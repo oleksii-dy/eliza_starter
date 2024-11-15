@@ -1,8 +1,10 @@
 import { SupabaseDatabaseAdapter } from "../packages/adapter-supabase/src";
 import { createAgent } from "../packages/agent/src";
-import { TelegramClient } from "../packages/client-telegram/src/telegramClient";
 import * as fs from "fs";
 import { Character, ModelProviderName } from "../packages/core/src";
+import { SqliteDatabaseAdapter } from "../packages/adapter-sqlite/src";
+import Database from "better-sqlite3";
+import TelegramClientInterface from "../packages/client-telegram/src";
 
 
 // put this in a function to make it easier to run multiple times
@@ -185,14 +187,8 @@ export async function main() {
   }
 };
     try {
-        const runtime = await createAgent(character, new SupabaseDatabaseAdapter(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_SERVICE_API_KEY),process.env.OPENAI_API_KEY );
-        // add logic to do something with the runtime here
-
-        // Telegram client example
-      const telegramClient = new TelegramClient(runtime, process.env.TELEGRAM_BOT_TOKEN);
-        await telegramClient.start();
+        const runtime = await createAgent(character,  new SqliteDatabaseAdapter(new Database("./db.sqlite")),  process.env.OPENAI_API_KEY);
+        const client = await TelegramClientInterface.start(runtime);
     } catch (error) {
         if (error.code === "CONFIG_NOT_FOUND") {
             console.error("Configuration file missing");
