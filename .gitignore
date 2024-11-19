@@ -54,3 +54,5 @@ coverage
 .eslintcache
 
 agent/content
+
+pnpm-lock.yaml
