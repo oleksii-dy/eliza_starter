@@ -1,6 +1,10 @@
+[@ai16z/eliza v0.1.4-alpha.3](../index.md) / Models
+
 # Type Alias: Models
 
 > **Models**: `object`
+
+Model configurations by provider
 
 ## Type declaration
 
@@ -48,6 +52,10 @@
 
 > **ollama**: [`Model`](Model.md)
 
+### heurist
+
+> **heurist**: [`Model`](Model.md)
+
 ## Defined in
 
-[packages/core/src/types.ts:105](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L105)
+[packages/core/src/types.ts:188](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L188)

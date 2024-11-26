@@ -16,14 +16,10 @@ import {
     TokenPerformance,
     TradePerformance,
     TokenRecommendation,
-} from "../adapters/trustScoreDatabase.ts";
-import settings from "@ai16z/eliza/src/settings.ts";
-import {
-    IAgentRuntime,
-    Memory,
-    Provider,
-    State,
-} from "@ai16z/eliza/src/types.ts";
+} from "@ai16z/plugin-trustdb";
+import { settings } from "@ai16z/eliza";
+import { IAgentRuntime, Memory, Provider, State } from "@ai16z/eliza";
+import { v4 as uuidv4 } from "uuid";
 
 const Wallet = settings.MAIN_WALLET_ADDRESS;
 interface TradeData {
@@ -34,7 +30,7 @@ interface sellDetails {
     sell_amount: number;
     sell_recommender_id: string | null;
 }
-interface RecommendationGroup {
+interface _RecommendationGroup {
     recommendation: any;
     trustScore: number;
 }
@@ -57,16 +53,26 @@ interface TokenRecommendationSummary {
 export class TrustScoreManager {
     private tokenProvider: TokenProvider;
     private trustScoreDb: TrustScoreDatabase;
-    private connection: Connection = new Connection(settings.RPC_URL!);
-    private baseMint: PublicKey = new PublicKey(settings.BASE_MINT!);
+    private connection: Connection;
+    private baseMint: PublicKey;
     private DECAY_RATE = 0.95;
     private MAX_DECAY_DAYS = 30;
+    private backend;
+    private backendToken;
     constructor(
+        runtime: IAgentRuntime,
         tokenProvider: TokenProvider,
         trustScoreDb: TrustScoreDatabase
     ) {
         this.tokenProvider = tokenProvider;
         this.trustScoreDb = trustScoreDb;
+        this.connection = new Connection(runtime.getSetting("RPC_URL"));
+        this.baseMint = new PublicKey(
+            runtime.getSetting("BASE_MINT") ||
+                "So11111111111111111111111111111111111111112"
+        );
+        this.backend = runtime.getSetting("BACKEND_URL");
+        this.backendToken = runtime.getSetting("BACKEND_TOKEN");
     }
 
     //getRecommenederBalance
@@ -148,6 +154,9 @@ export class TrustScoreManager {
                 rapidDump: isRapidDump,
                 suspiciousVolume: suspiciousVolume,
                 validationTrust: validationTrustScore,
+                balance: balance,
+                initialMarketCap:
+                    processedData.dexScreenerData.pairs[0]?.marketCap || 0,
                 lastUpdated: new Date(),
             },
             recommenderMetrics: {
@@ -333,23 +342,28 @@ export class TrustScoreManager {
         runtime: IAgentRuntime,
         tokenAddress: string,
         recommenderId: string,
+        username: string,
         data: TradeData
     ): Promise<TradePerformance> {
         const recommender =
-            await this.trustScoreDb.getOrCreateRecommenderWithDiscordId(
+            await this.trustScoreDb.getOrCreateRecommenderWithTelegramId(
                 recommenderId
             );
         const processedData: ProcessedTokenData =
             await this.tokenProvider.getProcessedTokenData();
         const wallet = new WalletProvider(
-            new Connection("https://api.mainnet-beta.solana.com"),
+            this.connection,
             new PublicKey(Wallet!)
         );
 
+        let tokensBalance = 0;
         const prices = await wallet.fetchPrices(runtime);
         const solPrice = prices.solana.usd;
         const buySol = data.buy_amount / parseFloat(solPrice);
         const buy_value_usd = data.buy_amount * processedData.tradeData.price;
+        const token = await this.tokenProvider.fetchTokenTradeData();
+        const tokenPrice = token.price;
+        tokensBalance = buy_value_usd / tokenPrice;
 
         const creationData = {
             token_address: tokenAddress,
@@ -378,7 +392,110 @@ export class TrustScoreManager {
             rapidDump: false,
         };
         this.trustScoreDb.addTradePerformance(creationData, data.is_simulation);
+        // generate unique uuid for each TokenRecommendation
+        const tokenUUId = uuidv4();
+        const tokenRecommendation: TokenRecommendation = {
+            id: tokenUUId,
+            recommenderId: recommenderId,
+            tokenAddress: tokenAddress,
+            timestamp: new Date(),
+            initialMarketCap:
+                processedData.dexScreenerData.pairs[0]?.marketCap || 0,
+            initialLiquidity:
+                processedData.dexScreenerData.pairs[0]?.liquidity?.usd || 0,
+            initialPrice: processedData.tradeData.price,
+        };
+        this.trustScoreDb.addTokenRecommendation(tokenRecommendation);
+
+        this.trustScoreDb.upsertTokenPerformance({
+            tokenAddress: tokenAddress,
+            priceChange24h: processedData.tradeData.price_change_24h_percent,
+            volumeChange24h: processedData.tradeData.volume_24h,
+            trade_24h_change: processedData.tradeData.trade_24h_change_percent,
+            liquidity:
+                processedData.dexScreenerData.pairs[0]?.liquidity.usd || 0,
+            liquidityChange24h: 0,
+            holderChange24h:
+                processedData.tradeData.unique_wallet_24h_change_percent,
+            rugPull: false,
+            isScam: false,
+            marketCapChange24h: 0,
+            sustainedGrowth: false,
+            rapidDump: false,
+            suspiciousVolume: false,
+            validationTrust: 0,
+            balance: tokensBalance,
+            initialMarketCap:
+                processedData.dexScreenerData.pairs[0]?.marketCap || 0,
+            lastUpdated: new Date(),
+        });
+
+        if (data.is_simulation) {
+            // If the trade is a simulation update the balance
+            this.trustScoreDb.updateTokenBalance(tokenAddress, tokensBalance);
+            // generate some random hash for simulations
+            const hash = Math.random().toString(36).substring(7);
+            const transaction = {
+                tokenAddress: tokenAddress,
+                type: "buy" as "buy" | "sell",
+                transactionHash: hash,
+                amount: data.buy_amount,
+                price: processedData.tradeData.price,
+                isSimulation: true,
+                timestamp: new Date().toISOString(),
+            };
+            this.trustScoreDb.addTransaction(transaction);
+        }
+        // api call to update trade performance
+        this.createTradeInBe(tokenAddress, recommenderId, username, data);
         return creationData;
+    }
+
+    async delay(ms: number) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async createTradeInBe(
+        tokenAddress: string,
+        recommenderId: string,
+        username: string,
+        data: TradeData,
+        retries = 3,
+        delayMs = 2000
+    ) {
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                await fetch(
+                    `${this.backend}/api/updaters/createTradePerformance`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${this.backendToken}`,
+                        },
+                        body: JSON.stringify({
+                            tokenAddress: tokenAddress,
+                            tradeData: data,
+                            recommenderId: recommenderId,
+                            username: username,
+                        }),
+                    }
+                );
+                // If the request is successful, exit the loop
+                return;
+            } catch (error) {
+                console.error(
+                    `Attempt ${attempt} failed: Error creating trade in backend`,
+                    error
+                );
+                if (attempt < retries) {
+                    console.log(`Retrying in ${delayMs} ms...`);
+                    await this.delay(delayMs); // Wait for the specified delay before retrying
+                } else {
+                    console.error("All attempts failed.");
+                }
+            }
+        }
     }
 
     /**
@@ -400,7 +517,7 @@ export class TrustScoreManager {
         isSimulation: boolean
     ) {
         const recommender =
-            await this.trustScoreDb.getOrCreateRecommenderWithDiscordId(
+            await this.trustScoreDb.getOrCreateRecommenderWithTelegramId(
                 recommenderId
             );
         const processedData: ProcessedTokenData =
@@ -455,6 +572,25 @@ export class TrustScoreManager {
             sellDetailsData,
             isSimulation
         );
+        if (isSimulation) {
+            // If the trade is a simulation update the balance
+            const oldBalance = this.trustScoreDb.getTokenBalance(tokenAddress);
+            const tokenBalance = oldBalance - sellDetails.sell_amount;
+            this.trustScoreDb.updateTokenBalance(tokenAddress, tokenBalance);
+            // generate some random hash for simulations
+            const hash = Math.random().toString(36).substring(7);
+            const transaction = {
+                tokenAddress: tokenAddress,
+                type: "sell" as "buy" | "sell",
+                transactionHash: hash,
+                amount: sellDetails.sell_amount,
+                price: processedData.tradeData.price,
+                isSimulation: true,
+                timestamp: new Date().toISOString(),
+            };
+            this.trustScoreDb.addTransaction(transaction);
+        }
+
         return sellDetailsData;
     }
 
@@ -553,7 +689,7 @@ export const trustScoreProvider: Provider = {
     async get(
         runtime: IAgentRuntime,
         message: Memory,
-        state?: State
+        _state?: State
     ): Promise<string> {
         try {
             const trustScoreDb = new TrustScoreDatabase(

@@ -1,3 +1,5 @@
+[@ai16z/eliza v0.1.4-alpha.3](../index.md) / ServiceType
+
 # Enumeration: ServiceType
 
 ## Enumeration Members
@@ -8,7 +10,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:646](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L646)
+[packages/core/src/types.ts:1079](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L1079)
 
 ***
 
@@ -18,7 +20,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:647](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L647)
+[packages/core/src/types.ts:1080](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L1080)
 
 ***
 
@@ -28,7 +30,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:648](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L648)
+[packages/core/src/types.ts:1081](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L1081)
 
 ***
 
@@ -38,7 +40,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:649](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L649)
+[packages/core/src/types.ts:1082](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L1082)
 
 ***
 
@@ -48,7 +50,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:650](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L650)
+[packages/core/src/types.ts:1083](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L1083)
 
 ***
 
@@ -58,7 +60,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:651](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L651)
+[packages/core/src/types.ts:1084](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L1084)
 
 ***
 
@@ -68,4 +70,4 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:652](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L652)
+[packages/core/src/types.ts:1085](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L1085)

@@ -1,7 +1,7 @@
 import settings from "./settings.ts";
 import { Models, ModelProviderName, ModelClass } from "./types.ts";
 
-const models: Models = {
+export const models: Models = {
     [ModelProviderName.OPENAI]: {
         endpoint: "https://api.openai.com/v1",
         settings: {
@@ -20,20 +20,41 @@ const models: Models = {
             [ModelClass.IMAGE]: "dall-e-3",
         },
     },
+    [ModelProviderName.ETERNALAI]: {
+        endpoint: settings.ETERNALAI_URL,
+        settings: {
+            stop: [],
+            maxInputTokens: 128000,
+            maxOutputTokens: 8192,
+            frequency_penalty: 0.0,
+            presence_penalty: 0.0,
+            temperature: 0.6,
+        },
+        model: {
+            [ModelClass.SMALL]:
+                "neuralmagic/Meta-Llama-3.1-405B-Instruct-quantized.w4a16",
+            [ModelClass.MEDIUM]:
+                "neuralmagic/Meta-Llama-3.1-405B-Instruct-quantized.w4a16",
+            [ModelClass.LARGE]:
+                "neuralmagic/Meta-Llama-3.1-405B-Instruct-quantized.w4a16",
+            [ModelClass.EMBEDDING]: "",
+            [ModelClass.IMAGE]: "",
+        },
+    },
     [ModelProviderName.ANTHROPIC]: {
         settings: {
             stop: [],
             maxInputTokens: 200000,
             maxOutputTokens: 8192,
-            frequency_penalty: 0.0,
-            presence_penalty: 0.0,
-            temperature: 0.3,
+            frequency_penalty: 0.4,
+            presence_penalty: 0.4,
+            temperature: 0.7,
         },
         endpoint: "https://api.anthropic.com/v1",
         model: {
             [ModelClass.SMALL]: "claude-3-5-haiku-20241022",
             [ModelClass.MEDIUM]: "claude-3-5-sonnet-20241022",
-            [ModelClass.LARGE]: "claude-3-opus-20240229",
+            [ModelClass.LARGE]: "claude-3-5-sonnet-20241022",
         },
     },
     [ModelProviderName.CLAUDE_VERTEX]: {
@@ -41,9 +62,9 @@ const models: Models = {
             stop: [],
             maxInputTokens: 200000,
             maxOutputTokens: 8192,
-            frequency_penalty: 0.0,
-            presence_penalty: 0.0,
-            temperature: 0.3,
+            frequency_penalty: 0.4,
+            presence_penalty: 0.4,
+            temperature: 0.7,
         },
         endpoint: "https://api.anthropic.com/v1", // TODO: check
         model: {
@@ -57,9 +78,9 @@ const models: Models = {
             stop: [],
             maxInputTokens: 128000,
             maxOutputTokens: 8192,
-            frequency_penalty: 0.0,
-            presence_penalty: 0.0,
-            temperature: 0.3,
+            frequency_penalty: 0.4,
+            presence_penalty: 0.4,
+            temperature: 0.7,
         },
         endpoint: "https://api.x.ai/v1",
         model: {
@@ -75,9 +96,9 @@ const models: Models = {
             stop: [],
             maxInputTokens: 128000,
             maxOutputTokens: 8000,
-            frequency_penalty: 0.0,
-            presence_penalty: 0.0,
-            temperature: 0.3,
+            frequency_penalty: 0.4,
+            presence_penalty: 0.4,
+            temperature: 0.7,
         },
         model: {
             [ModelClass.SMALL]: "llama-3.1-8b-instant",
@@ -91,8 +112,8 @@ const models: Models = {
             stop: [],
             maxInputTokens: 128000,
             maxOutputTokens: 8192,
-            repetition_penalty: 0.0,
-            temperature: 0.3,
+            repetition_penalty: 0.4,
+            temperature: 0.7,
         },
         imageSettings: {
             steps: 4,
@@ -112,8 +133,8 @@ const models: Models = {
             stop: ["<|eot_id|>", "<|eom_id|>"],
             maxInputTokens: 32768,
             maxOutputTokens: 8192,
-            repetition_penalty: 0.0,
-            temperature: 0.3,
+            repetition_penalty: 0.4,
+            temperature: 0.7,
         },
         model: {
             [ModelClass.SMALL]:
@@ -132,9 +153,9 @@ const models: Models = {
             stop: [],
             maxInputTokens: 128000,
             maxOutputTokens: 8192,
-            frequency_penalty: 0.0,
-            presence_penalty: 0.0,
-            temperature: 0.3,
+            frequency_penalty: 0.4,
+            presence_penalty: 0.4,
+            temperature: 0.7,
         },
         model: {
             [ModelClass.SMALL]: "gemini-1.5-flash-latest",
@@ -168,9 +189,9 @@ const models: Models = {
             stop: [],
             maxInputTokens: 128000,
             maxOutputTokens: 8192,
-            frequency_penalty: 0.0,
-            presence_penalty: 0.0,
-            temperature: 0.6,
+            frequency_penalty: 0.4,
+            presence_penalty: 0.4,
+            temperature: 0.7,
         },
         // Available models: https://openrouter.ai/models
         // To test other models, change the models below
@@ -178,7 +199,7 @@ const models: Models = {
             [ModelClass.SMALL]:
                 settings.SMALL_OPENROUTER_MODEL ||
                 settings.OPENROUTER_MODEL ||
-                "nousresearch/hermes-3-llama-3.1-70b",
+                "nousresearch/hermes-3-llama-3.1-405b",
             [ModelClass.MEDIUM]:
                 settings.MEDIUM_OPENROUTER_MODEL ||
                 settings.OPENROUTER_MODEL ||
@@ -195,9 +216,9 @@ const models: Models = {
             stop: [],
             maxInputTokens: 128000,
             maxOutputTokens: 8192,
-            frequency_penalty: 0.0,
-            presence_penalty: 0.0,
-            temperature: 0.3,
+            frequency_penalty: 0.4,
+            presence_penalty: 0.4,
+            temperature: 0.7,
         },
         endpoint: settings.OLLAMA_SERVER_URL || "http://localhost:11434",
         model: {
@@ -217,6 +238,26 @@ const models: Models = {
                 settings.OLLAMA_EMBEDDING_MODEL || "mxbai-embed-large",
         },
     },
+    [ModelProviderName.HEURIST]: {
+        settings: {
+            stop: [],
+            maxInputTokens: 128000,
+            maxOutputTokens: 8192,
+            repetition_penalty: 0.4,
+            temperature: 0.7,
+        },
+        imageSettings: {
+            steps: 20,
+        },
+        endpoint: "https://llm-gateway.heurist.xyz",
+        model: {
+            [ModelClass.SMALL]: "meta-llama/llama-3-70b-instruct",
+            [ModelClass.MEDIUM]: "meta-llama/llama-3-70b-instruct",
+            [ModelClass.LARGE]: "meta-llama/llama-3.1-405b-instruct",
+            [ModelClass.EMBEDDING]: "", //Add later,
+            [ModelClass.IMAGE]: "PepeXL",
+        },
+    },
 };
 
 export function getModel(provider: ModelProviderName, type: ModelClass) {
@@ -226,5 +267,3 @@ export function getModel(provider: ModelProviderName, type: ModelClass) {
 export function getEndpoint(provider: ModelProviderName) {
     return models[provider].endpoint;
 }
-
-export default models;

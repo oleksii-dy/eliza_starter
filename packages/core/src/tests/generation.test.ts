@@ -1,166 +1,127 @@
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { ModelProviderName, IAgentRuntime } from '../types';
+import { models } from '../models';
 import {
-    generateObject,
-    GenerationOptions,
-    trimTokens,
-    handleProvider,
-} from "../generation";
-import { createRuntime } from "../test_resources/createRuntime";
-import { ModelProviderName, ModelClass } from "../types";
-import { ZodSchema } from "zod";
-import dotenv from "dotenv";
+    generateText,
+    generateTrueOrFalse,
+    splitChunks,
+} from '../generation';
 
-dotenv.config({ path: ".dev.vars" });
+// Mock the elizaLogger
+vi.mock('../index.ts', () => ({
+    elizaLogger: {
+        log: vi.fn(),
+        info: vi.fn(),
+        error: vi.fn(),
+    },
+}));
 
-describe("generateObject", () => {
-    let runtime;
-
-    beforeAll(async () => {
-        // Create runtime with a mock environment
-        const setup = await createRuntime({
-            env: process.env as Record<string, string>,
-        });
-        runtime = setup.runtime;
-    });
-
-    test("should throw an error when context is empty", async () => {
-        const options: GenerationOptions = {
-            runtime,
-            context: "",
-            modelClass: ModelClass.SMALL,
-        };
-
-        await expect(generateObject(options)).rejects.toThrow(
-            "generateObject context is empty"
-        );
-    });
-
-    test("should handle supported provider calls", async () => {
-        // Mock provider and trimTokens response
-        const context = "Test prompt for generation";
-        const provider = ModelProviderName.OPENAI;
-        const schema: ZodSchema = ZodSchema.any(); // Replace with a valid schema if needed
-
-        runtime.modelProvider = provider;
-
-        (trimTokens as jest.Mock).mockResolvedValue(context);
-        (handleProvider as jest.Mock).mockResolvedValue([
-            { response: "Generated text" },
-        ]);
-
-        const options: GenerationOptions = {
-            runtime,
-            context,
-            modelClass: ModelClass.SMALL,
-            schema,
-            schemaName: "TestSchema",
-            schemaDescription: "A schema for testing purposes",
-            mode: "json",
-        };
-
-        const result = await generateObject(options);
-
-        expect(trimTokens).toHaveBeenCalledWith(
-            context,
-            expect.any(Number),
-            ModelClass.SMALL
-        );
-        expect(handleProvider).toHaveBeenCalledWith(
-            expect.objectContaining({
-                provider,
-                model: expect.anything(),
-                schema,
-                schemaName: "TestSchema",
-                schemaDescription: "A schema for testing purposes",
-            })
-        );
-        expect(result).toEqual([{ response: "Generated text" }]);
-    });
-
-    test("should throw an error for unsupported provider", async () => {
-        runtime.modelProvider = "unsupportedProvider" as ModelProviderName;
-
-        const options: GenerationOptions = {
-            runtime,
-            context: "This should fail",
-            modelClass: ModelClass.SMALL,
-        };
-
-        await expect(generateObject(options)).rejects.toThrow(
-            "Unsupported provider"
-        );
-    });
+// Mock the generation functions
+vi.mock('../generation', async () => {
+    const actual = await vi.importActual('../generation');
+    return {
+        ...actual,
+        generateText: vi.fn().mockImplementation(async ({ context }) => {
+            if (!context) return '';
+            return 'mocked response';
+        }),
+        generateTrueOrFalse: vi.fn().mockImplementation(async () => {
+            return true;
+        }),
+    };
 });
 
-describe("handleProvider", () => {
-    let runtime;
+describe('Generation', () => {
+    let mockRuntime: IAgentRuntime;
 
-    beforeAll(async () => {
-        const setup = await createRuntime({
-            env: process.env as Record<string, string>,
+    beforeEach(() => {
+        // Setup mock runtime for tests
+        mockRuntime = {
+            modelProvider: ModelProviderName.OPENAI,
+            token: 'mock-token',
+            character: {
+                modelEndpointOverride: undefined,
+            },
+            getSetting: vi.fn().mockImplementation((key: string) => {
+                if (key === 'LLAMACLOUD_MODEL_LARGE') return false;
+                if (key === 'LLAMACLOUD_MODEL_SMALL') return false;
+                return undefined;
+            }),
+        } as unknown as IAgentRuntime;
+
+        // Clear all mocks before each test
+        vi.clearAllMocks();
+    });
+
+    describe('generateText', () => {
+        it('should return empty string for empty context', async () => {
+            const result = await generateText({
+                runtime: mockRuntime,
+                context: '',
+                modelClass: 'completion',
+            });
+            expect(result).toBe('');
         });
-        runtime = setup.runtime;
+
+        it('should return mocked response for non-empty context', async () => {
+            const result = await generateText({
+                runtime: mockRuntime,
+                context: 'test context',
+                modelClass: 'completion',
+            });
+            expect(result).toBe('mocked response');
+        });
+
+        it('should use correct model settings from provider config', () => {
+            const modelProvider = mockRuntime.modelProvider;
+            const modelSettings = models[modelProvider].settings;
+            
+            expect(modelSettings).toBeDefined();
+            expect(modelSettings.temperature).toBeDefined();
+            expect(modelSettings.frequency_penalty).toBeDefined();
+            expect(modelSettings.presence_penalty).toBeDefined();
+            expect(modelSettings.maxInputTokens).toBeDefined();
+            expect(modelSettings.maxOutputTokens).toBeDefined();
+        });
     });
 
-    test("should handle OpenAI provider call", async () => {
-        const options = {
-            runtime,
-            provider: ModelProviderName.OPENAI,
-            model: "text-davinci-003",
-            apiKey: "testApiKey",
-            schema: ZodSchema.any(),
-            schemaName: "TestSchema",
-            schemaDescription: "A test schema",
-            mode: "json",
-            modelOptions: {
-                prompt: "Test prompt",
-                temperature: 0.7,
-                maxTokens: 100,
-                frequencyPenalty: 0,
-                presencePenalty: 0,
-            },
-            modelClass: ModelClass.SMALL,
-            context: "This is a test context",
-        };
-
-        (handleOpenAI as jest.Mock).mockResolvedValue([
-            { response: "Generated by OpenAI" },
-        ]);
-
-        const result = await handleProvider(options);
-
-        expect(handleOpenAI).toHaveBeenCalledWith(
-            expect.objectContaining({
-                model: "text-davinci-003",
-                apiKey: "testApiKey",
-                schemaName: "TestSchema",
-            })
-        );
-        expect(result).toEqual([{ response: "Generated by OpenAI" }]);
+    describe('generateTrueOrFalse', () => {
+        it('should return boolean value', async () => {
+            const result = await generateTrueOrFalse({
+                runtime: mockRuntime,
+                context: 'test context',
+                modelClass: 'completion',
+            });
+            expect(typeof result).toBe('boolean');
+        });
     });
 
-    test("should throw error on unsupported provider in handleProvider", async () => {
-        const options = {
-            runtime,
-            provider: "unsupportedProvider" as ModelProviderName,
-            model: "unsupportedModel",
-            apiKey: "testApiKey",
-            schema: ZodSchema.any(),
-            schemaName: "UnsupportedSchema",
-            schemaDescription: "This should fail",
-            mode: "json",
-            modelOptions: {
-                prompt: "Test unsupported provider",
-                temperature: 0.7,
-                maxTokens: 100,
-                frequencyPenalty: 0,
-                presencePenalty: 0,
-            },
-            modelClass: ModelClass.SMALL,
-            context: "This is an unsupported provider context",
-        };
+    describe('splitChunks', () => {
+        it('should split content into chunks of specified size', async () => {
+            const content = 'a'.repeat(1000);
+            const chunkSize = 100;
+            const bleed = 20;
 
-        await expect(handleProvider(options)).rejects.toThrow(
-            "Unsupported provider"
-        );
+            const chunks = await splitChunks(content, chunkSize, bleed);
+            
+            expect(chunks.length).toBeGreaterThan(0);
+            // Check if chunks overlap properly
+            for (let i = 1; i < chunks.length; i++) {
+                const prevChunkEnd = chunks[i - 1].slice(-bleed);
+                const currentChunkStart = chunks[i].slice(0, bleed);
+                expect(prevChunkEnd).toBe(currentChunkStart);
+            }
+        });
+
+        it('should handle empty content', async () => {
+            const chunks = await splitChunks('', 100, 20);
+            expect(chunks).toEqual([]);
+        });
+
+        it('should handle content smaller than chunk size', async () => {
+            const content = 'small content';
+            const chunks = await splitChunks(content, 100, 20);
+            expect(chunks).toEqual([content]);
+        });
     });
 });

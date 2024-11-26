@@ -2,21 +2,23 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import express, { Request as ExpressRequest } from "express";
 import multer, { File } from "multer";
-import { generateCaption, generateImage } from "@ai16z/eliza/src/generation.ts";
-import { composeContext } from "@ai16z/eliza/src/context.ts";
-import { generateMessageResponse } from "@ai16z/eliza/src/generation.ts";
-import { messageCompletionFooter } from "@ai16z/eliza/src/parsing.ts";
-import { AgentRuntime } from "@ai16z/eliza/src/runtime.ts";
+import { elizaLogger, generateCaption, generateImage } from "@ai16z/eliza";
+import { composeContext } from "@ai16z/eliza";
+import { generateMessageResponse } from "@ai16z/eliza";
+import { messageCompletionFooter } from "@ai16z/eliza";
+import { AgentRuntime } from "@ai16z/eliza";
 import {
     Content,
     Memory,
     ModelClass,
-    State,
     Client,
     IAgentRuntime,
-} from "@ai16z/eliza/src/types.ts";
-import { stringToUuid } from "@ai16z/eliza/src/uuid.ts";
-import settings from "@ai16z/eliza/src/settings.ts";
+} from "@ai16z/eliza";
+import { stringToUuid } from "@ai16z/eliza";
+import { settings } from "@ai16z/eliza";
+import { createApiRouter } from "./api.ts";
+import * as fs from "fs";
+import * as path from "path";
 const upload = multer({ storage: multer.memoryStorage() });
 
 export const messageHandlerTemplate =
@@ -24,6 +26,9 @@ export const messageHandlerTemplate =
     `# Action Examples
 {{actionExamples}}
 (Action examples are for reference only. Do not use the information from them in your response.)
+
+# Knowledge
+{{knowledge}}
 
 # Task: Generate dialog and actions for the character {{agentName}}.
 About {{agentName}}:
@@ -43,7 +48,7 @@ Note that {{agentName}} is capable of reading/seeing/hearing various forms of me
 
 {{actions}}
 
-# Instructions: Write the next message for {{agentName}}. Ignore "action".
+# Instructions: Write the next message for {{agentName}}.
 ` + messageCompletionFooter;
 
 export interface SimliClientConfig {
@@ -58,13 +63,16 @@ export class DirectClient {
     private agents: Map<string, AgentRuntime>;
 
     constructor() {
-        console.log("DirectClient constructor");
+        elizaLogger.log("DirectClient constructor");
         this.app = express();
         this.app.use(cors());
         this.agents = new Map();
 
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({ extended: true }));
+
+        const apiRouter = createApiRouter(this.agents);
+        this.app.use(apiRouter);
 
         // Define an interface that extends the Express Request interface
         interface CustomRequest extends ExpressRequest {
@@ -126,7 +134,6 @@ export class DirectClient {
         this.app.post(
             "/:agentId/message",
             async (req: express.Request, res: express.Response) => {
-                console.log("DirectClient message");
                 const agentId = req.params.agentId;
                 const roomId = stringToUuid(
                     req.body.roomId ?? "default-room-" + agentId
@@ -185,9 +192,9 @@ export class DirectClient {
 
                 await runtime.messageManager.createMemory(memory);
 
-                const state = (await runtime.composeState(userMessage, {
+                const state = await runtime.composeState(userMessage, {
                     agentName: runtime.character.name,
-                })) as State;
+                });
 
                 const context = composeContext({
                     state,
@@ -220,7 +227,7 @@ export class DirectClient {
 
                 await runtime.evaluate(memory, state);
 
-                const result = await runtime.processActions(
+                const _result = await runtime.processActions(
                     memory,
                     [responseMessage],
                     state,
@@ -265,6 +272,92 @@ export class DirectClient {
                 res.json({ images: imagesRes });
             }
         );
+
+        this.app.post(
+            "/fine-tune",
+            async (req: express.Request, res: express.Response) => {
+                try {
+                    const response = await fetch('https://api.bageldb.ai/api/v1/asset', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-KEY': `${process.env.BAGEL_API_KEY}`
+                        },
+                        body: JSON.stringify(req.body)
+                    });
+
+                    const data = await response.json();
+                    res.json(data);
+                } catch (error) {
+                    res.status(500).json({ 
+                        error: 'Failed to forward request to BagelDB',
+                        details: error.message 
+                    });
+                }
+            }
+        );
+        this.app.get(
+            "/fine-tune/:assetId", 
+            async (req: express.Request, res: express.Response) => {
+                const assetId = req.params.assetId;
+                const downloadDir = path.join(process.cwd(), 'downloads', assetId);
+                
+                console.log('Download directory:', downloadDir);
+
+                try {
+                    console.log('Creating directory...');
+                    await fs.promises.mkdir(downloadDir, { recursive: true });
+
+                    console.log('Fetching file...');
+                    const fileResponse = await fetch(`https://api.bageldb.ai/api/v1/asset/${assetId}/download`, {
+                        headers: {
+                            'X-API-KEY': `${process.env.BAGEL_API_KEY}`
+                        }
+                    });
+
+                    if (!fileResponse.ok) {
+                        throw new Error(`API responded with status ${fileResponse.status}: ${await fileResponse.text()}`);
+                    }
+
+                    console.log('Response headers:', fileResponse.headers);
+                    
+                    const fileName = fileResponse.headers.get('content-disposition')
+                        ?.split('filename=')[1]
+                        ?.replace(/"/g, '') || 'default_name.txt';
+                    
+                    console.log('Saving as:', fileName);
+                    
+                    const arrayBuffer = await fileResponse.arrayBuffer();
+                    const buffer = Buffer.from(arrayBuffer);
+                    
+                    const filePath = path.join(downloadDir, fileName);
+                    console.log('Full file path:', filePath);
+                    
+                    await fs.promises.writeFile(filePath, buffer);
+                    
+                    // Verify file was written
+                    const stats = await fs.promises.stat(filePath);
+                    console.log('File written successfully. Size:', stats.size, 'bytes');
+
+                    res.json({
+                        success: true,
+                        message: 'Single file downloaded successfully',
+                        downloadPath: downloadDir,
+                        fileCount: 1,
+                        fileName: fileName,
+                        fileSize: stats.size
+                    });
+
+                } catch (error) {
+                    console.error('Detailed error:', error);
+                    res.status(500).json({ 
+                        error: 'Failed to download files from BagelDB',
+                        details: error.message,
+                        stack: error.stack
+                    });
+                }
+            }
+        );
     }
 
     public registerAgent(runtime: AgentRuntime) {
@@ -277,21 +370,21 @@ export class DirectClient {
 
     public start(port: number) {
         this.app.listen(port, () => {
-            console.log(`Server running at http://localhost:${port}/`);
+            elizaLogger.success(`Server running at http://localhost:${port}/`);
         });
     }
 }
 
 export const DirectClientInterface: Client = {
-    start: async (runtime: IAgentRuntime) => {
-        console.log("DirectClientInterface start");
+    start: async (_runtime: IAgentRuntime) => {
+        elizaLogger.log("DirectClientInterface start");
         const client = new DirectClient();
         const serverPort = parseInt(settings.SERVER_PORT || "3000");
         client.start(serverPort);
         return client;
     },
-    stop: async (runtime: IAgentRuntime) => {
-        console.warn("Direct client does not support stopping yet");
+    stop: async (_runtime: IAgentRuntime) => {
+        elizaLogger.warn("Direct client does not support stopping yet");
     },
 };
 

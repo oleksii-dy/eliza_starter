@@ -1,4 +1,4 @@
-import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes/index.js";
+import bs58 from "bs58";
 import {
     Connection,
     Keypair,
@@ -7,10 +7,7 @@ import {
 } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import { v4 as uuidv4 } from "uuid";
-import { TrustScoreDatabase } from "../adapters/trustScoreDatabase.ts";
-import { composeContext } from "@ai16z/eliza/src/context.ts";
-import { generateObject } from "@ai16z/eliza/src/generation.ts";
-import settings from "@ai16z/eliza/src/settings.ts";
+import { TrustScoreDatabase } from "@ai16z/plugin-trustdb";
 import {
     ActionExample,
     HandlerCallback,
@@ -19,13 +16,13 @@ import {
     ModelClass,
     State,
     type Action,
-} from "@ai16z/eliza/src/types.ts";
+    composeContext,
+    generateObject,
+    settings,
+} from "@ai16z/eliza";
 import { TokenProvider } from "../providers/token.ts";
 import { TrustScoreManager } from "../providers/trustScoreProvider.ts";
-import {
-    walletProvider,
-    WalletProvider,
-} from "../providers/wallet.ts";
+import { walletProvider, WalletProvider } from "../providers/wallet.ts";
 import { getTokenDecimals } from "./swapUtils.ts";
 
 async function swapToken(
@@ -76,7 +73,7 @@ async function swapToken(
             quoteResponse: quoteData,
             userPublicKey: walletPublicKey.toString(),
             wrapAndUnwrapSol: true,
-            computeUnitPriceMicroLamports: 1000,
+            computeUnitPriceMicroLamports: 2000000,
             dynamicComputeUnitLimit: true,
         };
 
@@ -297,6 +294,8 @@ export const executeSwap: Action = {
                 runtime.getSetting("WALLET_PUBLIC_KEY")
             );
 
+            const provider = new WalletProvider(connection, walletPublicKey);
+
             console.log("Wallet Public Key:", walletPublicKey);
             console.log("inputTokenSymbol:", response.inputTokenCA);
             console.log("outputTokenSymbol:", response.outputTokenCA);
@@ -326,12 +325,14 @@ export const executeSwap: Action = {
             try {
                 // First try to decode as base58
                 secretKey = bs58.decode(privateKeyString);
+                // eslint-disable-next-line
             } catch (e) {
                 try {
                     // If that fails, try base64
                     secretKey = Uint8Array.from(
                         Buffer.from(privateKeyString, "base64")
                     );
+                    // eslint-disable-next-line
                 } catch (e2) {
                     throw new Error("Invalid private key format");
                 }
@@ -394,7 +395,11 @@ export const executeSwap: Action = {
             }
 
             if (type === "buy") {
-                const tokenProvider = new TokenProvider(response.outputTokenCA);
+                const tokenProvider = new TokenProvider(
+                    response.outputTokenCA,
+                    provider,
+                    runtime.cacheManager
+                );
                 const module = await import("better-sqlite3");
                 const Database = module.default;
                 const trustScoreDb = new TrustScoreDatabase(
@@ -409,6 +414,7 @@ export const executeSwap: Action = {
                 });
 
                 const trustScoreDatabase = new TrustScoreManager(
+                    runtime,
                     tokenProvider,
                     trustScoreDb
                 );
@@ -424,7 +430,11 @@ export const executeSwap: Action = {
                     tradeData
                 );
             } else if (type === "sell") {
-                const tokenProvider = new TokenProvider(response.inputTokenCA);
+                const tokenProvider = new TokenProvider(
+                    response.inputTokenCA,
+                    provider,
+                    runtime.cacheManager
+                );
                 const module = await import("better-sqlite3");
                 const Database = module.default;
                 const trustScoreDb = new TrustScoreDatabase(
@@ -439,6 +449,7 @@ export const executeSwap: Action = {
                 });
 
                 const trustScoreDatabase = new TrustScoreManager(
+                    runtime,
                     tokenProvider,
                     trustScoreDb
                 );

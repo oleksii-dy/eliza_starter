@@ -1,3 +1,5 @@
+[@ai16z/eliza v0.1.4-alpha.3](../index.md) / IMemoryManager
+
 # Interface: IMemoryManager
 
 ## Properties
@@ -8,7 +10,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:467](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L467)
+[packages/core/src/types.ts:864](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L864)
 
 ***
 
@@ -18,7 +20,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:468](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L468)
+[packages/core/src/types.ts:865](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L865)
 
 ***
 
@@ -28,7 +30,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:470](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L470)
+[packages/core/src/types.ts:866](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L866)
 
 ## Methods
 
@@ -46,7 +48,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:472](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L472)
+[packages/core/src/types.ts:868](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L868)
 
 ***
 
@@ -64,8 +66,6 @@
 
 • **opts.unique?**: `boolean`
 
-• **opts.agentId?**: \`$\{string\}-$\{string\}-$\{string\}-$\{string\}-$\{string\}\`
-
 • **opts.start?**: `number`
 
 • **opts.end?**: `number`
@@ -76,7 +76,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:473](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L473)
+[packages/core/src/types.ts:870](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L870)
 
 ***
 
@@ -94,7 +94,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:481](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L481)
+[packages/core/src/types.ts:878](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L878)
 
 ***
 
@@ -112,7 +112,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:484](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L484)
+[packages/core/src/types.ts:882](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L882)
 
 ***
 
@@ -126,15 +126,13 @@
 
 • **params.roomIds**: \`$\{string\}-$\{string\}-$\{string\}-$\{string\}-$\{string\}\`[]
 
-• **params.agentId?**: \`$\{string\}-$\{string\}-$\{string\}-$\{string\}-$\{string\}\`
-
 #### Returns
 
 `Promise`\<[`Memory`](Memory.md)[]\>
 
 #### Defined in
 
-[packages/core/src/types.ts:485](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L485)
+[packages/core/src/types.ts:883](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L883)
 
 ***
 
@@ -156,15 +154,13 @@
 
 • **opts.unique?**: `boolean`
 
-• **opts.agentId?**: \`$\{string\}-$\{string\}-$\{string\}-$\{string\}-$\{string\}\`
-
 #### Returns
 
 `Promise`\<[`Memory`](Memory.md)[]\>
 
 #### Defined in
 
-[packages/core/src/types.ts:489](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L489)
+[packages/core/src/types.ts:884](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L884)
 
 ***
 
@@ -184,7 +180,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:499](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L499)
+[packages/core/src/types.ts:894](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L894)
 
 ***
 
@@ -202,7 +198,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:500](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L500)
+[packages/core/src/types.ts:896](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L896)
 
 ***
 
@@ -220,7 +216,7 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:501](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L501)
+[packages/core/src/types.ts:898](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L898)
 
 ***
 
@@ -240,4 +236,4 @@
 
 #### Defined in
 
-[packages/core/src/types.ts:502](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L502)
+[packages/core/src/types.ts:900](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L900)

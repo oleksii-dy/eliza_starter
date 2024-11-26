@@ -1,8 +1,8 @@
-import { Client, IAgentRuntime } from "@ai16z/eliza/src/types.ts";
-import { TrustScoreManager } from "@ai16z/plugin-solana/src/providers/trustScoreProvider.ts";
-import { TokenProvider } from "@ai16z/plugin-solana/src/providers/token.ts";
-import { WalletProvider } from "@ai16z/plugin-solana/src/providers/wallet.ts";
-import { TrustScoreDatabase } from "@ai16z/plugin-solana/src/adapters/trustScoreDatabase.ts";
+import { Client, IAgentRuntime } from "@ai16z/eliza";
+import { TrustScoreManager } from "@ai16z/plugin-solana";
+import { TokenProvider } from "@ai16z/plugin-solana";
+import { WalletProvider } from "@ai16z/plugin-solana";
+import { TrustScoreDatabase } from "@ai16z/plugin-trustdb";
 import { Connection, PublicKey } from "@solana/web3.js";
 
 export class AutoClient {
@@ -15,7 +15,11 @@ export class AutoClient {
         this.runtime = runtime;
 
         const trustScoreDb = new TrustScoreDatabase(runtime.databaseAdapter.db);
-        this.trustScoreProvider = new TrustScoreManager(null, trustScoreDb);
+        this.trustScoreProvider = new TrustScoreManager(
+            runtime,
+            null,
+            trustScoreDb
+        );
         this.walletProvider = new WalletProvider(
             new Connection(runtime.getSetting("RPC_URL")),
             new PublicKey(runtime.getSetting("WALLET_PUBLIC_KEY"))
@@ -48,11 +52,12 @@ export class AutoClient {
         );
 
         // get information for all tokens which were recommended
-        const tokenInfos = highTrustRecommendations.map(
+        const _tokenInfos = highTrustRecommendations.map(
             async (highTrustRecommendation) => {
                 const tokenProvider = new TokenProvider(
                     highTrustRecommendation.tokenAddress,
-                    this.walletProvider
+                    this.walletProvider,
+                    this.runtime.cacheManager
                 );
                 const tokenInfo = await tokenProvider.getProcessedTokenData();
                 const shouldTrade = await tokenProvider.shouldTradeToken();
@@ -82,7 +87,7 @@ export const AutoClientInterface: Client = {
         const client = new AutoClient(runtime);
         return client;
     },
-    stop: async (runtime: IAgentRuntime) => {
+    stop: async (_runtime: IAgentRuntime) => {
         console.warn("Direct client does not support stopping yet");
     },
 };
