@@ -116,8 +116,16 @@ export class TwitterInteractionClient {
                 )
             ).tweets;
 
+            const tickerMentionCandidates = (
+                await this.client.fetchSearchTweets(
+                    `$wit`,
+                    20,
+                    SearchMode.Latest
+                )
+            ).tweets;
+
             // de-duplicate tweetCandidates with a set
-            const uniqueTweetCandidates = [...new Set(tweetCandidates)];
+            const uniqueTweetCandidates = [...new Set(tweetCandidates), ...new Set(tickerMentionCandidates)];
             // Sort tweet candidates by ID in ascending order
             uniqueTweetCandidates
                 .sort((a, b) => a.id.localeCompare(b.id))
