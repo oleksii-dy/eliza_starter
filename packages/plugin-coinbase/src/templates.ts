@@ -1,3 +1,20 @@
+import { z } from "zod";
+import { CreateWebhookOptions } from "@coinbase/coinbase-sdk/dist/coinbase/types";
+
+export const WebhookSchema = z.object({
+    networkId: z.string(),
+    notificationUri: z.string().url(),
+    eventType: z.string(),
+    eventTypeFilter: z.string().optional(),
+    eventFilters: z.array(z.string()).optional(),
+});
+
+export type WebhookContent = z.infer<typeof WebhookSchema>;
+
+export const isWebhookContent = (object: any): object is WebhookContent => {
+    return WebhookSchema.safeParse(object).success;
+};
+
 export const chargeTemplate = `
 Extract the following details to create a Coinbase charge:
 - **price** (number): The amount for the charge (e.g., 100.00).
@@ -98,6 +115,30 @@ Provide the details in the following JSON format:
     "amount": <amount>,
     "sourceAsset": "<source_asset_id>",
     "targetAsset": "<target_asset_id>"
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const webhookTemplate = `
+Extract the following details for creating a webhook:
+- **networkId** (string): The network ID for which the webhook is created.
+- **notificationUri** (string): The URI where notifications should be sent.
+- **eventType** (string): The type of event for the webhook.
+- **eventTypeFilter** (string, optional): Filter for wallet activity event type.
+- **eventFilters** (array, optional): Filters applied to the events that determine which specific events trigger the webhook.
+
+Provide the details in the following JSON format:
+
+\`\`\`json
+{
+    "networkId": "<networkId>",
+    "notificationUri": "<notificationUri>",
+    "eventType": "<eventType>",
+    "eventTypeFilter": "<eventTypeFilter>",
+    "eventFilters": ["<eventFilter1>", "<eventFilter2>"]
 }
 \`\`\`
 

@@ -1,5 +1,7 @@
 import { Coinbase } from "@coinbase/coinbase-sdk";
 import { z } from "zod";
+import { CreateWebhookOptions } from "@coinbase/coinbase-sdk/dist/coinbase/types";
+import { WebhookEventType, WebhookWalletActivityFilter, WebhookEventFilter, WebhookEventTypeFilter } from "@coinbase/coinbase-sdk/dist/client";
 
 export const ChargeSchema = z.object({
     id: z.string().nullable(),
@@ -80,4 +82,18 @@ export type TradeTransaction = {
     status: string;
     errorCode: string | null;
     transactionUrl: string | null;
+};
+
+export const WebhookSchema = z.object({
+    networkId: z.string(),
+    notificationUri: z.string().url(),
+    eventType: z.nativeEnum(WebhookEventType),
+    eventTypeFilter:z.custom<WebhookEventTypeFilter>().optional(),
+    eventFilters: z.array(z.custom<WebhookEventFilter>()).optional()
+});
+
+export type WebhookContent = z.infer<typeof WebhookSchema>;
+
+export const isWebhookContent = (object: any): object is WebhookContent => {
+    return WebhookSchema.safeParse(object).success;
 };
