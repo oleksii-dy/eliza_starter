@@ -25,7 +25,7 @@
     },
     "devDependencies": {
         "automd": "0.3.12",
-        "jiti": "2.4.0",
+        "jiti": "2.4.1",
         "unbuild": "2.0.0"
     }
 }
