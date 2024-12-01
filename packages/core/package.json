@@ -23,7 +23,7 @@
         "@rollup/plugin-json": "6.1.0",
         "@rollup/plugin-node-resolve": "15.3.0",
         "@rollup/plugin-replace": "5.0.7",
-        "@rollup/plugin-terser": "0.1.0",
+        "@rollup/plugin-terser": "0.4.4",
         "@rollup/plugin-typescript": "11.1.6",
         "@solana/web3.js": "1.95.5",
         "@types/fluent-ffmpeg": "2.1.27",
