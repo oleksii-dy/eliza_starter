@@ -16,9 +16,16 @@ import { WebhookSchema, isWebhookContent, WebhookContent } from "../types";
 import { webhookTemplate } from "../templates";
 
 const webhookProvider: Provider = {
-    get: async (_runtime: IAgentRuntime, _message: Memory) => {
+    get: async (runtime: IAgentRuntime, _message: Memory) => {
         try {
-            Coinbase.configureFromJson({ filePath: "~/Downloads/cdp_api_key.json" });
+            Coinbase.configure({
+                apiKeyName:
+                    runtime.getSetting("COINBASE_API_KEY") ??
+                    process.env.COINBASE_API_KEY,
+                privateKey:
+                    runtime.getSetting("COINBASE_PRIVATE_KEY") ??
+                    process.env.COINBASE_PRIVATE_KEY,
+            });
 
             // List all webhooks
             const resp = await Webhook.list();
@@ -52,6 +59,10 @@ const createWebhookAction: Action = {
             !!(
                 runtime.character.settings.secrets?.COINBASE_PRIVATE_KEY ||
                 process.env.COINBASE_PRIVATE_KEY
+            ) &&
+            !!(
+                runtime.character.settings.secrets?.COINBASE_NOTIFICATION_URI ||
+                process.env.COINBASE_NOTIFICATION_URI
             )
         );
     },
@@ -65,11 +76,18 @@ const createWebhookAction: Action = {
         elizaLogger.log("Starting CREATE_WEBHOOK handler...");
 
         try {
-            Coinbase.configureFromJson({ filePath: "~/Downloads/cdp_api_key.json" });
+            Coinbase.configure({
+                apiKeyName:
+                    runtime.getSetting("COINBASE_API_KEY") ??
+                    process.env.COINBASE_API_KEY,
+                privateKey:
+                    runtime.getSetting("COINBASE_PRIVATE_KEY") ??
+                    process.env.COINBASE_PRIVATE_KEY,
+            });
 
             const context = composeContext({
                 state,
-                template: webhookTemplate, // Use the new template
+                template: webhookTemplate,
             });
 
             const webhookDetails = await generateObjectV2({
@@ -89,7 +107,18 @@ const createWebhookAction: Action = {
                 return;
             }
 
-            const { networkId, notificationUri, eventType, eventFilters, eventTypeFilter } = webhookDetails.object as WebhookContent;
+            const { networkId, eventType, eventFilters, eventTypeFilter } = webhookDetails.object as WebhookContent;
+            const notificationUri = runtime.getSetting("COINBASE_NOTIFICATION_URI") ?? process.env.COINBASE_NOTIFICATION_URI;
+
+            if (!notificationUri) {
+                callback(
+                    {
+                        text: "Notification URI is not set in the environment variables.",
+                    },
+                    []
+                );
+                return;
+            }
 
             const webhook = await Webhook.create({networkId, notificationUri, eventType, eventTypeFilter, eventFilters});
 
@@ -110,8 +139,24 @@ const createWebhookAction: Action = {
             );
         }
     },
-    similes: [],
-    examples: []
+    similes: ["WEBHOOK", "NOTIFICATION", "EVENT", "TRIGGER", "LISTENER"],
+    examples: [
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Create a webhook on base for address 0x1234567890123456789012345678901234567890 on transfers",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: `Webhook created successfully: Webhook ID: {{webhookId}}, Network ID: {{networkId}}, Notification URI: {{notificationUri}}, Event Type: {{eventType}}`,
+                    action: "CREATE_WEBHOOK",
+                },
+            },
+        ],
+    ]
 };
 
 export const webhookPlugin: Plugin = {

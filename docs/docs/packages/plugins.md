@@ -238,43 +238,6 @@ This plugin enables Eliza to interact with the Coinbase Commerce API to create a
 
 ---
 
-### Coinbase Wallet Management
-
-The plugin automatically handles wallet creation or uses an existing wallet if the required details are provided during the first run.
-
-1. **Wallet Generation on First Run**
-   If no wallet information is provided (`COINBASE_GENERATED_WALLET_HEX_SEED` and `COINBASE_GENERATED_WALLET_ID`), the plugin will:
-
-   - **Generate a new wallet** using the Coinbase SDK.
-   - Automatically **export the wallet details** (`seed` and `walletId`) and securely store them in `runtime.character.settings.secrets` or other configured storage.
-   - Log the wallet’s default address for reference.
-   - If the character file does not exist, the wallet details are saved to a characters/charactername-seed.txt file in the characters directory with a note indicating that the user must manually add these details to settings.secrets or the .env file.
-
-2. **Using an Existing Wallet**
-   If wallet information is available during the first run:
-   - Provide `COINBASE_GENERATED_WALLET_HEX_SEED` and `COINBASE_GENERATED_WALLET_ID` via `runtime.character.settings.secrets` or environment variables.
-   - The plugin will **import the wallet** and use it for processing mass payouts.
-
----
-
-### Coinbase Wallet Management
-
-The plugin automatically handles wallet creation or uses an existing wallet if the required details are provided during the first run.
-
-1. **Wallet Generation on First Run**
-   If no wallet information is provided (`COINBASE_GENERATED_WALLET_HEX_SEED` and `COINBASE_GENERATED_WALLET_ID`), the plugin will:
-
-   - **Generate a new wallet** using the Coinbase SDK.
-   - Automatically **export the wallet details** (`seed` and `walletId`) and securely store them in `runtime.character.settings.secrets` or other configured storage.
-   - Log the wallet’s default address for reference.
-   - If the character file does not exist, the wallet details are saved to a characters/charactername-seed.txt file in the characters directory with a note indicating that the user must manually add these details to settings.secrets or the .env file.
-
-2. **Using an Existing Wallet**
-   If wallet information is available during the first run:
-   - Provide `COINBASE_GENERATED_WALLET_HEX_SEED` and `COINBASE_GENERATED_WALLET_ID` via `runtime.character.settings.secrets` or environment variables.
-   - The plugin will **import the wallet** and use it for processing mass payouts.
-
----
 
 #### 6. Coinbase MassPayments Plugin (`@eliza/plugin-coinbase`)
 
@@ -679,3 +642,75 @@ To contribute a new plugin:
 5. Update the plugin registry
 
 For detailed API documentation and examples, see the [API Reference](/api).
+
+
+#### 8. Coinbase Webhook Plugin (`@eliza/plugin-coinbase-webhook`)
+
+This plugin allows Eliza to manage Coinbase webhooks, enabling real-time updates and actions based on cryptocurrency transactions.
+To test this plugin, you can get a dummy webhook url fro https://webhook.site
+
+**Actions:**
+
+- `CREATE_WEBHOOK`
+  Creates a new webhook using the Coinbase SDK.
+  - **Inputs**:
+    - `networkId` (string): The network ID for which the webhook is created.
+    - `eventType` (string): The type of event to listen for (e.g., `transfer`).
+    - `eventFilters` (object): Additional filters for the event.
+    - `eventTypeFilter` (string): Specific event type filter.
+  - **Outputs**: Logs the webhook creation details.
+  - **Example**:
+    ```json
+    {
+      "networkId": "base",
+      "eventType": "transfer",
+      "eventFilters": {},
+      "eventTypeFilter": "transfer",
+      "notificationUri": "https://webhook.site/your-unique-url"
+    }
+    ```
+
+**Providers:**
+
+- `webhookProvider`
+  Retrieves details of existing webhooks.
+  - **Outputs**: A list of webhook records including the following fields:
+    - `id`: Webhook ID.
+    - `url`: Webhook URL.
+    - `eventType`: Event type the webhook is listening for.
+    - `status`: Current status of the webhook.
+
+**Description:**
+
+The Coinbase Webhook plugin enables Eliza to create and manage webhooks for real-time event handling from Coinbase. This allows for dynamic interactions and updates based on cryptocurrency transactions.
+
+**Example Usage:**
+
+1. **Webhook Creation**
+   An example of using the `CREATE_WEBHOOK` action:
+
+   ```typescript
+   const response = await runtime.triggerAction("CREATE_WEBHOOK", {
+     networkId: "base",
+     eventType: "transfer",
+     eventFilters: {},
+     eventTypeFilter: "transfer",
+     notificationUri: "https://webhook.site/your-unique-url"
+   });
+   console.log("Webhook creation response:", response);
+   ```
+
+2. **Webhook Listing**
+   All webhooks are listed and logged to provide an overview of active webhooks:
+   ```plaintext
+   ID,URL,Event Type,Status
+   1234567890abcdef,https://webhook.site/your-unique-url,transfer,active
+   ```
+
+**Best Practices:**
+
+- **Secure Webhook Secret**: Ensure the Coinbase webhook secret is stored securely in `runtime.character.settings.secrets` or environment variables.
+- **Validation**: Always validate the webhook details to ensure they are correctly specified.
+- **Error Handling**: Monitor logs for any issues in webhook creation or management and implement retry logic as needed.
+
+
