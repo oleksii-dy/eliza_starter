@@ -15,7 +15,7 @@
             "../core/dist"
         ],
         "ext": "js,json",
-        "exec": "node --enable-source-maps dist/index.ts"
+        "exec": "node --enable-source-maps dist/index.js"
     },
     "dependencies": {
         "@ai16z/adapter-postgres": "workspace:*",
