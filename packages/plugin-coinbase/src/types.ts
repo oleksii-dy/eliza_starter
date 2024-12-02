@@ -86,7 +86,6 @@ export type TradeTransaction = {
 
 export const WebhookSchema = z.object({
     networkId: z.string(),
-    notificationUri: z.string().url(),
     eventType: z.nativeEnum(WebhookEventType),
     eventTypeFilter:z.custom<WebhookEventTypeFilter>().optional(),
     eventFilters: z.array(z.custom<WebhookEventFilter>()).optional()

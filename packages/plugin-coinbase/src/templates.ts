@@ -125,7 +125,6 @@ Here are the recent user messages for context:
 export const webhookTemplate = `
 Extract the following details for creating a webhook:
 - **networkId** (string): The network ID for which the webhook is created.
-- **notificationUri** (string): The URI where notifications should be sent.
 - **eventType** (string): The type of event for the webhook.
 - **eventTypeFilter** (string, optional): Filter for wallet activity event type.
 - **eventFilters** (array, optional): Filters applied to the events that determine which specific events trigger the webhook.
@@ -135,7 +134,6 @@ Provide the details in the following JSON format:
 \`\`\`json
 {
     "networkId": "<networkId>",
-    "notificationUri": "<notificationUri>",
     "eventType": "<eventType>",
     "eventTypeFilter": "<eventTypeFilter>",
     "eventFilters": ["<eventFilter1>", "<eventFilter2>"]
