@@ -1,20 +1,3 @@
-import { z } from "zod";
-import { CreateWebhookOptions } from "@coinbase/coinbase-sdk/dist/coinbase/types";
-
-export const WebhookSchema = z.object({
-    networkId: z.string(),
-    notificationUri: z.string().url(),
-    eventType: z.string(),
-    eventTypeFilter: z.string().optional(),
-    eventFilters: z.array(z.string()).optional(),
-});
-
-export type WebhookContent = z.infer<typeof WebhookSchema>;
-
-export const isWebhookContent = (object: any): object is WebhookContent => {
-    return WebhookSchema.safeParse(object).success;
-};
-
 export const chargeTemplate = `
 Extract the following details to create a Coinbase charge:
 - **price** (number): The amount for the charge (e.g., 100.00).
