@@ -1,20 +1,21 @@
 {
     "name": "@ai16z/agent",
     "version": "0.1.4-alpha.3",
-    "main": "src/index.ts",
+    "main": "dist/index.js",
     "type": "module",
     "scripts": {
-        "start": "node --loader ts-node/esm src/index.ts",
-        "dev": "node --loader ts-node/esm src/index.ts",
+        "start": "node dist/index.js",
+        "dev": "tsup --format esm --dts --watch src/index.ts",
+        "build": "tsup --format esm --dts src/index.ts",
         "check-types": "tsc --noEmit"
     },
     "nodemonConfig": {
         "watch": [
-            "src",
+            "dist",
             "../core/dist"
         ],
-        "ext": "ts,json",
-        "exec": "node --enable-source-maps --loader ts-node/esm src/index.ts"
+        "ext": "js,json",
+        "exec": "node --enable-source-maps dist/index.js"
     },
     "dependencies": {
         "@ai16z/adapter-postgres": "workspace:*",

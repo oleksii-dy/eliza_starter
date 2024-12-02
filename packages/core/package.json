@@ -9,7 +9,7 @@
         "build": "tsup --format esm --dts",
         "lint": "eslint . --fix",
         "watch": "tsc --watch",
-        "dev": "tsup --format esm --dts --watch",
+        "dev": "tsup --format esm --dts --watch src/index.ts",
         "build:docs": "cd docs && pnpm run build",
         "test": "vitest run",
         "test:coverage": "vitest run --coverage",
