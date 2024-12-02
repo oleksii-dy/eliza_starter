@@ -5,7 +5,7 @@
     "type": "module",
     "types": "dist/index.d.ts",
     "dependencies": {
-        "coinbase-api": "1.0.5",
+        "@coinbase/coinbase-sdk": "^0.10.0",
         "@ai16z/eliza": "workspace:*"
     },
     "devDependencies": {
