@@ -34,7 +34,8 @@ export const initializeRepositoryAction: Action = {
         });
 
         if (!isInitializeContent(details.object)) {
-            throw new Error("Invalid initialize content");
+            elizaLogger.error("Invalid content:", details.object);
+            throw new Error("Invalid content");
         }
 
         const content = details.object as InitializeContent;
@@ -52,11 +53,11 @@ export const initializeRepositoryAction: Action = {
             );
             await checkoutBranch(repoPath, content.branch);
 
-            elizaLogger.info("Repository initialized successfully!");
+            elizaLogger.info("Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo}");
 
             callback(
                 {
-                    text: "Repository initialized successfully!",
+                    text: `Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo}`,
                     attachments: [],
                 }
             );
@@ -81,7 +82,7 @@ export const initializeRepositoryAction: Action = {
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Repository initialized successfully!",
+                    text: "Repository initialized successfully! URL: https://github.com/user1/repo1",
                     action: "INITIALIZE_REPOSITORY",
                 },
             },

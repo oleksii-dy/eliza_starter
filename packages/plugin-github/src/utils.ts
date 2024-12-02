@@ -58,16 +58,23 @@ export async function writeFiles(repoPath: string, files: Array<{ path: string; 
     }
 }
 
+interface CommitAndPushChangesResponse {
+    hash: string;
+}
+
 export async function commitAndPushChanges(repoPath: string, message: string, branch?: string) {
     try {
         const git = simpleGit(repoPath);
         await git.add(".");
-        await git.commit(message);
+        const commit = await git.commit(message);
         if (branch) {
             await git.push("origin", branch);
         } else {
             await git.push();
         }
+        return {
+            hash: commit.commit,
+        } as CommitAndPushChangesResponse;
     } catch (error) {
         elizaLogger.error("Error committing and pushing changes:", error);
         throw new Error(`Error committing and pushing changes: ${error}`);
@@ -95,6 +102,10 @@ export async function checkoutBranch(repoPath: string, branch?: string, create: 
     }
 }
 
+interface CreatePullRequestResponse {
+    url: string;
+}
+
 export async function createPullRequest(token: string, owner: string, repo: string, branch: string, title: string, description?: string, base?: string) {
     try {
         const octokit = new Octokit({
@@ -110,7 +121,9 @@ export async function createPullRequest(token: string, owner: string, repo: stri
             base: base || "main",
         });
 
-        return pr.data;
+        return {
+            url: pr.data.html_url,
+        } as CreatePullRequestResponse;
     } catch (error) {
         elizaLogger.error("Error creating pull request:", error);
         throw new Error(`Error creating pull request: ${error}`);

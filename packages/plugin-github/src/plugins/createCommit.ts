@@ -35,6 +35,7 @@ export const createCommitAction: Action = {
         });
 
         if (!isCreateCommitContent(details.object)) {
+            elizaLogger.error("Invalid content:", details.object);
             throw new Error("Invalid content");
         }
 
@@ -46,13 +47,13 @@ export const createCommitAction: Action = {
 
         try {
             await writeFiles(repoPath, content.files);
-            await commitAndPushChanges(repoPath, content.message);
+            const { hash } = await commitAndPushChanges(repoPath, content.message);
 
-            elizaLogger.info("Commited changes to the repository successfully!");
+            elizaLogger.info(`Commited changes to the repository successfully! commit hash: ${hash}`);
 
             callback(
                 {
-                    text: "Changes commited successfully!",
+                    text: `Changes commited successfully! commit hash: ${hash}`,
                     attachments: [],
                 }
             );
@@ -77,7 +78,7 @@ export const createCommitAction: Action = {
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Changes commited successfully!",
+                    text: "Changes commited successfully! commit hash: 7eded72",
                     action: "CREATE_COMMIT",
                 },
             },

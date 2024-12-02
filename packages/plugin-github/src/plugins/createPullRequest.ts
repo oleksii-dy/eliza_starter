@@ -34,6 +34,7 @@ export const createPullRequestAction: Action = {
         });
 
         if (!isCreatePullRequestContent(details.object)) {
+            elizaLogger.error("Invalid content:", details.object);
             throw new Error("Invalid content");
         }
 
@@ -47,7 +48,7 @@ export const createPullRequestAction: Action = {
             await checkoutBranch(repoPath, content.branch, true);
             await writeFiles(repoPath, content.files);
             await commitAndPushChanges(repoPath, content.title, content.branch);
-            await createPullRequest(
+            const { url } = await createPullRequest(
                 runtime.getSetting("GITHUB_API_TOKEN"),
                 content.owner,
                 content.repo,
@@ -57,11 +58,11 @@ export const createPullRequestAction: Action = {
                 content.base,
             );
 
-            elizaLogger.info("Pull request created successfully!");
+            elizaLogger.info(`Pull request created successfully! URL: ${url}`);
 
             callback(
                 {
-                    text: "Pull request created successfully!",
+                    text: `Pull request created successfully! URL: ${url}`,
                     attachments: [],
                 }
             );
@@ -86,7 +87,7 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Pull request created successfully!",
+                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/1",
                     action: "INITIALIZE_REPOSITORY",
                 },
             },
