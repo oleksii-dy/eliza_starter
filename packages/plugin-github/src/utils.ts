@@ -51,6 +51,12 @@ export async function cloneOrPullRepository(owner: string, repo: string, repoPat
 
 export async function writeFiles(repoPath: string, files: Array<{ path: string; content: string }>) {
     try {
+        // check if the local repo exists
+        if (!existsSync(repoPath)) {
+            elizaLogger.error(`Repository ${repoPath} does not exist locally. Please initialize the repository first.`);
+            throw new Error(`Repository ${repoPath} does not exist locally. Please initialize the repository first.`);
+        }
+
         for (const file of files) {
             const filePath = path.join(repoPath, file.path);
             await fs.mkdir(path.dirname(filePath), { recursive: true });

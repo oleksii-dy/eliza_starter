@@ -78,7 +78,7 @@ export const initializeRepositoryAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Initialize the repository for owner user1 and repository repo1 on main branch",
+                    text: "Initialize the repository user1/repo1 on main branch",
                 }
             },
             {

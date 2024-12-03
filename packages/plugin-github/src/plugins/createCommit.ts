@@ -72,7 +72,17 @@ export const createCommitAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Commit changes to the repository for user1/repo1",
+                    text: "Create a new commit in the repository user1/repo1 with the commit message: 'Add new feature'",
+                    // attachments: [
+                    //     {
+                    //         id: "file1",
+                    //         text: "File 1",
+                    //         url: "/file1",
+                    //         description: "File 1 description",
+                    //         source: "/file1",
+                    //         title: "File 1",
+                    //     },
+                    // ],
                 }
             },
             {

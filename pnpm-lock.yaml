@@ -153,6 +153,9 @@ importers:
       '@ai16z/plugin-evm':
         specifier: workspace:*
         version: link:../packages/plugin-evm
+      '@ai16z/plugin-github':
+        specifier: workspace:*
+        version: link:../packages/plugin-github
       '@ai16z/plugin-goat':
         specifier: workspace:*
         version: link:../packages/plugin-goat
