@@ -8,7 +8,7 @@ export const plugins = {
     githubCreateMemorizeFromFilesPlugin,
     githubCreatePullRequestPlugin,
     githubCreateCommitPlugin,
-}
+};
 
 export * from "./plugins/initializeRepository";
 export * from "./plugins/createMemoriesFromFiles";

@@ -12,7 +12,9 @@ export interface InitializeContent {
     branch: string;
 }
 
-export const isInitializeContent = (object: any): object is InitializeContent => {
+export const isInitializeContent = (
+    object: any
+): object is InitializeContent => {
     if (InitializeSchema.safeParse(object).success) {
         return true;
     }
@@ -32,7 +34,9 @@ export interface CreateMemoriesFromFilesContent {
     path: string;
 }
 
-export const isCreateMemoriesFromFilesContent = (object: any): object is CreateMemoriesFromFilesContent => {
+export const isCreateMemoriesFromFilesContent = (
+    object: any
+): object is CreateMemoriesFromFilesContent => {
     if (CreateMemoriesFromFilesSchema.safeParse(object).success) {
         return true;
     }
@@ -60,7 +64,9 @@ export interface CreatePullRequestContent {
     files: Array<{ path: string; content: string }>;
 }
 
-export const isCreatePullRequestContent = (object: any): object is CreatePullRequestContent => {
+export const isCreatePullRequestContent = (
+    object: any
+): object is CreatePullRequestContent => {
     if (CreatePullRequestSchema.safeParse(object).success) {
         return true;
     }
@@ -82,7 +88,9 @@ export interface CreateCommitContent {
     files: Array<{ path: string; content: string }>;
 }
 
-export const isCreateCommitContent = (object: any): object is CreateCommitContent => {
+export const isCreateCommitContent = (
+    object: any
+): object is CreateCommitContent => {
     if (CreateCommitSchema.safeParse(object).success) {
         return true;
     }

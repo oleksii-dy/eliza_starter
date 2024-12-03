@@ -1,11 +1,41 @@
-import { composeContext, elizaLogger, generateObjectV2, Action, HandlerCallback, IAgentRuntime, Memory, ModelClass, Plugin, State } from "@ai16z/eliza";
+import {
+    composeContext,
+    elizaLogger,
+    generateObjectV2,
+    Action,
+    HandlerCallback,
+    IAgentRuntime,
+    Memory,
+    ModelClass,
+    Plugin,
+    State,
+} from "@ai16z/eliza";
 import { initializeTemplate } from "../templates";
-import { InitializeContent, InitializeSchema, isInitializeContent } from "../types";
-import { checkoutBranch, cloneOrPullRepository, createReposDirectory, getRepoPath } from "../utils";
+import {
+    InitializeContent,
+    InitializeSchema,
+    isInitializeContent,
+} from "../types";
+import {
+    checkoutBranch,
+    cloneOrPullRepository,
+    createReposDirectory,
+    getRepoPath,
+} from "../utils";
 
 export const initializeRepositoryAction: Action = {
     name: "INITIALIZE_REPOSITORY",
-    similes: ["INITIALIZE_REPO", "INIT_REPO"],
+    similes: [
+        "INITIALIZE_REPOSITORY",
+        "INITIALIZE_REPO",
+        "INIT_REPO",
+        "GITHUB_INITIALIZE_REPOSITORY",
+        "GITHUB_INIT_REPO",
+        "GITHUB_INIT",
+        "GITHUB_INITIALIZE",
+        "GITHUB_INITIALIZE_REPO",
+        "GITHUB_INIT_REPOSITORY",
+    ],
     description: "Initialize the repository",
     validate: async (runtime: IAgentRuntime) => {
         // Check if all required environment variables are set
@@ -13,7 +43,13 @@ export const initializeRepositoryAction: Action = {
 
         return token;
     },
-    handler: async (runtime: IAgentRuntime, message: Memory, state: State, options: any, callback: HandlerCallback) => {
+    handler: async (
+        runtime: IAgentRuntime,
+        message: Memory,
+        state: State,
+        options: any,
+        callback: HandlerCallback
+    ) => {
         elizaLogger.log("Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
@@ -48,29 +84,28 @@ export const initializeRepositoryAction: Action = {
 
         try {
             await createReposDirectory(content.owner);
-            await cloneOrPullRepository(
-                content.owner,
-                content.repo,
-                repoPath,
-            );
+            await cloneOrPullRepository(content.owner, content.repo, repoPath);
             await checkoutBranch(repoPath, content.branch);
 
-            elizaLogger.info(`Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo}`);
-
-            callback(
-                {
-                    text: `Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo}`,
-                    attachments: [],
-                }
+            elizaLogger.info(
+                `Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo}`
             );
+
+            callback({
+                text: `Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo}`,
+                attachments: [],
+            });
         } catch (error) {
-            elizaLogger.error(`Error initializing repository ${content.owner}/${content.repo} branch ${content.branch}:`, error);
+            elizaLogger.error(
+                `Error initializing repository ${content.owner}/${content.repo} branch ${content.branch}:`,
+                error
+            );
             callback(
                 {
                     text: `Error initializing repository ${content.owner}/${content.repo} branch ${content.branch}. Please try again.`,
                 },
-                [],
-            )
+                []
+            );
         }
     },
     examples: [
@@ -79,13 +114,133 @@ export const initializeRepositoryAction: Action = {
                 user: "{{user1}}",
                 content: {
                     text: "Initialize the repository user1/repo1 on main branch",
-                }
+                },
             },
             {
                 user: "{{agentName}}",
                 content: {
                     text: "Repository initialized successfully! URL: https://github.com/user1/repo1",
                     action: "INITIALIZE_REPOSITORY",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Initialize the repo user1/repo1 on main branch",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Repository initialized successfully! URL: https://github.com/user1/repo1",
+                    action: "INITIALIZE_REPO",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Init repo user1/repo1 on main branch",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Repository initialized successfully! URL: https://github.com/user1/repo1",
+                    action: "INIT_REPO",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "GitHub initialize repository user1/repo1 on main branch",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Repository initialized successfully! URL: https://github.com/user1/repo1",
+                    action: "GITHUB_INITIALIZE_REPOSITORY",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "GitHub init repo user1/repo1 on main branch",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Repository initialized successfully! URL: https://github.com/user1/repo1",
+                    action: "GITHUB_INIT_REPO",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "GitHub init user1/repo1 on main branch",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Repository initialized successfully! URL: https://github.com/user1/repo1",
+                    action: "GITHUB_INIT",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "GitHub initialize user1/repo1 on main branch",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Repository initialized successfully! URL: https://github.com/user1/repo1",
+                    action: "GITHUB_INITIALIZE",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "GitHub initialize repo user1/repo1 on main branch",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Repository initialized successfully! URL: https://github.com/user1/repo1",
+                    action: "GITHUB_INITIALIZE_REPO",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "GitHub init repository user1/repo1 on main branch",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Repository initialized successfully! URL: https://github.com/user1/repo1",
+                    action: "GITHUB_INIT_REPOSITORY",
                 },
             },
         ],

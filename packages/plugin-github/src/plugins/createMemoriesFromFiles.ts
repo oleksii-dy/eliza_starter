@@ -1,18 +1,38 @@
 import path from "path";
 import fs from "fs/promises";
 import { createHash } from "crypto";
-import { composeContext, elizaLogger, generateObjectV2, stringToUuid, Action, HandlerCallback, IAgentRuntime, Memory, ModelClass, Plugin, State } from "@ai16z/eliza";
+import {
+    composeContext,
+    elizaLogger,
+    generateObjectV2,
+    stringToUuid,
+    Action,
+    HandlerCallback,
+    IAgentRuntime,
+    Memory,
+    ModelClass,
+    Plugin,
+    State,
+} from "@ai16z/eliza";
 import { createMemoriesFromFilesTemplate } from "../templates";
-import { CreateMemoriesFromFilesContent, CreateMemoriesFromFilesSchema, isCreateMemoriesFromFilesContent } from "../types";
+import {
+    CreateMemoriesFromFilesContent,
+    CreateMemoriesFromFilesSchema,
+    isCreateMemoriesFromFilesContent,
+} from "../types";
 import { getRepoPath, retrieveFiles } from "../utils";
 
-export async function addFilesToMemory(runtime: IAgentRuntime, files: string[], repoPath: string, owner: string, repo: string) {
+export async function addFilesToMemory(
+    runtime: IAgentRuntime,
+    files: string[],
+    repoPath: string,
+    owner: string,
+    repo: string
+) {
     for (const file of files) {
         const relativePath = path.relative(repoPath, file);
         const content = await fs.readFile(file, "utf-8");
-        const contentHash = createHash("sha256")
-            .update(content)
-            .digest("hex");
+        const contentHash = createHash("sha256").update(content).digest("hex");
         const memoryId = stringToUuid(
             `github-${owner}-${repo}-${relativePath}`
         );
@@ -56,7 +76,18 @@ export async function addFilesToMemory(runtime: IAgentRuntime, files: string[], 
 
 export const createMemoriesFromFilesAction: Action = {
     name: "CREATE_MEMORIES_FROM_FILES",
-    similes: ["CREATE_MEMORIES", "CREATE_MEMORIES_FROM_FILE"],
+    similes: [
+        "CREATE_MEMORIES_FROM_FILES",
+        "CREATE_MEMORIES",
+        "CREATE_MEMORIES_FROM_FILE",
+        "MEMORIES_FROM_FILES",
+        "MEMORIES_FROM_FILE",
+        "GITHUB_CREATE_MEMORIES_FROM_FILES",
+        "GITHUB_CREATE_MEMORIES",
+        "GITHUB_CREATE_MEMORIES_FROM_FILE",
+        "GITHUB_MEMORIES_FROM_FILES",
+        "GITHUB_MEMORIES_FROM_FILE",
+    ],
     description: "Create memories from files in the repository",
     validate: async (runtime: IAgentRuntime) => {
         // Check if all required environment variables are set
@@ -64,7 +95,13 @@ export const createMemoriesFromFilesAction: Action = {
 
         return token;
     },
-    handler: async (runtime: IAgentRuntime, message: Memory, state: State, options: any, callback: HandlerCallback) => {
+    handler: async (
+        runtime: IAgentRuntime,
+        message: Memory,
+        state: State,
+        options: any,
+        callback: HandlerCallback
+    ) => {
         elizaLogger.log("Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
@@ -102,24 +139,25 @@ export const createMemoriesFromFilesAction: Action = {
                 files,
                 repoPath,
                 content.owner,
-                content.repo,
+                content.repo
             );
 
             elizaLogger.info("Memories created successfully!");
 
-            callback(
-                {
-                    text: "Memories created successfully!",
-                    attachments: [],
-                }
-            );
+            callback({
+                text: "Memories created successfully!",
+                attachments: [],
+            });
         } catch (error) {
-            elizaLogger.error(`Error creating memories from files on ${content.owner}/${content.repo} path ${content.path}:`, error);
+            elizaLogger.error(
+                `Error creating memories from files on ${content.owner}/${content.repo} path ${content.path}:`,
+                error
+            );
             callback(
                 {
                     text: `Error creating memories from files on ${content.owner}/${content.repo} path ${content.path}. Please try again.`,
                 },
-                [],
+                []
             );
         }
     },
@@ -128,14 +166,149 @@ export const createMemoriesFromFilesAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Create memories from files on repository octocat/hello-world at path docs/",
-                }
+                    text: "Create memories from files on repository octocat/hello-world at path 'docs/'",
+                },
             },
             {
                 user: "{{agentName}}",
                 content: {
                     text: "Memories created successfully!",
                     action: "CREATE_MEMORIES_FROM_FILES",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Create memories from repository octocat/hello-world",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Memories created successfully!",
+                    action: "CREATE_MEMORIES",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Create memories from file in repository octocat/hello-world",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Memories created successfully!",
+                    action: "CREATE_MEMORIES_FROM_FILE",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Memories from files in repository octocat/hello-world",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Memories created successfully!",
+                    action: "MEMORIES_FROM_FILES",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Memories from file in repository octocat/hello-world",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Memories created successfully!",
+                    action: "MEMORIES_FROM_FILE",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "GitHub create memories from files in repository octocat/hello-world",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Memories created successfully!",
+                    action: "GITHUB_CREATE_MEMORIES_FROM_FILES",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "GitHub create memories in repository octocat/hello-world",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Memories created successfully!",
+                    action: "GITHUB_CREATE_MEMORIES",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "GitHub create memories from file in repository octocat/hello-world",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Memories created successfully!",
+                    action: "GITHUB_CREATE_MEMORIES_FROM_FILE",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "GitHub memories from files in repository octocat/hello-world",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Memories created successfully!",
+                    action: "GITHUB_MEMORIES_FROM_FILES",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "GitHub memories from file in repository octocat/hello-world",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Memories created successfully!",
+                    action: "GITHUB_MEMORIES_FROM_FILE",
                 },
             },
         ],

@@ -7,12 +7,7 @@ import { Octokit } from "@octokit/rest";
 import { elizaLogger } from "@ai16z/eliza";
 
 export function getRepoPath(owner: string, repo: string) {
-    return path.join(
-        process.cwd(),
-        ".repos",
-        owner,
-        repo,
-    );
+    return path.join(process.cwd(), ".repos", owner, repo);
 }
 
 export async function createReposDirectory(owner: string) {
@@ -27,7 +22,11 @@ export async function createReposDirectory(owner: string) {
     }
 }
 
-export async function cloneOrPullRepository(owner: string, repo: string, repoPath: string) {
+export async function cloneOrPullRepository(
+    owner: string,
+    repo: string,
+    repoPath: string
+) {
     try {
         elizaLogger.info(`Cloning or pulling repository ${owner}/${repo}...`);
         elizaLogger.info(`URL: https://github.com/${owner}/${repo}.git`);
@@ -44,17 +43,27 @@ export async function cloneOrPullRepository(owner: string, repo: string, repoPat
             await git.pull();
         }
     } catch (error) {
-        elizaLogger.error(`Error cloning or pulling repository ${owner}/${repo}:`, error);
+        elizaLogger.error(
+            `Error cloning or pulling repository ${owner}/${repo}:`,
+            error
+        );
         throw new Error(`Error cloning or pulling repository: ${error}`);
     }
 }
 
-export async function writeFiles(repoPath: string, files: Array<{ path: string; content: string }>) {
+export async function writeFiles(
+    repoPath: string,
+    files: Array<{ path: string; content: string }>
+) {
     try {
         // check if the local repo exists
         if (!existsSync(repoPath)) {
-            elizaLogger.error(`Repository ${repoPath} does not exist locally. Please initialize the repository first.`);
-            throw new Error(`Repository ${repoPath} does not exist locally. Please initialize the repository first.`);
+            elizaLogger.error(
+                `Repository ${repoPath} does not exist locally. Please initialize the repository first.`
+            );
+            throw new Error(
+                `Repository ${repoPath} does not exist locally. Please initialize the repository first.`
+            );
         }
 
         for (const file of files) {
@@ -72,7 +81,11 @@ interface CommitAndPushChangesResponse {
     hash: string;
 }
 
-export async function commitAndPushChanges(repoPath: string, message: string, branch?: string) {
+export async function commitAndPushChanges(
+    repoPath: string,
+    message: string,
+    branch?: string
+) {
     try {
         const git = simpleGit(repoPath);
         await git.add(".");
@@ -91,7 +104,11 @@ export async function commitAndPushChanges(repoPath: string, message: string, br
     }
 }
 
-export async function checkoutBranch(repoPath: string, branch?: string, create: boolean = false) {
+export async function checkoutBranch(
+    repoPath: string,
+    branch?: string,
+    create: boolean = false
+) {
     if (!branch) {
         return;
     }
@@ -116,7 +133,15 @@ interface CreatePullRequestResponse {
     url: string;
 }
 
-export async function createPullRequest(token: string, owner: string, repo: string, branch: string, title: string, description?: string, base?: string) {
+export async function createPullRequest(
+    token: string,
+    owner: string,
+    repo: string,
+    branch: string,
+    title: string,
+    description?: string,
+    base?: string
+) {
     try {
         const octokit = new Octokit({
             auth: token,
@@ -147,5 +172,5 @@ export async function retrieveFiles(repoPath: string, gitPath: string) {
 
     const files = await glob(searchPath, { nodir: true });
 
-    return files
+    return files;
 }
