@@ -495,7 +495,9 @@ const startAgents = async () => {
     }
 
     elizaLogger.log("Chat started. Type 'exit' to quit.");
-    chat();
+    if (!args["non-interactive"]) {
+        chat();
+    }
 };
 
 startAgents().catch((error) => {
