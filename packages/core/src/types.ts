@@ -649,6 +649,7 @@ export type Character = {
         discordVoiceHandlerTemplate?: string;
         discordShouldRespondTemplate?: string;
         discordMessageHandlerTemplate?: string;
+        devaPostTemplate?: string;
     };
 
     /** Character biography */
