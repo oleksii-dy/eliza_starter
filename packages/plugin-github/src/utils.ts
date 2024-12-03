@@ -29,9 +29,13 @@ export async function createReposDirectory(owner: string) {
 
 export async function cloneOrPullRepository(owner: string, repo: string, repoPath: string) {
     try {
+        elizaLogger.info(`Cloning or pulling repository ${owner}/${repo}...`);
+        elizaLogger.info(`URL: https://github.com/${owner}/${repo}.git`);
+
         // Clone or pull repository
         if (!existsSync(repoPath)) {
-            await this.git.clone(
+            const git = simpleGit();
+            await git.clone(
                 `https://github.com/${owner}/${repo}.git`,
                 repoPath
             );

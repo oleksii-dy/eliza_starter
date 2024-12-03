@@ -44,6 +44,8 @@ export const initializeRepositoryAction: Action = {
 
         const repoPath = getRepoPath(content.owner, content.repo);
 
+        elizaLogger.info(`Repository path: ${repoPath}`);
+
         try {
             await createReposDirectory(content.owner);
             await cloneOrPullRepository(
@@ -53,7 +55,7 @@ export const initializeRepositoryAction: Action = {
             );
             await checkoutBranch(repoPath, content.branch);
 
-            elizaLogger.info("Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo}");
+            elizaLogger.info(`Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo}`);
 
             callback(
                 {
