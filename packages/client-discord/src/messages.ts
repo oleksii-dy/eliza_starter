@@ -583,7 +583,8 @@ export class MessageManager {
         const response = await generateShouldRespond({
             runtime: this.runtime,
             context: shouldRespondContext,
-            modelClass: ModelClass.SMALL,
+            modelClass:
+                this.runtime.character.settings?.model || ModelClass.SMALL,
         });
 
         if (response === "RESPOND") {
@@ -612,7 +613,8 @@ export class MessageManager {
         const response = await generateMessageResponse({
             runtime: this.runtime,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass:
+                this.runtime.character.settings?.model || ModelClass.SMALL,
         });
 
         if (!response) {

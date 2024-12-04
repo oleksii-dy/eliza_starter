@@ -168,7 +168,8 @@ export class FarcasterInteractionManager {
         const shouldRespond = await generateShouldRespond({
             runtime: this.runtime,
             context: shouldRespondContext,
-            modelClass: ModelClass.SMALL,
+            modelClass:
+                this.runtime.character.settings?.model || ModelClass.SMALL,
         });
 
         if (!shouldRespond) {
@@ -188,7 +189,8 @@ export class FarcasterInteractionManager {
         const response = await generateMessageResponse({
             runtime: this.runtime,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass:
+                this.runtime.character.settings?.model || ModelClass.SMALL,
         });
 
         response.inReplyTo = memoryId;
