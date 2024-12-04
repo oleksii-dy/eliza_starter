@@ -57,6 +57,8 @@ export const twitterShouldRespondTemplate =
 
 Response options are RESPOND, IGNORE and STOP .
 
+If the (@{{twitterUserName}}) is @jlwhoo7 in the message, {{agentName}} should respond, regardless of the content of the message.
+
 {{agentName}} should respond to messages that are directed at them, or participate in conversations that are interesting or relevant to their background, IGNORE messages that are irrelevant to them, and should STOP if the conversation is concluded.
 
 {{agentName}} is in a room with other users and wants to be conversational, but not annoying.
@@ -78,6 +80,37 @@ Thread of Tweets You Are Replying To:
 
 # INSTRUCTIONS: Respond with [RESPOND] if {{agentName}} should respond, or [IGNORE] if {{agentName}} should not respond to the last message and [STOP] if {{agentName}} should stop participating in the conversation.
 ` + shouldRespondFooter;
+
+
+export const TwitterShouldResponseReasoning = `
+# Response Reasoning for {{agentName}} (@{{twitterUserName}})
+
+Current decision: [{{decision}}]
+
+Reasoning based on the following criteria:
+
+RESPOND if:
+- The message directly mentions or addresses {{agentName}}
+- The topic aligns with {{agentName}}'s expertise or background
+- The conversation is relevant and engaging
+- There's meaningful content to respond to
+
+IGNORE if:
+- The message is not directed at {{agentName}}
+- The topic is outside {{agentName}}'s expertise
+- The message is too short or lacks substance
+- {{agentName}}'s input wouldn't add value
+- There's uncertainty about whether to engage (err on the side of caution)
+
+STOP if:
+- The conversation has reached a natural conclusion
+- A user has requested {{agentName}} to stop participating
+- {{agentName}} has already made their point
+- The conversation has moved to topics outside {{agentName}}'s scope
+
+Based on the current context:
+{{reasoningExplanation}}
+`
 
 export class TwitterInteractionClient {
     client: ClientBase;
@@ -279,27 +312,6 @@ export class TwitterInteractionClient {
             this.client.saveRequestMessage(message, state);
         }
 
-        const shouldRespondContext = composeContext({
-            state,
-            template:
-                this.runtime.character.templates
-                    ?.twitterShouldRespondTemplate ||
-                this.runtime.character?.templates?.shouldRespondTemplate ||
-                twitterShouldRespondTemplate,
-        });
-
-        const shouldRespond = await generateShouldRespond({
-            runtime: this.runtime,
-            context: shouldRespondContext,
-            modelClass: ModelClass.MEDIUM,
-        });
-
-        // Promise<"RESPOND" | "IGNORE" | "STOP" | null> {
-        if (shouldRespond !== "RESPOND") {
-            elizaLogger.log("Not responding to message");
-            return { text: "Response Decision:", action: shouldRespond };
-        }
-
         const context = composeContext({
             state,
             template:
@@ -314,7 +326,7 @@ export class TwitterInteractionClient {
         const response = await generateMessageResponse({
             runtime: this.runtime,
             context,
-            modelClass: ModelClass.MEDIUM,
+            modelClass: ModelClass.SMALL,
         });
 
         const removeQuotes = (str: string) =>
