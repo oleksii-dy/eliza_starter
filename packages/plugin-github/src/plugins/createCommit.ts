@@ -195,7 +195,7 @@ export const createCommitAction: Action = {
 };
 
 export const githubCreateCommitPlugin: Plugin = {
-    name: "githubCreateCommitPlugin",
+    name: "githubCreateCommit",
     description:
         "Integration with GitHub for commiting changes to the repository",
     actions: [createCommitAction],
