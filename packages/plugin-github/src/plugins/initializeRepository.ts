@@ -22,6 +22,7 @@ import {
     createReposDirectory,
     getRepoPath,
 } from "../utils";
+import { sourceCodeProvider } from '../providers/sourceCode';
 
 export const initializeRepositoryAction: Action = {
     name: "INITIALIZE_REPOSITORY",
@@ -252,5 +253,5 @@ export const githubInitializePlugin: Plugin = {
     description: "Integration with GitHub for initializing the repository",
     actions: [initializeRepositoryAction],
     evaluators: [],
-    providers: [],
+    providers: [sourceCodeProvider],
 };

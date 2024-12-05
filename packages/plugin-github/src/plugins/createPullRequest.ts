@@ -23,6 +23,7 @@ import {
     getRepoPath,
     writeFiles,
 } from "../utils";
+import { sourceCodeProvider } from '../providers/sourceCode';
 
 export const createPullRequestAction: Action = {
     name: "CREATE_PULL_REQUEST",
@@ -242,5 +243,5 @@ export const githubCreatePullRequestPlugin: Plugin = {
     description: "Integration with GitHub for creating a pull request",
     actions: [createPullRequestAction],
     evaluators: [],
-    providers: [],
+    providers: [sourceCodeProvider],
 };

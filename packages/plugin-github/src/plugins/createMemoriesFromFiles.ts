@@ -21,6 +21,7 @@ import {
     isCreateMemoriesFromFilesContent,
 } from "../types";
 import { getRepoPath, retrieveFiles } from "../utils";
+import { sourceCodeProvider } from '../providers/sourceCode';
 
 export async function addFilesToMemory(
     runtime: IAgentRuntime,
@@ -320,5 +321,5 @@ export const githubCreateMemorizeFromFilesPlugin: Plugin = {
     description: "Integration with GitHub for creating memories from files",
     actions: [createMemoriesFromFilesAction],
     evaluators: [],
-    providers: [],
+    providers: [sourceCodeProvider],
 };
