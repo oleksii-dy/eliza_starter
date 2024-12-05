@@ -1,16 +1,12 @@
-[@ai16z/eliza v0.1.5-alpha.3](../index.md) / State
+[@ai16z/eliza v0.1.5-alpha.3](../index.md) / TemplateState
 
-# Interface: State
+# Interface: TemplateState
 
 Represents the current state/context of a conversation
 
-## Extended by
+## Extends
 
-- [`TemplateState`](TemplateState.md)
-
-## Indexable
-
- \[`key`: `string`\]: `unknown`
+- [`State`](State.md)
 
 ## Properties
 
@@ -19,6 +15,10 @@ Represents the current state/context of a conversation
 > `optional` **userId**: \`$\{string\}-$\{string\}-$\{string\}-$\{string\}-$\{string\}\`
 
 ID of user who sent current message
+
+#### Inherited from
+
+[`State`](State.md).[`userId`](State.md#userId)
 
 #### Defined in
 
@@ -32,6 +32,10 @@ ID of user who sent current message
 
 ID of agent in conversation
 
+#### Inherited from
+
+[`State`](State.md).[`agentId`](State.md#agentId)
+
 #### Defined in
 
 [packages/core/src/types.ts:243](https://github.com/f58637547/agentf/blob/main/packages/core/src/types.ts#L243)
@@ -43,6 +47,10 @@ ID of agent in conversation
 > **bio**: `string`
 
 Agent's biography
+
+#### Inherited from
+
+[`State`](State.md).[`bio`](State.md#bio)
 
 #### Defined in
 
@@ -56,6 +64,10 @@ Agent's biography
 
 Agent's background lore
 
+#### Inherited from
+
+[`State`](State.md).[`lore`](State.md#lore)
+
 #### Defined in
 
 [packages/core/src/types.ts:249](https://github.com/f58637547/agentf/blob/main/packages/core/src/types.ts#L249)
@@ -67,6 +79,10 @@ Agent's background lore
 > **messageDirections**: `string`
 
 Message handling directions
+
+#### Inherited from
+
+[`State`](State.md).[`messageDirections`](State.md#messageDirections)
 
 #### Defined in
 
@@ -80,6 +96,10 @@ Message handling directions
 
 Post handling directions
 
+#### Inherited from
+
+[`State`](State.md).[`postDirections`](State.md#postDirections)
+
 #### Defined in
 
 [packages/core/src/types.ts:255](https://github.com/f58637547/agentf/blob/main/packages/core/src/types.ts#L255)
@@ -91,6 +111,10 @@ Post handling directions
 > **roomId**: \`$\{string\}-$\{string\}-$\{string\}-$\{string\}-$\{string\}\`
 
 Current room/conversation ID
+
+#### Inherited from
+
+[`State`](State.md).[`roomId`](State.md#roomId)
 
 #### Defined in
 
@@ -104,6 +128,10 @@ Current room/conversation ID
 
 Optional agent name
 
+#### Inherited from
+
+[`State`](State.md).[`agentName`](State.md#agentName)
+
 #### Defined in
 
 [packages/core/src/types.ts:261](https://github.com/f58637547/agentf/blob/main/packages/core/src/types.ts#L261)
@@ -115,6 +143,10 @@ Optional agent name
 > `optional` **senderName**: `string`
 
 Optional message sender name
+
+#### Inherited from
+
+[`State`](State.md).[`senderName`](State.md#senderName)
 
 #### Defined in
 
@@ -128,6 +160,10 @@ Optional message sender name
 
 String representation of conversation actors
 
+#### Inherited from
+
+[`State`](State.md).[`actors`](State.md#actors)
+
 #### Defined in
 
 [packages/core/src/types.ts:267](https://github.com/f58637547/agentf/blob/main/packages/core/src/types.ts#L267)
@@ -139,6 +175,10 @@ String representation of conversation actors
 > `optional` **actorsData**: [`Actor`](Actor.md)[]
 
 Optional array of actor objects
+
+#### Inherited from
+
+[`State`](State.md).[`actorsData`](State.md#actorsData)
 
 #### Defined in
 
@@ -152,6 +192,10 @@ Optional array of actor objects
 
 Optional string representation of goals
 
+#### Inherited from
+
+[`State`](State.md).[`goals`](State.md#goals)
+
 #### Defined in
 
 [packages/core/src/types.ts:273](https://github.com/f58637547/agentf/blob/main/packages/core/src/types.ts#L273)
@@ -163,6 +207,10 @@ Optional string representation of goals
 > `optional` **goalsData**: [`Goal`](Goal.md)[]
 
 Optional array of goal objects
+
+#### Inherited from
+
+[`State`](State.md).[`goalsData`](State.md#goalsData)
 
 #### Defined in
 
@@ -176,6 +224,10 @@ Optional array of goal objects
 
 Recent message history as string
 
+#### Inherited from
+
+[`State`](State.md).[`recentMessages`](State.md#recentMessages)
+
 #### Defined in
 
 [packages/core/src/types.ts:279](https://github.com/f58637547/agentf/blob/main/packages/core/src/types.ts#L279)
@@ -187,6 +239,10 @@ Recent message history as string
 > **recentMessagesData**: [`Memory`](Memory.md)[]
 
 Recent message objects
+
+#### Inherited from
+
+[`State`](State.md).[`recentMessagesData`](State.md#recentMessagesData)
 
 #### Defined in
 
@@ -200,6 +256,10 @@ Recent message objects
 
 Optional valid action names
 
+#### Inherited from
+
+[`State`](State.md).[`actionNames`](State.md#actionNames)
+
 #### Defined in
 
 [packages/core/src/types.ts:285](https://github.com/f58637547/agentf/blob/main/packages/core/src/types.ts#L285)
@@ -211,6 +271,10 @@ Optional valid action names
 > `optional` **actions**: `string`
 
 Optional action descriptions
+
+#### Inherited from
+
+[`State`](State.md).[`actions`](State.md#actions)
 
 #### Defined in
 
@@ -224,6 +288,10 @@ Optional action descriptions
 
 Optional action objects
 
+#### Inherited from
+
+[`State`](State.md).[`actionsData`](State.md#actionsData)
+
 #### Defined in
 
 [packages/core/src/types.ts:291](https://github.com/f58637547/agentf/blob/main/packages/core/src/types.ts#L291)
@@ -235,6 +303,10 @@ Optional action objects
 > `optional` **actionExamples**: `string`
 
 Optional action examples
+
+#### Inherited from
+
+[`State`](State.md).[`actionExamples`](State.md#actionExamples)
 
 #### Defined in
 
@@ -248,6 +320,10 @@ Optional action examples
 
 Optional provider descriptions
 
+#### Inherited from
+
+[`State`](State.md).[`providers`](State.md#providers)
+
 #### Defined in
 
 [packages/core/src/types.ts:297](https://github.com/f58637547/agentf/blob/main/packages/core/src/types.ts#L297)
@@ -259,6 +335,10 @@ Optional provider descriptions
 > `optional` **responseData**: [`Content`](Content.md)
 
 Optional response content
+
+#### Inherited from
+
+[`State`](State.md).[`responseData`](State.md#responseData)
 
 #### Defined in
 
@@ -272,6 +352,10 @@ Optional response content
 
 Optional recent interaction objects
 
+#### Inherited from
+
+[`State`](State.md).[`recentInteractionsData`](State.md#recentInteractionsData)
+
 #### Defined in
 
 [packages/core/src/types.ts:303](https://github.com/f58637547/agentf/blob/main/packages/core/src/types.ts#L303)
@@ -283,6 +367,10 @@ Optional recent interaction objects
 > `optional` **recentInteractions**: `string`
 
 Optional recent interactions string
+
+#### Inherited from
+
+[`State`](State.md).[`recentInteractions`](State.md#recentInteractions)
 
 #### Defined in
 
@@ -296,6 +384,10 @@ Optional recent interactions string
 
 Optional formatted conversation
 
+#### Inherited from
+
+[`State`](State.md).[`formattedConversation`](State.md#formattedConversation)
+
 #### Defined in
 
 [packages/core/src/types.ts:309](https://github.com/f58637547/agentf/blob/main/packages/core/src/types.ts#L309)
@@ -307,6 +399,10 @@ Optional formatted conversation
 > `optional` **knowledge**: `string`
 
 Optional formatted knowledge
+
+#### Inherited from
+
+[`State`](State.md).[`knowledge`](State.md#knowledge)
 
 #### Defined in
 
@@ -320,6 +416,46 @@ Optional formatted knowledge
 
 Optional knowledge data
 
+#### Inherited from
+
+[`State`](State.md).[`knowledgeData`](State.md#knowledgeData)
+
 #### Defined in
 
 [packages/core/src/types.ts:314](https://github.com/f58637547/agentf/blob/main/packages/core/src/types.ts#L314)
+
+***
+
+### traits
+
+> **traits**: `object`
+
+#### active
+
+> **active**: `string`[]
+
+#### enhanced
+
+> **enhanced**: `string`[]
+
+#### evolved
+
+> **evolved**: `string`[]
+
+#### Defined in
+
+[packages/core/src/types.ts:656](https://github.com/f58637547/agentf/blob/main/packages/core/src/types.ts#L656)
+
+***
+
+### mood
+
+> **mood**: `object`
+
+#### type
+
+> **type**: [`MoodType`](../enumerations/MoodType.md)
+
+#### Defined in
+
+[packages/core/src/types.ts:661](https://github.com/f58637547/agentf/blob/main/packages/core/src/types.ts#L661)
