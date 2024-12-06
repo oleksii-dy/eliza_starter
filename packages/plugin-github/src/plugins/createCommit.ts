@@ -17,7 +17,8 @@ import {
     isCreateCommitContent,
 } from "../types";
 import { commitAndPushChanges, getRepoPath, writeFiles } from "../utils";
-import { sourceCodeProvider } from '../providers/sourceCode';
+import { sourceCodeProvider } from "../providers/sourceCode";
+import { testFilesProvider } from "../providers/testFiles";
 
 export const createCommitAction: Action = {
     name: "CREATE_COMMIT",
@@ -198,8 +199,8 @@ export const createCommitAction: Action = {
 export const githubCreateCommitPlugin: Plugin = {
     name: "githubCreateCommit",
     description:
-        "Integration with GitHub for commiting changes to the repository",
+        "Integration with GitHub for committing changes to the repository",
     actions: [createCommitAction],
     evaluators: [],
-    providers: [sourceCodeProvider],
+    providers: [sourceCodeProvider, testFilesProvider],
 };

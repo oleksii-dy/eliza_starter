@@ -127,7 +127,11 @@ export class GitHubService {
 
             if (Array.isArray(response.data)) {
                 return response.data
-                    .filter((file) => file.type === "file")
+                    .filter(
+                        (file) =>
+                            file.type === "file" &&
+                            !file.name.toLowerCase().includes("test")
+                    )
                     .map((file) => file.path);
             }
             return [];
