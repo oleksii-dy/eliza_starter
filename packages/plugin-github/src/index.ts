@@ -14,4 +14,3 @@ export * from "./plugins/initializeRepository";
 export * from "./plugins/createMemoriesFromFiles";
 export * from "./plugins/createPullRequest";
 export * from "./plugins/createCommit";
-export { GitHubService, GitHubConfig } from './github-service';
