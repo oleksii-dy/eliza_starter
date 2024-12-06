@@ -9,6 +9,7 @@ import {
     AgentRuntime,
     CacheManager,
     Character,
+    Clients,
     DbCacheAdapter,
     FsCacheAdapter,
     IAgentRuntime,
@@ -30,12 +31,15 @@ import {
     coinbaseCommercePlugin,
     coinbaseMassPaymentsPlugin,
     tradePlugin,
+    tokenContractPlugin,
+    webhookPlugin,
 } from "@ai16z/plugin-coinbase";
 import { confluxPlugin } from "@ai16z/plugin-conflux";
 import { imageGenerationPlugin } from "@ai16z/plugin-image-generation";
 import { evmPlugin } from "@ai16z/plugin-evm";
 import { createNodePlugin } from "@ai16z/plugin-node";
 import { solanaPlugin } from "@ai16z/plugin-solana";
+import { aptosPlugin, TransferAptosToken } from "@ai16z/plugin-aptos";
 import { teePlugin } from "@ai16z/plugin-tee";
 import {
     githubInitializePlugin,
@@ -394,14 +398,20 @@ export function createAgent(
                 : null,
             ...(getSecret(character, "COINBASE_API_KEY") &&
             getSecret(character, "COINBASE_PRIVATE_KEY")
-                ? [coinbaseMassPaymentsPlugin, tradePlugin]
+                ? [coinbaseMassPaymentsPlugin, tradePlugin, tokenContractPlugin]
                 : []),
+            getSecret(character, "COINBASE_API_KEY") &&
+            getSecret(character, "COINBASE_PRIVATE_KEY") &&
+            getSecret(character, "COINBASE_NOTIFICATION_URI")
+                ? webhookPlugin
+                : null,
             getSecret(character, "WALLET_SECRET_SALT") ? teePlugin : null,
             getSecret(character, "GITHUB_API_TOKEN") ? githubInitializePlugin : null,
             getSecret(character, "GITHUB_API_TOKEN") ? githubCreateCommitPlugin : null,
             getSecret(character, "GITHUB_API_TOKEN") ? githubCreatePullRequestPlugin : null,
             getSecret(character, "GITHUB_API_TOKEN") ? githubCreateMemorizeFromFilesPlugin : null,
             getSecret(character, "ALCHEMY_API_KEY") ? goatPlugin : null,
+            getSecret(character, "APTOS_PRIVATE_KEY") ? aptosPlugin : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
