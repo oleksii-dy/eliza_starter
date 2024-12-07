@@ -376,6 +376,28 @@ export const models: Models = {
             [ModelClass.EMBEDDING]: "doubao-embedding",
         },
     },
+    [ModelProviderName.CHROMINDSCAN]: {
+        endpoint: "https://api.chromindscan.com/v1",
+        settings: {
+            stop: [],
+            maxInputTokens: 128000,
+            maxOutputTokens: 8192,
+            frequency_penalty: 0.4,
+            presence_penalty: 0.4,
+            temperature: 0.7,
+        },
+        model: {
+            [ModelClass.SMALL]:
+                settings.SMALL_CHROMINDSCAN_MODEL ||
+                settings.CHROMINDSCAN_MODEL,
+            [ModelClass.MEDIUM]:
+                settings.MEDIUM_CHROMINDSCAN_MODEL ||
+                settings.CHROMINDSCAN_MODEL,
+            [ModelClass.LARGE]:
+                settings.LARGE_CHROMINDSCAN_MODEL ||
+                settings.CHROMINDSCAN_MODEL,
+        },
+    },
 };
 
 export function getModel(provider: ModelProviderName, type: ModelClass) {
