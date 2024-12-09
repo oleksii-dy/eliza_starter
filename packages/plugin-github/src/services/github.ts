@@ -1,4 +1,5 @@
-import { Octokit } from "@octokit/rest";
+import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
+import { elizaLogger } from "@ai16z/eliza";
 
 interface GitHubConfig {
     owner: string;
@@ -30,7 +31,7 @@ export class GitHubService {
             }
             throw new Error("Unable to get file contents");
         } catch (error) {
-            console.error(`Error getting file contents: ${error}`);
+            elizaLogger.error(`Error getting file contents: ${error}`);
             throw error;
         }
     }
@@ -54,13 +55,15 @@ export class GitHubService {
             }
             return [];
         } catch (error) {
-            console.error(`Error getting test files: ${error}`);
+            elizaLogger.error(`Error getting test files: ${error}`);
             throw error;
         }
     }
 
     // Scenario 4: Get workflow files
-    async getWorkflows(): Promise<any[]> {
+    async getWorkflows(): Promise<
+        RestEndpointMethodTypes["actions"]["listRepoWorkflows"]["response"]["data"]["workflows"]
+    > {
         try {
             const response = await this.octokit.actions.listRepoWorkflows({
                 owner: this.config.owner,
@@ -69,7 +72,7 @@ export class GitHubService {
 
             return response.data.workflows;
         } catch (error) {
-            console.error(`Error getting workflows: ${error}`);
+            elizaLogger.error(`Error getting workflows: ${error}`);
             throw error;
         }
     }
@@ -96,13 +99,15 @@ export class GitHubService {
             }
             return [];
         } catch (error) {
-            console.error(`Error getting documentation: ${error}`);
+            elizaLogger.error(`Error getting documentation: ${error}`);
             throw error;
         }
     }
 
     // Scenario 6: Get releases and changelogs
-    async getReleases(): Promise<any[]> {
+    async getReleases(): Promise<
+        RestEndpointMethodTypes["repos"]["listReleases"]["response"]["data"]
+    > {
         try {
             const response = await this.octokit.repos.listReleases({
                 owner: this.config.owner,
@@ -111,7 +116,7 @@ export class GitHubService {
 
             return response.data;
         } catch (error) {
-            console.error(`Error getting releases: ${error}`);
+            elizaLogger.error(`Error getting releases: ${error}`);
             throw error;
         }
     }
@@ -136,7 +141,7 @@ export class GitHubService {
             }
             return [];
         } catch (error) {
-            console.error(`Error getting source files: ${error}`);
+            elizaLogger.error(`Error getting source files: ${error}`);
             throw error;
         }
     }
