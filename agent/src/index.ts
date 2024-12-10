@@ -6,6 +6,7 @@ import { DiscordClientInterface } from "@ai16z/client-discord";
 import { TelegramClientInterface } from "@ai16z/client-telegram";
 import { TwitterClientInterface } from "@ai16z/client-twitter";
 import { FarcasterAgentClient } from "@ai16z/client-farcaster";
+import { EVMClientInterface } from "@ai16z/client-evm";
 import {
     AgentRuntime,
     CacheManager,
@@ -332,6 +333,11 @@ export async function initializeClients(
     if (clientTypes.includes("twitter")) {
         const twitterClients = await TwitterClientInterface.start(runtime);
         clients.push(twitterClients);
+    }
+
+    if (clientTypes.includes("evm")) {
+        const evmClient = await EVMClientInterface.start(runtime);
+        if (evmClient) clients.push(evmClient);
     }
 
     if (clientTypes.includes("farcaster")) {

@@ -604,6 +604,7 @@ export enum Clients {
     DIRECT = "direct",
     TWITTER = "twitter",
     TELEGRAM = "telegram",
+    EVM = "evm",
     FARCASTER = "farcaster",
 }
 /**

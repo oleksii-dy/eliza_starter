@@ -1,0 +1,21 @@
+{
+    "name": "@ai16z/client-evm",
+    "version": "0.1.0",
+    "main": "dist/index.js",
+    "type": "module",
+    "types": "dist/index.d.ts",
+    "dependencies": {
+        "@ai16z/eliza": "workspace:*",
+        "ethers": "^6.9.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.17.9",
+        "ts-node": "10.9.2",
+        "tsup": "^8.3.5",
+        "tsx": "^4.7.0",
+        "typescript": "^5.6.3"
+    },
+    "scripts": {
+        "build": "tsup src/index.ts --format esm --dts"
+    }
+}
