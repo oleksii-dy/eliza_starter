@@ -5,6 +5,7 @@ import { DirectClientInterface } from "@ai16z/client-direct";
 import { DiscordClientInterface } from "@ai16z/client-discord";
 import { TelegramClientInterface } from "@ai16z/client-telegram";
 import { TwitterClientInterface } from "@ai16z/client-twitter";
+import { FarcasterAgentClient } from "@ai16z/client-farcaster";
 import {
     AgentRuntime,
     CacheManager,
@@ -33,6 +34,7 @@ import {
     tradePlugin,
     tokenContractPlugin,
     webhookPlugin,
+    advancedTradePlugin,
 } from "@ai16z/plugin-coinbase";
 import { confluxPlugin } from "@ai16z/plugin-conflux";
 import { imageGenerationPlugin } from "@ai16z/plugin-image-generation";
@@ -40,6 +42,7 @@ import { evmPlugin } from "@ai16z/plugin-evm";
 import { createNodePlugin } from "@ai16z/plugin-node";
 import { solanaPlugin } from "@ai16z/plugin-solana";
 import { aptosPlugin, TransferAptosToken } from "@ai16z/plugin-aptos";
+import { flowPlugin } from "@ai16z/plugin-flow";
 import { teePlugin } from "@ai16z/plugin-tee";
 import {
     githubInitializePlugin,
@@ -273,6 +276,11 @@ export function getTokenForProvider(
                 character.settings?.secrets?.VOLENGINE_API_KEY ||
                 settings.VOLENGINE_API_KEY
             );
+        case ModelProviderName.HYPERBOLIC:
+            return (
+                character.settings?.secrets?.HYPERBOLIC_API_KEY ||
+                settings.HYPERBOLIC_API_KEY
+            );
     }
 }
 
@@ -330,6 +338,12 @@ export async function initializeClients(
     if (clientTypes.includes("twitter")) {
         const twitterClients = await TwitterClientInterface.start(runtime);
         clients.push(twitterClients);
+    }
+
+    if (clientTypes.includes("farcaster")) {
+        const farcasterClients = new FarcasterAgentClient(runtime);
+        farcasterClients.start();
+        clients.push(farcasterClients);
     }
 
     if (character.plugins?.length > 0) {
@@ -398,7 +412,7 @@ export function createAgent(
                 : null,
             ...(getSecret(character, "COINBASE_API_KEY") &&
             getSecret(character, "COINBASE_PRIVATE_KEY")
-                ? [coinbaseMassPaymentsPlugin, tradePlugin, tokenContractPlugin]
+                ? [coinbaseMassPaymentsPlugin, tradePlugin, tokenContractPlugin, advancedTradePlugin]
                 : []),
             getSecret(character, "COINBASE_API_KEY") &&
             getSecret(character, "COINBASE_PRIVATE_KEY") &&
@@ -411,6 +425,10 @@ export function createAgent(
             getSecret(character, "GITHUB_API_TOKEN") ? githubCreatePullRequestPlugin : null,
             getSecret(character, "GITHUB_API_TOKEN") ? githubCreateMemorizeFromFilesPlugin : null,
             getSecret(character, "ALCHEMY_API_KEY") ? goatPlugin : null,
+            getSecret(character, "FLOW_ADDRESS") &&
+            getSecret(character, "FLOW_PRIVATE_KEY")
+                ? flowPlugin
+                : null,
             getSecret(character, "APTOS_PRIVATE_KEY") ? aptosPlugin : null,
         ].filter(Boolean),
         providers: [],
