@@ -1,4 +1,3 @@
-// Work in progress - Currently the agent stores EVM events in a separate memory and is unable to discuss them in the main conversation
 import { composeContext } from "@ai16z/eliza";
 import { generateMessageResponse } from "@ai16z/eliza";
 import { Content, IAgentRuntime, Memory, ModelClass } from "@ai16z/eliza";
@@ -7,18 +6,39 @@ import { messageCompletionFooter } from "@ai16z/eliza";
 import { elizaLogger } from "@ai16z/eliza";
 import { BlockchainEvent } from './types';
 
-// Each client must have a MessageManager. It must have access to the agent runtime to store memories, generate responses & manage database connections
+// Custom template for EVM events to maintain agent's personality
+const evmMessageTemplate = `# Task: Generate a conversational response about this blockchain event for {{agentName}}.
+
+About {{agentName}}:
+{{bio}}
+{{lore}}
+
+Recent conversation history:
+{{recentMessages}}
+
+Event details:
+{{content.text}}
+
+# Instructions:
+- Respond conversationally about the event that just occurred
+- Maintain character personality and style
+- Focus on the key details (amounts, tokens, etc.)
+- Be engaging and invite further discussion
+- Vary your responses to avoid repetition
+` + messageCompletionFooter;
+
 export class MessageManager {
     private runtime: IAgentRuntime;
 
     constructor(runtime: IAgentRuntime) {
-       this.runtime = runtime;
+        this.runtime = runtime;
     }
 
-    // Handle each EVM event
     async handleEvent(event: BlockchainEvent) {
         const systemId = stringToUuid("blockchain-system");
-        const roomId = stringToUuid("blockchain-events-" + this.runtime.agentId);
+        // Use same room as main conversation
+        const roomId = stringToUuid("default-room-" + this.runtime.agentId);
+        console.log("Creating room ID from:", "default-room-" + this.runtime.agentId);
 
         try {
             await this.runtime.ensureConnection(
@@ -29,11 +49,9 @@ export class MessageManager {
                 "evm"
             );
 
-            const processedContent = this.formatEventContent(event);
-
-            // Create content object in format agent expects
-            const content: Content = {
-                text: processedContent,
+            // Create event memory with both human-readable format and technical details
+            const eventContent: Content = {
+                text: this.formatEventContent(event),
                 source: "evm",
                 metadata: {
                     type: "blockchain_event",
@@ -45,57 +63,41 @@ export class MessageManager {
                 }
             };
 
-            // Memory creation
             const eventMemory: Memory = {
                 id: stringToUuid(event.transactionHash + "-" + this.runtime.agentId),
                 userId: systemId,
                 agentId: this.runtime.agentId,
                 roomId,
-                content,
+                content: eventContent,
                 createdAt: new Date(event.timestamp).getTime()
             };
 
-            // Store memory in agent's memory system
+            // Store the event in memory
             await this.runtime.messageManager.createMemory(eventMemory);
 
+            // Compose state with context from both conversation and event
             const state = await this.runtime.composeState({
-                content,
+                content: eventContent,
                 roomId,
                 userId: systemId,
                 agentId: this.runtime.agentId
             });
 
-            // Creating context and instructions for the agent => Modify template for better responses!
+            // Generate context using our EVM-specific template
             const context = composeContext({
                 state,
-                template: `# Task: Generate a response about this blockchain event for {{agentName}}.
-
-                About {{agentName}}:
-                {{bio}}
-                {{lore}}
-
-                Recent conversation history:
-                {{recentMessages}}
-
-                Event details:
-                ${processedContent}
-
-                # Instructions:
-                Always format the raw numbers using token decimals. USDC must be formatted by 6 decimals (1e6) and DAI by 18 decimals (1e18).
-                Focus only on the amounts swapped and ignore other fields. Negative number means the token being sold, positive the token being bought, but do not output negative signs in your response, everything is in absolute values.
-                Remember and reference previous events, while keeping your character persona. Respond differently each time. Respond as the character would, based on the description.
-                ` + messageCompletionFooter
+                template: evmMessageTemplate
             });
 
-            // Get response from agent
+            // Get agent's response
             const response = await generateMessageResponse({
                 runtime: this.runtime,
                 context,
                 modelClass: ModelClass.SMALL,
             });
 
-            // Log response
             if (response) {
+                // Store agent's response in same conversation
                 const responseMemory: Memory = {
                     id: stringToUuid(event.transactionHash + "-response-" + this.runtime.agentId),
                     userId: this.runtime.agentId,
@@ -130,27 +132,33 @@ export class MessageManager {
         }
     }
 
-    // Format blockchain event into a more appropriate format for the message handler
     private formatEventContent(event: BlockchainEvent): string {
         const { decoded, transactionHash, blockNumber, timestamp, contractAddress } = event;
 
-        const params = Object.entries(decoded.params)
-            .map(([key, value]) => {
-                const paramDescription = decoded.description.params.find(p => p.name === key);
-                return `${key}: ${value}\n   Description: ${paramDescription?.description}`;
-            })
-            .join('\n\n');
+        // Format amounts based on token decimals (e.g., USDC has 6, DAI has 18)
+        const formatTokenAmount = (amount: string, decimals: number) => {
+            const value = BigInt(amount);
+            return Number(value) / Math.pow(10, decimals);
+        };
 
-        return `
-            ${decoded.name} Event Detected
-            Contract: ${contractAddress}
-            Block Number: ${blockNumber}
-            Timestamp: ${timestamp}
-            Transaction: ${transactionHash}
-            Description: ${decoded.description.description}
+        let formattedText = "";
 
-            Parameters:
-            ${params}
-                `.trim();
+        // Handle different event types with appropriate formatting
+        switch (decoded.name) {
+            case "Swap":
+                const amount0 = formatTokenAmount(decoded.params.amount0, 6); // USDC
+                const amount1 = formatTokenAmount(decoded.params.amount1, 18); // DAI
+                formattedText = `A swap just occurred on ${contractAddress}:\n`;
+                formattedText += amount0 > 0 ?
+                    `${amount0} USDC swapped for ${Math.abs(amount1)} DAI` :
+                    `${Math.abs(amount1)} DAI swapped for ${Math.abs(amount0)} USDC`;
+                break;
+            // Add other event types as needed
+            default:
+                formattedText = `${decoded.name} event detected on ${contractAddress}`;
+                break;
+        }
+
+        return formattedText;
     }
 }
