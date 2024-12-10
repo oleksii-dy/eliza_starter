@@ -26,7 +26,7 @@ export const DEFAULT_CHAIN_CONFIGS: Record<SupportedChain, ChainMetadata> = {
         chainId: 1,
         name: "Ethereum",
         chain: mainnet,
-        rpcUrl: "https://eth-mainnet-public.unifra.io",
+        rpcUrl: "https://eth.llamarpc.com",
         nativeCurrency: {
             name: "Ether",
             symbol: "ETH",
@@ -38,7 +38,7 @@ export const DEFAULT_CHAIN_CONFIGS: Record<SupportedChain, ChainMetadata> = {
         chainId: 33139,
         name: "ApeChain",
         chain: apeChain,
-        rpcUrl: "https://apechain-mainnet.g.alchemy.com/v2/BCpvnI9ysI6XpozBGwcBcuPmwTByJtnM",
+        rpcUrl: "https://rpc.apechain.com",
         nativeCurrency: {
             name: "ApeCoin",
             symbol: "APE",
@@ -62,7 +62,7 @@ export const DEFAULT_CHAIN_CONFIGS: Record<SupportedChain, ChainMetadata> = {
         chainId: 33111,
         name: "Curtis Testnet",
         chain: curtis,
-        rpcUrl: "https://apechain-curtis.g.alchemy.com/v2/BCpvnI9ysI6XpozBGwcBcuPmwTByJtnM",
+        rpcUrl: "https://rpc.curtis.apechain.com",
         nativeCurrency: {
             name: "ApeCoin",
             symbol: "APE",
