@@ -43,3 +43,12 @@ Available client platforms
 #### Defined in
 
 [packages/core/src/types.ts:604](https://github.com/monilpat/eliza/blob/main/packages/core/src/types.ts#L604)
+
+***
+
+### DEVA
+
+> **DEVA**: `"deva"`
+#### Defined in
+
+[packages/core/src/types.ts:597](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L605)

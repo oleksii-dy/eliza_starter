@@ -6,6 +6,7 @@ import { DiscordClientInterface } from "@ai16z/client-discord";
 import { TelegramClientInterface } from "@ai16z/client-telegram";
 import { TwitterClientInterface } from "@ai16z/client-twitter";
 import { FarcasterAgentClient } from "@ai16z/client-farcaster";
+import { DevaClientInterface } from "@ai16z/client-deva";
 import {
     AgentRuntime,
     CacheManager,
@@ -338,6 +339,11 @@ export async function initializeClients(
         const farcasterClients = new FarcasterAgentClient(runtime);
         farcasterClients.start();
         clients.push(farcasterClients);
+    }
+
+    if (clientTypes.includes("deva")) {
+        const devaClients = await DevaClientInterface.start(runtime);
+        clients.push(devaClients);
     }
 
     if (character.plugins?.length > 0) {

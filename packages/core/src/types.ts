@@ -605,6 +605,7 @@ export enum Clients {
     TWITTER = "twitter",
     TELEGRAM = "telegram",
     FARCASTER = "farcaster",
+    DEVA = "deva",
 }
 /**
  * Configuration for an agent character
@@ -651,6 +652,7 @@ export type Character = {
         discordVoiceHandlerTemplate?: string;
         discordShouldRespondTemplate?: string;
         discordMessageHandlerTemplate?: string;
+        devaPostTemplate?: string;
     };
 
     /** Character biography */
