@@ -5,7 +5,7 @@ export async function fetchFiles(
     runtime: IAgentRuntime,
     message: Memory,
     fetchFunction: (githubService: GitHubService) => Promise<any[]>,
-    formatPath: (path: any) => string,
+    formatPath: (path: any) => string = (path) => path,
     getContentFunction: (
         githubService: GitHubService,
         item: any
