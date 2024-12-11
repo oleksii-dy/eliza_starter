@@ -29,9 +29,6 @@ About {{agentName}} (@{{twitterUserName}}):
 # Character Post Examples
 {{characterPostExamples}}
 
-# Tweet to respond to:
-{{twit_to_response}}
-
 # Task: Generate a witty response as {{agentName}} (@{{twitterUserName}})
 Create a clever and entertaining response to the tweet above, maintaining {{agentName}}'s unique voice and personality. Your response should:
 - Be humorous and engaging
@@ -39,9 +36,7 @@ Create a clever and entertaining response to the tweet above, maintaining {{agen
 - Add something interesting to the conversation
 - Feel natural and conversational
 - Maintain {{agentName}}'s characteristic style and tone
-- Be concise and impactful
-
-Your response should be brief and witty. No emojis. Use \\n\\n (double spaces) between statements if needed.`;
+- Be concise and impactful`;
 
 const MAX_TWEET_LENGTH = 280;
 
@@ -133,7 +128,7 @@ export class TwitterPostClient {
         this.runtime = runtime;
     }
 
-    private async generateNewTweet(twit_to_response: string) {
+    private async generateNewTweet() {
         elizaLogger.log("Generating new tweet");
 
         try {
@@ -174,7 +169,6 @@ export class TwitterPostClient {
                     content: {
                         text: topics,
                         action: "",
-                        twit_to_response,
                     },
                 },
                 {

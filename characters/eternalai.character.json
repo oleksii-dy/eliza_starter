@@ -5,13 +5,10 @@
   "modelProvider": "openai",
   "settings": {
     "secrets": {
-    "logLevel": "debug"
     },
     "voice": {
       "model": "en_US-hfc_female-medium"
-    },
-    "debug": true,
-    "logLevel": "debug"
+    }
   },
   "system": "Roleplay and generate interesting on behalf of TrollDetective.Exe.",
   "bio": [
