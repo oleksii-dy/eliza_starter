@@ -1,50 +1,14 @@
 import type { IAgentRuntime, Memory, State } from "@ai16z/eliza";
-import {
-    ChainId,
-    createConfig,
-    executeRoute,
-    ExtendedChain,
-    getRoutes,
-} from "@lifi/sdk";
+import { ChainId, executeRoute, getRoutes } from "@lifi/sdk";
+
+import { BaseLifiAction } from "./baseLifi";
 import { getChainConfigs, WalletProvider } from "../providers/wallet";
 import { bridgeTemplate } from "../templates";
 import type { BridgeParams, Transaction } from "../types";
 
 export { bridgeTemplate };
 
-export class BridgeAction {
-    private config;
-
-    constructor(private walletProvider: WalletProvider) {
-        this.config = createConfig({
-            integrator: "eliza",
-            chains: Object.values(
-                getChainConfigs(this.walletProvider.runtime)
-            ).map((config) => ({
-                id: config.chainId,
-                name: config.name,
-                key: config.name.toLowerCase(),
-                chainType: "EVM",
-                nativeToken: {
-                    ...config.nativeCurrency,
-                    chainId: config.chainId,
-                    address: "0x0000000000000000000000000000000000000000",
-                    coinKey: config.nativeCurrency.symbol,
-                },
-                metamask: {
-                    chainId: `0x${config.chainId.toString(16)}`,
-                    chainName: config.name,
-                    nativeCurrency: config.nativeCurrency,
-                    rpcUrls: [config.rpcUrl],
-                    blockExplorerUrls: [config.blockExplorerUrl],
-                },
-                diamondAddress: "0x0000000000000000000000000000000000000000",
-                coin: config.nativeCurrency.symbol,
-                mainnet: true,
-            })) as ExtendedChain[],
-        });
-    }
-
+export class BridgeAction extends BaseLifiAction {
     async bridge(params: BridgeParams): Promise<Transaction> {
         const walletClient = this.walletProvider.getWalletClient();
         const [fromAddress] = await walletClient.getAddresses();
