@@ -29,7 +29,7 @@ export class BridgeAction extends BaseLifiAction {
 
         if (!routes.routes.length) throw new Error("No routes found");
 
-        const execution = await executeRoute(routes.routes[0], this.config);
+        const execution = await executeRoute(routes.routes[0]);
         const process = execution.steps[0]?.execution?.process[0];
 
         if (!process?.status || process.status === "FAILED") {
