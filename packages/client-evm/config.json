@@ -1,5 +1,5 @@
 {
-    "rpcUrl": "",
+    "rpcUrl": "wss://arbitrum-mainnet.infura.io/ws/v3/502da95c9fce4c318911f58852",
     "contracts": [
         {
             "address": "0x7cf803e8d82a50504180f417b8bc7a493c0a0503",

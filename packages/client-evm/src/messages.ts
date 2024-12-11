@@ -64,7 +64,8 @@ export class MessageManager {
         // Use same room as main conversation
         //const roomId = stringToUuid("default-room-" + this.runtime.agentId);
         //console.log("Creating room ID from:", "default-room-" + this.runtime.agentId);
-        const roomId = await this.findConversationRoom();
+        //const roomId = await this.findConversationRoom();
+        const roomId = stringToUuid("default-room-" + this.runtime.character.name);
         console.log("Room ID:", roomId);
 
         try {
