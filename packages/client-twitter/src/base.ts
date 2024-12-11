@@ -689,4 +689,47 @@ export class ClientBase extends EventEmitter {
             return undefined;
         }
     }
+
+    public getSmartReplyConfig(): { enabled: boolean; apiKey: string | undefined; error?: string } {
+        try {
+            const enabled = this.runtime.getSetting("ENABLE_SMART_REPLIES")?.toLowerCase() === "true";
+            const apiKey = this.runtime.getSetting("ELFA_API_KEY");
+
+            if (enabled && !apiKey) {
+                elizaLogger.warn("[SmartReply] Smart replies enabled but API key not configured");
+                return {
+                    enabled: false,
+                    apiKey: undefined,
+                    error: "API_KEY_MISSING"
+                };
+            }
+
+            if (enabled && apiKey && !apiKey.startsWith('elfak_')) {
+                elizaLogger.warn("[SmartReply] Invalid Elfa API key format");
+                return {
+                    enabled: false,
+                    apiKey: undefined,
+                    error: "INVALID_API_KEY_FORMAT"
+                };
+            }
+
+            elizaLogger.debug(`[SmartReply] Configuration loaded:
+                Enabled: ${enabled}
+                API Key Configured: ${Boolean(apiKey)}
+                API Key Format Valid: ${apiKey?.startsWith('elfak_')}
+            `);
+
+            return {
+                enabled,
+                apiKey
+            };
+        } catch (error) {
+            elizaLogger.error("[SmartReply] Error loading configuration:", error);
+            return {
+                enabled: false,
+                apiKey: undefined,
+                error: "CONFIG_ERROR"
+            };
+        }
+    }
 }

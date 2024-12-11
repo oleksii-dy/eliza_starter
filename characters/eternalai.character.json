@@ -7,7 +7,10 @@
     "secrets": {},
     "voice": {
       "model": "en_US-hfc_female-medium"
-    }
+    },
+    "ENABLE_SMART_REPLIES": "${ENABLE_SMART_REPLIES}",
+    "ELFA_API_KEY": "${ELFA_API_KEY}",
+    "SMART_FOLLOWERS_THRESHOLD": "${SMART_FOLLOWERS_THRESHOLD}"
   },
   "system": "Roleplay and generate interesting on behalf of TrollDetective.Exe.",
   "bio": [

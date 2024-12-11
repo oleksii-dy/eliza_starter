@@ -138,11 +138,13 @@ export class TwitterInteractionClient {
     }
 
     async handleTwitterInteractions() {
+        elizaLogger.info("========= TWITTER INTERACTIONS START =========");
         elizaLogger.log("Checking Twitter interactions");
 
         const twitterUsername = this.client.profile.username;
         try {
             // Check for mentions
+            elizaLogger.debug(`Fetching tweets mentioning @${twitterUsername}`);
             const tweetCandidates = (
                 await this.client.fetchSearchTweets(
                     `@${twitterUsername}`,
@@ -151,14 +153,13 @@ export class TwitterInteractionClient {
                 )
             ).tweets;
 
-            // de-duplicate tweetCandidates with a set
+            elizaLogger.info(`Found ${tweetCandidates.length} tweet candidates`);
+
             const uniqueTweetCandidates = [...new Set(tweetCandidates)];
-            // Sort tweet candidates by ID in ascending order
             uniqueTweetCandidates
                 .sort((a, b) => a.id.localeCompare(b.id))
                 .filter((tweet) => tweet.userId !== this.client.profile.id);
 
-            // for each tweet candidate, handle the tweet
             for (const tweet of uniqueTweetCandidates) {
                 if (
                     !this.client.lastCheckedTweetId ||
@@ -226,7 +227,7 @@ export class TwitterInteractionClient {
             // Save the latest checked tweet ID to the file
             await this.client.cacheLatestCheckedTweetId();
 
-            elizaLogger.log("Finished checking Twitter interactions");
+            elizaLogger.log("Completed checking for new tweets");
         } catch (error) {
             elizaLogger.error("Error handling Twitter interactions:", error);
         }
@@ -241,18 +242,55 @@ export class TwitterInteractionClient {
         message: Memory;
         thread: Tweet[];
     }) {
+
         if (tweet.userId === this.client.profile.id) {
-            // console.log("skipping tweet from bot itself", tweet.id);
-            // Skip processing if the tweet is from the bot itself
+            elizaLogger.debug("Skipping own tweet");
             return;
         }
 
         if (!message.content.text) {
             elizaLogger.log("Skipping Tweet with no text", tweet.id);
-            return { text: "", action: "IGNORE" };
+            return;
         }
 
-        elizaLogger.log("Processing Tweet: ", tweet.id);
+        elizaLogger.info("========= SMART STATS CHECK START =========");
+        // Add smart stats check here
+        const tweetAuthor = tweet.username;
+        if (tweetAuthor) {
+            elizaLogger.info(`Checking smart stats for tweet author: @${tweetAuthor}`);
+            try {
+                const config = this.client.getSmartReplyConfig();
+                elizaLogger.debug('Smart Reply Config:', config);
+
+                const hasEnoughSmartFollowers = await this.checkSmartStats(tweetAuthor);
+                elizaLogger.info(`Smart stats result for @${tweetAuthor}: ${hasEnoughSmartFollowers}`);
+                if (!hasEnoughSmartFollowers) {
+                    elizaLogger.info(`Smart stats check failed for @${tweetAuthor} - ignoring tweet`);
+                    // Create a memory record of the ignored tweet
+                    const tweetId = stringToUuid(tweet.id + "-" + this.runtime.agentId);
+                    await this.runtime.messageManager.createMemory({
+                        id: tweetId,
+                        agentId: this.runtime.agentId,
+                        content: {
+                            text: tweet.text,
+                            action: "IGNORE",
+                            metadata: {
+                                reason: "insufficient_smart_followers",
+                                username: tweetAuthor
+                            }
+                        },
+                        userId: stringToUuid(tweet.userId as string),
+                        roomId: stringToUuid(tweet.conversationId),
+                        createdAt: tweet.timestamp * 1000,
+                    });
+                    return;
+                }
+                elizaLogger.debug(`Smart stats check passed for @${tweetAuthor}`);
+            } catch (error) {
+                elizaLogger.error(`Error checking smart stats for @${tweetAuthor}:`, error);
+            }
+        }
+
         const formatTweet = (tweet: Tweet) => {
             return `  ID: ${tweet.id}
   From: ${tweet.name} (@${tweet.username})
@@ -323,8 +361,6 @@ export class TwitterInteractionClient {
                 this.runtime.character?.templates?.messageHandlerTemplate ||
                 twitterMessageHandlerTemplate,
         });
-
-        elizaLogger.debug("Interactions prompt:\n" + context);
 
         const response = await generateMessageResponse({
             runtime: this.runtime,
@@ -526,5 +562,106 @@ export class TwitterInteractionClient {
         });
 
         return thread;
+    }
+
+    /**
+     * Checks if a user has sufficient smart followers using Elfa API
+     * @param username Twitter username to check
+     * @returns Promise<boolean> true if user has enough smart followers or if check is disabled
+     */
+    private async checkSmartStats(username: string): Promise<boolean> {
+        elizaLogger.info(`[SmartStats] Starting check for @${username}`);
+
+        if (!username) {
+            elizaLogger.warn("[SmartStats] No username provided");
+            return true;
+        }
+
+        // Get smart reply configuration with validation
+        const { enabled: isSmartRepliesEnabled, apiKey: elfaApiKey, error } = this.client.getSmartReplyConfig();
+
+        // Get threshold from character settings
+        const threshold = parseInt(this.runtime.getSetting("SMART_FOLLOWERS_THRESHOLD") || "10");
+
+        elizaLogger.debug(`[SmartStats] Configuration:
+            Enabled: ${isSmartRepliesEnabled}
+            Username: ${username}
+            Threshold: ${threshold}
+        `);
+
+        // Handle configuration errors
+        if (error) {
+            elizaLogger.warn(`[SmartStats] Configuration error: ${error}`);
+            return true;
+        }
+
+        if (!isSmartRepliesEnabled) {
+            elizaLogger.info("[SmartStats] Smart replies disabled - allowing all responses");
+            return true;
+        }
+
+        try {
+            const response = await fetch(
+                `https://api.elfa.ai/v1/account/smart-stats?username=${encodeURIComponent(username)}`,
+                {
+                    headers: {
+                        'accept': 'application/json',
+                        'x-elfa-api-key': elfaApiKey
+                    },
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                const errorMessage = data.error || response.statusText;
+                elizaLogger.error(`[SmartStats] API error (${response.status}):`, errorMessage);
+
+                switch (response.status) {
+                    case 401:
+                        elizaLogger.error("[SmartStats] Invalid API key");
+                        return true;
+                    case 404:
+                        elizaLogger.warn("[SmartStats] User not found");
+                        return true;
+                    case 429:
+                        elizaLogger.warn("[SmartStats] Rate limit exceeded");
+                        return true;
+                    default:
+                        return true;
+                }
+            }
+
+            // Validate response data
+            if (!data || typeof data.smartFollowersCount !== 'number') {
+                elizaLogger.error("[SmartStats] Invalid API response format:", data);
+                return true;
+            }
+
+            // Check if the user has enough smart followers. If not, return true to allow all responses
+            const shouldRespond = data.smartFollowersCount >= threshold;
+            elizaLogger.info(`[SmartStats] Results for @${username}:
+                Smart Followers: ${data.smartFollowersCount}
+                Should Respond: ${shouldRespond}
+                Threshold: ${threshold}
+            `);
+
+            return shouldRespond;
+        } catch (error) {
+            elizaLogger.error("[SmartStats] Error checking stats:", {
+                error: error.message,
+                type: error.name,
+                stack: error.stack
+            });
+
+            // Handle specific error types
+            if (error.name === 'AbortError') {
+                elizaLogger.warn("[SmartStats] Request timeout");
+            } else if (error.name === 'TypeError') {
+                elizaLogger.warn("[SmartStats] Network or parsing error");
+            }
+
+            return true;
+        }
     }
 }
