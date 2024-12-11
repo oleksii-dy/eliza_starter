@@ -1,9 +1,25 @@
-import { elizaLogger, IAgentRuntime, Memory } from "@ai16z/eliza";
+import {
+    composeContext,
+    generateObjectV2,
+    elizaLogger,
+    IAgentRuntime,
+    Memory,
+    State,
+    ModelClass,
+} from "@ai16z/eliza";
 import { GitHubService } from "../services/github";
+import {
+    FetchFilesContent,
+    FetchFilesSchema,
+    isFetchFilesContent,
+} from "../types";
+import { fetchFilesTemplate } from "../templates";
 
 export async function fetchFiles(
     runtime: IAgentRuntime,
     message: Memory,
+    state: State,
+    description: string,
     fetchFunction: (githubService: GitHubService) => Promise<any[]>,
     formatPath: (path: any) => string = (path) => path,
     getContentFunction: (
@@ -12,13 +28,44 @@ export async function fetchFiles(
     ) => Promise<any> = (service, item) => service.getFileContents(item)
 ) {
     try {
-        // Extract repository details from state
-        const state = await runtime.composeState(message);
-        const owner = state?.owner as string;
-        const repo = state?.repo as string;
+        elizaLogger.log("Composing state for message:", message);
+        if (!state) {
+            state = (await runtime.composeState(message)) as State;
+        } else {
+            state = await runtime.updateRecentMessageState(state);
+        }
 
-        if (!owner || !repo) {
-            elizaLogger.warn("Missing repository details in state");
+        const context = composeContext({
+            state,
+            template: fetchFilesTemplate,
+        });
+
+        const details = await generateObjectV2({
+            runtime,
+            context,
+            modelClass: ModelClass.SMALL,
+            schema: FetchFilesSchema,
+        });
+
+        if (!isFetchFilesContent(details.object)) {
+            elizaLogger.error("Invalid content:", details.object);
+            throw new Error("Invalid content");
+        }
+
+        const content = details.object as FetchFilesContent;
+
+        const owner = content.owner;
+        const repo = content.repo;
+        const branch = content.branch;
+
+        elizaLogger.info(
+            `Fetching ${description} from GitHub ${owner}/${repo} on branch ${branch}`
+        );
+
+        if (!owner || !repo || !branch) {
+            elizaLogger.warn(
+                `Missing repository details in state for ${description}`
+            );
             return { files: [], repository: null };
         }
 
@@ -42,7 +89,7 @@ export async function fetchFiles(
         );
 
         elizaLogger.info(
-            `Retrieved ${fileContents.length} files from ${owner}/${repo}`
+            `Retrieved ${fileContents.length} files from ${owner}/${repo} for ${description}`
         );
 
         return {
@@ -50,10 +97,11 @@ export async function fetchFiles(
             repository: {
                 owner,
                 repo,
+                branch,
             },
         };
     } catch (error) {
-        elizaLogger.error("Error in fetchFiles:", error);
+        elizaLogger.error(`Error in fetchFiles for ${description}:`, error);
         return { files: [], repository: null };
     }
 }
