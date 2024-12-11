@@ -43,7 +43,7 @@ export class ImageDescriptionService
     }
 
     async initialize(runtime: IAgentRuntime): Promise<void> {
-        console.log("Initializing ImageDescriptionService");
+        elizaLogger.log("Initializing ImageDescriptionService");
         this.runtime = runtime;
     }
 
@@ -107,9 +107,9 @@ export class ImageDescriptionService
 
         if (this.device === "cloud") {
             if (!this.runtime) {
-                throw new Error(
-                    "Runtime is required for OpenAI image recognition"
-                );
+            throw new Error(
+            "Runtime is required for OpenAI image recognition"
+            );
             }
             return this.recognizeWithOpenAI(imageUrl);
         }

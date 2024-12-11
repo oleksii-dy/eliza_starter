@@ -23,13 +23,25 @@ About {{agentName}} (@{{twitterUserName}}):
 
 {{providers}}
 
+# Recent Posts
 {{recentPosts}}
 
+# Character Post Examples
 {{characterPostExamples}}
 
-# Task: Generate a post in the voice and style of {{agentName}}, aka @{{twitterUserName}}
-Write a single sentence post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Try to write something totally different than previous posts. Do not add commentary or acknowledge this request, just write the post.
-Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
+# Tweet to respond to:
+{{twit_to_response}}
+
+# Task: Generate a witty response as {{agentName}} (@{{twitterUserName}})
+Create a clever and entertaining response to the tweet above, maintaining {{agentName}}'s unique voice and personality. Your response should:
+- Be humorous and engaging
+- Stay relevant to the topic of the original tweet
+- Add something interesting to the conversation
+- Feel natural and conversational
+- Maintain {{agentName}}'s characteristic style and tone
+- Be concise and impactful
+
+Your response should be brief and witty. No emojis. Use \\n\\n (double spaces) between statements if needed.`;
 
 const MAX_TWEET_LENGTH = 280;
 
@@ -121,7 +133,7 @@ export class TwitterPostClient {
         this.runtime = runtime;
     }
 
-    private async generateNewTweet() {
+    private async generateNewTweet(twit_to_response: string) {
         elizaLogger.log("Generating new tweet");
 
         try {
@@ -148,7 +160,7 @@ export class TwitterPostClient {
                 `# ${this.runtime.character.name}'s Home Timeline\n\n` +
                 homeTimeline
                     .map((tweet) => {
-                        return `#${tweet.id}\n${tweet.name} (@${tweet.username})${tweet.inReplyToStatusId ? `\nIn reply to: ${tweet.inReplyToStatusId}` : ""}\n${new Date(tweet.timestamp).toDateString()}\n\n${tweet.text}\n---\n`;
+                        return `#${tweet.id}\n${tweet.name} (@${tweet.username})${tweet.inReplyToStatusId ? `\nIn reply to: ${tweet.inReplyToStatusId}` : ""}\n${new Date(tweet.timestamp*1000).toDateString()}\n\n${tweet.text}\n---\n`;
                     })
                     .join("\n");
 
@@ -162,6 +174,7 @@ export class TwitterPostClient {
                     content: {
                         text: topics,
                         action: "",
+                        twit_to_response,
                     },
                 },
                 {
@@ -170,6 +183,8 @@ export class TwitterPostClient {
                 }
             );
 
+            elizaLogger.debug("recentPosts:\n" + JSON.stringify(state.recentPosts, null, 2));
+            
             const context = composeContext({
                 state,
                 template:
