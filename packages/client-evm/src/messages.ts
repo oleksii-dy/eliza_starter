@@ -1,6 +1,6 @@
 import { composeContext } from "@ai16z/eliza";
 import { generateMessageResponse } from "@ai16z/eliza";
-import { Content, IAgentRuntime, Memory, ModelClass } from "@ai16z/eliza";
+import { Content, IAgentRuntime, Memory, ModelClass, UUID } from "@ai16z/eliza";
 import { stringToUuid } from "@ai16z/eliza";
 import { messageCompletionFooter } from "@ai16z/eliza";
 import { elizaLogger } from "@ai16z/eliza";
@@ -34,13 +34,42 @@ export class MessageManager {
         this.runtime = runtime;
     }
 
+    private async findConversationRoom(): Promise<UUID> {
+        const rooms = await this.runtime.databaseAdapter.getRoomsForParticipant(this.runtime.agentId);
+        //console.log("This.runtime.agentId:", this.runtime.agentId);
+        //console.log("Found rooms:", rooms);
+        //const test = stringToUuid("default-room-" + this.runtime.agentId)
+        //console.log("Test:", "default-room-" + this.runtime.agentId, test);
+
+        for (const roomId of rooms) {
+            const messages = await this.runtime.messageManager.getMemories({
+                roomId,
+                count: 1
+            });
+            console.log(`Room ${roomId} messages:`, messages);
+
+            // Check for either 'source: direct' or presence of 'user' field
+            if (messages.length > 0 &&
+                (messages[0].content.source === 'direct' || 'user' in messages[0].content)) {
+                return roomId;
+            }
+        }
+
+        throw new Error("No conversation room found");
+    }
+
     async handleEvent(event: BlockchainEvent) {
         const systemId = stringToUuid("blockchain-system");
+
         // Use same room as main conversation
-        const roomId = stringToUuid("default-room-" + this.runtime.agentId);
-        console.log("Creating room ID from:", "default-room-" + this.runtime.agentId);
+        //const roomId = stringToUuid("default-room-" + this.runtime.agentId);
+        //console.log("Creating room ID from:", "default-room-" + this.runtime.agentId);
+        const roomId = await this.findConversationRoom();
+        console.log("Room ID:", roomId);
 
         try {
+            // Get the room ID where the conversation is happening
+
             await this.runtime.ensureConnection(
                 systemId,
                 roomId,
