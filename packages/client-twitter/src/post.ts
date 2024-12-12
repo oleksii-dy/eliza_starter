@@ -29,14 +29,9 @@ About {{agentName}} (@{{twitterUserName}}):
 # Character Post Examples
 {{characterPostExamples}}
 
-# Task: Generate a witty response as {{agentName}} (@{{twitterUserName}})
-Create a clever and entertaining response to the tweet above, maintaining {{agentName}}'s unique voice and personality. Your response should:
-- Be humorous and engaging
-- Stay relevant to the topic of the original tweet
-- Add something interesting to the conversation
-- Feel natural and conversational
-- Maintain {{agentName}}'s characteristic style and tone
-- Be concise and impactful`;
+# Task: Generate a post in the voice and style of {{agentName}}, aka @{{twitterUserName}}
+Write a single sentence post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Try to write something totally different than previous posts. Do not add commentary or acknowledge this request, just write the post.
+Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
 
 const MAX_TWEET_LENGTH = 280;
 
