@@ -410,6 +410,8 @@ const startAgents = async () => {
     chat();
 };
 
+elizaLogger.verbose = true;
+
 startAgents().catch((error) => {
     elizaLogger.error("Unhandled error in startAgents:", error);
     process.exit(1); // Exit the process after logging

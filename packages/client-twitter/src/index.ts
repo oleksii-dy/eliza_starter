@@ -13,11 +13,15 @@ class TwitterManager {
     constructor(runtime: IAgentRuntime) {
         this.client = new ClientBase(runtime);
         this.post = new TwitterPostClient(this.client, runtime);
-        // this.search = new TwitterSearchClient(runtime); // don't start the search client by default
-        // this searches topics from character file, but kind of violates consent of random users
-        // burns your rate limit and can get your account banned
-        // use at your own risk
+        this.search = new TwitterSearchClient(this.client, runtime);
         this.interaction = new TwitterInteractionClient(this.client, runtime);
+    }
+
+    async start() {
+        await this.client.init();
+        await this.post.start();
+        await this.search.start();
+        await this.interaction.start();
     }
 }
 
@@ -29,11 +33,7 @@ export const TwitterClientInterface: Client = {
 
         const manager = new TwitterManager(runtime);
 
-        await manager.client.init();
-
-        await manager.post.start();
-
-        await manager.interaction.start();
+        await manager.start();
 
         return manager;
     },

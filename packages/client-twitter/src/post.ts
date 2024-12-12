@@ -23,8 +23,10 @@ About {{agentName}} (@{{twitterUserName}}):
 
 {{providers}}
 
+# Recent Posts
 {{recentPosts}}
 
+# Character Post Examples
 {{characterPostExamples}}
 
 # Task: Generate a post in the voice and style of {{agentName}}, aka @{{twitterUserName}}
@@ -148,7 +150,7 @@ export class TwitterPostClient {
                 `# ${this.runtime.character.name}'s Home Timeline\n\n` +
                 homeTimeline
                     .map((tweet) => {
-                        return `#${tweet.id}\n${tweet.name} (@${tweet.username})${tweet.inReplyToStatusId ? `\nIn reply to: ${tweet.inReplyToStatusId}` : ""}\n${new Date(tweet.timestamp).toDateString()}\n\n${tweet.text}\n---\n`;
+                        return `#${tweet.id}\n${tweet.name} (@${tweet.username})${tweet.inReplyToStatusId ? `\nIn reply to: ${tweet.inReplyToStatusId}` : ""}\n${new Date(tweet.timestamp*1000).toDateString()}\n\n${tweet.text}\n---\n`;
                     })
                     .join("\n");
 
@@ -170,6 +172,8 @@ export class TwitterPostClient {
                 }
             );
 
+            elizaLogger.debug("recentPosts:\n" + JSON.stringify(state.recentPosts, null, 2));
+            
             const context = composeContext({
                 state,
                 template:

@@ -1,5 +1,5 @@
 import { SearchMode } from "agent-twitter-client";
-import { composeContext } from "@ai16z/eliza";
+import { composeContext, parseBooleanFromText } from "@ai16z/eliza";
 import { generateMessageResponse, generateText } from "@ai16z/eliza";
 import { messageCompletionFooter } from "@ai16z/eliza";
 import {
@@ -42,17 +42,32 @@ Your response should not contain any questions. Brief, concise statements only. 
 
 ` + messageCompletionFooter;
 
-export class TwitterSearchClient extends ClientBase {
+export class TwitterSearchClient {
+    client: ClientBase;
+    runtime: IAgentRuntime;
     private respondedTweets: Set<string> = new Set();
 
-    constructor(runtime: IAgentRuntime) {
-        // Initialize the client and pass an optional callback to be called when the client is ready
-        super({
-            runtime,
-        });
+    constructor(client: ClientBase, runtime: IAgentRuntime) {
+        this.client = client;
+        this.runtime = runtime;
     }
 
-    async onReady() {
+    async start(searchImmediately: boolean = false) {
+        if (!this.client.profile) {
+            await this.client.init();
+        }
+
+        if (this.runtime.getSetting("SEARCH_IMMEDIATELY") != null && 
+            this.runtime.getSetting("SEARCH_IMMEDIATELY") != "") {
+            searchImmediately = parseBooleanFromText(
+                this.runtime.getSetting("SEARCH_IMMEDIATELY")
+            );
+        }
+
+        if (searchImmediately) {
+            this.engageWithSearchTerms();
+        }
+
         this.engageWithSearchTermsLoop();
     }
 
@@ -60,7 +75,7 @@ export class TwitterSearchClient extends ClientBase {
         this.engageWithSearchTerms();
         setTimeout(
             () => this.engageWithSearchTermsLoop(),
-            (Math.floor(Math.random() * (120 - 60 + 1)) + 60) * 60 * 1000
+            (Math.floor(Math.random() * 60) + 60) * 60 * 1000
         );
     }
 
@@ -74,16 +89,16 @@ export class TwitterSearchClient extends ClientBase {
             console.log("Fetching search tweets");
             // TODO: we wait 5 seconds here to avoid getting rate limited on startup, but we should queue
             await new Promise((resolve) => setTimeout(resolve, 5000));
-            const recentTweets = await this.fetchSearchTweets(
+            const recentTweets = await this.client.fetchSearchTweets(
                 searchTerm,
                 20,
                 SearchMode.Top
             );
             console.log("Search tweets fetched");
 
-            const homeTimeline = await this.fetchHomeTimeline(50);
+            const homeTimeline = await this.client.fetchHomeTimeline(50);
 
-            await this.cacheTimeline(homeTimeline);
+            await this.client.cacheTimeline(homeTimeline);
 
             const formattedHomeTimeline =
                 `# ${this.runtime.character.name}'s Home Timeline\n\n` +
@@ -179,7 +194,7 @@ export class TwitterSearchClient extends ClientBase {
             );
 
             // crawl additional conversation tweets, if there are any
-            await buildConversationThread(selectedTweet, this);
+            await buildConversationThread(selectedTweet, this.client);
 
             const message = {
                 id: stringToUuid(selectedTweet.id + "-" + this.runtime.agentId),
@@ -218,8 +233,8 @@ export class TwitterSearchClient extends ClientBase {
 
             let tweetBackground = "";
             if (selectedTweet.isRetweet) {
-                const originalTweet = await this.requestQueue.add(() =>
-                    this.twitterClient.getTweet(selectedTweet.id)
+                const originalTweet = await this.client.requestQueue.add(() =>
+                    this.client.getTweet(selectedTweet.id)
                 );
                 tweetBackground = `Retweeting @${originalTweet.username}: ${originalTweet.text}`;
             }
@@ -231,13 +246,12 @@ export class TwitterSearchClient extends ClientBase {
                     .getService<IImageDescriptionService>(
                         ServiceType.IMAGE_DESCRIPTION
                     )
-                    .getInstance()
                     .describeImage(photo.url);
                 imageDescriptions.push(description);
             }
 
             let state = await this.runtime.composeState(message, {
-                twitterClient: this.twitterClient,
+                twitterClient: this.client,
                 twitterUserName: this.runtime.getSetting("TWITTER_USERNAME"),
                 timeline: formattedHomeTimeline,
                 tweetContext: `${tweetBackground}
@@ -250,7 +264,7 @@ export class TwitterSearchClient extends ClientBase {
   `,
             });
 
-            await this.saveRequestMessage(message, state as State);
+            await this.client.saveRequestMessage(message, state as State);
 
             const context = composeContext({
                 state,
@@ -280,7 +294,7 @@ export class TwitterSearchClient extends ClientBase {
             try {
                 const callback: HandlerCallback = async (response: Content) => {
                     const memories = await sendTweet(
-                        this,
+                        this.client,
                         response,
                         message.roomId,
                         this.runtime.getSetting("TWITTER_USERNAME"),
