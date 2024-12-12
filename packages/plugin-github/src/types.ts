@@ -151,8 +151,8 @@ export const ModifyIssueSchema = z.object({
     owner: z.string().min(1, "GitHub owner is required"),
     repo: z.string().min(1, "GitHub repo is required"),
     issue: z.number().min(1, "Issue number is required"),
-    title: z.string().min(1, "Issue title is required"),
-    body: z.string().min(1, "Issue body is required"),
+    title: z.string().optional(),
+    body: z.string().optional(),
     state: z.string().optional(),
     labels: z.array(z.string()).optional(),
 });
@@ -161,8 +161,8 @@ export interface ModifyIssueContent {
     owner: string;
     repo: string;
     issue: number;
-    title: string;
-    body: string;
+    title?: string;
+    body?: string;
     state?: string;
     labels?: string[];
 }

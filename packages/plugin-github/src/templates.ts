@@ -140,9 +140,9 @@ Extract the details for modifying a GitHub issue:
 - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
 - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
 - **issue_number** (number): The number of the issue (e.g., 1)
-- **title** (string): The title of the issue (e.g., "Add new documentation")
-- **body** (string): The body of the issue (e.g., "Add new documentation")
-- **state** (string): The state of the issue (optional)
+- **title** (string): The title of the issue (e.g., "Add new documentation") (optional)
+- **body** (string): The body of the issue (e.g., "Add new documentation") (optional)
+- **state** (string): The state of the issue (e.g., "open", "closed") (optional)
 - **labels** (array): The labels of the issue (optional)
 
 Provide the issue details in the following JSON format:
