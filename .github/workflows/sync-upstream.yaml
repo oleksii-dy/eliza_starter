@@ -37,6 +37,7 @@ jobs:
             - name: Sync main branch
               run: |
                   git checkout main
+                  git pull origin main
                   git merge upstream/main
                   git push origin main
               env:
@@ -47,6 +48,7 @@ jobs:
               run: |
                   git fetch origin develop
                   git checkout develop || git checkout -b develop
+                  git pull origin develop
                   git merge upstream/develop
                   git push origin develop
               env:
@@ -57,6 +59,7 @@ jobs:
               run: |
                   git fetch origin sif-dev
                   git checkout sif-dev
+                  git pull origin sif-dev
 
                   # Try to merge main into sif-dev
                   git merge main --strategy-option ours || {
