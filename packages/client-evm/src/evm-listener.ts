@@ -48,7 +48,7 @@ export class EVMClient {
             );
 
             if (!eventConfig) {
-                elizaLogger.error('No matching event configuration found for topic:', log.topics[0]);
+                //elizaLogger.error('No matching event configuration found for topic:', log.topics[0]);
                 return null;
             }
 
@@ -126,10 +126,10 @@ export class EVMClient {
             // Decode the event
             const decoded = this.decodeEvent(log, contract);
             if (!decoded) {
-                elizaLogger.error('Failed to decode event:', {
-                    address: log.address,
-                    transactionHash: log.transactionHash
-                });
+                //elizaLogger.error('Failed to decode event:', {
+                    //address: log.address,
+                    //transactionHash: log.transactionHash
+                //});
                 return;
             }
 

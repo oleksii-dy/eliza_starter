@@ -6,9 +6,9 @@ import { elizaLogger } from "@ai16z/eliza";
 import { BlockchainEvent } from './types';
 
 /**
- * Template for EVM event responses. Provides character context and event details
- * while maintaining the agent's personality.
- */
+* Core template for EVM event responses.
+* Customize this template based on your specific event monitoring needs.
+*/
 const evmMessageTemplate = `# Task: Generate a conversational response about this blockchain event for {{agentName}}.
 
 About {{agentName}}:
@@ -16,38 +16,35 @@ About {{agentName}}:
 {{lore}}
 {{topics}}
 {{knowledge}}
-{{messageDirections}}
+{{messageExamples}}
 
 Recent conversation history:
 {{recentMessages}}
 
-Event details:
-Event Type: {{content.metadata.eventName}}
-Contract: {{content.metadata.contractAddress}}
-Description: {{content.text}}
-
-Technical Details:
-{{content.metadata.params}}
+Event Information:
+{{content.text}}
 
 # Instructions:
 - Respond conversationally about the event that just occurred
 - Maintain character personality and style throughout
-- Focus on key event details (amounts, addresses, etc.)
-- Reference relevant context if it exists in recent memory
+- Focus on key event details that are relevant based on current conversation context
+- Reference previous events if relevant
 - Be engaging and invite further discussion
 - Keep technical accuracy while staying in character
 ` + messageCompletionFooter;
 
 /**
- * Interface for event-specific formatters
- */
+* Interface for implementing event-specific formatters.
+* Use this to add custom formatting for different event types.
+*/
 interface EventFormatter {
     formatEvent: (decoded: BlockchainEvent['decoded']) => string;
 }
 
 /**
- * Event-specific formatting implementations
- */
+* Example event formatter implementation for Uniswap V3 USDC/DAI swap events.
+* Create your own formatters following this pattern for different event types.
+*/
 const eventFormatters: Record<string, EventFormatter> = {
     Swap: {
         formatEvent: (decoded) => {
@@ -56,34 +53,62 @@ const eventFormatters: Record<string, EventFormatter> = {
                 return Number(value) / Math.pow(10, decimals);
             };
 
-            const amount0 = formatTokenAmount(decoded.params.amount0, 6); // USDC
-            const amount1 = formatTokenAmount(decoded.params.amount1, 18); // DAI
+            const amount0 = formatTokenAmount(decoded.params.amount0, 6); // USDC decimals
+            const amount1 = formatTokenAmount(decoded.params.amount1, 18); // DAI decimals
 
             return amount0 > 0
                 ? `${amount0} USDC swapped for ${Math.abs(amount1)} DAI`
                 : `${Math.abs(amount1)} DAI swapped for ${Math.abs(amount0)} USDC`;
         }
+    },
+    Mint: {
+        formatEvent: (decoded) => {
+            const formatTokenAmount = (amount: string, decimals: number) => {
+                const value = BigInt(amount);
+                const formattedValue = Number(value) / Math.pow(10, decimals);
+                return formattedValue.toFixed(decimals);
+            };
+
+            // amount0 = WBTC (8 decimals), amount1 = WETH (18 decimals)
+            const wbtc = formatTokenAmount(decoded.params.amount0, 8);
+            const weth = formatTokenAmount(decoded.params.amount1, 18);
+
+            return `Liquidity minted: ${wbtc} WBTC and ${weth} WETH were deposited into the position.`;
+        }
+    },
+    Collect: {
+        formatEvent: (decoded) => {
+            const formatTokenAmount = (amount: string, decimals: number) => {
+                const value = BigInt(amount);
+                const formattedValue = Number(value) / Math.pow(10, decimals);
+                return formattedValue.toFixed(decimals);
+            };
+
+            // amount0 = WBTC (8 decimals), amount1 = WETH (18 decimals)
+            const wbtc = formatTokenAmount(decoded.params.amount0, 8);
+            const weth = formatTokenAmount(decoded.params.amount1, 18);
+
+            return `Fees collected: ${wbtc} WBTC and ${weth} WETH were collected from the position.`;
+        }
     }
-    // Additional event formatters can be added here following the same pattern
 };
 
 /**
- * Manages blockchain event processing and agent responses.
- * Currently configured for Direct client usage.
- */
+* Core message manager for handling blockchain events.
+* Handles event processing, memory storage, and agent responses.
+*/
 export class MessageManager {
     constructor(private runtime: IAgentRuntime) {}
 
     /**
-     * Processes blockchain events and generates agent responses.
-     * @param event - The blockchain event to process
+     * Main event handler that processes incoming blockchain events.
+     * @param event The blockchain event to process
      */
     async handleEvent(event: BlockchainEvent): Promise<void> {
-        // Create system ID for blockchain events
         const systemId = stringToUuid("blockchain-system");
 
-        // Note: Currently using Direct client room format
-        // This will need to be modified for other client implementations
+        // Note: Current implementation uses Direct client room format
+        // Modify this for other client implementations (Discord, Telegram, etc.)
         const roomId = stringToUuid(`default-room-${this.runtime.character.name}`);
 
         try {
@@ -128,13 +153,18 @@ export class MessageManager {
     }
 
     /**
-     * Creates content object for the event with both human-readable and technical details
+     * Creates structured content from blockchain event.
+     * Event data is placed in text field for agent accessibility.
+     * Format text using your own custom formatters.
      */
     private createEventContent(event: BlockchainEvent): Content {
         const formatter = eventFormatters[event.decoded.name];
-        const formattedText = formatter
-            ? `A ${event.decoded.name.toLowerCase()} event occurred on ${event.contractAddress}:\n${formatter.formatEvent(event.decoded)}`
-            : `${event.decoded.name} event detected on ${event.contractAddress}`;
+        const eventName = event.decoded.name;
+        const formattedDetails = formatter
+            ? formatter.formatEvent(event.decoded)
+            : `${eventName} event detected on ${event.contractAddress}`;
+
+    const formattedText = `An event of type "${eventName}" occurred on ${event.contractAddress}:\n${formattedDetails}\n\nTransaction: ${event.transactionHash}`;
 
         return {
             text: formattedText,
@@ -142,17 +172,13 @@ export class MessageManager {
             metadata: {
                 type: "blockchain_event",
                 eventName: event.decoded.name,
-                contractAddress: event.contractAddress,
-                transactionHash: event.transactionHash,
-                blockNumber: event.blockNumber,
-                params: event.decoded.params,
-                description: event.decoded.description
+                transactionHash: event.transactionHash
             }
         };
     }
 
     /**
-     * Creates memory object for the event
+     * Creates memory object for event storage.
      */
     private createEventMemory(
         event: BlockchainEvent,
@@ -171,7 +197,7 @@ export class MessageManager {
     }
 
     /**
-     * Generates agent response to the event
+     * Generates agent response using the event template.
      */
     private async generateResponse(state: any) {
         const context = composeContext({
@@ -187,7 +213,7 @@ export class MessageManager {
     }
 
     /**
-     * Stores agent's response in memory
+     * Stores agent's response in memory.
      */
     private async storeResponse(
         response: Content,
