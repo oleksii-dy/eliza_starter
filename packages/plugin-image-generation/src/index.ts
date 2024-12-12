@@ -6,6 +6,7 @@ import {
     Memory,
     Plugin,
     State,
+    ModelProviderName,
 } from "@ai16z/eliza";
 import { generateImage } from "@ai16z/eliza";
 
@@ -193,10 +194,17 @@ const imageGeneration: Action = {
                     "..." //caption.title
                 );
                 //res.push({ image: image, caption: caption.title });
+                elizaLogger.log(
+                    `image:`,
+                    image
+                );
+                if (runtime.imageModelProvider === ModelProviderName.HEURIST) {
 
+                }
+                const text = (runtime.imageModelProvider === ModelProviderName.HEURIST) ? image : "...";
                 callback(
                     {
-                        text: "...", //caption.description,
+                        text, //caption.description,
                         attachments: [
                             {
                                 id: crypto.randomUUID(),

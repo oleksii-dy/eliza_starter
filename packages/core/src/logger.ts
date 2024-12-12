@@ -130,7 +130,7 @@ class ElizaLogger {
 
         if (this.isNode) {
             const c = this.#getColor(foregroundColor, backgroundColor);
-            console.log(c, processedStrings.join(""), this.#getColorReset());
+            console.log(c, new Date(), processedStrings.join(""), this.#getColorReset());
         } else {
             const style = this.#getColor(foregroundColor, backgroundColor);
             console.log(`%c${processedStrings.join("")}`, style);

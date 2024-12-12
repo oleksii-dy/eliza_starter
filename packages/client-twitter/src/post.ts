@@ -7,9 +7,12 @@ import {
     ModelClass,
     stringToUuid,
     parseBooleanFromText,
+    generateImage,
 } from "@ai16z/eliza";
 import { elizaLogger } from "@ai16z/eliza";
 import { ClientBase } from "./base.ts";
+import { saveBase64Image, saveHeuristImage } from "../../plugin-image-generation/src/index.ts";
+import fs from "fs";
 
 const twitterPostTemplate = `
 # Areas of Expertise
@@ -185,14 +188,64 @@ export class TwitterPostClient {
                 return;
             }
 
+            // Generate image by generated content
+            const mediaData = [];
+            const imageSettings = this.runtime.getSetting("imageSettings");
+            const images = await generateImage(
+                {
+                    prompt: content,
+                    width: imageSettings?.width,
+                    height: imageSettings?.height,
+                },
+                this.runtime
+            );
+            if (images.success && images.data && images.data.length > 0) {
+                elizaLogger.log(
+                    "Image generation successful, number of images:",
+                    images.data.length
+                );
+                for (let i = 0; i < images.data.length; i++) {
+                    const image = images.data[i];
+
+                    // Save the image and get filepath
+                    const filename = `generated_${Date.now()}_${i}`;
+
+                    // Choose save function based on image data format
+                    const filepath = image.startsWith("http")
+                        ? await saveHeuristImage(image, filename)
+                        : saveBase64Image(image, filename);
+
+                    mediaData.push({
+                        data: fs.readFileSync(filepath),
+                        mediaType: 'image/png'
+                    })
+                    elizaLogger.log(`Processing image ${i + 1}:`, filename);
+                    elizaLogger.log(
+                        `image:`,
+                        image
+                    );
+                }
+            } else {
+                elizaLogger.error("Image generation failed or returned no data.");
+            }
+
             try {
                 elizaLogger.log(`Posting new tweet:\n ${content}`);
+                let body = {}
+                if (mediaData.length > 0) {
+                    const result = await this.client.requestQueue.add(
+                        async () =>
+                            await this.client.twitterClient.sendTweet(content, undefined, mediaData)
+                    );
+                    body = await result.json();
+                } else {
+                    const result = await this.client.requestQueue.add(
+                        async () =>
+                            await this.client.twitterClient.sendTweet(content)
+                    );
+                    body = await result.json();
+                }
 
-                const result = await this.client.requestQueue.add(
-                    async () =>
-                        await this.client.twitterClient.sendTweet(content)
-                );
-                const body = await result.json();
                 if (!body?.data?.create_tweet?.tweet_results?.result) {
                     console.error("Error sending tweet; Bad response:", body);
                     return;
