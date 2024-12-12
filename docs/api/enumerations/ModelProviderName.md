@@ -18,7 +18,7 @@ Available model providers
 [packages/core/src/types.ts:215](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L215)
 >>>>>>> origin/main
 
-***
+---
 
 ### ETERNALAI
 
@@ -32,7 +32,7 @@ Available model providers
 [packages/core/src/types.ts:216](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L216)
 >>>>>>> origin/main
 
-***
+---
 
 ### ANTHROPIC
 
@@ -46,7 +46,7 @@ Available model providers
 [packages/core/src/types.ts:217](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L217)
 >>>>>>> origin/main
 
-***
+---
 
 ### GROK
 
@@ -60,7 +60,7 @@ Available model providers
 [packages/core/src/types.ts:218](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L218)
 >>>>>>> origin/main
 
-***
+---
 
 ### GROQ
 
@@ -74,7 +74,7 @@ Available model providers
 [packages/core/src/types.ts:219](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L219)
 >>>>>>> origin/main
 
-***
+---
 
 ### LLAMACLOUD
 
@@ -88,7 +88,7 @@ Available model providers
 [packages/core/src/types.ts:220](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L220)
 >>>>>>> origin/main
 
-***
+---
 
 ### TOGETHER
 
@@ -102,7 +102,7 @@ Available model providers
 [packages/core/src/types.ts:221](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L221)
 >>>>>>> origin/main
 
-***
+---
 
 ### LLAMALOCAL
 
@@ -116,7 +116,7 @@ Available model providers
 [packages/core/src/types.ts:222](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L222)
 >>>>>>> origin/main
 
-***
+---
 
 ### GOOGLE
 
@@ -130,11 +130,11 @@ Available model providers
 [packages/core/src/types.ts:223](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L223)
 >>>>>>> origin/main
 
-***
+---
 
-### CLAUDE\_VERTEX
+### CLAUDE_VERTEX
 
-> **CLAUDE\_VERTEX**: `"claude_vertex"`
+> **CLAUDE_VERTEX**: `"claude_vertex"`
 
 #### Defined in
 
@@ -144,7 +144,7 @@ Available model providers
 [packages/core/src/types.ts:224](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L224)
 >>>>>>> origin/main
 
-***
+---
 
 ### REDPILL
 
@@ -158,7 +158,7 @@ Available model providers
 [packages/core/src/types.ts:225](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L225)
 >>>>>>> origin/main
 
-***
+---
 
 ### OPENROUTER
 
@@ -172,7 +172,7 @@ Available model providers
 [packages/core/src/types.ts:226](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L226)
 >>>>>>> origin/main
 
-***
+---
 
 ### OLLAMA
 
@@ -186,7 +186,7 @@ Available model providers
 [packages/core/src/types.ts:227](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L227)
 >>>>>>> origin/main
 
-***
+---
 
 ### HEURIST
 
@@ -200,11 +200,11 @@ Available model providers
 [packages/core/src/types.ts:228](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L228)
 >>>>>>> origin/main
 
-***
+---
 
 ### GALADRIEL
 
-> **GALADRIEL**: `"galadriel"`
+**GALADRIEL**: `"galadriel"`
 
 #### Defined in
 
@@ -214,7 +214,7 @@ Available model providers
 [packages/core/src/types.ts:229](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L229)
 >>>>>>> origin/main
 
-***
+---
 
 ### FAL
 
@@ -228,7 +228,7 @@ Available model providers
 [packages/core/src/types.ts:230](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L230)
 >>>>>>> origin/main
 
-***
+---
 
 ### GAIANET
 
@@ -242,11 +242,11 @@ Available model providers
 [packages/core/src/types.ts:231](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L231)
 >>>>>>> origin/main
 
-***
+---
 
-### ALI\_BAILIAN
+### ALI_BAILIAN
 
-> **ALI\_BAILIAN**: `"ali_bailian"`
+> **ALI_BAILIAN**: `"ali_bailian"`
 
 #### Defined in
 
@@ -256,7 +256,7 @@ Available model providers
 [packages/core/src/types.ts:232](https://github.com/ai16z/eliza/blob/main/packages/core/src/types.ts#L232)
 >>>>>>> origin/main
 
-***
+---
 
 ### VOLENGINE
 
