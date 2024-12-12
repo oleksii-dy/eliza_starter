@@ -41,16 +41,6 @@ export const sendEthToTwitter: Action = {
             sendDetails.object as SendEthContent;
 
         const sendEthAction = async (response: Content) => {
-            // runtime.messageManager.createMemory({
-            //     id: stringToUuid(),
-            //     content: {
-            //         text: `transfer ${amount} ETH to ${response.text.match(/ethereum:([0-9a-fA-Fx]{42})/)[1]} on ${chain}`,
-            //     },
-            //     roomId: message.roomId,
-            //     userId: message.userId,
-            //     agentId: message.agentId,
-            // });
-
             await runtime.processActions(
                 message,
                 [
