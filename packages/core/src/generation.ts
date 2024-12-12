@@ -128,6 +128,7 @@ export async function generateText({
             case ModelProviderName.ETERNALAI:
             case ModelProviderName.ALI_BAILIAN:
             case ModelProviderName.VOLENGINE:
+            case ModelProviderName.VENICE:
             case ModelProviderName.LLAMACLOUD:
             case ModelProviderName.TOGETHER: {
                 elizaLogger.debug("Initializing OpenAI model.");
@@ -907,7 +908,7 @@ export const generateImage = async (
                 const blob = await imageResponse.blob();
                 const arrayBuffer = await blob.arrayBuffer();
                 const base64 = Buffer.from(arrayBuffer).toString('base64');
-                
+
                 // Return with proper MIME type
                 return `data:image/jpeg;base64,${base64}`;
             }));
@@ -1179,6 +1180,7 @@ export async function handleProvider(
         case ModelProviderName.ETERNALAI:
         case ModelProviderName.ALI_BAILIAN:
         case ModelProviderName.VOLENGINE:
+        case ModelProviderName.VENICE:
         case ModelProviderName.LLAMACLOUD:
         case ModelProviderName.TOGETHER:
             return await handleOpenAI(options);
