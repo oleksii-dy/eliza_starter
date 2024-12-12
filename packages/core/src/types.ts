@@ -381,7 +381,7 @@ export type Handler = (
 export type HandlerCallback = (
     response: Content,
     files?: any
-) => Promise<Memory[]>;
+) => Promise<Memory[] | void>;
 
 /**
  * Validator function type for actions/evaluators
