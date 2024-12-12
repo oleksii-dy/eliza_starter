@@ -8,6 +8,7 @@ import {
     ModelClass,
     generateObjectV2,
     HandlerCallback,
+    stringToUuid,
 } from "@ai16z/eliza";
 import { PrivyProvider } from "../providers/privy";
 import { TwitterTemplate } from "../templates";
@@ -18,7 +19,7 @@ import {
 } from "../types";
 import { SimpleTwitterManager } from "@ai16z/client-twitter";
 
-export class PrivyTwitterWalletAction {
+export class TwitterWalletAction {
     privyProvider: PrivyProvider;
     agentRuntime: IAgentRuntime;
 
@@ -128,7 +129,7 @@ export const getWalletForTwitter: Action = {
     },
     handler: async (
         runtime: IAgentRuntime,
-        _message: Memory,
+        message: Memory,
         state: State,
         _options: any,
         callback: HandlerCallback
@@ -162,11 +163,22 @@ export const getWalletForTwitter: Action = {
         const { username } = twitterDetails.object as TwitterUsernameContent;
         const privyProvider = new PrivyProvider(runtime);
 
-        const action = new PrivyTwitterWalletAction(privyProvider, runtime);
+        const action = new TwitterWalletAction(privyProvider, runtime);
         const wallets = await action.getTwitterUserWallet(username);
 
+        const walletInfo = `@${username} wallet address is ${wallets.map((item) => `${item.chain}:${item.address}`).join(" ")}`;
+        runtime.messageManager.createMemory({
+            id: stringToUuid(username + "_twitter_" + message.roomId),
+            content: {
+                text: walletInfo,
+            },
+            roomId: message.roomId,
+            userId: message.userId,
+            agentId: message.agentId,
+        });
+
         callback({
-            text: `@${username} wallet addresses are ${wallets.map((item) => `${item.chain}:${item.address}`).join(" ")}`,
+            text: walletInfo,
             content: {
                 success: true,
             },

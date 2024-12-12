@@ -13,3 +13,18 @@ export const isTwitterUsernameContent = (
 ): object is TwitterUsernameContent => {
     return TwitterUsernameSchema.safeParse(object).success;
 };
+
+export interface SendEthContent {
+    username: string;
+    amount: string;
+    chain?: string;
+}
+export const SendEthSchema = z.object({
+    username: z.string(),
+    amount: z.string(),
+    chain: z.string().optional(),
+});
+
+export const isSendEthContent = (object: any): object is SendEthContent => {
+    return SendEthSchema.safeParse(object).success;
+};
