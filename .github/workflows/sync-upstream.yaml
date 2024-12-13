@@ -41,7 +41,7 @@ jobs:
                   git merge upstream/main
                   git push origin main
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
 
             # Add sync develop branch
             - name: Sync develop branch
@@ -52,7 +52,7 @@ jobs:
                   git merge upstream/develop
                   git push origin develop
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
 
             # Updated to merge both main and develop into sif-dev
             - name: Merge into sif-dev
@@ -77,4 +77,4 @@ jobs:
 
                   git push origin sif-dev
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.WORKFLOW_TOKEN }}
