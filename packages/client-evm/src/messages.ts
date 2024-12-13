@@ -42,8 +42,8 @@ interface EventFormatter {
 }
 
 /**
-* Example event formatter implementation for Uniswap V3 USDC/DAI swap events.
-* Create your own formatters following this pattern for different event types.
+* Example event formatter implementation.
+* You can skip formatting if not needed by removing or not using these.
 */
 const eventFormatters: Record<string, EventFormatter> = {
     Swap: {
@@ -107,9 +107,11 @@ export class MessageManager {
     async handleEvent(event: BlockchainEvent): Promise<void> {
         const systemId = stringToUuid("blockchain-system");
 
-        // Note: Current implementation uses Direct client room format
-        // Modify this for other client implementations (Discord, Telegram, etc.)
-        const roomId = stringToUuid(`default-room-${this.runtime.character.name}`);
+        // For simplicity, hardcode the Discord channel ID:
+        const channelId = "838504036557651969"; // Replace with your Discord channel ID
+
+        // Use a unique room for these events, if desired. Here we just default to one room:
+        const roomId = stringToUuid(`evm-event-room-${this.runtime.character.name}`);
 
         try {
             await this.runtime.ensureConnection(
@@ -136,6 +138,7 @@ export class MessageManager {
 
             if (response) {
                 await this.storeResponse(response, event, roomId);
+                await (this.runtime as any).discordClient.sendToChannel(channelId, response.text);
             }
 
         } catch (error) {
@@ -155,7 +158,7 @@ export class MessageManager {
     /**
      * Creates structured content from blockchain event.
      * Event data is placed in text field for agent accessibility.
-     * Format text using your own custom formatters.
+     * Format text using your own custom formatters if desired.
      */
     private createEventContent(event: BlockchainEvent): Content {
         const formatter = eventFormatters[event.decoded.name];
@@ -164,7 +167,7 @@ export class MessageManager {
             ? formatter.formatEvent(event.decoded)
             : `${eventName} event detected on ${event.contractAddress}`;
 
-    const formattedText = `An event of type "${eventName}" occurred on ${event.contractAddress}:\n${formattedDetails}\n\nTransaction: ${event.transactionHash}`;
+        const formattedText = `An event of type "${eventName}" occurred on ${event.contractAddress}:\n${formattedDetails}\n\nTransaction: ${event.transactionHash}`;
 
         return {
             text: formattedText,

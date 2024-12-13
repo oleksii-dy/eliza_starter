@@ -23,6 +23,8 @@ import channelStateProvider from "./providers/channelState.ts";
 import voiceStateProvider from "./providers/voiceState.ts";
 import { VoiceManager } from "./voice.ts";
 import { PermissionsBitField } from "discord.js";
+import { TextChannel, ChannelType } from "discord.js";
+import { sendMessageInChunks } from "./utils"; // adjust if your utils path differs
 
 export class DiscordClient extends EventEmitter {
     apiToken: string;
@@ -380,6 +382,30 @@ export class DiscordClient extends EventEmitter {
             this.voiceManager.scanGuild(fullGuild);
         }
     }
+
+    /**
+     * Sends a given text message to the specified Discord channel.
+     * This keeps all discord.js interaction inside this class.
+     */
+    async sendToChannel(channelId: string, text: string): Promise<void> {
+        try {
+            const channel = await this.client.channels.fetch(channelId);
+            if (!channel) {
+                elizaLogger.error(`Could not fetch channel with ID: ${channelId}`);
+                return;
+            }
+
+            if (channel.type !== ChannelType.GuildText) {
+                elizaLogger.error(`Channel ${channelId} is not a text channel`);
+                return;
+            }
+
+            // Since sendMessageInChunks expects a TextChannel, cast it
+            await sendMessageInChunks(channel as TextChannel, text, null, []);
+        } catch (error) {
+            elizaLogger.error("Error sending message to Discord channel:", error);
+        }
+    }
 }
 
 export function startDiscord(runtime: IAgentRuntime) {
@@ -387,7 +413,12 @@ export function startDiscord(runtime: IAgentRuntime) {
 }
 
 export const DiscordClientInterface: ElizaClient = {
-    start: async (runtime: IAgentRuntime) => new DiscordClient(runtime),
+    start: async (runtime: IAgentRuntime) => {
+        const discordClientInstance = new DiscordClient(runtime);
+        // Store the instance in runtime so it can be accessed later
+        (runtime as any).discordClient = discordClientInstance;
+        return discordClientInstance;
+    },
     stop: async (_runtime: IAgentRuntime) => {
         console.warn("Discord client does not support stopping yet");
     },

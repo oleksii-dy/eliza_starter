@@ -2,10 +2,16 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "outDir": "./dist",
-        "rootDir": "./src",
+        "rootDir": "../../",
         "moduleResolution": "node",
         "resolveJsonModule": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "baseUrl": "../../",
+        "paths": {
+            "client-discord/*": [
+                "packages/client-discord/src/*"
+            ]
+        }
     },
     "include": [
         "src/**/*"
