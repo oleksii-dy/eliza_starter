@@ -1,6 +1,6 @@
 {
     "name": "Yaposhi",
-    "plugins": ["solana"],
+    "plugins": [],
     "clients": ["twitter"],
     "modelProvider": "anthropic",
     "settings": {

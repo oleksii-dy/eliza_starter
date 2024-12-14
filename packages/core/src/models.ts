@@ -16,7 +16,8 @@ export const models: Models = {
             [ModelClass.SMALL]: settings.SMALL_OPENAI_MODEL || "gpt-4o-mini",
             [ModelClass.MEDIUM]: settings.MEDIUM_OPENAI_MODEL || "gpt-4o",
             [ModelClass.LARGE]: settings.LARGE_OPENAI_MODEL || "gpt-4o",
-            [ModelClass.EMBEDDING]: settings.EMBEDDING_OPENAI_MODEL || "text-embedding-3-small",
+            [ModelClass.EMBEDDING]:
+                settings.EMBEDDING_OPENAI_MODEL || "text-embedding-3-small",
             [ModelClass.IMAGE]: settings.IMAGE_OPENAI_MODEL || "dall-e-3",
         },
     },
@@ -55,9 +56,12 @@ export const models: Models = {
         },
         endpoint: "https://api.anthropic.com/v1",
         model: {
-            [ModelClass.SMALL]: settings.SMALL_ANTHROPIC_MODEL || "claude-3-haiku-20240307",
-            [ModelClass.MEDIUM]: settings.MEDIUM_ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022",
-            [ModelClass.LARGE]: settings.LARGE_ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022",
+            [ModelClass.SMALL]:
+                settings.SMALL_ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022",
+            [ModelClass.MEDIUM]:
+                settings.MEDIUM_ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022",
+            [ModelClass.LARGE]:
+                settings.LARGE_ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022",
         },
     },
     [ModelProviderName.CLAUDE_VERTEX]: {
@@ -425,7 +429,7 @@ export const models: Models = {
             [ModelClass.SMALL]: settings.SMALL_NANOGPT_MODEL || "gpt-4o-mini",
             [ModelClass.MEDIUM]: settings.MEDIUM_NANOGPT_MODEL || "gpt-4o",
             [ModelClass.LARGE]: settings.LARGE_NANOGPT_MODEL || "gpt-4o",
-        }
+        },
     },
     [ModelProviderName.HYPERBOLIC]: {
         endpoint: "https://api.hyperbolic.xyz/v1",
@@ -461,7 +465,8 @@ export const models: Models = {
         },
         model: {
             [ModelClass.SMALL]: settings.SMALL_VENICE_MODEL || "llama-3.3-70b",
-            [ModelClass.MEDIUM]: settings.MEDIUM_VENICE_MODEL || "llama-3.3-70b",
+            [ModelClass.MEDIUM]:
+                settings.MEDIUM_VENICE_MODEL || "llama-3.3-70b",
             [ModelClass.LARGE]: settings.LARGE_VENICE_MODEL || "llama-3.1-405b",
         },
     },
