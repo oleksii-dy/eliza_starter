@@ -25,12 +25,14 @@ Event Information:
 {{content.text}}
 
 # Instructions:
-- Respond conversationally about the event that just occurred
-- Maintain character personality and style throughout
-- Focus on key event details that are relevant based on current conversation context
-- Reference previous events if relevant
-- Be engaging and invite further discussion
-- Keep technical accuracy while staying in character
+- Keep responses short and focused on the key data
+- Include amounts and transaction hash in a consistent format
+- Add a short personal comment based on conversational context
+- Format example:
+  Amount: 100 USDC ➜ 99.95 DAI
+  Tx Hash: 0x123...
+  *brief comment if relevant*
+- Technical accuracy is crucial
 ` + messageCompletionFooter;
 
 /**
@@ -108,10 +110,11 @@ export class MessageManager {
         const systemId = stringToUuid("blockchain-system");
 
         // For simplicity, hardcode the Discord channel ID:
-        const channelId = "838504036557651969"; // Replace with your Discord channel ID
+        const channelId = "1312089061053300786"; // Replace with your Discord channel ID
 
         // Use a unique room for these events, if desired. Here we just default to one room:
-        const roomId = stringToUuid(`evm-event-room-${this.runtime.character.name}`);
+       // const roomId = stringToUuid(`evm-event-room-${this.runtime.character.name}`);
+        const roomId = stringToUuid(`${channelId}-${this.runtime.agentId}`);
 
         try {
             await this.runtime.ensureConnection(
@@ -123,7 +126,7 @@ export class MessageManager {
             );
 
             const eventContent = this.createEventContent(event);
-            const eventMemory = this.createEventMemory(event, eventContent, systemId, roomId);
+            const eventMemory = await this.createEventMemory(event, eventContent, systemId, roomId); // Add await here
 
             await this.runtime.messageManager.createMemory(eventMemory);
 
@@ -183,13 +186,13 @@ export class MessageManager {
     /**
      * Creates memory object for event storage.
      */
-    private createEventMemory(
+    private async createEventMemory(
         event: BlockchainEvent,
         content: Content,
         userId: UUID,
         roomId: UUID
-    ): Memory {
-        return {
+    ): Promise<Memory> {
+        const memory = {
             id: stringToUuid(event.transactionHash + "-" + this.runtime.agentId),
             userId,
             agentId: this.runtime.agentId,
@@ -197,6 +200,8 @@ export class MessageManager {
             content,
             createdAt: new Date(event.timestamp).getTime()
         };
+
+        return await this.runtime.messageManager.addEmbeddingToMemory(memory);
     }
 
     /**
@@ -239,7 +244,8 @@ export class MessageManager {
             createdAt: Date.now()
         };
 
-        await this.runtime.messageManager.createMemory(responseMemory);
+        const memoryWithEmbedding = await this.runtime.messageManager.addEmbeddingToMemory(responseMemory);
+        await this.runtime.messageManager.createMemory(memoryWithEmbedding);
         elizaLogger.log(response.text);
     }
 }
