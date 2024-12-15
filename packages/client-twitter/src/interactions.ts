@@ -334,7 +334,8 @@ export class TwitterInteractionClient {
                         response,
                         message.roomId,
                         this.runtime.getSetting("TWITTER_USERNAME"),
-                        tweet.id
+                        tweet.id,
+                        tweet.text
                     );
                     return memories;
                 };
