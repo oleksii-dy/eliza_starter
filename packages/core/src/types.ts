@@ -617,6 +617,7 @@ export enum Clients {
     LENS = "lens",
     AUTO = "auto",
     SLACK = "slack",
+    WORDPRESS = "wordpress",
 }
 
 export interface IAgentConfig {
@@ -674,6 +675,7 @@ export type Character = {
         discordMessageHandlerTemplate?: string;
         slackMessageHandlerTemplate?: string;
         slackShouldRespondTemplate?: string;
+        wordpressPostTemplate?: string;
     };
 
     /** Character biography */

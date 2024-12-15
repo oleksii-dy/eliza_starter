@@ -7,6 +7,7 @@ import { LensAgentClient } from "@ai16z/client-lens";
 import { SlackClientInterface } from "@ai16z/client-slack";
 import { TelegramClientInterface } from "@ai16z/client-telegram";
 import { TwitterClientInterface } from "@ai16z/client-twitter";
+import { WordpressClientInterface } from "@ai16z/client-wordpress";
 import {
     AgentRuntime,
     CacheManager,
@@ -392,6 +393,11 @@ export async function initializeClients(
         }
     }
 
+    if (clientTypes.includes("wordpress")) {
+        const wordpressClient = await WordpressClientInterface.start(runtime);
+        clients.push(wordpressClient);
+    }
+
     if (clientTypes.includes(Clients.FARCASTER)) {
         // why is this one different :(
         const farcasterClient = new FarcasterAgentClient(runtime);
@@ -414,6 +420,11 @@ export async function initializeClients(
     if (clientTypes.includes("slack")) {
         const slackClient = await SlackClientInterface.start(runtime);
         if (slackClient) clients.slack = slackClient; // Use object property instead of push
+    }
+
+    if (clientTypes.includes("wordpress")) {
+        const wordpressClient = await WordpressClientInterface.start(runtime);
+        if (wordpressClient) clients.wordpress = wordpressClient;
     }
 
     if (character.plugins?.length > 0) {
