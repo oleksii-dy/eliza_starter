@@ -15,6 +15,7 @@ import {
     documentationFilesProvider,
     releasesProvider,
 } from "@ai16z/plugin-github";
+
 export class GitHubClient extends EventEmitter {
     apiToken: string;
     runtime: IAgentRuntime;
