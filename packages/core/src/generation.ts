@@ -36,6 +36,7 @@ import {
     ActionResponse
 } from "./types.ts";
 import { fal } from "@fal-ai/client";
+import { mainSystemPrompt } from "./templates.ts";
 
 /**
  * Send a message to the model for a text generateText - receive a string back and parse how you'd like
@@ -52,14 +53,18 @@ import { fal } from "@fal-ai/client";
 
 export async function generateText({
     runtime,
+    systemPrompt,
     context,
     modelClass,
     stop,
+    modelProvider,
 }: {
     runtime: IAgentRuntime;
+    systemPrompt?: string;
     context: string;
     modelClass: string;
     stop?: string[];
+    modelProvider?: ModelProviderName;
 }): Promise<string> {
     if (!context) {
         console.error("generateText context is empty");
@@ -69,11 +74,11 @@ export async function generateText({
     elizaLogger.log("Generating text...");
 
     elizaLogger.info("Generating text with options:", {
-        modelProvider: runtime.modelProvider,
+        modelProvider: modelProvider || runtime.modelProvider,
         model: modelClass,
     });
 
-    const provider = runtime.modelProvider;
+    const provider = modelProvider || runtime.modelProvider;
     const endpoint =
         runtime.character.modelEndpointOverride || models[provider].endpoint;
     let model = models[provider].model[modelClass];
@@ -169,7 +174,34 @@ export async function generateText({
 
         switch (provider) {
             // OPENAI & LLAMACLOUD shared same structure.
-            case ModelProviderName.OPENAI:
+            case ModelProviderName.OPENAI: {
+                const apiKey = runtime.getSetting('OPENAI_API_KEY');
+                console.log("Using OpenAI GPT model");
+                const openai = new OpenAI({ apiKey });
+
+                // Ensure stop is a valid array of strings or undefined
+                const validatedStop = Array.isArray(stop) && stop.every(item => typeof item === 'string') ? stop : undefined;
+
+                try {
+                    const completion = await openai.chat.completions.create({
+                        model: 'gpt-4o-mini',
+                        messages: [
+                            { role: 'user', content: context }
+                        ],
+                        temperature: 0.2,
+                        max_tokens: 16384, // Use max_tokens instead of max_completion_tokens
+                        stop: validatedStop, // Pass only if valid
+                        frequency_penalty,
+                        presence_penalty,
+                    });
+
+                    const openaiResponse = completion.choices[0].message.content;
+                    response = openaiResponse;
+                } catch (error) {
+                    console.error("Error in OpenAI completion:", error);
+                }
+                break;
+            }
             case ModelProviderName.ETERNALAI:
             case ModelProviderName.ALI_BAILIAN:
             case ModelProviderName.VOLENGINE:
@@ -237,6 +269,8 @@ export async function generateText({
                     model: anthropic.languageModel(model),
                     prompt: context,
                     system:
+                        systemPrompt ??
+                        mainSystemPrompt ??
                         runtime.character.system ??
                         settings.SYSTEM_PROMPT ??
                         undefined,
@@ -642,7 +676,8 @@ export async function generateShouldRespond({
             const response = await generateText({
                 runtime,
                 context,
-                modelClass,
+                modelClass: ModelClass.SMALL,
+                modelProvider: ModelProviderName.OPENAI,
             });
 
             elizaLogger.debug("Received response from generateText:", response);
@@ -730,7 +765,8 @@ export async function generateTrueOrFalse({
                 stop,
                 runtime,
                 context,
-                modelClass,
+                modelClass: ModelClass.SMALL,
+                modelProvider: ModelProviderName.OPENAI,
             });
 
             const parsedResponse = parseBooleanFromText(response.trim());
@@ -835,10 +871,12 @@ export async function generateObjectDEPRECATED({
 
 export async function generateObjectArray({
     runtime,
+    systemPrompt,
     context,
     modelClass,
 }: {
     runtime: IAgentRuntime;
+    systemPrompt?: string;
     context: string;
     modelClass: string;
 }): Promise<any[]> {
@@ -852,6 +890,7 @@ export async function generateObjectArray({
         try {
             const response = await generateText({
                 runtime,
+                systemPrompt,
                 context,
                 modelClass,
             });
@@ -883,10 +922,12 @@ export async function generateObjectArray({
  */
 export async function generateMessageResponse({
     runtime,
+    systemPrompt,
     context,
     modelClass,
 }: {
     runtime: IAgentRuntime;
+    systemPrompt?: string;
     context: string;
     modelClass: string;
 }): Promise<Content> {
@@ -900,6 +941,7 @@ export async function generateMessageResponse({
 
             const response = await generateText({
                 runtime,
+                systemPrompt,
                 context,
                 modelClass,
             });
