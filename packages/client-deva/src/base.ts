@@ -51,7 +51,7 @@ export class ClientBase {
                 Authorization: `Bearer ${this.accessToken}`,
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ text, in_reply_to_id, author_type: "USER" }),
+            body: JSON.stringify({ text, in_reply_to_id, author_type: "BOT" }),
         }).then((res) => res.json());
 
         console.log(res);
