@@ -610,13 +610,16 @@ export type Plugin = {
  */
 export enum Clients {
     DISCORD = "discord",
-    DIRECT = "direct",
+    // you can't specify this in characters
+    // all characters are registered with this
+    //    DIRECT = "direct",
     TWITTER = "twitter",
     TELEGRAM = "telegram",
     FARCASTER = "farcaster",
     LENS = "lens",
     AUTO = "auto",
     SLACK = "slack",
+    NOSTR = "nostr",
 }
 
 export interface IAgentConfig {
@@ -755,7 +758,6 @@ export type Character = {
         slack?: {
             shouldIgnoreBotMessages?: boolean;
             shouldIgnoreDirectMessages?: boolean;
-
         };
     };
 
@@ -777,7 +779,7 @@ export type Character = {
     /** Optional NFT prompt */
     nft?: {
         prompt: string;
-    }
+    };
 };
 
 /**
@@ -1174,7 +1176,6 @@ export interface IPdfService extends Service {
 export interface IAwsS3Service extends Service {
     uploadFile(
         imagePath: string,
-        subDirectory: string,
         useSignedUrl: boolean,
         expiresIn: number
     ): Promise<{
