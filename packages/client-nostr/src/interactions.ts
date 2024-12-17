@@ -20,9 +20,8 @@ export class NostrInteractionManager {
 
             this.timeout = setTimeout(
                 handleInteractionsLoop,
-                Number(
-                    this.runtime.getSetting("FARCASTER_POLL_INTERVAL") || 120
-                ) * 1000 // Default to 2 minutes
+                Number(this.runtime.getSetting("NOSTR_POLL_INTERVAL") || 120) *
+                    1000 // Default to 2 minutes
             );
         };
 

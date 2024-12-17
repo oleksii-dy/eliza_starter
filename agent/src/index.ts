@@ -7,11 +7,12 @@ import { LensAgentClient } from "@ai16z/client-lens";
 import { SlackClientInterface } from "@ai16z/client-slack";
 import { TelegramClientInterface } from "@ai16z/client-telegram";
 import { TwitterClientInterface } from "@ai16z/client-twitter";
+import { NostrAgentClient } from "@ai16z/client-nostr";
+
 import {
     AgentRuntime,
     CacheManager,
     Character,
-    Clients,
     DbCacheAdapter,
     defaultCharacter,
     elizaLogger,
@@ -363,7 +364,10 @@ export async function initializeClients(
         if (telegramClient) clients.telegram = telegramClient;
     }
 
-    if (clientTypes.includes(Clients.TWITTER)) {
+    if (clientTypes.includes("twitter")) {
+        TwitterClientInterface.enableSearch = !isFalsish(
+            getSecret(character, "TWITTER_SEARCH_ENABLE")
+        );
         const twitterClient = await TwitterClientInterface.start(runtime);
 
         if (twitterClient) {
@@ -386,6 +390,14 @@ export async function initializeClients(
         const lensClient = new LensAgentClient(runtime);
         lensClient.start();
         clients.lens = lensClient;
+    }
+
+    if (clientTypes.includes("nostr")) {
+        const nostrClient = new NostrAgentClient(runtime);
+        if (nostrClient) {
+            nostrClient.start();
+            clients.nostr = nostrClient;
+        }
     }
 
     elizaLogger.log("client keys", Object.keys(clients));
@@ -446,7 +458,7 @@ export async function createAgent(
     db: IDatabaseAdapter,
     cache: ICacheManager,
     token: string
-): Promise<AgentRuntime> {
+): AgentRuntime {
     elizaLogger.success(
         elizaLogger.successesTitle,
         "Creating runtime for character",
@@ -571,10 +583,7 @@ function initializeDbCache(character: Character, db: IDatabaseCacheAdapter) {
     return cache;
 }
 
-async function startAgent(
-    character: Character,
-    directClient
-): Promise<AgentRuntime> {
+async function startAgent(character: Character, directClient): AgentRuntime {
     let db: IDatabaseAdapter & IDatabaseCacheAdapter;
     try {
         character.id ??= stringToUuid(character.name);
@@ -648,9 +657,9 @@ const startAgents = async () => {
     }
 
     // upload some agent functionality into directClient
-    directClient.startAgent = async character => {
-      // wrap it so we don't have to inject directClient later
-      return startAgent(character, directClient)
+    directClient.startAgent = async (character) => {
+        // wrap it so we don't have to inject directClient later
+        return startAgent(character, directClient);
     };
     directClient.start(serverPort);
 
