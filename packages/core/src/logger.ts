@@ -25,7 +25,7 @@ class ElizaLogger {
     logsTitle = "LOGS";
     warningsTitle = "WARNINGS";
     errorsTitle = "ERRORS";
-    informationsTitle = "INFORMATIONS";
+    informationsTitle = "INFORMATION";
     successesTitle = "SUCCESS";
     debugsTitle = "DEBUG";
     assertsTitle = "ASSERT";
