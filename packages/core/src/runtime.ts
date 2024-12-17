@@ -407,22 +407,22 @@ export class AgentRuntime implements IAgentRuntime {
     }
 
     async stop() {
-      elizaLogger.debug('runtime::stop - character', this.character)
-      // stop services, they don't have a stop function
+        elizaLogger.debug('runtime::stop - character', this.character)
+        // stop services, they don't have a stop function
         // just initialize
 
-      // plugins
+        // plugins
         // have actions, providers, evaluators (no start/stop)
         // services (just initialized), clients
 
-      // client have a start
-      for(const cStr in this.clients) {
-        const c = this.clients[cStr]
-        elizaLogger.log('runtime::stop - requesting', cStr, 'client stop for', this.character.name)
-        c.stop()
-      }
-      // we don't need to unregister with directClient
-      // don't need to worry about knowledge
+        // client have a start
+        for (const cStr in this.clients) {
+            const c = this.clients[cStr]
+            elizaLogger.log('runtime::stop - requesting', cStr, 'client stop for', this.character.name)
+            c.stop()
+        }
+        // we don't need to unregister with directClient
+        // don't need to worry about knowledge
     }
 
     /**
@@ -466,6 +466,7 @@ export class AgentRuntime implements IAgentRuntime {
             return this.character.settings[key];
         }
 
+        elizaLogger.info(`getting ${key} from env`);
         // if not, check if it's in the settings object
         if (settings[key]) {
             return settings[key];
@@ -1003,12 +1004,12 @@ Text: ${attachment.text}
             lore,
             adjective:
                 this.character.adjectives &&
-                this.character.adjectives.length > 0
+                    this.character.adjectives.length > 0
                     ? this.character.adjectives[
-                          Math.floor(
-                              Math.random() * this.character.adjectives.length
-                          )
-                      ]
+                    Math.floor(
+                        Math.random() * this.character.adjectives.length
+                    )
+                    ]
                     : "",
             knowledge: formattedKnowledge,
             knowledgeData: knowledegeData,
@@ -1022,70 +1023,70 @@ Text: ${attachment.text}
             topic:
                 this.character.topics && this.character.topics.length > 0
                     ? this.character.topics[
-                          Math.floor(
-                              Math.random() * this.character.topics.length
-                          )
-                      ]
+                    Math.floor(
+                        Math.random() * this.character.topics.length
+                    )
+                    ]
                     : null,
             topics:
                 this.character.topics && this.character.topics.length > 0
                     ? `${this.character.name} is interested in ` +
-                      this.character.topics
-                          .sort(() => 0.5 - Math.random())
-                          .slice(0, 5)
-                          .map((topic, index) => {
-                              if (index === this.character.topics.length - 2) {
-                                  return topic + " and ";
-                              }
-                              // if last topic, don't add a comma
-                              if (index === this.character.topics.length - 1) {
-                                  return topic;
-                              }
-                              return topic + ", ";
-                          })
-                          .join("")
+                    this.character.topics
+                        .sort(() => 0.5 - Math.random())
+                        .slice(0, 5)
+                        .map((topic, index) => {
+                            if (index === this.character.topics.length - 2) {
+                                return topic + " and ";
+                            }
+                            // if last topic, don't add a comma
+                            if (index === this.character.topics.length - 1) {
+                                return topic;
+                            }
+                            return topic + ", ";
+                        })
+                        .join("")
                     : "",
             characterPostExamples:
                 formattedCharacterPostExamples &&
-                formattedCharacterPostExamples.replaceAll("\n", "").length > 0
+                    formattedCharacterPostExamples.replaceAll("\n", "").length > 0
                     ? addHeader(
-                          `# Example Posts for ${this.character.name}`,
-                          formattedCharacterPostExamples
-                      )
+                        `# Example Posts for ${this.character.name}`,
+                        formattedCharacterPostExamples
+                    )
                     : "",
             characterMessageExamples:
                 formattedCharacterMessageExamples &&
-                formattedCharacterMessageExamples.replaceAll("\n", "").length >
+                    formattedCharacterMessageExamples.replaceAll("\n", "").length >
                     0
                     ? addHeader(
-                          `# Example Conversations for ${this.character.name}`,
-                          formattedCharacterMessageExamples
-                      )
+                        `# Example Conversations for ${this.character.name}`,
+                        formattedCharacterMessageExamples
+                    )
                     : "",
             messageDirections:
                 this.character?.style?.all?.length > 0 ||
-                this.character?.style?.chat.length > 0
+                    this.character?.style?.chat.length > 0
                     ? addHeader(
-                          "# Message Directions for " + this.character.name,
-                          (() => {
-                              const all = this.character?.style?.all || [];
-                              const chat = this.character?.style?.chat || [];
-                              return [...all, ...chat].join("\n");
-                          })()
-                      )
+                        "# Message Directions for " + this.character.name,
+                        (() => {
+                            const all = this.character?.style?.all || [];
+                            const chat = this.character?.style?.chat || [];
+                            return [...all, ...chat].join("\n");
+                        })()
+                    )
                     : "",
 
             postDirections:
                 this.character?.style?.all?.length > 0 ||
-                this.character?.style?.post.length > 0
+                    this.character?.style?.post.length > 0
                     ? addHeader(
-                          "# Post Directions for " + this.character.name,
-                          (() => {
-                              const all = this.character?.style?.all || [];
-                              const post = this.character?.style?.post || [];
-                              return [...all, ...post].join("\n");
-                          })()
-                      )
+                        "# Post Directions for " + this.character.name,
+                        (() => {
+                            const all = this.character?.style?.all || [];
+                            const post = this.character?.style?.post || [];
+                            return [...all, ...post].join("\n");
+                        })()
+                    )
                     : "",
 
             //old logic left in for reference
@@ -1119,9 +1120,9 @@ Text: ${attachment.text}
             goals:
                 goals && goals.length > 0
                     ? addHeader(
-                          "# Goals\n{{agentName}} should prioritize accomplishing the objectives that are in progress.",
-                          goals
-                      )
+                        "# Goals\n{{agentName}} should prioritize accomplishing the objectives that are in progress.",
+                        goals
+                    )
                     : "",
             goalsData,
             recentMessages:
@@ -1178,16 +1179,16 @@ Text: ${attachment.text}
             actions:
                 actionsData.length > 0
                     ? addHeader(
-                          "# Available Actions",
-                          formatActions(actionsData)
-                      )
+                        "# Available Actions",
+                        formatActions(actionsData)
+                    )
                     : "",
             actionExamples:
                 actionsData.length > 0
                     ? addHeader(
-                          "# Action Examples",
-                          composeActionExamples(actionsData, 10)
-                      )
+                        "# Action Examples",
+                        composeActionExamples(actionsData, 10)
+                    )
                     : "",
             evaluatorsData,
             evaluators:
