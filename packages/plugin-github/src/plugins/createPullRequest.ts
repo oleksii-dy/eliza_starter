@@ -123,13 +123,13 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Create a pull request on repository octocat/hello-world with branch 'fix/something', title 'fix: something' and path 'docs/'",
+                    text: "Create a pull request on repository octocat/hello-world with branch 'fix/something', title 'fix: something' and files 'docs/architecture.md' '# Architecture Documentation'",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/1",
+                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/1 @ branch: 'fix/something'",
                     action: "CREATE_PULL_REQUEST",
                 },
             },
@@ -138,13 +138,13 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Create PR on repository octocat/hello-world with branch 'feature/new-feature', title 'feat: new feature' and path 'src/'",
+                    text: "Create PR on repository octocat/hello-world with branch 'feature/new-feature', title 'feat: new feature' and files 'src/app.js' '# new app.js file'",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/2",
+                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/2 @ branch: 'feature/new-feature'",
                     action: "CREATE_PR",
                 },
             },
@@ -153,13 +153,13 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Generate PR on repository octocat/hello-world with branch 'hotfix/urgent-fix', title 'fix: urgent fix' and path 'lib/'",
+                    text: "Generate PR on repository octocat/hello-world with branch 'hotfix/urgent-fix', title 'fix: urgent fix' and files 'lib/something.go' '# go file'",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/3",
+                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/3 @ branch: 'hotfix/urgent-fix'",
                     action: "GENERATE_PR",
                 },
             },
@@ -168,13 +168,13 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Create a pull request on repository octocat/hello-world with branch 'chore/update-deps', title 'chore: update dependencies' and path 'package.json'",
+                    text: "Create a pull request on repository octocat/hello-world with branch 'chore/update-deps', title 'chore: update dependencies' and files 'package.json' '{\"name\": \"new-package\"}'",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/4",
+                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/4 @ branch: 'chore/update-deps'",
                     action: "PULL_REQUEST",
                 },
             },
@@ -183,13 +183,13 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "GitHub create pull request on repository octocat/hello-world with branch 'docs/update-readme', title 'docs: update README' and path 'README.md'",
+                    text: "GitHub create pull request on repository octocat/hello-world with branch 'docs/update-readme', title 'docs: update README' and files 'README.md' '# New README\nSomething something'",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/5",
+                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/5 @ branch: 'docs/update-readme'",
                     action: "GITHUB_CREATE_PULL_REQUEST",
                 },
             },
@@ -198,13 +198,13 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "GitHub PR on repository octocat/hello-world with branch 'refactor/code-cleanup', title 'refactor: code cleanup' and path 'src/'",
+                    text: "GitHub PR on repository octocat/hello-world with branch 'refactor/code-cleanup', title 'refactor: code cleanup' and files 'src/refactored_file.txt' 'Refactored content'",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/6",
+                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/6 @ branch: 'refactor/code-cleanup'",
                     action: "GITHUB_PR",
                 },
             },
@@ -213,13 +213,13 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "GitHub generate PR on repository octocat/hello-world with branch 'test/add-tests', title 'test: add tests' and path 'tests/'",
+                    text: "GitHub generate PR on repository octocat/hello-world with branch 'test/add-tests', title 'test: add tests' and files 'tests/e2e.test.ts' '# E2E test cases'",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/7",
+                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/7 @ branch: 'test/add-tests'",
                     action: "GITHUB_GENERATE_PR",
                 },
             },
@@ -228,13 +228,13 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "GitHub pull request on repository octocat/hello-world with branch 'ci/update-workflow', title 'ci: update workflow' and path '.github/workflows/'",
+                    text: "GitHub pull request on repository octocat/hello-world with branch 'ci/update-workflow', title 'ci: update workflow' and files '.github/workflows/ci.yaml' '# new CI workflow'",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/8",
+                    text: "Pull request created successfully! URL: https://github.com/octocat/hello-world/pull/8 @ branch: 'ci/update-workflow'",
                     action: "GITHUB_PULL_REQUEST",
                 },
             },
@@ -248,10 +248,10 @@ export const githubCreatePullRequestPlugin: Plugin = {
     actions: [createPullRequestAction],
     evaluators: [],
     providers: [
-        sourceCodeProvider,
-        testFilesProvider,
-        workflowFilesProvider,
-        documentationFilesProvider,
-        releasesProvider,
+        // sourceCodeProvider,
+        // testFilesProvider,
+        // workflowFilesProvider,
+        // documentationFilesProvider,
+        // releasesProvider,
     ],
 };

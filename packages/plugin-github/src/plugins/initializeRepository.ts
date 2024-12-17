@@ -81,7 +81,9 @@ export const initializeRepositoryAction: Action = {
 
         const content = details.object as InitializeContent;
 
-        elizaLogger.info("Initializing repository...");
+        elizaLogger.info(
+            `Initializing repository ${content.owner}/${content.repo} on branch ${content.branch}...`
+        );
 
         const repoPath = getRepoPath(content.owner, content.repo);
 
@@ -89,15 +91,20 @@ export const initializeRepositoryAction: Action = {
 
         try {
             await createReposDirectory(content.owner);
-            await cloneOrPullRepository(content.owner, content.repo, repoPath);
+            await cloneOrPullRepository(
+                content.owner,
+                content.repo,
+                repoPath,
+                content.branch
+            );
             await checkoutBranch(repoPath, content.branch);
 
             elizaLogger.info(
-                `Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo}`
+                `Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo} @ branch: ${content.branch}`
             );
 
             callback({
-                text: `Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo}`,
+                text: `Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo} @ branch: ${content.branch}`,
                 attachments: [],
             });
         } catch (error) {

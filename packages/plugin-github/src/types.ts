@@ -78,6 +78,7 @@ export const isCreatePullRequestContent = (
 export const CreateCommitSchema = z.object({
     owner: z.string().min(1, "GitHub owner is required"),
     repo: z.string().min(1, "GitHub repo is required"),
+    branch: z.string().min(1, "GitHub branch is required"),
     message: z.string().min(1, "Commit message is required"),
     files: z.array(z.object({ path: z.string(), content: z.string() })),
 });
@@ -85,6 +86,7 @@ export const CreateCommitSchema = z.object({
 export interface CreateCommitContent {
     owner: string;
     repo: string;
+    branch: string;
     message: string;
     files: Array<{ path: string; content: string }>;
 }

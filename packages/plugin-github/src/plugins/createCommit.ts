@@ -16,7 +16,12 @@ import {
     CreateCommitSchema,
     isCreateCommitContent,
 } from "../types";
-import { commitAndPushChanges, getRepoPath, writeFiles } from "../utils";
+import {
+    commitAndPushChanges,
+    getRepoPath,
+    writeFiles,
+    checkoutBranch,
+} from "../utils";
 import { sourceCodeProvider } from "../providers/sourceCode";
 import { testFilesProvider } from "../providers/testFiles";
 import { workflowFilesProvider } from "../providers/workflowFiles";
@@ -73,33 +78,37 @@ export const createCommitAction: Action = {
 
         const content = details.object as CreateCommitContent;
 
-        elizaLogger.info("Committing changes to the repository...");
+        elizaLogger.info(
+            `Committing changes to the repository ${content.owner}/${content.repo} on branch ${content.branch}...`
+        );
 
         const repoPath = getRepoPath(content.owner, content.repo);
 
         try {
+            await checkoutBranch(repoPath, content.branch, true);
             await writeFiles(repoPath, content.files);
             const { hash } = await commitAndPushChanges(
                 repoPath,
-                content.message
+                content.message,
+                content.branch
             );
 
             elizaLogger.info(
-                `Commited changes to the repository successfully! commit hash: ${hash}`
+                `Commited changes to the repository ${content.owner}/${content.repo} successfully to branch '${content.branch}'! commit hash: ${hash}`
             );
 
             callback({
-                text: `Changes commited successfully! commit hash: ${hash}`,
+                text: `Changes commited to repository ${content.owner}/${content.repo} successfully to branch '${content.branch}'! commit hash: ${hash}`,
                 attachments: [],
             });
         } catch (error) {
             elizaLogger.error(
-                `Error committing to the repository ${content.owner}/${content.repo} message ${content.message}:`,
+                `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}:`,
                 error
             );
             callback(
                 {
-                    text: `Error committing to the repository ${content.owner}/${content.repo} message ${content.message}. Please try again.`,
+                    text: `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}. Please try again.`,
                 },
                 []
             );
@@ -110,13 +119,13 @@ export const createCommitAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Commit changes to the repository user1/repo1 with the commit message: 'Initial commit'",
+                    text: "Commit changes to the repository user1/repo1 on branch 'main' with the commit message: 'Initial commit'",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Changes commited successfully! commit hash: abcdef1",
+                    text: "Changes commited to repository user1/repo1 successfully to branch 'main'! commit hash: abcdef1",
                     action: "COMMIT",
                 },
             },
@@ -125,13 +134,13 @@ export const createCommitAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Commit changes to the repository user1/repo1 with the commit message: 'Update README'",
+                    text: "Commit changes to the repository user1/repo1 on branch 'main' with the commit message: 'Update README'",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Changes commited successfully! commit hash: abcdef2",
+                    text: "Changes commited to repository user1/repo1 successfully to branch 'main'! commit hash: abcdef2",
                     action: "COMMIT_CHANGES",
                 },
             },
@@ -140,13 +149,13 @@ export const createCommitAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Create a commit in the repository user1/repo1 with the commit message: 'Fix bug'",
+                    text: "Create a commit in the repository user1/repo1 on branch 'main' with the commit message: 'Fix bug'",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Changes commited successfully! commit hash: abcdef3",
+                    text: "Changes commited to repository user1/repo1 successfully to branch 'main'! commit hash: abcdef3",
                     action: "CREATE_COMMIT",
                 },
             },
@@ -155,13 +164,13 @@ export const createCommitAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Commit changes to the GitHub repository user1/repo1 with the commit message: 'Add new feature'",
+                    text: "Commit changes to the GitHub repository user1/repo1 on branch 'main' with the commit message: 'Add new feature'",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Changes commited successfully! commit hash: abcdef4",
+                    text: "Changes commited to repository user1/repo1 successfully to branch 'main'! commit hash: abcdef4",
                     action: "GITHUB_COMMIT",
                 },
             },
@@ -170,13 +179,13 @@ export const createCommitAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Create a commit in the GitHub repository user1/repo1 with the commit message: 'Refactor code'",
+                    text: "Create a commit in the GitHub repository user1/repo1 on branch 'main' with the commit message: 'Refactor code'",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Changes commited successfully! commit hash: abcdef5",
+                    text: "Changes commited to repository user1/repo1 successfully to branch 'main'! commit hash: abcdef5",
                     action: "GITHUB_CREATE_COMMIT",
                 },
             },
@@ -185,13 +194,13 @@ export const createCommitAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Commit changes to the GitHub repository user1/repo1 with the commit message: 'Improve performance'",
+                    text: "Commit changes to the GitHub repository user1/repo1 on branch 'main' with the commit message: 'Improve performance'",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Changes commited successfully! commit hash: abcdef6",
+                    text: "Changes commited to repository user1/repo1 successfully to branch 'main'! commit hash: abcdef6",
                     action: "GITHUB_COMMIT_CHANGES",
                 },
             },
@@ -206,10 +215,10 @@ export const githubCreateCommitPlugin: Plugin = {
     actions: [createCommitAction],
     evaluators: [],
     providers: [
-        sourceCodeProvider,
-        testFilesProvider,
-        workflowFilesProvider,
-        documentationFilesProvider,
-        releasesProvider,
+        // sourceCodeProvider,
+        // testFilesProvider,
+        // workflowFilesProvider,
+        // documentationFilesProvider,
+        // releasesProvider,
     ],
 };
