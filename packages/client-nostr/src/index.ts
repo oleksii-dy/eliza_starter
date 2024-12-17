@@ -20,6 +20,8 @@ export class NostrAgentClient implements Client {
         const relays_str = runtime.getSetting("NOSTR_RELAYS")!;
         const relays = relays_str.split(",");
 
+        elizaLogger.info("Connecting to Nostr relays:", relays);
+
         // Nsec key is the private key for signing events
         this.nsec = runtime.getSetting("NOSTR_NSEC_KEY")!;
 
@@ -34,7 +36,7 @@ export class NostrAgentClient implements Client {
 
         this.client = client ?? nostrClient;
 
-        elizaLogger.info("Nostr client initialized.");
+        elizaLogger.info("Nostr client initialized and connected to relays.");
 
         this.posts = new NostrPostManager(this.client, this.runtime, cache);
 
@@ -46,6 +48,10 @@ export class NostrAgentClient implements Client {
     }
 
     async start() {
+        // Initialize the client
+        await this.client.init();
+
+        // Start the posts and interactions services
         await Promise.all([this.posts.start(), this.interactions.start()]);
     }
 

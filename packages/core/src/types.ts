@@ -676,6 +676,9 @@ export type Character = {
         discordMessageHandlerTemplate?: string;
         slackMessageHandlerTemplate?: string;
         slackShouldRespondTemplate?: string;
+        nostrMessageHandlerTemplate?: string;
+        nostrShouldRespondTemplate?: string;
+        nostrPostTemplate?: string;
     };
 
     /** Character biography */

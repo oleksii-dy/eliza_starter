@@ -5,4 +5,5 @@ export type NostrProfile = {
 export type NostrEvent = {
     id: string;
     content: string;
+    pubkey: string;
 };

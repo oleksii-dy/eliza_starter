@@ -19,6 +19,10 @@ export class NostrClient {
         this.lastInteractionTimestamp = new Date();
     }
 
+    async init() {
+        await this.ndk.connect();
+    }
+
     async publishNote(noteContent: string): Promise<NostrEvent | undefined> {
         try {
             const event = new NDKEvent(this.ndk);
@@ -27,10 +31,14 @@ export class NostrClient {
 
             await event.sign();
             await event.publish();
-
+            elizaLogger.info(
+                "Published raw Nostr event:",
+                JSON.stringify(event.rawEvent())
+            );
             return {
                 id: event.id,
                 content: event.content,
+                pubkey: event.pubkey,
             };
         } catch (err) {
             elizaLogger.error("Error: ", err);
@@ -52,6 +60,7 @@ export class NostrClient {
         return {
             id: eventId,
             content: "",
+            pubkey: "",
         };
     }
 }
