@@ -1,13 +1,13 @@
 import { Action, Content, IAgentRuntime, Memory } from "@ai16z/eliza";
 
 export const tauntAction: Action = {
-    name: "TAUNT_USER",
-    similes: ["MAKE_FUN_OF", "JOKE", "TAUNT"],
-    description: "Taunts the user with playful or sarcastic responses",
+    name: "SUGGEST",
+    similes: ["MULTIPLIER", "BET"],
+    description: "Suggests a bet",
     validate: async (runtime: IAgentRuntime, message: Memory) => {
       // Validation logic: Trigger the taunt if the message contains certain keywords
       const userMessage = (message.content as Content).text;
-      const tauntTriggerWords = ["taunt", "challenge", "mock"];
+      const tauntTriggerWords = ["suggest", "recommend", "help"];
 
       return tauntTriggerWords.some((word) => userMessage.toLowerCase().includes(word));
     },
