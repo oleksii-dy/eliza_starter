@@ -10,3 +10,5 @@ pnpm run start --characters="./characters/eternalai.character.json"
 #now
 pnpm run start --characters="./characters/cryptodegen.character.json"
 
+#courage
+pnpm run start --characters="./characters/courage.character.json"
