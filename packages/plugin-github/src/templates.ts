@@ -43,9 +43,9 @@ Extract the details for creating a pull request in the GitHub repository:
 - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
 - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
 - **branch** (string): The branch of the GitHub repository (e.g., "main")
-- **path** (string): The path to the files in the GitHub repository (e.g., "docs/")
 - **title** (string): The title of the pull request (e.g., "Add new documentation")
 - **description** (string): The description of the pull request (optional)
+- **files** (array): An array of files to commit with their content
 
 Provide the pull request details in the following JSON format:
 
@@ -54,9 +54,14 @@ Provide the pull request details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "branch": "<branch>",
-    "path": "<path>",
     "title": "<title>",
     "description": "<description>"
+    "files": [
+        {
+            "path": "<path>",
+            "content": "<content>"
+        }
+    ]
 }
 \`\`\`
 
@@ -68,6 +73,7 @@ export const createCommitTemplate = `
 Extract the details for creating a commit in the GitHub repository:
 - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
 - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
 - **message** (string): The commit message (e.g., "Update documentation")
 - **files** (array): An array of files to commit with their content
 
@@ -77,6 +83,7 @@ Provide the commit details in the following JSON format:
 {
     "owner": "<owner>",
     "repo": "<repo>",
+    "branch": "<branch>",
     "message": "<message>",
     "files": [
         {

@@ -540,25 +540,25 @@ Manages webhooks using the Coinbase SDK, allowing for the creation and managemen
 **Actions:**
 
 - `CREATE_WEBHOOK` - Create a new webhook to listen for specific events.
-  - **Inputs**:
-    - `networkId` (string): The network ID where the webhook should listen for events.
-    - `eventType` (string): The type of event to listen for (e.g., transfers).
-    - `eventFilters` (object, optional): Additional filters for the event.
-    - `eventTypeFilter` (string, optional): Specific event type filter.
-  - **Outputs**: Confirmation message with webhook details.
-  - **Example**:
-    ```json
-    {
-      "networkId": "base",
-      "eventType": "transfers",
-      "notificationUri": "https://your-notification-uri.com"
-    }
-    ```
+    - **Inputs**:
+        - `networkId` (string): The network ID where the webhook should listen for events.
+        - `eventType` (string): The type of event to listen for (e.g., transfers).
+        - `eventFilters` (object, optional): Additional filters for the event.
+        - `eventTypeFilter` (string, optional): Specific event type filter.
+    - **Outputs**: Confirmation message with webhook details.
+    - **Example**:
+        ```json
+        {
+            "networkId": "base",
+            "eventType": "transfers",
+            "notificationUri": "https://your-notification-uri.com"
+        }
+        ```
 
 **Providers:**
 
 - `webhookProvider` - Retrieves a list of all configured webhooks.
-  - **Outputs**: A list of webhooks with details such as ID, URL, event type, and status.
+    - **Outputs**: A list of webhooks with details such as ID, URL, event type, and status.
 
 **Description:**
 
@@ -569,21 +569,21 @@ The Webhook Plugin enables Eliza to interact with the Coinbase SDK to create and
 1. **Configure the Plugin**
    Add the plugin to your character’s configuration:
 
-   ```typescript
+    ```typescript
     import { webhookPlugin } from "@eliza/plugin-coinbase-webhooks";
 
     const character = {
         plugins: [webhookPlugin],
     };
-   ```
+    ```
 
 2. **Ensure Secure Configuration**
 
-   Set the following environment variables or runtime settings to ensure the plugin functions securely:
+    Set the following environment variables or runtime settings to ensure the plugin functions securely:
 
-   - `COINBASE_API_KEY`: API key for Coinbase SDK.
-   - `COINBASE_PRIVATE_KEY`: Private key for secure transactions.
-   - `COINBASE_NOTIFICATION_URI`: URI where notifications should be sent.
+    - `COINBASE_API_KEY`: API key for Coinbase SDK.
+    - `COINBASE_PRIVATE_KEY`: Private key for secure transactions.
+    - `COINBASE_NOTIFICATION_URI`: URI where notifications should be sent.
 
 **Example Call**
 
@@ -591,9 +591,9 @@ To create a webhook:
 
 ```typescript
 const response = await runtime.triggerAction("CREATE_WEBHOOK", {
-  networkId: "base",
-  eventType: "transfers",
-  notificationUri: "https://your-notification-uri.com"
+    networkId: "base",
+    eventType: "transfers",
+    notificationUri: "https://your-notification-uri.com",
 });
 console.log("Webhook creation response:", response);
 ```
@@ -634,18 +634,58 @@ The GitHub plugins enable agents to interact with GitHub repositories, create co
 1. **Configure the Plugin**
    Add the plugin to your character’s configuration:
 
-   ```typescript
-   import { githubInitializeRepository, githubCreateCommit, githubCreatePullRequest, githubMemoriesFromFiles } from "@eliza/plugin-github";
+    ```typescript
+    import {
+        githubInitializeRepository,
+        githubCreateCommit,
+        githubCreatePullRequest,
+        githubMemoriesFromFiles,
+    } from "@eliza/plugin-github";
 
-   const character = {
-     plugins: [githubInitializeRepository, githubCreateCommit, githubCreatePullRequest, githubMemoriesFromFiles],
-   };
-   ```
+    const character = {
+        plugins: [
+            githubInitializeRepository,
+            githubCreateCommit,
+            githubCreatePullRequest,
+            githubMemoriesFromFiles,
+        ],
+    };
+    ```
 
 2. **Ensure Secure Configuration**
-    Set the following environment variables or runtime settings to ensure the plugin functions securely:
+   Set the following environment variables within the `.env` file. See next section to know how to create a new github api token.
 
     - `GITHUB_API_TOKEN`: API key for GitHub API access.
+
+3. **Creating a GitHub Classic Token with `public_repo` Scope**
+
+To generate a GitHub Classic token with the required `public_repo` scope, follow these steps:
+
+- **\*Log in to GitHub**: Go to [GitHub](https://github.com/) and log in to your account.
+
+- **Access Personal Access Tokens**:
+
+    - Navigate to **Settings** by clicking on your profile picture in the top-right corner.
+    - Under **Developer settings**, select **Personal access tokens** > **Tokens (classic)**.
+    - Alternatively, you can go directly to [GitHub's token settings page](https://github.com/settings/tokens).
+
+- **Generate New Token**:
+
+    - Click on **Generate new token**.
+    - Provide a note to identify the purpose of the token (e.g., "Plugin API Access").
+
+- **Select the Scope**:
+
+    - Under **Select scopes**, check the box for `public_repo`. This grants access to public repositories.
+
+- **Generate and Save the Token**:
+
+    - Scroll to the bottom and click **Generate token**.
+    - **Important**: Copy and save the token securely as it will not be shown again.
+
+- **Set the Token as Environment Variable**:
+    - Add the generated token to your `.env` file:
+        - `GITHUB_API_TOKEN=<your_token>`
 
 ---
 

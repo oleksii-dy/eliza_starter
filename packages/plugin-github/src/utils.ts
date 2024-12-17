@@ -25,18 +25,26 @@ export async function createReposDirectory(owner: string) {
 export async function cloneOrPullRepository(
     owner: string,
     repo: string,
-    repoPath: string
+    repoPath: string,
+    branch: string = "main"
 ) {
     try {
-        elizaLogger.info(`Cloning or pulling repository ${owner}/${repo}...`);
-        elizaLogger.info(`URL: https://github.com/${owner}/${repo}.git`);
+        elizaLogger.info(
+            `Cloning or pulling repository ${owner}/${repo}... @ branch: ${branch}`
+        );
+        elizaLogger.info(
+            `URL: https://github.com/${owner}/${repo}.git @ branch: ${branch}`
+        );
 
         // Clone or pull repository
         if (!existsSync(repoPath)) {
             const git = simpleGit();
             await git.clone(
                 `https://github.com/${owner}/${repo}.git`,
-                repoPath
+                repoPath,
+                {
+                    "--branch": branch,
+                }
             );
         } else {
             const git = simpleGit(repoPath);
@@ -113,6 +121,8 @@ export async function checkoutBranch(
         return;
     }
 
+    elizaLogger.info(`Checking out branch ${branch} in repository ${repoPath}`);
+
     try {
         // Checkout specified branch
         const git = simpleGit(repoPath);
@@ -166,11 +176,38 @@ export async function createPullRequest(
 }
 
 export async function retrieveFiles(repoPath: string, gitPath: string) {
+    // Build the search path
     const searchPath = gitPath
         ? path.join(repoPath, gitPath, "**/*")
         : path.join(repoPath, "**/*");
 
-    const files = await glob(searchPath, { nodir: true });
+    // Exclude `.git` directory
+    const ignorePatterns = ["**/.git/**"];
+
+    // Check if a .gitignore file exists
+    const gitignorePath = path.join(repoPath, ".gitignore");
+    if (existsSync(gitignorePath)) {
+        const gitignoreContent = await fs.readFile(gitignorePath, "utf-8");
+        const gitignoreLines = gitignoreContent
+            .split("\n")
+            .map((line) => line.trim())
+            .filter(
+                (line) => line && !line.startsWith("#") && !line.startsWith("!")
+            ) // Exclude comments and lines starting with '!'
+            .map((line) => `**/${line}`); // Convert to glob patterns
+
+        ignorePatterns.push(...gitignoreLines);
+    }
+
+    elizaLogger.info(`Ignore patterns:\n${ignorePatterns.join("\n")}`);
+
+    const files = await glob(searchPath, {
+        nodir: true,
+        dot: true, // Include dotfiles
+        ignore: ignorePatterns, // Exclude .git and .gitignore patterns
+    });
+
+    elizaLogger.info(`Retrieved Files:\n${files.join("\n")}`);
 
     return files;
 }
