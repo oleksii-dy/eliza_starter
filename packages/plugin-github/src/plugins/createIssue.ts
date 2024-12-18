@@ -39,11 +39,11 @@ export const createIssueAction: Action = {
         if (!state) {
             state = (await runtime.composeState(message, {
                 files: files,
-                character: runtime.character,
             })) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
+        state.files = files;
         elizaLogger.info("State:", state);
         const context = composeContext({
             state,

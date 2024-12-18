@@ -121,9 +121,6 @@ Here are the recent user messages for context:
 export const createIssueTemplate = `
 Extract the details for creating a GitHub issue and fill in the issue template with additional details:
 
-Remember your character is:
-{{character}}
-
 Here is the original request:
 {{memory}}
 
@@ -211,9 +208,6 @@ Extract the details for modifying a GitHub issue and ensure the modifications al
 
 Ensure that the modifications are consistent with the character's objectives and the user's request without altering the owner and repo.
 
-Remember your character is:
-{{character}}
-
 Here is the original request:
 {{memory}}
 
@@ -252,9 +246,6 @@ Extract the details for adding a comment to a GitHub issue and ensure the commen
 - **comment** (string): The comment to add (e.g., "Add new documentation")
 
 Ensure that the comment is consistent with the character's objectives and the user's request without altering the owner and repo.
-
-Remember your character is:
-{{character}}
 
 Here is the original request:
 {{memory}}

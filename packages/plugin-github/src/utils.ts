@@ -213,29 +213,10 @@ export async function retrieveFiles(repoPath: string, gitPath: string) {
     return files;
 }
 
-export async function getFileContentFromMemory(runtime: IAgentRuntime, memory: Memory): Promise<string | null> {
-    if (!memory.content.metadata?.path) {
-        elizaLogger.warn(`Memory with ID ${memory.id} missing path metadata.`);
-        return null;
-    }
-
-    const { owner, repo, path: relativePath } = memory.content.metadata;
-    const repoPath = getRepoPath(owner, repo);
-    const fullPath = path.join(repoPath, relativePath);
-
-    try {
-        const content = await fs.readFile(fullPath, 'utf-8');
-        return content;
-    } catch (error) {
-        elizaLogger.error(`Error reading file at ${fullPath}:`, error);
-        return null;
-    }
-}
-
 export const getFilesFromMemories = async (runtime: IAgentRuntime, message: Memory) => {
-    const memories = await runtime.messageManager.getMemories({
+    const memories = (await runtime.messageManager.getMemories({
         roomId: message.roomId
-    });
+    })).filter(memory => memory.content.metadata?.path);
     elizaLogger.info("Memories:", memories);
     return memories.map((memory) => `File: ${memory.content.metadata?.path}
         Content: ${memory.content.text}

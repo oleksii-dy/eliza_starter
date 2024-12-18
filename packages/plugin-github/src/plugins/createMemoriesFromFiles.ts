@@ -20,7 +20,7 @@ import {
     CreateMemoriesFromFilesSchema,
     isCreateMemoriesFromFilesContent,
 } from "../types";
-import { getRepoPath, retrieveFiles, getFileContentFromMemory } from "../utils";
+import { getRepoPath, retrieveFiles } from "../utils";
 import { sourceCodeProvider } from "../providers/sourceCode";
 import { testFilesProvider } from "../providers/testFiles";
 import { workflowFilesProvider } from "../providers/workflowFiles";
@@ -40,11 +40,13 @@ export async function addFilesToMemory(
         const content = await fs.readFile(file, "utf-8");
         const contentHash = createHash("sha256").update(content).digest("hex");
         const memoryId = stringToUuid(
-            `github-${owner}-${repo}-${relativePath}`
+            `github-${owner}-${repo}-${relativePath}-${contentHash}`
         );
-
+        elizaLogger.info("Memory ID:", memoryId);
         const existingDocument =
             await runtime.messageManager.getMemoryById(memoryId);
+
+        elizaLogger.log("existingDocument", existingDocument);
 
         if (
             existingDocument &&
@@ -59,8 +61,7 @@ export async function addFilesToMemory(
             " - ",
             relativePath
         );
-
-        await runtime.messageManager.createMemory({
+        const memory = {
             id: memoryId,
             userId: runtime.agentId,
             agentId: runtime.agentId,
@@ -76,7 +77,9 @@ export async function addFilesToMemory(
                     owner,
                 },
             },
-        } as Memory);
+        } as Memory;
+        elizaLogger.info("Memory:", memory);
+        await runtime.messageManager.createMemory(memory);
     }
 }
 
@@ -150,8 +153,22 @@ export const createMemoriesFromFilesAction: Action = {
 
             elizaLogger.info("Memories created successfully!");
 
+            let extendedState = (await runtime.composeState(message, {
+                files: files
+            })) as State;
+            extendedState.files = files;
+            const output = createMemoriesFromFilesTemplate.replace(/{{\w+(\.\w+)*}}/g, (match) => {
+                const path = match.replace(/{{|}}/g, "").split(".");
+                let value: any = extendedState;
+                for (const key of path) {
+                    value = value?.[key];
+                    if (value === undefined) break;
+                }
+                return value ?? "";
+            });
+
             callback({
-                text: "Memories created successfully!",
+                text: output,
                 attachments: [],
             });
         } catch (error) {
