@@ -288,11 +288,16 @@ export class TwitterInteractionClient {
                 twitterShouldRespondTemplate,
         });
 
-        const shouldRespond = await generateShouldRespond({
+        let shouldRespond = await generateShouldRespond({
             runtime: this.runtime,
             context: shouldRespondContext,
             modelClass: ModelClass.MEDIUM,
         });
+
+        if (tweet.username === "yungcarlthedev") {
+            elizaLogger.log("Always responding to yungcarlthedev");
+            shouldRespond = "RESPOND";
+        }
 
         // Promise<"RESPOND" | "IGNORE" | "STOP" | null> {
         if (shouldRespond !== "RESPOND") {
@@ -314,7 +319,7 @@ export class TwitterInteractionClient {
         const response = await generateMessageResponse({
             runtime: this.runtime,
             context,
-            modelClass: ModelClass.MEDIUM,
+            modelClass: ModelClass.LARGE,
         });
 
         const removeQuotes = (str: string) =>
