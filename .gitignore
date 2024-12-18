@@ -52,3 +52,6 @@ tsup.config.bundled_*.mjs
 
 coverage
 .eslintcache
+
+docker-compose.yaml
+char/*

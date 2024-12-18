@@ -79,8 +79,8 @@ export const CharacterSchema = z.object({
     knowledge: z.array(z.string()).optional(),
     clients: z.array(z.nativeEnum(Clients)),
     plugins: z.union([
-      z.array(z.string()),
-      z.array(PluginSchema),
+        z.array(z.string()),
+        z.array(PluginSchema),
     ]),
     settings: z
         .object({
@@ -93,6 +93,16 @@ export const CharacterSchema = z.object({
                 .optional(),
             model: z.string().optional(),
             embeddingModel: z.string().optional(),
+            TWITTER_DRY_RUN: z
+                .string()
+                .optional(),
+            TWITTER_USERNAME: z.string().optional(),
+            TWITTER_PASSWORD: z.string().optional(),
+            TWITTER_EMAIL: z.string().optional(),
+            TWITTER_COOKIES: z.string().optional(),
+            MAX_TWEET_LENGTH: z
+                .string()
+                .optional()
         })
         .optional(),
     clientConfig: z

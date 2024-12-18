@@ -157,7 +157,7 @@ export class TwitterInteractionClient {
                                 const isUnprocessed =
                                     !this.client.lastCheckedTweetId ||
                                     parseInt(tweet.id) >
-                                        this.client.lastCheckedTweetId;
+                                    this.client.lastCheckedTweetId;
                                 const isRecent =
                                     Date.now() - tweet.timestamp * 1000 <
                                     2 * 60 * 60 * 1000;
@@ -199,7 +199,7 @@ export class TwitterInteractionClient {
                             // Randomly select one tweet from this user
                             const randomTweet =
                                 tweets[
-                                    Math.floor(Math.random() * tweets.length)
+                                Math.floor(Math.random() * tweets.length)
                                 ];
                             selectedTweets.push(randomTweet);
                             elizaLogger.log(
@@ -369,10 +369,10 @@ export class TwitterInteractionClient {
                     url: tweet.permanentUrl,
                     inReplyTo: tweet.inReplyToStatusId
                         ? stringToUuid(
-                              tweet.inReplyToStatusId +
-                                  "-" +
-                                  this.runtime.agentId
-                          )
+                            tweet.inReplyToStatusId +
+                            "-" +
+                            this.runtime.agentId
+                        )
                         : undefined,
                 },
                 userId: userIdUUID,
@@ -389,10 +389,10 @@ export class TwitterInteractionClient {
         const validTargetUsersStr =
             targetUsersStr && targetUsersStr.trim()
                 ? targetUsersStr
-                      .split(",") // Split by commas: "user1,user2" -> ["user1", "user2"]
-                      .map((u) => u.trim()) // Remove whitespace: [" user1 ", "user2 "] -> ["user1", "user2"]
-                      .filter((u) => u.length > 0)
-                      .join(",")
+                    .split(",") // Split by commas: "user1,user2" -> ["user1", "user2"]
+                    .map((u) => u.trim()) // Remove whitespace: [" user1 ", "user2 "] -> ["user1", "user2"]
+                    .filter((u) => u.length > 0)
+                    .join(",")
                 : "";
 
         const shouldRespondContext = composeContext({
@@ -408,7 +408,7 @@ export class TwitterInteractionClient {
         const shouldRespond = await generateShouldRespond({
             runtime: this.runtime,
             context: shouldRespondContext,
-            modelClass: ModelClass.MEDIUM,
+            modelClass: ModelClass.SMALL,
         });
 
         // Promise<"RESPOND" | "IGNORE" | "STOP" | null> {
@@ -549,10 +549,10 @@ export class TwitterInteractionClient {
                         url: currentTweet.permanentUrl,
                         inReplyTo: currentTweet.inReplyToStatusId
                             ? stringToUuid(
-                                  currentTweet.inReplyToStatusId +
-                                      "-" +
-                                      this.runtime.agentId
-                              )
+                                currentTweet.inReplyToStatusId +
+                                "-" +
+                                this.runtime.agentId
+                            )
                             : undefined,
                     },
                     createdAt: currentTweet.timestamp * 1000,

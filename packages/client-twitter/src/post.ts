@@ -112,8 +112,8 @@ export class TwitterPostClient {
                 timestamp: number;
             }>(
                 "twitter/" +
-                    this.twitterUsername +
-                    "/lastPost"
+                this.twitterUsername +
+                "/lastPost"
             );
 
             const lastPostTimestamp = lastPost?.timestamp ?? 0;
@@ -294,7 +294,7 @@ export class TwitterPostClient {
 
                 const result = await this.client.requestQueue.add(
                     async () =>
-                        await this.client.twitterClient.sendTweet(cleanedContent)
+                        await this.client.twitterClient.sendTweet(`[${this.runtime.character.name}] ${cleanedContent}`)
                 );
                 const body = await result.json();
                 if (!body?.data?.create_tweet?.tweet_results?.result) {

@@ -463,10 +463,10 @@ export class ClientBase extends EventEmitter {
                         source: "twitter",
                         inReplyTo: tweet.inReplyToStatusId
                             ? stringToUuid(
-                                  tweet.inReplyToStatusId +
-                                      "-" +
-                                      this.runtime.agentId
-                              )
+                                tweet.inReplyToStatusId +
+                                "-" +
+                                this.runtime.agentId
+                            )
                             : undefined,
                     } as Content;
 
@@ -620,12 +620,11 @@ export class ClientBase extends EventEmitter {
     async setCookiesFromArray(cookiesArray: any[]) {
         const cookieStrings = cookiesArray.map(
             (cookie) =>
-                `${cookie.key}=${cookie.value}; Domain=${cookie.domain}; Path=${cookie.path}; ${
-                    cookie.secure ? "Secure" : ""
-                }; ${cookie.httpOnly ? "HttpOnly" : ""}; SameSite=${
-                    cookie.sameSite || "Lax"
+                `${cookie.key}=${cookie.value}; Domain=${cookie.domain}; Path=${cookie.path}; ${cookie.secure ? "Secure" : ""
+                }; ${cookie.httpOnly ? "HttpOnly" : ""}; SameSite=${cookie.sameSite || "Lax"
                 }`
         );
+        elizaLogger.info(`cookies: ${cookieStrings}`);
         await this.twitterClient.setCookies(cookieStrings);
     }
 
@@ -741,11 +740,11 @@ export class ClientBase extends EventEmitter {
                     screenName: profile.name || this.runtime.character.name,
                     bio:
                         profile.biography ||
-                        typeof this.runtime.character.bio === "string"
+                            typeof this.runtime.character.bio === "string"
                             ? (this.runtime.character.bio as string)
                             : this.runtime.character.bio.length > 0
-                              ? this.runtime.character.bio[0]
-                              : "",
+                                ? this.runtime.character.bio[0]
+                                : "",
                     nicknames:
                         this.runtime.character.twitterProfile?.nicknames || [],
                 } satisfies TwitterProfile;
