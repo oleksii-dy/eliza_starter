@@ -58,7 +58,6 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
-import { character } from "./character.ts";
 import type { DirectClient } from "@ai16z/client-direct";
 import { Pool } from "pg";
 import { EncryptionUtil } from "@ai16z/eliza";
@@ -645,7 +644,7 @@ export function getGlobalDirectClient(): DirectClient | null {
 }
 
 const startAgents = async () => {
-    const directClient = await DirectClientInterface.start();
+    const directClient = new DirectClient();
     const serverPort = parseInt(settings.SERVER_PORT || "3000");
     setGlobalDirectClient(directClient as DirectClient);
     const args = parseArguments();
@@ -689,6 +688,7 @@ const startAgents = async () => {
 
 startAgents().catch((error) => {
     elizaLogger.error("Unhandled error in startAgents:", error);
+    console.log(error); // elizaLogger isn't showing the error
     process.exit(1); // Exit the process after logging
 });
 
