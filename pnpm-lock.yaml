@@ -174,6 +174,9 @@ importers:
       '@ai16z/plugin-near':
         specifier: workspace:*
         version: link:../packages/plugin-near
+      '@ai16z/plugin-news':
+        specifier: workspace:*
+        version: link:../packages/plugin-news
       '@ai16z/plugin-nft-generation':
         specifier: workspace:*
         version: link:../packages/plugin-nft-generation
@@ -719,28 +722,6 @@ importers:
         specifier: 8.3.5
         version: 8.3.5(@swc/core@1.10.1(@swc/helpers@0.5.15))(jiti@2.4.0)(postcss@8.4.49)(typescript@5.6.3)(yaml@2.6.1)
 
-  packages/client-whatsapp:
-    dependencies:
-      '@ai16z/eliza':
-        specifier: workspace:*
-        version: link:../core
-    devDependencies:
-      '@types/jest':
-        specifier: ^29.0.0
-        version: 29.5.14
-      '@types/node':
-        specifier: ^20.0.0
-        version: 20.17.9
-      jest:
-        specifier: ^29.0.0
-        version: 29.7.0(@types/node@20.17.9)
-      rimraf:
-        specifier: ^5.0.0
-        version: 5.0.10
-      typescript:
-        specifier: ^5.0.0
-        version: 5.6.3
-
   packages/core:
     dependencies:
       '@ai-sdk/anthropic':
@@ -1246,6 +1227,18 @@ importers:
       node-cache:
         specifier: 5.1.2
         version: 5.1.2
+      tsup:
+        specifier: 8.3.5
+        version: 8.3.5(@swc/core@1.10.1(@swc/helpers@0.5.15))(jiti@2.4.0)(postcss@8.4.49)(typescript@5.6.3)(yaml@2.6.1)
+      whatwg-url:
+        specifier: 7.1.0
+        version: 7.1.0
+
+  packages/plugin-news:
+    dependencies:
+      '@ai16z/eliza':
+        specifier: workspace:*
+        version: link:../core
       tsup:
         specifier: 8.3.5
         version: 8.3.5(@swc/core@1.10.1(@swc/helpers@0.5.15))(jiti@2.4.0)(postcss@8.4.49)(typescript@5.6.3)(yaml@2.6.1)
