@@ -1,156 +1,176 @@
 {
-  description = "Eliza development environment";
+  description = "Eliza Development Environment";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    pnpm2nix = {
+      url = "github:nzbr/pnpm2nix-nzbr";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
     self,
     nixpkgs,
-    flake-utils,
-  }:
-    flake-utils.lib.eachDefaultSystem (system: let
-      pkgs = import nixpkgs {inherit system;};
+    pnpm2nix,
+  }: let
+    systems = ["x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin"];
+    forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f system);
 
-      # Read versions from package.json
-      packageJson = builtins.fromJSON (builtins.readFile ./package.json);
-      versions = let
-        # Extract version from packageManager string (e.g., "pnpm@9.12.3+sha512...")
-        pnpmFull = packageJson.packageManager or "pnpm@9.12.3";
-        pnpmVersion = builtins.head (builtins.match "pnpm@([^+]+).*" pnpmFull);
-      in {
-        nodejs = builtins.replaceStrings ["^" "~"] ["" ""] packageJson.engines.node;
-        pnpm = pnpmVersion;
+    # Read and parse package.json
+    packageJson = builtins.fromJSON (builtins.readFile ./package.json);
+
+    # Extract versions
+    nodeVersion = builtins.replaceStrings ["^" "~"] ["" ""] packageJson.engines.node;
+    pnpmVersion = builtins.head (builtins.match "pnpm@([0-9.]+).*" packageJson.packageManager);
+
+    # Function to fetch Node.js for a specific system
+    fetchNodejs = system: let
+      pkgs = nixpkgs.legacyPackages.${system};
+      platformMap = {
+        "x86_64-linux" = "linux-x64";
+        "aarch64-linux" = "linux-arm64";
+        "x86_64-darwin" = "darwin-x64";
+        "aarch64-darwin" = "darwin-arm64";
+      };
+      platform = platformMap.${system};
+    in
+      pkgs.fetchurl {
+        url = "https://nodejs.org/dist/v${nodeVersion}/node-v${nodeVersion}-${platform}.tar.xz";
+        # Let Nix calculate the hash on first run
+        hash = null;
       };
 
-      # Function to fetch Node.js tarball with hash
-      fetchNodeJs = version: platform: arch:
-        pkgs.fetchurl {
-          url = "https://nodejs.org/dist/v${version}/node-v${version}-${platform}-${arch}.tar.gz";
-          hash = null; # Nix will provide the correct hash when it fails
-        };
-
-      # Function to fetch pnpm tarball with hash
-      fetchPnpm = version:
-        pkgs.fetchurl {
-          url = "https://registry.npmjs.org/pnpm/-/pnpm-${version}.tgz";
-          hash = null; # Nix will provide the correct hash when it fails
-        };
-
-      # Define specific Node.js version
-      nodejs = pkgs.stdenv.mkDerivation rec {
+    # Create pkgs with overlays
+    pkgsFor = system: let
+      pkgs = nixpkgs.legacyPackages.${system};
+      nodejsCustom = pkgs.stdenv.mkDerivation {
         pname = "nodejs";
-        version = versions.nodejs;
+        version = nodeVersion;
 
-        src =
-          fetchNodeJs version
-          (
-            if pkgs.stdenv.isDarwin
-            then "darwin"
-            else "linux"
-          )
-          (
-            if pkgs.stdenv.isx86_64
-            then "x64"
-            else "arm64"
-          );
+        src = fetchNodejs system;
+
+        # Skip phases that aren't needed for pre-built binaries
+        dontBuild = true;
+        dontConfigure = true;
+        dontPatchELF = true;
+        dontPatchShebangs = true;
 
         installPhase = ''
+          runHook preInstall
+
           mkdir -p $out
-          cp -r ./* $out/
-          chmod +x $out/bin/node
-          chmod +x $out/bin/npm
-          chmod +x $out/bin/npx
+          cp -R * $out/
+
+          mkdir -p $out/bin
+          chmod +x $out/bin/*
+
+          runHook postInstall
         '';
 
-        dontStrip = true;
+        # Skip unnecessary fixup steps
+        dontFixup = true;
+
+        # Add standard C libraries to rpath for binary compatibility
+        nativeBuildInputs = with pkgs; [autoPatchelfHook];
+        buildInputs = with pkgs; [stdenv.cc.cc.lib];
       };
 
-      # Define specific pnpm version
-      pnpm = pkgs.stdenv.mkDerivation {
-        name = "pnpm";
-        version = versions.pnpm;
-
-        src = fetchPnpm versions.pnpm;
-
-        buildInputs = [nodejs];
-
-        installPhase = ''
-          # Create directories
-          mkdir -p $out/{lib,bin}
-
-          # Extract tarball
-          cd $out/lib
-          tar xzf $src --strip-components=1
-
-          # Create the executable
-          cat > $out/bin/pnpm << EOF
-          #!${nodejs}/bin/node
-          require(process.env.PNPM_DIST || require('path').resolve(__dirname, '../lib/dist/pnpm.cjs'))
-          EOF
-
-          chmod +x $out/bin/pnpm
-
-          # Export the dist path
-          mkdir -p $out/nix-support
-          echo "export PNPM_DIST=\"$out/lib/dist/pnpm.cjs\"" >> $out/nix-support/setup-hook
-        '';
-
-        dontStrip = true;
+      # Create a pnpm package directly from npm registry
+      pnpmTarball = pkgs.fetchurl {
+        url = "https://registry.npmjs.org/pnpm/-/pnpm-${pnpmVersion}.tgz";
+        hash = null; # Will fail with correct hash on first run
       };
+    in
+      import nixpkgs {
+        inherit system;
+        overlays = [
+          (final: prev: {
+            nodejs = nodejsCustom;
+            pnpm = prev.stdenv.mkDerivation {
+              pname = "pnpm";
+              version = pnpmVersion;
 
-      # Define development tools separately
-      devTools = with pkgs; [
-        nixpkgs-fmt
-        remarshal
-        gcc
-        gnumake
-        python3
-        vips
-        libopus
-        rabbitmq-server
-        pkg-config
-        pnpm # Our specific pnpm version
-      ];
-    in {
-      devShells.default = pkgs.mkShell {
-        buildInputs = devTools;
+              src = pnpmTarball;
 
-        shellHook = ''
-          echo "Welcome to Eliza development environment"
+              nativeBuildInputs = with pkgs; [
+                nodejsCustom
+                makeWrapper
+              ];
 
-          # Ensure project-specific Node.js takes precedence
-          export PATH="${nodejs}/bin:$PATH"
-
-          # Set up pnpm environment
-          export PNPM_HOME="$HOME/.local/share/pnpm"
-          export PATH="$PNPM_HOME:$PATH"
-
-          # Ensure PNPM_HOME exists
-          mkdir -p "$PNPM_HOME"
-
-          # Set up development environment variables
-          export NODE_ENV="development"
-          export VERBOSE="true"
-          export DEBUG="eliza:*"
-
-          # Print available commands
-          echo "Available commands:"
-          echo "  pnpm i        - Install dependencies"
-          echo "  pnpm build    - Build the project"
-          echo "  pnpm dev      - Start development server"
-          echo "  pnpm test     - Run tests"
-
-          # Print actual environment versions
-          node_version=$(${nodejs}/bin/node --version)
-          pnpm_version=$(pnpm --version)
-          echo "Node.js version: $node_version"
-          echo "pnpm version: $pnpm_version"
-        '';
+              installPhase = ''
+                export HOME=$TMPDIR
+                mkdir -p $out/bin $out/lib/node_modules/pnpm
+                tar -xzf $src -C $out/lib/node_modules/pnpm --strip-components=1
+                makeWrapper ${nodejsCustom}/bin/node $out/bin/pnpm \
+                  --add-flags $out/lib/node_modules/pnpm/bin/pnpm.cjs
+              '';
+            };
+          })
+        ];
       };
+  in {
+    packages = forAllSystems (system: {
+      default = pnpm2nix.lib.${system}.mkPnpmPackage {
+        src = ./.;
+        nodejs = (pkgsFor system).nodejs;
+        installInPlace = true;
 
-      formatter = pkgs.nixpkgs-fmt;
+        installEnv = {
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD = "1";
+        };
+
+        script = "build";
+
+        extraBuildInputs = with (pkgsFor system); [
+          python3
+          pkg-config
+          turbo
+        ];
+      };
     });
+
+    devShells = forAllSystems (
+      system: let
+        pkgs = pkgsFor system;
+      in {
+        default = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            nodejs
+            pnpm
+            python3
+            pkg-config
+
+            # Add canvas build dependencies
+            cairo
+            pango
+            libpng
+            libjpeg
+            giflib
+            librsvg
+            pixman
+
+            # Build essentials
+            gcc
+            gnumake
+
+            # Optional but helpful
+            vips
+          ];
+
+          # Network access
+          __noChroot = true;
+          __impureHostDeps = ["/etc/resolv.conf"];
+
+          # Add pkg-config path
+          shellHook = ''
+            export PKG_CONFIG_PATH="${pkgs.cairo}/lib/pkgconfig:${pkgs.pango}/lib/pkgconfig:${pkgs.libpng}/lib/pkgconfig:$PKG_CONFIG_PATH"
+            echo "Entering Eliza development environment with:"
+            echo "Node.js $(node --version)"
+            echo "pnpm $(pnpm --version)"
+          '';
+        };
+      }
+    );
+  };
 }
