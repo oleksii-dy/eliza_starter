@@ -39,8 +39,12 @@ export interface EventConfig {
  */
 export interface EVMClientConfig {
     rpcUrl: string;
+    discordChannelId: string;
     contracts: {
+        name: string;
         address: string;
+        description: string;
+        network: string;
         events: EventConfig[];
     }[];
 }

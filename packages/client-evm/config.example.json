@@ -1,0 +1,40 @@
+{
+    "rpcUrl": "wss://network.infura.io/ws/v3/YOUR-API-KEY",
+    "discordChannelId": "Discord Channel ID",
+    "contracts": [
+        {
+            "name": "ExampleContract",
+            "address": "0xContractAddress",
+            "description": "Description of what this contract does",
+            "network": "network-name",
+            "events": [
+                {
+                    "topic": "0xEventTopic",
+                    "abi": {
+                        "anonymous": false,
+                        "inputs": [
+                            {
+                                "indexed": true,
+                                "internalType": "address",
+                                "name": "exampleParam",
+                                "type": "address"
+                            }
+                        ],
+                        "name": "ExampleEvent",
+                        "type": "event"
+                    },
+                    "description": {
+                        "name": "ExampleEvent",
+                        "description": "Description of what this event represents",
+                        "params": [
+                            {
+                                "name": "exampleParam",
+                                "description": "Description of what this parameter means"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

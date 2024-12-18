@@ -1,55 +1,78 @@
 # EVM Client for Eliza
 
-A WebSocket-based EVM event listener that integrates with Eliza agents, allowing them to monitor and discuss blockchain events through natural language conversation.
+A blockchain event monitoring client that integrates with Eliza agents, allowing them to watch and discuss EVM blockchain events through Discord in natural language.
 
 ## Overview
 
-The EVM Client connects to the blockchain via WebSocket, monitors specified events, formats them for agent understanding, and enables natural conversation about them through different interfaces (currently implemented for console, expandable to Discord etc.).
+The EVM Client:
+
+- Connects to EVM-compatible blockchains via WebSocket
+- Monitors specified smart contract events
+- Formats blockchain data for agent understanding
+- Enables natural language discussion through Discord
+- Stores event history in agent's memory
 
 ## Setup Guide
 
-### 1. Configure Event Monitoring (config.json)
+1. Installation
 
-- Set your WebSocket endpoint (rpcUrl)
-- Specify contracts to monitor:
- - Contract address
- - Event topics to watch
- - Event ABI definition
- - Event descriptions (for documentation)
+npm install @ai16z/client-evm
 
-Example provided shows monitoring of Uniswap V3 USDC/DAI swaps.
+2. Configuration
 
-### 2. Configure Event Handling (messages.ts)
+Modify the config.json file with your settings:
 
-Three main components need to be configured:
+- rpcUrl: WebSocket endpoint for your blockchain node
+- discordChannelId: Where the agent will post event updates
+- contracts: Array of contracts to monitor with topic0 hashes, ABIs, event descriptions, etc.
 
-#### a. Event Formatters
-Create formatters for each event type you want to monitor. These format raw event data into readable text.
-- Implement the EventFormatter interface
-- Handle specific parameters for your events
-- Example provided shows USDC/DAI swap amount formatting
+3. Usage
 
-#### b. Event Content Creation
-Modify createEventContent to structure how event data appears in memory.
-- Format text field as desired
-- Structure event information
-- Set metadata for system use
+import { EVMClientInterface } from '@ai16z/client-evm';
 
-#### c. Response Template
-Configure how the agent understands and responds to events.
-- Set context elements (bio, lore, etc.)
-- Structure event information presentation
-- Define response instructions
+// In your agent setup:
+await EVMClientInterface.start(runtime);
 
-### 3. Client Setup
-Currently configured for Direct client (console). Modify room management in MessageManager for different clients.
+## Working Example: USDC/DAI Swap Monitor
 
-## Current Implementation Example
+The client comes with a complete implementation monitoring USDC/DAI swaps on Uniswap V3
 
-The provided implementation monitors USDC/DAI swaps on Uniswap V3, formats amounts with proper decimals, and enables agent conversation about the swaps.
+1. Event Monitoring:
 
-## Extending
+- Watches Uniswap V3 Arbitrum USDC/DAI pool
+- Detects swap events
+- Decodes transaction data
 
-- Add new event types by updating config.json and creating corresponding formatters
-- Implement different client interfaces by modifying room management
-- Customize event formatting and agent responses by adjusting templates
+2. Data Formatting:
+
+- Handles token decimals (6 for USDC, 18 for DAI)
+- Formats amounts to human-readable numbers
+- Structures swap information
+
+3. Agent Integration:
+
+- Stores events in agent memory
+- Generates natural language responses
+- Posts updates to Discord
+
+## Customization
+
+1. Event Formatters
+
+Create formatters in implementations/ for your events.
+
+2. Response Templates
+
+Customize how your agent talks about events.
+
+3. Message Management
+
+The client is configured for Discord. The message handler in 'messages.ts' can be modified for other platforms.
+
+## Technical Details
+
+- Uses ethers.js for blockchain interaction
+- WebSocket connection with auto-reconnection
+- Event decoding using contract ABIs
+- Memory storage for event history
+- Natural language processing through Eliza framework

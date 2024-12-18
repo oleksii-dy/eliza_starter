@@ -1,8 +1,12 @@
 {
-    "rpcUrl": "wss://arbitrum-mainnet.infura.io/ws/v3/502da95c9fce4c318911f588546a9082",
+    "rpcUrl": "...",
+    "discordChannelId": "...",
     "contracts": [
         {
+            "name": "UniswapV3_USDC_DAI_Pool",
             "address": "0x7cf803e8d82a50504180f417b8bc7a493c0a0503",
+            "description": "Uniswap V3 USDC/DAI 0.01% Fee Pool",
+            "network": "arbitrum",
             "events": [
                 {
                     "topic": "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67",
