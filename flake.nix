@@ -138,7 +138,7 @@
 
           # Print available commands
           echo "Available commands:"
-          echo "  pnpm i  - Install dependencies"
+          echo "  pnpm i        - Install dependencies"
           echo "  pnpm build    - Build the project"
           echo "  pnpm dev      - Start development server"
           echo "  pnpm test     - Run tests"
