@@ -8,6 +8,7 @@ import { SlackClientInterface } from "@ai16z/client-slack";
 import { TelegramClientInterface } from "@ai16z/client-telegram";
 import { TwitterClientInterface } from "@ai16z/client-twitter";
 import { NostrAgentClient } from "@ai16z/client-nostr";
+import { Clients } from "@ai16z/eliza";
 
 import {
     AgentRuntime,
@@ -364,7 +365,7 @@ export async function initializeClients(
         if (telegramClient) clients.telegram = telegramClient;
     }
 
-    if (clientTypes.includes("twitter")) {
+    if (clientTypes.includes(Clients.TWITTER)) {
         TwitterClientInterface.enableSearch = !isFalsish(
             getSecret(character, "TWITTER_SEARCH_ENABLE")
         );
@@ -386,13 +387,13 @@ export async function initializeClients(
             clients.farcaster = farcasterClient;
         }
     }
-    if (clientTypes.includes("lens")) {
+    if (clientTypes.includes(Clients.LENS)) {
         const lensClient = new LensAgentClient(runtime);
         lensClient.start();
         clients.lens = lensClient;
     }
 
-    if (clientTypes.includes("nostr")) {
+    if (clientTypes.includes(Clients.NOSTR)) {
         const nostrClient = new NostrAgentClient(runtime);
         if (nostrClient) {
             nostrClient.start();
@@ -403,7 +404,7 @@ export async function initializeClients(
     elizaLogger.log("client keys", Object.keys(clients));
 
     // TODO: Add Slack client to the list
-    if (clientTypes.includes("slack")) {
+    if (clientTypes.includes(Clients.SLACK)) {
         const slackClient = await SlackClientInterface.start(runtime);
         if (slackClient) clients.push(slackClient);
     }
