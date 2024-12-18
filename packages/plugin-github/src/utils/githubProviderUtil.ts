@@ -43,7 +43,7 @@ export async function fetchFiles(
         const details = await generateObjectV2({
             runtime,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
             schema: FetchFilesSchema,
         });
 

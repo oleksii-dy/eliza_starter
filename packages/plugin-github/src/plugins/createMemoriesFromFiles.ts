@@ -20,7 +20,7 @@ import {
     CreateMemoriesFromFilesSchema,
     isCreateMemoriesFromFilesContent,
 } from "../types";
-import { getRepoPath, retrieveFiles } from "../utils";
+import { getRepoPath, retrieveFiles, getFileContentFromMemory } from "../utils";
 import { sourceCodeProvider } from "../providers/sourceCode";
 import { testFilesProvider } from "../providers/testFiles";
 import { workflowFilesProvider } from "../providers/workflowFiles";
@@ -34,6 +34,7 @@ export async function addFilesToMemory(
     owner: string,
     repo: string
 ) {
+    elizaLogger.info("Adding files to memory:", files);
     for (const file of files) {
         const relativePath = path.relative(repoPath, file);
         const content = await fs.readFile(file, "utf-8");
@@ -122,7 +123,7 @@ export const createMemoriesFromFilesAction: Action = {
         const details = await generateObjectV2({
             runtime,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
             schema: CreateMemoriesFromFilesSchema,
         });
 
@@ -135,10 +136,10 @@ export const createMemoriesFromFilesAction: Action = {
         elizaLogger.info("Creating memories from files...");
 
         const repoPath = getRepoPath(content.owner, content.repo);
-
+        elizaLogger.info(`Repo path: ${repoPath}`);
         try {
             const files = await retrieveFiles(repoPath, content.path);
-
+            elizaLogger.info(`Files: ${files}`);
             await addFilesToMemory(
                 runtime,
                 files,
