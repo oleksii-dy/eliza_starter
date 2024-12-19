@@ -34,7 +34,7 @@ Que pouvez-vous faire avec Eliza?
 
 -   Copier le fichier d'example et le remplir le avec les valeurs adéquates
 
-```
+```bash
 cp .env.example .env
 ```
 
@@ -64,7 +64,7 @@ pnpm clean
 Il vous faudra peut-être installer Sharp.
 Si il y a une erreur lors du lancement du bot, essayez d'installer Sharp comme ceci :
 
-```
+```bash
 pnpm install --include=optional sharp
 ```
 
