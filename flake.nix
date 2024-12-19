@@ -39,13 +39,10 @@
       };
       platform = platformMap.${system};
     in
-      pkgs.fetchurl {
-        urls = [
-          "https://nodejs.org/dist/v${nodeVersion}/node-v${nodeVersion}-${platform}.tar.xz"
-          "https://archive.nodejs.org/dist/v${nodeVersion}/node-v${nodeVersion}-${platform}.tar.xz"
-        ];
-        curlOpts = ''-L --retry 3 --retry-delay 3'';
-        hash = null;
+      pkgs.fetchzip {
+        url = "https://nodejs.org/dist/v${nodeVersion}/node-v${nodeVersion}-${platform}.tar.xz";
+        stripRoot = false;
+        hash = pkgs.lib.fakeHash; # Will fail and show correct hash
       };
 
     # Create pkgs with overlays
@@ -85,9 +82,10 @@
       };
 
       # Create a pnpm package directly from npm registry
-      pnpmTarball = pkgs.fetchurl {
+      pnpmTarball = pkgs.fetchzip {
         url = "https://registry.npmjs.org/pnpm/-/pnpm-${pnpmVersion}.tgz";
-        hash = null; # Will fail with correct hash on first run
+        stripRoot = false;
+        hash = pkgs.lib.fakeHash; # Will fail and show correct hash
       };
     in
       import nixpkgs {
@@ -140,12 +138,13 @@
 
     devShells = forAllSystems (
       system: let
-        pkgs = pkgsFor system;
+        pkgs = nixpkgs.legacyPackages.${system};
       in {
         default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            nodejs
-            pnpm
+            # Use the system's nodejs package instead of fetching our own
+            nodejs_20 # or whatever version matches your needs
+            nodePackages.pnpm
             python3
             pkg-config
 
@@ -168,17 +167,9 @@
 
           # Network access
           __noChroot = true;
-          __impureHostDeps = [
-            "/etc/resolv.conf"
-            "/etc/ssl/certs/ca-certificates.crt" # Add SSL certificates
-            "/etc/ssl/certs/ca-bundle.crt"
-          ];
+          __impureHostDeps = ["/etc/resolv.conf"];
 
-          # Add DNS configuration to shellHook
           shellHook = ''
-            export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-            export NIX_SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-
             export PKG_CONFIG_PATH="${pkgs.cairo}/lib/pkgconfig:${pkgs.pango}/lib/pkgconfig:${pkgs.libpng}/lib/pkgconfig:$PKG_CONFIG_PATH"
             echo "🤖 Eliza development environment loaded 🚀"
             echo "------------------------------------------"
