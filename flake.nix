@@ -42,7 +42,7 @@
       pkgs.fetchzip {
         url = "https://nodejs.org/dist/v${nodeVersion}/node-v${nodeVersion}-${platform}.tar.xz";
         stripRoot = false;
-        hash = pkgs.lib.fakeHash; # Will fail and show correct hash
+        hash = null; # Will fail and show correct hash
       };
 
     # Create pkgs with overlays
@@ -85,7 +85,7 @@
       pnpmTarball = pkgs.fetchzip {
         url = "https://registry.npmjs.org/pnpm/-/pnpm-${pnpmVersion}.tgz";
         stripRoot = false;
-        hash = pkgs.lib.fakeHash; # Will fail and show correct hash
+        hash = null; # Will fail and show correct hash
       };
     in
       import nixpkgs {
@@ -138,13 +138,13 @@
 
     devShells = forAllSystems (
       system: let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = pkgsFor system;
       in {
         default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            # Use the system's nodejs package instead of fetching our own
-            nodejs_20 # or whatever version matches your needs
-            nodePackages.pnpm
+            # Use our custom nodejs and pnpm versions instead of system packages
+            nodejs # This will use the custom nodejs defined in the overlay
+            pnpm # This will use the custom pnpm defined in the overlay
             python3
             pkg-config
 
