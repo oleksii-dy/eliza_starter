@@ -40,8 +40,11 @@
       platform = platformMap.${system};
     in
       pkgs.fetchurl {
-        url = "https://nodejs.org/dist/v${nodeVersion}/node-v${nodeVersion}-${platform}.tar.xz";
-        # Let Nix calculate the hash on first run
+        urls = [
+          "https://nodejs.org/dist/v${nodeVersion}/node-v${nodeVersion}-${platform}.tar.xz"
+          "https://archive.nodejs.org/dist/v${nodeVersion}/node-v${nodeVersion}-${platform}.tar.xz"
+        ];
+        curlOpts = ''-L --retry 3 --retry-delay 3'';
         hash = null;
       };
 
