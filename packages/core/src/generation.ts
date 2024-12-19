@@ -36,6 +36,7 @@ import {
     ActionResponse,
 } from "./types.ts";
 import { fal } from "@fal-ai/client";
+import { Livepeer } from "@livepeer/ai";
 
 /**
  * Send a message to the model for a text generateText - receive a string back and parse how you'd like
@@ -955,7 +956,8 @@ export const generateImage = async (
               runtime.getSetting("TOGETHER_API_KEY") ??
               runtime.getSetting("FAL_API_KEY") ??
               runtime.getSetting("OPENAI_API_KEY") ??
-              runtime.getSetting("VENICE_API_KEY"));
+              runtime.getSetting("VENICE_API_KEY") ??
+              runtime.getSetting("LIVEPEER_API_KEY"));
 
     try {
         if (runtime.imageModelProvider === ModelProviderName.HEURIST) {
@@ -1137,8 +1139,48 @@ export const generateImage = async (
                 }
                 return `data:image/png;base64,${base64String}`;
             });
-
-            return { success: true, data: base64s };
+            return {success: true, data: base64s };
+        } else if (runtime.imageModelProvider === ModelProviderName.LIVEPEER) {
+            if (!apiKey) {
+                throw new Error("LIVEPEER_API_KEY is not defined");
+            }
+            try {
+                const livepeer = new Livepeer({
+                    httpBearer: apiKey,
+                });
+                const response = await livepeer.generate.textToImage({
+                    prompt: data.prompt,
+                    width: data.width || 1024,
+                    height: data.height || 1024,
+                    numImagesPerPrompt: data.count || 1,
+                });
+                if (!response.imageResponse?.images?.length) {
+                    throw new Error("No images generated");
+                }
+                // const result = await response.imageResponse.images[0].url
+                // Convert image URLs to base64
+                const base64Images = await Promise.all(
+                    response.imageResponse.images.map(async (image) => {
+                        const imageResponse = await fetch(image.url);
+                        if (!imageResponse.ok) {
+                            throw new Error(
+                                `Failed to fetch image from Livepeer: ${imageResponse.statusText}`
+                            );
+                        }
+                        const blob = await imageResponse.blob();
+                        const arrayBuffer = await blob.arrayBuffer();
+                        const base64 = Buffer.from(arrayBuffer).toString("base64");
+                        return `data:image/jpeg;base64,${base64}`;
+                    })
+                );
+                return {
+                    success: true,
+                    data: base64Images
+                };
+            } catch (error) {
+                console.error(error);
+                return { success: false, error: error };
+            }
         } else {
             let targetSize = `${data.width}x${data.height}`;
             if (
