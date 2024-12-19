@@ -41,7 +41,7 @@
     in
       pkgs.fetchzip {
         url = "https://nodejs.org/dist/v${nodeVersion}/node-v${nodeVersion}-${platform}.tar.xz";
-        stripRoot = false;
+        stripRoot = true;
         hash = null; # Will fail and show correct hash
       };
 
@@ -66,25 +66,38 @@
           mkdir -p $out
           cp -R * $out/
 
-          # More explicit permission handling
+          # Ensure bin directory exists and files are executable
           mkdir -p $out/bin
-          find $out/bin -type f -exec chmod +x {} +
+          chmod +x $out/bin/*
+
+          # Make sure node is executable
+          chmod +x $out/bin/node
 
           runHook postInstall
         '';
 
-        # Skip unnecessary fixup steps
-        dontFixup = true;
+        # Only use autoPatchelfHook on Linux systems
+        nativeBuildInputs = with pkgs;
+          if pkgs.stdenv.isLinux
+          then [autoPatchelfHook]
+          else [];
 
-        # Add standard C libraries to rpath for binary compatibility
-        nativeBuildInputs = with pkgs; [autoPatchelfHook];
-        buildInputs = with pkgs; [stdenv.cc.cc.lib];
+        # Only include C libraries on Linux
+        buildInputs = with pkgs;
+          if pkgs.stdenv.isLinux
+          then [stdenv.cc.cc.lib]
+          else [];
+
+        # Add post-fixup phase to ensure executables are properly handled
+        postFixup = ''
+          # Ensure all executables in bin are actually executable
+          find $out/bin -type f -exec chmod +x {} +
+        '';
       };
 
       # Create a pnpm package directly from npm registry
-      pnpmTarball = pkgs.fetchzip {
+      pnpmTarball = pkgs.fetchurl {
         url = "https://registry.npmjs.org/pnpm/-/pnpm-${pnpmVersion}.tgz";
-        stripRoot = false;
         hash = null; # Will fail and show correct hash
       };
     in
@@ -107,7 +120,7 @@
               installPhase = ''
                 export HOME=$TMPDIR
                 mkdir -p $out/bin $out/lib/node_modules/pnpm
-                tar -xzf $src -C $out/lib/node_modules/pnpm --strip-components=1
+                tar xf $src -C $out/lib/node_modules/pnpm --strip-components=1
                 makeWrapper ${nodejsCustom}/bin/node $out/bin/pnpm \
                   --add-flags $out/lib/node_modules/pnpm/bin/pnpm.cjs
               '';
