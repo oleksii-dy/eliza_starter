@@ -17,12 +17,8 @@
     systems = ["x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin"];
     forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f system);
 
-    # Package.json content inlined to avoid path resolution issues
-    packageJson = {
-      name = "eliza";
-      engines.node = "23.3.0";
-      packageManager = "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee";
-    };
+    # Read package.json content directly
+    packageJson = builtins.fromJSON (builtins.readFile ./package.json);
 
     # Extract versions directly
     nodeVersion = builtins.replaceStrings ["^" "~"] ["" ""] packageJson.engines.node;
@@ -39,10 +35,32 @@
       };
       platform = platformMap.${system};
     in
-      pkgs.fetchzip {
-        url = "https://nodejs.org/dist/v${nodeVersion}/node-v${nodeVersion}-${platform}.tar.xz";
-        stripRoot = true;
-        hash = null; # Will fail and show correct hash
+      pkgs.stdenv.mkDerivation {
+        pname = "nodejs";
+        version = nodeVersion;
+
+        src = pkgs.fetchurl {
+          urls = [
+            "https://nodejs.org/dist/v${nodeVersion}/node-v${nodeVersion}-${platform}.tar.xz"
+            "https://nodejs.org/download/release/v${nodeVersion}/node-v${nodeVersion}-${platform}.tar.xz"
+          ];
+          hash = null;
+        };
+
+        # Skip unnecessary phases
+        dontBuild = true;
+        dontConfigure = true;
+
+        installPhase = ''
+          mkdir -p $out
+          cp -r * $out/
+          chmod +x $out/bin/*
+        '';
+
+        # Add post-fixup phase for NixOS compatibility
+        fixupPhase = ''
+          patchShebangs $out/bin
+        '';
       };
 
     # Create pkgs with overlays
@@ -97,8 +115,12 @@
 
       # Create a pnpm package directly from npm registry
       pnpmTarball = pkgs.fetchurl {
-        url = "https://registry.npmjs.org/pnpm/-/pnpm-${pnpmVersion}.tgz";
-        hash = null; # Will fail and show correct hash
+        urls = [
+          "https://registry.npmjs.org/pnpm/-/pnpm-${pnpmVersion}.tgz"
+          "https://registry.npmjs.com/pnpm/-/pnpm-${pnpmVersion}.tgz"
+        ];
+        curlOpts = ''-L --retry 3 --retry-delay 3'';
+        hash = null;
       };
     in
       import nixpkgs {
