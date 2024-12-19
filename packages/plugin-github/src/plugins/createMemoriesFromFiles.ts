@@ -326,10 +326,10 @@ export const githubCreateMemorizeFromFilesPlugin: Plugin = {
     actions: [createMemoriesFromFilesAction],
     evaluators: [],
     providers: [
-        sourceCodeProvider,
-        testFilesProvider,
-        workflowFilesProvider,
-        documentationFilesProvider,
-        releasesProvider,
+        // sourceCodeProvider,
+        // testFilesProvider,
+        // workflowFilesProvider,
+        // documentationFilesProvider,
+        // releasesProvider,
     ],
 };
