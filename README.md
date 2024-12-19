@@ -76,7 +76,7 @@ git checkout $(git describe --tags --abbrev=0)
 
 Copy .env.example to .env and fill in the appropriate values.
 
-```
+```bash
 cp .env.example .env
 ```
 
@@ -115,7 +115,7 @@ pnpm clean
 
 You may need to install Sharp. If you see an error when starting up, try installing it with the following command:
 
-```
+```bash
 pnpm install --include=optional sharp
 ```
 
