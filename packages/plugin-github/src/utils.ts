@@ -213,12 +213,21 @@ export async function retrieveFiles(repoPath: string, gitPath: string) {
     return files;
 }
 
-export const getFilesFromMemories = async (runtime: IAgentRuntime, message: Memory) => {
-    const memories = (await runtime.messageManager.getMemories({
-        roomId: message.roomId
-    })).filter(memory => memory.content.metadata?.path);
+export const getFilesFromMemories = async (
+    runtime: IAgentRuntime,
+    message: Memory
+) => {
+    const allMemories = await runtime.messageManager.getMemories({
+        roomId: message.roomId,
+    });
+    elizaLogger.info("All Memories:", allMemories);
+    const memories = allMemories.filter(
+        (memory) => memory.content.metadata?.path
+    );
     elizaLogger.info("Memories:", memories);
-    return memories.map((memory) => `File: ${memory.content.metadata?.path}
+    return memories.map(
+        (memory) => `File: ${memory.content.metadata?.path}
         Content: ${memory.content.text}
-        `);
+        `
+    );
 };
