@@ -165,10 +165,6 @@
             vips
           ];
 
-          # Network access
-          __noChroot = true;
-          __impureHostDeps = ["/etc/resolv.conf"];
-
           shellHook = ''
             export PKG_CONFIG_PATH="${pkgs.cairo}/lib/pkgconfig:${pkgs.pango}/lib/pkgconfig:${pkgs.libpng}/lib/pkgconfig:$PKG_CONFIG_PATH"
             echo "🤖 Eliza development environment loaded 🚀"
