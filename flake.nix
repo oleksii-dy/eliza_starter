@@ -17,12 +17,24 @@
     systems = ["x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin"];
     forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f system);
 
-    # Read and parse package.json
-    packageJson = builtins.fromJSON (builtins.readFile ./package.json);
+    # Read and parse package.json with error handling
+    packageJson = let
+      rawContent = builtins.readFile ./package.json;
+    in
+      if rawContent == ""
+      then throw "package.json is empty"
+      else builtins.fromJSON rawContent;
 
-    # Extract versions
-    nodeVersion = builtins.replaceStrings ["^" "~"] ["" ""] packageJson.engines.node;
-    pnpmVersion = builtins.head (builtins.match "pnpm@([0-9.]+).*" packageJson.packageManager);
+    # Extract versions with safe fallbacks
+    nodeVersion =
+      if packageJson ? engines.node
+      then builtins.replaceStrings ["^" "~"] ["" ""] packageJson.engines.node
+      else throw "Node version not specified in package.json engines field";
+
+    pnpmVersion =
+      if packageJson ? packageManager
+      then builtins.head (builtins.match "pnpm@([0-9.]+).*" packageJson.packageManager)
+      else throw "pnpm version not found in packageManager field of package.json";
 
     # Function to fetch Node.js for a specific system
     fetchNodejs = system: let
@@ -62,8 +74,9 @@
           mkdir -p $out
           cp -R * $out/
 
+          # More explicit permission handling
           mkdir -p $out/bin
-          chmod +x $out/bin/*
+          find $out/bin -type f -exec chmod +x {} +
 
           runHook postInstall
         '';
