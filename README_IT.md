@@ -37,7 +37,7 @@
 
 Copia .env.example in .env e inserisci i valori appropriati
 
-```
+```bash
 cp .env.example .env
 ```
 
@@ -72,7 +72,7 @@ pnpm clean
 
 Potrebbe essere necessario installare Sharp. Se vedi un errore all'avvio, prova a installarlo con il seguente comando:
 
-```
+```bash
 pnpm install --include=optional sharp
 ```
 
