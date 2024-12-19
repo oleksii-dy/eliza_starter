@@ -29,6 +29,7 @@ import { releasesProvider } from "../providers/releases";
 
 export async function addFilesToMemory(
     runtime: IAgentRuntime,
+    message: Memory,
     files: string[],
     repoPath: string,
     owner: string,
@@ -63,9 +64,9 @@ export async function addFilesToMemory(
         );
         const memory = {
             id: memoryId,
-            userId: runtime.agentId,
-            agentId: runtime.agentId,
-            roomId: memoryId,
+            userId: message.userId,
+            agentId: message.agentId,
+            roomId: message.roomId,
             content: {
                 text: content,
                 hash: contentHash,
@@ -145,6 +146,7 @@ export const createMemoriesFromFilesAction: Action = {
             elizaLogger.info(`Files: ${files}`);
             await addFilesToMemory(
                 runtime,
+                message,
                 files,
                 repoPath,
                 content.owner,

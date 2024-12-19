@@ -121,15 +121,12 @@ Here are the recent user messages for context:
 export const createIssueTemplate = `
 Extract the details for creating a GitHub issue and fill in the issue template with additional details:
 
-Here is the character file:
-\`\`\`
-{{character}}
-\`\`\`
+Here is the character:
+{{bio}}
+{{lore}}
+{{topics}}
 
-Here is the original request:
-\`\`\`
-{{memory}}
-\`\`\`
+{{characterPostExamples}}
 
 Please use the related files to provide context and fill in the issue template with additional details:
 \`\`\`

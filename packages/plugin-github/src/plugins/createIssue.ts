@@ -35,17 +35,21 @@ export const createIssueAction: Action = {
         callback: HandlerCallback
     ) => {
         elizaLogger.log("Composing state for message:", message);
+
         const files = await getFilesFromMemories(runtime, message);
+
         if (!state) {
-            state = (await runtime.composeState(message, {
-                character: runtime.character,
-                files: files,
-            })) as State;
+            state = (await runtime.composeState(message, {})) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
+
+        // add additional keys to state
         state.files = files;
+        state.character = JSON.stringify(runtime.character || {}, null, 2);
+
         elizaLogger.info("State:", state);
+
         const context = composeContext({
             state,
             template: createIssueTemplate,
