@@ -165,20 +165,19 @@
           # Add pkg-config path
           shellHook = ''
             export PKG_CONFIG_PATH="${pkgs.cairo}/lib/pkgconfig:${pkgs.pango}/lib/pkgconfig:${pkgs.libpng}/lib/pkgconfig:$PKG_CONFIG_PATH"
-            echo "Entering Eliza development environment with:"
+            echo "🤖 Eliza development environment loaded 🚀"
+            echo "------------------------------------------"
+            echo "Using:"
             echo "Node.js $(node --version)"
             echo "pnpm $(pnpm --version)"
 
             echo """
-            📦 PNPM Quickstart Guide:
+            🏗️  Quickstart Guide:
             ------------------------
-            • Install dependencies:    pnpm install
-            • Add a dependency:       pnpm add <package>
-            • Add dev dependency:     pnpm add -D <package>
-            • Run a script:          pnpm run <script>
-            • Start development:      pnpm dev
-            • Build project:         pnpm build
-            • Clean install:         pnpm clean && pnpm install
+            ┌─> 1. pnpm i      (Install dependencies)
+            │   2. pnpm build  (Build project)
+            └── 3. pnpm clean  (Clear Artifacts, for a fresh start)
+                4. pnpm test   (Run tests)
 
             For more commands, run: pnpm --help
             ------------------------
