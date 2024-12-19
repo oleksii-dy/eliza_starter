@@ -70,7 +70,7 @@ git checkout $(git describe --tags --abbrev=0)
 
 Sao chép .env.example vào .env và điền các giá trị thích hợp.
 
-```
+```bash
 cp .env.example .env
 ```
 
@@ -109,7 +109,7 @@ pnpm clean
 
 Bạn có thể cần cài đặt Sharp. Nếu bạn thấy lỗi khi khởi động, hãy thử cài đặt bằng lệnh sau:
 
-```
+```bash
 pnpm install --include=optional sharp
 ```
 
