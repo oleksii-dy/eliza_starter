@@ -7,14 +7,19 @@ import {
 import {
     DeriveKeyProvider,
     RemoteAttestationProvider,
+    RemoteAttestationQuote,
 } from "@ai16z/plugin-tee";
 
 export class VerifiableLogProvider implements IVerifiableLogProvider {
     private dao: VerifiableDAO;
     private keyPath: string = "/keys/verifiable_key";
+    private remoteAttestationProvider: RemoteAttestationProvider;
+    private provider: DeriveKeyProvider;
 
-    constructor(dao: VerifiableDAO) {
+    constructor(dao: VerifiableDAO, teeMode: string) {
         this.dao = dao;
+        this.remoteAttestationProvider = new RemoteAttestationProvider(teeMode);
+        this.provider = new DeriveKeyProvider(teeMode);
     }
 
     async log(
@@ -25,18 +30,16 @@ export class VerifiableLogProvider implements IVerifiableLogProvider {
             type: string;
             content: string;
         },
-        endpoint: string
+        subject: string
     ): Promise<boolean> {
         let singed: string = "";
 
-        const provider = new DeriveKeyProvider(endpoint);
-
         try {
-            const evmKeypair = await provider.deriveEcdsaKeypair(
+            const evmKeypair = await this.provider.deriveEcdsaKeypair(
                 this.keyPath,
+                subject,
                 params.agentId
             );
-
             const signature = await evmKeypair.keypair.signMessage({
                 message: params.content,
             });
@@ -61,21 +64,22 @@ export class VerifiableLogProvider implements IVerifiableLogProvider {
             agentId: string;
             agentName: string;
         },
-        endpoint: string
+        subject: string
     ): Promise<boolean> {
         if (params.agentId === undefined) {
             throw new Error("agentId is required");
         }
 
         const agent = await this.dao.getAgent(params.agentId);
-        if (agent !==null){
+        if (agent !== null) {
             return true;
         }
-        const provider = new DeriveKeyProvider(endpoint);
-        const evmKeypair = await provider.deriveEcdsaKeypair(
+        const evmKeypair = await this.provider.deriveEcdsaKeypair(
             this.keyPath,
+            subject,
             params.agentId
         );
+
         const publicKey = evmKeypair.keypair.publicKey;
 
         return this.dao.addAgent(<VerifiableAgent>{
@@ -90,18 +94,17 @@ export class VerifiableLogProvider implements IVerifiableLogProvider {
         params: {
             agentId: string;
             publicKey: string;
-        },
-        endpoint: string
+        }
     ): Promise<string> {
         if (params.agentId === undefined || params.publicKey === undefined) {
             throw new Error("agentId and publicKey are required");
         }
-        const raProvider = new RemoteAttestationProvider(endpoint);
         try {
             // Generate 32-byte report data (reportData) containing the hash value of the public key.
             const reportData = JSON.stringify(params);
             // Call the remote attestation interface.
-            return raProvider.generateAttestation(reportData);
+            const quote: RemoteAttestationQuote = await this.remoteAttestationProvider.generateAttestation(reportData);
+            return JSON.stringify(quote);
         } catch (error) {
             console.error("Failed to generate attestation quote:", error);
             throw error;
