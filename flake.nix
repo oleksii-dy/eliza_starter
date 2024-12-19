@@ -165,16 +165,23 @@
 
           # Network access
           __noChroot = true;
-          __impureHostDeps = ["/etc/resolv.conf"];
+          __impureHostDeps = [
+            "/etc/resolv.conf"
+            "/etc/ssl/certs/ca-certificates.crt" # Add SSL certificates
+            "/etc/ssl/certs/ca-bundle.crt"
+          ];
 
-          # Add pkg-config path
+          # Add DNS configuration to shellHook
           shellHook = ''
+            export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+            export NIX_SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+
             export PKG_CONFIG_PATH="${pkgs.cairo}/lib/pkgconfig:${pkgs.pango}/lib/pkgconfig:${pkgs.libpng}/lib/pkgconfig:$PKG_CONFIG_PATH"
             echo "🤖 Eliza development environment loaded 🚀"
             echo "------------------------------------------"
             echo "Using:"
-            echo "Node.js $(node --version)"
-            echo "pnpm $(pnpm --version)"
+            echo "      Node.js $(node --version)"
+            echo "      pnpm $(pnpm --version)"
 
             echo """
             🏗️  Quickstart Guide:
