@@ -170,8 +170,8 @@
             echo "🤖 Eliza development environment loaded 🚀"
             echo "------------------------------------------"
             echo "Using:"
-            echo "      Node.js $(node --version)"
-            echo "      pnpm $(pnpm --version)"
+            echo "      - Node.js $(node --version)"
+            echo "      - pnpm $(pnpm --version)"
 
             echo """
             🏗️  Quickstart Guide:
