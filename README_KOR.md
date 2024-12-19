@@ -70,7 +70,7 @@ git checkout $(git describe --tags --abbrev=0)
 
 .env.example을 복사해서 필요한 값들을 채워넣어 .env파일을 만드세요.
 
-```
+```bash
 cp .env.example .env
 ```
 
@@ -108,7 +108,7 @@ pnpm clean
 
 시작 시 에러가 발생하면 Sharp를 설치해야 할 수 있습니다. 아래 명령어를 사용하여 설치하세요:
 
-```
+```bash
 pnpm install --include=optional sharp
 ```
 
