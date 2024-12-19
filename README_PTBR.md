@@ -39,7 +39,7 @@
 
 Após configurar o arquivo .env e o arquivo de personagem, você pode iniciar o bot com o seguinte comando:
 
-```
+```bash
 pnpm i
 pnpm start
 ```
@@ -68,7 +68,7 @@ Você pode executar modelos OpenAI configurando a variável de ambiente `XAI_MOD
 
 Pode ser necessário instalar o Sharp. Se você encontrar um erro ao iniciar, tente instalá-lo com o seguinte comando:
 
-```
+```bash
 pnpm install --include=optional sharp
 ```
 
@@ -139,7 +139,7 @@ TOGETHER_API_KEY=
 
 Se você tiver uma GPU NVIDIA, pode instalar o CUDA para acelerar dramaticamente a inferência local.
 
-```
+```bash
 pnpm install
 npx --no node-llama-cpp source download --gpu cuda
 ```
