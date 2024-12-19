@@ -168,6 +168,21 @@
             echo "Entering Eliza development environment with:"
             echo "Node.js $(node --version)"
             echo "pnpm $(pnpm --version)"
+
+            echo """
+            📦 PNPM Quickstart Guide:
+            ------------------------
+            • Install dependencies:    pnpm install
+            • Add a dependency:       pnpm add <package>
+            • Add dev dependency:     pnpm add -D <package>
+            • Run a script:          pnpm run <script>
+            • Start development:      pnpm dev
+            • Build project:         pnpm build
+            • Clean install:         pnpm clean && pnpm install
+
+            For more commands, run: pnpm --help
+            ------------------------
+            """
           '';
         };
       }
