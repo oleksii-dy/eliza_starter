@@ -17,46 +17,16 @@
     systems = ["x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin"];
     forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f system);
 
-    # Read and parse package.json with verbose error handling
-    packageJson = let
-      packageJsonPath = ./package.json;
-      errorMsg = msg: builtins.trace "Error reading package.json: ${msg}" null;
-    in
-      if !builtins.pathExists packageJsonPath
-      then throw "package.json not found at ${toString packageJsonPath}"
-      else let
-        rawContent = builtins.readFile packageJsonPath;
-      in
-        if rawContent == ""
-        then throw "package.json is empty at ${toString packageJsonPath}"
-        else
-          try
-          builtins.fromJSON
-          rawContent
-          catch
-          err:
-            throw "Failed to parse package.json: ${err}";
+    # Package.json content inlined to avoid path resolution issues
+    packageJson = {
+      name = "eliza";
+      engines.node = "23.3.0";
+      packageManager = "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee";
+    };
 
-    # Extract versions with better error handling
-    nodeVersion = let
-      rawVersion = packageJson.engines.node or null;
-    in
-      if rawVersion == null
-      then throw "Node version not specified in package.json engines field"
-      else builtins.replaceStrings ["^" "~"] ["" ""] rawVersion;
-
-    # More flexible PNPM version extraction
-    pnpmVersion = let
-      # Try packageManager field first
-      fromPackageManager = builtins.match "pnpm@([0-9.]+).*" (packageJson.packageManager or "");
-      # Fallback to dependencies
-      fromDependencies = packageJson.dependencies.pnpm or null;
-    in
-      if fromPackageManager != null
-      then builtins.head fromPackageManager
-      else if fromDependencies != null
-      then fromDependencies
-      else throw "Could not determine pnpm version from package.json";
+    # Extract versions directly
+    nodeVersion = builtins.replaceStrings ["^" "~"] ["" ""] packageJson.engines.node;
+    pnpmVersion = builtins.head (builtins.match "pnpm@([0-9.]+).*" packageJson.packageManager);
 
     # Function to fetch Node.js for a specific system
     fetchNodejs = system: let
@@ -211,7 +181,7 @@
             ------------------------
             ┌─> 1. pnpm i      (Install dependencies)
             │   2. pnpm build  (Build project)
-            └── 3. pnpm clean  (Clear Artifacts, for a fresh start)
+            └─  3. pnpm clean  (Clear Artifacts, for a fresh start)
                 4. pnpm test   (Run tests)
 
             For more commands, run: pnpm --help
