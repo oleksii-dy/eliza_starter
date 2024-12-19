@@ -38,7 +38,7 @@
 
 .envファイルとキャラクターファイルを設定した後、以下のコマンドでボットを起動可能:
 
-```
+```bash
 pnpm i
 pnpm start
 ```
@@ -67,7 +67,7 @@ pnpm start
 
 Sharpをインストールする必要があるかもしれません。起動時にエラーが表示された場合は、以下のコマンドでインストールを試みてください:
 
-```
+```bash
 pnpm install --include=optional sharp
 ```
 
@@ -137,7 +137,7 @@ TOGETHER_API_KEY=
 
 NVIDIA GPUを持っている場合、CUDAをインストールしてローカル推論を大幅に高速化可能
 
-```
+```bash
 pnpm install
 npx --no node-llama-cpp source download --gpu cuda
 ```
