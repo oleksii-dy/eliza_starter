@@ -31,7 +31,7 @@
 
 ## (A) 使用启动器(Starter): 推荐
 
-```
+```bash
 git clone https://github.com/ai16z/eliza-starter.git
 cd eliza-starter
 cp .env.example .env
@@ -39,7 +39,7 @@ cp .env.example .env
 
 ## (B) 手动启动Eliza: 仅在您知道自己在做什么时才推荐
 
-```
+```bash
 git clone https://github.com/ai16z/eliza.git
 cd eliza
 # 切换最新发布的版本(Checkout the latest release)
@@ -116,7 +116,7 @@ pnpm start
 
 您可能需要安装 Sharp。如果在启动时看到错误，请尝试使用以下命令安装：
 
-```
+```bash
 pnpm install --include=optional sharp
 ```
 
