@@ -17,24 +17,46 @@
     systems = ["x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin"];
     forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f system);
 
-    # Read and parse package.json with error handling
+    # Read and parse package.json with verbose error handling
     packageJson = let
-      rawContent = builtins.readFile ./package.json;
+      packageJsonPath = ./package.json;
+      errorMsg = msg: builtins.trace "Error reading package.json: ${msg}" null;
     in
-      if rawContent == ""
-      then throw "package.json is empty"
-      else builtins.fromJSON rawContent;
+      if !builtins.pathExists packageJsonPath
+      then throw "package.json not found at ${toString packageJsonPath}"
+      else let
+        rawContent = builtins.readFile packageJsonPath;
+      in
+        if rawContent == ""
+        then throw "package.json is empty at ${toString packageJsonPath}"
+        else
+          try
+          builtins.fromJSON
+          rawContent
+          catch
+          err:
+            throw "Failed to parse package.json: ${err}";
 
-    # Extract versions with safe fallbacks
-    nodeVersion =
-      if packageJson ? engines.node
-      then builtins.replaceStrings ["^" "~"] ["" ""] packageJson.engines.node
-      else throw "Node version not specified in package.json engines field";
+    # Extract versions with better error handling
+    nodeVersion = let
+      rawVersion = packageJson.engines.node or null;
+    in
+      if rawVersion == null
+      then throw "Node version not specified in package.json engines field"
+      else builtins.replaceStrings ["^" "~"] ["" ""] rawVersion;
 
-    pnpmVersion =
-      if packageJson ? packageManager
-      then builtins.head (builtins.match "pnpm@([0-9.]+).*" packageJson.packageManager)
-      else throw "pnpm version not found in packageManager field of package.json";
+    # More flexible PNPM version extraction
+    pnpmVersion = let
+      # Try packageManager field first
+      fromPackageManager = builtins.match "pnpm@([0-9.]+).*" (packageJson.packageManager or "");
+      # Fallback to dependencies
+      fromDependencies = packageJson.dependencies.pnpm or null;
+    in
+      if fromPackageManager != null
+      then builtins.head fromPackageManager
+      else if fromDependencies != null
+      then fromDependencies
+      else throw "Could not determine pnpm version from package.json";
 
     # Function to fetch Node.js for a specific system
     fetchNodejs = system: let
