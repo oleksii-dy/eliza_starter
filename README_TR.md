@@ -5,9 +5,9 @@
 </div>
 
 <div align="center">
-  
+
   📖 [Dokümantasyon](https://ai16z.github.io/eliza/) | 🎯 [Örnekler](https://github.com/thejoven/awesome-eliza)
-  
+
 </div>
 
 ## ✨ Özellikler
@@ -43,7 +43,7 @@
 
 .env.example dosyasını .env olarak kopyalayın ve uygun değerleri doldurun
 
-```
+```bash
 cp .env.example .env
 ```
 
@@ -72,7 +72,7 @@ pnpm clean
 
 Sharp'ı yüklemeniz gerekebilir. Başlatma sırasında bir hata görürseniz, aşağıdaki komutla yüklemeyi deneyin:
 
-```
+```bash
 pnpm install --include=optional sharp
 ```
 
