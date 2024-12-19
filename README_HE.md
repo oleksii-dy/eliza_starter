@@ -72,7 +72,7 @@
 
 <div align="right" dir="ltr">
 
-```
+```bash
 git clone https://github.com/ai16z/eliza-starter.git
 
 cp .env.example .env
@@ -88,7 +88,7 @@ pnpm i && pnpm start
 ### התחלה ידנית של אלייזה (מומלץ רק למי שיודע מה הוא עושה)
 <div align="right">
 
-```
+```bash
 # שכפול המאגר
 git clone https://github.com/ai16z/eliza.git
 
@@ -100,7 +100,6 @@ git checkout $(git describe --tags --abbrev=0)
 ### התחלת אלייזה עם Gitpod
 
 <div align="right">
-
 [![פתח ב-Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/ai16z/eliza/tree/main)
 
 </div>
@@ -111,7 +110,7 @@ git checkout $(git describe --tags --abbrev=0)
 
 העתק את .env.example ל-.env ומלא את הערכים המתאימים.
 
-```
+```bash
 cp .env.example .env
 ```
 
@@ -159,7 +158,7 @@ pnpm clean
 
 ייתכן שתצטרך להתקין את Sharp. אם אתה רואה שגיאה בעת ההפעלה, נסה להתקין עם הפקודה הבאה:
 
-```
+```bash
 pnpm install --include=optional sharp
 ```
 
