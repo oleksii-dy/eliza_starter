@@ -3,8 +3,8 @@ import { Models, ModelProviderName, ModelClass } from "./types.ts";
 import { elizaLogger } from "./index.ts";
 import si from "systeminformation";
 
-function generateModels(hasGPU:Boolean) {
-    elizaLogger.debug('generateModels')
+function generateModels(hasGPU:boolean) {
+    elizaLogger.debug('generateModels', hasGPU)
     // image and text models mixed
     const models: Models = {
         [ModelProviderName.OPENAI]: {
@@ -510,7 +510,6 @@ async function getModels() {
 }
 
 export async function getModelProviderData(provider: ModelProviderName) {
-    elizaLogger.debug('getModelProviderData')
     const models = await getModels()
     return models[provider]
 }
