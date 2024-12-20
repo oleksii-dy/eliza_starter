@@ -17,11 +17,14 @@ export class PayInvoiceAction {
     constructor(private lnbitsProvider: LNBitsProvider) {}
 
     async payInvoice(invoice: string): Promise<{ status: string }> {
-        console.log(`Paying invoice: ${invoice}`);
+        console.log(`Received bolt11 invoice: ${invoice}`);
+        const decodedInvoice =
+            this.lnbitsProvider.toHumanFriendlyInvoice(invoice);
+        console.log(`Decoded invoice: ${JSON.stringify(decodedInvoice)}`);
 
         try {
             await this.lnbitsProvider.payInvoice(invoice);
-
+            console.log("Invoice paid successfully");
             return {
                 status: "success",
             };
