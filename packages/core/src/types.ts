@@ -660,6 +660,7 @@ export type Character = {
         continueMessageHandlerTemplate?: string;
         evaluationTemplate?: string;
         twitterSearchTemplate?: string;
+        twitterActionTemplate?: string;
         twitterPostTemplate?: string;
         twitterMessageHandlerTemplate?: string;
         twitterShouldRespondTemplate?: string;
