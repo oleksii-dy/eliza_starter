@@ -1,0 +1,44 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js version
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18  # Specify your Node.js version
+          cache: pnpm
+
+      # Step 3: Install pnpm
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      # Step 4: Install dependencies using pnpm
+      - name: Install dependencies
+        run: pnpm install
+
+      # Step 5: Build the application
+      - name: Build application
+        run: pnpm run build
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Additional deployment steps go here
