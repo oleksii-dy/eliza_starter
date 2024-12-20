@@ -8,6 +8,7 @@ import {
     getEmbeddingZeroVector,
     elizaLogger,
     stringToUuid,
+    ServiceType,
 } from "@ai16z/eliza";
 import {
     QueryTweetsResponse,
@@ -720,6 +721,57 @@ export class ClientBase extends EventEmitter {
             console.error("Error fetching Twitter profile:", error);
 
             return undefined;
+        }
+    }
+
+    async hasRespondedToTweet(tweetId: string): Promise<boolean> {
+        const memories = await this.runtime.messageManager.getMemoriesByRoomIds({
+            roomIds: [stringToUuid(tweetId + "-" + this.runtime.agentId)]
+        });
+
+        return memories.some(memory =>
+            memory.content.inReplyTo === stringToUuid(tweetId + "-" + this.runtime.agentId)
+        );
+    }
+
+    async getQuotedContent(tweet: Tweet): Promise<string | null> {
+        try {
+            // Check if tweet has quoted content
+            if (!tweet.quotedStatusId) {
+                return null;
+            }
+
+            // Fetch the quoted tweet
+            const quotedTweet = await this.requestQueue.add(() =>
+                this.twitterClient.getTweet(tweet.quotedStatusId)
+            );
+
+            if (!quotedTweet) {
+                return null;
+            }
+
+            let content = `Original Tweet by @${quotedTweet.username}:\n"${quotedTweet.text}"`;
+
+            // Process images if they exist
+            if (quotedTweet.photos && quotedTweet.photos.length > 0) {
+                const imageDescriptions = [];
+                for (const photo of quotedTweet.photos) {
+                    const description = await this.runtime
+                        .getService<IImageDescriptionService>(ServiceType.IMAGE_DESCRIPTION)
+                        .describeImage(photo.url);
+                    imageDescriptions.push(description);
+                }
+
+                content += `\n\nImages in Quoted Tweet:\n${imageDescriptions.map(
+                    (desc, i) => `Image ${i + 1}: ${desc}`
+                ).join('\n')}`;
+            }
+
+            return content;
+
+        } catch (error) {
+            console.error('Error fetching quoted tweet:', error);
+            return null;
         }
     }
 }

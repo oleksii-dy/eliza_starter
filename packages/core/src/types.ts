@@ -646,6 +646,7 @@ export type Character = {
         shouldRespondTemplate?: string;
         continueMessageHandlerTemplate?: string;
         evaluationTemplate?: string;
+        twitterActionTemplate?: string;
         twitterSearchTemplate?: string;
         twitterPostTemplate?: string;
         twitterMessageHandlerTemplate?: string;

@@ -11,10 +11,11 @@ import {
 import { elizaLogger } from "@ai16z/eliza";
 import { ClientBase } from "./base.ts";
 import { postActionResponseFooter } from "@ai16z/eliza";
-import { generateTweetActions } from "@ai16z/eliza";
+import { generateTweetActions, generateImage } from "@ai16z/eliza";
 import { IImageDescriptionService, ServiceType } from "@ai16z/eliza";
 import { buildConversationThread } from "./utils.ts";
 import { twitterMessageHandlerTemplate } from "./interactions.ts";
+import { darkComicMedia } from "./templates.ts";
 
 const twitterPostTemplate = `
 # Areas of Expertise
@@ -32,7 +33,7 @@ const twitterPostTemplate = `
 {{postDirections}}
 
 # Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
-Write a 1-3 sentence post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
+Write a single sentence post or ASCII art that is about whatever youre interested in, feel there is needed discourse on, or want to talk about, from the perspective of {{agentName}}. Write something totally different than previous posts. Do not add commentary or ackwowledge this request, just write the post.
 Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than {{maxTweetLength}}. No emojis. Use \\n\\n (double spaces) between statements.`;
 
 export const twitterActionTemplate = `
@@ -126,7 +127,14 @@ export class TwitterPostClient {
             const delay = randomMinutes * 60 * 1000;
 
             if (Date.now() > lastPostTimestamp + delay) {
-                await this.generateNewTweet();
+                // Random number between 0 and 1
+                const random = Math.random();
+                // 0.65 gives regular tweets 65% higher probability
+                if (random < 0.825) { // (1 + 0.65) / 2 = 0.825
+                    await this.generateNewTweet();
+                } else {
+                    await this.generateMediaTweet();
+                }
             }
 
             setTimeout(() => {
@@ -708,25 +716,74 @@ export class TwitterPostClient {
                 }
             );
 
-            // Generate and clean the reply content
-            const replyText = await this.generateTweetContent(enrichedState, {
-                template: this.runtime.character.templates?.twitterMessageHandlerTemplate || twitterMessageHandlerTemplate
-            });
+            let result;
+            let replyText;
+            if (Math.random() < 0.5) {
+                // Generate and clean the reply content
+                replyText = await this.generateTweetContent(enrichedState, {
+                    template: this.runtime.character.templates?.twitterMessageHandlerTemplate || twitterMessageHandlerTemplate
+                });
 
-            if (!replyText) {
-                elizaLogger.error('Failed to generate valid reply content');
-                return;
+                if (!replyText) {
+                    elizaLogger.error('Failed to generate valid reply content');
+                    return;
+                }
+
+                elizaLogger.debug('Final reply text to be sent:', replyText);
+
+                // Send the tweet through request queue
+                result = await this.client.requestQueue.add(
+                    async () => await this.client.twitterClient.sendTweet(
+                        replyText,
+                        tweet.id
+                    )
+                );
+            } else {
+                // Generate and clean the reply content
+                const response = await this.generateTweetContent(enrichedState, {
+                    template: this.runtime.character.templates?.twitterMessageHandlerTemplate || twitterMessageHandlerTemplate
+                });
+
+                const parsedResponse = JSON.parse(response);
+
+                replyText = parsedResponse.text.replaceAll(/\\n/g, "\n").trim().replace(/\s+/g, ' ');
+                const imagePrompt = parsedResponse.image_prompt;
+
+                if (!replyText) {
+                    elizaLogger.error('Failed to generate valid reply content');
+                    return;
+                }
+
+                let image;
+                try {
+                    image = await this.client.requestQueue.add(() =>
+                        generateImage({
+                            prompt: imagePrompt,
+                            width: 1024,
+                            height: 1024,
+                        }, this.runtime));
+                } catch (error) {
+                    elizaLogger.error("Error generating image", error);
+                }
+
+                const imageBuffer = Buffer.from(image.data[0], "base64");
+
+                elizaLogger.debug('Final reply text to be sent:', replyText);
+
+                // Send the tweet through request queue
+                result = await this.client.requestQueue.add(
+                    async () => await this.client.twitterClient.sendTweet(
+                        replyText,
+                        tweet.id,
+                        [
+                            {
+                                data: imageBuffer,
+                                mediaType: "image/png",
+                            }
+                        ]
+                    )
+                );
             }
-
-            elizaLogger.debug('Final reply text to be sent:', replyText);
-
-            // Send the tweet through request queue
-            const result = await this.client.requestQueue.add(
-                async () => await this.client.twitterClient.sendTweet(
-                    replyText,
-                    tweet.id
-                )
-            );
 
             const body = await result.json();
 
@@ -744,6 +801,161 @@ export class TwitterPostClient {
             }
         } catch (error) {
             elizaLogger.error('Error in handleTextOnlyReply:', error);
+        }
+    }
+
+    private async generateMediaTweet() {
+        console.log("Generating new Media tweet");
+        try {
+            const roomId = stringToUuid(
+                "twitter_generate_room-" + this.client.profile.username
+            );
+            await this.runtime.ensureUserExists(
+                this.runtime.agentId,
+                this.client.profile.username,
+                this.runtime.character.name,
+                "twitter"
+            );
+
+            const topics = this.runtime.character.topics.join(", ");
+            const state = await this.runtime.composeState(
+                {
+                    userId: this.runtime.agentId,
+                    roomId: roomId,
+                    agentId: this.runtime.agentId,
+                    content: {
+                        text: topics,
+                        action: "",
+                    },
+                },
+                {
+                    twitterUserName: this.client.profile.username,
+                }
+            );
+
+            console.log('State check for media tweet', state);
+            // Generate new tweet
+            const context = composeContext({
+                state,
+                template: darkComicMedia,
+            });
+
+            elizaLogger.debug("generate image response prompt:\n" + context);
+
+            const newMediaTweetContent = await generateText({
+                runtime: this.runtime,
+                context,
+                modelClass: ModelClass.SMALL,
+            });
+
+            // If the response is a string, parse it into an object
+            const parsedResponse = JSON.parse(newMediaTweetContent);
+
+            // Access the properties
+            const tweetText = parsedResponse.text.replaceAll(/\\n/g, "\n").trim().replace(/\s+/g, ' ');
+            const imagePrompt = parsedResponse.image_prompt;
+
+            if (this.runtime.getSetting("TWITTER_DRY_RUN") === "true") {
+                elizaLogger.info(
+                    `Dry run: would have posted image tweet:\n tweetText: ${tweetText}\n imagePrompt: ${imagePrompt}`
+                );
+                return;
+            }
+            try {
+                elizaLogger.log(`Posting new tweet:\n tweetText: ${tweetText}\n imagePrompt: ${imagePrompt}`);
+                let image;
+                try {
+                    image = await this.client.requestQueue.add(() =>
+                        generateImage({
+                            prompt: imagePrompt,
+                            width: 1024,
+                            height: 1024,
+                        }, this.runtime));
+                } catch (error) {
+                    elizaLogger.error("Error generating image", error);
+                }
+
+                console.log('Image generated', image);
+                // convert base64 string to buffer
+                const base64Data = image.data[0].replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
+
+                // Convert base64 string to buffer
+                const imageBuffer = Buffer.from(base64Data, 'base64');
+
+                const result = await this.client.requestQueue.add(
+                    async () =>
+                        await this.client.twitterClient.sendTweet(tweetText, undefined, [
+                            {
+                                data: imageBuffer,
+                                mediaType: "image/jpeg",
+                            }
+                        ])
+                );
+                const body = await result.json();
+                if (!body?.data?.create_tweet?.tweet_results?.result) {
+                    console.error("Error sending tweet with media; Bad response:", body);
+                    return;
+                }
+                const tweetResult = body.data.create_tweet.tweet_results.result;
+
+                const tweet = {
+                    id: tweetResult.rest_id,
+                    name: this.client.profile.screenName,
+                    username: this.client.profile.username,
+                    text: tweetResult.legacy.full_text,
+                    conversationId: tweetResult.legacy.conversation_id_str,
+                    createdAt: tweetResult.legacy.created_at,
+                    timestamp: new Date(
+                        tweetResult.legacy.created_at
+                    ).getTime(),
+                    userId: this.client.profile.id,
+                    inReplyToStatusId:
+                        tweetResult.legacy.in_reply_to_status_id_str,
+                    permanentUrl: `https://twitter.com/${this.runtime.getSetting("TWITTER_USERNAME")}/status/${tweetResult.rest_id}`,
+                    hashtags: [],
+                    mentions: [],
+                    photos: [],
+                    thread: [],
+                    urls: [],
+                    videos: [],
+                } as Tweet;
+
+                await this.runtime.cacheManager.set(
+                    `twitter/${this.client.profile.username}/lastPost`,
+                    {
+                        id: tweet.id,
+                        timestamp: Date.now(),
+                    }
+                );
+
+                await this.client.cacheTweet(tweet);
+
+                elizaLogger.log(`Tweet with media posted:\n ${tweet.permanentUrl}`);
+
+                await this.runtime.ensureRoomExists(roomId);
+                await this.runtime.ensureParticipantInRoom(
+                    this.runtime.agentId,
+                    roomId
+                );
+
+                await this.runtime.messageManager.createMemory({
+                    id: stringToUuid(tweet.id + "-" + this.runtime.agentId),
+                    userId: this.runtime.agentId,
+                    agentId: this.runtime.agentId,
+                    content: {
+                        text: tweetText.trim(),
+                        url: tweet.permanentUrl,
+                        source: "twitter",
+                    },
+                    roomId,
+                    embedding: getEmbeddingZeroVector(),
+                    createdAt: tweet.timestamp,
+                });
+            } catch (error) {
+                elizaLogger.error("Error sending tweet:", error);
+            }
+        } catch (error) {
+          console.error("Error generating new tweet:", error);
         }
     }
 

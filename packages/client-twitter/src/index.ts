@@ -1,6 +1,7 @@
 import { TwitterPostClient } from "./post.ts";
 import { TwitterSearchClient } from "./search.ts";
 import { TwitterInteractionClient } from "./interactions.ts";
+import { TwitterViralClient } from "./viral.ts";
 import { IAgentRuntime, Client, elizaLogger } from "@ai16z/eliza";
 import { validateTwitterConfig } from "./environment.ts";
 import { ClientBase } from "./base.ts";
@@ -10,6 +11,7 @@ class TwitterManager {
     post: TwitterPostClient;
     search: TwitterSearchClient;
     interaction: TwitterInteractionClient;
+    viral: TwitterViralClient;
     constructor(runtime: IAgentRuntime, enableSearch:boolean) {
         this.client = new ClientBase(runtime);
         this.post = new TwitterPostClient(this.client, runtime);
@@ -24,6 +26,7 @@ class TwitterManager {
           this.search = new TwitterSearchClient(this.client, runtime); // don't start the search client by default
         }
         this.interaction = new TwitterInteractionClient(this.client, runtime);
+        this.viral = new TwitterViralClient(this.client, runtime);
     }
 }
 
@@ -43,10 +46,12 @@ export const TwitterClientInterface: Client = {
 
         await manager.post.start();
 
-        await manager.interaction.start();
+        // await manager.interaction.start();
 
-        //await manager.search.start(); // don't run the search by default
+        // await manager.search.start(); // don't run the search by default
 
+        await manager.viral.start();
+        
         return manager;
     },
     async stop(_runtime: IAgentRuntime) {
