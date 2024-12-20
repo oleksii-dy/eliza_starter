@@ -506,10 +506,13 @@ async function getModels() {
         );
         cacheModels = generateModels(hasCUDA);
     }
-    return cacheModels
+    return cacheModels;
 }
 
 export async function getModelProviderData(provider: ModelProviderName) {
-    const models = await getModels()
+    const models = await getModels();
+    if (!models[provider]) {
+        throw new Error(`getModelProviderData failed Unkonwn provider ${provider}`);
+    }
     return models[provider]
 }
