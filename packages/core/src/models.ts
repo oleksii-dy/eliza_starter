@@ -500,7 +500,7 @@ export const models: Models = {
             [ModelClass.MEDIUM]: "",
             [ModelClass.LARGE]: "",
             [ModelClass.EMBEDDING]: "",
-            [ModelClass.IMAGE]: settings.LIVEPEER_IMAGE_MODEL || "text-to-image",
+            [ModelClass.IMAGE]: settings.LIVEPEER_IMAGE_MODEL || "ByteDance/SDXL-Lightning",
         },
     },
 };
