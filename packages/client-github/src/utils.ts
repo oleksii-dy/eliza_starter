@@ -1,4 +1,4 @@
-import { IAgentRuntime, Memory } from "@ai16z/eliza";
+import { elizaLogger, IAgentRuntime, Memory } from "@ai16z/eliza";
 import { stringToUuid } from "@ai16z/eliza";
 import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
 
@@ -7,6 +7,7 @@ export async function getIssuesFromMemories(runtime: IAgentRuntime, owner: strin
     const memories = await runtime.messageManager.getMemories({
         roomId: roomId,
     });
+    elizaLogger.log("Memories:", memories);
     // Filter memories to only include those that are issues
     const issueMemories = memories.filter(memory => (memory.content.metadata as any)?.type === "issue");
     return issueMemories;

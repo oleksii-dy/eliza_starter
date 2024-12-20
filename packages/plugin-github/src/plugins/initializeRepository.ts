@@ -55,7 +55,7 @@ export const initializeRepositoryAction: Action = {
         options: any,
         callback: HandlerCallback
     ) => {
-        elizaLogger.log("Composing state for message:", message);
+        elizaLogger.log("[initializeRepository] Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -265,10 +265,10 @@ export const githubInitializePlugin: Plugin = {
     actions: [initializeRepositoryAction],
     evaluators: [],
     providers: [
-        sourceCodeProvider,
-        testFilesProvider,
-        workflowFilesProvider,
-        documentationFilesProvider,
-        releasesProvider,
+        // sourceCodeProvider,
+        // testFilesProvider,
+        // workflowFilesProvider,
+        // documentationFilesProvider,
+        // releasesProvider,
     ],
 };

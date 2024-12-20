@@ -234,7 +234,7 @@ export const getFilesFromMemories = async (
     const allMemories = await runtime.messageManager.getMemories({
         roomId: message.roomId,
     });
-    elizaLogger.info("All Memories:", allMemories);
+    // elizaLogger.info("All Memories:", allMemories);
     const memories = allMemories.filter(
         (memory) => (memory.content.metadata as any)?.path
     );

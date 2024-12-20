@@ -128,6 +128,12 @@ Here is the character:
 
 {{characterPostExamples}}
 
+Here is owner:
+{{owner}}
+
+Here is repository:
+{{repository}}
+
 Please use the related files to provide context and fill in the issue template with additional details:
 \`\`\`
 {{files}}

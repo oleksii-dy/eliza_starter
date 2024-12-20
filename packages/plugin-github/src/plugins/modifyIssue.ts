@@ -34,13 +34,9 @@ export const modifyIssueAction: Action = {
         options: any,
         callback: HandlerCallback
     ) => {
-        elizaLogger.log("Composing state for message:", message);
-        const files = await getFilesFromMemories(runtime, message);
+        elizaLogger.log("[modifyIssue] Composing state for message:", message);
         if (!state) {
-            state = (await runtime.composeState(message, {
-                files: files,
-                character: runtime.character,
-            })) as State;
+            state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }

@@ -30,6 +30,8 @@ export async function saveIssueToMemory(runtime: IAgentRuntime, issue: RestEndpo
         roomId: roomId,
         content: {
             text: `Issue Created: ${issue.title}`,
+            action: "CREATE_ISSUE",
+            source: "github",
             metadata: {
                 type: "issue",
                 url: issue.html_url,
@@ -43,6 +45,7 @@ export async function saveIssueToMemory(runtime: IAgentRuntime, issue: RestEndpo
             },
         },
     };
+    elizaLogger.log("[createIssue] Issue memory:", issueMemory);
 
     await runtime.messageManager.createMemory(issueMemory);
 }
@@ -63,9 +66,7 @@ export const createIssueAction: Action = {
         options: any,
         callback: HandlerCallback
     ) => {
-        elizaLogger.log("Composing state for message:", message);
-
-        const files = await getFilesFromMemories(runtime, message);
+        elizaLogger.log("[createIssue] Composing state for message:", message);
 
         if (!state) {
             state = (await runtime.composeState(message, {})) as State;
@@ -73,10 +74,13 @@ export const createIssueAction: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
+        const files = await getFilesFromMemories(runtime, message);
+
         // add additional keys to state
         state.files = files;
         state.character = JSON.stringify(runtime.character || {}, null, 2);
-
+        state.owner = runtime.getSetting("GITHUB_OWNER") ?? 'monilpat' as string;
+        state.repository = runtime.getSetting("GITHUB_REPO") ?? 'eliza' as string;
         elizaLogger.info("State:", state);
 
         const context = composeContext({
@@ -120,7 +124,7 @@ export const createIssueAction: Action = {
 
             await saveIssueToMemory(runtime, issue, content.owner, content.repo);
 
-            callback({
+            await callback({
                 text: `Created issue #${issue.number} successfully!`,
                 attachments: [],
             });
@@ -129,7 +133,7 @@ export const createIssueAction: Action = {
                 `Error creating issue in repository ${content.owner}/${content.repo}:`,
                 error
             );
-            callback(
+            await callback(
                 {
                     text: `Error creating issue in repository ${content.owner}/${content.repo}. Please try again.`,
                 },

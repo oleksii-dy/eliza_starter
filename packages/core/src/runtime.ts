@@ -641,7 +641,7 @@ export class AgentRuntime implements IAgentRuntime {
         const result = await generateText({
             runtime: this,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
         });
 
         const evaluators = parseJsonArrayFromText(

@@ -114,7 +114,7 @@ export const createMemoriesFromFilesAction: Action = {
         options: any,
         callback: HandlerCallback
     ) => {
-        elizaLogger.log("Composing state for message:", message);
+        elizaLogger.log("[createMemoriesFromFiles] Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {

@@ -17,7 +17,7 @@ export const OODASchema = z.object({
     repo: z.string().optional(),
     path: z.string().optional(),
     branch: z.string().optional(),
-    title: z.string().min(1, "Pull request title is required"),
+    title: z.string().min(1, "Pull request title is required").optional(),
     description: z.string().optional(),
     files: z.array(z.object({ path: z.string(), content: z.string() })).optional(),
     message: z.string().optional(),

@@ -28,7 +28,7 @@ export async function fetchFiles(
     ) => Promise<any> = (service, item) => service.getFileContents(item)
 ) {
     try {
-        elizaLogger.log("Composing state for message:", message);
+        elizaLogger.log("[fetchFiles] Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
