@@ -1164,7 +1164,6 @@ export const generateImage = async (
             }
             try {
                 const baseUrl = new URL(apiKey);
-                console.log('baseUrl', baseUrl);
                 if (!baseUrl.protocol.startsWith('http')) {
                     throw new Error("Invalid Livepeer Gateway URL protocol");
                 }
