@@ -38,7 +38,11 @@ export async function addFilesToMemory(
     elizaLogger.info("Adding files to memory:", files);
     for (const file of files) {
         const relativePath = path.relative(repoPath, file);
-        const content = await fs.readFile(file, "utf-8");
+        // read file and escape new lines with \n
+        const content = (await fs.readFile(file, "utf-8")).replace(
+            /\n/g,
+            "\\n"
+        );
         const contentHash = createHash("sha256").update(content).digest("hex");
         const memoryId = stringToUuid(
             `github-${owner}-${repo}-${relativePath}-${contentHash}`

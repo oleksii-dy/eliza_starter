@@ -134,7 +134,9 @@ export async function checkoutBranch(
 
         if (create) {
             if (branchExists) {
-                elizaLogger.warn(`Branch "${branch}" already exists. Checking out instead.`);
+                elizaLogger.warn(
+                    `Branch "${branch}" already exists. Checking out instead.`
+                );
                 await git.checkout(branch); // Checkout the existing branch
             } else {
                 // Create a new branch
@@ -241,7 +243,7 @@ export const getFilesFromMemories = async (
     elizaLogger.info("Memories:", memories);
     return memories.map(
         (memory) => `File: ${(memory.content.metadata as any)?.path}
-        Content: ${memory.content.text}
+        Content: ${memory.content.text.replace(/\n/g, "\\n")}
         `
     );
 };
