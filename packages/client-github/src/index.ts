@@ -14,10 +14,12 @@ import {
     workflowFilesProvider,
     documentationFilesProvider,
     releasesProvider,
+    getFilesFromMemories
 } from "@ai16z/plugin-github";
 import { z } from "zod";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
+import { getIssuesFromMemories, getPullRequestsFromMemories } from "./utils"; // Import the utility functions
 
 export class GitHubClient extends EventEmitter {
     apiToken: string;
@@ -66,7 +68,7 @@ export class GitHubClient extends EventEmitter {
     }
 
     private startOodaLoop() {
-        const interval = Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) || 300000; // Default to 5 minutes
+        const interval = Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) || 60000; // Default to 5 minutes
         elizaLogger.log("Starting OODA loop with interval:", interval);
         setInterval(() => {
             this.processOodaCycle();
@@ -88,18 +90,49 @@ export class GitHubClient extends EventEmitter {
             roomId: roomId,
         });
         elizaLogger.log("Retrieved memories:", memories);
-        // const files = await getFilesFromMemories(this.runtime, memories);
-        const files = []
+        if (memories.length === 0) {
+            elizaLogger.log("No memories found, skipping OODA cycle.");
+            return;
+        }
+        const files = await getFilesFromMemories(this.runtime, memories[0]);
         elizaLogger.log("Files:", files);
+
+        const owner = this.runtime.getSetting("GITHUB_OWNER") ?? 'monilpat' as string;
+        const repo = this.runtime.getSetting("GITHUB_REPO") ?? 'eliza' as string;
+
         const originalState = await this.runtime.composeState({
             userId: this.runtime.agentId, // TODO: this should be the user id
             roomId: roomId,
             agentId: this.runtime.agentId,
             content: { text: "", action: "NOTHING", source: "github" },
         } as Memory, {});
+
         // add additional keys to state
         originalState.files = files;
         originalState.character = JSON.stringify(this.runtime.character || {}, null, 2);
+        originalState.owner = owner;
+        originalState.repository = repo;
+
+        // Get previous issues from memory
+        const previousIssues = await getIssuesFromMemories(this.runtime, owner, repo);
+        originalState.previousIssues = previousIssues.map(issue => ({
+            title: issue.content.text,
+            body: (issue.content.metadata as any).body,
+            url: (issue.content.metadata as any).url,
+            number: (issue.content.metadata as any).number,
+            state: (issue.content.metadata as any).state,
+        }));
+
+        // Get previous pull requests from memory
+        // const previousPRs = await getPullRequestsFromMemories(this.runtime, owner, repo);
+        // originalState.previousPRs = previousPRs.map(pr => ({
+        //     title: pr.content.text,
+        //     url: (pr.content.metadata as any).url,
+        //     number: (pr.content.metadata as any).number,
+        //     state: (pr.content.metadata as any).state,
+        // }));
+        originalState.previousPRs = [];
+
         // Orient: Analyze the memories to determine if logging improvements are needed
         const context = composeContext({
             state: originalState,
@@ -197,7 +230,7 @@ export class GitHubClient extends EventEmitter {
     }
 
     private getRepositoryRoomId(): UUID {
-        const owner = this.runtime.getSetting("GITHUB_OWNER") ?? 'ai16z' as string;
+        const owner = this.runtime.getSetting("GITHUB_OWNER") ?? 'monilpat' as string;
         const repo = this.runtime.getSetting("GITHUB_REPO") ?? 'eliza' as string;
         const roomId = stringToUuid(`github-${owner}-${repo}`);
         elizaLogger.log("Generated repository room ID:", roomId);

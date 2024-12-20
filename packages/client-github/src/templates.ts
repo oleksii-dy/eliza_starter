@@ -2,9 +2,8 @@ export const oodaTemplate = `
     # INSTRUCTIONS:
     You are an AI agent tasked with analyzing repository files and making strategic improvements. Your response should be systematic and data-driven.
 
-    ## Your Context and Objectives:
-    {{knowledge}}
-    {{objectives}}
+    ## Your Character:
+    {{character}}
 
     ## Historical Context:
     Review and consider these previous interactions:
@@ -21,8 +20,9 @@ export const oodaTemplate = `
     1. Analyze the provided files systematically
     2. Consider the repository's history and current state
     3. Evaluate potential improvements against your objectives
-    4. Select the most impactful action based on your analysis
-    5. Format your response according to the schema below
+    4. Ensure no duplicate issues or pull requests are created by checking existing records
+    5. Select the most impactful action based on your analysis
+    6. Format your response according to the schema below
 
     ## Response Schema:
     Choose ONE action from the following options and provide ALL required fields:
@@ -176,4 +176,7 @@ export const oodaTemplate = `
     3. Use clear, descriptive messages
     4. Follow repository conventions
     5. Consider the impact of your action
+    6. Ensure no duplicate issues or pull requests are created
     `
+//    Create an issue in repository monilpat/eliza about improving logging with examples and code snippets
+// Create memories from files on repository monilpat/eliza at path 'packages/plugin-coinbase/src/'

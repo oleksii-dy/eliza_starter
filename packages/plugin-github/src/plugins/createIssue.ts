@@ -9,6 +9,7 @@ import {
     ModelClass,
     Plugin,
     State,
+    stringToUuid,
 } from "@ai16z/eliza";
 import { GitHubService } from "../services/github";
 import { createIssueTemplate } from "../templates";
@@ -18,6 +19,34 @@ import {
     isCreateIssueContent,
 } from "../types";
 import { getFilesFromMemories } from "../utils";
+import { RestEndpointMethodTypes } from "@octokit/rest";
+
+
+export async function saveIssueToMemory(runtime: IAgentRuntime, issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"], owner: string, repo: string): Promise<void> {
+    const roomId = stringToUuid(`github-${owner}-${repo}`);
+    const issueMemory: Memory = {
+        userId: runtime.agentId,
+        agentId: runtime.agentId,
+        roomId: roomId,
+        content: {
+            text: `Issue Created: ${issue.title}`,
+            metadata: {
+                type: "issue",
+                url: issue.html_url,
+                number: issue.number,
+                state: issue.state,
+                created_at: issue.created_at,
+                updated_at: issue.updated_at,
+                comments: issue.comments,
+                labels: issue.labels.map((label: any) => (typeof label === 'string' ? label : label?.name)),
+                body: issue.body,
+            },
+        },
+    };
+
+    await runtime.messageManager.createMemory(issueMemory);
+}
+
 
 export const createIssueAction: Action = {
     name: "CREATE_ISSUE",
@@ -59,7 +88,7 @@ export const createIssueAction: Action = {
         const details = await generateObjectV2({
             runtime,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
             schema: CreateIssueSchema,
         });
 
@@ -88,6 +117,8 @@ export const createIssueAction: Action = {
             elizaLogger.info(
                 `Created issue successfully! Issue number: ${issue.number}`
             );
+
+            await saveIssueToMemory(runtime, issue, content.owner, content.repo);
 
             callback({
                 text: `Created issue #${issue.number} successfully!`,

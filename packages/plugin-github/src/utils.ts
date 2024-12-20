@@ -236,11 +236,11 @@ export const getFilesFromMemories = async (
     });
     elizaLogger.info("All Memories:", allMemories);
     const memories = allMemories.filter(
-        (memory) => memory.content.metadata?.path
+        (memory) => (memory.content.metadata as any)?.path
     );
     elizaLogger.info("Memories:", memories);
     return memories.map(
-        (memory) => `File: ${memory.content.metadata?.path}
+        (memory) => `File: ${(memory.content.metadata as any)?.path}
         Content: ${memory.content.text}
         `
     );
