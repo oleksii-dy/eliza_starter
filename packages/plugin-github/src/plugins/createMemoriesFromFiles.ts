@@ -41,6 +41,7 @@ export async function addFilesToMemory(
         const memoryId = stringToUuid(
             `github-${owner}-${repo}-${relativePath}`
         );
+        const roomId = stringToUuid(`github-${owner}-${repo}`);
 
         const existingDocument =
             await runtime.messageManager.getMemoryById(memoryId);
@@ -63,7 +64,7 @@ export async function addFilesToMemory(
             id: memoryId,
             userId: runtime.agentId,
             agentId: runtime.agentId,
-            roomId: memoryId,
+            roomId,
             content: {
                 text: content,
                 hash: contentHash,

@@ -19,10 +19,11 @@ export const OODASchema = z.object({
     branch: z.string().optional(),
     title: z.string().min(1, "Pull request title is required"),
     description: z.string().optional(),
-    files: z.array(z.object({ path: z.string(), content: z.string() })),
+    files: z.array(z.object({ path: z.string(), content: z.string() })).optional(),
     message: z.string().optional(),
     labels: z.array(z.string()).optional(),
     issue: z.number().optional(),
+    reasoning: z.string().optional(),
 })
 
 export interface OODAContent {
@@ -37,6 +38,7 @@ export interface OODAContent {
     message?: string;
     labels?: string[];
     issue?: number;
+    reasoning?: string;
 }
 
 export const isOODAContent = (
