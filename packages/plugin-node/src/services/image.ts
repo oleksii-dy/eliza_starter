@@ -95,7 +95,6 @@ export class ImageDescriptionService
     ): Promise<{ title: string; description: string }> {
         if (!this.initialized) {
             const provider = this.runtime?.character?.modelProvider;
-            const model = await getModelProviderData(provider);
 
             if (provider === ModelProviderName.LLAMALOCAL) {
                 await this.initializeLocalModel();
