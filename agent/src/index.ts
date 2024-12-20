@@ -39,6 +39,7 @@ import {
 } from "@ai16z/plugin-coinbase";
 import { confluxPlugin } from "@ai16z/plugin-conflux";
 import { imageGenerationPlugin } from "@ai16z/plugin-image-generation";
+import { videoGenerationPlugin } from "@ai16z/plugin-video-generation";
 import { evmPlugin } from "@ai16z/plugin-evm";
 import { createNodePlugin } from "@ai16z/plugin-node";
 import { solanaPlugin } from "@ai16z/plugin-solana";
@@ -496,6 +497,9 @@ export async function createAgent(
                 ? flowPlugin
                 : null,
             getSecret(character, "APTOS_PRIVATE_KEY") ? aptosPlugin : null,
+            getSecret(character, "LUMA_API_KEY")
+                ? videoGenerationPlugin
+                : null,
         ].filter(Boolean),
         providers: [],
         actions: [],

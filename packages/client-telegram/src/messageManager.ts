@@ -1,5 +1,6 @@
 import { Message } from "@telegraf/types";
 import { Context, Telegraf } from "telegraf";
+import { createReadStream } from "fs";
 
 import { composeContext, elizaLogger, ServiceType } from "@ai16z/eliza";
 import { getEmbeddingZeroVector } from "@ai16z/eliza";
@@ -231,6 +232,98 @@ export class MessageManager {
         return false;
     }
 
+    private async hasPermissionToSend(
+        ctx: Context,
+        chatId: number
+    ): Promise<boolean> {
+        try {
+            const chat = await ctx.telegram.getChat(chatId);
+            const me = await ctx.telegram.getMe();
+            const member = await ctx.telegram.getChatMember(chatId, me.id);
+
+            // Check if the bot is an admin (admins don't have explicit can_send_messages)
+            if (
+                member.status === "administrator" ||
+                member.status === "creator"
+            ) {
+                return true;
+            }
+
+            // For regular members, they can send messages by default
+            return member.status === "member";
+        } catch (error) {
+            console.warn(
+                `Cannot verify permissions for chat ${chatId}:`,
+                error.message
+            );
+            return false;
+        }
+    }
+
+    private async sendWithRetry(
+        ctx: Context,
+        params: {
+            chat_id: number,
+            [key: string]: any,
+            options?: any
+        },
+        maxRetries = 1000
+    ): Promise<any> {
+        let lastError;
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                if (!await this.hasPermissionToSend(ctx, params.chat_id)) {
+                    console.warn(`Bot lacks permission to send content in chat ${params.chat_id}`);
+                    return null;
+                }
+
+                const methodMap = {
+                    'text': 'sendMessage',
+                    'imageGeneration': 'sendPhoto',
+                    'videoGeneration': 'sendVideo'
+                };
+
+                const contentKey = Object.keys(params).find(key => key in methodMap);
+
+                if (!contentKey) {
+                    throw new Error('No valid content type found in params');
+                }
+
+                const method = methodMap[contentKey];
+                let content = typeof params[contentKey] === 'object' ? params[contentKey].source : params[contentKey];
+
+                // Handle local file paths for images and videos
+                if ((contentKey === 'imageGeneration' || contentKey === 'videoGeneration') &&
+                    content && typeof content === 'object' && content.url &&
+                    content.url.startsWith('/')) {
+                    // Use the file path directly with { source: filepath } format
+                    content = { source: content.url };
+                }
+
+                return await ctx.telegram[method](
+                    params.chat_id,
+                    content,
+                    params.options
+                );
+
+            } catch (error) {
+                lastError = error;
+                if (error?.response?.error_code === 429) {
+                    const retryAfter = error?.response?.parameters?.retry_after || 10;
+                    console.log(`Rate limited. Waiting ${retryAfter} seconds before retry ${i + 1}/${maxRetries}`);
+                    await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+                    continue;
+                }
+                if (error?.response?.error_code === 400 && error?.response?.description?.includes('not enough rights')) {
+                    console.warn(`Bot lacks permission in chat ${params.chat_id}: ${error.response.description}`);
+                    return null;
+                }
+                throw error;
+            }
+        }
+        throw lastError;
+    }
+
     // Send long messages in chunks
     private async sendMessageInChunks(
         ctx: Context,
@@ -445,6 +538,29 @@ export class MessageManager {
                         content.text,
                         message.message_id
                     );
+                    console.log("content CALLBACK", content);
+                    if (
+                        content.attachments &&
+                        Array.isArray(content.attachments) &&
+                        content.attachments.length > 0
+                    ) {
+                        console.log(
+                            "Sending image files:",
+                            content.attachments
+                        );
+                        for (const attachment of content.attachments) {
+                            const contentType = attachment.source || "text";
+                            console.log("contentType", contentType);
+                            await this.sendWithRetry(ctx, {
+                                chat_id: ctx.chat.id,
+                                [contentType]:
+                                    contentType === "text"
+                                        ? attachment
+                                        : { source: attachment },
+                                options: {},
+                            });
+                        }
+                    }
 
                     const memories: Memory[] = [];
 

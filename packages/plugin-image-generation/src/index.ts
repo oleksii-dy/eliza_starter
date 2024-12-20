@@ -1,4 +1,4 @@
-import { elizaLogger } from "@ai16z/eliza";
+import { elizaLogger, generateText, ModelClass } from "@ai16z/eliza";
 import {
     Action,
     HandlerCallback,
@@ -115,10 +115,42 @@ const imageGeneration: Action = {
         const userId = runtime.agentId;
         elizaLogger.log("User ID:", userId);
 
-        const imagePrompt = message.content.text;
+        let imagePrompt = message.content.text;
         elizaLogger.log("Image prompt received:", imagePrompt);
 
         // TODO: Generate a prompt for the image
+
+        try {
+            const context = `# Task: Enhance the image generation prompt
+                Your task is to enhance the user's request into a detailed prompt that will generate the best possible image.
+
+                # Instructions
+                - Focus on artistic style, mood, lighting, composition and important details
+                - Add your own creative touches to the prompt
+                - Keep the final prompt under 400 characters
+                - If the request is to "generate anything", you have creative control
+                - Only respond with the enhanced prompt text, no other commentary
+
+                Original request: ${message.content.text}
+
+                Enhanced prompt:`;
+
+            const promptResponse = await generateText({
+                runtime,
+                systemPrompt: undefined, // no system prompt
+                context,
+                modelClass: ModelClass.LARGE,
+            });
+
+            if (promptResponse?.trim()) {
+                imagePrompt = promptResponse.trim();
+                elizaLogger.log("Successfully enhanced prompt to:", imagePrompt);
+            } else {
+                elizaLogger.log("Using original prompt due to empty enhancement response");
+            }
+        } catch (error) {
+            elizaLogger.error("Error enhancing image prompt:", error);
+        }
 
         const res: { image: string; caption: string }[] = [];
 
@@ -186,25 +218,25 @@ const imageGeneration: Action = {
                     runtime
                 );*/
 
-                res.push({ image: filepath, caption: "..." }); //caption.title });
+                res.push({ image: filepath, caption: "processing..." }); //caption.title });
 
                 elizaLogger.log(
                     `Generated caption for image ${i + 1}:`,
-                    "..." //caption.title
+                    "image generation in progress..." //caption.title
                 );
                 //res.push({ image: image, caption: caption.title });
 
                 callback(
                     {
-                        text: "...", //caption.description,
+                        text: "image generation in progress...", //caption.description,
                         attachments: [
                             {
                                 id: crypto.randomUUID(),
                                 url: filepath,
                                 title: "Generated image",
                                 source: "imageGeneration",
-                                description: "...", //caption.title,
-                                text: "...", //caption.description,
+                                description: "your image generation", //caption.title,
+                                text: "an image created by ai", //caption.description,
                             },
                         ],
                     },

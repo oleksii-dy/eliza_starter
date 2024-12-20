@@ -1,4 +1,4 @@
-import { elizaLogger } from "@ai16z/eliza";
+import { elizaLogger, generateText, ModelClass } from "@ai16z/eliza";
 import {
     Action,
     HandlerCallback,
@@ -109,6 +109,7 @@ const videoGeneration: Action = {
     name: "GENERATE_VIDEO",
     similes: [
         "VIDEO_GENERATION",
+        "GENERATE_VIDEO",
         "VIDEO_GEN",
         "CREATE_VIDEO",
         "MAKE_VIDEO",
@@ -123,7 +124,10 @@ const videoGeneration: Action = {
         elizaLogger.log("Validating video generation action");
         const lumaApiKey = runtime.getSetting("LUMA_API_KEY");
         elizaLogger.log("LUMA_API_KEY present:", !!lumaApiKey);
-        return !!lumaApiKey;
+        if (!lumaApiKey) {
+            return false;
+        }
+        return true;
     },
     handler: async (
         runtime: IAgentRuntime,
@@ -135,13 +139,44 @@ const videoGeneration: Action = {
         elizaLogger.log("Video generation request:", message);
 
         // Clean up the prompt by removing mentions and commands
-        const videoPrompt = message.content.text
+        let videoPrompt = message.content.text
             .replace(/<@\d+>/g, "") // Remove mentions
             .replace(
                 /generate video|create video|make video|render video/gi,
                 ""
             ) // Remove commands
             .trim();
+
+            try {
+                const context = `# Task: Enhance the video generation prompt
+                    Your task is to enhance the user's request into a detailed prompt that will generate the best possible 3D video.
+
+                    # Instructions
+                    - Focus on motion, camera angles, lighting, and composition
+                    - Keep the final prompt under 200 characters
+                    - If the request is to "generate anything", you have creative control
+                    - Only respond with the enhanced prompt text, no other commentary
+
+                    Original request: ${message.content.text}
+
+                    Enhanced prompt:`;
+
+                const promptResponse = await generateText({
+                    runtime,
+                    systemPrompt: undefined,
+                    context,
+                    modelClass: ModelClass.LARGE,
+                });
+
+                if (promptResponse?.trim()) {
+                    videoPrompt = promptResponse.trim();
+                    console.log("Successfully enhanced prompt to:", videoPrompt);
+                } else {
+                    console.log("Using original prompt due to empty enhancement response");
+                }
+            } catch (promptError) {
+                console.error("Prompt enhancement failed, using original prompt:", promptError);
+        }
 
         if (!videoPrompt || videoPrompt.length < 5) {
             callback({

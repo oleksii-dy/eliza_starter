@@ -60,7 +60,7 @@ export async function generateText({
     modelProvider,
 }: {
     runtime: IAgentRuntime;
-    systemPrompt?: string;
+    systemPrompt?: string | undefined;
     context: string;
     modelClass: string;
     stop?: string[];
