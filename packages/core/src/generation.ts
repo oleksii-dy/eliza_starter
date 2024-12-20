@@ -1597,7 +1597,8 @@ async function handleOllama({
     schemaDescription,
     mode,
     modelOptions,
-    provider,
+    // not used?
+    //provider,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     const ollamaSettings = await getModelProviderData(ModelProviderName.OLLAMA);
     const ollamaProvider = createOllama({
