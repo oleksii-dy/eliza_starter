@@ -1142,29 +1142,41 @@ export const generateImage = async (
             return {success: true, data: base64s };
         } else if (runtime.imageModelProvider === ModelProviderName.LIVEPEER) {
             if (!apiKey) {
-                throw new Error("LIVEPEER_API_KEY is not defined");
+                throw new Error("Livepeer Gateway is not defined");
             }
             try {
-                const livepeer = new Livepeer({
-                    httpBearer: apiKey,
+                const baseUrl = new URL(apiKey);
+                console.log('baseUrl', baseUrl);
+                if (!baseUrl.protocol.startsWith('http')) {
+                    throw new Error("Invalid Livepeer Gateway URL protocol");
+                }
+
+                const response = await fetch(`${baseUrl.toString()}text-to-image`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model_id: "ByteDance/SDXL-Lightning",
+                        prompt: data.prompt,
+                        width: data.width || 1024,
+                        height: data.height || 1024
+                    })
                 });
-                const response = await livepeer.generate.textToImage({
-                    prompt: data.prompt,
-                    width: data.width || 1024,
-                    height: data.height || 1024,
-                    numImagesPerPrompt: data.count || 1,
-                });
-                if (!response.imageResponse?.images?.length) {
+
+                const result = await response.json();
+
+                if (!result.images?.length) {
                     throw new Error("No images generated");
                 }
-                // const result = await response.imageResponse.images[0].url
-                // Convert image URLs to base64
+
                 const base64Images = await Promise.all(
-                    response.imageResponse.images.map(async (image) => {
-                        const imageResponse = await fetch(image.url);
+                    result.images.map(async (image) => {
+                        const imageUrl = `${apiKey}${image.url}`;
+                        const imageResponse = await fetch(imageUrl);
                         if (!imageResponse.ok) {
                             throw new Error(
-                                `Failed to fetch image from Livepeer: ${imageResponse.statusText}`
+                                `Failed to fetch image: ${imageResponse.statusText}`
                             );
                         }
                         const blob = await imageResponse.blob();
@@ -1173,6 +1185,7 @@ export const generateImage = async (
                         return `data:image/jpeg;base64,${base64}`;
                     })
                 );
+
                 return {
                     success: true,
                     data: base64Images
