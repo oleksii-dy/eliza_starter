@@ -21,8 +21,8 @@ export const WhatsAppClientInterface: Client = {
         return client;
     },
     stop: async (runtime: IAgentRuntime) => {
-        elizaLogger.warn("WhatsApp client stopping...");
+        elizaLogger.warn("WhatsApp client stopping... for", runtime.character.name);
     },
 };
 
-export default WhatsAppClientInterface; 
+export default WhatsAppClientInterface;
