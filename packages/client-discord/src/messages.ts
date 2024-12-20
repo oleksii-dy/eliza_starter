@@ -512,7 +512,6 @@ export class MessageManager {
         const guild = message.guild;
         const member = guild?.members.cache.get(this.client.user?.id as string);
         const nickname = member?.nickname;
-        const memberId = member?.id;
 
         // Don't consider role mentions as direct mentions
         const hasRoleMentionOnly = message.mentions.roles.size > 0 && !isMentioned;
