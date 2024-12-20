@@ -314,20 +314,6 @@ export class MessageManager {
         return contextSimilarity >= similarityThreshold;
     }
 
-    private _isMessageForMe(message: Message): boolean {
-        const botUsername = this.bot.botInfo?.username;
-        if (!botUsername) return false;
-
-        const messageText = 'text' in message ? message.text :
-                           'caption' in message ? (message as any).caption : '';
-        if (!messageText) return false;
-
-        const isMentioned = messageText.includes(`@${botUsername}`);
-        const hasUsername = messageText.toLowerCase().includes(botUsername.toLowerCase());
-
-        return isMentioned || (!this.runtime.character.clientConfig?.telegram?.shouldRespondOnlyToMentions && hasUsername);
-    }
-
     private _checkInterest(chatId: string): boolean {
         const chatState = this.interestChats[chatId];
         if (!chatState) return false;
@@ -367,7 +353,7 @@ export class MessageManager {
         const messageText = 'text' in message ? message.text :
                            'caption' in message ? (message as any).caption : '';
         if (!messageText) return false;
-      
+
         const isReplyToBot = (message as any).reply_to_message?.from?.is_bot === true &&
                         (message as any).reply_to_message?.from?.username === botUsername;
         const isMentioned = messageText.includes(`@${botUsername}`);
@@ -422,7 +408,7 @@ export class MessageManager {
         message: Message,
         state: State
     ): Promise<boolean> {
-         
+
         if (this.runtime.character.clientConfig?.telegram?.shouldRespondOnlyToMentions) {
             return this._isMessageForMe(message);
         }
