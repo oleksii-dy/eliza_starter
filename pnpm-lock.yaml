@@ -153,6 +153,9 @@ importers:
       '@elizaos/plugin-avalanche':
         specifier: workspace:*
         version: link:../packages/plugin-avalanche
+      '@ai16zaos/plugin-birdeye':
+        specifier: workspace:*
+        version: link:../packages/plugin-birdeye
       '@elizaos/plugin-bootstrap':
         specifier: workspace:*
         version: link:../packages/plugin-bootstrap
