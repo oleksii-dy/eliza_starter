@@ -660,6 +660,7 @@ export type Character = {
         continueMessageHandlerTemplate?: string;
         evaluationTemplate?: string;
         twitterSearchTemplate?: string;
+        twitterActionTemplate?: string;
         twitterPostTemplate?: string;
         twitterMessageHandlerTemplate?: string;
         twitterShouldRespondTemplate?: string;
@@ -758,7 +759,6 @@ export type Character = {
         slack?: {
             shouldIgnoreBotMessages?: boolean;
             shouldIgnoreDirectMessages?: boolean;
-
         };
     };
 
@@ -780,7 +780,7 @@ export type Character = {
     /** Optional NFT prompt */
     nft?: {
         prompt: string;
-    }
+    };
 };
 
 /**
@@ -995,6 +995,12 @@ export interface IMemoryManager {
 export type CacheOptions = {
     expires?: number;
 };
+
+export enum CacheStore {
+    REDIS = "redis",
+    DATABASE = "database",
+    FILESYSTEM = "filesystem",
+}
 
 export interface ICacheManager {
     get<T = unknown>(key: string): Promise<T | undefined>;
