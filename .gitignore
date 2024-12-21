@@ -54,3 +54,7 @@ coverage
 .eslintcache
 
 agent/content
+
+# MoonDev's Secret Keys 🌙
+dontshare.ts
+dontshare.py
