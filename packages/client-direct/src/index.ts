@@ -71,6 +71,7 @@ export class DirectClient {
         const apiRouter = createApiRouter(this.agents, this);
         this.app.use(apiRouter);
 
+
         const apiLogRouter = createVerifiableLogApiRouter(this.agents, this);
         this.app.use(apiLogRouter);
 

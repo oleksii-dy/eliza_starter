@@ -564,9 +564,9 @@ export async function createAgent(
             getSecret(character, "TON_PRIVATE_KEY") ? tonPlugin : null,
             getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
             getSecret(character, "STORY_PRIVATE_KEY") ? storyPlugin : null,
-            (getSecret(character, "TEE_MODE") && getSecret(character,"VLOG"))
+            (teeMode !== TEEMode.OFF && walletSecretSalt &&getSecret(character,"VLOG")
                 ? verifiableLogPlugin
-                : null,
+                : null)
         ].filter(Boolean),
         providers: [],
         actions: [],
