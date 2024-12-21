@@ -380,7 +380,7 @@ export async function initializeClients(
     }
 
     if (clientTypes.includes(Clients.TELEGRAM)) {
-        const isValidKey = await TelegramClientInterface.validate(runtime.getSetting("DISCORD_API_TOKEN"))
+        const isValidKey = await TelegramClientInterface.validate(runtime.getSetting("TELEGRAM_BOT_TOKEN"))
         if (isValidKey) {
             const telegramClient = await TelegramClientInterface.start(runtime);
             if (telegramClient) clients.telegram = telegramClient;
