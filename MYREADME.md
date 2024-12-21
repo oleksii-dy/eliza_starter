@@ -1,6 +1,7 @@
 # Eliza 🤖
 
 trades: https://app.eliza.systems/trades
+hi
 
 top 5 wallets
 https://solscan.io/account/9YnQdCWDAQRfQYm5HvRzoPgc5GRn8fyhsH2eru8nfsxG
@@ -11,7 +12,7 @@ https://solscan.io/account/6rg2rfZ6Sim6j63LXvaLgbWicVGWhJUYHkCxgSHZBCqs
 
 resources
 - docs: https://ai16z.github.io/eliza/docs/intro/#
-- eliza dev playlist: https://www.youtube.com/watch?v=ArptLpQiKfI&list=PLx5pnFXdPTRzWla0RaOxALTSTnVq53fKL 
+- eliza dev playlist: https://www.youtube.com/watch?v=ArptLpQiKfI&list=PLx5pnFXdPTRzWla0RaOxALTSTnVq53fKL
 - each ai can launch a token: https://www.daos.fun/
     - virtuals.io is the base one: https://app.virtuals.io/
 - listen: https://x.com/weremeow/status/1851365658916708616
@@ -26,17 +27,17 @@ resources
 models
 https://lmarena.ai/ - go to arena to see whos top dawg
 https://context.ai/compare/o1-preview-2024-09-12/gemini-1-5-pro
-    usage: https://console.cloud.google.com/apis/api/generativelanguage.googleapis.com/cost?project=gen-lang-client-0134479047 
+    usage: https://console.cloud.google.com/apis/api/generativelanguage.googleapis.com/cost?project=gen-lang-client-0134479047
 
 
 - claude rn is the best
 - grok is good for this type of stuff
-- gemeni is technically the best model out rn 
+- gemeni is technically the best model out rn
 
 cloud gpus
 - lambda of course, most exp
 - prime intellect cheaper but works cheaper
-- https://app.hyperbolic.xyz/compute 
+- https://app.hyperbolic.xyz/compute
 model selection for AFI
     - gemini + rag for now
         - maybe use llama or a smaler cheaper modle for small stuff, f it just use gemini sma
@@ -85,7 +86,7 @@ contribute to project
 
 - building afi.xyz artificial financial intelligence for the people fuck wall street.
 - learned typescript today, so we ready to build & contribute
-- https://www.youtube.com/watch?v=XenGeAcPAQo finishing up the day with finishing this training and then will watch next one. 
+- https://www.youtube.com/watch?v=XenGeAcPAQo finishing up the day with finishing this training and then will watch next one.
 
 step 1: learn typescript
 
