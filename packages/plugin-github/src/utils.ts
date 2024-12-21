@@ -11,9 +11,14 @@ export function getRepoPath(owner: string, repo: string) {
 }
 
 export async function createReposDirectory(owner: string) {
+    const dirPath = path.join(process.cwd(), ".repos", owner);
+    if (existsSync(dirPath)) {
+        elizaLogger.info(`Repos directory already exists: ${dirPath}`);
+        return;
+    }
     try {
-        // Create repos directory if it doesn't exist
-        await fs.mkdir(path.join(process.cwd(), ".repos", owner), {
+        // Create repos directory
+        await fs.mkdir(dirPath, {
             recursive: true,
         });
     } catch (error) {

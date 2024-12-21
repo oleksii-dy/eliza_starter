@@ -71,6 +71,13 @@ export class GitHubClient extends EventEmitter {
 
     private async processOodaCycle() {
         elizaLogger.log("Starting OODA cycle...");
+        const owner = this.runtime.getSetting("GITHUB_OWNER") ?? '' as string;
+        const repository = this.runtime.getSetting("GITHUB_REPO") ?? '' as string;
+        if (owner === '' || repository === '') {
+            elizaLogger.error("GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle.");
+            throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
+        }
+
         const roomId = this.getRepositoryRoomId();
         elizaLogger.log("Repository room ID:", roomId);
 
@@ -86,15 +93,89 @@ export class GitHubClient extends EventEmitter {
         // elizaLogger.log("Retrieved memories:", memories);
         if (memories.length === 0) {
             elizaLogger.log("No memories found, skipping OODA cycle.");
-            return;
-        }
-        const files = await getFilesFromMemories(this.runtime, memories[0]);
-        elizaLogger.log("Files:", files);
-        const owner = this.runtime.getSetting("GITHUB_OWNER") ?? '' as string;
-        const repository = this.runtime.getSetting("GITHUB_REPO") ?? '' as string;
-        if (owner === '' || repository === '') {
-            elizaLogger.error("GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle.");
-            throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
+            // time to initialize repository and create memories
+            const timestamp = Date.now();
+            const userIdUUID = stringToUuid(`${this.runtime.agentId}-${timestamp}`);
+            const originalMemory: Memory = {
+                id: stringToUuid(`${roomId}-${this.runtime.agentId}-${timestamp}-original`),
+                userId: userIdUUID,
+                agentId: this.runtime.agentId,
+                content: {
+                    text: `No memories found, starting to initialize repository and create memories.`,
+                    action: "NOTHING",
+                    source: "github",
+                    inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`)
+                },
+                roomId,
+                createdAt: timestamp,
+            }
+            const originalState = await this.runtime.composeState(originalMemory);
+            originalState.files = []
+            originalState.character = JSON.stringify(this.runtime.character || {}, null, 2);
+            originalState.owner = owner;
+            originalState.repository = repository;
+
+            // Get previous issues from memory
+            const previousIssues = await getIssuesFromMemories(this.runtime, owner, repository);
+            originalState.previousIssues = JSON.stringify(previousIssues.map(issue => ({
+                title: issue.content.text,
+                body: (issue.content.metadata as any).body,
+                url: (issue.content.metadata as any).url,
+                number: (issue.content.metadata as any).number,
+                state: (issue.content.metadata as any).state,
+            })), null, 2);
+            elizaLogger.log("Previous issues:", previousIssues);
+            const initializeRepositoryMemory: Memory = {
+                id: stringToUuid(`${roomId}-${this.runtime.agentId}-${timestamp}-initialize-repository`),
+                userId: userIdUUID,
+                agentId: this.runtime.agentId,
+                content: {
+                    text: `Initialize the repository ${owner}/${repository} on sif-dev branch`,
+                    action: "INITIALIZE_REPOSITORY",
+                    source: "github",
+                    inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`)
+                },
+                roomId,
+                createdAt: timestamp,
+            }
+            await this.runtime.messageManager.createMemory(initializeRepositoryMemory);
+            elizaLogger.debug("Memory created successfully:", {
+                memoryId: initializeRepositoryMemory.id,
+                action: initializeRepositoryMemory.content.action,
+                userId: this.runtime.agentId,
+            });
+            const createMemoriesFromFilesMemory = {
+                id: stringToUuid(`${roomId}-${this.runtime.agentId}-${timestamp}-create-memories-from-files`),
+                userId: userIdUUID,
+                agentId: this.runtime.agentId,
+                content: {
+                    text: `Create memories from files for the repository ${owner}/${repository} at path '/packages/client-github/src'`,
+                    action: "CREATE_MEMORIES_FROM_FILES",
+                    source: "github",
+                    inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`)
+                },
+                roomId,
+                createdAt: timestamp,
+            }
+            await this.runtime.messageManager.createMemory(createMemoriesFromFilesMemory);
+            elizaLogger.debug("Memory created successfully:", {
+                memoryId: createMemoriesFromFilesMemory.id,
+                action: createMemoriesFromFilesMemory.content.action,
+                userId: this.runtime.agentId,
+            });
+            const callback: HandlerCallback = async (
+                content: Content,
+                files: any[]
+            ) => {
+                elizaLogger.log("Callback called with content:", content);
+                return [];
+            };
+            await this.runtime.processActions(
+                originalMemory,
+                [initializeRepositoryMemory, createMemoriesFromFilesMemory],
+                originalState,
+                callback
+            );
         }
 
         elizaLogger.log('Before composeState')
@@ -105,6 +186,8 @@ export class GitHubClient extends EventEmitter {
             content: { text: "sample text", action: "NOTHING", source: "github" },
         } as Memory, {});
         elizaLogger.log("Original state:", originalState);
+        const files = await getFilesFromMemories(this.runtime, memories[0]);
+        elizaLogger.log("Files:", files);
         // add additional keys to state
         originalState.files = files;
         originalState.character = JSON.stringify(this.runtime.character || {}, null, 2);

@@ -29,8 +29,6 @@ export const oodaTemplate = `
 
     Action Options:
     1. CREATE_ISSUE: For identifying problems or suggesting improvements
-    2. MODIFY_ISSUE: For updating existing issues
-    3. COMMENT_ISSUE: For general issue feedback
     6. NOTHING: When no action is needed
 
     Required Fields:
