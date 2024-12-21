@@ -202,3 +202,15 @@ export const isAddCommentToIssueContent = (
     elizaLogger.error("Invalid content: ", object);
     return false;
 };
+
+export const IdeationSchema = z.object({
+    response: z.string().min(1, "Response is required"),
+});
+
+export interface IdeationContent {
+    response: string;
+}
+
+export const isIdeationContent = (object: any): object is IdeationContent => {
+    return IdeationSchema.safeParse(object).success;
+};

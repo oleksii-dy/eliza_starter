@@ -671,6 +671,266 @@ Here are the recent user messages for context:
 {{recentMessages}}
 `;
 
+export const ideationTemplate = `
+Based on the current context and the user's message, generate a thoughtful response that addresses the query and provides valuable insights. Consider the following categories for inspiration:
+
+- **Architecture & Design**
+- **Coding Practices**
+- **Logging & Monitoring**
+- **Frontend Development**
+- **Backend Development**
+- **Database Design**
+- **Testing**
+- **Performance & Optimization**
+- **Security**
+- **Deployment & DevOps**
+- **Version Control**
+- **Project Management**
+- **User Experience (UX)**
+- **Maintainability**
+- **Internationalization & Localization**
+- **Documentation**
+- **Continuous Learning & Improvement**
+
+Here is the character context:
+{{character}}
+
+Owner details:
+{{owner}}
+
+Repository details:
+{{repository}}
+
+Review previous interactions to avoid duplicate suggestions:
+    - Previous Pull Requests: {{previousPRs}}
+    - Previous Issues: {{previousIssues}}
+
+Utilize the related files to provide context and enrich the response with additional details. Whenever possible, use code snippets from the files to clarify the response.
+
+Respond to the user's message: **{{message}}**
+
+Provide your response in the following JSON format:
+
+\`\`\`json
+{
+    "response": "<Your insightful response here>"
+}
+\`\`\`
+examples:
+[
+    {
+        user: "{{user}}",
+        content: {
+            text: "Can you suggest improvements for the architecture and design of my project?",
+        },
+        agent: {
+            content: {
+                response: "Based on the current state of your project and previous interactions, here are some suggestions for improving the architecture and design:\n\n1. **Modularize Components**: Break down your application into smaller, reusable modules to enhance maintainability and scalability.\n2. **Implement Design Patterns**: Utilize design patterns such as MVC or MVVM to structure your code more effectively.\n3. **Adopt Microservices**: Consider transitioning to a microservices architecture to improve scalability and fault isolation.\n4. **Use Dependency Injection**: Implement dependency injection to manage dependencies more efficiently and improve testability.\n5. **Document Architecture**: Create comprehensive architecture diagrams and documentation to facilitate better understanding and communication among team members.\n\nIn previous discussions, we identified that modularizing components could significantly improve the maintainability of your project.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "What coding practices should I follow to improve my code quality?",
+        },
+        agent: {
+            content: {
+                response: "To improve your code quality, consider adopting the following coding practices:\n\n1. **Follow Coding Standards**: Adhere to established coding standards and guidelines to ensure consistency and readability.\n2. **Write Clean Code**: Focus on writing clean, readable, and maintainable code by following principles such as SOLID and DRY.\n3. **Conduct Code Reviews**: Regularly review code with peers to identify potential issues and share knowledge.\n4. **Implement Unit Tests**: Write unit tests to verify the functionality of individual components and catch bugs early.\n5. **Use Version Control**: Utilize version control systems like Git to track changes and collaborate effectively with team members.\n\nPreviously, we discussed the importance of code reviews in maintaining high code quality.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "How can I improve logging and monitoring in my application?",
+        },
+        agent: {
+            content: {
+                response: "Here are some suggestions to enhance logging and monitoring in your application:\n\n1. **Implement Structured Logging**: Use structured logging to capture detailed and consistent log data.\n2. **Centralize Logs**: Aggregate logs from different services into a centralized logging system for easier analysis.\n3. **Set Up Alerts**: Configure alerts to notify you of critical issues and anomalies in real-time.\n4. **Use Monitoring Tools**: Implement monitoring tools like Prometheus and Grafana to visualize and track application performance metrics.\n5. **Log Contextual Information**: Include contextual information in logs to provide better insights into the application's state and behavior.\n\nIn our last session, we highlighted the need for centralized logging to streamline log analysis.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "What are some best practices for frontend development?",
+        },
+        agent: {
+            content: {
+                response: "To improve your frontend development, consider the following best practices:\n\n1. **Use Modern Frameworks**: Leverage modern frontend frameworks like React, Vue, or Angular to build dynamic and responsive user interfaces.\n2. **Optimize Performance**: Optimize frontend performance by minimizing asset sizes, lazy-loading resources, and using efficient rendering techniques.\n3. **Ensure Accessibility**: Follow accessibility guidelines to make your application usable for all users, including those with disabilities.\n4. **Implement Responsive Design**: Use responsive design techniques to ensure your application works well on different devices and screen sizes.\n5. **Write Maintainable CSS**: Organize and modularize your CSS using methodologies like BEM or CSS-in-JS to improve maintainability.\n\nPreviously, we discussed the benefits of using modern frameworks like React for building responsive UIs.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "Can you suggest improvements for the backend of my application?",
+        },
+        agent: {
+            content: {
+                response: "Here are some suggestions to enhance the backend of your application:\n\n1. **Optimize Database Queries**: Review and optimize database queries to improve performance and reduce load times.\n2. **Implement Caching**: Use caching strategies to store frequently accessed data and reduce the load on your backend services.\n3. **Enhance Security**: Implement security best practices such as input validation, encryption, and secure authentication mechanisms.\n4. **Use Asynchronous Processing**: Leverage asynchronous processing to handle long-running tasks and improve the responsiveness of your application.\n5. **Document APIs**: Create comprehensive API documentation to facilitate easier integration and usage by other developers.\n\nIn our last discussion, we identified the need to optimize database queries to improve performance.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "What are some best practices for database design?",
+        },
+        agent: {
+            content: {
+                response: "To improve your database design, consider the following best practices:\n\n1. **Normalize Data**: Normalize your database schema to reduce redundancy and improve data integrity.\n2. **Use Indexes**: Implement indexes on frequently queried columns to enhance query performance.\n3. **Design for Scalability**: Plan your database schema with scalability in mind, considering factors like sharding and partitioning.\n4. **Implement Backup and Recovery**: Set up regular backups and a robust recovery plan to protect against data loss.\n5. **Monitor Performance**: Continuously monitor database performance and optimize queries and schema as needed.\n\nPreviously, we discussed the importance of using indexes to enhance query performance.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "How can I improve testing in my project?",
+        },
+        agent: {
+            content: {
+                response: "To enhance testing in your project, consider the following best practices:\n\n1. **Write Unit Tests**: Develop unit tests to verify the functionality of individual components and catch bugs early.\n2. **Implement Integration Tests**: Create integration tests to ensure different components work together as expected.\n3. **Use Test Automation**: Automate tests to improve efficiency and consistency in your testing process.\n4. **Adopt Test-Driven Development (TDD)**: Follow TDD principles to write tests before implementing code, ensuring better test coverage and design.\n5. **Perform Code Coverage Analysis**: Use code coverage tools to identify untested code and improve overall test coverage.\n\nIn our previous conversation, we emphasized the importance of unit tests in catching bugs early.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "What are some ways to optimize the performance of my application?",
+        },
+        agent: {
+            content: {
+                response: "Here are some suggestions to optimize the performance of your application:\n\n1. **Optimize Code**: Review and optimize your code to reduce complexity and improve execution speed.\n2. **Use Efficient Algorithms**: Implement efficient algorithms and data structures to enhance performance.\n3. **Minimize Resource Usage**: Reduce the usage of system resources such as memory and CPU by optimizing resource-intensive operations.\n4. **Implement Caching**: Use caching strategies to store frequently accessed data and reduce the load on your application.\n5. **Monitor Performance**: Continuously monitor application performance and identify bottlenecks using profiling and monitoring tools.\n\nPreviously, we discussed the benefits of using efficient algorithms to enhance performance.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "How can I improve the security of my application?",
+        },
+        agent: {
+            content: {
+                response: "To enhance the security of your application, consider the following best practices:\n\n1. **Implement Input Validation**: Validate all user inputs to prevent injection attacks and other security vulnerabilities.\n2. **Use Encryption**: Encrypt sensitive data both in transit and at rest to protect it from unauthorized access.\n3. **Implement Secure Authentication**: Use secure authentication mechanisms such as OAuth 2.0 and multi-factor authentication.\n4. **Perform Security Audits**: Regularly conduct security audits and vulnerability assessments to identify and address potential security issues.\n5. **Keep Dependencies Updated**: Ensure that all dependencies and libraries are up-to-date to mitigate known security vulnerabilities.\n\nIn our last session, we highlighted the importance of input validation to prevent security vulnerabilities.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "What are some best practices for deployment and DevOps?",
+        },
+        agent: {
+            content: {
+                response: "To improve your deployment and DevOps practices, consider the following best practices:\n\n1. **Automate Deployment**: Implement continuous integration and continuous deployment (CI/CD) pipelines to automate the deployment process.\n2. **Use Infrastructure as Code (IaC)**: Manage infrastructure using code to ensure consistency and reproducibility.\n3. **Monitor Deployments**: Set up monitoring and logging to track deployment success and application performance post-deployment.\n4. **Implement Blue-Green Deployments**: Use blue-green deployments to minimize downtime and ensure smooth rollbacks.\n5. **Containerize Applications**: Use containerization technologies like Docker to ensure consistency across different environments.\n\nPreviously, we discussed the benefits of using CI/CD pipelines to automate the deployment process.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "How can I improve version control in my project?",
+        },
+        agent: {
+            content: {
+                response: "To enhance version control in your project, consider the following best practices:\n\n1. **Use Branching Strategies**: Implement branching strategies such as Git Flow or GitHub Flow to manage feature development and releases.\n2. **Write Descriptive Commit Messages**: Use clear and descriptive commit messages to provide context for changes.\n3. **Perform Code Reviews**: Conduct code reviews to ensure code quality and share knowledge among team members.\n4. **Tag Releases**: Use tags to mark release points in your version control system for easier tracking and rollback.\n5. **Automate Merges**: Use automated tools to handle merges and resolve conflicts efficiently.\n\nIn our previous conversation, we emphasized the importance of using branching strategies to manage feature development.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "What are some best practices for project management?",
+        },
+        agent: {
+            content: {
+                response: "To improve project management, consider the following best practices:\n\n1. **Define Clear Goals**: Set clear and achievable goals for your project to provide direction and focus.\n2. **Use Agile Methodologies**: Implement agile methodologies such as Scrum or Kanban to manage tasks and workflows effectively.\n3. **Communicate Regularly**: Maintain regular communication with team members and stakeholders to ensure alignment and address issues promptly.\n4. **Track Progress**: Use project management tools to track progress, manage tasks, and monitor deadlines.\n5. **Conduct Retrospectives**: Regularly conduct retrospectives to reflect on the project's progress and identify areas for improvement.\n\nPreviously, we discussed the benefits of using agile methodologies to manage tasks and workflows.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "How can I improve the user experience (UX) of my application?",
+        },
+        agent: {
+            content: {
+                response: "To enhance the user experience (UX) of your application, consider the following best practices:\n\n1. **Conduct User Research**: Gather feedback from users to understand their needs and pain points.\n2. **Design Intuitive Interfaces**: Create user interfaces that are easy to navigate and understand.\n3. **Ensure Consistency**: Maintain consistency in design elements such as colors, fonts, and layouts to provide a cohesive experience.\n4. **Optimize Performance**: Ensure your application performs well and responds quickly to user interactions.\n5. **Implement Accessibility Features**: Make your application accessible to all users, including those with disabilities, by following accessibility guidelines.\n\nIn our last session, we highlighted the importance of conducting user research to understand user needs.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "What are some best practices for maintainability?",
+        },
+        agent: {
+            content: {
+                response: "To improve the maintainability of your project, consider the following best practices:\n\n1. **Write Clean Code**: Follow coding standards and best practices to write clean, readable, and maintainable code.\n2. **Document Code**: Provide clear and comprehensive documentation for your code to facilitate easier understanding and maintenance.\n3. **Refactor Regularly**: Regularly refactor code to improve its structure and eliminate technical debt.\n4. **Use Version Control**: Utilize version control systems to track changes and collaborate effectively with team members.\n5. **Automate Tests**: Implement automated tests to catch bugs early and ensure code quality.\n\nPreviously, we discussed the importance of regular refactoring to improve code structure.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "How can I improve internationalization and localization in my application?",
+        },
+        agent: {
+            content: {
+                response: "To enhance internationalization and localization in your application, consider the following best practices:\n\n1. **Use Localization Libraries**: Implement localization libraries to manage translations and language-specific content.\n2. **Design for Multiple Languages**: Ensure your application design accommodates different languages and text lengths.\n3. **Support Multiple Time Zones**: Handle date and time formatting to support users in different time zones.\n4. **Test Localization**: Regularly test your application with different language settings to ensure proper functionality.\n5. **Provide Language Switcher**: Include a language switcher in your application to allow users to easily change languages.\n\nIn our last discussion, we highlighted the importance of using localization libraries to manage translations.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "What are some best practices for documentation?",
+        },
+        agent: {
+            content: {
+                response: "To improve documentation, consider the following best practices:\n\n1. **Write Clear and Concise Documentation**: Ensure your documentation is easy to read and understand.\n2. **Use Examples**: Provide examples and code snippets to illustrate concepts and usage.\n3. **Keep Documentation Updated**: Regularly update documentation to reflect changes in the codebase and features.\n4. **Organize Documentation**: Structure documentation logically with clear headings and sections for easy navigation.\n5. **Include Troubleshooting Guides**: Provide troubleshooting guides to help users resolve common issues.\n\nPreviously, we discussed the importance of keeping documentation updated to reflect changes in the codebase.",
+                action: "IDEATION",
+            },
+        },
+    },
+    {
+        user: "{{user}}",
+        content: {
+            text: "How can I promote continuous learning and improvement in my team?",
+        },
+        agent: {
+            content: {
+                response: "To foster continuous learning and improvement in your team, consider the following best practices:\n\n1. **Encourage Knowledge Sharing**: Promote a culture of knowledge sharing through regular team meetings, code reviews, and documentation.\n2. **Provide Learning Resources**: Offer access to learning resources such as online courses, books, and workshops.\n3. **Set Learning Goals**: Encourage team members to set personal learning goals and track their progress.\n4. **Conduct Retrospectives**: Regularly conduct retrospectives to reflect on the team's performance and identify areas for improvement.\n5. **Celebrate Achievements**: Recognize and celebrate individual and team achievements to motivate continuous learning and growth.\n\nIn our previous conversation, we emphasized the importance of encouraging knowledge sharing through regular team meetings.",
+                action: "IDEATION",
+            },
+        },
+    },
+]
+
+
+
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
 // Initialize the repository ai16z/eliza on develop branch
 // Create memories from file on repository ai16z/eliza at path '/packages/plugin-coinbase'
 // Create an issue in repository ai16z/eliza titled about improving logging in /packages/plugin-github/plugins

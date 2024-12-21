@@ -26,6 +26,7 @@ import {
     githubAddCommentToIssuePlugin,
     addCommentToIssueAction,
 } from "./plugins/addCommentToIssue";
+import { githubIdeationPlugin, ideationAction } from "./plugins/ideationPlugin";
 import type { Plugin } from "@ai16z/eliza";
 import { sourceCodeProvider } from "./providers/sourceCode";
 import { testFilesProvider } from "./providers/testFiles";
@@ -41,6 +42,7 @@ export const plugins = {
     githubCreateIssuePlugin,
     githubModifyIssuePlugin,
     githubAddCommentToIssuePlugin,
+    githubIdeationPlugin,
 };
 
 export * from "./plugins/initializeRepository";
@@ -50,6 +52,7 @@ export * from "./plugins/createCommit";
 export * from "./plugins/createIssue";
 export * from "./plugins/modifyIssue";
 export * from "./plugins/addCommentToIssue";
+export * from "./plugins/ideationPlugin";
 
 export * from "./providers/sourceCode";
 export * from "./providers/testFiles";
@@ -68,6 +71,7 @@ export const githubPlugin: Plugin = {
         createIssueAction,
         modifyIssueAction,
         addCommentToIssueAction,
+        ideationAction,
     ],
     evaluators: [],
     providers: [
