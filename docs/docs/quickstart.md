@@ -226,6 +226,12 @@ pnpm start --characters="characters/trump.character.json,characters/tate.charact
    - Use `node -v` to check version
    - Consider using [nvm](https://github.com/nvm-sh/nvm) to manage Node versions
 
+   NOTE: pnpm may be bundled with a different node version. You can use
+   ```bash
+   pnpm env use --global 23.3.0
+   ```
+   to force it to use the correct one.
+
 2. **Sharp Installation**
    If you see Sharp-related errors:
 
