@@ -78,10 +78,14 @@ export const createIssueAction: Action = {
         // add additional keys to state
         state.files = files;
         state.character = JSON.stringify(runtime.character || {}, null, 2);
-        const owner = runtime.getSetting("GITHUB_OWNER") ?? 'monilpat' as string;
+        const owner = runtime.getSetting("GITHUB_OWNER") ?? '' as string;
         state.owner = owner;
-        const repository = runtime.getSetting("GITHUB_REPO") ?? 'eliza' as string;
+        const repository = runtime.getSetting("GITHUB_REPO") ?? '' as string;
         state.repository = repository;
+        if (owner === '' || repository === '') {
+            elizaLogger.error("GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle.");
+            throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
+        }
         state.previousIssues = await getIssuesFromMemories(runtime, owner, repository);
         elizaLogger.info("State:", state);
 
@@ -127,7 +131,7 @@ export const createIssueAction: Action = {
             await saveIssueToMemory(runtime, issue, content.owner, content.repo);
 
             await callback({
-                text: `Created issue #${issue.number} successfully!`,
+                text: `Created issue #${issue.number} successfully see: ${issue.url}`,
                 attachments: [],
             });
         } catch (error) {

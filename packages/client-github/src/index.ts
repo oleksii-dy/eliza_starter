@@ -91,8 +91,12 @@ export class GitHubClient extends EventEmitter {
         }
         const files = await getFilesFromMemories(this.runtime, memories[0]);
         elizaLogger.log("Files:", files);
-        const owner = this.runtime.getSetting("GITHUB_OWNER") ?? 'monilpat' as string;
-        const repository = this.runtime.getSetting("GITHUB_REPO") ?? 'eliza' as string;
+        const owner = this.runtime.getSetting("GITHUB_OWNER") ?? '' as string;
+        const repository = this.runtime.getSetting("GITHUB_REPO") ?? '' as string;
+        if (owner === '' || repository === '') {
+            elizaLogger.error("GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle.");
+            throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
+        }
 
         elizaLogger.log('Before composeState')
         const originalState = await this.runtime.composeState({
@@ -119,15 +123,15 @@ export class GitHubClient extends EventEmitter {
         }));
         elizaLogger.log("Previous issues:", previousIssues);
         // Get previous pull requests from memory
-        // const previousPRs = await getPullRequestsFromMemories(this.runtime, owner, repo);
-        // originalState.previousPRs = previousPRs.map(pr => ({
-        //     title: pr.content.text,
-        //     url: (pr.content.metadata as any).url,
-        //     number: (pr.content.metadata as any).number,
-        //     state: (pr.content.metadata as any).state,
-        // }));
-        // elizaLogger.log("Previous PRs:", originalState.previousPRs);
-        originalState.previousPRs = [];
+        const previousPRs = await getPullRequestsFromMemories(this.runtime, owner, repository);
+        originalState.previousPRs = previousPRs.map(pr => ({
+            title: pr.content.text,
+            url: (pr.content.metadata as any).url,
+            number: (pr.content.metadata as any).number,
+            state: (pr.content.metadata as any).state,
+        }));
+        originalState.previousPRs = previousPRs;
+        elizaLogger.log("Previous PRs:", originalState.previousPRs);
         elizaLogger.log("Original state:", originalState);
         // Orient: Analyze the memories to determine if logging improvements are needed
         const context = composeContext({
@@ -224,8 +228,12 @@ export class GitHubClient extends EventEmitter {
     }
 
     private getRepositoryRoomId(): UUID {
-        const owner = this.runtime.getSetting("GITHUB_OWNER") ?? 'monilpat' as string;
-        const repository = this.runtime.getSetting("GITHUB_REPO") ?? 'eliza' as string;
+        const owner = this.runtime.getSetting("GITHUB_OWNER") ?? '' as string;
+        const repository = this.runtime.getSetting("GITHUB_REPO") ?? '' as string;
+        if (owner === '' || repository === '') {
+            elizaLogger.error("GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle.");
+            throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
+        }
         const roomId = stringToUuid(`github-${owner}-${repository}`);
         elizaLogger.log("Generated repository room ID:", roomId);
         return roomId;
