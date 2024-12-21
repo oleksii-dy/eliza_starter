@@ -360,7 +360,7 @@ export async function initializeClients(
 
     if (clientTypes.includes("wordpress")) {
         const wordpressClient = await WordpressClientInterface.start(runtime);
-        clients.push(wordpressClient);
+        if (wordpressClient) clients.wordpress = wordpressClient;
     }
 
     if (clientTypes.includes("farcaster")) {

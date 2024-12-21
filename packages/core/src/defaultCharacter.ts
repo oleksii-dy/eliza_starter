@@ -5,7 +5,7 @@ export const defaultCharacter: Character = {
     username: "degen8ball",
     plugins: [],
     clients: [
-
+        Clients.WORDPRESS,
     ],
     modelProvider: ModelProviderName.ANTHROPIC,
     settings: {

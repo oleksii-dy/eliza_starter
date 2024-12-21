@@ -7,7 +7,7 @@ import {
     generateText,
     ModelClass
 } from "@ai16z/eliza";
-
+import { buildBlogPost } from "./utils";
 const wordpressPostTemplate = `{{timeline}}
 
 # Knowledge
@@ -79,30 +79,19 @@ export class WordpressBlogClient {
 
         elizaLogger.debug('Generate post prompt:\n' + context);
 
-        const newBlogContent = await generateText({
-            runtime: this.runtime,
-            context,
-            modelClass: ModelClass.SMALL
-        });
-
-        // Generate a title for the post
-        const title = await generateText({
-            runtime: this.runtime,
-            context: `Generate a title for the post, only return the title, no other text: ${newBlogContent}`,
-            modelClass: ModelClass.SMALL
-        });
+        const { title, content } = await buildBlogPost(this.runtime, this.client);
 
         if (this.runtime.getSetting('WORDPRESS_DRY_RUN') === 'true') {
-            elizaLogger.info(`Dry run: would have posted:\nTitle: ${title}\nContent: ${newBlogContent}`);
+            elizaLogger.info(`Dry run: would have posted:\nTitle: ${title}\nContent: ${content}`);
             return;
         }
         try {
-            elizaLogger.log(`Posting new WordPress blog post:\n${newBlogContent}`);
+            elizaLogger.log(`Posting new WordPress blog post:\n${content}`);
 
             const result = await this.client.addToRequestQueue(
                 async () => await this.client.createPost({
                     title: title,
-                    content: newBlogContent,
+                    content: content,
                     status: 'draft'
                 })
             );
@@ -120,7 +109,7 @@ export class WordpressBlogClient {
               id: stringToUuid(`${result.id}-${this.runtime.agentId}`),
               userId: this.runtime.agentId,
               content: {
-                text: newBlogContent,
+                text: content,
                 url: result.url,
                 source: 'wordpress'
               },

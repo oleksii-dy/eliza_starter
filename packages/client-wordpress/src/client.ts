@@ -95,4 +95,17 @@ export class WordpressClient {
     public async addToRequestQueue(task: () => Promise<any>) {
         return this.requestQueue.add(task);
     }
+
+    async uploadMedia(file: Buffer, filename: string, mimeType: string = 'image/png'): Promise<any> {
+        return this.addToRequestQueue(async () => {
+            const headers = {
+                Authorization: this.client.defaults.headers['Authorization'],
+                'Content-Disposition': `attachment; filename="${filename}"`,
+                'Content-Type': mimeType,
+            };
+
+            const response = await this.client.post('/media', file, { headers });
+            return response.data;
+        });
+    }
 }
