@@ -53,6 +53,7 @@ import {
     githubCreateIssuePlugin,
     githubModifyIssuePlugin,
     githubAddCommentToIssuePlugin,
+    githubIdeationPlugin,
 } from "@ai16z/plugin-github";
 import Database from "better-sqlite3";
 import fs from "fs";
@@ -520,6 +521,7 @@ export async function createAgent(
                       githubCreateIssuePlugin,
                       githubModifyIssuePlugin,
                       githubAddCommentToIssuePlugin,
+                      githubIdeationPlugin,
                   ]
                 : []),
             getSecret(character, "ALCHEMY_API_KEY") ? goatPlugin : null,

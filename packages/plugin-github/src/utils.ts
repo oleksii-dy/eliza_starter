@@ -4,7 +4,7 @@ import { glob } from "glob";
 import { existsSync } from "fs";
 import simpleGit from "simple-git";
 import { Octokit } from "@octokit/rest";
-import { elizaLogger, IAgentRuntime, Memory, stringToUuid } from "@ai16z/eliza";
+import { elizaLogger, IAgentRuntime, Memory, State, stringToUuid, UUID } from "@ai16z/eliza";
 
 export function getRepoPath(owner: string, repo: string) {
     return path.join(process.cwd(), ".repos", owner, repo);
@@ -262,4 +262,60 @@ export async function getIssuesFromMemories(runtime: IAgentRuntime, owner: strin
     // Filter memories to only include those that are issues
     const issueMemories = memories.filter(memory => (memory.content.metadata as any)?.type === "issue");
     return issueMemories;
+}
+
+export async function incorporateRepositoryState(state: State, runtime: IAgentRuntime, message: Memory) {
+    const files = await getFilesFromMemories(runtime, message);
+    // add additional keys to state
+    state.files = files;
+    state.character = JSON.stringify(runtime.character || {}, null, 2);
+    const owner = runtime.getSetting("GITHUB_OWNER") ?? '' as string;
+    state.owner = owner;
+    const repository = runtime.getSetting("GITHUB_REPO") ?? '' as string;
+    state.repository = repository;
+    if (owner === '' || repository === '') {
+        elizaLogger.error("GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle.");
+        throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
+    }
+    const previousIssues = await getIssuesFromMemories(runtime, owner, repository);
+    state.previousIssues = JSON.stringify(previousIssues.map(issue => ({
+        title: issue.content.text,
+        body: (issue.content.metadata as any).body,
+        url: (issue.content.metadata as any).url,
+        number: (issue.content.metadata as any).number,
+        state: (issue.content.metadata as any).state,
+    })), null, 2);
+    elizaLogger.log("Previous issues:", state.previousIssues);
+    elizaLogger.info("State:", state);
+    const previousPRs = await getPullRequestsFromMemories(runtime, owner, repository);
+    state.previousPRs = JSON.stringify(previousPRs.map(pr => ({
+        title: pr.content.text,
+        body: (pr.content.metadata as any).body,
+        url: (pr.content.metadata as any).url,
+        number: (pr.content.metadata as any).number,
+        state: (pr.content.metadata as any).state,
+    })), null, 2);
+    return state;
+}
+
+export async function getPullRequestsFromMemories(runtime: IAgentRuntime, owner: string, repo: string): Promise<Memory[]> {
+    const roomId = stringToUuid(`github-${owner}-${repo}`);
+    const memories = await runtime.messageManager.getMemories({
+        roomId: roomId,
+    });
+    // Filter memories to only include those that are pull requests
+    const prMemories = memories.filter(memory => (memory.content.metadata as any)?.type === "pull_request");
+    return prMemories;
+}
+
+export const getRepositoryRoomId = (runtime: IAgentRuntime): UUID => {
+    const owner = runtime.getSetting("GITHUB_OWNER") ?? '' as string;
+    const repository = runtime.getSetting("GITHUB_REPO") ?? '' as string;
+    if (owner === '' || repository === '') {
+        elizaLogger.error("GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle.");
+        throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
+    }
+    const roomId = stringToUuid(`github-${owner}-${repository}`);
+    elizaLogger.log("Generated repository room ID:", roomId);
+    return roomId;
 }

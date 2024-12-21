@@ -18,7 +18,7 @@ import {
     CreateIssueSchema,
     isCreateIssueContent,
 } from "../types";
-import { getIssuesFromMemories, getFilesFromMemories } from "../utils";
+import { getIssuesFromMemories, getFilesFromMemories, incorporateRepositoryState } from "../utils";
 import { RestEndpointMethodTypes } from "@octokit/rest";
 
 export async function saveIssueToMemory(runtime: IAgentRuntime, issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"], owner: string, repo: string): Promise<void> {
