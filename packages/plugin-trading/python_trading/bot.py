@@ -28,7 +28,7 @@ import schedule
 ###### ASKING USER WHAT THEY WANNA DO - WILL REMOVE USER SOON AND REPLACE WITH BOT ######
 action = 0
 print('slow down, dont trade by hand... moon dev told you so...')
-action = input('0 to close, 1 to buy, 2 stop loss, 3 breakout, 4 OHLCV data, 5 market maker  |||| 6 funding buy, 7 liquidation amount:')
+action = input('0 to close, 1 to buy, 2 stop loss, 3 breakout, 5 market maker  |||| 6 funding buy, 7 liquidation amount:')
 print('you entered:', action)
 action = int(action)
 
@@ -194,12 +194,7 @@ def bot():
             print(f'price is {price} and not buying or selling position is {pos_usd} and usd size is {usd_size}')
             time.sleep(30)
 
-    if action == 4:
-        print('OHLCV data bot')
-        df = n.get_data(symbol, DAYSBACK_4_DATA, DATA_TIMEFRAME)
 
-        # save df to csv here packages/plugin-trading/python_trading/ohlcv_data
-        df.to_csv(f'packages/plugin-trading/python_trading/ohlcv_data/{symbol}.csv')
     while action == 5:
         print(f'market maker buying below {buy_under} and selling above {sell_over}')
 

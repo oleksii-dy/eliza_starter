@@ -1,14 +1,43 @@
 # advanced trading by moon dev
 
-- this plugin will include a ton of helpful trading functions so that agents can buy, sell & manage risk
-- while everything is currently in python i will later convert to ts
+- this plugin will include a ton of helpful trading functions so that agents can buy, sell & manage risk. i use these for onchain solana bots
+- while everything is currently in python i will later convert to ts if needed or i will add a shell (researching best approach)
 
 how to use
-1. config controls the solana contract that is being traded, size, etc.
-2. run from ezbot, there are a bunch of different options of bots
-3. nice_funcs has a lot of helpful functions to enable the bot to trade
+1. config.py controls the solana contract that is being traded, size, etc.
+2. run from bot.py, there are a bunch of different 'actions' for the trading, like buy under x price, while sell over y price. or a breakout option or stop loss.
+3. nice_funcs has a ton of helpful functions to algo trade onchain solana
+4. if the ai needs ohlcv data they can get it on get_ohlcv_data.py
 
-'
+things needed in dontshare.py (add to .gitignore and never share this file)
+1. sketch but private solana key if you want them to trade
+2. birdeye api key
+3. rpc_url (i use helius)
+
+Completed 12/21
+
+1. nice_funcs.py - a ton of solana onchain infastructure to trade. ive been using this code for all my onchain bots but believe ai will utilize them better.
+
+2. bot.py - a simple script to allow any ai to call actions like 0 - close a position 1- open a position 2- sell if price falls under x price (stop loss) 3- buy if price goes over y price (breakout) 5- buy if under X price and sell if over Y price (market maker)
+
+3. get_ohlcv_data.py - an easy way for ai to get any ohlcv data anytime. every great trade starts with data so this is essential
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 CONVERTING FROM PYTHON TO TYPESCRIPT
 
