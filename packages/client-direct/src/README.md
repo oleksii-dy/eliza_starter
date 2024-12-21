@@ -47,7 +47,9 @@ curl -X GET "http://localhost:3000/fine-tune/8566c47a-ada8-441c-95bc-7bb07656c4c
 
 ## Verifiable Attestations
 
-Enable Verifiable Logs,Configuration variables in .env
+This function relies on  [plugin-tee-verifiable-log](../../plugin-tee-verifiable-log/README.md)
+
+Enable Verifiable Logs, Configuration variables in .env
 ```shell
 TEE_MODE="DOCKER"                    # LOCAL | DOCKER | PRODUCTION
 WALLET_SECRET_SALT= "<your wallet secret salt>"            # ONLY define if you want to use TEE Plugin, otherwise it will throw errors
