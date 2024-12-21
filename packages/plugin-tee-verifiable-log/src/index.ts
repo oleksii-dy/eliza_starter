@@ -37,8 +37,6 @@ export class VerifiableLogService extends Service {
         if (runtime.getSetting("WALLET_SECRET_SALT") === null) {
             throw new Error("WALLET_SECRET_SALT is not set.");
         }
-
-
         this.teeMode = runtime.getSetting("TEE_MODE");
         const value = runtime.getSetting("VLOG");
         const truthyValues = ["yes", "true", "YES", "TRUE", "Yes", "True", "1"];
