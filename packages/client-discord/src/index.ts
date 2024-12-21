@@ -16,7 +16,6 @@ import {
     User,
 } from "discord.js";
 import { EventEmitter } from "events";
-import fetch from 'node-fetch';
 import chat_with_attachments from "./actions/chat_with_attachments.ts";
 import download_media from "./actions/download_media.ts";
 import joinvoice from "./actions/joinvoice.ts";
