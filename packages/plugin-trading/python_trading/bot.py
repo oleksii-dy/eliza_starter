@@ -1,18 +1,20 @@
 
 '''
-building the first essentially tools for our market maker
-creating something that will allow us to
-essentially put in a number and have the bot do what is correlated
+building the first essential tools for any trading bot
+creating something that will allow the ais we create to trade
+essentially they can put in a number and have the bot do that trading action
 
-0 - close the position (in chunks)
-1 - open a buying position (in chunks)
-5 - market maker above or below
+0 - close a position (in chunks)
+1 - open a position (in chunks)
+2 - stop loss: close under X price
+3 - break out: buy over Y price
+4 - data bot: get OHLCV data for a solana contract address
+5 - market maker - buy under X price and sell over Y price
 
-
-4 - pnl close, just monitor position for tp and sl
-
-6 - funding buy
-7 - liquidation amount
+not done yet
+# 4 - pnl close, just monitor position for tp and sl
+# 6 - funding buy
+# 7 - liquidation amount
 
 '''
 
@@ -24,15 +26,15 @@ import schedule
 
 
 ###### ASKING USER WHAT THEY WANNA DO - WILL REMOVE USER SOON AND REPLACE WITH BOT ######
-buy = 0
+action = 0
 print('slow down, dont trade by hand... moon dev told you so...')
-buy = input('0 to close, 1 to buy, 5 market maker  |||| 6 funding buy, 7 liquidation amount:')
-print('you entered:', buy)
-buy = int(buy)
+action = input('0 to close, 1 to buy, 2 stop loss, 3 breakout, 4 OHLCV data, 5 market maker  |||| 6 funding buy, 7 liquidation amount:')
+print('you entered:', action)
+action = int(action)
 
 def bot():
 
-    while buy == 0:
+    while action == 0:
         print('closing position')
         # get pos first
         pos = n.get_position(symbol)
@@ -46,13 +48,13 @@ def bot():
             pos = n.get_position(symbol)
             if pos < .9:
                 print('position closed thanks moon dev....')
-                time.sleep(876786)
+                time.sleep(SLEEP_AFTER_CLOSE)
                 break
 
 
     print('bot successfully closed position...')
 
-    while buy == 1:
+    while action == 1:
         print('opening buying position')
         pos = n.get_position(symbol)
         price = n.token_price(symbol)
@@ -133,10 +135,72 @@ def bot():
         cprint(f'position filled of {symbol[-4:]} total: ${pos_usd}', 'white', 'on_green')
         break
 
-    while buy == 4:
-        print('pnl close')
+    while action == 2:
 
-    while buy == 5:
+        # get token price
+        pos = n.get_position(symbol)
+        price = n.token_price(symbol)
+        pos = float(pos)
+
+        print(f'stop loss: close if price under {STOPLOSS_PRICE} current price is {price}')
+
+        if price < STOPLOSS_PRICE and pos > 0:
+            print(f'selling {symbol[-4:]} bc price is {price}  is under {STOPLOSS_PRICE}')
+            n.chunk_kill(symbol, max_usd_order_size, slippage)
+            print(f'chunk kill complete... thank you moon dev you are my savior 777')
+            time.sleep(15)
+
+        else:
+            print(f'price is {price} and pos is {pos}')
+            time.sleep(30)
+
+    while action == 3:
+
+        # get token price
+        pos = n.get_position(symbol)
+        price = n.token_price(symbol)
+        pos_usd = pos * price
+        size_needed = usd_size - pos_usd
+        if size_needed > max_usd_order_size: chunk_size = max_usd_order_size
+        else: chunk_size = size_needed
+
+        print(f'breakout action called, buying over {BREAKOUT_PRICE} current price is {price} & pos is ${pos_usd}')
+
+        chunk_size = int(chunk_size * 10**6)
+        chunk_size = str(chunk_size)
+
+        print(f'BREAKOUT_PRICE: {BREAKOUT_PRICE} pos_usd: {pos_usd} usd_size: {usd_size} price: {price}')
+        if (price > BREAKOUT_PRICE) and (pos_usd < usd_size):
+
+            time.sleep(1)
+            # get token price
+            pos = n.get_position(symbol)
+            price = n.token_price(symbol)
+            pos_usd = pos * price
+            size_needed = usd_size - pos_usd
+            if size_needed > max_usd_order_size: chunk_size = max_usd_order_size
+            else: chunk_size = size_needed
+
+            chunk_size = int(chunk_size * 10**6)
+            chunk_size = str(chunk_size)
+
+            if (pos_usd < usd_size) and (price > BREAKOUT_PRICE):
+                print(f'buying {symbol[-4:]} bc price is {price} and breakoutprice is {BREAKOUT_PRICE}')
+                n.breakout_entry(symbol, BREAKOUT_PRICE)
+                print('breakout entry complete, thanks moon dev...')
+                time.sleep(15)
+
+        else:
+            print(f'price is {price} and not buying or selling position is {pos_usd} and usd size is {usd_size}')
+            time.sleep(30)
+
+    if action == 4:
+        print('OHLCV data bot')
+        df = n.get_data(symbol, DAYSBACK_4_DATA, DATA_TIMEFRAME)
+
+        # save df to csv here packages/plugin-trading/python_trading/ohlcv_data
+        df.to_csv(f'packages/plugin-trading/python_trading/ohlcv_data/{symbol}.csv')
+    while action == 5:
         print(f'market maker buying below {buy_under} and selling above {sell_over}')
 
         # get token price
@@ -182,10 +246,10 @@ def bot():
             print(f'price is {price} and not buying or selling position is {pos_usd} and usd size is {usd_size}')
             time.sleep(30)
 
-    while buy == 6:
+    while action == 6:
         print('funding buy')
 
-    while buy == 7:
+    while action == 7:
         print('liquidation amount')
 
     else:
