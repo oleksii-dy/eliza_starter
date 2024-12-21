@@ -179,14 +179,15 @@ export class GitHubClient extends EventEmitter {
         }
 
         elizaLogger.log('Before composeState')
-        const originalState = await this.runtime.composeState({
+        const originalMemory = {
             userId: this.runtime.agentId, // TODO: this should be the user id
             roomId: roomId,
             agentId: this.runtime.agentId,
             content: { text: "sample text", action: "NOTHING", source: "github" },
-        } as Memory, {});
+        } as Memory;
+        const originalState = await this.runtime.composeState(originalMemory, {});
         elizaLogger.log("Original state:", originalState);
-        const files = await getFilesFromMemories(this.runtime, memories[0]);
+        const files = await getFilesFromMemories(this.runtime, originalMemory);
         elizaLogger.log("Files:", files);
         // add additional keys to state
         originalState.files = files;
