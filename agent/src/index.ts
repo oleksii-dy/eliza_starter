@@ -28,6 +28,7 @@ import {
 import { zgPlugin } from "@ai16z/plugin-0g";
 import createGoatPlugin from "@ai16z/plugin-goat";
 import { bootstrapPlugin } from "@ai16z/plugin-bootstrap";
+import { predictionPlugin } from "@ai16z/plugin-predictions";
 // import { intifacePlugin } from "@ai16z/plugin-intiface";
 import {
     coinbaseCommercePlugin,
@@ -499,6 +500,9 @@ export async function createAgent(
             getSecret(character, "APTOS_PRIVATE_KEY") ? aptosPlugin : null,
             getSecret(character, "LUMA_API_KEY")
                 ? videoGenerationPlugin
+                : null,
+            getSecret(character, "BIRDEYE_API_KEY")
+                ? predictionPlugin
                 : null,
         ].filter(Boolean),
         providers: [],
