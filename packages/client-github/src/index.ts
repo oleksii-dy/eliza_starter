@@ -149,7 +149,7 @@ export class GitHubClient extends EventEmitter {
                 userId: userIdUUID,
                 agentId: this.runtime.agentId,
                 content: {
-                    text: `Create memories from files for the repository ${owner}/${repository} at path '/packages/client-github/src'`,
+                    text: `Create memories from files for the repository ${owner}/${repository} at path '/'`,
                     action: "CREATE_MEMORIES_FROM_FILES",
                     source: "github",
                     inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`)
