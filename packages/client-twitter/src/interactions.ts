@@ -89,13 +89,12 @@ Thread of Tweets You Are Replying To:
 /**
  * Represents a client for interacting with Twitter, handling interactions and responding to tweets.
  */
-  **/
 export class TwitterInteractionClient {
     client: ClientBase;
     runtime: IAgentRuntime;
 /**
  * Constructor for creating a new instance of a class.
- * 
+ *
  * @param {ClientBase} client - The client object to interact with.
  * @param {IAgentRuntime} runtime - The runtime object for managing the agent.
  */
@@ -318,7 +317,7 @@ export class TwitterInteractionClient {
 
 /**
  * Handles a tweet message and generates appropriate responses.
- * 
+ *
  * @param {Object} param0 - The parameters object
  * @param {Tweet} param0.tweet - The tweet object
  * @param {Memory} param0.message - The message object
@@ -522,7 +521,7 @@ export class TwitterInteractionClient {
 
 /**
  * Asynchronously builds a conversation thread starting from a given tweet.
- * 
+ *
  * @param {Tweet} tweet - The tweet to start building the thread from.
  * @param {number} [maxReplies=10] - The maximum number of replies to include in the thread.
  * @returns {Promise<Tweet[]>} The list of tweets representing the conversation thread.

@@ -45,8 +45,6 @@ Your response should not contain any questions. Brief, concise statements only. 
 /**
  * Class representing a Twitter search client.
  */
- 
-
 export class TwitterSearchClient {
     client: ClientBase;
     runtime: IAgentRuntime;

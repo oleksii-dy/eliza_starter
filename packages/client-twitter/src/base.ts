@@ -19,7 +19,7 @@ import { EventEmitter } from "events";
 
 /**
  * Extracts the answer from the given text.
- * 
+ *
  * @param {string} text - The text from which to extract the answer.
  * @returns {string} - The extracted answer.
  */
@@ -49,14 +49,13 @@ type TwitterProfile = {
 /**
  * Represents a queue of requests that are processed in order with exponential backoff and random delay.
  */
-  */
 class RequestQueue {
     private queue: (() => Promise<any>)[] = [];
     private processing: boolean = false;
 
 /**
  * Asynchronously adds a new request to the queue for processing.
- * 
+ *
  * @template T
  * @param {() => Promise<T>} request - The request to be added to the queue.
  * @returns {Promise<T>} - A promise that resolves with the result of the request or rejects with an error.
@@ -78,8 +77,8 @@ class RequestQueue {
 /**
  * Asynchronously processes the queue of requests one by one.
  * If there is an error while processing a request, it will log the error, re-add the failed request to the front of the queue,
- * and wait using exponential backoff before attempting the request again. 
- * Additionally, a random delay is added after each request processing. 
+ * and wait using exponential backoff before attempting the request again.
+ * Additionally, a random delay is added after each request processing.
  * This method returns a Promise that resolves once all requests in the queue have been processed.
  */
     private async processQueue(): Promise<void> {
@@ -143,7 +142,7 @@ export class ClientBase extends EventEmitter {
 
 /**
  * Caches a Tweet object in the cache manager.
- * 
+ *
  * @param {Tweet} tweet - The Tweet object to cache.
  * @returns {Promise<void>} A Promise that resolves when the Tweet is successfully cached.
  */
@@ -158,7 +157,7 @@ export class ClientBase extends EventEmitter {
 
 /**
  * Asynchronously retrieves a cached Tweet object with the specified tweet ID.
- * 
+ *
  * @param {string} tweetId - The ID of the tweet to retrieve from the cache.
  * @returns {Promise<Tweet | undefined>} A Promise that resolves to the cached tweet object, or undefined if not found.
  */
@@ -173,7 +172,7 @@ export class ClientBase extends EventEmitter {
 /**
  * Retrieves a tweet with the specified tweet ID. If the tweet is found in the cache, it is returned directly.
  * Otherwise, the tweet is fetched from the Twitter client using a request queue and then cached for future use.
- * 
+ *
  * @param {string} tweetId The ID of the tweet to retrieve.
  * @returns {Promise<Tweet>} A promise that resolves to the fetched tweet.
  */
@@ -196,10 +195,9 @@ export class ClientBase extends EventEmitter {
 
 /**
  * Function to be called when the object is ready.
- * 
+ *
  * @throws {Error} Not implemented in base class, please call from subclass
  */
-```
     onReady() {
         throw new Error(
             "Not implemented in base class, please call from subclass"
@@ -230,10 +228,10 @@ export class ClientBase extends EventEmitter {
 
 /**
 * Asynchronously initializes the Twitter bot by logging in with the specified credentials.
-* Retrieves settings such as username, password, email, retry limit, and 2FA secret. 
-* Logs in to Twitter with retries, caching cookies if available. 
-* Retrieves Twitter profile information, stores it for responses, and populates the timeline. 
-* 
+* Retrieves settings such as username, password, email, retry limit, and 2FA secret.
+* Logs in to Twitter with retries, caching cookies if available.
+* Retrieves Twitter profile information, stores it for responses, and populates the timeline.
+*
 * @returns {Promise<void>} A Promise that resolves once the initialization process is complete.
 */
     async init() {
@@ -337,7 +335,7 @@ export class ClientBase extends EventEmitter {
 
 /**
  * Asynchronously fetches the home timeline with the specified count.
- * 
+ *
  * @param {number} count - The number of tweets to fetch.
  * @returns {Promise<Tweet[]>} - A promise that resolves to an array of processed tweets.
  */
@@ -405,7 +403,7 @@ export class ClientBase extends EventEmitter {
  * Fetches the timeline for actions based on the given count.
  * @param {number} count - The number of tweets to fetch
  * @returns {Promise<Tweet[]>} - A promise that resolves with an array of Tweet objects representing the timeline for actions
- */ 
+ */
     async fetchTimelineForActions(count: number): Promise<Tweet[]> {
         elizaLogger.debug("fetching timeline for actions");
         const homeTimeline = await this.twitterClient.fetchHomeTimeline(
@@ -756,7 +754,7 @@ export class ClientBase extends EventEmitter {
 
 /**
  * Asynchronously saves a request message in memory and evaluates it.
- * 
+ *
  * @param {Memory} message - The message to be saved in memory.
  * @param {State} state - The current state of the application.
  * @returns {Promise<void>} - A Promise that resolves once the message is saved and evaluated.
@@ -821,7 +819,7 @@ export class ClientBase extends EventEmitter {
 
 /**
  * Asynchronously retrieves the cached timeline for the user's profile.
- * 
+ *
  * @returns A Promise that resolves with an array of Tweet objects representing the timeline of the user's profile, or undefined if the timeline is not cached.
  */
     async getCachedTimeline(): Promise<Tweet[] | undefined> {
@@ -845,7 +843,7 @@ export class ClientBase extends EventEmitter {
 
 /**
  * Caches the provided array of Tweet mentions for the Twitter profile.
- * 
+ *
  * @param {Tweet[]} mentions - The array of Tweet mentions to cache.
  * @returns {Promise<void>} - A Promise that resolves once the mentions are successfully cached.
  */
@@ -871,7 +869,7 @@ export class ClientBase extends EventEmitter {
 
 /**
  * Caches the provided cookies for a specific user in the runtime cache manager.
- * 
+ *
  * @param {string} username - The username of the user for whom the cookies are being cached.
  * @param {any[]} cookies - The cookies to be cached.
  * @returns {Promise<void>} - A Promise that resolves once the cookies are cached.
@@ -885,7 +883,7 @@ export class ClientBase extends EventEmitter {
 
 /**
  * Asynchronously retrieves the cached Twitter profile for a given username.
- * 
+ *
  * @param {string} username - The username for which to retrieve the profile.
  * @returns {Promise<TwitterProfile>} A Promise that resolves to the cached Twitter profile object.
  */

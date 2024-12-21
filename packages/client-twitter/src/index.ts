@@ -9,7 +9,6 @@ import { TwitterSearchClient } from "./search.ts";
  * Class representing a Twitter manager for interacting with Twitter API.
  * @class
  */
-
 class TwitterManager {
     client: ClientBase;
     post: TwitterPostClient;
