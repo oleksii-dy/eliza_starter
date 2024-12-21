@@ -137,7 +137,6 @@ const imageGeneration: Action = {
 
             const promptResponse = await generateText({
                 runtime,
-                systemPrompt: undefined, // no system prompt
                 context,
                 modelClass: ModelClass.LARGE,
             });

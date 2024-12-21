@@ -163,7 +163,6 @@ const videoGeneration: Action = {
 
                 const promptResponse = await generateText({
                     runtime,
-                    systemPrompt: undefined,
                     context,
                     modelClass: ModelClass.LARGE,
                 });
