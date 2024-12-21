@@ -4,16 +4,21 @@ import { glob } from "glob";
 import { existsSync } from "fs";
 import simpleGit from "simple-git";
 import { Octokit } from "@octokit/rest";
-import { elizaLogger, IAgentRuntime, Memory } from "@ai16z/eliza";
+import { elizaLogger, IAgentRuntime, Memory, stringToUuid } from "@ai16z/eliza";
 
 export function getRepoPath(owner: string, repo: string) {
     return path.join(process.cwd(), ".repos", owner, repo);
 }
 
 export async function createReposDirectory(owner: string) {
+    const dirPath = path.join(process.cwd(), ".repos", owner);
+    if (existsSync(dirPath)) {
+        elizaLogger.info(`Repos directory already exists: ${dirPath}`);
+        return;
+    }
     try {
-        // Create repos directory if it doesn't exist
-        await fs.mkdir(path.join(process.cwd(), ".repos", owner), {
+        // Create repos directory
+        await fs.mkdir(dirPath, {
             recursive: true,
         });
     } catch (error) {
@@ -124,18 +129,34 @@ export async function checkoutBranch(
     elizaLogger.info(`Checking out branch ${branch} in repository ${repoPath}`);
 
     try {
-        // Checkout specified branch
         const git = simpleGit(repoPath);
+
+        // Get the list of branches
+        const branchList = await git.branch();
+
+        // Check if the branch exists
+        const branchExists = branchList.all.includes(branch);
+
         if (create) {
-            // create a new branch if it doesn't exist
-            await git.checkoutLocalBranch(branch);
+            if (branchExists) {
+                elizaLogger.warn(
+                    `Branch "${branch}" already exists. Checking out instead.`
+                );
+                await git.checkout(branch); // Checkout the existing branch
+            } else {
+                // Create a new branch
+                await git.checkoutLocalBranch(branch);
+            }
         } else {
-            // checkout an existing branch
+            if (!branchExists) {
+                throw new Error(`Branch "${branch}" does not exist.`);
+            }
+            // Checkout an existing branch
             await git.checkout(branch);
         }
     } catch (error) {
-        elizaLogger.error("Error checking out branch:", error);
-        throw new Error(`Error checking out branch: ${error}`);
+        elizaLogger.error("Error checking out branch:", error.message);
+        throw new Error(`Error checking out branch: ${error.message}`);
     }
 }
 
@@ -220,14 +241,25 @@ export const getFilesFromMemories = async (
     const allMemories = await runtime.messageManager.getMemories({
         roomId: message.roomId,
     });
-    elizaLogger.info("All Memories:", allMemories);
+    // elizaLogger.info("All Memories:", allMemories);
     const memories = allMemories.filter(
-        (memory) => memory.content.metadata?.path
+        (memory) => (memory.content.metadata as any)?.path
     );
     elizaLogger.info("Memories:", memories);
     return memories.map(
-        (memory) => `File: ${memory.content.metadata?.path}
-        Content: ${memory.content.text}
+        (memory) => `File: ${(memory.content.metadata as any)?.path}
+        Content: ${memory.content.text.replace(/\n/g, "\\n")}
         `
     );
 };
+
+export async function getIssuesFromMemories(runtime: IAgentRuntime, owner: string, repo: string): Promise<Memory[]> {
+    const roomId = stringToUuid(`github-${owner}-${repo}`);
+    const memories = await runtime.messageManager.getMemories({
+        roomId: roomId,
+    });
+    elizaLogger.log("Memories:", memories);
+    // Filter memories to only include those that are issues
+    const issueMemories = memories.filter(memory => (memory.content.metadata as any)?.type === "issue");
+    return issueMemories;
+}

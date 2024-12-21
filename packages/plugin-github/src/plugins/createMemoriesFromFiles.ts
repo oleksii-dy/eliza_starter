@@ -38,13 +38,19 @@ export async function addFilesToMemory(
     elizaLogger.info("Adding files to memory:", files);
     for (const file of files) {
         const relativePath = path.relative(repoPath, file);
-        const content = await fs.readFile(file, "utf-8");
+        // read file and escape new lines with \n
+        const content = (await fs.readFile(file, "utf-8")).replace(
+            /\n/g,
+            "\\n"
+        );
         const contentHash = createHash("sha256").update(content).digest("hex");
         const memoryId = stringToUuid(
             `github-${owner}-${repo}-${relativePath}-${contentHash}`
         );
+        const roomId = stringToUuid(`github-${owner}-${repo}`);
+
         elizaLogger.info("Memory ID:", memoryId);
-        const existingDocument =
+     const existingDocument =
             await runtime.messageManager.getMemoryById(memoryId);
 
         elizaLogger.log("existingDocument", existingDocument);
@@ -66,7 +72,7 @@ export async function addFilesToMemory(
             id: memoryId,
             userId: message.userId,
             agentId: message.agentId,
-            roomId: message.roomId,
+            roomId: roomId,
             content: {
                 text: content,
                 hash: contentHash,
@@ -112,7 +118,7 @@ export const createMemoriesFromFilesAction: Action = {
         options: any,
         callback: HandlerCallback
     ) => {
-        elizaLogger.log("Composing state for message:", message);
+        elizaLogger.log("[createMemoriesFromFiles] Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -127,7 +133,7 @@ export const createMemoriesFromFilesAction: Action = {
         const details = await generateObjectV2({
             runtime,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
             schema: CreateMemoriesFromFilesSchema,
         });
 
