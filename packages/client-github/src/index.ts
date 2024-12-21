@@ -14,7 +14,8 @@ import {
     workflowFilesProvider,
     documentationFilesProvider,
     releasesProvider,
-    getFilesFromMemories
+    getFilesFromMemories,
+    ideationAction
 } from "@ai16z/plugin-github";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
@@ -40,6 +41,7 @@ export class GitHubClient extends EventEmitter {
         this.runtime.registerAction(createIssueAction);
         this.runtime.registerAction(modifyIssueAction);
         this.runtime.registerAction(addCommentToIssueAction);
+        this.runtime.registerAction(ideationAction);
 
         // this.runtime.providers.push(sourceCodeProvider);
         // this.runtime.providers.push(testFilesProvider);

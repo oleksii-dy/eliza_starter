@@ -273,6 +273,7 @@ export async function incorporateRepositoryState(state: State, runtime: IAgentRu
     state.owner = owner;
     const repository = runtime.getSetting("GITHUB_REPO") ?? '' as string;
     state.repository = repository;
+    state.message = message.content.text;
     if (owner === '' || repository === '') {
         elizaLogger.error("GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle.");
         throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
@@ -285,8 +286,6 @@ export async function incorporateRepositoryState(state: State, runtime: IAgentRu
         number: (issue.content.metadata as any).number,
         state: (issue.content.metadata as any).state,
     })), null, 2);
-    elizaLogger.log("Previous issues:", state.previousIssues);
-    elizaLogger.info("State:", state);
     const previousPRs = await getPullRequestsFromMemories(runtime, owner, repository);
     state.previousPRs = JSON.stringify(previousPRs.map(pr => ({
         title: pr.content.text,

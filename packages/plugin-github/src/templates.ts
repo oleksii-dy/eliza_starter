@@ -674,23 +674,6 @@ Here are the recent user messages for context:
 export const ideationTemplate = `
 Based on the current context and the user's message, generate a thoughtful response that addresses the query and provides valuable insights. Consider the following categories for inspiration:
 
-- **Architecture & Design**
-- **Coding Practices**
-- **Logging & Monitoring**
-- **Frontend Development**
-- **Backend Development**
-- **Database Design**
-- **Testing**
-- **Performance & Optimization**
-- **Security**
-- **Deployment & DevOps**
-- **Version Control**
-- **Project Management**
-- **User Experience (UX)**
-- **Maintainability**
-- **Internationalization & Localization**
-- **Documentation**
-- **Continuous Learning & Improvement**
 
 Here is the character context:
 {{character}}
@@ -700,6 +683,9 @@ Owner details:
 
 Repository details:
 {{repository}}
+
+Files:
+{{files}}
 
 Review previous interactions to avoid duplicate suggestions:
     - Previous Pull Requests: {{previousPRs}}
