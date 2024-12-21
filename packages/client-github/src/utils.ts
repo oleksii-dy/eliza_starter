@@ -1,6 +1,6 @@
 import { elizaLogger, IAgentRuntime, Memory } from "@ai16z/eliza";
 import { stringToUuid } from "@ai16z/eliza";
-import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
+import { RestEndpointMethodTypes } from "@octokit/rest";
 
 export async function getIssuesFromMemories(runtime: IAgentRuntime, owner: string, repo: string): Promise<Memory[]> {
     const roomId = stringToUuid(`github-${owner}-${repo}`);

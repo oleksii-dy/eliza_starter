@@ -209,13 +209,9 @@ export class GitHubClient extends EventEmitter {
             return [];
         };
 
-        // const responseMessages = await callback(responseContent);
-        // elizaLogger.log("Response messages from callback:", responseContent);
-
         // Update the state with the new memory
         const state = await this.runtime.composeState(newMemory);
         const newState = await this.runtime.updateRecentMessageState(state);
-        // elizaLogger.log("Updated state with new memory:", newState);
 
         elizaLogger.log("Processing actions for action:", content.action);
         await this.runtime.processActions(

@@ -18,9 +18,8 @@ import {
     CreateIssueSchema,
     isCreateIssueContent,
 } from "../types";
-import { getFilesFromMemories } from "../utils";
+import { getIssuesFromMemories, getFilesFromMemories } from "../utils";
 import { RestEndpointMethodTypes } from "@octokit/rest";
-
 
 export async function saveIssueToMemory(runtime: IAgentRuntime, issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"], owner: string, repo: string): Promise<void> {
     const roomId = stringToUuid(`github-${owner}-${repo}`);
@@ -79,8 +78,11 @@ export const createIssueAction: Action = {
         // add additional keys to state
         state.files = files;
         state.character = JSON.stringify(runtime.character || {}, null, 2);
-        state.owner = runtime.getSetting("GITHUB_OWNER") ?? 'monilpat' as string;
-        state.repository = runtime.getSetting("GITHUB_REPO") ?? 'eliza' as string;
+        const owner = runtime.getSetting("GITHUB_OWNER") ?? 'monilpat' as string;
+        state.owner = owner;
+        const repository = runtime.getSetting("GITHUB_REPO") ?? 'eliza' as string;
+        state.repository = repository;
+        state.previousIssues = await getIssuesFromMemories(runtime, owner, repository);
         elizaLogger.info("State:", state);
 
         const context = composeContext({

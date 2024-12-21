@@ -4,7 +4,7 @@ import { glob } from "glob";
 import { existsSync } from "fs";
 import simpleGit from "simple-git";
 import { Octokit } from "@octokit/rest";
-import { elizaLogger, IAgentRuntime, Memory } from "@ai16z/eliza";
+import { elizaLogger, IAgentRuntime, Memory, stringToUuid } from "@ai16z/eliza";
 
 export function getRepoPath(owner: string, repo: string) {
     return path.join(process.cwd(), ".repos", owner, repo);
@@ -247,3 +247,14 @@ export const getFilesFromMemories = async (
         `
     );
 };
+
+export async function getIssuesFromMemories(runtime: IAgentRuntime, owner: string, repo: string): Promise<Memory[]> {
+    const roomId = stringToUuid(`github-${owner}-${repo}`);
+    const memories = await runtime.messageManager.getMemories({
+        roomId: roomId,
+    });
+    elizaLogger.log("Memories:", memories);
+    // Filter memories to only include those that are issues
+    const issueMemories = memories.filter(memory => (memory.content.metadata as any)?.type === "issue");
+    return issueMemories;
+}
