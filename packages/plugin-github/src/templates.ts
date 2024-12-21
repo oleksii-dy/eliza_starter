@@ -154,15 +154,15 @@ If it is a bug report use:
 \`\`\`
 **Describe the bug**
 
-<!-- A clear and concise description of what the bug is. -->
+<!-- A clear and concise description of what the bug is. Include relevant code snippets to illustrate the issue. -->
 
 **To Reproduce**
 
-<!-- Steps to reproduce the behavior. -->
+<!-- Steps to reproduce the behavior, including code snippets if applicable. -->
 
 **Expected behavior**
 
-<!-- A clear and concise description of what you expected to happen. -->
+<!-- A clear and concise description of what you expected to happen, with code examples if relevant. -->
 
 **Screenshots**
 
@@ -170,7 +170,7 @@ If it is a bug report use:
 
 **Additional context**
 
-<!-- Add any other context about the problem here. -->
+<!-- Add any other context about the problem here, including code snippets and file references. -->
 \`\`\`
 
 If it is a feature request use:
@@ -178,19 +178,19 @@ If it is a feature request use:
 \`\`\`
 **Is your feature request related to a problem? Please describe.**
 
-<!-- A clear and concise description of what the problem is. Ex. I'm always frustrated when [...] -->
+<!-- A clear and concise description of what the problem is, with code snippets to illustrate the current limitations. -->
 
 **Describe the solution you'd like**
 
-<!-- A clear and concise description of what you want to happen. -->
+<!-- A clear and concise description of what you want to happen, with code examples or pseudocode if applicable. -->
 
 **Describe alternatives you've considered**
 
-<!-- A clear and concise description of any alternative solutions or features you've considered. -->
+<!-- A clear and concise description of any alternative solutions or features you've considered, with code snippets if relevant. -->
 
 **Additional context**
 
-<!-- Add any other context or screenshots about the feature request here. -->
+<!-- Add any other context or screenshots about the feature request here, including code snippets and file references. -->
 \`\`\`
 
 Examples of bug reports:
@@ -367,6 +367,7 @@ Provide the issue details in the following JSON format:
     "labels": ["<label1>", "<label2>"]
 }
 \`\`\`
+
 ## Examples of Issues
 
 ### 1. Architecture & Design
@@ -376,7 +377,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Implement Singleton Design Pattern",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nTo ensure a class has only one instance and provide a global point of access to it.\\n\\n**Describe the solution you'd like**\\n\\nImplement the Singleton design pattern for the Logger class.\\n\\n**Describe alternatives you've considered**\\n\\nUsing static methods.\\n\\n**Additional context**\\n\\nThis will help in managing a single instance of the Logger class across the application.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nTo ensure a class has only one instance and provide a global point of access to it.\\n\\n**Describe the solution you'd like**\\n\\nImplement the Singleton design pattern for the Logger class. This can be achieved by creating a private static instance of the class and a public static method that returns the instance.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\nclass Logger {\\n  private static instance: Logger;\\n  private constructor() {}\\n  public static getInstance(): Logger {\\n    if (!Logger.instance) {\\n      Logger.instance = new Logger();\\n    }\\n    return Logger.instance;\\n  }\\n}\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nUsing static methods, but this does not provide the same level of control over instance creation.\\n\\n**Additional context**\\n\\nThis will help in managing a single instance of the Logger class across the application, ensuring consistent logging behavior.",
     "labels": ["enhancement", "design"]
 }
 \`\`\`
@@ -388,7 +389,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Refactor: Improve Code Readability",
-    "body": "## Refactor\\n\\n**Is your refactor related to a problem? Please describe.**\\n\\nThe current codebase has inconsistent naming conventions and lacks comments.\\n\\n**Describe the solution you'd like**\\n\\nRefactor the code to follow consistent naming conventions and add comments for better readability.\\n\\n**Describe alternatives you've considered**\\n\\nLeaving the code as is.\\n\\n**Additional context**\\n\\nThis will improve maintainability and ease of understanding for new developers.",
+    "body": "## Refactor\\n\\n**Is your refactor related to a problem? Please describe.**\\n\\nThe current codebase has inconsistent naming conventions and lacks comments.\\n\\n**Describe the solution you'd like**\\n\\nRefactor the code to follow consistent naming conventions and add comments for better readability. For example, rename variables to be more descriptive and add JSDoc comments.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\n// Before\\nconst x = 10;\\nfunction foo() {\\n  return x * 2;\\n}\\n\\n// After\\nconst multiplier = 10;\\n/**\\n * Multiplies the multiplier by 2\\n * @returns {number} The result of the multiplication\\n */\\nfunction multiplyByTwo() {\\n  return multiplier * 2;\\n}\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nLeaving the code as is, but this would make it harder for new developers to understand and maintain.\\n\\n**Additional context**\\n\\nThis will improve maintainability and ease of understanding for new developers.",
     "labels": ["refactor", "code quality"]
 }
 \`\`\`
@@ -400,7 +401,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Enhance Logging Practices",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nCurrent logging lacks structure and meaningful messages.\\n\\n**Describe the solution you'd like**\\n\\nImplement structured logging with meaningful messages and log levels.\\n\\n**Describe alternatives you've considered**\\n\\nUsing existing logging practices.\\n\\n**Additional context**\\n\\nThis will help in better debugging and monitoring of the application.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nCurrent logging lacks structure and meaningful messages.\\n\\n**Describe the solution you'd like**\\n\\nImplement structured logging with meaningful messages and log levels. Use a logging library like Winston or Bunyan to create structured logs.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\nconst winston = require('winston');\\nconst logger = winston.createLogger({\\n  level: 'info',\\n  format: winston.format.json(),\\n  transports: [\\n    new winston.transports.Console(),\\n    new winston.transports.File({ filename: 'combined.log' })\\n  ]\\n});\\nlogger.info('User logged in', { userId: 123 });\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nUsing existing logging practices, but they do not provide the same level of detail and structure.\\n\\n**Additional context**\\n\\nThis will help in better debugging and monitoring of the application by providing more detailed and structured logs.",
     "labels": ["enhancement", "logging"]
 }
 \`\`\`
@@ -412,7 +413,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Fix Responsive Design Issues",
-    "body": "## Bug\\n\\n**Describe the bug**\\n\\nThe application does not render correctly on mobile devices.\\n\\n**To Reproduce**\\n\\nSteps to reproduce the behavior:\\n1. Open the application on a mobile device.\\n2. Observe the layout issues.\\n\\n**Expected behavior**\\n\\nThe application should render correctly on all devices.\\n\\n**Screenshots**\\n\\nIf applicable, add screenshots to help explain your problem.\\n\\n**Additional context**\\n\\nEnsure the application is fully responsive.",
+    "body": "## Bug\\n\\n**Describe the bug**\\n\\nThe application does not render correctly on mobile devices.\\n\\n**To Reproduce**\\n\\nSteps to reproduce the behavior:\\n1. Open the application on a mobile device.\\n2. Observe the layout issues.\\n\\n**Expected behavior**\\n\\nThe application should render correctly on all devices.\\n\\n**Code Example**\\n\\n\`\`\`css\\n/* Before */\\n.container {\\n  width: 1000px;\\n}\\n\\n/* After */\\n.container {\\n  width: 100%;\\n  max-width: 1000px;\\n}\\n\`\`\`\\n\\n**Screenshots**\\n\\nIf applicable, add screenshots to help explain your problem.\\n\\n**Additional context**\\n\\nEnsure the application is fully responsive by using media queries and flexible layouts.",
     "labels": ["bug", "frontend"]
 }
 \`\`\`
@@ -424,7 +425,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Implement JWT Authentication",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nNeed a secure method for user authentication.\\n\\n**Describe the solution you'd like**\\n\\nImplement JWT (JSON Web Token) for user authentication and authorization.\\n\\n**Describe alternatives you've considered**\\n\\nUsing session-based authentication.\\n\\n**Additional context**\\n\\nJWT will provide a stateless and scalable authentication mechanism.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nNeed a secure method for user authentication.\\n\\n**Describe the solution you'd like**\\n\\nImplement JWT (JSON Web Token) for user authentication and authorization. This involves generating a token upon user login and verifying the token for protected routes.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\nconst jwt = require('jsonwebtoken');\\nconst token = jwt.sign({ userId: 123 }, 'secretKey', { expiresIn: '1h' });\\n// Middleware to verify token\\nfunction authenticateToken(req, res, next) {\\n  const token = req.header('Authorization');\\n  if (!token) return res.status(401).send('Access Denied');\\n  try {\\n    const verified = jwt.verify(token, 'secretKey');\\n    req.user = verified;\\n    next();\\n  } catch (err) {\\n    res.status(400).send('Invalid Token');\\n  }\\n}\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nUsing session-based authentication, but this is less scalable and requires server-side session management.\\n\\n**Additional context**\\n\\nJWT will provide a stateless and scalable authentication mechanism, improving security and performance.",
     "labels": ["enhancement", "backend"]
 }
 \`\`\`
@@ -436,7 +437,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Optimize Database Indexing",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nSlow query performance due to lack of proper indexing.\\n\\n**Describe the solution you'd like**\\n\\nImplement appropriate indexing strategies to optimize query performance.\\n\\n**Describe alternatives you've considered**\\n\\nLeaving the database as is.\\n\\n**Additional context**\\n\\nThis will improve the overall performance of the application.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nSlow query performance due to lack of proper indexing.\\n\\n**Describe the solution you'd like**\\n\\nImplement appropriate indexing strategies to optimize query performance. This includes creating indexes on frequently queried columns and analyzing query patterns.\\n\\n**Code Example**\\n\\n\`\`\`sql\\n-- Before\\nSELECT * FROM users WHERE email = 'example@example.com';\\n\\n-- After\\nCREATE INDEX idx_users_email ON users(email);\\nSELECT * FROM users WHERE email = 'example@example.com';\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nLeaving the database as is, but this would result in continued slow performance.\\n\\n**Additional context**\\n\\nThis will improve the overall performance of the application by reducing query execution time.",
     "labels": ["enhancement", "database"]
 }
 \`\`\`
@@ -448,7 +449,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Add Unit Tests for User Service",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nLack of unit tests for the User Service.\\n\\n**Describe the solution you'd like**\\n\\nAdd comprehensive unit tests for the User Service to ensure its functionality.\\n\\n**Describe alternatives you've considered**\\n\\nManual testing.\\n\\n**Additional context**\\n\\nUnit tests will help in maintaining code quality and catching bugs early.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nLack of unit tests for the User Service.\\n\\n**Describe the solution you'd like**\\n\\nAdd comprehensive unit tests for the User Service to ensure its functionality. Use a testing framework like Jest or Mocha to write and run the tests.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\n// userService.test.ts\\nconst userService = require('./userService');\\ntest('should create a new user', () => {\\n  const user = userService.createUser('testUser');\\n  expect(user).toHaveProperty('id');\\n  expect(user.name).toBe('testUser');\\n});\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nManual testing, but this is time-consuming and prone to human error.\\n\\n**Additional context**\\n\\nUnit tests will help in maintaining code quality and catching bugs early, ensuring the reliability of the User Service.",
     "labels": ["enhancement", "testing"]
 }
 \`\`\`
@@ -460,7 +461,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Implement Caching for API Responses",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nSlow API response times due to repeated data fetching.\\n\\n**Describe the solution you'd like**\\n\\nImplement caching mechanisms to store and retrieve API responses efficiently.\\n\\n**Describe alternatives you've considered**\\n\\nFetching data on every request.\\n\\n**Additional context**\\n\\nCaching will improve the performance and reduce server load.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nSlow API response times due to repeated data fetching.\\n\\n**Describe the solution you'd like**\\n\\nImplement caching mechanisms to store and retrieve API responses efficiently. Use a caching solution like Redis or Memcached to cache frequently requested data.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\nconst redis = require('redis');\\nconst client = redis.createClient();\\n// Middleware to check cache\\nfunction checkCache(req, res, next) {\\n  const { id } = req.params;\\n  client.get(id, (err, data) => {\\n    if (err) throw err;\\n    if (data) {\\n      res.send(JSON.parse(data));\\n    } else {\\n      next();\\n    }\\n  });\\n}\\n// Route to get data\\napp.get('/data/:id', checkCache, (req, res) => {\\n  const data = getDataFromDatabase(req.params.id);\\n  client.setex(req.params.id, 3600, JSON.stringify(data));\\n  res.send(data);\\n});\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nFetching data on every request, but this results in slower response times and higher server load.\\n\\n**Additional context**\\n\\nCaching will improve the performance and reduce server load, providing a better user experience.",
     "labels": ["enhancement", "performance"]
 }
 \`\`\`
@@ -472,7 +473,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Enhance Data Encryption",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nSensitive data is not encrypted adequately.\\n\\n**Describe the solution you'd like**\\n\\nImplement stronger encryption algorithms for sensitive data.\\n\\n**Describe alternatives you've considered**\\n\\nUsing existing encryption methods.\\n\\n**Additional context**\\n\\nEnhanced encryption will improve data security and compliance.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nSensitive data is not encrypted adequately.\\n\\n**Describe the solution you'd like**\\n\\nImplement stronger encryption algorithms for sensitive data. Use libraries like CryptoJS or Node.js built-in crypto module to encrypt data.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\nconst crypto = require('crypto');\\nconst algorithm = 'aes-256-ctr';\\nconst secretKey = 'vOVH6sdmpNWjRRIqCc7rdxs01lwHzfr3';\\nconst iv = crypto.randomBytes(16);\\n\\nfunction encrypt(text) {\\n  const cipher = crypto.createCipheriv(algorithm, secretKey, iv);\\n  const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);\\n  return { iv: iv.toString('hex'), content: encrypted.toString('hex') };\\n}\\n\\nfunction decrypt(hash) {\\n  const decipher = crypto.createDecipheriv(algorithm, secretKey, Buffer.from(hash.iv, 'hex'));\\n  const decrypted = Buffer.concat([decipher.update(Buffer.from(hash.content, 'hex')), decipher.final()]);\\n  return decrypted.toString();\\n}\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nUsing existing encryption methods, but they may not provide the required level of security.\\n\\n**Additional context**\\n\\nEnhanced encryption will improve data security and compliance, protecting sensitive information from unauthorized access.",
     "labels": ["enhancement", "security"]
 }
 \`\`\`
@@ -484,7 +485,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Implement CI/CD Pipeline",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nManual deployment processes are error-prone and time-consuming.\\n\\n**Describe the solution you'd like**\\n\\nImplement a CI/CD pipeline to automate the build, testing, and deployment processes.\\n\\n**Describe alternatives you've considered**\\n\\nManual deployment.\\n\\n**Additional context**\\n\\nCI/CD will streamline the development workflow and ensure faster releases.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nManual deployment processes are error-prone and time-consuming.\\n\\n**Describe the solution you'd like**\\n\\nImplement a CI/CD pipeline to automate the build, testing, and deployment processes. Use tools like Jenkins, GitHub Actions, or GitLab CI to set up the pipeline.\\n\\n**Code Example**\\n\\n\`\`\`yaml\\n# .github/workflows/ci-cd.yml\\nname: CI/CD Pipeline\\non: [push]\\njobs:\\n  build:\\n    runs-on: ubuntu-latest\\n    steps:\\n    - uses: actions/checkout@v2\\n    - name: Set up Node.js\\n      uses: actions/setup-node@v2\\n      with:\\n        node-version: '14'\\n    - name: Install dependencies\\n      run: npm install\\n    - name: Run tests\\n      run: npm test\\n    - name: Deploy\\n      run: npm run deploy\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nManual deployment, but this is prone to errors and delays.\\n\\n**Additional context**\\n\\nCI/CD will streamline the development workflow and ensure faster releases, improving the overall efficiency of the development process.",
     "labels": ["enhancement", "devops"]
 }
 \`\`\`
@@ -496,7 +497,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Adopt Git Flow Branching Strategy",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nInconsistent branching and merging practices.\\n\\n**Describe the solution you'd like**\\n\\nAdopt the Git Flow branching strategy to standardize the development process.\\n\\n**Describe alternatives you've considered**\\n\\nUsing the current branching strategy.\\n\\n**Additional context**\\n\\nGit Flow will improve collaboration and code management.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nInconsistent branching and merging practices.\\n\\n**Describe the solution you'd like**\\n\\nAdopt the Git Flow branching strategy to standardize the development process. This involves using specific branches for features, releases, and hotfixes.\\n\\n**Code Example**\\n\\n\`\`\`\\n# Create a new feature branch\\ngit checkout -b feature/my-new-feature\\n# Commit changes\\ngit commit -m 'Add new feature'\\n# Push the feature branch\\ngit push origin feature/my-new-feature\\n# Merge the feature branch into develop\\ngit checkout develop\\ngit merge feature/my-new-feature\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nUsing the current branching strategy, but this leads to confusion and conflicts.\\n\\n**Additional context**\\n\\nGit Flow will improve collaboration and code management by providing a clear and structured workflow.",
     "labels": ["enhancement", "version control"]
 }
 \`\`\`
@@ -508,7 +509,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Implement Agile Methodology",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nLack of structured project management practices.\\n\\n**Describe the solution you'd like**\\n\\nImplement Agile methodology to manage and iterate on projects efficiently.\\n\\n**Describe alternatives you've considered**\\n\\nUsing traditional project management methods.\\n\\n**Additional context**\\n\\nAgile will improve project visibility and adaptability.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nLack of structured project management practices.\\n\\n**Describe the solution you'd like**\\n\\nImplement Agile methodology to manage and iterate on projects efficiently. This includes adopting practices like Scrum or Kanban, conducting regular stand-ups, and using tools like Jira or Trello.\\n\\n**Code Example**\\n\\n\`\`\`\\n# Example of a Jira ticket\\nSummary: Implement user authentication\\nDescription: As a user, I want to securely log in to the application so that I can access my account.\\nAcceptance Criteria:\\n- User can log in with email and password\\n- User receives an error message for invalid credentials\\n- User session is maintained across pages\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nUsing traditional project management methods, but they are less flexible and adaptive.\\n\\n**Additional context**\\n\\nAgile will improve project visibility and adaptability, allowing the team to respond to changes quickly and deliver value incrementally.",
     "labels": ["enhancement", "project management"]
 }
 \`\`\`
@@ -520,7 +521,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Conduct Usability Testing",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nUncertainty about the application's ease of use.\\n\\n**Describe the solution you'd like**\\n\\nConduct usability testing to evaluate and improve the user experience.\\n\\n**Describe alternatives you've considered**\\n\\nRelying on internal feedback.\\n\\n**Additional context**\\n\\nUsability testing will provide valuable insights from real users.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nUncertainty about the application's ease of use.\\n\\n**Describe the solution you'd like**\\n\\nConduct usability testing to evaluate and improve the user experience. This involves recruiting real users to perform tasks and providing feedback on their experience.\\n\\n**Code Example**\\n\\n\`\`\`\\n# Example of a usability test script\\nTask: Log in to the application\\nSteps:\\n1. Open the application\\n2. Click on the 'Log In' button\\n3. Enter your email and password\\n4. Click 'Submit'\\nQuestions:\\n- Was the log-in process straightforward?\\n- Did you encounter any issues?\\n- How would you rate the overall experience?\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nRelying on internal feedback, but this may not provide an accurate representation of the user experience.\\n\\n**Additional context**\\n\\nUsability testing will provide valuable insights from real users, helping to identify and address usability issues.",
     "labels": ["enhancement", "ux"]
 }
 \`\`\`
@@ -532,7 +533,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Refactor: Modularize Codebase",
-    "body": "## Refactor\\n\\n**Is your refactor related to a problem? Please describe.**\\n\\nThe current codebase is monolithic and hard to maintain.\\n\\n**Describe the solution you'd like**\\n\\nRefactor the codebase to be more modular and organized into distinct modules.\\n\\n**Describe alternatives you've considered**\\n\\nLeaving the codebase as is.\\n\\n**Additional context**\\n\\nModularizing the codebase will improve maintainability and scalability.",
+    "body": "## Refactor\\n\\n**Is your refactor related to a problem? Please describe.**\\n\\nThe current codebase is monolithic and hard to maintain.\\n\\n**Describe the solution you'd like**\\n\\nRefactor the codebase to be more modular and organized into distinct modules. This involves breaking down the code into smaller, reusable components and organizing them into separate files or directories.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\n// Before\\nclass UserService {\\n  createUser() {\\n    // ...\\n  }\\n  deleteUser() {\\n    // ...\\n  }\\n}\\n\\n// After\\n// userService.ts\\nexport class UserService {\\n  createUser() {\\n    // ...\\n  }\\n}\\n\\n// deleteUserService.ts\\nexport class DeleteUserService {\\n  deleteUser() {\\n    // ...\\n  }\\n}\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nLeaving the codebase as is, but this would make it harder to maintain and scale.\\n\\n**Additional context**\\n\\nModularizing the codebase will improve maintainability and scalability, making it easier to manage and extend.",
     "labels": ["refactor", "maintainability"]
 }
 \`\`\`
@@ -544,31 +545,31 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Add Support for Multiple Languages",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nThe application currently supports only one language.\\n\\n**Describe the solution you'd like**\\n\\nImplement internationalization to support multiple languages.\\n\\n**Describe alternatives you've considered**\\n\\nMaintaining a single language application.\\n\\n**Additional context**\\n\\nSupporting multiple languages will make the application accessible to a wider audience.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nThe application currently supports only one language.\\n\\n**Describe the solution you'd like**\\n\\nImplement internationalization to support multiple languages. Use libraries like i18next or react-intl to manage translations and language switching.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\n// i18n.js\\nimport i18n from 'i18next';\\nimport { initReactI18next } from 'react-i18next';\\nimport translationEN from './locales/en/translation.json';\\nimport translationES from './locales/es/translation.json';\\n\\ni18n\\n  .use(initReactI18next)\\n  .init({\\n    resources: {\\n      en: { translation: translationEN },\\n      es: { translation: translationES }\\n    },\\n    lng: 'en',\\n    fallbackLng: 'en',\\n    interpolation: { escapeValue: false }\\n  });\\nexport default i18n;\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nMaintaining a single language application, but this limits the user base.\\n\\n**Additional context**\\n\\nSupporting multiple languages will make the application accessible to a wider audience, improving user experience and engagement.",
     "labels": ["enhancement", "i18n"]
 }
 \`\`\`
 
 ### 16. Documentation
-#### Feature Request: Improve API Documentation
+#### Feature Request: Enhance API Documentation
 \`\`\`json
 {
     "owner": "<owner>",
     "repo": "<repo>",
-    "title": "Improve API Documentation",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nThe current API documentation is incomplete and lacks examples.\\n\\n**Describe the solution you'd like**\\n\\nEnhance the API documentation with comprehensive guides and examples.\\n\\n**Describe alternatives you've considered**\\n\\nUsing the existing documentation.\\n\\n**Additional context**\\n\\nImproved documentation will aid developers in integrating with the API.",
+    "title": "Enhance API Documentation",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nThe current API documentation is insufficient and lacks detailed examples.\\n\\n**Describe the solution you'd like**\\n\\nImprove the API documentation by adding comprehensive guides and illustrative examples.\\n\\n**Describe alternatives you've considered**\\n\\nRelying on the existing documentation.\\n\\n**Additional context**\\n\\nBetter documentation will assist developers in effectively integrating with the API.",
     "labels": ["enhancement", "documentation"]
 }
 \`\`\`
 
 ### 17. Continuous Learning & Improvement
-#### Feature Request: Conduct Regular Code Reviews
+#### Feature Request: Implement Regular Code Reviews
 \`\`\`json
 {
     "owner": "<owner>",
     "repo": "<repo>",
-    "title": "Conduct Regular Code Reviews",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nLack of regular code reviews leading to potential code quality issues.\\n\\n**Describe the solution you'd like**\\n\\nEstablish a process for regular code reviews to maintain code quality and share knowledge.\\n\\n**Describe alternatives you've considered**\\n\\nAd-hoc code reviews.\\n\\n**Additional context**\\n\\nRegular code reviews will help in maintaining high code quality and fostering team collaboration.",
+    "title": "Implement Regular Code Reviews",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nThe absence of regular code reviews may lead to potential code quality issues.\\n\\n**Describe the solution you'd like**\\n\\nIntroduce a structured process for regular code reviews to ensure code quality and facilitate knowledge sharing.\\n\\n**Describe alternatives you've considered**\\n\\nConducting ad-hoc code reviews.\\n\\n**Additional context**\\n\\nRegular code reviews will contribute to maintaining high code quality and enhancing team collaboration.",
     "labels": ["enhancement", "continuous improvement"]
 }
 \`\`\`

@@ -86,7 +86,15 @@ export const createIssueAction: Action = {
             elizaLogger.error("GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle.");
             throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
         }
-        state.previousIssues = await getIssuesFromMemories(runtime, owner, repository);
+        const previousIssues = await getIssuesFromMemories(runtime, owner, repository);
+        state.previousIssues = previousIssues.map(issue => ({
+            title: issue.content.text,
+            body: (issue.content.metadata as any).body,
+            url: (issue.content.metadata as any).url,
+            number: (issue.content.metadata as any).number,
+            state: (issue.content.metadata as any).state,
+        }));
+        elizaLogger.log("Previous issues:", state.previousIssues);
         elizaLogger.info("State:", state);
 
         const context = composeContext({
@@ -131,7 +139,7 @@ export const createIssueAction: Action = {
             await saveIssueToMemory(runtime, issue, content.owner, content.repo);
 
             await callback({
-                text: `Created issue #${issue.number} successfully see: ${issue.url}`,
+                text: `Created issue #${issue.number} successfully see: ${issue.html_url}`,
                 attachments: [],
             });
         } catch (error) {
