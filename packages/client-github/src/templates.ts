@@ -29,15 +29,9 @@ export const oodaTemplate = `
 
     Action Options:
     1. CREATE_ISSUE: For identifying problems or suggesting improvements
-    2. CREATE_PULL_REQUEST: For implementing code changes
-    3. CREATE_COMMIT: For direct repository updates
-    4. MODIFY_ISSUE: For updating existing issues
-    5. ADD_COMMENT_TO_ISSUE: For providing additional information
-    6. COMMENT_ISSUE: For general issue feedback
-    7. COMMENT_PR: For pull request feedback
-    8. CREATE_MEMORIES_FROM_FILES: For processing repository content
-    9. INITIALIZE_REPOSITORY: For new repository setup
-    10. NOTHING: When no action is needed
+    2. MODIFY_ISSUE: For updating existing issues
+    3. COMMENT_ISSUE: For general issue feedback
+    6. NOTHING: When no action is needed
 
     Required Fields:
     - action: (required) One of the actions listed above
