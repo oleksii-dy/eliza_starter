@@ -200,19 +200,13 @@ export class TwitterPostClient {
     private async tweet(content: string, replyToTweetId?: string) {
         try {
             if (this.isLongTweet) {
-                const response = await this.client.twitterClient.sendLongTweet(content, replyToTweetId);
-                if (!response.ok) {
-                    throw new Error(`Failed to send long tweet: ${response.statusText}`);
-                }
+                return await this.client.twitterClient.sendLongTweet(content, replyToTweetId);
             } else {
-                const response = await this.client.twitterClient.sendTweet(content, replyToTweetId);
-                if (!response.ok) {
-                    throw new Error(`Failed to send tweet: ${response.statusText}`);
-                }
+                return await this.client.twitterClient.sendTweet(content, replyToTweetId);
             }
         } catch (error) {
             elizaLogger.error('Error in tweet():', error);
-            throw error; // Re-throw to allow proper handling by caller
+            throw error;
         }
     }
 
