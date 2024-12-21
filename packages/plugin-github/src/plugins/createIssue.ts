@@ -87,13 +87,13 @@ export const createIssueAction: Action = {
             throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
         }
         const previousIssues = await getIssuesFromMemories(runtime, owner, repository);
-        state.previousIssues = previousIssues.map(issue => ({
+        state.previousIssues = JSON.stringify(previousIssues.map(issue => ({
             title: issue.content.text,
             body: (issue.content.metadata as any).body,
             url: (issue.content.metadata as any).url,
             number: (issue.content.metadata as any).number,
             state: (issue.content.metadata as any).state,
-        }));
+        })), null, 2);
         elizaLogger.log("Previous issues:", state.previousIssues);
         elizaLogger.info("State:", state);
 

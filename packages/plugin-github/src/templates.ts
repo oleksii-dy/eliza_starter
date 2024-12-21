@@ -171,6 +171,13 @@ If it is a bug report use:
 **Additional context**
 
 <!-- Add any other context about the problem here, including code snippets and file references. -->
+
+**Related Issues** (if any)
+
+<!-- Reference any related issues with their URLs if relevant. -->
+{{#each previousIssues}}
+- [Issue #{{this.number}}]({{this.url}})
+{{/each}}
 \`\`\`
 
 If it is a feature request use:
@@ -191,6 +198,13 @@ If it is a feature request use:
 **Additional context**
 
 <!-- Add any other context or screenshots about the feature request here, including code snippets and file references. -->
+
+**Related Issues**
+
+<!-- Reference any related issues with their URLs if relevant. -->
+{{#each previousIssues}}
+- [Issue #{{this.number}}]({{this.url}})
+{{/each}}
 \`\`\`
 
 Examples of bug reports:
@@ -354,6 +368,8 @@ Would integrate with observability stack and help with:
 - Dependency analysis
 - Error correlation
 - System understanding
+
+- [Issue #456](https://github.com/octocat/hello-world/issues/456)
 \`\`\`
 
 Provide the issue details in the following JSON format:
@@ -377,7 +393,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Implement Singleton Design Pattern",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nTo ensure a class has only one instance and provide a global point of access to it.\\n\\n**Describe the solution you'd like**\\n\\nImplement the Singleton design pattern for the Logger class. This can be achieved by creating a private static instance of the class and a public static method that returns the instance.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\nclass Logger {\\n  private static instance: Logger;\\n  private constructor() {}\\n  public static getInstance(): Logger {\\n    if (!Logger.instance) {\\n      Logger.instance = new Logger();\\n    }\\n    return Logger.instance;\\n  }\\n}\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nUsing static methods, but this does not provide the same level of control over instance creation.\\n\\n**Additional context**\\n\\nThis will help in managing a single instance of the Logger class across the application, ensuring consistent logging behavior.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nTo ensure a class has only one instance and provide a global point of access to it.\\n\\n**Describe the solution you'd like**\\n\\nImplement the Singleton design pattern for the Logger class. This can be achieved by creating a private static instance of the class and a public static method that returns the instance.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\nclass Logger {\\n  private static instance: Logger;\\n  private constructor() {}\\n  public static getInstance(): Logger {\\n    if (!Logger.instance) {\\n      Logger.instance = new Logger();\\n    }\\n    return Logger.instance;\\n  }\\n}\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nUsing static methods, but this does not provide the same level of control over instance creation.\\n\\n**Additional context**\\n\\nThis will help in managing a single instance of the Logger class across the application, ensuring consistent logging behavior.\\n\\n**Linked PR:** [PR #123](https://github.com/octocat/hello-world/pull/123)",
     "labels": ["enhancement", "design"]
 }
 \`\`\`
@@ -389,7 +405,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Refactor: Improve Code Readability",
-    "body": "## Refactor\\n\\n**Is your refactor related to a problem? Please describe.**\\n\\nThe current codebase has inconsistent naming conventions and lacks comments.\\n\\n**Describe the solution you'd like**\\n\\nRefactor the code to follow consistent naming conventions and add comments for better readability. For example, rename variables to be more descriptive and add JSDoc comments.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\n// Before\\nconst x = 10;\\nfunction foo() {\\n  return x * 2;\\n}\\n\\n// After\\nconst multiplier = 10;\\n/**\\n * Multiplies the multiplier by 2\\n * @returns {number} The result of the multiplication\\n */\\nfunction multiplyByTwo() {\\n  return multiplier * 2;\\n}\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nLeaving the code as is, but this would make it harder for new developers to understand and maintain.\\n\\n**Additional context**\\n\\nThis will improve maintainability and ease of understanding for new developers.",
+    "body": "## Refactor\\n\\n**Is your refactor related to a problem? Please describe.**\\n\\nThe current codebase has inconsistent naming conventions and lacks comments.\\n\\n**Describe the solution you'd like**\\n\\nRefactor the code to follow consistent naming conventions and add comments for better readability. For example, rename variables to be more descriptive and add JSDoc comments.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\n// Before\\nconst x = 10;\\nfunction foo() {\\n  return x * 2;\\n}\\n\\n// After\\nconst multiplier = 10;\\n/**\\n * Multiplies the multiplier by 2\\n * @returns {number} The result of the multiplication\\n */\\nfunction multiplyByTwo() {\\n  return multiplier * 2;\\n}\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nLeaving the code as is, but this would make it harder for new developers to understand and maintain.\\n\\n**Additional context**\\n\\nThis will improve maintainability and ease of understanding for new developers.\\n\\n**Linked PR:** [PR #124](https://github.com/octocat/hello-world/pull/124)",
     "labels": ["refactor", "code quality"]
 }
 \`\`\`
@@ -401,7 +417,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Enhance Logging Practices",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nCurrent logging lacks structure and meaningful messages.\\n\\n**Describe the solution you'd like**\\n\\nImplement structured logging with meaningful messages and log levels. Use a logging library like Winston or Bunyan to create structured logs.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\nconst winston = require('winston');\\nconst logger = winston.createLogger({\\n  level: 'info',\\n  format: winston.format.json(),\\n  transports: [\\n    new winston.transports.Console(),\\n    new winston.transports.File({ filename: 'combined.log' })\\n  ]\\n});\\nlogger.info('User logged in', { userId: 123 });\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nUsing existing logging practices, but they do not provide the same level of detail and structure.\\n\\n**Additional context**\\n\\nThis will help in better debugging and monitoring of the application by providing more detailed and structured logs.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nCurrent logging lacks structure and meaningful messages.\\n\\n**Describe the solution you'd like**\\n\\nImplement structured logging with meaningful messages and log levels. Use a logging library like Winston or Bunyan to create structured logs.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\nconst winston = require('winston');\\nconst logger = winston.createLogger({\\n  level: 'info',\\n  format: winston.format.json(),\\n  transports: [\\n    new winston.transports.Console(),\\n    new winston.transports.File({ filename: 'combined.log' })\\n  ]\\n});\\nlogger.info('User logged in', { userId: 123 });\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nUsing existing logging practices, but they do not provide the same level of detail and structure.\\n\\n**Additional context**\\n\\nThis will help in better debugging and monitoring of the application by providing more detailed and structured logs.\\n\\n**Linked PR:** [PR #125](https://github.com/octocat/hello-world/pull/125)",
     "labels": ["enhancement", "logging"]
 }
 \`\`\`
@@ -437,7 +453,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Optimize Database Indexing",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nSlow query performance due to lack of proper indexing.\\n\\n**Describe the solution you'd like**\\n\\nImplement appropriate indexing strategies to optimize query performance. This includes creating indexes on frequently queried columns and analyzing query patterns.\\n\\n**Code Example**\\n\\n\`\`\`sql\\n-- Before\\nSELECT * FROM users WHERE email = 'example@example.com';\\n\\n-- After\\nCREATE INDEX idx_users_email ON users(email);\\nSELECT * FROM users WHERE email = 'example@example.com';\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nLeaving the database as is, but this would result in continued slow performance.\\n\\n**Additional context**\\n\\nThis will improve the overall performance of the application by reducing query execution time.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nSlow query performance due to lack of proper indexing.\\n\\n**Describe the solution you'd like**\\n\\nImplement appropriate indexing strategies to optimize query performance. This includes creating indexes on frequently queried columns and analyzing query patterns.\\n\\n**Code Example**\\n\\n\`\`\`sql\\n-- Before\\nSELECT * FROM users WHERE email = 'example@example.com';\\n\\n-- After\\nCREATE INDEX idx_users_email ON users(email);\\nSELECT * FROM users WHERE email = 'example@example.com';\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nLeaving the database as is, but this would result in continued slow performance.\\n\\n**Additional context**\\n\\nThis will improve the overall performance of the application by reducing query execution time.\\n\\n**Linked PR:** [PR #128](https://github.com/octocat/hello-world/pull/128)",
     "labels": ["enhancement", "database"]
 }
 \`\`\`
@@ -449,7 +465,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Add Unit Tests for User Service",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nLack of unit tests for the User Service.\\n\\n**Describe the solution you'd like**\\n\\nAdd comprehensive unit tests for the User Service to ensure its functionality. Use a testing framework like Jest or Mocha to write and run the tests.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\n// userService.test.ts\\nconst userService = require('./userService');\\ntest('should create a new user', () => {\\n  const user = userService.createUser('testUser');\\n  expect(user).toHaveProperty('id');\\n  expect(user.name).toBe('testUser');\\n});\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nManual testing, but this is time-consuming and prone to human error.\\n\\n**Additional context**\\n\\nUnit tests will help in maintaining code quality and catching bugs early, ensuring the reliability of the User Service.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nLack of unit tests for the User Service.\\n\\n**Describe the solution you'd like**\\n\\nAdd comprehensive unit tests for the User Service to ensure its functionality. Use a testing framework like Jest or Mocha to write and run the tests.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\n// userService.test.ts\\nconst userService = require('./userService');\\ntest('should create a new user', () => {\\n  const user = userService.createUser('testUser');\\n  expect(user).toHaveProperty('id');\\n  expect(user.name).toBe('testUser');\\n});\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nManual testing, but this is time-consuming and prone to human error.\\n\\n**Additional context**\\n\\nUnit tests will help in maintaining code quality and catching bugs early, ensuring the reliability of the User Service.\\n\\n**Linked PR:** [PR #129](https://github.com/octocat/hello-world/pull/129)",
     "labels": ["enhancement", "testing"]
 }
 \`\`\`
@@ -473,7 +489,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Enhance Data Encryption",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nSensitive data is not encrypted adequately.\\n\\n**Describe the solution you'd like**\\n\\nImplement stronger encryption algorithms for sensitive data. Use libraries like CryptoJS or Node.js built-in crypto module to encrypt data.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\nconst crypto = require('crypto');\\nconst algorithm = 'aes-256-ctr';\\nconst secretKey = 'vOVH6sdmpNWjRRIqCc7rdxs01lwHzfr3';\\nconst iv = crypto.randomBytes(16);\\n\\nfunction encrypt(text) {\\n  const cipher = crypto.createCipheriv(algorithm, secretKey, iv);\\n  const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);\\n  return { iv: iv.toString('hex'), content: encrypted.toString('hex') };\\n}\\n\\nfunction decrypt(hash) {\\n  const decipher = crypto.createDecipheriv(algorithm, secretKey, Buffer.from(hash.iv, 'hex'));\\n  const decrypted = Buffer.concat([decipher.update(Buffer.from(hash.content, 'hex')), decipher.final()]);\\n  return decrypted.toString();\\n}\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nUsing existing encryption methods, but they may not provide the required level of security.\\n\\n**Additional context**\\n\\nEnhanced encryption will improve data security and compliance, protecting sensitive information from unauthorized access.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nSensitive data is not encrypted adequately.\\n\\n**Describe the solution you'd like**\\n\\nImplement stronger encryption algorithms for sensitive data. Use libraries like CryptoJS or Node.js built-in crypto module to encrypt data.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\nconst crypto = require('crypto');\\nconst algorithm = 'aes-256-ctr';\\nconst secretKey = 'vOVH6sdmpNWjRRIqCc7rdxs01lwHzfr3';\\nconst iv = crypto.randomBytes(16);\\n\\nfunction encrypt(text) {\\n  const cipher = crypto.createCipheriv(algorithm, secretKey, iv);\\n  const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);\\n  return { iv: iv.toString('hex'), content: encrypted.toString('hex') };\\n}\\n\\nfunction decrypt(hash) {\\n  const decipher = crypto.createDecipheriv(algorithm, secretKey, Buffer.from(hash.iv, 'hex'));\\n  const decrypted = Buffer.concat([decipher.update(Buffer.from(hash.content, 'hex')), decipher.final()]);\\n  return decrypted.toString();\\n}\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nUsing existing encryption methods, but they may not provide the required level of security.\\n\\n**Additional context**\\n\\nEnhanced encryption will improve data security and compliance, protecting sensitive information from unauthorized access.\\n\\n**Linked PR:** [PR #131](https://github.com/octocat/hello-world/pull/131)",
     "labels": ["enhancement", "security"]
 }
 \`\`\`
@@ -509,7 +525,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Implement Agile Methodology",
-    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nLack of structured project management practices.\\n\\n**Describe the solution you'd like**\\n\\nImplement Agile methodology to manage and iterate on projects efficiently. This includes adopting practices like Scrum or Kanban, conducting regular stand-ups, and using tools like Jira or Trello.\\n\\n**Code Example**\\n\\n\`\`\`\\n# Example of a Jira ticket\\nSummary: Implement user authentication\\nDescription: As a user, I want to securely log in to the application so that I can access my account.\\nAcceptance Criteria:\\n- User can log in with email and password\\n- User receives an error message for invalid credentials\\n- User session is maintained across pages\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nUsing traditional project management methods, but they are less flexible and adaptive.\\n\\n**Additional context**\\n\\nAgile will improve project visibility and adaptability, allowing the team to respond to changes quickly and deliver value incrementally.",
+    "body": "## Feature Request\\n\\n**Is your feature request related to a problem? Please describe.**\\n\\nLack of structured project management practices.\\n\\n**Describe the solution you'd like**\\n\\nImplement Agile methodology to manage and iterate on projects efficiently. This includes adopting practices like Scrum or Kanban, conducting regular stand-ups, and using tools like Jira or Trello.\\n\\n**Code Example**\\n\\n\`\`\`\\n# Example of a Jira ticket\\nSummary: Implement user authentication\\nDescription: As a user, I want to securely log in to the application so that I can access my account.\\nAcceptance Criteria:\\n- User can log in with email and password\\n- User receives an error message for invalid credentials\\n- User session is maintained across pages\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nUsing traditional project management methods, but they are less flexible and adaptive.\\n\\n**Additional context**\\n\\nAgile will improve project visibility and adaptability, allowing the team to respond to changes quickly and deliver value incrementally.\\n\\n**Linked PR:** [PR #134](https://github.com/octocat/hello-world/pull/134)",
     "labels": ["enhancement", "project management"]
 }
 \`\`\`
@@ -533,7 +549,7 @@ Provide the issue details in the following JSON format:
     "owner": "<owner>",
     "repo": "<repo>",
     "title": "Refactor: Modularize Codebase",
-    "body": "## Refactor\\n\\n**Is your refactor related to a problem? Please describe.**\\n\\nThe current codebase is monolithic and hard to maintain.\\n\\n**Describe the solution you'd like**\\n\\nRefactor the codebase to be more modular and organized into distinct modules. This involves breaking down the code into smaller, reusable components and organizing them into separate files or directories.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\n// Before\\nclass UserService {\\n  createUser() {\\n    // ...\\n  }\\n  deleteUser() {\\n    // ...\\n  }\\n}\\n\\n// After\\n// userService.ts\\nexport class UserService {\\n  createUser() {\\n    // ...\\n  }\\n}\\n\\n// deleteUserService.ts\\nexport class DeleteUserService {\\n  deleteUser() {\\n    // ...\\n  }\\n}\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nLeaving the codebase as is, but this would make it harder to maintain and scale.\\n\\n**Additional context**\\n\\nModularizing the codebase will improve maintainability and scalability, making it easier to manage and extend.",
+    "body": "## Refactor\\n\\n**Is your refactor related to a problem? Please describe.**\\n\\nThe current codebase is monolithic and hard to maintain.\\n\\n**Describe the solution you'd like**\\n\\nRefactor the codebase to be more modular and organized into distinct modules. This involves breaking down the code into smaller, reusable components and organizing them into separate files or directories.\\n\\n**Code Example**\\n\\n\`\`\`typescript\\n// Before\\nclass UserService {\\n  createUser() {\\n    // ...\\n  }\\n  deleteUser() {\\n    // ...\\n  }\\n}\\n\\n// After\\n// userService.ts\\nexport class UserService {\\n  createUser() {\\n    // ...\\n  }\\n}\\n\\n// deleteUserService.ts\\nexport class DeleteUserService {\\n  deleteUser() {\\n    // ...\\n  }\\n}\\n\`\`\`\\n\\n**Describe alternatives you've considered**\\n\\nLeaving the codebase as is, but this would make it harder to maintain and scale.\\n\\n**Additional context**\\n\\nModularizing the codebase will improve maintainability and scalability, making it easier to manage and extend.\\n\\n**Linked PR:** [PR #136](https://github.com/octocat/hello-world/pull/136)",
     "labels": ["refactor", "maintainability"]
 }
 \`\`\`

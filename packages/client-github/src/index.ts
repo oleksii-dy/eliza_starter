@@ -114,23 +114,22 @@ export class GitHubClient extends EventEmitter {
 
         // Get previous issues from memory
         const previousIssues = await getIssuesFromMemories(this.runtime, owner, repository);
-        originalState.previousIssues = previousIssues.map(issue => ({
+        originalState.previousIssues = JSON.stringify(previousIssues.map(issue => ({
             title: issue.content.text,
             body: (issue.content.metadata as any).body,
             url: (issue.content.metadata as any).url,
             number: (issue.content.metadata as any).number,
             state: (issue.content.metadata as any).state,
-        }));
+        })), null, 2);
         elizaLogger.log("Previous issues:", previousIssues);
         // Get previous pull requests from memory
         const previousPRs = await getPullRequestsFromMemories(this.runtime, owner, repository);
-        originalState.previousPRs = previousPRs.map(pr => ({
+        originalState.previousPRs = JSON.stringify(previousPRs.map(pr => ({
             title: pr.content.text,
             url: (pr.content.metadata as any).url,
             number: (pr.content.metadata as any).number,
             state: (pr.content.metadata as any).state,
-        }));
-        originalState.previousPRs = previousPRs;
+        })), null, 2);
         elizaLogger.log("Previous PRs:", originalState.previousPRs);
         elizaLogger.log("Original state:", originalState);
         // Orient: Analyze the memories to determine if logging improvements are needed
