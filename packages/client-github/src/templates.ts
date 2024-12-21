@@ -29,11 +29,8 @@ export const oodaTemplate = `
 
     Action Options:
     1. CREATE_ISSUE: For identifying problems or suggesting improvements
-    2. IDEATE: For generating ideas and suggestions based on user message, past actions, using the context of the files and previous messages
-    3. NOTHING: When no action is needed
+    2. NOTHING: When no action is needed
 
-    EITHER IDEATE => CREATE_ISSUE or NOTHING
-    Update that a sample workflow would be to Ideate on what needs to be improved in the repository and then create an issue to address the most important ideas.
     Required Fields:
     - action: (required) One of the actions listed above
     - reasoning: (required) Explanation of why this action was chosen
@@ -163,15 +160,6 @@ export const oodaTemplate = `
         "repo": "hello-world",
         "issue": 456,
         "comment": "## Code Review Feedback\\n\\n### Strengths\\n- [Positive point 1]\\n- [Positive point 2]\\n\\n### Suggestions\\n- [Suggestion 1]\\n- [Suggestion 2]\\n\\nOverall: [Summary]"
-    }
-
-    11. IDEATE:
-    {
-        "action": "IDEATE",
-        "reasoning": "Generate ideas and suggestions based on user message, past actions, using the context of the files and previous messages",
-        "owner": "octocat",
-        "repo": "hello-world",
-        "message": "User message"
     }
 
     Remember to:
