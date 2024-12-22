@@ -55,6 +55,7 @@ import { suiPlugin } from "@elizaos/plugin-sui";
 import { TEEMode, teePlugin } from "@elizaos/plugin-tee";
 import { tonPlugin } from "@elizaos/plugin-ton";
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
+import { geckoTerminalPlugin } from "@elizaos/plugin-geckoterminal";
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
@@ -503,6 +504,7 @@ export async function createAgent(
         character,
         // character.plugins are handled when clients are added
         plugins: [
+            geckoTerminalPlugin,
             bootstrapPlugin,
             getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
                 ? confluxPlugin
