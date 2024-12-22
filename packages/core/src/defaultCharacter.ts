@@ -6,8 +6,6 @@ export const defaultCharacter: Character = {
     plugins: [],
     clients: [
         Clients.TELEGRAM,
-        Clients.TWITTER,
-        Clients.FARCASTER
     ],
     modelProvider: ModelProviderName.ANTHROPIC,
     settings: {

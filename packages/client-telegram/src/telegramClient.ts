@@ -2,6 +2,8 @@ import { Context, Telegraf } from "telegraf";
 import { IAgentRuntime, elizaLogger } from "@ai16z/eliza";
 import { MessageManager } from "./messageManager.ts";
 import { getOrCreateRecommenderInBe } from "./getOrCreateRecommenderInBe.ts";
+import { commands } from "./commands";
+import { redis } from "./redis";
 
 export class TelegramClient {
     private bot: Telegraf<Context>;
@@ -10,6 +12,7 @@ export class TelegramClient {
     private backend;
     private backendToken;
     private tgTrader;
+    private checkPermissionsInterval: NodeJS.Timeout;
 
     constructor(runtime: IAgentRuntime, botToken: string) {
         elizaLogger.log("📱 Constructing new TelegramClient...");
@@ -19,6 +22,7 @@ export class TelegramClient {
         this.backend = runtime.getSetting("BACKEND_URL");
         this.backendToken = runtime.getSetting("BACKEND_TOKEN");
         this.tgTrader = runtime.getSetting("TG_TRADER"); // boolean To Be added to the settings
+        this.setupPermissionChecker();
         elizaLogger.log("✅ TelegramClient constructor completed");
     }
 
@@ -35,6 +39,13 @@ export class TelegramClient {
     }
 
     private async initializeBot(): Promise<void> {
+        await this.bot.telegram.setMyCommands(
+            commands.map((cmd) => ({
+                command: cmd.command,
+                description: cmd.description,
+            }))
+        );
+
         this.bot.launch({ dropPendingUpdates: true });
         elizaLogger.log(
             "✨ Telegram bot successfully launched and is running!"
@@ -49,6 +60,12 @@ export class TelegramClient {
 
     private setupMessageHandlers(): void {
         elizaLogger.log("Setting up message handler...");
+
+        commands.forEach((cmd) => {
+            this.bot.command(cmd.command, (ctx) =>
+                cmd.handler(ctx, this.runtime)
+            );
+        });
 
         this.bot.on("message", async (ctx) => {
             try {
@@ -129,7 +146,41 @@ export class TelegramClient {
 
     public async stop(): Promise<void> {
         elizaLogger.log("Stopping Telegram bot...");
+        clearInterval(this.checkPermissionsInterval);
         await this.bot.stop();
         elizaLogger.log("Telegram bot stopped");
+    }
+
+    private setupPermissionChecker(): void {
+        this.checkPermissionsInterval = setInterval(async () => {
+            try {
+                const users = await redis.keys('user:*:permissions');
+                for (const userKey of users) {
+                    try {
+                        const permissions = await redis.get(userKey);
+                        if (!permissions) continue;
+
+                        // Parse user data
+                        const data = JSON.parse(permissions);
+                        const userId = userKey.split(':')[1];
+                        const chatId = this.runtime.getSetting("TELEGRAM_CHAT_ID");
+
+                        // Kick the user if they don't have required balance
+                        if (!data.hasRequiredBalance) {
+                            await this.bot.telegram.banChatMember(chatId, userId);
+                            elizaLogger.log(`Removed user ${userId} from the group due to insufficient tokens`);
+                        }
+
+                        // Remove processed permission update
+                        await redis.del(userKey);
+
+                    } catch (error) {
+                        elizaLogger.error(`Error processing permissions for key ${userKey}:`, error);
+                    }
+                }
+            } catch (error) {
+                elizaLogger.error('Permission check error:', error);
+            }
+        }, 60000); // Check every minute
     }
 }

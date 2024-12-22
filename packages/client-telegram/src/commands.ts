@@ -1,0 +1,153 @@
+import { Context } from "telegraf";
+import { IAgentRuntime, elizaLogger, UUID, stringToUuid } from "@ai16z/eliza";
+import { v4 as uuidv4 } from "uuid";
+import { askServer } from "./utils";
+
+export interface CommandHandler {
+    command: string;
+    description: string;
+    handler: (ctx: Context, runtime: IAgentRuntime) => Promise<void>;
+}
+
+export const commands: CommandHandler[] = [
+    {
+        command: "verify",
+        description: "Verify by connecting a wallet",
+        handler: async (ctx: Context, runtime: IAgentRuntime) => {
+            try {
+                const userId = ctx.from?.id.toString();
+                const username =
+                    ctx.from?.username || ctx.from?.first_name || "Unknown";
+
+                if (!userId) {
+                    await ctx.reply(
+                        "Unable to verify: Could not identify user.",
+                        {
+                            reply_markup: {
+                                inline_keyboard: [
+                                    [
+                                        {
+                                            text: "Try Again",
+                                            callback_data: "verify_retry",
+                                        },
+                                    ],
+                                ],
+                            },
+                        }
+                    );
+                    return;
+                }
+
+                const sessionId = uuidv4();
+                const webAppUrl = runtime.getSetting("WEBAPP_URL");
+
+                await runtime.messageManager.createMemory({
+                    content: {
+                        text: `wallet_session: ${sessionId}`,
+                    },
+                    roomId: (ctx.chat?.id.toString() +
+                        "-" +
+                        runtime.agentId) as UUID,
+                    agentId: runtime.agentId,
+                    userId: stringToUuid(userId) as UUID,
+                });
+
+                await ctx.reply(
+                    "Please connect your wallet to complete verification:",
+                    {
+                        reply_markup: {
+                            inline_keyboard: [
+                                [
+                                    {
+                                        text: "Connect Wallet",
+                                        url: `${webAppUrl}/verify?session=${sessionId}&userId=${userId}`,
+                                    },
+                                ],
+                            ],
+                        },
+                    }
+                );
+
+                // Get the invite link for the private group
+                let inviteLink = "";
+                try {
+                    const privateGroupId =
+                        runtime.getSetting("PRIVATE_GROUP_ID");
+                    if (privateGroupId) {
+                        const formattedGroupId = privateGroupId.toString().startsWith('-100')
+                            ? privateGroupId.toString()
+                            : `-100${privateGroupId.toString().replace('-', '')}`;
+                        const inviteLinkObj = await ctx.telegram.createChatInviteLink(
+                            formattedGroupId,
+                            {
+                                creates_join_request: false,
+                                member_limit: 1,
+                                name: `${username} (${userId})`,
+                                expire_date:
+                                    Math.floor(Date.now() / 1000) + 3600, // Link expires in 1 hour
+                            }
+                        );
+                        inviteLink = inviteLinkObj.invite_link;
+                    }
+                } catch (error) {
+                    elizaLogger.error(
+                        "Error generating invite link for private group:",
+                        error
+                    );
+                }
+
+                try {
+                    await askServer({
+                        sessionId: sessionId,
+                        inviteUrl: inviteLink,
+                        telegramId: userId,
+                    });
+
+                } catch (error) {
+                    elizaLogger.error(
+                        "Error checking verification status:",
+                        error
+                    );
+                }
+
+                elizaLogger.info(
+                    `Session created for user ${username} (${userId})`
+                );
+            } catch (error) {
+                elizaLogger.error("Error in verify command:", error);
+                await ctx.reply("An error occurred. Please try again later.");
+            }
+        },
+    },
+    {
+        command: "help",
+        description: "Show available commands",
+        handler: async (ctx: Context) => {
+            const helpText = commands
+                .map((cmd) => `/${cmd.command} - ${cmd.description}`)
+                .join("\n");
+            await ctx.reply(`Available commands:\n\n${helpText}`, {
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            { text: "Verify Account", callback_data: "verify" },
+                            {
+                                text: "Get Support",
+                                url: "https://t.me/support",
+                            },
+                        ],
+                    ],
+                },
+            });
+        },
+    },
+    {
+        command: "status",
+        description: "Check bot status",
+        handler: async (ctx: Context, runtime: IAgentRuntime) => {
+            await ctx.reply(
+                `✅ I'm online and running!\nCharacter: ${runtime.character.name}`
+            );
+        },
+    },
+];
