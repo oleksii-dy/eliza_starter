@@ -48,4 +48,3 @@ export async function saveIssueToMemory(runtime: IAgentRuntime, issue: RestEndpo
     await runtime.messageManager.createMemory(issueMemory);
 }
 
-// TODO: get previous PRs

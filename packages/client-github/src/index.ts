@@ -10,7 +10,8 @@ import {
     modifyIssueAction,
     addCommentToIssueAction,
     ideationAction,
-    incorporateRepositoryState
+    incorporateRepositoryState,
+    getRepositoryRoomId
 } from "@ai16z/plugin-github";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
@@ -68,7 +69,7 @@ export class GitHubClient extends EventEmitter {
             throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
         }
 
-        const roomId = this.getRepositoryRoomId();
+        const roomId = getRepositoryRoomId(this.runtime);
         elizaLogger.log("Repository room ID:", roomId);
 
         // Observe: Gather relevant memories related to the repository
@@ -258,17 +259,6 @@ export class GitHubClient extends EventEmitter {
         elizaLogger.log("OODA cycle completed.");
     }
 
-    private getRepositoryRoomId(): UUID {
-        const owner = this.runtime.getSetting("GITHUB_OWNER") ?? '' as string;
-        const repository = this.runtime.getSetting("GITHUB_REPO") ?? '' as string;
-        if (owner === '' || repository === '') {
-            elizaLogger.error("GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle.");
-            throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
-        }
-        const roomId = stringToUuid(`github-${owner}-${repository}`);
-        elizaLogger.log("Generated repository room ID:", roomId);
-        return roomId;
-    }
 }
 
 export const GitHubClientInterface: Client = {
