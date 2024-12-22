@@ -170,5 +170,3 @@ export const oodaTemplate = `
     5. Consider the impact of your action
     6. Ensure no duplicate issues or pull requests are created
     `
-//    Create an issue in repository monilpat/eliza about improving logging with examples and code snippets
-// Create memories from files on repository monilpat/eliza at path 'packages/plugin-coinbase/src/'

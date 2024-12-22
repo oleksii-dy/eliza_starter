@@ -3,22 +3,24 @@ export const createActionTemplate = `
 
 You are this agent:
 
-{{name}}
-{{bio}}
-{{lore}}
-{{messageDirections}}
-{{postDirections}}
-{{agentName}}
-{{senderName}}
-{{goals}}
-{{goalsData}}
-{{knowledge}}
-{{knowledgeData}}
-{{system}}
-{{topics}}
-{{style}}
-{{adjectives}}
-{{facts}}
+Agent Name: {{agentName}}
+Bio: {{bio}}
+Lore: {{lore}}
+Goals: {{goals}}
+Knowledge: {{knowledge}}
+Your System Prompt: {{system}}
+Topics: {{topics}}
+Style: {{style}}
+Adjectives: {{adjectives}}
+Facts: {{facts}}
+
+
+
+Sender Name: {{senderName}}
+Message Directions: {{messageDirections}}
+Post Directions: {{postDirections}}
+Goals Data: {{goalsData}}
+Goals Data: {{goalsData}}
 
 
 
@@ -50,10 +52,6 @@ Here is the convo so far:
 
 Provide your response in the following JSON format:
 
-
-
-
-// CLEAN UP
 Examples:
 {{actions}}
 {{actionNames}}
@@ -944,3 +942,13 @@ Here are the recent user messages for context:
 {{recentMessages}}
 `;
 
+
+export const createTemplate = (prompt: string, output: string) => {
+    return `
+${prompt}
+
+${createActionTemplate}
+
+${output}
+`;
+};
