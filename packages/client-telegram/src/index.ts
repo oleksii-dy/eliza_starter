@@ -2,6 +2,7 @@ import { elizaLogger } from "@ai16z/eliza";
 import { Client, IAgentRuntime } from "@ai16z/eliza";
 import { TelegramClient } from "./telegramClient.ts";
 import { validateTelegramConfig } from "./environment.ts";
+import { redis, balanceCheckQueue } from "./redis";
 
 export const TelegramClientInterface: Client = {
     start: async (runtime: IAgentRuntime) => {
@@ -21,6 +22,9 @@ export const TelegramClientInterface: Client = {
     },
     stop: async (_runtime: IAgentRuntime) => {
         elizaLogger.warn("Telegram client does not support stopping yet");
+        // Cleanup Redis connections
+        await redis.quit();
+        await balanceCheckQueue.close();
     },
 };
 

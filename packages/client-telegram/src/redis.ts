@@ -1,5 +1,6 @@
 import Redis from 'ioredis';
 import Bull from 'bull';
+import { elizaLogger } from '@ai16z/eliza';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
@@ -16,11 +17,11 @@ export const balanceCheckQueue = new Bull('balance-checks', REDIS_URL, {
 
 // Error handling
 redis.on('error', (error) => {
-  console.error('Redis connection error:', error);
+  elizaLogger.error('Redis connection error:', error);
 });
 
 redis.on('connect', () => {
-  console.log('Redis connected successfully');
+  elizaLogger.success('Redis connected successfully');
 });
 
 // Optional: graceful shutdown

@@ -130,7 +130,7 @@ export const commands: CommandHandler[] = [
                 reply_markup: {
                     inline_keyboard: [
                         [
-                            { text: "Verify Account", callback_data: "verify" },
+                            { text: "Verify Account", callback_data: "verify_account" },
                             {
                                 text: "Get Support",
                                 url: "https://t.me/support",

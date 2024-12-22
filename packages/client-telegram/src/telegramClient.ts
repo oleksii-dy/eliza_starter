@@ -67,6 +67,13 @@ export class TelegramClient {
             );
         });
 
+        this.bot.action('verify_account', async (ctx) => {
+            const verifyCommand = commands.find(cmd => cmd.command === 'verify');
+            if (verifyCommand) {
+                await verifyCommand.handler(ctx, this.runtime);
+            }
+        });
+
         this.bot.on("message", async (ctx) => {
             try {
                 if (this.tgTrader) {
@@ -155,20 +162,31 @@ export class TelegramClient {
         this.checkPermissionsInterval = setInterval(async () => {
             try {
                 const users = await redis.keys('user:*:permissions');
+                const chatId = this.runtime.getSetting("TELEGRAM_CHAT_ID");
+
                 for (const userKey of users) {
                     try {
                         const permissions = await redis.get(userKey);
                         if (!permissions) continue;
 
-                        // Parse user data
                         const data = JSON.parse(permissions);
                         const userId = userKey.split(':')[1];
-                        const chatId = this.runtime.getSetting("TELEGRAM_CHAT_ID");
 
-                        // Kick the user if they don't have required balance
-                        if (!data.hasRequiredBalance) {
-                            await this.bot.telegram.banChatMember(chatId, userId);
-                            elizaLogger.log(`Removed user ${userId} from the group due to insufficient tokens`);
+                        // Check if user is an admin before taking action
+                        try {
+                            const member = await this.bot.telegram.getChatMember(chatId, userId);
+                            if (member.status === 'administrator' || member.status === 'creator') {
+                                elizaLogger.log(`Skipping admin check for ${userId}`);
+                                continue;
+                            }
+
+                            // Only kick non-admin users if they don't have required balance
+                            if (!data.hasRequiredBalance) {
+                                await this.bot.telegram.banChatMember(chatId, userId);
+                                elizaLogger.log(`Removed user ${userId} from the group due to insufficient tokens`);
+                            }
+                        } catch (error) {
+                            elizaLogger.error(`Error checking member status for ${userId}:`, error);
                         }
 
                         // Remove processed permission update

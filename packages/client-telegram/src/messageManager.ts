@@ -1,6 +1,5 @@
 import { Message } from "@telegraf/types";
 import { Context, Telegraf } from "telegraf";
-import { createReadStream } from "fs";
 
 import { composeContext, elizaLogger, ServiceType } from "@ai16z/eliza";
 import { getEmbeddingZeroVector } from "@ai16z/eliza";
