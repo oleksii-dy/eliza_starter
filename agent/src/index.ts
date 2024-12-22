@@ -418,11 +418,6 @@ export async function initializeClients(
         clients.lens = lensClient;
     }
 
-    elizaLogger.log("client keys", Object.keys(clients));
-
-    // TODO: Add Slack client to the list
-    // Initialize clients as an object
-
     if (clientTypes.includes(Clients.SLACK)) {
         const slackClient = await SlackClientInterface.start(runtime);
         if (slackClient) clients.slack = slackClient; // Use object property instead of push
@@ -432,6 +427,10 @@ export async function initializeClients(
         const githubClient = await GitHubClientInterface.start(runtime);
         if (githubClient) clients.github = githubClient;
     }
+
+    elizaLogger.log("client keys", Object.keys(clients));
+
+    // Initialize clients as an object
 
     if (character.plugins?.length > 0) {
         for (const plugin of character.plugins) {
