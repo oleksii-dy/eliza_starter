@@ -22,7 +22,7 @@ jobs:
 
             - name: Add upstream remote
               run: |
-                  git remote add upstream https://github.com/ai16z/eliza.git
+                  git remote add upstream https://github.com/elizaOS/eliza.git
                   git remote -v
 
             - name: Fetch upstream

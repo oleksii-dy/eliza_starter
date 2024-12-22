@@ -1,3 +1,67 @@
+export const createActionTemplate = `
+
+
+You are this agent:
+
+{{name}}
+{{bio}}
+{{lore}}
+{{messageDirections}}
+{{postDirections}}
+{{agentName}}
+{{senderName}}
+{{goals}}
+{{goalsData}}
+{{knowledge}}
+{{knowledgeData}}
+{{system}}
+{{topics}}
+{{style}}
+{{adjectives}}
+{{facts}}
+
+
+
+For the task at hand here is the relevant context:
+{{relevantMemories}}
+
+Repository details:
+{{owner}}/{{repository}}
+
+Files:
+{{files}}
+
+Review previous interactions to avoid duplicate suggestions:
+    - Previous Pull Requests: {{previousPRs}}
+    - Previous Issues: {{previousIssues}}
+
+Utilize the related files to provide context and enrich the response with additional details. Whenever possible, use code snippets from the files to clarify the response.
+
+Respond to the user's message: **{{message}}**
+
+Here are the recent user messages for context:
+{{recentMessages}}
+{{recentMessagesData}}
+{{recentInteractionsData}}
+{{recentInteractions}}
+
+Here is the convo so far:
+{{formattedConversation}}
+
+Provide your response in the following JSON format:
+
+
+
+
+// CLEAN UP
+Examples:
+{{actions}}
+{{actionNames}}
+{{actionExamples}}
+{{messageExamples}}
+
+`;
+
 export const initializeTemplate = `
 Extract the details for initializing the GitHub repository:
 - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
@@ -590,7 +654,6 @@ Provide the issue details in the following JSON format:
 }
 \`\`\`
 
-
 Here are the recent user messages for context:
 {{recentMessages}}
 `;
@@ -644,20 +707,7 @@ Extract the details for adding a comment to a GitHub issue and ensure the commen
 - **issue_number** (number): The number of the issue (e.g., 1)
 - **comment** (string): The comment to add (e.g., "Add new documentation")
 
-Ensure that the comment is consistent with the character's objectives and the user's request without altering the owner and repo.
-
-Here is the original request:
-{{memory}}
-
-Please use the related files to provide context and fill in the issue template with additional details:
-{{files}}
-
-Try to integrate examples using the files provided to explain details of the issue.
-
-Ensure that the comment is generated based on the character's goals and the user's request without changing the owner and repo.
-
-Provide the comment details in the following JSON format:
-
+${createActionTemplate}
 \`\`\`json
 {
     "owner": "<owner>",
@@ -666,36 +716,13 @@ Provide the comment details in the following JSON format:
     "comment": "<comment>"
 }
 \`\`\`
-
-Here are the recent user messages for context:
-{{recentMessages}}
+e
 `;
 
 export const ideationTemplate = `
 Based on the current context and the user's message, generate a thoughtful response that addresses the query and provides valuable insights. Consider the following categories for inspiration:
 
-
-Here is the character context:
-{{character}}
-
-Owner details:
-{{owner}}
-
-Repository details:
-{{repository}}
-
-Files:
-{{files}}
-
-Review previous interactions to avoid duplicate suggestions:
-    - Previous Pull Requests: {{previousPRs}}
-    - Previous Issues: {{previousIssues}}
-
-Utilize the related files to provide context and enrich the response with additional details. Whenever possible, use code snippets from the files to clarify the response.
-
-Respond to the user's message: **{{message}}**
-
-Provide your response in the following JSON format:
+${createActionTemplate}
 
 \`\`\`json
 {
@@ -917,7 +944,3 @@ Here are the recent user messages for context:
 {{recentMessages}}
 `;
 
-// Initialize the repository ai16z/eliza on develop branch
-// Create memories from file on repository ai16z/eliza at path '/packages/plugin-coinbase'
-// Create an issue in repository ai16z/eliza titled about improving logging in /packages/plugin-github/plugins
-// pnpm build && pnpm start
