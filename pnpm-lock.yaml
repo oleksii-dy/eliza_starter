@@ -1055,7 +1055,7 @@ importers:
 
   packages/plugin-birdeye:
     dependencies:
-      '@ai16z/eliza':
+      '@elizaos/core':
         specifier: workspace:*
         version: link:../core
       form-data:
