@@ -1,50 +1,53 @@
-import { PostgresDatabaseAdapter } from "@ai16z/adapter-postgres";
-import { SqliteDatabaseAdapter } from "@ai16z/adapter-sqlite";
-import { AutoClientInterface } from "@ai16z/client-auto";
-import { DirectClientInterface } from "@ai16z/client-direct";
-import { DiscordClientInterface } from "@ai16z/client-discord";
-import { TelegramClientInterface } from "@ai16z/client-telegram";
-import { TwitterClientInterface } from "@ai16z/client-twitter";
-import { FarcasterAgentClient } from "@ai16z/client-farcaster";
-import { GitHubClientInterface } from "@ai16z/client-github";
+import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
+import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
+import { AutoClientInterface } from "@elizaos/client-auto";
+import { DirectClientInterface } from "@elizaos/client-direct";
+import { DiscordClientInterface } from "@elizaos/client-discord";
+import { TelegramClientInterface } from "@elizaos/client-telegram";
+import { TwitterClientInterface } from "@elizaos/client-twitter";
+import { FarcasterAgentClient } from "@elizaos/client-farcaster";
+import { GitHubClient, GitHubClientInterface } from "@elizaos/client-github";
 import {
     AgentRuntime,
     CacheManager,
     Character,
     Clients,
     DbCacheAdapter,
+    defaultCharacter,
+    elizaLogger,
     FsCacheAdapter,
     IAgentRuntime,
     ICacheManager,
     IDatabaseAdapter,
     IDatabaseCacheAdapter,
     ModelProviderName,
-    defaultCharacter,
-    elizaLogger,
     settings,
     stringToUuid,
     validateCharacterConfig,
-} from "@ai16z/eliza";
-import { zgPlugin } from "@ai16z/plugin-0g";
-import createGoatPlugin from "@ai16z/plugin-goat";
-import { bootstrapPlugin } from "@ai16z/plugin-bootstrap";
-// import { intifacePlugin } from "@ai16z/plugin-intiface";
+    CacheStore,
+} from "@elizaos/core";
+import { RedisClient } from "@elizaos/adapter-redis";
+import { zgPlugin } from "@elizaos/plugin-0g";
+import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
+import createGoatPlugin from "@elizaos/plugin-goat";
+// import { intifacePlugin } from "@elizaos/plugin-intiface";
+import { DirectClient } from "@elizaos/client-direct";
 import {
+    advancedTradePlugin,
     coinbaseCommercePlugin,
     coinbaseMassPaymentsPlugin,
-    tradePlugin,
     tokenContractPlugin,
+    tradePlugin,
     webhookPlugin,
-    advancedTradePlugin,
-} from "@ai16z/plugin-coinbase";
-import { confluxPlugin } from "@ai16z/plugin-conflux";
-import { imageGenerationPlugin } from "@ai16z/plugin-image-generation";
-import { evmPlugin } from "@ai16z/plugin-evm";
-import { createNodePlugin } from "@ai16z/plugin-node";
-import { solanaPlugin } from "@ai16z/plugin-solana";
-import { teePlugin, TEEMode } from "@ai16z/plugin-tee";
-import { aptosPlugin, TransferAptosToken } from "@ai16z/plugin-aptos";
-import { flowPlugin } from "@ai16z/plugin-flow";
+} from "@elizaos/plugin-coinbase";
+import { confluxPlugin } from "@elizaos/plugin-conflux";
+import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
+import { evmPlugin } from "@elizaos/plugin-evm";
+import { createNodePlugin } from "@elizaos/plugin-node";
+import { solanaPlugin } from "@elizaos/plugin-solana";
+import { teePlugin, TEEMode } from "@elizaos/plugin-tee";
+import { aptosPlugin, TransferAptosToken } from "@elizaos/plugin-aptos";
+import { flowPlugin } from "@elizaos/plugin-flow";
 import {
     githubInitializePlugin,
     githubCreateCommitPlugin,
@@ -54,11 +57,10 @@ import {
     githubModifyIssuePlugin,
     githubAddCommentToIssuePlugin,
     githubIdeationPlugin,
-} from "@ai16z/plugin-github";
+} from "@elizaos/plugin-github";
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
-import readline from "readline";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
 
@@ -72,8 +74,9 @@ export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
 };
 
 const logFetch = async (url: string, options: any) => {
-    elizaLogger.info(`Fetching ${url}`);
-    elizaLogger.info(options);
+    elizaLogger.debug(`Fetching ${url}`);
+    // Disabled to avoid disclosure of sensitive information such as API keys
+    // elizaLogger.debug(JSON.stringify(options, null, 2));
     return fetch(url, options);
 };
 
@@ -212,8 +215,15 @@ export async function loadCharacters(
 export function getTokenForProvider(
     provider: ModelProviderName,
     character: Character
-) {
+): string {
     switch (provider) {
+        // no key needed for llama_local or gaianet
+        case ModelProviderName.LLAMALOCAL:
+            return "";
+        case ModelProviderName.OLLAMA:
+            return "";
+        case ModelProviderName.GAIANET:
+            return "";
         case ModelProviderName.OPENAI:
             return (
                 character.settings?.secrets?.OPENAI_API_KEY ||
@@ -236,6 +246,7 @@ export function getTokenForProvider(
                 character.settings?.secrets?.OPENAI_API_KEY ||
                 settings.OPENAI_API_KEY
             );
+        case ModelProviderName.CLAUDE_VERTEX:
         case ModelProviderName.ANTHROPIC:
             return (
                 character.settings?.secrets?.ANTHROPIC_API_KEY ||
@@ -302,6 +313,20 @@ export function getTokenForProvider(
                 character.settings?.secrets?.VENICE_API_KEY ||
                 settings.VENICE_API_KEY
             );
+        case ModelProviderName.AKASH_CHAT_API:
+            return (
+                character.settings?.secrets?.AKASH_CHAT_API_KEY ||
+                settings.AKASH_CHAT_API_KEY
+            );
+        case ModelProviderName.GOOGLE:
+            return (
+                character.settings?.secrets?.GOOGLE_GENERATIVE_AI_API_KEY ||
+                settings.GOOGLE_GENERATIVE_AI_API_KEY
+            );
+        default:
+            const errorMessage = `Failed to get token - unsupported model provider: ${provider}`;
+            elizaLogger.error(errorMessage);
+            throw new Error(errorMessage);
     }
 }
 
@@ -342,34 +367,37 @@ export async function initializeClients(
     // each client can only register once
     // and if we want two we can explicitly support it
     const clients: Record<string, any> = {};
-    const clientTypes: string[] =
+    const clientTypes:  string[] =
         character.clients?.map((str) => str.toLowerCase()) || [];
     elizaLogger.log("initializeClients", clientTypes, "for", character.name);
 
-    if (clientTypes.includes("auto")) {
+    if (clientTypes.includes(Clients.DIRECT)) {
         const autoClient = await AutoClientInterface.start(runtime);
         if (autoClient) clients.auto = autoClient;
     }
 
-    if (clientTypes.includes("discord")) {
+    if (clientTypes.includes(Clients.DISCORD)) {
         const discordClient = await DiscordClientInterface.start(runtime);
         if (discordClient) clients.discord = discordClient;
     }
 
-    if (clientTypes.includes("telegram")) {
+    if (clientTypes.includes(Clients.TELEGRAM)) {
         const telegramClient = await TelegramClientInterface.start(runtime);
         if (telegramClient) clients.telegram = telegramClient;
     }
 
-    if (clientTypes.includes("twitter")) {
-        TwitterClientInterface.enableSearch = !isFalsish(
-            getSecret(character, "TWITTER_SEARCH_ENABLE")
-        );
+    if (clientTypes.includes(Clients.TWITTER)) {
         const twitterClient = await TwitterClientInterface.start(runtime);
-        if (twitterClient) clients.twitter = twitterClient;
+
+        if (twitterClient) {
+            clients.twitter = twitterClient;
+            (twitterClient as any).enableSearch = !isFalsish(
+                getSecret(character, "TWITTER_SEARCH_ENABLE")
+            );
+        }
     }
 
-    if (clientTypes.includes("farcaster")) {
+    if (clientTypes.includes(Clients.FARCASTER)) {
         // why is this one different :(
         const farcasterClient = new FarcasterAgentClient(runtime);
         if (farcasterClient) {
@@ -377,20 +405,33 @@ export async function initializeClients(
             clients.farcaster = farcasterClient;
         }
     }
-
-    if (clientTypes.includes("github")) {
-        const githubClient = await GitHubClientInterface.start(runtime);
-        if (githubClient) clients.github = githubClient;
+    if (clientTypes.includes(Clients.LENS)) {
+        const lensClient = new LensAgentClient(runtime);
+        lensClient.start();
+        clients.lens = lensClient;
     }
 
     elizaLogger.log("client keys", Object.keys(clients));
 
+    // TODO: Add Slack client to the list
+    // Initialize clients as an object
+
+    if (clientTypes.includes(Clients.SLACK)) {
+        const slackClient = await SlackClientInterface.start(runtime);
+        if (slackClient) clients.slack = slackClient; // Use object property instead of push
+    }
+
+    if (clientTypes.includes(Clients.GITHUB)) {
+        const githubClient = await GitHubClientInterface.start(runtime);
+        if (githubClient) clients.github = githubClient;
+    }
+
     if (character.plugins?.length > 0) {
         for (const plugin of character.plugins) {
-            // if plugin has clients, add those..
             if (plugin.clients) {
                 for (const client of plugin.clients) {
-                    clients.push(await client.start(runtime));
+                    const startedClient = await client.start(runtime);
+                    clients[client.name] = startedClient; // Assuming client has a name property
                 }
             }
         }
@@ -435,7 +476,7 @@ export async function createAgent(
     db: IDatabaseAdapter,
     cache: ICacheManager,
     token: string
-): AgentRuntime {
+): Promise<AgentRuntime> {
     elizaLogger.success(
         elizaLogger.successesTitle,
         "Creating runtime for character",
@@ -480,10 +521,25 @@ export async function createAgent(
                 !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
                 ? solanaPlugin
                 : null,
-            getSecret(character, "EVM_PRIVATE_KEY") ||
+            (getSecret(character, "NEAR_ADDRESS") ||
+                getSecret(character, "NEAR_WALLET_PUBLIC_KEY")) &&
+            getSecret(character, "NEAR_WALLET_SECRET_KEY")
+                ? nearPlugin
+                : null,
+            getSecret(character, "EVM_PUBLIC_KEY") ||
             (getSecret(character, "WALLET_PUBLIC_KEY") &&
                 getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
                 ? evmPlugin
+                : null,
+            (getSecret(character, "SOLANA_PUBLIC_KEY") ||
+                (getSecret(character, "WALLET_PUBLIC_KEY") &&
+                    !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith(
+                        "0x"
+                    ))) &&
+            getSecret(character, "SOLANA_ADMIN_PUBLIC_KEY") &&
+            getSecret(character, "SOLANA_PRIVATE_KEY") &&
+            getSecret(character, "SOLANA_ADMIN_PRIVATE_KEY")
+                ? nftGenerationPlugin
                 : null,
             getSecret(character, "ZEROG_PRIVATE_KEY") ? zgPlugin : null,
             getSecret(character, "COINBASE_COMMERCE_KEY")
@@ -530,6 +586,11 @@ export async function createAgent(
                 ? flowPlugin
                 : null,
             getSecret(character, "APTOS_PRIVATE_KEY") ? aptosPlugin : null,
+            getSecret(character, "MVX_PRIVATE_KEY") ? multiversxPlugin : null,
+            getSecret(character, "ZKSYNC_PRIVATE_KEY") ? zksyncEraPlugin : null,
+            getSecret(character, "TON_PRIVATE_KEY") ? tonPlugin : null,
+            getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
+            getSecret(character, "STORY_PRIVATE_KEY") ? storyPlugin : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
@@ -552,7 +613,49 @@ function initializeDbCache(character: Character, db: IDatabaseCacheAdapter) {
     return cache;
 }
 
-async function startAgent(character: Character, directClient): AgentRuntime {
+function initializeCache(
+    cacheStore: string,
+    character: Character,
+    baseDir?: string,
+    db?: IDatabaseCacheAdapter
+) {
+    switch (cacheStore) {
+        case CacheStore.REDIS:
+            if (process.env.REDIS_URL) {
+                elizaLogger.info("Connecting to Redis...");
+                const redisClient = new RedisClient(process.env.REDIS_URL);
+                return new CacheManager(
+                    new DbCacheAdapter(redisClient, character.id) // Using DbCacheAdapter since RedisClient also implements IDatabaseCacheAdapter
+                );
+            } else {
+                throw new Error("REDIS_URL environment variable is not set.");
+            }
+
+        case CacheStore.DATABASE:
+            if (db) {
+                elizaLogger.info("Using Database Cache...");
+                return initializeDbCache(character, db);
+            } else {
+                throw new Error(
+                    "Database adapter is not provided for CacheStore.Database."
+                );
+            }
+
+        case CacheStore.FILESYSTEM:
+            elizaLogger.info("Using File System Cache...");
+            return initializeFsCache(baseDir, character);
+
+        default:
+            throw new Error(
+                `Invalid cache store: ${cacheStore} or required configuration missing.`
+            );
+    }
+}
+
+async function startAgent(
+    character: Character,
+    directClient: DirectClient
+): Promise<AgentRuntime> {
     let db: IDatabaseAdapter & IDatabaseCacheAdapter;
     try {
         character.id ??= stringToUuid(character.name);
@@ -571,12 +674,7 @@ async function startAgent(character: Character, directClient): AgentRuntime {
         await db.init();
 
         const cache = initializeDbCache(character, db);
-        const runtime: AgentRuntime = await createAgent(
-            character,
-            db,
-            cache,
-            token
-        );
+        const runtime:AgentRuntime = await createAgent(character, db, cache, token);
 
         // start services/plugins/process knowledge
         await runtime.initialize();
@@ -596,7 +694,7 @@ async function startAgent(character: Character, directClient): AgentRuntime {
             `Error starting agent for character ${character.name}:`,
             error
         );
-        console.error(error);
+        elizaLogger.error(error);
         if (db) {
             await db.close();
         }
@@ -605,7 +703,8 @@ async function startAgent(character: Character, directClient): AgentRuntime {
 }
 
 const startAgents = async () => {
-    const directClient = await DirectClientInterface.start();
+    const directClient = new DirectClient();
+    const serverPort = parseInt(settings.SERVER_PORT || "3000");
     const args = parseArguments();
 
     let charactersArg = args.characters || args.character;
@@ -623,73 +722,20 @@ const startAgents = async () => {
     } catch (error) {
         elizaLogger.error("Error starting agents:", error);
     }
+
     // upload some agent functionality into directClient
-    directClient.startAgent = async character => {
-      // wrap it so we don't have to inject directClient later
-      return startAgent(character, directClient)
+    directClient.startAgent = async (character: Character) => {
+        // wrap it so we don't have to inject directClient later
+        return startAgent(character, directClient);
     };
+    directClient.start(serverPort);
 
-    function chat() {
-        const agentId = characters[0].name ?? "Agent";
-        rl.question("You: ", async (input) => {
-            await handleUserInput(input, agentId);
-            if (input.toLowerCase() !== "exit") {
-                chat(); // Loop back to ask another question
-            }
-        });
-    }
-
-    if (!args["non-interactive"]) {
-        elizaLogger.log("Chat started. Type 'exit' to quit.");
-        chat();
-    }
+    elizaLogger.log(
+        "Run `pnpm start:client` to start the client and visit the outputted URL (http://localhost:5173) to chat with your agents"
+    );
 };
 
 startAgents().catch((error) => {
     elizaLogger.error("Unhandled error in startAgents:", error);
     process.exit(1); // Exit the process after logging
 });
-
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-});
-
-async function handleUserInput(input, agentId) {
-    if (input.toLowerCase() === "exit") {
-        gracefulExit();
-    }
-
-    try {
-        const serverPort = parseInt(settings.SERVER_PORT || "3000");
-
-        const response = await fetch(
-            `http://localhost:${serverPort}/${agentId}/message`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    text: input,
-                    userId: "user",
-                    userName: "User",
-                }),
-            }
-        );
-
-        const data = await response.json();
-        data.forEach((message) =>
-            elizaLogger.log(`${"Agent"}: ${message.text}`)
-        );
-    } catch (error) {
-        console.error("Error fetching response:", error);
-    }
-}
-
-async function gracefulExit() {
-    elizaLogger.log("Terminating and cleaning up resources...");
-    rl.close();
-    process.exit(0);
-}
-
-rl.on("SIGINT", gracefulExit);
-rl.on("SIGTERM", gracefulExit);

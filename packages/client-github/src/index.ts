@@ -1,4 +1,4 @@
-import { elizaLogger, Client, IAgentRuntime, Character, ModelClass, composeContext, Memory, generateMessageResponse, Content, HandlerCallback, UUID, generateObjectV2, stringToUuid } from "@ai16z/eliza";
+import { elizaLogger, Client, IAgentRuntime, Character, ModelClass, composeContext, Memory, generateMessageResponse, Content, HandlerCallback, UUID, generateObject, stringToUuid } from "@elizaos/core";
 import { validateGithubConfig } from "./environment";
 import { EventEmitter } from "events";
 import {
@@ -12,7 +12,7 @@ import {
     ideationAction,
     incorporateRepositoryState,
     getRepositoryRoomId
-} from "@ai16z/plugin-github";
+} from "@elizaos/plugin-github";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
 
@@ -172,7 +172,7 @@ export class GitHubClient extends EventEmitter {
         });
         // elizaLogger.log("Composed context for OODA cycle:", context);
 
-        const response = await generateObjectV2({
+        const response = await generateObject({
             runtime: this.runtime,
             context,
             modelClass: ModelClass.LARGE,

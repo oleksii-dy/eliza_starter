@@ -1,7 +1,7 @@
 import {
     composeContext,
     elizaLogger,
-    generateObjectV2,
+    generateObject,
     Action,
     HandlerCallback,
     IAgentRuntime,
@@ -10,7 +10,7 @@ import {
     Plugin,
     State,
     stringToUuid,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 import { GitHubService } from "../services/github";
 import { createIssueTemplate } from "../templates";
 import {
@@ -103,7 +103,7 @@ export const createIssueAction: Action = {
         });
         elizaLogger.info("Context:", context);
 
-        const details = await generateObjectV2({
+        const details = await generateObject({
             runtime,
             context,
             modelClass: ModelClass.LARGE,

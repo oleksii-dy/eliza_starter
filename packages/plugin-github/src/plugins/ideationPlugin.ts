@@ -1,7 +1,7 @@
 import {
     composeContext,
     elizaLogger,
-    generateObjectV2,
+    generateObject,
     Action,
     HandlerCallback,
     IAgentRuntime,
@@ -10,7 +10,7 @@ import {
     Plugin,
     State,
     stringToUuid,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 import { ideationTemplate } from "../templates";
 import { IdeationSchema, isIdeationContent } from "../types";
 import { getRepositoryRoomId, incorporateRepositoryState } from "../utils";
@@ -45,7 +45,7 @@ export const ideationAction: Action = {
             template: ideationTemplate,
         });
 
-        const details = await generateObjectV2({
+        const details = await generateObject({
             runtime,
             context,
             modelClass: ModelClass.LARGE,

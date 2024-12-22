@@ -1,7 +1,7 @@
 import {
     composeContext,
     elizaLogger,
-    generateObjectV2,
+    generateObject,
     Action,
     HandlerCallback,
     IAgentRuntime,
@@ -9,7 +9,7 @@ import {
     ModelClass,
     Plugin,
     State,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 import { initializeTemplate } from "../templates";
 import {
     InitializeContent,
@@ -67,7 +67,7 @@ export const initializeRepositoryAction: Action = {
             template: initializeTemplate,
         });
 
-        const details = await generateObjectV2({
+        const details = await generateObject({
             runtime,
             context,
             modelClass: ModelClass.LARGE,

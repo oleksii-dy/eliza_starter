@@ -4,7 +4,7 @@ import { createHash } from "crypto";
 import {
     composeContext,
     elizaLogger,
-    generateObjectV2,
+    generateObject,
     stringToUuid,
     Action,
     HandlerCallback,
@@ -13,7 +13,7 @@ import {
     ModelClass,
     Plugin,
     State,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 import { createMemoriesFromFilesTemplate } from "../templates";
 import {
     CreateMemoriesFromFilesContent,
@@ -130,7 +130,7 @@ export const createMemoriesFromFilesAction: Action = {
             template: createMemoriesFromFilesTemplate,
         });
 
-        const details = await generateObjectV2({
+        const details = await generateObject({
             runtime,
             context,
             modelClass: ModelClass.LARGE,

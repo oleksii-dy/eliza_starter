@@ -4,7 +4,7 @@ import { glob } from "glob";
 import { existsSync } from "fs";
 import simpleGit from "simple-git";
 import { Octokit } from "@octokit/rest";
-import { elizaLogger, IAgentRuntime, Memory, State, stringToUuid, UUID } from "@ai16z/eliza";
+import { elizaLogger, IAgentRuntime, Memory, State, stringToUuid, UUID } from "@elizaos/core";
 
 export function getRepoPath(owner: string, repo: string) {
     return path.join(process.cwd(), ".repos", owner, repo);

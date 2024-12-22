@@ -27,7 +27,7 @@ import {
     addCommentToIssueAction,
 } from "./plugins/addCommentToIssue";
 import { githubIdeationPlugin, ideationAction } from "./plugins/ideationPlugin";
-import type { Plugin } from "@ai16z/eliza";
+import type { Plugin } from "@elizaos/core";
 import { sourceCodeProvider } from "./providers/sourceCode";
 import { testFilesProvider } from "./providers/testFiles";
 import { workflowFilesProvider } from "./providers/workflowFiles";
