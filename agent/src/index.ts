@@ -6,7 +6,16 @@ import { DiscordClientInterface } from "@elizaos/client-discord";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 import { FarcasterAgentClient } from "@elizaos/client-farcaster";
-import { GitHubClient, GitHubClientInterface } from "@elizaos/client-github";
+import { GitHubClientInterface } from "@elizaos/client-github";
+import { SlackClientInterface } from "@elizaos/client-slack";
+import { LensAgentClient } from "@elizaos/client-lens";
+import {nearPlugin} from "@elizaos/plugin-near";
+import {nftGenerationPlugin} from "@elizaos/plugin-nft-generation";
+import {multiversxPlugin} from "@elizaos/plugin-multiversx";
+import {zksyncEraPlugin} from "@elizaos/plugin-zksync-era";
+import {tonPlugin} from "@elizaos/plugin-ton";
+import {suiPlugin} from "@elizaos/plugin-sui";
+import {storyPlugin} from "@elizaos/plugin-story";
 import {
     AgentRuntime,
     CacheManager,
@@ -371,10 +380,8 @@ export async function initializeClients(
         character.clients?.map((str) => str.toLowerCase()) || [];
     elizaLogger.log("initializeClients", clientTypes, "for", character.name);
 
-    if (clientTypes.includes(Clients.DIRECT)) {
-        const autoClient = await AutoClientInterface.start(runtime);
-        if (autoClient) clients.auto = autoClient;
-    }
+    const autoClient = await AutoClientInterface.start(runtime);
+    if (autoClient) clients.auto = autoClient;
 
     if (clientTypes.includes(Clients.DISCORD)) {
         const discordClient = await DiscordClientInterface.start(runtime);

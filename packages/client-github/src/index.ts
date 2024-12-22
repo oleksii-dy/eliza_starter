@@ -101,7 +101,7 @@ export class GitHubClient extends EventEmitter {
                 createdAt: timestamp,
             }
             let originalState = await this.runtime.composeState(originalMemory);
-            originalState = await incorporateRepositoryState(originalState, this.runtime, originalMemory);
+            originalState = await incorporateRepositoryState(originalState, this.runtime, originalMemory, []);
             const initializeRepositoryMemory: Memory = {
                 id: stringToUuid(`${roomId}-${this.runtime.agentId}-${timestamp}-initialize-repository`),
                 userId: userIdUUID,
@@ -163,7 +163,7 @@ export class GitHubClient extends EventEmitter {
             content: { text: "sample text", action: "NOTHING", source: "github" },
         } as Memory;
         let originalState = await this.runtime.composeState(originalMemory, {});
-        originalState = await incorporateRepositoryState(originalState, this.runtime, originalMemory);
+        originalState = await incorporateRepositoryState(originalState, this.runtime, originalMemory, []);
         elizaLogger.log("Original state:", originalState);
         // Orient: Analyze the memories to determine if logging improvements are needed
         const context = composeContext({
