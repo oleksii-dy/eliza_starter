@@ -1,4 +1,5 @@
 import { Client, IAgentRuntime, elizaLogger } from "@ai16z/eliza";
+import diamondHandPlugin from "@ai16z/plugin-diamondhands";
 
 export class AutoClient {
     interval: NodeJS.Timeout;
@@ -8,12 +9,37 @@ export class AutoClient {
         this.runtime = runtime;
 
         // start a loop that runs every x seconds
-        this.interval = setInterval(
-            async () => {
-                elizaLogger.log("running auto client...");
-            },
-            60 * 60 * 1000
-        ); // 1 hour in milliseconds
+        this.initializePlugin().then(() => {
+            this.interval = setInterval(
+                async () => {
+                    console.log("running auto client...");
+                    await this.executeTradingCycle();
+                },
+                60 * 60 * 1000
+            ); // 1 hour in milliseconds
+        });
+    }
+    
+    private async initializePlugin() {
+        try {
+            const plugin = await diamondHandPlugin(
+                (key: string) => this.runtime.getSetting(key),
+                this.runtime
+            );
+            elizaLogger.log("DiamonHand plugin initialized successfully");
+        } catch (error) {
+            elizaLogger.error("Failed to initialize DiamonHand plugin:", error);
+            throw error;
+        }
+    }
+
+    private async executeTradingCycle() {
+        try {
+            elizaLogger.log("Running auto client trading cycle...");
+            // Trading logic is handled by the plugin itself
+        } catch (error) {
+            elizaLogger.error("Error in trading cycle:", error);
+        }
     }
 }
 
