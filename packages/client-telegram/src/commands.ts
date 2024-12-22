@@ -60,7 +60,7 @@ export const commands: CommandHandler[] = [
                                 [
                                     {
                                         text: "Connect Wallet",
-                                        url: `${webAppUrl}/verify?session=${sessionId}&userId=${userId}`,
+                                        url: `${webAppUrl}/verify?session=${sessionId}`,
                                     },
                                 ],
                             ],
@@ -74,9 +74,14 @@ export const commands: CommandHandler[] = [
                     const privateGroupId =
                         runtime.getSetting("PRIVATE_GROUP_ID");
                     if (privateGroupId) {
+                        // Also unban from private group
                         const formattedGroupId = privateGroupId.toString().startsWith('-100')
                             ? privateGroupId.toString()
                             : `-100${privateGroupId.toString().replace('-', '')}`;
+
+                        // unban user so invite link works
+                        await ctx.telegram.unbanChatMember(formattedGroupId, parseInt(userId), { only_if_banned: true });
+
                         const inviteLinkObj = await ctx.telegram.createChatInviteLink(
                             formattedGroupId,
                             {
@@ -127,6 +132,7 @@ export const commands: CommandHandler[] = [
                 .map((cmd) => `/${cmd.command} - ${cmd.description}`)
                 .join("\n");
             await ctx.reply(`Available commands:\n\n${helpText}`, {
+                parse_mode: "HTML",
                 reply_markup: {
                     inline_keyboard: [
                         [
@@ -146,7 +152,7 @@ export const commands: CommandHandler[] = [
         description: "Check bot status",
         handler: async (ctx: Context, runtime: IAgentRuntime) => {
             await ctx.reply(
-                `✅ I'm online and running!\nCharacter: ${runtime.character.name}`
+                `✅ I'm online and running!\nAgent: ${runtime.character.name}`
             );
         },
     },
