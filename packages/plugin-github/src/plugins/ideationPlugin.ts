@@ -21,7 +21,9 @@ export const ideationAction: Action = {
     description: "Generates ideas and suggestions based on user message using the context of the files and previous messages",
     validate: async (runtime: IAgentRuntime) => {
         const token = !!runtime.getSetting("GITHUB_API_TOKEN");
-        return token;
+        const repo = !!runtime.getSetting("GITHUB_REPO");
+        const owner = !!runtime.getSetting("GITHUB_OWNER");
+        return token && repo && owner;
     },
     handler: async (
         runtime: IAgentRuntime,

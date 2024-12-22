@@ -1,4 +1,4 @@
-import { elizaLogger, Client, IAgentRuntime, Character, generateShouldRespond, ModelClass, composeContext, State, Memory, generateMessageResponse, getEmbeddingZeroVector, Content, HandlerCallback, UUID, generateObjectV2, stringToUuid, GoalStatus } from "@ai16z/eliza";
+import { elizaLogger, Client, IAgentRuntime, Character, ModelClass, composeContext, Memory, generateMessageResponse, Content, HandlerCallback, UUID, generateObjectV2, stringToUuid } from "@ai16z/eliza";
 import { validateGithubConfig } from "./environment";
 import { EventEmitter } from "events";
 import {
@@ -9,17 +9,11 @@ import {
     createIssueAction,
     modifyIssueAction,
     addCommentToIssueAction,
-    sourceCodeProvider,
-    testFilesProvider,
-    workflowFilesProvider,
-    documentationFilesProvider,
-    releasesProvider,
-    getFilesFromMemories,
-    ideationAction
+    ideationAction,
+    incorporateRepositoryState
 } from "@ai16z/plugin-github";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
-import { getIssuesFromMemories, getPullRequestsFromMemories } from "./utils"; // Import the utility functions
 
 export class GitHubClient extends EventEmitter {
     apiToken: string;
@@ -42,12 +36,6 @@ export class GitHubClient extends EventEmitter {
         this.runtime.registerAction(modifyIssueAction);
         this.runtime.registerAction(addCommentToIssueAction);
         this.runtime.registerAction(ideationAction);
-
-        // this.runtime.providers.push(sourceCodeProvider);
-        // this.runtime.providers.push(testFilesProvider);
-        // this.runtime.providers.push(workflowFilesProvider);
-        // this.runtime.providers.push(documentationFilesProvider);
-        // this.runtime.providers.push(releasesProvider);
 
         elizaLogger.log("GitHubClient actions and providers registered.");
 
@@ -111,22 +99,8 @@ export class GitHubClient extends EventEmitter {
                 roomId,
                 createdAt: timestamp,
             }
-            const originalState = await this.runtime.composeState(originalMemory);
-            originalState.files = []
-            originalState.character = JSON.stringify(this.runtime.character || {}, null, 2);
-            originalState.owner = owner;
-            originalState.repository = repository;
-
-            // Get previous issues from memory
-            const previousIssues = await getIssuesFromMemories(this.runtime, owner, repository);
-            originalState.previousIssues = JSON.stringify(previousIssues.map(issue => ({
-                title: issue.content.text,
-                body: (issue.content.metadata as any).body,
-                url: (issue.content.metadata as any).url,
-                number: (issue.content.metadata as any).number,
-                state: (issue.content.metadata as any).state,
-            })), null, 2);
-            elizaLogger.log("Previous issues:", previousIssues);
+            let originalState = await this.runtime.composeState(originalMemory);
+            originalState = await incorporateRepositoryState(originalState, this.runtime, originalMemory);
             const initializeRepositoryMemory: Memory = {
                 id: stringToUuid(`${roomId}-${this.runtime.agentId}-${timestamp}-initialize-repository`),
                 userId: userIdUUID,
@@ -187,35 +161,8 @@ export class GitHubClient extends EventEmitter {
             agentId: this.runtime.agentId,
             content: { text: "sample text", action: "NOTHING", source: "github" },
         } as Memory;
-        const originalState = await this.runtime.composeState(originalMemory, {});
-        elizaLogger.log("Original state:", originalState);
-        const files = await getFilesFromMemories(this.runtime, originalMemory);
-        elizaLogger.log("Files:", files);
-        // add additional keys to state
-        originalState.files = files;
-        originalState.character = JSON.stringify(this.runtime.character || {}, null, 2);
-        originalState.owner = owner;
-        originalState.repository = repository;
-
-        // Get previous issues from memory
-        const previousIssues = await getIssuesFromMemories(this.runtime, owner, repository);
-        originalState.previousIssues = JSON.stringify(previousIssues.map(issue => ({
-            title: issue.content.text,
-            body: (issue.content.metadata as any).body,
-            url: (issue.content.metadata as any).url,
-            number: (issue.content.metadata as any).number,
-            state: (issue.content.metadata as any).state,
-        })), null, 2);
-        elizaLogger.log("Previous issues:", previousIssues);
-        // Get previous pull requests from memory
-        const previousPRs = await getPullRequestsFromMemories(this.runtime, owner, repository);
-        originalState.previousPRs = JSON.stringify(previousPRs.map(pr => ({
-            title: pr.content.text,
-            url: (pr.content.metadata as any).url,
-            number: (pr.content.metadata as any).number,
-            state: (pr.content.metadata as any).state,
-        })), null, 2);
-        elizaLogger.log("Previous PRs:", originalState.previousPRs);
+        let originalState = await this.runtime.composeState(originalMemory, {});
+        originalState = await incorporateRepositoryState(originalState, this.runtime, originalMemory);
         elizaLogger.log("Original state:", originalState);
         // Orient: Analyze the memories to determine if logging improvements are needed
         const context = composeContext({
