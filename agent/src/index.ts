@@ -27,34 +27,11 @@ import {
     CacheStore,
 } from "@elizaos/core";
 import { RedisClient } from "@elizaos/adapter-redis";
-import { zgPlugin } from "@elizaos/plugin-0g";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import createGoatPlugin from "@elizaos/plugin-goat";
-// import { intifacePlugin } from "@elizaos/plugin-intiface";
 import { DirectClient } from "@elizaos/client-direct";
-import { aptosPlugin } from "@elizaos/plugin-aptos";
-import {
-    advancedTradePlugin,
-    coinbaseCommercePlugin,
-    coinbaseMassPaymentsPlugin,
-    tokenContractPlugin,
-    tradePlugin,
-    webhookPlugin,
-} from "@elizaos/plugin-coinbase";
-import { confluxPlugin } from "@elizaos/plugin-conflux";
-import { evmPlugin } from "@elizaos/plugin-evm";
-import { storyPlugin } from "@elizaos/plugin-story";
-import { flowPlugin } from "@elizaos/plugin-flow";
-import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
-import { multiversxPlugin } from "@elizaos/plugin-multiversx";
-import { nearPlugin } from "@elizaos/plugin-near";
-import { nftGenerationPlugin } from "@elizaos/plugin-nft-generation";
 import { createNodePlugin } from "@elizaos/plugin-node";
-import { solanaPlugin } from "@elizaos/plugin-solana";
-import { suiPlugin } from "@elizaos/plugin-sui";
-import { TEEMode, teePlugin } from "@elizaos/plugin-tee";
-import { tonPlugin } from "@elizaos/plugin-ton";
-import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
+import { TEEMode } from "@elizaos/plugin-tee";
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
@@ -504,73 +481,151 @@ export async function createAgent(
         // character.plugins are handled when clients are added
         plugins: [
             bootstrapPlugin,
-            getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
-                ? confluxPlugin
-                : null,
             nodePlugin,
-            getSecret(character, "SOLANA_PUBLIC_KEY") ||
-            (getSecret(character, "WALLET_PUBLIC_KEY") &&
-                !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
-                ? solanaPlugin
-                : null,
-            (getSecret(character, "NEAR_ADDRESS") ||
-                getSecret(character, "NEAR_WALLET_PUBLIC_KEY")) &&
-            getSecret(character, "NEAR_WALLET_SECRET_KEY")
-                ? nearPlugin
-                : null,
+            (async () => {
+                return getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
+                    ? (await import("@elizaos/plugin-conflux")).confluxPlugin
+                    : null;
+            })(),
+            (async () => {
+                return getSecret(character, "SOLANA_PUBLIC_KEY") ||
+                    (getSecret(character, "WALLET_PUBLIC_KEY") &&
+                        !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith(
+                            "0x"
+                        ))
+                    ? (await import("@elizaos/plugin-solana")).solanaPlugin
+                    : null;
+            })(),
+            (async () => {
+                return (getSecret(character, "NEAR_ADDRESS") ||
+                    getSecret(character, "NEAR_WALLET_PUBLIC_KEY")) &&
+                    getSecret(character, "NEAR_WALLET_SECRET_KEY")
+                    ? (await import("@elizaos/plugin-near")).nearPlugin
+                    : null;
+            })(),
             getSecret(character, "EVM_PUBLIC_KEY") ||
-            (getSecret(character, "WALLET_PUBLIC_KEY") &&
-                getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
-                ? evmPlugin
-                : null,
-            (getSecret(character, "SOLANA_PUBLIC_KEY") ||
                 (getSecret(character, "WALLET_PUBLIC_KEY") &&
-                    !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith(
-                        "0x"
-                    ))) &&
-            getSecret(character, "SOLANA_ADMIN_PUBLIC_KEY") &&
-            getSecret(character, "SOLANA_PRIVATE_KEY") &&
-            getSecret(character, "SOLANA_ADMIN_PRIVATE_KEY")
-                ? nftGenerationPlugin
-                : null,
-            getSecret(character, "ZEROG_PRIVATE_KEY") ? zgPlugin : null,
-            getSecret(character, "COINBASE_COMMERCE_KEY")
-                ? coinbaseCommercePlugin
-                : null,
-            getSecret(character, "FAL_API_KEY") ||
-            getSecret(character, "OPENAI_API_KEY") ||
-            getSecret(character, "VENICE_API_KEY") ||
-            getSecret(character, "HEURIST_API_KEY")
-                ? imageGenerationPlugin
-                : null,
-            ...(getSecret(character, "COINBASE_API_KEY") &&
-            getSecret(character, "COINBASE_PRIVATE_KEY")
-                ? [
-                      coinbaseMassPaymentsPlugin,
-                      tradePlugin,
-                      tokenContractPlugin,
-                      advancedTradePlugin,
-                  ]
-                : []),
-            ...(teeMode !== TEEMode.OFF && walletSecretSalt
-                ? [teePlugin, solanaPlugin]
-                : []),
-            getSecret(character, "COINBASE_API_KEY") &&
-            getSecret(character, "COINBASE_PRIVATE_KEY") &&
-            getSecret(character, "COINBASE_NOTIFICATION_URI")
-                ? webhookPlugin
-                : null,
-            getSecret(character, "ALCHEMY_API_KEY") ? goatPlugin : null,
-            getSecret(character, "FLOW_ADDRESS") &&
-            getSecret(character, "FLOW_PRIVATE_KEY")
-                ? flowPlugin
-                : null,
-            getSecret(character, "APTOS_PRIVATE_KEY") ? aptosPlugin : null,
-            getSecret(character, "MVX_PRIVATE_KEY") ? multiversxPlugin : null,
-            getSecret(character, "ZKSYNC_PRIVATE_KEY") ? zksyncEraPlugin : null,
-            getSecret(character, "TON_PRIVATE_KEY") ? tonPlugin : null,
-            getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
-            getSecret(character, "STORY_PRIVATE_KEY") ? storyPlugin : null,
+                    (async () => {
+                        return getSecret(
+                            character,
+                            "WALLET_PUBLIC_KEY"
+                        )?.startsWith("0x")
+                            ? (await import("@ai16z/plugin-evm")).evmPlugin
+                            : null;
+                    })()),
+            (async () => {
+                return (getSecret(character, "SOLANA_PUBLIC_KEY") ||
+                    (getSecret(character, "WALLET_PUBLIC_KEY") &&
+                        !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith(
+                            "0x"
+                        ))) &&
+                    getSecret(character, "SOLANA_ADMIN_PUBLIC_KEY") &&
+                    getSecret(character, "SOLANA_PRIVATE_KEY") &&
+                    getSecret(character, "SOLANA_ADMIN_PRIVATE_KEY")
+                    ? (await import("@elizaos/plugin-nft-generation"))
+                          .nftGenerationPlugin
+                    : null;
+            })(),
+            (async () => {
+                return getSecret(character, "ZEROG_PRIVATE_KEY")
+                    ? (await import("@elizaos/plugin-0g")).zgPlugin
+                    : null;
+            })(),
+            (async () => {
+                return getSecret(character, "COINBASE_COMMERCE_KEY")
+                    ? (await import("@elizaos/plugin-coinbase"))
+                          .coinbaseCommercePlugin
+                    : null;
+            })(),
+            (async () => {
+                return getSecret(character, "COINBASE_COMMERCE_KEY")
+                    ? (await import("@elizaos/plugin-coinbase"))
+                          .coinbaseCommercePlugin
+                    : null;
+            })(),
+            (async () => {
+                return getSecret(character, "FAL_API_KEY") ||
+                    getSecret(character, "OPENAI_API_KEY") ||
+                    getSecret(character, "VENICE_API_KEY") ||
+                    getSecret(character, "HEURIST_API_KEY")
+                    ? (await import("@elizaos/plugin-image-generation"))
+                          .imageGenerationPlugin
+                    : null;
+            })(),
+            ...(await (async () => {
+                if (
+                    getSecret(character, "COINBASE_API_KEY") &&
+                    getSecret(character, "COINBASE_PRIVATE_KEY")
+                ) {
+                    const coinbase = await import("@elizaos/plugin-coinbase");
+                    return [
+                        coinbase.coinbaseMassPaymentsPlugin,
+                        coinbase.tradePlugin,
+                        coinbase.tokenContractPlugin,
+                        coinbase.advancedTradePlugin,
+                    ];
+                }
+                return [];
+            })()),
+            ...(await (async () => {
+                if (teeMode !== TEEMode.OFF && walletSecretSalt) {
+                    return [
+                        (await import("@elizaos/plugin-tee")).teePlugin,
+                        (await import("@elizaos/plugin-solana")).solanaPlugin,
+                    ];
+                }
+                return [];
+            })()),
+            (async () => {
+                return getSecret(character, "COINBASE_API_KEY") &&
+                    getSecret(character, "COINBASE_PRIVATE_KEY") &&
+                    getSecret(character, "COINBASE_NOTIFICATION_URI")
+                    ? (await import("@elizaos/plugin-coinbase")).webhookPlugin
+                    : null;
+            })(),
+            (async () => {
+                return getSecret(character, "ALCHEMY_API_KEY")
+                    ? (await import("@elizaos/plugin-goat")).default
+                    : null;
+            })(),
+            (async () => {
+                return getSecret(character, "FLOW_ADDRESS") &&
+                    getSecret(character, "FLOW_PRIVATE_KEY")
+                    ? (await import("@elizaos/plugin-flow")).flowPlugin
+                    : null;
+            })(),
+            (async () => {
+                return getSecret(character, "APTOS_PRIVATE_KEY")
+                    ? (await import("@elizaos/plugin-aptos")).aptosPlugin
+                    : null;
+            })(),
+            (async () => {
+                return getSecret(character, "MVX_PRIVATE_KEY")
+                    ? (await import("@elizaos/plugin-multiversx"))
+                          .multiversxPlugin
+                    : null;
+            })(),
+            (async () => {
+                return getSecret(character, "ZKSYNC_PRIVATE_KEY")
+                    ? (await import("@elizaos/plugin-zksync-era"))
+                          .zksyncEraPlugin
+                    : null;
+            })(),
+            (async () => {
+                return getSecret(character, "TON_PRIVATE_KEY")
+                    ? (await import("@elizaos/plugin-ton")).tonPlugin
+                    : null;
+            })(),
+            (async () => {
+                return getSecret(character, "SUI_PRIVATE_KEY")
+                    ? (await import("@elizaos/plugin-sui")).suiPlugin
+                    : null;
+            })(),
+            (async () => {
+                return getSecret(character, "STORY_PRIVATE_KEY")
+                    ? (await import("@elizaos/plugin-story")).storyPlugin
+                    : null;
+            })(),
         ].filter(Boolean),
         providers: [],
         actions: [],
