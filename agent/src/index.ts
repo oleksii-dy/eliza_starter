@@ -25,6 +25,7 @@ import {
     stringToUuid,
     validateCharacterConfig,
     CacheStore,
+    Plugin,
 } from "@elizaos/core";
 import { RedisClient } from "@elizaos/adapter-redis";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
@@ -474,16 +475,14 @@ export async function createAgent(
 
     async function loadPlugin(
         keys: string | string[],
-        importFn: () => Promise<any>,
-        exportName?: string
-    ) {
+        importFn: () => Promise<Plugin>
+    ): Promise<Plugin | null> {
         const keyArray = Array.isArray(keys) ? keys : [keys];
         const hasAllSecrets = keyArray.every((key) =>
             getSecret(character, key)
         );
         if (!hasAllSecrets) return null;
-        const module = await importFn();
-        return exportName ? module[exportName] : module.default;
+        return importFn();
     }
 
     return new AgentRuntime({
@@ -496,35 +495,29 @@ export async function createAgent(
         plugins: [
             bootstrapPlugin,
             nodePlugin,
-            await loadPlugin(
-                ["COINBASE_API_KEY", "COINBASE_PRIVATE_KEY"],
-                () => import("@elizaos/plugin-coinbase"),
-                "coinbaseMassPaymentsPlugin"
+            await loadPlugin(["COINBASE_API_KEY", "COINBASE_PRIVATE_KEY"], () =>
+                import("@elizaos/plugin-coinbase").then(
+                    (m) => m.coinbaseMassPaymentsPlugin
+                )
             ),
-            await loadPlugin(
-                ["COINBASE_API_KEY", "COINBASE_PRIVATE_KEY"],
-                () => import("@elizaos/plugin-coinbase"),
-                "tradePlugin"
+            await loadPlugin(["COINBASE_API_KEY", "COINBASE_PRIVATE_KEY"], () =>
+                import("@elizaos/plugin-coinbase").then((m) => m.tradePlugin)
             ),
-            await loadPlugin(
-                ["COINBASE_API_KEY", "COINBASE_PRIVATE_KEY"],
-                () => import("@elizaos/plugin-coinbase"),
-                "tokenContractPlugin"
+            await loadPlugin(["COINBASE_API_KEY", "COINBASE_PRIVATE_KEY"], () =>
+                import("@elizaos/plugin-coinbase").then(
+                    (m) => m.tokenContractPlugin
+                )
             ),
-            await loadPlugin(
-                ["COINBASE_API_KEY", "COINBASE_PRIVATE_KEY"],
-                () => import("@elizaos/plugin-coinbase"),
-                "advancedTradePlugin"
+            await loadPlugin(["COINBASE_API_KEY", "COINBASE_PRIVATE_KEY"], () =>
+                import("@elizaos/plugin-coinbase").then(
+                    (m) => m.advancedTradePlugin
+                )
             ),
-            await loadPlugin(
-                "CONFLUX_CORE_PRIVATE_KEY",
-                () => import("@elizaos/plugin-conflux"),
-                "confluxPlugin"
+            await loadPlugin("CONFLUX_CORE_PRIVATE_KEY", () =>
+                import("@elizaos/plugin-conflux").then((m) => m.confluxPlugin)
             ),
-            await loadPlugin(
-                "SOLANA_PUBLIC_KEY",
-                () => import("@elizaos/plugin-solana"),
-                "solanaPlugin"
+            await loadPlugin("SOLANA_PUBLIC_KEY", () =>
+                import("@elizaos/plugin-solana").then((m) => m.solanaPlugin)
             ),
             await loadPlugin(
                 [
@@ -532,13 +525,10 @@ export async function createAgent(
                     "NEAR_WALLET_PUBLIC_KEY",
                     "NEAR_WALLET_SECRET_KEY",
                 ],
-                () => import("@elizaos/plugin-near"),
-                "nearPlugin"
+                () => import("@elizaos/plugin-near").then((m) => m.nearPlugin)
             ),
-            await loadPlugin(
-                "EVM_PUBLIC_KEY",
-                () => import("@ai16z/plugin-evm"),
-                "evmPlugin"
+            await loadPlugin("EVM_PUBLIC_KEY", () =>
+                import("@ai16z/plugin-evm").then((m) => m.evmPlugin)
             ),
             await loadPlugin(
                 [
@@ -547,18 +537,18 @@ export async function createAgent(
                     "SOLANA_PRIVATE_KEY",
                     "SOLANA_ADMIN_PRIVATE_KEY",
                 ],
-                () => import("@elizaos/plugin-nft-generation"),
-                "nftGenerationPlugin"
+                () =>
+                    import("@elizaos/plugin-nft-generation").then(
+                        (m) => m.nftGenerationPlugin
+                    )
             ),
-            await loadPlugin(
-                "ZEROG_PRIVATE_KEY",
-                () => import("@elizaos/plugin-0g"),
-                "zgPlugin"
+            await loadPlugin("ZEROG_PRIVATE_KEY", () =>
+                import("@elizaos/plugin-0g").then((m) => m.zgPlugin)
             ),
-            await loadPlugin(
-                "COINBASE_COMMERCE_KEY",
-                () => import("@elizaos/plugin-coinbase"),
-                "coinbaseCommercePlugin"
+            await loadPlugin("COINBASE_COMMERCE_KEY", () =>
+                import("@elizaos/plugin-coinbase").then(
+                    (m) => m.coinbaseCommercePlugin
+                )
             ),
             await loadPlugin(
                 [
@@ -567,47 +557,38 @@ export async function createAgent(
                     "VENICE_API_KEY",
                     "HEURIST_API_KEY",
                 ],
-                () => import("@elizaos/plugin-image-generation"),
-                "imageGenerationPlugin"
+                () =>
+                    import("@elizaos/plugin-image-generation").then(
+                        (m) => m.imageGenerationPlugin
+                    )
             ),
-            await loadPlugin(
-                ["ALCHEMY_API_KEY"],
-                () => import("@elizaos/plugin-goat")
+            await loadPlugin(["ALCHEMY_API_KEY"], () =>
+                import("@elizaos/plugin-goat").then((m) => m.default)
             ),
-            await loadPlugin(
-                "FLOW_ADDRESS",
-                () => import("@elizaos/plugin-flow"),
-                "flowPlugin"
+            await loadPlugin("FLOW_ADDRESS", () =>
+                import("@elizaos/plugin-flow").then((m) => m.flowPlugin)
             ),
-            await loadPlugin(
-                "APTOS_PRIVATE_KEY",
-                () => import("@elizaos/plugin-aptos"),
-                "aptosPlugin"
+            await loadPlugin("APTOS_PRIVATE_KEY", () =>
+                import("@elizaos/plugin-aptos").then((m) => m.aptosPlugin)
             ),
-            await loadPlugin(
-                "MVX_PRIVATE_KEY",
-                () => import("@elizaos/plugin-multiversx"),
-                "multiversxPlugin"
+            await loadPlugin("MVX_PRIVATE_KEY", () =>
+                import("@elizaos/plugin-multiversx").then(
+                    (m) => m.multiversxPlugin
+                )
             ),
-            await loadPlugin(
-                "ZKSYNC_PRIVATE_KEY",
-                () => import("@elizaos/plugin-zksync-era"),
-                "zksyncEraPlugin"
+            await loadPlugin("ZKSYNC_PRIVATE_KEY", () =>
+                import("@elizaos/plugin-zksync-era").then(
+                    (m) => m.zksyncEraPlugin
+                )
             ),
-            await loadPlugin(
-                "TON_PRIVATE_KEY",
-                () => import("@elizaos/plugin-ton"),
-                "tonPlugin"
+            await loadPlugin("TON_PRIVATE_KEY", () =>
+                import("@elizaos/plugin-ton").then((m) => m.tonPlugin)
             ),
-            await loadPlugin(
-                "SUI_PRIVATE_KEY",
-                () => import("@elizaos/plugin-sui"),
-                "suiPlugin"
+            await loadPlugin("SUI_PRIVATE_KEY", () =>
+                import("@elizaos/plugin-sui").then((m) => m.suiPlugin)
             ),
-            await loadPlugin(
-                "STORY_PRIVATE_KEY",
-                () => import("@elizaos/plugin-story"),
-                "storyPlugin"
+            await loadPlugin("STORY_PRIVATE_KEY", () =>
+                import("@elizaos/plugin-story").then((m) => m.storyPlugin)
             ),
         ].filter(Boolean),
         providers: [],
