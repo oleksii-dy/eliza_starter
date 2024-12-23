@@ -58,13 +58,3 @@ jobs:
                   subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
                   subject-digest: ${{ steps.push.outputs.digest }}
                   push-to-registry: true
-
-            # This step makes the Docker image public, so users can pull it without authentication.
-            - name: Make Docker image public
-              run: |
-                  curl \
-                    -X PATCH \
-                    -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-                    -H "Accept: application/vnd.github.v3+json" \
-                    https://api.github.com/user/packages/container/${{ env.IMAGE_NAME }}/visibility \
-                    -d '{"visibility":"public"}'
