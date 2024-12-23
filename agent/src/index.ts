@@ -510,105 +510,105 @@ export async function createAgent(
                 ["COINBASE_API_KEY", "COINBASE_PRIVATE_KEY"],
                 () => import("@elizaos/plugin-coinbase"),
                 "tokenContractPlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 ["COINBASE_API_KEY", "COINBASE_PRIVATE_KEY"],
                 () => import("@elizaos/plugin-coinbase"),
                 "advancedTradePlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 "CONFLUX_CORE_PRIVATE_KEY",
                 () => import("@elizaos/plugin-conflux"),
                 "confluxPlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 "SOLANA_PUBLIC_KEY",
                 () => import("@elizaos/plugin-solana"),
                 "solanaPlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 [
-                  "NEAR_ADDRESS",
-                  "NEAR_WALLET_PUBLIC_KEY",
-                  "NEAR_WALLET_SECRET_KEY",
+                    "NEAR_ADDRESS",
+                    "NEAR_WALLET_PUBLIC_KEY",
+                    "NEAR_WALLET_SECRET_KEY",
                 ],
                 () => import("@elizaos/plugin-near"),
                 "nearPlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 "EVM_PUBLIC_KEY",
                 () => import("@ai16z/plugin-evm"),
                 "evmPlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 [
-                  "SOLANA_PUBLIC_KEY",
-                  "SOLANA_ADMIN_PUBLIC_KEY",
-                  "SOLANA_PRIVATE_KEY",
-                  "SOLANA_ADMIN_PRIVATE_KEY",
+                    "SOLANA_PUBLIC_KEY",
+                    "SOLANA_ADMIN_PUBLIC_KEY",
+                    "SOLANA_PRIVATE_KEY",
+                    "SOLANA_ADMIN_PRIVATE_KEY",
                 ],
                 () => import("@elizaos/plugin-nft-generation"),
                 "nftGenerationPlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 "ZEROG_PRIVATE_KEY",
                 () => import("@elizaos/plugin-0g"),
                 "zgPlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 "COINBASE_COMMERCE_KEY",
                 () => import("@elizaos/plugin-coinbase"),
                 "coinbaseCommercePlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 [
-                  "FAL_API_KEY",
-                  "OPENAI_API_KEY",
-                  "VENICE_API_KEY",
-                  "HEURIST_API_KEY",
+                    "FAL_API_KEY",
+                    "OPENAI_API_KEY",
+                    "VENICE_API_KEY",
+                    "HEURIST_API_KEY",
                 ],
                 () => import("@elizaos/plugin-image-generation"),
                 "imageGenerationPlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 ["ALCHEMY_API_KEY"],
                 () => import("@elizaos/plugin-goat")
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 "FLOW_ADDRESS",
                 () => import("@elizaos/plugin-flow"),
                 "flowPlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 "APTOS_PRIVATE_KEY",
                 () => import("@elizaos/plugin-aptos"),
                 "aptosPlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 "MVX_PRIVATE_KEY",
                 () => import("@elizaos/plugin-multiversx"),
                 "multiversxPlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 "ZKSYNC_PRIVATE_KEY",
                 () => import("@elizaos/plugin-zksync-era"),
                 "zksyncEraPlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 "TON_PRIVATE_KEY",
                 () => import("@elizaos/plugin-ton"),
                 "tonPlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 "SUI_PRIVATE_KEY",
                 () => import("@elizaos/plugin-sui"),
                 "suiPlugin"
-              ),
-              await loadPlugin(
+            ),
+            await loadPlugin(
                 "STORY_PRIVATE_KEY",
                 () => import("@elizaos/plugin-story"),
                 "storyPlugin"
-              ),
+            ),
         ].filter(Boolean),
         providers: [],
         actions: [],
