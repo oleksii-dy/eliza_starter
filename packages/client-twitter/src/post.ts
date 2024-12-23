@@ -349,7 +349,7 @@ export class TwitterPostClient {
                 if (mediaData.length > 0) {
                     const result = await this.client.requestQueue.add(
                         async () =>
-                            await this.client.twitterClient.sendTweet(content, undefined, mediaData)
+                            await this.client.twitterClient.sendTweet(cleanedContent, undefined, mediaData)
                     );
                     body = await result.json();
                 } else {
