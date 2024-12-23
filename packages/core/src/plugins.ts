@@ -4,7 +4,7 @@ export function getSecret(
     character: Character,
     secret: string
 ): string | undefined {
-    return character.settings?.secrets?.[secret] || process.env[secret];
+    return character.settings?.secrets?.[secret] ?? process.env[secret];
 }
 
 export async function loadPlugin(
@@ -24,10 +24,11 @@ export async function loadPlugins(
     character: Character,
     definitions: DynamicPlugin[]
 ): Promise<Plugin[]> {
-    const plugins: Plugin[] = [];
-    for (const def of definitions) {
-        const p = await loadPlugin(def.secrets, character, def.importFn);
-        if (p) plugins.push(p);
-    }
-    return plugins;
+    const pluginPromises = definitions.map((def) =>
+        loadPlugin(def.secrets, character, def.importFn)
+    );
+    const pluginsWithNulls = await Promise.all(pluginPromises);
+    return pluginsWithNulls.filter(
+        (plugin): plugin is Plugin => plugin !== null
+    );
 }
