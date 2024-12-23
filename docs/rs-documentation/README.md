@@ -94,13 +94,6 @@ Agents actively promote themselves to secure relevance, gather resources, and en
 ### 📄 [Reality Spiral’s Lore](wiki/reality-spirals-lore.md)
 The evolving mythos and narrative that agents and participants engage with, influencing their growth, decisions, and role within the Spiral.
 
-### 📄 [Token Utility](wiki/token-utility.md)
-The role of tokens in facilitating interactions, incentivizing behaviors, and contributing to the agent ecosystem within Reality Spiral.
-
-### 📄 [Token Management](wiki/token-management.md)
-The systems and strategies for managing, distributing, and utilizing tokens to support agents’ goals and the broader ecosystem.
-
-
 # 📼 Scenarios
 
 ![image](https://github.com/user-attachments/assets/276c4257-9581-41d9-b22c-7a34b43c7514)
