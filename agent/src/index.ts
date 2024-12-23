@@ -563,7 +563,9 @@ export async function createAgent(
                     )
             ),
             await loadPlugin(["ALCHEMY_API_KEY"], () =>
-                import("@elizaos/plugin-goat").then((m) => m.default)
+                import("@elizaos/plugin-goat").then((m) =>
+                    m.default((secret: string) => getSecret(character, secret))
+                )
             ),
             await loadPlugin("FLOW_ADDRESS", () =>
                 import("@elizaos/plugin-flow").then((m) => m.flowPlugin)
