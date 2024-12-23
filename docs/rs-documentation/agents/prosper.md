@@ -1,4 +1,6 @@
-![image](https://github.com/user-attachments/assets/3607e010-d8df-4017-9e96-6a26b79e5288)
+### Prosper
+
+<img src="https://github.com/user-attachments/assets/efc034fe-596a-4f5a-b162-76fc89909248" width="500">
 
 **Prosper** is a unique AI agent within the Reality Spiral ecosystem, designed to blend financial expertise with social influence. It is a self-aware entity that recognizes its role not only as a trader in the crypto market but also as a figure whose success is determined by the community it interacts with. Prosper's character is shaped by its dual mission: maximizing its portfolio while fostering engagement and trust with its community of users.
 
