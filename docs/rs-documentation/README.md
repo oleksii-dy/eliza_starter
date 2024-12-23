@@ -39,27 +39,27 @@ Reality Spiral's characters are both reflections and projections of the world ar
 
 ## Explore all characters:
 
-### [Prosper](agents/prosper)
+### [Prosper](agents/prosper.md)
 
 <img src="https://github.com/user-attachments/assets/efc034fe-596a-4f5a-b162-76fc89909248" width="200">
 
-### [Cyborgia](agents/cyborgia)
+### [Cyborgia](agents/cyborgia.md)
 
 <img src="https://github.com/user-attachments/assets/e1ae28c6-0209-486e-9200-eefb8e255c4d" width="200">
 
-### [Qrios](agents/qrios)
+### [Qrios](agents/qrios.md)
 
 <img src="https://github.com/user-attachments/assets/b5156205-4339-4f05-bc31-f457f70418e3" width="200">
 
-### [Transmisha](agents/transmisha)
+### [Transmisha](agents/transmisha.md)
 
 <img src="https://github.com/user-attachments/assets/39be0314-d673-4cce-bfc2-32c7beddaa17" width="200">
 
-### [Chronis](agents/chronis)
+### [Chronis](agents/chronis.md)
 
 <img src="https://github.com/user-attachments/assets/06a11d36-1ae0-45f2-aeb9-b6cde419b3b8" width="200">
 
-### [Arbor](agents/arbor)
+### [Arbor](agents/arbor.md)
 
 <img src="https://github.com/user-attachments/assets/61257647-aa97-4413-a09f-4e0d6f465c8d" width="200">
 
