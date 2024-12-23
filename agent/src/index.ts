@@ -30,7 +30,6 @@ import {
 } from "@elizaos/core";
 import { RedisClient } from "@elizaos/adapter-redis";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
-import createGoatPlugin from "@elizaos/plugin-goat";
 import { DirectClient } from "@elizaos/client-direct";
 import { createNodePlugin } from "@elizaos/plugin-node";
 import { TEEMode } from "@elizaos/plugin-tee";
@@ -461,13 +460,6 @@ export async function createAgent(
             "WALLET_SECRET_SALT required when TEE_MODE is enabled"
         );
         throw new Error("Invalid TEE configuration");
-    }
-
-    let goatPlugin: any | undefined;
-    if (getSecret(character, "ALCHEMY_API_KEY")) {
-        goatPlugin = await createGoatPlugin((secret) =>
-            getSecret(character, secret)
-        );
     }
 
     const dynamicPlugins = await loadPlugins(character, [
