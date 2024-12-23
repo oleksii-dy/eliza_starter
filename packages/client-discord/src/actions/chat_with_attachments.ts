@@ -197,7 +197,7 @@ const summarizeAction = {
             template: trimTokens(
                 summarizationTemplate,
                 chunkSize + 500,
-                "gpt-4o-mini" // TODO: make this dynamic and generic
+                model
             ),
         });
 
