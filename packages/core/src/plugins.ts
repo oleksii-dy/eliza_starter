@@ -26,7 +26,9 @@ export async function loadPlugin(
     importFn: () => Promise<Plugin>
 ): Promise<Plugin | null> {
     const keyArray = Array.isArray(keys) ? keys : [keys];
-    const hasAllSecrets = keyArray.every((key) => getSecret(character, key));
+    const hasAllSecrets =
+        keyArray.every((key) => getSecret(character, key)) ||
+        keyArray.length === 0;
     if (!hasAllSecrets) return null;
     return importFn();
 }

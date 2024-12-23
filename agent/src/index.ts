@@ -490,6 +490,22 @@ export async function createAgent(
                 ),
         },
         {
+            secrets: "COINBASE_COMMERCE_KEY",
+            importFn: () =>
+                import("@elizaos/plugin-coinbase").then(
+                    (m) => m.coinbaseCommercePlugin
+                ),
+        },
+        {
+            secrets: [
+                "COINBASE_API_KEY",
+                "COINBASE_PRIVATE_KEY",
+                "COINBASE_NOTIFICATION_URI",
+            ],
+            importFn: () =>
+                import("@elizaos/plugin-coinbase").then((m) => m.webhookPlugin),
+        },
+        {
             secrets: "CONFLUX_CORE_PRIVATE_KEY",
             importFn: () =>
                 import("@elizaos/plugin-conflux").then((m) => m.confluxPlugin),
@@ -530,13 +546,7 @@ export async function createAgent(
             importFn: () =>
                 import("@elizaos/plugin-0g").then((m) => m.zgPlugin),
         },
-        {
-            secrets: "COINBASE_COMMERCE_KEY",
-            importFn: () =>
-                import("@elizaos/plugin-coinbase").then(
-                    (m) => m.coinbaseCommercePlugin
-                ),
-        },
+
         {
             secrets: [
                 "FAL_API_KEY",
@@ -550,7 +560,7 @@ export async function createAgent(
                 ),
         },
         {
-            secrets: ["FLOW_ADDRESS"],
+            secrets: ["FLOW_ADDRESS", "FLOW_PRIVATE_KEY"],
             importFn: () =>
                 import("@elizaos/plugin-flow").then((m) => m.flowPlugin),
         },
@@ -588,6 +598,14 @@ export async function createAgent(
             importFn: () =>
                 import("@elizaos/plugin-story").then((m) => m.storyPlugin),
         },
+        ...(teeMode === TEEMode.OFF &&
+            walletSecretSalt && [
+                {
+                    secrets: [],
+                    importFn: () =>
+                        import("@elizaos/plugin-tee").then((m) => m.teePlugin),
+                },
+            ]),
     ]);
 
     return new AgentRuntime({
