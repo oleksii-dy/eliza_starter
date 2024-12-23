@@ -87,7 +87,7 @@ We take the security of Eliza seriously. If you believe you have found a securit
     - Improved audit logging
 
 2. **Q1 2025**
-    - Security-focused documentation improvements
+    - Security-focused documentation improvements 
     - Enhanced platform permission management
     - Automated vulnerability scanning
 
