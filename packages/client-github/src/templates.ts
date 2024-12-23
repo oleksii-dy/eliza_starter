@@ -29,7 +29,7 @@ export const oodaTemplate = `
 
     Action Options:
     1. CREATE_ISSUE: For identifying problems or suggesting improvements
-    6. NOTHING: When no action is needed
+    2. NOTHING: When no action is needed
 
     Required Fields:
     - action: (required) One of the actions listed above
@@ -170,5 +170,3 @@ export const oodaTemplate = `
     5. Consider the impact of your action
     6. Ensure no duplicate issues or pull requests are created
     `
-//    Create an issue in repository monilpat/eliza about improving logging with examples and code snippets
-// Create memories from files on repository monilpat/eliza at path 'packages/plugin-coinbase/src/'

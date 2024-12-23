@@ -1,4 +1,4 @@
-import { elizaLogger } from "@ai16z/eliza";
+import { elizaLogger } from "@elizaos/core";
 import { z } from "zod";
 
 export const InitializeSchema = z.object({
@@ -201,4 +201,16 @@ export const isAddCommentToIssueContent = (
     }
     elizaLogger.error("Invalid content: ", object);
     return false;
+};
+
+export const IdeationSchema = z.object({
+    response: z.string().min(1, "Response is required"),
+});
+
+export interface IdeationContent {
+    response: string;
+}
+
+export const isIdeationContent = (object: any): object is IdeationContent => {
+    return IdeationSchema.safeParse(object).success;
 };

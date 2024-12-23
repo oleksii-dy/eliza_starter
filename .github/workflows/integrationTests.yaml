@@ -3,7 +3,7 @@ on:
     push:
         branches:
             - "*"
-    pull_request_target:
+    pull_request:
         branches:
             - "*"
 jobs:
@@ -25,6 +25,8 @@ jobs:
               run: pnpm run smokeTests
     integration-tests:
         runs-on: ubuntu-latest
+        env:
+            OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         steps:
             - uses: actions/checkout@v4
 
@@ -38,18 +40,22 @@ jobs:
                   cache: "pnpm"
 
             - name: Install dependencies
-              run: pnpm install -r --frozen-lockfile
+              run: pnpm install -r
 
             - name: Build packages
               run: pnpm build
 
-            - name: Run integration tests
-              env:
-                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+            - name: Check for API key
+              id: check_api_key
               run: |
                   if [ -z "$OPENAI_API_KEY" ]; then
-                    echo "Skipping integration tests due to missing required API keys"
-                    exit 1
-                  else
-                    pnpm run integrationTests
+                      echo "Error: OPENAI_API_KEY is not set."
+                      exit 1
                   fi
+              env:
+                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+            - name: Run integration tests
+              run: pnpm run integrationTests
+              env:
+                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

@@ -1,4 +1,4 @@
-import { elizaLogger, Client, IAgentRuntime, Character, generateShouldRespond, ModelClass, composeContext, State, Memory, generateMessageResponse, getEmbeddingZeroVector, Content, HandlerCallback, UUID, generateObjectV2, stringToUuid, GoalStatus } from "@ai16z/eliza";
+import { elizaLogger, Client, IAgentRuntime, Character, ModelClass, composeContext, Memory, generateMessageResponse, Content, HandlerCallback, UUID, generateObject, stringToUuid } from "@elizaos/core";
 import { validateGithubConfig } from "./environment";
 import { EventEmitter } from "events";
 import {
@@ -9,16 +9,12 @@ import {
     createIssueAction,
     modifyIssueAction,
     addCommentToIssueAction,
-    sourceCodeProvider,
-    testFilesProvider,
-    workflowFilesProvider,
-    documentationFilesProvider,
-    releasesProvider,
-    getFilesFromMemories
-} from "@ai16z/plugin-github";
+    ideationAction,
+    incorporateRepositoryState,
+    getRepositoryRoomId
+} from "@elizaos/plugin-github";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
-import { getIssuesFromMemories, getPullRequestsFromMemories } from "./utils"; // Import the utility functions
 
 export class GitHubClient extends EventEmitter {
     apiToken: string;
@@ -40,12 +36,7 @@ export class GitHubClient extends EventEmitter {
         this.runtime.registerAction(createIssueAction);
         this.runtime.registerAction(modifyIssueAction);
         this.runtime.registerAction(addCommentToIssueAction);
-
-        // this.runtime.providers.push(sourceCodeProvider);
-        // this.runtime.providers.push(testFilesProvider);
-        // this.runtime.providers.push(workflowFilesProvider);
-        // this.runtime.providers.push(documentationFilesProvider);
-        // this.runtime.providers.push(releasesProvider);
+        this.runtime.registerAction(ideationAction);
 
         elizaLogger.log("GitHubClient actions and providers registered.");
 
@@ -78,7 +69,7 @@ export class GitHubClient extends EventEmitter {
             throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
         }
 
-        const roomId = this.getRepositoryRoomId();
+        const roomId = getRepositoryRoomId(this.runtime);
         elizaLogger.log("Repository room ID:", roomId);
 
         // Observe: Gather relevant memories related to the repository
@@ -90,8 +81,11 @@ export class GitHubClient extends EventEmitter {
         const memories = await this.runtime.messageManager.getMemories({
             roomId: roomId,
         });
+        const fileMemories = memories.filter(
+            (memory) => (memory.content.metadata as any)?.path
+        );
         // elizaLogger.log("Retrieved memories:", memories);
-        if (memories.length === 0) {
+        if (fileMemories.length === 0) {
             elizaLogger.log("No memories found, skipping OODA cycle.");
             // time to initialize repository and create memories
             const timestamp = Date.now();
@@ -109,22 +103,8 @@ export class GitHubClient extends EventEmitter {
                 roomId,
                 createdAt: timestamp,
             }
-            const originalState = await this.runtime.composeState(originalMemory);
-            originalState.files = []
-            originalState.character = JSON.stringify(this.runtime.character || {}, null, 2);
-            originalState.owner = owner;
-            originalState.repository = repository;
-
-            // Get previous issues from memory
-            const previousIssues = await getIssuesFromMemories(this.runtime, owner, repository);
-            originalState.previousIssues = JSON.stringify(previousIssues.map(issue => ({
-                title: issue.content.text,
-                body: (issue.content.metadata as any).body,
-                url: (issue.content.metadata as any).url,
-                number: (issue.content.metadata as any).number,
-                state: (issue.content.metadata as any).state,
-            })), null, 2);
-            elizaLogger.log("Previous issues:", previousIssues);
+            let originalState = await this.runtime.composeState(originalMemory);
+            originalState = await incorporateRepositoryState(originalState, this.runtime, originalMemory, []);
             const initializeRepositoryMemory: Memory = {
                 id: stringToUuid(`${roomId}-${this.runtime.agentId}-${timestamp}-initialize-repository`),
                 userId: userIdUUID,
@@ -149,7 +129,7 @@ export class GitHubClient extends EventEmitter {
                 userId: userIdUUID,
                 agentId: this.runtime.agentId,
                 content: {
-                    text: `Create memories from files for the repository ${owner}/${repository} at path '/packages/client-github/src'`,
+                    text: `Create memories from files for the repository ${owner}/${repository} at path '/'`,
                     action: "CREATE_MEMORIES_FROM_FILES",
                     source: "github",
                     inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`)
@@ -179,40 +159,14 @@ export class GitHubClient extends EventEmitter {
         }
 
         elizaLogger.log('Before composeState')
-        const originalState = await this.runtime.composeState({
+        const originalMemory = {
             userId: this.runtime.agentId, // TODO: this should be the user id
             roomId: roomId,
             agentId: this.runtime.agentId,
             content: { text: "sample text", action: "NOTHING", source: "github" },
-        } as Memory, {});
-        elizaLogger.log("Original state:", originalState);
-        const files = await getFilesFromMemories(this.runtime, memories[0]);
-        elizaLogger.log("Files:", files);
-        // add additional keys to state
-        originalState.files = files;
-        originalState.character = JSON.stringify(this.runtime.character || {}, null, 2);
-        originalState.owner = owner;
-        originalState.repository = repository;
-
-        // Get previous issues from memory
-        const previousIssues = await getIssuesFromMemories(this.runtime, owner, repository);
-        originalState.previousIssues = JSON.stringify(previousIssues.map(issue => ({
-            title: issue.content.text,
-            body: (issue.content.metadata as any).body,
-            url: (issue.content.metadata as any).url,
-            number: (issue.content.metadata as any).number,
-            state: (issue.content.metadata as any).state,
-        })), null, 2);
-        elizaLogger.log("Previous issues:", previousIssues);
-        // Get previous pull requests from memory
-        const previousPRs = await getPullRequestsFromMemories(this.runtime, owner, repository);
-        originalState.previousPRs = JSON.stringify(previousPRs.map(pr => ({
-            title: pr.content.text,
-            url: (pr.content.metadata as any).url,
-            number: (pr.content.metadata as any).number,
-            state: (pr.content.metadata as any).state,
-        })), null, 2);
-        elizaLogger.log("Previous PRs:", originalState.previousPRs);
+        } as Memory;
+        let originalState = await this.runtime.composeState(originalMemory, {});
+        originalState = await incorporateRepositoryState(originalState, this.runtime, originalMemory, []);
         elizaLogger.log("Original state:", originalState);
         // Orient: Analyze the memories to determine if logging improvements are needed
         const context = composeContext({
@@ -221,7 +175,7 @@ export class GitHubClient extends EventEmitter {
         });
         // elizaLogger.log("Composed context for OODA cycle:", context);
 
-        const response = await generateObjectV2({
+        const response = await generateObject({
             runtime: this.runtime,
             context,
             modelClass: ModelClass.LARGE,
@@ -308,17 +262,6 @@ export class GitHubClient extends EventEmitter {
         elizaLogger.log("OODA cycle completed.");
     }
 
-    private getRepositoryRoomId(): UUID {
-        const owner = this.runtime.getSetting("GITHUB_OWNER") ?? '' as string;
-        const repository = this.runtime.getSetting("GITHUB_REPO") ?? '' as string;
-        if (owner === '' || repository === '') {
-            elizaLogger.error("GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle.");
-            throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
-        }
-        const roomId = stringToUuid(`github-${owner}-${repository}`);
-        elizaLogger.log("Generated repository room ID:", roomId);
-        return roomId;
-    }
 }
 
 export const GitHubClientInterface: Client = {

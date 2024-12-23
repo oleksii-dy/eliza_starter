@@ -1,4 +1,4 @@
-import { Provider } from "@ai16z/eliza";
+import { Provider } from "@elizaos/core";
 import { fetchFiles } from "../utils/githubProviderUtil";
 
 export const workflowFilesProvider: Provider = {

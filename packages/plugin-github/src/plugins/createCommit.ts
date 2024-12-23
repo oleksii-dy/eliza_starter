@@ -1,7 +1,7 @@
 import {
     composeContext,
     elizaLogger,
-    generateObjectV2,
+    generateObject,
     Action,
     HandlerCallback,
     IAgentRuntime,
@@ -9,7 +9,7 @@ import {
     ModelClass,
     Plugin,
     State,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 import { createCommitTemplate } from "../templates";
 import {
     CreateCommitContent,
@@ -66,7 +66,7 @@ export const createCommitAction: Action = {
             template: createCommitTemplate,
         });
 
-        const details = await generateObjectV2({
+        const details = await generateObject({
             runtime,
             context,
             modelClass: ModelClass.LARGE,

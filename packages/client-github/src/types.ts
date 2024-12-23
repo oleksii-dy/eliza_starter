@@ -11,6 +11,7 @@ export const OODASchema = z.object({
         "CREATE_MEMORIES_FROM_FILES",
         // "CREATE_PULL_REQUEST",
         // "MODIFY_ISSUE",
+        // "IDEATE",
     ]),
     owner: z.string().optional(),
     repo: z.string().optional(),

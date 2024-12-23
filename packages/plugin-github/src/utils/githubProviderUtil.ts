@@ -1,12 +1,12 @@
 import {
     composeContext,
-    generateObjectV2,
+    generateObject,
     elizaLogger,
     IAgentRuntime,
     Memory,
     State,
     ModelClass,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 import { GitHubService } from "../services/github";
 import {
     FetchFilesContent,
@@ -40,7 +40,7 @@ export async function fetchFiles(
             template: fetchFilesTemplate,
         });
 
-        const details = await generateObjectV2({
+        const details = await generateObject({
             runtime,
             context,
             modelClass: ModelClass.LARGE,

@@ -1,5 +1,4 @@
-import { elizaLogger, IAgentRuntime, Memory } from "@ai16z/eliza";
-import { stringToUuid } from "@ai16z/eliza";
+import { elizaLogger, IAgentRuntime, Memory, stringToUuid } from "@elizaos/core";
 import { RestEndpointMethodTypes } from "@octokit/rest";
 
 export async function getIssuesFromMemories(runtime: IAgentRuntime, owner: string, repo: string): Promise<Memory[]> {
@@ -48,4 +47,3 @@ export async function saveIssueToMemory(runtime: IAgentRuntime, issue: RestEndpo
     await runtime.messageManager.createMemory(issueMemory);
 }
 
-// TODO: get previous PRs
