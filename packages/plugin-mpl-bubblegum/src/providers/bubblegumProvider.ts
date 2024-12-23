@@ -41,11 +41,11 @@ export type Signature = string;
 
 export class MplBubblegumProvider {
     private readonly umi: Umi & { rpc: DasApiInterface };
-    private readonly keypair: Keypair;
+    private readonly keypair?: Keypair;
 
-    constructor(keypair: Keypair, rpcUrl: string) {
+    constructor(rpcUrl: string, keypair?: Keypair) {
         const umi = createUmi(rpcUrl)
-            .use(keypairIdentity(keypair))
+            .use(keypair ? keypairIdentity(keypair) : undefined)
             .use(mplBubblegum())
             .use(dasApi());
 
@@ -53,8 +53,15 @@ export class MplBubblegumProvider {
         this.keypair = keypair;
     }
 
-    public getKeypairPubKey(): string {
-        return this.keypair.publicKey.toString();
+    private ensureKeypairIsSet(): void {
+        if (!this.keypair) {
+            throw new Error("This operation requires a keypair.");
+        }
+    }
+
+    public getKeypairPublicKey(): PublicKey {
+        this.ensureKeypairIsSet();
+        return this.keypair.publicKey;
     }
 
     public findLeafAssetId(
@@ -116,6 +123,7 @@ export class MplBubblegumProvider {
         signature: TransactionSignature;
         result: RpcConfirmTransactionResult;
     }> {
+        this.ensureKeypairIsSet();
         const { signature, result } = await mintV1(this.umi, {
             merkleTree,
             leafOwner: leafOwner || this.keypair.publicKey,
@@ -132,6 +140,7 @@ export class MplBubblegumProvider {
         signature: Signature;
         result: RpcConfirmTransactionResult;
     }> {
+        this.ensureKeypairIsSet();
         const assetWithProof = await this.getAssetWithProof(assetId);
         const { signature, result } = await transfer(this.umi, {
             ...assetWithProof,
@@ -151,6 +160,7 @@ export class MplBubblegumProvider {
         signature: Signature;
         result: RpcConfirmTransactionResult;
     }> {
+        this.ensureKeypairIsSet();
         const assetWithProof = await this.getAssetWithProof(assetId);
 
         const updateArgs: UpdateArgsArgs = {
@@ -173,6 +183,7 @@ export class MplBubblegumProvider {
         signature: Signature;
         result: RpcConfirmTransactionResult;
     }> {
+        this.ensureKeypairIsSet();
         const assetWithProof = await this.getAssetWithProof(assetId);
 
         const { signature, result } = await burn(this.umi, {
@@ -187,6 +198,7 @@ export class MplBubblegumProvider {
         signature: Signature;
         result: RpcConfirmTransactionResult;
     }> {
+        this.ensureKeypairIsSet();
         const assetWithProof = await this.getAssetWithProof(assetId);
 
         const signer = generateSigner(this.umi);
@@ -203,6 +215,7 @@ export class MplBubblegumProvider {
         signature: Signature;
         result: RpcConfirmTransactionResult;
     }> {
+        this.ensureKeypairIsSet();
         const assetWithProof = await this.getAssetWithProof(assetId);
 
         const signer = generateSigner(this.umi);
@@ -221,6 +234,7 @@ export class MplBubblegumProvider {
         signature: Signature;
         result: RpcConfirmTransactionResult;
     }> {
+        this.ensureKeypairIsSet();
         const assetWithProof = await this.getAssetWithProof(assetId);
 
         const signer = generateSigner(this.umi);
@@ -241,6 +255,7 @@ export class MplBubblegumProvider {
         signature: Signature;
         result: RpcConfirmTransactionResult;
     }> {
+        this.ensureKeypairIsSet();
         const assetWithProof = await this.getAssetWithProof(assetId);
 
         const signer = generateSigner(this.umi);
