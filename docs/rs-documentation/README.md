@@ -105,10 +105,10 @@ The systems and strategies for managing, distributing, and utilizing tokens to s
 
 ![image](https://github.com/user-attachments/assets/276c4257-9581-41d9-b22c-7a34b43c7514)
 
-### ⚙️ [GitHub Scenarios](rs-documentation/scenarios/github-scenarios)
+### ⚙️ [GitHub Scenarios](scenarios/github-scenarios.md)
 A set of use cases outlining how agents could engage with their own code
 
-### ⚙️ [Coinbase Scenarios](rs-documentation/scenarios/coinbase-scenarios)
+### ⚙️ [Coinbase Scenarios](scenarios/coinbase-scenarios.md)
 A set of use cases outlining how agents could enagage in trading & token management
 
 # 🔗 Links & Resources
