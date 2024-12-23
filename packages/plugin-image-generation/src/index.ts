@@ -1,4 +1,4 @@
-import { elizaLogger } from "@ai16z/eliza";
+import { elizaLogger } from "@elizaos/core";
 import {
     Action,
     HandlerCallback,
@@ -7,8 +7,8 @@ import {
     Plugin,
     State,
     ModelProviderName,
-} from "@ai16z/eliza";
-import { generateImage } from "@ai16z/eliza";
+} from "@elizaos/core";
+import { generateImage } from "@elizaos/core";
 
 import fs from "fs";
 import path from "path";
@@ -200,9 +200,7 @@ const imageGeneration: Action = {
                     `image:`,
                     image
                 );
-                if (runtime.imageModelProvider === ModelProviderName.HEURIST) {
 
-                }
                 const text = (runtime.imageModelProvider === ModelProviderName.HEURIST) ? image : "...";
                 callback(
                     {
@@ -215,7 +213,7 @@ const imageGeneration: Action = {
                                 source: "imageGeneration",
                                 description: "...", //caption.title,
                                 text: "...", //caption.description,
-                                contentType: "image",
+                                contentType: "image/png",
                             },
                         ],
                     },
