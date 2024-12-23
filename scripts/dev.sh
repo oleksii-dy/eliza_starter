@@ -42,19 +42,17 @@ cat << "EOF"
 *                                                                     *
 *        "@elizaos/your-plugin-name": "workspace:*"                    *
 *                                                                     *
-*  5. Edit the 'index.ts' file in 'agent/src':                       *
-*                                                                     *
-*     a. Import your plugin:                                         *
-*                                                                     *
-*        import yourPlugin from '@elizaos/your-plugin-name';           *
-*                                                                     *
-*     b. Add your plugin to the `plugins` array:                     *
-*                                                                     *
-*        const plugins = [                                           *
-*          existingPlugin,                                           *
-*          yourPlugin,                                               *
-*        ];                                                          *
-*                                                                     *
+*  5. Edit the 'index.ts' file in 'agent/src':                        *
+*   a. Use the `await loadPlugin` function to dynamically import your plugin: *
+*                                                       *
+*      await loadPlugin(                                             *
+*        "YOUR_PLUGIN_SECRET_KEY",                                   *
+*        () => import("path/to/your-plugin"),                        *
+*        "yourPluginName"                                            *
+*      )                                                             *
+*                                                                    *
+*   b. Add this call in the `plugins` array.                         *
+*                                                                    *
 * This will ensure that your plugin's development server runs        *
 * alongside others when you execute this script.                     *
 ***********************************************************************
