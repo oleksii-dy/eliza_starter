@@ -43,15 +43,15 @@ cat << "EOF"
 *        "@elizaos/your-plugin-name": "workspace:*"                    *
 *                                                                     *
 *  5. Edit the 'index.ts' file in 'agent/src':                        *
-*   a. Use the `await loadPlugin` function to dynamically import your plugin: *
-*                                                       *
-*      await loadPlugin(                                             *
-*        "YOUR_PLUGIN_SECRET_KEY",                                   *
-*        () => import("path/to/your-plugin"),                        *
-*        "yourPluginName"                                            *
-*      )                                                             *
+*                                                                     *                  
+*   a. Use the `loadPlugins` function to dynamically import your plugin: *
 *                                                                    *
-*   b. Add this call in the `plugins` array.                         *
+*      {                                                             *
+*          secrets: ["YOUR_PLUGIN_SECRET_KEY"],                      *
+*          importFn: () => import("path/to/your-plugin").then((m) => m.yourPluginExport), *
+*      },                                                            *
+*                                                                    *
+*   b. Add this object to the array passed to the `loadPlugins` function. *
 *                                                                    *
 * This will ensure that your plugin's development server runs        *
 * alongside others when you execute this script.                     *
