@@ -81,8 +81,11 @@ export class GitHubClient extends EventEmitter {
         const memories = await this.runtime.messageManager.getMemories({
             roomId: roomId,
         });
+        const fileMemories = memories.filter(
+            (memory) => (memory.content.metadata as any)?.path
+        );
         // elizaLogger.log("Retrieved memories:", memories);
-        if (memories.length === 0) {
+        if (fileMemories.length === 0) {
             elizaLogger.log("No memories found, skipping OODA cycle.");
             // time to initialize repository and create memories
             const timestamp = Date.now();

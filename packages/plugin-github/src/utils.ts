@@ -5,6 +5,7 @@ import { existsSync } from "fs";
 import simpleGit from "simple-git";
 import { Octokit } from "@octokit/rest";
 import { elizaLogger, IAgentRuntime, Memory, State, stringToUuid, UUID } from "@elizaos/core";
+import { contextTemplate } from "./templates";
 
 export function getRepoPath(owner: string, repo: string) {
     return path.join(process.cwd(), ".repos", owner, repo);
@@ -272,7 +273,7 @@ export async function incorporateRepositoryState(state: State, runtime: IAgentRu
     state.messageExamples = JSON.stringify(runtime.character?.messageExamples, null, 2);
     state.system = runtime.character?.system;
     state.topics = JSON.stringify(runtime.character?.topics, null, 2);
-    state.style = runtime.character?.style;
+    state.style = JSON.stringify(runtime.character?.style, null, 2);
     state.adjectives = JSON.stringify(runtime.character?.adjectives, null, 2);
     const sanitizedMemories = sanitizeMemories(relevantMemories);
     state.relevantMemories = JSON.stringify(sanitizedMemories, null, 2);
@@ -342,3 +343,15 @@ function sanitizeMemories(memories: Memory[]): Partial<Memory>[] {
         similarity: memory.similarity,
     }));
 }
+
+export const createTemplate = (prompt: string, output: string, examples: string) => {
+    return `
+${prompt}
+
+${contextTemplate}
+
+${output}
+
+${examples}
+`;
+};

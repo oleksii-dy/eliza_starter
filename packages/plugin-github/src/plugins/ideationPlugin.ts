@@ -14,7 +14,7 @@ import {
 import { ideationTemplate } from "../templates";
 import { IdeationSchema, isIdeationContent } from "../types";
 import { getRepositoryRoomId, incorporateRepositoryState } from "../utils";
-
+import fs from "fs/promises";
 export const ideationAction: Action = {
     name: "IDEATION",
     similes: ["THINK","IDEATE", "IDEAS", "IDEATION", "CO_CREATION", "BRAINSTORM", "THOUGHTS", "SUGGESTIONS", "THINKING"],
@@ -45,6 +45,8 @@ export const ideationAction: Action = {
             template: ideationTemplate,
         });
 
+        // write the context to a file for testing
+        await fs.writeFile("context.txt", context);
         const details = await generateObject({
             runtime,
             context,
