@@ -23,7 +23,9 @@ import { RestEndpointMethodTypes } from "@octokit/rest";
 
 export async function saveIssueToMemory(runtime: IAgentRuntime, issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"], owner: string, repo: string): Promise<void> {
     const roomId = stringToUuid(`github-${owner}-${repo}`);
+    const issueId = stringToUuid(`${roomId}-${runtime.agentId}-issue-${issue.number}`);
     const issueMemory: Memory = {
+        id: issueId,
         userId: runtime.agentId,
         agentId: runtime.agentId,
         roomId: roomId,

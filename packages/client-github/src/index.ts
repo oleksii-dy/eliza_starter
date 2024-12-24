@@ -15,6 +15,7 @@ import {
 } from "@elizaos/plugin-github";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
+import { saveIssuesToMemory } from "./utils";
 
 export class GitHubClient extends EventEmitter {
     apiToken: string;
@@ -143,6 +144,8 @@ export class GitHubClient extends EventEmitter {
                 action: createMemoriesFromFilesMemory.content.action,
                 userId: this.runtime.agentId,
             });
+            const issuesMemories = await saveIssuesToMemory(this.runtime, owner, repository, this.apiToken);
+            elizaLogger.log("Issues memories:", issuesMemories);
             await this.runtime.processActions(
                 originalMemory,
                 [initializeRepositoryMemory, createMemoriesFromFilesMemory],
@@ -274,5 +277,7 @@ export const GitHubClientInterface: Client = {
         }
     },
 };
+
+export * from "./utils";
 
 export default GitHubClientInterface;

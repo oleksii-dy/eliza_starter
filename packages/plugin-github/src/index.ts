@@ -60,6 +60,8 @@ export * from "./providers/workflowFiles";
 export * from "./providers/documentationFiles";
 export * from "./providers/releases";
 export * from "./utils";
+export * from "./services/github";
+
 export const githubPlugin: Plugin = {
     name: "github",
     description: "Integration with GitHub",

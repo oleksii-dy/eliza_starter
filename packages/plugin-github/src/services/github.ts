@@ -236,6 +236,24 @@ export class GitHubService {
             throw error;
         }
     }
+
+    // Get all issues
+    async getIssues(): Promise<RestEndpointMethodTypes["issues"]["list"]["response"]["data"]> {
+        const response = await this.octokit.issues.listForRepo({
+            owner: this.config.owner,
+            repo: this.config.repo,
+        });
+        return response.data;
+    }
+
+    // Get all pull requests
+    async getPullRequests(): Promise<RestEndpointMethodTypes["pulls"]["list"]["response"]["data"]> {
+        const response = await this.octokit.pulls.list({
+            owner: this.config.owner,
+            repo: this.config.repo,
+        });
+        return response.data;
+    }
 }
 
 export { GitHubConfig };
