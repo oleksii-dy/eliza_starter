@@ -405,27 +405,32 @@ export class AgentRuntime implements IAgentRuntime {
             this.character.knowledge &&
             this.character.knowledge.length > 0
         ) {
-            await this.processCharacterKnowledge(this.character.knowledge);
+            await this.processBulkKnowledge(this.character.knowledge);
         }
     }
 
     async stop() {
-      elizaLogger.debug('runtime::stop - character', this.character)
-      // stop services, they don't have a stop function
+        elizaLogger.debug("runtime::stop - character", this.character);
+        // stop services, they don't have a stop function
         // just initialize
 
-      // plugins
+        // plugins
         // have actions, providers, evaluators (no start/stop)
         // services (just initialized), clients
 
-      // client have a start
-      for(const cStr in this.clients) {
-        const c = this.clients[cStr]
-        elizaLogger.log('runtime::stop - requesting', cStr, 'client stop for', this.character.name)
-        c.stop()
-      }
-      // we don't need to unregister with directClient
-      // don't need to worry about knowledge
+        // client have a start
+        for (const cStr in this.clients) {
+            const c = this.clients[cStr];
+            elizaLogger.log(
+                "runtime::stop - requesting",
+                cStr,
+                "client stop for",
+                this.character.name
+            );
+            c.stop();
+        }
+        // we don't need to unregister with directClient
+        // don't need to worry about knowledge
     }
 
     /**
@@ -433,7 +438,7 @@ export class AgentRuntime implements IAgentRuntime {
      * @param knowledge a string to remember
      */
     public async addStringToMemory(item: string) {
-        const knowledgeId:UUID = stringToUuid(item);
+        const knowledgeId: UUID = stringToUuid(item);
         try {
             const existingDocument =
                 await this.documentsManager.getMemoryById(knowledgeId);
@@ -456,7 +461,10 @@ export class AgentRuntime implements IAgentRuntime {
             });
             return { id: knowledgeId, have: false };
         } catch (error) {
-            elizaLogger.error(`Error processing memory for ${this.character.name}:`, error);
+            elizaLogger.error(
+                `Error processing memory for ${this.character.name}:`,
+                error
+            );
             throw error;
         }
     }
@@ -467,38 +475,43 @@ export class AgentRuntime implements IAgentRuntime {
      * then chunks the content into fragments, embeds each fragment, and creates fragment memories.
      * @param knowledge An array of knowledge items containing id, path, and content.
      */
-    private async processCharacterKnowledge(items: string[]) {
-
+    public async processBulkKnowledge(items: string[]) {
         // uuid it first
-        const ts = Date.now()
         const keyedItems = new Map(
-            items.map(item => [stringToUuid(item), item])
+            items.map((item) => [stringToUuid(item), item])
         );
 
         // then do one look up and build a list of new items
-          // can't atm so we'll do this for now
+        // can't atm so we'll do this for now
         const existingMemories = await Promise.all(
-            Array.from(keyedItems.keys()).map(id =>
+            Array.from(keyedItems.keys()).map((id) =>
                 this.documentsManager.getMemoryById(id)
             )
         );
-        elizaLogger.log('existingMemories', existingMemories.length, 'items', items.length);
+        elizaLogger.log(
+            "existingMemories",
+            existingMemories.length,
+            "items",
+            items.length
+        );
 
         // cache uuids
-        const idMap = Array.from(keyedItems.keys())
+        const idMap = Array.from(keyedItems.keys());
         const newMemories: KnowledgeItem[] = existingMemories
             .map((doc, index) => {
-                const id:UUID = idMap[index];
-                return !doc ? {
-                    id,
-                    content: { text: keyedItems.get(id)! }
-                } : null;
+                const id: UUID = idMap[index];
+                return !doc
+                    ? {
+                          id,
+                          content: { text: keyedItems.get(id)! },
+                      }
+                    : null;
             })
             .filter((memory): memory is KnowledgeItem => memory !== null);
 
         // add new items
         await Promise.all(
-            newMemories.map(memory => knowledge.set(this, memory))
+            newMemories.map((memory) => knowledge.set(this, memory))
         );
     }
 
