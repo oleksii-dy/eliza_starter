@@ -35,7 +35,7 @@ export class DevaController {
     private async populatePersona() {
         this.persona = await this.client.getMe();
 
-        if (!this.persona) {
+        if (!this.persona && !this.persona.id) {
             elizaLogger.error("❌ Deva Client failed to fetch Persona");
             throw new Error("❌ Deva Client failed to fetch Persona");
         }

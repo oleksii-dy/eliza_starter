@@ -1,4 +1,4 @@
-import { IAgentRuntime } from "@elizaos/core";
+import { elizaLogger, IAgentRuntime } from "@elizaos/core";
 import { DevaPersona, DevaPost } from "./types";
 
 export class ClientBase {
