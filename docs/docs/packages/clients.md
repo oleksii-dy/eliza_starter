@@ -78,14 +78,14 @@ The Discord client provides full integration with Discord's features including v
 ### Basic Setup
 
 ```typescript
-  import { DiscordClientInterface } from "@eliza/client-discord";
-  
-  // Initialize client
-  const client = await DiscordClientInterface.start(runtime);
-  
-  // Configuration in .env
-  DISCORD_APPLICATION_ID = your_app_id;
-  DISCORD_API_TOKEN = your_bot_token;
+import { DiscordClientInterface } from "@eliza/client-discord";
+
+// Initialize client
+const client = await DiscordClientInterface.start(runtime);
+
+// Configuration in .env
+DISCORD_APPLICATION_ID = your_app_id;
+DISCORD_API_TOKEN = your_bot_token;
 ```
 
 ### Features
@@ -100,17 +100,17 @@ The Discord client provides full integration with Discord's features including v
 
 ```typescript
 class VoiceManager {
-	// Join a voice channel
-	async handleJoinChannelCommand(interaction) {
-		await this.joinVoiceChannel(channel);
-	}
+  // Join a voice channel
+  async handleJoinChannelCommand(interaction) {
+    await this.joinVoiceChannel(channel);
+  }
 
-	// Handle voice state updates
-	async handleVoiceStateUpdate(oldState, newState) {
-		if (newState.channelId) {
-			await this.handleUserJoinedChannel(newState);
-		}
-	}
+  // Handle voice state updates
+  async handleVoiceStateUpdate(oldState, newState) {
+    if (newState.channelId) {
+      await this.handleUserJoinedChannel(newState);
+    }
+  }
 }
 ```
 
@@ -118,18 +118,18 @@ class VoiceManager {
 
 ```typescript
 class MessageManager {
-	async handleMessage(message) {
-		// Ignore bot messages
-		if (message.author.bot) return;
+  async handleMessage(message) {
+    // Ignore bot messages
+    if (message.author.bot) return;
 
-		// Process attachments
-		if (message.attachments.size > 0) {
-			await this.processAttachments(message);
-		}
+    // Process attachments
+    if (message.attachments.size > 0) {
+      await this.processAttachments(message);
+    }
 
-		// Generate response
-		await this.generateResponse(message);
-	}
+    // Generate response
+    await this.generateResponse(message);
+  }
 }
 ```
 
@@ -141,6 +141,7 @@ The Twitter client enables posting, searching, and interacting with Twitter user
 
 ```typescript
 import { TwitterClientInterface } from "@eliza/client-twitter";
+
 // Initialize client
 const client = await TwitterClientInterface.start(runtime);
 
@@ -160,19 +161,19 @@ TWITTER_EMAIL = your_email;
 
 ```typescript
 class TwitterPostClient {
-	async createPost(content: string) {
-		return await this.post({
-			text: content,
-			media: await this.processMedia(),
-		});
-	}
+  async createPost(content: string) {
+    return await this.post({
+      text: content,
+      media: await this.processMedia(),
+    });
+  }
 
-	async replyTo(tweetId: string, content: string) {
-		return await this.post({
-			text: content,
-			reply: {in_reply_to_tweet_id: tweetId},
-		});
-	}
+  async replyTo(tweetId: string, content: string) {
+    return await this.post({
+      text: content,
+      reply: { in_reply_to_tweet_id: tweetId },
+    });
+  }
 }
 ```
 
@@ -180,15 +181,15 @@ class TwitterPostClient {
 
 ```typescript
 class TwitterSearchClient {
-	async searchTweets(query: string) {
-		return await this.search({
-			query,
-			filters: {
-				recency: "recent",
-				language: "en",
-			},
-		});
-	}
+  async searchTweets(query: string) {
+    return await this.search({
+      query,
+      filters: {
+        recency: "recent",
+        language: "en",
+      },
+    });
+  }
 }
 ```
 
@@ -212,16 +213,16 @@ TELEGRAM_BOT_TOKEN = your_bot_token;
 
 ```typescript
 class TelegramClient {
-	async handleMessage(message) {
-		// Process message content
-		const content = await this.processMessage(message);
+  async handleMessage(message) {
+    // Process message content
+    const content = await this.processMessage(message);
 
-		// Generate response
-		const response = await this.generateResponse(content);
+    // Generate response
+    const response = await this.generateResponse(content);
 
-		// Send response
-		await this.sendMessage(message.chat.id, response);
-	}
+    // Send response
+    await this.sendMessage(message.chat.id, response);
+  }
 }
 ```
 
@@ -242,19 +243,19 @@ const client = await DirectClientInterface.start(runtime);
 
 ```typescript
 class DirectClient {
-	constructor() {
-		// Message endpoint
-		this.app.post("/:agentId/message", async (req, res) => {
-			const response = await this.handleMessage(req.body);
-			res.json(response);
-		});
+  constructor() {
+    // Message endpoint
+    this.app.post("/:agentId/message", async (req, res) => {
+      const response = await this.handleMessage(req.body);
+      res.json(response);
+    });
 
-		// Image generation endpoint
-		this.app.post("/:agentId/image", async (req, res) => {
-			const images = await this.generateImage(req.body);
-			res.json(images);
-		});
-	}
+    // Image generation endpoint
+    this.app.post("/:agentId/image", async (req, res) => {
+      const images = await this.generateImage(req.body);
+      res.json(images);
+    });
+  }
 }
 ```
 
@@ -275,122 +276,100 @@ const client = await AutoClientInterface.start(runtime);
 
 ```typescript
 class AutoClient {
-	constructor(runtime: IAgentRuntime) {
-		this.runtime = runtime;
+  constructor(runtime: IAgentRuntime) {
+    this.runtime = runtime;
 
-		// Start trading loop
-		this.interval = setInterval(
-			() => {
-				this.makeTrades();
-			},
-			60 * 60 * 1000,
-		); // 1 hour interval
-	}
+    // Start trading loop
+    this.interval = setInterval(() => {
+      this.makeTrades();
+    }, 60 * 60 * 1000); // 1 hour interval
+  }
 
-	async makeTrades() {
-		// Get recommendations
-		const recommendations = await this.getHighTrustRecommendations();
+  async makeTrades() {
+    // Get recommendations
+    const recommendations = await this.getHighTrustRecommendations();
 
-		// Analyze tokens
-		const analysis = await this.analyzeTokens(recommendations);
+    // Analyze tokens
+    const analysis = await this.analyzeTokens(recommendations);
 
-		// Execute trades
-		await this.executeTrades(analysis);
-	}
+    // Execute trades
+    await this.executeTrades(analysis);
+  }
 }
 ```
 
 ## Deva Client
 
-The Deva client allows fetching user-related data and making posts based on it
+The Deva client allows fetching user-related data and making posts based on it.
 
 ### Client setup
 
 ```typescript
 export const DevaClientInterface: Client = {
-	async start(runtime: IAgentRuntime) {
-		await validateDevaConfig(runtime);
+  async start(runtime: IAgentRuntime) {
+    await validateDevaConfig(runtime);
 
-		const deva = new DevaClient(
-			runtime,
-			runtime.getSetting("DEVA_API_KEY"),
-			runtime.getSetting("DEVA_API_BASE_URL"),
-		);
+    const deva = new DevaClient(
+      runtime,
+      runtime.getSetting("DEVA_API_KEY"),
+      runtime.getSetting("DEVA_API_BASE_URL"),
+    );
 
-		await deva.start();
+    await deva.start();
 
-		elizaLogger.success(
-			`✅ Deva client successfully started for character ${runtime.character.name}`,
-		);
+    elizaLogger.success(
+      `✅ Deva client successfully started for character ${runtime.character.name}`,
+    );
 
-		return deva;
-	},
+    return deva;
+  },
 };
 ```
 
 ### Fetch personal user data
 
 ```typescript
-    public async
-getMe()
-:
-Promise < DevaPersona | null > {
-	return await fetch(`${this.apiBaseUrl}/persona`, {
-		headers: {...this.defaultHeaders},
-	})
-		.then((res) => res.json())
-		.catch(() => null);
+public async getMe(): Promise<DevaPersona | null> {
+  return await fetch(`${this.apiBaseUrl}/persona`, {
+    headers: { ...this.defaultHeaders },
+  })
+    .then((res) => res.json())
+    .catch(() => null);
 }
 ```
 
 ### Fetch user posts
 
 ```typescript
-    public async
-getPersonaPosts(personaId
-:
-string
-):
-Promise < DevaPost[] > {
-	const res = await fetch(
-		`${this.apiBaseUrl}/post?filter_persona_id=${personaId}`,
-		{
-			headers: {
-				Authorization: `Bearer ${this.accessToken}`,
-				"Content-Type": "application/json",
-			},
-		}
-	).then((res) => res.json());
-	return res.items;
+public async getPersonaPosts(personaId: string): Promise<DevaPost[]> {
+  const res = await fetch(
+    `${this.apiBaseUrl}/post?filter_persona_id=${personaId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${this.accessToken}`,
+        "Content-Type": "application/json",
+      },
+    }
+  ).then((res) => res.json());
+  return res.items;
 }
 ```
 
 ### Create and publish a post on behalf of the user
 
 ```typescript
-    public async
-makePost({
-	text,
-	in_reply_to_id,
-}
-:
-{
-	text: string;
-	in_reply_to_id: string;
-}
-):
-Promise < DevaPost > {
-	const res = await fetch(`${this.apiBaseUrl}/post`, {
-		method: "POST",
-		headers: {
-			Authorization: `Bearer ${this.accessToken}`,
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify({text, in_reply_to_id, author_type: "BOT"}),
-	}).then((res) => res.json());
+public async makePost({ text, in_reply_to_id }: { text: string; in_reply_to_id: string }): Promise<DevaPost> {
+  const res = await fetch(`${this.apiBaseUrl}/post`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${this.accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text, in_reply_to_id, author_type: "BOT" }),
+  }).then((res) => res.json());
 
-	console.log(res);
-	return res;
+  console.log(res);
+  return res;
 }
 ```
 
@@ -402,17 +381,11 @@ All clients implement standard message handling:
 
 ```typescript
 interface ClientInterface {
-	async
+  async handleMessage(message: Message): Promise<void>;
 
-	handleMessage(message: Message): Promise<void>;
+  async generateResponse(context: Context): Promise<Response>;
 
-	async
-
-	generateResponse(context: Context): Promise<Response>;
-
-	async
-
-	sendMessage(destination: string, content: Content): Promise<void>;
+  async sendMessage(destination: string, content: Content): Promise<void>;
 }
 ```
 
@@ -420,17 +393,11 @@ interface ClientInterface {
 
 ```typescript
 interface MediaProcessor {
-	async
+  async processImage(image: Image): Promise<ProcessedImage>;
 
-	processImage(image: Image): Promise<ProcessedImage>;
+  async processVideo(video: Video): Promise<ProcessedVideo>;
 
-	async
-
-	processVideo(video: Video): Promise<ProcessedVideo>;
-
-	async
-
-	processAudio(audio: Audio): Promise<ProcessedAudio>;
+  async processAudio(audio: Audio): Promise<ProcessedAudio>;
 }
 ```
 
@@ -438,15 +405,15 @@ interface MediaProcessor {
 
 ```typescript
 class BaseClient {
-	protected async handleError(error: Error) {
-		console.error("Client error:", error);
+  protected async handleError(error: Error) {
+    console.error("Client error:", error);
 
-		if (error.code === "RATE_LIMIT") {
-			await this.handleRateLimit(error);
-		} else if (error.code === "AUTH_FAILED") {
-			await this.refreshAuth();
-		}
-	}
+    if (error.code === "RATE_LIMIT") {
+      await this.handleRateLimit(error);
+    } else if (error.code === "AUTH_FAILED") {
+      await this.refreshAuth();
+    }
+  }
 }
 ```
 
@@ -482,23 +449,23 @@ class BaseClient {
 
 ```typescript
 class BaseClient {
-	protected async handleError(error: Error) {
-		if (error.code === "RATE_LIMIT") {
-			await this.handleRateLimit(error);
-		} else if (error.code === "AUTH_FAILED") {
-			await this.refreshAuth();
-		} else if (error.code === "NETWORK_ERROR") {
-			await this.reconnect();
-		}
+  protected async handleError(error: Error) {
+    if (error.code === "RATE_LIMIT") {
+      await this.handleRateLimit(error);
+    } else if (error.code === "AUTH_FAILED") {
+      await this.refreshAuth();
+    } else if (error.code === "NETWORK_ERROR") {
+      await this.reconnect();
+    }
 
-		// Log error
-		console.error("Client error:", {
-			type: error.name,
-			message: error.message,
-			code: error.code,
-			stack: error.stack,
-		});
-	}
+    // Log error
+    console.error("Client error:", {
+      type: error.name,
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+    });
+  }
 }
 ```
 
@@ -506,22 +473,22 @@ class BaseClient {
 
 ```typescript
 class ClientManager {
-	private async cleanup() {
-		// Close connections
-		await Promise.all(this.connections.map((conn) => conn.close()));
+  private async cleanup() {
+    // Close connections
+    await Promise.all(this.connections.map((conn) => conn.close()));
 
-		// Clear caches
-		this.cache.clear();
+    // Clear caches
+    this.cache.clear();
 
-		// Cancel timers
-		this.timers.forEach((timer) => clearInterval(timer));
-	}
+    // Cancel timers
+    this.timers.forEach((timer) => clearInterval(timer));
+  }
 
-	private async reconnect() {
-		await this.cleanup();
-		await wait(this.calculateBackoff());
-		await this.initialize();
-	}
+  private async reconnect() {
+    await this.cleanup();
+    await wait(this.calculateBackoff());
+    await this.initialize();
+  }
 }
 ```
 
@@ -529,18 +496,18 @@ class ClientManager {
 
 ```typescript
 class RateLimiter {
-	private async handleRateLimit(error: RateLimitError) {
-		const delay = this.calculateBackoff(error);
-		await wait(delay);
-		return this.retryRequest();
-	}
+  private async handleRateLimit(error: RateLimitError) {
+    const delay = this.calculateBackoff(error);
+    await wait(delay);
+    return this.retryRequest();
+  }
 
-	private calculateBackoff(error: RateLimitError): number {
-		return Math.min(
-			this.baseDelay * Math.pow(2, this.attempts),
-			this.maxDelay,
-		);
-	}
+  private calculateBackoff(error: RateLimitError): number {
+    return Math.min(
+      this.baseDelay * Math.pow(2, this.attempts),
+      this.maxDelay,
+    );
+  }
 }
 ```
 
@@ -552,11 +519,11 @@ class RateLimiter {
 
 ```typescript
 class ClientManager {
-	private reconnect() {
-		await this.disconnect();
-		await wait(this.backoff());
-		await this.connect();
-	}
+  private reconnect() {
+    await this.disconnect();
+    await wait(this.backoff());
+    await this.connect();
+  }
 }
 ```
 
@@ -579,9 +546,7 @@ class MessageQueue {
 
 ```typescript
 // Implement token refresh
-async
-refreshAuth()
-{
+async refreshAuth() {
 	const newToken = await this.requestNewToken();
 	await this.updateToken(newToken);
 }
@@ -591,9 +556,7 @@ refreshAuth()
 
 ```typescript
 // Handle rate limiting
-async
-handleRateLimit(error)
-{
+async handleRateLimit(error) {
 	const delay = this.calculateBackoff(error);
 	await wait(delay);
 	return this.retryRequest();
@@ -604,12 +567,10 @@ handleRateLimit(error)
 
 ```typescript
 // Implement reconnection logic
-async
-handleDisconnect()
-{
+async handleDisconnect() {
 	await this.reconnect({
 		maxAttempts: 5,
-		backoff: 'exponential'
+		backoff: "exponential",
 	});
 }
 ```
@@ -617,9 +578,7 @@ handleDisconnect()
 4. **Message Processing Failure**
 
 ```typescript
-async
-processMessage(message)
-{
+async processMessage(message) {
 	try {
 		return await this.messageProcessor(message);
 	} catch (error) {
