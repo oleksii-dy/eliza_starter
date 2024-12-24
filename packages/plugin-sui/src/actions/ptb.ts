@@ -11,7 +11,7 @@ import {
     Memory,
     ModelClass,
     State,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 
 const ArgSchema = z.union([
     z.object({
