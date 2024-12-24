@@ -9,7 +9,7 @@ import {
     parseBooleanFromText,
     State,
     stringToUuid,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 import { ClientBase } from "./base";
 import { DevaPersona, DevaPost } from "./types";
 import { DEVA_POST_TEMPLATE } from "./templates.ts";

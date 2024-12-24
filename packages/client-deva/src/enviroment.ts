@@ -1,4 +1,4 @@
-import { IAgentRuntime } from "@ai16z/eliza";
+import { IAgentRuntime } from "@elizaos/core";
 import { z } from "zod";
 
 export const devaEnvSchema = z.object({
@@ -13,8 +13,7 @@ export async function validateDevaConfig(
     try {
         const config = {
             DEVA_API_KEY:
-                runtime.getSetting("DEVA_API_KEY") ||
-                process.env.DEVA_API_KEY,
+                runtime.getSetting("DEVA_API_KEY") || process.env.DEVA_API_KEY,
         };
 
         return devaEnvSchema.parse(config);
