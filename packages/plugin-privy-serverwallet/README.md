@@ -5,11 +5,12 @@ A plugin for the Eliza framework that enables AI agents to interact with blockch
 ## Features
 
 - Create and manage server wallets across multiple chains (Ethereum, EVM-compatible, Solana)
-- Send transactions with idempotency guarantees
+- Send transactions with idempotency guarantees and third-party gas payments
+- Support for custom wallet metadata and tags
 - Check wallet balances for native and token assets
 - Track transaction history in agent memory for context awareness
 - Configurable network settings (mainnet/testnet)
-- Comprehensive transaction logging and retrieval
+- Comprehensive transaction logging and retrieval with metadata support
 
 ## Installation
 
@@ -34,7 +35,7 @@ PRIVY_API_SECRET=your_api_secret_here
 PRIVY_WALLET_ADDRESS=optional_default_wallet_address
 ```
 
-You can obtain your App ID and API Secret from the [Privy Dashboard](https://dashboard.privy.io/).
+You can obtain your App ID and API Secret from the [Privy Dashboard](https://dashboard.privy.io/). For detailed information about server wallets and their capabilities, refer to the [Privy Server Wallets Documentation](https://docs.privy.io/guide/server-wallets/).
 
 ## Usage
 
@@ -51,20 +52,28 @@ eliza.registerPlugin(PrivyWalletPlugin);
 
 #### 1. Create Wallet
 ```typescript
-// Example: Create a new wallet
+// Example: Create a new wallet with metadata
 const result = await runtime.executeAction("CREATE_PRIVY_WALLET", {
-  chain: "ethereum" // or "polygon", "solana", etc.
+  chain: "ethereum", // or "polygon", "solana", etc.
+  customId: "agent-trading-wallet",
+  tags: ["defi", "trading"],
+  description: "DeFi trading wallet for Agent X"
 });
 // Returns: { address: "0x..." }
 ```
 
 #### 2. Send Transaction
 ```typescript
-// Example: Send ETH to another address
+// Example: Send ETH with gas management and idempotency
 const result = await runtime.executeAction("SEND_PRIVY_TRANSACTION", {
   to: "0x123...",
   value: "0.1", // in ETH
-  chainId: 1 // Ethereum mainnet
+  chainId: "eip155:1", // Ethereum mainnet
+  useThirdPartyGas: true, // Enable third-party gas payments
+  gasPayedBy: "protocol", // Specify gas payer
+  idempotency: {
+    useGeneratedKey: true // Auto-generate idempotency key
+  }
 });
 // Returns: { hash: "0x...", status: "pending" }
 ```
@@ -94,7 +103,14 @@ The plugin automatically logs all transactions to the agent's memory for context
       to: "0x...",
       value: "0.1",
       symbol: "ETH",
-      chainId: 1
+      chainId: "eip155:1",
+      useThirdPartyGas: true,
+      gasPayedBy: "protocol",
+      idempotencyKey: "tx-123...",
+      metadata: {
+        purpose: "defi-trade",
+        tags: ["swap", "uniswap"]
+      }
     }
   }
 }
@@ -123,6 +139,12 @@ pnpm test
 # Lint code
 pnpm lint
 ```
+
+## Related Projects
+
+- [ElizaOS](https://github.com/elizaOS/eliza) - The core Eliza framework
+- [Privy Documentation](https://docs.privy.io/) - Official Privy documentation
+- [Privy Server Wallets Guide](https://docs.privy.io/guide/server-wallets/) - Detailed server wallet documentation
 
 ## Security Considerations
 

@@ -9,6 +9,10 @@ interface Transaction {
     network?: string;
     timestamp?: number;
     blockNumber?: number;
+    idempotencyKey?: string;
+    useThirdPartyGas?: boolean;
+    gasPayedBy?: string;
+    metadata?: Record<string, any>;
 }
 
 /**
@@ -31,7 +35,11 @@ export async function storeTransactionMemory(runtime: IAgentRuntime, tx: Transac
                 status: tx.status || 'pending',
                 network: tx.network,
                 timestamp: tx.timestamp || Date.now(),
-                blockNumber: tx.blockNumber
+                blockNumber: tx.blockNumber,
+                ...(tx.idempotencyKey && { idempotencyKey: tx.idempotencyKey }),
+                ...(tx.useThirdPartyGas && { useThirdPartyGas: tx.useThirdPartyGas }),
+                ...(tx.gasPayedBy && { gasPayedBy: tx.gasPayedBy }),
+                ...(tx.metadata && { metadata: tx.metadata })
             }
         }
     };

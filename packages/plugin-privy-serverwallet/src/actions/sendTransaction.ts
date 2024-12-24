@@ -1,10 +1,16 @@
 import { Action, IAgentRuntime, Memory, ActionExample } from "@ai16z/eliza";
 import fetch from 'node-fetch';
 import { storeTransactionMemory } from "../utils/transactionLogger";
+import { v4 as uuidv4 } from 'uuid';
 
 interface PrivyTransactionResponse {
     transaction_hash: string;
     status: string;
+}
+
+interface IdempotencyParams {
+    idempotencyKey?: string;
+    useGeneratedKey?: boolean;
 }
 
 export const sendTransactionAction: Action = {
@@ -16,6 +22,15 @@ export const sendTransactionAction: Action = {
             user: "user",
             content: {
                 text: "Send 0.1 ETH to 0x123..."
+            }
+        }
+    ], [
+        {
+            user: "user",
+            content: {
+                text: "Send 0.5 ETH to 0x456 using third party gas",
+                useThirdPartyGas: true,
+                gasPayedBy: "protocol"
             }
         }
     ]] as ActionExample[][],
@@ -45,6 +60,11 @@ export const sendTransactionAction: Action = {
         const to = message.content?.to;
         const value = message.content?.value;
         const chainId = message.content?.chainId || "eip155:1";
+        const idempotencyParams = message.content?.idempotency as IdempotencyParams || {};
+        
+        // Generate or use provided idempotency key
+        const idempotencyKey = idempotencyParams.idempotencyKey || 
+            (idempotencyParams.useGeneratedKey !== false ? uuidv4() : undefined);
 
         if (!to || !value) {
             throw new Error("Transaction recipient (to) and value are required");
@@ -61,21 +81,29 @@ export const sendTransactionAction: Action = {
                 chain_id: chainId,
                 to,
                 value,
-                data: "0x" // Empty data for simple transfers
+                data: "0x", // Empty data for simple transfers
+                ...(idempotencyKey && { idempotency_key: idempotencyKey }),
+                ...(message.content?.useThirdPartyGas && { use_third_party_gas: true }),
+                ...(message.content?.gasPayedBy && { gas_payed_by: message.content.gasPayedBy })
             })
         }).then(async res => {
             const data = await res.json();
             return data as PrivyTransactionResponse;
         });
 
-        // Store transaction in memory
+        // Store transaction in memory with enhanced details
         await storeTransactionMemory(runtime, {
             hash: response.transaction_hash,
             from: fromAddress,
             to,
             value,
             status: response.status || "pending",
-            network: chainId
+            network: chainId,
+            idempotencyKey,
+            useThirdPartyGas: message.content?.useThirdPartyGas,
+            gasPayedBy: message.content?.gasPayedBy,
+            metadata: message.content?.metadata,
+            timestamp: Date.now()
         });
 
         return {

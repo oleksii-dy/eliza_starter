@@ -1,5 +1,6 @@
-import { Action, IAgentRuntime, Memory, Content, ActionExample } from "@ai16z/eliza";
+import { Action, IAgentRuntime, Memory, ActionExample } from "@ai16z/eliza";
 import { PrivyClient } from "@privy-io/server-auth";
+import { WalletMetadata, CreateWalletContent } from "../types";
 
 /**
  * Action to create or load a Privy server wallet
@@ -18,6 +19,7 @@ export const createWalletAction: Action = {
     },
 
     handler: async (runtime: IAgentRuntime, message: Memory) => {
+        const content = message.content as CreateWalletContent;
         try {
             const appId = await runtime.getSetting("PRIVY_APP_ID");
             const apiSecret = await runtime.getSetting("PRIVY_API_SECRET");
@@ -27,8 +29,20 @@ export const createWalletAction: Action = {
                 throw new Error("Missing Privy credentials");
             }
 
-            // Extract chain from message content or use default
-            const chain = message.content?.chain || "ethereum";
+            // Extract chain and metadata from message content
+            const chain = content?.chain || "ethereum";
+            const walletMetadata: WalletMetadata = {
+                customId: content?.customId,
+                tags: content?.tags,
+                description: content?.description
+            };
+            
+            // Remove undefined values from metadata
+            Object.keys(walletMetadata).forEach(key => {
+                if (walletMetadata[key as keyof WalletMetadata] === undefined) {
+                    delete walletMetadata[key as keyof WalletMetadata];
+                }
+            });
             
             // Create wallet using Privy API
             const response = await fetch(`https://auth.privy.io/api/v1/wallets`, {
@@ -38,7 +52,8 @@ export const createWalletAction: Action = {
                     'Authorization': `Bearer ${apiSecret}`
                 },
                 body: JSON.stringify({
-                    chain: chain
+                    chain: chain,
+                    ...(Object.keys(walletMetadata).length > 0 && { metadata: walletMetadata })
                 })
             });
 
@@ -56,7 +71,8 @@ export const createWalletAction: Action = {
                     metadata: {
                         chain,
                         address: walletAddress,
-                        timestamp: new Date().toISOString()
+                        timestamp: new Date().toISOString(),
+                        ...(Object.keys(walletMetadata).length > 0 && { customMetadata: walletMetadata })
                     }
                 }
             });
@@ -113,6 +129,16 @@ export const createWalletAction: Action = {
             content: {
                 text: "Set up a Solana wallet",
                 chain: "solana"
+            }
+        }],
+        [{
+            user: "user",
+            content: {
+                text: "Create a tagged wallet for DeFi operations",
+                chain: "ethereum",
+                customId: "defi-ops-1",
+                tags: ["defi", "trading"],
+                description: "Wallet for DeFi operations and trading"
             }
         }]
     ] as ActionExample[][]
