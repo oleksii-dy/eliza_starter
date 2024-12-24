@@ -32,7 +32,6 @@ import { RedisClient } from "@elizaos/adapter-redis";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import { DirectClient } from "@elizaos/client-direct";
 import { createNodePlugin } from "@elizaos/plugin-node";
-import { TEEMode } from "@elizaos/plugin-tee";
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
@@ -456,7 +455,7 @@ export async function createAgent(
     const walletSecretSalt = getSecret(character, "WALLET_SECRET_SALT");
 
     // Validate TEE configuration
-    if (teeMode !== TEEMode.OFF && !walletSecretSalt) {
+    if (teeMode !== "OFF" && !walletSecretSalt) {
         elizaLogger.error(
             "WALLET_SECRET_SALT required when TEE_MODE is enabled"
         );
@@ -598,7 +597,7 @@ export async function createAgent(
             importFn: () =>
                 import("@elizaos/plugin-story").then((m) => m.storyPlugin),
         },
-        ...(teeMode === TEEMode.OFF &&
+        ...(teeMode === "OFF" &&
             walletSecretSalt && [
                 {
                     secrets: [],
