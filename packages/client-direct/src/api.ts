@@ -121,30 +121,78 @@ export function createApiRouter(
         }
     });
 
-    router.post("/agents/:agentId/memory/add", async (req, resp) => {
-        // Validate input
-        const errors = []
-        const { memoryString } = req.body;
-        if (!memoryString) {
-            errors.push('memory is required')
-        }
-        const agentId = req.params.agentId;
-        const runtime = agents.get(agentId);
-        if (!runtime) {
-            errors.push('Runtime not found')
-        }
-        if (errors.length) {
-            res.status(404).json({ errors });
-            return;
-        }
+    router.post(
+        "/agents/:agentId/memory/add",
+        async (req: express.Request, res: express.Response) => {
+            const errors: string[] = [];
 
-        const res = runtime.addStringToMemory(memoryString)
-        // lock return format incase internals change
-        resp.json({
-            id: res.id,
-            have: res.have,
-        });
-    })
+            try {
+                // Validate input
+                const { memoryString } = req.body;
+                const agentId = req.params.agentId;
+
+                // Input validation
+                if (!memoryString || typeof memoryString !== "string") {
+                    errors.push("memory must be a non-empty string");
+                }
+
+                if (!agentId) {
+                    errors.push("agentId is required");
+                }
+
+                // Return validation errors if any
+                if (errors.length) {
+                    return res.status(400).json({
+                        success: false,
+                        errors,
+                        message: "Validation failed",
+                    });
+                }
+
+                // Get runtime
+                let runtime = agents.get(agentId);
+
+                // if runtime is null, look for runtime with the same name
+                if (!runtime) {
+                    runtime = Array.from(agents.values()).find(
+                        (a) =>
+                            a.character.name.toLowerCase() ===
+                            agentId.toLowerCase()
+                    );
+                }
+
+                if (!runtime) {
+                    return res.status(404).json({ error: "Agent not found" });
+                }
+
+                // Add memory
+                const result = await runtime.addStringToMemory(memoryString);
+
+                // Return success response
+                return res.status(200).json({
+                    success: true,
+                    data: {
+                        id: result.id,
+                        have: result.have,
+                    },
+                });
+            } catch (error) {
+                // Log the error
+                console.error("Error adding memory:", error);
+
+                // Return error response
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Internal server error occurred while adding memory",
+                    error:
+                        process.env.NODE_ENV === "development"
+                            ? error.message
+                            : undefined,
+                });
+            }
+        }
+    );
 
     return router;
 }
