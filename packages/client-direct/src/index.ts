@@ -2,11 +2,11 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import express, { Request as ExpressRequest } from "express";
 import multer, { File } from "multer";
-import { elizaLogger, generateCaption, generateImage } from "@ai16z/eliza";
-import { composeContext } from "@ai16z/eliza";
-import { generateMessageResponse } from "@ai16z/eliza";
-import { messageCompletionFooter } from "@ai16z/eliza";
-import { AgentRuntime } from "@ai16z/eliza";
+import { elizaLogger, generateCaption, generateImage } from "@elizaos/core";
+import { composeContext } from "@elizaos/core";
+import { generateMessageResponse } from "@elizaos/core";
+import { messageCompletionFooter } from "@elizaos/core";
+import { AgentRuntime } from "@elizaos/core";
 import {
     Content,
     Memory,
