@@ -246,7 +246,7 @@ export const getFilesFromMemories = async (
     const memories = allMemories.filter(
         (memory) => (memory.content.metadata as any)?.path
     );
-    elizaLogger.info("Memories:", memories);
+    // elizaLogger.info("Memories:", memories);
     return memories.map(
         (memory) => `File: ${(memory.content.metadata as any)?.path}
         Content: ${memory.content.text.replace(/\n/g, "\\n")}
@@ -278,9 +278,9 @@ export async function incorporateRepositoryState(state: State, runtime: IAgentRu
     const sanitizedMemories = sanitizeMemories(relevantMemories);
     state.relevantMemories = JSON.stringify(sanitizedMemories, null, 2);
     // Doesn't exist in character or state but we want it in state
-    state.facts = JSON.stringify(await runtime.messageManager.getMemories({
+    state.facts = JSON.stringify(sanitizeMemories(await runtime.messageManager.getMemories({
         roomId: message.roomId,
-    }), null, 2);
+    })), null, 2);
     // TODO:
     // We need to actually save goals, knowledge, facts,we only save memories for now
     // We need to dynamically update the goals, knoweldge, facts, bio, lore, we should add actions to update these and chain them to the OODA cycle

@@ -53,7 +53,7 @@ export const initializeRepositoryAction: Action = {
         message: Memory,
         state: State,
         options: any,
-        callback: HandlerCallback
+        callback?: HandlerCallback
     ) => {
         elizaLogger.log("[initializeRepository] Composing state for message:", message);
         if (!state) {
@@ -102,22 +102,24 @@ export const initializeRepositoryAction: Action = {
             elizaLogger.info(
                 `Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo} @ branch: ${content.branch}`
             );
-
-            callback({
-                text: `Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo} @ branch: ${content.branch}`,
-                attachments: [],
-            });
+            if (callback) {
+                callback({
+                    text: `Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo} @ branch: ${content.branch}`,
+                    attachments: [],
+                });
+            }
         } catch (error) {
             elizaLogger.error(
                 `Error initializing repository ${content.owner}/${content.repo} branch ${content.branch}:`,
                 error
             );
-            callback(
-                {
-                    text: `Error initializing repository ${content.owner}/${content.repo} branch ${content.branch}. Please try again.`,
-                },
-                []
-            );
+            if (callback) {
+                callback(
+                    {
+                        text: `Error initializing repository ${content.owner}/${content.repo} branch ${content.branch}. Please try again.`,
+                    },
+                []);
+            }
         }
     },
     examples: [

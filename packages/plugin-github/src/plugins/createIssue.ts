@@ -63,7 +63,7 @@ export const createIssueAction: Action = {
         message: Memory,
         state: State,
         options: any,
-        callback: HandlerCallback
+        callback?: HandlerCallback
     ) => {
         elizaLogger.log("[createIssue] Composing state for message:", message);
 
@@ -137,22 +137,25 @@ export const createIssueAction: Action = {
             );
 
             await saveIssueToMemory(runtime, issue, content.owner, content.repo);
-
-            await callback({
-                text: `Created issue #${issue.number} successfully see: ${issue.html_url}`,
-                attachments: [],
-            });
+            if (callback) {
+                await callback({
+                    text: `Created issue #${issue.number} successfully see: ${issue.html_url}`,
+                    attachments: [],
+                });
+            }
         } catch (error) {
             elizaLogger.error(
                 `Error creating issue in repository ${content.owner}/${content.repo}:`,
                 error
             );
-            await callback(
-                {
-                    text: `Error creating issue in repository ${content.owner}/${content.repo}. Please try again.`,
-                },
-                []
-            );
+            if (callback) {
+                await callback(
+                    {
+                        text: `Error creating issue in repository ${content.owner}/${content.repo}. Please try again.`,
+                    },
+                    []
+                );
+            }
         }
     },
     examples: [

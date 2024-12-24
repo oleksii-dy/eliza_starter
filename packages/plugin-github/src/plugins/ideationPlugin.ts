@@ -30,7 +30,7 @@ export const ideationAction: Action = {
         message: Memory,
         state: State,
         options: any,
-        callback: HandlerCallback
+        callback?: HandlerCallback
     ) => {
         elizaLogger.log("[ideation] Composing state for message:", message);
 
@@ -82,10 +82,12 @@ export const ideationAction: Action = {
             createdAt: timestamp,
         };
         await runtime.messageManager.createMemory(newMemory);
-        await callback({
-            text: content.response,
-            attachments: [],
-        });
+        if (callback) {
+            await callback({
+                text: content.response,
+                attachments: [],
+            });
+        }
     },
     examples: [
         [

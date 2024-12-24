@@ -143,18 +143,11 @@ export class GitHubClient extends EventEmitter {
                 action: createMemoriesFromFilesMemory.content.action,
                 userId: this.runtime.agentId,
             });
-            const callback: HandlerCallback = async (
-                content: Content,
-                files: any[]
-            ) => {
-                elizaLogger.log("Callback called with content:", content);
-                return [];
-            };
             await this.runtime.processActions(
                 originalMemory,
                 [initializeRepositoryMemory, createMemoriesFromFilesMemory],
                 originalState,
-                callback
+                undefined
             );
         }
 
