@@ -16,7 +16,7 @@ import {
 } from "@ai16z/eliza";
 import { stringToUuid } from "@ai16z/eliza";
 import { settings } from "@ai16z/eliza";
-import { createApiRouter } from "./api.ts";
+import { createAgentApiRouter } from "./agent.api.ts";
 import * as fs from "fs";
 import * as path from "path";
 const upload = multer({ storage: multer.memoryStorage() });
@@ -66,7 +66,7 @@ export class DirectClient {
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({ extended: true }));
 
-        const apiRouter = createApiRouter(this.agents, this);
+        const apiRouter = createAgentApiRouter(this.agents, this);
         this.app.use(apiRouter);
 
         // Define an interface that extends the Express Request interface

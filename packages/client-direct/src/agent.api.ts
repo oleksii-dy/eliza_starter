@@ -12,7 +12,7 @@ import {
 
 import { DirectClient } from ".";
 
-export class ApiRouter {
+export class AgentApiRouter {
     private router: Router;
     private agents: Map<string, AgentRuntime>;
     private directClient: DirectClient;
@@ -304,10 +304,10 @@ export class ApiRouter {
     }
 }
 
-export function createApiRouter(
+export function createAgentApiRouter(
     agents: Map<string, AgentRuntime>,
     directClient: DirectClient
 ): Router {
-    const apiRouter = new ApiRouter(agents, directClient);
-    return apiRouter.getRouter();
+    const agentApiRouter = new AgentApiRouter(agents, directClient);
+    return agentApiRouter.getRouter();
 }
