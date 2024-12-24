@@ -27,7 +27,7 @@ graph TD
     TC --> |"Bot API"| TC1["Commands & Media"]
     TWC --> |"Social"| TWC1["Posts & Interactions"]
     AC --> |"Trading"| AC1["Analysis & Execution"]
-    DEVA --> |"Social"| AC1["Messages & Execution"]
+    DEVA --> |"Social"| DEVA1["Messages & Execution"]
 
     %% Simple styling with better contrast and black text
     classDef default fill:#f9f9f9,stroke:#333,stroke-width:1px,color:black
