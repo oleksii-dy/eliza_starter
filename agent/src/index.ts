@@ -49,6 +49,7 @@ import { nearPlugin } from "@ai16z/plugin-near";
 import { nftGenerationPlugin } from "@ai16z/plugin-nft-generation";
 import { createNodePlugin } from "@ai16z/plugin-node";
 import { solanaPlugin } from "@ai16z/plugin-solana";
+import { privyPlugin } from "@ai16z/plugin-privy";
 import { suiPlugin } from "@ai16z/plugin-sui";
 import { TEEMode, teePlugin } from "@ai16z/plugin-tee";
 import { tonPlugin } from "@ai16z/plugin-ton";
@@ -549,6 +550,7 @@ export async function createAgent(
             getSecret(character, "TON_PRIVATE_KEY") ? tonPlugin : null,
             getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
             getSecret(character, "STORY_PRIVATE_KEY") ? storyPlugin : null,
+            getSecret(character, "PRIVY_APP_ID") && getSecret(character, "PRIVY_APP_SECRET") ? privyPlugin : null,
         ].filter(Boolean),
         providers: [],
         actions: [],

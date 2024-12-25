@@ -42,6 +42,7 @@
     "@ai16z/plugin-image-generation": "workspace:*",
     "@ai16z/plugin-nft-generation": "workspace:*",
     "@ai16z/plugin-node": "workspace:*",
+    "@ai16z/plugin-privy": "workspace:*",
     "@ai16z/plugin-solana": "workspace:*",
     "@ai16z/plugin-starknet": "workspace:*",
     "@ai16z/plugin-ton": "workspace:*",
