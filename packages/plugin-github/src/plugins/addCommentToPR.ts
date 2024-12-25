@@ -78,9 +78,7 @@ export const addCommentToPRAction: Action = {
         try {
             const comment = await githubService.addPRComment(
                 content.pullRequest,
-                content.comment,
-                content.owner,
-                content.repo
+                content.comment
             );
 
             elizaLogger.info(
@@ -110,7 +108,7 @@ export const addCommentToPRAction: Action = {
     examples: [
         [
             {
-                user: "{{user1}}",
+                user: "{{user}}",
                 content: {
                     text: "Add a comment to pull request #1 in repository user1/repo1: 'This is fixed in the latest release'",
                 },
@@ -119,6 +117,66 @@ export const addCommentToPRAction: Action = {
                 user: "{{agentName}}",
                 content: {
                     text: "Added comment to pull request #1 successfully!",
+                    action: "ADD_COMMENT_PR",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Add a comment to pull request #2 in repository user2/repo2: 'Please review the changes'",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added comment to pull request #2 successfully!",
+                    action: "ADD_COMMENT_PR",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Add a comment to pull request #3 in repository user3/repo3: 'Great work on this feature!'",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added comment to pull request #3 successfully!",
+                    action: "ADD_COMMENT_PR",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Add a comment to pull request #4 in repository user4/repo4: 'Can you add more tests?'",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added comment to pull request #4 successfully!",
+                    action: "ADD_COMMENT_PR",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Add a comment to pull request #5 in repository user5/repo5: 'This needs some refactoring'",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added comment to pull request #5 successfully!",
                     action: "ADD_COMMENT_PR",
                 },
             },
