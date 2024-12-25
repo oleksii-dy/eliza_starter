@@ -1,4 +1,4 @@
-# Eliza 🤖
+# InHouse Custom Eliza Inspired by AI16Z Eliza 🤖
 
 <div align="center">
   <img src="./docs/static/img/eliza_banner.jpg" alt="Eliza Banner" width="100%" />
@@ -16,6 +16,8 @@
 
 ## ✨ Features
 
+-   🚝 In-built training pipeline for agents
+-   ➕ Farcaster additional functionalities like create account etc
 -   🛠️ Full-featured Discord, Twitter and Telegram connectors
 -   🔗 Support for every model (Llama, Grok, OpenAI, Anthropic, etc.)
 -   👥 Multi-agent and room support
@@ -66,12 +68,9 @@ git clone https://github.com/ai16z/eliza.git
 
 # Checkout the latest release
 # This project iterates fast, so we recommend checking out the latest release
-git checkout $(git describe --tags --abbrev=0)
+# git checkout $(git describe --tags --abbrev=0)
+git checkout feature/multi-farcaster-agents
 ```
-
-### Start Eliza with Gitpod
-
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/ai16z/eliza/tree/main)
 
 ### Edit the .env file
 
@@ -124,13 +123,3 @@ pnpm install --include=optional sharp
 
 -   [GitHub Issues](https://github.com/ai16z/eliza/issues). Best for: bugs you encounter using Eliza, and feature proposals.
 -   [Discord](https://discord.gg/ai16z). Best for: sharing your applications and hanging out with the community.
-
-## Contributors
-
-<a href="https://github.com/ai16z/eliza/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=ai16z/eliza" />
-</a>
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=ai16z/eliza&type=Date)](https://star-history.com/#ai16z/eliza&Date)
