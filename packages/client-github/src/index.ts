@@ -159,7 +159,7 @@ export class GitHubClient extends EventEmitter {
             userId: this.runtime.agentId, // TODO: this should be the user id
             roomId: roomId,
             agentId: this.runtime.agentId,
-            content: { text: "sample text", action: "NOTHING", source: "github" },
+            content: { text: "Initializing repository and creating memories", action: "NOTHING", source: "github" },
         } as Memory;
         let originalState = await this.runtime.composeState(originalMemory, {});
         originalState = await incorporateRepositoryState(originalState, this.runtime, originalMemory, []);
@@ -209,13 +209,6 @@ export class GitHubClient extends EventEmitter {
             createdAt: timestamp,
         };
         elizaLogger.log("New memory to be created:", newMemory);
-
-        const responseContent = await generateMessageResponse({
-            runtime: this.runtime,
-            context,
-            modelClass: ModelClass.LARGE,
-        });
-        elizaLogger.log("Generated response content:", responseContent);
 
         try {
             await this.runtime.messageManager.createMemory(newMemory);
