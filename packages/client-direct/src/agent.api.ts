@@ -8,7 +8,7 @@ import {
     elizaLogger,
     getEnvVariable,
     validateCharacterConfig,
-} from "@ai16z/eliza";
+} from "@elizaos/eliza";
 
 import { DirectClient } from ".";
 
