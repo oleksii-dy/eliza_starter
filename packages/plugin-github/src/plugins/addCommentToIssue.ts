@@ -125,7 +125,7 @@ export const addCommentToIssueAction: Action = {
             );
 
             elizaLogger.info(
-                `Added comment to issue #${content.issue} successfully!`
+                `Added comment to issue #${content.issue} successfully! See comment at ${comment.html_url}`
             );
             if (callback) {
                 callback({
@@ -159,7 +159,7 @@ export const addCommentToIssueAction: Action = {
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Added comment to issue #1 successfully!",
+                    text: "Added comment to issue #1 successfully! See comment at https://github.com/user1/repo1/issues/1#issuecomment-1234567890",
                     action: "ADD_COMMENT",
                 },
             },

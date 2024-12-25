@@ -3,7 +3,7 @@
     "clients": [
         "github"
     ],
-    "modelProvider": "google",
+    "modelProvider": "openai",
     "settings": {
         "secrets": {},
         "voice": {
