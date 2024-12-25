@@ -6,6 +6,7 @@ import {
     Memory,
     type Action,
     State,
+    generateWebSearch,
 } from "@elizaos/core";
 
 interface DiscordMessage {
@@ -219,7 +220,7 @@ export const codeAssistantAction: Action = {
         }
 
         elizaLogger.log("Processing development guide request:", message);
-        console.log("***inside handler");
+        //console.log("***inside handler");
         const text = message.content.text.toLowerCase();
         const isGithubIssueQuery =
             text.includes("latest") &&
@@ -231,7 +232,7 @@ export const codeAssistantAction: Action = {
             previousContext: state.previousMessages?.map((m) => m.content.text),
         });
 
-        // Handle GitHub issue queries directly, bypassing knowledge base
+        // Only use GitHub API for explicit GitHub queries
         if (isGithubIssueQuery) {
             try {
                 elizaLogger.log("Fetching latest GitHub issues...");
@@ -288,47 +289,57 @@ export const codeAssistantAction: Action = {
                 });
                 return;
             }
+        } else {
+            // For non-GitHub queries, prioritize knowledge base search
+            const knowledgeResults = await knowledgeManager.searchKnowledge(
+                message.content.text
+            );
+
+            // Then, perform web search with more targeted scope
+            const searchQuery = `${message.content.text} site:elizaos.github.io/eliza OR site:github.com/elizaos/eliza/docs OR site:github.com/elizaos/eliza/wiki`;
+            const searchResponse = await generateWebSearch(
+                searchQuery,
+                runtime
+            );
+
+            let responseText = "";
+
+            // Prioritize knowledge base results
+            if (knowledgeResults.length > 0) {
+                responseText +=
+                    "Here's what I found in our community knowledge:\n\n";
+                responseText +=
+                    knowledgeResults.slice(0, 3).join("\n") + "\n\n";
+            }
+
+            // Add web search results if available and relevant
+            if (searchResponse && searchResponse.results.length) {
+                responseText += searchResponse.answer
+                    ? `Here's what I found in the Eliza documentation:\n\n${searchResponse.answer}\n\n`
+                    : "";
+
+                responseText += `Relevant documentation and examples:\n${searchResponse.results
+                    .map(
+                        (result: SearchResult, index: number) =>
+                            `${index + 1}. [${result.title}](${result.url})`
+                    )
+                    .join("\n")}\n\n`;
+            }
+
+            // Add helpful suggestions only if few results found
+            if (
+                !knowledgeResults.length &&
+                (!searchResponse || !searchResponse.results.length)
+            ) {
+                responseText +=
+                    `If you need more help, consider:\n` +
+                    `- Checking the Getting Started guide\n` +
+                    `- Joining our Discord community\n` +
+                    `- Opening an issue on GitHub`;
+            }
+
+            callback({ text: responseText });
         }
-
-        // Only proceed with knowledge base search for non-GitHub queries
-        const knowledgeResults = await knowledgeManager.searchKnowledge(
-            message.content.text
-        );
-
-        // Then, perform web search
-        const searchQuery = `${message.content.text} site:elizaos.github.io/eliza OR site:github.com/elizaos/eliza`;
-        const searchResponse = await generateWebSearch(searchQuery, runtime);
-
-        let responseText = "";
-
-        // If we have knowledge base results, include them first
-        if (knowledgeResults.length > 0) {
-            responseText +=
-                "Here's what I found in our community knowledge:\n\n";
-            responseText += knowledgeResults.slice(0, 3).join("\n") + "\n\n";
-        }
-
-        // Add web search results if available
-        if (searchResponse && searchResponse.results.length) {
-            responseText += searchResponse.answer
-                ? `Here's what I found in the Eliza documentation:\n\n${searchResponse.answer}\n\n`
-                : "";
-
-            responseText += `Relevant documentation and examples:\n${searchResponse.results
-                .map(
-                    (result: SearchResult, index: number) =>
-                        `${index + 1}. [${result.title}](${result.url})`
-                )
-                .join("\n")}\n\n`;
-        }
-
-        responseText +=
-            `If you need more help, consider:\n` +
-            `- Checking the Getting Started guide\n` +
-            `- Joining our Discord community\n` +
-            `- Opening an issue on GitHub`;
-
-        callback({ text: responseText });
     },
     examples: [
         [
