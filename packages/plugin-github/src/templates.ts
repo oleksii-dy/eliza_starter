@@ -649,36 +649,55 @@ Here are the recent user messages for context:
 `;
 
 export const addCommentToIssueTemplate = `
-Extract the details for adding a comment to a GitHub issue and ensure the comment aligns with the character's goals and the user's request:
+Extract the details for adding a comment to a specific GitHub issue:
 - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
 - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
-- **issue_number** (number): The number of the issue (e.g., 1)
-- **comment** (string): The comment to add (e.g., "Add new documentation")
+- **issue_number** (number): The number of the issue to comment on (e.g., 1)
 
 ${contextTemplate}
 \`\`\`json
 {
     "owner": "<owner>",
     "repo": "<repo>",
-    "issue_number": "<issue_number>",
+    "issue_number": "<issue_number>"
+}
+\`\`\`
+`;
+
+export const generateCommentForASpecificIssueTemplate = `
+Generate a comment for a specific GitHub issue that aligns with the character's goals and the user's request:
+Here is the specific issue to comment on: {{specificIssue}}
+${contextTemplate}
+\`\`\`json
+{
     "comment": "<comment>"
 }
 \`\`\`
-e
 `;
+
 export const addCommentToPRTemplate = `
-Extract the details for adding a comment to a GitHub pull request and ensure the comment aligns with the character's goals and the user's request:
+Extract the details for a specific GitHub pull request:
 - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
 - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
 - **pullRequest** (number): The number of the pull request (e.g., 1)
-- **comment** (string): The comment to add (e.g., "Add new documentation")
 
+Here is the specific pull request: {{specificPullRequest}}
 ${contextTemplate}
 \`\`\`json
 {
     "owner": "<owner>",
     "repo": "<repo>",
-    "pullRequest": "<pullRequest>",
+    "pullRequest": "<pullRequest>"
+}
+\`\`\`
+`;
+
+export const generateCommentForASpecificPRTemplate = `
+Generate a comment for a specific GitHub pull request that aligns with the character's goals and the user's request:
+Here is the specific pull request to comment on: {{specificPullRequest}}
+${contextTemplate}
+\`\`\`json
+{
     "comment": "<comment>"
 }
 \`\`\`

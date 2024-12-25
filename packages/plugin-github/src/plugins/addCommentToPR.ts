@@ -14,10 +14,12 @@ import { GitHubService } from "../services/github";
 import {
     AddCommentToPRContent,
     AddCommentToPRSchema,
+    GenerateCommentForASpecificPRSchema,
     isAddCommentToPRContent,
+    isGenerateCommentForASpecificPRSchema,
 } from "../types";
-import { addCommentToPRTemplate } from "../templates";
-import { incorporateRepositoryState } from "../utils";
+import { addCommentToPRTemplate, generateCommentForASpecificPRTemplate } from "../templates";
+import { getPullRequestFromMemories, incorporateRepositoryState } from "../utils";
 
 export const addCommentToPRAction: Action = {
     name: "ADD_COMMENT_TO_PR",
@@ -68,7 +70,31 @@ export const addCommentToPRAction: Action = {
         const content = details.object as AddCommentToPRContent;
 
         elizaLogger.info("Adding comment to pull request in the repository...");
+        const pullRequest = await getPullRequestFromMemories(runtime, message, content.pullRequest);
+        updatedState.specificPullRequest = JSON.stringify(pullRequest.content);
+        const commentContext = composeContext({
+            state: updatedState,
+            template: generateCommentForASpecificPRTemplate,
+        });
 
+        const commentDetails = await generateObject({
+            runtime,
+            context: commentContext,
+            modelClass: ModelClass.LARGE,
+            schema: GenerateCommentForASpecificPRSchema,
+        });
+
+        if (!isGenerateCommentForASpecificPRSchema(commentDetails.object)) {
+            elizaLogger.error("Invalid comment content:", commentDetails.object);
+            throw new Error("Invalid comment content");
+        }
+
+        const commentBody = commentDetails.object.comment;
+
+        elizaLogger.info("Adding comment to pull request in the repository...", {
+            pullRequest,
+            commentBody,
+        });
         const githubService = new GitHubService({
             owner: content.owner,
             repo: content.repo,
@@ -78,7 +104,7 @@ export const addCommentToPRAction: Action = {
         try {
             const comment = await githubService.addPRComment(
                 content.pullRequest,
-                content.comment
+                commentBody
             );
 
             elizaLogger.info(

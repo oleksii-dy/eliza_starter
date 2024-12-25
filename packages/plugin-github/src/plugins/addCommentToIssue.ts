@@ -14,10 +14,12 @@ import { GitHubService } from "../services/github";
 import {
     AddCommentToIssueContent,
     AddCommentToIssueSchema,
+    GenerateCommentForASpecificPRSchema,
     isAddCommentToIssueContent,
+    isGenerateCommentForASpecificPRSchema,
 } from "../types";
-import { addCommentToIssueTemplate } from "../templates";
-import { incorporateRepositoryState } from "../utils";
+import { addCommentToIssueTemplate, generateCommentForASpecificIssueTemplate } from "../templates";
+import { getIssueFromMemories, incorporateRepositoryState } from "../utils";
 
 export const addCommentToIssueAction: Action = {
     name: "ADD_COMMENT_TO_ISSUE",
@@ -46,6 +48,7 @@ export const addCommentToIssueAction: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
         const updatedState = await incorporateRepositoryState(state, runtime, message, []);
+        updatedState.specificIssue = 1; // update to the specific issue number
         elizaLogger.info("State:", updatedState);
 
         const context = composeContext({
@@ -67,18 +70,41 @@ export const addCommentToIssueAction: Action = {
 
         const content = details.object as AddCommentToIssueContent;
 
-        elizaLogger.info("Adding comment to issue in the repository...");
-
         const githubService = new GitHubService({
             owner: content.owner,
             repo: content.repo,
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
+        const issue = await getIssueFromMemories(runtime, message, content.issue);
+        updatedState.specificIssue = JSON.stringify(issue.content);
+        const commentContext = composeContext({
+            state: updatedState,
+            template: generateCommentForASpecificIssueTemplate,
+        });
+
+        const commentDetails = await generateObject({
+            runtime,
+            context: commentContext,
+            modelClass: ModelClass.LARGE,
+            schema: GenerateCommentForASpecificPRSchema,
+        });
+
+        if (!isGenerateCommentForASpecificPRSchema(commentDetails.object)) {
+            elizaLogger.error("Invalid comment content:", commentDetails.object);
+            throw new Error("Invalid comment content");
+        }
+
+        const commentBody = commentDetails.object.comment;
+
+        elizaLogger.info("Adding comment to issue in the repository...", {
+            issue,
+            commentBody,
+        });
 
         try {
             const comment = await githubService.addIssueComment(
                 content.issue,
-                content.comment
+                commentBody
             );
 
             elizaLogger.info(
