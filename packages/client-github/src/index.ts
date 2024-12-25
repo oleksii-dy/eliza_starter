@@ -10,6 +10,7 @@ import {
     modifyIssueAction,
     addCommentToIssueAction,
     ideationAction,
+    addCommentToPRAction,
     incorporateRepositoryState,
     getRepositoryRoomId
 } from "@elizaos/plugin-github";
@@ -38,7 +39,7 @@ export class GitHubClient extends EventEmitter {
         this.runtime.registerAction(modifyIssueAction);
         this.runtime.registerAction(addCommentToIssueAction);
         this.runtime.registerAction(ideationAction);
-
+        this.runtime.registerAction(addCommentToPRAction);
         elizaLogger.log("GitHubClient actions and providers registered.");
 
         // Start the OODA loop after initialization
