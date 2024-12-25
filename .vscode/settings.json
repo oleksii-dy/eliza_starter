@@ -43,5 +43,6 @@
     },
     "[shellscript]": {
         "editor.defaultFormatter": "foxundermoon.shell-format"
-    }
+    },
+    "terminal.integrated.scrollback": 100000
 }

@@ -67,8 +67,8 @@ class KnowledgeManager {
             }
             const data = await response.json();
             elizaLogger.log(
-                "GitHub API Response:",
-                JSON.stringify(data, null, 2)
+                "GitHub API Response:"
+                //JSON.stringify(data, null, 2)
             );
             return data;
         } catch (error) {
@@ -210,7 +210,7 @@ export const codeAssistantAction: Action = {
         // Initialize knowledge base if not already done
         try {
             await Promise.all([
-                knowledgeManager.fetchDiscordKnowledge(),
+                //knowledgeManager.fetchDiscordKnowledge(),
                 knowledgeManager.fetchGithubKnowledge(),
             ]);
         } catch (error) {
