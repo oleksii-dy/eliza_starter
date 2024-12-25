@@ -17,7 +17,7 @@ import {
     isAddCommentToIssueContent,
 } from "../types";
 import { addCommentToIssueTemplate } from "../templates";
-import { getFilesFromMemories } from "../utils";
+import { incorporateRepositoryState } from "../utils";
 
 export const addCommentToIssueAction: Action = {
     name: "ADD_COMMENT_TO_ISSUE",
@@ -37,18 +37,19 @@ export const addCommentToIssueAction: Action = {
         message: Memory,
         state: State,
         options: any,
-        callback: HandlerCallback
+        callback?: HandlerCallback
     ) => {
         elizaLogger.log("[addCommentToIssue] Composing state for message:", message);
-        const files = await getFilesFromMemories(runtime, message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
+        const updatedState = await incorporateRepositoryState(state, runtime, message, []);
+        elizaLogger.info("State:", updatedState);
 
         const context = composeContext({
-            state,
+            state: updatedState,
             template: addCommentToIssueTemplate,
         });
 
@@ -83,22 +84,25 @@ export const addCommentToIssueAction: Action = {
             elizaLogger.info(
                 `Added comment to issue #${content.issue} successfully!`
             );
-
-            callback({
-                text: `Added comment to issue #${content.issue} successfully!`,
-                attachments: [],
-            });
+            if (callback) {
+                callback({
+                    text: `Added comment to issue #${content.issue} successfully! See comment at ${comment.html_url}`,
+                    attachments: [],
+                });
+            }
         } catch (error) {
             elizaLogger.error(
                 `Error adding comment to issue #${content.issue} in repository ${content.owner}/${content.repo}:`,
                 error
             );
-            callback(
-                {
-                    text: `Error adding comment to issue #${content.issue}. Please try again.`,
-                },
-                []
-            );
+            if (callback) {
+                callback(
+                    {
+                        text: `Error adding comment to issue #${content.issue}. Please try again.`,
+                    },
+                    []
+                );
+            }
         }
     },
     examples: [

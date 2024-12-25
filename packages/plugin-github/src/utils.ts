@@ -282,7 +282,7 @@ export async function incorporateRepositoryState(state: State, runtime: IAgentRu
         roomId: message.roomId,
     })), null, 2);
     // TODO:
-    // We need to actually save goals, knowledge, facts,we only save memories for now
+    // We need to actually save goals, knowledge,facts, we only save memories for now
     // We need to dynamically update the goals, knoweldge, facts, bio, lore, we should add actions to update these and chain them to the OODA cycle
     const owner = runtime.getSetting("GITHUB_OWNER") ?? '' as string;
     state.owner = owner;
