@@ -1,6 +1,6 @@
 {
     "name": "@elizaos/agent",
-    "version": "0.1.6",
+    "version": "0.1.7-alpha.1",
     "main": "src/index.ts",
     "type": "module",
     "scripts": {
@@ -30,6 +30,7 @@
         "@elizaos/client-slack": "workspace:*",
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-0g": "workspace:*",
+        "@elizaos/plugin-abstract": "workspace:*",
         "@elizaos/plugin-aptos": "workspace:*",
         "@elizaos/plugin-bootstrap": "workspace:*",
         "@elizaos/plugin-intiface": "workspace:*",
