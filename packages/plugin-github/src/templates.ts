@@ -666,6 +666,23 @@ ${contextTemplate}
 \`\`\`
 e
 `;
+export const addCommentToPRTemplate = `
+Extract the details for adding a comment to a GitHub pull request and ensure the comment aligns with the character's goals and the user's request:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **pullRequest** (number): The number of the pull request (e.g., 1)
+- **comment** (string): The comment to add (e.g., "Add new documentation")
+
+${contextTemplate}
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "pullRequest": "<pullRequest>",
+    "comment": "<comment>"
+}
+\`\`\`
+`;
 
 export const ideationTemplate = createTemplate(`Based on the current context and the user's message, generate a thoughtful response that addresses the query and provides valuable insights. Consider the following categories for inspiration:
 `, `\`\`\`json

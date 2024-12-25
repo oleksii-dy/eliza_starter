@@ -254,6 +254,23 @@ export class GitHubService {
         });
         return response.data;
     }
+
+    async addPRComment(pullRequestNumber: number, comment: string, commitId: string, path: string): Promise<RestEndpointMethodTypes["pulls"]["createReview"]["response"]["data"]> {
+        try {
+            const response = await this.octokit.pulls.createReview({
+                owner: this.config.owner,
+                repo: this.config.repo,
+                pull_number: pullRequestNumber,
+                body: comment,
+                commit_id: commitId,
+                path: path,
+            })
+            return response.data;
+        } catch (error) {
+            elizaLogger.error("Failed to add comment to pull request:", error);
+            throw error;
+        }
+    }
 }
 
 export { GitHubConfig };
