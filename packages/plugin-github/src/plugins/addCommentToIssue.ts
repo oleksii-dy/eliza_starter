@@ -48,7 +48,6 @@ export const addCommentToIssueAction: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
         const updatedState = await incorporateRepositoryState(state, runtime, message, []);
-        updatedState.specificIssue = 1; // update to the specific issue number
         elizaLogger.info("State:", updatedState);
 
         const context = composeContext({
@@ -76,6 +75,10 @@ export const addCommentToIssueAction: Action = {
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
         const issue = await getIssueFromMemories(runtime, message, content.issue);
+        if (!issue) {
+            elizaLogger.error("Issue not found in memories");
+            throw new Error("Issue not found in memories");
+        }
         updatedState.specificIssue = JSON.stringify(issue.content);
         const commentContext = composeContext({
             state: updatedState,

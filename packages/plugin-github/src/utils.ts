@@ -265,22 +265,22 @@ export async function getIssuesFromMemories(runtime: IAgentRuntime, owner: strin
     return issueMemories;
 }
 
-export const getIssueFromMemories = async (runtime: IAgentRuntime, message: Memory, issueNumber: number): Promise<Memory> => {
+export const getIssueFromMemories = async (runtime: IAgentRuntime, message: Memory, issueNumber: number): Promise<Memory | null> => {
     const roomId = message.roomId;
     const memories = await runtime.messageManager.getMemories({
         roomId,
     });
     const issueId = stringToUuid(`${roomId}-${runtime.agentId}-issue-${issueNumber}`);
-    return memories.find(memory => memory.id === issueId);
+    return memories.find(memory => memory.id === issueId) ?? null;
 }
 
-export const getPullRequestFromMemories = async (runtime: IAgentRuntime, message: Memory, pullRequestNumber: number): Promise<Memory> => {
+export const getPullRequestFromMemories = async (runtime: IAgentRuntime, message: Memory, pullRequestNumber: number): Promise<Memory | null> => {
     const roomId = message.roomId;
     const memories = await runtime.messageManager.getMemories({
         roomId,
     });
     const prId = stringToUuid(`${roomId}-${runtime.agentId}-pr-${pullRequestNumber}`);
-    return memories.find(memory => memory.id === prId);
+    return memories.find(memory => memory.id === prId) ?? null;
 }
 
 export async function incorporateRepositoryState(state: State, runtime: IAgentRuntime, message: Memory, relevantMemories: Memory[]) {

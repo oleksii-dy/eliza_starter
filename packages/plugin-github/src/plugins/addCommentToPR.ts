@@ -71,6 +71,10 @@ export const addCommentToPRAction: Action = {
 
         elizaLogger.info("Adding comment to pull request in the repository...");
         const pullRequest = await getPullRequestFromMemories(runtime, message, content.pullRequest);
+        if (!pullRequest) {
+            elizaLogger.error("Pull request not found in memories");
+            throw new Error("Pull request not found in memories");
+        }
         updatedState.specificPullRequest = JSON.stringify(pullRequest.content);
         const commentContext = composeContext({
             state: updatedState,
