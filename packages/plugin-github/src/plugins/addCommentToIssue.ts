@@ -74,12 +74,26 @@ export const addCommentToIssueAction: Action = {
             repo: content.repo,
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
-        const issue = await getIssueFromMemories(runtime, message, content.issue);
+        let issue = await getIssueFromMemories(runtime, message, content.issue);
         if (!issue) {
             elizaLogger.error("Issue not found in memories");
-            throw new Error("Issue not found in memories");
+
+            let issueData = await githubService.getIssue(content.issue);
+            const issueDetails = {
+                type: "issue",
+                url: issueData.html_url,
+                number: issueData.number,
+                state: issueData.state,
+                created_at: issueData.created_at,
+                updated_at: issueData.updated_at,
+                comments: await githubService.getIssueCommentsText(issueData.comments_url),
+                labels: issueData.labels.map((label: any) => (typeof label === 'string' ? label : label?.name)),
+                body: issueData.body,
+            }
+            updatedState.specificIssue = JSON.stringify(issueDetails);
+        } else {
+            updatedState.specificIssue = JSON.stringify(issue.content);
         }
-        updatedState.specificIssue = JSON.stringify(issue.content);
         const commentContext = composeContext({
             state: updatedState,
             template: generateCommentForASpecificIssueTemplate,

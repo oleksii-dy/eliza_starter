@@ -68,19 +68,39 @@ export const addCommentToPRAction: Action = {
         }
 
         const content = details.object as AddCommentToPRContent;
-
+        const githubService = new GitHubService({
+            owner: content.owner,
+            repo: content.repo,
+            auth: runtime.getSetting("GITHUB_API_TOKEN"),
+        });
         elizaLogger.info("Adding comment to pull request in the repository...");
-        const pullRequest = await getPullRequestFromMemories(runtime, message, content.pullRequest);
+        let pullRequest = await getPullRequestFromMemories(runtime, message, content.pullRequest);
         if (!pullRequest) {
             elizaLogger.error("Pull request not found in memories");
-            throw new Error("Pull request not found in memories");
+
+            let pr = await githubService.getPullRequest(content.pullRequest);
+            const prData = {
+                type: "pull_request",
+                url: pr.html_url,
+                number: pr.number,
+                state: pr.state,
+                created_at: pr.created_at,
+                updated_at: pr.updated_at,
+                comments: await githubService.getPRCommentsText(pr.comments_url),
+                labels: pr.labels.map((label: any) => (typeof label === 'string' ? label : label?.name)),
+                body: pr.body,
+                diff: await githubService.getPRDiffText(pr.diff_url)
+            }
+            updatedState.specificPullRequest = JSON.stringify(prData);
+        } else {
+            updatedState.specificPullRequest = JSON.stringify(pullRequest.content);
         }
-        updatedState.specificPullRequest = JSON.stringify(pullRequest.content);
+
         const commentContext = composeContext({
             state: updatedState,
             template: generateCommentForASpecificPRTemplate,
         });
-
+        
         const commentDetails = await generateObject({
             runtime,
             context: commentContext,
@@ -99,11 +119,11 @@ export const addCommentToPRAction: Action = {
             pullRequest,
             commentBody,
         });
-        const githubService = new GitHubService({
-            owner: content.owner,
-            repo: content.repo,
-            auth: runtime.getSetting("GITHUB_API_TOKEN"),
-        });
+        // const githubService = new GitHubService({
+        //     owner: content.owner,
+        //     repo: content.repo,
+        //     auth: runtime.getSetting("GITHUB_API_TOKEN"),
+        // });
 
         try {
             const comment = await githubService.addPRComment(
@@ -112,7 +132,7 @@ export const addCommentToPRAction: Action = {
             );
 
             elizaLogger.info(
-                `Added comment to pull request #${content.pullRequest} successfully!`
+                `Added comment to pull request #${content.pullRequest} successfully! See comment at ${comment.html_url}`
             );
             if (callback) {
                 callback({

@@ -94,18 +94,7 @@ export async function savePullRequestToMemory(runtime: IAgentRuntime, pullReques
         roomId: roomId,
         content: {
             text: `Pull Request Created: ${pullRequest.title}`,
-            metadata: {
-                type: "pull_request",
-                url: pullRequest.html_url,
-                number: pullRequest.number,
-                state: pullRequest.state,
-                created_at: pullRequest.created_at,
-                updated_at: pullRequest.updated_at,
-                comments: await githubService.getPRCommentsText(pullRequest.comments_url),
-                labels: pullRequest.labels.map((label: any) => (typeof label === 'string' ? label : label?.name)),
-                body: pullRequest.body,
-                diff: await githubService.getPRDiffText(pullRequest.diff_url)
-            },
+            metadata: await getPullRequestMetadata(pullRequest, githubService),
         },
     };
 
@@ -129,7 +118,7 @@ export const savePullRequestsToMemory = async (runtime: IAgentRuntime, owner: st
     for (const pr of pullRequests) {
         // check if the pull request is already in the memories by checking id in the memories
 
-        const prMemory = memories.find(memory => memory.id === stringToUuid(`${roomId}-${runtime.agentId}-pr-${pr.number}`));
+        const prMemory = memories.find(memory => memory.id === stringToUuid(`${roomId}-${runtime.agentId}-pr-${pr.number}`)) ?? null;
         if (!prMemory) {
             const newPrMemory = await savePullRequestToMemory(runtime, pr, owner, repository, apiToken);
             pullRequestsMemories.push(newPrMemory);
@@ -138,5 +127,22 @@ export const savePullRequestsToMemory = async (runtime: IAgentRuntime, owner: st
             // update the pull request memory
         }
     }
+    elizaLogger.log("Pull requests memories:", pullRequestsMemories);
     return pullRequestsMemories;
 }
+
+export async function getPullRequestMetadata(pullRequest: RestEndpointMethodTypes["pulls"]["list"]["response"]["data"][number], githubService: GitHubService): Promise<any> {
+    return {
+        type: "pull_request",
+        url: pullRequest.html_url,
+        number: pullRequest.number,
+        state: pullRequest.state,
+        created_at: pullRequest.created_at,
+        updated_at: pullRequest.updated_at,
+        comments: await githubService.getPRCommentsText(pullRequest.comments_url),
+        labels: pullRequest.labels.map((label: any) => (typeof label === 'string' ? label : label?.name)),
+        body: pullRequest.body,
+        diff: await githubService.getPRDiffText(pullRequest.diff_url)
+    }
+}
+

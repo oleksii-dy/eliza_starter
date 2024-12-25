@@ -255,6 +255,16 @@ export class GitHubService {
         return response.data;
     }
 
+    // Get a specific pull request
+    async getPullRequest(pullRequestNumber: number): Promise<RestEndpointMethodTypes["pulls"]["get"]["response"]["data"]> {
+        const response = await this.octokit.pulls.get({
+            owner: this.config.owner,
+            repo: this.config.repo,
+            pull_number: pullRequestNumber,
+        });
+        return response.data;
+    }
+
     async addPRComment(pullRequestNumber: number, comment: string): Promise<RestEndpointMethodTypes["pulls"]["createReview"]["response"]["data"]> {
         try {
             const response = await this.octokit.pulls.createReview({
@@ -309,6 +319,30 @@ export class GitHubService {
      * @returns The comments text of the PR
      */
     public async getPRCommentsText(
+        commentsUrl: string
+    ): Promise<string> {
+        try {
+            const commentsResponse = await this.octokit.request({
+                method: "GET",
+                url: commentsUrl,
+                headers: {
+                    accept: "application/vnd.github.v3+json",
+                },
+            });
+
+            return commentsResponse.data as string;
+        } catch (error) {
+            elizaLogger.error("Error fetching comments:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Fetch the comments from an issue.
+     * @param comments_url The issue comments url
+     * @returns The comments text of the issue
+     */
+    public async getIssueCommentsText(
         commentsUrl: string
     ): Promise<string> {
         try {
