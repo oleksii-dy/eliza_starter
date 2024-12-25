@@ -278,6 +278,54 @@ export class GitHubService {
             throw error;
         }
     }
+
+     /**
+     * Fetch the diff from a PR.
+     * @param diff_url The PR diff url
+     * @returns The diff text of the PR
+     */
+     public async getPRDiffText(
+        diffUrl: string
+    ): Promise<string> {
+        try {
+            const diffResponse = await this.octokit.request({
+                method: "GET",
+                url: diffUrl,
+                headers: {
+                    accept: "application/vnd.github.v3.diff",
+                },
+            });
+
+            return diffResponse.data as string;
+        } catch (error) {
+            elizaLogger.error("Error fetching diff:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Fetch the comments from a PR.
+     * @param comments_url The PR comments url
+     * @returns The comments text of the PR
+     */
+    public async getPRCommentsText(
+        commentsUrl: string
+    ): Promise<string> {
+        try {
+            const commentsResponse = await this.octokit.request({
+                method: "GET",
+                url: commentsUrl,
+                headers: {
+                    accept: "application/vnd.github.v3+json",
+                },
+            });
+
+            return commentsResponse.data as string;
+        } catch (error) {
+            elizaLogger.error("Error fetching comments:", error);
+            throw error;
+        }
+    }
 }
 
 export { GitHubConfig };

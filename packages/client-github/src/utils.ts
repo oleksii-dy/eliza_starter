@@ -78,3 +78,65 @@ export const saveIssuesToMemory = async (runtime: IAgentRuntime, owner: string, 
     }
     return issuesMemories;
 }
+
+export async function savePullRequestToMemory(runtime: IAgentRuntime, pullRequest: RestEndpointMethodTypes["pulls"]["list"]["response"]["data"][number], owner: string, repository: string, apiToken: string): Promise<Memory> {
+    const roomId = stringToUuid(`github-${owner}-${repository}`);
+    const githubService = new GitHubService({
+        owner: owner,
+        repo: repository,
+        auth: apiToken,
+    });
+    const prId = stringToUuid(`${roomId}-${runtime.agentId}-pr-${pullRequest.number}`);
+    const prMemory: Memory = {
+        id: prId,
+        userId: runtime.agentId,
+        agentId: runtime.agentId,
+        roomId: roomId,
+        content: {
+            text: `Pull Request Created: ${pullRequest.title}`,
+            metadata: {
+                type: "pull_request",
+                url: pullRequest.html_url,
+                number: pullRequest.number,
+                state: pullRequest.state,
+                created_at: pullRequest.created_at,
+                updated_at: pullRequest.updated_at,
+                comments: await githubService.getPRCommentsText(pullRequest.comments_url),
+                labels: pullRequest.labels.map((label: any) => (typeof label === 'string' ? label : label?.name)),
+                body: pullRequest.body,
+                diff: await githubService.getPRDiffText(pullRequest.diff_url)
+            },
+        },
+    };
+
+    await runtime.messageManager.createMemory(prMemory);
+    return prMemory;
+}
+
+export const savePullRequestsToMemory = async (runtime: IAgentRuntime, owner: string, repository: string, apiToken: string): Promise<Memory[]> => {
+    const roomId = stringToUuid(`github-${owner}-${repository}`);
+    const memories = await runtime.messageManager.getMemories({
+        roomId: roomId,
+    });
+    const githubService = new GitHubService({
+        owner: owner,
+        repo: repository,
+        auth: apiToken,
+    });
+    const pullRequests = await githubService.getPullRequests();
+    const pullRequestsMemories: Memory[] = [];
+    // create memories for each pull request if they are not already in the memories
+    for (const pr of pullRequests) {
+        // check if the pull request is already in the memories by checking id in the memories
+
+        const prMemory = memories.find(memory => memory.id === stringToUuid(`${roomId}-${runtime.agentId}-pr-${pr.number}`));
+        if (!prMemory) {
+            const newPrMemory = await savePullRequestToMemory(runtime, pr, owner, repository, apiToken);
+            pullRequestsMemories.push(newPrMemory);
+        } else {
+            elizaLogger.log("Pull request already in memories:", prMemory);
+            // update the pull request memory
+        }
+    }
+    return pullRequestsMemories;
+}

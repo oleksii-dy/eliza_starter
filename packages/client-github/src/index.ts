@@ -15,7 +15,7 @@ import {
 } from "@elizaos/plugin-github";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
-import { saveIssuesToMemory } from "./utils";
+import { saveIssuesToMemory, savePullRequestsToMemory } from "./utils";
 
 export class GitHubClient extends EventEmitter {
     apiToken: string;
@@ -87,71 +87,7 @@ export class GitHubClient extends EventEmitter {
         );
         // elizaLogger.log("Retrieved memories:", memories);
         if (fileMemories.length === 0) {
-            elizaLogger.log("No memories found, skipping OODA cycle.");
-            // time to initialize repository and create memories
-            const timestamp = Date.now();
-            const userIdUUID = stringToUuid(`${this.runtime.agentId}-${timestamp}`);
-            const originalMemory: Memory = {
-                id: stringToUuid(`${roomId}-${this.runtime.agentId}-${timestamp}-original`),
-                userId: userIdUUID,
-                agentId: this.runtime.agentId,
-                content: {
-                    text: `No memories found, starting to initialize repository and create memories.`,
-                    action: "NOTHING",
-                    source: "github",
-                    inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`)
-                },
-                roomId,
-                createdAt: timestamp,
-            }
-            let originalState = await this.runtime.composeState(originalMemory);
-            originalState = await incorporateRepositoryState(originalState, this.runtime, originalMemory, []);
-            const initializeRepositoryMemory: Memory = {
-                id: stringToUuid(`${roomId}-${this.runtime.agentId}-${timestamp}-initialize-repository`),
-                userId: userIdUUID,
-                agentId: this.runtime.agentId,
-                content: {
-                    text: `Initialize the repository ${owner}/${repository} on sif-dev branch`,
-                    action: "INITIALIZE_REPOSITORY",
-                    source: "github",
-                    inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`)
-                },
-                roomId,
-                createdAt: timestamp,
-            }
-            await this.runtime.messageManager.createMemory(initializeRepositoryMemory);
-            elizaLogger.debug("Memory created successfully:", {
-                memoryId: initializeRepositoryMemory.id,
-                action: initializeRepositoryMemory.content.action,
-                userId: this.runtime.agentId,
-            });
-            const createMemoriesFromFilesMemory = {
-                id: stringToUuid(`${roomId}-${this.runtime.agentId}-${timestamp}-create-memories-from-files`),
-                userId: userIdUUID,
-                agentId: this.runtime.agentId,
-                content: {
-                    text: `Create memories from files for the repository ${owner}/${repository} at path '/'`,
-                    action: "CREATE_MEMORIES_FROM_FILES",
-                    source: "github",
-                    inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`)
-                },
-                roomId,
-                createdAt: timestamp,
-            }
-            await this.runtime.messageManager.createMemory(createMemoriesFromFilesMemory);
-            elizaLogger.debug("Memory created successfully:", {
-                memoryId: createMemoriesFromFilesMemory.id,
-                action: createMemoriesFromFilesMemory.content.action,
-                userId: this.runtime.agentId,
-            });
-            const issuesMemories = await saveIssuesToMemory(this.runtime, owner, repository, this.apiToken);
-            elizaLogger.log("Issues memories:", issuesMemories);
-            await this.runtime.processActions(
-                originalMemory,
-                [initializeRepositoryMemory, createMemoriesFromFilesMemory],
-                originalState,
-                undefined
-            );
+            await this.initializeRepositoryAndCreateMemories(owner, repository, roomId);
         }
 
         elizaLogger.log('Before composeState')
@@ -251,6 +187,76 @@ export class GitHubClient extends EventEmitter {
         elizaLogger.log("OODA cycle completed.");
     }
 
+    private async initializeRepositoryAndCreateMemories(owner: string, repository: string, roomId: UUID) {
+        elizaLogger.log("No memories found, skipping OODA cycle.");
+        // time to initialize repository and create memories
+        const timestamp = Date.now();
+        const userIdUUID = stringToUuid(`${this.runtime.agentId}-${timestamp}`);
+        const originalMemory: Memory = {
+            id: stringToUuid(`${roomId}-${this.runtime.agentId}-${timestamp}-original`),
+            userId: userIdUUID,
+            agentId: this.runtime.agentId,
+            content: {
+                text: `No memories found, starting to initialize repository and create memories.`,
+                action: "NOTHING",
+                source: "github",
+                inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`)
+            },
+            roomId,
+            createdAt: timestamp,
+        }
+        let originalState = await this.runtime.composeState(originalMemory);
+        originalState = await incorporateRepositoryState(originalState, this.runtime, originalMemory, []);
+        const initializeRepositoryMemory: Memory = {
+            id: stringToUuid(`${roomId}-${this.runtime.agentId}-${timestamp}-initialize-repository`),
+            userId: userIdUUID,
+            agentId: this.runtime.agentId,
+            content: {
+                text: `Initialize the repository ${owner}/${repository} on sif-dev branch`,
+                action: "INITIALIZE_REPOSITORY",
+                source: "github",
+                inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`)
+            },
+            roomId,
+            createdAt: timestamp,
+        }
+        await this.runtime.messageManager.createMemory(initializeRepositoryMemory);
+        elizaLogger.debug("Memory created successfully:", {
+            memoryId: initializeRepositoryMemory.id,
+            action: initializeRepositoryMemory.content.action,
+            userId: this.runtime.agentId,
+        });
+        const createMemoriesFromFilesMemory = {
+            id: stringToUuid(`${roomId}-${this.runtime.agentId}-${timestamp}-create-memories-from-files`),
+            userId: userIdUUID,
+            agentId: this.runtime.agentId,
+            content: {
+                text: `Create memories from files for the repository ${owner}/${repository} at path '/'`,
+                action: "CREATE_MEMORIES_FROM_FILES",
+                source: "github",
+                inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`)
+            },
+            roomId,
+            createdAt: timestamp,
+        }
+        await this.runtime.messageManager.createMemory(createMemoriesFromFilesMemory);
+        elizaLogger.debug("Memory created successfully:", {
+            memoryId: createMemoriesFromFilesMemory.id,
+            action: createMemoriesFromFilesMemory.content.action,
+            userId: this.runtime.agentId,
+        });
+        const issuesMemories = await saveIssuesToMemory(this.runtime, owner, repository, this.apiToken);
+        elizaLogger.log("Issues memories:", issuesMemories);
+        const pullRequestsMemories = await savePullRequestsToMemory(this.runtime, owner, repository, this.apiToken);
+        elizaLogger.log("Pull requests memories:", pullRequestsMemories);
+
+        await this.runtime.processActions(
+            originalMemory,
+            [initializeRepositoryMemory, createMemoriesFromFilesMemory],
+            originalState,
+            undefined
+        );
+    }
 }
 
 export const GitHubClientInterface: Client = {

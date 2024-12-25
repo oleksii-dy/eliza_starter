@@ -301,14 +301,16 @@ export async function incorporateRepositoryState(state: State, runtime: IAgentRu
         number: (issue.content.metadata as any).number,
         state: (issue.content.metadata as any).state,
     })), null, 2);
-    // const previousPRs = await getPullRequestsFromMemories(runtime, owner, repository);
-    // state.previousPRs = JSON.stringify(previousPRs.map(pr => ({
-    //     title: pr.content.text,
-    //     body: (pr.content.metadata as any).body,
-    //     url: (pr.content.metadata as any).url,
-    //     number: (pr.content.metadata as any).number,
-    //     state: (pr.content.metadata as any).state,
-    // })), null, 2);
+    const previousPRs = await getPullRequestsFromMemories(runtime, owner, repository);
+    state.previousPRs = JSON.stringify(previousPRs.map(pr => ({
+        title: pr.content.text,
+        body: (pr.content.metadata as any).body,
+        url: (pr.content.metadata as any).url,
+        number: (pr.content.metadata as any).number,
+        state: (pr.content.metadata as any).state,
+        diff: (pr.content.metadata as any).diff,
+        comments: (pr.content.metadata as any).comments,
+    })), null, 2);
     return state;
 }
 
