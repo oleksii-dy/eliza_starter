@@ -236,6 +236,130 @@ export class GitHubService {
             throw error;
         }
     }
+
+    // Get all issues
+    async getIssues(): Promise<RestEndpointMethodTypes["issues"]["list"]["response"]["data"]> {
+        const response = await this.octokit.issues.listForRepo({
+            owner: this.config.owner,
+            repo: this.config.repo,
+        });
+        return response.data;
+    }
+
+    // Get all pull requests
+    async getPullRequests(): Promise<RestEndpointMethodTypes["pulls"]["list"]["response"]["data"]> {
+        const response = await this.octokit.pulls.list({
+            owner: this.config.owner,
+            repo: this.config.repo,
+        });
+        return response.data;
+    }
+
+    // Get a specific pull request
+    async getPullRequest(pullRequestNumber: number): Promise<RestEndpointMethodTypes["pulls"]["get"]["response"]["data"]> {
+        const response = await this.octokit.pulls.get({
+            owner: this.config.owner,
+            repo: this.config.repo,
+            pull_number: pullRequestNumber,
+        });
+        return response.data;
+    }
+
+    async addPRComment(pullRequestNumber: number, comment: string): Promise<RestEndpointMethodTypes["pulls"]["createReview"]["response"]["data"]> {
+        try {
+            const response = await this.octokit.pulls.createReview({
+                owner: this.config.owner,
+                repo: this.config.repo,
+                pull_number: pullRequestNumber,
+                body: comment,
+                event: "COMMENT"
+                // To add comments to specific files in the PR / specific lines
+                // comments: [
+                //     {
+                //         path: path,
+                //         body: comment,
+                //         commit_id: commitId,
+                //     }
+                // ]
+            })
+            return response.data;
+        } catch (error) {
+            elizaLogger.error("Failed to add comment to pull request:", error);
+            throw error;
+        }
+    }
+
+     /**
+     * Fetch the diff from a PR.
+     * @param diff_url The PR diff url
+     * @returns The diff text of the PR
+     */
+     public async getPRDiffText(
+        diffUrl: string
+    ): Promise<string> {
+        try {
+            const diffResponse = await this.octokit.request({
+                method: "GET",
+                url: diffUrl,
+                headers: {
+                    accept: "application/vnd.github.v3.diff",
+                },
+            });
+
+            return diffResponse.data as string;
+        } catch (error) {
+            elizaLogger.error("Error fetching diff:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Fetch the comments from a PR.
+     * @param comments_url The PR comments url
+     * @returns The comments text of the PR
+     */
+    public async getPRCommentsText(
+        commentsUrl: string
+    ): Promise<string> {
+        try {
+            const commentsResponse = await this.octokit.request({
+                method: "GET",
+                url: commentsUrl,
+                headers: {
+                    accept: "application/vnd.github.v3+json",
+                },
+            });
+
+            return commentsResponse.data as string;
+        } catch (error) {
+            elizaLogger.error("Error fetching comments:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Fetch the comments from an issue.
+     * @param comments_url The issue comments url
+     * @returns The comments text of the issue
+     */
+    public async getIssueCommentsText(
+        commentsUrl: string
+    ): Promise<string> {
+        try {
+            const commentsResponse = await this.octokit.request({
+                method: "GET",
+                url: commentsUrl,
+                headers: {
+                    accept: "application/vnd.github.v3+json",
+                },
+            });
+
+            return commentsResponse.data as string;
+        } catch (error) {
+            elizaLogger.error("Error fetching comments:", error);
+            throw error;
+        }
+    }
 }
 
 export { GitHubConfig };

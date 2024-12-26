@@ -23,7 +23,9 @@ import { RestEndpointMethodTypes } from "@octokit/rest";
 
 export async function saveIssueToMemory(runtime: IAgentRuntime, issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"], owner: string, repo: string): Promise<void> {
     const roomId = stringToUuid(`github-${owner}-${repo}`);
+    const issueId = stringToUuid(`${roomId}-${runtime.agentId}-issue-${issue.number}`);
     const issueMemory: Memory = {
+        id: issueId,
         userId: runtime.agentId,
         agentId: runtime.agentId,
         roomId: roomId,
@@ -63,7 +65,7 @@ export const createIssueAction: Action = {
         message: Memory,
         state: State,
         options: any,
-        callback: HandlerCallback
+        callback?: HandlerCallback
     ) => {
         elizaLogger.log("[createIssue] Composing state for message:", message);
 
@@ -73,32 +75,11 @@ export const createIssueAction: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        const files = await getFilesFromMemories(runtime, message);
-
-        // add additional keys to state
-        state.files = files;
-        state.character = JSON.stringify(runtime.character || {}, null, 2);
-        const owner = runtime.getSetting("GITHUB_OWNER") ?? '' as string;
-        state.owner = owner;
-        const repository = runtime.getSetting("GITHUB_REPO") ?? '' as string;
-        state.repository = repository;
-        if (owner === '' || repository === '') {
-            elizaLogger.error("GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle.");
-            throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
-        }
-        const previousIssues = await getIssuesFromMemories(runtime, owner, repository);
-        state.previousIssues = JSON.stringify(previousIssues.map(issue => ({
-            title: issue.content.text,
-            body: (issue.content.metadata as any).body,
-            url: (issue.content.metadata as any).url,
-            number: (issue.content.metadata as any).number,
-            state: (issue.content.metadata as any).state,
-        })), null, 2);
-        elizaLogger.log("Previous issues:", state.previousIssues);
-        elizaLogger.info("State:", state);
+        const updatedState = await incorporateRepositoryState(state, runtime, message, []);
+        elizaLogger.info("State:", updatedState);
 
         const context = composeContext({
-            state,
+            state: updatedState,
             template: createIssueTemplate,
         });
         elizaLogger.info("Context:", context);
@@ -137,22 +118,25 @@ export const createIssueAction: Action = {
             );
 
             await saveIssueToMemory(runtime, issue, content.owner, content.repo);
-
-            await callback({
-                text: `Created issue #${issue.number} successfully see: ${issue.html_url}`,
-                attachments: [],
-            });
+            if (callback) {
+                await callback({
+                    text: `Created issue #${issue.number} successfully see: ${issue.html_url}`,
+                    attachments: [],
+                });
+            }
         } catch (error) {
             elizaLogger.error(
                 `Error creating issue in repository ${content.owner}/${content.repo}:`,
                 error
             );
-            await callback(
-                {
-                    text: `Error creating issue in repository ${content.owner}/${content.repo}. Please try again.`,
-                },
-                []
-            );
+            if (callback) {
+                await callback(
+                    {
+                        text: `Error creating issue in repository ${content.owner}/${content.repo}. Please try again.`,
+                    },
+                    []
+                );
+            }
         }
     },
     examples: [

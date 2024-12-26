@@ -246,7 +246,7 @@ export const getFilesFromMemories = async (
     const memories = allMemories.filter(
         (memory) => (memory.content.metadata as any)?.path
     );
-    elizaLogger.info("Memories:", memories);
+    // elizaLogger.info("Memories:", memories);
     return memories.map(
         (memory) => `File: ${(memory.content.metadata as any)?.path}
         Content: ${memory.content.text.replace(/\n/g, "\\n")}
@@ -265,6 +265,24 @@ export async function getIssuesFromMemories(runtime: IAgentRuntime, owner: strin
     return issueMemories;
 }
 
+export const getIssueFromMemories = async (runtime: IAgentRuntime, message: Memory, issueNumber: number): Promise<Memory | null> => {
+    const roomId = message.roomId;
+    const memories = await runtime.messageManager.getMemories({
+        roomId,
+    });
+    const issueId = stringToUuid(`${roomId}-${runtime.agentId}-issue-${issueNumber}`);
+    return memories.find(memory => memory.id === issueId) ?? null;
+}
+
+export const getPullRequestFromMemories = async (runtime: IAgentRuntime, message: Memory, pullRequestNumber: number): Promise<Memory | null> => {
+    const roomId = message.roomId;
+    const memories = await runtime.messageManager.getMemories({
+        roomId,
+    });
+    const prId = stringToUuid(`${roomId}-${runtime.agentId}-pr-${pullRequestNumber}`);
+    return memories.find(memory => memory.id === prId) ?? null;
+}
+
 export async function incorporateRepositoryState(state: State, runtime: IAgentRuntime, message: Memory, relevantMemories: Memory[]) {
     const files = await getFilesFromMemories(runtime, message);
     // add additional keys to state
@@ -278,9 +296,11 @@ export async function incorporateRepositoryState(state: State, runtime: IAgentRu
     const sanitizedMemories = sanitizeMemories(relevantMemories);
     state.relevantMemories = JSON.stringify(sanitizedMemories, null, 2);
     // Doesn't exist in character or state but we want it in state
-    state.facts = '';
+    state.facts = JSON.stringify(sanitizeMemories(await runtime.messageManager.getMemories({
+        roomId: message.roomId,
+    })), null, 2);
     // TODO:
-    // We need to actually save goals, knowledge, facts,we only save memories for now
+    // We need to actually save goals, knowledge,facts, we only save memories for now
     // We need to dynamically update the goals, knoweldge, facts, bio, lore, we should add actions to update these and chain them to the OODA cycle
     const owner = runtime.getSetting("GITHUB_OWNER") ?? '' as string;
     state.owner = owner;
@@ -299,14 +319,16 @@ export async function incorporateRepositoryState(state: State, runtime: IAgentRu
         number: (issue.content.metadata as any).number,
         state: (issue.content.metadata as any).state,
     })), null, 2);
-    // const previousPRs = await getPullRequestsFromMemories(runtime, owner, repository);
-    // state.previousPRs = JSON.stringify(previousPRs.map(pr => ({
-    //     title: pr.content.text,
-    //     body: (pr.content.metadata as any).body,
-    //     url: (pr.content.metadata as any).url,
-    //     number: (pr.content.metadata as any).number,
-    //     state: (pr.content.metadata as any).state,
-    // })), null, 2);
+    const previousPRs = await getPullRequestsFromMemories(runtime, owner, repository);
+    state.previousPRs = JSON.stringify(previousPRs.map(pr => ({
+        title: pr.content.text,
+        body: (pr.content.metadata as any).body,
+        url: (pr.content.metadata as any).url,
+        number: (pr.content.metadata as any).number,
+        state: (pr.content.metadata as any).state,
+        diff: (pr.content.metadata as any).diff,
+        comments: (pr.content.metadata as any).comments,
+    })), null, 2);
     return state;
 }
 

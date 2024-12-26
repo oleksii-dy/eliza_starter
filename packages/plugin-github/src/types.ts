@@ -183,14 +183,12 @@ export const AddCommentToIssueSchema = z.object({
     owner: z.string().min(1, "GitHub owner is required"),
     repo: z.string().min(1, "GitHub repo is required"),
     issue: z.number().min(1, "Issue number is required"),
-    comment: z.string().min(1, "Comment is required"),
 });
 
 export interface AddCommentToIssueContent {
     owner: string;
     repo: string;
     issue: number;
-    comment: string;
 }
 
 export const isAddCommentToIssueContent = (
@@ -213,4 +211,38 @@ export interface IdeationContent {
 
 export const isIdeationContent = (object: any): object is IdeationContent => {
     return IdeationSchema.safeParse(object).success;
+};
+
+export const AddCommentToPRSchema = z.object({
+    owner: z.string().min(1, "GitHub owner is required"),
+    repo: z.string().min(1, "GitHub repo is required"),
+    pullRequest: z.number().min(1, "Pull request number is required"),
+});
+
+export interface AddCommentToPRContent {
+    owner: string;
+    repo: string;
+    pullRequest: number;
+}
+
+export const isAddCommentToPRContent = (
+    object: any
+): object is AddCommentToPRContent => {
+    if (AddCommentToPRSchema.safeParse(object).success) {
+        return true;
+    }
+    elizaLogger.error("Invalid content: ", object);
+    return false;
+};
+
+export const GenerateCommentForASpecificPRSchema = z.object({
+    comment: z.string().min(1, "Comment is required"),
+});
+
+export interface GenerateCommentForASpecificPRSchema {
+    comment: string;
+}
+
+export const isGenerateCommentForASpecificPRSchema = (object: any): object is GenerateCommentForASpecificPRSchema => {
+    return GenerateCommentForASpecificPRSchema.safeParse(object).success;
 };

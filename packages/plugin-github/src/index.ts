@@ -27,6 +27,10 @@ import {
     addCommentToIssueAction,
 } from "./plugins/addCommentToIssue";
 import { githubIdeationPlugin, ideationAction } from "./plugins/ideationPlugin";
+import {
+    githubAddCommentToPRPlugin,
+    addCommentToPRAction,
+} from "./plugins/addCommentToPR";
 import type { Plugin } from "@elizaos/core";
 import { sourceCodeProvider } from "./providers/sourceCode";
 import { testFilesProvider } from "./providers/testFiles";
@@ -43,6 +47,7 @@ export const plugins = {
     githubModifyIssuePlugin,
     githubAddCommentToIssuePlugin,
     githubIdeationPlugin,
+    githubAddCommentToPRPlugin,
 };
 
 export * from "./plugins/initializeRepository";
@@ -53,6 +58,7 @@ export * from "./plugins/createIssue";
 export * from "./plugins/modifyIssue";
 export * from "./plugins/addCommentToIssue";
 export * from "./plugins/ideationPlugin";
+export * from "./plugins/addCommentToPR";
 
 export * from "./providers/sourceCode";
 export * from "./providers/testFiles";
@@ -60,6 +66,9 @@ export * from "./providers/workflowFiles";
 export * from "./providers/documentationFiles";
 export * from "./providers/releases";
 export * from "./utils";
+export * from "./services/github";
+export * from "./templates";
+
 export const githubPlugin: Plugin = {
     name: "github",
     description: "Integration with GitHub",
@@ -72,6 +81,7 @@ export const githubPlugin: Plugin = {
         modifyIssueAction,
         addCommentToIssueAction,
         ideationAction,
+        addCommentToPRAction,
     ],
     evaluators: [],
     providers: [

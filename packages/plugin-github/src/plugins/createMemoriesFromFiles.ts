@@ -116,7 +116,7 @@ export const createMemoriesFromFilesAction: Action = {
         message: Memory,
         state: State,
         options: any,
-        callback: HandlerCallback
+        callback?: HandlerCallback
     ) => {
         elizaLogger.log("[createMemoriesFromFiles] Composing state for message:", message);
         if (!state) {
@@ -160,22 +160,25 @@ export const createMemoriesFromFilesAction: Action = {
             );
 
             elizaLogger.info("Memories created successfully!");
-
-            callback({
-                text: "Memories created successfully!",
-                attachments: [],
-            });
+            if (callback) {
+                callback({
+                    text: "Memories created successfully!",
+                    attachments: [],
+                });
+            }
         } catch (error) {
             elizaLogger.error(
                 `Error creating memories from files on ${content.owner}/${content.repo} path ${content.path}:`,
                 error
             );
-            callback(
-                {
-                    text: `Error creating memories from files on ${content.owner}/${content.repo} path ${content.path}. Please try again.`,
-                },
-                []
-            );
+            if (callback) {
+                callback(
+                    {
+                        text: `Error creating memories from files on ${content.owner}/${content.repo} path ${content.path}. Please try again.`,
+                    },
+                    []
+                );
+            }
         }
     },
     examples: [
