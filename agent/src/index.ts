@@ -578,6 +578,13 @@ export async function createAgent(
             importFn: () =>
                 import("@elizaos/plugin-story").then((m) => m.storyPlugin),
         },
+        {
+            secrets: "CRONOSZKEVM_PRIVATE_KEY",
+            importFn: () =>
+                import("@elizaos/plugin-cronoszkevm").then(
+                    (m) => m.cronosZkEVMPlugin
+                ),
+        },
         ...(teeMode === "OFF" &&
             walletSecretSalt && [
                 {
