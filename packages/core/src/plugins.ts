@@ -20,15 +20,33 @@ export async function loadPlugin(
     return importFn();
 }
 
+const importCache = new Map<
+    () => Promise<Plugin | Plugin[]>,
+    Promise<Plugin | Plugin[]>
+>();
+
 export async function loadPlugins(
     character: Character,
     definitions: DynamicPlugin[]
 ): Promise<Plugin[]> {
-    const pluginPromises = definitions.map((def) =>
-        loadPlugin(def.secrets, character, def.importFn)
-    );
-    const pluginsWithNulls = await Promise.all(pluginPromises);
-    return pluginsWithNulls.filter(
-        (plugin): plugin is Plugin => plugin !== null
-    );
+    const plugins: Plugin[] = [];
+
+    for (const def of definitions) {
+        const keyArray = Array.isArray(def.secrets)
+            ? def.secrets
+            : [def.secrets];
+        const hasAllSecrets =
+            keyArray.every((key) => getSecret(character, key)) ||
+            keyArray.length === 0;
+        if (!hasAllSecrets) continue;
+
+        let importPromise = importCache.get(def.importFn);
+        if (!importPromise) {
+            importPromise = def.importFn();
+            importCache.set(def.importFn, importPromise);
+        }
+        const result = await importPromise;
+        plugins.push(...(Array.isArray(result) ? result : [result]));
+    }
+    return plugins;
 }
