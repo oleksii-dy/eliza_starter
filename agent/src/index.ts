@@ -530,6 +530,13 @@ export async function createAgent(
                 ),
         },
         {
+            secrets: ["ABSTRACT_PRIVATE_KEY"],
+            importFn: () =>
+                import("@elizaos/plugin-abstract").then(
+                    (m) => m.abstractPlugin
+                ),
+        },
+        {
             secrets: ["FLOW_ADDRESS", "FLOW_PRIVATE_KEY"],
             importFn: () =>
                 import("@elizaos/plugin-flow").then((m) => m.flowPlugin),
