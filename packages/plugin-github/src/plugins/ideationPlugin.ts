@@ -15,6 +15,7 @@ import { ideationTemplate } from "../templates";
 import { IdeationSchema, isIdeationContent } from "../types";
 import { getRepositoryRoomId, incorporateRepositoryState } from "../utils";
 import fs from "fs/promises";
+
 export const ideationAction: Action = {
     name: "IDEATION",
     similes: ["THINK","IDEATE", "IDEAS", "IDEATION", "CO_CREATION", "BRAINSTORM", "THOUGHTS", "SUGGESTIONS", "THINKING"],

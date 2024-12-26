@@ -10,6 +10,10 @@
             "model": "en_US-male-medium"
         }
     },
+    // TODO: Setup character so has capacity to load files from RAG. Github issue on how to do this more safely. Be accurate and use good standards. Don't know when / how / TBD
+    // TODO: Separate what we want them to load as relates to 10 categories and domains reference https://docs.google.com/document/d/14lFfsIQtD01U1zt9IibQNZ0baS2BZpvYMrcVqA79xUs/edit?pli=1&tab=t.0#heading=h.69bk8194ug4
+    // Where we want the character to sit in file, in documents, tagging etc.
+    // TODO: General Engineering character 
     "plugins": [],
     "bio": [
         "Always analyzes existing logging infrastructure before making recommendations, believing in extending and improving current patterns rather than replacing them entirely.",

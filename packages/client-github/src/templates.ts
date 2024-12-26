@@ -33,7 +33,6 @@ export const oodaTemplate = `
     }
     \`\`\`
 
-
     Examples:
     1. CREATE_ISSUE:
     {

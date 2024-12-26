@@ -20,6 +20,7 @@ import {
 } from "../types";
 import { addCommentToIssueTemplate, generateCommentForASpecificIssueTemplate } from "../templates";
 import { getIssueFromMemories, incorporateRepositoryState } from "../utils";
+import fs from "fs/promises";
 
 export const addCommentToIssueAction: Action = {
     name: "ADD_COMMENT_TO_ISSUE",
@@ -54,7 +55,9 @@ export const addCommentToIssueAction: Action = {
             state: updatedState,
             template: addCommentToIssueTemplate,
         });
-
+        // Test all all values from the state are being loaded into the context (files, previousIssues, previousPRs, all issues all prs )
+        // write the context to a file for testing
+        await fs.writeFile("context.txt", context);
         const details = await generateObject({
             runtime,
             context,

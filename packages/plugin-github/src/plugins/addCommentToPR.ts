@@ -20,6 +20,7 @@ import {
 } from "../types";
 import { addCommentToPRTemplate, generateCommentForASpecificPRTemplate } from "../templates";
 import { getPullRequestFromMemories, incorporateRepositoryState } from "../utils";
+import fs from "fs/promises";
 
 export const addCommentToPRAction: Action = {
     name: "ADD_COMMENT_TO_PR",
@@ -54,7 +55,8 @@ export const addCommentToPRAction: Action = {
             state: updatedState,
             template: addCommentToPRTemplate,
         });
-
+        // write the context to a file for testing
+        await fs.writeFile("context.txt", context);
         const details = await generateObject({
             runtime,
             context,
@@ -100,7 +102,7 @@ export const addCommentToPRAction: Action = {
             state: updatedState,
             template: generateCommentForASpecificPRTemplate,
         });
-        
+
         const commentDetails = await generateObject({
             runtime,
             context: commentContext,

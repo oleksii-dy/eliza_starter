@@ -31,15 +31,15 @@ export class GitHubClient extends EventEmitter {
         this.runtime = runtime;
         this.character = runtime.character;
 
-        this.runtime.registerAction(initializeRepositoryAction);
-        this.runtime.registerAction(createCommitAction);
-        this.runtime.registerAction(createMemoriesFromFilesAction);
-        this.runtime.registerAction(createPullRequestAction);
-        this.runtime.registerAction(createIssueAction);
-        this.runtime.registerAction(modifyIssueAction);
-        this.runtime.registerAction(addCommentToIssueAction);
-        this.runtime.registerAction(ideationAction);
-        this.runtime.registerAction(addCommentToPRAction);
+        // this.runtime.registerAction(initializeRepositoryAction);
+        // this.runtime.registerAction(createCommitAction);
+        // this.runtime.registerAction(createMemoriesFromFilesAction);
+        // this.runtime.registerAction(createPullRequestAction);
+        // this.runtime.registerAction(createIssueAction);
+        // this.runtime.registerAction(modifyIssueAction);
+        // this.runtime.registerAction(addCommentToIssueAction);
+        // this.runtime.registerAction(ideationAction);
+        // this.runtime.registerAction(addCommentToPRAction);
         elizaLogger.log("GitHubClient actions and providers registered.");
 
         // Start the OODA loop after initialization
@@ -55,11 +55,12 @@ export class GitHubClient extends EventEmitter {
     }
 
     private startOodaLoop() {
-        const interval = Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) || 300000; // Default to 5 minutes
-        elizaLogger.log("Starting OODA loop with interval:", interval);
-        setInterval(() => {
-            this.processOodaCycle();
-        }, interval);
+        this.processOodaCycle();
+        // const interval = Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) || 300000; // Default to 5 minutes
+        // elizaLogger.log("Starting OODA loop with interval:", interval);
+        // setInterval(() => {
+        //     this.processOodaCycle();
+        // }, interval);
     }
 
     private async processOodaCycle() {
@@ -70,7 +71,7 @@ export class GitHubClient extends EventEmitter {
             elizaLogger.error("GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle.");
             throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
         }
-
+        // TODO: We generate this, we want the default one that gets generated
         const roomId = getRepositoryRoomId(this.runtime);
         elizaLogger.log("Repository room ID:", roomId);
 
@@ -193,6 +194,7 @@ export class GitHubClient extends EventEmitter {
         // time to initialize repository and create memories
         const timestamp = Date.now();
         const userIdUUID = stringToUuid(`${this.runtime.agentId}-${timestamp}`);
+        // TODO: Are we saving all the right values in content
         const originalMemory: Memory = {
             id: stringToUuid(`${roomId}-${this.runtime.agentId}-${timestamp}-original`),
             userId: userIdUUID,
@@ -246,6 +248,7 @@ export class GitHubClient extends EventEmitter {
             action: createMemoriesFromFilesMemory.content.action,
             userId: this.runtime.agentId,
         });
+        // This returns nothing no issue memories or pull request memories
         const issuesMemories = await saveIssuesToMemory(this.runtime, owner, repository, this.apiToken);
         elizaLogger.log("Issues memories:", issuesMemories);
         const pullRequestsMemories = await savePullRequestsToMemory(this.runtime, owner, repository, this.apiToken);

@@ -41,8 +41,6 @@ Provide your response in the following JSON format:
  * Goals Data: {{goalsData}}
  * Recent Interactions: {{recentInteractions}}
  * Here is the convo so far: {{formattedConversation}}
-
-
  */
 export const initializeTemplate = `
 Extract the details for initializing the GitHub repository:
