@@ -1,80 +1,64 @@
 import { contextTemplate } from "@elizaos/plugin-github";
 
 export const oodaTemplate = `
-    # INSTRUCTIONS:
-    You are an AI agent tasked with analyzing repository files and making strategic improvements. Your response should be systematic and data-driven.
-
     ## Task Instructions:
-    1. Analyze the provided files systematically
-    2. Consider the repository's history and current state
-    3. Evaluate potential improvements against your objectives
-    4. Ensure no duplicate issues or pull requests are created by checking existing records
-    5. Select the most impactful action based on your analysis
-    6. Format your response according to the schema below
+    1. Systematically analyze the provided files.
+    2. Consider the repository's history and current state.
+    3. Evaluate potential improvements against your objectives.
+    4. Check existing records to avoid duplicate issues or pull requests.
+    5. Select the most impactful action based on your analysis.
+    6. Format your response according to the schema below.
 
+    Context:
     ${contextTemplate}
-    ## Response Schema:
-    Choose ONE action from the following options and provide ALL required fields:
+    \`\`\`json
+    {
+        "action": "One of the actions listed below (required)",
+        "reasoning": "Explanation of why this action was chosen (required)",
+        "owner": "Repository owner (required for most actions)",
+        "repo": "Repository name (required for most actions)",
+        "path": "File path (required for file operations)",
+        "branch": "Branch name (required for branch operations)",
+        "title": "Clear, descriptive title (required for issues/PRs)",
+        "description": "Detailed explanation (recommended)",
+        "files": [
+            {
+                "path": "file/path",
+                "content": "file content"
+            }
+        ],
+        "message": "Descriptive commit message (required for commits)",
+        "labels": "Relevant labels (optional)",
+        "issue": "Issue number (required for issue operations)"
+    }
+    \`\`\`
 
-    Action Options:
-    1. CREATE_ISSUE: For identifying problems or suggesting improvements
-    2. ADD_COMMENT_TO_ISSUE: For following up on an issue if you have more information
-    3. ADD_COMMENT_TO_PR: For providing feedback on a pull request
-    2. NOTHING: When no action is needed
 
-    Required Fields:
-    - action: (required) One of the actions listed above
-    - reasoning: (required) Explanation of why this action was chosen
-    - owner: (required for most actions) Repository owner
-    - repo: (required for most actions) Repository name
-    - path: (required for file operations) File path
-    - branch: (required for branch operations) Branch name
-    - title: (required for issues/PRs) Clear, descriptive title
-    - description: (recommended) Detailed explanation
-    - files: (required for file changes) Array of file objects:
-        {
-            path: "file/path",
-            content: "file content"
-        }
-    - message: (required for commits) Descriptive commit message
-    - labels: (optional) Relevant labels
-    - issue: (required for issue operations) Issue number
-
-    Remember to:
-    1. Provide complete and valid JSON
-    2. Include all required fields for your chosen action
-    3. Use clear, descriptive messages
-    4. Follow repository conventions
-    5. Consider the impact of your action
-    6. Ensure no duplicate issues or pull requests are created
-
-    ## Response Examples:
-
+    Examples:
     1. CREATE_ISSUE:
     {
         "action": "CREATE_ISSUE",
-        "reasoning": "Issue is needed to identify performance issue and propose solution",
+        "reasoning": "Identifying a problem in the codebase",
         "owner": "octocat",
         "repo": "hello-world",
-        "title": "perf: Optimize database queries for better performance",
-        "body": "## Current Behavior\\n[Description of the current performance issue]\\n\\n## Proposed Solution\\n[Detailed solution proposal]\\n\\n## Expected Benefits\\n- Benefit 1\\n- Benefit 2\\n\\n## Additional Context\\n[Any relevant context or metrics]",
-        "labels": ["performance", "high-priority"]
+        "title": "Improvement suggestion",
+        "description": "The codebase could benefit from a more efficient data structure."
     }
 
     2. ADD_COMMENT_TO_ISSUE:
     {
         "action": "ADD_COMMENT_TO_ISSUE",
-        "reasoning": "Comment is added to provide progress update",
+        "reasoning": "Providing more information about the issue",
         "owner": "octocat",
         "repo": "hello-world",
         "issue": 123,
-        "comment": "## Progress Update\\n- Completed X\\n- Found Y\\n- Next steps: Z"
+        "comment": "I've found a potential solution to the issue."
     }
 
     3. ADD_COMMENT_TO_PR:
     {
         "action": "ADD_COMMENT_TO_PR",
-        "reasoning": "Pull request needs feedback on implementation approach and code quality",
+        "reasoning": "Providing constructive feedback on the changes proposed in the PR",
         "owner": "octocat",
         "repo": "hello-world",
         "issue": 456,
@@ -84,6 +68,6 @@ export const oodaTemplate = `
     4. NOTHING:
     {
         "action": "NOTHING",
-        "reasoning": "No action is needed because the current state meets all requirements and no further changes are necessary."
+        "reasoning": "No action is needed because all open PRs have been commented on or there are no open PRs."
     }
     `
