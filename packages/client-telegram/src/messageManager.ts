@@ -1092,7 +1092,7 @@ export class MessageManager {
                                 roomId,
                                 content: {
                                     ...content,
-                                    text: sentMessage.text + '',
+                                    text: sentMessage.text,
                                     inReplyTo: messageId,
                                 },
                                 createdAt: sentMessage.date * 1000,
