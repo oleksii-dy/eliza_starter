@@ -156,7 +156,7 @@ export async function loadCharacters(
 
                 // .id isn't really valid
                 const characterId = character.id || character.name;
-                const characterPrefix = `CHARACTER.${characterId.toUpperCase().replace(/ /g, '_')}.`;
+                const characterPrefix = `CHARACTER.${characterId.toUpperCase().replace(/ /g, "_")}.`;
 
                 const characterSettings = Object.entries(process.env)
                     .filter(([key]) => key.startsWith(characterPrefix))
@@ -169,7 +169,7 @@ export async function loadCharacters(
                     character.settings = character.settings || {};
                     character.settings.secrets = {
                         ...characterSettings,
-                        ...character.settings.secrets
+                        ...character.settings.secrets,
                     };
                 }
 
