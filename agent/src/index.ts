@@ -437,28 +437,12 @@ export async function createAgent(
         {
             secrets: ["COINBASE_API_KEY", "COINBASE_PRIVATE_KEY"],
             importFn: () =>
-                import("@elizaos/plugin-coinbase").then(
-                    (m) => m.coinbaseMassPaymentsPlugin
-                ),
-        },
-        {
-            secrets: ["COINBASE_API_KEY", "COINBASE_PRIVATE_KEY"],
-            importFn: () =>
-                import("@elizaos/plugin-coinbase").then((m) => m.tradePlugin),
-        },
-        {
-            secrets: ["COINBASE_API_KEY", "COINBASE_PRIVATE_KEY"],
-            importFn: () =>
-                import("@elizaos/plugin-coinbase").then(
-                    (m) => m.tokenContractPlugin
-                ),
-        },
-        {
-            secrets: ["COINBASE_API_KEY", "COINBASE_PRIVATE_KEY"],
-            importFn: () =>
-                import("@elizaos/plugin-coinbase").then(
-                    (m) => m.advancedTradePlugin
-                ),
+                import("@elizaos/plugin-coinbase").then((m) => [
+                    m.coinbaseMassPaymentsPlugin,
+                    m.tradePlugin,
+                    m.tokenContractPlugin,
+                    m.advancedTradePlugin,
+                ]),
         },
         {
             secrets: "COINBASE_COMMERCE_KEY",
