@@ -106,43 +106,13 @@ export const swapAction = {
         _options: any,
         callback?: any
     ) => {
-        console.log("Swap action handler called");
-        const walletProvider = await initWalletProvider(runtime);
-        const action = new SwapAction(walletProvider);
-
-        // Compose swap context
-        const swapContext = composeContext({
-            state,
-            template: swapTemplate,
-        });
-        const content = await generateObjectDeprecated({
-            runtime,
-            context: swapContext,
-            modelClass: ModelClass.LARGE,
-        });
-
-        const swapOptions: SwapParams = {
-            chain: content.chain,
-            fromToken: content.inputToken,
-            toToken: content.outputToken,
-            amount: content.amount,
-            slippage: content.slippage,
-        };
-
         try {
-            const swapResp = await action.swap(swapOptions);
-            if (callback) {
-                callback({
-                    text: `Successfully swap ${swapOptions.amount} ${swapOptions.fromToken} tokens to ${swapOptions.toToken}\nTransaction Hash: ${swapResp.hash}`,
-                    content: {
-                        success: true,
-                        hash: swapResp.hash,
-                        recipient: swapResp.to,
-                        chain: content.chain,
-                    },
-                });
-            }
-            return true;
+            const privateKey = runtime.getSetting(
+                "EVM_PRIVATE_KEY"
+            ) as `0x${string}`;
+            const walletProvider = new WalletProvider(runtime.cacheManager, privateKey);
+            const action = new SwapAction(walletProvider);
+            return await action.swap(options);
         } catch (error) {
             console.error("Error in swap handler:", error.message);
             if (callback) {

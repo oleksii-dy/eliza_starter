@@ -96,8 +96,10 @@ export const bridgeAction = {
         _options: any,
         callback?: any
     ) => {
-        console.log("Bridge action handler called");
-        const walletProvider = await initWalletProvider(runtime);
+        const privateKey = runtime.getSetting(
+            "EVM_PRIVATE_KEY"
+        ) as `0x${string}`;
+        const walletProvider = new WalletProvider(runtime.cacheManager, privateKey);
         const action = new BridgeAction(walletProvider);
 
         // Compose bridge context
