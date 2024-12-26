@@ -701,7 +701,7 @@ export class MessageManager {
                             i === 0 && replyToMessageId
                                 ? { message_id: replyToMessageId }
                                 : undefined,
-                        parse_mode: "Markdown",
+                        parse_mode: undefined,
                     }
                 )) as Message.TextMessage;
 
@@ -1092,7 +1092,7 @@ export class MessageManager {
                                 roomId,
                                 content: {
                                     ...content,
-                                    text: sentMessage.text,
+                                    text: sentMessage.text + '',
                                     inReplyTo: messageId,
                                 },
                                 createdAt: sentMessage.date * 1000,
