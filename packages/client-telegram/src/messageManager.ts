@@ -706,11 +706,7 @@ export class MessageManager {
                             i === 0 && replyToMessageId
                                 ? { message_id: replyToMessageId }
                                 : undefined,
-                        parse_mode: this.runtime.character.clientConfig.telegram
-                            .disableParseMode
-                            ? undefined
-                            : this.runtime.character.clientConfig.telegram
-                                  .parseMode || "Markdown",
+                        parse_mode: this.runtime.character.clientConfig.telegram.parseMode || undefined,
                     }
                 )) as Message.TextMessage;
 
