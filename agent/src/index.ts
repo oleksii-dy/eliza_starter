@@ -59,6 +59,9 @@ import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { character } from "./character.ts";
+import { imageGenerationPlugin } from "@ai16z/plugin-image-generation";
+import type { DirectClient } from "@ai16z/client-direct";
 import yargs from "yargs";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
