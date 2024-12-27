@@ -56,7 +56,10 @@ export const createPullRequestAction: Action = {
         options: any,
         callback: HandlerCallback
     ) => {
-        elizaLogger.log("[createPullRequest] Composing state for message:", message);
+        elizaLogger.log(
+            "[createPullRequest] Composing state for message:",
+            message
+        );
         const files = await getFilesFromMemories(runtime, message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
@@ -72,7 +75,7 @@ export const createPullRequestAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: CreatePullRequestSchema,
         });
 

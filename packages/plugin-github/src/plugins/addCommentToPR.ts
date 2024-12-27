@@ -18,8 +18,14 @@ import {
     isAddCommentToPRContent,
     isGenerateCommentForASpecificPRSchema,
 } from "../types";
-import { addCommentToPRTemplate, generateCommentForASpecificPRTemplate } from "../templates";
-import { getPullRequestFromMemories, incorporateRepositoryState } from "../utils";
+import {
+    addCommentToPRTemplate,
+    generateCommentForASpecificPRTemplate,
+} from "../templates";
+import {
+    getPullRequestFromMemories,
+    incorporateRepositoryState,
+} from "../utils";
 import fs from "fs/promises";
 
 export const addCommentToPRAction: Action = {
@@ -30,7 +36,8 @@ export const addCommentToPRAction: Action = {
         "POST_COMMENT_PR",
         "ADD_COMMENT_PR",
     ],
-    description: "Adds a comment to an existing pull request in the GitHub repository",
+    description:
+        "Adds a comment to an existing pull request in the GitHub repository",
     validate: async (runtime: IAgentRuntime) => {
         const token = !!runtime.getSetting("GITHUB_API_TOKEN");
         return token;
@@ -42,13 +49,21 @@ export const addCommentToPRAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log("[addCommentToPR] Composing state for message:", message);
+        elizaLogger.log(
+            "[addCommentToPR] Composing state for message:",
+            message
+        );
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        const updatedState = await incorporateRepositoryState(state, runtime, message, []);
+        const updatedState = await incorporateRepositoryState(
+            state,
+            runtime,
+            message,
+            []
+        );
         elizaLogger.info("State:", updatedState);
 
         const context = composeContext({
@@ -60,7 +75,7 @@ export const addCommentToPRAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: AddCommentToPRSchema,
         });
 
@@ -76,7 +91,11 @@ export const addCommentToPRAction: Action = {
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
         elizaLogger.info("Adding comment to pull request in the repository...");
-        let pullRequest = await getPullRequestFromMemories(runtime, message, content.pullRequest);
+        let pullRequest = await getPullRequestFromMemories(
+            runtime,
+            message,
+            content.pullRequest
+        );
         if (!pullRequest) {
             elizaLogger.error("Pull request not found in memories");
 
@@ -88,14 +107,20 @@ export const addCommentToPRAction: Action = {
                 state: pr.state,
                 created_at: pr.created_at,
                 updated_at: pr.updated_at,
-                comments: await githubService.getPRCommentsText(pr.comments_url),
-                labels: pr.labels.map((label: any) => (typeof label === 'string' ? label : label?.name)),
+                comments: await githubService.getPRCommentsText(
+                    pr.comments_url
+                ),
+                labels: pr.labels.map((label: any) =>
+                    typeof label === "string" ? label : label?.name
+                ),
                 body: pr.body,
-                diff: await githubService.getPRDiffText(pr.diff_url)
-            }
+                diff: await githubService.getPRDiffText(pr.diff_url),
+            };
             updatedState.specificPullRequest = JSON.stringify(prData);
         } else {
-            updatedState.specificPullRequest = JSON.stringify(pullRequest.content);
+            updatedState.specificPullRequest = JSON.stringify(
+                pullRequest.content
+            );
         }
 
         const commentContext = composeContext({
@@ -106,21 +131,27 @@ export const addCommentToPRAction: Action = {
         const commentDetails = await generateObject({
             runtime,
             context: commentContext,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: GenerateCommentForASpecificPRSchema,
         });
 
         if (!isGenerateCommentForASpecificPRSchema(commentDetails.object)) {
-            elizaLogger.error("Invalid comment content:", commentDetails.object);
+            elizaLogger.error(
+                "Invalid comment content:",
+                commentDetails.object
+            );
             throw new Error("Invalid comment content");
         }
 
         const commentBody = commentDetails.object.comment;
 
-        elizaLogger.info("Adding comment to pull request in the repository...", {
-            pullRequest,
-            commentBody,
-        });
+        elizaLogger.info(
+            "Adding comment to pull request in the repository...",
+            {
+                pullRequest,
+                commentBody,
+            }
+        );
         // const githubService = new GitHubService({
         //     owner: content.owner,
         //     repo: content.repo,
