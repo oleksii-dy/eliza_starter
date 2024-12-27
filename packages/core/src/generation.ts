@@ -198,24 +198,6 @@ export async function generateText({
                     presencePenalty: presence_penalty,
                 });
 
-                console.log("\n[LLM Debug]", {
-                    sent: {
-                        prompt: context.slice(0, 200) + "...",
-                        system:
-                            runtime.character.system ??
-                            settings.SYSTEM_PROMPT ??
-                            undefined,
-                        model,
-                        temperature,
-                        maxTokens: max_response_length,
-                    },
-                    received: {
-                        response: openaiResponse?.slice(0, 200) + "...",
-                        responseType: typeof openaiResponse,
-                        responseLength: openaiResponse?.length,
-                    },
-                });
-
                 response = openaiResponse;
                 elizaLogger.debug("Received response from OpenAI model.");
                 break;
@@ -237,24 +219,6 @@ export async function generateText({
                     maxTokens: max_response_length,
                     frequencyPenalty: frequency_penalty,
                     presencePenalty: presence_penalty,
-                });
-
-                console.log("\n[LLM Debug]", {
-                    sent: {
-                        prompt: context.slice(0, 200) + "...",
-                        system:
-                            runtime.character.system ??
-                            settings.SYSTEM_PROMPT ??
-                            undefined,
-                        model,
-                        temperature,
-                        maxTokens: max_response_length,
-                    },
-                    received: {
-                        response: googleResponse?.slice(0, 200) + "...",
-                        responseType: typeof googleResponse,
-                        responseLength: googleResponse?.length,
-                    },
                 });
 
                 response = googleResponse;
@@ -283,24 +247,6 @@ export async function generateText({
                     presencePenalty: presence_penalty,
                 });
 
-                console.log("\n[LLM Debug]", {
-                    sent: {
-                        prompt: context.slice(0, 200) + "...",
-                        system:
-                            runtime.character.system ??
-                            settings.SYSTEM_PROMPT ??
-                            undefined,
-                        model,
-                        temperature,
-                        maxTokens: max_response_length,
-                    },
-                    received: {
-                        response: anthropicResponse?.slice(0, 200) + "...",
-                        responseType: typeof anthropicResponse,
-                        responseLength: anthropicResponse?.length,
-                    },
-                });
-
                 response = anthropicResponse;
                 elizaLogger.debug("Received response from Anthropic model.");
                 break;
@@ -325,24 +271,6 @@ export async function generateText({
                     maxTokens: max_response_length,
                     frequencyPenalty: frequency_penalty,
                     presencePenalty: presence_penalty,
-                });
-
-                console.log("\n[LLM Debug]", {
-                    sent: {
-                        prompt: context.slice(0, 200) + "...",
-                        system:
-                            runtime.character.system ??
-                            settings.SYSTEM_PROMPT ??
-                            undefined,
-                        model,
-                        temperature,
-                        maxTokens: max_response_length,
-                    },
-                    received: {
-                        response: anthropicResponse?.slice(0, 200) + "...",
-                        responseType: typeof anthropicResponse,
-                        responseLength: anthropicResponse?.length,
-                    },
                 });
 
                 response = anthropicResponse;
@@ -375,24 +303,6 @@ export async function generateText({
                     presencePenalty: presence_penalty,
                 });
 
-                console.log("\n[LLM Debug]", {
-                    sent: {
-                        prompt: context.slice(0, 200) + "...",
-                        system:
-                            runtime.character.system ??
-                            settings.SYSTEM_PROMPT ??
-                            undefined,
-                        model,
-                        temperature,
-                        maxTokens: max_response_length,
-                    },
-                    received: {
-                        response: grokResponse?.slice(0, 200) + "...",
-                        responseType: typeof grokResponse,
-                        responseLength: grokResponse?.length,
-                    },
-                });
-
                 response = grokResponse;
                 elizaLogger.debug("Received response from Grok model.");
                 break;
@@ -412,24 +322,6 @@ export async function generateText({
                     maxTokens: max_response_length,
                     frequencyPenalty: frequency_penalty,
                     presencePenalty: presence_penalty,
-                });
-
-                console.log("\n[LLM Debug]", {
-                    sent: {
-                        prompt: context.slice(0, 200) + "...",
-                        system:
-                            runtime.character.system ??
-                            settings.SYSTEM_PROMPT ??
-                            undefined,
-                        model,
-                        temperature,
-                        maxTokens: max_response_length,
-                    },
-                    received: {
-                        response: groqResponse?.slice(0, 200) + "...",
-                        responseType: typeof groqResponse,
-                        responseLength: groqResponse?.length,
-                    },
                 });
 
                 response = groqResponse;
@@ -483,24 +375,6 @@ export async function generateText({
                     presencePenalty: presence_penalty,
                 });
 
-                console.log("\n[LLM Debug]", {
-                    sent: {
-                        prompt: context.slice(0, 200) + "...",
-                        system:
-                            runtime.character.system ??
-                            settings.SYSTEM_PROMPT ??
-                            undefined,
-                        model,
-                        temperature,
-                        maxTokens: max_response_length,
-                    },
-                    received: {
-                        response: redpillResponse?.slice(0, 200) + "...",
-                        responseType: typeof redpillResponse,
-                        responseLength: redpillResponse?.length,
-                    },
-                });
-
                 response = redpillResponse;
                 elizaLogger.debug("Received response from redpill model.");
                 break;
@@ -526,24 +400,6 @@ export async function generateText({
                     maxTokens: max_response_length,
                     frequencyPenalty: frequency_penalty,
                     presencePenalty: presence_penalty,
-                });
-
-                console.log("\n[LLM Debug]", {
-                    sent: {
-                        prompt: context.slice(0, 200) + "...",
-                        system:
-                            runtime.character.system ??
-                            settings.SYSTEM_PROMPT ??
-                            undefined,
-                        model,
-                        temperature,
-                        maxTokens: max_response_length,
-                    },
-                    received: {
-                        response: openrouterResponse?.slice(0, 200) + "...",
-                        responseType: typeof openrouterResponse,
-                        responseLength: openrouterResponse?.length,
-                    },
                 });
 
                 response = openrouterResponse;
@@ -572,24 +428,6 @@ export async function generateText({
                         presencePenalty: presence_penalty,
                     });
 
-                    console.log("\n[LLM Debug]", {
-                        sent: {
-                            prompt: context.slice(0, 200) + "...",
-                            system:
-                                runtime.character.system ??
-                                settings.SYSTEM_PROMPT ??
-                                undefined,
-                            model,
-                            temperature,
-                            maxTokens: max_response_length,
-                        },
-                        received: {
-                            response: ollamaResponse?.slice(0, 200) + "...",
-                            responseType: typeof ollamaResponse,
-                            responseLength: ollamaResponse?.length,
-                        },
-                    });
-
                     response = ollamaResponse;
                 }
                 elizaLogger.debug("Received response from Ollama model.");
@@ -614,24 +452,6 @@ export async function generateText({
                     maxTokens: max_response_length,
                     frequencyPenalty: frequency_penalty,
                     presencePenalty: presence_penalty,
-                });
-
-                console.log("\n[LLM Debug]", {
-                    sent: {
-                        prompt: context.slice(0, 200) + "...",
-                        system:
-                            runtime.character.system ??
-                            settings.SYSTEM_PROMPT ??
-                            undefined,
-                        model,
-                        temperature,
-                        maxTokens: max_response_length,
-                    },
-                    received: {
-                        response: heuristResponse?.slice(0, 200) + "...",
-                        responseType: typeof heuristResponse,
-                        responseLength: heuristResponse?.length,
-                    },
                 });
 
                 response = heuristResponse;
@@ -683,24 +503,6 @@ export async function generateText({
                     presencePenalty: presence_penalty,
                 });
 
-                console.log("\n[LLM Debug]", {
-                    sent: {
-                        prompt: context.slice(0, 200) + "...",
-                        system:
-                            runtime.character.system ??
-                            settings.SYSTEM_PROMPT ??
-                            undefined,
-                        model,
-                        temperature,
-                        maxTokens: max_response_length,
-                    },
-                    received: {
-                        response: openaiResponse?.slice(0, 200) + "...",
-                        responseType: typeof openaiResponse,
-                        responseLength: openaiResponse?.length,
-                    },
-                });
-
                 response = openaiResponse;
                 elizaLogger.debug("Received response from GAIANET model.");
                 break;
@@ -727,24 +529,6 @@ export async function generateText({
                     presencePenalty: presence_penalty,
                 });
 
-                console.log("\n[LLM Debug]", {
-                    sent: {
-                        prompt: context.slice(0, 200) + "...",
-                        system:
-                            runtime.character.system ??
-                            settings.SYSTEM_PROMPT ??
-                            undefined,
-                        model,
-                        temperature,
-                        maxTokens: max_response_length,
-                    },
-                    received: {
-                        response: galadrielResponse?.slice(0, 200) + "...",
-                        responseType: typeof galadrielResponse,
-                        responseLength: galadrielResponse?.length,
-                    },
-                });
-
                 response = galadrielResponse;
                 elizaLogger.debug("Received response from Galadriel model.");
                 break;
@@ -766,24 +550,6 @@ export async function generateText({
                         undefined,
                     temperature: temperature,
                     maxTokens: max_response_length,
-                });
-
-                console.log("\n[LLM Debug]", {
-                    sent: {
-                        prompt: context.slice(0, 200) + "...",
-                        system:
-                            runtime.character.system ??
-                            settings.SYSTEM_PROMPT ??
-                            undefined,
-                        model,
-                        temperature,
-                        maxTokens: max_response_length,
-                    },
-                    received: {
-                        response: veniceResponse?.slice(0, 200) + "...",
-                        responseType: typeof veniceResponse,
-                        responseLength: veniceResponse?.length,
-                    },
                 });
 
                 response = veniceResponse;
