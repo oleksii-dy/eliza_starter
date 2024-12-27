@@ -937,11 +937,15 @@ Text: ${attachment.text}
             ]);
 
             // Check the existing memories in the database
+            console.time("existing-memories");
+            console.timeLog("existing-memories", rooms.filter((room) => room !== roomId));
             const existingMemories =
-                await this.messageManager.getMemoriesByRoomIds({
-                    // filter out the current room id from rooms
-                    roomIds: rooms.filter((room) => room !== roomId),
-                });
+            await this.messageManager.getMemoriesByRoomIds({
+                // filter out the current room id from rooms
+                roomIds: rooms.filter((room) => room !== roomId),
+            });
+            console.timeLog("existing-memories", existingMemories.length);
+            console.timeEnd("existing-memories");
 
             // Sort messages by timestamp in descending order
             existingMemories.sort((a, b) => b.createdAt - a.createdAt);
@@ -951,10 +955,12 @@ Text: ${attachment.text}
             return recentInteractionsData;
         };
 
+        console.time("get-recent=interactions")
         const recentInteractions =
-            userId !== this.agentId
-                ? await getRecentInteractions(userId, this.agentId)
-                : [];
+        userId !== this.agentId
+        ? await getRecentInteractions(userId, this.agentId)
+        : [];
+        console.timeEnd("get-recent=interactions")
 
         const getRecentMessageInteractions = async (
             recentInteractionsData: Memory[]
@@ -980,8 +986,10 @@ Text: ${attachment.text}
             return formattedInteractions.join("\n");
         };
 
+        console.time("getrecent-message-interactoins")
         const formattedMessageInteractions =
-            await getRecentMessageInteractions(recentInteractions);
+        await getRecentMessageInteractions(recentInteractions);
+        console.timeEnd("getrecent-message-interactoins")
 
         const getRecentPostInteractions = async (
             recentInteractionsData: Memory[],
@@ -996,10 +1004,12 @@ Text: ${attachment.text}
             return formattedInteractions;
         };
 
+        console.time('getrecent-post-interactions')
         const formattedPostInteractions = await getRecentPostInteractions(
             recentInteractions,
             actorsData
         );
+        console.timeEnd('getrecent-post-interactions')
 
         // if bio is a string, use it. if its an array, pick one at random
         let bio = this.character.bio || "";
@@ -1011,7 +1021,9 @@ Text: ${attachment.text}
                 .join(" ");
         }
 
+        console.time('knowledge-get')
         const knowledegeData = await knowledge.get(this, message);
+        console.timeEnd('knowledge-get')
 
         const formattedKnowledge = formatKnowledge(knowledegeData);
 
@@ -1159,6 +1171,7 @@ Text: ${attachment.text}
             ...additionalKeys,
         } as State;
 
+        console.time("action-validations")
         const actionPromises = this.actions.map(async (action: Action) => {
             const result = await action.validate(this, message, initialState);
             if (result) {
@@ -1166,7 +1179,9 @@ Text: ${attachment.text}
             }
             return null;
         });
+        console.timeEnd("action-validations")
 
+        console.time("evaluation-validations")
         const evaluatorPromises = this.evaluators.map(async (evaluator) => {
             const result = await evaluator.validate(
                 this,
@@ -1178,13 +1193,16 @@ Text: ${attachment.text}
             }
             return null;
         });
+        console.timeEnd("evaluation-validations")
 
+        console.time("actionevaluators-resolution")
         const [resolvedEvaluators, resolvedActions, providers] =
-            await Promise.all([
-                Promise.all(evaluatorPromises),
-                Promise.all(actionPromises),
-                getProviders(this, message, initialState),
-            ]);
+        await Promise.all([
+            Promise.all(evaluatorPromises),
+            Promise.all(actionPromises),
+            getProviders(this, message, initialState),
+        ]);
+        console.timeEnd("actionevaluators-resolution")
 
         const evaluatorsData = resolvedEvaluators.filter(
             Boolean
