@@ -1,6 +1,6 @@
 node_modules
 /out
-
+pnpm-lock.yaml
 .env
 .env.production
 .env.local
@@ -8,9 +8,8 @@ node_modules
 concatenated-output.ts
 embedding-cache.json
 packages/plugin-buttplug/intiface-engine
-
 .DS_Store
-
+shawdocs/
 dist/
 # Allow models directory but ignore model files
 models/*.gguf
@@ -38,8 +37,8 @@ timeline_cache.json
 
 *.sqlite
 
-characters/
-
+characters/*
+!characters/shaiw.character.json
 packages/core/src/providers/cache
 packages/core/src/providers/cache/*
 cache/*
@@ -56,3 +55,4 @@ coverage
 agent/content
 agent/.turbo
 .env.copy
+pnpm-lock.yaml
