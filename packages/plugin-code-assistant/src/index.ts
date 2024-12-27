@@ -1,10 +1,11 @@
 import { Plugin } from "@elizaos/core";
 import { codeAssistantAction } from "./actions/codeAssistant";
+import { githubAction } from "./actions/githubActions";
 
 const codeAssistantPlugin: Plugin = {
     name: "codeAssistant",
     description: "Development assistance and documentation search",
-    actions: [codeAssistantAction],
+    actions: [codeAssistantAction, githubAction],
     evaluators: [],
     providers: [],
 };

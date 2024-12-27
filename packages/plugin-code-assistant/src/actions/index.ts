@@ -1,2 +1,3 @@
-export * from "./none.ts";
-export * from "./codeAssistant.ts";
+export * from "./none";
+export * from "./codeAssistant";
+export * from "./githubActions";
