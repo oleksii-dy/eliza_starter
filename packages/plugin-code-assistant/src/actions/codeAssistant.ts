@@ -45,13 +45,14 @@ export const codeAssistantAction: Action = {
                     skipKnowledge: true,
                 };
                 // Forward to GitHub handler
-                return await githubAction.handler(
+                await githubAction.handler(
                     runtime,
                     message,
                     state,
                     options,
                     callback
                 );
+                return true;
             }
         } catch (error) {
             elizaLogger.error(`Handler failed for ${requestId}:`, error);
@@ -184,4 +185,3 @@ export const codeAssistantAction: Action = {
         ],
     ] as ActionExample[][],
 } as Action;
-

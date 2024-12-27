@@ -1,6 +1,28 @@
-import { Plugin } from "@elizaos/core";
+import {
+    elizaLogger,
+    Plugin,
+    IAgentRuntime,
+    Service,
+    ServiceType,
+} from "@elizaos/core";
 import { codeAssistantAction } from "./actions/codeAssistant";
-import { githubAction } from "./actions/githubActions";
+import { githubAction, crawlDocumentation } from "./actions/githubActions";
+
+class DocumentationService extends Service {
+    static override serviceType = ServiceType.BROWSER;
+
+    async initialize(runtime: IAgentRuntime) {
+        try {
+            elizaLogger.log("Initializing documentation crawler...");
+            await crawlDocumentation(runtime);
+        } catch (error) {
+            elizaLogger.error(
+                "Failed to initialize documentation crawler:",
+                error
+            );
+        }
+    }
+}
 
 const codeAssistantPlugin: Plugin = {
     name: "codeAssistant",
@@ -8,8 +30,8 @@ const codeAssistantPlugin: Plugin = {
     actions: [codeAssistantAction, githubAction],
     evaluators: [],
     providers: [],
+    services: [new DocumentationService()],
 };
 
-// Export both default and named export to ensure compatibility
 export default codeAssistantPlugin;
 export { codeAssistantPlugin };

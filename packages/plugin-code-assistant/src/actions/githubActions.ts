@@ -8,120 +8,121 @@ import {
     type Action,
     State,
     ActionExample,
+    stringToUuid,
+    getEmbeddingZeroVector,
+    embed,
 } from "@elizaos/core";
 import { Octokit } from "@octokit/rest";
 
-class KnowledgeManager {
-    private knowledge: KnowledgeBase = {
-        discord: [],
-        github: { issues: [], contributors: [] },
-        documentation: new Map(),
-    };
-
-    private async fetchGithubApi(endpoint: string): Promise<any> {
-        try {
-            const baseUrl = endpoint.startsWith("/search")
-                ? "https://api.github.com"
-                : "https://api.github.com/repos/ai16z/eliza";
-
-            const url = `${baseUrl}${endpoint}`;
-            elizaLogger.log(`Fetching GitHub API: ${url}`);
-
-            const response = await fetch(url, {
-                headers: {
-                    Accept: "application/vnd.github.v3+json",
-                    "User-Agent": "eliza-code-assistant",
-                },
-            });
-            if (!response.ok) {
-                throw new Error(`GitHub API error: ${response.status}`);
-            }
-            const data = await response.json();
-            elizaLogger.log(
-                "GitHub API Response:"
-                //JSON.stringify(data, null, 2)
-            );
-            return data;
-        } catch (error) {
-            elizaLogger.error("Error fetching from GitHub API:", error);
-            return null;
-        }
-    }
-
-    async fetchDiscordKnowledge(): Promise<void> {
-        try {
-            const response = await fetch(
-                "https://ai16z.github.io/eliza/community/Discord/"
-            );
-            const data = await response.json();
-            this.knowledge.discord = data;
-            elizaLogger.log("Fetched Discord knowledge");
-        } catch (error) {
-            elizaLogger.error("Error fetching Discord knowledge:", error);
-        }
-    }
-
-    async searchIssues(query: string): Promise<GithubIssue[]> {
-        try {
-            const searchResults = await this.fetchGithubApi(
-                `/search/issues?q=repo:elizaos/eliza ${encodeURIComponent(query)}&per_page=5&sort=updated`
-            );
-
-            if (!searchResults || !searchResults.items) {
-                elizaLogger.error("Invalid search results from GitHub API");
-                return [];
-            }
-
-            return searchResults.items.map((item) => ({
-                title: item.title,
-                body: item.body || "",
-                labels: item.labels.map((label) =>
-                    typeof label === "string" ? label : label.name || ""
-                ),
-                state: item.state,
-                number: item.number,
-                html_url: item.html_url,
-                created_at: item.created_at,
-                updated_at: item.updated_at,
-            }));
-        } catch (error) {
-            elizaLogger.error("Error searching Github issues:", error);
-            return [];
-        }
-    }
-
-    async searchKnowledge(query: string): Promise<string[]> {
-        const results: string[] = [];
-
-        // Search Github issues first for better relevance
-        const githubIssues = await this.searchIssues(query);
-        if (githubIssues.length > 0) {
-            const relevantIssues = githubIssues.map(
-                (issue) =>
-                    `GitHub Issue #${issue.number}: [${issue.title}](${issue.html_url})\n` +
-                    `Status: ${issue.state}\n` +
-                    `Last updated: ${new Date(issue.updated_at).toLocaleDateString()}\n`
-            );
-            results.push(...relevantIssues);
-        }
-
-        // Search Discord messages
-        const relevantMessages = this.knowledge.discord
-            .filter((msg) =>
-                msg.content.toLowerCase().includes(query.toLowerCase())
-            )
-            .map(
-                (msg) =>
-                    `Discord: ${msg.content} (Solution: ${msg.solution || "N/A"})`
-            );
-
-        results.push(...relevantMessages);
-
-        return results;
-    }
+// Helper function for text preprocessing
+function preprocess(text: string): string {
+    return text
+        .replace(/```[\s\S]*?```/g, "") // Remove code blocks
+        .replace(/\[.*?\]/g, "") // Remove markdown links
+        .replace(/[^\w\s]/g, " ") // Replace punctuation with spaces
+        .replace(/\s+/g, " ") // Normalize whitespace
+        .trim();
 }
 
-const knowledgeManager = new KnowledgeManager();
+export async function crawlDocumentation(runtime: IAgentRuntime) {
+    const baseUrl = "https://elizaos.github.io/eliza/docs/intro/";
+    const urlsToVisit = new Set([baseUrl]);
+    const visitedUrls = new Set<string>();
+    elizaLogger.log(`Starting documentation crawl from ${baseUrl}`);
+
+    while (urlsToVisit.size > 0) {
+        const url = urlsToVisit.values().next().value;
+        urlsToVisit.delete(url);
+
+        if (visitedUrls.has(url)) {
+            elizaLogger.log(`Skipping already visited URL: ${url}`);
+            continue;
+        }
+
+        visitedUrls.add(url);
+        elizaLogger.log(`Crawling page: ${url}`);
+
+        try {
+            const response = await fetch(url);
+            const html = await response.text();
+            const mainContent = html
+                .replace(
+                    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+                    ""
+                )
+                .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
+                .replace(/<[^>]+>/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+
+            // Create document memory with URL
+            const docId = stringToUuid(url);
+            await runtime.documentsManager.createMemory({
+                id: docId,
+                agentId: runtime.agentId,
+                roomId: runtime.agentId,
+                userId: runtime.agentId,
+                createdAt: Date.now(),
+                content: {
+                    text: mainContent,
+                    source: "documentation",
+                    url: url,
+                },
+                embedding: getEmbeddingZeroVector(),
+            });
+
+            // Split into chunks and create vector embeddings
+            const preprocessed = preprocess(mainContent);
+            const fragments = await splitChunks(preprocessed, 512, 20);
+
+            for (const fragment of fragments) {
+                const embedding = await embed(runtime, fragment);
+                await runtime.knowledgeManager.createMemory({
+                    id: stringToUuid(docId + fragment),
+                    roomId: runtime.agentId,
+                    agentId: runtime.agentId,
+                    userId: runtime.agentId,
+                    createdAt: Date.now(),
+                    content: {
+                        source: docId,
+                        text: fragment,
+                        url: url,
+                    },
+                    embedding,
+                });
+            }
+
+            // Extract and add new links to visit
+            const linkMatches =
+                html.match(/href="(\/eliza\/docs\/[^"]+)"/g) || [];
+            linkMatches
+                .map((match) => {
+                    const path = match.match(/href="([^"]+)"/)?.[1];
+                    if (!path) return null;
+                    return new URL(
+                        path,
+                        "https://elizaos.github.io"
+                    ).toString();
+                })
+                .filter(
+                    (link): link is string =>
+                        link !== null &&
+                        link.startsWith(
+                            "https://elizaos.github.io/eliza/docs/"
+                        ) &&
+                        !link.includes("#") && // Exclude anchor links
+                        !visitedUrls.has(link) // Don't add already visited URLs
+                )
+                .forEach((link) => urlsToVisit.add(link));
+        } catch (error) {
+            elizaLogger.error(`Error crawling ${url}:`, error);
+        }
+    }
+
+    elizaLogger.log(
+        `Documentation crawl completed. Visited ${visitedUrls.size} pages.`
+    );
+}
 
 // Initialize Octokit without auth for public repo access
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
@@ -413,7 +414,7 @@ Respond with ONLY a JSON object in this format:
     "action": "CODE_ASSISTANT"
 }
 
-Provide a clear, informative summary that captures the main points. Format exactly as shown above.`;
+If knowledge sources contain URLs, include them in the references section. Format exactly as shown above.`;
 
 // Modified handler with better flow control
 export const githubAction: Action = {

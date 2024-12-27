@@ -10,9 +10,9 @@ async function get(
     message: Memory
 ): Promise<KnowledgeItem[]> {
     // Skip knowledge search if flag is set
-    if (message?.metadata?.skipKnowledge) {
-        elizaLogger.debug(
-            "Skipping knowledge search due to skipKnowledge flag"
+    if (message?.metadata?.skipKnowledge === true) {
+        await elizaLogger.debug(
+            "***Skipping knowledge search due to skipKnowledge flag"
         );
         return [];
     }
