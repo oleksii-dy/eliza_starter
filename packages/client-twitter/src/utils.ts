@@ -177,7 +177,6 @@ export async function sendTweet(
     const sentTweets: Tweet[] = [];
     let previousTweetId = inReplyTo;
 
-    elizaLogger.info("==start sendTweet:", inReplyText);
     for (const chunk of tweetChunks) {
         let result: Response;
         const keywords = ["image", "img", "picture"];
@@ -185,18 +184,29 @@ export async function sendTweet(
             inReplyText &&
             keywords.some(keyword => inReplyText.includes(keyword))
         ) {
-            elizaLogger.info("===start genImage:", content.text);
-            const apiKey = this.runtime.getSetting("HEURIST_API_KEY");
-            const imageData = await genImage(apiKey,content.text);
-            elizaLogger.info("==end genImage:", imageData);
+            try {
+                elizaLogger.info("===start genImage:", content.text);
+                const apiKey = this.runtime.getSetting("HEURIST_API_KEY");
+                const imageData = await genImage(apiKey, content.text);
+                elizaLogger.info("==end genImage:", imageData);
 
-            if (imageData) {
+                if (imageData) {
+                    result = await client.requestQueue.add(
+                        async () =>
+                            await client.twitterClient.sendTweet(
+                                chunk.trim(),
+                                previousTweetId,
+                                imageData
+                            )
+                    );
+                }
+            }catch (e) {
+                elizaLogger.error("Error genImage:", e);
                 result = await client.requestQueue.add(
                     async () =>
                         await client.twitterClient.sendTweet(
                             chunk.trim(),
-                            previousTweetId,
-                            imageData
+                            previousTweetId
                         )
                 );
             }
@@ -355,12 +365,12 @@ function splitParagraph(paragraph: string, maxLength: number): string[] {
 
 export async function genImage(heuristApiKey: string,strPrompt: string): Promise<any> {
     const heurist = new Heurist({
-        apiKey: heuristApiKey, // 默认值，可以省略
+        apiKey: heuristApiKey,
     });
 
     try {
         const heuristResponse = await heurist.images.generate({
-            model: "SDXL",
+            model: "SDXLUnstableDiffusersV11",
             prompt: strPrompt,
             neg_prompt: "worst quality",
             num_iterations: 25,
@@ -375,12 +385,12 @@ export async function genImage(heuristApiKey: string,strPrompt: string): Promise
         if (heuristResponse.url) {
             const imageUrl = heuristResponse.url;
 
-            // 从 URL 下载图像
+            // Download an image from a URL.
             const axiosResponse = await axios.get(imageUrl, {
                 responseType: "arraybuffer",
             });
 
-            // 转换为媒体数据
+            // Convert to media data.
             const mediaData = [
                 {
                     data: Buffer.from(axiosResponse.data),
@@ -394,6 +404,6 @@ export async function genImage(heuristApiKey: string,strPrompt: string): Promise
         }
     } catch (error) {
         elizaLogger.error("Error generating image:", error);
-        throw error; // 抛出错误以便调用者处理
+        throw error;
     }
 }
