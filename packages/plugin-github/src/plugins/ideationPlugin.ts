@@ -18,8 +18,19 @@ import fs from "fs/promises";
 
 export const ideationAction: Action = {
     name: "IDEATION",
-    similes: ["THINK","IDEATE", "IDEAS", "IDEATION", "CO_CREATION", "BRAINSTORM", "THOUGHTS", "SUGGESTIONS", "THINKING"],
-    description: "Generates ideas and suggestions based on user message using the context of the files and previous messages",
+    similes: [
+        "THINK",
+        "IDEATE",
+        "IDEAS",
+        "IDEATION",
+        "CO_CREATION",
+        "BRAINSTORM",
+        "THOUGHTS",
+        "SUGGESTIONS",
+        "THINKING",
+    ],
+    description:
+        "Generates ideas and suggestions based on user message using the context of the files and previous messages",
     validate: async (runtime: IAgentRuntime) => {
         const token = !!runtime.getSetting("GITHUB_API_TOKEN");
         const repo = !!runtime.getSetting("GITHUB_REPO");
@@ -51,7 +62,7 @@ export const ideationAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: IdeationSchema,
         });
 
@@ -67,7 +78,9 @@ export const ideationAction: Action = {
         const roomId = getRepositoryRoomId(runtime);
         const timestamp = Date.now();
         const userIdUUID = stringToUuid(`${runtime.agentId}-${timestamp}`);
-        const memoryUUID = stringToUuid(`${roomId}-${runtime.agentId}-${timestamp}`);
+        const memoryUUID = stringToUuid(
+            `${roomId}-${runtime.agentId}-${timestamp}`
+        );
 
         const newMemory: Memory = {
             id: memoryUUID,
@@ -77,7 +90,7 @@ export const ideationAction: Action = {
                 text: content.response,
                 action: "IDEATION",
                 source: "github",
-                inReplyTo: stringToUuid(`${roomId}-${runtime.agentId}`)
+                inReplyTo: stringToUuid(`${roomId}-${runtime.agentId}`),
             },
             roomId,
             createdAt: timestamp,

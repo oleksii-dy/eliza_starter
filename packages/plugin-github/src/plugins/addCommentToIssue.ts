@@ -18,7 +18,10 @@ import {
     isAddCommentToIssueContent,
     isGenerateCommentForASpecificPRSchema,
 } from "../types";
-import { addCommentToIssueTemplate, generateCommentForASpecificIssueTemplate } from "../templates";
+import {
+    addCommentToIssueTemplate,
+    generateCommentForASpecificIssueTemplate,
+} from "../templates";
 import { getIssueFromMemories, incorporateRepositoryState } from "../utils";
 import fs from "fs/promises";
 
@@ -42,13 +45,21 @@ export const addCommentToIssueAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log("[addCommentToIssue] Composing state for message:", message);
+        elizaLogger.log(
+            "[addCommentToIssue] Composing state for message:",
+            message
+        );
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        const updatedState = await incorporateRepositoryState(state, runtime, message, []);
+        const updatedState = await incorporateRepositoryState(
+            state,
+            runtime,
+            message,
+            []
+        );
         elizaLogger.info("State:", updatedState);
 
         const context = composeContext({
@@ -61,7 +72,7 @@ export const addCommentToIssueAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: AddCommentToIssueSchema,
         });
 
@@ -89,10 +100,14 @@ export const addCommentToIssueAction: Action = {
                 state: issueData.state,
                 created_at: issueData.created_at,
                 updated_at: issueData.updated_at,
-                comments: await githubService.getIssueCommentsText(issueData.comments_url),
-                labels: issueData.labels.map((label: any) => (typeof label === 'string' ? label : label?.name)),
+                comments: await githubService.getIssueCommentsText(
+                    issueData.comments_url
+                ),
+                labels: issueData.labels.map((label: any) =>
+                    typeof label === "string" ? label : label?.name
+                ),
                 body: issueData.body,
-            }
+            };
             updatedState.specificIssue = JSON.stringify(issueDetails);
         } else {
             updatedState.specificIssue = JSON.stringify(issue.content);
@@ -105,12 +120,15 @@ export const addCommentToIssueAction: Action = {
         const commentDetails = await generateObject({
             runtime,
             context: commentContext,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: GenerateCommentForASpecificPRSchema,
         });
 
         if (!isGenerateCommentForASpecificPRSchema(commentDetails.object)) {
-            elizaLogger.error("Invalid comment content:", commentDetails.object);
+            elizaLogger.error(
+                "Invalid comment content:",
+                commentDetails.object
+            );
             throw new Error("Invalid comment content");
         }
 
