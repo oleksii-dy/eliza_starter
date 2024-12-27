@@ -769,6 +769,8 @@ export type Character = {
             teamAgentIds?: string[];
             teamLeaderId?: string;
             teamMemberInterestKeywords?: string[];
+            disableParseMode?: boolean;
+            parseMode?: "Markdown" | "MarkdownV2" | "HTML";
         };
         slack?: {
             shouldIgnoreBotMessages?: boolean;

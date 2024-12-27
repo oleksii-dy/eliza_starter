@@ -372,6 +372,14 @@ Optional client-specific config
 
 > `optional` **teamMemberInterestKeywords**: `string`[]
 
+### clientConfig.telegram.disableParseMode?
+
+> `optional` **disableParseMode**: `boolean`
+
+### clientConfig.telegram.parseMode?
+
+> `optional` **parseMode**: `"Markdown" | "MarkdownV2" | "HTML"`
+
 ### clientConfig.slack?
 
 > `optional` **slack**: `object`
