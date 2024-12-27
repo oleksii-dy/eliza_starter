@@ -60,7 +60,7 @@
         "Focus on official Eliza documentation and GitHub resources",
         "Encourage best practices and contribution guidelines"
     ],
-    "knowledge": ["docs/", "CONTRIBUTING.md", "README.md"],
+    "knowledge": ["docs/*", "CONTRIBUTING.md", "README.md"],
     "examples": [
         [
             {

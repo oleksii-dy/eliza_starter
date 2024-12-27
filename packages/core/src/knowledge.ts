@@ -9,6 +9,14 @@ async function get(
     runtime: AgentRuntime,
     message: Memory
 ): Promise<KnowledgeItem[]> {
+    // Skip knowledge search if flag is set
+    if (message?.metadata?.skipKnowledge) {
+        elizaLogger.debug(
+            "Skipping knowledge search due to skipKnowledge flag"
+        );
+        return [];
+    }
+
     // Add validation for message
     if (!message?.content?.text) {
         elizaLogger.warn("Invalid message for knowledge query:", {

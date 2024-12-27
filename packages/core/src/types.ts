@@ -355,6 +355,9 @@ export interface Memory {
 
     /** Embedding similarity score */
     similarity?: number;
+
+    /** Optional metadata */
+    metadata?: { [key: string]: any };
 }
 
 /**
