@@ -18,12 +18,24 @@ import {
     CreateIssueSchema,
     isCreateIssueContent,
 } from "../types";
-import { getIssuesFromMemories, getFilesFromMemories, incorporateRepositoryState } from "../utils";
+import {
+    getIssuesFromMemories,
+    getFilesFromMemories,
+    incorporateRepositoryState,
+} from "../utils";
 import { RestEndpointMethodTypes } from "@octokit/rest";
 
-export async function saveIssueToMemory(runtime: IAgentRuntime, issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"], owner: string, repo: string): Promise<void> {
-    const roomId = stringToUuid(`github-${owner}-${repo}`);
-    const issueId = stringToUuid(`${roomId}-${runtime.agentId}-issue-${issue.number}`);
+export async function saveIssueToMemory(
+    runtime: IAgentRuntime,
+    issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"],
+    owner: string,
+    repo: string,
+    branch: string
+): Promise<void> {
+    const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
+    const issueId = stringToUuid(
+        `${roomId}-${runtime.agentId}-issue-${issue.number}`
+    );
     const issueMemory: Memory = {
         id: issueId,
         userId: runtime.agentId,
@@ -41,7 +53,9 @@ export async function saveIssueToMemory(runtime: IAgentRuntime, issue: RestEndpo
                 created_at: issue.created_at,
                 updated_at: issue.updated_at,
                 comments: issue.comments,
-                labels: issue.labels.map((label: any) => (typeof label === 'string' ? label : label?.name)),
+                labels: issue.labels.map((label: any) =>
+                    typeof label === "string" ? label : label?.name
+                ),
                 body: issue.body,
             },
         },
@@ -50,7 +64,6 @@ export async function saveIssueToMemory(runtime: IAgentRuntime, issue: RestEndpo
 
     await runtime.messageManager.createMemory(issueMemory);
 }
-
 
 export const createIssueAction: Action = {
     name: "CREATE_ISSUE",
@@ -75,7 +88,12 @@ export const createIssueAction: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        const updatedState = await incorporateRepositoryState(state, runtime, message, []);
+        const updatedState = await incorporateRepositoryState(
+            state,
+            runtime,
+            message,
+            []
+        );
         elizaLogger.info("State:", updatedState);
 
         const context = composeContext({
@@ -87,7 +105,7 @@ export const createIssueAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: CreateIssueSchema,
         });
 
@@ -103,6 +121,7 @@ export const createIssueAction: Action = {
         const githubService = new GitHubService({
             owner: content.owner,
             repo: content.repo,
+            branch: content.branch,
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
 
@@ -117,7 +136,13 @@ export const createIssueAction: Action = {
                 `Created issue successfully! Issue number: ${issue.number}`
             );
 
-            await saveIssueToMemory(runtime, issue, content.owner, content.repo);
+            await saveIssueToMemory(
+                runtime,
+                issue,
+                content.owner,
+                content.repo,
+                content.branch
+            );
             if (callback) {
                 await callback({
                     text: `Created issue #${issue.number} successfully see: ${issue.html_url}`,

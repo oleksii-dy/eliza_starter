@@ -66,6 +66,7 @@ export const createMemoriesFromFilesTemplate = `
 Extract the details for creating memories from files in the GitHub repository:
 - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
 - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
 - **path** (string): The path to the files in the GitHub repository (e.g., "docs/")
 
 Provide the repository details in the following JSON format:
@@ -74,6 +75,7 @@ Provide the repository details in the following JSON format:
 {
     "owner": "<owner>",
     "repo": "<repo>",
+    "branch": "<branch>",
     "path": "<path>"
 }
 \`\`\`
@@ -162,10 +164,12 @@ Here are the recent user messages for context:
 {{recentMessages}}
 `;
 
-export const createIssueTemplate = createTemplate(`Create a new GitHub issue, ensure it is distinct from existing issues by comparing the title, body, and labels with previous issues, using a similarity threshold to determine if the issue should be created. Align the issue with the character's goals and the user's request to ensure its relevance and necessity.
+export const createIssueTemplate = createTemplate(
+    `Create a new GitHub issue, ensure it is distinct from existing issues by comparing the title, body, and labels with previous issues, using a similarity threshold to determine if the issue should be created. Align the issue with the character's goals and the user's request to ensure its relevance and necessity.
 Incorporate examples from the provided files to clarify the issue details. Generate the title, body, and labels based on the character's goals and the user's request, ensuring the owner and repository remain unchanged. Assign relevant labels as appropriate:
 - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
 - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
 - **title** (string): The title of the issue (e.g., "Add new documentation")
 - **body** (string): The body of the issue (e.g., "Add new documentation")
 - **labels** (array): The labels of the issue (optional)
@@ -225,7 +229,8 @@ If it is a feature request use:
 {{#each previousIssues}}
 - [Issue #{{this.number}}]({{this.url}})
 {{/each}}
-\`\`\``, `
+\`\`\``,
+    `
 \`\`\`json
 {
     "owner": "<owner>",
@@ -234,7 +239,8 @@ If it is a feature request use:
     "body": "<body>",
     "labels": ["<label1>", "<label2>"]
 }
-\`\`\``, `Examples of bug reports:
+\`\`\``,
+    `Examples of bug reports:
 
 1. Logging system not capturing error stack traces:
 
@@ -602,7 +608,8 @@ Would integrate with observability stack and help with:
     "labels": ["enhancement", "continuous improvement"]
 }
 \`\`\`
-`);
+`
+);
 
 export const modifyIssueTemplate = `
 Extract the details for modifying a GitHub issue and ensure the modifications align with the character's goals and the user's request:
@@ -634,6 +641,7 @@ Provide the issue details in the following JSON format:
 {
     "owner": "<owner>",
     "repo": "<repo>",
+    "branch": "<branch>",
     "issue_number": "<issue_number>",
     "title": "<title>",
     "body": "<body>",
@@ -650,6 +658,7 @@ export const addCommentToIssueTemplate = `
 Extract the details for adding a comment to a specific GitHub issue:
 - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
 - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
 - **issue_number** (number): The number of the issue to comment on (e.g., 1)
 
 ${contextTemplate}
@@ -657,6 +666,7 @@ ${contextTemplate}
 {
     "owner": "<owner>",
     "repo": "<repo>",
+    "branch": "<branch>",
     "issue_number": "<issue_number>"
 }
 \`\`\`
@@ -677,6 +687,7 @@ export const addCommentToPRTemplate = `
 Extract the details for a specific GitHub pull request:
 - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
 - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
 - **pullRequest** (number): The number of the pull request (e.g., 1)
 
 Here is the specific pull request: {{specificPullRequest}}
@@ -685,6 +696,7 @@ ${contextTemplate}
 {
     "owner": "<owner>",
     "repo": "<repo>",
+    "branch": "<branch>",
     "pullRequest": "<pullRequest>"
 }
 \`\`\`
@@ -701,12 +713,15 @@ ${contextTemplate}
 \`\`\`
 `;
 
-export const ideationTemplate = createTemplate(`Based on the current context and the user's message, generate a thoughtful response that addresses the query and provides valuable insights. Consider the following categories for inspiration:
-`, `\`\`\`json
+export const ideationTemplate = createTemplate(
+    `Based on the current context and the user's message, generate a thoughtful response that addresses the query and provides valuable insights. Consider the following categories for inspiration:
+`,
+    `\`\`\`json
 {
     "response": "<Your insightful response here>"
 }
-\`\`\``, `examples:
+\`\`\``,
+    `examples:
 [
     {
         user: "{{user}}",
@@ -913,4 +928,5 @@ export const ideationTemplate = createTemplate(`Based on the current context and
         },
     },
 ]
-`);
+`
+);

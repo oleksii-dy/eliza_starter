@@ -26,12 +26,14 @@ export const isInitializeContent = (
 export const CreateMemoriesFromFilesSchema = z.object({
     owner: z.string().min(1, "GitHub owner is required"),
     repo: z.string().min(1, "GitHub repo is required"),
+    branch: z.string().min(1, "GitHub branch is required"),
     path: z.string().min(1, "GitHub path is required"),
 });
 
 export interface CreateMemoriesFromFilesContent {
     owner: string;
     repo: string;
+    branch: string;
     path: string;
 }
 
@@ -126,6 +128,7 @@ export const isFetchFilesContent = (
 export const CreateIssueSchema = z.object({
     owner: z.string().min(1, "GitHub owner is required"),
     repo: z.string().min(1, "GitHub repo is required"),
+    branch: z.string().min(1, "GitHub branch is required"),
     title: z.string().min(1, "Issue title is required"),
     body: z.string().min(1, "Issue body is required"),
     labels: z.array(z.string()).optional(),
@@ -134,6 +137,7 @@ export const CreateIssueSchema = z.object({
 export interface CreateIssueContent {
     owner: string;
     repo: string;
+    branch: string;
     title: string;
     body: string;
     labels?: string[];
@@ -152,6 +156,7 @@ export const isCreateIssueContent = (
 export const ModifyIssueSchema = z.object({
     owner: z.string().min(1, "GitHub owner is required"),
     repo: z.string().min(1, "GitHub repo is required"),
+    branch: z.string().min(1, "GitHub branch is required"),
     issue: z.number().min(1, "Issue number is required"),
     title: z.string().optional(),
     body: z.string().optional(),
@@ -162,6 +167,7 @@ export const ModifyIssueSchema = z.object({
 export interface ModifyIssueContent {
     owner: string;
     repo: string;
+    branch: string;
     issue: number;
     title?: string;
     body?: string;
@@ -182,12 +188,14 @@ export const isModifyIssueContent = (
 export const AddCommentToIssueSchema = z.object({
     owner: z.string().min(1, "GitHub owner is required"),
     repo: z.string().min(1, "GitHub repo is required"),
+    branch: z.string().min(1, "GitHub branch is required"),
     issue: z.number().min(1, "Issue number is required"),
 });
 
 export interface AddCommentToIssueContent {
     owner: string;
     repo: string;
+    branch: string;
     issue: number;
 }
 
@@ -216,12 +224,14 @@ export const isIdeationContent = (object: any): object is IdeationContent => {
 export const AddCommentToPRSchema = z.object({
     owner: z.string().min(1, "GitHub owner is required"),
     repo: z.string().min(1, "GitHub repo is required"),
+    branch: z.string().min(1, "GitHub branch is required"),
     pullRequest: z.number().min(1, "Pull request number is required"),
 });
 
 export interface AddCommentToPRContent {
     owner: string;
     repo: string;
+    branch: string;
     pullRequest: number;
 }
 
@@ -243,6 +253,8 @@ export interface GenerateCommentForASpecificPRSchema {
     comment: string;
 }
 
-export const isGenerateCommentForASpecificPRSchema = (object: any): object is GenerateCommentForASpecificPRSchema => {
+export const isGenerateCommentForASpecificPRSchema = (
+    object: any
+): object is GenerateCommentForASpecificPRSchema => {
     return GenerateCommentForASpecificPRSchema.safeParse(object).success;
 };

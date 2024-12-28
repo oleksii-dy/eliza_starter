@@ -5,6 +5,7 @@ interface GitHubConfig {
     owner: string;
     repo: string;
     auth: string;
+    branch?: string;
 }
 
 export class GitHubService {
@@ -22,6 +23,7 @@ export class GitHubService {
             const response = await this.octokit.repos.getContent({
                 owner: this.config.owner,
                 repo: this.config.repo,
+                branch: this.config.branch,
                 path,
             });
 
@@ -42,6 +44,7 @@ export class GitHubService {
             const response = await this.octokit.repos.getContent({
                 owner: this.config.owner,
                 repo: this.config.repo,
+                branch: this.config.branch,
                 path: testPath,
             });
 
@@ -68,6 +71,7 @@ export class GitHubService {
             const response = await this.octokit.actions.listRepoWorkflows({
                 owner: this.config.owner,
                 repo: this.config.repo,
+                branch: this.config.branch,
             });
 
             return response.data.workflows;
@@ -84,6 +88,7 @@ export class GitHubService {
                 owner: this.config.owner,
                 repo: this.config.repo,
                 path: docPath,
+                branch: this.config.branch,
             });
 
             if (Array.isArray(response.data)) {
@@ -112,6 +117,7 @@ export class GitHubService {
             const response = await this.octokit.repos.listReleases({
                 owner: this.config.owner,
                 repo: this.config.repo,
+                branch: this.config.branch,
             });
 
             return response.data;
@@ -128,6 +134,7 @@ export class GitHubService {
                 owner: this.config.owner,
                 repo: this.config.repo,
                 path: sourcePath,
+                branch: this.config.branch,
             });
 
             if (Array.isArray(response.data)) {
@@ -161,6 +168,7 @@ export class GitHubService {
                 title,
                 body,
                 labels,
+                branch: this.config.branch,
             });
 
             return response.data;
@@ -188,6 +196,7 @@ export class GitHubService {
                 repo: this.config.repo,
                 issue_number: issueNumber,
                 ...updates,
+                branch: this.config.branch,
             });
 
             return response.data;
@@ -210,6 +219,7 @@ export class GitHubService {
                 repo: this.config.repo,
                 issue_number: issueNumber,
                 body,
+                branch: this.config.branch,
             });
 
             return response.data;
@@ -228,6 +238,7 @@ export class GitHubService {
                 owner: this.config.owner,
                 repo: this.config.repo,
                 issue_number: issueNumber,
+                branch: this.config.branch,
             });
 
             return response.data;
@@ -238,41 +249,56 @@ export class GitHubService {
     }
 
     // Get all issues
-    async getIssues(): Promise<RestEndpointMethodTypes["issues"]["list"]["response"]["data"]> {
+    async getIssues(): Promise<
+        RestEndpointMethodTypes["issues"]["list"]["response"]["data"]
+    > {
         const response = await this.octokit.issues.listForRepo({
             owner: this.config.owner,
             repo: this.config.repo,
+            branch: this.config.branch,
         });
         return response.data;
     }
 
     // Get all pull requests
-    async getPullRequests(): Promise<RestEndpointMethodTypes["pulls"]["list"]["response"]["data"]> {
+    async getPullRequests(): Promise<
+        RestEndpointMethodTypes["pulls"]["list"]["response"]["data"]
+    > {
         const response = await this.octokit.pulls.list({
             owner: this.config.owner,
             repo: this.config.repo,
+            // branch: this.config.branch,
         });
         return response.data;
     }
 
     // Get a specific pull request
-    async getPullRequest(pullRequestNumber: number): Promise<RestEndpointMethodTypes["pulls"]["get"]["response"]["data"]> {
+    async getPullRequest(
+        pullRequestNumber: number
+    ): Promise<RestEndpointMethodTypes["pulls"]["get"]["response"]["data"]> {
         const response = await this.octokit.pulls.get({
             owner: this.config.owner,
             repo: this.config.repo,
             pull_number: pullRequestNumber,
+            branch: this.config.branch,
         });
         return response.data;
     }
 
-    async addPRComment(pullRequestNumber: number, comment: string): Promise<RestEndpointMethodTypes["pulls"]["createReview"]["response"]["data"]> {
+    async addPRComment(
+        pullRequestNumber: number,
+        comment: string
+    ): Promise<
+        RestEndpointMethodTypes["pulls"]["createReview"]["response"]["data"]
+    > {
         try {
             const response = await this.octokit.pulls.createReview({
                 owner: this.config.owner,
                 repo: this.config.repo,
                 pull_number: pullRequestNumber,
                 body: comment,
-                event: "COMMENT"
+                event: "COMMENT",
+                branch: this.config.branch,
                 // To add comments to specific files in the PR / specific lines
                 // comments: [
                 //     {
@@ -281,7 +307,7 @@ export class GitHubService {
                 //         commit_id: commitId,
                 //     }
                 // ]
-            })
+            });
             return response.data;
         } catch (error) {
             elizaLogger.error("Failed to add comment to pull request:", error);
@@ -289,14 +315,12 @@ export class GitHubService {
         }
     }
 
-     /**
+    /**
      * Fetch the diff from a PR.
      * @param diff_url The PR diff url
      * @returns The diff text of the PR
      */
-     public async getPRDiffText(
-        diffUrl: string
-    ): Promise<string> {
+    public async getPRDiffText(diffUrl: string): Promise<string> {
         try {
             const diffResponse = await this.octokit.request({
                 method: "GET",
@@ -304,6 +328,7 @@ export class GitHubService {
                 headers: {
                     accept: "application/vnd.github.v3.diff",
                 },
+                branch: this.config.branch,
             });
 
             return diffResponse.data as string;
@@ -318,9 +343,7 @@ export class GitHubService {
      * @param comments_url The PR comments url
      * @returns The comments text of the PR
      */
-    public async getPRCommentsText(
-        commentsUrl: string
-    ): Promise<string> {
+    public async getPRCommentsText(commentsUrl: string): Promise<string> {
         try {
             const commentsResponse = await this.octokit.request({
                 method: "GET",
@@ -328,6 +351,7 @@ export class GitHubService {
                 headers: {
                     accept: "application/vnd.github.v3+json",
                 },
+                branch: this.config.branch,
             });
 
             return commentsResponse.data as string;
@@ -342,9 +366,7 @@ export class GitHubService {
      * @param comments_url The issue comments url
      * @returns The comments text of the issue
      */
-    public async getIssueCommentsText(
-        commentsUrl: string
-    ): Promise<string> {
+    public async getIssueCommentsText(commentsUrl: string): Promise<string> {
         try {
             const commentsResponse = await this.octokit.request({
                 method: "GET",
@@ -352,6 +374,7 @@ export class GitHubService {
                 headers: {
                     accept: "application/vnd.github.v3+json",
                 },
+                branch: this.config.branch,
             });
 
             return commentsResponse.data as string;
