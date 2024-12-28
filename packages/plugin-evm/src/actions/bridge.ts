@@ -7,11 +7,6 @@ import {
     ModelClass,
 } from "@elizaos/core";
 import {
-    composeContext,
-    generateObjectDeprecated,
-    ModelClass,
-} from "@elizaos/core";
-import {
     createConfig,
     executeRoute,
     ExtendedChain,
