@@ -151,7 +151,9 @@ export class GitHubClient extends EventEmitter {
             originalState,
             this.runtime,
             originalMemory,
-            []
+            [],
+            true,
+            false
         );
         elizaLogger.log("Original state:", originalState);
 
@@ -303,7 +305,9 @@ export class GitHubClient extends EventEmitter {
             originalState,
             this.runtime,
             originalMemory,
-            []
+            [],
+            true,
+            false
         );
 
         //

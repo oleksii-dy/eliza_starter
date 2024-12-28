@@ -62,7 +62,9 @@ export const addCommentToPRAction: Action = {
             state,
             runtime,
             message,
-            []
+            [],
+            false,
+            true
         );
         elizaLogger.info("State:", updatedState);
 

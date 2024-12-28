@@ -334,11 +334,13 @@ export async function incorporateRepositoryState(
     state: State,
     runtime: IAgentRuntime,
     message: Memory,
-    relevantMemories: Memory[]
+    relevantMemories: Memory[],
+    isIssuesFlow: boolean,
+    isPullRequestsFlow: boolean
 ) {
-    const files = await getFilesFromMemories(runtime, message);
-    // add additional keys to state
-    state.files = files;
+    // const files = await getFilesFromMemories(runtime, message);
+    // // add additional keys to state
+    // state.files = files;
     // Doesn't exist in state but exists in character
     state.messageExamples = JSON.stringify(
         runtime.character?.messageExamples,
@@ -352,18 +354,18 @@ export async function incorporateRepositoryState(
     const sanitizedMemories = sanitizeMemories(relevantMemories);
     state.relevantMemories = JSON.stringify(sanitizedMemories, null, 2);
     // Doesn't exist in character or state but we want it in state
-    state.facts = JSON.stringify(
-        sanitizeMemories(
-            (await runtime.messageManager.getMemories({
-                roomId: message.roomId,
-            })).filter(
-                (memory) =>
-                    !["issue", "pull_request"].includes((memory.content.metadata as any)?.type)
-            )
-        ),
-        null,
-        2
-    );
+    // state.facts = JSON.stringify(
+    //     sanitizeMemories(
+    //         (await runtime.messageManager.getMemories({
+    //             roomId: message.roomId,
+    //         })).filter(
+    //             (memory) =>
+    //                 !["issue", "pull_request"].includes((memory.content.metadata as any)?.type)
+    //         )
+    //     ),
+    //     null,
+    //     2
+    // );
     // TODO:
     // We need to actually save goals, knowledge,facts, we only save memories for now
     // We need to dynamically update the goals, knoweldge, facts, bio, lore, we should add actions to update these and chain them to the OODA cycle
@@ -380,6 +382,7 @@ export async function incorporateRepositoryState(
         );
         throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
     }
+    if (isIssuesFlow) {
     const previousIssues = await getIssuesFromMemories(
         runtime,
         owner,
@@ -397,12 +400,15 @@ export async function incorporateRepositoryState(
         null,
         2
     );
-    const previousPRs = await getPullRequestsFromMemories(
-        runtime,
-        owner,
-        repository,
-        branch
-    );
+    }
+
+    if (isPullRequestsFlow) {
+        const previousPRs = await getPullRequestsFromMemories(
+            runtime,
+            owner,
+            repository,
+            branch
+        );
     state.previousPRs = JSON.stringify(
         previousPRs.map((pr) => ({
             title: pr.content.text,
@@ -413,9 +419,10 @@ export async function incorporateRepositoryState(
             diff: (pr.content.metadata as any).diff,
             comments: (pr.content.metadata as any).comments,
         })),
-        null,
-        2
-    );
+            null,
+            2
+        );
+    }
     return state;
 }
 

@@ -1,5 +1,13 @@
 import { contextTemplate } from "@elizaos/plugin-github";
 
+// TODO: Improve client prompt so it doesn't do the same action type over and over again Monil
+// Ideate make more useful Monil
+
+// TODO: Improve individual action prompts because Each action does not properly consider previous actions it took and keeps generating the same action content Camer
+// TODO: Have a way to prevent duplicates potentially hae separate llm post process to explicitly check for duplicates Caner
+// TODO: Make sure previous issues / pull requests from repo are considered Caner
+
+
 export const oodaTemplate = `
     ## Task Instructions:
     1. Systematically analyze the provided files.

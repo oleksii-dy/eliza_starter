@@ -51,7 +51,14 @@ export const ideationAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        state = await incorporateRepositoryState(state, runtime, message, []);
+        state = await incorporateRepositoryState(
+            state,
+            runtime,
+            message,
+            [],
+            true,
+            true
+        );
         const context = composeContext({
             state,
             template: ideationTemplate,

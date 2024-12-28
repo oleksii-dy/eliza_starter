@@ -92,7 +92,9 @@ export const createIssueAction: Action = {
             state,
             runtime,
             message,
-            []
+            [],
+            true,
+            false
         );
         elizaLogger.info("State:", updatedState);
 
