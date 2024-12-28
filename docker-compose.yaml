@@ -10,6 +10,7 @@ services:
             - tee:/app/packages/client-twitter/src/tweetcache
             - tee:/app/db.sqlite
         environment:
+            - OPENAI_API_URL=
             - OPENAI_API_KEY=
             - REDPILL_API_KEY=
             - ELEVENLABS_XI_API_KEY=
