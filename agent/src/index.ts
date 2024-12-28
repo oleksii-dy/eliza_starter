@@ -26,7 +26,6 @@ import {
     elizaLogger,
     FsCacheAdapter,
     IAgentRuntime,
-    ICacheManager,
     IDatabaseAdapter,
     IDatabaseCacheAdapter,
     ModelProviderName,
@@ -34,6 +33,8 @@ import {
     stringToUuid,
     validateCharacterConfig,
     CacheStore,
+    Client,
+    ICacheManager,
 } from "@elizaos/core";
 import { RedisClient } from "@elizaos/adapter-redis";
 import { zgPlugin } from "@elizaos/plugin-0g";
@@ -453,7 +454,11 @@ export async function initializeClients(
             if (plugin.clients) {
                 for (const client of plugin.clients) {
                     const startedClient = await client.start(runtime);
-                    clients[client.name] = startedClient; // Assuming client has a name property
+                    const clientType = determineClientType(client);
+                    elizaLogger.debug(
+                        `Initializing client of type: ${clientType}`
+                    );
+                    clients[clientType] = startedClient;
                 }
             }
         }
@@ -545,7 +550,8 @@ export async function createAgent(
             getSecret(character, "FAL_API_KEY") ||
             getSecret(character, "OPENAI_API_KEY") ||
             getSecret(character, "VENICE_API_KEY") ||
-            getSecret(character, "HEURIST_API_KEY")
+            getSecret(character, "HEURIST_API_KEY") ||
+            getSecret(character, "LIVEPEER_GATEWAY_URL")
                 ? imageGenerationPlugin
                 : null,
             getSecret(character, "FAL_API_KEY") ? ThreeDGenerationPlugin : null,
@@ -592,6 +598,10 @@ export async function createAgent(
             getSecret(character, "TON_PRIVATE_KEY") ? tonPlugin : null,
             getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
             getSecret(character, "STORY_PRIVATE_KEY") ? storyPlugin : null,
+            getSecret(character, "FUEL_PRIVATE_KEY") ? fuelPlugin : null,
+            getSecret(character, "AVALANCHE_PRIVATE_KEY")
+                ? avalanchePlugin
+                : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
