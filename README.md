@@ -120,6 +120,10 @@ You may need to install Sharp. If you see an error when starting up, try install
 pnpm install --include=optional sharp
 ```
 
+### Optional: install the Shaiw Developer Code Assistant
+
+[README.md](packages/plugin-code-assistant/README.md)
+
 ### Community & contact
 
 - [GitHub Issues](https://github.com/elizaos/eliza/issues). Best for: bugs you encounter using Eliza, and feature proposals.
