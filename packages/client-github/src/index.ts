@@ -71,11 +71,12 @@ export class GitHubClient extends EventEmitter {
 
     private startOodaLoop() {
         this.processOodaCycle();
-        // const interval = Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) || 300000; // Default to 5 minutes
-        // elizaLogger.log("Starting OODA loop with interval:", interval);
-        // setInterval(() => {
-        //     this.processOodaCycle();
-        // }, interval);
+        const interval =
+            Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) || 60000; // Default to 1 minute
+        elizaLogger.log("Starting OODA loop with interval:", interval);
+        setInterval(() => {
+            this.processOodaCycle();
+        }, interval);
     }
 
     private async processOodaCycle() {
