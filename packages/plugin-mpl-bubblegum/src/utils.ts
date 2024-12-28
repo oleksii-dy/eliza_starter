@@ -1,7 +1,7 @@
 import { IAgentRuntime } from "@elizaos/core";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
-import { DeriveKeyProvider, TEEMode } from "../../plugin-tee/dist";
+import { DeriveKeyProvider, TEEMode } from "@elizaos/plugin-tee";
 
 export interface KeypairResult {
     keypair?: Keypair;
