@@ -354,9 +354,12 @@ export async function incorporateRepositoryState(
     // Doesn't exist in character or state but we want it in state
     state.facts = JSON.stringify(
         sanitizeMemories(
-            await runtime.messageManager.getMemories({
+            (await runtime.messageManager.getMemories({
                 roomId: message.roomId,
-            })
+            })).filter(
+                (memory) =>
+                    !["issue", "pull_request"].includes((memory.content.metadata as any)?.type)
+            )
         ),
         null,
         2
