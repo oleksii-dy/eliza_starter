@@ -124,10 +124,7 @@ const imageGeneration: Action = {
         "MAKE_A",
     ],
     description: "Generate an image to go along with the message.",
-
-    /**
-     * Validates that required API keys are present for image generation
-     */
+    suppressInitialMessage: true,
     validate: async (runtime: IAgentRuntime, _message: Memory) => {
         await validateImageGenConfig(runtime);
 
@@ -169,6 +166,8 @@ const imageGeneration: Action = {
             seed?: number;
             modelId?: string;
             jobId?: string;
+            stylePreset?: string;
+            hideWatermark?: boolean;
         },
         callback: HandlerCallback
     ) => {
@@ -195,13 +194,15 @@ const imageGeneration: Action = {
         const context = runtime.character.system ??
         settings.SYSTEM_PROMPT ?? imageGenerationPrompt + `\n\nHere is the user's message:\n<user_message> ${agentImagePrompt} </user_message>`;
 
-        // Generate the technical prompt for the image generation model
         const imagePrompt = await generateText({
             runtime,
             context,
             modelClass: ModelClass.SMALL,
         });
+        const imageSettings = runtime.character?.settings?.imageSettings || {};
+        elizaLogger.log("Image settings:", imageSettings);
 
+        // TODO: Generate a prompt for the image
         const res: { image: string; caption: string }[] = [];
 
         // Generate the actual image
@@ -209,23 +210,17 @@ const imageGeneration: Action = {
         const images = await generateImage(
             {
                 prompt: imagePrompt,
-                width: options.width || 1024,
-                height: options.height || 1024,
-                ...(options.count != null ? { count: options.count || 1 } : {}),
-                ...(options.negativePrompt != null
-                    ? { negativePrompt: options.negativePrompt }
-                    : {}),
-                ...(options.numIterations != null
-                    ? { numIterations: options.numIterations }
-                    : {}),
-                ...(options.guidanceScale != null
-                    ? { guidanceScale: options.guidanceScale }
-                    : {}),
-                ...(options.seed != null ? { seed: options.seed } : {}),
-                ...(options.modelId != null
-                    ? { modelId: options.modelId }
-                    : {}),
-                ...(options.jobId != null ? { jobId: options.jobId } : {}),
+                width: options.width || imageSettings.width || 1024,
+                height: options.height || imageSettings.height || 1024,
+                ...(options.count != null || imageSettings.count != null ? { count: options.count || imageSettings.count || 1 } : {}),
+                ...(options.negativePrompt != null || imageSettings.negativePrompt != null ? { negativePrompt: options.negativePrompt || imageSettings.negativePrompt } : {}),
+                ...(options.numIterations != null || imageSettings.numIterations != null ? { numIterations: options.numIterations || imageSettings.numIterations } : {}),
+                ...(options.guidanceScale != null || imageSettings.guidanceScale != null ? { guidanceScale: options.guidanceScale || imageSettings.guidanceScale } : {}),
+                ...(options.seed != null || imageSettings.seed != null ? { seed: options.seed || imageSettings.seed } : {}),
+                ...(options.modelId != null || imageSettings.modelId != null ? { modelId: options.modelId || imageSettings.modelId } : {}),
+                ...(options.jobId != null || imageSettings.jobId != null ? { jobId: options.jobId || imageSettings.jobId } : {}),
+                ...(options.stylePreset != null || imageSettings.stylePreset != null ? { stylePreset: options.stylePreset || imageSettings.stylePreset } : {}),
+                ...(options.hideWatermark != null || imageSettings.hideWatermark != null ? { hideWatermark: options.hideWatermark || imageSettings.hideWatermark } : {}),
             },
             runtime
         );

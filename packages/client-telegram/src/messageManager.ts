@@ -1,6 +1,7 @@
 import { Message } from "@telegraf/types";
 import { Context, Telegraf } from "telegraf";
-
+import { composeContext, elizaLogger, ServiceType, composeRandomUser } from "@elizaos/core";
+import { getEmbeddingZeroVector } from "@elizaos/core";
 import {
     composeContext,
     ServiceType,
@@ -664,7 +665,7 @@ export class MessageManager {
                     this.runtime.character.templates
                         ?.telegramShouldRespondTemplate ||
                     this.runtime.character?.templates?.shouldRespondTemplate ||
-                    telegramShouldRespondTemplate,
+                    composeRandomUser(telegramShouldRespondTemplate, 2),
             });
 
             const response = await generateShouldRespond({
