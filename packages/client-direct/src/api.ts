@@ -9,8 +9,9 @@ import {
 } from "@ai16z/eliza";
 
 import { REST, Routes } from "discord.js";
+import { DirectClient } from ".";
 
-export function createApiRouter(agents: Map<string, AgentRuntime>, directClient) {
+export function createApiRouter(agents: Map<string, AgentRuntime>, directClient: DirectClient) {
     const router = express.Router();
 
     router.use(cors());
@@ -52,7 +53,7 @@ export function createApiRouter(agents: Map<string, AgentRuntime>, directClient)
     router.post("/agents/:agentId/set", async (req, res) => {
         const agentId = req.params.agentId;
         console.log('agentId', agentId)
-        let agent:AgentRuntime = agents.get(agentId);
+        let agent: AgentRuntime = agents.get(agentId);
 
         // update character
         if (agent) {
@@ -65,14 +66,14 @@ export function createApiRouter(agents: Map<string, AgentRuntime>, directClient)
         // load character from body
         const character = req.body
         try {
-          validateCharacterConfig(character)
-        } catch(e) {
-          elizaLogger.error(`Error parsing character: ${e}`);
-          res.status(400).json({
-            success: false,
-            message: e.message,
-          });
-          return;
+            validateCharacterConfig(character)
+        } catch (e) {
+            elizaLogger.error(`Error parsing character: ${e}`);
+            res.status(400).json({
+                success: false,
+                message: e.message,
+            });
+            return;
         }
 
         // start it up (and register it)
@@ -84,7 +85,6 @@ export function createApiRouter(agents: Map<string, AgentRuntime>, directClient)
             character: character,
         });
     });
-
 
     router.get("/agents/:agentId/channels", async (req, res) => {
         const agentId = req.params.agentId;
