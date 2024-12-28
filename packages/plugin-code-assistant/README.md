@@ -20,34 +20,44 @@ This plugin provides code assistance functionality for Shaiw, alter ego of Shaw,
 
 ## Installation
 
-1. Adjust the `shaiw.character.json` in `characters` folder to your liking
+0. Setup the discord bot: [Discord guide here](https://discordjs.guide/preparations/setting-up-a-bot-application.html#creating-your-bot)
 
-2. update .env with your:
+1. Setup Discord bot intents, select app, then select bot menu on the left, then scroll down and enable:
+
+- Persistence Intent
+- Server Members Intent
+- Message Content Intent
+
+Hit save.
+
+2. Adjust the `shaiw.character.json` in `characters` folder to your liking
+
+3. update .env with your:
 
 - ANTHROPIC_API_KEY
 - GITHUB_TOKEN
 - DISCORD_APPLICATION_ID
 - DISCORD_API_TOKEN
 
-3. Standard install and build:
+4. Standard install and build:
 
 ```
 pnpm clean && pnpm install && pnpm build
 ```
 
-4. Run the plugin:
+5. Run the plugin:
 
 ```
 pnpm start --characters characters/shaiw.character.json
 ```
 
-5. Run the plugin (with new database)
+6. Run the plugin (with new database)
 
 ```
 pnpm cleanstart --characters characters/shaiw.character.json
 ```
 
-6. Run the plugin (with new database and in debug mode)
+7. Run the plugin (with new database and in debug mode)
 
 ```
 pnpm cleanstart:debug --characters characters/shaiw.character.json

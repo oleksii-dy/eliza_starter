@@ -9,7 +9,6 @@ import {
     State,
     ActionExample,
     stringToUuid,
-    getEmbeddingZeroVector,
     embed,
 } from "@elizaos/core";
 import { Octokit } from "@octokit/rest";
@@ -57,6 +56,13 @@ export async function crawlDocumentation(runtime: IAgentRuntime) {
 
             // Create document memory with URL
             const docId = stringToUuid(url);
+            const initialEmbedding = await embed(runtime, mainContent);
+            if (!initialEmbedding || initialEmbedding.length === 0) {
+                elizaLogger.warn(
+                    "Empty embedding generated, skipping memory creation"
+                );
+                return;
+            }
             await runtime.documentsManager.createMemory({
                 id: docId,
                 agentId: runtime.agentId,
@@ -68,7 +74,7 @@ export async function crawlDocumentation(runtime: IAgentRuntime) {
                     source: "documentation",
                     url: url,
                 },
-                embedding: getEmbeddingZeroVector(),
+                embedding: initialEmbedding,
             });
 
             // Split into chunks and create vector embeddings
@@ -131,7 +137,6 @@ const REPO_NAME = "eliza";
 
 // Increase timeout
 const TIMEOUT_MS = 30000; // 30 seconds timeout
-const MAX_RETRIES = 2;
 let type = "Issue";
 // Add request tracking helper
 class RequestTracker {
@@ -496,15 +501,36 @@ export const githubAction: Action = {
                     }
 
                     if (llmResponse?.text) {
+                        const responseText = llmResponse.text;
+                        const responseEmbedding = await embed(
+                            runtime,
+                            responseText
+                        );
+
+                        if (
+                            !responseEmbedding ||
+                            responseEmbedding.length === 0
+                        ) {
+                            elizaLogger.warn(
+                                "Empty response embedding generated, skipping memory creation"
+                            );
+                            callback({
+                                text: responseText,
+                                metadata: { requestId },
+                            });
+                            return;
+                        }
+
                         const responseMessage = {
                             content: {
-                                text: llmResponse.text,
+                                text: responseText,
                                 source: "github",
                                 attachments: [],
                             },
                             userId: runtime.agentId,
                             roomId: message.roomId,
                             agentId: runtime.agentId,
+                            embedding: responseEmbedding,
                         };
                         await runtime.messageManager.createMemory(
                             responseMessage
@@ -598,4 +624,5 @@ export const githubAction: Action = {
             },
         ],
     ] as ActionExample[][],
+
 } as Action;

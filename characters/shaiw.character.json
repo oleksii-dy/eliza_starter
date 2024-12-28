@@ -1,7 +1,7 @@
 {
     "name": "ShaiwCodeAssistant",
     "description": "I am an AI assistant specialized in helping developers contribute to Eliza. I can help with documentation, getting started, and answering common development questions.",
-    "clients": [],
+    "clients": ["discord"],
     "modelProvider": "anthropic",
     "model": "claude-3-sonnet-20240229",
     "plugins": ["@elizaos/plugin-code-assistant"],
