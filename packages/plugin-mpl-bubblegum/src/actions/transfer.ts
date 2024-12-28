@@ -109,7 +109,7 @@ export default {
                 agentKeypairAdapter
             );
 
-            const { signature, result } = await mplBubblegumProvider.transfer(
+            const { signature } = await mplBubblegumProvider.transfer(
                 content.assetId as PublicKey,
                 content.newLeafOwner as PublicKey
             );
@@ -158,6 +158,48 @@ export default {
                 user: "{{user2}}",
                 content: {
                     text: "Successfully sent BieefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8pump to 9jW8FPr6BSSsemWPV22UUCzSqkVdTp6HTyPqeqyuBbCa\nTransaction: 5KtPn3DXXzHkb7VAVHZGwXJQqww39ASnrf7YkyJoF2qAGEpBEEGvRHLnnTG8ZVwKqNHMqSckWVGnsQAgfH5pbxEb",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Send cNFT BieefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8pump to 9jW8FPr6BSSsemWPV22UUCzSqkVdTp6HTyPqeqyuBbCa",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "I'll send the cNFT BieefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8pump now...",
+                    action: "SEND_COMPRESSED_NFT",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Successfully sent cNFT BieefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8pump to 9jW8FPr6BSSsemWPV22UUCzSqkVdTp6HTyPqeqyuBbCa\nTransaction: 5KtPn3DXXzHkb7VAVHZGwXJQqww39ASnrf7YkyJoF2qAGEpBEEGvRHLnnTG8ZVwKqNHMqSckWVGnsQAgfH5pbxEb",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Please transfer the solana compressed NFT BieefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8pump to wallet address 9jW8FPr6BSSsemWPV22UUCzSqkVdTp6HTyPqeqyuBbCa",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "I'll send the cNFT BieefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8pump...",
+                    action: "SEND_COMPRESSED_NFT",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Transfer complete! The cNFT BieefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8pump has been sent to 9jW8FPr6BSSsemWPV22UUCzSqkVdTp6HTyPqeqyuBbCa\nTransaction: 5KtPn3DXXzHkb7VAVHZGwXJQqww39ASnrf7YkyJoF2qAGEpBEEGvRHLnnTG8ZVwKqNHMqSckWVGnsQAgfH5pbxEb",
                 },
             },
         ],
