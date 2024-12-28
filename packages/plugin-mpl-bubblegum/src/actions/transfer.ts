@@ -105,8 +105,8 @@ export default {
             const agentKeypairAdapter = fromWeb3JsKeypair(agentKeypair);
 
             const mplBubblegumProvider = new MplBubblegumProvider(
-                agentKeypairAdapter,
-                RPC_URL
+                RPC_URL,
+                agentKeypairAdapter
             );
 
             const { signature, result } = await mplBubblegumProvider.transfer(
