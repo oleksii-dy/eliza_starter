@@ -1,10 +1,18 @@
-import type { IAgentRuntime, Memory, State } from "@elizaos/core";
+import {
+    IAgentRuntime,
+    Memory,
+    State,
+    composeContext,
+    generateObjectDeprecated,
+    ModelClass,
+} from "@elizaos/core";
 import {
     createConfig,
     executeRoute,
     ExtendedChain,
     getRoutes,
 } from "@lifi/sdk";
+import { zeroAddress } from "viem";
 import { WalletProvider } from "../providers/wallet";
 import { swapTemplate } from "../templates";
 import type { SwapParams, Transaction } from "../types";
@@ -104,8 +112,26 @@ export const swapAction = {
                 "EVM_PRIVATE_KEY"
             ) as `0x${string}`;
             const walletProvider = new WalletProvider(privateKey);
+
+            const chains = Object.keys(walletProvider.chains);
+            const context = composeContext({
+                state,
+                template: swapTemplate,
+            });
+            const contextWithChains = context.replace(
+                "SUPPORTED_CHAINS",
+                chains.map((item) => `"${item}"`).join("|")
+            );
+
+            // Generate swap details object
+            const swapDetails = (await generateObjectDeprecated({
+                runtime,
+                context: contextWithChains,
+                modelClass: ModelClass.SMALL,
+            })) as SwapParams;
+
             const action = new SwapAction(walletProvider);
-            return await action.swap(options);
+            return await action.swap(swapDetails);
         } catch (error) {
             console.error("Error in swap handler:", error.message);
             if (callback) {

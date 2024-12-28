@@ -1,10 +1,18 @@
-import type { IAgentRuntime, Memory, State } from "@elizaos/core";
+import {
+    IAgentRuntime,
+    Memory,
+    State,
+    composeContext,
+    generateObjectDeprecated,
+    ModelClass,
+} from "@elizaos/core";
 import {
     createConfig,
     executeRoute,
     ExtendedChain,
     getRoutes,
 } from "@lifi/sdk";
+import { zeroAddress } from "viem";
 import { WalletProvider } from "../providers/wallet";
 import { bridgeTemplate } from "../templates";
 import type { BridgeParams, Transaction } from "../types";
@@ -52,8 +60,9 @@ export class BridgeAction {
             fromChainId: this.walletProvider.getChainConfigs(params.fromChain)
                 .id,
             toChainId: this.walletProvider.getChainConfigs(params.toChain).id,
-            fromTokenAddress: params.fromToken,
-            toTokenAddress: params.toToken,
+            // if user wants to bridge native token, setting fromToken to zero address
+            fromTokenAddress: params.fromToken ? params.fromToken : zeroAddress,
+            toTokenAddress: params.toToken ? params.toToken : zeroAddress,
             fromAmount: params.amount,
             fromAddress: fromAddress,
             toAddress: params.toAddress || fromAddress,
@@ -88,12 +97,29 @@ export const bridgeAction = {
         state: State,
         options: any
     ) => {
+        // Option is {} object
         const privateKey = runtime.getSetting(
             "EVM_PRIVATE_KEY"
         ) as `0x${string}`;
         const walletProvider = new WalletProvider(privateKey);
+        // Get all chains from walletProvider
+        const chains = Object.keys(walletProvider.chains);
+        const context = composeContext({
+            state,
+            template: bridgeTemplate,
+        });
+        const contextWithChains = context.replace(
+            "SUPPORTED_CHAINS",
+            chains.map((item) => `"${item}"`).join("|")
+        );
+        // Generate bridge details object
+        const bridgeDetails = (await generateObjectDeprecated({
+            runtime,
+            context: contextWithChains,
+            modelClass: ModelClass.SMALL,
+        })) as BridgeParams;
         const action = new BridgeAction(walletProvider);
-        return action.bridge(options);
+        return action.bridge(bridgeDetails);
     },
     template: bridgeTemplate,
     validate: async (runtime: IAgentRuntime) => {
