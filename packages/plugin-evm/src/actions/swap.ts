@@ -7,11 +7,6 @@ import {
     ModelClass,
 } from "@elizaos/core";
 import {
-    composeContext,
-    generateObjectDeprecated,
-    ModelClass,
-} from "@elizaos/core";
-import {
     createConfig,
     executeRoute,
     ExtendedChain,
@@ -113,27 +108,6 @@ export const swapAction = {
         callback?: any
     ) => {
         console.log("Swap action handler called");
-        const walletProvider = initWalletProvider(runtime);
-        const action = new SwapAction(walletProvider);
-
-        // Compose swap context
-        const swapContext = composeContext({
-            state,
-            template: swapTemplate,
-        });
-        const content = await generateObjectDeprecated({
-            runtime,
-            context: swapContext,
-            modelClass: ModelClass.LARGE,
-        });
-
-        const swapOptions: SwapParams = {
-            chain: content.chain,
-            fromToken: content.inputToken,
-            toToken: content.outputToken,
-            amount: content.amount,
-            slippage: content.slippage,
-        };
 
         try {
             const walletProvider = initWalletProvider(runtime);
@@ -149,11 +123,19 @@ export const swapAction = {
             );
 
             // Generate swap details object
-            const swapDetails = (await generateObjectDeprecated({
+            const content = (await generateObjectDeprecated({
                 runtime,
                 context: contextWithChains,
                 modelClass: ModelClass.SMALL,
             })) as SwapParams;
+
+            const swapOptions: SwapParams = {
+                chain: content.chain,
+                fromToken: content.fromToken,
+                toToken: content.toToken,
+                amount: content.amount,
+                slippage: content.slippage,
+            };
 
             const action = new SwapAction(walletProvider);
             const swapResp = await action.swap(swapOptions);
