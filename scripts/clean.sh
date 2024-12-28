@@ -7,7 +7,7 @@ echo "Cleanup started."
 find . -type d -name "node_modules" -exec rm -rf {} + \
     -o -type d -name "dist" -exec rm -rf {} +
 
-# Remove model cache
-rm -rf ./cache
+# Remove core cache
+rm -rf ./packages/core/cache
 
 echo "Cleanup completed."
