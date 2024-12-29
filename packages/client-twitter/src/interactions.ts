@@ -89,13 +89,19 @@ Thread of Tweets You Are Replying To:
 export class TwitterInteractionClient {
     client: ClientBase;
     runtime: IAgentRuntime;
+    running: boolean;
     constructor(client: ClientBase, runtime: IAgentRuntime) {
         this.client = client;
         this.runtime = runtime;
     }
 
+    stop() {
+        this.running = false;
+    }
+
     async start() {
         const handleTwitterInteractionsLoop = () => {
+            if (!this.running) { return }
             this.handleTwitterInteractions();
             setTimeout(
                 handleTwitterInteractionsLoop,

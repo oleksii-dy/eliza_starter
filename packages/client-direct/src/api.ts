@@ -22,10 +22,6 @@ export function createApiRouter(agents: Map<string, AgentRuntime>, directClient:
         res.send("Welcome, this is the REST API!");
     });
 
-    router.get("/hello", (req, res) => {
-        res.json({ message: "Hello World!" });
-    });
-
     router.get("/agents", (req, res) => {
         const agentsList = Array.from(agents.values()).map((agent) => ({
             id: agent.agentId,
@@ -50,7 +46,7 @@ export function createApiRouter(agents: Map<string, AgentRuntime>, directClient:
         });
     });
 
-    router.post("/agents/:agentId/set", async (req, res) => {
+    router.post("/agents/:agentId", async (req, res) => {
         const agentId = req.params.agentId;
         console.log('agentId', agentId)
         let agent: AgentRuntime = agents.get(agentId);
@@ -58,15 +54,17 @@ export function createApiRouter(agents: Map<string, AgentRuntime>, directClient:
         // update character
         if (agent) {
             // stop agent
-            agent.stop()
+            await agent.stop()
             directClient.unregisterAgent(agent)
             // if it has a different name, the agentId will change
         }
 
         // load character from body
         const character = req.body
+        elizaLogger.info(`char id: ${character.id}`);
         try {
-            validateCharacterConfig(character)
+            validateCharacterConfig(character);
+            elizaLogger.info(`char id: ${character.id}`);
         } catch (e) {
             elizaLogger.error(`Error parsing character: ${e}`);
             res.status(400).json({
@@ -78,11 +76,30 @@ export function createApiRouter(agents: Map<string, AgentRuntime>, directClient:
 
         // start it up (and register it)
         agent = await directClient.startAgent(character)
-        elizaLogger.log(`${character.name} started`)
+        elizaLogger.log(`${agentId} started`)
 
         res.json({
             id: character.id,
             character: character,
+        });
+    });
+
+    router.delete("/agents/:agentId", async (req, res) => {
+        const agentId = req.params.agentId;
+        console.log('agentId', agentId)
+        let agent: AgentRuntime = agents.get(agentId);
+
+        if (agent) {
+            await agent.stop()
+            directClient.unregisterAgent(agent)
+        } else {
+            res.status(400);
+            return;
+        }
+        elizaLogger.log(`${agentId} stopped`)
+
+        res.json({
+            id: agentId,
         });
     });
 

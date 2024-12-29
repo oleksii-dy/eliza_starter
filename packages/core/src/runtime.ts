@@ -46,6 +46,7 @@ import {
     type Memory,
 } from "./types.ts";
 import { stringToUuid } from "./uuid.ts";
+import { json } from "stream/consumers";
 
 /**
  * Represents the runtime environment for an agent, handling message processing,

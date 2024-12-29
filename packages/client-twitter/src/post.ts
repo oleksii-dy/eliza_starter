@@ -108,6 +108,7 @@ export class TwitterPostClient {
         }
 
         const generateNewTweetLoop = async () => {
+            if (this.stopProcessingActions) { return; }
             const lastPost = await this.runtime.cacheManager.get<{
                 timestamp: number;
             }>(
@@ -171,7 +172,6 @@ export class TwitterPostClient {
         if (postImmediately) {
             await this.generateNewTweet();
         }
-        generateNewTweetLoop();
 
         // Add check for ENABLE_ACTION_PROCESSING before starting the loop
         const enableActionProcessing = parseBooleanFromText(
