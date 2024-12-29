@@ -68,6 +68,8 @@ export * from "./providers/releases";
 export * from "./utils";
 export * from "./services/github";
 export * from "./templates";
+export * from "./types";
+export * from "./constants"
 
 export const githubPlugin: Plugin = {
     name: "github",

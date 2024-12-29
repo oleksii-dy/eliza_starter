@@ -7,7 +7,6 @@ import { contextTemplate } from "@elizaos/plugin-github";
 // TODO: Have a way to prevent duplicates potentially hae separate llm post process to explicitly check for duplicates Caner
 // TODO: Make sure previous issues / pull requests from repo are considered Caner
 
-
 export const oodaTemplate = `
     ## Task Instructions:
     1. Systematically analyze the provided files.
@@ -15,7 +14,60 @@ export const oodaTemplate = `
     3. Evaluate potential improvements against your objectives.
     4. Check existing records to avoid duplicate issues or pull requests.
     5. Select the most impactful action based on your analysis.
-    6. Format your response according to the schema below.
+    6. Ensure the action aligns with the project's goals and priorities.
+    7. Validate the action against the criteria provided.
+    8. Format your response according to the schema below.
+
+    Determine the appropriate action based on the following criteria:
+
+    1. CREATE_ISSUE:
+        - When a new bug, feature request, or task is identified that is not already tracked.
+        - Criteria:
+            - The issue is not a duplicate of an existing issue.
+            - The issue has a significant impact on the project.
+            - The issue can be clearly described with specific details and examples.
+
+    2. ADD_COMMENT_TO_ISSUE:
+        - When additional information or clarification is needed for an existing issue.
+        - Criteria:
+            - The comment provides valuable insights or updates.
+            - The comment helps in progressing the resolution of the issue.
+
+    3. ADD_COMMENT_TO_PR:
+        - When feedback or suggestions are needed for an open pull request.
+        - Criteria:
+            - The comment addresses specific lines of code or overall implementation.
+            - The comment is constructive and helps improve the pull request.
+
+    4. REACT_TO_ISSUE:
+        - When expressing agreement, disagreement, or other reactions to an issue.
+        - Criteria:
+            - The reaction is appropriate and adds value to the discussion.
+            - The reaction helps in gauging the community's sentiment.
+
+    5. REACT_TO_PR:
+        - When expressing agreement, disagreement, or other reactions to a pull request.
+        - Criteria:
+            - The reaction is appropriate and adds value to the discussion.
+            - The reaction helps in gauging the community's sentiment.
+
+    6. CLOSE_ISSUE:
+        - When an issue has been resolved or is no longer relevant.
+        - Criteria:
+            - The issue has been fixed, and the solution has been verified.
+            - The issue is a duplicate or no longer applicable.
+
+    7. CLOSE_PR:
+        - When a pull request is no longer needed or has been superseded.
+        - Criteria:
+            - The pull request has been merged or is no longer relevant.
+            - The pull request does not meet the project's standards or requirements.
+
+    8. NOTHING:
+        - When no action is needed.
+        - Criteria:
+            - The current state of the repository does not require any changes.
+            - The analysis does not reveal any new issues or improvements.
 
     Context:
     ${contextTemplate}
@@ -37,7 +89,10 @@ export const oodaTemplate = `
         ],
         "message": "Descriptive commit message (required for commits)",
         "labels": "Relevant labels (optional)",
-        "issue": "Issue number (required for issue operations)"
+        "issue": "Issue number (required for issue operations)",
+        "pullRequest": "Pull request number (required for PR operations)",
+        "reaction": "Reaction type (required for reaction operations)",
+        "event": "Event type, either OPEN or CLOSE (required for closing issues or PRs)"
     }
     \`\`\`
 
@@ -74,11 +129,83 @@ export const oodaTemplate = `
         "reasoning": "Providing constructive feedback on the changes proposed in the PR",
         "owner": "octocat",
         "repo": "hello-world",
-        "issue": 456,
+        "pullRequest": 456,
         "comment": "## Code Review Feedback\\n\\n### Strengths\\n- [Positive point 1]\\n- [Positive point 2]\\n\\n### Suggestions\\n- [Suggestion 1]\\n- [Suggestion 2]\\n\\nOverall: [Summary]"
     }
 
-    4. NOTHING:
+    4. CLOSE_ISSUE:
+    {
+        "action": "CLOSE_ISSUE",
+        "reasoning": "The issue has been resolved and verified.",
+        "owner": "octocat",
+        "repo": "hello-world",
+        "issue": 123,
+        "event": "CLOSE"
+    }
+    {
+        "action": "CLOSE_ISSUE",
+        "reasoning": "The issue is a duplicate of another issue.",
+        "owner": "octocat",
+        "repo": "hello-world",
+        "issue": 124,
+        "event": "CLOSE"
+    }
+    {
+        "action": "CLOSE_ISSUE",
+        "reasoning": "The issue was a duplicate and has been closed.",
+        "owner": "octocat",
+        "repo": "hello-world",
+        "issue": 125,
+        "event": "CLOSE"
+    }
+
+    5. CLOSE_PR:
+    {
+        "action": "CLOSE_PR",
+        "reasoning": "The pull request is no longer needed as the changes have been incorporated elsewhere.",
+        "owner": "octocat",
+        "repo": "hello-world",
+        "pullRequest": 456,
+        "event": "CLOSE"
+    }
+    {
+        "action": "CLOSE_PR",
+        "reasoning": "The pull request is a duplicate of another pull request.",
+        "owner": "octocat",
+        "repo": "hello-world",
+        "pullRequest": 457,
+        "event": "CLOSE"
+    }
+    {
+        "action": "CLOSE_PR",
+        "reasoning": "The pull request was opened by mistake and is a duplicate.",
+        "owner": "octocat",
+        "repo": "hello-world",
+        "pullRequest": 458,
+        "event": "CLOSE"
+    }
+
+    6. REACT_TO_ISSUE:
+    {
+        "action": "REACT_TO_ISSUE",
+        "reasoning": "Expressing agreement with the issue's importance.",
+        "owner": "octocat",
+        "repo": "hello-world",
+        "issue": 123,
+        "reaction": "+1"
+    }
+
+    7. REACT_TO_PR:
+    {
+        "action": "REACT_TO_PR",
+        "reasoning": "Acknowledging the effort put into the pull request.",
+        "owner": "octocat",
+        "repo": "hello-world",
+        "pullRequest": 456,
+        "reaction": "heart"
+    }
+
+    8. NOTHING:
     {
         "action": "NOTHING",
         "reasoning": "No action is needed because all open PRs have been commented on or there are no open PRs."

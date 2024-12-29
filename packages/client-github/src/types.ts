@@ -1,3 +1,4 @@
+import { githubReactions } from "@elizaos/plugin-github";
 import { z } from "zod";
 
 export const OODASchema = z.object({
@@ -6,9 +7,10 @@ export const OODASchema = z.object({
         "NOTHING",
         "ADD_COMMENT_TO_ISSUE",
         "ADD_COMMENT_TO_PR",
-        // "INITIALIZE_REPOSITORY",
-        // "CREATE_MEMORIES_FROM_FILES",
-        // "IDEATE",
+        "REACT_TO_ISSUE",
+        "REACT_TO_PR",
+        "CLOSE_ISSUE",
+        "CLOSE_PR",
     ]),
     owner: z.string().optional(),
     repo: z.string().optional(),
@@ -21,6 +23,7 @@ export const OODASchema = z.object({
     labels: z.array(z.string()).optional(),
     issue: z.number().optional(),
     reasoning: z.string().optional(),
+    reaction: z.enum(githubReactions as [string, ...string[]]).optional(),
 })
 
 export interface OODAContent {

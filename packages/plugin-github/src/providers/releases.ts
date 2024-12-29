@@ -9,7 +9,7 @@ export const releasesProvider: Provider = {
             message,
             state,
             "releases",
-            (githubService) => githubService.getReleases(),
+            (githubService) => null,
             (release) => release,
             async (githubService, path) => path
         );
