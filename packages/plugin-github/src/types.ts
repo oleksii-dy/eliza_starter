@@ -190,6 +190,7 @@ export const AddCommentToIssueSchema = z.object({
     repo: z.string().min(1, "GitHub repo is required"),
     branch: z.string().min(1, "GitHub branch is required"),
     issue: z.number().min(1, "Issue number is required"),
+    reaction: z.enum(["+1", "-1", "laugh", "confused", "heart", "hooray", "rocket", "eyes"]).optional(),
 });
 
 export interface AddCommentToIssueContent {
@@ -197,6 +198,7 @@ export interface AddCommentToIssueContent {
     repo: string;
     branch: string;
     issue: number;
+    reaction?: "+1" | "-1" | "laugh" | "confused" | "heart" | "hooray" | "rocket" | "eyes";
 }
 
 export const isAddCommentToIssueContent = (
@@ -247,10 +249,24 @@ export const isAddCommentToPRContent = (
 
 export const GenerateCommentForASpecificPRSchema = z.object({
     comment: z.string().min(1, "Comment is required"),
+    action: z.enum(["COMMENT", "APPROVE", "REQUEST_CHANGES"]).optional(),
+    lineLevelComments: z.array(z.object({
+        path: z.string().optional(),
+        body: z.string().optional(),
+        position: z.number().optional(),
+        line: z.number().optional(),
+    })).optional(),
 });
 
 export interface GenerateCommentForASpecificPRSchema {
     comment: string;
+    action?: "COMMENT" | "APPROVE" | "REQUEST_CHANGES";
+    lineLevelComments?: Array<{
+        path: string;
+        body: string;
+        position?: number;
+        line?: number;
+    }>;
 }
 
 export const isGenerateCommentForASpecificPRSchema = (

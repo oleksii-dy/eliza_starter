@@ -1,5 +1,6 @@
 import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
 import { elizaLogger } from "@elizaos/core";
+import { GithubReaction } from "../constants";
 
 interface GitHubConfig {
     owner: string;
@@ -109,24 +110,6 @@ export class GitHubService {
         }
     }
 
-    // Scenario 6: Get releases and changelogs
-    async getReleases(): Promise<
-        RestEndpointMethodTypes["repos"]["listReleases"]["response"]["data"]
-    > {
-        try {
-            const response = await this.octokit.repos.listReleases({
-                owner: this.config.owner,
-                repo: this.config.repo,
-                branch: this.config.branch,
-            });
-
-            return response.data;
-        } catch (error) {
-            elizaLogger.error(`Error getting releases: ${error}`);
-            throw error;
-        }
-    }
-
     // Scenario 7: Get source files for refactoring analysis
     async getSourceFiles(sourcePath: string): Promise<string[]> {
         try {
@@ -178,7 +161,7 @@ export class GitHubService {
         }
     }
 
-    // Update an existing issue
+    // Update an existing issue and open or close it
     async updateIssue(
         issueNumber: number,
         updates: {
@@ -285,9 +268,26 @@ export class GitHubService {
         return response.data;
     }
 
-    async addPRComment(
+    async addPRCommentAndReview(
         pullRequestNumber: number,
-        comment: string
+        comment: string,
+        lineLevelComments:  {
+            /** @description The relative path to the file that necessitates a review comment. */
+            path: string;
+            /** @description The position in the diff where you want to add a review comment. Note this value is not the same as the line number in the file. The `position` value equals the number of lines down from the first "@@" hunk header in the file you want to add a comment. The line just below the "@@" line is position 1, the next line is position 2, and so on. The position in the diff continues to increase through lines of whitespace and additional hunks until the beginning of a new file. */
+            position?: number;
+            /** @description Text of the review comment. */
+            body: string;
+            /** @example 28 */
+            line?: number;
+            /** @example RIGHT */
+            side?: string;
+            /** @example 26 */
+            start_line?: number;
+            /** @example LEFT */
+            start_side?: string;
+          }[] = [],
+        action: "COMMENT" | "APPROVE" | "REQUEST_CHANGES" = "COMMENT",
     ): Promise<
         RestEndpointMethodTypes["pulls"]["createReview"]["response"]["data"]
     > {
@@ -297,16 +297,9 @@ export class GitHubService {
                 repo: this.config.repo,
                 pull_number: pullRequestNumber,
                 body: comment,
-                event: "COMMENT",
+                event: action,
                 branch: this.config.branch,
-                // To add comments to specific files in the PR / specific lines
-                // comments: [
-                //     {
-                //         path: path,
-                //         body: comment,
-                //         commit_id: commitId,
-                //     }
-                // ]
+                comments: lineLevelComments
             });
             return response.data;
         } catch (error) {
@@ -315,6 +308,39 @@ export class GitHubService {
         }
     }
 
+    public async mergePullRequest(
+        owner: string,
+        repo: string,
+        pullNumber: number,
+        mergeMethod?: "merge" | "squash" | "rebase"
+    ): Promise<RestEndpointMethodTypes["pulls"]["merge"]["response"]["data"]> {
+        const response = await this.octokit.pulls.merge({
+            owner,
+            repo,
+            pull_number: pullNumber,
+            merge_method: mergeMethod,
+        });
+        return response.data;
+    }
+
+    public async updatePullRequest(
+        owner: string,
+        repo: string,
+        pullNumber: number,
+        title?: string,
+        body?: string,
+        state?: "open" | "closed"
+    ): Promise<RestEndpointMethodTypes["pulls"]["update"]["response"]["data"]> {
+        const response = await this.octokit.pulls.update({
+            owner,
+            repo,
+            pull_number: pullNumber,
+            title,
+            body,
+            state,
+        });
+        return response.data;
+    }
     /**
      * Fetch the diff from a PR.
      * @param diff_url The PR diff url
@@ -380,6 +406,122 @@ export class GitHubService {
             return commentsResponse.data as string;
         } catch (error) {
             elizaLogger.error("Error fetching comments:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Create a reaction for a commit comment.
+     * @param owner The repository owner
+     * @param repo The repository name
+     * @param commentId The comment ID
+     * @param reaction The reaction type
+     * @returns The created reaction
+     */
+    public async createReactionForCommitComment(
+        owner: string,
+        repo: string,
+        commentId: number,
+        reaction: GithubReaction,
+    ): Promise<RestEndpointMethodTypes["reactions"]["createForCommitComment"]["response"]["data"]> {
+        try {
+            const response = await this.octokit.reactions.createForCommitComment({
+                owner,
+                repo,
+                comment_id: commentId,
+                content: reaction,
+            });
+
+            return response.data;
+        } catch (error) {
+            elizaLogger.error("Error creating reaction for commit comment:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Create a reaction for an issue.
+     * @param owner The repository owner
+     * @param repo The repository name
+     * @param issueNumber The issue number
+     * @param reaction The reaction type
+     * @returns The created reaction
+     */
+    public async createReactionForIssue(
+        owner: string,
+        repo: string,
+        issueNumber: number,
+        reaction: GithubReaction
+    ): Promise<RestEndpointMethodTypes["reactions"]["createForIssue"]["response"]["data"]> {
+        try {
+            const response = await this.octokit.reactions.createForIssue({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                content: reaction,
+            });
+
+            return response.data;
+        } catch (error) {
+            elizaLogger.error("Error creating reaction for issue:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Create a reaction for an issue comment.
+     * @param owner The repository owner
+     * @param repo The repository name
+     * @param commentId The comment ID
+     * @param reaction The reaction type
+     * @returns The created reaction
+     */
+    public async createReactionForIssueComment(
+        owner: string,
+        repo: string,
+        commentId: number,
+        reaction: GithubReaction
+    ): Promise<RestEndpointMethodTypes["reactions"]["createForIssueComment"]["response"]["data"]> {
+        try {
+            const response = await this.octokit.reactions.createForIssueComment({
+                owner,
+                repo,
+                comment_id: commentId,
+                content: reaction,
+            });
+
+            return response.data;
+        } catch (error) {
+            elizaLogger.error("Error creating reaction for issue comment:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Create a reaction for a pull request review comment.
+     * @param owner The repository owner
+     * @param repo The repository name
+     * @param commentId The comment ID
+     * @param reaction The reaction type
+     * @returns The created reaction
+     */
+    public async createReactionForPullRequestReviewComment(
+        owner: string,
+        repo: string,
+        commentId: number,
+        reaction: GithubReaction
+    ): Promise<RestEndpointMethodTypes["reactions"]["createForPullRequestReviewComment"]["response"]["data"]> {
+        try {
+            const response = await this.octokit.reactions.createForPullRequestReviewComment({
+                owner,
+                repo,
+                comment_id: commentId,
+                content: reaction,
+            });
+
+            return response.data;
+        } catch (error) {
+            elizaLogger.error("Error creating reaction for pull request review comment:", error);
             throw error;
         }
     }

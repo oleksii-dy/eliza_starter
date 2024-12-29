@@ -16,18 +16,9 @@ import {
 import { validateGithubConfig } from "./environment";
 import { EventEmitter } from "events";
 import {
-    initializeRepositoryAction,
-    createCommitAction,
-    createMemoriesFromFilesAction,
-    createPullRequestAction,
-    createIssueAction,
-    modifyIssueAction,
-    addCommentToIssueAction,
-    ideationAction,
-    addCommentToPRAction,
     incorporateRepositoryState,
     getRepositoryRoomId,
-    saveIssuesToMemory,
+    saveIssuesToMemory
 } from "@elizaos/plugin-github";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
@@ -46,17 +37,6 @@ export class GitHubClient extends EventEmitter {
 
         this.runtime = runtime;
         this.character = runtime.character;
-
-        // this.runtime.registerAction(initializeRepositoryAction);
-        // this.runtime.registerAction(createCommitAction);
-        // this.runtime.registerAction(createMemoriesFromFilesAction);
-        // this.runtime.registerAction(createPullRequestAction);
-        // this.runtime.registerAction(createIssueAction);
-        // this.runtime.registerAction(modifyIssueAction);
-        // this.runtime.registerAction(addCommentToIssueAction);
-        // this.runtime.registerAction(ideationAction);
-        // this.runtime.registerAction(addCommentToPRAction);
-        elizaLogger.log("GitHubClient actions and providers registered.");
 
         // Start the OODA loop after initialization
         this.startOodaLoop();

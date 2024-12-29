@@ -154,16 +154,13 @@ export const addCommentToPRAction: Action = {
                 commentBody,
             }
         );
-        // const githubService = new GitHubService({
-        //     owner: content.owner,
-        //     repo: content.repo,
-        //     auth: runtime.getSetting("GITHUB_API_TOKEN"),
-        // });
 
         try {
-            const comment = await githubService.addPRComment(
+            const comment = await githubService.addPRCommentAndReview(
                 content.pullRequest,
-                commentBody
+                commentBody,
+                [],
+                "COMMENT"
             );
 
             elizaLogger.info(
