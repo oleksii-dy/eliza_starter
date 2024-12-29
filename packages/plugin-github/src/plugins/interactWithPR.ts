@@ -20,6 +20,7 @@ import fs from "fs/promises";
 export const reactToPRAction: Action = {
     name: "REACT_TO_PR",
     similes: [
+        "ADD_REACTION_PR",
         "REACT_TO_PR",
         "ADD_REACTION_PR",
         "POST_REACTION_PR",
@@ -85,15 +86,16 @@ export const reactToPRAction: Action = {
                 content.owner,
                 content.repo,
                 content.pullRequest,
-                options.reaction
+                content.reaction
             );
-
+            const pr = await githubService.getPullRequest(content.pullRequest);
+            elizaLogger.info("Reaction:", JSON.stringify(reaction, null, 2));
             elizaLogger.info(
-                `Added reaction to pull request #${content.pullRequest} successfully!`
+                `Added reaction to pull request #${content.pullRequest} successfully! PR: ${pr.html_url}`
             );
             if (callback) {
                 callback({
-                    text: `Added reaction to pull request #${content.pullRequest} successfully!`,
+                    text: `Added reaction to pull request #${content.pullRequest} successfully! PR: ${pr.html_url}`,
                     attachments: [],
                 });
             }
@@ -124,6 +126,51 @@ export const reactToPRAction: Action = {
                 user: "{{agentName}}",
                 content: {
                     text: "Added reaction to pull request #1 successfully!",
+                    action: "REACT_TO_PR",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "React to pull request #2 in repository user2/repo2 with a heart (like showing love)",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added reaction to pull request #2 successfully! (like a charm)",
+                    action: "REACT_TO_PR",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "React to pull request #3 in repository user3/repo3 with a laugh (like a burst of joy)",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added reaction to pull request #3 successfully! (like a breeze)",
+                    action: "REACT_TO_PR",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "React to pull request #4 in repository user4/repo4 with a rocket (like shooting for the stars)",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added reaction to pull request #4 successfully! (like a rocket launch)",
                     action: "REACT_TO_PR",
                 },
             },
@@ -265,7 +312,7 @@ export const addCommentToPRAction: Action = {
                 [],
                 "COMMENT"
             );
-
+            elizaLogger.info("Comment:", JSON.stringify(comment, null, 2));
             elizaLogger.info(
                 `Added comment to pull request #${content.pullRequest} successfully! See comment at ${comment.html_url}`
             );
@@ -440,7 +487,7 @@ export const closePRAction: Action = {
                 undefined,
                 "closed"
             );
-
+            elizaLogger.info("Pull request:", JSON.stringify(pr, null, 2));
             elizaLogger.info(
                 `Closed pull request #${content.pullRequest} successfully!`
             );

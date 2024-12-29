@@ -451,7 +451,7 @@ export class GitHubService {
         owner: string,
         repo: string,
         issueNumber: number,
-        reaction: GithubReaction
+        reaction: "+1" | "-1" | "laugh" | "confused" | "heart" | "hooray" | "rocket" | "eyes"
     ): Promise<RestEndpointMethodTypes["reactions"]["createForIssue"]["response"]["data"]> {
         try {
             const response = await this.octokit.reactions.createForIssue({

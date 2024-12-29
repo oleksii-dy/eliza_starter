@@ -6,7 +6,6 @@ import {
     ModelClass,
     composeContext,
     Memory,
-    generateMessageResponse,
     Content,
     HandlerCallback,
     UUID,
@@ -66,17 +65,7 @@ export class GitHubClient extends EventEmitter {
         //
         // 1) retrieve github information
         //
-        const owner = this.runtime.getSetting("GITHUB_OWNER") ?? ("" as string);
-        const repository =
-            this.runtime.getSetting("GITHUB_REPO") ?? ("" as string);
-        const branch =
-            this.runtime.getSetting("GITHUB_BRANCH") ?? ("main" as string);
-        if (owner === "" || repository === "") {
-            elizaLogger.error(
-                "GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle."
-            );
-            throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
-        }
+        const { owner, repository, branch } = getRepositorySettings(this.runtime);
 
         //
         // 2) prepare the room id
@@ -98,20 +87,21 @@ export class GitHubClient extends EventEmitter {
         // 3) retrieve memories
         //
         const memories = await this.runtime.messageManager.getMemories({
-            roomId: roomId,
+            roomId
         });
+        await fs.writeFile("memories.txt", JSON.stringify(memories, null, 2));
         const fileMemories = memories.filter(
             (memory) => (memory.content.metadata as any)?.path
         );
-        // elizaLogger.log("Retrieved memories:", memories);
-        if (fileMemories.length === 0) {
+        await fs.writeFile("fileMemories.txt", JSON.stringify(fileMemories, null, 2));
+        // if (fileMemories.length === 0 || ) {
             await this.initializeRepositoryAndCreateMemories(
                 owner,
                 repository,
                 branch,
                 roomId
             );
-        }
+        // }
 
         //
         // 4) compose the state with original memory and incorporate repository state
@@ -134,7 +124,7 @@ export class GitHubClient extends EventEmitter {
             originalMemory,
             [],
             true,
-            false
+            true
         );
         elizaLogger.log("Original state:", originalState);
 
@@ -155,7 +145,7 @@ export class GitHubClient extends EventEmitter {
         const response = await generateObject({
             runtime: this.runtime,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
             schema: OODASchema,
         });
         if (!isOODAContent(response.object)) {
@@ -261,7 +251,6 @@ export class GitHubClient extends EventEmitter {
         const timestamp = Date.now();
         const userIdUUID = stringToUuid(`${this.runtime.agentId}-${timestamp}`);
 
-        // TODO: Are we saving all the right values in content
 
         //
         // 2) create the memory to acknowledge that no memories are found and trigger NOTHING action
@@ -288,7 +277,7 @@ export class GitHubClient extends EventEmitter {
             originalMemory,
             [],
             true,
-            false
+            true
         );
 
         //
@@ -369,7 +358,19 @@ export class GitHubClient extends EventEmitter {
             undefined
         );
     }
+
 }
+
+const getRepositorySettings = (runtime: IAgentRuntime) => {
+    const owner = runtime.getSetting("GITHUB_OWNER") ?? ("" as string);
+    const repository = runtime.getSetting("GITHUB_REPO") ?? ("" as string);
+    const branch = runtime.getSetting("GITHUB_BRANCH") ?? ("main" as string);
+    if (owner === "" || repository === "") {
+        elizaLogger.error("GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle.");
+        throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
+    }
+    return { owner, repository, branch };
+};
 
 export const GitHubClientInterface: Client = {
     start: async (runtime: IAgentRuntime) => {

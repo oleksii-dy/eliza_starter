@@ -12,18 +12,18 @@ export const OODASchema = z.object({
         "CLOSE_ISSUE",
         "CLOSE_PR",
     ]),
-    owner: z.string().optional(),
-    repo: z.string().optional(),
-    path: z.string().optional(),
-    branch: z.string().optional(),
-    title: z.string().optional(),
-    description: z.string().optional(),
-    files: z.array(z.object({ path: z.string(), content: z.string() })).optional(),
-    message: z.string().optional(),
-    labels: z.array(z.string()).optional(),
-    issue: z.number().optional(),
-    reasoning: z.string().optional(),
-    reaction: z.enum(githubReactions as [string, ...string[]]).optional(),
+    owner: z.string().nullable().optional(),
+    repo: z.string().nullable().optional(),
+    path: z.string().nullable().optional(),
+    branch: z.string().nullable().optional(),
+    title: z.string().nullable().optional(),
+    description: z.string().nullable().optional(),
+    files: z.array(z.object({ path: z.string(), content: z.string() })).nullable().optional(),
+    message: z.string().nullable().optional(),
+    labels: z.array(z.string()).nullable().optional(),
+    issue: z.number().nullable().optional(),
+    reasoning: z.string(),
+    reaction: z.enum(githubReactions as [string, ...string[]]).nullable().optional(),
 })
 
 export interface OODAContent {
@@ -38,7 +38,8 @@ export interface OODAContent {
     message?: string;
     labels?: string[];
     issue?: number;
-    reasoning?: string;
+    reasoning: string;
+    reaction?: string;
 }
 
 export const isOODAContent = (

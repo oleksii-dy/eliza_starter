@@ -8,18 +8,8 @@ import { contextTemplate } from "@elizaos/plugin-github";
 // TODO: Make sure previous issues / pull requests from repo are considered Caner
 
 export const oodaTemplate = `
-    ## Task Instructions:
-    1. Systematically analyze the provided files.
-    2. Consider the repository's history and current state.
-    3. Evaluate potential improvements against your objectives.
-    4. Check existing records to avoid duplicate issues or pull requests.
-    5. Select the most impactful action based on your analysis.
-    6. Ensure the action aligns with the project's goals and priorities.
-    7. Validate the action against the criteria provided.
-    8. Format your response according to the schema below.
 
     Determine the appropriate action based on the following criteria:
-
     1. CREATE_ISSUE:
         - When a new bug, feature request, or task is identified that is not already tracked.
         - Criteria:
@@ -64,11 +54,12 @@ export const oodaTemplate = `
             - The pull request does not meet the project's standards or requirements.
 
     8. NOTHING:
-        - When no action is needed.
+        - When no action is needed, and all other criteria for actions have been thoroughly evaluated and found unsuitable.
         - Criteria:
-            - The current state of the repository does not require any changes.
-            - The analysis does not reveal any new issues or improvements.
-
+            - The current state of the repository does not require any changes, and no new issues or improvements can be identified after a comprehensive analysis.
+            - All open issues and pull requests have been appropriately addressed with comments or reactions, and no further action is deemed necessary.
+            - Consider alternative actions before deciding on "NOTHING," such as providing feedback, suggestions, or reactions to ongoing discussions.
+    
     Context:
     ${contextTemplate}
     \`\`\`json
@@ -91,8 +82,7 @@ export const oodaTemplate = `
         "labels": "Relevant labels (optional)",
         "issue": "Issue number (required for issue operations)",
         "pullRequest": "Pull request number (required for PR operations)",
-        "reaction": "Reaction type (required for reaction operations)",
-        "event": "Event type, either OPEN or CLOSE (required for closing issues or PRs)"
+        "reaction": "Reaction type (required for reaction operations)"
     }
     \`\`\`
 
@@ -139,24 +129,21 @@ export const oodaTemplate = `
         "reasoning": "The issue has been resolved and verified.",
         "owner": "octocat",
         "repo": "hello-world",
-        "issue": 123,
-        "event": "CLOSE"
+        "issue": 123
     }
     {
         "action": "CLOSE_ISSUE",
         "reasoning": "The issue is a duplicate of another issue.",
         "owner": "octocat",
         "repo": "hello-world",
-        "issue": 124,
-        "event": "CLOSE"
+        "issue": 124
     }
     {
         "action": "CLOSE_ISSUE",
         "reasoning": "The issue was a duplicate and has been closed.",
         "owner": "octocat",
         "repo": "hello-world",
-        "issue": 125,
-        "event": "CLOSE"
+        "issue": 125
     }
 
     5. CLOSE_PR:
@@ -165,24 +152,21 @@ export const oodaTemplate = `
         "reasoning": "The pull request is no longer needed as the changes have been incorporated elsewhere.",
         "owner": "octocat",
         "repo": "hello-world",
-        "pullRequest": 456,
-        "event": "CLOSE"
+        "pullRequest": 456
     }
     {
         "action": "CLOSE_PR",
         "reasoning": "The pull request is a duplicate of another pull request.",
         "owner": "octocat",
         "repo": "hello-world",
-        "pullRequest": 457,
-        "event": "CLOSE"
+        "pullRequest": 457
     }
     {
         "action": "CLOSE_PR",
         "reasoning": "The pull request was opened by mistake and is a duplicate.",
         "owner": "octocat",
         "repo": "hello-world",
-        "pullRequest": 458,
-        "event": "CLOSE"
+        "pullRequest": 458
     }
 
     6. REACT_TO_ISSUE:

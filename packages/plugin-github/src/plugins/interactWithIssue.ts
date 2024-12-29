@@ -260,21 +260,22 @@ export const reactToIssueAction: Action = {
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
         elizaLogger.info("Adding reaction to issue comment...");
-
+        await fs.writeFile("reaction.txt", JSON.stringify(content, null, 2));
         try {
             const reaction = await githubService.createReactionForIssue(
                 content.owner,
                 content.repo,
                 content.issue,
-                options.reaction
+                content.reaction
             );
-
+            const issue = await githubService.getIssue(content.issue);
+            elizaLogger.info("Reaction:", JSON.stringify(reaction, null, 2));
             elizaLogger.info(
-                `Added reaction to issue #${content.issue} successfully!`
+                `Added reaction to issue #${content.issue} successfully! Issue: ${issue.html_url}`
             );
             if (callback) {
                 callback({
-                    text: `Added reaction to issue #${content.issue} successfully!`,
+                    text: `Added reaction to issue #${content.issue} successfully! Issue: ${issue.html_url}`,
                     attachments: [],
                 });
             }
@@ -305,6 +306,51 @@ export const reactToIssueAction: Action = {
                 user: "{{agentName}}",
                 content: {
                     text: "Added reaction to issue #1 successfully!",
+                    action: "REACT_TO_ISSUE",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "React to issue #2 in repository user2/repo2 with a thumbs up",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added reaction to issue #2 successfully!",
+                    action: "REACT_TO_ISSUE",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "React to issue #3 in repository user3/repo3 with a laugh",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added reaction to issue #3 successfully!",
+                    action: "REACT_TO_ISSUE",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "React to issue #4 in repository user4/repo4 with a hooray",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added reaction to issue #4 successfully!",
                     action: "REACT_TO_ISSUE",
                 },
             },
@@ -377,9 +423,9 @@ export const closeIssueAction: Action = {
         try {
             const issue = await githubService.updateIssue(
                 content.issue,
-                { state: "closed" }
+                { state: "closed", labels: ["automated-close"] }
             );
-
+            elizaLogger.info("Issue:", JSON.stringify(issue, null, 2));
             elizaLogger.info(
                 `Closed issue #${content.issue} successfully!`
             );
@@ -416,6 +462,51 @@ export const closeIssueAction: Action = {
                 user: "{{agentName}}",
                 content: {
                     text: "Closed issue #1 successfully!",
+                    action: "CLOSE_ISSUE",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Close issue #2 in repository user2/repo2",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Closed issue #2 successfully!",
+                    action: "CLOSE_ISSUE",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Close issue #3 in repository user3/repo3",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Closed issue #3 successfully!",
+                    action: "CLOSE_ISSUE",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Close issue #4 in repository user4/repo4",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Closed issue #4 successfully!",
                     action: "CLOSE_ISSUE",
                 },
             },
