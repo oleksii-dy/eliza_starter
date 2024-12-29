@@ -34,12 +34,14 @@ import { getIssueFromMemories, incorporateRepositoryState } from "../utils";
 import fs from "fs/promises";
 
 export const addCommentToIssueAction: Action = {
-    name: "ADD_COMMENT_TO_ISSUE",
+    name: "COMMENT_ON_ISSUE",
     similes: [
         "ADD_COMMENT_TO_ISSUE",
         "COMMENT_ON_ISSUE",
-        "POST_COMMENT",
-        "ADD_COMMENT",
+        "POST_COMMENT_ON_ISSUE",
+        "POST_COMMENT_TO_ISSUE",
+        "ADD_COMMENT_ON_ISSUE",
+        "ADD_COMMENT_TO_ISSUE",
     ],
     description: "Adds a comment to an existing issue in the GitHub repository",
     validate: async (runtime: IAgentRuntime) => {
@@ -191,7 +193,67 @@ export const addCommentToIssueAction: Action = {
                 user: "{{agentName}}",
                 content: {
                     text: "Added comment to issue #1 successfully! See comment at https://github.com/user1/repo1/issues/1#issuecomment-1234567890",
-                    action: "ADD_COMMENT",
+                    action: "COMMENT_ON_ISSUE",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Add a comment to issue #2 in repository user2/repo2: 'Can you provide more details on this issue?'",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added comment to issue #2 successfully! See comment at https://github.com/user2/repo2/issues/2#issuecomment-0987654321",
+                    action: "COMMENT_ON_ISSUE",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user3}}",
+                content: {
+                    text: "Add a comment to issue #3 in repository user3/repo3: 'We are working on a fix for this issue.'",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added comment to issue #3 successfully! See comment at https://github.com/user3/repo3/issues/3#issuecomment-1122334455",
+                    action: "COMMENT_ON_ISSUE",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user4}}",
+                content: {
+                    text: "Add a comment to issue #4 in repository user4/repo4: 'This issue has been prioritized.'",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added comment to issue #4 successfully! See comment at https://github.com/user4/repo4/issues/4#issuecomment-6677889900",
+                    action: "COMMENT_ON_ISSUE",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user5}}",
+                content: {
+                    text: "Add a comment to issue #5 in repository user5/repo5: 'Please check the latest update for a resolution.'",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added comment to issue #5 successfully! See comment at https://github.com/user5/repo5/issues/5#issuecomment-5544332211",
+                    action: "COMMENT_ON_ISSUE",
                 },
             },
         ],
@@ -514,10 +576,10 @@ export const closeIssueAction: Action = {
     ],
 };
 
-export const githubAddCommentToIssuePlugin: Plugin = {
-    name: "githubAddCommentToIssue",
+export const githubInteractWithIssuePlugin: Plugin = {
+    name: "githubInteractWithIssue",
     description: "Integration with GitHub for adding comments or reactions or closing issues",
-    actions: [addCommentToIssueAction, reactToIssueAction, closeIssueAction],
+    actions: [reactToIssueAction, addCommentToIssueAction, closeIssueAction],
     evaluators: [],
     providers: [],
 };

@@ -23,12 +23,17 @@ import {
     modifyIssueAction,
 } from "./plugins/modifyIssue";
 import {
-    githubAddCommentToIssuePlugin,
+    githubInteractWithIssuePlugin,
     addCommentToIssueAction,
+    reactToIssueAction,
+    closeIssueAction,
 } from "./plugins/interactWithIssue";
 import {
-    githubAddCommentToPRPlugin,
+    githubInteractWithPRPlugin,
     addCommentToPRAction,
+    reactToPRAction,
+    closePRAction,
+    mergePRAction,
 } from "./plugins/interactWithPR";
 import { githubIdeationPlugin, ideationAction } from "./plugins/ideationPlugin";
 import type { Plugin } from "@elizaos/core";
@@ -45,9 +50,9 @@ export const plugins = {
     githubCreateCommitPlugin,
     githubCreateIssuePlugin,
     githubModifyIssuePlugin,
-    githubAddCommentToIssuePlugin,
+    githubInteractWithIssuePlugin,
+    githubInteractWithPRPlugin,
     githubIdeationPlugin,
-    githubAddCommentToPRPlugin,
 };
 
 export * from "./plugins/initializeRepository";
@@ -84,6 +89,12 @@ export const githubPlugin: Plugin = {
         addCommentToIssueAction,
         ideationAction,
         addCommentToPRAction,
+        mergePRAction,
+        closePRAction,
+        reactToPRAction,
+        closePRAction,
+        reactToIssueAction,
+        closeIssueAction,
     ],
     evaluators: [],
     providers: [

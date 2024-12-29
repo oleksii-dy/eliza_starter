@@ -6,15 +6,18 @@ import {
     ClosePRActionContent,
     ClosePRActionSchema,
     GenerateCommentForASpecificPRSchema,
+    MergePRActionContent,
+    MergePRActionSchema,
     ReactToPRContent,
     ReactToPRSchema,
     isAddCommentToPRContent,
     isClosePRActionContent,
     isGenerateCommentForASpecificPRSchema,
+    isMergePRActionContent,
     isReactToPRContent,
 } from "../types";
 import { getPullRequestFromMemories, incorporateRepositoryState } from "../utils";
-import { addCommentToPRTemplate, closePRActionTemplate, generateCommentForASpecificPRTemplate, reactToPRTemplate } from "../templates";
+import { addCommentToPRTemplate, closePRActionTemplate, generateCommentForASpecificPRTemplate, mergePRActionTemplate, reactToPRTemplate } from "../templates";
 import fs from "fs/promises";
 
 export const reactToPRAction: Action = {
@@ -179,15 +182,20 @@ export const reactToPRAction: Action = {
 };
 
 export const addCommentToPRAction: Action = {
-    name: "ADD_COMMENT_TO_PR",
+    name: "COMMENT_ON_PULL_REQUEST",
     similes: [
-        "ADD_COMMENT_TO_PR",
         "COMMENT_ON_PR",
+        "REVIEW_PR",
+        "REVIEW_PULL_REQUEST",
+        "ADD_REVIEW_COMMENT_TO_PR",
+        "ADD_REVIEW_COMMENT_TO_PULL_REQUEST",
+        "ADD_COMMENT_TO_PR",
+        "ADD_COMMENT_TO_PULL_REQUEST",
         "POST_COMMENT_PR",
         "ADD_COMMENT_PR",
     ],
     description:
-        "Adds a comment to an existing pull request in the GitHub repository",
+        "Adds a comment and review to an existing pull request in the GitHub repository",
     validate: async (runtime: IAgentRuntime) => {
         const token = !!runtime.getSetting("GITHUB_API_TOKEN");
         return token;
@@ -295,30 +303,29 @@ export const addCommentToPRAction: Action = {
             throw new Error("Invalid comment content");
         }
 
-        const commentBody = commentDetails.object.comment;
-
+        const comment = commentDetails.object
         elizaLogger.info(
             "Adding comment to pull request in the repository...",
             {
                 pullRequest,
-                commentBody,
+                comment,
             }
         );
 
         try {
-            const comment = await githubService.addPRCommentAndReview(
+            const addedComment = await githubService.addPRCommentAndReview(
                 content.pullRequest,
-                commentBody,
+                comment.comment,
                 [],
-                "COMMENT"
+                comment.approvalEvent
             );
             elizaLogger.info("Comment:", JSON.stringify(comment, null, 2));
             elizaLogger.info(
-                `Added comment to pull request #${content.pullRequest} successfully! See comment at ${comment.html_url}`
+                `Added comment to pull request #${content.pullRequest} successfully! See comment at ${addedComment.html_url}. Approval status: ${comment.approvalEvent}`
             );
             if (callback) {
                 callback({
-                    text: `Added comment to pull request #${content.pullRequest} successfully! See comment at ${comment.html_url}`,
+                    text: `Added comment to pull request #${content.pullRequest} successfully! See comment at ${addedComment.html_url}`,
                     attachments: [],
                 });
             }
@@ -413,11 +420,56 @@ export const addCommentToPRAction: Action = {
                 },
             },
         ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Add a comment to pull request #6 in repository user6/repo6: 'Looks good to me', approve the changes",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added comment and approved pull request #6 successfully!",
+                    action: "COMMENT_ON_PULL_REQUEST",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Add a comment to pull request #7 in repository user7/repo7: 'Needs more work', request changes",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added comment and requested changes for pull request #7 successfully!",
+                    action: "COMMENT_ON_PULL_REQUEST",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Add a comment to pull request #8 in repository user8/repo8: 'I have some questions', comment only",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added comment to pull request #8 successfully!",
+                    action: "COMMENT_ON_PULL_REQUEST",
+                },
+            },
+        ],
     ],
 };
 
 export const closePRAction: Action = {
-    name: "CLOSE_PR",
+    name: "CLOSE_PULL_REQUEST",
     similes: [
         "CLOSE_PR",
         "CLOSE_PULL_REQUEST",
@@ -531,11 +583,172 @@ export const closePRAction: Action = {
     ],
 };
 
-export const githubAddCommentToPRPlugin: Plugin = {
-    name: "githubAddCommentToPR",
-    description: "Integration with GitHub for adding comments or reactions or closing pull requests",
-    actions: [addCommentToPRAction, reactToPRAction, closePRAction],
+export const mergePRAction: Action = {
+    name: "MERGE_PULL_REQUEST",
+    similes: [
+        "MERGE_PR",
+        "SQUASH_PR",
+        "SQUASH_PULL_REQUEST",
+        "REBASE_PR",
+        "REBASE_PULL_REQUEST",
+        "MERGE_PULL_REQUEST",
+    ],
+    description:
+        "Merges a pull request in the GitHub repository",
+    validate: async (runtime: IAgentRuntime) => {
+        const token = !!runtime.getSetting("GITHUB_API_TOKEN");
+        return token;
+    },
+    handler: async (
+        runtime: IAgentRuntime,
+        message: Memory,
+        state: State,
+        options: any,
+        callback?: HandlerCallback
+    ) => {
+        elizaLogger.log(
+            "[mergePR] Composing state for message:",
+            message
+        );
+        if (!state) {
+            state = (await runtime.composeState(message)) as State;
+        } else {
+            state = await runtime.updateRecentMessageState(state);
+        }
+        const updatedState = await incorporateRepositoryState(
+            state,
+            runtime,
+            message,
+            [],
+            false,
+            true
+        );
+        elizaLogger.info("State:", updatedState);
+
+        const context = composeContext({
+            state: updatedState,
+            template: mergePRActionTemplate,
+        });
+        const details = await generateObject({
+            runtime,
+            context,
+            modelClass: ModelClass.SMALL,
+            schema: MergePRActionSchema,
+        });
+
+        if (!isMergePRActionContent(details.object)) {
+            elizaLogger.error("Invalid content:", details.object);
+            throw new Error("Invalid content");
+        }
+
+        const content = details.object as MergePRActionContent;
+        const githubService = new GitHubService({
+            owner: content.owner,
+            repo: content.repo,
+            auth: runtime.getSetting("GITHUB_API_TOKEN"),
+        });
+        elizaLogger.info("Merging pull request...");
+
+        try {
+            const mergeResult = await githubService.mergePullRequest(
+                content.owner,
+                content.repo,
+                content.pullRequest,
+                content.mergeMethod
+            );
+            elizaLogger.info("Merge result:", JSON.stringify(mergeResult, null, 2));
+            elizaLogger.info(
+                `Merged pull request #${content.pullRequest} successfully!`
+            );
+            if (callback) {
+                callback({
+                    text: `Merged pull request #${content.pullRequest} successfully!`,
+                    attachments: [],
+                });
+            }
+        } catch (error) {
+            elizaLogger.error(
+                `Error merging pull request #${content.pullRequest} in repository ${content.owner}/${content.repo}:`,
+                error
+            );
+            if (callback) {
+                callback(
+                    {
+                        text: `Error merging pull request #${content.pullRequest}. Please try again.`,
+                    },
+                    []
+                );
+            }
+        }
+    },
+    examples: [
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Merge pull request #1 in repository user1/repo1 using merge method 'squash'",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Merged pull request #1 successfully!",
+                    action: "MERGE_PULL_REQUEST",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Merge pull request #2 in repository user2/repo2 using merge method 'merge'",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Merged pull request #2 successfully!",
+                    action: "MERGE_PULL_REQUEST",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Merge pull request #3 in repository user3/repo3 using merge method 'rebase'",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Merged pull request #3 successfully!",
+                    action: "MERGE_PULL_REQUEST",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Merge pull request #4 in repository user4/repo4",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Merged pull request #4 successfully!",
+                    action: "MERGE_PULL_REQUEST",
+                },
+            },
+        ],
+    ],
+};
+
+export const githubInteractWithPRPlugin: Plugin = {
+    name: "githubInteractWithPR",
+    description: "Integration with GitHub for adding comments or reactions or merging, or closing pull requests",
+    actions: [addCommentToPRAction, reactToPRAction, closePRAction, mergePRAction],
     evaluators: [],
     providers: [],
 };
-

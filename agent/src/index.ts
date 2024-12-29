@@ -65,8 +65,9 @@ import {
     githubCreateMemorizeFromFilesPlugin,
     githubCreateIssuePlugin,
     githubModifyIssuePlugin,
-    githubAddCommentToIssuePlugin,
     githubIdeationPlugin,
+    githubInteractWithPRPlugin,
+    githubInteractWithIssuePlugin
 } from "@elizaos/plugin-github";
 import Database from "better-sqlite3";
 import fs from "fs";
@@ -580,8 +581,9 @@ export async function createAgent(
                       githubCreateMemorizeFromFilesPlugin,
                       githubCreateIssuePlugin,
                       githubModifyIssuePlugin,
-                      githubAddCommentToIssuePlugin,
                       githubIdeationPlugin,
+                      githubInteractWithIssuePlugin,
+                      githubInteractWithPRPlugin,
                   ]
                 : []),
             getSecret(character, "ALCHEMY_API_KEY") ? goatPlugin : null,

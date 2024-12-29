@@ -312,7 +312,7 @@ export class GitHubService {
         owner: string,
         repo: string,
         pullNumber: number,
-        mergeMethod?: "merge" | "squash" | "rebase"
+        mergeMethod: "merge" | "squash" | "rebase" = "merge"
     ): Promise<RestEndpointMethodTypes["pulls"]["merge"]["response"]["data"]> {
         const response = await this.octokit.pulls.merge({
             owner,

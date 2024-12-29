@@ -705,10 +705,12 @@ ${contextTemplate}
 export const generateCommentForASpecificPRTemplate = `
 Generate a comment for a specific GitHub pull request that aligns with the character's goals and the user's request:
 Here is the specific pull request to comment on: {{specificPullRequest}}
+Please provide the approval event for the pull request: COMMENT or APPROVE or REQUEST_CHANGES
 ${contextTemplate}
 \`\`\`json
 {
-    "comment": "<comment>"
+    "comment": "<comment>",
+    "approvalEvent": "<approvalEvent>"
 }
 \`\`\`
 `;
@@ -1003,6 +1005,26 @@ ${contextTemplate}
     "repo": "<repo>",
     "branch": "<branch>",
     "issue": "<issue>"
+}
+\`\`\`
+`;
+
+export const mergePRActionTemplate = `
+Extract the details for merging a specific GitHub pull request:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+- **pullRequest** (number): The number of the pull request to merge (e.g., 1)
+- **mergeMethod** (string): The method to use for merging (e.g., "merge", "squash", "rebase").
+
+${contextTemplate}
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>",
+    "pullRequest": "<pullRequest>",
+    "mergeMethod": "<mergeMethod>"
 }
 \`\`\`
 `;

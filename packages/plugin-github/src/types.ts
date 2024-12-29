@@ -257,6 +257,7 @@ export const GenerateCommentForASpecificPRSchema = z.object({
         position: z.number().optional(),
         line: z.number().optional(),
     })).optional(),
+    approvalEvent: z.enum(["COMMENT", "APPROVE", "REQUEST_CHANGES"]).optional(),
 });
 
 export interface GenerateCommentForASpecificPRSchema {
@@ -268,6 +269,7 @@ export interface GenerateCommentForASpecificPRSchema {
         position?: number;
         line?: number;
     }>;
+    approvalEvent?: "COMMENT" | "APPROVE" | "REQUEST_CHANGES";
 }
 
 export const isGenerateCommentForASpecificPRSchema = (
@@ -372,6 +374,32 @@ export const isCloseIssueActionContent = (
     object: any
 ): object is CloseIssueActionContent => {
     if (CloseIssueActionSchema.safeParse(object).success) {
+        return true;
+    }
+    elizaLogger.error("Invalid content: ", object);
+    return false;
+};
+
+export const MergePRActionSchema = z.object({
+    owner: z.string().min(1, "GitHub owner is required"),
+    repo: z.string().min(1, "GitHub repo is required"),
+    branch: z.string().min(1, "GitHub branch is required"),
+    pullRequest: z.number().min(1, "Pull request number is required"),
+    mergeMethod: z.enum(["merge", "squash", "rebase"]).optional().default("merge"),
+});
+
+export interface MergePRActionContent {
+    owner: string;
+    repo: string;
+    branch: string;
+    pullRequest: number;
+    mergeMethod?: "merge" | "squash" | "rebase";
+}
+
+export const isMergePRActionContent = (
+    object: any
+): object is MergePRActionContent => {
+    if (MergePRActionSchema.safeParse(object).success) {
         return true;
     }
     elizaLogger.error("Invalid content: ", object);

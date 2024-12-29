@@ -17,13 +17,13 @@ export const oodaTemplate = `
             - The issue has a significant impact on the project.
             - The issue can be clearly described with specific details and examples.
 
-    2. ADD_COMMENT_TO_ISSUE:
+    2. COMMENT_ON_ISSUE:
         - When additional information or clarification is needed for an existing issue.
         - Criteria:
             - The comment provides valuable insights or updates.
             - The comment helps in progressing the resolution of the issue.
 
-    3. ADD_COMMENT_TO_PR:
+    3. COMMENT_ON_PULL_REQUEST:
         - When feedback or suggestions are needed for an open pull request.
         - Criteria:
             - The comment addresses specific lines of code or overall implementation.
@@ -53,13 +53,19 @@ export const oodaTemplate = `
             - The pull request has been merged or is no longer relevant.
             - The pull request does not meet the project's standards or requirements.
 
-    8. NOTHING:
+    8. MERGE_PR:
+        - When a pull request has been approved and is ready to be merged.
+        - Criteria:
+            - The pull request has been approved by the necessary reviewers.
+            - The pull request is ready to be merged into the target branch.
+
+    9. NOTHING:
         - When no action is needed, and all other criteria for actions have been thoroughly evaluated and found unsuitable.
         - Criteria:
             - The current state of the repository does not require any changes, and no new issues or improvements can be identified after a comprehensive analysis.
             - All open issues and pull requests have been appropriately addressed with comments or reactions, and no further action is deemed necessary.
             - Consider alternative actions before deciding on "NOTHING," such as providing feedback, suggestions, or reactions to ongoing discussions.
-    
+
     Context:
     ${contextTemplate}
     \`\`\`json
@@ -103,7 +109,7 @@ export const oodaTemplate = `
         ]
     }
 
-    2. ADD_COMMENT_TO_ISSUE:
+    2. COMMENT_ON_ISSUE:
     {
         "action": "ADD_COMMENT_TO_ISSUE",
         "reasoning": "Providing more information about the issue",
@@ -113,7 +119,7 @@ export const oodaTemplate = `
         "comment": "I've found a potential solution to the issue."
     }
 
-    3. ADD_COMMENT_TO_PR:
+    3. COMMENT_ON_PULL_REQUEST:
     {
         "action": "ADD_COMMENT_TO_PR",
         "reasoning": "Providing constructive feedback on the changes proposed in the PR",
@@ -189,7 +195,16 @@ export const oodaTemplate = `
         "reaction": "heart"
     }
 
-    8. NOTHING:
+    8. MERGE_PULL_REQUEST:
+    {
+        "action": "MERGE_PULL_REQUEST",
+        "reasoning": "The pull request has been approved and is ready to be merged.",
+        "owner": "octocat",
+        "repo": "hello-world",
+        "pullRequest": 456
+    }
+
+    9. NOTHING:
     {
         "action": "NOTHING",
         "reasoning": "No action is needed because all open PRs have been commented on or there are no open PRs."
