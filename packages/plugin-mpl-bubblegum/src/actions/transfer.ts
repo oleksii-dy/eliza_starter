@@ -1,4 +1,5 @@
 import {
+    Action,
     ActionExample,
     composeContext,
     Content,
@@ -114,7 +115,7 @@ export default {
                 content.newLeafOwner as PublicKey
             );
 
-            console.log("Transfer successful", signature);
+            console.log("Transfer successful: ", signature);
 
             if (callback) {
                 callback({
@@ -204,4 +205,4 @@ export default {
             },
         ],
     ] as ActionExample[][],
-};
+} as Action;
