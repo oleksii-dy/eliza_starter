@@ -22,48 +22,10 @@ import {
     getIssuesFromMemories,
     getFilesFromMemories,
     incorporateRepositoryState,
+    saveIssueToMemory,
+    saveIssuesToMemory,
 } from "../utils";
-import { RestEndpointMethodTypes } from "@octokit/rest";
-
-export async function saveIssueToMemory(
-    runtime: IAgentRuntime,
-    issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"],
-    owner: string,
-    repo: string,
-    branch: string
-): Promise<void> {
-    const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
-    const issueId = stringToUuid(
-        `${roomId}-${runtime.agentId}-issue-${issue.number}`
-    );
-    const issueMemory: Memory = {
-        id: issueId,
-        userId: runtime.agentId,
-        agentId: runtime.agentId,
-        roomId: roomId,
-        content: {
-            text: `Issue Created: ${issue.title}`,
-            action: "CREATE_ISSUE",
-            source: "github",
-            metadata: {
-                type: "issue",
-                url: issue.html_url,
-                number: issue.number,
-                state: issue.state,
-                created_at: issue.created_at,
-                updated_at: issue.updated_at,
-                comments: issue.comments,
-                labels: issue.labels.map((label: any) =>
-                    typeof label === "string" ? label : label?.name
-                ),
-                body: issue.body,
-            },
-        },
-    };
-    elizaLogger.log("[createIssue] Issue memory:", issueMemory);
-
-    await runtime.messageManager.createMemory(issueMemory);
-}
+import fs from "fs/promises";
 
 export const createIssueAction: Action = {
     name: "CREATE_ISSUE",
@@ -102,7 +64,9 @@ export const createIssueAction: Action = {
             state: updatedState,
             template: createIssueTemplate,
         });
-        elizaLogger.info("Context:", context);
+        // elizaLogger.info("Context:", context);
+        // write the context to a file for testing
+        await fs.writeFile("plugin-github-create-issue-context.txt", context);
 
         const details = await generateObject({
             runtime,
@@ -128,6 +92,15 @@ export const createIssueAction: Action = {
         });
 
         try {
+            const issuesMemories = await saveIssuesToMemory(
+                runtime,
+                content.owner,
+                content.repo,
+                content.branch,
+                runtime.getSetting("GITHUB_API_TOKEN")
+            );
+            elizaLogger.log("Issues memories:", issuesMemories);
+
             const issue = await githubService.createIssue(
                 content.title,
                 content.body,

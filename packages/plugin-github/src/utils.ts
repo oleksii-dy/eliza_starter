@@ -12,7 +12,9 @@ import {
     stringToUuid,
     UUID,
 } from "@elizaos/core";
+import { RestEndpointMethodTypes } from "@octokit/rest";
 import { contextTemplate } from "./templates";
+import { GitHubService } from "./services/github";
 
 export function getRepoPath(owner: string, repo: string) {
     return path.join(process.cwd(), ".repos", owner, repo);
@@ -330,6 +332,96 @@ export const getPullRequestFromMemories = async (
     return memories.find((memory) => memory.id === prId) ?? null;
 };
 
+export async function saveIssueToMemory(
+    runtime: IAgentRuntime,
+    issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"],
+    owner: string,
+    repo: string,
+    branch: string
+): Promise<Memory> {
+    const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
+    const issueId = stringToUuid(
+        `${roomId}-${runtime.agentId}-issue-${issue.number}`
+    );
+    const issueMemory: Memory = {
+        id: issueId,
+        userId: runtime.agentId,
+        agentId: runtime.agentId,
+        roomId: roomId,
+        content: {
+            text: `Issue Created: ${issue.title}`,
+            action: "CREATE_ISSUE",
+            source: "github",
+            metadata: {
+                type: "issue",
+                url: issue.html_url,
+                number: issue.number,
+                state: issue.state,
+                created_at: issue.created_at,
+                updated_at: issue.updated_at,
+                comments: issue.comments,
+                labels: issue.labels.map((label: any) =>
+                    typeof label === "string" ? label : label?.name
+                ),
+                body: issue.body,
+            },
+        },
+    };
+
+    elizaLogger.log("Issue memory:", issueMemory);
+
+    await runtime.messageManager.createMemory(issueMemory);
+
+    return issueMemory;
+}
+
+export const saveIssuesToMemory = async (
+    runtime: IAgentRuntime,
+    owner: string,
+    repository: string,
+    branch: string,
+    apiToken: string
+): Promise<Memory[]> => {
+    const roomId = stringToUuid(`github-${owner}-${repository}-${branch}`);
+    const memories = await runtime.messageManager.getMemories({
+        roomId: roomId,
+    });
+    const githubService = new GitHubService({
+        owner: owner,
+        repo: repository,
+        branch: branch,
+        auth: apiToken,
+    });
+    const issues = await githubService.getIssues();
+    const issuesMemories: Memory[] = [];
+    // create memories for each issue if they are not already in the memories
+    for (const issue of issues) {
+        // check if the issue is already in the memories by checking id in the memories
+
+        const issueMemory = memories.find(
+            (memory) =>
+                memory.id ===
+                stringToUuid(
+                    `${roomId}-${runtime.agentId}-issue-${issue.number}`
+                )
+        );
+        if (!issueMemory) {
+            const newIssueMemory = await saveIssueToMemory(
+                runtime,
+                issue,
+                owner,
+                repository,
+                branch
+            );
+            issuesMemories.push(newIssueMemory);
+        } else {
+            elizaLogger.log("Issue already in memories:", issueMemory);
+            // update the issue memory
+        }
+    }
+    return issuesMemories;
+};
+
 export async function incorporateRepositoryState(
     state: State,
     runtime: IAgentRuntime,
@@ -383,23 +475,23 @@ export async function incorporateRepositoryState(
         throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
     }
     if (isIssuesFlow) {
-    const previousIssues = await getIssuesFromMemories(
-        runtime,
-        owner,
-        repository,
-        branch
-    );
-    state.previousIssues = JSON.stringify(
-        previousIssues.map((issue) => ({
-            title: issue.content.text,
-            body: (issue.content.metadata as any).body,
-            url: (issue.content.metadata as any).url,
-            number: (issue.content.metadata as any).number,
-            state: (issue.content.metadata as any).state,
-        })),
-        null,
-        2
-    );
+        const previousIssues = await getIssuesFromMemories(
+            runtime,
+            owner,
+            repository,
+            branch
+        );
+        state.previousIssues = JSON.stringify(
+            previousIssues.map((issue) => ({
+                title: issue.content.text,
+                body: (issue.content.metadata as any).body,
+                url: (issue.content.metadata as any).url,
+                number: (issue.content.metadata as any).number,
+                state: (issue.content.metadata as any).state,
+            })),
+            null,
+            2
+        );
     }
 
     if (isPullRequestsFlow) {
@@ -409,16 +501,16 @@ export async function incorporateRepositoryState(
             repository,
             branch
         );
-    state.previousPRs = JSON.stringify(
-        previousPRs.map((pr) => ({
-            title: pr.content.text,
-            body: (pr.content.metadata as any).body,
-            url: (pr.content.metadata as any).url,
-            number: (pr.content.metadata as any).number,
-            state: (pr.content.metadata as any).state,
-            diff: (pr.content.metadata as any).diff,
-            comments: (pr.content.metadata as any).comments,
-        })),
+        state.previousPRs = JSON.stringify(
+            previousPRs.map((pr) => ({
+                title: pr.content.text,
+                body: (pr.content.metadata as any).body,
+                url: (pr.content.metadata as any).url,
+                number: (pr.content.metadata as any).number,
+                state: (pr.content.metadata as any).state,
+                diff: (pr.content.metadata as any).diff,
+                comments: (pr.content.metadata as any).comments,
+            })),
             null,
             2
         );

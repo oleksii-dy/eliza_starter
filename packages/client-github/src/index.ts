@@ -27,10 +27,11 @@ import {
     addCommentToPRAction,
     incorporateRepositoryState,
     getRepositoryRoomId,
+    saveIssuesToMemory,
 } from "@elizaos/plugin-github";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
-import { saveIssuesToMemory, savePullRequestsToMemory } from "./utils";
+import { savePullRequestsToMemory } from "./utils";
 import fs from "fs/promises";
 
 export class GitHubClient extends EventEmitter {
