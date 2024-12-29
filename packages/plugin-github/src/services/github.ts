@@ -1,6 +1,6 @@
 import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
 import { elizaLogger } from "@elizaos/core";
-import { GithubReaction } from "../constants";
+import { GithubReaction } from "../types";
 
 interface GitHubConfig {
     owner: string;

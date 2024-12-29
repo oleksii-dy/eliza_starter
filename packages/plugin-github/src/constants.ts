@@ -1,2 +1,3 @@
+import { GithubReaction } from "./types";
 
-export type GithubReaction = "+1" | "-1" | "laugh" | "confused" | "heart" | "hooray" | "rocket" | "eyes";
+export const githubReactions: GithubReaction[] = ["+1", "-1", "laugh", "confused", "heart", "hooray", "rocket", "eyes"];

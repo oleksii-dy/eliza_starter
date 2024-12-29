@@ -1,5 +1,6 @@
 import { elizaLogger } from "@elizaos/core";
 import { z } from "zod";
+import { githubReactions } from "./constants";
 
 export const InitializeSchema = z.object({
     owner: z.string().min(1, "GitHub owner is required"),
@@ -273,4 +274,106 @@ export const isGenerateCommentForASpecificPRSchema = (
     object: any
 ): object is GenerateCommentForASpecificPRSchema => {
     return GenerateCommentForASpecificPRSchema.safeParse(object).success;
+};
+
+export const ReactToIssueSchema = z.object({
+    owner: z.string().min(1, "GitHub owner is required"),
+    repo: z.string().min(1, "GitHub repo is required"),
+    branch: z.string().min(1, "GitHub branch is required"),
+    issue: z.number().min(1, "Issue number is required"),
+    reaction: z.enum(githubReactions as [string, ...string[]]),
+});
+
+export interface ReactToIssueContent {
+    owner: string;
+    repo: string;
+    branch: string;
+    issue: number;
+    reaction: GithubReaction;
+}
+
+export const isReactToIssueContent = (
+    object: any
+): object is ReactToIssueContent => {
+    if (ReactToIssueSchema.safeParse(object).success) {
+        return true;
+    }
+    elizaLogger.error("Invalid content: ", object);
+    return false;
+};
+
+export const ReactToPRSchema = z.object({
+    owner: z.string().min(1, "GitHub owner is required"),
+    repo: z.string().min(1, "GitHub repo is required"),
+    branch: z.string().min(1, "GitHub branch is required"),
+    pullRequest: z.number().min(1, "Pull request number is required"),
+    reaction: z.enum(githubReactions as [string, ...string[]]),
+});
+
+export interface ReactToPRContent {
+    owner: string;
+    repo: string;
+    branch: string;
+    pullRequest: number;
+    reaction: GithubReaction;
+}
+
+export const isReactToPRContent = (
+    object: any
+): object is ReactToPRContent => {
+    if (ReactToPRSchema.safeParse(object).success) {
+        return true;
+    }
+    elizaLogger.error("Invalid content: ", object);
+    return false;
+};
+
+export type GithubReaction = "+1" | "-1" | "laugh" | "confused" | "heart" | "hooray" | "rocket" | "eyes";
+
+export const ClosePRActionSchema = z.object({
+    owner: z.string().min(1, "GitHub owner is required"),
+    repo: z.string().min(1, "GitHub repo is required"),
+    branch: z.string().min(1, "GitHub branch is required"),
+    pullRequest: z.number().min(1, "Pull request number is required"),
+});
+
+export interface ClosePRActionContent {
+    owner: string;
+    repo: string;
+    branch: string;
+    pullRequest: number;
+}
+
+export const isClosePRActionContent = (
+    object: any
+): object is ClosePRActionContent => {
+    if (ClosePRActionSchema.safeParse(object).success) {
+        return true;
+    }
+    elizaLogger.error("Invalid content: ", object);
+    return false;
+};
+
+export const CloseIssueActionSchema = z.object({
+    owner: z.string().min(1, "GitHub owner is required"),
+    repo: z.string().min(1, "GitHub repo is required"),
+    branch: z.string().min(1, "GitHub branch is required"),
+    issue: z.number().min(1, "Issue number is required"),
+});
+
+export interface CloseIssueActionContent {
+    owner: string;
+    repo: string;
+    branch: string;
+    issue: number;
+}
+
+export const isCloseIssueActionContent = (
+    object: any
+): object is CloseIssueActionContent => {
+    if (CloseIssueActionSchema.safeParse(object).success) {
+        return true;
+    }
+    elizaLogger.error("Invalid content: ", object);
+    return false;
 };

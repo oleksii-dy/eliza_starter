@@ -930,3 +930,79 @@ export const ideationTemplate = createTemplate(
 ]
 `
 );
+
+export const reactToIssueTemplate = `
+Extract the details for reacting to a specific GitHub issue:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+- **issue_number** (number): The number of the issue to react to (e.g., 1)
+- **reaction** (string): The reaction to add (e.g., "+1", "heart")
+
+${contextTemplate}
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>",
+    "issue_number": "<issue_number>",
+    "reaction": "<reaction>"
+}
+\`\`\`
+`;
+
+export const reactToPRTemplate = `
+Extract the details for reacting to a specific GitHub pull request:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+- **pullRequest** (number): The number of the pull request to react to (e.g., 1)
+- **reaction** (string): The reaction to add (e.g., "+1", "heart")
+
+${contextTemplate}
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>",
+    "pullRequest": "<pullRequest>",
+    "reaction": "<reaction>"
+}
+\`\`\`
+`;
+
+export const closePRActionTemplate = `
+Extract the details for closing a specific GitHub pull request:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+- **pullRequest** (number): The number of the pull request to close (e.g., 1)
+
+${contextTemplate}
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>",
+    "pullRequest": "<pullRequest>"
+}
+\`\`\`
+`;
+
+export const closeIssueTemplate = `
+Extract the details for closing a specific GitHub issue:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+- **issue** (number): The number of the issue to close (e.g., 1)
+
+${contextTemplate}
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>",
+    "issue": "<issue>"
+}
+\`\`\`
+`;

@@ -25,12 +25,12 @@ import {
 import {
     githubAddCommentToIssuePlugin,
     addCommentToIssueAction,
-} from "./plugins/addCommentToIssue";
-import { githubIdeationPlugin, ideationAction } from "./plugins/ideationPlugin";
+} from "./plugins/interactWithIssue";
 import {
     githubAddCommentToPRPlugin,
     addCommentToPRAction,
-} from "./plugins/addCommentToPR";
+} from "./plugins/interactWithPR";
+import { githubIdeationPlugin, ideationAction } from "./plugins/ideationPlugin";
 import type { Plugin } from "@elizaos/core";
 import { sourceCodeProvider } from "./providers/sourceCode";
 import { testFilesProvider } from "./providers/testFiles";
@@ -56,9 +56,9 @@ export * from "./plugins/createPullRequest";
 export * from "./plugins/createCommit";
 export * from "./plugins/createIssue";
 export * from "./plugins/modifyIssue";
-export * from "./plugins/addCommentToIssue";
+export * from "./plugins/interactWithIssue";
 export * from "./plugins/ideationPlugin";
-export * from "./plugins/addCommentToPR";
+export * from "./plugins/interactWithPR";
 
 export * from "./providers/sourceCode";
 export * from "./providers/testFiles";

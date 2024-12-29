@@ -1,32 +1,135 @@
-import {
-    composeContext,
-    elizaLogger,
-    generateObject,
-    Action,
-    HandlerCallback,
-    IAgentRuntime,
-    Memory,
-    ModelClass,
-    Plugin,
-    State,
-} from "@elizaos/core";
+import { Action, IAgentRuntime, HandlerCallback, Memory, State, elizaLogger, composeContext, generateObject, ModelClass, Plugin } from "@elizaos/core";
 import { GitHubService } from "../services/github";
 import {
     AddCommentToPRContent,
     AddCommentToPRSchema,
+    ClosePRActionContent,
+    ClosePRActionSchema,
     GenerateCommentForASpecificPRSchema,
+    ReactToPRContent,
+    ReactToPRSchema,
     isAddCommentToPRContent,
+    isClosePRActionContent,
     isGenerateCommentForASpecificPRSchema,
+    isReactToPRContent,
 } from "../types";
-import {
-    addCommentToPRTemplate,
-    generateCommentForASpecificPRTemplate,
-} from "../templates";
-import {
-    getPullRequestFromMemories,
-    incorporateRepositoryState,
-} from "../utils";
+import { getPullRequestFromMemories, incorporateRepositoryState } from "../utils";
+import { addCommentToPRTemplate, closePRActionTemplate, generateCommentForASpecificPRTemplate, reactToPRTemplate } from "../templates";
 import fs from "fs/promises";
+
+export const reactToPRAction: Action = {
+    name: "REACT_TO_PR",
+    similes: [
+        "REACT_TO_PR",
+        "ADD_REACTION_PR",
+        "POST_REACTION_PR",
+    ],
+    description:
+        "Adds a reaction to a comment in a pull request in the GitHub repository",
+    validate: async (runtime: IAgentRuntime) => {
+        const token = !!runtime.getSetting("GITHUB_API_TOKEN");
+        return token;
+    },
+    handler: async (
+        runtime: IAgentRuntime,
+        message: Memory,
+        state: State,
+        options: any,
+        callback?: HandlerCallback
+    ) => {
+        elizaLogger.log(
+            "[reactToPR] Composing state for message:",
+            message
+        );
+        if (!state) {
+            state = (await runtime.composeState(message)) as State;
+        } else {
+            state = await runtime.updateRecentMessageState(state);
+        }
+        const updatedState = await incorporateRepositoryState(
+            state,
+            runtime,
+            message,
+            [],
+            false,
+            true
+        );
+        elizaLogger.info("State:", updatedState);
+
+        const context = composeContext({
+            state: updatedState,
+            template: reactToPRTemplate,
+        });
+        const details = await generateObject({
+            runtime,
+            context,
+            modelClass: ModelClass.SMALL,
+            schema: ReactToPRSchema,
+        });
+
+        if (!isReactToPRContent(details.object)) {
+            elizaLogger.error("Invalid content:", details.object);
+            throw new Error("Invalid content");
+        }
+
+        const content = details.object as ReactToPRContent;
+        const githubService = new GitHubService({
+            owner: content.owner,
+            repo: content.repo,
+            auth: runtime.getSetting("GITHUB_API_TOKEN"),
+        });
+        elizaLogger.info("Adding reaction to pull request comment...");
+
+        try {
+            const reaction = await githubService.createReactionForPullRequestReviewComment(
+                content.owner,
+                content.repo,
+                content.pullRequest,
+                options.reaction
+            );
+
+            elizaLogger.info(
+                `Added reaction to pull request #${content.pullRequest} successfully!`
+            );
+            if (callback) {
+                callback({
+                    text: `Added reaction to pull request #${content.pullRequest} successfully!`,
+                    attachments: [],
+                });
+            }
+        } catch (error) {
+            elizaLogger.error(
+                `Error adding reaction to pull request #${content.pullRequest} in repository ${content.owner}/${content.repo}:`,
+                error
+            );
+            if (callback) {
+                callback(
+                    {
+                        text: `Error adding reaction to pull request #${content.pullRequest}. Please try again.`,
+                    },
+                    []
+                );
+            }
+        }
+    },
+    examples: [
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "React to pull request #1 in repository user1/repo1 with a thumbs up",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Added reaction to pull request #1 successfully!",
+                    action: "REACT_TO_PR",
+                },
+            },
+        ],
+    ],
+};
 
 export const addCommentToPRAction: Action = {
     name: "ADD_COMMENT_TO_PR",
@@ -266,10 +369,126 @@ export const addCommentToPRAction: Action = {
     ],
 };
 
+export const closePRAction: Action = {
+    name: "CLOSE_PR",
+    similes: [
+        "CLOSE_PR",
+        "CLOSE_PULL_REQUEST",
+    ],
+    description:
+        "Closes a pull request in the GitHub repository",
+    validate: async (runtime: IAgentRuntime) => {
+        const token = !!runtime.getSetting("GITHUB_API_TOKEN");
+        return token;
+    },
+    handler: async (
+        runtime: IAgentRuntime,
+        message: Memory,
+        state: State,
+        options: any,
+        callback?: HandlerCallback
+    ) => {
+        elizaLogger.log(
+            "[closePR] Composing state for message:",
+            message
+        );
+        if (!state) {
+            state = (await runtime.composeState(message)) as State;
+        } else {
+            state = await runtime.updateRecentMessageState(state);
+        }
+        const updatedState = await incorporateRepositoryState(
+            state,
+            runtime,
+            message,
+            [],
+            false,
+            true
+        );
+        elizaLogger.info("State:", updatedState);
+
+        const context = composeContext({
+            state: updatedState,
+            template: closePRActionTemplate,
+        });
+        const details = await generateObject({
+            runtime,
+            context,
+            modelClass: ModelClass.SMALL,
+            schema: ClosePRActionSchema,
+        });
+
+        if (!isClosePRActionContent(details.object)) {
+            elizaLogger.error("Invalid content:", details.object);
+            throw new Error("Invalid content");
+        }
+
+        const content = details.object as ClosePRActionContent;
+        const githubService = new GitHubService({
+            owner: content.owner,
+            repo: content.repo,
+            auth: runtime.getSetting("GITHUB_API_TOKEN"),
+        });
+        elizaLogger.info("Closing pull request...");
+
+        try {
+            const pr = await githubService.updatePullRequest(
+                content.owner,
+                content.repo,
+                content.pullRequest,
+                undefined,
+                undefined,
+                "closed"
+            );
+
+            elizaLogger.info(
+                `Closed pull request #${content.pullRequest} successfully!`
+            );
+            if (callback) {
+                callback({
+                    text: `Closed pull request #${content.pullRequest} successfully!`,
+                    attachments: [],
+                });
+            }
+        } catch (error) {
+            elizaLogger.error(
+                `Error closing pull request #${content.pullRequest} in repository ${content.owner}/${content.repo}:`,
+                error
+            );
+            if (callback) {
+                callback(
+                    {
+                        text: `Error closing pull request #${content.pullRequest}. Please try again.`,
+                    },
+                    []
+                );
+            }
+        }
+    },
+    examples: [
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Close pull request #1 in repository user1/repo1",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Closed pull request #1 successfully!",
+                    action: "CLOSE_PR",
+                },
+            },
+        ],
+    ],
+};
+
 export const githubAddCommentToPRPlugin: Plugin = {
     name: "githubAddCommentToPR",
-    description: "Integration with GitHub for adding comments to pull requests",
-    actions: [addCommentToPRAction],
+    description: "Integration with GitHub for adding comments or reactions or closing pull requests",
+    actions: [addCommentToPRAction, reactToPRAction, closePRAction],
     evaluators: [],
     providers: [],
 };
+
