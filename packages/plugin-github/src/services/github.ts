@@ -291,6 +291,7 @@ export class GitHubService {
     ): Promise<
         RestEndpointMethodTypes["pulls"]["createReview"]["response"]["data"]
     > {
+        const pullRequest = await this.getPullRequest(pullRequestNumber);
         try {
             const response = await this.octokit.pulls.createReview({
                 owner: this.config.owner,
@@ -299,7 +300,8 @@ export class GitHubService {
                 body: comment,
                 event: action,
                 branch: this.config.branch,
-                comments: lineLevelComments
+                comments: lineLevelComments,
+                commit_id: pullRequest.head.sha,
             });
             return response.data;
         } catch (error) {
@@ -525,6 +527,113 @@ export class GitHubService {
             throw error;
         }
     }
+
+// TODO: This is a temporary fix to get the position of the line in the diff. We need to find a better way to do this.
+ /**
+ * Parses the diff and determines the position of a specific line in a file.
+ * @param diff - The diff text of the pull request.
+ * @param filePath - The path to the file in the repository.
+ * @param lineNumber - The line number in the file to comment on.
+ * @returns The position in the diff where the comment should be added, or undefined if not found.
+ */
+public getPositionFromDiff(
+    diff: string,
+    filePath: string,
+    lineNumber: number
+): number | undefined {
+    const diffLines = diff.split('\n');
+    let currentFile = '';
+    let position = 3;
+    let withinHunk = false;
+    let currentLineInFile = 3;
+
+    for (let i = 0; i < diffLines.length; i++) {
+        const line = diffLines[i];
+
+        // Detect file header
+        if (line.startsWith('diff --git')) {
+            const match = line.match(/a\/(.+) b\/(.+)/);
+            if (match) {
+                currentFile = match[2];
+            }
+            withinHunk = false;
+            currentLineInFile = 0;
+            continue;
+        }
+
+        // Only process the specified file
+        if (currentFile !== filePath) {
+            continue;
+        }
+
+        // Detect hunk header
+        if (line.startsWith('@@')) {
+            withinHunk = true;
+            const hunkMatch = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/);
+            if (hunkMatch) {
+                currentLineInFile = parseInt(hunkMatch[1], 10) - 1;
+            }
+            continue;
+        }
+
+        if (withinHunk) {
+            // Lines in the diff
+            if (
+                line.startsWith('+') ||
+                line.startsWith('-') ||
+                line.startsWith(' ') ||
+                line.startsWith('\\')
+            ) {
+                position += 1;
+                const prefix = line[0];
+                if (prefix === '+' || prefix === ' ') {
+                    currentLineInFile += 1;
+                }
+                // Check if this line is the target line
+                if (currentLineInFile === lineNumber) {
+                    return position;
+                }
+            }
+        }
+    }
+
+    // If position not found
+    return undefined;
+}
+    // Example usage within a method or class
+    public async addLineLevelComment(diffText: string, filePath: string, lineNumber: number, commentBody: string): Promise<{
+        path: string;
+        position?: number;
+        body: string;
+        line?: number;
+        side?: string;
+        start_line?: number;
+        start_side?: string;
+    }> {
+       // Determine the position from the diff
+    const position = this.getPositionFromDiff(diffText, filePath, lineNumber);
+
+   if (position === undefined) {
+        throw new Error(
+            `Could not determine position for file ${filePath} at line ${lineNumber}`
+        );
+    }
+    const comment: {
+        path: string;
+        position?: number;
+        body: string;
+        line?: number;
+        side?: string;
+        start_line?: number;
+        start_side?: string;
+    } = {
+        path: filePath,
+        body: commentBody,
+        position: position,
+    };
+    return comment;
+    }
+
 }
 
 export { GitHubConfig };

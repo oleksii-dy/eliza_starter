@@ -706,11 +706,80 @@ export const generateCommentForASpecificPRTemplate = `
 Generate a comment for a specific GitHub pull request that aligns with the character's goals and the user's request:
 Here is the specific pull request to comment on: {{specificPullRequest}}
 Please provide the approval event for the pull request: COMMENT or APPROVE or REQUEST_CHANGES
+Please provide the line level comments for the pull request when referring to the code. Use the diff field {{specificPullRequest.diff}} to determine the line number. And always have a general comment.
+Remember these are suggestions and not something that has been implemented yet.
+
 ${contextTemplate}
+
+Example 1:
+"diff": "diff --git a/index.js b/index.js\nindex da36ae3..2a707ec 100644\n--- a/index.js\n+++ b/index.js\n@@ -10,7 +10,7 @@ async function main() {\n     console.log(chalk.blue('🚀 Welcome to Todo CLI!'));\n     console.log(chalk.blue('='.repeat(50)));\n     \n-    while (true) {\n+    while (true === true) {\n         try {\n             const action = await mainMenu();\n             \n@@ -51,4 +51,4 @@ main().catch(error => {\n     console.error(chalk.gray('\\nStack trace:'));\n     console.error(chalk.gray(error.stack));\n     process.exit(1);\n-}); \n\\ No newline at end of file\n+}); \n"
+
 \`\`\`json
 {
     "comment": "<comment>",
-    "approvalEvent": "<approvalEvent>"
+    "approvalEvent": "<approvalEvent>",
+    "lineLevelComments": [
+        {
+            "path": "index.js",
+            "body": "Changed condition in the while loop to 'true === true' for explicit comparison.",
+            "line": 13,
+            "side": "RIGHT"
+        }
+    ],
+}
+\`\`\`
+
+Example 2:
+"diff": "diff --git a/app.js b/app.js\nindex 1234567..89abcde 100644\n--- a/app.js\n+++ b/app.js\n@@ -1,5 +1,4 @@\n-import unusedModule from 'module';\n const express = require('express');\n const app = express();\n \n async function startServer() {\n@@ -25,7 +24,7 @@ async function startServer() {\n     console.log('Server started');\n }\n \n-startServer();\n+await startServer();\n"
+
+\`\`\`json
+{
+    "comment": "<comment>",
+    "approvalEvent": "<approvalEvent>",
+    "lineLevelComments": [
+        {
+            "path": "app.js",
+            "body": "Refactored the function to use async/await for better readability.",
+            "line": 27,
+            "side": "RIGHT"
+        }
+    ],
+}
+\`\`\`
+
+Example 3:
+    "diff": "diff --git a/server.js b/server.js\nindex abcdef1..2345678 100644\n--- a/server.js\n+++ b/server.js\n@@ -43,6 +43,7 @@ function configureServer() {\n     app.use(bodyParser.json());\n     app.use(cors());\n+    app.use(newMiddleware());\n }\n \n function startServer() {\n@@ -76,7 +77,7 @@ function handleError(error) {\n     console.error('An error occurred:', error);\n-    console.error('Please check the server logs for more details.');\n+    console.error('Please check the server log for more details.');\n }\n"
+
+\`\`\`json
+{
+    "comment": "<comment>",
+    "approvalEvent": "<approvalEvent>",
+    "lineLevelComments": [
+        {
+            "path": "server.js",
+            "body": "Updated the server configuration to include new middleware.",
+            "line": 45,
+            "side": "RIGHT"
+        }
+    ],
+}
+\`\`\`
+
+Example 4:
+    "diff": "diff --git a/config.js b/config.js\nindex 3456789..456789a 100644\n--- a/config.js\n+++ b/config.js\n@@ -10,7 +10,7 @@ module.exports = {\n     maxConnections: 100,\n     timeout: 5000,\n-    logLevel: 'info',\n+    logLevel: 'debug',\n     enableCache: true,\n }\n \n@@ -32,6 +32,7 @@ module.exports = {\n     database: {\n         host: 'localhost',\n         port: 5432,\n+        enableLogging: true,\n     }\n }\n"
+
+\`\`\`json
+{
+    "comment": "<comment>",
+    "approvalEvent": "<approvalEvent>",
+    "lineLevelComments": [
+        {
+            "path": "config.js",
+            "body": "Changed configuration value to improve performance.",
+            "line": 12,
+            "side": "RIGHT"
+        }
+    ],
 }
 \`\`\`
 `;

@@ -256,10 +256,10 @@ export const addCommentToPRAction: Action = {
             message,
             content.pullRequest
         );
+        let pr = await githubService.getPullRequest(content.pullRequest);
+        const diffText =  await githubService.getPRDiffText(pr.diff_url)
         if (!pullRequest) {
             elizaLogger.error("Pull request not found in memories");
-
-            let pr = await githubService.getPullRequest(content.pullRequest);
             const prData = {
                 type: "pull_request",
                 url: pr.html_url,
@@ -274,7 +274,9 @@ export const addCommentToPRAction: Action = {
                     typeof label === "string" ? label : label?.name
                 ),
                 body: pr.body,
-                diff: await githubService.getPRDiffText(pr.diff_url),
+                diff: diffText,
+                lineLevelComments: []
+
             };
             updatedState.specificPullRequest = JSON.stringify(prData);
         } else {
@@ -287,7 +289,7 @@ export const addCommentToPRAction: Action = {
             state: updatedState,
             template: generateCommentForASpecificPRTemplate,
         });
-
+        await fs.writeFile("commentContext.txt", commentContext);
         const commentDetails = await generateObject({
             runtime,
             context: commentContext,
@@ -309,14 +311,20 @@ export const addCommentToPRAction: Action = {
             {
                 pullRequest,
                 comment,
+                lineLevelComments: comment.lineLevelComments
             }
         );
-
+        const sanitizedLineLevelComments = await Promise.all(comment.lineLevelComments.map(async (lineLevelComment) => {
+            return await githubService.addLineLevelComment(diffText, lineLevelComment.path, lineLevelComment.line, lineLevelComment.body)
+        }))
+        await fs.writeFile("diffText.txt", diffText);
+        await fs.writeFile("comment.txt", JSON.stringify(comment, null, 2));
+        await fs.writeFile("sanitizedLineLevelComments.txt", JSON.stringify(sanitizedLineLevelComments, null, 2));
         try {
             const addedComment = await githubService.addPRCommentAndReview(
                 content.pullRequest,
                 comment.comment,
-                [],
+                sanitizedLineLevelComments,
                 comment.approvalEvent
             );
             elizaLogger.info("Comment:", JSON.stringify(comment, null, 2));
