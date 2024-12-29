@@ -1,5 +1,5 @@
 {
-  "name": "@ai16z/plugin-bitcoin",
+  "name": "@elizaos/plugin-bitcoin",
   "version": "0.1.0",
   "description": "Bitcoin on-chain plugin for Eliza",
   "main": "dist/index.js",
@@ -14,7 +14,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@ai16z/eliza": "workspace:*",
+    "@elizaos/core": "workspace:*",
     "@arklabs/wallet-sdk": "^0.0.1",
     "node-fetch": "^2.6.9"
   },

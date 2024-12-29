@@ -1,3 +1,14 @@
 // @ts-ignore
-const { InMemoryKey, Wallet } = await import('@arklabs/wallet-sdk')
+let InMemoryKey: any;
+let Wallet: any;
+
+async function initSDK() {
+    const sdk = await import('@arklabs/wallet-sdk');
+    InMemoryKey = sdk.InMemoryKey;
+    Wallet = sdk.Wallet;
+}
+
+// Initialize the SDK
+initSDK().catch(console.error);
+
 export { InMemoryKey, Wallet }
