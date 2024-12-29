@@ -186,6 +186,9 @@ importers:
       '@elizaos/plugin-intiface':
         specifier: workspace:*
         version: link:../packages/plugin-intiface
+      '@elizaos/plugin-mpl-bubblegum':
+        specifier: workspace:*
+        version: link:../packages/plugin-mpl-bubblegum
       '@elizaos/plugin-multiversx':
         specifier: workspace:*
         version: link:../packages/plugin-multiversx
