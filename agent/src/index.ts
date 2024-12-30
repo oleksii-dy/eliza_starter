@@ -60,6 +60,8 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
+import { bitcoinPriceProvider } from "./providers/bitcoinPriceProvider";
+import { etfsProvider } from "./providers/etfsProvider";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -418,16 +420,16 @@ export async function initializeClients(
         if (slackClient) clients.slack = slackClient; // Use object property instead of push
     }
 
-    if (character.plugins?.length > 0) {
-        for (const plugin of character.plugins) {
-            if (plugin.clients) {
-                for (const client of plugin.clients) {
-                    const startedClient = await client.start(runtime);
-                    clients[client.name] = startedClient; // Assuming client has a name property
-                }
-            }
-        }
-    }
+    // if (character.plugins?.length > 0) {
+    //     for (const plugin of character.plugins) {
+    //         if (plugin.clients) {
+    //             for (const client of plugin.clients) {
+    //                 const startedClient = await client.start(runtime);
+    //                 clients[client] = startedClient; // Assuming client has a name property
+    //             }
+    //         }
+    //     }
+    // }
 
     return clients;
 }
@@ -572,7 +574,7 @@ export async function createAgent(
             getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
             getSecret(character, "STORY_PRIVATE_KEY") ? storyPlugin : null,
         ].filter(Boolean),
-        providers: [],
+        providers: [bitcoinPriceProvider, etfsProvider],
         actions: [],
         services: [],
         managers: [],
