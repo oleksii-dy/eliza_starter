@@ -60,6 +60,16 @@ export const oodaTemplate = `
             - The pull request has been approved by the necessary reviewers.
             - The pull request is ready to be merged into the target branch.
 
+    9. NOTHING:
+        - This action should ONLY be chosen as an absolute last resort, after exhaustively evaluating all other possible actions.
+        - Criteria:
+            - Every other action (CREATE_ISSUE, COMMENT_ON_ISSUE, etc.) has been carefully considered and definitively ruled out.
+            - The repository is in an optimal state with no pending work items requiring attention.
+            - All open issues and pull requests have recent activity and don't need intervention.
+            - No code improvements, bugs, or potential enhancements can be identified.
+            - No ongoing discussions would benefit from additional feedback or reactions.
+            - WARNING: This action indicates a complete lack of needed work. Be extremely certain no other actions are appropriate before selecting it.
+
     Context:
     ${contextTemplate}
     \`\`\`json
