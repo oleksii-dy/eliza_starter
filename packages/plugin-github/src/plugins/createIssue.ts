@@ -71,7 +71,7 @@ export const createIssueAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: CreateIssueSchema,
         });
 

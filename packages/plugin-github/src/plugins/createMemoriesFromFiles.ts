@@ -54,8 +54,6 @@ export async function addFilesToMemory(
         const existingDocument =
             await runtime.messageManager.getMemoryById(memoryId);
 
-        elizaLogger.log("existingDocument", existingDocument);
-
         if (
             existingDocument &&
             existingDocument.content["hash"] == contentHash
@@ -137,7 +135,7 @@ export const createMemoriesFromFilesAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: CreateMemoriesFromFilesSchema,
         });
 

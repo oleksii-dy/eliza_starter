@@ -293,6 +293,7 @@ export async function getIssuesFromMemories(
     const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
     const memories = await runtime.messageManager.getMemories({
         roomId: roomId,
+        count: 100,
     });
     // elizaLogger.log("Memories:", memories);
     await fs.writeFile(
@@ -492,7 +493,10 @@ export async function incorporateRepositoryState(
             repository,
             branch
         );
-        // await fs.writeFile("/tmp/previousIssues.txt", JSON.stringify(previousIssues, null, 2));
+        await fs.writeFile(
+            "/tmp/plugin-github-previousIssues.txt",
+            JSON.stringify(previousIssues, null, 2)
+        );
         state.previousIssues = JSON.stringify(
             previousIssues.map((issue) => ({
                 title: issue.content.text,

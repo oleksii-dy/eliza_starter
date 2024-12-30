@@ -100,17 +100,11 @@ export const oodaTemplate = `
     1. CREATE_ISSUE:
     {
         "action": "CREATE_ISSUE",
-        "reasoning": "After analyzing {filepath}:{line-range}, I identified {specific issue}. This conclusion is supported by {related code or patterns} found in {related files}.",
+        "reasoning": "Identifying a problem in the codebase",
         "owner": "octocat",
         "repo": "hello-world",
-        "title": "Specific and descriptive issue title",
-        "description": "## Location\\nFile: '\{filepath\}'\\nLines: \{line-range\}\\n\\n## Current Implementation\\n\`\`\`\{language\}\\n\{relevant code snippet\}\\n\`\`\`\\n\\n## Problem\\n\{detailed problem description with specific references to the code\}\\n\\n## Impact\\n- \{specific impact 1\}\\n- \{specific impact 2\}\\n\\n## Related Code\\n- '\{related file 1\}': \{how it relates\}\\n- '\{related file 2\}': \{how it relates\}\\n\\n## Proposed Solution\\n\{detailed solution with code examples if applicable\}",
-        "files": [
-            {
-                "path": "file/path",
-                "content": "file content"
-            }
-        ]
+        "title": "Improvement suggestion",
+        "description": "The codebase could benefit from a more efficient data structure."
     }
 
     2. COMMENT_ON_ISSUE:

@@ -91,11 +91,17 @@ export class GitHubClient extends EventEmitter {
         const memories = await this.runtime.messageManager.getMemories({
             roomId,
         });
-        // await fs.writeFile("/tmp/memories.txt", JSON.stringify(memories, null, 2));
+        await fs.writeFile(
+            "/tmp/client-github-memories.txt",
+            JSON.stringify(memories, null, 2)
+        );
         const fileMemories = memories.filter(
             (memory) => (memory.content.metadata as any)?.path
         );
-        // await fs.writeFile("/tmp/fileMemories.txt", JSON.stringify(fileMemories, null, 2));
+        await fs.writeFile(
+            "/tmp/client-github-fileMemories.txt",
+            JSON.stringify(fileMemories, null, 2)
+        );
         if (fileMemories.length === 0) {
             await this.initializeRepositoryAndCreateMemories(
                 owner,
@@ -151,7 +157,7 @@ export class GitHubClient extends EventEmitter {
         const response = await generateObject({
             runtime: this.runtime,
             context,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: OODASchema,
         });
         if (!isOODAContent(response.object)) {
