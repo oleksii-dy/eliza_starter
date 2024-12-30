@@ -17,11 +17,11 @@ import { contextTemplate } from "./templates";
 import { GitHubService } from "./services/github";
 
 export function getRepoPath(owner: string, repo: string) {
-    return path.join(process.cwd(), ".repos", owner, repo);
+    return path.join("/tmp", "elizaos-repos", owner, repo);
 }
 
 export async function createReposDirectory(owner: string) {
-    const dirPath = path.join(process.cwd(), ".repos", owner);
+    const dirPath = path.join("/tmp", "elizaos-repos", owner);
     if (existsSync(dirPath)) {
         elizaLogger.info(`Repos directory already exists: ${dirPath}`);
         return;
@@ -294,8 +294,11 @@ export async function getIssuesFromMemories(
     const memories = await runtime.messageManager.getMemories({
         roomId: roomId,
     });
-    elizaLogger.log("Memories:", memories);
-    // await fs.writeFile("getIssuesFromMemories.txt", JSON.stringify(memories, null, 2));
+    // elizaLogger.log("Memories:", memories);
+    await fs.writeFile(
+        "/tmp/getIssuesFromMemories.txt",
+        JSON.stringify(memories, null, 2)
+    );
     // Filter memories to only include those that are issues
     const issueMemories = memories.filter(
         (memory) => (memory.content.metadata as any)?.type === "issue"
@@ -369,7 +372,11 @@ export async function saveIssueToMemory(
         },
     };
 
-    elizaLogger.log("Issue memory:", issueMemory);
+    // elizaLogger.log("Issue memory:", issueMemory);
+    await fs.writeFile(
+        `/tmp/saveIssueToMemory-issueMemory-${issue.number}.txt`,
+        JSON.stringify(issueMemory, null, 2)
+    );
 
     await runtime.messageManager.createMemory(issueMemory);
 
@@ -394,7 +401,7 @@ export const saveIssuesToMemory = async (
         auth: apiToken,
     });
     const issues = await githubService.getIssues();
-    // await fs.writeFile("issues.txt", JSON.stringify(issues, null, 2));
+    // await fs.writeFile("/tmp/issues.txt", JSON.stringify(issues, null, 2));
     const issuesMemories: Memory[] = [];
     // create memories for each issue if they are not already in the memories
     for (const issue of issues) {
@@ -408,21 +415,21 @@ export const saveIssuesToMemory = async (
         //         )
         // );
         // if (!issueMemory) {
-            const newIssueMemory = await saveIssueToMemory(
-                runtime,
-                issue,
-                owner,
-                repository,
-                branch
-            );
+        const newIssueMemory = await saveIssueToMemory(
+            runtime,
+            issue,
+            owner,
+            repository,
+            branch
+        );
 
-            issuesMemories.push(newIssueMemory);
+        issuesMemories.push(newIssueMemory);
         // } else {
         //     elizaLogger.log("Issue already in memories:", issueMemory);
         //     // update the issue memory
         // }
     }
-    // await fs.writeFile("issuesMemories.txt", JSON.stringify(issuesMemories, null, 2));
+    // await fs.writeFile("/tmp/issuesMemories.txt", JSON.stringify(issuesMemories, null, 2));
     return issuesMemories;
 };
 
@@ -485,7 +492,7 @@ export async function incorporateRepositoryState(
             repository,
             branch
         );
-        // await fs.writeFile("previousIssues.txt", JSON.stringify(previousIssues, null, 2));
+        // await fs.writeFile("/tmp/previousIssues.txt", JSON.stringify(previousIssues, null, 2));
         state.previousIssues = JSON.stringify(
             previousIssues.map((issue) => ({
                 title: issue.content.text,
@@ -506,7 +513,7 @@ export async function incorporateRepositoryState(
             repository,
             branch
         );
-        // await fs.writeFile("previousPRs.txt", JSON.stringify(previousPRs, null, 2));
+        // await fs.writeFile("/tmp/previousPRs.txt", JSON.stringify(previousPRs, null, 2));
         state.previousPRs = JSON.stringify(
             previousPRs.map((pr) => ({
                 title: pr.content.text,

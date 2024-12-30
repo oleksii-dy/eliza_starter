@@ -66,7 +66,7 @@ export const createIssueAction: Action = {
         });
         // elizaLogger.info("Context:", context);
         // write the context to a file for testing
-        // await fs.writeFile("plugin-github-create-issue-context.txt", context);
+        // await fs.writeFile("/tmp/plugin-github-create-issue-context.txt", context);
 
         const details = await generateObject({
             runtime,
@@ -99,12 +99,16 @@ export const createIssueAction: Action = {
                 content.branch,
                 runtime.getSetting("GITHUB_API_TOKEN")
             );
-            elizaLogger.log("Issues memories:", issuesMemories);
+            // elizaLogger.log("Issues memories:", issuesMemories);
+            await fs.writeFile(
+                "/tmp/createIssue-issuesMemories.txt",
+                JSON.stringify(issuesMemories, null, 2)
+            );
 
             const issue = await githubService.createIssue(
                 content.title,
                 content.body,
-                [...content.labels, 'auto-generated']
+                [...content.labels, "auto-generated"]
             );
 
             elizaLogger.info(

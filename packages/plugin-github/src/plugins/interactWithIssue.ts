@@ -80,7 +80,7 @@ export const addCommentToIssueAction: Action = {
         });
         // Test all all values from the state are being loaded into the context (files, previousIssues, previousPRs, all issues all prs )
         // write the context to a file for testing
-        // await fs.writeFile("context.txt", context);
+        // await fs.writeFile("/tmp/context.txt", context);
         const details = await generateObject({
             runtime,
             context,
@@ -262,11 +262,7 @@ export const addCommentToIssueAction: Action = {
 
 export const reactToIssueAction: Action = {
     name: "REACT_TO_ISSUE",
-    similes: [
-        "REACT_TO_ISSUE",
-        "ADD_REACTION_ISSUE",
-        "POST_REACTION_ISSUE",
-    ],
+    similes: ["REACT_TO_ISSUE", "ADD_REACTION_ISSUE", "POST_REACTION_ISSUE"],
     description:
         "Adds a reaction to a comment in an issue in the GitHub repository",
     validate: async (runtime: IAgentRuntime) => {
@@ -280,10 +276,7 @@ export const reactToIssueAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log(
-            "[reactToIssue] Composing state for message:",
-            message
-        );
+        elizaLogger.log("[reactToIssue] Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -322,7 +315,7 @@ export const reactToIssueAction: Action = {
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
         elizaLogger.info("Adding reaction to issue comment...");
-        // await fs.writeFile("reaction.txt", JSON.stringify(content, null, 2));
+        // await fs.writeFile("/tmp/reaction.txt", JSON.stringify(content, null, 2));
         try {
             const reaction = await githubService.createReactionForIssue(
                 content.owner,
@@ -422,12 +415,8 @@ export const reactToIssueAction: Action = {
 
 export const closeIssueAction: Action = {
     name: "CLOSE_ISSUE",
-    similes: [
-        "CLOSE_ISSUE",
-        "CLOSE_GITHUB_ISSUE",
-    ],
-    description:
-        "Closes an issue in the GitHub repository",
+    similes: ["CLOSE_ISSUE", "CLOSE_GITHUB_ISSUE"],
+    description: "Closes an issue in the GitHub repository",
     validate: async (runtime: IAgentRuntime) => {
         const token = !!runtime.getSetting("GITHUB_API_TOKEN");
         return token;
@@ -439,10 +428,7 @@ export const closeIssueAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log(
-            "[closeIssue] Composing state for message:",
-            message
-        );
+        elizaLogger.log("[closeIssue] Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -483,14 +469,12 @@ export const closeIssueAction: Action = {
         elizaLogger.info("Closing issue...");
 
         try {
-            const issue = await githubService.updateIssue(
-                content.issue,
-                { state: "closed", labels: ["automated-close"] }
-            );
+            const issue = await githubService.updateIssue(content.issue, {
+                state: "closed",
+                labels: ["automated-close"],
+            });
             elizaLogger.info("Issue:", JSON.stringify(issue, null, 2));
-            elizaLogger.info(
-                `Closed issue #${content.issue} successfully!`
-            );
+            elizaLogger.info(`Closed issue #${content.issue} successfully!`);
             if (callback) {
                 callback({
                     text: `Closed issue #${content.issue} successfully!`,
@@ -578,7 +562,8 @@ export const closeIssueAction: Action = {
 
 export const githubInteractWithIssuePlugin: Plugin = {
     name: "githubInteractWithIssue",
-    description: "Integration with GitHub for adding comments or reactions or closing issues",
+    description:
+        "Integration with GitHub for adding comments or reactions or closing issues",
     actions: [reactToIssueAction, addCommentToIssueAction, closeIssueAction],
     evaluators: [],
     providers: [],

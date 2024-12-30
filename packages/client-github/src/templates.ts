@@ -1,11 +1,11 @@
 import { contextTemplate } from "@elizaos/plugin-github";
 
-// TODO: Improve client prompt so it doesn't do the same action type over and over again Monil
-// Ideate make more useful Monil
+// TODO: Improve client prompt so it doesn't do the same action type over and over again (monil)
+// Ideate make more useful (monil)
 
-// TODO: Improve individual action prompts because Each action does not properly consider previous actions it took and keeps generating the same action content Camer
-// TODO: Have a way to prevent duplicates potentially hae separate llm post process to explicitly check for duplicates Caner
-// TODO: Make sure previous issues / pull requests from repo are considered Caner
+// TODO: Improve individual action prompts because Each action does not properly consider previous actions it took and keeps generating the same action content (snobbee)
+// TODO: Have a way to prevent duplicates potentially hae separate llm post process to explicitly check for duplicates (snobbee)
+// TODO: Make sure previous issues / pull requests from repo are considered (snobbee)
 
 export const oodaTemplate = `
 
@@ -14,6 +14,7 @@ export const oodaTemplate = `
         - When a new bug, feature request, or task is identified that is not already tracked.
         - Criteria:
             - The issue is not a duplicate of an existing issue.
+            - The problem described in the issue is not already being worked on by another issue.
             - The issue has a significant impact on the project.
             - The issue can be clearly described with specific details and examples.
 
@@ -58,13 +59,6 @@ export const oodaTemplate = `
         - Criteria:
             - The pull request has been approved by the necessary reviewers.
             - The pull request is ready to be merged into the target branch.
-
-    9. NOTHING:
-        - When no action is needed, and all other criteria for actions have been thoroughly evaluated and found unsuitable.
-        - Criteria:
-            - The current state of the repository does not require any changes, and no new issues or improvements can be identified after a comprehensive analysis.
-            - All open issues and pull requests have been appropriately addressed with comments or reactions, and no further action is deemed necessary.
-            - Consider alternative actions before deciding on "NOTHING," such as providing feedback, suggestions, or reactions to ongoing discussions.
 
     Context:
     ${contextTemplate}

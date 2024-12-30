@@ -1,4 +1,15 @@
-import { Action, IAgentRuntime, HandlerCallback, Memory, State, elizaLogger, composeContext, generateObject, ModelClass, Plugin } from "@elizaos/core";
+import {
+    Action,
+    IAgentRuntime,
+    HandlerCallback,
+    Memory,
+    State,
+    elizaLogger,
+    composeContext,
+    generateObject,
+    ModelClass,
+    Plugin,
+} from "@elizaos/core";
 import { GitHubService } from "../services/github";
 import {
     AddCommentToPRContent,
@@ -16,8 +27,17 @@ import {
     isMergePRActionContent,
     isReactToPRContent,
 } from "../types";
-import { getPullRequestFromMemories, incorporateRepositoryState } from "../utils";
-import { addCommentToPRTemplate, closePRActionTemplate, generateCommentForASpecificPRTemplate, mergePRActionTemplate, reactToPRTemplate } from "../templates";
+import {
+    getPullRequestFromMemories,
+    incorporateRepositoryState,
+} from "../utils";
+import {
+    addCommentToPRTemplate,
+    closePRActionTemplate,
+    generateCommentForASpecificPRTemplate,
+    mergePRActionTemplate,
+    reactToPRTemplate,
+} from "../templates";
 import fs from "fs/promises";
 
 export const reactToPRAction: Action = {
@@ -41,10 +61,7 @@ export const reactToPRAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log(
-            "[reactToPR] Composing state for message:",
-            message
-        );
+        elizaLogger.log("[reactToPR] Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -85,12 +102,13 @@ export const reactToPRAction: Action = {
         elizaLogger.info("Adding reaction to pull request comment...");
 
         try {
-            const reaction = await githubService.createReactionForPullRequestReviewComment(
-                content.owner,
-                content.repo,
-                content.pullRequest,
-                content.reaction
-            );
+            const reaction =
+                await githubService.createReactionForPullRequestReviewComment(
+                    content.owner,
+                    content.repo,
+                    content.pullRequest,
+                    content.reaction
+                );
             const pr = await githubService.getPullRequest(content.pullRequest);
             elizaLogger.info("Reaction:", JSON.stringify(reaction, null, 2));
             elizaLogger.info(
@@ -231,7 +249,7 @@ export const addCommentToPRAction: Action = {
             template: addCommentToPRTemplate,
         });
         // write the context to a file for testing
-        // await fs.writeFile("context.txt", context);
+        // await fs.writeFile("/tmp/context.txt", context);
         const details = await generateObject({
             runtime,
             context,
@@ -257,7 +275,7 @@ export const addCommentToPRAction: Action = {
             content.pullRequest
         );
         let pr = await githubService.getPullRequest(content.pullRequest);
-        const diffText =  await githubService.getPRDiffText(pr.diff_url)
+        const diffText = await githubService.getPRDiffText(pr.diff_url);
         if (!pullRequest) {
             elizaLogger.error("Pull request not found in memories");
             const prData = {
@@ -275,8 +293,7 @@ export const addCommentToPRAction: Action = {
                 ),
                 body: pr.body,
                 diff: diffText,
-                lineLevelComments: []
-
+                lineLevelComments: [],
             };
             updatedState.specificPullRequest = JSON.stringify(prData);
         } else {
@@ -289,7 +306,7 @@ export const addCommentToPRAction: Action = {
             state: updatedState,
             template: generateCommentForASpecificPRTemplate,
         });
-        // await fs.writeFile("commentContext.txt", commentContext);
+        // await fs.writeFile("/tmp/commentContext.txt", commentContext);
         const commentDetails = await generateObject({
             runtime,
             context: commentContext,
@@ -305,21 +322,28 @@ export const addCommentToPRAction: Action = {
             throw new Error("Invalid comment content");
         }
 
-        const comment = commentDetails.object
+        const comment = commentDetails.object;
         elizaLogger.info(
             "Adding comment to pull request in the repository...",
             {
                 pullRequest,
                 comment,
-                lineLevelComments: comment.lineLevelComments
+                lineLevelComments: comment.lineLevelComments,
             }
         );
-        const sanitizedLineLevelComments = await Promise.all(comment.lineLevelComments.map(async (lineLevelComment) => {
-            return await githubService.addLineLevelComment(diffText, lineLevelComment.path, lineLevelComment.line, lineLevelComment.body)
-        }))
-        // await fs.writeFile("diffText.txt", diffText);
-        // await fs.writeFile("comment.txt", JSON.stringify(comment, null, 2));
-        // await fs.writeFile("sanitizedLineLevelComments.txt", JSON.stringify(sanitizedLineLevelComments, null, 2));
+        const sanitizedLineLevelComments = await Promise.all(
+            comment.lineLevelComments.map(async (lineLevelComment) => {
+                return await githubService.addLineLevelComment(
+                    diffText,
+                    lineLevelComment.path,
+                    lineLevelComment.line,
+                    lineLevelComment.body
+                );
+            })
+        );
+        // await fs.writeFile("/tmp/diffText.txt", diffText);
+        // await fs.writeFile("/tmp/comment.txt", JSON.stringify(comment, null, 2));
+        // await fs.writeFile("/tmp/sanitizedLineLevelComments.txt", JSON.stringify(sanitizedLineLevelComments, null, 2));
         try {
             const addedComment = await githubService.addPRCommentAndReview(
                 content.pullRequest,
@@ -478,12 +502,8 @@ export const addCommentToPRAction: Action = {
 
 export const closePRAction: Action = {
     name: "CLOSE_PULL_REQUEST",
-    similes: [
-        "CLOSE_PR",
-        "CLOSE_PULL_REQUEST",
-    ],
-    description:
-        "Closes a pull request in the GitHub repository",
+    similes: ["CLOSE_PR", "CLOSE_PULL_REQUEST"],
+    description: "Closes a pull request in the GitHub repository",
     validate: async (runtime: IAgentRuntime) => {
         const token = !!runtime.getSetting("GITHUB_API_TOKEN");
         return token;
@@ -495,10 +515,7 @@ export const closePRAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log(
-            "[closePR] Composing state for message:",
-            message
-        );
+        elizaLogger.log("[closePR] Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -601,8 +618,7 @@ export const mergePRAction: Action = {
         "REBASE_PULL_REQUEST",
         "MERGE_PULL_REQUEST",
     ],
-    description:
-        "Merges a pull request in the GitHub repository",
+    description: "Merges a pull request in the GitHub repository",
     validate: async (runtime: IAgentRuntime) => {
         const token = !!runtime.getSetting("GITHUB_API_TOKEN");
         return token;
@@ -614,10 +630,7 @@ export const mergePRAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log(
-            "[mergePR] Composing state for message:",
-            message
-        );
+        elizaLogger.log("[mergePR] Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -664,7 +677,10 @@ export const mergePRAction: Action = {
                 content.pullRequest,
                 content.mergeMethod
             );
-            elizaLogger.info("Merge result:", JSON.stringify(mergeResult, null, 2));
+            elizaLogger.info(
+                "Merge result:",
+                JSON.stringify(mergeResult, null, 2)
+            );
             elizaLogger.info(
                 `Merged pull request #${content.pullRequest} successfully!`
             );
@@ -755,8 +771,14 @@ export const mergePRAction: Action = {
 
 export const githubInteractWithPRPlugin: Plugin = {
     name: "githubInteractWithPR",
-    description: "Integration with GitHub for adding comments or reactions or merging, or closing pull requests",
-    actions: [addCommentToPRAction, reactToPRAction, closePRAction, mergePRAction],
+    description:
+        "Integration with GitHub for adding comments or reactions or merging, or closing pull requests",
+    actions: [
+        addCommentToPRAction,
+        reactToPRAction,
+        closePRAction,
+        mergePRAction,
+    ],
     evaluators: [],
     providers: [],
 };

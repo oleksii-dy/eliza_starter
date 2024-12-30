@@ -65,7 +65,7 @@ export const ideationAction: Action = {
         });
 
         // write the context to a file for testing
-        // await fs.writeFile("context.txt", context);
+        // await fs.writeFile("/tmp/context.txt", context);
         const details = await generateObject({
             runtime,
             context,

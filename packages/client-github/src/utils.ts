@@ -6,7 +6,7 @@ import {
 } from "@elizaos/core";
 import { GitHubService } from "@elizaos/plugin-github";
 import { RestEndpointMethodTypes } from "@octokit/rest";
-
+import fs from "fs/promises";
 export async function getIssuesFromMemories(
     runtime: IAgentRuntime,
     owner: string,
@@ -117,7 +117,11 @@ export const savePullRequestsToMemory = async (
             // update the pull request memory
         }
     }
-    elizaLogger.log("Pull requests memories:", pullRequestsMemories);
+    // elizaLogger.log("Pull requests memories:", pullRequestsMemories);
+    await fs.writeFile(
+        "/tmp/savePullRequestsToMemory-pullRequestsMemories.txt",
+        JSON.stringify(pullRequestsMemories, null, 2)
+    );
     return pullRequestsMemories;
 };
 
