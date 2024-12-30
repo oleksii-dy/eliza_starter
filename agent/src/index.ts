@@ -27,7 +27,7 @@ import {
     Client,
     ICacheManager,
     getSecret,
-    loadPlugins
+    loadPlugins,
 } from "@elizaos/core";
 import { RedisClient } from "@elizaos/adapter-redis";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
@@ -605,6 +605,16 @@ export async function createAgent(
                 import("@elizaos/plugin-cronoszkevm").then(
                     (m) => m.cronosZkEVMPlugin
                 ),
+        },
+        {
+            secrets: ["FUEL_PRIVATE_KEY"],
+            importFn: () =>
+                import("@elizaos/plugin-fuel").then((m) => m.fuelPlugin),
+        },
+        {
+            secrets: ["AVALANCHE_PRIVATE_KEY"],
+            importFn: () =>
+                import("@elizaos/plugin-avalanche").then((m) => m.fuelPlugin),
         },
         ...(teeMode === "OFF" &&
             walletSecretSalt && [
