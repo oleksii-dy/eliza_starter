@@ -32,7 +32,7 @@ describe("Transfer Action", () => {
         it("throws if not enough gas", async () => {
             await expect(
                 ta.transfer({
-                    fromChain: "iotexTestnet",
+                    fromChain: "sepolia",
                     toAddress: receiver.address,
                     amount: "1",
                 })
@@ -45,7 +45,7 @@ describe("Transfer Action", () => {
 
 const prepareChains = () => {
     const customChains: Record<string, Chain> = {};
-    const chainNames = ["iotexTestnet"];
+    const chainNames = ["sepolia"];
     chainNames.forEach(
         (chain) =>
             (customChains[chain] = WalletProvider.genChainFromName(chain))
