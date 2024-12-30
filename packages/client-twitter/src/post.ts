@@ -342,7 +342,7 @@ export class TwitterPostClient {
         tweetId?: string,
         mediaData?: Array<{ data: Buffer; mediaType: string }>
     ) {
-        try {
+        // try {
             const standardTweetResult = await client.requestQueue.add(
                 async () =>
                     await client.twitterClient.sendTweet(content, tweetId, mediaData)
@@ -353,10 +353,10 @@ export class TwitterPostClient {
                 return;
             }
             return body.data.create_tweet.tweet_results.result;
-        } catch (error) {
-            elizaLogger.error("Error sending standard Tweet:", error);
-            throw error;
-        }
+        // } catch (error) {
+        //     elizaLogger.error("Error sending standard Tweet:", error);
+        //     throw error;
+        // }
     }
 
     async postTweet(
@@ -368,7 +368,7 @@ export class TwitterPostClient {
         twitterUsername: string,
         mediaData?: Array<{ data: Buffer; mediaType: string }>
     ) {
-        try {
+        // try {
             elizaLogger.log(`Posting new tweet:\n`);
 
             let result;
@@ -378,10 +378,11 @@ export class TwitterPostClient {
                     client,
                     runtime,
                     cleanedContent,
+                    undefined,
                     mediaData
                 );
             } else {
-                result = await this.sendStandardTweet(client, cleanedContent, mediaData);
+                result = await this.sendStandardTweet(client, cleanedContent, undefined, mediaData);
             }
 
             const tweet = this.createTweetObject(
@@ -397,9 +398,9 @@ export class TwitterPostClient {
                 roomId,
                 newTweetContent
             );
-        } catch (error) {
-            elizaLogger.error("Error sending tweet:", error);
-        }
+        // } catch (error) {
+        //     elizaLogger.error("Error sending tweet:", error);
+        // }
     }
 
     /**
@@ -437,7 +438,7 @@ export class TwitterPostClient {
                 );
             }
             const brnCollectionData = brnCollectionDataFetch?.success ? brnCollectionDataFetch?.data : '';
-            
+
             const state = await this.runtime.composeState(
                 {
                     userId: this.runtime.agentId,
@@ -567,7 +568,7 @@ export class TwitterPostClient {
                 elizaLogger.error("Image generation failed or returned no data.");
             }
 
-            try {
+            // try {
                 elizaLogger.log(`Posting new tweet:\n ${cleanedContent}`);
                 this.postTweet(
                     this.runtime,
@@ -578,9 +579,9 @@ export class TwitterPostClient {
                     this.twitterUsername,
                     mediaData
                 );
-            } catch (error) {
-                elizaLogger.error("Error sending tweet:", error);
-            }
+            // } catch (error) {
+            //     elizaLogger.error("Error sending tweet:", error);
+            // }
         } catch (error) {
             elizaLogger.error("Error generating new tweet:", error);
         }
