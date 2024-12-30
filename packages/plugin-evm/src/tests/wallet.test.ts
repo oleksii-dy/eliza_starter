@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeAll, beforeEach } from "vitest";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { mainnet, sepolia, arbitrum, Chain } from "viem/chains";
+import { mainnet, arthera, arbitrum, Chain } from "viem/chains";
 
 import { WalletProvider } from "../providers/wallet";
 
 const customRpcUrls = {
     mainnet: "custom-rpc.mainnet.io",
     arbitrum: "custom-rpc.base.io",
-    sepolia: "custom-rpc.sepolia.io",
+    arthera: "custom-rpc.arthera.io",
 };
 
 describe("Wallet provider", () => {
@@ -18,7 +18,7 @@ describe("Wallet provider", () => {
     beforeAll(() => {
         pk = generatePrivateKey();
 
-        const chainNames = ["sepolia", "arbitrum"];
+        const chainNames = ["arthera", "arbitrum"];
         chainNames.forEach(
             (chain) =>
                 (customChains[chain] = WalletProvider.genChainFromName(chain))
@@ -43,13 +43,13 @@ describe("Wallet provider", () => {
         it("sets custom chains", () => {
             walletProvider = new WalletProvider(pk, customChains);
 
-            expect(walletProvider.chains.sepolia.id).toEqual(sepolia.id);
+            expect(walletProvider.chains.arthera.id).toEqual(arthera.id);
             expect(walletProvider.chains.arbitrum.id).toEqual(arbitrum.id);
         });
         it("sets the first provided custom chain as current chain", () => {
             walletProvider = new WalletProvider(pk, customChains);
 
-            expect(walletProvider.getCurrentChain().id).toEqual(sepolia.id);
+            expect(walletProvider.getCurrentChain().id).toEqual(arthera.id);
         });
     });
     describe("Clients", () => {
@@ -123,7 +123,7 @@ describe("Wallet provider", () => {
             expect(bal).toEqual("0");
         });
         it("should fetch balance for a specific added chain", async () => {
-            const bal = await walletProvider.getWalletBalanceForChain("sepolia");
+            const bal = await walletProvider.getWalletBalanceForChain("arthera");
 
             expect(bal).toEqual("0");
         });
@@ -137,15 +137,15 @@ describe("Wallet provider", () => {
             walletProvider = new WalletProvider(pk, customChains);
         });
         it("generates chains from chain name", () => {
-            const chainName = "sepolia";
+            const chainName = "arthera";
             const chain: Chain = WalletProvider.genChainFromName(chainName);
 
             expect(chain.rpcUrls.default.http[0]).toEqual(
-                sepolia.rpcUrls.default.http[0]
+                arthera.rpcUrls.default.http[0]
             );
         });
         it("generates chains from chain name with custom rpc url", () => {
-            const chainName = "sepolia";
+            const chainName = "arthera";
             const customRpcUrl = "custom.url.io";
             const chain: Chain = WalletProvider.genChainFromName(
                 chainName,
@@ -153,13 +153,13 @@ describe("Wallet provider", () => {
             );
 
             expect(chain.rpcUrls.default.http[0]).toEqual(
-                sepolia.rpcUrls.default.http[0]
+                arthera.rpcUrls.default.http[0]
             );
             expect(chain.rpcUrls.custom.http[0]).toEqual(customRpcUrl);
         });
         it("switches chain", () => {
             const initialChain = walletProvider.getCurrentChain().id;
-            expect(initialChain).toEqual(sepolia.id);
+            expect(initialChain).toEqual(arthera.id);
 
             walletProvider.switchChain("mainnet");
 
@@ -168,7 +168,7 @@ describe("Wallet provider", () => {
         });
         it("switches chain (by adding new chain)", () => {
             const initialChain = walletProvider.getCurrentChain().id;
-            expect(initialChain).toEqual(sepolia.id);
+            expect(initialChain).toEqual(arthera.id);
 
             walletProvider.switchChain("arbitrum");
 
@@ -185,13 +185,13 @@ describe("Wallet provider", () => {
             expect(newChains.arbitrum.id).toEqual(arbitrum.id);
         });
         it("gets chain configs", () => {
-            const chain = walletProvider.getChainConfigs("sepolia");
+            const chain = walletProvider.getChainConfigs("arthera");
 
-            expect(chain.id).toEqual(sepolia.id);
+            expect(chain.id).toEqual(arthera.id);
         });
         it("throws if tries to switch to an invalid chain", () => {
             const initialChain = walletProvider.getCurrentChain().id;
-            expect(initialChain).toEqual(sepolia.id);
+            expect(initialChain).toEqual(arthera.id);
 
             // intentionally set incorrect chain, ts will complain
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
