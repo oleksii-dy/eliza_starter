@@ -7,6 +7,8 @@ import type { Plugin } from "@elizaos/core";
 import { balanceAction } from "./actions/balance";
 import { coinsAction } from "./actions/coins";
 import { bitcoinProvider } from "./providers/bitcoin";
+import { sendBitcoinAction } from "./actions/send";
+import { showBitcoinAddressesAction } from "./actions/addresses";
 
 export const bitcoinPlugin: Plugin = {
     name: "bitcoin",
@@ -15,5 +17,10 @@ export const bitcoinPlugin: Plugin = {
     providers: [bitcoinProvider],
     evaluators: [],
     services: [],
-    actions: [balanceAction, coinsAction],
+    actions: [
+        showBitcoinAddressesAction,
+        balanceAction,
+        coinsAction,
+        sendBitcoinAction,
+    ],
 };
