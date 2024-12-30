@@ -1,12 +1,16 @@
 import { Character, ModelProviderName } from "./types.ts";
+import { evmPlugin } from "@elizaos/plugin-evm";
 
 export const defaultCharacter: Character = {
     name: "Eliza",
     username: "eliza",
-    plugins: [],
+    plugins: [evmPlugin],
     clients: [],
-    modelProvider: ModelProviderName.LLAMALOCAL,
+    modelProvider: ModelProviderName.AKASH_CHAT_API,
     settings: {
+        chains: {
+            evm: ["sepolia"]
+        },
         secrets: {},
         voice: {
             model: "en_US-hfc_female-medium",
