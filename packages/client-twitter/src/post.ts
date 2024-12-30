@@ -437,7 +437,7 @@ export class TwitterPostClient {
                 );
             }
             const brnCollectionData = brnCollectionDataFetch?.success ? brnCollectionDataFetch?.data : '';
-
+            
             const state = await this.runtime.composeState(
                 {
                     userId: this.runtime.agentId,
