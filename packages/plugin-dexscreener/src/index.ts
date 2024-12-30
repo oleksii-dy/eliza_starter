@@ -1,7 +1,11 @@
-export * from "./actions/getLatest";
+export * from "./actions/getTokens";
 
 import type { Plugin } from "@elizaos/core";
-import { getLatestTokensAction } from "./actions/getLatest";
+import {
+    getLatestTokensAction,
+    getLatestBoostedTokensAction,
+    getTopBoostedTokensAction,
+} from "./actions/getTokens";
 
 export const dexscreenerPlugin: Plugin = {
     name: "dexscreener",
@@ -9,7 +13,11 @@ export const dexscreenerPlugin: Plugin = {
     providers: [],
     evaluators: [],
     services: [],
-    actions: [getLatestTokensAction],
+    actions: [
+        getLatestTokensAction,
+        getLatestBoostedTokensAction,
+        getTopBoostedTokensAction,
+    ],
 };
 
 export default dexscreenerPlugin;
