@@ -18,6 +18,15 @@ A powerful plugin that integrates Hummingbot's market making capabilities with E
 npm install @eliza/plugin-hummingbot
 ```
 
+## Environment Variables
+
+The plugin uses the following environment variables:
+```
+HUMMINGBOT_API_URL=http://localhost:15888  # Hummingbot REST API URL
+HUMMINGBOT_WS_URL=ws://localhost:8060      # Hummingbot WebSocket URL
+HUMMINGBOT_API_KEY=your-api-key            # Hummingbot API Key
+```
+
 ## Usage in Eliza Character
 
 Add the plugin to your character configuration:
@@ -28,9 +37,9 @@ Add the plugin to your character configuration:
   "settings": {
     "HUMMINGBOT_CONFIG": {
       "instance": {
-        "url": "http://localhost:15888",
-        "wsUrl": "ws://localhost:8060",
-        "apiKey": "your-hummingbot-api-key",
+        "url": "${HUMMINGBOT_API_URL}",
+        "wsUrl": "${HUMMINGBOT_WS_URL}",
+        "apiKey": "${HUMMINGBOT_API_KEY}",
         "instanceId": "eli-agent"
       },
       "defaultStrategy": {
@@ -64,9 +73,9 @@ import { SimpleMarketMaking } from '@eliza/plugin-hummingbot/strategies';
 // Initialize the plugin
 const plugin = new HummingbotPlugin({
   instance: {
-    url: 'http://localhost:15888',      // Default Hummingbot REST API port
-    wsUrl: 'ws://localhost:8060',       // Default Hummingbot WebSocket port
-    apiKey: 'your-api-key',
+    url: process.env.HUMMINGBOT_API_URL,      // Default Hummingbot REST API port
+    wsUrl: process.env.HUMMINGBOT_WS_URL,       // Default Hummingbot WebSocket port
+    apiKey: process.env.HUMMINGBOT_API_KEY,
     instanceId: 'instance-1'
   }
 });

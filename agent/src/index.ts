@@ -601,7 +601,7 @@ export async function createAgent(
             getSecret(character, "AVALANCHE_PRIVATE_KEY")
                 ? avalanchePlugin
                 : null,
-            getSecret(character, "HUMMINGBOT_PRIVATE_KEY")
+            getSecret(character, "HUMMINGBOT_API_KEY")
                 ? hummingbotPlugin
                 : null,
         ].filter(Boolean),
