@@ -80,7 +80,7 @@ export const addCommentToIssueAction: Action = {
         });
         // Test all all values from the state are being loaded into the context (files, previousIssues, previousPRs, all issues all prs )
         // write the context to a file for testing
-        await fs.writeFile("context.txt", context);
+        // await fs.writeFile("context.txt", context);
         const details = await generateObject({
             runtime,
             context,
@@ -322,7 +322,7 @@ export const reactToIssueAction: Action = {
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
         elizaLogger.info("Adding reaction to issue comment...");
-        await fs.writeFile("reaction.txt", JSON.stringify(content, null, 2));
+        // await fs.writeFile("reaction.txt", JSON.stringify(content, null, 2));
         try {
             const reaction = await githubService.createReactionForIssue(
                 content.owner,

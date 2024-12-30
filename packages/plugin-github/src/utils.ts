@@ -92,7 +92,7 @@ export async function writeFiles(
         for (const file of files) {
             const filePath = path.join(repoPath, file.path);
             await fs.mkdir(path.dirname(filePath), { recursive: true });
-            await fs.writeFile(filePath, file.content);
+            // await fs.writeFile(filePath, file.content);
         }
     } catch (error) {
         elizaLogger.error("Error writing files:", error);
@@ -295,7 +295,7 @@ export async function getIssuesFromMemories(
         roomId: roomId,
     });
     elizaLogger.log("Memories:", memories);
-    await fs.writeFile("getIssuesFromMemories.txt", JSON.stringify(memories, null, 2));
+    // await fs.writeFile("getIssuesFromMemories.txt", JSON.stringify(memories, null, 2));
     // Filter memories to only include those that are issues
     const issueMemories = memories.filter(
         (memory) => (memory.content.metadata as any)?.type === "issue"
@@ -394,7 +394,7 @@ export const saveIssuesToMemory = async (
         auth: apiToken,
     });
     const issues = await githubService.getIssues();
-    await fs.writeFile("issues.txt", JSON.stringify(issues, null, 2));
+    // await fs.writeFile("issues.txt", JSON.stringify(issues, null, 2));
     const issuesMemories: Memory[] = [];
     // create memories for each issue if they are not already in the memories
     for (const issue of issues) {
@@ -422,7 +422,7 @@ export const saveIssuesToMemory = async (
         //     // update the issue memory
         // }
     }
-    await fs.writeFile("issuesMemories.txt", JSON.stringify(issuesMemories, null, 2));
+    // await fs.writeFile("issuesMemories.txt", JSON.stringify(issuesMemories, null, 2));
     return issuesMemories;
 };
 
@@ -485,7 +485,7 @@ export async function incorporateRepositoryState(
             repository,
             branch
         );
-        await fs.writeFile("previousIssues.txt", JSON.stringify(previousIssues, null, 2));
+        // await fs.writeFile("previousIssues.txt", JSON.stringify(previousIssues, null, 2));
         state.previousIssues = JSON.stringify(
             previousIssues.map((issue) => ({
                 title: issue.content.text,
@@ -506,7 +506,7 @@ export async function incorporateRepositoryState(
             repository,
             branch
         );
-        await fs.writeFile("previousPRs.txt", JSON.stringify(previousPRs, null, 2));
+        // await fs.writeFile("previousPRs.txt", JSON.stringify(previousPRs, null, 2));
         state.previousPRs = JSON.stringify(
             previousPRs.map((pr) => ({
                 title: pr.content.text,

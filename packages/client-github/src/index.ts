@@ -89,11 +89,11 @@ export class GitHubClient extends EventEmitter {
         const memories = await this.runtime.messageManager.getMemories({
             roomId
         });
-        await fs.writeFile("memories.txt", JSON.stringify(memories, null, 2));
+        // await fs.writeFile("memories.txt", JSON.stringify(memories, null, 2));
         const fileMemories = memories.filter(
             (memory) => (memory.content.metadata as any)?.path
         );
-        await fs.writeFile("fileMemories.txt", JSON.stringify(fileMemories, null, 2));
+        // await fs.writeFile("fileMemories.txt", JSON.stringify(fileMemories, null, 2));
         if (fileMemories.length === 0 ) {
             await this.initializeRepositoryAndCreateMemories(
                 owner,
@@ -137,7 +137,7 @@ export class GitHubClient extends EventEmitter {
         });
         // elizaLogger.log("Composed context for OODA cycle:", context);
         // write the context to a file for testing
-        await fs.writeFile("client-github-context.txt", context);
+        // await fs.writeFile("client-github-context.txt", context);
 
         //
         // 6) retrieve the content

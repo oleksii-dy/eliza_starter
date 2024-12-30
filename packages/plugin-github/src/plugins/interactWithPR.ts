@@ -231,7 +231,7 @@ export const addCommentToPRAction: Action = {
             template: addCommentToPRTemplate,
         });
         // write the context to a file for testing
-        await fs.writeFile("context.txt", context);
+        // await fs.writeFile("context.txt", context);
         const details = await generateObject({
             runtime,
             context,
@@ -289,7 +289,7 @@ export const addCommentToPRAction: Action = {
             state: updatedState,
             template: generateCommentForASpecificPRTemplate,
         });
-        await fs.writeFile("commentContext.txt", commentContext);
+        // await fs.writeFile("commentContext.txt", commentContext);
         const commentDetails = await generateObject({
             runtime,
             context: commentContext,
@@ -317,9 +317,9 @@ export const addCommentToPRAction: Action = {
         const sanitizedLineLevelComments = await Promise.all(comment.lineLevelComments.map(async (lineLevelComment) => {
             return await githubService.addLineLevelComment(diffText, lineLevelComment.path, lineLevelComment.line, lineLevelComment.body)
         }))
-        await fs.writeFile("diffText.txt", diffText);
-        await fs.writeFile("comment.txt", JSON.stringify(comment, null, 2));
-        await fs.writeFile("sanitizedLineLevelComments.txt", JSON.stringify(sanitizedLineLevelComments, null, 2));
+        // await fs.writeFile("diffText.txt", diffText);
+        // await fs.writeFile("comment.txt", JSON.stringify(comment, null, 2));
+        // await fs.writeFile("sanitizedLineLevelComments.txt", JSON.stringify(sanitizedLineLevelComments, null, 2));
         try {
             const addedComment = await githubService.addPRCommentAndReview(
                 content.pullRequest,

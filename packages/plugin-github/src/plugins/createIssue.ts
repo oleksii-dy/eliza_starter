@@ -66,7 +66,7 @@ export const createIssueAction: Action = {
         });
         // elizaLogger.info("Context:", context);
         // write the context to a file for testing
-        await fs.writeFile("plugin-github-create-issue-context.txt", context);
+        // await fs.writeFile("plugin-github-create-issue-context.txt", context);
 
         const details = await generateObject({
             runtime,
