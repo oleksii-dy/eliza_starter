@@ -786,6 +786,13 @@ export type Character = {
             shouldIgnoreBotMessages?: boolean;
             shouldIgnoreDirectMessages?: boolean;
         };
+        gitbook?: {
+            keywords?: {
+                projectTerms?: string[];
+                generalQueries?: string[];
+            };
+            documentTriggers?: string[];
+        };
     };
 
     /** Writing style guides */
