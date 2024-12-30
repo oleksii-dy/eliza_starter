@@ -5,9 +5,7 @@ import { mainnet, arthera, arbitrum, Chain } from "viem/chains";
 import { WalletProvider } from "../providers/wallet";
 
 const customRpcUrls = {
-    mainnet: "custom-rpc.mainnet.io",
-    arbitrum: "custom-rpc.base.io",
-    arthera: "custom-rpc.arthera.io",
+    mainnet: "https://eth.drpc.org",
 };
 
 describe("Wallet provider", () => {
