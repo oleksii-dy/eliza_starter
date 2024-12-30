@@ -18,6 +18,7 @@ import { buildConversationThread } from "./utils.ts";
 import { twitterMessageHandlerTemplate } from "./interactions.ts";
 import { DEFAULT_MAX_TWEET_LENGTH } from "./environment.ts";
 import { saveBase64Image, saveHeuristImage } from "../../plugin-image-generation/src/index.ts";
+import {getBrnCollectionItems} from "../../plugin-brn/api.ts";
 import fs from "fs";
 import { Buffer } from "buffer";
 
@@ -420,6 +421,23 @@ export class TwitterPostClient {
 
             const topics = this.runtime.character.topics.join(", ");
 
+            const brnHost = this.runtime.getSetting("BRN_HOST");
+            const collectionId = this.runtime.getSetting("BRN_NEWS_COLLECTION_ID");
+
+            let brnCollectionDataFetch = {};
+            if (brnHost && collectionId) {
+                brnCollectionDataFetch = await getBrnCollectionItems(
+                    {
+                        brn_host: brnHost,
+                        collectionId: collectionId,
+                        offset: parseInt(this.runtime.getSetting("BRN_NEWS_COLLECTION_OFFSET")) || 0,
+                        limit: parseInt(this.runtime.getSetting("BRN_NEWS_COLLECTION_LIMIT")) || 100,
+                    },
+                    this.runtime
+                );
+            }
+            const brnCollectionData = brnCollectionDataFetch?.success ? brnCollectionDataFetch?.data : '';
+
             const state = await this.runtime.composeState(
                 {
                     userId: this.runtime.agentId,
@@ -432,6 +450,7 @@ export class TwitterPostClient {
                 },
                 {
                     twitterUserName: this.client.profile.username,
+                    brnCollectionData,
                 }
             );
 
