@@ -311,7 +311,7 @@ export class TwitterPostClient {
         try {
             const noteTweetResult = await client.requestQueue.add(
                 async () =>
-                    await client.twitterClient.sendNoteTweet(content, tweetId)
+                    await client.twitterClient.sendNoteTweet(content, tweetId, mediaData)
             );
 
             if (noteTweetResult.errors && noteTweetResult.errors.length > 0) {
@@ -342,20 +342,11 @@ export class TwitterPostClient {
         mediaData?: Array<{ data: Buffer; mediaType: string }>
     ) {
         try {
-            let body = {};
-            if (mediaData && mediaData.length > 0) {
-                const standardTweetResult = await this.client.requestQueue.add(
-                    async () =>
-                        await this.client.twitterClient.sendTweet(content, undefined, mediaData)
-                );
-                body = await standardTweetResult.json();
-            } else {
-                const standardTweetResult = await client.requestQueue.add(
-                    async () =>
-                        await client.twitterClient.sendTweet(content, tweetId)
-                );
-                body = await standardTweetResult.json();
-            }
+            const standardTweetResult = await client.requestQueue.add(
+                async () =>
+                    await client.twitterClient.sendTweet(content, tweetId, mediaData)
+            );
+            const body = await standardTweetResult.json();
             if (!body?.data?.create_tweet?.tweet_results?.result) {
                 console.error("Error sending tweet; Bad response:", body);
                 return;
