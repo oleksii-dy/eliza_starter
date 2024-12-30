@@ -94,14 +94,14 @@ export class GitHubClient extends EventEmitter {
             (memory) => (memory.content.metadata as any)?.path
         );
         await fs.writeFile("fileMemories.txt", JSON.stringify(fileMemories, null, 2));
-        // if (fileMemories.length === 0 || ) {
+        if (fileMemories.length === 0 ) {
             await this.initializeRepositoryAndCreateMemories(
                 owner,
                 repository,
                 branch,
                 roomId
             );
-        // }
+        }
 
         //
         // 4) compose the state with original memory and incorporate repository state

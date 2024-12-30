@@ -75,7 +75,7 @@ export const createPullRequestAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
             schema: CreatePullRequestSchema,
         });
 

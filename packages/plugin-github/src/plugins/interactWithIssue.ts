@@ -84,7 +84,7 @@ export const addCommentToIssueAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
             schema: AddCommentToIssueSchema,
         });
 
@@ -132,7 +132,7 @@ export const addCommentToIssueAction: Action = {
         const commentDetails = await generateObject({
             runtime,
             context: commentContext,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
             schema: GenerateCommentForASpecificPRSchema,
         });
 
@@ -306,7 +306,7 @@ export const reactToIssueAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
             schema: ReactToIssueSchema,
         });
 
@@ -465,7 +465,7 @@ export const closeIssueAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
             schema: CloseIssueActionSchema,
         });
 

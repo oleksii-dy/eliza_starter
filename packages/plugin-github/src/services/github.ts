@@ -543,10 +543,10 @@ public getPositionFromDiff(
 ): number | undefined {
     const diffLines = diff.split('\n');
     let currentFile = '';
-    let position = 3;
+    let position = 0;
     let withinHunk = false;
-    let currentLineInFile = 3;
-
+    let currentLineInFile = 0;
+    let lineNum = lineNumber + 3
     for (let i = 0; i < diffLines.length; i++) {
         const line = diffLines[i];
 
@@ -590,7 +590,7 @@ public getPositionFromDiff(
                     currentLineInFile += 1;
                 }
                 // Check if this line is the target line
-                if (currentLineInFile === lineNumber) {
+                if (currentLineInFile === lineNum) {
                     return position;
                 }
             }

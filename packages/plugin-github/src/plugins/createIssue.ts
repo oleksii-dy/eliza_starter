@@ -71,7 +71,7 @@ export const createIssueAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
             schema: CreateIssueSchema,
         });
 
@@ -104,7 +104,7 @@ export const createIssueAction: Action = {
             const issue = await githubService.createIssue(
                 content.title,
                 content.body,
-                content.labels
+                [...content.labels, 'auto-generated']
             );
 
             elizaLogger.info(
