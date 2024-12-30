@@ -6,7 +6,7 @@ import {
     Memory,
     Plugin,
     State,
-    ModelClass
+    ModelClass,
     ModelProviderName,
 } from "@elizaos/core";
 import { generateImage } from "@elizaos/core";
