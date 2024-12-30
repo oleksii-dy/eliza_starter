@@ -24,7 +24,7 @@
   "author": "Nethermind",
   "license": "MIT",
   "dependencies": {
-    "@ai16z/eliza": "workspace:*",
+    "@elizaos/core": "workspace:*",
     "axios": "^1.6.0",
     "ws": "^8.16.0"
   },
@@ -36,6 +36,6 @@
     "typescript": "^5.0.0"
   },
   "peerDependencies": {
-    "@ai16z/eliza": "*"
+    "@elizaos/core": "*"
   }
 }

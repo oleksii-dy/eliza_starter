@@ -1,4 +1,4 @@
-import { IAgentRuntime, Plugin } from '@ai16z/eliza';
+import { IAgentRuntime, Plugin } from '@elizaos/core';
 import { MarketDataProvider } from './providers/market-data-provider';
 import { OrderService } from './providers/order-provider';
 import { StrategyService } from './providers/strategy-provider';
@@ -169,6 +169,10 @@ export class HummingbotPlugin extends Plugin {
     return response.data;
   }
 }
+
+export const hummingbotPlugin = (config: HummingbotConfig): Plugin => {
+  return new HummingbotPlugin(config);
+};
 
 export * from './actions/market-making';
 export * from './actions/orders';
