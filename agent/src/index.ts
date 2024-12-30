@@ -614,7 +614,9 @@ export async function createAgent(
         {
             secrets: ["AVALANCHE_PRIVATE_KEY"],
             importFn: () =>
-                import("@elizaos/plugin-avalanche").then((m) => m.fuelPlugin),
+                import("@elizaos/plugin-avalanche").then(
+                    (m) => m.avalanchePlugin
+                ),
         },
         ...(teeMode === "OFF" &&
             walletSecretSalt && [
