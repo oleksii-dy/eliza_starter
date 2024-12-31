@@ -1,7 +1,6 @@
 {
     "name": "StaffEngineer",
     "clients": [
-        "github"
     ],
     "modelProvider": "openai",
     "settings": {

@@ -34,6 +34,7 @@ import {
     reactToPRAction,
     closePRAction,
     mergePRAction,
+    replyToPRCommentAction,
 } from "./plugins/interactWithPR";
 import { githubIdeationPlugin, ideationAction } from "./plugins/ideationPlugin";
 import type { Plugin } from "@elizaos/core";
@@ -95,6 +96,7 @@ export const githubPlugin: Plugin = {
         closePRAction,
         reactToIssueAction,
         closeIssueAction,
+        replyToPRCommentAction,
     ],
     evaluators: [],
     providers: [

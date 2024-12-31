@@ -150,7 +150,7 @@ export class GitHubService {
                 repo: this.config.repo,
                 title,
                 body,
-                labels,
+                labels: [...(labels || []), 'agent-generated'],
                 branch: this.config.branch,
             });
 
@@ -204,7 +204,8 @@ export class GitHubService {
                 body,
                 branch: this.config.branch,
             });
-
+            // add agent-commented label
+            await this.addLabelToIssue(issueNumber, 'agent-commented');
             return response.data;
         } catch (error) {
             elizaLogger.error(`Error adding comment to issue: ${error}`);
@@ -250,7 +251,20 @@ export class GitHubService {
         const response = await this.octokit.pulls.list({
             owner: this.config.owner,
             repo: this.config.repo,
-            // branch: this.config.branch,
+            branch: this.config.branch,
+
+        });
+        return response.data;
+    }
+
+    // Get open pull requests
+    async getPullRequestsByState(state: 'open' | 'closed' | 'all' = 'open'): Promise<
+        RestEndpointMethodTypes["pulls"]["list"]["response"]["data"]
+    > {
+        const response = await this.octokit.pulls.list({
+            owner: this.config.owner,
+            repo: this.config.repo,
+            state
         });
         return response.data;
     }
@@ -262,8 +276,7 @@ export class GitHubService {
         const response = await this.octokit.pulls.get({
             owner: this.config.owner,
             repo: this.config.repo,
-            pull_number: pullRequestNumber,
-            branch: this.config.branch,
+            pull_number: pullRequestNumber
         });
         return response.data;
     }
@@ -308,6 +321,42 @@ export class GitHubService {
             elizaLogger.error("Failed to add comment to pull request:", error);
             throw error;
         }
+    }
+
+    async replyToPRComment(
+        pullRequestNumber: number,
+        commentId: number,
+        body: string,
+        emojiReaction: GithubReaction
+    ): Promise<RestEndpointMethodTypes["pulls"]["createReplyForReviewComment"]["response"]["data"]> {
+        try {
+            const response = await this.octokit.pulls.createReplyForReviewComment({
+                owner: this.config.owner,
+                repo: this.config.repo,
+                pull_number: pullRequestNumber,
+                comment_id: commentId,
+                body
+            });
+            // react to the comment with the emoji reaction
+            await this.createReactionForPullRequestReviewComment(this.config.owner, this.config.repo, commentId, emojiReaction);
+            return response.data;
+        } catch (error) {
+            elizaLogger.error("Failed to reply to pull request comment:", error);
+            throw error;
+        }
+    }
+
+    async addLabelToIssue(
+        issueNumber: number,
+        label: string
+    ): Promise<RestEndpointMethodTypes["issues"]["addLabels"]["response"]["data"]> {
+        const response = await this.octokit.issues.addLabels({
+            owner: this.config.owner,
+            repo: this.config.repo,
+            issue_number: issueNumber,
+            labels: [label]
+        });
+        return response.data;
     }
 
     public async mergePullRequest(
@@ -382,19 +431,20 @@ export class GitHubService {
                 branch: this.config.branch,
             });
 
-            return commentsResponse.data as string;
+            return JSON.stringify(commentsResponse.data);
         } catch (error) {
             elizaLogger.error("Error fetching comments:", error);
             throw error;
         }
     }
 
+
     /**
      * Fetch the comments from an issue.
      * @param comments_url The issue comments url
      * @returns The comments text of the issue
      */
-    public async getIssueCommentsText(commentsUrl: string): Promise<string> {
+    public async getIssueCommentsText(commentsUrl: string): Promise<RestEndpointMethodTypes["issues"]["listComments"]["response"]["data"]> {
         try {
             const commentsResponse = await this.octokit.request({
                 method: "GET",
@@ -405,7 +455,7 @@ export class GitHubService {
                 branch: this.config.branch,
             });
 
-            return commentsResponse.data as string;
+            return commentsResponse.data;
         } catch (error) {
             elizaLogger.error("Error fetching comments:", error);
             throw error;
@@ -462,6 +512,8 @@ export class GitHubService {
                 issue_number: issueNumber,
                 content: reaction,
             });
+            // add agent-interacted label
+            await this.addLabelToIssue(issueNumber, 'agent-interacted');
 
             return response.data;
         } catch (error) {
@@ -481,6 +533,7 @@ export class GitHubService {
     public async createReactionForIssueComment(
         owner: string,
         repo: string,
+        issueNumber: number,
         commentId: number,
         reaction: GithubReaction
     ): Promise<RestEndpointMethodTypes["reactions"]["createForIssueComment"]["response"]["data"]> {
@@ -492,6 +545,8 @@ export class GitHubService {
                 content: reaction,
             });
 
+            // add agent-interacted label
+            await this.addLabelToIssue(issueNumber, 'agent-interacted');
             return response.data;
         } catch (error) {
             elizaLogger.error("Error creating reaction for issue comment:", error);

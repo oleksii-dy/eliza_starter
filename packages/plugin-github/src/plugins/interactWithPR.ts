@@ -17,15 +17,21 @@ import {
     ClosePRActionContent,
     ClosePRActionSchema,
     GenerateCommentForASpecificPRSchema,
+    GeneratePRCommentReplyContent,
+    GeneratePRCommentReplySchema,
     MergePRActionContent,
     MergePRActionSchema,
     ReactToPRContent,
     ReactToPRSchema,
+    ReplyToPRCommentContent,
+    ReplyToPRCommentSchema,
     isAddCommentToPRContent,
     isClosePRActionContent,
     isGenerateCommentForASpecificPRSchema,
+    isGeneratePRCommentReplyContent,
     isMergePRActionContent,
     isReactToPRContent,
+    isReplyToPRCommentContent,
 } from "../types";
 import {
     getPullRequestFromMemories,
@@ -35,8 +41,10 @@ import {
     addCommentToPRTemplate,
     closePRActionTemplate,
     generateCommentForASpecificPRTemplate,
+    generatePRCommentReplyTemplate,
     mergePRActionTemplate,
     reactToPRTemplate,
+    replyToPRCommentTemplate,
 } from "../templates";
 import fs from "fs/promises";
 
@@ -769,6 +777,160 @@ export const mergePRAction: Action = {
     ],
 };
 
+export const replyToPRCommentAction: Action = {
+    name: "REPLY_TO_PR_COMMENT",
+    similes: [
+        "REPLY_PR_COMMENT",
+        "RESPOND_TO_PR_COMMENT",
+        "ANSWER_PR_COMMENT",
+    ],
+    description:
+        "Replies to a specific comment in a pull request in the GitHub repository",
+    validate: async (runtime: IAgentRuntime) => {
+        const token = !!runtime.getSetting("GITHUB_API_TOKEN");
+        return token;
+    },
+    handler: async (
+        runtime: IAgentRuntime,
+        message: Memory,
+        state: State,
+        options: any,
+        callback?: HandlerCallback
+    ) => {
+        elizaLogger.log("[replyToPRComment] Composing state for message:", message);
+        if (!state) {
+            state = (await runtime.composeState(message)) as State;
+        } else {
+            state = await runtime.updateRecentMessageState(state);
+        }
+        const updatedState = await incorporateRepositoryState(
+            state,
+            runtime,
+            message,
+            [],
+            false,
+            true
+        );
+        elizaLogger.info("State:", updatedState);
+
+        const context = composeContext({
+            state: updatedState,
+            template: replyToPRCommentTemplate,
+        });
+        const details = await generateObject({
+            runtime,
+            context,
+            modelClass: ModelClass.SMALL,
+            schema: ReplyToPRCommentSchema,
+        });
+
+        if (!isReplyToPRCommentContent(details.object)) {
+            elizaLogger.error("Invalid content:", details.object);
+            throw new Error("Invalid content");
+        }
+
+        const content = details.object as ReplyToPRCommentContent;
+
+        const githubService = new GitHubService({
+            owner: content.owner,
+            repo: content.repo,
+            auth: runtime.getSetting("GITHUB_API_TOKEN"),
+        });
+        // reply to all comments in the pull request
+        const pullRequest = await githubService.getPullRequest(content.pullRequest);
+        elizaLogger.info("Pull request:", JSON.stringify(pullRequest, null, 2));
+        const commentsUrl = pullRequest.comments_url;
+        elizaLogger.info("Comments URL:", commentsUrl);
+        const comments = await githubService.getPRCommentsText(commentsUrl);
+        elizaLogger.info("Comments:", JSON.stringify(comments, null, 2));
+        const commentsArray = JSON.parse(comments);
+        for (const comment of commentsArray) {
+            const replyContext = composeContext({
+                state: updatedState,
+                template: generatePRCommentReplyTemplate,
+            });
+            const replyDetails = await generateObject({
+                runtime,
+                context: replyContext,
+                modelClass: ModelClass.SMALL,
+                schema: GeneratePRCommentReplySchema,
+            });
+
+        if (!isGeneratePRCommentReplyContent(replyDetails.object)) {
+            elizaLogger.error("Invalid reply content:", replyDetails.object);
+            throw new Error("Invalid reply content");
+        }
+
+        const replyContent = replyDetails.object as GeneratePRCommentReplyContent;
+        if (replyContent.comment === "") {
+            elizaLogger.info("No comment to reply to, skipping...");
+            continue;
+        }
+        elizaLogger.info("Replying to pull request comment...", JSON.stringify(replyContent, null, 2));
+        try {
+            const repliedMessage = await githubService.replyToPRComment(content.pullRequest, comment.id, replyContent.comment, replyContent.emojiReaction)
+            elizaLogger.log("Replied message:", JSON.stringify(repliedMessage, null, 2));
+            elizaLogger.info(
+                `Replied to comment #${comment.id} in pull request #${content.pullRequest} successfully with emoji reaction: ${replyContent.emojiReaction}!`
+            );
+            if (callback) {
+                callback({
+                    text: `Replied to comment #${comment.id} in pull request #${content.pullRequest} successfully with emoji reaction: ${replyContent.emojiReaction}!`,
+                    attachments: [],
+                });
+            }
+        }
+        catch (error) {
+            elizaLogger.error(
+                `Error replying to comment #${comment.id} in pull request #${content.pullRequest} in repository ${content.owner}/${content.repo}:`,
+                error
+            );
+            if (callback) {
+                callback(
+                    {
+                        text: `Error replying to comment #${comment.id} in pull request #${content.pullRequest}. Please try again.`,
+                    },
+                    []
+                );
+                }
+            }
+        }
+
+    },
+    examples: [
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Reply to all comments in pull request #1 in repository user1/repo1",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Replied to all comments in pull request #1 successfully!",
+                    action: "REPLY_TO_ALL_PR_COMMENTS",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Reply to all comments in pull request #2 in repository user2/repo2",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Replied to all comments in pull request #2 successfully!",
+                    action: "REPLY_TO_ALL_PR_COMMENTS",
+                },
+            },
+        ],
+    ],
+};
+
 export const githubInteractWithPRPlugin: Plugin = {
     name: "githubInteractWithPR",
     description:
@@ -778,6 +940,7 @@ export const githubInteractWithPRPlugin: Plugin = {
         reactToPRAction,
         closePRAction,
         mergePRAction,
+        replyToPRCommentAction,
     ],
     evaluators: [],
     providers: [],

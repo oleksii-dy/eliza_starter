@@ -1097,3 +1097,105 @@ ${contextTemplate}
 }
 \`\`\`
 `;
+
+export const replyToPRCommentTemplate = `
+Extract the details for replying to a specific comment in a GitHub pull request:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+- **pullRequest** (number): The number of the pull request (e.g., 1)
+- **commentId** (number): The ID of the comment to reply to (e.g., 123)
+- **body** (string): The body of the reply (e.g., "Thank you for your feedback!")
+
+${contextTemplate}
+
+Provide the reply details in the following JSON format:
+
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "pullRequest": "<pullRequest>",
+    "body": "<body>"
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const generatePRCommentReplyTemplate = `
+Generate a reply to a specific comment in a GitHub pull request that aligns with the character's goals and the user's request:
+Here is the specific comment to reply to: {{specificComment}} for this pull request: {{specificPullRequest}}
+Please provide the most relevant emoji reaction for the comment based on your reply. Allowed values are: "+1", "-1", "laugh", "confused", "heart", "hooray", "rocket", "eyes".
+
+If you don't think there is anything useful to say, return an empty string for the comment and null for the emojiReaction.
+Remember these are suggestions and not something that has been implemented yet.
+
+${contextTemplate}
+
+Example:
+\`\`\`json
+{
+    "comment": "<comment>",
+    "emojiReaction": "<emojiReaction>"
+}
+\`\`\`
+
+Examples with emoji reactions:
+\`\`\`json
+{
+    "comment": "Thank you for your feedback!",
+    "emojiReaction": "+1"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "I don't think this is the right approach.",
+    "emojiReaction": "-1"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "Haha, that's a funny suggestion!",
+    "emojiReaction": "laugh"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "I'm not sure I understand what you mean.",
+    "emojiReaction": "confused"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "I love this idea!",
+    "emojiReaction": "heart"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "Hooray! This is exactly what we needed!",
+    "emojiReaction": "hooray"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "This is going to take our project to the next level!",
+    "emojiReaction": "rocket"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "I'm keeping an eye on this.",
+    "emojiReaction": "eyes"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "",
+    "emojiReaction": null
+}
+\`\`\`
+
+`;

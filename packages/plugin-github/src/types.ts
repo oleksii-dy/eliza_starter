@@ -405,3 +405,43 @@ export const isMergePRActionContent = (
     elizaLogger.error("Invalid content: ", object);
     return false;
 };
+
+export const ReplyToPRCommentSchema = z.object({
+    owner: z.string().min(1, "GitHub owner is required"),
+    repo: z.string().min(1, "GitHub repo is required"),
+    pullRequest: z.number().min(1, "Pull request number is required"),
+    body: z.string().min(1, "Reply body is required"),
+});
+
+export interface ReplyToPRCommentContent {
+    owner: string;
+    repo: string;
+    pullRequest: number;
+    body: string;
+}
+
+export const isReplyToPRCommentContent = (
+    object: any
+): object is ReplyToPRCommentContent => {
+    if (ReplyToPRCommentSchema.safeParse(object).success) {
+        return true;
+    }
+    elizaLogger.error("Invalid content: ", object);
+    return false;
+};
+
+export const GeneratePRCommentReplySchema = z.object({
+    comment: z.string(),
+    emojiReaction: z.enum(githubReactions as [string, ...string[]]).optional().default('+1'),
+});
+
+export interface GeneratePRCommentReplyContent {
+    comment: string;
+    emojiReaction: GithubReaction;
+}
+
+export const isGeneratePRCommentReplyContent = (
+    object: any
+): object is GeneratePRCommentReplyContent => {
+    return GeneratePRCommentReplySchema.safeParse(object).success;
+};
