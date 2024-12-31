@@ -21,7 +21,7 @@ runtime: IAgentRuntime
 
     try {
         const response = await fetch(
-            `${data.brn_host}/items/${data.collectionId}?sort_field=created_at&sort_direction=1&viewed=0&text_cut=false&limit=${data.limit}&offset=${data.offset}`,
+            `${data.brn_host}/items/${data.collectionId}?sort_field=date&sort_direction=-1&viewed=0&text_cut=false&limit=${data.limit}&offset=${data.offset}`,
             {
                 method: "GET",
                 headers: {

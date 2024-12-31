@@ -438,6 +438,8 @@ export class TwitterPostClient {
                 );
             }
             const brnCollectionData = brnCollectionDataFetch?.success ? brnCollectionDataFetch?.data : '';
+            elizaLogger.info("brnCollectionDataFetch?.success", brnCollectionDataFetch?.success);
+            elizaLogger.info("brnCollectionDataFetch?.data", brnCollectionDataFetch?.data);
 
             const state = await this.runtime.composeState(
                 {
