@@ -439,6 +439,8 @@ export class TwitterPostClient {
             }
             const brnCollectionData = brnCollectionDataFetch?.success ? brnCollectionDataFetch?.data : '';
 
+            const maxTweetLength = this.client.twitterConfig.MAX_TWEET_LENGTH;
+
             const state = await this.runtime.composeState(
                 {
                     userId: this.runtime.agentId,
@@ -452,6 +454,7 @@ export class TwitterPostClient {
                 {
                     twitterUserName: this.client.profile.username,
                     brnCollectionData,
+                    maxTweetLength,
                 }
             );
 
@@ -504,7 +507,6 @@ export class TwitterPostClient {
             }
 
             // Truncate the content to the maximum tweet length specified in the environment settings, ensuring the truncation respects sentence boundaries.
-            const maxTweetLength = this.client.twitterConfig.MAX_TWEET_LENGTH
             if (maxTweetLength) {
                 cleanedContent = truncateToCompleteSentence(
                     cleanedContent,
