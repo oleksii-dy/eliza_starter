@@ -822,7 +822,7 @@ importers:
         specifier: 0.7.0
         version: 0.7.0
       js-tiktoken:
-        specifier: 1.0.16
+        specifier: ^1.0.16
         version: 1.0.16
       langchain:
         specifier: 0.3.6
