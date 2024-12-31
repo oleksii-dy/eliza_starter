@@ -21,7 +21,7 @@ runtime: IAgentRuntime
 
     try {
         const response = await fetch(
-            `${data.brn_host}/items/${data.collectionId}?text_cut=false&limit=${data.limit}&offset=${data.offset}`,
+            `${data.brn_host}/items/${data.collectionId}?sort_field=created_at&sort_direction=1&viewed=0&text_cut=false&limit=${data.limit}&offset=${data.offset}`,
             {
                 method: "GET",
                 headers: {
@@ -47,6 +47,33 @@ runtime: IAgentRuntime
                 };
             });
             result = JSON.stringify(items);
+            for (const item of itemsFetch.items) {
+                try {
+                    elizaLogger.info("item.item_id", item.item_id);
+                    const response = await fetch(
+                        `${data.brn_host}/item/${item.item_id}/view`,
+                        {
+                            method: "POST",
+                            headers: {
+                                "x-access-token": brnApiKey,
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                viewed: true,
+                            }),
+                        }
+                    );
+
+                    if (!response.ok) {
+                        throw new Error(
+                            `Set View for item: ${item.item_id}} of the Brn collection failed: ${response.statusText}`
+                        );
+                    }
+                    elizaLogger.info("response",  await response.json());
+                } catch (error) {
+                    console.error(error);
+                }
+            }
         }
         return { success: true, data: result };
     } catch (error) {

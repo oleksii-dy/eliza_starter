@@ -27,6 +27,7 @@ import {
 } from "./constants";
 
 import fs from "fs";
+import {getBrnCollectionItems} from "../../plugin-brn/api.ts";
 
 const MAX_MESSAGE_LENGTH = 4096; // Telegram's max message length
 
@@ -816,6 +817,26 @@ export class MessageManager {
         ) {
             return;
         }
+
+        const brnHost = this.runtime.getSetting("BRN_HOST");
+        const collectionId = this.runtime.getSetting("BRN_NEWS_COLLECTION_ID");
+
+        let brnCollectionDataFetch = {};
+        if (brnHost && collectionId) {
+            brnCollectionDataFetch = await getBrnCollectionItems(
+                {
+                    brn_host: brnHost,
+                    collectionId: collectionId,
+                    offset: parseInt(this.runtime.getSetting("BRN_NEWS_COLLECTION_OFFSET")) || 0,
+                    limit: parseInt(this.runtime.getSetting("BRN_NEWS_COLLECTION_LIMIT")) || 100,
+                },
+                this.runtime
+            );
+        }
+        const brnCollectionData = brnCollectionDataFetch?.success ? brnCollectionDataFetch?.data : '';
+
+        elizaLogger.info("response",  brnCollectionDataFetch);
+        elizaLogger.info("brnCollectionData",  brnCollectionData);
 
         const message = ctx.message;
         const chatId = ctx.chat?.id.toString();
