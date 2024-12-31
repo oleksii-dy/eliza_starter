@@ -44,10 +44,11 @@ export class MplBubblegumProvider {
     private readonly keypair?: Keypair;
 
     constructor(rpcUrl: string, keypair?: Keypair) {
-        const umi = createUmi(rpcUrl)
-            .use(keypair ? keypairIdentity(keypair) : undefined)
-            .use(mplBubblegum())
-            .use(dasApi());
+        const umi = createUmi(rpcUrl);
+        if (keypair) {
+            umi.use(keypairIdentity(keypair));
+        }
+        umi.use(mplBubblegum()).use(dasApi());
 
         this.umi = umi as Umi & { rpc: DasApiInterface };
         this.keypair = keypair;
