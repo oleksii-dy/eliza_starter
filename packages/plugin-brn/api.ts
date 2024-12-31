@@ -49,7 +49,6 @@ runtime: IAgentRuntime
             result = JSON.stringify(items);
             for (const item of itemsFetch.items) {
                 try {
-                    elizaLogger.info("item.item_id", item.item_id);
                     const response = await fetch(
                         `${data.brn_host}/item/${item.item_id}/view`,
                         {
@@ -63,13 +62,11 @@ runtime: IAgentRuntime
                             }),
                         }
                     );
-
                     if (!response.ok) {
                         throw new Error(
                             `Set View for item: ${item.item_id}} of the Brn collection failed: ${response.statusText}`
                         );
                     }
-                    elizaLogger.info("response",  await response.json());
                 } catch (error) {
                     console.error(error);
                 }

@@ -432,7 +432,7 @@ export class TwitterPostClient {
                         brn_host: brnHost,
                         collectionId: collectionId,
                         offset: parseInt(this.runtime.getSetting("BRN_NEWS_COLLECTION_OFFSET")) || 0,
-                        limit: parseInt(this.runtime.getSetting("BRN_NEWS_COLLECTION_LIMIT")) || 100,
+                        limit: parseInt(this.runtime.getSetting("BRN_NEWS_COLLECTION_LIMIT")) || 10,
                     },
                     this.runtime
                 );
