@@ -20,5 +20,14 @@ export async function cancelAllOrders(
   plugin: HummingbotPlugin,
   exchange: string
 ): Promise<void> {
-  await plugin.orderService.cancelAllOrders(exchange);
+  const orders = await plugin.orderService.getOpenOrders(exchange);
+  await Promise.all(
+    orders.map(order => {
+      const orderId = (order as any).id || order.clientOrderId;
+      if (orderId) {
+        return plugin.orderService.cancelOrder(exchange, orderId);
+      }
+      return Promise.resolve();
+    })
+  );
 }
