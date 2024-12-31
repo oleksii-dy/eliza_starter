@@ -5,6 +5,7 @@ import {
     Content,
     elizaLogger,
     generateObject,
+    generateObjectDeprecated,
     HandlerCallback,
     IAgentRuntime,
     Memory,
@@ -70,7 +71,7 @@ export default {
             template: fetchTemplate,
         });
 
-        const content = await generateObject({
+        const content = await generateObjectDeprecated({
             runtime,
             context: fetchContext,
             modelClass: ModelClass.LARGE,
@@ -90,7 +91,6 @@ export default {
             const RPC_URL = runtime.getSetting("MPL_BUBBLEGUM_RPC_URL");
 
             const mplBubblegumProvider = new MplBubblegumProvider(RPC_URL);
-            const assetId = content.assetId as PublicKey;
 
             const cNFT: DasApiAsset = await mplBubblegumProvider.getAsset(
                 content.assetId as PublicKey
@@ -100,12 +100,21 @@ export default {
 
             if (callback) {
                 callback({
-                    text: `Successfully fetched details for ${content.assetId}`,
+                    text: `
+                    Here are the details for ${content.assetId}\n\n
+                    - Name: ${cNFT.content.metadata.name}\n\n
+                    - Description: ${cNFT.content.metadata.description}\n\n
+                    - Creator: ${cNFT.creators.map((creator) => creator.address).join(", ")}\n\n
+                    - Uri ${cNFT.content.json_uri}\n\n
+                    - Royalties: ${cNFT.royalty.percent * 100} %\n\n
+                    - Collection: ${cNFT.grouping[0].group_value} \n\n
+                    `,
                     content: {
                         asset: cNFT,
                     },
                 });
             }
+
             return true;
         } catch (error) {
             console.error("Error in transfer", error);
