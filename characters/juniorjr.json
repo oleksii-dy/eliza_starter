@@ -1,7 +1,7 @@
 {
     "name": "Junior Jr",
     "plugins": [],
-    "clients": ["auto","twitter"],
+    "clients": ["auto","twitter","telegram"],
     "modelProvider": "anthropic",
     "settings": {
       "model": "claude-3-5-sonnet",
