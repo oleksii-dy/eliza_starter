@@ -7,7 +7,7 @@ import {
     type IAgentRuntime,
     type Memory,
     type State,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 
 import { initWalletProvider, WalletProvider } from "../providers/wallet";
 import type { Transaction, TransferParams } from "../types";
@@ -115,7 +115,7 @@ export const transferAction = {
         callback?: HandlerCallback
     ) => {
         console.log("Transfer action handler called");
-        const walletProvider = initWalletProvider(runtime);
+        const walletProvider = await initWalletProvider(runtime);
         const action = new TransferAction(walletProvider);
 
         // Compose transfer context
