@@ -1,5 +1,5 @@
-import { Client, IAgentRuntime, elizaLogger } from "@ai16z/eliza";
-import diamondHandPlugin from "@ai16z/plugin-diamondhands";
+import { Client, IAgentRuntime, elizaLogger } from "@elizaos/core";
+import diamondHandPlugin from "@elizaos/plugin-diamondhands";
 
 export class AutoClient {
     interval: NodeJS.Timeout;
