@@ -15,7 +15,7 @@ export const models: Models = {
         model: {
             [ModelClass.SMALL]: settings.SMALL_OPENAI_MODEL || "gpt-4o-mini",
             [ModelClass.MEDIUM]: settings.MEDIUM_OPENAI_MODEL || "gpt-4o",
-            [ModelClass.LARGE]: settings.LARGE_OPENAI_MODEL || "gpt-4o",
+            [ModelClass.LARGE]: settings.LARGE_OPENAI_MODEL || "o1-2024-12-17",
             [ModelClass.EMBEDDING]: settings.EMBEDDING_OPENAI_MODEL || "text-embedding-3-small",
             [ModelClass.IMAGE]: settings.IMAGE_OPENAI_MODEL || "dall-e-3",
         },
@@ -228,7 +228,7 @@ export const models: Models = {
             [ModelClass.LARGE]:
                 settings.LARGE_REDPILL_MODEL ||
                 settings.REDPILL_MODEL ||
-                "gpt-4o",
+                "o1-2024-12-17",
             [ModelClass.EMBEDDING]: "text-embedding-3-small",
         },
     },
@@ -435,7 +435,7 @@ export const models: Models = {
         model: {
             [ModelClass.SMALL]: settings.SMALL_NANOGPT_MODEL || "gpt-4o-mini",
             [ModelClass.MEDIUM]: settings.MEDIUM_NANOGPT_MODEL || "gpt-4o",
-            [ModelClass.LARGE]: settings.LARGE_NANOGPT_MODEL || "gpt-4o",
+            [ModelClass.LARGE]: settings.LARGE_NANOGPT_MODEL || "o1-2024-12-17",
         }
     },
     [ModelProviderName.HYPERBOLIC]: {
