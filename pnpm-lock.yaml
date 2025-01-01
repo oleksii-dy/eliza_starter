@@ -185,7 +185,7 @@ importers:
         version: link:../packages/plugin-image-generation
       '@elizaos/plugin-sd-image-generation':
         specifier: workspace:*
-        version: link:../packages/plugin-sd-image-generation
+        version: link:../packages/plugin-sd-generation
       '@elizaos/plugin-intiface':
         specifier: workspace:*
         version: link:../packages/plugin-intiface
@@ -542,7 +542,7 @@ importers:
         version: link:../plugin-image-generation
       '@elizaos/plugin-sd-image-generation':
         specifier: workspace:*
-        version: link:../plugin-sd-image-generation
+        version: link:../plugin-sd-generation
       '@types/body-parser':
         specifier: 1.19.5
         version: 1.19.5
@@ -1330,7 +1330,7 @@ importers:
         specifier: 7.1.0
         version: 7.1.0
 
-  packages/plugin-sd-image-generation:
+  packages/plugin-sd-generation:
     dependencies:
       '@elizaos/core':
         specifier: workspace:*
