@@ -99,6 +99,9 @@ importers:
 
   agent:
     dependencies:
+      '@elizaos/adapter-opacity':
+        specifier: workspace:*
+        version: link:../packages/adapter-opacity
       '@elizaos/adapter-postgres':
         specifier: workspace:*
         version: link:../packages/adapter-postgres
