@@ -130,15 +130,14 @@ export class OpacityAdapter implements IVerifiableInferenceAdapter {
                 timestamp: Date.now(),
             };
         } catch (error) {
-            console.error("Error in Reclaim generateText:", error);
+            console.error("Error in Opacity generateText:", error);
             throw error;
         }
     }
 
     async verifyProof(result: VerifiableInferenceResult): Promise<boolean> {
-        // Reclaim's zkFetch response is self-verifying
         const isValid = await verifyProof(
-            this.options.opacityProverUrl,
+            `${this.options.opacityProverUrl}/api/verify`,
             result.proof
         );
         console.log("Proof is valid:", isValid);
