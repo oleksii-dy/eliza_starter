@@ -1286,19 +1286,19 @@ importers:
         version: 0.3.8(typescript@5.6.3)
       '@goat-sdk/plugin-coingecko':
         specifier: 0.1.4
-        version: 0.1.4(@goat-sdk/core@0.3.8)(viem@2.22.1)
+        version: 0.1.4(@goat-sdk/core@0.3.8)(viem@2.21.58)
       '@goat-sdk/plugin-erc20':
         specifier: 0.1.7
-        version: 0.1.7(@goat-sdk/core@0.3.8)(viem@2.22.1)
+        version: 0.1.7(@goat-sdk/core@0.3.8)(viem@2.21.58)
       '@goat-sdk/wallet-viem':
         specifier: 0.1.3
-        version: 0.1.3(@goat-sdk/core@0.3.8)(viem@2.22.1)
+        version: 0.1.3(@goat-sdk/core@0.3.8)(viem@2.21.58)
       tsup:
         specifier: 8.3.5
         version: 8.3.5(postcss@8.4.49)(typescript@5.6.3)
       viem:
-        specifier: ^2.21.58
-        version: 2.22.1(typescript@5.6.3)(zod@3.23.8)
+        specifier: 2.21.58
+        version: 2.21.58(typescript@5.6.3)(zod@3.23.8)
       whatwg-url:
         specifier: 7.1.0
         version: 7.1.0
@@ -4895,7 +4895,7 @@ packages:
       ethers: 6.13.4
       node-jose: 2.2.0
       secp256k1: 5.0.1
-      viem: 2.22.1(typescript@5.6.3)(zod@3.23.8)
+      viem: 2.21.58(typescript@5.6.3)(zod@3.23.8)
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -8494,7 +8494,7 @@ packages:
     dependencies:
       '@solana/web3.js': 1.95.5
       abitype: 1.0.8(typescript@5.6.3)(zod@3.23.8)
-      viem: 2.22.1(typescript@5.6.3)(zod@3.23.8)
+      viem: 2.21.58(typescript@5.6.3)(zod@3.23.8)
       zod: 3.23.8
     transitivePeerDependencies:
       - bufferutil
@@ -8503,18 +8503,18 @@ packages:
       - utf-8-validate
     dev: false
 
-  /@goat-sdk/plugin-coingecko@0.1.4(@goat-sdk/core@0.3.8)(viem@2.22.1):
+  /@goat-sdk/plugin-coingecko@0.1.4(@goat-sdk/core@0.3.8)(viem@2.21.58):
     resolution: {integrity: sha512-i85v/SeCXB7/fcqZKc0hV68/3FrUAHJSL4N5AUp5OPauzV5kq4Ecn0WjeDZEHX8iCEEY1NZSZ47yweDckAhjhA==}
     peerDependencies:
       '@goat-sdk/core': 0.3.14
       viem: 2.21.49
     dependencies:
       '@goat-sdk/core': 0.3.8(typescript@5.6.3)
-      viem: 2.22.1(typescript@5.6.3)(zod@3.23.8)
+      viem: 2.21.58(typescript@5.6.3)(zod@3.23.8)
       zod: 3.23.8
     dev: false
 
-  /@goat-sdk/plugin-erc20@0.1.7(@goat-sdk/core@0.3.8)(viem@2.22.1):
+  /@goat-sdk/plugin-erc20@0.1.7(@goat-sdk/core@0.3.8)(viem@2.21.58):
     resolution: {integrity: sha512-UDd6pXIBmpCWW7QIFxM5rJPta4tWqkys8P1sAt1kqabAndx+GaczhNUPwSdV1MH77BNtcyGZ6+HoeirskiV//Q==}
     engines: {node: '>=20.12.2 <21', npm: please-use-pnpm, pnpm: '>=9', yarn: please-use-pnpm}
     peerDependencies:
@@ -8522,11 +8522,11 @@ packages:
       viem: ^2.21.49
     dependencies:
       '@goat-sdk/core': 0.3.8(typescript@5.6.3)
-      viem: 2.22.1(typescript@5.6.3)(zod@3.23.8)
+      viem: 2.21.58(typescript@5.6.3)(zod@3.23.8)
       zod: 3.23.8
     dev: false
 
-  /@goat-sdk/wallet-viem@0.1.3(@goat-sdk/core@0.3.8)(viem@2.22.1):
+  /@goat-sdk/wallet-viem@0.1.3(@goat-sdk/core@0.3.8)(viem@2.21.58):
     resolution: {integrity: sha512-2uofsH/dVmeJk/4V2/tJ1rDk6/ZFQlthUO50tg366hjq0vjINJXMQqYGwSLnv5Z3PMmdfPCSd5xikFEfA+1ZZw==}
     engines: {node: '>=20.12.2 <21', npm: please-use-pnpm, pnpm: '>=9', yarn: please-use-pnpm}
     peerDependencies:
@@ -8534,7 +8534,7 @@ packages:
       viem: ^2.21.49
     dependencies:
       '@goat-sdk/core': 0.3.8(typescript@5.6.3)
-      viem: 2.22.1(typescript@5.6.3)(zod@3.23.8)
+      viem: 2.21.58(typescript@5.6.3)(zod@3.23.8)
     dev: false
 
   /@google-cloud/vertexai@1.9.2:
@@ -11988,7 +11988,7 @@ packages:
     resolution: {integrity: sha512-/JNlCDvgQmqAs+3N9qbRjqQdm4UCd1iYmkjH7cE7ejwWcoF4b4bSikiQdMK+fQ3be8T7FJupjWw52ysHWsnwmQ==}
     engines: {node: '>=18.0.0'}
     optionalDependencies:
-      viem: 2.22.1(typescript@5.6.3)(zod@3.23.8)
+      viem: 2.21.58(typescript@5.6.3)(zod@3.23.8)
     transitivePeerDependencies:
       - bufferutil
       - typescript
@@ -14501,7 +14501,7 @@ packages:
       bs58: 6.0.0
       dotenv: 16.4.7
       multiformats: 9.9.0
-      viem: 2.22.1(typescript@5.6.3)(zod@3.23.8)
+      viem: 2.21.58(typescript@5.6.3)(zod@3.23.8)
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -18137,7 +18137,7 @@ packages:
   /bip39@3.1.0:
     resolution: {integrity: sha512-c9kiwdk45Do5GL0vJMe7tS95VjCii65mYAH7DfWl3uW8AVzXKQVUm64i3hzVybBDMp9r7j9iNxR85+ul8MdN/A==}
     dependencies:
-      '@noble/hashes': 1.3.0
+      '@noble/hashes': 1.6.1
     dev: false
 
   /bitcoinjs-lib@7.0.0-rc.0(typescript@5.6.3):
@@ -22671,7 +22671,7 @@ packages:
     engines: {node: '>= 10.17.0'}
     hasBin: true
     dependencies:
-      debug: 4.3.4
+      debug: 4.4.0(supports-color@8.1.1)
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
@@ -29875,11 +29875,31 @@ packages:
         optional: true
     dependencies:
       '@adraffy/ens-normalize': 1.11.0
-      '@noble/curves': 1.6.0
-      '@noble/hashes': 1.5.0
-      '@scure/bip32': 1.5.0
-      '@scure/bip39': 1.4.0
-      abitype: 1.0.6(typescript@5.6.3)
+      '@noble/curves': 1.7.0
+      '@noble/hashes': 1.6.1
+      '@scure/bip32': 1.6.0
+      '@scure/bip39': 1.5.0
+      abitype: 1.0.8(typescript@5.6.3)(zod@3.23.8)
+      eventemitter3: 5.0.1
+      typescript: 5.6.3
+    transitivePeerDependencies:
+      - zod
+    dev: false
+
+  /ox@0.4.4(typescript@5.6.3)(zod@3.23.8):
+    resolution: {integrity: sha512-oJPEeCDs9iNiPs6J0rTx+Y0KGeCGyCAA3zo94yZhm8G5WpOxrwUtn2Ie/Y8IyARSqqY/j9JTKA3Fc1xs1DvFnw==}
+    peerDependencies:
+      typescript: '>=5.4.0'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+    dependencies:
+      '@adraffy/ens-normalize': 1.11.0
+      '@noble/curves': 1.7.0
+      '@noble/hashes': 1.6.1
+      '@scure/bip32': 1.6.0
+      '@scure/bip39': 1.5.0
+      abitype: 1.0.8(typescript@5.6.3)(zod@3.23.8)
       eventemitter3: 5.0.1
       typescript: 5.6.3
     transitivePeerDependencies:
@@ -29899,7 +29919,7 @@ packages:
       '@noble/hashes': 1.6.1
       '@scure/bip32': 1.6.0
       '@scure/bip39': 1.5.0
-      abitype: 1.0.7(typescript@5.6.3)(zod@3.23.8)
+      abitype: 1.0.8(typescript@5.6.3)(zod@3.23.8)
       eventemitter3: 5.0.1
       typescript: 5.6.3
     transitivePeerDependencies:
@@ -37081,6 +37101,30 @@ packages:
       abitype: 1.0.7(typescript@5.6.3)(zod@3.23.8)
       isows: 1.0.6(ws@8.18.0)
       ox: 0.1.2(typescript@5.6.3)
+      typescript: 5.6.3
+      webauthn-p256: 0.0.10
+      ws: 8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+      - zod
+    dev: false
+
+  /viem@2.21.58(typescript@5.6.3)(zod@3.23.8):
+    resolution: {integrity: sha512-mGVKlu3ici7SueEQatn44I7KePP8Nwb5JUjZaQOciWxWHCFP/WLyjdZDIK09qyaozHNTH/t78K3ptXCe+AnMuQ==}
+    peerDependencies:
+      typescript: '>=5.0.4'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+    dependencies:
+      '@noble/curves': 1.7.0
+      '@noble/hashes': 1.6.1
+      '@scure/bip32': 1.6.0
+      '@scure/bip39': 1.5.0
+      abitype: 1.0.7(typescript@5.6.3)(zod@3.23.8)
+      isows: 1.0.6(ws@8.18.0)
+      ox: 0.4.4(typescript@5.6.3)(zod@3.23.8)
       typescript: 5.6.3
       webauthn-p256: 0.0.10
       ws: 8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
