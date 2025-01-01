@@ -366,6 +366,18 @@ export const addCommentToPRAction: Action = {
             elizaLogger.info(
                 `Added comment to pull request #${content.pullRequest} successfully! See comment at ${addedComment.html_url}. Approval status: ${comment.approvalEvent}`
             );
+            if (content.emojiReaction) {
+                // TODO: add emoji reaction to pull request which this library doesn't support
+                // await githubService.createReactionForPullRequestReviewComment(
+                //     content.owner,
+                //     content.repo,
+                //     content.pullRequest,
+                //     content.emojiReaction
+                // );
+                // elizaLogger.info(
+                //     `Added emoji reaction to pull request #${content.pullRequest} successfully!`
+                // );
+            }
             if (callback) {
                 callback({
                     text: `Added comment to pull request #${content.pullRequest} successfully! See comment at ${addedComment.html_url}`,
@@ -841,13 +853,18 @@ export const replyToPRCommentAction: Action = {
         });
         // reply to all comments in the pull request
         const pullRequest = await githubService.getPullRequest(content.pullRequest);
+        updatedState.specificPullRequest = JSON.stringify(pullRequest);
         elizaLogger.info("Pull request:", JSON.stringify(pullRequest, null, 2));
         const reviewCommentsUrl = pullRequest.review_comments_url;
         elizaLogger.info("Review Comments URL:", reviewCommentsUrl);
         const reviewComments = await githubService.getPRCommentsText(reviewCommentsUrl);
         elizaLogger.info("Review Comments:", JSON.stringify(reviewComments, null, 2));
         const reviewCommentsArray = JSON.parse(reviewComments);
-        for (const comment of reviewCommentsArray) {
+        const nonReviewComments = await githubService.getPRCommentsText(pullRequest.comments_url);
+        elizaLogger.info("Non-Review Comments:", JSON.stringify(nonReviewComments, null, 2));
+        const nonReviewCommentsArray = JSON.parse(nonReviewComments);
+        const allComments = [...reviewCommentsArray, ...nonReviewCommentsArray];
+        for (const comment of allComments) {
             const replyContext = composeContext({
                 state: updatedState,
                 template: generatePRCommentReplyTemplate,

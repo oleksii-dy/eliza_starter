@@ -192,25 +192,38 @@ export class GitHubService {
     // Add a comment to an issue
     async addIssueComment(
         issueNumber: number,
-        body: string
+        body: string,
+        emojiReaction?: GithubReaction
     ): Promise<
         RestEndpointMethodTypes["issues"]["createComment"]["response"]["data"]
     > {
+        let response;
         try {
-            const response = await this.octokit.issues.createComment({
+            response = await this.octokit.issues.createComment({
                 owner: this.config.owner,
                 repo: this.config.repo,
                 issue_number: issueNumber,
                 body,
                 branch: this.config.branch,
             });
-            // add agent-commented label
-            await this.addLabelToIssue(issueNumber, 'agent-commented');
-            return response.data;
+            } catch (error) {
+                elizaLogger.error(`Error adding comment to issue: ${error}`);
+                throw error;
+            }
+            try {
+                await this.createReactionForIssueComment(this.config.owner, this.config.repo, issueNumber, response.data.id, 'eyes');
+            } catch (error) {
+                elizaLogger.error("Failed to add label to issue:", error);
+            }
+            try {
+                if (emojiReaction) {
+                    await this.createReactionForIssueComment(this.config.owner, this.config.repo, issueNumber, response.data.id, emojiReaction);
+                }
         } catch (error) {
             elizaLogger.error(`Error adding comment to issue: ${error}`);
             throw error;
         }
+        return response.data;
     }
 
     // Get issue details
@@ -329,32 +342,37 @@ export class GitHubService {
         body: string,
         emojiReaction: GithubReaction
     ): Promise<RestEndpointMethodTypes["pulls"]["createReplyForReviewComment"]["response"]["data"]> {
+        let response;
         try {
-            const response = await this.octokit.pulls.createReplyForReviewComment({
+            response = await this.octokit.pulls.createReplyForReviewComment({
                 owner: this.config.owner,
                 repo: this.config.repo,
                 pull_number: pullRequestNumber,
                 comment_id: commentId,
                 body
             });
+        } catch (error) {
+            elizaLogger.error("Failed to reply to pull request comment:", error);
+        }
+        try {
             // react to the comment with the emoji reaction
             await this.createReactionForPullRequestReviewComment(this.config.owner, this.config.repo, commentId, emojiReaction);
             return response.data;
         } catch (error) {
-            elizaLogger.error("Failed to reply to pull request comment:", error);
+            elizaLogger.error("Failed to react to pull request comment:", error);
             throw error;
         }
     }
 
-    async addLabelToIssue(
+    async addLabelsToIssue(
         issueNumber: number,
-        label: string
+        labels: string[]
     ): Promise<RestEndpointMethodTypes["issues"]["addLabels"]["response"]["data"]> {
         const response = await this.octokit.issues.addLabels({
             owner: this.config.owner,
             repo: this.config.repo,
             issue_number: issueNumber,
-            labels: [label]
+            labels: labels
         });
         return response.data;
     }
@@ -530,7 +548,7 @@ export class GitHubService {
                 content: reaction,
             });
             // add agent-interacted label
-            await this.addLabelToIssue(issueNumber, 'agent-interacted');
+            await this.addLabelsToIssue(issueNumber, ['agent-interacted']);
 
             return response.data;
         } catch (error) {
@@ -563,7 +581,7 @@ export class GitHubService {
             });
 
             // add agent-interacted label
-            await this.addLabelToIssue(issueNumber, 'agent-interacted');
+            await this.addLabelsToIssue(issueNumber, ['agent-interacted']);
             return response.data;
         } catch (error) {
             elizaLogger.error("Error creating reaction for issue comment:", error);

@@ -229,6 +229,7 @@ export const AddCommentToPRSchema = z.object({
     repo: z.string().min(1, "GitHub repo is required"),
     branch: z.string().min(1, "GitHub branch is required"),
     pullRequest: z.number().min(1, "Pull request number is required"),
+    emojiReaction: z.enum(githubReactions as [string, ...string[]]).optional(),
 });
 
 export interface AddCommentToPRContent {
@@ -236,6 +237,7 @@ export interface AddCommentToPRContent {
     repo: string;
     branch: string;
     pullRequest: number;
+    emojiReaction?: GithubReaction;
 }
 
 export const isAddCommentToPRContent = (
@@ -258,6 +260,7 @@ export const GenerateCommentForASpecificPRSchema = z.object({
         line: z.number().optional(),
     })).optional(),
     approvalEvent: z.enum(["COMMENT", "APPROVE", "REQUEST_CHANGES"]).optional(),
+    emojiReaction: z.enum(githubReactions as [string, ...string[]]).optional(),
 });
 
 export interface GenerateCommentForASpecificPRSchema {
@@ -270,6 +273,7 @@ export interface GenerateCommentForASpecificPRSchema {
         line?: number;
     }>;
     approvalEvent?: "COMMENT" | "APPROVE" | "REQUEST_CHANGES";
+    emojiReaction?: GithubReaction;
 }
 
 export const isGenerateCommentForASpecificPRSchema = (

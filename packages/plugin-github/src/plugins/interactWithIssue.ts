@@ -145,7 +145,7 @@ export const addCommentToIssueAction: Action = {
         }
 
         const commentBody = commentDetails.object.comment;
-
+        const emojiReaction = commentDetails.object.emojiReaction;
         elizaLogger.info("Adding comment to issue in the repository...", {
             issue,
             commentBody,
@@ -154,7 +154,8 @@ export const addCommentToIssueAction: Action = {
         try {
             const comment = await githubService.addIssueComment(
                 content.issue,
-                commentBody
+                commentBody,
+                emojiReaction
             );
 
             elizaLogger.info(

@@ -675,10 +675,37 @@ ${contextTemplate}
 export const generateCommentForASpecificIssueTemplate = `
 Generate a comment for a specific GitHub issue that aligns with the character's goals and the user's request:
 Here is the specific issue to comment on: {{specificIssue}}
+Please provide the most relevant emoji reaction for the comment. Allowed values are: "+1", "-1", "laugh", "confused", "heart", "hooray", "rocket", "eyes".
+
 ${contextTemplate}
 \`\`\`json
 {
-    "comment": "<comment>"
+    "comment": "<comment>",
+    "emojiReaction": "<emojiReaction>"
+}
+\`\`\`
+
+Example 1:
+\`\`\`json
+{
+    "comment": "This is a great addition to the project!",
+    "emojiReaction": "heart"
+}
+\`\`\`
+
+Example 2:
+\`\`\`json
+{
+    "comment": "I think this change might introduce some issues. Can you double-check?",
+    "emojiReaction": "confused"
+}
+\`\`\`
+
+Example 3:
+\`\`\`json
+{
+    "comment": "Awesome work! This will definitely improve performance.",
+    "emojiReaction": "rocket"
 }
 \`\`\`
 `;
@@ -689,6 +716,7 @@ Extract the details for a specific GitHub pull request:
 - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
 - **branch** (string): The branch of the GitHub repository (e.g., "main")
 - **pullRequest** (number): The number of the pull request (e.g., 1)
+- **emojiReaction** (string): Allowed values are: "+1", "-1", "laugh", "confused", "heart", "hooray", "rocket", "eyes".
 
 Here is the specific pull request: {{specificPullRequest}}
 ${contextTemplate}
@@ -697,7 +725,41 @@ ${contextTemplate}
     "owner": "<owner>",
     "repo": "<repo>",
     "branch": "<branch>",
-    "pullRequest": "<pullRequest>"
+    "pullRequest": "<pullRequest>",
+    "emojiReaction": "<emojiReaction>"
+}
+\`\`\`
+
+Example 1:
+\`\`\`json
+{
+    "owner": "octocat",
+    "repo": "hello-world",
+    "branch": "main",
+    "pullRequest": 1,
+    "emojiReaction": "heart"
+}
+\`\`\`
+
+Example 2:
+\`\`\`json
+{
+    "owner": "user1",
+    "repo": "repo1",
+    "branch": "develop",
+    "pullRequest": 2,
+    "emojiReaction": "rocket"
+}
+\`\`\`
+
+Example 3:
+\`\`\`json
+{
+    "owner": "user2",
+    "repo": "repo2",
+    "branch": "feature-branch",
+    "pullRequest": 3,
+    "emojiReaction": "laugh"
 }
 \`\`\`
 `;
