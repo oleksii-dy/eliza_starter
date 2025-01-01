@@ -5,6 +5,7 @@ import {
     Memory,
     HandlerCallback,
     State,
+    getEmbeddingZeroVector,
 } from "@elizaos/core";
 
 interface TokenProfile {
@@ -14,12 +15,29 @@ interface TokenProfile {
     tokenAddress: string;
 }
 
+const createTokenMemory = async (
+    runtime: IAgentRuntime,
+    state: State,
+    formattedOutput: string
+): Promise<Memory> => {
+    const memory: Memory = {
+        userId: runtime.agentId,
+        agentId: runtime.agentId,
+        roomId: state.roomId,
+        content: { text: formattedOutput },
+        createdAt: Date.now(),
+        embedding: getEmbeddingZeroVector(),
+    };
+    await runtime.messageManager.createMemory(memory);
+    return memory;
+};
+
 export const getLatestTokensAction: Action = {
     name: "GET_LATEST_TOKENS",
     description: "Get the latest tokens from DexScreener API",
     validate: async (runtime: IAgentRuntime, _message: Memory) => {
         elizaLogger.log("Validating runtime for GET_LATEST_TOKENS...");
-        return true; // No API key required for this endpoint
+        return true;
     },
     handler: async (
         runtime: IAgentRuntime,
@@ -29,6 +47,12 @@ export const getLatestTokensAction: Action = {
         callback: HandlerCallback
     ) => {
         elizaLogger.log("Starting GET_LATEST_TOKENS handler...");
+
+        const recentMessage = await runtime.messageManager.getMemories({
+            roomId: state.roomId,
+            count: 10,
+            unique: false,
+        });
 
         try {
             const response = await fetch(
@@ -47,7 +71,6 @@ export const getLatestTokensAction: Action = {
 
             const tokens: TokenProfile[] = await response.json();
 
-            // Format the output with URL and Description
             const formattedOutput = tokens
                 .map((token) => {
                     const description =
@@ -55,6 +78,10 @@ export const getLatestTokensAction: Action = {
                     return `Chain: ${token.chainId}\nToken Address: ${token.tokenAddress}\nURL: ${token.url}\nDescription: ${description}\n\n`;
                 })
                 .join("");
+
+            state = (await runtime.composeState(
+                await createTokenMemory(runtime, state, formattedOutput)
+            )) as State;
 
             callback(
                 {
@@ -122,6 +149,10 @@ export const getLatestBoostedTokensAction: Action = {
                 })
                 .join("");
 
+            state = (await runtime.composeState(
+                await createTokenMemory(runtime, state, formattedOutput)
+            )) as State;
+
             callback(
                 {
                     text: formattedOutput,
@@ -187,6 +218,10 @@ export const getTopBoostedTokensAction: Action = {
                     return `Chain: ${token.chainId}\nToken Address: ${token.tokenAddress}\nURL: ${token.url}\nDescription: ${description}\n\n`;
                 })
                 .join("");
+
+            state = (await runtime.composeState(
+                await createTokenMemory(runtime, state, formattedOutput)
+            )) as State;
 
             callback(
                 {

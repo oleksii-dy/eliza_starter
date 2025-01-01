@@ -18,3 +18,7 @@ Just add it under your character profile in plugins as
 ## Configuration
 
 There is no need fo configuration for this plugin, API is free and limited per 60 req/min
+
+## Usage
+
+Results are saved to State object and agents can retrive it from there for use
