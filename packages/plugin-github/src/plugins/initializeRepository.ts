@@ -55,7 +55,10 @@ export const initializeRepositoryAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log("[initializeRepository] Composing state for message:", message);
+        elizaLogger.log(
+            "[initializeRepository] Composing state for message:",
+            message
+        );
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -70,7 +73,7 @@ export const initializeRepositoryAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: InitializeSchema,
         });
 
@@ -118,7 +121,8 @@ export const initializeRepositoryAction: Action = {
                     {
                         text: `Error initializing repository ${content.owner}/${content.repo} branch ${content.branch}. Please try again.`,
                     },
-                []);
+                    []
+                );
             }
         }
     },

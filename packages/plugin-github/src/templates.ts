@@ -41,8 +41,6 @@ Provide your response in the following JSON format:
  * Goals Data: {{goalsData}}
  * Recent Interactions: {{recentInteractions}}
  * Here is the convo so far: {{formattedConversation}}
-
-
  */
 export const initializeTemplate = `
 Extract the details for initializing the GitHub repository:
@@ -68,6 +66,7 @@ export const createMemoriesFromFilesTemplate = `
 Extract the details for creating memories from files in the GitHub repository:
 - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
 - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
 - **path** (string): The path to the files in the GitHub repository (e.g., "docs/")
 
 Provide the repository details in the following JSON format:
@@ -76,6 +75,7 @@ Provide the repository details in the following JSON format:
 {
     "owner": "<owner>",
     "repo": "<repo>",
+    "branch": "<branch>",
     "path": "<path>"
 }
 \`\`\`
@@ -164,10 +164,12 @@ Here are the recent user messages for context:
 {{recentMessages}}
 `;
 
-export const createIssueTemplate = createTemplate(`Create a new GitHub issue, ensure it is distinct from existing issues by comparing the title, body, and labels with previous issues, using a similarity threshold to determine if the issue should be created. Align the issue with the character's goals and the user's request to ensure its relevance and necessity.
+export const createIssueTemplate = createTemplate(
+    `Create a new GitHub issue, ensure it is distinct from existing issues by comparing the title, body, and labels with previous issues, using a similarity threshold to determine if the issue should be created. Align the issue with the character's goals and the user's request to ensure its relevance and necessity.
 Incorporate examples from the provided files to clarify the issue details. Generate the title, body, and labels based on the character's goals and the user's request, ensuring the owner and repository remain unchanged. Assign relevant labels as appropriate:
 - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
 - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
 - **title** (string): The title of the issue (e.g., "Add new documentation")
 - **body** (string): The body of the issue (e.g., "Add new documentation")
 - **labels** (array): The labels of the issue (optional)
@@ -227,7 +229,8 @@ If it is a feature request use:
 {{#each previousIssues}}
 - [Issue #{{this.number}}]({{this.url}})
 {{/each}}
-\`\`\``, `
+\`\`\``,
+    `
 \`\`\`json
 {
     "owner": "<owner>",
@@ -236,7 +239,8 @@ If it is a feature request use:
     "body": "<body>",
     "labels": ["<label1>", "<label2>"]
 }
-\`\`\``, `Examples of bug reports:
+\`\`\``,
+    `Examples of bug reports:
 
 1. Logging system not capturing error stack traces:
 
@@ -604,7 +608,8 @@ Would integrate with observability stack and help with:
     "labels": ["enhancement", "continuous improvement"]
 }
 \`\`\`
-`);
+`
+);
 
 export const modifyIssueTemplate = `
 Extract the details for modifying a GitHub issue and ensure the modifications align with the character's goals and the user's request:
@@ -636,6 +641,7 @@ Provide the issue details in the following JSON format:
 {
     "owner": "<owner>",
     "repo": "<repo>",
+    "branch": "<branch>",
     "issue_number": "<issue_number>",
     "title": "<title>",
     "body": "<body>",
@@ -652,6 +658,7 @@ export const addCommentToIssueTemplate = `
 Extract the details for adding a comment to a specific GitHub issue:
 - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
 - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
 - **issue_number** (number): The number of the issue to comment on (e.g., 1)
 
 ${contextTemplate}
@@ -659,6 +666,7 @@ ${contextTemplate}
 {
     "owner": "<owner>",
     "repo": "<repo>",
+    "branch": "<branch>",
     "issue_number": "<issue_number>"
 }
 \`\`\`
@@ -667,10 +675,37 @@ ${contextTemplate}
 export const generateCommentForASpecificIssueTemplate = `
 Generate a comment for a specific GitHub issue that aligns with the character's goals and the user's request:
 Here is the specific issue to comment on: {{specificIssue}}
+Please provide the most relevant emoji reaction for the comment. Allowed values are: "+1", "-1", "laugh", "confused", "heart", "hooray", "rocket", "eyes".
+
 ${contextTemplate}
 \`\`\`json
 {
-    "comment": "<comment>"
+    "comment": "<comment>",
+    "emojiReaction": "<emojiReaction>"
+}
+\`\`\`
+
+Example 1:
+\`\`\`json
+{
+    "comment": "This is a great addition to the project!",
+    "emojiReaction": "heart"
+}
+\`\`\`
+
+Example 2:
+\`\`\`json
+{
+    "comment": "I think this change might introduce some issues. Can you double-check?",
+    "emojiReaction": "confused"
+}
+\`\`\`
+
+Example 3:
+\`\`\`json
+{
+    "comment": "Awesome work! This will definitely improve performance.",
+    "emojiReaction": "rocket"
 }
 \`\`\`
 `;
@@ -679,7 +714,9 @@ export const addCommentToPRTemplate = `
 Extract the details for a specific GitHub pull request:
 - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
 - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
 - **pullRequest** (number): The number of the pull request (e.g., 1)
+- **emojiReaction** (string): Allowed values are: "+1", "-1", "laugh", "confused", "heart", "hooray", "rocket", "eyes".
 
 Here is the specific pull request: {{specificPullRequest}}
 ${contextTemplate}
@@ -687,7 +724,42 @@ ${contextTemplate}
 {
     "owner": "<owner>",
     "repo": "<repo>",
-    "pullRequest": "<pullRequest>"
+    "branch": "<branch>",
+    "pullRequest": "<pullRequest>",
+    "emojiReaction": "<emojiReaction>"
+}
+\`\`\`
+
+Example 1:
+\`\`\`json
+{
+    "owner": "octocat",
+    "repo": "hello-world",
+    "branch": "main",
+    "pullRequest": 1,
+    "emojiReaction": "heart"
+}
+\`\`\`
+
+Example 2:
+\`\`\`json
+{
+    "owner": "user1",
+    "repo": "repo1",
+    "branch": "develop",
+    "pullRequest": 2,
+    "emojiReaction": "rocket"
+}
+\`\`\`
+
+Example 3:
+\`\`\`json
+{
+    "owner": "user2",
+    "repo": "repo2",
+    "branch": "feature-branch",
+    "pullRequest": 3,
+    "emojiReaction": "laugh"
 }
 \`\`\`
 `;
@@ -695,20 +767,94 @@ ${contextTemplate}
 export const generateCommentForASpecificPRTemplate = `
 Generate a comment for a specific GitHub pull request that aligns with the character's goals and the user's request:
 Here is the specific pull request to comment on: {{specificPullRequest}}
+Please provide the approval event for the pull request: COMMENT or APPROVE or REQUEST_CHANGES
+Please provide the line level comments for the pull request when referring to the code. Use the diff field {{specificPullRequest.diff}} to determine the line number. And always have a general comment.
+Remember these are suggestions and not something that has been implemented yet.
+
 ${contextTemplate}
+
+Example 1:
+"diff": "diff --git a/index.js b/index.js\nindex da36ae3..2a707ec 100644\n--- a/index.js\n+++ b/index.js\n@@ -10,7 +10,7 @@ async function main() {\n     console.log(chalk.blue('🚀 Welcome to Todo CLI!'));\n     console.log(chalk.blue('='.repeat(50)));\n     \n-    while (true) {\n+    while (true === true) {\n         try {\n             const action = await mainMenu();\n             \n@@ -51,4 +51,4 @@ main().catch(error => {\n     console.error(chalk.gray('\\nStack trace:'));\n     console.error(chalk.gray(error.stack));\n     process.exit(1);\n-}); \n\\ No newline at end of file\n+}); \n"
+
 \`\`\`json
 {
-    "comment": "<comment>"
+    "comment": "<comment>",
+    "approvalEvent": "<approvalEvent>",
+    "lineLevelComments": [
+        {
+            "path": "index.js",
+            "body": "Changed condition in the while loop to 'true === true' for explicit comparison.",
+            "line": 13,
+            "side": "RIGHT"
+        }
+    ],
+}
+\`\`\`
+
+Example 2:
+"diff": "diff --git a/app.js b/app.js\nindex 1234567..89abcde 100644\n--- a/app.js\n+++ b/app.js\n@@ -1,5 +1,4 @@\n-import unusedModule from 'module';\n const express = require('express');\n const app = express();\n \n async function startServer() {\n@@ -25,7 +24,7 @@ async function startServer() {\n     console.log('Server started');\n }\n \n-startServer();\n+await startServer();\n"
+
+\`\`\`json
+{
+    "comment": "<comment>",
+    "approvalEvent": "<approvalEvent>",
+    "lineLevelComments": [
+        {
+            "path": "app.js",
+            "body": "Refactored the function to use async/await for better readability.",
+            "line": 27,
+            "side": "RIGHT"
+        }
+    ],
+}
+\`\`\`
+
+Example 3:
+    "diff": "diff --git a/server.js b/server.js\nindex abcdef1..2345678 100644\n--- a/server.js\n+++ b/server.js\n@@ -43,6 +43,7 @@ function configureServer() {\n     app.use(bodyParser.json());\n     app.use(cors());\n+    app.use(newMiddleware());\n }\n \n function startServer() {\n@@ -76,7 +77,7 @@ function handleError(error) {\n     console.error('An error occurred:', error);\n-    console.error('Please check the server logs for more details.');\n+    console.error('Please check the server log for more details.');\n }\n"
+
+\`\`\`json
+{
+    "comment": "<comment>",
+    "approvalEvent": "<approvalEvent>",
+    "lineLevelComments": [
+        {
+            "path": "server.js",
+            "body": "Updated the server configuration to include new middleware.",
+            "line": 45,
+            "side": "RIGHT"
+        }
+    ],
+}
+\`\`\`
+
+Example 4:
+    "diff": "diff --git a/config.js b/config.js\nindex 3456789..456789a 100644\n--- a/config.js\n+++ b/config.js\n@@ -10,7 +10,7 @@ module.exports = {\n     maxConnections: 100,\n     timeout: 5000,\n-    logLevel: 'info',\n+    logLevel: 'debug',\n     enableCache: true,\n }\n \n@@ -32,6 +32,7 @@ module.exports = {\n     database: {\n         host: 'localhost',\n         port: 5432,\n+        enableLogging: true,\n     }\n }\n"
+
+\`\`\`json
+{
+    "comment": "<comment>",
+    "approvalEvent": "<approvalEvent>",
+    "lineLevelComments": [
+        {
+            "path": "config.js",
+            "body": "Changed configuration value to improve performance.",
+            "line": 12,
+            "side": "RIGHT"
+        }
+    ],
 }
 \`\`\`
 `;
 
-export const ideationTemplate = createTemplate(`Based on the current context and the user's message, generate a thoughtful response that addresses the query and provides valuable insights. Consider the following categories for inspiration:
-`, `\`\`\`json
+export const ideationTemplate = createTemplate(
+    `Based on the current context and the user's message, generate a thoughtful response that addresses the query and provides valuable insights. Consider the following categories for inspiration:
+`,
+    `\`\`\`json
 {
     "response": "<Your insightful response here>"
 }
-\`\`\``, `examples:
+\`\`\``,
+    `examples:
 [
     {
         user: "{{user}}",
@@ -915,4 +1061,203 @@ export const ideationTemplate = createTemplate(`Based on the current context and
         },
     },
 ]
-`);
+`
+);
+
+export const reactToIssueTemplate = `
+Extract the details for reacting to a specific GitHub issue:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+- **issue_number** (number): The number of the issue to react to (e.g., 1)
+- **reaction** (string): The reaction to add (e.g., "+1", "heart")
+
+${contextTemplate}
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>",
+    "issue_number": "<issue_number>",
+    "reaction": "<reaction>"
+}
+\`\`\`
+`;
+
+export const reactToPRTemplate = `
+Extract the details for reacting to a specific GitHub pull request:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+- **pullRequest** (number): The number of the pull request to react to (e.g., 1)
+- **reaction** (string): The reaction to add (e.g., "+1", "heart")
+
+${contextTemplate}
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>",
+    "pullRequest": "<pullRequest>",
+    "reaction": "<reaction>"
+}
+\`\`\`
+`;
+
+export const closePRActionTemplate = `
+Extract the details for closing a specific GitHub pull request:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+- **pullRequest** (number): The number of the pull request to close (e.g., 1)
+
+${contextTemplate}
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>",
+    "pullRequest": "<pullRequest>"
+}
+\`\`\`
+`;
+
+export const closeIssueTemplate = `
+Extract the details for closing a specific GitHub issue:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+- **issue** (number): The number of the issue to close (e.g., 1)
+
+${contextTemplate}
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>",
+    "issue": "<issue>"
+}
+\`\`\`
+`;
+
+export const mergePRActionTemplate = `
+Extract the details for merging a specific GitHub pull request:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+- **pullRequest** (number): The number of the pull request to merge (e.g., 1)
+- **mergeMethod** (string): The method to use for merging (e.g., "merge", "squash", "rebase").
+
+${contextTemplate}
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>",
+    "pullRequest": "<pullRequest>",
+    "mergeMethod": "<mergeMethod>"
+}
+\`\`\`
+`;
+
+export const replyToPRCommentTemplate = `
+Extract the details for replying to a specific comment in a GitHub pull request:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+- **pullRequest** (number): The number of the pull request (e.g., 1)
+- **commentId** (number): The ID of the comment to reply to (e.g., 123)
+- **body** (string): The body of the reply (e.g., "Thank you for your feedback!")
+
+${contextTemplate}
+
+Provide the reply details in the following JSON format:
+
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "pullRequest": "<pullRequest>",
+    "body": "<body>"
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const generatePRCommentReplyTemplate = `
+Generate a reply to a specific comment in a GitHub pull request that aligns with the character's goals and the user's request:
+Here is the specific comment to reply to: {{specificComment}} for this pull request: {{specificPullRequest}}
+Please provide the most relevant emoji reaction for the comment based on your reply. Allowed values are: "+1", "-1", "laugh", "confused", "heart", "hooray", "rocket", "eyes".
+
+If you don't think there is anything useful to say, return an empty string for the comment and null for the emojiReaction.
+Remember these are suggestions and not something that has been implemented yet.
+
+${contextTemplate}
+
+Example:
+\`\`\`json
+{
+    "comment": "<comment>",
+    "emojiReaction": "<emojiReaction>"
+}
+\`\`\`
+
+Examples with emoji reactions:
+\`\`\`json
+{
+    "comment": "Thank you for your feedback!",
+    "emojiReaction": "+1"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "I don't think this is the right approach.",
+    "emojiReaction": "-1"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "Haha, that's a funny suggestion!",
+    "emojiReaction": "laugh"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "I'm not sure I understand what you mean.",
+    "emojiReaction": "confused"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "I love this idea!",
+    "emojiReaction": "heart"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "Hooray! This is exactly what we needed!",
+    "emojiReaction": "hooray"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "This is going to take our project to the next level!",
+    "emojiReaction": "rocket"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "I'm keeping an eye on this.",
+    "emojiReaction": "eyes"
+}
+\`\`\`
+\`\`\`json
+{
+    "comment": "",
+    "emojiReaction": null
+}
+\`\`\`
+
+`;

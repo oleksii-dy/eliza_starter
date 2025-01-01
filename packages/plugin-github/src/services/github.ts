@@ -1,10 +1,12 @@
 import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
 import { elizaLogger } from "@elizaos/core";
+import { GithubReaction } from "../types";
 
 interface GitHubConfig {
     owner: string;
     repo: string;
     auth: string;
+    branch?: string;
 }
 
 export class GitHubService {
@@ -22,6 +24,7 @@ export class GitHubService {
             const response = await this.octokit.repos.getContent({
                 owner: this.config.owner,
                 repo: this.config.repo,
+                branch: this.config.branch,
                 path,
             });
 
@@ -42,6 +45,7 @@ export class GitHubService {
             const response = await this.octokit.repos.getContent({
                 owner: this.config.owner,
                 repo: this.config.repo,
+                branch: this.config.branch,
                 path: testPath,
             });
 
@@ -68,6 +72,7 @@ export class GitHubService {
             const response = await this.octokit.actions.listRepoWorkflows({
                 owner: this.config.owner,
                 repo: this.config.repo,
+                branch: this.config.branch,
             });
 
             return response.data.workflows;
@@ -84,6 +89,7 @@ export class GitHubService {
                 owner: this.config.owner,
                 repo: this.config.repo,
                 path: docPath,
+                branch: this.config.branch,
             });
 
             if (Array.isArray(response.data)) {
@@ -104,23 +110,6 @@ export class GitHubService {
         }
     }
 
-    // Scenario 6: Get releases and changelogs
-    async getReleases(): Promise<
-        RestEndpointMethodTypes["repos"]["listReleases"]["response"]["data"]
-    > {
-        try {
-            const response = await this.octokit.repos.listReleases({
-                owner: this.config.owner,
-                repo: this.config.repo,
-            });
-
-            return response.data;
-        } catch (error) {
-            elizaLogger.error(`Error getting releases: ${error}`);
-            throw error;
-        }
-    }
-
     // Scenario 7: Get source files for refactoring analysis
     async getSourceFiles(sourcePath: string): Promise<string[]> {
         try {
@@ -128,6 +117,7 @@ export class GitHubService {
                 owner: this.config.owner,
                 repo: this.config.repo,
                 path: sourcePath,
+                branch: this.config.branch,
             });
 
             if (Array.isArray(response.data)) {
@@ -160,7 +150,8 @@ export class GitHubService {
                 repo: this.config.repo,
                 title,
                 body,
-                labels,
+                labels: [...(labels || []), 'agent-generated'],
+                branch: this.config.branch,
             });
 
             return response.data;
@@ -170,7 +161,7 @@ export class GitHubService {
         }
     }
 
-    // Update an existing issue
+    // Update an existing issue and open or close it
     async updateIssue(
         issueNumber: number,
         updates: {
@@ -188,6 +179,7 @@ export class GitHubService {
                 repo: this.config.repo,
                 issue_number: issueNumber,
                 ...updates,
+                branch: this.config.branch,
             });
 
             return response.data;
@@ -200,23 +192,38 @@ export class GitHubService {
     // Add a comment to an issue
     async addIssueComment(
         issueNumber: number,
-        body: string
+        body: string,
+        emojiReaction?: GithubReaction
     ): Promise<
         RestEndpointMethodTypes["issues"]["createComment"]["response"]["data"]
     > {
+        let response;
         try {
-            const response = await this.octokit.issues.createComment({
+            response = await this.octokit.issues.createComment({
                 owner: this.config.owner,
                 repo: this.config.repo,
                 issue_number: issueNumber,
                 body,
+                branch: this.config.branch,
             });
-
-            return response.data;
+            } catch (error) {
+                elizaLogger.error(`Error adding comment to issue: ${error}`);
+                throw error;
+            }
+            try {
+                await this.createReactionForIssueComment(this.config.owner, this.config.repo, issueNumber, response.data.id, 'eyes');
+            } catch (error) {
+                elizaLogger.error("Failed to add label to issue:", error);
+            }
+            try {
+                if (emojiReaction) {
+                    await this.createReactionForIssueComment(this.config.owner, this.config.repo, issueNumber, response.data.id, emojiReaction);
+                }
         } catch (error) {
             elizaLogger.error(`Error adding comment to issue: ${error}`);
             throw error;
         }
+        return response.data;
     }
 
     // Get issue details
@@ -228,6 +235,7 @@ export class GitHubService {
                 owner: this.config.owner,
                 repo: this.config.repo,
                 issue_number: issueNumber,
+                branch: this.config.branch,
             });
 
             return response.data;
@@ -238,50 +246,89 @@ export class GitHubService {
     }
 
     // Get all issues
-    async getIssues(): Promise<RestEndpointMethodTypes["issues"]["list"]["response"]["data"]> {
+    async getIssues(): Promise<
+        RestEndpointMethodTypes["issues"]["list"]["response"]["data"]
+    > {
         const response = await this.octokit.issues.listForRepo({
             owner: this.config.owner,
             repo: this.config.repo,
+            branch: this.config.branch,
         });
         return response.data;
     }
 
     // Get all pull requests
-    async getPullRequests(): Promise<RestEndpointMethodTypes["pulls"]["list"]["response"]["data"]> {
+    async getPullRequests(): Promise<
+        RestEndpointMethodTypes["pulls"]["list"]["response"]["data"]
+    > {
         const response = await this.octokit.pulls.list({
             owner: this.config.owner,
             repo: this.config.repo,
+            branch: this.config.branch,
+
+        });
+        return response.data;
+    }
+
+    // Get open pull requests
+    async getPullRequestsByState(state: 'open' | 'closed' | 'all' = 'open'): Promise<
+        RestEndpointMethodTypes["pulls"]["list"]["response"]["data"]
+    > {
+        const response = await this.octokit.pulls.list({
+            owner: this.config.owner,
+            repo: this.config.repo,
+            state
         });
         return response.data;
     }
 
     // Get a specific pull request
-    async getPullRequest(pullRequestNumber: number): Promise<RestEndpointMethodTypes["pulls"]["get"]["response"]["data"]> {
+    async getPullRequest(
+        pullRequestNumber: number
+    ): Promise<RestEndpointMethodTypes["pulls"]["get"]["response"]["data"]> {
         const response = await this.octokit.pulls.get({
             owner: this.config.owner,
             repo: this.config.repo,
-            pull_number: pullRequestNumber,
+            pull_number: pullRequestNumber
         });
         return response.data;
     }
 
-    async addPRComment(pullRequestNumber: number, comment: string): Promise<RestEndpointMethodTypes["pulls"]["createReview"]["response"]["data"]> {
+    async addPRCommentAndReview(
+        pullRequestNumber: number,
+        comment: string,
+        lineLevelComments:  {
+            /** @description The relative path to the file that necessitates a review comment. */
+            path: string;
+            /** @description The position in the diff where you want to add a review comment. Note this value is not the same as the line number in the file. The `position` value equals the number of lines down from the first "@@" hunk header in the file you want to add a comment. The line just below the "@@" line is position 1, the next line is position 2, and so on. The position in the diff continues to increase through lines of whitespace and additional hunks until the beginning of a new file. */
+            position?: number;
+            /** @description Text of the review comment. */
+            body: string;
+            /** @example 28 */
+            line?: number;
+            /** @example RIGHT */
+            side?: string;
+            /** @example 26 */
+            start_line?: number;
+            /** @example LEFT */
+            start_side?: string;
+          }[] = [],
+        action: "COMMENT" | "APPROVE" | "REQUEST_CHANGES" = "COMMENT",
+    ): Promise<
+        RestEndpointMethodTypes["pulls"]["createReview"]["response"]["data"]
+    > {
+        const pullRequest = await this.getPullRequest(pullRequestNumber);
         try {
             const response = await this.octokit.pulls.createReview({
                 owner: this.config.owner,
                 repo: this.config.repo,
                 pull_number: pullRequestNumber,
                 body: comment,
-                event: "COMMENT"
-                // To add comments to specific files in the PR / specific lines
-                // comments: [
-                //     {
-                //         path: path,
-                //         body: comment,
-                //         commit_id: commitId,
-                //     }
-                // ]
-            })
+                event: action,
+                branch: this.config.branch,
+                comments: lineLevelComments,
+                commit_id: pullRequest.head.sha,
+            });
             return response.data;
         } catch (error) {
             elizaLogger.error("Failed to add comment to pull request:", error);
@@ -289,14 +336,103 @@ export class GitHubService {
         }
     }
 
-     /**
+    async replyToPRComment(
+        pullRequestNumber: number,
+        commentId: number,
+        body: string,
+        emojiReaction: GithubReaction
+    ): Promise<RestEndpointMethodTypes["pulls"]["createReplyForReviewComment"]["response"]["data"]> {
+        let response;
+        try {
+            response = await this.octokit.pulls.createReplyForReviewComment({
+                owner: this.config.owner,
+                repo: this.config.repo,
+                pull_number: pullRequestNumber,
+                comment_id: commentId,
+                body
+            });
+        } catch (error) {
+            elizaLogger.error("Failed to reply to pull request comment:", error);
+        }
+        try {
+            // react to the comment with the emoji reaction
+            await this.createReactionForPullRequestReviewComment(this.config.owner, this.config.repo, commentId, emojiReaction);
+            return response.data;
+        } catch (error) {
+            elizaLogger.error("Failed to react to pull request comment:", error);
+            throw error;
+        }
+    }
+
+    async addLabelsToIssue(
+        issueNumber: number,
+        labels: string[]
+    ): Promise<RestEndpointMethodTypes["issues"]["addLabels"]["response"]["data"]> {
+        const response = await this.octokit.issues.addLabels({
+            owner: this.config.owner,
+            repo: this.config.repo,
+            issue_number: issueNumber,
+            labels: labels
+        });
+        return response.data;
+    }
+
+    public async mergePullRequest(
+        owner: string,
+        repo: string,
+        pullNumber: number,
+        mergeMethod: "merge" | "squash" | "rebase" = "merge"
+    ): Promise<RestEndpointMethodTypes["pulls"]["merge"]["response"]["data"]> {
+        try {
+            // Check if the pull request is mergeable
+            const prResponse = await this.octokit.pulls.get({
+                owner,
+                repo,
+                pull_number: pullNumber,
+            });
+
+            if (prResponse.data.mergeable) {
+                const response = await this.octokit.pulls.merge({
+                    owner,
+                    repo,
+                    pull_number: pullNumber,
+                    merge_method: mergeMethod,
+                });
+                return response.data;
+            } else {
+                elizaLogger.error("Pull request is not mergeable")
+                throw new Error("Pull request is not mergeable");
+            }
+        } catch (error) {
+            elizaLogger.error("Failed to merge pull request:", error);
+            throw error;
+        }
+    }
+
+    public async updatePullRequest(
+        owner: string,
+        repo: string,
+        pullNumber: number,
+        title?: string,
+        body?: string,
+        state?: "open" | "closed"
+    ): Promise<RestEndpointMethodTypes["pulls"]["update"]["response"]["data"]> {
+        const response = await this.octokit.pulls.update({
+            owner,
+            repo,
+            pull_number: pullNumber,
+            title,
+            body,
+            state,
+        });
+        return response.data;
+    }
+    /**
      * Fetch the diff from a PR.
      * @param diff_url The PR diff url
      * @returns The diff text of the PR
      */
-     public async getPRDiffText(
-        diffUrl: string
-    ): Promise<string> {
+    public async getPRDiffText(diffUrl: string): Promise<string> {
         try {
             const diffResponse = await this.octokit.request({
                 method: "GET",
@@ -304,6 +440,7 @@ export class GitHubService {
                 headers: {
                     accept: "application/vnd.github.v3.diff",
                 },
+                branch: this.config.branch,
             });
 
             return diffResponse.data as string;
@@ -318,9 +455,7 @@ export class GitHubService {
      * @param comments_url The PR comments url
      * @returns The comments text of the PR
      */
-    public async getPRCommentsText(
-        commentsUrl: string
-    ): Promise<string> {
+    public async getPRCommentsText(commentsUrl: string): Promise<string> {
         try {
             const commentsResponse = await this.octokit.request({
                 method: "GET",
@@ -328,9 +463,34 @@ export class GitHubService {
                 headers: {
                     accept: "application/vnd.github.v3+json",
                 },
+                branch: this.config.branch,
             });
 
-            return commentsResponse.data as string;
+            return JSON.stringify(commentsResponse.data);
+        } catch (error) {
+            elizaLogger.error("Error fetching comments:", error);
+            throw error;
+        }
+    }
+
+
+    /**
+     * Fetch the comments from an issue.
+     * @param comments_url The issue comments url
+     * @returns The comments text of the issue
+     */
+    public async getIssueCommentsText(commentsUrl: string): Promise<RestEndpointMethodTypes["issues"]["listComments"]["response"]["data"]> {
+        try {
+            const commentsResponse = await this.octokit.request({
+                method: "GET",
+                url: commentsUrl,
+                headers: {
+                    accept: "application/vnd.github.v3+json",
+                },
+                branch: this.config.branch,
+            });
+
+            return commentsResponse.data;
         } catch (error) {
             elizaLogger.error("Error fetching comments:", error);
             throw error;
@@ -338,28 +498,232 @@ export class GitHubService {
     }
 
     /**
-     * Fetch the comments from an issue.
-     * @param comments_url The issue comments url
-     * @returns The comments text of the issue
+     * Create a reaction for a commit comment.
+     * @param owner The repository owner
+     * @param repo The repository name
+     * @param commentId The comment ID
+     * @param reaction The reaction type
+     * @returns The created reaction
      */
-    public async getIssueCommentsText(
-        commentsUrl: string
-    ): Promise<string> {
+    public async createReactionForCommitComment(
+        owner: string,
+        repo: string,
+        commentId: number,
+        reaction: GithubReaction,
+    ): Promise<RestEndpointMethodTypes["reactions"]["createForCommitComment"]["response"]["data"]> {
         try {
-            const commentsResponse = await this.octokit.request({
-                method: "GET",
-                url: commentsUrl,
-                headers: {
-                    accept: "application/vnd.github.v3+json",
-                },
+            const response = await this.octokit.reactions.createForCommitComment({
+                owner,
+                repo,
+                comment_id: commentId,
+                content: reaction,
             });
 
-            return commentsResponse.data as string;
+            return response.data;
         } catch (error) {
-            elizaLogger.error("Error fetching comments:", error);
+            elizaLogger.error("Error creating reaction for commit comment:", error);
             throw error;
         }
     }
+
+    /**
+     * Create a reaction for an issue.
+     * @param owner The repository owner
+     * @param repo The repository name
+     * @param issueNumber The issue number
+     * @param reaction The reaction type
+     * @returns The created reaction
+     */
+    public async createReactionForIssue(
+        owner: string,
+        repo: string,
+        issueNumber: number,
+        reaction: "+1" | "-1" | "laugh" | "confused" | "heart" | "hooray" | "rocket" | "eyes"
+    ): Promise<RestEndpointMethodTypes["reactions"]["createForIssue"]["response"]["data"]> {
+        try {
+            const response = await this.octokit.reactions.createForIssue({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                content: reaction,
+            });
+            // add agent-interacted label
+            await this.addLabelsToIssue(issueNumber, ['agent-interacted']);
+
+            return response.data;
+        } catch (error) {
+            elizaLogger.error("Error creating reaction for issue:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Create a reaction for an issue comment.
+     * @param owner The repository owner
+     * @param repo The repository name
+     * @param commentId The comment ID
+     * @param reaction The reaction type
+     * @returns The created reaction
+     */
+    public async createReactionForIssueComment(
+        owner: string,
+        repo: string,
+        issueNumber: number,
+        commentId: number,
+        reaction: GithubReaction
+    ): Promise<RestEndpointMethodTypes["reactions"]["createForIssueComment"]["response"]["data"]> {
+        try {
+            const response = await this.octokit.reactions.createForIssueComment({
+                owner,
+                repo,
+                comment_id: commentId,
+                content: reaction,
+            });
+
+            // add agent-interacted label
+            await this.addLabelsToIssue(issueNumber, ['agent-interacted']);
+            return response.data;
+        } catch (error) {
+            elizaLogger.error("Error creating reaction for issue comment:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Create a reaction for a pull request review comment.
+     * @param owner The repository owner
+     * @param repo The repository name
+     * @param commentId The comment ID
+     * @param reaction The reaction type
+     * @returns The created reaction
+     */
+    public async createReactionForPullRequestReviewComment(
+        owner: string,
+        repo: string,
+        commentId: number,
+        reaction: GithubReaction
+    ): Promise<RestEndpointMethodTypes["reactions"]["createForPullRequestReviewComment"]["response"]["data"]> {
+        try {
+            const response = await this.octokit.reactions.createForPullRequestReviewComment({
+                owner,
+                repo,
+                comment_id: commentId,
+                content: reaction,
+            });
+
+            return response.data;
+        } catch (error) {
+            elizaLogger.error("Error creating reaction for pull request review comment:", error);
+            throw error;
+        }
+    }
+
+// TODO: This is a temporary fix to get the position of the line in the diff. We need to find a better way to do this.
+ /**
+ * Parses the diff and determines the position of a specific line in a file.
+ * @param diff - The diff text of the pull request.
+ * @param filePath - The path to the file in the repository.
+ * @param lineNumber - The line number in the file to comment on.
+ * @returns The position in the diff where the comment should be added, or undefined if not found.
+ */
+public getPositionFromDiff(
+    diff: string,
+    filePath: string,
+    lineNumber: number
+): number | undefined {
+    const diffLines = diff.split('\n');
+    let currentFile = '';
+    let position = 0;
+    let withinHunk = false;
+    let currentLineInFile = 0;
+    let lineNum = lineNumber + 3
+    for (let i = 0; i < diffLines.length; i++) {
+        const line = diffLines[i];
+
+        // Detect file header
+        if (line.startsWith('diff --git')) {
+            const match = line.match(/a\/(.+) b\/(.+)/);
+            if (match) {
+                currentFile = match[2];
+            }
+            withinHunk = false;
+            currentLineInFile = 0;
+            continue;
+        }
+
+        // Only process the specified file
+        if (currentFile !== filePath) {
+            continue;
+        }
+
+        // Detect hunk header
+        if (line.startsWith('@@')) {
+            withinHunk = true;
+            const hunkMatch = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/);
+            if (hunkMatch) {
+                currentLineInFile = parseInt(hunkMatch[1], 10) - 1;
+            }
+            continue;
+        }
+
+        if (withinHunk) {
+            // Lines in the diff
+            if (
+                line.startsWith('+') ||
+                line.startsWith('-') ||
+                line.startsWith(' ') ||
+                line.startsWith('\\')
+            ) {
+                position += 1;
+                const prefix = line[0];
+                if (prefix === '+' || prefix === ' ') {
+                    currentLineInFile += 1;
+                }
+                // Check if this line is the target line
+                if (currentLineInFile === lineNum) {
+                    return position;
+                }
+            }
+        }
+    }
+
+    // If position not found
+    return undefined;
+}
+    // Example usage within a method or class
+    public async addLineLevelComment(diffText: string, filePath: string, lineNumber: number, commentBody: string): Promise<{
+        path: string;
+        position?: number;
+        body: string;
+        line?: number;
+        side?: string;
+        start_line?: number;
+        start_side?: string;
+    }> {
+       // Determine the position from the diff
+    const position = this.getPositionFromDiff(diffText, filePath, lineNumber);
+
+   if (position === undefined) {
+        throw new Error(
+            `Could not determine position for file ${filePath} at line ${lineNumber}`
+        );
+    }
+    const comment: {
+        path: string;
+        position?: number;
+        body: string;
+        line?: number;
+        side?: string;
+        start_line?: number;
+        start_side?: string;
+    } = {
+        path: filePath,
+        body: commentBody,
+        position: position,
+    };
+    return comment;
+    }
+
 }
 
 export { GitHubConfig };

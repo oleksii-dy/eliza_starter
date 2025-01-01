@@ -1,6 +1,7 @@
 import handlebars from "handlebars";
 import { type State } from "./types.ts";
 import { names, uniqueNamesGenerator } from "unique-names-generator";
+import { trimTokens } from "./generation.ts";
 
 /**
  * Composes a context string by replacing placeholders in a template with corresponding values from the state.
@@ -45,7 +46,9 @@ export const composeContext = ({
         const key = match.replace(/{{|}}/g, "");
         return state[key] ?? "";
     });
-    return out;
+    // TODO: This is a temporary fix to get the context to fit within the token limit. We need to find a better way to do this.
+    const context = trimTokens(out, 128000, "gpt-4o");
+    return context;
 };
 
 /**

@@ -33,7 +33,8 @@ export async function addFilesToMemory(
     files: string[],
     repoPath: string,
     owner: string,
-    repo: string
+    repo: string,
+    branch: string
 ) {
     elizaLogger.info("Adding files to memory:", files);
     for (const file of files) {
@@ -45,15 +46,13 @@ export async function addFilesToMemory(
         );
         const contentHash = createHash("sha256").update(content).digest("hex");
         const memoryId = stringToUuid(
-            `github-${owner}-${repo}-${relativePath}-${contentHash}`
+            `github-${owner}-${repo}-${branch}-${relativePath}-${contentHash}`
         );
-        const roomId = stringToUuid(`github-${owner}-${repo}`);
+        const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
 
         elizaLogger.info("Memory ID:", memoryId);
-     const existingDocument =
+        const existingDocument =
             await runtime.messageManager.getMemoryById(memoryId);
-
-        elizaLogger.log("existingDocument", existingDocument);
 
         if (
             existingDocument &&
@@ -118,7 +117,10 @@ export const createMemoriesFromFilesAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log("[createMemoriesFromFiles] Composing state for message:", message);
+        elizaLogger.log(
+            "[createMemoriesFromFiles] Composing state for message:",
+            message
+        );
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -133,7 +135,7 @@ export const createMemoriesFromFilesAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: CreateMemoriesFromFilesSchema,
         });
 
@@ -156,7 +158,8 @@ export const createMemoriesFromFilesAction: Action = {
                 files,
                 repoPath,
                 content.owner,
-                content.repo
+                content.repo,
+                content.branch
             );
 
             elizaLogger.info("Memories created successfully!");
@@ -186,7 +189,7 @@ export const createMemoriesFromFilesAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Create memories from files on repository octocat/hello-world at path 'docs/'",
+                    text: "Create memories from files on repository octocat/hello-world @ branch main and path 'docs/'",
                 },
             },
             {
@@ -201,7 +204,7 @@ export const createMemoriesFromFilesAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Create memories from repository octocat/hello-world",
+                    text: "Create memories from repository octocat/hello-world @ branch main and path 'docs/'",
                 },
             },
             {
@@ -216,7 +219,7 @@ export const createMemoriesFromFilesAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Create memories from file in repository octocat/hello-world",
+                    text: "Create memories from file in repository octocat/hello-world @ branch main and path 'docs/'",
                 },
             },
             {
@@ -231,7 +234,7 @@ export const createMemoriesFromFilesAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Memories from files in repository octocat/hello-world",
+                    text: "Memories from files in repository octocat/hello-world @ branch main and path 'docs/'",
                 },
             },
             {
@@ -246,7 +249,7 @@ export const createMemoriesFromFilesAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Memories from file in repository octocat/hello-world",
+                    text: "Memories from file in repository octocat/hello-world @ branch main and path 'docs/'",
                 },
             },
             {
@@ -261,7 +264,7 @@ export const createMemoriesFromFilesAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "GitHub create memories from files in repository octocat/hello-world",
+                    text: "GitHub create memories from files in repository octocat/hello-world @ branch main and path 'docs/'",
                 },
             },
             {
@@ -276,7 +279,7 @@ export const createMemoriesFromFilesAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "GitHub create memories in repository octocat/hello-world",
+                    text: "GitHub create memories in repository octocat/hello-world @ branch main and path 'docs/'",
                 },
             },
             {
@@ -291,7 +294,7 @@ export const createMemoriesFromFilesAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "GitHub create memories from file in repository octocat/hello-world",
+                    text: "GitHub create memories from file in repository octocat/hello-world @ branch main and path 'docs/'",
                 },
             },
             {
@@ -306,7 +309,7 @@ export const createMemoriesFromFilesAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "GitHub memories from files in repository octocat/hello-world",
+                    text: "GitHub memories from files in repository octocat/hello-world @ branch main and path 'docs/'",
                 },
             },
             {
@@ -321,7 +324,7 @@ export const createMemoriesFromFilesAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "GitHub memories from file in repository octocat/hello-world",
+                    text: "GitHub memories from file in repository octocat/hello-world @ branch main and path 'docs/'",
                 },
             },
             {

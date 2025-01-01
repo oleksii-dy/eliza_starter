@@ -18,39 +18,14 @@ import {
     CreateIssueSchema,
     isCreateIssueContent,
 } from "../types";
-import { getIssuesFromMemories, getFilesFromMemories, incorporateRepositoryState } from "../utils";
-import { RestEndpointMethodTypes } from "@octokit/rest";
-
-export async function saveIssueToMemory(runtime: IAgentRuntime, issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"], owner: string, repo: string): Promise<void> {
-    const roomId = stringToUuid(`github-${owner}-${repo}`);
-    const issueId = stringToUuid(`${roomId}-${runtime.agentId}-issue-${issue.number}`);
-    const issueMemory: Memory = {
-        id: issueId,
-        userId: runtime.agentId,
-        agentId: runtime.agentId,
-        roomId: roomId,
-        content: {
-            text: `Issue Created: ${issue.title}`,
-            action: "CREATE_ISSUE",
-            source: "github",
-            metadata: {
-                type: "issue",
-                url: issue.html_url,
-                number: issue.number,
-                state: issue.state,
-                created_at: issue.created_at,
-                updated_at: issue.updated_at,
-                comments: issue.comments,
-                labels: issue.labels.map((label: any) => (typeof label === 'string' ? label : label?.name)),
-                body: issue.body,
-            },
-        },
-    };
-    elizaLogger.log("[createIssue] Issue memory:", issueMemory);
-
-    await runtime.messageManager.createMemory(issueMemory);
-}
-
+import {
+    getIssuesFromMemories,
+    getFilesFromMemories,
+    incorporateRepositoryState,
+    saveIssueToMemory,
+    saveIssuesToMemory,
+} from "../utils";
+import fs from "fs/promises";
 
 export const createIssueAction: Action = {
     name: "CREATE_ISSUE",
@@ -75,19 +50,28 @@ export const createIssueAction: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        const updatedState = await incorporateRepositoryState(state, runtime, message, []);
+        const updatedState = await incorporateRepositoryState(
+            state,
+            runtime,
+            message,
+            [],
+            true,
+            false
+        );
         elizaLogger.info("State:", updatedState);
 
         const context = composeContext({
             state: updatedState,
             template: createIssueTemplate,
         });
-        elizaLogger.info("Context:", context);
+        // elizaLogger.info("Context:", context);
+        // write the context to a file for testing
+        // await fs.writeFile("/tmp/plugin-github-create-issue-context.txt", context);
 
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: CreateIssueSchema,
         });
 
@@ -103,21 +87,41 @@ export const createIssueAction: Action = {
         const githubService = new GitHubService({
             owner: content.owner,
             repo: content.repo,
+            branch: content.branch,
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
 
         try {
+            const issuesMemories = await saveIssuesToMemory(
+                runtime,
+                content.owner,
+                content.repo,
+                content.branch,
+                runtime.getSetting("GITHUB_API_TOKEN")
+            );
+            // elizaLogger.log("Issues memories:", issuesMemories);
+            await fs.writeFile(
+                "/tmp/createIssue-issuesMemories.txt",
+                JSON.stringify(issuesMemories, null, 2)
+            );
+
             const issue = await githubService.createIssue(
                 content.title,
                 content.body,
-                content.labels
+                [...content.labels, "auto-generated"]
             );
 
             elizaLogger.info(
                 `Created issue successfully! Issue number: ${issue.number}`
             );
 
-            await saveIssueToMemory(runtime, issue, content.owner, content.repo);
+            await saveIssueToMemory(
+                runtime,
+                issue,
+                content.owner,
+                content.repo,
+                content.branch
+            );
             if (callback) {
                 await callback({
                     text: `Created issue #${issue.number} successfully see: ${issue.html_url}`,

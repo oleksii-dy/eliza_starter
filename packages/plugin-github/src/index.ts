@@ -23,14 +23,20 @@ import {
     modifyIssueAction,
 } from "./plugins/modifyIssue";
 import {
-    githubAddCommentToIssuePlugin,
+    githubInteractWithIssuePlugin,
     addCommentToIssueAction,
-} from "./plugins/addCommentToIssue";
-import { githubIdeationPlugin, ideationAction } from "./plugins/ideationPlugin";
+    reactToIssueAction,
+    closeIssueAction,
+} from "./plugins/interactWithIssue";
 import {
-    githubAddCommentToPRPlugin,
+    githubInteractWithPRPlugin,
     addCommentToPRAction,
-} from "./plugins/addCommentToPR";
+    reactToPRAction,
+    closePRAction,
+    mergePRAction,
+    replyToPRCommentAction,
+} from "./plugins/interactWithPR";
+import { githubIdeationPlugin, ideationAction } from "./plugins/ideationPlugin";
 import type { Plugin } from "@elizaos/core";
 import { sourceCodeProvider } from "./providers/sourceCode";
 import { testFilesProvider } from "./providers/testFiles";
@@ -45,9 +51,9 @@ export const plugins = {
     githubCreateCommitPlugin,
     githubCreateIssuePlugin,
     githubModifyIssuePlugin,
-    githubAddCommentToIssuePlugin,
+    githubInteractWithIssuePlugin,
+    githubInteractWithPRPlugin,
     githubIdeationPlugin,
-    githubAddCommentToPRPlugin,
 };
 
 export * from "./plugins/initializeRepository";
@@ -56,9 +62,9 @@ export * from "./plugins/createPullRequest";
 export * from "./plugins/createCommit";
 export * from "./plugins/createIssue";
 export * from "./plugins/modifyIssue";
-export * from "./plugins/addCommentToIssue";
+export * from "./plugins/interactWithIssue";
 export * from "./plugins/ideationPlugin";
-export * from "./plugins/addCommentToPR";
+export * from "./plugins/interactWithPR";
 
 export * from "./providers/sourceCode";
 export * from "./providers/testFiles";
@@ -68,6 +74,8 @@ export * from "./providers/releases";
 export * from "./utils";
 export * from "./services/github";
 export * from "./templates";
+export * from "./types";
+export * from "./constants"
 
 export const githubPlugin: Plugin = {
     name: "github",
@@ -82,6 +90,13 @@ export const githubPlugin: Plugin = {
         addCommentToIssueAction,
         ideationAction,
         addCommentToPRAction,
+        mergePRAction,
+        closePRAction,
+        reactToPRAction,
+        closePRAction,
+        reactToIssueAction,
+        closeIssueAction,
+        replyToPRCommentAction,
     ],
     evaluators: [],
     providers: [
