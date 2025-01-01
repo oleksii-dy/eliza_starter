@@ -365,13 +365,30 @@ export class GitHubService {
         pullNumber: number,
         mergeMethod: "merge" | "squash" | "rebase" = "merge"
     ): Promise<RestEndpointMethodTypes["pulls"]["merge"]["response"]["data"]> {
-        const response = await this.octokit.pulls.merge({
-            owner,
-            repo,
-            pull_number: pullNumber,
-            merge_method: mergeMethod,
-        });
-        return response.data;
+        try {
+            // Check if the pull request is mergeable
+            const prResponse = await this.octokit.pulls.get({
+                owner,
+                repo,
+                pull_number: pullNumber,
+            });
+
+            if (prResponse.data.mergeable) {
+                const response = await this.octokit.pulls.merge({
+                    owner,
+                    repo,
+                    pull_number: pullNumber,
+                    merge_method: mergeMethod,
+                });
+                return response.data;
+            } else {
+                elizaLogger.error("Pull request is not mergeable")
+                throw new Error("Pull request is not mergeable");
+            }
+        } catch (error) {
+            elizaLogger.error("Failed to merge pull request:", error);
+            throw error;
+        }
     }
 
     public async updatePullRequest(

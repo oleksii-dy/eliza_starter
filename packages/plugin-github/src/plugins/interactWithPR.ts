@@ -294,6 +294,9 @@ export const addCommentToPRAction: Action = {
                 created_at: pr.created_at,
                 updated_at: pr.updated_at,
                 comments: await githubService.getPRCommentsText(
+                    pr.review_comment_url
+                ),
+                nonReviewComments: await githubService.getPRCommentsText(
                     pr.comments_url
                 ),
                 labels: pr.labels.map((label: any) =>
@@ -839,12 +842,12 @@ export const replyToPRCommentAction: Action = {
         // reply to all comments in the pull request
         const pullRequest = await githubService.getPullRequest(content.pullRequest);
         elizaLogger.info("Pull request:", JSON.stringify(pullRequest, null, 2));
-        const commentsUrl = pullRequest.comments_url;
-        elizaLogger.info("Comments URL:", commentsUrl);
-        const comments = await githubService.getPRCommentsText(commentsUrl);
-        elizaLogger.info("Comments:", JSON.stringify(comments, null, 2));
-        const commentsArray = JSON.parse(comments);
-        for (const comment of commentsArray) {
+        const reviewCommentsUrl = pullRequest.review_comments_url;
+        elizaLogger.info("Review Comments URL:", reviewCommentsUrl);
+        const reviewComments = await githubService.getPRCommentsText(reviewCommentsUrl);
+        elizaLogger.info("Review Comments:", JSON.stringify(reviewComments, null, 2));
+        const reviewCommentsArray = JSON.parse(reviewComments);
+        for (const comment of reviewCommentsArray) {
             const replyContext = composeContext({
                 state: updatedState,
                 template: generatePRCommentReplyTemplate,
