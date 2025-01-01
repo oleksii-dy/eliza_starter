@@ -540,9 +540,6 @@ importers:
       '@elizaos/plugin-image-generation':
         specifier: workspace:*
         version: link:../plugin-image-generation
-      '@elizaos/plugin-sd-image-generation':
-        specifier: workspace:*
-        version: link:../plugin-sd-generation
       '@types/body-parser':
         specifier: 1.19.5
         version: 1.19.5
