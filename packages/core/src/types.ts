@@ -1074,6 +1074,7 @@ export interface IAgentRuntime {
     token: string | null;
     modelProvider: ModelProviderName;
     imageModelProvider: ModelProviderName;
+    imageVisionModelProvider: ModelProviderName;
     character: Character;
     providers: Provider[];
     actions: Action[];
