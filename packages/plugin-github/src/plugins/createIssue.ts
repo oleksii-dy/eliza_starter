@@ -56,7 +56,7 @@ export const createIssueAction: Action = {
             message,
             [],
             true,
-            false
+            true,
         );
         elizaLogger.info("State:", updatedState);
 
@@ -108,7 +108,7 @@ export const createIssueAction: Action = {
             const issue = await githubService.createIssue(
                 content.title,
                 content.body,
-                [...content.labels, "auto-generated"]
+                content.labels
             );
 
             elizaLogger.info(
