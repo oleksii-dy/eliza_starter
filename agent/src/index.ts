@@ -48,6 +48,7 @@ import { storyPlugin } from "@elizaos/plugin-story";
 import { flowPlugin } from "@elizaos/plugin-flow";
 import { fuelPlugin } from "@elizaos/plugin-fuel";
 import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
+import { imageSDGenerationPlugin } from "@elizaos/plugin-sd-image-generation";
 import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
 import { multiversxPlugin } from "@elizaos/plugin-multiversx";
 // import { nearPlugin } from "@elizaos/plugin-near";
@@ -521,6 +522,7 @@ export async function createAgent(
         // character.plugins are handled when clients are added
         plugins: [
             bootstrapPlugin,
+            imageSDGenerationPlugin,
             getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
                 ? confluxPlugin
                 : null,
