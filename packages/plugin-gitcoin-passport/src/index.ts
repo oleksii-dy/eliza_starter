@@ -1,11 +1,7 @@
 export * from "./actions/getScore";
 
 import type { Plugin } from "@elizaos/core";
-import {
-    getLatestTokensAction,
-    getLatestBoostedTokensAction,
-    getTopBoostedTokensAction,
-} from "./actions/getScore";
+import { getPassportScoreAction } from "./actions/getScore";
 
 export const passportPlugin: Plugin = {
     name: "passport",
@@ -13,11 +9,7 @@ export const passportPlugin: Plugin = {
     providers: [],
     evaluators: [],
     services: [],
-    actions: [
-        getLatestTokensAction,
-        getLatestBoostedTokensAction,
-        getTopBoostedTokensAction,
-    ],
+    actions: [getPassportScoreAction],
 };
 
 export default passportPlugin;
