@@ -5,6 +5,10 @@ import { hex } from "@scure/base";
 import mempoolJS from "@mempool/mempool.js";
 import { MempoolReturn } from "@mempool/mempool.js/lib/interfaces";
 import { IAccount } from "../types";
+import {
+    Tx,
+    TxStatus,
+} from "@mempool/mempool.js/lib/interfaces/bitcoin/transactions";
 
 export class WalletProvider {
     mempool: MempoolReturn;
@@ -41,31 +45,36 @@ export class WalletProvider {
         };
     }
 
-    getAddresses() {
+    getAddresses(): IAccount {
         return {
             nestedSegwitAddress: this.account.nestedSegwitAddress,
             taprootAddress: this.account.taprootAddress,
         };
     }
 
-    async getBalance() {
+    async getBalance(): Promise<number> {
         const data = await this.mempool.bitcoin.addresses.getAddress({
             address: this.account.nestedSegwitAddress,
         });
         return data?.mempool_stats?.funded_txo_sum || 0;
     }
 
-    async getTransactionHistory() {
+    async getTransactionHistory(): Promise<Tx[]> {
         return await this.mempool.bitcoin.addresses.getAddressTxs({
             address: this.account.nestedSegwitAddress,
         });
     }
 
-    async getTransactionStatus(txid: string) {
+    async getTransactionStatus(txid: string): Promise<TxStatus> {
         return await this.mempool.bitcoin.transactions.getTxStatus({ txid });
     }
 
-    async signPsbt(){}
+    async signPsbt() {}
+
+    async broadcastTransaction(txhex: string): Promise<string> {
+        const txid = await this.mempool.bitcoin.transactions.postTx({ txhex }) as string;
+        return txid;
+    }
 }
 
 const walletProvider: Provider = {
