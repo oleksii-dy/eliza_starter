@@ -37,10 +37,10 @@ async function createTokenTransaction(
         );
 
         const result = await actor.create_token({
-            name: tokenInfo.name ?? "AI Token",
-            ticker: tokenInfo.symbol ?? "AIT",
-            description: tokenInfo.description ?? "A token created by an ai.",
-            image: "https://icptoken.default.logo",
+            name: tokenInfo.name,
+            ticker: tokenInfo.symbol,
+            description: tokenInfo.description,
+            image: tokenInfo.logo,
             maybe_twitter: wrapOption(tokenInfo.twitter),
             maybe_website: wrapOption(tokenInfo.website),
             maybe_telegram: wrapOption(tokenInfo.telegram),
