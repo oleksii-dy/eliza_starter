@@ -1,8 +1,8 @@
 services:
-    tee:
+    adam:
         build:
             context: .
-            dockerfile: Dockerfile
+            dockerfile: Dockerfile.adam
         stdin_open: true
         tty: true
         volumes:
