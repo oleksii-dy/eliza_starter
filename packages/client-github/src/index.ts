@@ -18,7 +18,7 @@ import {
     incorporateRepositoryState,
     getRepositoryRoomId,
     saveIssuesToMemory,
-    GitHubService
+    GitHubService,
 } from "@elizaos/plugin-github";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
@@ -207,7 +207,6 @@ export class GitHubClient extends EventEmitter {
             },
             roomId,
             createdAt: timestamp,
-
         };
         elizaLogger.log("New memory to be created:", newMemory);
 
@@ -320,7 +319,6 @@ export class GitHubClient extends EventEmitter {
             },
             roomId,
             createdAt: timestamp,
-
         };
         await this.runtime.messageManager.createMemory(
             initializeRepositoryMemory
@@ -341,14 +339,13 @@ export class GitHubClient extends EventEmitter {
             userId: userIdUUID,
             agentId: this.runtime.agentId,
             content: {
-                text: `Create memories from files for the repository ${owner}/${repository} @ branch ${branch} and path '/'`,
+                text: `Create memories from files for the repository ${owner}/${repository} @ branch ${branch} and path '/packages/plugin-github/src'`,
                 action: "CREATE_MEMORIES_FROM_FILES",
                 source: "github",
                 inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`),
             },
             roomId,
             createdAt: timestamp,
-
         };
         await this.runtime.messageManager.createMemory(
             createMemoriesFromFilesMemory
