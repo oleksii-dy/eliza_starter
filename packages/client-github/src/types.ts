@@ -21,7 +21,7 @@ export const OODASchema = z.object({
     message: z.string().nullable().optional(),
     labels: z.array(z.string()).nullable().optional(),
     issue: z.number().nullable().optional(),
-    reasoning: z.string(),
+    reasoning: z.string().nullable().optional(),
     reaction: z.enum(githubReactions as [string, ...string[]]).nullable().optional(),
 })
 

@@ -414,6 +414,16 @@ export class GitHubService {
                 }
                 return response.data;
             } else {
+                // update the branch if it isn't mergable
+                try {
+                    await this.octokit.pulls.updateBranch({
+                        owner: this.config.owner,
+                        repo: this.config.repo,
+                        pull_number: pullNumber,
+                    });
+                    } catch (error) {
+                    elizaLogger.error("Failed to update branch:", error);
+                }
                 elizaLogger.error("Pull request is not mergeable")
                 throw new Error("Pull request is not mergeable");
             }

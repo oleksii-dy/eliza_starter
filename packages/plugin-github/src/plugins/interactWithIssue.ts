@@ -478,7 +478,7 @@ export const closeIssueAction: Action = {
             elizaLogger.info(`Closed issue #${content.issue} successfully!`);
             if (callback) {
                 callback({
-                    text: `Closed issue #${content.issue} successfully!`,
+                    text: `Closed issue #${content.issue} successfully! Issue: ${issue.html_url}`,
                     attachments: [],
                 });
             }
