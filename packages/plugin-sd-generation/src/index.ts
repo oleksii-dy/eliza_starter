@@ -11,16 +11,44 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import { IMAGE_GENERATION_CONSTANTS } from "./constants";
-import { Buffer } from "buffer";
 
-const decodeImage = (base64Image: string): string => {
-    const imageBuffer = Buffer.from(base64Image, "base64");
-    const fileName = `generated_image_${Date.now()}.png`;
-    const filePath = path.join(__dirname, "content_cache", fileName);
+export async function saveImage(data: string, filename: string, isBase64: boolean = true): Promise<string> {
+    const imageDir = path.join(process.cwd(), "generatedImages");
 
-    fs.writeFileSync(filePath, imageBuffer);
-    return filePath;
-};
+    // Убедитесь, что директория существует
+    if (!fs.existsSync(imageDir)) {
+        fs.mkdirSync(imageDir, { recursive: true });
+    }
+
+    const filepath = path.join(imageDir, `${filename}.png`);
+
+    if (isBase64) {
+        // Удаляем префикс base64, если он есть
+        const base64Image = data.replace(/^data:image\/\w+;base64,/, "");
+        const imageBuffer = Buffer.from(base64Image, "base64");
+        fs.writeFileSync(filepath, imageBuffer);
+    } else {
+        // Скачиваем изображение по URL
+        const response = await fetch(data);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch image: ${response.statusText}`);
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        const imageBuffer = Buffer.from(arrayBuffer);
+        fs.writeFileSync(filepath, imageBuffer);
+    }
+    if (!fs.existsSync(filepath)) {
+        throw new Error(`Image file not created: ${filepath}`);
+    }
+    
+    return filepath;
+}
+
+// const saveGeneratedImage = async (imageData: string, filename: string): Promise<string> => {
+//     const isBase64 = !imageData.startsWith("http");
+//     return await saveImage(imageData, filename, isBase64);
+// };
+
 
 const generateImage = async (prompt: string, runtime: IAgentRuntime) => {
     const API_KEY = runtime.getSetting(IMAGE_GENERATION_CONSTANTS.API_KEY_SETTING);
@@ -66,7 +94,10 @@ const generateImage = async (prompt: string, runtime: IAgentRuntime) => {
             throw new Error("No images returned in the response");
         }
 
-        const imagePath = decodeImage(data.output.images[0]);
+        // Сохраняем только один раз
+        const filename = `generated_image_${Date.now()}`;
+        const imagePath = await saveImage(data.output.images[0], filename, true);
+
         return {
             success: true,
             imagePath,
@@ -80,10 +111,11 @@ const generateImage = async (prompt: string, runtime: IAgentRuntime) => {
         elizaLogger.error("Image generation error:", error);
         return {
             success: false,
-            error: error.message || "Unknown error occurred",
+            error: error instanceof Error ? error.message : "Unknown error occurred",
         };
     }
 };
+
 
 const imageGeneration: Action = {
     name: "GENERATE_IMAGE",
@@ -139,18 +171,19 @@ const imageGeneration: Action = {
 
             if (result.success) {
                 const { imagePath, additionalData } = result;
-
+                elizaLogger.log("imageGeneration result.success url:", imagePath);
                 callback(
                     {
                         text: `Here's your generated image (Execution time: ${additionalData.executionTime}ms):`,
                         attachments: [
                             {
                                 id: crypto.randomUUID(),
-                                url: `file://${imagePath}`, // Локальный путь к изображению
+                                url: imagePath,
                                 title: "Generated Image",
                                 source: "imageGeneration",
                                 description: imagePrompt,
                                 text: imagePrompt,
+                                contentType: "image/png", // Убедитесь, что тип контента указан
                             },
                         ],
                     },
