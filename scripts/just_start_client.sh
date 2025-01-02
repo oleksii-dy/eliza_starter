@@ -1,8 +1,7 @@
 #!/bin/sh
 
 # Node.js version check
-REQUIRED_NODE_VERSION=23.5.0
-nvm use $REQUIRED_NODE_VERSION
+REQUIRED_NODE_VERSION=23.3.0
 CURRENT_NODE_VERSION=$(node -v | cut -d'.' -f1-3 | sed 's/v//')
 
 # Compare Node versions
@@ -20,17 +19,10 @@ fi
 # Navigate to project root
 cd "$(dirname "$0")"/.. || exit 1
 
-# Build project
-echo "\033[1mBuilding project...\033[0m"
-if ! pnpm build; then
-    echo "\033[1;31mFailed to build project.\033[0m"
-    exit 1
-fi
-
-# Start project
-echo "\033[1mStarting project...\033[0m"
-if ! pnpm start; then
-    echo "\033[1;31mFailed to start project.\033[0m"
+# Start client
+echo "\033[1mStarting client...\033[0m"
+if ! pnpm start:client; then
+    echo "\033[1;31mFailed to start client.\033[0m"
     exit 1
 fi
 

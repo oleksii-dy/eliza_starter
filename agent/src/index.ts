@@ -1,47 +1,60 @@
-//import * from "./otelapis";
-/*instrumentation.ts*/
+console.log("Hello agent")
+import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import {  PeriodicExportingMetricReader,  ConsoleMetricExporter,} from '@opentelemetry/sdk-metrics';
-
 import * as opentelemetry from '@opentelemetry/api';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { ZipkinExporter } from '@opentelemetry/exporter-zipkin';
+import { Resource } from '@opentelemetry/resources';
+import {
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
+} from '@opentelemetry/semantic-conventions';
+import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 
-  //Specify zipkin url. default url is http://localhost:9411/api/v2/spans
-  const zipkinUrl = 'http://localhost';
-  const zipkinPort = '9411';
-  const zipkinPath = '/api/v2/spans';
-  const zipkinURL = `${zipkinUrl}:${zipkinPort}${zipkinPath}`;
+//Specify zipkin url. default url is http://localhost:9411/api/v2/spans
+const zipkinUrl = 'http://localhost';
+const zipkinPort = '9411';
+const zipkinPath = '/api/v2/spans';
+const zipkinURL = `${zipkinUrl}:${zipkinPort}${zipkinPath}`;
 
-  const options = {
+const options = {
     headers: {
 	'module': 'mainai16z',
     },
     url: zipkinURL,
-    //serviceName: 'your-application-name',   
-   
+    serviceName: 'ai16z',   
+    
     // optional interceptor
     getExportRequestHeaders: () => {
-      return {
-        'module': 'mainai16z',
-      }
+	return {
+            'module': 'mainai16z',
+	}
     }
-  }
+}
 const traceExporter_zipkin = new ZipkinExporter(options);
 // parts from https://stackoverflow.com/questions/71654897/opentelemetry-typescript-project-zipkin-exporter
 
 const sdk = new NodeSDK({
+        resource: new Resource({
+	[ATTR_SERVICE_NAME]: 'eliza-agent',
+	[ATTR_SERVICE_VERSION]: '1.0',
+    }),
     //traceExporter: new ConsoleSpanExporter(),
     traceExporter: traceExporter_zipkin,
-    metricReader: new PeriodicExportingMetricReader({
-	exporter: new ConsoleMetricExporter(),
-    }),
-    instrumentations: [getNodeAutoInstrumentations()],
+    instrumentations: [getNodeAutoInstrumentations(),
+		       new HttpInstrumentation()
+
+		      ],
 });
 
-sdk.start();
+// For troubleshooting, set the log level to DiagLogLevel.DEBUG
+diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ALL);
+
+console.log(sdk.start());
+
 
 import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
 import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
@@ -125,7 +138,7 @@ export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
 const logFetch = async (url: string, options: any) => {
     elizaLogger.debug(`Fetching ${url}`);
     // Disabled to avoid disclosure of sensitive information such as API keys
-    // elizaLogger.debug(JSON.stringify(options, null, 2));
+    elizaLogger.debug(JSON.stringify(options, null, 2));
     return fetch(url, options);
 };
 
