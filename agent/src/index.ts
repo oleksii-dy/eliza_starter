@@ -2,6 +2,8 @@
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { SEMRESATTRS_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
+import { trace } from '@opentelemetry/api';
+
 //import { NodeSDK } from '@opentelemetry/sdk-node';
 import { SpanExporter, Span } from '@opentelemetry/sdk-trace-base';
 // , ExportResult
@@ -44,9 +46,9 @@ const traceExporter = new ConsoleSpanExporter();
 
 export class CustomConsoleSpanExporter implements SpanExporter {
     export(spans: Span[], resultCallback: (result: ExportResult) => void): void {
-	console.log("hello1")
-	traceExporter.export(spans,resultCallback);
-	traceExporter.export(traceExporter_zipkin,resultCallback);	
+      elizaLogger.log("hello1")
+      //traceExporter.export(spans,resultCallback);
+      //traceExporter.export(traceExporter_zipkin,resultCallback);	
 	for (const span of spans) {
 	    const spanData = {
 		name: span.name,
@@ -59,7 +61,7 @@ export class CustomConsoleSpanExporter implements SpanExporter {
 		status: span.status,
 		kind: span.kind,
 	    };	    
-	    console.log(JSON.stringify(spanData, null, 2)); 
+	  elizaLogger.log(JSON.stringify(spanData, null, 2)); 
 	}	
 	resultCallback(ExportResult.SUCCESS);
     }
@@ -67,13 +69,14 @@ export class CustomConsoleSpanExporter implements SpanExporter {
 	return Promise.resolve();
     }
 }
-//const myExporter = new CustomConsoleSpanExporter()
+const myExporter = new CustomConsoleSpanExporter()
 
 // parts from https://stackoverflow.com/questions/71654897/opentelemetry-typescript-project-zipkin-exporter
 //const { SimpleSpanProcessor } = import('@opentelemetry/sdk-trace-base');
 import { NodeTracerProvider, SimpleSpanProcessor } from "@opentelemetry/sdk-trace-node";
 const txz=new SimpleSpanProcessor(traceExporter_zipkin);
 const tx=new SimpleSpanProcessor(traceExporter);
+const tx2=new SimpleSpanProcessor(myExporter);
 
 try {
     const serviceName = 'eliza-agent';
@@ -84,7 +87,8 @@ try {
 	  [ATTR_SERVICE_VERSION]: '1.0',    }),
       spanProcessors: [
 	txz,
-	tx
+	tx,
+	tx2
       ]
     });
 
@@ -98,12 +102,14 @@ try {
     ],
   });
   
-  opentelemetry.trace.getTracer('http-example');
-  console.log("setup!")
+
+  elizaLogger.log("setup!")
 } catch(error){
-  console.log("ERROR",error)
+  elizaLogger.log("ERROR",error)
 }
 // const sdk = new NodeSDK({         resource: new Resource({
+
+const tracer=opentelemetry.trace.getTracer('ai16z');
 
 //     //traceExporter: new ConsoleSpanExporter(),
 //     traceExporter: myExporter,
@@ -224,11 +230,23 @@ export function parseArguments(): {
 }
 
 function tryLoadFile(filePath: string): string | null {
-    try {
-        return fs.readFileSync(filePath, "utf8");
-    } catch (e) {
-        return null;
-    }
+    elizaLogger.log(`tryLoadFile filePath: ${filePath}`);    
+    const span = tracer.startSpan('tryLoadFile', {
+      //  kind: 1, // server
+      attributes: { filePath: filePath },
+    });
+  try {
+    const ret = fs.readFileSync(filePath, "utf8");
+    span.addEvent(`got ${ret.length}`);
+    
+    span.end();
+    return ret;
+    
+  } catch (e) {
+    
+    span.end();
+    return null;
+  }
 }
 
 function isAllStrings(arr: unknown[]): boolean {
@@ -901,7 +919,8 @@ const startAgents = async () => {
     );
 };
 
-startAgents().catch((error) => {
-    elizaLogger.error("Unhandled error in startAgents:", error);
-    process.exit(1);
-});
+startAgents();
+//.catch((error) => {
+//  elizaLogger.error("Unhandled error in startAgents:", error);
+//    process.exit(1);
+//});
