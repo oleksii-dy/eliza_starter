@@ -6,6 +6,7 @@
             "ES2021",
             "DOM"
         ],
+        "types": ["jest", "@jest/globals"],
         "declaration": true,
         "outDir": "./dist",
         "strict": true,
