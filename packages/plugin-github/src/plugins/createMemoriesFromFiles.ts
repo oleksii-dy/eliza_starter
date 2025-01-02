@@ -84,7 +84,7 @@ export async function addFilesToMemory(
                     owner,
                 },
             },
-            embedding: getEmbeddingZeroVector(),
+
         } as Memory;
         elizaLogger.info("Memory:", memory);
         await runtime.messageManager.createMemory(memory);

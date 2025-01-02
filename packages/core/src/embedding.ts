@@ -187,7 +187,7 @@ export async function embed(runtime: IAgentRuntime, input: string) {
 
     const config = getEmbeddingConfig();
     const isNode = typeof process !== "undefined" && process.versions?.node;
-    const trimmedInput = trimTokens(input, 5000000, 'gpt-4o');
+    const trimmedInput = input?.slice(0, 50)
     // Determine which embedding path to use
     if (config.provider === EmbeddingProvider.OpenAI) {
         return await getRemoteEmbedding(trimmedInput, {

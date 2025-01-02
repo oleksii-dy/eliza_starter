@@ -844,7 +844,13 @@ export async function generateObjectDeprecated({
         return null;
     }
     let retryDelay = 1000;
-
+    const provider = runtime.modelProvider;
+    const model = models[provider].model[modelClass] as TiktokenModel;
+    if (!model) {
+        throw new Error(`Unsupported model class: ${modelClass}`);
+    }
+    const max_context_length = models[provider].settings.maxInputTokens;
+    context = trimTokens(context, max_context_length, model);
     while (true) {
         try {
             // this is slightly different than generateObjectArray, in that we parse object, not object array
@@ -858,7 +864,7 @@ export async function generateObjectDeprecated({
                 return parsedResponse;
             }
         } catch (error) {
-            elizaLogger.error("Error in generateObject:", error);
+            elizaLogger.error("Error in generateObjectDeprecated:", error);
         }
 
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
@@ -1406,7 +1412,7 @@ export const generateObject = async ({
     const apiKey = runtime.token;
 
     try {
-        context = trimTokens(context, max_context_length, model);
+        context = trimTokens(context, max_context_length - 10000, model);
 
         const modelOptions: ModelSettings = {
             prompt: context,

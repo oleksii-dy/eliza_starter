@@ -372,7 +372,7 @@ export async function saveIssueToMemory(
                 body: issue.body,
             },
         },
-        embedding: getEmbeddingZeroVector(),
+
     };
 
     // elizaLogger.log("Issue memory:", issueMemory);

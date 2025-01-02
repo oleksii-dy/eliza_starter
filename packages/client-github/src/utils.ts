@@ -69,7 +69,7 @@ export async function savePullRequestToMemory(
             text: `Pull Request Created: ${pullRequest.title}`,
             metadata: await getPullRequestMetadata(pullRequest, githubService),
         },
-        embedding: getEmbeddingZeroVector(),
+
     };
 
     await runtime.messageManager.createMemory(prMemory);

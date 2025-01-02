@@ -102,7 +102,7 @@ export const ideationAction: Action = {
             },
             roomId,
             createdAt: timestamp,
-            embedding: getEmbeddingZeroVector(),
+
         };
         await runtime.messageManager.createMemory(newMemory);
         if (callback) {

@@ -197,7 +197,7 @@ export class GitHubClient extends EventEmitter {
             },
             roomId,
             createdAt: timestamp,
-            embedding: getEmbeddingZeroVector()
+
         };
         elizaLogger.log("New memory to be created:", newMemory);
 
@@ -310,7 +310,7 @@ export class GitHubClient extends EventEmitter {
             },
             roomId,
             createdAt: timestamp,
-            embedding: getEmbeddingZeroVector()
+
         };
         await this.runtime.messageManager.createMemory(
             initializeRepositoryMemory
@@ -338,7 +338,7 @@ export class GitHubClient extends EventEmitter {
             },
             roomId,
             createdAt: timestamp,
-            embedding: getEmbeddingZeroVector()
+
         };
         await this.runtime.messageManager.createMemory(
             createMemoriesFromFilesMemory
