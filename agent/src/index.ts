@@ -1,6 +1,10 @@
-console.log("Hello agent")
+//
+import { registerInstrumentations } from '@opentelemetry/instrumentation';
+import { SEMRESATTRS_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
-import { NodeSDK } from '@opentelemetry/sdk-node';
+//import { NodeSDK } from '@opentelemetry/sdk-node';
+import { SpanExporter, Span } from '@opentelemetry/sdk-trace-base';
+// , ExportResult
 import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import {  PeriodicExportingMetricReader,  ConsoleMetricExporter,} from '@opentelemetry/sdk-metrics';
@@ -35,25 +39,80 @@ const options = {
     }
 }
 const traceExporter_zipkin = new ZipkinExporter(options);
+const traceExporter = new ConsoleSpanExporter();
+
+
+export class CustomConsoleSpanExporter implements SpanExporter {
+    export(spans: Span[], resultCallback: (result: ExportResult) => void): void {
+	console.log("hello1")
+	traceExporter.export(spans,resultCallback);
+	traceExporter.export(traceExporter_zipkin,resultCallback);	
+	for (const span of spans) {
+	    const spanData = {
+		name: span.name,
+		traceId: span.spanContext().traceId,
+		spanId: span.spanContext().spanId,
+		startTime: span.startTime,
+		endTime: span.endTime,
+		attributes: span.attributes,
+		events: span.events,
+		status: span.status,
+		kind: span.kind,
+	    };	    
+	    console.log(JSON.stringify(spanData, null, 2)); 
+	}	
+	resultCallback(ExportResult.SUCCESS);
+    }
+    shutdown(): Promise<void> {
+	return Promise.resolve();
+    }
+}
+//const myExporter = new CustomConsoleSpanExporter()
+
 // parts from https://stackoverflow.com/questions/71654897/opentelemetry-typescript-project-zipkin-exporter
+//const { SimpleSpanProcessor } = import('@opentelemetry/sdk-trace-base');
+import { NodeTracerProvider, SimpleSpanProcessor } from "@opentelemetry/sdk-trace-node";
+const txz=new SimpleSpanProcessor(traceExporter_zipkin);
+const tx=new SimpleSpanProcessor(traceExporter);
 
-const sdk = new NodeSDK({
-        resource: new Resource({
-	[ATTR_SERVICE_NAME]: 'eliza-agent',
-	[ATTR_SERVICE_VERSION]: '1.0',
-    }),
-    //traceExporter: new ConsoleSpanExporter(),
-    traceExporter: traceExporter_zipkin,
-    instrumentations: [getNodeAutoInstrumentations(),
-		       new HttpInstrumentation()
+try {
+    const serviceName = 'eliza-agent';
+    const provider = new NodeTracerProvider({
+	resource: new Resource({
+	  [SEMRESATTRS_SERVICE_NAME]: serviceName,
+	  [ATTR_SERVICE_NAME]: serviceName,
+	  [ATTR_SERVICE_VERSION]: '1.0',    }),
+      spanProcessors: [
+	txz,
+	tx
+      ]
+    });
 
-		      ],
-});
+  // Initialize the OpenTelemetry APIs to use the NodeTracerProvider bindings
+  provider.register();
+  
+  registerInstrumentations({
+    instrumentations: [
+      getNodeAutoInstrumentations(),
+      new HttpInstrumentation(),
+    ],
+  });
+  
+  opentelemetry.trace.getTracer('http-example');
+  console.log("setup!")
+} catch(error){
+  console.log("ERROR",error)
+}
+// const sdk = new NodeSDK({         resource: new Resource({
 
-// For troubleshooting, set the log level to DiagLogLevel.DEBUG
-diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ALL);
-
-console.log(sdk.start());
+//     //traceExporter: new ConsoleSpanExporter(),
+//     traceExporter: myExporter,
+//     //traceExporter_zipkin
+//     instrumentations: [, new HttpInstrumentation()     ],
+// });
+// // For troubleshooting, set the log level to DiagLogLevel.DEBUG
+// diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ALL);
+// console.log(sdk.start());
 
 
 import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
