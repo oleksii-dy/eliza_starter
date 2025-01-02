@@ -6,6 +6,7 @@ import {
     HandlerCallback,
     State,
     getEmbeddingZeroVector,
+    Content,
     composeContext,
     generateMessageResponse,
     ModelClass,
@@ -49,11 +50,11 @@ export const getPassportScoreAction: Action = {
     description: "Get score from Passport API for an address",
     validate: async (runtime: IAgentRuntime, _message: Memory) => {
         elizaLogger.log("Validating runtime for GET_PASSPORT_SCORE...");
-        const apiKey = process.env.PASSPORT_API_KEY;
-        const scorerId = process.env.PASSPORT_SCORER;
+        const apiKey = runtime.getSetting("PASSPORT_API_KEY");
+        const scorerId = runtime.getSetting("PASSPORT_SCORER");
         if (!apiKey || !scorerId) {
             elizaLogger.error(
-                "Missing PASSPORT_API_KEY or PASSPORT_SCORER environment variables"
+                "Missing PASSPORT_API_KEY or PASSPORT_SCORER settings"
             );
             return false;
         }
@@ -67,8 +68,8 @@ export const getPassportScoreAction: Action = {
         callback: HandlerCallback
     ) => {
         elizaLogger.log("Starting GET_PASSPORT_SCORE handler...");
-        const apiKey = process.env.PASSPORT_API_KEY;
-        const scorerId = process.env.PASSPORT_SCORER;
+        const apiKey = runtime.getSetting("PASSPORT_API_KEY");
+        const scorerId = runtime.getSetting("PASSPORT_SCORER");
 
         if (!state) {
             state = (await runtime.composeState(_message)) as State;

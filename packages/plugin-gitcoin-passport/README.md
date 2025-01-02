@@ -11,7 +11,7 @@ Just add it under your character profile in plugins as
 
 ```
     "plugins": [
-        "@elizaos/plugin-passport"
+        "@elizaos/plugin-gitcoin-passport"
     ],
 ```
 
