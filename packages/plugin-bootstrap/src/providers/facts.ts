@@ -3,8 +3,8 @@ import {
     MemoryManager,
     formatMessages,
     AgentRuntime as IAgentRuntime,
-} from "@ai16z/eliza";
-import type { Memory, Provider, State } from "@ai16z/eliza";
+} from "@elizaos/core";
+import type { Memory, Provider, State } from "@elizaos/core";
 import { formatFacts } from "../evaluators/fact.ts";
 
 const factsProvider: Provider = {
@@ -45,6 +45,10 @@ const factsProvider: Provider = {
             (fact, index, self) =>
                 index === self.findIndex((t) => t.id === fact.id)
         );
+
+        if (allFacts.length === 0) {
+            return "";
+        }
 
         const formattedFacts = formatFacts(allFacts);
 
