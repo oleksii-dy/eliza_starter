@@ -35,6 +35,7 @@ import {
     CacheStore,
     Client,
     ICacheManager,
+    parseBooleanFromText,
 } from "@elizaos/core";
 import { RedisClient } from "@elizaos/adapter-redis";
 import { zgPlugin } from "@elizaos/plugin-0g";
@@ -515,6 +516,10 @@ export async function createAgent(
         // character.plugins are handled when clients are added
         plugins: [
             bootstrapPlugin,
+            parseBooleanFromText(getSecret(character, "ENABLE_WEBSEARCH")) ===
+            true
+                ? webSearchPlugin
+                : null,
             getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
                 ? confluxPlugin
                 : null,
