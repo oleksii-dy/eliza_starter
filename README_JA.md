@@ -10,6 +10,12 @@
 
 </div>
 
+## 🚩 システム概要
+
+<div align="center">
+  <img src="./docs/static/img/eliza_diagram.jpg" alt="Eliza Diagram" width="100%" />
+</div>
+
 ## ✨ 機能
 
 -   🛠 多機能なDiscord、Twitter、Telegramコネクタ
@@ -57,28 +63,6 @@ pnpm start:client
 ```
 Elizaをカスタマイズするための方法は[ドキュメンテーション](https://elizaos.github.io/eliza/)を参照してください。
 
-### Gitpodを利用した起動
-
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/elizaos/eliza/tree/main)
-
-### .env ファイルの編集
-
-以下のように .env.example ファイルを .env としてコピーし、適切な値を設定します。
-
-```
-cp .env.example .env
-```
-
-.env の利用はオプショナルです。もし、複数の異なるエージェントを実行する場合、シークレット情報はキャラクターJSONを通して設定することができます。
-
-### Elizaの自動起動
-
-以下のコマンドを実行すると、自動的にプロジェクトのセットアップを行い、デフォルトのキャラクターを用いてエージェントを起動します。
-
-```bash
-sh scripts/start.sh
-```
-
 ### マニュアルによる起動（実際に何をやっているかがわかる人向け）
 
 ```bash
@@ -104,6 +88,28 @@ Sharpのインストールが必要になる場合があります。もしエー
 
 ```
 pnpm install --include=optional sharp
+```
+
+### Gitpodを利用した起動
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/elizaos/eliza/tree/main)
+
+### .env ファイルの編集
+
+以下のように .env.example ファイルを .env としてコピーし、適切な値を設定します。
+
+```
+cp .env.example .env
+```
+
+.env の利用はオプショナルです。もし、複数の異なるエージェントを実行する場合、シークレット情報はキャラクターJSONを通して設定することができます。
+
+### Elizaの自動起動
+
+以下のコマンドを実行すると、自動的にプロジェクトのセットアップを行い、デフォルトのキャラクターを用いてエージェントを起動します。
+
+```bash
+sh scripts/start.sh
 ```
 
 ### キャラクターファイルの編集
