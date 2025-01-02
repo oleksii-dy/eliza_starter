@@ -11,7 +11,6 @@ import {
     UUID,
     generateObject,
     stringToUuid,
-    getEmbeddingZeroVector,
 } from "@elizaos/core";
 import { validateGithubConfig } from "./environment";
 import { EventEmitter } from "events";
@@ -19,6 +18,7 @@ import {
     incorporateRepositoryState,
     getRepositoryRoomId,
     saveIssuesToMemory,
+    GitHubService
 } from "@elizaos/plugin-github";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
@@ -69,6 +69,16 @@ export class GitHubClient extends EventEmitter {
         const { owner, repository, branch } = getRepositorySettings(
             this.runtime
         );
+        // const client = new GitHubService({
+        //     owner,
+        //     repo: repository,
+        //     branch,
+        //     auth: this.apiToken,
+        // });
+        // const issue = await client.getIssue(1);
+        // await fs.writeFile("/tmp/client-github-issue.txt", JSON.stringify(issue, null, 2));
+        // const res = await client.addLabelsToLabelable(issue.node_id, ["agent-commented"]);
+        // await fs.writeFile("/tmp/client-github-response.txt", JSON.stringify(res, null, 2));
 
         //
         // 2) prepare the room id
@@ -136,10 +146,10 @@ export class GitHubClient extends EventEmitter {
             true
         );
         // elizaLogger.log("Original state:", originalState);
-        await fs.writeFile(
-            "/tmp/client-github-originalState.txt",
-            JSON.stringify(originalState, null, 2)
-        );
+        // await fs.writeFile(
+        //     "/tmp/client-github-originalState.txt",
+        //     JSON.stringify(originalState, null, 2)
+        // );
 
         //
         // 5) compose the context

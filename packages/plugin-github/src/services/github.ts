@@ -1,4 +1,6 @@
 import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
+import { graphql, GraphqlResponseError } from "@octokit/graphql";
+import type { GraphQlQueryResponseData } from "@octokit/graphql";
 import { elizaLogger } from "@elizaos/core";
 import { GithubReaction } from "../types";
 
@@ -12,10 +14,12 @@ interface GitHubConfig {
 export class GitHubService {
     private octokit: Octokit;
     private config: GitHubConfig;
+    private graphqlClient: typeof graphql;
 
     constructor(config: GitHubConfig) {
         this.config = config;
         this.octokit = new Octokit({ auth: config.auth });
+        this.graphqlClient = graphql.defaults({ headers: { authorization: `token ${config.auth}` } });
     }
 
     // Scenario 1 & 2: Get file contents for code analysis
@@ -329,6 +333,18 @@ export class GitHubService {
                 comments: lineLevelComments,
                 commit_id: pullRequest.head.sha,
             });
+
+            try {
+                // Add labels to the pull request
+                const labels = ["agent-commented"];
+                if (action !== "COMMENT") {
+                    labels.push("agent-reviewed");
+                }
+                await this.addLabelsToLabelable(pullRequest.node_id, labels);
+            } catch (labelError) {
+                elizaLogger.error("Failed to add labels to pull request:", labelError);
+            }
+
             return response.data;
         } catch (error) {
             elizaLogger.error("Failed to add comment to pull request:", error);
@@ -746,6 +762,75 @@ public getPositionFromDiff(
         position: position,
     };
     return comment;
+    }
+    // TODO: test this
+    // Add labels to a labelable (issue or pull request)
+    async addLabelsToLabelable(labelableId: string, labels: string[]): Promise<{ clientMutationId: string, labelable: any }> {
+        const mutation = `
+            mutation($input: AddLabelsToLabelableInput!) {
+                addLabelsToLabelable(input: $input) {
+                    clientMutationId
+                    labelable {
+                        labels(first: 10) {
+                            nodes {
+                                name
+                            }
+                        }
+                    }
+                }
+            }
+        `;
+        elizaLogger.info(`Adding labels to labelable: ${labelableId}`);
+        try {
+            const labelIds = await this.fetchLabelIds(labels);
+            elizaLogger.info(`Label IDs: ${labelIds}`);
+            const variables = {
+                input: {
+                    labelableId,
+                    labelIds
+                }
+            };
+            const response: GraphQlQueryResponseData = await this.graphqlClient(mutation, variables);
+            elizaLogger.info(`Labels added to labelable: ${labelableId}`);
+            elizaLogger.info(`Response: ${JSON.stringify(response)}`);
+            return response.addLabelsToLabelable;
+        } catch (error) {
+            if (error instanceof GraphqlResponseError) {
+                elizaLogger.error(`GraphQL error: ${error.message}`);
+                elizaLogger.error(`Request details: ${JSON.stringify(error.request)}`);
+            } else {
+                elizaLogger.error(`Error adding labels to labelable: ${error}`);
+            }
+            throw error;
+        }
+    }
+    // Helper function to fetch label IDs by name
+    async fetchLabelIds(labelNames: string[]): Promise<string[]> {
+        const query = `
+            query($owner: String!, $repo: String!) {
+                repository(owner: $owner, name: $repo) {
+                    labels(first: 100) {
+                        nodes {
+                            id
+                            name
+                        }
+                    }
+                }
+            }
+        `;
+
+        try {
+            const { repository }: GraphQlQueryResponseData  = await this.graphqlClient(query, {
+                owner: this.config.owner,
+                repo: this.config.repo
+            });
+
+            const labelMap = new Map(repository.labels.nodes.map((label: { id: string, name: string }) => [label.name, label.id]));
+            return labelNames.map(name => labelMap.get(name)).filter(id => id !== undefined) as string[];
+        } catch (error) {
+            elizaLogger.error(`Error fetching label IDs: ${error}`);
+            throw error;
+        }
     }
 
 }
