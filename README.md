@@ -17,7 +17,6 @@
 ## ✨ Features
 
 - 🛠️ Full-featured Discord, Twitter and Telegram connectors
-- 🔗 Support for every model (Llama, Grok, OpenAI, Anthropic, etc.)
 - 👥 Multi-agent and room support
 - 📚 Easily ingest and interact with your documents
 - 💾 Retrievable memory and document store
@@ -56,23 +55,12 @@ cp .env.example .env
 pnpm i && pnpm build && pnpm start
 ```
 Once the agent is running, You should see the message to run "pnpm start:client" at the end.
-Open another terminal and move to same directory and then run below command and follow the URL to chat to your agent. 
+Open another terminal and move to same directory and then run below command and follow the URL to chat to your agent.
 ```bash
 pnpm start:client
 ```
 
 Then read the [Documentation](https://elizaos.github.io/eliza/) to learn how to customize your Eliza.
-
-### Manually Start Eliza (Only recommended if you know what you are doing)
-
-```bash
-# Clone the repository
-git clone https://github.com/elizaos/eliza.git
-
-# Checkout the latest release
-# This project iterates fast, so we recommend checking out the latest release
-git checkout $(git describe --tags --abbrev=0)
-```
 
 ### Start Eliza with Gitpod
 
@@ -106,9 +94,17 @@ sh scripts/start.sh
 3. Connect with X (Twitter)
     - change `"clients": []` to `"clients": ["twitter"]` in the character file to connect with X
 
-### Manually Start Eliza
+### Manually Start Eliza (Only recommended if you know what you are doing)
 
 ```bash
+# Clone the repository
+git clone https://github.com/elizaos/eliza.git
+
+# Checkout the latest release
+# This project iterates fast, so we recommend checking out the latest release
+git checkout $(git describe --tags --abbrev=0)
+
+# Build and start Eliza
 pnpm i
 pnpm build
 pnpm start
