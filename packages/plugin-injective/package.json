@@ -1,0 +1,30 @@
+{
+  "name": "plugin-injective",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.10.3",
+    "@typescript-eslint/eslint-plugin": "8.16.0",
+    "@typescript-eslint/parser": "8.16.0",
+    "eslint": "9.16.0",
+    "jest": "^29.7.0",
+    "prettier": "3.4.1",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@injectivelabs/sdk-ts": "^1.14.33",
+    "@injectivelabs/utils": "^1.14.33",
+    "axios": "^1.7.9",
+    "jsonwebtoken": "^9.0.2",
+    "@elizaos/core": "workspace:*"
+  }
+}
