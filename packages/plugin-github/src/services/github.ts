@@ -392,12 +392,26 @@ export class GitHubService {
             });
 
             if (prResponse.data.mergeable) {
-                const response = await this.octokit.pulls.merge({
-                    owner,
-                    repo,
-                    pull_number: pullNumber,
-                    merge_method: mergeMethod,
-                });
+                let response;
+                try {
+                    response = await this.octokit.pulls.merge({
+                        owner,
+                        repo,
+                        pull_number: pullNumber,
+                        merge_method: mergeMethod,
+                    });
+                } catch (error) {
+                    elizaLogger.error("Failed to merge pull request:", error);
+                    throw error;
+                }
+
+                try {
+                    // add agent-merged label
+                    await this.addLabelsToIssue(pullNumber, ['agent-merged']);
+                } catch (error) {
+                    elizaLogger.error("Failed to add label to pull request:", error);
+                    throw error;
+                }
                 return response.data;
             } else {
                 elizaLogger.error("Pull request is not mergeable")

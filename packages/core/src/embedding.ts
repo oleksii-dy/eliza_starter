@@ -3,6 +3,7 @@ import { models } from "./models.ts";
 import { IAgentRuntime, ModelProviderName } from "./types.ts";
 import settings from "./settings.ts";
 import elizaLogger from "./logger.ts";
+import { trimTokens } from "./index.ts";
 
 interface EmbeddingOptions {
     model: string;
@@ -186,10 +187,10 @@ export async function embed(runtime: IAgentRuntime, input: string) {
 
     const config = getEmbeddingConfig();
     const isNode = typeof process !== "undefined" && process.versions?.node;
-
+    const trimmedInput = trimTokens(input, 5000000, 'gpt-4o');
     // Determine which embedding path to use
     if (config.provider === EmbeddingProvider.OpenAI) {
-        return await getRemoteEmbedding(input, {
+        return await getRemoteEmbedding(trimmedInput, {
             model: config.model,
             endpoint: settings.OPENAI_API_URL || "https://api.openai.com/v1",
             apiKey: settings.OPENAI_API_KEY,
@@ -198,7 +199,7 @@ export async function embed(runtime: IAgentRuntime, input: string) {
     }
 
     if (config.provider === EmbeddingProvider.Ollama) {
-        return await getRemoteEmbedding(input, {
+        return await getRemoteEmbedding(trimmedInput, {
             model: config.model,
             endpoint:
                 runtime.character.modelEndpointOverride ||
@@ -209,7 +210,7 @@ export async function embed(runtime: IAgentRuntime, input: string) {
     }
 
     if (config.provider == EmbeddingProvider.GaiaNet) {
-        return await getRemoteEmbedding(input, {
+        return await getRemoteEmbedding(trimmedInput, {
             model: config.model,
             endpoint:
                 runtime.character.modelEndpointOverride ||
@@ -225,7 +226,7 @@ export async function embed(runtime: IAgentRuntime, input: string) {
     // BGE - try local first if in Node
     if (isNode) {
         try {
-            return await getLocalEmbedding(input);
+            return await getLocalEmbedding(trimmedInput);
         } catch (error) {
             elizaLogger.warn(
                 "Local embedding failed, falling back to remote",
@@ -235,7 +236,7 @@ export async function embed(runtime: IAgentRuntime, input: string) {
     }
 
     // Fallback to remote override
-    return await getRemoteEmbedding(input, {
+    return await getRemoteEmbedding(trimmedInput, {
         model: config.model,
         endpoint:
             runtime.character.modelEndpointOverride ||

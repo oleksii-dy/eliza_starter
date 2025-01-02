@@ -13,6 +13,7 @@ import {
     ModelClass,
     Plugin,
     State,
+    getEmbeddingZeroVector,
 } from "@elizaos/core";
 import { createMemoriesFromFilesTemplate } from "../templates";
 import {
@@ -83,6 +84,7 @@ export async function addFilesToMemory(
                     owner,
                 },
             },
+            embedding: getEmbeddingZeroVector(),
         } as Memory;
         elizaLogger.info("Memory:", memory);
         await runtime.messageManager.createMemory(memory);

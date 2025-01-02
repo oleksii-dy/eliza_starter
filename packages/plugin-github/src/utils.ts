@@ -6,6 +6,7 @@ import simpleGit from "simple-git";
 import { Octokit } from "@octokit/rest";
 import {
     elizaLogger,
+    getEmbeddingZeroVector,
     IAgentRuntime,
     Memory,
     State,
@@ -371,6 +372,7 @@ export async function saveIssueToMemory(
                 body: issue.body,
             },
         },
+        embedding: getEmbeddingZeroVector(),
     };
 
     // elizaLogger.log("Issue memory:", issueMemory);

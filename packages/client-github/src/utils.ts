@@ -3,6 +3,7 @@ import {
     IAgentRuntime,
     Memory,
     stringToUuid,
+    getEmbeddingZeroVector,
 } from "@elizaos/core";
 import { GitHubService } from "@elizaos/plugin-github";
 import { RestEndpointMethodTypes } from "@octokit/rest";
@@ -68,6 +69,7 @@ export async function savePullRequestToMemory(
             text: `Pull Request Created: ${pullRequest.title}`,
             metadata: await getPullRequestMetadata(pullRequest, githubService),
         },
+        embedding: getEmbeddingZeroVector(),
     };
 
     await runtime.messageManager.createMemory(prMemory);
