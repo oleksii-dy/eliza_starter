@@ -23,6 +23,7 @@
 ## ✨ Features
 
 - 🛠️ Full-featured Discord, Twitter and Telegram connectors
+- 🔗 Support for every model (Llama, Grok, OpenAI, Anthropic, etc.)
 - 👥 Multi-agent and room support
 - 📚 Easily ingest and interact with your documents
 - 💾 Retrievable memory and document store
