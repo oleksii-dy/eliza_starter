@@ -7,7 +7,6 @@ import {
 } from "@elizaos/core";
 import * as btc from "@scure/btc-signer";
 import { secp256k1 } from "@noble/curves/secp256k1";
-import { hex } from "@scure/base";
 import { mnemonicToSeedSync, validateMnemonic } from "@scure/bip39";
 import { HDKey } from "@scure/bip32";
 import { wordlist } from "@scure/bip39/wordlists/english";

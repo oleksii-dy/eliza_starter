@@ -8,7 +8,7 @@ import {
     elizaLogger,
 } from "@elizaos/core";
 import { WalletProvider, walletProvider } from "../../providers/wallet";
-import { BigNumber } from "bignumber.js";
+import { formatBitcoinBalance } from "../../utils";
 
 export default {
     name: "ORDINALS_GET_BALANCE",
@@ -36,10 +36,7 @@ export default {
             const paymentWallet = addresses.nestedSegwitAddress;
 
             /** Format Bitcoin balance so it doesn't appear as sats */
-            const bitcoinFormatter = 100_000_000;
-            const formattedBalance = new BigNumber(String(balance)).dividedBy(
-                new BigNumber(bitcoinFormatter)
-            );
+            const formattedBalance = formatBitcoinBalance(balance);
 
             callback({
                 text: `You have a balance of ${String(formattedBalance)} BTC on your payment wallet: ${paymentWallet}`,
