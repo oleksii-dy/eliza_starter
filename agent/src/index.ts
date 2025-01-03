@@ -21,6 +21,7 @@ import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { wrapTracer } from '@opentelemetry/api/experimental';
 
 //Specify zipkin url. default url is http://localhost:9411/api/v2/spans
+// docker run -d -p 9411:9411 openzipkin/zipkin
 const zipkinUrl = 'http://localhost';
 const zipkinPort = '9411';
 const zipkinPath = '/api/v2/spans';
@@ -89,23 +90,9 @@ try {
 } catch(error){
   elizaLogger.log("ERROR",error)
 }
-// const sdk = new NodeSDK({         resource: new Resource({
 
-//const tracer=opentelemetry.trace.getTracer('ai16z');
-
-
-
+// wrapper
 const tracer = wrapTracer(opentelemetry.trace.getTracer('ai16z-agent'))
-
-//     //traceExporter: new ConsoleSpanExporter(),
-//     traceExporter: myExporter,
-//     //traceExporter_zipkin
-//     instrumentations: [, new HttpInstrumentation()     ],
-// });
-// // For troubleshooting, set the log level to DiagLogLevel.DEBUG
-// diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ALL);
-// console.log(sdk.start());
-
 
 import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
 import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
@@ -220,7 +207,7 @@ export function parseArguments(): {
 
 function tryLoadFile(filePath: string): string | null {
   elizaLogger.log(`tryLoadFile filePath: ${filePath}`);
-  return tracer.withActiveSpan('tryLoadFile', () => {
+  return tracer.withActiveSpan(`tryLoadFile filePath: ${filePath}`, () => {
     try {
       const ret = fs.readFileSync(filePath, "utf8");
       return ret;
@@ -473,6 +460,7 @@ export function getTokenForProvider(
 }
 
 function initializeDatabase(dataDir: string) {
+  return tracer.withActiveSpan('initializeDatabase', () => {
     if (process.env.POSTGRES_URL) {
         elizaLogger.info("Initializing PostgreSQL connection...");
         const db = new PostgresDatabaseAdapter({
@@ -499,6 +487,7 @@ function initializeDatabase(dataDir: string) {
         const db = new SqliteDatabaseAdapter(new Database(filePath));
         return db;
     }
+  })
 }
 
 // also adds plugins from character file into the runtime
@@ -506,6 +495,8 @@ export async function initializeClients(
     character: Character,
     runtime: IAgentRuntime
 ) {
+
+  return await tracer.withActiveSpan('initializeClients', async () => {
     // each client can only register once
     // and if we want two we can explicitly support it
     const clients: Record<string, any> = {};
@@ -590,11 +581,15 @@ export async function initializeClients(
         }
     }
 
+
     return clients;
+  });
 }
 
 function getSecret(character: Character, secret: string) {
-    return character.settings?.secrets?.[secret] || process.env[secret];
+    return tracer.withActiveSpan('getSecret', () => {
+      return character.settings?.secrets?.[secret] || process.env[secret];
+    });
 }
 
 let nodePlugin: any | undefined;
@@ -605,6 +600,8 @@ export async function createAgent(
     cache: ICacheManager,
     token: string
 ): Promise<AgentRuntime> {
+  return await tracer.withActiveSpan('createAgent', async () => {
+
     elizaLogger.success(
         elizaLogger.successesTitle,
         "Creating runtime for character",
@@ -727,18 +724,23 @@ export async function createAgent(
         cacheManager: cache,
         fetch: logFetch,
     });
+  });
 }
 
-function initializeFsCache(baseDir: string, character: Character) {
+  function initializeFsCache(baseDir: string, character: Character) {
+    return tracer.withActiveSpan('initializeFsCache', () => {
     const cacheDir = path.resolve(baseDir, character.id, "cache");
 
     const cache = new CacheManager(new FsCacheAdapter(cacheDir));
-    return cache;
+      return cache;
+    });
 }
 
-function initializeDbCache(character: Character, db: IDatabaseCacheAdapter) {
-    const cache = new CacheManager(new DbCacheAdapter(db, character.id));
-    return cache;
+  function initializeDbCache(character: Character, db: IDatabaseCacheAdapter) {
+    return tracer.withActiveSpan('initializeDbCache', () => {
+        const cache = new CacheManager(new DbCacheAdapter(db, character.id));
+        return cache;
+      });
 }
 
 function initializeCache(
@@ -747,6 +749,7 @@ function initializeCache(
     baseDir?: string,
     db?: IDatabaseCacheAdapter
 ) {
+  return tracer.withActiveSpan('initializeCache', () => {
     switch (cacheStore) {
         case CacheStore.REDIS:
             if (process.env.REDIS_URL) {
@@ -778,12 +781,14 @@ function initializeCache(
                 `Invalid cache store: ${cacheStore} or required configuration missing.`
             );
     }
+  });
 }
 
 async function startAgent(
     character: Character,
     directClient: DirectClient
 ): Promise<AgentRuntime> {
+
     let db: IDatabaseAdapter & IDatabaseCacheAdapter;
     try {
         character.id ??= stringToUuid(character.name);
