@@ -1,5 +1,4 @@
-import { ResponseTemplate, CoinTemplate } from "./templates/types";
-
+import { ResponseTemplate, CoinTemplate } from "./types";
 export interface AuctionModuleParams {
     auctionPeriod: string;
     minNextBidIncrementRate: string;

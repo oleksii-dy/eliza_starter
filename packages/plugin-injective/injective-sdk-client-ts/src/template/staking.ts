@@ -3,7 +3,7 @@ import {
     ResponseTemplate,
     CoinTemplate,
     PaginationTemplate,
-} from "./templates/types";
+} from "./types";
 
 export interface StakingModuleParams {
     unbondingTime: string;

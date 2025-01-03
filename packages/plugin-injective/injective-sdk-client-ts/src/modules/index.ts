@@ -322,3 +322,5 @@ export class GrpcClient extends InjectiveGrpcBase {
     public getIBCTransferTxs = ExplorerModule.getIBCTransferTxs.bind(this);
     public getExplorerStats = ExplorerModule.getExplorerStats.bind(this);
 }
+export { InjectiveGrpcBase };
+

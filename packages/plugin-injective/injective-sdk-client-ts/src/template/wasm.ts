@@ -1,6 +1,5 @@
 // templates/wasm.ts
-import { ResponseTemplate, PaginationTemplate } from "./templates/types";
-
+import { ResponseTemplate, PaginationTemplate } from "./types";
 export interface ContractInfo {
     codeId: number;
     creator: string;

@@ -1,3 +1,5 @@
+import { ResponseTemplate } from "../types";
+
 export const orderbookTemplates = {
     orderbook: {
         template: `

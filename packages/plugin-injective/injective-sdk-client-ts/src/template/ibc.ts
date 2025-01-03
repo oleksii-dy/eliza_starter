@@ -1,5 +1,5 @@
 // templates/ibc.ts
-import { ResponseTemplate, PaginationTemplate } from "./templates/types";
+import { ResponseTemplate, PaginationTemplate } from "./types";
 
 export interface DenomTrace {
     path: string;

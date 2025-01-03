@@ -1,5 +1,5 @@
 // templates/distribution.ts
-import { ResponseTemplate, CoinTemplate } from "./templates/types";
+import { ResponseTemplate, CoinTemplate } from "./types";
 
 export interface DistributionModuleParams {
     communityTax: string;

@@ -1,5 +1,5 @@
 // templates/token-factory.ts
-import { ResponseTemplate, CoinTemplate } from "./templates/types";
+import { ResponseTemplate, CoinTemplate } from "./types";
 
 export interface TokenFactoryModuleParams {
     denomCreationFee: CoinTemplate[];

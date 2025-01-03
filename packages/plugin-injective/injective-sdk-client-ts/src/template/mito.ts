@@ -1,5 +1,5 @@
 // templates/mito.ts
-import { ResponseTemplate, CoinTemplate } from "./templates/types";
+import { ResponseTemplate, CoinTemplate } from "./types";
 
 export interface MitoVault {
     contractAddress: string;

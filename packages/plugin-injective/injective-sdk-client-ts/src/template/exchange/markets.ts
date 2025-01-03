@@ -1,5 +1,4 @@
-import { ResponseTemplate } from "../templates/types";
-
+import { ResponseTemplate } from "../types";
 export const marketTemplates = {
     spotMarket: {
         template: `

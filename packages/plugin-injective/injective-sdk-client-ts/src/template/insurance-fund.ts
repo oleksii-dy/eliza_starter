@@ -1,5 +1,5 @@
 // templates/insurance.ts
-import { ResponseTemplate, CoinTemplate } from "./templates/types";
+import { ResponseTemplate, CoinTemplate } from "./types";
 
 export interface InsuranceModuleParams {
     defaultRedemptionNoticePeriodDuration: string;

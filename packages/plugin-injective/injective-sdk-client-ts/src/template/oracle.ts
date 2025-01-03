@@ -1,5 +1,5 @@
 // templates/oracle.ts
-import { ResponseTemplate } from "./templates/types";
+import { ResponseTemplate } from "./types";
 
 export interface OracleModuleParams {
     pyth: {

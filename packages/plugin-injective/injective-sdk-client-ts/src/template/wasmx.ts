@@ -1,6 +1,4 @@
-// templates/wasmx.ts
-import { ResponseTemplate } from "./templates/types";
-
+import { ResponseTemplate } from "./types";
 export interface WasmxModuleParams {
     isExecutionEnabled: boolean;
     maxBeginBlockTotalGas: number;

@@ -1,5 +1,4 @@
-import { CoinTemplate, PaginationTemplate } from "../templates/types";
-
+import { CoinTemplate } from "../types";
 export interface FeeDiscountTierInfo {
     makerDiscountRate: string;
     takerDiscountRate: string;

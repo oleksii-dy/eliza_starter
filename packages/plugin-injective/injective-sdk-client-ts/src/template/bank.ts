@@ -2,7 +2,7 @@ import {
     ResponseTemplate,
     CoinTemplate,
     PaginationTemplate,
-} from "./templates/types";
+} from "./types";
 
 export interface SendEnabled {
     denom: string;

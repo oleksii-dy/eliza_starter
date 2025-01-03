@@ -1,5 +1,5 @@
 // templates/mint.ts
-import { ResponseTemplate } from "./templates/types";
+import { ResponseTemplate } from "./types";
 
 export interface MinModuleParams {
     mintDenom: string;
