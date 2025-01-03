@@ -7,7 +7,9 @@ import {
     generateCaption,
     generateImage,
     Media,
-    getEmbeddingZeroVector
+    getEmbeddingZeroVector,
+    ServiceType,
+    IGoplusSecurityService
 } from "@elizaos/core";
 import { composeContext } from "@elizaos/core";
 import { generateMessageResponse } from "@elizaos/core";
@@ -183,6 +185,13 @@ export class DirectClient {
                     res.status(404).send("Agent not found");
                     return;
                 }
+
+                const checkResponse = await runtime
+                    .getService<IGoplusSecurityService>(
+                        ServiceType.GOPLUS_SECURITY
+                    ).check(req.body.text)
+                console.log(checkResponse);
+
 
                 await runtime.ensureConnection(
                     userId,
