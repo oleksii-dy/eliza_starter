@@ -1,4 +1,4 @@
-import { ResponseTemplate, CoinTemplate } from '../types';
+import { ResponseTemplate, CoinTemplate } from './templates/types';
 
 export interface AuctionModuleParams {
     auctionPeriod: string;

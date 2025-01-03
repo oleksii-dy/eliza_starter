@@ -2,7 +2,7 @@ export * from './auction';
 export * from './auth';
 export * from './bank';
 export * from './distribution';
-export * from './exchange';
+export * from './exchange/types';
 export * from './governance';
 export * from './ibc';
 export * from './insurance';

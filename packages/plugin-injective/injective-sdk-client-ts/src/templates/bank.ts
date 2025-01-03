@@ -1,5 +1,4 @@
-// templates/bank.ts
-import { ResponseTemplate, CoinTemplate, PaginationTemplate } from '../types';
+import { ResponseTemplate, CoinTemplate, PaginationTemplate } from './templates/types';
 
 export interface SendEnabled {
     denom: string;

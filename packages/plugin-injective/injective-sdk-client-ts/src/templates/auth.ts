@@ -1,5 +1,4 @@
-// templates/auth.ts
-import { ResponseTemplate } from '../types';
+import { ResponseTemplate } from './templates/types';
 
 export interface PublicKeyParams {
     type: string;
