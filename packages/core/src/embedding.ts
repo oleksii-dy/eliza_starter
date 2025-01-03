@@ -67,7 +67,7 @@ async function getRemoteEmbedding(
         : `${options.endpoint}${options.isOllama ? "/v1" : ""}`;
 
     // Construct full URL
-    const fullUrl = `${baseEndpoint}/embeddings`;
+    const fullUrl = `${baseEndpoint}/api/chat`;
 
     const requestOptions = {
         method: "POST",

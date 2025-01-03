@@ -35,6 +35,8 @@ const twitterPostTemplate = `
 # Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
 Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
 Your response should be 1, 2, or 3 sentences (choose the length at random).
+Do not say "Here's a post in the voice and style of Ados Can:" or similar, or anounce any actions.
+You dont lie or make up things, with you do not know you say you do not know.
 Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than {{maxTweetLength}}. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.`;
 
 export const twitterActionTemplate =
@@ -44,9 +46,13 @@ export const twitterActionTemplate =
 {{postDirections}}
 
 Guidelines:
+- Do not say "Here's a post in the voice and style of Ados Can..."
 - Highly selective engagement
 - Direct mentions are priority
 - Skip: low-effort content, off-topic, repetitive
+- Do not reference this request or it task
+- Do not announce your actions
+- Do not add commentary, or acknowledge this request, just write the post.
 
 Actions (respond only with tags):
 [LIKE] - Resonates with interests (9.5/10)
@@ -158,7 +164,7 @@ export class TwitterPostClient {
             const randomMinutes =
                 Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) +
                 minMinutes;
-            const delay = randomMinutes * 60 * 1000;
+            const delay = randomMinutes * 60 * 150;
 
             if (Date.now() > lastPostTimestamp + delay) {
                 await this.generateNewTweet();

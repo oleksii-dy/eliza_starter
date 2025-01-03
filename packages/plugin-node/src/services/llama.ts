@@ -635,7 +635,7 @@ export class LlamaService extends Service {
                 `Using Ollama API for embeddings with model ${embeddingModel} (base: ${ollamaModel})`
             );
 
-            const response = await fetch(`${ollamaUrl}/api/embeddings`, {
+            const response = await fetch(`${ollamaUrl}/api/chat`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -667,7 +667,7 @@ export class LlamaService extends Service {
             `Using Ollama API for embeddings with model ${embeddingModel} (base: ${this.ollamaModel})`
         );
 
-        const response = await fetch(`${ollamaUrl}/api/embeddings`, {
+        const response = await fetch(`${ollamaUrl}/api/chat`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -729,7 +729,7 @@ export class LlamaService extends Service {
             `Using Ollama API for embeddings with model ${embeddingModel} (base: ${ollamaModel})`
         );
 
-        const response = await fetch(`${ollamaUrl}/api/embeddings`, {
+        const response = await fetch(`${ollamaUrl}/api`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
