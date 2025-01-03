@@ -16,11 +16,12 @@ export class TelegramClient {
         elizaLogger.log("📱 Constructing new TelegramClient...");
         this.runtime = runtime;
         let tg_options = null;
-        if (process.env.https_proxy != null && process.env.https_proxy != "") {
-            elizaLogger.info("use https_proxy", process.env.https_proxy);
+        const https_proxy = runtime.getSetting("HTTPS_PROXY");
+        if (https_proxy != null && https_proxy != "") {
+            elizaLogger.info("use https_proxy", https_proxy);
             tg_options = {
                 telegram: {
-                    agent: new HttpsProxyAgent(process.env.https_proxy),
+                    agent: new HttpsProxyAgent(https_proxy),
                 },
             };
         }
