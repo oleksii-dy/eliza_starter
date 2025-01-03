@@ -52,7 +52,7 @@ Respond with a JSON markdown block containing only the extracted values.`;
 export default {
     name: "TRANSFER_RUNE",
     similes: [
-        "TRANSFER_RUNE__ON_BITCOIN",
+        "TRANSFER_RUNE_ON_BITCOIN",
         "TRANSFER_RUNES_ON_BITCOIN",
         "SEND_RUNE_ON_BITCOIN",
         "MOVE_RUNES_ON_BITCOIN",
@@ -108,37 +108,16 @@ export default {
                 },
             },
             {
-                user: "{{agent}}",
+                user: "{{user2}}",
                 content: {
                     text: "Sure, I'll send 100 GIZMO•IMAGINARY•KITTEN to that address now.",
                     action: "TRANSFER_RUNE",
                 },
             },
             {
-                user: "{{agent}}",
+                user: "{{user2}}",
                 content: {
                     text: "Successfully sent 100 GIZMO•IMAGINARY•KITTEN to bc1p7sqrqnu55k4xedm5585vg8du3jueldvkps8nc96sqv353punzdhq4yg0ke\nTransaction: a7003934654bf20fa06d90e13e9002c7087e7d0fff15a7feb26ab98d7cbcc304",
-                },
-            },
-        ],
-        [
-            {
-                user: "{{user1}}",
-                content: {
-                    text: "Please send 0.1 GIZMO•IMAGINARY•KITTEN to bc1p7sqrqnu55k4xedm5585vg8du3jueldvkps8nc96sqv353punzdhq4yg0ke",
-                },
-            },
-            {
-                user: "{{agent}}",
-                content: {
-                    text: "Of course. Sending 0.1 GIZMO•IMAGINARY•KITTEN to that address now.",
-                    action: "SEND_RUNE",
-                },
-            },
-            {
-                user: "{{agent}}",
-                content: {
-                    text: "Successfully sent 0.1 GIZMO•IMAGINARY•KITTEN to bc1p7sqrqnu55k4xedm5585vg8du3jueldvkps8nc96sqv353punzdhq4yg0ke\nTransaction: a7003934654bf20fa06d90e13e9002c7087e7d0fff15a7feb26ab98d7cbcc304",
                 },
             },
         ],

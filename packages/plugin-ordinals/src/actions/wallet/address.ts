@@ -11,13 +11,12 @@ import {
     composeContext,
     Content,
 } from "@elizaos/core";
-import { walletProvider } from "../providers/wallet";
+import { WalletProvider, walletProvider } from "../../providers/wallet";
 
 export default {
     name: "ORDINALS_GET_ADDRESS",
     similes: ["GET_ORDINALS_ADDRESS", "RETRIEVE_ORDINALS_TAPROOT_ADDRESS"],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
-        elizaLogger.info(`Validate => ${JSON.stringify(message)}`);
+    validate: async () => {
         return true;
     },
     description: "Retrieves the agents Ordinals taproot address",
@@ -29,7 +28,11 @@ export default {
         callback?: HandlerCallback
     ): Promise<boolean> => {
         try {
-            const wallet = await walletProvider.get(runtime, message, state);
+            const wallet: WalletProvider = await walletProvider.get(
+                runtime,
+                message,
+                state
+            );
             const addresses = wallet.getAddresses();
 
             elizaLogger.success(
@@ -37,9 +40,10 @@ export default {
             );
 
             const taprootAddress = addresses?.taprootAddress;
+            const paymentWallet = addresses.nestedSegwitAddress;
 
             callback({
-                text: `Your ordinals/taproot address is: ${taprootAddress}`,
+                text: `Your ordinals/taproot address is: ${taprootAddress} and your payment wallet is: ${paymentWallet}`,
             });
 
             return true;
@@ -59,13 +63,27 @@ export default {
                 user: "{{user1}}",
                 content: {
                     text: "What is my ordinals address?",
-                    action: "ORDINALS_GET_ADDRESS",
                 },
             },
             {
                 user: "{{user2}}",
                 content: {
                     text: "Your ordinals address is: bc1p7sqrqnu55k4xedm5585vg8du3jueldvkps8nc96sqv353punzdhq4yg0ke.",
+                    action: "ORDINALS_GET_ADDRESS",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Hey, what is my taproot address?",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Your taproot address is: bc1p7sqrqnu55k4xedm5585vg8du3jueldvkps8nc96sqv353punzdhq4yg0ke.",
                     action: "ORDINALS_GET_ADDRESS",
                 },
             },

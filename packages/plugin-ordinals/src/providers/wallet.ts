@@ -1,4 +1,10 @@
-import { IAgentRuntime, Memory, Provider, State } from "@elizaos/core";
+import {
+    elizaLogger,
+    IAgentRuntime,
+    Memory,
+    Provider,
+    State,
+} from "@elizaos/core";
 import * as btc from "@scure/btc-signer";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { hex } from "@scure/base";
@@ -56,7 +62,8 @@ export class WalletProvider {
         const data = await this.mempool.bitcoin.addresses.getAddress({
             address: this.account.nestedSegwitAddress,
         });
-        return data?.mempool_stats?.funded_txo_sum || 0;
+
+        return data?.chain_stats?.funded_txo_sum;
     }
 
     async getTransactionHistory(): Promise<Tx[]> {
