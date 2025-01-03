@@ -6,9 +6,18 @@ import {
     State,
     type Action,
     elizaLogger,
+    generateObject,
+    composeContext,
+    ModelClass,
 } from "@elizaos/core";
 import { WalletProvider, walletProvider } from "../../providers/wallet";
 import API from "../../utils/api";
+import { z } from "zod";
+import { balanceTemplate } from "../../templates";
+
+export const addressSchema = z.object({
+    address: z.string(),
+});
 
 export default {
     name: "RUNES_GET_PORTFOLIO",
@@ -30,16 +39,32 @@ export default {
                 message,
                 state
             );
+
+            const context = composeContext({
+                state,
+                template: balanceTemplate,
+            });
+
+            const content: { object: { address?: string } } =
+                await generateObject({
+                    runtime,
+                    context,
+                    schema: addressSchema,
+                    modelClass: ModelClass.LARGE,
+                });
+
+            const derivedAddress = content?.object?.address;
+
             const addresses = wallet.getAddresses();
-            const taprootAddress = addresses.taprootAddress;
+            const taprootAddress =
+                derivedAddress === "ME"
+                    ? addresses.taprootAddress
+                    : derivedAddress;
 
             const ordiscan = new API(runtime.getSetting("ORDISCAN_API_KEY"));
-
             const portfolio = await ordiscan.getRunesPortfolio(taprootAddress);
 
             const balances = portfolio?.results;
-
-            elizaLogger.info(JSON.stringify(portfolio));
 
             callback({
                 text: `Runes portfolio for address ${taprootAddress}:\n${balances?.map((item, idx) => `${idx + 1}: ${item?.rune?.spaced_name} - ${item.balance}\n`)}`,

@@ -55,8 +55,6 @@ export default {
                 state
             );
 
-            elizaLogger.info(JSON.stringify(content?.object));
-
             if (address && address !== "ME") {
                 const balance = await wallet.getBalance(address);
                 const formattedBalance = formatBitcoinBalance(balance);
