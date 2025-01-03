@@ -6,9 +6,18 @@ import {
     State,
     type Action,
     elizaLogger,
+    composeContext,
+    generateObject,
+    ModelClass,
 } from "@elizaos/core";
 import { WalletProvider, walletProvider } from "../../providers/wallet";
 import { formatBitcoinBalance } from "../../utils";
+import { z } from "zod";
+import { balanceTemplate } from "../../templates";
+
+export const addressSchema = z.object({
+    address: z.string(),
+});
 
 export default {
     name: "ORDINALS_GET_BALANCE",
@@ -26,11 +35,39 @@ export default {
         callback?: HandlerCallback
     ): Promise<boolean> => {
         try {
+            const context = composeContext({
+                state,
+                template: balanceTemplate,
+            });
+
+            const content: { object: { address?: string } } =
+                await generateObject({
+                    runtime,
+                    context,
+                    schema: addressSchema,
+                    modelClass: ModelClass.LARGE,
+                });
+
+            const address = content?.object?.address;
             const wallet: WalletProvider = await walletProvider.get(
                 runtime,
                 message,
                 state
             );
+
+            elizaLogger.info(JSON.stringify(content?.object));
+
+            if (address && address !== "ME") {
+                const balance = await wallet.getBalance(address);
+                const formattedBalance = formatBitcoinBalance(balance);
+
+                callback({
+                    text: `The wallet ${address} has a balance of ${String(formattedBalance)} BTC.`,
+                });
+
+                return true;
+            }
+
             const addresses = wallet.getAddresses();
             const balance = await wallet.getBalance();
             const paymentWallet = addresses.nestedSegwitAddress;

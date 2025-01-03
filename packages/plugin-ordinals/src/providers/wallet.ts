@@ -79,9 +79,9 @@ export class WalletProvider {
         };
     }
 
-    async getBalance(): Promise<number> {
+    async getBalance(address?: string): Promise<number> {
         const data = await this.mempool.bitcoin.addresses.getAddress({
-            address: this.account.nestedSegwitAddress,
+            address: address ? address : this.account.nestedSegwitAddress,
         });
 
         return data?.chain_stats?.funded_txo_sum;

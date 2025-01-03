@@ -1,3 +1,25 @@
+export const balanceTemplate = `
+## Recent Messages
+
+{{recentMessages}}
+
+Given the most recent message, extract the wallet address:
+- Address (usually looks like: 33vMQ8mtV2LE1ndCiQLxnPFqddDCUAgLDQ or bc1p4tcx7zxqj7wx9vp3spya7t0uq42hc2ghcpfafuvhq5ns9t6lu6qswwwkh8)
+
+It could also be that the user is requesting balance for himself. The message will not contain an address in that case. If that is the case return ME as an address.
+
+Extract the following details:
+- **address** (string): The address
+
+Provide the values in the following JSON format:
+
+\`\`\`json
+{
+    "address": "the address that we extracted or ME",
+}
+\`\`\`
+`;
+
 export const transactionHashTemplate = `
 ## Recent Messages
 
