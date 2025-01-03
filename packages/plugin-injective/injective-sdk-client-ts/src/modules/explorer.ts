@@ -1,6 +1,6 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
-import { InjectiveExplorerRpc } from '@injectivelabs/indexer-proto-ts';
-import { 
+import { InjectiveExplorerRpc } from "@injectivelabs/indexer-proto-ts";
+import {
     Transaction,
     ExplorerValidator,
     ValidatorUptime,
@@ -8,15 +8,16 @@ import {
     PeggyWithdrawalTx,
     IBCTransferTx,
     ExplorerStats,
-    ExchangePagination
+    ExchangePagination,
 } from "@injectivelabs/sdk-ts";
 export function getTxByHash(
     this: InjectiveGrpcBase,
     hash: string
 ): Promise<Transaction> {
     return this.request({
-        method: (params: string) => this.indexerGrpcExplorerApi.fetchTxByHash(params),
-        params: hash
+        method: (params: string) =>
+            this.indexerGrpcExplorerApi.fetchTxByHash(params),
+        params: hash,
     });
 }
 
@@ -45,7 +46,7 @@ export function getAccountTx(
             startTime?: number;
             endTime?: number;
         }) => this.indexerGrpcExplorerApi.fetchAccountTx(params),
-        params
+        params,
     });
 }
 
@@ -54,8 +55,9 @@ export function getValidator(
     validatorAddress: string
 ): Promise<ExplorerValidator> {
     return this.request({
-        method: (params: string) => this.indexerGrpcExplorerApi.fetchValidator(params),
-        params: validatorAddress
+        method: (params: string) =>
+            this.indexerGrpcExplorerApi.fetchValidator(params),
+        params: validatorAddress,
     });
 }
 
@@ -64,8 +66,9 @@ export function getValidatorUptime(
     validatorAddress: string
 ): Promise<ValidatorUptime[]> {
     return this.request({
-        method: (params: string) => this.indexerGrpcExplorerApi.fetchValidatorUptime(params),
-        params: validatorAddress
+        method: (params: string) =>
+            this.indexerGrpcExplorerApi.fetchValidatorUptime(params),
+        params: validatorAddress,
     });
 }
 
@@ -85,7 +88,7 @@ export function getPeggyDepositTxs(
             limit?: number;
             skip?: number;
         }) => this.indexerGrpcExplorerApi.fetchPeggyDepositTxs(params),
-        params
+        params,
     });
 }
 
@@ -105,7 +108,7 @@ export function getPeggyWithdrawalTxs(
             limit?: number;
             skip?: number;
         }) => this.indexerGrpcExplorerApi.fetchPeggyWithdrawalTxs(params),
-        params
+        params,
     });
 }
 
@@ -127,7 +130,7 @@ export function getBlocks(
             from?: number;
             to?: number;
         }) => this.indexerGrpcExplorerApi.fetchBlocks(params),
-        params
+        params,
     });
 }
 
@@ -136,8 +139,9 @@ export function getBlock(
     id: string
 ): Promise<InjectiveExplorerRpc.GetBlockResponse> {
     return this.request({
-        method: (params: string) => this.indexerGrpcExplorerApi.fetchBlock(params),
-        params: id
+        method: (params: string) =>
+            this.indexerGrpcExplorerApi.fetchBlock(params),
+        params: id,
     });
 }
 
@@ -165,7 +169,7 @@ export function getTxs(
             endTime?: number;
             chainModule?: string;
         }) => this.indexerGrpcExplorerApi.fetchTxs(params),
-        params
+        params,
     });
 }
 
@@ -193,7 +197,7 @@ export function getIBCTransferTxs(
             limit?: number;
             skip?: number;
         }) => this.indexerGrpcExplorerApi.fetchIBCTransferTxs(params),
-        params
+        params,
     });
 }
 
@@ -201,7 +205,8 @@ export function getExplorerStats(
     this: InjectiveGrpcBase
 ): Promise<ExplorerStats> {
     return this.request({
-        method: (params: any) => this.indexerGrpcExplorerApi.fetchExplorerStats(),
-        params: {}
+        method: (params: any) =>
+            this.indexerGrpcExplorerApi.fetchExplorerStats(),
+        params: {},
     });
 }

@@ -312,10 +312,8 @@ export class GrpcClient extends InjectiveGrpcBase {
     public getTxByHash = ExplorerModule.getTxByHash.bind(this);
     public getAccountTx = ExplorerModule.getAccountTx.bind(this);
     public getExplorerValidator = ExplorerModule.getValidator.bind(this);
-    public getValidatorUptime =
-        ExplorerModule.getValidatorUptime.bind(this);
-    public getPeggyDepositTxs =
-        ExplorerModule.getPeggyDepositTxs.bind(this);
+    public getValidatorUptime = ExplorerModule.getValidatorUptime.bind(this);
+    public getPeggyDepositTxs = ExplorerModule.getPeggyDepositTxs.bind(this);
     public getPeggyWithdrawalTxs =
         ExplorerModule.getPeggyWithdrawalTxs.bind(this);
     public getBlocks = ExplorerModule.getBlocks.bind(this);

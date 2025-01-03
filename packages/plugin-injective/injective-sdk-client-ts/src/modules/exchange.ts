@@ -32,8 +32,6 @@ import {
     SpotOrderHistory,
     SpotTrade,
     AtomicSwap,
-    InsuranceFund,
-    Redemption,
     MarketType,
     GridStrategyType,
     HistoricalBalance,
@@ -50,7 +48,7 @@ import {
 
 import { QuerySubaccountTradeNonceResponse } from "@injectivelabs/core-proto-ts/cjs/injective/exchange/v1beta1/query.js";
 import { OrderSide, OrderState } from "@injectivelabs/ts-types";
-
+// TODO: refactor this to take the params from ../types/index.ts
 //All the chain functions go here
 export function getModuleParams(
     this: InjectiveGrpcBase
