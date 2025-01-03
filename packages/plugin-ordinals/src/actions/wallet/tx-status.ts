@@ -14,12 +14,12 @@ import {
 import { WalletProvider, walletProvider } from "../../providers/wallet";
 
 export default {
-    name: "ORDINALS_GET_ADDRESS",
-    similes: ["GET_ORDINALS_ADDRESS", "RETRIEVE_ORDINALS_TAPROOT_ADDRESS"],
+    name: "GET_BTC_TX_STATUS",
+    similes: ["GET_TX_STATUS_BTC", "RETRIEVE_BTC_TX_STATUS"],
     validate: async () => {
         return true;
     },
-    description: "Retrieves the agents Ordinals taproot address",
+    description: "Returns the status of a Bitcoin transaction hash",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -33,17 +33,14 @@ export default {
                 message,
                 state
             );
-            const addresses = wallet.getAddresses();
 
-            elizaLogger.success(
-                `Retrieved ordinals taproot address: ${addresses.taprootAddress}`
-            );
+            const txid =
+                "06d39fa9ee4d864e602dcbee40fcbc78dff5fcfb65ec25cf3ac5c147be98d6c8";
 
-            const taprootAddress = addresses?.taprootAddress;
-            const paymentWallet = addresses.nestedSegwitAddress;
+            const status = await wallet.getTransactionStatus(txid);
 
             callback({
-                text: `Ordinals/taproot address is: ${taprootAddress} Payment wallet is: ${paymentWallet}`,
+                text: `The status of the transaction is ${status?.confirmed ? `CONFIRMED @ [${status?.block_height}]` : "UNCONFIRMED"}`,
             });
 
             return true;
@@ -62,14 +59,14 @@ export default {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "What is my ordinals address?",
+                    text: "What is the status of this Bitcoin transaction: 06d39fa9ee4d864e602dcbee40fcbc78dff5fcfb65ec25cf3ac5c147be98d6c8 ?",
+                    action: "GET_BTC_TX_STATUS",
                 },
             },
             {
                 user: "{{user2}}",
                 content: {
-                    text: "Your ordinals address is: bc1p7sqrqnu55k4xedm5585vg8du3jueldvkps8nc96sqv353punzdhq4yg0ke.",
-                    action: "ORDINALS_GET_ADDRESS",
+                    text: "The status of the transaction is: CONFIRMED",
                 },
             },
         ],
@@ -77,14 +74,14 @@ export default {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Hey, what is my taproot address?",
+                    text: "Is this bitcoin transaction confirmed? 06d39fa9ee4d864e602dcbee40fcbc78dff5fcfb65ec25cf3ac5c147be98d6c8",
                 },
             },
             {
                 user: "{{user2}}",
                 content: {
-                    text: "Your taproot address is: bc1p7sqrqnu55k4xedm5585vg8du3jueldvkps8nc96sqv353punzdhq4yg0ke.",
-                    action: "ORDINALS_GET_ADDRESS",
+                    text: "The status of the transaction is: CONFIRMED",
+                    action: "GET_BTC_TX_STATUS",
                 },
             },
         ],

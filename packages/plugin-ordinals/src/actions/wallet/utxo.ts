@@ -40,7 +40,7 @@ export default {
             const utxos = await wallet.getUtxos(paymentWallet);
 
             callback({
-                text: `In your payments wallet: ${paymentWallet}\n\nYou currently have the following UTXO's:\n${utxos.map((item, idx) => `${idx}: ${item.vout} - ${item.value} sats\n`)}`,
+                text: `In your payments wallet: ${paymentWallet}\n\nYou currently have the following UTXO's:\n\n${utxos.map((item, idx) => `${idx}: ${item.vout} - ${item.value} sats\n\n`)}`,
             });
 
             return true;
