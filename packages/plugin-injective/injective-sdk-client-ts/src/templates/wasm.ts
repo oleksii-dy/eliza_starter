@@ -1,5 +1,5 @@
 // templates/wasm.ts
-import { ResponseTemplate, PaginationTemplate } from './templates/types';
+import { ResponseTemplate, PaginationTemplate } from "./templates/types";
 
 export interface ContractInfo {
     codeId: number;
@@ -56,7 +56,7 @@ Extract the following contract information:
 - Admin and label
 - Creation details
 - IBC port ID
-`
+`,
     } as ResponseTemplate,
 
     contractState: {
@@ -80,7 +80,7 @@ Extract the following contract information:
 Extract the following contract state:
 - Key-value pairs of contract state
 - Pagination information
-`
+`,
     } as ResponseTemplate,
 
     contractAccountsBalance: {
@@ -109,7 +109,7 @@ Extract the following contract state:
 Extract the following contract accounts balance:
 - List of accounts and their balances
 - Pagination details
-`
+`,
     } as ResponseTemplate,
 
     contractHistory: {
@@ -139,7 +139,7 @@ Extract the following contract history:
 - List of historical operations
 - Code updates and timing
 - Operation messages
-`
+`,
     } as ResponseTemplate,
 
     smartContractState: {
@@ -153,7 +153,7 @@ Extract the following contract history:
         description: `
 Extract the following smart contract state:
 - Contract state data
-`
+`,
     } as ResponseTemplate,
 
     rawContractState: {
@@ -167,7 +167,7 @@ Extract the following smart contract state:
         description: `
 Extract the following raw contract state:
 - Raw contract state data
-`
+`,
     } as ResponseTemplate,
 
     contractCodes: {
@@ -197,7 +197,7 @@ Extract the following contract codes:
 - List of code information
 - Code permissions
 - Pagination details
-`
+`,
     } as ResponseTemplate,
 
     contractCode: {
@@ -221,7 +221,7 @@ Extract the following contract codes:
 Extract the following contract code:
 - Code information details
 - Binary data
-`
+`,
     } as ResponseTemplate,
 
     contractCodeContracts: {
@@ -240,6 +240,6 @@ Extract the following contract code:
 Extract the following code contracts:
 - List of contracts using code ID
 - Pagination information
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

@@ -1,5 +1,9 @@
 // templates/staking.ts
-import { ResponseTemplate, CoinTemplate, PaginationTemplate } from './templates/types';
+import {
+    ResponseTemplate,
+    CoinTemplate,
+    PaginationTemplate,
+} from "./templates/types";
 
 export interface StakingModuleParams {
     unbondingTime: string;
@@ -63,7 +67,7 @@ Extract the following staking parameters:
 - Historical entries count
 - Bond denomination
 - Minimum commission rate
-`
+`,
     } as ResponseTemplate,
 
     validator: {
@@ -103,7 +107,7 @@ Extract the following validator information:
 - Status and tokens
 - Description and commission details
 - Unbonding information
-`
+`,
     } as ResponseTemplate,
 
     delegation: {
@@ -127,7 +131,7 @@ Extract the following delegation information:
 - Delegator and validator addresses
 - Delegation shares
 - Balance details
-`
+`,
     } as ResponseTemplate,
 
     unbondingDelegation: {
@@ -152,7 +156,7 @@ Extract the following unbonding delegation information:
 - Delegator and validator addresses
 - Unbonding entries with timing
 - Balance information
-`
+`,
     } as ResponseTemplate,
 
     redelegation: {
@@ -178,7 +182,7 @@ Extract the following redelegation information:
 - Delegator address
 - Source and destination validator addresses
 - Redelegation entries with timing
-`
+`,
     } as ResponseTemplate,
 
     pool: {
@@ -194,7 +198,7 @@ Extract the following redelegation information:
 Extract the following pool information:
 - Not bonded tokens amount
 - Bonded tokens amount
-`
+`,
     } as ResponseTemplate,
 
     validatorDelegations: {
@@ -219,7 +223,7 @@ Extract the following pool information:
 Extract the following validator delegations:
 - List of delegations to validator
 - Pagination details
-`
+`,
     } as ResponseTemplate,
 
     validators: {
@@ -253,6 +257,6 @@ Extract the following validator delegations:
 Extract the following validators list:
 - Array of validators with key details
 - Pagination information
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

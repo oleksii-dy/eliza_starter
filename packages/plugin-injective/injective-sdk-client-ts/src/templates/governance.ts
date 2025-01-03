@@ -1,5 +1,5 @@
 // templates/governance.ts
-import { ResponseTemplate, CoinTemplate } from './templates/types';
+import { ResponseTemplate, CoinTemplate } from "./templates/types";
 
 export interface GovModuleParams {
     minDeposit: CoinTemplate[];
@@ -59,7 +59,7 @@ Extract the following governance parameters:
 - Time periods (deposit, voting)
 - Voting thresholds (quorum, pass threshold, veto)
 - Initial deposit ratio requirement
-`
+`,
     } as ResponseTemplate,
 
     proposal: {
@@ -98,7 +98,7 @@ Extract the following proposal information:
 - Voting results
 - Timeline information
 - Deposit details
-`
+`,
     } as ResponseTemplate,
 
     proposalsList: {
@@ -138,7 +138,7 @@ Extract the following proposal information:
 Extract the following proposals list information:
 - Array of proposals with summary information
 - Pagination details
-`
+`,
     } as ResponseTemplate,
 
     vote: {
@@ -158,7 +158,7 @@ Extract the following vote information:
 - Voter address
 - Vote option
 - Optional metadata
-`
+`,
     } as ResponseTemplate,
 
     deposit: {
@@ -181,7 +181,7 @@ Extract the following deposit information:
 - Proposal identification
 - Depositor address
 - Deposit amount details
-`
+`,
     } as ResponseTemplate,
 
     tally: {
@@ -198,6 +198,6 @@ Extract the following deposit information:
         description: `
 Extract the following tally information:
 - Vote counts by option (yes, no, abstain, veto)
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

@@ -7,10 +7,14 @@
             "src",
             "injective-sdk-client-ts"
         ],
+        "baseUrl": ".",
+        "paths": {
+            "@injective/*": ["injective-sdk-client-ts/src/*"]
+        },
         "types": ["node"]
     },
-        "include" : [
-            "src/**/*.ts",
-            "injective-sdk-client-ts/**/*.ts",
+    "include" : [
+        "src/**/*.ts",
+        "injective-sdk-client-ts/**/*.ts",
     ]
 }

@@ -22,7 +22,7 @@ Extract the following position information:
 - Position details (direction, quantity, prices)
 - Risk parameters (margin, liquidation price)
 - Position status and timestamps
-`
+`,
     } as ResponseTemplate,
 
     positionsList: {
@@ -54,6 +54,6 @@ Extract the following position information:
 Extract the following positions list information:
 - Array of positions with full details
 - Pagination information
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

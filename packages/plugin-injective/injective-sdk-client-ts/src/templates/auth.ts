@@ -1,4 +1,4 @@
-import { ResponseTemplate } from './templates/types';
+import { ResponseTemplate } from "./templates/types";
 
 export interface PublicKeyParams {
     type: string;
@@ -45,7 +45,7 @@ Extract the following auth parameters:
 - Transaction size cost per byte
 - Signature verification costs (Ed25519 and Secp256k1)
 - Public key parameters
-`
+`,
     } as ResponseTemplate,
 
     account: {
@@ -68,7 +68,7 @@ Extract the following account details:
 - Public key information (type and value)
 - Account number
 - Sequence number
-`
+`,
     } as ResponseTemplate,
 
     accounts: {
@@ -97,6 +97,6 @@ Extract the following account details:
 Extract the following accounts information:
 - List of account details
 - Pagination information
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

@@ -1,5 +1,5 @@
 // templates/token-factory.ts
-import { ResponseTemplate, CoinTemplate } from './templates/types';
+import { ResponseTemplate, CoinTemplate } from "./templates/types";
 
 export interface TokenFactoryModuleParams {
     denomCreationFee: CoinTemplate[];
@@ -34,7 +34,7 @@ export const tokenFactoryTemplates = {
         description: `
 Extract the following token factory parameters:
 - Denomination creation fee details
-`
+`,
     } as ResponseTemplate,
 
     moduleState: {
@@ -65,7 +65,7 @@ Extract the following module state information:
 - Module parameters
 - List of factory denominations
 - Authority metadata
-`
+`,
     } as ResponseTemplate,
 
     denomsFromCreator: {
@@ -79,7 +79,7 @@ Extract the following module state information:
         description: `
 Extract the following creator denoms:
 - List of denominations created by address
-`
+`,
     } as ResponseTemplate,
 
     denomAuthorityMetadata: {
@@ -93,6 +93,6 @@ Extract the following creator denoms:
         description: `
 Extract the following authority metadata:
 - Admin address for denomination
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

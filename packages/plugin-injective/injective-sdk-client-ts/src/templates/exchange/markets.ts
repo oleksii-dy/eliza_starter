@@ -1,4 +1,4 @@
-import { ResponseTemplate } from '../templates/types';
+import { ResponseTemplate } from "../templates/types";
 
 export const marketTemplates = {
     spotMarket: {
@@ -25,7 +25,7 @@ Extract the following spot market information:
 - Base and quote denominations
 - Fee rates (maker, taker, service provider)
 - Minimum tick sizes (price and quantity)
-`
+`,
     } as ResponseTemplate,
 
     derivativeMarket: {
@@ -56,6 +56,6 @@ Extract the following derivative market information:
 - Fee structure
 - Margin requirements
 - Market type and expiry details
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

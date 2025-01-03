@@ -1,5 +1,5 @@
 // templates/insurance.ts
-import { ResponseTemplate, CoinTemplate } from './templates/types';
+import { ResponseTemplate, CoinTemplate } from "./templates/types";
 
 export interface InsuranceModuleParams {
     defaultRedemptionNoticePeriodDuration: string;
@@ -47,7 +47,7 @@ Extract the following insurance parameters:
 - Default redemption notice period duration
 - Default underwriting period duration
 - Default liquidation period duration
-`
+`,
     } as ResponseTemplate,
 
     insuranceFund: {
@@ -78,7 +78,7 @@ Extract the following insurance fund information:
 - Fund configuration
 - Balance and share information
 - Market and oracle details
-`
+`,
     } as ResponseTemplate,
 
     insuranceFunds: {
@@ -105,7 +105,7 @@ Extract the following insurance fund information:
 Extract the following insurance funds list:
 - Array of insurance funds with details
 - Fund balances and configurations
-`
+`,
     } as ResponseTemplate,
 
     estimatedRedemptions: {
@@ -122,7 +122,7 @@ Extract the following insurance funds list:
         description: `
 Extract the following estimated redemption information:
 - Redemption amount details
-`
+`,
     } as ResponseTemplate,
 
     pendingRedemptions: {
@@ -153,6 +153,6 @@ Extract the following pending redemptions information:
 - Array of redemption schedules
 - Redemption details and timing
 - Amount information
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

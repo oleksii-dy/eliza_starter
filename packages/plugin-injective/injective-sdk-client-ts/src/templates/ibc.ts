@@ -1,5 +1,5 @@
 // templates/ibc.ts
-import { ResponseTemplate, PaginationTemplate } from './templates/types';
+import { ResponseTemplate, PaginationTemplate } from "./templates/types";
 
 export interface DenomTrace {
     path: string;
@@ -38,7 +38,7 @@ export const ibcTemplates = {
 Extract the following denomination trace information:
 - IBC path
 - Base denomination
-`
+`,
     } as ResponseTemplate,
 
     denomsTrace: {
@@ -62,7 +62,7 @@ Extract the following denomination trace information:
 Extract the following denominations trace list:
 - Array of denomination traces
 - Pagination information
-`
+`,
     } as ResponseTemplate,
 
     transfer: {
@@ -91,7 +91,7 @@ Extract the following IBC transfer information:
 - Token details
 - Sender and receiver addresses
 - Timeout configuration
-`
+`,
     } as ResponseTemplate,
 
     channel: {
@@ -116,7 +116,7 @@ Extract the following channel information:
 - Counterparty details
 - Connection hops
 - Protocol version
-`
+`,
     } as ResponseTemplate,
 
     channels: {
@@ -151,7 +151,7 @@ Extract the following channels information:
 - Array of channels with details
 - Pagination information
 - Block height information
-`
+`,
     } as ResponseTemplate,
 
     packet: {
@@ -178,7 +178,7 @@ Extract the following packet information:
 - Source and destination details
 - Packet data
 - Timeout configuration
-`
+`,
     } as ResponseTemplate,
 
     packetCommitment: {
@@ -199,7 +199,7 @@ Extract the following packet commitment information:
 - Commitment hash
 - Proof data
 - Proof height details
-`
+`,
     } as ResponseTemplate,
 
     packetAcknowledgement: {
@@ -220,7 +220,7 @@ Extract the following packet acknowledgement information:
 - Acknowledgement data
 - Proof data
 - Proof height details
-`
+`,
     } as ResponseTemplate,
 
     clientState: {
@@ -257,6 +257,6 @@ Extract the following client state information:
 - Timing configurations
 - Height information
 - Update permissions
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

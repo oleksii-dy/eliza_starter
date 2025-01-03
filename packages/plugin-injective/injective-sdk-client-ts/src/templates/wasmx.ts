@@ -1,5 +1,5 @@
 // templates/wasmx.ts
-import { ResponseTemplate } from './templates/types';
+import { ResponseTemplate } from "./templates/types";
 
 export interface WasmxModuleParams {
     isExecutionEnabled: boolean;
@@ -36,7 +36,7 @@ Extract the following WasmX parameters:
 - Execution enabled status
 - Gas limits (total and per contract)
 - Minimum gas price
-`
+`,
     } as ResponseTemplate,
 
     moduleState: {
@@ -66,9 +66,9 @@ Extract the following module state:
 - Module parameters
 - List of contract registrations
 - Contract execution settings
-`
+`,
     } as ResponseTemplate,
-    
+
     contractRegistration: {
         template: `
 \`\`\`json
@@ -86,6 +86,6 @@ Extract the following contract registration:
 - Gas configuration
 - Contract address
 - Execution status
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

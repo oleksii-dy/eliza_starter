@@ -1,4 +1,4 @@
-import { ResponseTemplate, CoinTemplate } from './templates/types';
+import { ResponseTemplate, CoinTemplate } from "./templates/types";
 
 export interface AuctionModuleParams {
     auctionPeriod: string;
@@ -36,7 +36,7 @@ Extract the following auction parameters:
 - Auction period duration
 - Minimum next bid increment rate
 - Default bid amount
-`
+`,
     } as ResponseTemplate,
 
     moduleState: {
@@ -67,6 +67,6 @@ Extract the following auction state information:
 - Current basket contents
 - Current auction round
 - Highest bid details
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

@@ -1,5 +1,5 @@
 // templates/mito.ts
-import { ResponseTemplate, CoinTemplate } from './templates/types';
+import { ResponseTemplate, CoinTemplate } from "./templates/types";
 
 export interface MitoVault {
     contractAddress: string;
@@ -56,7 +56,7 @@ Extract the following vault information:
 - Vault details (name, description)
 - Performance metrics (TVL, token price, APY)
 - Current status
-`
+`,
     } as ResponseTemplate,
 
     vaults: {
@@ -86,7 +86,7 @@ Extract the following vault information:
 Extract the following vaults list:
 - Array of vaults with details
 - Pagination information
-`
+`,
     } as ResponseTemplate,
 
     priceChart: {
@@ -106,7 +106,7 @@ Extract the following vaults list:
 Extract the following price chart information:
 - Array of price snapshots
 - Timestamp and value pairs
-`
+`,
     } as ResponseTemplate,
 
     holderPortfolio: {
@@ -138,7 +138,7 @@ Extract the following portfolio information:
 - Deposit amounts
 - Reward amounts
 - TVL and P&L metrics
-`
+`,
     } as ResponseTemplate,
 
     leaderboard: {
@@ -162,9 +162,9 @@ Extract the following portfolio information:
 Extract the following leaderboard information:
 - Round details and timing
 - Leaderboard entries with rankings
-`
+`,
     } as ResponseTemplate,
-    
+
     stakingPools: {
         template: `
 \`\`\`json
@@ -189,6 +189,6 @@ Extract the following staking pools information:
 - Pool contract details
 - Staking amounts and rewards
 - Lock period information
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

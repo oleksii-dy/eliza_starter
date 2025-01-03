@@ -1,5 +1,5 @@
 // templates/permissions.ts
-import { ResponseTemplate, CoinTemplate } from './templates/types';
+import { ResponseTemplate, CoinTemplate } from "./templates/types";
 
 export interface PermissionsModuleParams {
     enablePermissions: boolean;
@@ -33,7 +33,7 @@ export const permissionsTemplates = {
 Extract the following permissions parameters:
 - Permissions enabled status
 - Default send enabled status
-`
+`,
     } as ResponseTemplate,
 
     addressesByRole: {
@@ -51,7 +51,7 @@ Extract the following permissions parameters:
         description: `
 Extract the following addresses by role:
 - List of addresses with specified role
-`
+`,
     } as ResponseTemplate,
 
     addressRoles: {
@@ -69,7 +69,7 @@ Extract the following addresses by role:
         description: `
 Extract the following address roles:
 - List of roles assigned to address
-`
+`,
     } as ResponseTemplate,
 
     allNamespaces: {
@@ -95,7 +95,7 @@ Extract the following address roles:
 Extract the following namespaces information:
 - List of all namespaces
 - Roles and addresses in each namespace
-`
+`,
     } as ResponseTemplate,
 
     namespaceByDenom: {
@@ -118,7 +118,7 @@ Extract the following namespace information:
 - Denomination details
 - Available roles
 - Addresses with permissions
-`
+`,
     } as ResponseTemplate,
 
     vouchersForAddress: {
@@ -138,6 +138,6 @@ Extract the following namespace information:
 Extract the following voucher information:
 - List of vouchers owned by address
 - Denomination and amount details
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

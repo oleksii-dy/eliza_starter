@@ -1,4 +1,8 @@
-import { ResponseTemplate, CoinTemplate, PaginationTemplate } from './templates/types';
+import {
+    ResponseTemplate,
+    CoinTemplate,
+    PaginationTemplate,
+} from "./templates/types";
 
 export interface SendEnabled {
     denom: string;
@@ -51,7 +55,7 @@ export const bankTemplates = {
 Extract the following bank parameters:
 - Send enabled denominations and their status
 - Default send enabled status
-`
+`,
     } as ResponseTemplate,
 
     balance: {
@@ -69,7 +73,7 @@ Extract the following bank parameters:
 Extract the following balance information:
 - Token denomination
 - Token amount
-`
+`,
     } as ResponseTemplate,
 
     balances: {
@@ -93,7 +97,7 @@ Extract the following balance information:
 Extract the following balances information:
 - List of token balances
 - Pagination details
-`
+`,
     } as ResponseTemplate,
 
     totalSupply: {
@@ -117,7 +121,7 @@ Extract the following balances information:
 Extract the following supply information:
 - List of token supplies
 - Pagination details
-`
+`,
     } as ResponseTemplate,
 
     denomMetadata: {
@@ -148,7 +152,7 @@ Extract the following denomination metadata:
 - Base and display denominations
 - Name and symbol
 - URI information
-`
+`,
     } as ResponseTemplate,
 
     denomOwners: {
@@ -175,6 +179,6 @@ Extract the following denomination metadata:
 Extract the following denomination owners information:
 - List of owners and their balances
 - Pagination details
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

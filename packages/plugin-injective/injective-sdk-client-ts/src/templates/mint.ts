@@ -1,5 +1,5 @@
 // templates/mint.ts
-import { ResponseTemplate } from './templates/types';
+import { ResponseTemplate } from "./templates/types";
 
 export interface MinModuleParams {
     mintDenom: string;
@@ -30,7 +30,7 @@ Extract the following mint parameters:
 - Inflation rate parameters (change, max, min)
 - Goal bonded ratio
 - Blocks per year
-`
+`,
     } as ResponseTemplate,
 
     inflation: {
@@ -44,7 +44,7 @@ Extract the following mint parameters:
         description: `
 Extract the following inflation information:
 - Current inflation rate
-`
+`,
     } as ResponseTemplate,
 
     annualProvisions: {
@@ -58,6 +58,6 @@ Extract the following inflation information:
         description: `
 Extract the following annual provisions information:
 - Current annual provision amount
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

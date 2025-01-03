@@ -1,5 +1,5 @@
 // templates/distribution.ts
-import { ResponseTemplate, CoinTemplate } from './templates/types';
+import { ResponseTemplate, CoinTemplate } from "./templates/types";
 
 export interface DistributionModuleParams {
     communityTax: string;
@@ -36,7 +36,7 @@ Extract the following distribution parameters:
 - Base proposer reward
 - Bonus proposer reward
 - Withdrawal address enabled status
-`
+`,
     } as ResponseTemplate,
 
     delegatorRewardsForValidator: {
@@ -55,7 +55,7 @@ Extract the following distribution parameters:
         description: `
 Extract the following delegator rewards:
 - List of rewards per denomination
-`
+`,
     } as ResponseTemplate,
 
     delegatorRewards: {
@@ -86,7 +86,7 @@ Extract the following delegator rewards:
 Extract the following delegator rewards information:
 - List of rewards per validator
 - Total rewards per denomination
-`
+`,
     } as ResponseTemplate,
 
     validatorOutstandingRewards: {
@@ -107,7 +107,7 @@ Extract the following delegator rewards information:
         description: `
 Extract the following validator outstanding rewards:
 - List of outstanding rewards per denomination
-`
+`,
     } as ResponseTemplate,
 
     validatorCommission: {
@@ -128,7 +128,7 @@ Extract the following validator outstanding rewards:
         description: `
 Extract the following validator commission information:
 - List of commission rewards per denomination
-`
+`,
     } as ResponseTemplate,
 
     withdrawAddress: {
@@ -142,6 +142,6 @@ Extract the following validator commission information:
         description: `
 Extract the following withdrawal address information:
 - Withdrawal address
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

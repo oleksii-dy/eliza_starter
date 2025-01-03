@@ -26,7 +26,7 @@ Extract the following trade information:
 - Position changes
 - Financial impact (payout, fees)
 - Execution timestamp
-`
+`,
     } as ResponseTemplate,
 
     tradeHistory: {
@@ -61,6 +61,6 @@ Extract the following trade information:
 Extract the following trade history information:
 - List of trades with full details
 - Pagination information
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

@@ -1,5 +1,5 @@
 // templates/peggy.ts
-import { ResponseTemplate, CoinTemplate } from './templates/types';
+import { ResponseTemplate, CoinTemplate } from "./templates/types";
 
 export interface PeggyModuleParams {
     bridgeEthAddress: string;
@@ -76,7 +76,7 @@ Extract the following Peggy parameters:
 - Block time averages
 - Slashing parameters
 - Validation thresholds
-`
+`,
     } as ResponseTemplate,
 
     currentValset: {
@@ -99,7 +99,7 @@ Extract the following current valset information:
 - Nonce
 - Validator set members
 - Block height
-`
+`,
     } as ResponseTemplate,
 
     outgoingTxBatch: {
@@ -134,7 +134,7 @@ Extract the following batch information:
 - Transaction details
 - Token contract information
 - Block number
-`
+`,
     } as ResponseTemplate,
 
     lastEventNonce: {
@@ -148,7 +148,7 @@ Extract the following batch information:
         description: `
 Extract the following event nonce information:
 - Latest event nonce
-`
+`,
     } as ResponseTemplate,
 
     lastValsetRequests: {
@@ -176,6 +176,6 @@ Extract the following valset requests:
 - List of recent validator sets
 - Timing and height information
 - Member details
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

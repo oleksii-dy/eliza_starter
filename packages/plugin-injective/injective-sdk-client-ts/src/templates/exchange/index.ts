@@ -1,7 +1,7 @@
-export * from './types';
+export * from "./types";
 export const exchangeTemplates = {
     ...marketTemplates,
     ...positionTemplates,
     ...tradeTemplates,
-    ...orderbookTemplates
+    ...orderbookTemplates,
 };

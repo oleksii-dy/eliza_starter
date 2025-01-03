@@ -27,6 +27,6 @@ Extract the following orderbook information:
 - Buy orders with price levels
 - Sell orders with price levels
 - Timestamps for each level
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };

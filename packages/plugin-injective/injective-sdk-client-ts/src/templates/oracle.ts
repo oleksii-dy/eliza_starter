@@ -1,5 +1,5 @@
 // templates/oracle.ts
-import { ResponseTemplate } from './templates/types';
+import { ResponseTemplate } from "./templates/types";
 
 export interface OracleModuleParams {
     pyth: {
@@ -66,7 +66,7 @@ Extract the following oracle parameters:
 - Band Protocol settings
 - Coinbase API settings
 - Provider timeout period
-`
+`,
     } as ResponseTemplate,
 
     price: {
@@ -82,7 +82,7 @@ Extract the following oracle parameters:
 Extract the following price information:
 - Price value
 - Price timestamp
-`
+`,
     } as ResponseTemplate,
 
     prices: {
@@ -103,7 +103,7 @@ Extract the following price information:
 Extract the following prices information:
 - Array of price data
 - Symbol, price, and timestamp for each entry
-`
+`,
     } as ResponseTemplate,
 
     votePeriod: {
@@ -119,6 +119,6 @@ Extract the following prices information:
 Extract the following vote period information:
 - Current block height
 - Remaining blocks in period
-`
-    } as ResponseTemplate
+`,
+    } as ResponseTemplate,
 };
