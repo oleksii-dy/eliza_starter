@@ -26,6 +26,8 @@ git clone https://github.com/meta-introspector/eliza-starter
 pnpm start --characters="characters/eliza.character.json"
 ```
 
+the --characters="characters/eliza.character.json" is hard coded on the client and must match the server version
+
 ```
 nvm install --lts
 nvm use --lts
@@ -36,7 +38,7 @@ pnpm rebuild
 
 docker run -d -p 9411:9411 openzipkin/zipkin
 
-pnpm start --characters="characters/eliza.character.json"
+pnpm start 
 ```
 
 Run just this 
