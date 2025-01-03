@@ -671,31 +671,6 @@ export function getAtomicSwapHistory(
     });
 }
 
-//Insurance fund rpcs
-
-export function getInsuranceFunds(
-    this: InjectiveGrpcBase
-): Promise<InsuranceFund[]> {
-    return this.request({
-        method: this.indexerGrpcInsuranceFundApi.fetchInsuranceFunds,
-        params: {},
-    });
-}
-
-export function getInsuranceFundRedemption(
-    this: InjectiveGrpcBase,
-    params: {
-        address: string;
-        denom?: string;
-        status?: string;
-    }
-): Promise<Redemption> {
-    return this.request({
-        method: this.indexerGrpcInsuranceFundApi.fetchRedemptions,
-        params,
-    });
-}
-
 export function getGridStrategies(
     this: InjectiveGrpcBase,
     params: {
