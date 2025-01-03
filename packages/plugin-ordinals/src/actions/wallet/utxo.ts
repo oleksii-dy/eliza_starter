@@ -6,10 +6,6 @@ import {
     State,
     type Action,
     elizaLogger,
-    generateObject,
-    ModelClass,
-    composeContext,
-    Content,
 } from "@elizaos/core";
 import { WalletProvider, walletProvider } from "../../providers/wallet";
 

@@ -6,12 +6,17 @@ import {
     State,
     type Action,
     elizaLogger,
-    generateObject,
-    ModelClass,
     composeContext,
-    Content,
+    ModelClass,
+    generateObject,
 } from "@elizaos/core";
 import { WalletProvider, walletProvider } from "../../providers/wallet";
+import { transactionHashTemplate } from "../../templates";
+import { z } from "zod";
+
+export const transactionIdSchema = z.object({
+    txid: z.string().toLowerCase(),
+});
 
 export default {
     name: "GET_BTC_TX_STATUS",
@@ -28,11 +33,31 @@ export default {
         callback?: HandlerCallback
     ): Promise<boolean> => {
         try {
+            if (!state) {
+                state = await runtime.composeState(message);
+            } else {
+                state = await runtime.updateRecentMessageState(state);
+            }
+
             const wallet: WalletProvider = await walletProvider.get(
                 runtime,
                 message,
                 state
             );
+
+            const context = composeContext({
+                state,
+                template: transactionHashTemplate,
+            });
+
+            const content = await generateObject({
+                runtime,
+                context,
+                schema: transactionIdSchema,
+                modelClass: ModelClass.LARGE,
+            });
+
+            elizaLogger.info("Transaction ID generated:", content.object);
 
             const txid =
                 "06d39fa9ee4d864e602dcbee40fcbc78dff5fcfb65ec25cf3ac5c147be98d6c8";
