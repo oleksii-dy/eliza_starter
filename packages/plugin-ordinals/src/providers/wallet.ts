@@ -15,6 +15,7 @@ import {
     Tx,
     TxStatus,
 } from "@mempool/mempool.js/lib/interfaces/bitcoin/transactions";
+import { AddressTxsUtxo } from "@mempool/mempool.js/lib/interfaces/bitcoin/addresses";
 
 export class WalletProvider {
     mempool: MempoolReturn;
@@ -74,6 +75,12 @@ export class WalletProvider {
 
     async getTransactionStatus(txid: string): Promise<TxStatus> {
         return await this.mempool.bitcoin.transactions.getTxStatus({ txid });
+    }
+
+    async getUtxos(address: string): Promise<AddressTxsUtxo[]> {
+        return await this.mempool.bitcoin.addresses.getAddressTxsUtxo({
+            address,
+        });
     }
 
     async signPsbt() {}
