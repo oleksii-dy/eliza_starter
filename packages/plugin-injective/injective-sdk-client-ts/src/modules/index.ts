@@ -16,7 +16,6 @@ export * as OracleModule from "./oracle-module";
 export * as PeggyModule from "./peggy-module";
 export * as PermissionsModule from "./permissions-module";
 export * as StakingModule from "./staking-module";
-export * as TendermintModule from "./tendermint-module";
 export * as TokenFactoryModule from "./token-factory-module";
 export * as WasmModule from "./wasm-module";
 export * as WasmXModule from "./wasmx-module";
@@ -44,18 +43,14 @@ export function getAddressFromPrivateKey(privateKey?: string): string {
             formattedPrivateKey.slice(2),
             "hex"
         );
-
         // Validate private key length
         if (privateKeyBuffer.length !== 32) {
             throw new Error("Invalid private key length. Must be 32 bytes.");
         }
-
         // Derive public key
         const publicKey = ethUtil.privateToPublic(privateKeyBuffer);
-
         // Generate address from public key
         const address = ethUtil.publicToAddress(publicKey);
-
         // Convert to checksum address
         return ethUtil.toChecksumAddress(address.toString("hex"));
     } catch (error) {

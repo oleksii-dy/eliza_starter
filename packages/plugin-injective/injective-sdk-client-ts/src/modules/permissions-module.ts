@@ -8,12 +8,14 @@ export function getAddressesByRole(
         denom: string;
         role: string;
     }
-): Promise<{
-    addresses: string;
-}[]> {
+): Promise<
+    {
+        addresses: string;
+    }[]
+> {
     return this.request({
         method: this.chainGrpcPermissionsApi.fetchAddressesByRole,
-        params
+        params,
     });
 }
 
@@ -23,21 +25,21 @@ export function getAddressRoles(
         address: string;
         denom: string;
     }
-): Promise<{
-    roles: string;
-}[]> {
+): Promise<
+    {
+        roles: string;
+    }[]
+> {
     return this.request({
         method: this.chainGrpcPermissionsApi.fetchAddressRoles,
-        params
+        params,
     });
 }
 
-export function getAllNamespaces(
-    this: InjectiveGrpcBase
-): Promise<void[]> {
+export function getAllNamespaces(this: InjectiveGrpcBase): Promise<void[]> {
     return this.request({
         method: this.chainGrpcPermissionsApi.fetchAllNamespaces,
-        params: {}
+        params: {},
     });
 }
 
@@ -46,7 +48,7 @@ export function getPermissionsModuleParams(
 ): Promise<PermissionsModuleParams> {
     return this.request({
         method: this.chainGrpcPermissionsApi.fetchModuleParams,
-        params: {}
+        params: {},
     });
 }
 
@@ -59,7 +61,7 @@ export function getNamespaceByDenom(
 ): Promise<Namespace> {
     return this.request({
         method: this.chainGrpcPermissionsApi.fetchNamespaceByDenom,
-        params
+        params,
     });
 }
 
@@ -68,11 +70,13 @@ export function getVouchersForAddress(
     params: {
         address: string;
     }
-): Promise<{
-    vouchers: Coin;
-}[]> {
+): Promise<
+    {
+        vouchers: Coin;
+    }[]
+> {
     return this.request({
         method: this.chainGrpcPermissionsApi.fetchVouchersForAddress,
-        params
+        params,
     });
 }

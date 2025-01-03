@@ -1,13 +1,13 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
-import { 
-    StakingModuleParams, 
+import {
+    StakingModuleParams,
     Pool,
-    PaginationOption, 
-    Pagination, 
-    Validator, 
+    PaginationOption,
+    Pagination,
+    Validator,
     Delegation,
     UnBondingDelegation,
-    ReDelegation
+    ReDelegation,
 } from "@injectivelabs/sdk-ts";
 
 export function getStakingModuleParams(
@@ -15,16 +15,14 @@ export function getStakingModuleParams(
 ): Promise<StakingModuleParams> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchModuleParams,
-        params: {}
+        params: {},
     });
 }
 
-export function getPool(
-    this: InjectiveGrpcBase
-): Promise<Pool> {
+export function getPool(this: InjectiveGrpcBase): Promise<Pool> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchPool,
-        params: {}
+        params: {},
     });
 }
 
@@ -37,7 +35,7 @@ export function getValidators(
 }> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchValidators,
-        params: pagination || {}
+        params: pagination || {},
     });
 }
 
@@ -47,7 +45,7 @@ export function getValidator(
 ): Promise<Validator> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchValidator,
-        params: address
+        params: address,
     });
 }
 
@@ -63,7 +61,7 @@ export function getValidatorDelegations(
 }> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchValidatorDelegations,
-        params
+        params,
     });
 }
 
@@ -79,7 +77,7 @@ export function getValidatorDelegationsNoThrow(
 }> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchValidatorDelegationsNoThrow,
-        params
+        params,
     });
 }
 
@@ -95,7 +93,7 @@ export function getValidatorUnbondingDelegations(
 }> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchValidatorUnbondingDelegations,
-        params
+        params,
     });
 }
 
@@ -110,8 +108,9 @@ export function getValidatorUnbondingDelegationsNoThrow(
     pagination: Pagination;
 }> {
     return this.request({
-        method: this.chainGrpcStakingApi.fetchValidatorUnbondingDelegationsNoThrow,
-        params
+        method: this.chainGrpcStakingApi
+            .fetchValidatorUnbondingDelegationsNoThrow,
+        params,
     });
 }
 
@@ -124,7 +123,7 @@ export function getDelegation(
 ): Promise<Delegation> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchDelegation,
-        params
+        params,
     });
 }
 
@@ -140,7 +139,7 @@ export function getDelegations(
 }> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchDelegations,
-        params
+        params,
     });
 }
 
@@ -156,7 +155,7 @@ export function getDelegationsNoThrow(
 }> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchDelegationsNoThrow,
-        params
+        params,
     });
 }
 
@@ -172,7 +171,7 @@ export function getDelegators(
 }> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchDelegators,
-        params
+        params,
     });
 }
 
@@ -188,10 +187,9 @@ export function getDelegatorsNoThrow(
 }> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchDelegatorsNoThrow,
-        params
+        params,
     });
 }
-
 
 export function getUnbondingDelegations(
     this: InjectiveGrpcBase,
@@ -205,7 +203,7 @@ export function getUnbondingDelegations(
 }> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchUnbondingDelegations,
-        params
+        params,
     });
 }
 
@@ -221,7 +219,7 @@ export function getUnbondingDelegationsNoThrow(
 }> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchUnbondingDelegationsNoThrow,
-        params
+        params,
     });
 }
 
@@ -237,7 +235,7 @@ export function getReDelegations(
 }> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchReDelegations,
-        params
+        params,
     });
 }
 
@@ -253,6 +251,6 @@ export function getReDelegationsNoThrow(
 }> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchReDelegationsNoThrow,
-        params
+        params,
     });
 }

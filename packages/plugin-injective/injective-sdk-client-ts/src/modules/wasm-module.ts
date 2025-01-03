@@ -1,14 +1,14 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
-import { 
+import {
     ContractAccountsBalanceWithPagination,
     ContractStateWithPagination,
     ContractInfo,
-    PaginationOption, 
+    PaginationOption,
     Pagination,
     ContractCodeHistoryEntry,
-    CodeInfoResponse
+    CodeInfoResponse,
 } from "@injectivelabs/sdk-ts";
-import { CosmwasmWasmV1Query } from '@injectivelabs/core-proto-ts';
+import { CosmwasmWasmV1Query } from "@injectivelabs/core-proto-ts";
 
 export function getContractAccountsBalance(
     this: InjectiveGrpcBase,
@@ -18,9 +18,11 @@ export function getContractAccountsBalance(
     }
 ): Promise<ContractAccountsBalanceWithPagination> {
     return this.request({
-        method: (params: { contractAddress: string; pagination?: PaginationOption }) => 
-            this.chainGrpcWasmApi.fetchContractAccountsBalance(params),
-        params
+        method: (params: {
+            contractAddress: string;
+            pagination?: PaginationOption;
+        }) => this.chainGrpcWasmApi.fetchContractAccountsBalance(params),
+        params,
     });
 }
 
@@ -32,9 +34,11 @@ export function getContractState(
     }
 ): Promise<ContractStateWithPagination> {
     return this.request({
-        method: (params: { contractAddress: string; pagination?: PaginationOption }) => 
-            this.chainGrpcWasmApi.fetchContractState(params),
-        params
+        method: (params: {
+            contractAddress: string;
+            pagination?: PaginationOption;
+        }) => this.chainGrpcWasmApi.fetchContractState(params),
+        params,
     });
 }
 
@@ -43,8 +47,9 @@ export function getContractInfo(
     contractAddress: string
 ): Promise<ContractInfo | undefined> {
     return this.request({
-        method: (params: string) => this.chainGrpcWasmApi.fetchContractInfo(params),
-        params: contractAddress
+        method: (params: string) =>
+            this.chainGrpcWasmApi.fetchContractInfo(params),
+        params: contractAddress,
     });
 }
 
@@ -56,8 +61,9 @@ export function getContractHistory(
     pagination: Pagination;
 }> {
     return this.request({
-        method: (params: string) => this.chainGrpcWasmApi.fetchContractHistory(params),
-        params: contractAddress
+        method: (params: string) =>
+            this.chainGrpcWasmApi.fetchContractHistory(params),
+        params: contractAddress,
     });
 }
 
@@ -69,9 +75,15 @@ export function getSmartContractState(
     }
 ): Promise<CosmwasmWasmV1Query.QuerySmartContractStateResponse> {
     return this.request({
-        method: (params: { contractAddress: string; query?: string | Record<string, any> }) => 
-            this.chainGrpcWasmApi.fetchSmartContractState(params.contractAddress, params.query),
-        params
+        method: (params: {
+            contractAddress: string;
+            query?: string | Record<string, any>;
+        }) =>
+            this.chainGrpcWasmApi.fetchSmartContractState(
+                params.contractAddress,
+                params.query
+            ),
+        params,
     });
 }
 
@@ -83,9 +95,12 @@ export function getRawContractState(
     }
 ): Promise<CosmwasmWasmV1Query.QueryRawContractStateResponse> {
     return this.request({
-        method: (params: { contractAddress: string; query?: string }) => 
-            this.chainGrpcWasmApi.fetchRawContractState(params.contractAddress, params.query),
-        params
+        method: (params: { contractAddress: string; query?: string }) =>
+            this.chainGrpcWasmApi.fetchRawContractState(
+                params.contractAddress,
+                params.query
+            ),
+        params,
     });
 }
 
@@ -97,8 +112,9 @@ export function getContractCodes(
     pagination: Pagination;
 }> {
     return this.request({
-        method: (params: PaginationOption) => this.chainGrpcWasmApi.fetchContractCodes(params),
-        params: pagination || {}
+        method: (params: PaginationOption) =>
+            this.chainGrpcWasmApi.fetchContractCodes(params),
+        params: pagination || {},
     });
 }
 
@@ -110,8 +126,9 @@ export function getContractCode(
     data: Uint8Array;
 }> {
     return this.request({
-        method: (params: number) => this.chainGrpcWasmApi.fetchContractCode(params),
-        params: codeId
+        method: (params: number) =>
+            this.chainGrpcWasmApi.fetchContractCode(params),
+        params: codeId,
     });
 }
 
@@ -126,8 +143,11 @@ export function getContractCodeContracts(
     pagination: Pagination;
 }> {
     return this.request({
-        method: (params: { codeId: number; pagination?: PaginationOption }) => 
-            this.chainGrpcWasmApi.fetchContractCodeContracts(params.codeId, params.pagination),
-        params
+        method: (params: { codeId: number; pagination?: PaginationOption }) =>
+            this.chainGrpcWasmApi.fetchContractCodeContracts(
+                params.codeId,
+                params.pagination
+            ),
+        params,
     });
 }

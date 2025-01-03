@@ -1,8 +1,8 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
-import { 
+import {
     AuthorityMetadata,
     TokenFactoryModuleParams,
-    TokenFactoryModuleState 
+    TokenFactoryModuleState,
 } from "@injectivelabs/sdk-ts";
 
 export function getDenomsFromCreator(
@@ -11,7 +11,7 @@ export function getDenomsFromCreator(
 ): Promise<string[]> {
     return this.request({
         method: this.chainGrpcTokenFactoryApi.fetchDenomsFromCreator,
-        params
+        params,
     });
 }
 
@@ -23,9 +23,12 @@ export function getDenomAuthorityMetadata(
     }
 ): Promise<AuthorityMetadata> {
     return this.request({
-        method: (params: { creator: string; subDenom: string }) => 
-            this.chainGrpcTokenFactoryApi.fetchDenomAuthorityMetadata(params.creator, params.subDenom),
-        params
+        method: (params: { creator: string; subDenom: string }) =>
+            this.chainGrpcTokenFactoryApi.fetchDenomAuthorityMetadata(
+                params.creator,
+                params.subDenom
+            ),
+        params,
     });
 }
 
@@ -34,7 +37,7 @@ export function getTokenFactoryModuleParams(
 ): Promise<TokenFactoryModuleParams> {
     return this.request({
         method: this.chainGrpcTokenFactoryApi.fetchModuleParams,
-        params: {}
+        params: {},
     });
 }
 
@@ -43,6 +46,6 @@ export function getTokenFactoryModuleState(
 ): Promise<TokenFactoryModuleState> {
     return this.request({
         method: this.chainGrpcTokenFactoryApi.fetchModuleState,
-        params: {}
+        params: {},
     });
 }
