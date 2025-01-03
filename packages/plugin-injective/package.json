@@ -8,7 +8,8 @@
     "dev": "tsup --format esm --dts --watch",
     "lint": "eslint --fix  --cache .",
     "test": "jest",
-    "test:integration": "jest --config jest.integration.config.js"
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [],
   "author": "",
@@ -25,12 +26,14 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
+    "@elizaos/adapter-sqlite": "0.1.7-alpha.2",
+    "@elizaos/core": "workspace:*",
+    "@injectivelabs/grpc-web": "0.0.1",
     "@injectivelabs/sdk-ts": "^1.14.33",
     "@injectivelabs/utils": "^1.14.33",
-    "@injectivelabs/grpc-web": "0.0.1",
-    "injective-sdk-client-ts": "file:../../packages/plugin-injective/injective-sdk-client-ts",
     "axios": "^1.7.9",
-    "jsonwebtoken": "^9.0.2",
-    "@elizaos/core": "workspace:*"
+    "better-sqlite3": "11.6.0",
+    "injective-sdk-client-ts": "file:../../packages/plugin-injective/injective-sdk-client-ts",
+    "jsonwebtoken": "^9.0.2"
   }
 }
