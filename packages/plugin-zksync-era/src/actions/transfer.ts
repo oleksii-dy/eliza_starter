@@ -107,7 +107,7 @@ export default {
         "PAY_ON_ZKSYNC",
         "PAY_ON_ERA",
     ],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (runtime: IAgentRuntime, _message: Memory) => {
         await validateZKsyncConfig(runtime);
         return true;
     },
