@@ -26,6 +26,7 @@ const fetcher = async (url: string, apiKey: string) => {
 
 class OrdiscanAPI {
     apiKey: string;
+
     constructor(apiKey: string) {
         this.apiKey = apiKey;
     }
