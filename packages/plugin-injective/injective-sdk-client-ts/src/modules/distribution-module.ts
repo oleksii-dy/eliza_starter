@@ -1,8 +1,8 @@
-import { InjectiveGrpcBase } from '../grpc/grpc-base';
-import { 
+import { InjectiveGrpcBase } from "../grpc/grpc-base";
+import {
     ValidatorRewards,
     DistributionModuleParams,
-    Coin
+    Coin,
 } from "@injectivelabs/sdk-ts";
 //All the chain grpc params go here
 export function getDistributionModuleParams(
@@ -10,36 +10,36 @@ export function getDistributionModuleParams(
 ): Promise<DistributionModuleParams> {
     return this.request({
         method: this.chainGrpcDistributionApi.fetchModuleParams,
-        params: {}
+        params: {},
     });
 }
 
 export function getDelegatorRewardsForValidator(
     this: InjectiveGrpcBase,
     delegatorAddress: string,
-    validatorAddress: string    
+    validatorAddress: string
 ): Promise<Coin[]> {
     return this.request({
         method: this.chainGrpcDistributionApi.fetchDelegatorRewardsForValidator,
         params: {
             delegatorAddress,
             validatorAddress,
-        }
+        },
     });
 }
 
 export function getDelegatorRewardsForValidatorNoThrow(
     this: InjectiveGrpcBase,
     delegatorAddress: string,
-    validatorAddress: string,
-    
+    validatorAddress: string
 ): Promise<Coin[]> {
     return this.request({
-        method: this.chainGrpcDistributionApi.fetchDelegatorRewardsForValidatorNoThrow,
-        params :{
+        method: this.chainGrpcDistributionApi
+            .fetchDelegatorRewardsForValidatorNoThrow,
+        params: {
             delegatorAddress,
             validatorAddress,
-        }
+        },
     });
 }
 
@@ -49,7 +49,7 @@ export function getDelegatorRewards(
 ): Promise<ValidatorRewards[]> {
     return this.request({
         method: this.chainGrpcDistributionApi.fetchDelegatorRewards,
-        params: injectiveAddress
+        params: injectiveAddress,
     });
 }
 
@@ -59,6 +59,6 @@ export function getDelegatorRewardsNoThrow(
 ): Promise<ValidatorRewards[]> {
     return this.request({
         method: this.chainGrpcDistributionApi.fetchDelegatorRewardsNoThrow,
-        params: injectiveAddress
+        params: injectiveAddress,
     });
 }

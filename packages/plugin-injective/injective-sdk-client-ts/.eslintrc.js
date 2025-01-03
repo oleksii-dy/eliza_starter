@@ -1,24 +1,23 @@
 module.exports = {
-    root: true,
-    parser: '@typescript-eslint/parser',
-    plugins: ['@typescript-eslint'],
-    extends: [
-      'eslint:recommended',
-      'plugin:@typescript-eslint/recommended',
-      'prettier'
-    ],
-    env: {
-      node: true,
-      es6: true
-    },
-    parserOptions: {
-      ecmaVersion: 2020,
-      sourceType: 'module'
-    },
-    ignorePatterns: ['**/dist/**', '**/node_modules/**', '**/*.md'],
-    rules: {
-    'prettier/prettier': 'error',
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/no-explicit-any': 'off',
-    }
-  };
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "rules": {
+    // TypeScript-specific rules
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    
+    // General ESLint rules
+    "no-console": "warn",
+    "eqeqeq": "error",
+    "no-duplicate-imports": "error",
+    "prefer-const": "warn"
+  }
+}

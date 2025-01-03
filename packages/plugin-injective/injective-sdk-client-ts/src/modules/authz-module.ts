@@ -1,7 +1,17 @@
-import { GrantWithDecodedAuthorization, GrantAuthorizationWithDecodedAuthorization, Pagination, PaginationOption } from "@injectivelabs/sdk-ts";
+import {
+    GrantWithDecodedAuthorization,
+    GrantAuthorizationWithDecodedAuthorization,
+    Pagination,
+    PaginationOption,
+} from "@injectivelabs/sdk-ts";
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
 //include chain grpc functions here
-export function getGrants(this: InjectiveGrpcBase, granter: string, grantee: string, pagination?: PaginationOption): Promise<{
+export function getGrants(
+    this: InjectiveGrpcBase,
+    granter: string,
+    grantee: string,
+    pagination?: PaginationOption
+): Promise<{
     pagination: Pagination;
     grants: GrantWithDecodedAuthorization[];
 }> {
@@ -10,26 +20,34 @@ export function getGrants(this: InjectiveGrpcBase, granter: string, grantee: str
         params: {
             pagination,
             granter,
-            grantee
-        }
+            grantee,
+        },
     });
 }
-export function getGranterGrants(this: InjectiveGrpcBase, granter: string, pagination?: PaginationOption): Promise<{
+export function getGranterGrants(
+    this: InjectiveGrpcBase,
+    granter: string,
+    pagination?: PaginationOption
+): Promise<{
     pagination: Pagination;
     grants: GrantAuthorizationWithDecodedAuthorization[];
 }> {
     return this.request({
         method: this.chainGrpcAuthZApi.fetchGranterGrants,
-        params: granter
+        params: granter,
     });
 }
 
-export function getGranteeGrants(this: InjectiveGrpcBase, grantee: string, pagination?: PaginationOption): Promise<{
+export function getGranteeGrants(
+    this: InjectiveGrpcBase,
+    grantee: string,
+    pagination?: PaginationOption
+): Promise<{
     pagination: Pagination;
     grants: GrantAuthorizationWithDecodedAuthorization[];
 }> {
     return this.request({
         method: this.chainGrpcAuthZApi.fetchGranteeGrants,
-        params: grantee
+        params: grantee,
     });
 }

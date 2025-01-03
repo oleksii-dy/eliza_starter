@@ -1,1 +1,1 @@
-export * from './GrpcException'
+export * from "./GrpcException";

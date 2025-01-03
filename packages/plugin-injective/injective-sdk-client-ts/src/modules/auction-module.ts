@@ -1,36 +1,54 @@
-import { AuctionModuleStateParams, AuctionModuleState, CurrentBasket, Auction} from "@injectivelabs/sdk-ts";
+import {
+    AuctionModuleStateParams,
+    AuctionModuleState,
+    CurrentBasket,
+    Auction,
+} from "@injectivelabs/sdk-ts";
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
 //include chain grpc calls for fetch functions
-export function getAuctionModuleParams(this: InjectiveGrpcBase): Promise<AuctionModuleStateParams> {
+export function getAuctionModuleParams(
+    this: InjectiveGrpcBase
+): Promise<AuctionModuleStateParams> {
     return this.request({
         method: this.chainGrpcAuctionApi.fetchModuleParams,
-        params: {}
+        params: {},
     });
 }
-export function getAuctionModuleState(this: InjectiveGrpcBase): Promise<AuctionModuleState> {
+export function getAuctionModuleState(
+    this: InjectiveGrpcBase
+): Promise<AuctionModuleState> {
     return this.request({
         method: this.chainGrpcAuctionApi.fetchModuleState,
-        params: {}
+        params: {},
     });
 }
 
-export function getCurrentBasket(this: InjectiveGrpcBase): Promise<CurrentBasket> {
+export function getCurrentBasket(
+    this: InjectiveGrpcBase
+): Promise<CurrentBasket> {
     return this.request({
         method: this.chainGrpcAuctionApi.fetchCurrentBasket,
-        params: {}
+        params: {},
     });
 }
 //include indexer grpc calls
-export function getAuctionRound(this: InjectiveGrpcBase, round: number): Promise<Auction> {
+export function getAuctionRound(
+    this: InjectiveGrpcBase,
+    round: number
+): Promise<Auction> {
     return this.query({
         method: this.indexerGrpcAuctionApi.fetchAuction,
         params: round,
     });
 }
 
-export function getAuctions(this: InjectiveGrpcBase, startRound: number, limit: number): Promise<Auction[]> {
+export function getAuctions(
+    this: InjectiveGrpcBase,
+    startRound: number,
+    limit: number
+): Promise<Auction[]> {
     return this.query({
         method: this.indexerGrpcAuctionApi.fetchAuctions,
         params: { startRound, limit },
-    })
+    });
 }
