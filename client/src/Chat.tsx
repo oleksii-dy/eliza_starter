@@ -1,11 +1,9 @@
 import { useRef, useState } from "react";
-import { useParams } from "react-router-dom";
-import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ImageIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import "./App.css";
-import path from "path";
+import { useMutation } from "@tanstack/react-query";
 
 type TextResponse = {
     text: string;
@@ -13,8 +11,7 @@ type TextResponse = {
     attachments?: { url: string; contentType: string; title: string }[];
 };
 
-export default function Chat() {
-    const { agentId } = useParams();
+export default function Chat({ agentId }: { agentId: string }) {
     const [input, setInput] = useState("");
     const [messages, setMessages] = useState<TextResponse[]>([]);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -78,18 +75,16 @@ export default function Chat() {
                         messages.map((message, index) => (
                             <div
                                 key={index}
-                                className={`text-left flex ${
-                                    message.user === "user"
-                                        ? "justify-end"
-                                        : "justify-start"
-                                }`}
+                                className={`text-left flex ${message.user === "user"
+                                    ? "justify-end"
+                                    : "justify-start"
+                                    }`}
                             >
                                 <div
-                                    className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                                        message.user === "user"
-                                            ? "bg-primary text-primary-foreground"
-                                            : "bg-muted"
-                                    }`}
+                                    className={`max-w-[80%] rounded-lg px-4 py-2 ${message.user === "user"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-muted"
+                                        }`}
                                 >
                                     {message.text}
                                     {message.attachments?.map((attachment, i) => (
@@ -107,7 +102,7 @@ export default function Chat() {
                                             />
                                         )
                                     ))}
-                                 </div>
+                                </div>
                             </div>
                         ))
                     ) : (
