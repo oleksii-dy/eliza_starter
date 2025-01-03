@@ -198,6 +198,9 @@ importers:
       '@elizaos/plugin-node':
         specifier: workspace:*
         version: link:../packages/plugin-node
+      '@elizaos/plugin-ordinals':
+        specifier: workspace:*
+        version: link:../packages/plugin-ordinals
       '@elizaos/plugin-solana':
         specifier: workspace:*
         version: link:../packages/plugin-solana

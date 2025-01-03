@@ -61,6 +61,7 @@ import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
 import { cronosZkEVMPlugin } from "@elizaos/plugin-cronoszkevm";
 import { abstractPlugin } from "@elizaos/plugin-abstract";
 import { avalanchePlugin } from "@elizaos/plugin-avalanche";
+import { ordinalsPlugin } from "@elizaos/plugin-ordinals";
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
@@ -520,6 +521,7 @@ export async function createAgent(
         character,
         // character.plugins are handled when clients are added
         plugins: [
+            ordinalsPlugin,
             bootstrapPlugin,
             getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
                 ? confluxPlugin

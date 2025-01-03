@@ -72,7 +72,9 @@ export class WalletProvider {
     async signPsbt() {}
 
     async broadcastTransaction(txhex: string): Promise<string> {
-        const txid = await this.mempool.bitcoin.transactions.postTx({ txhex }) as string;
+        const txid = (await this.mempool.bitcoin.transactions.postTx({
+            txhex,
+        })) as string;
         return txid;
     }
 }
@@ -84,11 +86,10 @@ const walletProvider: Provider = {
         _state?: State
     ): Promise<string | null> => {
         try {
-            const BTC_PK = runtime.getSetting("BITCOIN_PRIVATE_KEY");
+            const BTC_PK = runtime.getSetting("ORDINALS_PRIVATE_KEY");
             const provider = new WalletProvider(BTC_PK);
             const balance = await provider.getBalance();
             const addresses = provider.getAddresses();
-
             return `Ordinals wallet => ${addresses.nestedSegwitAddress} / ${addresses.taprootAddress} | Balance: ${balance}`;
         } catch (error) {
             console.error("Error in wallet provider:", error);
