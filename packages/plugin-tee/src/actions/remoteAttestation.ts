@@ -1,5 +1,6 @@
 import type { IAgentRuntime, Memory, State, HandlerCallback } from "@elizaos/core";
 import { RemoteAttestationProvider } from "../providers/remoteAttestationProvider";
+import { File } from "formdata-node";
 
 function hexToUint8Array(hex: string) {
     hex = hex.trim();
@@ -33,9 +34,12 @@ async function uploadUint8Array(data: Uint8Array) {
     formData.append("file", file);
 
     return await fetch("https://proof.t16z.com/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+        method: "POST",
+        headers: {
+          "Content-type": "multipart/form-data",
+        },
+        body: formData,
+      });
 }
 
 export const remoteAttestationAction = {
@@ -87,18 +91,10 @@ export const remoteAttestationAction = {
             {
                 user: "{{user2}}",
                 content: {
-                    text: "I'm running in a TEE, generate a remote attestation",
+                    text: "One second, let me generate and upload my attestation report",
                     action: "REMOTE_ATTESTATION",
                 },
-            },
-            {
-                user: "{{user2}}",
-                content: {
-                    text: `Sure thing, here is my attestation report
-                    https://proof.t16z.com/reports/a0fd21c0602374388addb2f5272ab61008f5adf9c9b9a85978b799accb9c3442
-                    `,
-                },
-            },
+            }
         ],
     ],
 };
