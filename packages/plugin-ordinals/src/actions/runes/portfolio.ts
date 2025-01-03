@@ -8,7 +8,7 @@ import {
     elizaLogger,
 } from "@elizaos/core";
 import { WalletProvider, walletProvider } from "../../providers/wallet";
-import OrdiscanAPI from "../../utils/ordiscan-api";
+import API from "../../utils/api";
 
 export default {
     name: "RUNES_GET_PORTFOLIO",
@@ -33,16 +33,16 @@ export default {
             const addresses = wallet.getAddresses();
             const taprootAddress = addresses.taprootAddress;
 
-            const ordiscan = new OrdiscanAPI(
-                runtime.getSetting("ORDISCAN_API_KEY")
-            );
+            const ordiscan = new API(runtime.getSetting("ORDISCAN_API_KEY"));
 
             const portfolio = await ordiscan.getRunesPortfolio(taprootAddress);
 
-            const balances = portfolio?.data;
+            const balances = portfolio?.results;
+
+            elizaLogger.info(JSON.stringify(portfolio));
 
             callback({
-                text: `Runes portfolio for address ${taprootAddress}:\n${balances?.map((item, idx) => `${idx + 1}: ${item.name} - ${item.balance}\n`)}`,
+                text: `Runes portfolio for address ${taprootAddress}:\n${balances?.map((item, idx) => `${idx + 1}: ${item?.rune?.spaced_name} - ${item.balance}\n`)}`,
             });
 
             return true;

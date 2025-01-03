@@ -1,11 +1,12 @@
 import { elizaLogger } from "@elizaos/core";
 
-const BASE_URL = "https://api.ordiscan.com/v1";
+const ORDISCAN_BASE_URL = "https://api.ordiscan.com/v1";
+const HIRO_BASE_URL = "https://api.hiro.so";
 
-const fetcher = async (url: string, apiKey: string) => {
+const fetcher = async (url: string, apiKey?: string) => {
     try {
         const response = await fetch(url, {
-            headers: { Authorization: `Bearer ${apiKey}` },
+            headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
         });
 
         if (!response.ok) {
@@ -24,16 +25,18 @@ const fetcher = async (url: string, apiKey: string) => {
     }
 };
 
-class OrdiscanAPI {
-    apiKey: string;
+class API {
+    ordiscanApiKey: string;
 
-    constructor(apiKey: string) {
-        this.apiKey = apiKey;
+    constructor(ordiscanApiKey?: string) {
+        this.ordiscanApiKey = ordiscanApiKey;
     }
 
     async getRunesPortfolio(address: string) {
-        return fetcher(`${BASE_URL}/address/${address}/runes`, this.apiKey);
+        return fetcher(
+            `${HIRO_BASE_URL}/runes/v1/addresses/${address}/balances?offset=0&limit=20`
+        );
     }
 }
 
-export default OrdiscanAPI;
+export default API;
