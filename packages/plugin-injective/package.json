@@ -23,6 +23,7 @@
   "dependencies": {
     "@injectivelabs/sdk-ts": "^1.14.33",
     "@injectivelabs/utils": "^1.14.33",
+    "@injectivelabs/grpc-web": "0.0.1",
     "axios": "^1.7.9",
     "jsonwebtoken": "^9.0.2",
     "@elizaos/core": "workspace:*"
