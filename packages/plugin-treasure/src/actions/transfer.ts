@@ -13,10 +13,17 @@ import {
 } from "@elizaos/core";
 import { validateTreasureConfig } from "../environment";
 
-import { Address, createWalletClient, http, parseEther } from "viem";
+import { Address, createWalletClient, erc20Abi, http, parseEther } from "viem";
 import { treasure } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { eip712WalletActions } from "viem/zksync";
+import { z } from "zod";
+
+const TransferSchema = z.object({
+    tokenAddress: z.string(),
+    recipient: z.string(),
+    amount: z.string(),
+});
 
 export interface TransferContent extends Content {
     tokenAddress: string;
@@ -71,6 +78,14 @@ Given the recent messages, extract the following information about the requested
 
 Respond with a JSON markdown block containing only the extracted values.`;
 
+const MAGIC_ADDRESS = "0x000000000000000000000000000000000000800A";
+const ERC20_OVERRIDE_INFO = {
+    "0x650BE505C391d396A1e0b1f2337EaE77F064fF7f": {
+        name: "ETH",
+        decimals: 18,
+    },
+};
+
 export default {
     name: "SEND_TOKEN",
     similes: [
@@ -78,11 +93,9 @@ export default {
         "TRANSFER_TOKENS_ON_TREASURE",
         "SEND_TOKENS_ON_TREASURE",
         "SEND_MAGIC_ON_TREASURE",
-        "SEND_ETH_ON_TREASURE",
         "PAY_ON_TREASURE",
         "MOVE_TOKENS_ON_TREASURE",
         "MOVE_MAGIC_ON_TREASURE",
-        "MOVE_ETH_ON_TREASURE",
     ],
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         await validateTreasureConfig(runtime);
@@ -116,6 +129,7 @@ export default {
             runtime,
             context: transferContext,
             modelClass: ModelClass.SMALL,
+            schema: TransferSchema,
         })) as unknown as TransferContent;
 
         // Validate transfer content
@@ -139,13 +153,36 @@ export default {
                 transport: http(),
             }).extend(eip712WalletActions());
 
-            const hash = await walletClient.sendTransaction({
-                account: account,
-                chain: treasure,
-                to: content.recipient as Address,
-                value: parseEther(content.amount.toString()),
-                kzg: undefined,
-            });
+            let hash;
+            if (
+                content.tokenAddress.toLowerCase() !==
+                MAGIC_ADDRESS.toLowerCase()
+            ) {
+                // Convert amount to proper token decimals
+                const tokenInfo =
+                    ERC20_OVERRIDE_INFO[content.tokenAddress.toLowerCase()];
+                const decimals = tokenInfo?.decimals ?? 18; // Default to 18 decimals if not specified
+                const tokenAmount =
+                    BigInt(content.amount) * BigInt(10 ** decimals);
+
+                // Execute ERC20 transfer
+                hash = await walletClient.writeContract({
+                    account,
+                    chain: treasure,
+                    address: content.tokenAddress as Address,
+                    abi: erc20Abi,
+                    functionName: "transfer",
+                    args: [content.recipient as Address, tokenAmount],
+                });
+            } else {
+                hash = await walletClient.sendTransaction({
+                    account: account,
+                    chain: treasure,
+                    to: content.recipient as Address,
+                    value: parseEther(content.amount.toString()),
+                    kzg: undefined,
+                });
+            }
 
             elizaLogger.success("Transfer completed successfully! tx: " + hash);
             if (callback) {
