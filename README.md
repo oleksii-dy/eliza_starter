@@ -1,3 +1,25 @@
+# 
+
+git clone https://github.com/meta-introspector/eliza-starter
+
+```
+nvm install --lts
+nvm use --lts
+rm -rf node_modules/
+rm -rf dist/
+pnpm i && pnpm build && pnpm start
+pnpm rebuild
+
+docker run -d -p 9411:9411 openzipkin/zipkin
+
+pnpm start --characters="characters/eliza.character.json"
+```
+
+Run just this 
+`scripts/start.sh` does the first install
+`scripts/just_start.sh` then you can run this
+`agent/run.sh` afterwards you can just run this to debug the agent
+
 # Eliza 🤖
 
 <div align="center">
