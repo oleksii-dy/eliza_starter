@@ -2,23 +2,23 @@ import * as ethUtil from "ethereumjs-util";
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
 import { Network } from "@injectivelabs/networks";
 
-export * as AuctionModule from "./auction-module";
-export * as AuthModule from "./auth-module";
-export * as AuthZModule from "./authz-module";
-export * as BankModule from "./bank-module";
-export * as DistributionModule from "./distribution-module";
-export * as ExchangeModule from "./exchange-module";
-export * as GovernanceModule from "./gov-module";
-export * as IbcModule from "./Ibc-module";
-export * as InsuranceFundModule from "./insurance-fund-module";
-export * as MintModule from "./mint-module";
-export * as OracleModule from "./oracle-module";
-export * as PeggyModule from "./peggy-module";
-export * as PermissionsModule from "./permissions-module";
-export * as StakingModule from "./staking-module";
-export * as TokenFactoryModule from "./token-factory-module";
-export * as WasmModule from "./wasm-module";
-export * as WasmXModule from "./wasmx-module";
+export * as AuctionModule from "./auction";
+export * as AuthModule from "./auth";
+export * as AuthZModule from "./authz";
+export * as BankModule from "./bank";
+export * as DistributionModule from "./distribution";
+export * as ExchangeModule from "./exchange";
+export * as GovernanceModule from "./gov";
+export * as IbcModule from "./Ibc";
+export * as InsuranceFundModule from "./insurance-fund";
+export * as MintModule from "./mint";
+export * as OracleModule from "./oracle";
+export * as PeggyModule from "./peggy";
+export * as PermissionsModule from "./permissions";
+export * as StakingModule from "./staking";
+export * as TokenFactoryModule from "./token-factory";
+export * as WasmModule from "./wasm";
+export * as WasmXModule from "./wasmx";
 
 /**
  * Generates an Ethereum address from a private key
