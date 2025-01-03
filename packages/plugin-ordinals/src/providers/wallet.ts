@@ -8,6 +8,9 @@ import {
 import * as btc from "@scure/btc-signer";
 import { secp256k1 } from "@noble/curves/secp256k1";
 import { hex } from "@scure/base";
+import { mnemonicToSeedSync, validateMnemonic } from "@scure/bip39";
+import { HDKey } from "@scure/bip32";
+import { wordlist } from "@scure/bip39/wordlists/english";
 import mempoolJS from "@mempool/mempool.js";
 import { MempoolReturn } from "@mempool/mempool.js/lib/interfaces";
 import { IAccount } from "../types";
@@ -21,18 +24,37 @@ export class WalletProvider {
     mempool: MempoolReturn;
     account: IAccount;
 
-    constructor(privateKey: string) {
-        this.account = this.getAccount(privateKey);
+    constructor(seed: string) {
+        this.account = this.getAccount(seed);
         this.mempool = mempoolJS({
             hostname: "mempool.space",
         });
     }
 
-    getAccount(privateKey: string): IAccount {
-        const privateKeyA = hex.decode(privateKey);
-        const publicKey = secp256k1.getPublicKey(privateKeyA, true);
-        const schnorrPublicKey = btc.utils.pubSchnorr(privateKeyA);
+    getAccount(seedPhrase: string): IAccount {
+        if (!validateMnemonic(seedPhrase, wordlist)) {
+            throw new Error("Invalid seed phrase");
+        }
+
+        const seed = mnemonicToSeedSync(seedPhrase);
+        const masterKey = HDKey.fromMasterSeed(seed);
+
         const network = btc.NETWORK;
+
+        const paymentWalletPath = "m/49'/0'/0'/0/0";
+        const paymentDerivedKey = masterKey.derive(paymentWalletPath);
+        const ordinalsWalletPath = "m/86'/0'/0'/0/0";
+        const ordinalsDerivedKey = masterKey.derive(ordinalsWalletPath);
+
+        if (!paymentDerivedKey.privateKey || !ordinalsDerivedKey.privateKey) {
+            throw new Error("Unable to derive private key");
+        }
+
+        const paymentWalletPrivateKey = paymentDerivedKey.privateKey;
+        const ordinalsWalletPrivateKey = ordinalsDerivedKey.privateKey;
+
+        const publicKey = secp256k1.getPublicKey(paymentWalletPrivateKey, true);
+        const schnorrPublicKey = btc.utils.pubSchnorr(ordinalsWalletPrivateKey);
 
         const nestedSegwitAddress = btc.p2sh(
             btc.p2wpkh(publicKey, network),
@@ -46,9 +68,8 @@ export class WalletProvider {
         ).address;
 
         return {
-            nestedSegwitAddress,
-            taprootAddress,
-            privateKey,
+            nestedSegwitAddress: nestedSegwitAddress || "",
+            taprootAddress: taprootAddress || "",
         };
     }
 
@@ -100,7 +121,7 @@ const walletProvider: Provider = {
         _state?: State
     ): Promise<WalletProvider> => {
         try {
-            const BTC_PK = runtime.getSetting("ORDINALS_PRIVATE_KEY");
+            const BTC_PK = runtime.getSetting("ORDINALS_SEED");
             const provider = new WalletProvider(BTC_PK);
 
             return provider;
