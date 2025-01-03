@@ -1,17 +1,16 @@
 //
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
-import { SEMRESATTRS_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
-import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
-import { trace } from '@opentelemetry/api';
+//import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
+//import { trace } from '@opentelemetry/api';
 
 //import { NodeSDK } from '@opentelemetry/sdk-node';
 import { SpanExporter, Span } from '@opentelemetry/sdk-trace-base';
 // , ExportResult
 import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import {  PeriodicExportingMetricReader,  ConsoleMetricExporter,} from '@opentelemetry/sdk-metrics';
+//import {  PeriodicExportingMetricReader,  ConsoleMetricExporter,} from '@opentelemetry/sdk-metrics';
 import * as opentelemetry from '@opentelemetry/api';
-import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
+//import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { ZipkinExporter } from '@opentelemetry/exporter-zipkin';
 import { Resource } from '@opentelemetry/resources';
 import {
@@ -19,6 +18,7 @@ import {
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions';
 import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
+import { wrapTracer } from '@opentelemetry/api/experimental';
 
 //Specify zipkin url. default url is http://localhost:9411/api/v2/spans
 const zipkinUrl = 'http://localhost';
@@ -31,8 +31,8 @@ const options = {
 	'module': 'mainai16z',
     },
     url: zipkinURL,
-    serviceName: 'ai16z',   
-    
+    serviceName: 'ai16z',
+
     // optional interceptor
     getExportRequestHeaders: () => {
 	return {
@@ -44,64 +44,46 @@ const traceExporter_zipkin = new ZipkinExporter(options);
 const traceExporter = new ConsoleSpanExporter();
 
 
-export class CustomConsoleSpanExporter implements SpanExporter {
-    export(spans: Span[], resultCallback: (result: ExportResult) => void): void {
-      elizaLogger.log("hello1")
-      //traceExporter.export(spans,resultCallback);
-      //traceExporter.export(traceExporter_zipkin,resultCallback);	
-	for (const span of spans) {
-	    const spanData = {
-		name: span.name,
-		traceId: span.spanContext().traceId,
-		spanId: span.spanContext().spanId,
-		startTime: span.startTime,
-		endTime: span.endTime,
-		attributes: span.attributes,
-		events: span.events,
-		status: span.status,
-		kind: span.kind,
-	    };	    
-	  elizaLogger.log(JSON.stringify(spanData, null, 2)); 
-	}	
-	resultCallback(ExportResult.SUCCESS);
-    }
-    shutdown(): Promise<void> {
-	return Promise.resolve();
-    }
-}
-const myExporter = new CustomConsoleSpanExporter()
+// export class CustomConsoleSpanExporter implements SpanExporter {
+//     export(spans: Span[], resultCallback: (result: any) => void): void {
+//       elizaLogger.log("test trace", JSON.stringify(spans, null, 2));
+//       //traceExporter.export(spans,resultCallback);
+//       //traceExporter.export(traceExporter_zipkin,resultCallback);
+//       //elizaLogger.log(JSON.stringify(spans, null, 2));
+//     }
+// }
+// const myExporter = new CustomConsoleSpanExporter()
 
 // parts from https://stackoverflow.com/questions/71654897/opentelemetry-typescript-project-zipkin-exporter
 //const { SimpleSpanProcessor } = import('@opentelemetry/sdk-trace-base');
 import { NodeTracerProvider, SimpleSpanProcessor } from "@opentelemetry/sdk-trace-node";
 const txz=new SimpleSpanProcessor(traceExporter_zipkin);
 const tx=new SimpleSpanProcessor(traceExporter);
-const tx2=new SimpleSpanProcessor(myExporter);
+//const tx2=new SimpleSpanProcessor(myExporter);
 
 try {
     const serviceName = 'eliza-agent';
     const provider = new NodeTracerProvider({
 	resource: new Resource({
-	  [SEMRESATTRS_SERVICE_NAME]: serviceName,
 	  [ATTR_SERVICE_NAME]: serviceName,
 	  [ATTR_SERVICE_VERSION]: '1.0',    }),
       spanProcessors: [
 	txz,
-	tx,
-	tx2
+	tx
+	//	tx2
       ]
     });
 
   // Initialize the OpenTelemetry APIs to use the NodeTracerProvider bindings
   provider.register();
-  
+
   registerInstrumentations({
     instrumentations: [
       getNodeAutoInstrumentations(),
       new HttpInstrumentation(),
     ],
   });
-  
+
 
   elizaLogger.log("setup!")
 } catch(error){
@@ -109,7 +91,11 @@ try {
 }
 // const sdk = new NodeSDK({         resource: new Resource({
 
-const tracer=opentelemetry.trace.getTracer('ai16z');
+//const tracer=opentelemetry.trace.getTracer('ai16z');
+
+
+
+const tracer = wrapTracer(opentelemetry.trace.getTracer('ai16z-agent'))
 
 //     //traceExporter: new ConsoleSpanExporter(),
 //     traceExporter: myExporter,
@@ -201,10 +187,12 @@ export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
 };
 
 const logFetch = async (url: string, options: any) => {
+  return await tracer.withActiveSpan('logFetch', async () => {
     elizaLogger.debug(`Fetching ${url}`);
     // Disabled to avoid disclosure of sensitive information such as API keys
     elizaLogger.debug(JSON.stringify(options, null, 2));
-    return fetch(url, options);
+      return fetch(url, options);
+    });
 };
 
 export function parseArguments(): {
@@ -229,24 +217,18 @@ export function parseArguments(): {
     }
 }
 
+
 function tryLoadFile(filePath: string): string | null {
-    elizaLogger.log(`tryLoadFile filePath: ${filePath}`);    
-    const span = tracer.startSpan('tryLoadFile', {
-      //  kind: 1, // server
-      attributes: { filePath: filePath },
-    });
-  try {
-    const ret = fs.readFileSync(filePath, "utf8");
-    span.addEvent(`got ${ret.length}`);
-    
-    span.end();
-    return ret;
-    
-  } catch (e) {
-    
-    span.end();
-    return null;
-  }
+  elizaLogger.log(`tryLoadFile filePath: ${filePath}`);
+  return tracer.withActiveSpan('tryLoadFile', () => {
+    try {
+      const ret = fs.readFileSync(filePath, "utf8");
+      return ret;
+
+    } catch (e) {
+      return null;
+    }
+  })
 }
 
 function isAllStrings(arr: unknown[]): boolean {
@@ -256,9 +238,10 @@ function isAllStrings(arr: unknown[]): boolean {
 export async function loadCharacters(
     charactersArg: string
 ): Promise<Character[]> {
+  return await tracer.withActiveSpan('loadCharacters', async () => {
     let characterPaths = charactersArg
-        ?.split(",")
-        .map((filePath) => filePath.trim());
+      ?.split(",")
+      .map((filePath) => filePath.trim());
     const loadedCharacters = [];
 
     if (characterPaths?.length > 0) {
@@ -368,6 +351,7 @@ export async function loadCharacters(
     }
 
     return loadedCharacters;
+  })
 }
 
 export function getTokenForProvider(
