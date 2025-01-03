@@ -13,6 +13,7 @@ import * as IbcModule from "./Ibc";
 import * as InsuranceFundModule from "./insurance-fund";
 import * as MintModule from "./mint";
 import * as MitoModule from "./mito";
+import * as ExplorerModule from "./explorer";
 import * as OracleModule from "./oracle";
 import * as PeggyModule from "./peggy";
 import * as PermissionsModule from "./permissions";
@@ -260,7 +261,7 @@ export class GrpcClient extends InjectiveGrpcBase {
         StakingModule.getStakingModuleParams.bind(this);
     public getPool = StakingModule.getPool.bind(this);
     public getValidators = StakingModule.getValidators.bind(this);
-    public getValidator = StakingModule.getValidator.bind(this);
+    public getStakingValidator = StakingModule.getValidator.bind(this);
     public getValidatorDelegations =
         StakingModule.getValidatorDelegations.bind(this);
     public getValidatorDelegationsNoThrow =
@@ -306,4 +307,20 @@ export class GrpcClient extends InjectiveGrpcBase {
     //Wasmx functions
     public getWasmxModuleParams = WasmXModule.getWasmxModuleParams.bind(this);
     public getWasmxWasmModuleState = WasmXModule.getWasmxModuleState.bind(this);
+    //Explorer functions
+    //===========================INDEXER==============================
+    public getTxByHash = ExplorerModule.getTxByHash.bind(this);
+    public getAccountTx = ExplorerModule.getAccountTx.bind(this);
+    public getExplorerValidator = ExplorerModule.getValidator.bind(this);
+    public getValidatorUptime =
+        ExplorerModule.getValidatorUptime.bind(this);
+    public getPeggyDepositTxs =
+        ExplorerModule.getPeggyDepositTxs.bind(this);
+    public getPeggyWithdrawalTxs =
+        ExplorerModule.getPeggyWithdrawalTxs.bind(this);
+    public getBlocks = ExplorerModule.getBlocks.bind(this);
+    public getBlock = ExplorerModule.getBlock.bind(this);
+    public getTxs = ExplorerModule.getTxs.bind(this);
+    public getIBCTransferTxs = ExplorerModule.getIBCTransferTxs.bind(this);
+    public getExplorerStats = ExplorerModule.getExplorerStats.bind(this);
 }

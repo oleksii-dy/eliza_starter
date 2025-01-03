@@ -1,5 +1,6 @@
 // We need to add the following:
 // basically wrap rpc requests, query, and response
+// TODO : Assert type safety for the requests
 import { Network, getNetworkEndpoints } from "@injectivelabs/networks";
 //chain imports
 import {
@@ -27,7 +28,6 @@ import {
     IndexerGrpcAccountApi,
     IndexerGrpcArchiverApi,
     IndexerGrpcAuctionApi,
-    IndexerGrpcCampaignApi,
     IndexerGrpcDerivativesApi,
     IndexerGrpcExplorerApi,
     IndexerGrpcInsuranceFundApi,
@@ -43,7 +43,6 @@ import {
 import {
     ChainRestAuthApi,
     ChainRestTendermintApi,
-    getEthereumAddress,
     getInjectiveAddress,
 } from "@injectivelabs/sdk-ts";
 import { UnspecifiedErrorCode } from "@injectivelabs/exceptions";
