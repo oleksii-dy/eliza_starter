@@ -71,30 +71,12 @@ export default {
         callback?: HandlerCallback
     ): Promise<boolean> => {
         elizaLogger.info("Starting Ordinals test handler...");
-        // Initialize or update state
-        if (!state) {
-            state = (await runtime.composeState(message)) as State;
-        } else {
-            state = await runtime.updateRecentMessageState(state);
-        }
-
-        // Compose transfer context
-        const transferContext = composeContext({
-            state,
-            template: transferTemplate,
-        });
-
-        // Generate transfer content
-        const content = (
-            await generateObject({
-                runtime,
-                context: transferContext,
-                modelClass: ModelClass.SMALL,
-                schema: TransferSchema,
-            })
-        ).object as unknown as TransferContent;
-
-        elizaLogger.info(content);
+        // // Initialize or update state
+        // if (!state) {
+        //     state = (await runtime.composeState(message)) as State;
+        // } else {
+        //     state = await runtime.updateRecentMessageState(state);
+        // }
 
         try {
             elizaLogger.success("Test completed successfully!");

@@ -84,13 +84,12 @@ const walletProvider: Provider = {
         runtime: IAgentRuntime,
         _message: Memory,
         _state?: State
-    ): Promise<string | null> => {
+    ): Promise<WalletProvider> => {
         try {
             const BTC_PK = runtime.getSetting("ORDINALS_PRIVATE_KEY");
             const provider = new WalletProvider(BTC_PK);
-            const balance = await provider.getBalance();
-            const addresses = provider.getAddresses();
-            return `Ordinals wallet => ${addresses.nestedSegwitAddress} / ${addresses.taprootAddress} | Balance: ${balance}`;
+
+            return provider;
         } catch (error) {
             console.error("Error in wallet provider:", error);
             return null;
