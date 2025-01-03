@@ -33,12 +33,7 @@ export default {
         callback?: HandlerCallback
     ): Promise<boolean> => {
         try {
-            if (!state) {
-                state = await runtime.composeState(message);
-            } else {
-                state = await runtime.updateRecentMessageState(state);
-            }
-
+            elizaLogger.info(state.recentMessages);
             const wallet: WalletProvider = await walletProvider.get(
                 runtime,
                 message,
@@ -50,22 +45,25 @@ export default {
                 template: transactionHashTemplate,
             });
 
-            const content = await generateObject({
-                runtime,
-                context,
-                schema: transactionIdSchema,
-                modelClass: ModelClass.LARGE,
-            });
+            const content: { object: { txid?: string | null } } =
+                await generateObject({
+                    runtime,
+                    context,
+                    schema: transactionIdSchema,
+                    modelClass: ModelClass.LARGE,
+                });
 
-            elizaLogger.info("Transaction ID generated:", content.object);
+            const txid = content?.object?.txid;
 
-            const txid =
-                "06d39fa9ee4d864e602dcbee40fcbc78dff5fcfb65ec25cf3ac5c147be98d6c8";
+            if (!txid || txid?.length !== 64) {
+                throw new Error("Unable to find the txid.");
+            }
 
             const status = await wallet.getTransactionStatus(txid);
+            const isConfirmed = status?.confirmed;
 
             callback({
-                text: `The status of the transaction is ${status?.confirmed ? `CONFIRMED @ [${status?.block_height}]` : "UNCONFIRMED"}`,
+                text: `The status of the transaction is: ${isConfirmed ? `✅ Confirmed @ block ${status?.block_height}` : "⏳ Unconfirmed"}`,
             });
 
             return true;
