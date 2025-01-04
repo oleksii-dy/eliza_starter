@@ -6,7 +6,7 @@
 
 <div align="center">
 
-📖 [Documentation](https://elizaos.github.io/eliza/) | 🎯 [Examples](https://github.com/thejoven/awesome-eliza)
+📖 [ドキュメント](https://elizaos.github.io/eliza/) | 🎯 [Examples](https://github.com/thejoven/awesome-eliza)
 
 </div>
 
@@ -18,13 +18,14 @@
 
 ## ✨ 機能
 
--   🛠 多機能なDiscord、Twitter、Telegramコネクタ
--   👥 マルチエージェントおよびルームサポート
--   📚 ドキュメントの取り込みと対話を容易に実現可能
--   💾 メモリおよびドキュメントストアへのアクセス
--   🚀 高い拡張性 - 独自のアクションとクライアントを作成可能
--   ☁️  Llama、OpenAI、Anthropic、Groqなど、多くのモデルをサポート
--   📦 とにかく使いやすい！
+- 🛠️ 多機能なDiscord、Twitter、Telegramコネクタ
+- 🔗 各種モデルのサポート (Llama, Grok, OpenAI, Anthropic, etc.)
+- 👥 マルチエージェントおよびルームサポート
+- 📚 キュメントの取り込みと対話を容易に実現可
+- 💾 メモリおよびドキュメントストアへのアクセス
+- 🚀 高い拡張性 - 独自のアクションとクライアントを作成可能
+- ☁️ lama、OpenAI、Anthropic、Groqなど、多くのモデルをサポート
+- 📦 とにかく使いやすい！
 
 ## チュートリアルビデオ
 
@@ -56,11 +57,14 @@ cd eliza-starter
 cp .env.example .env
 pnpm i && pnpm build && pnpm start
 ```
+
 エージェントが正常に実行されると、"pnpm start:client"を実行することを指示するメッセージが最後に出力されます。
 新しくターミナルを開き、上述のコマンドを実行したディレクトリに移動、そこで以下のコマンドを実行し、出力されたURLにアクセスすることでエージェントとチャットを行うことができます。
+
 ```bash
 pnpm start:client
 ```
+
 Elizaをカスタマイズするための方法は[ドキュメンテーション](https://elizaos.github.io/eliza/)を参照してください。
 
 ### マニュアルによる起動（実際に何をやっているかがわかる人向け）
@@ -72,22 +76,6 @@ git clone https://github.com/elizaos/eliza.git
 # 最新版のチェックアウト
 # 本プロジェクトはとても頻繁に更新されるため、最新版の利用を推奨します
 git checkout $(git describe --tags --abbrev=0)
-
-# Elizaのビルドと起動
-pnpm i
-pnpm build
-pnpm start
-
-# 本プロジェクトは頻繁に更新されるため、しばらく触っていなかった場合、プロジェクトを一度クリーンにすることを推奨します
-pnpm clean
-```
-
-#### その他の必要事項について
-
-Sharpのインストールが必要になる場合があります。もしエージェントの起動時にエラーが発生した場合、以下のコマンドを実行しSharpをインストールしてみてください:
-
-```
-pnpm install --include=optional sharp
 ```
 
 ### Gitpodを利用した起動
@@ -121,6 +109,25 @@ sh scripts/start.sh
     - 複数のキャラクターファイルを同時に読み込むことも可能です
 3. X (Twitter)への接続
     - キャラクターファイルの `"clients": []` を `"clients": ["twitter"]` に変更することで接続することができます
+
+### マニュアルでのElizaの起動
+
+```bash
+pnpm i
+pnpm build
+pnpm start
+
+# 本プロジェクトは頻繁に更新されるため、しばらく触っていなかった場合、プロジェクトを一度クリーンにすることを推奨します
+pnpm clean
+```
+
+#### その他の必要事項について
+
+Sharpのインストールが必要になる場合があります。もしエージェントの起動時にエラーが発生した場合、以下のコマンドを実行しSharpをインストールしてみてください:
+
+```
+pnpm install --include=optional sharp
+```
 
 ### コミュニティと連絡先
 
