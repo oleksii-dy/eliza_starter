@@ -13,6 +13,7 @@ import {
 import { WalletProvider, walletProvider } from "../../providers/wallet";
 import { transactionHashTemplate } from "../../templates";
 import { z } from "zod";
+import { handleError } from "../../utils";
 
 export const transactionIdSchema = z.object({
     txid: z.string().toLowerCase(),
@@ -68,13 +69,7 @@ export default {
 
             return true;
         } catch (error) {
-            elizaLogger.error("Error during address retrieval:", error);
-            callback({
-                text: `Error during address retrieval: ${error.message}`,
-                error: true,
-                content: { error: error.message },
-            });
-            return false;
+            handleError(error, callback);
         }
     },
     examples: [

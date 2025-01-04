@@ -14,6 +14,7 @@ import { WalletProvider, walletProvider } from "../../providers/wallet";
 import API from "../../utils/api";
 import { z } from "zod";
 import { balanceTemplate } from "../../templates";
+import { handleError } from "../../utils";
 
 export const addressSchema = z.object({
     address: z.string(),
@@ -72,13 +73,7 @@ export default {
 
             return true;
         } catch (error) {
-            elizaLogger.error("Error during address retrieval:", error);
-            callback({
-                text: `Error during address retrieval: ${error.message}`,
-                error: true,
-                content: { error: error.message },
-            });
-            return false;
+            handleError(error, callback);
         }
     },
     examples: [

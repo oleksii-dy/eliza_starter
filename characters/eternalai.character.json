@@ -4,7 +4,9 @@
   "clients": ["twitter"],
   "modelProvider": "eternalai",
   "settings": {
-    "secrets": {},
+    "secrets": {
+        "FAL_API_KEY": "12345"
+    },
     "voice": {
       "model": "en_US-hfc_female-medium"
     }

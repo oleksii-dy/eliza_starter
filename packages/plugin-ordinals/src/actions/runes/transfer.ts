@@ -17,6 +17,18 @@ import { runeTransferTemplate } from "../../templates";
 import API from "../../utils/api";
 import { walletProvider, WalletProvider } from "../../providers/wallet";
 import { Transaction } from "@scure/btc-signer";
+import {
+    Rune,
+    RuneId,
+    Runestone,
+    EtchInscription,
+    none,
+    some,
+    Terms,
+    Range,
+    Etching,
+} from "runelib";
+import { handleError } from "../../utils";
 
 export const transferSchema = z.object({
     rune: z.string(),
@@ -109,21 +121,6 @@ export default {
 
             elizaLogger.info(JSON.stringify(utxos));
 
-            const edictRunestone = encodeRunestone({
-                edicts: [
-                    {
-                        id: {
-                            block: mintBlock,
-                            tx,
-                        },
-                        amount: BigInt(amount),
-                        output: 1, // The output that the UTXO will go to
-                    },
-                ],
-            });
-
-            elizaLogger.success(JSON.stringify(edictRunestone));
-
             // The amount in the UTXO has to be more or equal to the amount that we are transferring
             const runeUtxo = utxos[0];
 
@@ -165,10 +162,20 @@ export default {
 
             elizaLogger.info(`input 2 done`);
 
+            const edicts: any = [];
+
+            edicts.push({
+                id: new RuneId(mintBlock, tx),
+                amount,
+                output: 1,
+            });
+
+            const mintstone = new Runestone(edicts, none(), none(), none());
+
             // Create outputs
             psbt.addOutput({
-                script: edictRunestone.encodedRunestone,
-                amount: BigInt(0),
+                script: mintstone.encipher(),
+                amount: 0n,
             });
 
             elizaLogger.info(`output 1 done`);
@@ -180,13 +187,20 @@ export default {
             const fee = 100000;
             const change = BigInt(btcUtxo.value - fee - 2200);
 
+            if (change < 0) {
+                throw new Error("Insufficient funds to transfer Runes");
+            }
+
+            elizaLogger.info(change);
+
             psbt.addOutputAddress(
                 addresses.nestedSegwitAddress, // change address
                 change
             );
+
             elizaLogger.info(`output 3 done`);
 
-            elizaLogger.info(psbt.toPSBT());
+            elizaLogger.info(psbt.hex);
 
             if (callback) {
                 callback({
@@ -197,15 +211,7 @@ export default {
 
             return true;
         } catch (error) {
-            console.error(error);
-            elizaLogger.error("Error during token transfer:", error.message);
-            if (callback) {
-                callback({
-                    text: `Error transferring tokens: ${error.message}`,
-                    content: { error: error.message },
-                });
-            }
-            return false;
+            handleError(error, callback);
         }
     },
     examples: [

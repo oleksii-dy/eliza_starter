@@ -11,7 +11,7 @@ import {
     ModelClass,
 } from "@elizaos/core";
 import { WalletProvider, walletProvider } from "../../providers/wallet";
-import { formatBitcoinBalance } from "../../utils";
+import { formatBitcoinBalance, handleError } from "../../utils";
 import { z } from "zod";
 import { balanceTemplate } from "../../templates";
 
@@ -79,13 +79,7 @@ export default {
 
             return true;
         } catch (error) {
-            elizaLogger.error("Error during address retrieval:", error);
-            callback({
-                text: `Error during address retrieval: ${error.message}`,
-                error: true,
-                content: { error: error.message },
-            });
-            return false;
+            handleError(error, callback);
         }
     },
     examples: [
