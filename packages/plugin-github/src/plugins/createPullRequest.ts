@@ -23,6 +23,8 @@ import {
     getRepoPath,
     incorporateRepositoryState,
     writeFiles,
+    savePullRequestToMemory,
+    saveCreatedPullRequestToMemory,
 } from "../utils";
 
 export const createPullRequestAction: Action = {
@@ -96,7 +98,7 @@ export const createPullRequestAction: Action = {
             await checkoutBranch(repoPath, content.branch, true);
             await writeFiles(repoPath, content.files);
             await commitAndPushChanges(repoPath, content.title, content.branch);
-            const { url } = await createPullRequest(
+            const pullRequest = await createPullRequest(
                 runtime.getSetting("GITHUB_API_TOKEN"),
                 content.owner,
                 content.repo,
@@ -105,24 +107,29 @@ export const createPullRequestAction: Action = {
                 content.description,
                 content.base
             );
+            await saveCreatedPullRequestToMemory(runtime, pullRequest, content.owner, content.repo, content.branch, runtime.getSetting("GITHUB_API_TOKEN"));
 
-            elizaLogger.info(`Pull request created successfully! URL: ${url}`);
-
-            callback({
-                text: `Pull request created successfully! URL: ${url}`,
-                attachments: [],
-            });
+            elizaLogger.info(`Pull request created successfully! URL: ${pullRequest.html_url}`);
+            if (callback) {
+                callback({
+                    text: `Pull request created successfully! URL: ${pullRequest.html_url}`,
+                    attachments: [],
+                });
+            }
+            return pullRequest;
         } catch (error) {
             elizaLogger.error(
                 `Error creating pull request on ${content.owner}/${content.repo} branch ${content.branch}:`,
                 error
             );
-            callback(
+            if (callback) {
+              callback(
                 {
                     text: `Error creating pull request on ${content.owner}/${content.repo} branch ${content.branch}. Please try again.`,
                 },
                 []
             );
+            }
         }
     },
     examples: [
@@ -130,7 +137,7 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Create a pull request on repository octocat/hello-world with branch 'fix/something', title 'fix: something' and files 'docs/architecture.md' '# Architecture Documentation'",
+                    text: "Create a pull request on repository octocat/hello-world with branch 'fix/something' against base 'develop', title 'fix: something' and files 'docs/architecture.md' '# Architecture Documentation'",
                 },
             },
             {
@@ -145,7 +152,7 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Create PR on repository octocat/hello-world with branch 'feature/new-feature', title 'feat: new feature' and files 'src/app.js' '# new app.js file'",
+                    text: "Create PR on repository octocat/hello-world with branch 'feature/new-feature' against base 'develop', title 'feat: new feature' and files 'src/app.js' '# new app.js file'",
                 },
             },
             {
@@ -160,7 +167,7 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Generate PR on repository octocat/hello-world with branch 'hotfix/urgent-fix', title 'fix: urgent fix' and files 'lib/something.go' '# go file'",
+                    text: "Generate PR on repository octocat/hello-world with branch 'hotfix/urgent-fix' against base 'develop', title 'fix: urgent fix' and files 'lib/something.go' '# go file'",
                 },
             },
             {
@@ -175,7 +182,7 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Create a pull request on repository octocat/hello-world with branch 'chore/update-deps', title 'chore: update dependencies' and files 'package.json' '{\"name\": \"new-package\"}'",
+                    text: "Create a pull request on repository octocat/hello-world with branch 'chore/update-deps' against base 'develop', title 'chore: update dependencies' and files 'package.json' '{\"name\": \"new-package\"}'",
                 },
             },
             {
@@ -190,7 +197,7 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "GitHub create pull request on repository octocat/hello-world with branch 'docs/update-readme', title 'docs: update README' and files 'README.md' '# New README\nSomething something'",
+                    text: "GitHub create pull request on repository octocat/hello-world with branch 'docs/update-readme' against base 'develop', title 'docs: update README' and files 'README.md' '# New README\nSomething something'",
                 },
             },
             {
@@ -205,7 +212,7 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "GitHub PR on repository octocat/hello-world with branch 'refactor/code-cleanup', title 'refactor: code cleanup' and files 'src/refactored_file.txt' 'Refactored content'",
+                    text: "GitHub PR on repository octocat/hello-world with branch 'refactor/code-cleanup' against base 'develop', title 'refactor: code cleanup' and files 'src/refactored_file.txt' 'Refactored content'",
                 },
             },
             {
@@ -220,7 +227,7 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "GitHub generate PR on repository octocat/hello-world with branch 'test/add-tests', title 'test: add tests' and files 'tests/e2e.test.ts' '# E2E test cases'",
+                    text: "GitHub generate PR on repository octocat/hello-world with branch 'test/add-tests' against base 'develop', title 'test: add tests' and files 'tests/e2e.test.ts' '# E2E test cases'",
                 },
             },
             {
@@ -235,7 +242,7 @@ export const createPullRequestAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "GitHub pull request on repository octocat/hello-world with branch 'ci/update-workflow', title 'ci: update workflow' and files '.github/workflows/ci.yaml' '# new CI workflow'",
+                    text: "GitHub pull request on repository octocat/hello-world with branch 'ci/update-workflow' against base 'develop', title 'ci: update workflow' and files '.github/workflows/ci.yaml' '# new CI workflow'",
                 },
             },
             {

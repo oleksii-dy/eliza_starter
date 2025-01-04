@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { glob } from "glob";
 import { existsSync } from "fs";
-import simpleGit from "simple-git";
+import simpleGit, { CommitResult } from "simple-git";
 import { Octokit } from "@octokit/rest";
 import {
     elizaLogger,
@@ -101,27 +101,23 @@ export async function writeFiles(
     }
 }
 
-interface CommitAndPushChangesResponse {
-    hash: string;
-}
-
 export async function commitAndPushChanges(
     repoPath: string,
     message: string,
     branch?: string
-) {
+): Promise<CommitResult> {
     try {
         const git = simpleGit(repoPath);
         await git.add(".");
         const commit = await git.commit(message);
+        let pushResult;
         if (branch) {
-            await git.push("origin", branch);
+            pushResult = await git.push("origin", branch);
         } else {
-            await git.push();
+            pushResult = await git.push();
         }
-        return {
-            hash: commit.commit,
-        } as CommitAndPushChangesResponse;
+        elizaLogger.info("Push result:", pushResult);
+        return commit;
     } catch (error) {
         elizaLogger.error("Error committing and pushing changes:", error);
         throw new Error(`Error committing and pushing changes: ${error}`);
@@ -171,10 +167,6 @@ export async function checkoutBranch(
     }
 }
 
-interface CreatePullRequestResponse {
-    url: string;
-}
-
 export async function createPullRequest(
     token: string,
     owner: string,
@@ -183,7 +175,7 @@ export async function createPullRequest(
     title: string,
     description?: string,
     base?: string
-) {
+): Promise<RestEndpointMethodTypes["pulls"]["create"]["response"]["data"]> {
     try {
         const octokit = new Octokit({
             auth: token,
@@ -197,10 +189,7 @@ export async function createPullRequest(
             head: branch,
             base: base || "main",
         });
-
-        return {
-            url: pr.data.html_url,
-        } as CreatePullRequestResponse;
+        return pr.data
     } catch (error) {
         elizaLogger.error("Error creating pull request:", error);
         throw new Error(`Error creating pull request: ${error}`);
@@ -444,10 +433,8 @@ export async function incorporateRepositoryState(
     isIssuesFlow: boolean,
     isPullRequestsFlow: boolean
 ) {
-    // const files = await getFilesFromMemories(runtime, message);
-    // // add additional keys to state
-    // state.files = files;
-    // Doesn't exist in state but exists in character
+    const files = await getFilesFromMemories(runtime, message);
+    state.files = files;
     state.messageExamples = JSON.stringify(
         runtime.character?.messageExamples,
         null,
@@ -596,3 +583,164 @@ ${output}
 ${examples}
 `;
 };
+
+export async function savePullRequestToMemory(
+    runtime: IAgentRuntime,
+    pullRequest: RestEndpointMethodTypes["pulls"]["list"]["response"]["data"][number],
+    owner: string,
+    repository: string,
+    branch: string,
+    apiToken: string
+): Promise<Memory> {
+    const roomId = stringToUuid(`github-${owner}-${repository}-${branch}`);
+    const githubService = new GitHubService({
+        owner: owner,
+        repo: repository,
+        auth: apiToken,
+    });
+    const prId = stringToUuid(
+        `${roomId}-${runtime.agentId}-pr-${pullRequest.number}`
+    );
+    const prMemory: Memory = {
+        id: prId,
+        userId: runtime.agentId,
+        agentId: runtime.agentId,
+        roomId: roomId,
+        content: {
+            text: `Pull Request Created: ${pullRequest.title}`,
+            metadata: await getPullRequestMetadata(pullRequest, githubService),
+        },
+
+    };
+
+    await runtime.messageManager.createMemory(prMemory);
+    return prMemory;
+}
+
+export async function saveCreatedPullRequestToMemory(
+    runtime: IAgentRuntime,
+    pullRequest: RestEndpointMethodTypes["pulls"]["create"]["response"]["data"],
+    owner: string,
+    repository: string,
+    branch: string,
+    apiToken: string
+): Promise<Memory> {
+    const roomId = stringToUuid(`github-${owner}-${repository}-${branch}`);
+    const githubService = new GitHubService({
+        owner: owner,
+        repo: repository,
+        auth: apiToken,
+    });
+    const prId = stringToUuid(
+        `${roomId}-${runtime.agentId}-pr-${pullRequest.number}`
+    );
+    const prMemory: Memory = {
+        id: prId,
+        userId: runtime.agentId,
+        agentId: runtime.agentId,
+        roomId: roomId,
+        content: {
+            text: `Pull Request Created: ${pullRequest.title}`,
+            metadata: await getCreatedPullRequestMetadata(pullRequest, githubService),
+        },
+
+    };
+
+    await runtime.messageManager.createMemory(prMemory);
+    return prMemory;
+}
+
+export const savePullRequestsToMemory = async (
+    runtime: IAgentRuntime,
+    owner: string,
+    repository: string,
+    branch: string,
+    apiToken: string
+): Promise<Memory[]> => {
+    const roomId = stringToUuid(`github-${owner}-${repository}-${branch}`);
+    const memories = await runtime.messageManager.getMemories({
+        roomId: roomId,
+    });
+    const githubService = new GitHubService({
+        owner: owner,
+        repo: repository,
+        auth: apiToken,
+    });
+    const pullRequests = await githubService.getPullRequests();
+    const pullRequestsMemories: Memory[] = [];
+    // create memories for each pull request if they are not already in the memories
+    for (const pr of pullRequests) {
+        // check if the pull request is already in the memories by checking id in the memories
+
+        const prMemory =
+            memories.find(
+                (memory) =>
+                    memory.id ===
+                    stringToUuid(`${roomId}-${runtime.agentId}-pr-${pr.number}`)
+            ) ?? null;
+        if (!prMemory) {
+            const newPrMemory = await savePullRequestToMemory(
+                runtime,
+                pr,
+                owner,
+                repository,
+                branch,
+                apiToken
+            );
+            pullRequestsMemories.push(newPrMemory);
+        } else {
+            elizaLogger.log("Pull request already in memories:", prMemory);
+            // update the pull request memory
+        }
+    }
+    // elizaLogger.log("Pull requests memories:", pullRequestsMemories);
+    await fs.writeFile(
+        "/tmp/savePullRequestsToMemory-pullRequestsMemories.txt",
+        JSON.stringify(pullRequestsMemories, null, 2)
+    );
+    return pullRequestsMemories;
+};
+
+export async function getPullRequestMetadata(
+    pullRequest: RestEndpointMethodTypes["pulls"]["list"]["response"]["data"][number],
+    githubService: GitHubService
+): Promise<any> {
+    return {
+        type: "pull_request",
+        url: pullRequest.html_url,
+        number: pullRequest.number,
+        state: pullRequest.state,
+        created_at: pullRequest.created_at,
+        updated_at: pullRequest.updated_at,
+        comments: await githubService.getPRCommentsText(
+            pullRequest.comments_url
+        ),
+        labels: pullRequest.labels.map((label: any) =>
+            typeof label === "string" ? label : label?.name
+        ),
+        body: pullRequest.body,
+        diff: await githubService.getPRDiffText(pullRequest.diff_url),
+    };
+}
+
+export async function getCreatedPullRequestMetadata(
+    pullRequest: RestEndpointMethodTypes["pulls"]["create"]["response"]["data"],
+    githubService: GitHubService
+): Promise<any> {
+    return {
+        type: "pull_request",
+        url: pullRequest.html_url,
+        number: pullRequest.number,
+        state: pullRequest.state,
+        created_at: pullRequest.created_at,
+        updated_at: pullRequest.updated_at,
+        comments: await githubService.getPRCommentsText(
+            pullRequest.comments_url
+        ),
+        labels: pullRequest.labels.map((label: any) =>
+            typeof label === "string" ? label : label?.name
+        ),
+        body: pullRequest.body,
+        diff: await githubService.getPRDiffText(pullRequest.diff_url),
+    };
+}

@@ -92,31 +92,33 @@ export const createCommitAction: Action = {
         try {
             await checkoutBranch(repoPath, content.branch, true);
             await writeFiles(repoPath, content.files);
-            const { hash } = await commitAndPushChanges(
+            const commit = await commitAndPushChanges(
                 repoPath,
                 content.message,
                 content.branch
             );
-
+            const hash = commit.commit;
             elizaLogger.info(
                 `Commited changes to the repository ${content.owner}/${content.repo} successfully to branch '${content.branch}'! commit hash: ${hash}`
             );
-
-            callback({
-                text: `Changes commited to repository ${content.owner}/${content.repo} successfully to branch '${content.branch}'! commit hash: ${hash}`,
-                attachments: [],
-            });
-            return hash;
+            if (callback) {
+                callback({
+                    text: `Changes commited to repository ${content.owner}/${content.repo} successfully to branch '${content.branch}'! commit hash: ${hash}`,
+                    attachments: [],
+                });
+            }
+            return commit;
         } catch (error) {
             elizaLogger.error(
                 `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}: See error: ${error.message}`,
             );
-            callback(
-                {
-                    text: `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}. Please try again See error: ${error.message}.`,
-                },
-                []
-            );
+            if (callback) {
+                callback(
+                    {
+                        text: `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}. Please try again See error: ${error.message}.`,
+                    },
+                    []);
+            }
         }
     },
     examples: [

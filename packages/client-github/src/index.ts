@@ -19,10 +19,10 @@ import {
     getRepositoryRoomId,
     saveIssuesToMemory,
     GitHubService,
+    savePullRequestsToMemory
 } from "@elizaos/plugin-github";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
-import { savePullRequestsToMemory } from "./utils";
 import fs from "fs/promises";
 
 export class GitHubClient extends EventEmitter {
@@ -51,8 +51,7 @@ export class GitHubClient extends EventEmitter {
     }
 
     private startOodaLoop() {
-        const interval =
-            Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) || 300000; // Default to 1 minute
+        const interval = 180000; // Default to 1 minute
         elizaLogger.log("Starting OODA loop with interval:", interval);
         setInterval(() => {
             this.processOodaCycle();
@@ -422,7 +421,5 @@ export const GitHubClientInterface: Client = {
         }
     },
 };
-
-export * from "./utils";
 
 export default GitHubClientInterface;

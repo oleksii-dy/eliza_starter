@@ -70,7 +70,7 @@ export const addCommentToIssueAction: Action = {
             message,
             [],
             true,
-            false
+            true
         );
         elizaLogger.info("State:", updatedState);
 
@@ -289,7 +289,7 @@ export const reactToIssueAction: Action = {
             message,
             [],
             true,
-            false
+            true
         );
         elizaLogger.info("State:", updatedState);
 
@@ -441,7 +441,7 @@ export const closeIssueAction: Action = {
             message,
             [],
             true,
-            false
+            true
         );
         elizaLogger.info("State:", updatedState);
 
@@ -472,7 +472,7 @@ export const closeIssueAction: Action = {
         try {
             const issue = await githubService.updateIssue(content.issue, {
                 state: "closed",
-                labels: ["automated-close"],
+                labels: ["agent-close"],
             });
             elizaLogger.info("Issue:", JSON.stringify(issue, null, 2));
             elizaLogger.info(`Closed issue #${content.issue} successfully!`);

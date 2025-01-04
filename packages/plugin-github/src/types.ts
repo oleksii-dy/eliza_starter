@@ -52,7 +52,7 @@ export const isCreateMemoriesFromFilesContent = (
 export const CreatePullRequestSchema = z.object({
     owner: z.string().min(1, "GitHub owner is required"),
     repo: z.string().min(1, "GitHub repo is required"),
-    base: z.string().optional(),
+    base: z.string().optional().default("main"),
     branch: z.string().min(1, "GitHub pull request branch is required"),
     title: z.string().min(1, "Pull request title is required"),
     description: z.string().optional(),
@@ -454,6 +454,7 @@ export const ImplementFeatureSchema = z.object({
     branch: z.string().min(1, "GitHub branch is required"),
     feature: z.string().nullable().optional(),
     issue: z.number().nullable().optional(),
+    base: z.string().default("develop"),
 });
 
 export interface ImplementFeatureContent {
@@ -462,6 +463,7 @@ export interface ImplementFeatureContent {
     branch: string;
     feature?: string;
     issue?: number;
+    base?: string;
 }
 
 export const isImplementFeatureContent = (
@@ -479,6 +481,7 @@ export const GenerateCodeFileChangesSchema = z.object({
     repo: z.string().min(1, "GitHub repo is required"),
     branch: z.string().min(1, "GitHub branch is required"),
     feature: z.string().min(1, "Feature is required"),
+    base: z.string().default("develop"),
     files: z.array(
         z.object({
             path: z.string().min(1, "File path is required"),
@@ -492,6 +495,7 @@ export interface GenerateCodeFileChangesContent {
     repo: string;
     branch: string;
     feature: string;
+    base?: string;
     files: Array<{
         path: string;
         content: string;

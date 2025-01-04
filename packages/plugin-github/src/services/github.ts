@@ -833,6 +833,142 @@ public getPositionFromDiff(
         }
     }
 
+  /**
+     * Retrieves the latest commit SHA from a specified branch.
+     * @param owner - The owner of the repository.
+     * @param repo - The repository name.
+     * @param branch - The branch name.
+     * @returns The latest commit SHA.
+     */
+  private async getLatestCommitSha(owner: string, repo: string, branch: string): Promise<string> {
+    const { data: refData } = await this.octokit.git.getRef({
+        owner,
+        repo,
+        ref: `heads/${branch}`,
+    });
+    return refData.object.sha;
+}
+
+/**
+ * Retrieves the tree SHA from a given commit SHA.
+ * @param owner - The owner of the repository.
+ * @param repo - The repository name.
+ * @param commitSha - The commit SHA.
+ * @returns The tree SHA.
+ */
+private async getTreeSha(owner: string, repo: string, commitSha: string): Promise<string> {
+    const { data: commitData } = await this.octokit.git.getCommit({
+        owner,
+        repo,
+        commit_sha: commitSha,
+    });
+    return commitData.tree.sha;
+}
+
+/**
+ * Creates a new tree with the specified file changes.
+ * @param owner - The owner of the repository.
+ * @param repo - The repository name.
+ * @param baseTreeSha - The base tree SHA.
+ * @param files - An array of file changes with their paths and contents.
+ * @returns The new tree SHA.
+ */
+private async createNewTree(
+    owner: string,
+    repo: string,
+    baseTreeSha: string,
+    files: { path: string; content: string }[]
+): Promise<string> {
+    const tree = files.map(file => ({
+        path: file.path,
+        mode: "100644", // File mode for blob objects
+        type: "blob",
+        content: file.content,
+    }));
+
+    const { data: newTreeData } = await this.octokit.git.createTree({
+        owner,
+        repo,
+        base_tree: baseTreeSha,
+        tree: tree as { path?: string; mode?: "100644" | "100755" | "040000" | "160000" | "120000"; type?: "blob" | "tree" | "commit"; sha?: string; content?: string; }[],
+    });
+
+    return newTreeData.sha;
+}
+
+/**
+ * Creates a new commit with the specified file changes.
+ * @param owner - The owner of the repository.
+ * @param repo - The repository name.
+ * @param branch - The branch name.
+ * @param message - The commit message.
+ * @param files - An array of file changes with their paths and contents.
+ * @returns The new commit SHA.
+ */
+async createCommit(
+    owner: string,
+    repo: string,
+    branch: string,
+    message: string,
+    files: { path: string; content: string }[]
+): Promise<RestEndpointMethodTypes["git"]["createCommit"]["response"]["data"]> {
+    try {
+        // Step 1: Get the latest commit SHA from the branch
+        const latestCommitSha = await this.getLatestCommitSha(owner, repo, branch);
+        console.log(`Latest commit SHA on branch '${branch}': ${latestCommitSha}`);
+
+        // Step 2: Get the tree SHA from the latest commit
+        const baseTreeSha = await this.getTreeSha(owner, repo, latestCommitSha);
+        console.log(`Base tree SHA: ${baseTreeSha}`);
+
+        // Step 3: Create a new tree with the file changes
+        const newTreeSha = await this.createNewTree(owner, repo, baseTreeSha, files);
+        console.log(`New tree SHA: ${newTreeSha}`);
+
+        // Step 4: Create a new commit
+        const { data: newCommit } = await this.octokit.git.createCommit({
+            owner,
+            repo,
+            message: message,
+            tree: newTreeSha,
+            parents: [latestCommitSha],
+        });
+        console.log(`New commit created with SHA: ${newCommit.sha}`);
+
+        return newCommit;
+    } catch (error) {
+        console.error("Error creating commit:", error);
+        throw error;
+    }
+}
+
+/**
+ * Updates the reference of the branch to point to the new commit.
+ * @param owner - The owner of the repository.
+ * @param repo - The repository name.
+ * @param branch - The branch name.
+ * @param newCommitSha - The new commit SHA.
+ */
+async updateBranchReference(
+    owner: string,
+    repo: string,
+    branch: string,
+    newCommitSha: string
+): Promise<void> {
+    try {
+        await this.octokit.git.updateRef({
+            owner,
+            repo,
+            ref: `heads/${branch}`,
+            sha: newCommitSha,
+            force: false, // Set to true if you need to force update
+        });
+        console.log(`Branch '${branch}' updated to commit SHA: ${newCommitSha}`);
+    } catch (error) {
+        console.error("Error updating branch reference:", error);
+        throw error;
+    }
+}
 }
 
 export { GitHubConfig };

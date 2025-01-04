@@ -100,7 +100,7 @@ export const reactToPRAction: Action = {
             runtime,
             message,
             [],
-            false,
+            true,
             true
         );
         elizaLogger.info("State:", updatedState);
@@ -267,7 +267,7 @@ export const addCommentToPRAction: Action = {
             runtime,
             message,
             [],
-            false,
+            true,
             true
         );
         elizaLogger.info("State:", updatedState);
@@ -569,7 +569,7 @@ export const closePRAction: Action = {
             runtime,
             message,
             [],
-            false,
+            true,
             true
         );
         elizaLogger.info("State:", updatedState);
@@ -684,7 +684,7 @@ export const mergePRAction: Action = {
             runtime,
             message,
             [],
-            false,
+            true,
             true
         );
         elizaLogger.info("State:", updatedState);
@@ -843,7 +843,7 @@ export const replyToPRCommentAction: Action = {
             runtime,
             message,
             [],
-            false,
+            true,
             true
         );
         elizaLogger.info("State:", updatedState);
@@ -997,7 +997,7 @@ export const implementFeatureAction: Action = {
             runtime,
             message,
             [],
-            false,
+            true,
             true
         );
         elizaLogger.info("State:", updatedState);
@@ -1019,6 +1019,7 @@ export const implementFeatureAction: Action = {
         }
 
         const content = details.object as ImplementFeatureContent;
+        await fs.writeFile("implementFeatureContent.json", JSON.stringify(content, null, 2));
         const githubService = new GitHubService({
             owner: content.owner,
             repo: content.repo,
@@ -1033,6 +1034,7 @@ export const implementFeatureAction: Action = {
                 issue = await createIssueAction.handler(runtime, message, updatedState, options);
                 elizaLogger.info(`Created issue successfully!`);
             }
+            await fs.writeFile("issue.json", JSON.stringify(issue, null, 2));
             updatedState.specificIssue = issue;
             // Generate code file changes
             const codeFileChangesContext = composeContext({
@@ -1045,7 +1047,7 @@ export const implementFeatureAction: Action = {
                 modelClass: ModelClass.LARGE,
                 schema: GenerateCodeFileChangesSchema,
             });
-
+            await fs.writeFile("codeFileChanges.json", JSON.stringify(codeFileChangesDetails.object, null, 2));
             if (!isGenerateCodeFileChangesContent(codeFileChangesDetails.object)) {
                 elizaLogger.error("Invalid code file changes content:", codeFileChangesDetails.object);
                 throw new Error("Invalid code file changes content");
@@ -1054,16 +1056,17 @@ export const implementFeatureAction: Action = {
             const codeFileChangesContent = codeFileChangesDetails.object as GenerateCodeFileChangesContent;
             updatedState.codeFileChanges = codeFileChangesContent.files;
             elizaLogger.info(`Generated code file changes successfully!`, JSON.stringify(codeFileChangesContent, null, 2));
-            message.content.text = `Commit changes to the repository ${content.owner}/${content.repo} on branch ${content.branch} with the commit message: ${content.feature}`;
+            message.content.text = `Commit changes to the repository ${content.owner}/${content.repo} on branch realitySpiral/demoPR with the commit message: ${content.feature}`;
             // Commit changes
             const commit = await createCommitAction.handler(runtime, message, updatedState, options);
             updatedState.specificCommit = commit;
             elizaLogger.info(`Committed changes successfully!`, JSON.stringify(commit, null, 2));
-            message.content.text = `Create a pull request on repository ${content.owner}/${content.repo} with branch '${content.branch}', title '${content.feature}' and files ${JSON.stringify([])}`;
+            await fs.writeFile("commit.json", JSON.stringify(commit, null, 2));
+            message.content.text = `Create a pull request on repository ${content.owner}/${content.repo} with branch '${content.branch}', title '${content.feature}' against base '${content.base}' and files ${JSON.stringify([])}`;
             // Create pull request
-            await createPullRequestAction.handler(runtime, message, updatedState, options);
+            const pullRequest = await createPullRequestAction.handler(runtime, message, updatedState, options);
             elizaLogger.info(`Pull request created successfully!`);
-
+            await fs.writeFile("pullRequest.json", JSON.stringify(pullRequest, null, 2));
             if (callback) {
                 callback({
                     text: `Pull request created successfully!`,
@@ -1090,7 +1093,7 @@ export const implementFeatureAction: Action = {
             {
                 user: "{{user}}",
                 content: {
-                    text: "Implement replacing console.log with elizaLogger.log across the repo on repository elizaOS/eliza branch develop",
+                    text: "Implement replacing console.log with elizaLogger.log across the repo on repository elizaOS/eliza branch realitySpiral/demo against base develop",
                 },
             },
             {
@@ -1105,7 +1108,7 @@ export const implementFeatureAction: Action = {
             {
                 user: "{{user}}",
                 content: {
-                    text: "Implement feature for issue #42 in repository elizaOS/eliza branch develop",
+                    text: "Implement feature for issue #42 in repository elizaOS/eliza branch develop against base develop",
                 },
             },
             {
