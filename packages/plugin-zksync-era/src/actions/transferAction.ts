@@ -19,15 +19,17 @@ import {
     erc20Abi,
     http,
     parseEther,
-    isAddress,
     parseUnits,
 } from "viem";
 import { zksync } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { eip712WalletActions } from "viem/zksync";
 import { z } from "zod";
+import { ValidateContext } from "../utils";
+import { ETH_ADDRESS, ERC20_OVERRIDE_INFO } from "../constants";
+import { useGetAccount, useGetWalletClient } from "../hooks";
 
-const TransferSchema = z.object({
+const TransferActionSchema = z.object({
     tokenAddress: z.string(),
     recipient: z.string(),
     amount: z.string(),
@@ -37,27 +39,6 @@ export interface TransferContent extends Content {
     tokenAddress: string;
     recipient: string;
     amount: string | number;
-}
-
-export function isTransferContent(
-    content: TransferContent
-): content is TransferContent {
-    const { tokenAddress, recipient, amount } = content;
-
-    // Validate types
-    const areTypesValid =
-        typeof tokenAddress === "string" &&
-        typeof recipient === "string" &&
-        (typeof amount === "string" || typeof amount === "number");
-
-    if (!areTypesValid) {
-        return false;
-    }
-
-    // Validate addresses
-    return [tokenAddress, recipient].every((address) =>
-        isAddress(address, { strict: false })
-    );
 }
 
 const transferTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
@@ -85,15 +66,7 @@ Given the recent messages, extract the following information about the requested
 
 Respond with a JSON markdown block containing only the extracted values.`;
 
-const ETH_ADDRESS = "0x000000000000000000000000000000000000800A";
-const ERC20_OVERRIDE_INFO = {
-    "0xe4c7fbb0a626ed208021ccaba6be1566905e2dfc": {
-        name: "USDC",
-        decimals: 6,
-    },
-};
-
-export default {
+export const TransferAction: Action = {
     name: "SEND_TOKEN",
     similes: [
         "TRANSFER_TOKEN_ON_ZKSYNC",
@@ -140,12 +113,12 @@ export default {
                 runtime,
                 context: transferContext,
                 modelClass: ModelClass.SMALL,
-                schema: TransferSchema,
+                schema: TransferActionSchema,
             })
         ).object as unknown as TransferContent;
 
         // Validate transfer content
-        if (!isTransferContent(content)) {
+        if (!ValidateContext.transferAction(content)) {
             console.error("Invalid content for TRANSFER_TOKEN action.");
             if (callback) {
                 callback({
@@ -157,13 +130,8 @@ export default {
         }
 
         try {
-            const PRIVATE_KEY = runtime.getSetting("ZKSYNC_PRIVATE_KEY")!;
-            const account = privateKeyToAccount(`0x${PRIVATE_KEY}`);
-
-            const walletClient = createWalletClient({
-                chain: zksync,
-                transport: http(),
-            }).extend(eip712WalletActions());
+            const account = useGetAccount(runtime);
+            const walletClient = useGetWalletClient();
 
             let hash;
 
@@ -268,4 +236,4 @@ export default {
             },
         ],
     ] as ActionExample[][],
-} as Action;
+};
