@@ -18,7 +18,8 @@
     "ext": "ts,json",
     "exec": "node --enable-source-maps --loader ts-node/esm src/index.ts"
   },
-  "dependencies": {
+    "dependencies": {
+	"@elizaos/telemetry": "workspace:*",
     "@elizaos/adapter-postgres": "workspace:*",
     "@elizaos/adapter-redis": "workspace:*",
     "@elizaos/adapter-sqlite": "workspace:*",
