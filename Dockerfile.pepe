@@ -52,4 +52,4 @@ COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/characters ./characters
 
 # Set the command to run the application
-CMD ["pnpm", "start", "--characters", "characters/adam.character.json"]
+CMD ["pnpm", "start", "--characters", "characters/pepe.character.json"]
