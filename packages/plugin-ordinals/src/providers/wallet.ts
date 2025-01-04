@@ -21,16 +21,17 @@ import { AddressTxsUtxo } from "@mempool/mempool.js/lib/interfaces/bitcoin/addre
 
 export class WalletProvider {
     mempool: MempoolReturn;
-    account: IAccount;
+    seedPhrase: string;
 
-    constructor(seed: string) {
-        this.account = this.getAccount(seed);
+    constructor(seedPhrase: string) {
+        this.seedPhrase = seedPhrase;
         this.mempool = mempoolJS({
             hostname: "mempool.space",
         });
     }
 
-    getAccount(seedPhrase: string): IAccount {
+    getAccount(): IAccount {
+        const seedPhrase = this.seedPhrase;
         if (!validateMnemonic(seedPhrase, wordlist)) {
             throw new Error("Invalid seed phrase");
         }
@@ -55,33 +56,33 @@ export class WalletProvider {
         const publicKey = secp256k1.getPublicKey(paymentWalletPrivateKey, true);
         const schnorrPublicKey = btc.utils.pubSchnorr(ordinalsWalletPrivateKey);
 
-        const nestedSegwitAddress = btc.p2sh(
-            btc.p2wpkh(publicKey, network),
-            network
-        ).address;
+        const nestedSegwit = btc.p2sh(btc.p2wpkh(publicKey, network), network);
+        const nestedSegwitAddress = nestedSegwit.address;
 
-        const taprootAddress = btc.p2tr(
-            schnorrPublicKey,
-            undefined,
-            network
-        ).address;
+        const taproot = btc.p2tr(schnorrPublicKey, undefined, network);
+        const taprootAddress = taproot.address;
 
         return {
             nestedSegwitAddress: nestedSegwitAddress || "",
             taprootAddress: taprootAddress || "",
+            nestedSegwit,
+            taproot,
+            schnorrPublicKey,
+            publicKey,
         };
     }
 
     getAddresses(): IAccount {
+        const account = this.getAccount();
         return {
-            nestedSegwitAddress: this.account.nestedSegwitAddress,
-            taprootAddress: this.account.taprootAddress,
+            nestedSegwitAddress: account.nestedSegwitAddress,
+            taprootAddress: account.taprootAddress,
         };
     }
 
     async getBalance(address?: string): Promise<number> {
         const data = await this.mempool.bitcoin.addresses.getAddress({
-            address: address ? address : this.account.nestedSegwitAddress,
+            address: address ? address : this.getAccount().nestedSegwitAddress,
         });
 
         return data?.chain_stats?.funded_txo_sum;
@@ -89,7 +90,7 @@ export class WalletProvider {
 
     async getTransactionHistory(): Promise<Tx[]> {
         return await this.mempool.bitcoin.addresses.getAddressTxs({
-            address: this.account.nestedSegwitAddress,
+            address: this.getAccount().nestedSegwitAddress,
         });
     }
 
@@ -101,6 +102,10 @@ export class WalletProvider {
         return await this.mempool.bitcoin.addresses.getAddressTxsUtxo({
             address,
         });
+    }
+
+    async lookupUtxo(txid: string): Promise<Tx> {
+        return await this.mempool.bitcoin.transactions.getTx({ txid });
     }
 
     async signPsbt() {}

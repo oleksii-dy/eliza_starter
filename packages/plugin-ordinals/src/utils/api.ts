@@ -37,6 +37,16 @@ class API {
             `${HIRO_BASE_URL}/runes/v1/addresses/${address}/balances?offset=0&limit=20`
         );
     }
+
+    async getRuneInfo(name: string) {
+        return fetcher(`${HIRO_BASE_URL}/runes/v1/etchings/${name}`);
+    }
+
+    async getRunesUtxos(address: string, runeName: string) {
+        return fetcher(
+            `https://api-3.xverse.app/v1/market/address/${address}/rune/${runeName}/utxos`
+        );
+    }
 }
 
 export default API;

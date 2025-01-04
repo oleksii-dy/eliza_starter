@@ -7,44 +7,22 @@ import {
     type Action,
     elizaLogger,
     Content,
+    generateObject,
+    composeContext,
+    ModelClass,
 } from "@elizaos/core";
+import { encodeRunestone } from "@magiceden-oss/runestone-lib";
 import { z } from "zod";
+import { runeTransferTemplate } from "../../templates";
+import API from "../../utils/api";
+import { walletProvider, WalletProvider } from "../../providers/wallet";
+import { Transaction } from "@scure/btc-signer";
 
-const TransferSchema = z.object({
-    tokenAddress: z.string(),
-    recipient: z.string(),
+export const transferSchema = z.object({
+    rune: z.string(),
     amount: z.string(),
+    toAddress: z.string(),
 });
-
-export interface TransferContent extends Content {
-    tokenAddress: string;
-    recipient: string;
-    amount: string | number;
-}
-
-const transferTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
-
-Here are several frequently used addresses. Use these for the corresponding tokens:
-- ETH/eth: 0x000000000000000000000000000000000000800A
-- USDC/usdc: 0xe4c7fbb0a626ed208021ccaba6be1566905e2dfc
-
-Example response:
-\`\`\`json
-{
-    "tokenAddress": "0x5A7d6b2F92C77FAD6CCaBd7EE0624E64907Eaf3E",
-    "recipient": "0xCCa8009f5e09F8C5dB63cb0031052F9CB635Af62",
-    "amount": "1000"
-}
-\`\`\`
-
-{{recentMessages}}
-
-Given the recent messages, extract the following information about the requested token transfer:
-- Token contract address
-- Recipient wallet address
-- Amount to transfer
-
-Respond with a JSON markdown block containing only the extracted values.`;
 
 export default {
     name: "TRANSFER_RUNE",
@@ -67,16 +45,149 @@ export default {
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
     ): Promise<boolean> => {
-        elizaLogger.info("Starting Ordinals test handler...");
-        // // Initialize or update state
-        // if (!state) {
-        //     state = (await runtime.composeState(message)) as State;
-        // } else {
-        //     state = await runtime.updateRecentMessageState(state);
-        // }
-
         try {
-            elizaLogger.success("Test completed successfully!");
+            const context = composeContext({
+                state,
+                template: runeTransferTemplate,
+            });
+
+            const content: {
+                object: { rune?: string; amount?: string; toAddress?: string };
+            } = await generateObject({
+                runtime,
+                context,
+                schema: transferSchema,
+                modelClass: ModelClass.LARGE,
+            });
+
+            elizaLogger.info(JSON.stringify(content?.object));
+
+            const rune = content?.object?.rune;
+            const amount = content?.object?.amount;
+            const toAddress = content?.object?.toAddress;
+
+            if (!rune || !amount || !toAddress) {
+                throw new Error("Unable to parse info");
+            }
+
+            const nonSpacedName = rune?.replaceAll("•", "");
+
+            // Send 500 UNCOMMON•GOODS to bc1pud2j5tpy5s3c5u6y7e2lqn8tp5208q0mmxjtjqncmzp9wyj5gssswnz8nk
+            // { rune: 'WHICH RUNE', amount: 'WHAT AMOUNT', toAddress: ''}
+
+            const api = new API(runtime.getSetting("ORDISCAN_API_KEY"));
+            const runeInfo = await api.getRuneInfo(nonSpacedName);
+            elizaLogger.info(JSON.stringify(runeInfo));
+
+            if (!runeInfo) throw new Error("Unable to retrieve rune info");
+
+            if (runeInfo?.name !== nonSpacedName) {
+                throw new Error("Unable to ensure correct rune info");
+            }
+
+            const mintBlock = runeInfo?.location?.block_height;
+            const tx = runeInfo?.location?.tx_index;
+
+            elizaLogger.info(JSON.stringify(runeInfo, mintBlock, tx));
+
+            const wallet: WalletProvider = await walletProvider.get(
+                runtime,
+                message,
+                state
+            );
+
+            const addresses = wallet.getAddresses();
+
+            const utxos = await api.getRunesUtxos(
+                addresses.taprootAddress,
+                rune
+            );
+
+            if (!utxos || utxos?.length === 0) {
+                throw new Error("Unable to retrieve utxos");
+            }
+
+            elizaLogger.info(JSON.stringify(utxos));
+
+            const edictRunestone = encodeRunestone({
+                edicts: [
+                    {
+                        id: {
+                            block: mintBlock,
+                            tx,
+                        },
+                        amount: BigInt(amount),
+                        output: 1, // The output that the UTXO will go to
+                    },
+                ],
+            });
+
+            elizaLogger.success(JSON.stringify(edictRunestone));
+
+            // The amount in the UTXO has to be more or equal to the amount that we are transferring
+            const runeUtxo = utxos[0];
+
+            elizaLogger.info(JSON.stringify({ runeUtxo }));
+
+            const btcUtxos = await wallet.getUtxos(
+                addresses.nestedSegwitAddress
+            );
+            const btcUtxo = btcUtxos[0];
+
+            elizaLogger.info(JSON.stringify({ btcUtxo }));
+
+            const accounts = wallet.getAccount();
+
+            const psbt = new Transaction({ allowUnknownOutputs: true });
+
+            // We need the rune utxo, where utxo is
+            psbt.addInput({
+                txid: runeUtxo.txid,
+                index: runeUtxo.vout,
+                witnessUtxo: {
+                    amount: BigInt(runeUtxo.value),
+                    script: accounts.taproot.script,
+                },
+                tapInternalKey: accounts.schnorrPublicKey,
+            });
+
+            elizaLogger.info(`input 1 done`);
+
+            psbt.addInput({
+                txid: btcUtxo.txid,
+                index: btcUtxo.vout,
+                witnessUtxo: {
+                    amount: BigInt(btcUtxo.value),
+                    script: accounts.nestedSegwit.script!,
+                },
+                tapInternalKey: accounts.schnorrPublicKey,
+            });
+
+            elizaLogger.info(`input 2 done`);
+
+            // Create outputs
+            psbt.addOutput({
+                script: edictRunestone.encodedRunestone,
+                amount: BigInt(0),
+            });
+
+            elizaLogger.info(`output 1 done`);
+
+            psbt.addOutputAddress(toAddress, BigInt(546));
+
+            elizaLogger.info(`output 2 done`);
+
+            const fee = 100000;
+            const change = BigInt(btcUtxo.value - fee - 2200);
+
+            psbt.addOutputAddress(
+                addresses.nestedSegwitAddress, // change address
+                change
+            );
+            elizaLogger.info(`output 3 done`);
+
+            elizaLogger.info(psbt.toPSBT());
+
             if (callback) {
                 callback({
                     text: "Test completed successfully!",
@@ -86,7 +197,8 @@ export default {
 
             return true;
         } catch (error) {
-            elizaLogger.error("Error during token transfer:", error);
+            console.error(error);
+            elizaLogger.error("Error during token transfer:", error.message);
             if (callback) {
                 callback({
                     text: `Error transferring tokens: ${error.message}`,
