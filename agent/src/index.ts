@@ -2,11 +2,8 @@ import * as opentelemetry from '@opentelemetry/api';
 import { SpanExporter, Span } from '@opentelemetry/sdk-trace-base';
 import { wrapTracer } from '@opentelemetry/api/experimental';
 
-try {
-  import * from "otelapi.ts";
-} catch (error) {
-  console.log("ERR",error)
-}
+//import {} from "otelapi.ts";
+
 // wrapper
 const tracer = wrapTracer(opentelemetry.trace.getTracer('ai16z-agent'))
 
@@ -64,7 +61,7 @@ import { DirectClient } from "@elizaos/client-direct";
 //import { multiversxPlugin } from "@elizaos/plugin-multiversx";
 //import { nearPlugin } from "@elizaos/plugin-near";
 //import { nftGenerationPlugin } from "@elizaos/plugin-nft-generation";
-import { createNodePlugin } from "@elizaos/plugin-node"; // it looks like we need this
+//import { createNodePlugin } from "@elizaos/plugin-node"; // it looks like we need this
 //import { solanaPlugin } from "@elizaos/plugin-solana";
 //console.log("SOLANA",solanaPlugin)
 //import { suiPlugin } from "@elizaos/plugin-sui";
@@ -378,7 +375,7 @@ export function getTokenForProvider(
 
 function initializeDatabase(dataDir: string) {
   return tracer.withActiveSpan('initializeDatabase', () => {
-    if (process.env.POSTGRES_URL) {
+    /* if (process.env.POSTGRES_URL) {
         elizaLogger.info("Initializing PostgreSQL connection...");
         const db = new PostgresDatabaseAdapter({
             connectionString: process.env.POSTGRES_URL,
@@ -397,7 +394,7 @@ function initializeDatabase(dataDir: string) {
             });
 
         return db;
-    } else {
+    }  else */ {
         const filePath =
             process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
         // ":memory:";
@@ -506,9 +503,9 @@ export async function initializeClients(
 function getSecret(character: Character, secret: string) {
   return tracer.startActiveSpan("getSecret", (span:Span) => {
     span.setAttribute('secret', secret);
-    span.setAttribute('character', character);
+    span.setAttribute('character', JSON.stringify(character));
     const ret = character.settings?.secrets?.[secret] || process.env[secret];
-    
+
     span.end()
     return ret;
     });
@@ -530,7 +527,7 @@ export async function createAgent(
         character.name
     );
 
-    nodePlugin ??= createNodePlugin();
+    //nodePlugin ??= createNodePlugin();
 
     //    const teeMode = getSecret(character, "TEE_MODE") || "OFF";
     //    const walletSecretSalt = getSecret(character, "WALLET_SECRET_SALT");
@@ -674,7 +671,7 @@ function initializeCache(
   return tracer.withActiveSpan('initializeCache', () => {
     switch (cacheStore) {
         case CacheStore.REDIS:
-            if (process.env.REDIS_URL) {
+            /* if (process.env.REDIS_URL) {
                 elizaLogger.info("Connecting to Redis...");
                 const redisClient = new RedisClient(process.env.REDIS_URL);
                 return new CacheManager(
@@ -682,7 +679,7 @@ function initializeCache(
                 );
             } else {
                 throw new Error("REDIS_URL environment variable is not set.");
-            }
+            } */
 
         case CacheStore.DATABASE:
             if (db) {
@@ -832,7 +829,7 @@ const startAgents = async () => {
 
 try{
   startAgents();
-} catch((error) => {
+} catch(error) {
   elizaLogger.error("Unhandled error in startAgents:", error);
   //process.exit(1);
-});
+}
