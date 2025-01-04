@@ -47,6 +47,12 @@ class API {
             `https://api-3.xverse.app/v1/market/address/${address}/rune/${runeName}/utxos`
         );
     }
+
+    async getRareSats(address: string){
+        // return fetcher(
+        //     `https://api-3.xverse.app/v1/market/address/${address}/rune/${runeName}/utxos`
+        // );
+    }
 }
 
 export default API;
