@@ -1,6 +1,6 @@
 import type { IAgentRuntime, Memory, State, HandlerCallback } from "@elizaos/core";
 import { RemoteAttestationProvider } from "../providers/remoteAttestationProvider";
-import { fetch, type BodyInit } from 'undici'
+import { fetch, type BodyInit } from "undici";
 
 function hexToUint8Array(hex: string) {
     hex = hex.trim();
@@ -58,11 +58,9 @@ export const remoteAttestationAction = {
             const response = await uploadUint8Array(attestationData);
             const data = await response.json();
             callback({
-                text: `Uploading attestation to proof.t16z.com...`,
-                action: "NONE",
-            });
-            callback({
-                text: `Attestation report for ${agentName}: https://proof.t16z.com/reports/${data.checksum}`,
+                text: `Here's my 🧾 RA Quote 🫡
+
+                https://proof.t16z.com/reports/${data.checksum}`,
                 action: "NONE",
             });
             return true;
@@ -85,7 +83,7 @@ export const remoteAttestationAction = {
             {
                 user: "{{user2}}",
                 content: {
-                    text: "One second, let me generate and upload my attestation report",
+                    text: "Of course, one second...",
                     action: "REMOTE_ATTESTATION",
                 },
             }
