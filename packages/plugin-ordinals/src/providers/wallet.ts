@@ -18,6 +18,7 @@ import {
     TxStatus,
 } from "@mempool/mempool.js/lib/interfaces/bitcoin/transactions";
 import { AddressTxsUtxo } from "@mempool/mempool.js/lib/interfaces/bitcoin/addresses";
+import { FeesRecommended } from "@mempool/mempool.js/lib/interfaces/bitcoin/fees";
 
 export class WalletProvider {
     mempool: MempoolReturn;
@@ -112,13 +113,16 @@ export class WalletProvider {
         return await this.mempool.bitcoin.transactions.getTx({ txid });
     }
 
-    async signPsbt() {}
-
     async broadcastTransaction(txhex: string): Promise<string> {
         const txid = await this.mempool.bitcoin.transactions.postTx({
             txhex,
         });
         return txid as string;
+    }
+
+    async getFeeRates(): Promise<FeesRecommended> {
+        const fees = await this.mempool.bitcoin.fees.getFeesRecommended();
+        return fees;
     }
 }
 

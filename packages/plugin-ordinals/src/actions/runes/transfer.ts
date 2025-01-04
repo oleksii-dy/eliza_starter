@@ -157,11 +157,15 @@ export default {
                 inputSigners.push("taproot");
             }
 
-            // TODO - Find the right BTC utxo to use
             const btcUtxos = await wallet.getUtxos(
                 addresses.nestedSegwitAddress
             );
-            const btcUtxo = btcUtxos[0];
+
+            const btcUtxo = btcUtxos.sort((a, b) => b.value - a.value)?.[0];
+
+            if (!btcUtxo) {
+                throw new Error("Unable to find appropriate BTC utxo");
+            }
 
             psbt.addInput({
                 txid: btcUtxo.txid,
@@ -190,6 +194,7 @@ export default {
                 toUseRuneUtxos?.hasChange ? some(2) : none() // If we have Runes change we map it to pointer 2
             );
 
+            /** Add the OP_RETURN Runestone */
             psbt.addOutput({
                 script: mintstone.encipher(),
                 amount: 0n,
@@ -204,15 +209,58 @@ export default {
             }
 
             // TODO - Calculate tx fee properly based on sat/vbyte
-            const fee = 5000;
-            const change = BigInt(btcUtxo.value - fee - 546);
 
-            if (change < 0) {
-                throw new Error("Insufficient funds to transfer Runes");
+            const estimateTransactionSize = (
+                taprootInputCount,
+                p2shP2wpkhInputCount,
+                outputCounts
+            ) => {
+                const baseSize = 10;
+                const taprootInputSize = 57 * taprootInputCount;
+                const p2shP2wpkhInputSize = 91 * p2shP2wpkhInputCount;
+                const outputSize =
+                    31 * outputCounts.p2wpkh +
+                    43 * outputCounts.taproot +
+                    43 * outputCounts.opReturn;
+                return (
+                    baseSize +
+                    taprootInputSize +
+                    p2shP2wpkhInputSize +
+                    outputSize
+                );
+            };
+
+            const estimatedSize = estimateTransactionSize(
+                toUseRuneUtxos.utxos.length, // The rune utxo's that we are using
+                1, // One BTC UTXO
+                {
+                    p2wpkh: 1, // BTC change
+                    taproot: 1 + (toUseRuneUtxos.hasChange ? 1 : 0), // Recipient and Runes change
+                    opReturn: 1, // Mintstone
+                }
+            );
+            const feerates = await wallet.getFeeRates();
+
+            if (!feerates?.fastestFee) {
+                throw new Error("Unable to determine fee rate for transaction");
             }
 
-            /** The BTC change address */
-            psbt.addOutputAddress(addresses.nestedSegwitAddress, change);
+            const fee = Math.ceil(estimatedSize * feerates.fastestFee);
+
+            const change = BigInt(
+                btcUtxo.value -
+                    fee -
+                    (toUseRuneUtxos?.hasChange ? 546 * 2 : 546)
+            );
+
+            if (change < 0) {
+                throw new Error("Insufficient funds to cover transaction fees");
+            }
+
+            /** The BTC change address (if there is any) */
+            if (change > 0) {
+                psbt.addOutputAddress(addresses.nestedSegwitAddress, change);
+            }
 
             /** Signing all the inputs */
             let inputIdx = 0;
@@ -233,13 +281,9 @@ export default {
 
             const txid = await wallet.broadcastTransaction(txHex);
 
-            // sendrawtransaction RPC error: {"code":-26,"message":"bad-txns-nonstandard-inputs"
-
             callback({
                 text: `Successfully transferred ${amount} ${rune} to ${toAddress} at txid: ${txid}`,
             });
-
-            elizaLogger.info(JSON.stringify(txid));
 
             return true;
         } catch (error) {
