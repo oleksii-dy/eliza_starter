@@ -16,6 +16,7 @@
     "bignumber.js": "9.1.2",
     "runelib": "^1.0.7",
     "tsup": "8.3.5",
+    "viem": "^2.22.2",
     "vitest": "2.1.4"
   },
   "scripts": {

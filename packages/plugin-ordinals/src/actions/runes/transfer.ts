@@ -17,6 +17,7 @@ import { runeTransferTemplate } from "../../templates";
 import API from "../../utils/api";
 import { walletProvider, WalletProvider } from "../../providers/wallet";
 import { Transaction } from "@scure/btc-signer";
+import { parseUnits } from "viem";
 import {
     Rune,
     RuneId,
@@ -28,7 +29,7 @@ import {
     Range,
     Etching,
 } from "runelib";
-import { handleError } from "../../utils";
+import { getRequiredRuneUtxos, handleError } from "../../utils";
 
 export const transferSchema = z.object({
     rune: z.string(),
@@ -99,6 +100,11 @@ export default {
 
             const mintBlock = runeInfo?.location?.block_height;
             const tx = runeInfo?.location?.tx_index;
+            const divisibility = runeInfo?.divisibility;
+
+            if (typeof divisibility == "undefined") {
+                throw new Error(`Unable to determine divisibility of ${rune}`);
+            }
 
             elizaLogger.info(JSON.stringify(runeInfo, mintBlock, tx));
 
@@ -110,45 +116,52 @@ export default {
 
             const addresses = wallet.getAddresses();
 
-            const utxos = await api.getRunesUtxos(
+            const runeUtxos = await api.getRunesUtxos(
                 addresses.taprootAddress,
                 rune
             );
 
-            if (!utxos || utxos?.length === 0) {
+            if (!runeUtxos || runeUtxos?.length === 0) {
                 throw new Error("Unable to retrieve utxos");
             }
 
-            elizaLogger.info(JSON.stringify(utxos));
+            elizaLogger.info(JSON.stringify(runeUtxos));
 
             // The amount in the UTXO has to be more or equal to the amount that we are transferring
-            const runeUtxo = utxos[0];
+            const toUseRuneUtxos = getRequiredRuneUtxos(
+                runeUtxos,
+                rune,
+                Number(amount),
+                divisibility
+            );
 
-            elizaLogger.info(JSON.stringify({ runeUtxo }));
+            if (toUseRuneUtxos.insufficientFunds) {
+                throw new Error(`Insufficient ${rune} balance`);
+            }
 
+            const accounts = wallet.getAccount();
+            const psbt = new Transaction({ allowUnknownOutputs: true });
+            const inputSigners: ("taproot" | "segwit")[] = [];
+
+            for (const runeUtxo of toUseRuneUtxos.utxos) {
+                psbt.addInput({
+                    txid: runeUtxo.txid,
+                    index: runeUtxo.vout,
+                    witnessUtxo: {
+                        amount: BigInt(runeUtxo.value),
+                        script: accounts.taproot.script!,
+                    },
+                    tapInternalKey: accounts.schnorrPublicKey,
+                });
+
+                inputSigners.push("taproot");
+            }
+
+            // TODO - Find the right BTC utxo to use
             const btcUtxos = await wallet.getUtxos(
                 addresses.nestedSegwitAddress
             );
             const btcUtxo = btcUtxos[0];
-
-            elizaLogger.info(JSON.stringify({ btcUtxo }));
-
-            const accounts = wallet.getAccount();
-
-            const psbt = new Transaction({ allowUnknownOutputs: true });
-
-            // We need the rune utxo, where utxo is
-            psbt.addInput({
-                txid: runeUtxo.txid,
-                index: runeUtxo.vout,
-                witnessUtxo: {
-                    amount: BigInt(runeUtxo.value),
-                    script: accounts.taproot.script,
-                },
-                tapInternalKey: accounts.schnorrPublicKey,
-            });
-
-            elizaLogger.info(`input 1 done`);
 
             psbt.addInput({
                 txid: btcUtxo.txid,
@@ -157,57 +170,76 @@ export default {
                     amount: BigInt(btcUtxo.value),
                     script: accounts.nestedSegwit.script!,
                 },
+                redeemScript: accounts.nestedSegwit.redeemScript,
                 tapInternalKey: accounts.schnorrPublicKey,
             });
-
-            elizaLogger.info(`input 2 done`);
+            inputSigners.push("segwit");
 
             const edicts: any = [];
 
             edicts.push({
                 id: new RuneId(mintBlock, tx),
-                amount,
+                amount: parseUnits(amount, divisibility),
                 output: 1,
             });
 
-            const mintstone = new Runestone(edicts, none(), none(), none());
+            const mintstone = new Runestone(
+                edicts,
+                none(),
+                none(),
+                toUseRuneUtxos?.hasChange ? some(2) : none() // If we have Runes change we map it to pointer 2
+            );
 
-            // Create outputs
             psbt.addOutput({
                 script: mintstone.encipher(),
                 amount: 0n,
             });
 
-            elizaLogger.info(`output 1 done`);
-
+            /** The utxo for the to address */
             psbt.addOutputAddress(toAddress, BigInt(546));
 
-            elizaLogger.info(`output 2 done`);
+            /** If there is Runes change we need to add another minimum dust utxo at pointer 2 */
+            if (toUseRuneUtxos?.hasChange) {
+                psbt.addOutputAddress(addresses.taprootAddress, BigInt(546));
+            }
 
-            const fee = 100000;
-            const change = BigInt(btcUtxo.value - fee - 2200);
+            // TODO - Calculate tx fee properly based on sat/vbyte
+            const fee = 5000;
+            const change = BigInt(btcUtxo.value - fee - 546);
 
             if (change < 0) {
                 throw new Error("Insufficient funds to transfer Runes");
             }
 
-            elizaLogger.info(change);
+            /** The BTC change address */
+            psbt.addOutputAddress(addresses.nestedSegwitAddress, change);
 
-            psbt.addOutputAddress(
-                addresses.nestedSegwitAddress, // change address
-                change
-            );
-
-            elizaLogger.info(`output 3 done`);
-
-            elizaLogger.info(psbt.hex);
-
-            if (callback) {
-                callback({
-                    text: "Test completed successfully!",
-                    content: {},
-                });
+            /** Signing all the inputs */
+            let inputIdx = 0;
+            for (const input of inputSigners) {
+                psbt.signIdx(
+                    input === "taproot"
+                        ? accounts.taproot.privateKey
+                        : accounts.nestedSegwit.privateKey,
+                    inputIdx
+                );
+                inputIdx++;
             }
+
+            psbt.finalize();
+            psbt.extract();
+
+            const txHex = psbt.hex;
+
+            const txid = await wallet.broadcastTransaction(txHex);
+
+            // sendrawtransaction RPC error: {"code":-26,"message":"bad-txns-nonstandard-inputs"
+
+            callback({
+                text: `Successfully transferred ${amount} ${rune} to ${toAddress} at txid: ${txid}`,
+            });
+
+            elizaLogger.info(JSON.stringify(txid));
 
             return true;
         } catch (error) {
@@ -219,7 +251,7 @@ export default {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Send 100 GIZMO•IMAGINARY•KITTEN to bc1p7sqrqnu55k4xedm5585vg8du3jueldvkps8nc96sqv353punzdhq4yg0ke",
+                    text: "Send 1 GIZMO•IMAGINARY•KITTEN to bc1ph3j3sdcx7pzfkpwfvmu8kvk44rvzyh83gect74al2dcmg30drueq42yxey",
                 },
             },
             {
@@ -232,7 +264,7 @@ export default {
             {
                 user: "{{user2}}",
                 content: {
-                    text: "Successfully sent 100 GIZMO•IMAGINARY•KITTEN to bc1p7sqrqnu55k4xedm5585vg8du3jueldvkps8nc96sqv353punzdhq4yg0ke\nTransaction: a7003934654bf20fa06d90e13e9002c7087e7d0fff15a7feb26ab98d7cbcc304",
+                    text: "Successfully sent 100 GIZMO•IMAGINARY•KITTEN to bc1ph3j3sdcx7pzfkpwfvmu8kvk44rvzyh83gect74al2dcmg30drueq42yxey\nTransaction: a7003934654bf20fa06d90e13e9002c7087e7d0fff15a7feb26ab98d7cbcc304",
                 },
             },
         ],

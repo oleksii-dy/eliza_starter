@@ -57,6 +57,7 @@ export class WalletProvider {
         const schnorrPublicKey = btc.utils.pubSchnorr(ordinalsWalletPrivateKey);
 
         const nestedSegwit = btc.p2sh(btc.p2wpkh(publicKey, network), network);
+
         const nestedSegwitAddress = nestedSegwit.address;
 
         const taproot = btc.p2tr(schnorrPublicKey, undefined, network);
@@ -65,8 +66,11 @@ export class WalletProvider {
         return {
             nestedSegwitAddress: nestedSegwitAddress || "",
             taprootAddress: taprootAddress || "",
-            nestedSegwit,
-            taproot,
+            nestedSegwit: {
+                ...nestedSegwit,
+                privateKey: paymentDerivedKey.privateKey,
+            },
+            taproot: { ...taproot, privateKey: ordinalsDerivedKey.privateKey },
             schnorrPublicKey,
             publicKey,
         };
@@ -111,10 +115,10 @@ export class WalletProvider {
     async signPsbt() {}
 
     async broadcastTransaction(txhex: string): Promise<string> {
-        const txid = (await this.mempool.bitcoin.transactions.postTx({
+        const txid = await this.mempool.bitcoin.transactions.postTx({
             txhex,
-        })) as string;
-        return txid;
+        });
+        return txid as string;
     }
 }
 
