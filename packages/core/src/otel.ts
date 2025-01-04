@@ -1,4 +1,4 @@
-import { registerInstrumentations } from '@opentelemetry/instrumentation';
+//import { registerInstrumentations } from '@opentelemetry/instrumentation';
 //import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
 //import { trace } from '@opentelemetry/api';
 
@@ -56,12 +56,12 @@ try {
   // Initialize the OpenTelemetry APIs to use the NodeTracerProvider bindings
   provider.register();
 
-  registerInstrumentations({
-    instrumentations: [
-      getNodeAutoInstrumentations(),
-      new HttpInstrumentation(),
-    ],
-  });
+  // registerInstrumentations({
+  //   instrumentations: [
+  //     getNodeAutoInstrumentations(),
+  //     new HttpInstrumentation(),
+  //   ],
+  // });
 
 
   console.log("setup!")
