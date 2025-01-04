@@ -1,6 +1,6 @@
 import type { IAgentRuntime, Memory, State, HandlerCallback } from "@elizaos/core";
 import { RemoteAttestationProvider } from "../providers/remoteAttestationProvider";
-import { File } from "formdata-node";
+import { fetch, type BodyInit } from 'undici'
 
 function hexToUint8Array(hex: string) {
     hex = hex.trim();
@@ -27,18 +27,12 @@ function hexToUint8Array(hex: string) {
 
 async function uploadUint8Array(data: Uint8Array) {
     const blob = new Blob([data], { type: "application/octet-stream" });
-    const file = new File([blob], "quote.bin", {
-      type: "application/octet-stream",
-    });
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", blob, 'quote.bin');
 
     return await fetch("https://proof.t16z.com/api/upload", {
         method: "POST",
-        headers: {
-          "Content-type": "multipart/form-data",
-        },
-        body: formData,
+        body: formData as BodyInit,
       });
 }
 
