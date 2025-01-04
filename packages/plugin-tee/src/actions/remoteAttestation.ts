@@ -50,7 +50,6 @@ export const remoteAttestationAction = {
         try {
             // Get the remote attestation of the agentId
             const agentId = runtime.agentId;
-            const agentName = runtime.character.name;
             const teeMode = runtime.getSetting("TEE_MODE");
             const provider = new RemoteAttestationProvider(teeMode);
             const attestation = await provider.generateAttestation(agentId, 'raw');
