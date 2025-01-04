@@ -66,7 +66,7 @@ export default function Chat() {
                                 }`}
                             >
                                 <pre
-                                    className={`max-w-[80%] rounded-lg px-4 py-2 whitespace-pre-wrap ${
+                                    className={`max-w-[80%] rounded-lg px-4 py-2 whitespace-pre-wrap break-words ${
                                         message.user === "user"
                                             ? "bg-primary text-primary-foreground"
                                             : "bg-muted"
@@ -99,7 +99,6 @@ export default function Chat() {
                     <div ref={messagesEndRef} />
                 </div>
             </div>
-
             <div className="border-t p-4 bg-background">
                 <div className="max-w-3xl mx-auto">
                     <form onSubmit={handleSubmit} className="flex gap-2">
