@@ -8,8 +8,8 @@ export * as evaluators from "./evaluators";
 export * as providers from "./providers";
 
 export const dexScreenerPlugin: Plugin = {
-    name: "bootstrap",
-    description: "Agent bootstrap with basic actions and evaluators",
+    name: "DexScreener",
+    description: "A plugin to get token prices usidng DexScreener API",
     actions: [
         new TokenPriceAction()
     ],
