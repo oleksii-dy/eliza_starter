@@ -9,7 +9,10 @@ import {
     validateCharacterConfig,
 } from "@elizaos/core";
 
-import { REST, Routes } from "discord.js";
+//import { REST, Routes } from "discord.js";
+class REST {};
+class Routes {};
+
 import { DirectClient } from ".";
 import { stringToUuid } from "@elizaos/core";
 
