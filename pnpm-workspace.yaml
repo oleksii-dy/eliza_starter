@@ -1,4 +1,5 @@
 packages:
+    - "packages/plugin-node"
     - "!packages/plugin-3d-generation/**"
     - "!packages/plugin-bootstrap/**"
     - "!packages/plugin-solana/**"
@@ -26,10 +27,11 @@ packages:
     - "!packages/plugin-sui/**"
     - "!packages/plugin-tee/**"
     - "!packages/plugin-ton/**"
+    - "!packages/client-slack/**"
     - "!packages/plugin-twitter/**"
     - "!packages/plugin-zksync-era/**"
     - "packages/plugin-0g/**"
-    # - "!packages/plugin-node
+
     - "docs"
     - "packages/*"
     - "client"

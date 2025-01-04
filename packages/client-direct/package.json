@@ -6,7 +6,6 @@
   "types": "dist/index.d.ts",
   "dependencies": {
     "@elizaos/core": "workspace:*",
-    "@elizaos/plugin-image-generation": "workspace:*",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/auto-instrumentations-node": "^0.55.0",
     "@opentelemetry/exporter-zipkin": "^1.30.0",
@@ -18,7 +17,6 @@
     "@types/express": "5.0.0",
     "body-parser": "1.20.3",
     "cors": "2.8.5",
-    "discord.js": "14.16.3",
     "express": "4.21.1",
     "multer": "1.4.5-lts.1"
   },
