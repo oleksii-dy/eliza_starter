@@ -218,6 +218,48 @@ export const TransferAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
+                    text: "Send 0.01 ETH to 0x114B242D931B47D5cDcEe7AF065856f70ee278C4",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "Sure, I'll send 0.01 ETH to that address now.",
+                    action: "SEND_TOKEN",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "Successfully sent 0.01 ETH to 0x114B242D931B47D5cDcEe7AF065856f70ee278C4\nTransaction: 0xdde850f9257365fffffc11324726ebdcf5b90b01c6eec9b3e7ab3e81fde6f14b",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Send 0.01 ETH to alim.getclave.eth",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "Sure, I'll send 0.01 ETH to alim.getclave.eth now.",
+                    action: "SEND_TOKEN",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "Successfully sent 0.01 ETH to alim.getclave.eth\nTransaction: 0xdde850f9257365fffffc11324726ebdcf5b90b01c6eec9b3e7ab3e81fde6f14b",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
                     text: "Send 100 USDC to 0xCCa8009f5e09F8C5dB63cb0031052F9CB635Af62",
                 },
             },
