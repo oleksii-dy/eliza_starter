@@ -115,6 +115,93 @@ Here are the recent user messages for context:
 {{recentMessages}}
 `;
 
+export const generateCodeFileChangesTemplate = `
+Generate the necessary code file changes to implement the following issue please keep the language consistent with the files:
+Issue: {{specificIssue}}
+Files: {{files}}
+
+Try to keep the changes minimal and only add the necessary changes to the files.
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **feature** (string): The feature to be implemented (e.g., "Add a new feature to the project")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+- **files** (array): An array of changes to be made, each with a file path and the new content. You should only return the changed files.
+
+${contextTemplate}
+Provide the code file changes in the following JSON format:
+
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>",
+    "feature": "<feature>",
+    "files": [
+        {
+            "path": "<path>",
+            "content": "<new_content>"
+        }
+    ]
+}
+\`\`\`
+
+Example:
+\`\`\`json
+{
+    "owner": "octocat",
+    "repo": "hello-world",
+    "branch": "main",
+    "feature": "Add a new feature to the project",
+    "files": [
+        {
+            "path": "src/newFeature.js",
+            "content": "import { helper } from './utils/helper';\nconsole.log('This is a new feature');\nconst result = helper();\nconsole.log('Helper function result:', result);"
+        },
+        {
+            "path": "src/utils/helper.js",
+            "content": "export const helper = () => {\n    console.log('Executing helper function');\n    return 'Helper function';\n};\nexport const anotherHelper = () => {\n    console.log('Executing another helper function');\n    return 'Another helper function';\n};"
+        },
+        {
+            "path": "src/index.js",
+            "content": "import { helper, anotherHelper } from './utils/helper';\nconsole.log('Initializing application');\nconst helperResult = helper();\nconst anotherHelperResult = anotherHelper();\nconsole.log('Helper function result:', helperResult);\nconsole.log('Another helper function result:', anotherHelperResult);"
+        }
+    ]
+}
+\`\`\`
+
+Example:
+\`\`\`json
+{
+    "owner": "octocat",
+    "repo": "hello-world",
+    "branch": "feature-branch",
+    "feature": "Update the README file",
+    "files": [
+        {
+            "path": "README.md",
+            "content": "# Hello World\n\nThis is an updated README file."
+        }
+    ]
+}
+\`\`\`
+
+Example:
+\`\`\`json
+{
+    "owner": "octocat",
+    "repo": "hello-world",
+    "branch": "bugfix-branch",
+    "feature": "Fix a bug in the application",
+    "files": [
+        {
+            "path": "src/app.js",
+            "content": "function app() {\n  console.log('Bug fixed');\n}"
+        }
+    ]
+}
+\`\`\`
+`;
+
 export const createCommitTemplate = `
 Extract the details for creating a commit in the GitHub repository:
 - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
@@ -1268,6 +1355,52 @@ Examples with emoji reactions:
 {
     "comment": "",
     "emojiReaction": null
+}
+\`\`\`
+
+`;
+
+export const implementFeatureTemplate = `
+Extract the details for implementing a feature in the GitHub repository:
+Ensure the owner, repository, branch, and feature remain unchanged. Provide examples as appropriate:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+- **feature** (string): The feature to be implemented (e.g., "Replace console.log with elizaLogger.log")
+
+${contextTemplate}
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>",
+    "feature": "<feature>"
+}
+\`\`\`
+
+Examples:
+\`\`\`json
+{
+    "owner": "octocat",
+    "repo": "hello-world",
+    "branch": "main",
+    "feature": "Replace console.log with elizaLogger.log for better logging"
+}
+\`\`\`
+\`\`\`json
+{
+    "owner": "octocat",
+    "repo": "hello-world",
+    "branch": "develop",
+    "feature": "Update all API calls to use async/await syntax"
+}
+\`\`\`
+\`\`\`json
+{
+    "owner": "octocat",
+    "repo": "hello-world",
+    "branch": "feature/ui-enhancements",
+    "feature": "Redesign the user interface for the settings page"
 }
 \`\`\`
 

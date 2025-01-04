@@ -20,15 +20,10 @@ import {
     checkoutBranch,
     commitAndPushChanges,
     createPullRequest,
-    getFilesFromMemories,
     getRepoPath,
+    incorporateRepositoryState,
     writeFiles,
 } from "../utils";
-import { sourceCodeProvider } from "../providers/sourceCode";
-import { testFilesProvider } from "../providers/testFiles";
-import { workflowFilesProvider } from "../providers/workflowFiles";
-import { documentationFilesProvider } from "../providers/documentationFiles";
-import { releasesProvider } from "../providers/releases";
 
 export const createPullRequestAction: Action = {
     name: "CREATE_PULL_REQUEST",
@@ -60,22 +55,29 @@ export const createPullRequestAction: Action = {
             "[createPullRequest] Composing state for message:",
             message
         );
-        const files = await getFilesFromMemories(runtime, message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
+        const updatedState = await incorporateRepositoryState(
+            state,
+            runtime,
+            message,
+            [],
+            true,
+            true
+        );
 
         const context = composeContext({
-            state,
+            state: updatedState,
             template: createPullRequestTemplate,
         });
 
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
             schema: CreatePullRequestSchema,
         });
 

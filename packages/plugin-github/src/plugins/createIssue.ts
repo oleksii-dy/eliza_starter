@@ -87,7 +87,7 @@ export const createIssueAction: Action = {
         const githubService = new GitHubService({
             owner: content.owner,
             repo: content.repo,
-            branch: content.branch,
+            branch: runtime.getSetting("GITHUB_BRANCH"),
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
 
@@ -96,7 +96,7 @@ export const createIssueAction: Action = {
                 runtime,
                 content.owner,
                 content.repo,
-                content.branch,
+                runtime.getSetting("GITHUB_BRANCH"),
                 runtime.getSetting("GITHUB_API_TOKEN")
             );
             // elizaLogger.log("Issues memories:", issuesMemories);
@@ -115,19 +115,17 @@ export const createIssueAction: Action = {
                 `Created issue successfully! Issue number: ${issue.number}`
             );
 
-            await saveIssueToMemory(
+            const memory = await saveIssueToMemory(
                 runtime,
                 issue,
                 content.owner,
                 content.repo,
-                content.branch
+                runtime.getSetting("GITHUB_BRANCH")
             );
             if (callback) {
-                await callback({
-                    text: `Created issue #${issue.number} successfully see: ${issue.html_url}`,
-                    attachments: [],
-                });
+                await callback(memory.content);
             }
+            return issue;
         } catch (error) {
             elizaLogger.error(
                 `Error creating issue in repository ${content.owner}/${content.repo}:`,

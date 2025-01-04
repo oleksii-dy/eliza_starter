@@ -51,9 +51,8 @@ export class GitHubClient extends EventEmitter {
     }
 
     private startOodaLoop() {
-        this.processOodaCycle();
         const interval =
-            Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) || 60000; // Default to 1 minute
+            Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) || 300000; // Default to 1 minute
         elizaLogger.log("Starting OODA loop with interval:", interval);
         setInterval(() => {
             this.processOodaCycle();
@@ -339,7 +338,7 @@ export class GitHubClient extends EventEmitter {
             userId: userIdUUID,
             agentId: this.runtime.agentId,
             content: {
-                text: `Create memories from files for the repository ${owner}/${repository} @ branch ${branch} and path '/packages/plugin-github/src'`,
+                text: `Create memories from files for the repository ${owner}/${repository} @ branch ${branch} and path '/packages/plugin-coinbase'`,
                 action: "CREATE_MEMORIES_FROM_FILES",
                 source: "github",
                 inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`),

@@ -21,13 +21,9 @@ import {
     getRepoPath,
     writeFiles,
     checkoutBranch,
-    getFilesFromMemories,
+    incorporateRepositoryState,
 } from "../utils";
-import { sourceCodeProvider } from "../providers/sourceCode";
-import { testFilesProvider } from "../providers/testFiles";
-import { workflowFilesProvider } from "../providers/workflowFiles";
-import { documentationFilesProvider } from "../providers/documentationFiles";
-import { releasesProvider } from "../providers/releases";
+
 
 export const createCommitAction: Action = {
     name: "CREATE_COMMIT",
@@ -54,15 +50,22 @@ export const createCommitAction: Action = {
         callback: HandlerCallback
     ) => {
         elizaLogger.log("[createCommit] Composing state for message:", message);
-        const files = await getFilesFromMemories(runtime, message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
+        const updatedState = await incorporateRepositoryState(
+            state,
+            runtime,
+            message,
+            [],
+            true,
+            true
+        );
 
         const context = composeContext({
-            state,
+            state: updatedState,
             template: createCommitTemplate,
         });
 
@@ -103,14 +106,14 @@ export const createCommitAction: Action = {
                 text: `Changes commited to repository ${content.owner}/${content.repo} successfully to branch '${content.branch}'! commit hash: ${hash}`,
                 attachments: [],
             });
+            return hash;
         } catch (error) {
             elizaLogger.error(
-                `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}:`,
-                error
+                `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}: See error: ${error.message}`,
             );
             callback(
                 {
-                    text: `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}. Please try again.`,
+                    text: `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}. Please try again See error: ${error.message}.`,
                 },
                 []
             );
