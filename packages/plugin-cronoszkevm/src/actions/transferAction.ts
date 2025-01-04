@@ -15,19 +15,24 @@ import { validateCronosZkevmConfig } from "../enviroment";
 
 import {
     Address,
-    createWalletClient,
+    createPublicClient,
     erc20Abi,
     http,
     parseEther,
     isAddress,
     parseUnits,
 } from "viem";
-import { cronoszkEVM } from "viem/chains";
-import { privateKeyToAccount } from "viem/accounts";
-import { eip712WalletActions } from "viem/zksync";
+import { mainnet, cronoszkEVM } from "viem/chains";
 import { z } from "zod";
 import { ZKCRO_ADDRESS, ERC20_OVERRIDE_INFO } from "../constants";
 import { useGetAccount, useGetWalletClient } from "../hooks";
+import { normalize } from "viem/ens";
+import { ValidateContext } from "../utils";
+
+const ethereumClient = createPublicClient({
+    chain: mainnet,
+    transport: http(),
+});
 
 const TransferSchema = z.object({
     tokenAddress: z.string(),
@@ -39,27 +44,6 @@ export interface TransferContent extends Content {
     tokenAddress: string;
     recipient: string;
     amount: string | number;
-}
-
-export function isTransferContent(
-    content: TransferContent
-): content is TransferContent {
-    const { tokenAddress, recipient, amount } = content;
-
-    // Validate types
-    const areTypesValid =
-        typeof tokenAddress === "string" &&
-        typeof recipient === "string" &&
-        (typeof amount === "string" || typeof amount === "number");
-
-    if (!areTypesValid) {
-        return false;
-    }
-
-    // Validate addresses
-    return [tokenAddress, recipient].every((address) =>
-        isAddress(address, { strict: false })
-    );
 }
 
 const transferTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
@@ -136,8 +120,25 @@ export const TransferAction: Action = {
             })
         ).object as unknown as TransferContent;
 
+        if (!isAddress(content.recipient, { strict: false })) {
+            elizaLogger.log("Resolving ENS name...");
+            try {
+                const name = normalize(content.recipient.trim());
+                const resolvedAddress = await ethereumClient.getEnsAddress({
+                    name,
+                });
+
+                if (isAddress(resolvedAddress, { strict: false })) {
+                    elizaLogger.log(`${name} resolved to ${resolvedAddress}`);
+                    content.recipient = resolvedAddress;
+                }
+            } catch (error) {
+                elizaLogger.error("Error resolving ENS name:", error);
+            }
+        }
+
         // Validate transfer content
-        if (!isTransferContent(content)) {
+        if (!ValidateContext.transferAction(content)) {
             console.error("Invalid content for TRANSFER_TOKEN action.");
             if (callback) {
                 callback({
