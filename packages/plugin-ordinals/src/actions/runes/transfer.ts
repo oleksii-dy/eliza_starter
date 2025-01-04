@@ -208,12 +208,14 @@ export default {
                 psbt.addOutputAddress(addresses.taprootAddress, BigInt(546));
             }
 
-            // TODO - Calculate tx fee properly based on sat/vbyte
-
             const estimateTransactionSize = (
-                taprootInputCount,
-                p2shP2wpkhInputCount,
-                outputCounts
+                taprootInputCount: number,
+                p2shP2wpkhInputCount: number,
+                outputCounts: {
+                    p2wpkh: number;
+                    taproot: number;
+                    opReturn: number;
+                }
             ) => {
                 const baseSize = 10;
                 const taprootInputSize = 57 * taprootInputCount;
@@ -239,6 +241,7 @@ export default {
                     opReturn: 1, // Mintstone
                 }
             );
+            
             const feerates = await wallet.getFeeRates();
 
             if (!feerates?.fastestFee) {
