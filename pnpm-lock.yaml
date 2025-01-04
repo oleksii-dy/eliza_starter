@@ -29,9 +29,6 @@ importers:
       csv-parse:
         specifier: 5.6.0
         version: 5.6.0
-      node-llama-cpp:
-        specifier: 3.1.1
-        version: 3.1.1(typescript@5.6.3)
       ollama-ai-provider:
         specifier: 0.16.1
         version: 0.16.1(zod@3.23.8)
@@ -21532,7 +21529,7 @@ snapshots:
     dependencies:
       '@scure/bip32': 1.6.0
       abitype: 1.0.8(typescript@5.6.3)(zod@3.23.8)
-      axios: 1.7.9(debug@4.4.0)
+      axios: 1.7.9
       axios-mock-adapter: 1.22.0(axios@1.7.9)
       axios-retry: 4.5.0(axios@1.7.9)
       bip32: 4.0.0
@@ -29948,13 +29945,13 @@ snapshots:
 
   axios-mock-adapter@1.22.0(axios@1.7.9):
     dependencies:
-      axios: 1.7.9(debug@4.4.0)
+      axios: 1.7.9
       fast-deep-equal: 3.1.3
       is-buffer: 2.0.5
 
   axios-retry@4.5.0(axios@1.7.9):
     dependencies:
-      axios: 1.7.9(debug@4.4.0)
+      axios: 1.7.9
       is-retry-allowed: 2.2.0
 
   axios@0.21.4:
@@ -29965,7 +29962,7 @@ snapshots:
 
   axios@0.27.2:
     dependencies:
-      follow-redirects: 1.15.9(debug@4.4.0)
+      follow-redirects: 1.15.9
       form-data: 4.0.1
     transitivePeerDependencies:
       - debug
@@ -29989,6 +29986,14 @@ snapshots:
   axios@1.7.8:
     dependencies:
       follow-redirects: 1.15.9(debug@4.4.0)
+      form-data: 4.0.1
+      proxy-from-env: 1.1.0
+    transitivePeerDependencies:
+      - debug
+
+  axios@1.7.9:
+    dependencies:
+      follow-redirects: 1.15.9
       form-data: 4.0.1
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
@@ -33521,6 +33526,8 @@ snapshots:
     dependencies:
       async: 0.2.10
       which: 1.3.1
+
+  follow-redirects@1.15.9: {}
 
   follow-redirects@1.15.9(debug@4.3.7):
     optionalDependencies:
@@ -38018,7 +38025,7 @@ snapshots:
       '@yarnpkg/lockfile': 1.1.0
       '@yarnpkg/parsers': 3.0.0-rc.46
       '@zkochan/js-yaml': 0.0.7
-      axios: 1.7.9(debug@4.4.0)
+      axios: 1.7.9
       chalk: 4.1.2
       cli-cursor: 3.1.0
       cli-spinners: 2.6.1
