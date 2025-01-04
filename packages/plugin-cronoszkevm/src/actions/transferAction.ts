@@ -26,6 +26,8 @@ import { cronoszkEVM } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { eip712WalletActions } from "viem/zksync";
 import { z } from "zod";
+import { ZKCRO_ADDRESS, ERC20_OVERRIDE_INFO } from "../constants";
+import { useGetAccount, useGetWalletClient } from "../hooks";
 
 const TransferSchema = z.object({
     tokenAddress: z.string(),
@@ -85,15 +87,7 @@ Given the recent messages, extract the following information about the requested
 
 Respond with a JSON markdown block containing only the extracted values.`;
 
-const ZKCRO_ADDRESS = "0x000000000000000000000000000000000000800A";
-const ERC20_OVERRIDE_INFO = {
-    "0xe4c7fbb0a626ed208021ccaba6be1566905e2dfc": {
-        name: "USDC",
-        decimals: 6,
-    },
-};
-
-export default {
+export const TransferAction: Action = {
     name: "SEND_TOKEN",
     similes: [
         "TRANSFER_TOKEN_ON_CRONOSZKEVM",
@@ -155,13 +149,8 @@ export default {
         }
 
         try {
-            const PRIVATE_KEY = runtime.getSetting("CRONOSZKEVM_PRIVATE_KEY");
-            const account = privateKeyToAccount(`0x${PRIVATE_KEY}`);
-
-            const walletClient = createWalletClient({
-                chain: cronoszkEVM,
-                transport: http(),
-            }).extend(eip712WalletActions());
+            const account = useGetAccount(runtime);
+            const walletClient = useGetWalletClient();
 
             let hash;
 
@@ -267,4 +256,4 @@ export default {
             },
         ],
     ] as ActionExample[][],
-} as Action;
+};
