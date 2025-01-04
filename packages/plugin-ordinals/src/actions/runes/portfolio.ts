@@ -14,7 +14,9 @@ import { WalletProvider, walletProvider } from "../../providers/wallet";
 import API from "../../utils/api";
 import { z } from "zod";
 import { balanceTemplate } from "../../templates";
-import { handleError } from "../../utils";
+import { dollarFormatter, handleError } from "../../utils";
+import { formatUnits } from "viem";
+import BigNumber from "bignumber.js";
 
 export const addressSchema = z.object({
     address: z.string(),
@@ -62,13 +64,29 @@ export default {
                     ? addresses.taprootAddress
                     : derivedAddress;
 
-            const ordiscan = new API(runtime.getSetting("ORDISCAN_API_KEY"));
-            const portfolio = await ordiscan.getRunesPortfolio(taprootAddress);
+            const api = new API();
 
-            const balances = portfolio?.results;
+            const balances = await api.getRunesPortfolio(taprootAddress);
+            let balanceText = "";
+            for (const balance of balances) {
+                const formattedBalance = formatUnits(
+                    BigInt(balance.amount),
+                    balance.divisibility
+                );
+
+                const totalValue = new BigNumber(balance.currentPrice)
+                    .multipliedBy(new BigNumber(formattedBalance))
+                    .toNumber();
+
+                const pastDayChange =
+                    balance.priceChangePercentage24h.toFixed(2);
+                const pastDayPositive = Number(pastDayChange) > 0;
+
+                balanceText += `${balance.symbol} ${balance?.runeName}: ${formattedBalance} [Value: ${dollarFormatter.format(totalValue)}] (${pastDayPositive ? "+" : ""}${pastDayChange}%)\n`;
+            }
 
             callback({
-                text: `Runes portfolio for address ${taprootAddress}:\n${balances?.map((item, idx) => `${idx + 1}: ${item?.rune?.spaced_name} - ${item.balance}\n`)}`,
+                text: `Runes portfolio for address ${taprootAddress}:\n\n${balanceText}`,
             });
 
             return true;

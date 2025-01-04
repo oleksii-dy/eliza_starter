@@ -29,7 +29,11 @@ import {
     Range,
     Etching,
 } from "runelib";
-import { getRequiredRuneUtxos, handleError } from "../../utils";
+import {
+    estimateTransactionSize,
+    getRequiredRuneUtxos,
+    handleError,
+} from "../../utils";
 
 export const transferSchema = z.object({
     rune: z.string(),
@@ -208,30 +212,6 @@ export default {
                 psbt.addOutputAddress(addresses.taprootAddress, BigInt(546));
             }
 
-            const estimateTransactionSize = (
-                taprootInputCount: number,
-                p2shP2wpkhInputCount: number,
-                outputCounts: {
-                    p2wpkh: number;
-                    taproot: number;
-                    opReturn: number;
-                }
-            ) => {
-                const baseSize = 10;
-                const taprootInputSize = 57 * taprootInputCount;
-                const p2shP2wpkhInputSize = 91 * p2shP2wpkhInputCount;
-                const outputSize =
-                    31 * outputCounts.p2wpkh +
-                    43 * outputCounts.taproot +
-                    43 * outputCounts.opReturn;
-                return (
-                    baseSize +
-                    taprootInputSize +
-                    p2shP2wpkhInputSize +
-                    outputSize
-                );
-            };
-
             const estimatedSize = estimateTransactionSize(
                 toUseRuneUtxos.utxos.length, // The rune utxo's that we are using
                 1, // One BTC UTXO
@@ -241,7 +221,7 @@ export default {
                     opReturn: 1, // Mintstone
                 }
             );
-            
+
             const feerates = await wallet.getFeeRates();
 
             if (!feerates?.fastestFee) {

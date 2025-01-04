@@ -6,3 +6,14 @@ export interface IAccount {
     schnorrPublicKey?: any;
     publicKey?: any;
 }
+
+export interface IBalance {
+    amount: number;
+    divisibility: number;
+    symbol: string;
+    runeName: string;
+    inscriptionId: string;
+    id: `${string}:${string}`;
+    priceChangePercentage24h: number;
+    currentPrice: number;
+}

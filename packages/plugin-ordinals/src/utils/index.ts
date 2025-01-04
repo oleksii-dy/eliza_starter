@@ -54,3 +54,32 @@ export const getRequiredRuneUtxos = (
         insufficientFunds: accumulated < amountNeeded,
     };
 };
+
+export const estimateTransactionSize = (
+    taprootInputCount: number,
+    p2shP2wpkhInputCount: number,
+    outputCounts: {
+        p2wpkh: number;
+        taproot: number;
+        opReturn: number;
+    }
+) => {
+    const baseSize = 10;
+    const taprootInputSize = 57 * taprootInputCount;
+    const p2shP2wpkhInputSize = 91 * p2shP2wpkhInputCount;
+    const outputSize =
+        31 * outputCounts.p2wpkh +
+        43 * outputCounts.taproot +
+        43 * outputCounts.opReturn;
+    return (
+        baseSize +
+        taprootInputSize +
+        p2shP2wpkhInputSize +
+        outputSize
+    );
+};
+
+export const dollarFormatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+});

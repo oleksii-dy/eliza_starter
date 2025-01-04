@@ -1,4 +1,5 @@
 import { elizaLogger } from "@elizaos/core";
+import { IBalance } from "../types";
 
 const ORDISCAN_BASE_URL = "https://api.ordiscan.com/v1";
 const HIRO_BASE_URL = "https://api.hiro.so";
@@ -32,9 +33,9 @@ class API {
         this.ordiscanApiKey = ordiscanApiKey;
     }
 
-    async getRunesPortfolio(address: string) {
-        return fetcher(
-            `${HIRO_BASE_URL}/runes/v1/addresses/${address}/balances?offset=0&limit=20`
+    async getRunesPortfolio(address: string): Promise<IBalance[]> {
+        return await fetcher(
+            `https://api-3.xverse.app/v2/address/${address}/rune-balance?includeUnconfirmed=true`
         );
     }
 
@@ -48,7 +49,7 @@ class API {
         );
     }
 
-    async getRareSats(address: string){
+    async getRareSats(address: string) {
         // return fetcher(
         //     `https://api-3.xverse.app/v1/market/address/${address}/rune/${runeName}/utxos`
         // );
