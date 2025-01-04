@@ -1,6 +1,7 @@
 import { Message } from "@telegraf/types";
 import { Context, Telegraf } from "telegraf";
-import { composeContext, elizaLogger, ServiceType, composeRandomUser } from "@elizaos/core";
+
+import { composeContext, elizaLogger, ServiceType } from "@elizaos/core";
 import { getEmbeddingZeroVector } from "@elizaos/core";
 import {
     Content,
@@ -18,7 +19,7 @@ import { stringToUuid } from "@elizaos/core";
 import { generateMessageResponse, generateShouldRespond } from "@elizaos/core";
 import { messageCompletionFooter, shouldRespondFooter } from "@elizaos/core";
 
-import { cosineSimilarity, escapeMarkdown } from "./utils";
+import { cosineSimilarity } from "./utils";
 import {
     MESSAGE_CONSTANTS,
     TIMING_CONSTANTS,
@@ -296,8 +297,8 @@ export class MessageManager {
             "text" in message
                 ? message.text
                 : "caption" in message
-                  ? (message as any).caption
-                  : "";
+                    ? (message as any).caption
+                    : "";
 
         if (!messageText) return false;
 
@@ -359,8 +360,8 @@ export class MessageManager {
             "text" in message
                 ? message.text
                 : "caption" in message
-                  ? (message as any).caption
-                  : "";
+                    ? (message as any).caption
+                    : "";
         if (!messageText) return false;
 
         const isReplyToBot =
@@ -375,7 +376,7 @@ export class MessageManager {
             isReplyToBot ||
             isMentioned ||
             (!this.runtime.character.clientConfig?.telegram
-                ?.shouldRespondOnlyToMentions &&
+                    ?.shouldRespondOnlyToMentions &&
                 hasUsername)
         );
     }
@@ -507,8 +508,8 @@ export class MessageManager {
             "text" in message
                 ? message.text
                 : "caption" in message
-                  ? (message as any).caption
-                  : "";
+                    ? (message as any).caption
+                    : "";
 
         // Check if team member has direct interest first
         if (
@@ -529,8 +530,8 @@ export class MessageManager {
                     const randomDelay =
                         Math.floor(
                             Math.random() *
-                                (TIMING_CONSTANTS.TEAM_MEMBER_DELAY_MAX -
-                                    TIMING_CONSTANTS.TEAM_MEMBER_DELAY_MIN)
+                            (TIMING_CONSTANTS.TEAM_MEMBER_DELAY_MAX -
+                                TIMING_CONSTANTS.TEAM_MEMBER_DELAY_MIN)
                         ) + TIMING_CONSTANTS.TEAM_MEMBER_DELAY_MIN; // 1-3 second random delay
                     await new Promise((resolve) =>
                         setTimeout(resolve, randomDelay)
@@ -556,8 +557,8 @@ export class MessageManager {
                     const leaderResponded = recentMessages.some(
                         (m) =>
                             m.userId ===
-                                this.runtime.character.clientConfig?.telegram
-                                    ?.teamLeaderId &&
+                            this.runtime.character.clientConfig?.telegram
+                                ?.teamLeaderId &&
                             Date.now() - chatState.lastMessageSent < 3000
                     );
 
@@ -578,8 +579,8 @@ export class MessageManager {
                 const randomDelay =
                     Math.floor(
                         Math.random() *
-                            (TIMING_CONSTANTS.LEADER_DELAY_MAX -
-                                TIMING_CONSTANTS.LEADER_DELAY_MIN)
+                        (TIMING_CONSTANTS.LEADER_DELAY_MAX -
+                            TIMING_CONSTANTS.LEADER_DELAY_MIN)
                     ) + TIMING_CONSTANTS.LEADER_DELAY_MIN; // 2-4 second random delay
                 await new Promise((resolve) =>
                     setTimeout(resolve, randomDelay)
@@ -617,7 +618,7 @@ export class MessageManager {
             if (chatState?.currentHandler) {
                 if (
                     chatState.currentHandler !==
-                        this.bot.botInfo?.id.toString() &&
+                    this.bot.botInfo?.id.toString() &&
                     this._isTeamMember(chatState.currentHandler)
                 ) {
                     return false;
@@ -628,7 +629,7 @@ export class MessageManager {
             if (!this._isMessageForMe(message) && this.interestChats[chatId]) {
                 const recentMessages = this.interestChats[
                     chatId
-                ].messages.slice(-MESSAGE_CONSTANTS.CHAT_HISTORY_COUNT);
+                    ].messages.slice(-MESSAGE_CONSTANTS.CHAT_HISTORY_COUNT);
                 const ourMessageCount = recentMessages.filter(
                     (m) => m.userId === this.runtime.agentId
                 ).length;
@@ -660,7 +661,7 @@ export class MessageManager {
                     this.runtime.character.templates
                         ?.telegramShouldRespondTemplate ||
                     this.runtime.character?.templates?.shouldRespondTemplate ||
-                    composeRandomUser(telegramShouldRespondTemplate, 2),
+                    telegramShouldRespondTemplate,
             });
 
             const response = await generateShouldRespond({
@@ -684,7 +685,17 @@ export class MessageManager {
         if (content.attachments && content.attachments.length > 0) {
             content.attachments.map(async (attachment: Media) => {
                 if (attachment.contentType.startsWith("image")) {
-                    this.sendImage(ctx, attachment.url, attachment.description);
+                    await this.sendImage(ctx, attachment.url, attachment.description);
+                } else if (attachment.contentType.startsWith("doc")) {
+                    await this.sendDocument(
+                        ctx,
+                        attachment.url,
+                        attachment.description
+                    );
+                } else if (attachment.contentType.startsWith("video")) {
+                    await this.sendVideo(ctx, attachment.url, attachment.description);
+                } else if (attachment.contentType.startsWith("audio")) {
+                    await this.sendAudio(ctx, attachment.url, attachment.description);
                 }
             });
         } else {
@@ -692,7 +703,7 @@ export class MessageManager {
             const sentMessages: Message.TextMessage[] = [];
 
             for (let i = 0; i < chunks.length; i++) {
-                const chunk = escapeMarkdown(chunks[i]);
+                const chunk = chunks[i];
                 const sentMessage = (await ctx.telegram.sendMessage(
                     ctx.chat.id,
                     chunk,
@@ -712,40 +723,82 @@ export class MessageManager {
         }
     }
 
+    private async sendMedia(
+        ctx: Context,
+        mediaPath: string,
+        type: "photo" | "video" | "document" | "audio",
+        caption?: string
+    ): Promise<void> {
+        try {
+            const isUrl = /^(http|https):\/\//.test(mediaPath);
+            const sendFunctionMap = {
+                photo: ctx.telegram.sendPhoto.bind(ctx.telegram),
+                video: ctx.telegram.sendVideo.bind(ctx.telegram),
+                document: ctx.telegram.sendDocument.bind(ctx.telegram),
+                audio: ctx.telegram.sendAudio.bind(ctx.telegram),
+            };
+
+            if (!sendFunctionMap[type]) {
+                throw new Error(`Unsupported media type: ${type}`);
+            }
+
+            const sendFunction = sendFunctionMap[type];
+
+            if (isUrl) {
+                // Handle HTTP URLs
+                await sendFunction(ctx.chat.id, mediaPath, { caption });
+            } else {
+                // Handle local file paths
+                if (!fs.existsSync(mediaPath)) {
+                    throw new Error(`File not found: ${mediaPath}`);
+                }
+
+                const fileStream = fs.createReadStream(mediaPath);
+                await sendFunction(
+                    ctx.chat.id,
+                    { source: fileStream },
+                    { caption }
+                );
+            }
+
+            elizaLogger.info(
+                `${type.charAt(0).toUpperCase() + type.slice(1)} sent successfully: ${mediaPath}`
+            );
+        } catch (error) {
+            elizaLogger.error(`Error sending ${type}:`, error);
+        }
+    }
+
     private async sendImage(
         ctx: Context,
         imagePath: string,
         caption?: string
     ): Promise<void> {
-        try {
-            if (/^(http|https):\/\//.test(imagePath)) {
-                // Handle HTTP URLs
-                await ctx.telegram.sendPhoto(ctx.chat.id, imagePath, {
-                    caption,
-                });
-            } else {
-                // Handle local file paths
-                if (!fs.existsSync(imagePath)) {
-                    throw new Error(`File not found: ${imagePath}`);
-                }
+        await this.sendMedia(ctx, imagePath, "photo", caption);
+    }
 
-                const fileStream = fs.createReadStream(imagePath);
+    private async sendVideo(
+        ctx: Context,
+        videoPath: string,
+        caption?: string
+    ): Promise<void> {
+        await this.sendMedia(ctx, videoPath, "video", caption);
+    }
 
-                await ctx.telegram.sendPhoto(
-                    ctx.chat.id,
-                    {
-                        source: fileStream,
-                    },
-                    {
-                        caption,
-                    }
-                );
-            }
+    private async sendDocument(
+        ctx: Context,
+        documentPath: string,
+        caption?: string
+    ): Promise<void> {
+        await this.sendMedia(ctx, documentPath, "document", caption);
+    }
 
-            elizaLogger.info(`Image sent successfully: ${imagePath}`);
-        } catch (error) {
-            elizaLogger.error("Error sending image:", error);
-        }
+    private async sendAudio(
+        ctx: Context,
+        audioPath: string,
+        caption?: string
+    ): Promise<void> {
+        await this.sendMedia(ctx, audioPath, "audio", caption);
     }
 
     // Split message into smaller parts
@@ -823,8 +876,8 @@ export class MessageManager {
             "text" in message
                 ? message.text
                 : "caption" in message
-                  ? (message as any).caption
-                  : "";
+                    ? (message as any).caption
+                    : "";
 
         // Add team handling at the start
         if (
@@ -914,7 +967,7 @@ export class MessageManager {
                 if (
                     hasInterest ||
                     this.interestChats[chatId]?.currentHandler ===
-                        this.bot.botInfo?.id.toString()
+                    this.bot.botInfo?.id.toString()
                 ) {
                     delete this.interestChats[chatId];
 
@@ -953,7 +1006,7 @@ export class MessageManager {
                 ) {
                     this.interestChats[chatId].messages = this.interestChats[
                         chatId
-                    ].messages.slice(-MESSAGE_CONSTANTS.MAX_MESSAGES);
+                        ].messages.slice(-MESSAGE_CONSTANTS.MAX_MESSAGES);
                 }
             }
         }
@@ -1018,10 +1071,10 @@ export class MessageManager {
                 inReplyTo:
                     "reply_to_message" in message && message.reply_to_message
                         ? stringToUuid(
-                              message.reply_to_message.message_id.toString() +
-                                  "-" +
-                                  this.runtime.agentId
-                          )
+                            message.reply_to_message.message_id.toString() +
+                            "-" +
+                            this.runtime.agentId
+                        )
                         : undefined,
             };
 
@@ -1084,8 +1137,8 @@ export class MessageManager {
                             const memory: Memory = {
                                 id: stringToUuid(
                                     sentMessage.message_id.toString() +
-                                        "-" +
-                                        this.runtime.agentId
+                                    "-" +
+                                    this.runtime.agentId
                                 ),
                                 agentId,
                                 userId: agentId,
