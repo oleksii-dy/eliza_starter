@@ -1,4 +1,4 @@
-import { trace } from "@elizaos/telemetry";
+import {  } from "@elizaos/telemetry";
 
 import * as opentelemetry from '@opentelemetry/api';
 import { SpanExporter, Span } from '@opentelemetry/sdk-trace-base';

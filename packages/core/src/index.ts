@@ -1,4 +1,5 @@
-import "./config.ts"; // Add this line first
+import "./otel.ts"; // No, Add this line first
+import "./config.ts"; 
 
 export * from "./actions.ts";
 export * from "./context.ts";

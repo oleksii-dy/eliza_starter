@@ -1,7 +1,4 @@
-export * from "./sqliteTables.ts";
-export * from "./sqlite_vec.ts";
-
-import { DatabaseAdapter, IDatabaseCacheAdapter } from "@elizaos/core";
+// bring core to the fore :)
 import {
     Account,
     Actor,
@@ -12,6 +9,11 @@ import {
     type Relationship,
     type UUID,
 } from "@elizaos/core";
+
+export * from "./sqliteTables.ts";
+export * from "./sqlite_vec.ts";
+
+import { DatabaseAdapter, IDatabaseCacheAdapter } from "@elizaos/core";
 import { Database } from "better-sqlite3";
 import { v4 } from "uuid";
 import { load } from "./sqlite_vec.ts";
