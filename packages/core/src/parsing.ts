@@ -160,26 +160,17 @@ export const parseActionResponseFromText = (
         reply: false,
     };
 
-    // Regex patterns
-    const likePattern = /\[LIKE\]/i;
-    const retweetPattern = /\[RETWEET\]/i;
-    const quotePattern = /\[QUOTE\]/i;
-    const replyPattern = /\[REPLY\]/i;
+    // Action patterns without the `i` flag for case sensitivity
+    const actionPatterns = {
+        like: /\[LIKE\]/,
+        retweet: /\[RETWEET\]/,
+        quote: /\[QUOTE\]/,
+        reply: /\[REPLY\]/
+    };
 
-    // Check with regex
-    actions.like = likePattern.test(text);
-    actions.retweet = retweetPattern.test(text);
-    actions.quote = quotePattern.test(text);
-    actions.reply = replyPattern.test(text);
-
-    // Also do line by line parsing as backup
-    const lines = text.split("\n");
-    for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed === "[LIKE]") actions.like = true;
-        if (trimmed === "[RETWEET]") actions.retweet = true;
-        if (trimmed === "[QUOTE]") actions.quote = true;
-        if (trimmed === "[REPLY]") actions.reply = true;
+    // Update actions based on matches
+    for (const [key, pattern] of Object.entries(actionPatterns)) {
+        actions[key as keyof ActionResponse] = pattern.test(text);
     }
 
     return { actions };
