@@ -1027,7 +1027,8 @@ export const implementFeatureAction: Action = {
         });
         try {
             let issue;
-            if (content.issue) {
+            if (content.issue != null) {
+                elizaLogger.info(`Getting issue ${content.issue} from repository ${content.owner}/${content.repo}`);
                 issue = await githubService.getIssue(content.issue);
             } else {
                 message.content.text = `Create an issue for ${content.feature} in repository ${content.owner}/${content.repo}`;
@@ -1035,12 +1036,13 @@ export const implementFeatureAction: Action = {
                 elizaLogger.info(`Created issue successfully!`);
             }
             await fs.writeFile("issue.json", JSON.stringify(issue, null, 2));
-            updatedState.specificIssue = issue;
+            updatedState.specificIssue = JSON.stringify(issue, null, 2)
             // Generate code file changes
             const codeFileChangesContext = composeContext({
                 state: updatedState,
                 template: generateCodeFileChangesTemplate,
             });
+            await fs.writeFile("codeFileChangesContext.json", JSON.stringify(codeFileChangesContext, null, 2));
             const codeFileChangesDetails = await generateObject({
                 runtime,
                 context: codeFileChangesContext,

@@ -23,7 +23,7 @@ import {
     checkoutBranch,
     incorporateRepositoryState,
 } from "../utils";
-
+import fs from "fs/promises";
 
 export const createCommitAction: Action = {
     name: "CREATE_COMMIT",
@@ -68,7 +68,7 @@ export const createCommitAction: Action = {
             state: updatedState,
             template: createCommitTemplate,
         });
-
+        await fs.writeFile("createCommitContext.json", JSON.stringify(context, null, 2));
         const details = await generateObject({
             runtime,
             context,
@@ -82,7 +82,7 @@ export const createCommitAction: Action = {
         }
 
         const content = details.object as CreateCommitContent;
-
+        await fs.writeFile("createCommit.json", JSON.stringify(content, null, 2));
         elizaLogger.info(
             `Committing changes to the repository ${content.owner}/${content.repo} on branch ${content.branch}...`
         );
@@ -90,20 +90,20 @@ export const createCommitAction: Action = {
         const repoPath = getRepoPath(content.owner, content.repo);
 
         try {
-            await checkoutBranch(repoPath, content.branch, true);
+            await checkoutBranch(repoPath, 'realitySpiral/demoPR', true);
             await writeFiles(repoPath, content.files);
             const commit = await commitAndPushChanges(
                 repoPath,
                 content.message,
-                content.branch
+                'realitySpiral/demoPR'
             );
             const hash = commit.commit;
             elizaLogger.info(
-                `Commited changes to the repository ${content.owner}/${content.repo} successfully to branch '${content.branch}'! commit hash: ${hash}`
+                `Commited changes to the repository ${content.owner}/${content.repo} successfully to branch 'realitySpiral/demoPR'! commit hash: ${hash}`
             );
             if (callback) {
                 callback({
-                    text: `Changes commited to repository ${content.owner}/${content.repo} successfully to branch '${content.branch}'! commit hash: ${hash}`,
+                    text: `Changes commited to repository ${content.owner}/${content.repo} successfully to branch 'realitySpiral/demoPR'! commit hash: ${hash}`,
                     attachments: [],
                 });
             }

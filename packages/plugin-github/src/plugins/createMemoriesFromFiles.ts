@@ -38,6 +38,7 @@ export async function addFilesToMemory(
     branch: string
 ) {
     elizaLogger.info("Adding files to memory:", files);
+    const memories = [];
     for (const file of files) {
         const relativePath = path.relative(repoPath, file);
         // read file and escape new lines with \n
@@ -88,7 +89,10 @@ export async function addFilesToMemory(
         } as Memory;
         elizaLogger.info("Memory:", memory);
         await runtime.messageManager.createMemory(memory);
+        memories.push(memory);
+
     }
+    await fs.writeFile("memories.json", JSON.stringify(memories, null, 2));
 }
 
 export const createMemoriesFromFilesAction: Action = {

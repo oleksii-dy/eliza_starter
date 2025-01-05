@@ -23,9 +23,9 @@ import {
     getRepoPath,
     incorporateRepositoryState,
     writeFiles,
-    savePullRequestToMemory,
     saveCreatedPullRequestToMemory,
 } from "../utils";
+import fs from "fs/promises";
 
 export const createPullRequestAction: Action = {
     name: "CREATE_PULL_REQUEST",
@@ -75,7 +75,7 @@ export const createPullRequestAction: Action = {
             state: updatedState,
             template: createPullRequestTemplate,
         });
-
+        await fs.writeFile("createPullRequestContext.json", JSON.stringify(context, null, 2));
         const details = await generateObject({
             runtime,
             context,
@@ -89,7 +89,7 @@ export const createPullRequestAction: Action = {
         }
 
         const content = details.object as CreatePullRequestContent;
-
+        await fs.writeFile("createPullRequest.json", JSON.stringify(content, null, 2));
         elizaLogger.info("Creating a pull request...");
 
         const repoPath = getRepoPath(content.owner, content.repo);

@@ -326,7 +326,7 @@ Example:
 `;
 
 export const generateCodeFileChangesTemplate = `
-Generate the necessary code file changes to implement the following issue. Please keep the language consistent with the existing files and ensure that only the files specified are modified or created as needed:
+Using the files in the repository, generate the code file changes (please modify existing files, before creating new files unless you are explicitly asked to create a new file) to implement the following issue. Please keep the language consistent with the existing files and ensure that only the files specified are modified or created as needed:
 Issue: {{specificIssue}}
 Files: {{files}}
 
