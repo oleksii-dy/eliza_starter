@@ -67,7 +67,7 @@ export const sendSmsAction: Action = {
 
         if (!twilioNumber) {
             console.error('Twilio phone number is missing');
-
+            // TODO: generate text to have a different message from AI Agent
             _callback({
                 text: `Sorry there was an issue send sms, please try again later`,
             });
@@ -92,7 +92,7 @@ export const sendSmsAction: Action = {
 
         if (!mobileNumberProvidedByUser) {
             console.error('Mobile number is missing');
-
+            // TODO: generate text to have a different message from AI Agent
             _callback({
                 text: `Sorry,  there was an issue send sms, please try again later`,
             });
@@ -117,6 +117,7 @@ export const sendSmsAction: Action = {
         if(messageToSendFromUser==null){
             console.error('messageToSendFromUser is empty or null');
 
+            // TODO: generate text to have a different message from AI Agent
             _callback({
                 text: `Sorry there was an issue sending the WhatsApp message, please try again later`,
             });
