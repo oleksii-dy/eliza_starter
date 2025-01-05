@@ -55,7 +55,7 @@ class API {
         let rareSats: IOrdinalUtxo[] = [];
         let hasAny = true;
         let run = 1;
-        const batchSize = 1;
+        const batchSize = 50;
         let total = 0;
         do {
             const data = await fetcher(
