@@ -63,15 +63,13 @@ export const sendWhatsAppMessageAction: Action = {
             }
         }
 
-        const twilioNumber = process.env.TWILIO_WHATSAPP_PHONE_NUMBER; // Your Twilio WhatsApp number
-
-        console.log('check target mobile number: ', mobileNumberProvidedByUser);
-        console.log('check messageToSendFromUser: ', messageToSendFromUser);
-        console.log('check twilioNumber: ', twilioNumber);
+        // Your Twilio WhatsApp enabled phone number this is a different from twilio regular phone number
+        const twilioNumber = process.env.TWILIO_WHATSAPP_PHONE_NUMBER;
 
         if (!mobileNumberProvidedByUser) {
             console.error('Mobile number is missing');
 
+            //TODO: this can be improve by letting the AI Agent generate his/her own reply for the specific issue
             _callback({
                 text: `Sorry there was an issue sending the WhatsApp message, please try again later`,
             });
@@ -81,6 +79,7 @@ export const sendWhatsAppMessageAction: Action = {
         if (!twilioNumber) {
             console.error('Twilio WhatsApp number is missing');
 
+            //TODO: this can be improve by letting the AI Agent generate his/her own reply for the specific issue
             _callback({
                 text: `Sorry there was an issue sending the WhatsApp message, please try again later`,
             });
@@ -90,6 +89,7 @@ export const sendWhatsAppMessageAction: Action = {
         if(messageToSendFromUser==null){
             console.error('messageToSendFromUser is empty or null');
 
+            //TODO: this can be improve by letting the AI Agent generate his/her own reply for the specific issue
             _callback({
                 text: `Sorry there was an issue sending the WhatsApp message, please try again later`,
             });
@@ -107,8 +107,10 @@ export const sendWhatsAppMessageAction: Action = {
                 from: `whatsapp:${twilioNumber}`, // Your Twilio WhatsApp number
             });
 
-            console.log("message body: ", message);
+            // for debug purposes uncomment this
+            console.log("check twilio message body: ", message);
 
+            //TODO: this can be improve by letting the AI Agent generate his/her own reply to user
             const messageFromAgent = `WhatsApp message sent successfully to ${mobileNumberProvidedByUser}`;
 
             // Call the callback to notify the user

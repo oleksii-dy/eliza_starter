@@ -31,8 +31,6 @@ export const sendSmsAction: Action = {
         const accountSid = process.env.TWILIO_ACCOUNT_SID;
         const authToken = process.env.TWILIO_AUTH_TOKEN;
 
-        console.log("CHECK _message: ",_message.content.text);
-
         if (!accountSid || !authToken) {
             console.error('TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN is not set');
             return false;
@@ -66,10 +64,6 @@ export const sendSmsAction: Action = {
         }
 
         const twilioNumber = process.env.TWILIO_PHONE_NUMBER; // Your Twilio phone number
-
-        console.log('check target mobile number: ', mobileNumberProvidedByUser);
-        console.log('check messageToSendFromUser: ', messageToSendFromUser);
-        console.log('check twilioNumber: ', twilioNumber);
 
         if (!twilioNumber) {
             console.error('Twilio phone number is missing');
@@ -140,7 +134,8 @@ export const sendSmsAction: Action = {
                 from: twilioNumber, // Your Twilio phone number
             });
 
-            console.log("message body: ", message);
+            // for debug purposes uncomment this
+            console.log("check twilio message body: ", message);
 
             const messageFromAgent = `SMS sent successfully to ${mobileNumberProvidedByUser}`;
 
