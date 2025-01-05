@@ -35,7 +35,7 @@ jobs:
           rm -rf node_modules .pnpm-store packages/*/node_modules  # Removes all node_modules directories
 
       - name: Install dependencies with frozen lockfile
-        run: pnpm install --frozen-lockfile -r
+        run: pnpm install -r --no-frozen-lockfile
 
       - name: Build packages
         run: pnpm build

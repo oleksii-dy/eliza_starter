@@ -9,9 +9,8 @@
         "./package.json": "./package.json",
         ".": {
             "import": {
+                "@elizaos/source": "./src/index.ts",
                 "types": "./dist/index.d.ts",
-                "import": "./dist/index.js",
-                "require": "./dist/index.js",
                 "default": "./dist/index.js"
             }
         }
@@ -87,7 +86,7 @@
         "build": "tsup --format esm --dts",
         "dev": "tsup --format esm --dts --watch",
         "lint": "eslint --fix  --cache .",
-        "postinstall": "node scripts/postinstall.js"
+        "postinstall": "pnpm run build && node scripts/postinstall.js"
     },
     "peerDependencies": {
         "onnxruntime-node": "1.20.1",
