@@ -25,7 +25,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "23.3.0"
+          node-version: "23"
           cache: "pnpm"
 
       - name: Clean up previous builds and caches
@@ -34,7 +34,7 @@ jobs:
           pnpm clean
           rm -rf node_modules .pnpm-store packages/*/node_modules  # Removes all node_modules directories
 
-      - name: Install dependencies with frozen lockfile
+      - name: Install dependencies
         run: pnpm install -r --no-frozen-lockfile
 
       - name: Build packages
