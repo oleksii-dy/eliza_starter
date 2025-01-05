@@ -1,4 +1,11 @@
-import { ActionExample, HandlerCallback, IAgentRuntime, Memory, State, type Action } from "@elizaos/core";
+import {
+    ActionExample,
+    HandlerCallback,
+    IAgentRuntime,
+    Memory,
+    State,
+    type Action,
+} from "@elizaos/core";
 import { WalletProvider, walletProvider } from "../../providers/wallet";
 import { handleError } from "../../utils";
 
@@ -28,8 +35,16 @@ export default {
 
             const utxos = await wallet.getUtxos(paymentWallet);
 
+            let utxosText = "";
+
+            let index = 1;
+            for (const utxo of utxos) {
+                utxosText += `${index}: ${utxo.value} sats\n`;
+                index++;
+            }
+
             callback({
-                text: `In your payments wallet: ${paymentWallet}\n\nYou currently have the following UTXO's:\n\n${utxos.map((item, idx) => `${idx}: ${item.vout} - ${item.value} sats\n\n`)}`,
+                text: `In your payments wallet: ${paymentWallet}\n\nYou currently have the following UTXO's:\n\n${utxosText}\n\nTotal UTXOs: ${utxos?.length || 0}`,
             });
 
             return true;
