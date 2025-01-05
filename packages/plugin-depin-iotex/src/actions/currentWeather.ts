@@ -186,7 +186,7 @@ async function extractLocationAndCoordinates(
 ) {
     const locationExtractionContext = composeContext({
         state,
-        template: locationExtractionTemplate,
+        template: runtime.character.templates?.locationExtractionTemplate || locationExtractionTemplate,
     });
     const location = await generateText({
         runtime,
@@ -214,7 +214,7 @@ async function getAndAnalyzeWeather(
 
     const weatherContext = composeContext({
         state,
-        template: currentWeatherTemplate,
+        template: runtime.character.templates?.currentWeatherTemplate || currentWeatherTemplate,
     });
 
     const weatherText = await generateText({
