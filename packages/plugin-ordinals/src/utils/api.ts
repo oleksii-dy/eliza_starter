@@ -59,7 +59,7 @@ class API {
         let total = 0;
         do {
             const data = await fetcher(
-                `https://api-3.xverse.app/v2/address/${address}/ordinal-utxo?limit=${batchSize}&offset=${(run * batchSize) - 1}&hideUnconfirmed=true&hideSpecialWithoutSatributes=true`
+                `https://api-3.xverse.app/v2/address/${address}/ordinal-utxo?limit=${batchSize}&offset=${(run * batchSize) - batchSize}&hideUnconfirmed=true&hideSpecialWithoutSatributes=true`
             );
             total = data?.total;
             if (data?.results?.length > 0) {
