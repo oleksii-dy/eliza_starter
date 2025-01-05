@@ -12,7 +12,7 @@ import { HDKey } from "@scure/bip32";
 import { wordlist } from "@scure/bip39/wordlists/english";
 import mempoolJS from "@mempool/mempool.js";
 import { MempoolReturn } from "@mempool/mempool.js/lib/interfaces";
-import { IAccount } from "../types";
+import { IAccount, TBitcoinTxId } from "../types";
 import {
     Tx,
     TxStatus,
@@ -99,7 +99,7 @@ export class WalletProvider {
         });
     }
 
-    async getTransactionStatus(txid: string): Promise<TxStatus> {
+    async getTransactionStatus(txid: TBitcoinTxId): Promise<TxStatus> {
         return await this.mempool.bitcoin.transactions.getTxStatus({ txid });
     }
 
@@ -109,15 +109,15 @@ export class WalletProvider {
         });
     }
 
-    async lookupUtxo(txid: string): Promise<Tx> {
+    async lookupUtxo(txid: TBitcoinTxId): Promise<Tx> {
         return await this.mempool.bitcoin.transactions.getTx({ txid });
     }
 
-    async broadcastTransaction(txhex: string): Promise<string> {
+    async broadcastTransaction(txhex: string): Promise<TBitcoinTxId> {
         const txid = await this.mempool.bitcoin.transactions.postTx({
             txhex,
         });
-        return txid as string;
+        return txid as TBitcoinTxId;
     }
 
     async getFeeRates(): Promise<FeesRecommended> {

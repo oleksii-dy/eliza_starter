@@ -1,3 +1,5 @@
+export type TBitcoinTxId = string & { readonly __brand: unique symbol } & { readonly length: 64 };
+
 export interface IAccount {
     nestedSegwitAddress: string;
     taprootAddress: string;
@@ -53,4 +55,23 @@ export interface IRuneInfo {
         output: string;
         timestamp: number;
     };
+}
+
+export interface IRuneUtxo {
+    txid: TBitcoinTxId;
+    vout: number;
+    value: number;
+    block_height: number;
+    sat_ranges: any[];
+    runes: [
+        [
+            string,
+            {
+                amount: string;
+                divisibility: number;
+                symbol: string;
+            },
+        ],
+    ];
+    listing: (null | any)[];
 }

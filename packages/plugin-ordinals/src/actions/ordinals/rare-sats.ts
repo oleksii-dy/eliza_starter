@@ -62,7 +62,7 @@ export default {
                     ? addresses.taprootAddress
                     : derivedAddress;
 
-            const ordiscan = new API(runtime.getSetting("ORDISCAN_API_KEY"));
+            const ordiscan = new API();
             const portfolio = await ordiscan.getRunesPortfolio(taprootAddress);
 
             const balances = portfolio?.results;

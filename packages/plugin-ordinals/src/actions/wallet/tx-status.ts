@@ -14,6 +14,7 @@ import { WalletProvider, walletProvider } from "../../providers/wallet";
 import { transactionHashTemplate } from "../../templates";
 import { z } from "zod";
 import { handleError } from "../../utils";
+import { TBitcoinTxId } from "../../types";
 
 export const transactionIdSchema = z.object({
     txid: z.string().toLowerCase(),
@@ -46,7 +47,7 @@ export default {
                 template: transactionHashTemplate,
             });
 
-            const content: { object: { txid?: string | null } } =
+            const content: { object: { txid?: TBitcoinTxId | null } } =
                 await generateObject({
                     runtime,
                     context,

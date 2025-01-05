@@ -110,8 +110,6 @@ export default {
                 throw new Error(`Unable to determine divisibility of ${rune}`);
             }
 
-            elizaLogger.info(JSON.stringify(runeInfo, mintBlock, tx));
-
             const wallet: WalletProvider = await walletProvider.get(
                 runtime,
                 message,

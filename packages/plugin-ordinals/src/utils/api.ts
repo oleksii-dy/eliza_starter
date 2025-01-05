@@ -1,5 +1,5 @@
 import { elizaLogger } from "@elizaos/core";
-import { IBalance, IRuneInfo } from "../types";
+import { IBalance, IRuneInfo, IRuneUtxo } from "../types";
 
 const HIRO_BASE_URL = "https://api.hiro.so";
 
@@ -34,11 +34,16 @@ class API {
 
     async getRuneInfo(name: string): Promise<IRuneInfo> {
         const nonSpacedName = name?.replaceAll("•", "");
-        return await fetcher(`${HIRO_BASE_URL}/runes/v1/etchings/${nonSpacedName}`);
+        return await fetcher(
+            `${HIRO_BASE_URL}/runes/v1/etchings/${nonSpacedName}`
+        );
     }
 
-    async getRunesUtxos(address: string, runeName: string) {
-        return fetcher(
+    async getRunesUtxos(
+        address: string,
+        runeName: string
+    ): Promise<IRuneUtxo[]> {
+        return await fetcher(
             `https://api-3.xverse.app/v1/market/address/${address}/rune/${runeName}/utxos`
         );
     }
