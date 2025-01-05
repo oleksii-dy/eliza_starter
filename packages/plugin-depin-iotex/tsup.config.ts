@@ -16,6 +16,7 @@ export default defineConfig({
         "http",
         "agentkeepalive",
         "events",
-        "node-cache"
+        "node-cache",
+        "axios"
     ],
 });
