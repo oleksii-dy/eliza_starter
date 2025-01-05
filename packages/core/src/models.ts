@@ -513,11 +513,11 @@ export const models: Models = {
         },
         model: {
             [ModelClass.SMALL]:
-                settings.SMALL_INFERA_MODEL || "llama3.2:3b",
+                settings.SMALL_INFERA_MODEL,
             [ModelClass.MEDIUM]:
-                settings.MEDIUM_INFERA_MODEL || "mistral-nemo:latest",
+                settings.MEDIUM_INFERA_MODEL,
             [ModelClass.LARGE]:
-                settings.LARGE_INFERA_MODEL || "mistral-small:latest",
+                settings.LARGE_INFERA_MODEL,
         },
     },
 };
