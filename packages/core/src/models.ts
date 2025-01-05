@@ -503,6 +503,23 @@ export const models: Models = {
             [ModelClass.IMAGE]: settings.LIVEPEER_IMAGE_MODEL || "ByteDance/SDXL-Lightning",
         },
     },
+    [ModelProviderName.INFERA]: {
+        endpoint: "https://api.infera.org",
+        settings: {
+            stop: [],
+            maxInputTokens: 128000,
+            maxOutputTokens: 8192,
+            temperature: 0.6,
+        },
+        model: {
+            [ModelClass.SMALL]:
+                settings.SMALL_INFERA_MODEL || "llama3.2:3b",
+            [ModelClass.MEDIUM]:
+                settings.MEDIUM_INFERA_MODEL || "mistral-nemo:latest",
+            [ModelClass.LARGE]:
+                settings.LARGE_INFERA_MODEL || "mistral-small:latest",
+        },
+    },
 };
 
 export function getModel(provider: ModelProviderName, type: ModelClass) {

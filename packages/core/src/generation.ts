@@ -472,6 +472,7 @@ export async function generateText({
                 elizaLogger.debug("Received response from Heurist model.");
                 break;
             }
+            
             case ModelProviderName.GAIANET: {
                 elizaLogger.debug("Initializing GAIANET model.");
 
@@ -571,12 +572,41 @@ export async function generateText({
                 break;
             }
 
+            case ModelProviderName.INFERA: {
+                elizaLogger.debug("Initializing Infera model.");
+                const apiKey = settings.INFERA_API_KEY || runtime.token;
+
+                const infera = createOpenAI({
+                    apiKey,
+                    baseURL: endpoint,
+                    headers: {
+                        'api_key': apiKey,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const { text: inferaResponse } = await aiGenerateText({
+                    model: infera.languageModel(model),
+                    prompt: context,
+                    system: runtime.character.system ?? settings.SYSTEM_PROMPT ?? undefined,
+                    temperature: temperature,
+                    maxTokens: max_response_length,
+                    frequencyPenalty: frequency_penalty,
+                    presencePenalty: presence_penalty,
+                });
+
+                response = inferaResponse;
+                elizaLogger.debug("Received response from Infera model.");
+                break;
+            }
+
             default: {
                 const errorMessage = `Unsupported provider: ${provider}`;
                 elizaLogger.error(errorMessage);
                 throw new Error(errorMessage);
             }
         }
+        
 
         return response;
     } catch (error) {
@@ -975,6 +1005,8 @@ export const generateImage = async (
                     return runtime.getSetting("HEURIST_API_KEY");
                 case ModelProviderName.TOGETHER:
                     return runtime.getSetting("TOGETHER_API_KEY");
+                case ModelProviderName.INFERA:
+                    return runtime.getSetting("INFERA_API_KEY");
                 case ModelProviderName.FAL:
                     return runtime.getSetting("FAL_API_KEY");
                 case ModelProviderName.OPENAI:
@@ -986,11 +1018,13 @@ export const generateImage = async (
                 default:
                     // If no specific match, try the fallback chain
                     return (runtime.getSetting("HEURIST_API_KEY") ??
+                           runtime.getSetting("INFERA_API_KEY") ??
                            runtime.getSetting("TOGETHER_API_KEY") ??
                            runtime.getSetting("FAL_API_KEY") ??
                            runtime.getSetting("OPENAI_API_KEY") ??
                            runtime.getSetting("VENICE_API_KEY"))??
-                           runtime.getSetting("LIVEPEER_GATEWAY_URL");
+                           runtime.getSetting("LIVEPEER_GATEWAY_URL") ??
+                           runtime.getSetting("INFERA_API_KEY");
             }
         })();
     try {
@@ -1463,6 +1497,7 @@ export async function handleProvider(
         case ModelProviderName.LLAMACLOUD:
         case ModelProviderName.TOGETHER:
         case ModelProviderName.NANOGPT:
+        case ModelProviderName.INFERA:
         case ModelProviderName.AKASH_CHAT_API:
             return await handleOpenAI(options);
         case ModelProviderName.ANTHROPIC:
