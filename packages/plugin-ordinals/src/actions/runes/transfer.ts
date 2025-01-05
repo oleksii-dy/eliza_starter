@@ -27,6 +27,7 @@ export const transferSchema = z.object({
     rune: z.string(),
     amount: z.string(),
     toAddress: z.string(),
+    desiredFeeRate: z.number().nullable(),
 });
 
 export default {
@@ -57,7 +58,12 @@ export default {
             });
 
             const content: {
-                object: { rune?: string; amount?: string; toAddress?: string };
+                object: {
+                    rune?: string;
+                    amount?: string;
+                    toAddress?: string;
+                    desiredFeeRate?: number;
+                };
             } = await generateObject({
                 runtime,
                 context,
@@ -65,11 +71,10 @@ export default {
                 modelClass: ModelClass.LARGE,
             });
 
-            elizaLogger.info(JSON.stringify(content?.object));
-
             const rune = content?.object?.rune;
             const amount = content?.object?.amount;
             const toAddress = content?.object?.toAddress;
+            const desiredFeeRate = content?.object?.desiredFeeRate;
 
             if (!rune || !amount || !toAddress) {
                 throw new Error("Unable to parse info");
@@ -77,12 +82,8 @@ export default {
 
             const nonSpacedName = rune?.replaceAll("•", "");
 
-            // Send 500 UNCOMMON•GOODS to bc1pud2j5tpy5s3c5u6y7e2lqn8tp5208q0mmxjtjqncmzp9wyj5gssswnz8nk
-            // { rune: 'WHICH RUNE', amount: 'WHAT AMOUNT', toAddress: ''}
-
             const api = new API();
             const runeInfo = await api.getRuneInfo(nonSpacedName);
-            elizaLogger.info(JSON.stringify(runeInfo));
 
             if (!runeInfo) throw new Error("Unable to retrieve rune info");
 
@@ -112,10 +113,8 @@ export default {
             );
 
             if (!runeUtxos || runeUtxos?.length === 0) {
-                throw new Error("Unable to retrieve utxos");
+                throw new Error("Unable to retrieve rune utxos");
             }
-
-            elizaLogger.info(JSON.stringify(runeUtxos));
 
             // The amount in the UTXO has to be more or equal to the amount that we are transferring
             const toUseRuneUtxos = getRequiredRuneUtxos(
@@ -208,13 +207,22 @@ export default {
                 }
             );
 
-            const feerates = await wallet.getFeeRates();
+            let feeRateToUse = desiredFeeRate
+                ? Number(desiredFeeRate)
+                : undefined;
 
-            if (!feerates?.fastestFee) {
-                throw new Error("Unable to determine fee rate for transaction");
+            if (!desiredFeeRate) {
+                const feerates = await wallet.getFeeRates();
+                if (!feerates?.fastestFee) {
+                    throw new Error(
+                        "Unable to determine fee rate for transaction"
+                    );
+                }
+
+                feeRateToUse = feerates.fastestFee;
             }
 
-            const fee = Math.ceil(estimatedSize * feerates.fastestFee);
+            const fee = Math.ceil(estimatedSize * feeRateToUse);
 
             const change = BigInt(
                 btcUtxo.value -
@@ -251,7 +259,7 @@ export default {
             const txid = await wallet.broadcastTransaction(txHex);
 
             callback({
-                text: `Successfully transferred ${amount} ${rune} to ${toAddress} at txid: ${txid}`,
+                text: `Successfully transferred ${amount} ${rune} to ${toAddress} at txid: ${txid} (${feeRateToUse} sats/vbyte)`,
             });
 
             return true;

@@ -29,11 +29,13 @@ Knowledge:
 - An address usually looks like: bc1p4tcx7zxqj7wx9vp3spya7t0uq42hc2ghcpfafuvhq5ns9t6lu6qswwwkh8
 - A Rune looks similar to: UNCOMMON•GOODS
 - The amount ALWAYS is always an integer
+- The desired fee rate is optional, and is always an integer
 
 Given the most recent message, extract the wallet address::
 - **rune** (string): The Rune
 - **amount** (string): The amount
 - **toAddress** (string): The address
+- **desiredFeeRate** (number | null): The desired fee rate or null if none
 
 Provide the values in the following JSON format:
 
@@ -42,6 +44,7 @@ Provide the values in the following JSON format:
     "rune": "the rune",
     "amount": "the amount",
     "toAddress": "the address",
+    "desiredFeeRate": "the desired fee rate"
 }
 \`\`\`
 `;
