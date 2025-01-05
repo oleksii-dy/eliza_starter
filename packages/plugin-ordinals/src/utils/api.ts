@@ -1,7 +1,6 @@
 import { elizaLogger } from "@elizaos/core";
-import { IBalance } from "../types";
+import { IBalance, IRuneInfo } from "../types";
 
-const ORDISCAN_BASE_URL = "https://api.ordiscan.com/v1";
 const HIRO_BASE_URL = "https://api.hiro.so";
 
 const fetcher = async (url: string, apiKey?: string) => {
@@ -27,20 +26,15 @@ const fetcher = async (url: string, apiKey?: string) => {
 };
 
 class API {
-    ordiscanApiKey: string;
-
-    constructor(ordiscanApiKey?: string) {
-        this.ordiscanApiKey = ordiscanApiKey;
-    }
-
     async getRunesPortfolio(address: string): Promise<IBalance[]> {
         return await fetcher(
             `https://api-3.xverse.app/v2/address/${address}/rune-balance?includeUnconfirmed=true`
         );
     }
 
-    async getRuneInfo(name: string) {
-        return fetcher(`${HIRO_BASE_URL}/runes/v1/etchings/${name}`);
+    async getRuneInfo(name: string): Promise<IRuneInfo> {
+        const nonSpacedName = name?.replaceAll("•", "");
+        return await fetcher(`${HIRO_BASE_URL}/runes/v1/etchings/${nonSpacedName}`);
     }
 
     async getRunesUtxos(address: string, runeName: string) {
@@ -53,6 +47,22 @@ class API {
         // return fetcher(
         //     `https://api-3.xverse.app/v1/market/address/${address}/rune/${runeName}/utxos`
         // );
+    }
+
+    async getRunePrice(
+        name: string
+    ): Promise<IRuneInfo & { pricePerToken: number }> {
+        const info = await this.getRuneInfo(name);
+        const priceInfo = await fetcher(
+            `https://api-3.xverse.app/v1/runes/fiat-rates?currency=USD&runeIds[]=${info?.id}`
+        );
+
+        const pricePerToken =
+            priceInfo?.[
+                `${info?.location?.block_height}:${info?.location?.tx_index}`
+            ].USD;
+
+        return { ...info, pricePerToken };
     }
 }
 

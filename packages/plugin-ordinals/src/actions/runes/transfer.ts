@@ -92,7 +92,7 @@ export default {
             // Send 500 UNCOMMON•GOODS to bc1pud2j5tpy5s3c5u6y7e2lqn8tp5208q0mmxjtjqncmzp9wyj5gssswnz8nk
             // { rune: 'WHICH RUNE', amount: 'WHAT AMOUNT', toAddress: ''}
 
-            const api = new API(runtime.getSetting("ORDISCAN_API_KEY"));
+            const api = new API();
             const runeInfo = await api.getRuneInfo(nonSpacedName);
             elizaLogger.info(JSON.stringify(runeInfo));
 

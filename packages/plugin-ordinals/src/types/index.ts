@@ -17,3 +17,40 @@ export interface IBalance {
     priceChangePercentage24h: number;
     currentPrice: number;
 }
+
+export interface IRuneInfo {
+    id: string;
+    name: string;
+    spaced_name: string;
+    number: number;
+    divisibility: number;
+    symbol: string;
+    turbo: boolean;
+    mint_terms: {
+        amount: string;
+        cap: string;
+        height_start: number;
+        height_end: number;
+        offset_start: number;
+        offset_end: number;
+    };
+    supply: {
+        current: string;
+        minted: string;
+        total_mints: string;
+        mint_percentage: string;
+        mintable: boolean;
+        burned: string;
+        total_burns: string;
+        premine: string;
+    };
+    location: {
+        block_hash: string;
+        block_height: number;
+        tx_id: string;
+        tx_index: number;
+        vout: number;
+        output: string;
+        timestamp: number;
+    };
+}

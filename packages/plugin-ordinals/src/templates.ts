@@ -1,3 +1,24 @@
+export const runePriceInformationTemplate = `
+## Recent Messages
+
+{{recentMessages}}
+
+Knowledge:
+
+- A Rune looks similar to: UNCOMMON•GOODS
+
+Given the most recent message, extract the rune:
+- **rune** (string | null): The Rune
+
+Provide the values in the following JSON format:
+
+\`\`\`json
+{
+    "rune": "the rune or null",
+}
+\`\`\`
+`;
+
 export const runeTransferTemplate = `
 ## Recent Messages
 
