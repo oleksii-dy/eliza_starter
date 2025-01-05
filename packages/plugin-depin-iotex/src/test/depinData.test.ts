@@ -5,7 +5,11 @@ import {
     DEPIN_PROJECTS_URL,
     DePINScanProvider,
 } from "../providers/depinData";
-import { mockDepinscanMetrics, mockDepinscanProjects, parsedProjectsSample } from "./mockData";
+import {
+    mockDepinscanMetrics,
+    mockDepinscanProjects,
+    parsedProjectsSample,
+} from "./mockData";
 
 vi.stubGlobal(
     "fetch",
@@ -47,9 +51,7 @@ describe("Depin Data provider", () => {
         vi.clearAllMocks();
         mockCacheManager.get.mockResolvedValue(null);
 
-        depinscan = new DePINScanProvider(
-            mockCacheManager as any
-        );
+        depinscan = new DePINScanProvider(mockCacheManager as any);
     });
 
     afterEach(() => {
@@ -60,16 +62,17 @@ describe("Depin Data provider", () => {
         it("should use cached data when available", async () => {
             mockCacheManager.get.mockResolvedValueOnce(mockDepinscanMetrics);
 
-            const result = await (depinscan as any).getCachedData(
-                "test-key"
-            );
+            const result = await (depinscan as any).getCachedData("test-key");
 
             expect(result).toEqual(mockDepinscanMetrics);
             expect(mockCacheManager.get).toHaveBeenCalledTimes(1);
         });
 
         it("should write data to both caches", async () => {
-            await (depinscan as any).setCachedData("test-key", mockDepinscanMetrics);
+            await (depinscan as any).setCachedData(
+                "test-key",
+                mockDepinscanMetrics
+            );
 
             expect(mockCacheManager.set).toHaveBeenCalledWith(
                 expect.stringContaining("test-key"),

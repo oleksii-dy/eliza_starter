@@ -25,7 +25,7 @@ Remember to be precise, especially when discussing token prices or other numeric
 Now, please answer the user question, based on some recent messages:
 
 {{recentMessages}}
-`
+`;
 
 export const locationExtractionTemplate = `
 You are an AI assistant specialized in extracting location information from user messages. Your primary task is to identify and extract a valid location name that can be used to query the Mapbox API for latitude and longitude coordinates.
@@ -75,7 +75,7 @@ The extracted location should be formatted as a string that could be used as a q
 - "Sydney Opera House, Australia"
 
 Remember, the goal is to provide a clear, specific location that can be used to find geographic coordinates. Do not include any explanation or additional text outside of the location_analysis and extracted_location tags.
-`
+`;
 
 export const currentWeatherTemplate = `
 You are an AI assistant tasked with answering questions about the weather based on provided weather data. You will be given context about your persona, weather data, and a user's question. Your goal is to provide an accurate and helpful answer while maintaining the personality described in the context.
@@ -116,4 +116,4 @@ Present your answer in the following format:
 </weather_analysis>
 
 Remember to stay in character and provide a helpful, accurate response based solely on the provided weather data.
-`
+`;

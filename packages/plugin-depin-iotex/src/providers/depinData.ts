@@ -19,9 +19,7 @@ export class DePINScanProvider {
     private cache: NodeCache;
     private cacheKey: string = "depin/metrics";
 
-    constructor(
-        private cacheManager: ICacheManager
-    ) {
+    constructor(private cacheManager: ICacheManager) {
         this.cache = new NodeCache({ stdTTL: 3600 });
     }
 
@@ -67,12 +65,12 @@ export class DePINScanProvider {
     private async fetchDepinscanMetrics(): Promise<DepinScanMetrics> {
         const res = await fetch(DEPIN_METRICS_URL);
         return res.json();
-    };
+    }
 
     private async fetchDepinscanProjects(): Promise<DepinScanProject[]> {
         const res = await fetch(DEPIN_PROJECTS_URL);
         return res.json();
-    };
+    }
 
     async getDailyMetrics(): Promise<DepinScanMetrics> {
         const cacheKey = "depinscanDailyMetrics";
@@ -90,7 +88,9 @@ export class DePINScanProvider {
         return metrics;
     }
 
-    private abbreviateNumber = (value: string | number | bigint | undefined): string => {
+    private abbreviateNumber = (
+        value: string | number | bigint | undefined
+    ): string => {
         if (value === undefined || value === null) return "";
 
         let num: number;

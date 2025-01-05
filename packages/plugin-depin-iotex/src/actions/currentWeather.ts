@@ -1,12 +1,30 @@
-import { Action, IAgentRuntime, Memory, State, HandlerCallback, ModelClass, composeContext, generateText, elizaLogger } from "@elizaos/core";
+import {
+    Action,
+    IAgentRuntime,
+    Memory,
+    State,
+    HandlerCallback,
+    ModelClass,
+    composeContext,
+    generateText,
+    elizaLogger,
+} from "@elizaos/core";
 
-import { locationExtractionTemplate, currentWeatherTemplate } from "../template";
+import {
+    locationExtractionTemplate,
+    currentWeatherTemplate,
+} from "../template";
 import { parseLocation, parseWeatherAnalysis } from "../parsers";
 import { getLatLngMapbox, getWeather } from "../utils/weather";
 
 export const currentWeather: Action = {
     name: "CURRENT_WEATHER",
-    similes: ["WEATHER", "WEATHER_REPORT", "WEATHER_FORECAST", "WEATHER_UPDATE"],
+    similes: [
+        "WEATHER",
+        "WEATHER_REPORT",
+        "WEATHER_FORECAST",
+        "WEATHER_UPDATE",
+    ],
     description: "Get the current weather for a given location",
     validate: async (runtime: IAgentRuntime) => {
         const nubilaKey = runtime.getSetting("NUBILA_API_KEY");
@@ -106,7 +124,7 @@ export const currentWeather: Action = {
                     action: "CURRENT_WEATHER",
                 },
             },
-        ]
+        ],
     ],
     handler: async (
         runtime: IAgentRuntime,
@@ -121,9 +139,11 @@ export const currentWeather: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-
         try {
-            const coordinates = await extractLocationAndCoordinates(state, runtime);
+            const coordinates = await extractLocationAndCoordinates(
+                state,
+                runtime
+            );
             if (!coordinates) {
                 if (callback) {
                     callback({
@@ -134,12 +154,16 @@ export const currentWeather: Action = {
                 return false;
             }
 
-            const weatherAnalysis = await getAndAnalyzeWeather(state, runtime, coordinates);
+            const weatherAnalysis = await getAndAnalyzeWeather(
+                state,
+                runtime,
+                coordinates
+            );
             if (callback) {
                 callback({
                     text: weatherAnalysis,
-                    inReplyTo: message.id
-                })
+                    inReplyTo: message.id,
+                });
             }
 
             return true;
@@ -153,19 +177,22 @@ export const currentWeather: Action = {
             }
             return false;
         }
-    }
+    },
 };
 
-async function extractLocationAndCoordinates(state: State, runtime: IAgentRuntime) {
+async function extractLocationAndCoordinates(
+    state: State,
+    runtime: IAgentRuntime
+) {
     const locationExtractionContext = composeContext({
         state,
-        template: locationExtractionTemplate
-    })
+        template: locationExtractionTemplate,
+    });
     const location = await generateText({
         runtime,
         context: locationExtractionContext,
         modelClass: ModelClass.SMALL,
-    })
+    });
 
     const parsedLocation = parseLocation(location);
 
@@ -174,7 +201,11 @@ async function extractLocationAndCoordinates(state: State, runtime: IAgentRuntim
     return getLatLngMapbox(runtime, parsedLocation);
 }
 
-async function getAndAnalyzeWeather(state: State, runtime: IAgentRuntime, coordinates: { lat: number, lon: number }) {
+async function getAndAnalyzeWeather(
+    state: State,
+    runtime: IAgentRuntime,
+    coordinates: { lat: number; lon: number }
+) {
     elizaLogger.log("Looking up the weather for coordinates: ", coordinates);
 
     const weather = await getWeather(runtime, coordinates);
@@ -183,14 +214,14 @@ async function getAndAnalyzeWeather(state: State, runtime: IAgentRuntime, coordi
 
     const weatherContext = composeContext({
         state,
-        template: currentWeatherTemplate
-    })
+        template: currentWeatherTemplate,
+    });
 
     const weatherText = await generateText({
         runtime,
         context: weatherContext,
         modelClass: ModelClass.LARGE,
-    })
+    });
 
     return parseWeatherAnalysis(weatherText);
 }

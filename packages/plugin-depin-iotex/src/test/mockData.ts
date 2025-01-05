@@ -83,7 +83,7 @@ export const parsedProjectsSample = [
         "",
         "",
         "solana",
-        "131.51B"
+        "131.51B",
     ],
     [
         "Render",
@@ -99,6 +99,6 @@ export const parsedProjectsSample = [
         "",
         "1",
         "render-token",
-        "4.71B"
-    ]
-]
+        "4.71B",
+    ],
+];

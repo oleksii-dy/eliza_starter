@@ -1,4 +1,13 @@
-import { Action, composeContext, generateText, HandlerCallback, IAgentRuntime, Memory, ModelClass, State } from "@elizaos/core";
+import {
+    Action,
+    composeContext,
+    generateText,
+    HandlerCallback,
+    IAgentRuntime,
+    Memory,
+    ModelClass,
+    State,
+} from "@elizaos/core";
 
 import { projectsTemplate } from "../template";
 
@@ -16,7 +25,7 @@ export const depinProjects: Action = {
         "CHAIN_PROJECTS",
         "BLOCKCHAIN_PROJECTS",
         "PROJECT_ANALYTICS",
-        "PROJECT_DETAILS"
+        "PROJECT_DETAILS",
     ],
     description: "Analyzes DePINScan projects",
     validate: async (_runtime: IAgentRuntime) => {
@@ -202,7 +211,7 @@ export const depinProjects: Action = {
                     action: "DEPIN_TOKENS",
                 },
             },
-        ]
+        ],
     ],
     handler: async (
         runtime: IAgentRuntime,
@@ -219,21 +228,21 @@ export const depinProjects: Action = {
 
         const projectsContext = composeContext({
             state,
-            template: projectsTemplate
-        })
+            template: projectsTemplate,
+        });
 
         try {
             const text = await generateText({
                 runtime,
                 context: projectsContext,
                 modelClass: ModelClass.LARGE,
-            })
+            });
 
             if (callback) {
                 callback({
                     text,
-                    inReplyTo: message.id
-                })
+                    inReplyTo: message.id,
+                });
             }
 
             return true;
@@ -247,5 +256,5 @@ export const depinProjects: Action = {
             }
             return false;
         }
-    }
-}
+    },
+};
