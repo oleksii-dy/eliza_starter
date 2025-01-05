@@ -19,7 +19,6 @@ export const currentWeather: Action = {
     similes: [
         "WEATHER",
         "WEATHER_REPORT",
-        "WEATHER_FORECAST",
         "WEATHER_UPDATE",
     ],
     description: "Get the current weather for a given location",
