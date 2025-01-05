@@ -12,6 +12,7 @@ import {
     getLlama,
     Llama,
     LlamaChatSession,
+    LlamaChatSessionRepeatPenalty,
     LlamaContext,
     LlamaContextSequence,
     LlamaContextSequenceRepeatPenalty,
@@ -554,10 +555,23 @@ export class LlamaService extends Service {
             contextSequence: this.sequence
         });
 
+        const wordsToPunishTokens = wordsToPunish
+            .map((word) => this.model!.tokenize(word))
+            .flat();
+
+        const repeatPenalty: LlamaChatSessionRepeatPenalty = {
+            punishTokensFilter: () => wordsToPunishTokens,
+            penalty: 1.2,
+            frequencyPenalty: frequency_penalty,
+            presencePenalty: presence_penalty,
+        };
+
         const response = await session.prompt(context, {
             onTextChunk(chunk) {                // stream the response to the console as it's being generated
                 process.stdout.write(chunk);
-            }
+            },
+            temperature: Number(temperature),
+            repeatPenalty: repeatPenalty
         });
 
         if (!response) {
