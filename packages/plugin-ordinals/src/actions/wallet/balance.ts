@@ -5,7 +5,6 @@ import {
     Memory,
     State,
     type Action,
-    elizaLogger,
     composeContext,
     generateObject,
     ModelClass,

@@ -1,12 +1,4 @@
-import {
-    ActionExample,
-    HandlerCallback,
-    IAgentRuntime,
-    Memory,
-    State,
-    type Action,
-    elizaLogger,
-} from "@elizaos/core";
+import { ActionExample, HandlerCallback, IAgentRuntime, Memory, State, type Action } from "@elizaos/core";
 import { WalletProvider, walletProvider } from "../../providers/wallet";
 import { handleError } from "../../utils";
 

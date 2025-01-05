@@ -6,29 +6,17 @@ import {
     State,
     type Action,
     elizaLogger,
-    Content,
     generateObject,
     composeContext,
     ModelClass,
 } from "@elizaos/core";
-import { encodeRunestone } from "@magiceden-oss/runestone-lib";
 import { z } from "zod";
 import { runeTransferTemplate } from "../../templates";
 import API from "../../utils/api";
 import { walletProvider, WalletProvider } from "../../providers/wallet";
 import { Transaction } from "@scure/btc-signer";
 import { parseUnits } from "viem";
-import {
-    Rune,
-    RuneId,
-    Runestone,
-    EtchInscription,
-    none,
-    some,
-    Terms,
-    Range,
-    Etching,
-} from "runelib";
+import { RuneId, Runestone, none, some } from "runelib";
 import {
     estimateTransactionSize,
     getRequiredRuneUtxos,

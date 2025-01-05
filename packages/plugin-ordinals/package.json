@@ -6,7 +6,6 @@
   "types": "dist/index.d.ts",
   "dependencies": {
     "@elizaos/core": "workspace:*",
-    "@magiceden-oss/runestone-lib": "^1.0.2",
     "@mempool/mempool.js": "^3.0.0",
     "@noble/curves": "^1.7.0",
     "@scure/base": "^1.2.1",

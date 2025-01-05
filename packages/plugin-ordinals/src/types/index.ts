@@ -21,7 +21,7 @@ export interface IBalance {
 }
 
 export interface IRuneInfo {
-    id: string;
+    id: `${string}:${string}`;
     name: string;
     spaced_name: string;
     number: number;
@@ -49,7 +49,7 @@ export interface IRuneInfo {
     location: {
         block_hash: string;
         block_height: number;
-        tx_id: string;
+        tx_id: TBitcoinTxId;
         tx_index: number;
         vout: number;
         output: string;
