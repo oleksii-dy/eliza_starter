@@ -60,7 +60,7 @@ export class TwitterSearchClient {
 
     private engageWithSearchTermsLoop() {
         this.engageWithSearchTerms().then();
-        const randomMinutes = (Math.floor(Math.random() * (120 - 60 + 1)) + 60);
+        const randomMinutes = (Math.floor(Math.random() * (240 - 120 + 1)) + 120);
         elizaLogger.log(`Next twitter search scheduled in ${randomMinutes} minutes`);
         setTimeout(
             () => this.engageWithSearchTermsLoop(),
