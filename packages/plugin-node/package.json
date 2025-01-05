@@ -34,6 +34,7 @@
         "@opendocsg/pdf2md": "0.1.32",
         "@types/uuid": "10.0.0",
         "alawmulaw": "6.0.0",
+        "bignumber": "1.1.0",
         "bignumber.js": "9.1.2",
         "capsolver-npm": "2.0.2",
         "cldr-segmentation": "2.2.1",
@@ -86,7 +87,7 @@
         "build": "tsup --format esm --dts",
         "dev": "tsup --format esm --dts --watch",
         "lint": "eslint --fix  --cache .",
-        "postinstall": "pnpm run build && node scripts/postinstall.js"
+        "postinstall": "node scripts/postinstall.js"
     },
     "peerDependencies": {
         "onnxruntime-node": "1.20.1",
