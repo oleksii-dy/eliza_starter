@@ -1023,8 +1023,7 @@ export const generateImage = async (
                            runtime.getSetting("FAL_API_KEY") ??
                            runtime.getSetting("OPENAI_API_KEY") ??
                            runtime.getSetting("VENICE_API_KEY"))??
-                           runtime.getSetting("LIVEPEER_GATEWAY_URL") ??
-                           runtime.getSetting("INFERA_API_KEY");
+                           runtime.getSetting("LIVEPEER_GATEWAY_URL");
             }
         })();
     try {
