@@ -10,12 +10,9 @@ import {
     elizaLogger,
 } from "@elizaos/core";
 
-import {
-    locationExtractionTemplate,
-    currentWeatherTemplate,
-} from "../template";
-import { parseLocation, parseWeatherAnalysis } from "../parsers";
-import { getLatLngMapbox, getWeather } from "../utils/weather";
+import { currentWeatherTemplate } from "../template";
+import { parseWeatherAnalysis } from "../parsers";
+import { extractLocationAndCoordinates, getWeather } from "../utils/weather";
 
 export const currentWeather: Action = {
     name: "CURRENT_WEATHER",
@@ -180,27 +177,6 @@ export const currentWeather: Action = {
     },
 };
 
-async function extractLocationAndCoordinates(
-    state: State,
-    runtime: IAgentRuntime
-) {
-    const locationExtractionContext = composeContext({
-        state,
-        template: runtime.character.templates?.locationExtractionTemplate || locationExtractionTemplate,
-    });
-    const location = await generateText({
-        runtime,
-        context: locationExtractionContext,
-        modelClass: ModelClass.SMALL,
-    });
-
-    const parsedLocation = parseLocation(location);
-
-    elizaLogger.log("Extracted location is: ", parsedLocation);
-
-    return getLatLngMapbox(runtime, parsedLocation);
-}
-
 async function getAndAnalyzeWeather(
     state: State,
     runtime: IAgentRuntime,
@@ -214,7 +190,10 @@ async function getAndAnalyzeWeather(
 
     const weatherContext = composeContext({
         state,
-        template: runtime.character.templates?.currentWeatherTemplate || currentWeatherTemplate,
+        template:
+            // @ts-ignore
+            runtime.character.templates?.currentWeatherTemplate ||
+            currentWeatherTemplate,
     });
 
     const weatherText = await generateText({

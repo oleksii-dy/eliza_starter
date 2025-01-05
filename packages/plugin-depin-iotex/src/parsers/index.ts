@@ -14,3 +14,7 @@ export function parseLocation(text: string) {
 export function parseWeatherAnalysis(text: string) {
     return parseTagContent(text, "weather_analysis");
 }
+
+export function parseWeatherForecast(text: string) {
+    return parseTagContent(text, "weather_forecast_analysis");
+}
