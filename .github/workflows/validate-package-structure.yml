@@ -2,7 +2,7 @@ name: Validate Package Structure
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ develop ]
     paths:
       - 'packages/**'
 
