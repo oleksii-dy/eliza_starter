@@ -1,5 +1,6 @@
 import { elizaLogger } from "@elizaos/core";
-import { IBalance, IRuneInfo, IRuneUtxo } from "../types";
+import { IBalance, IOrdinalUtxo, IRuneInfo, IRuneUtxo } from "../types";
+import { sleep } from ".";
 
 const HIRO_BASE_URL = "https://api.hiro.so";
 
@@ -48,10 +49,28 @@ class API {
         );
     }
 
-    async getRareSats(address: string) {
-        // return fetcher(
-        //     `https://api-3.xverse.app/v1/market/address/${address}/rune/${runeName}/utxos`
-        // );
+    async getRareSats(
+        address: string
+    ): Promise<{ rareSats: IOrdinalUtxo[]; totalRareSats: number }> {
+        let rareSats: IOrdinalUtxo[] = [];
+        let hasAny = true;
+        let run = 1;
+        const batchSize = 1;
+        let total = 0;
+        do {
+            const data = await fetcher(
+                `https://api-3.xverse.app/v2/address/${address}/ordinal-utxo?limit=${batchSize}&offset=${(run * batchSize) - 1}&hideUnconfirmed=true&hideSpecialWithoutSatributes=true`
+            );
+            total = data?.total;
+            if (data?.results?.length > 0) {
+                rareSats = [...rareSats, ...(data?.results || [])];
+            } else {
+                hasAny = false;
+            }
+            run++;
+            await sleep(500);
+        } while (hasAny);
+        return { rareSats, totalRareSats: total };
     }
 
     async getRunePrice(

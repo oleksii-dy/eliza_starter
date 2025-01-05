@@ -75,3 +75,24 @@ export interface IRuneUtxo {
     ];
     listing: (null | any)[];
 }
+
+interface ISatRange {
+    range: {
+      start: string;
+      end: string;
+    };
+    offset: number;
+    satributes: string[];
+    inscriptions: any[];
+    block: number;
+    year_mined: number;
+  }
+
+  export interface IOrdinalUtxo {
+    txid: string;
+    vout: number;
+    value: number;
+    block_height: number;
+    sat_ranges: ISatRange[];
+    runes: any[];
+  }

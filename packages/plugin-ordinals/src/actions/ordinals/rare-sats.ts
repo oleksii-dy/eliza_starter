@@ -14,7 +14,7 @@ import { WalletProvider, walletProvider } from "../../providers/wallet";
 import API from "../../utils/api";
 import { z } from "zod";
 import { balanceTemplate } from "../../templates";
-import { handleError } from "../../utils";
+import { handleError, rareSatEmojis } from "../../utils";
 
 export const addressSchema = z.object({
     address: z.string(),
@@ -63,12 +63,28 @@ export default {
                     : derivedAddress;
 
             const ordiscan = new API();
-            const portfolio = await ordiscan.getRunesPortfolio(taprootAddress);
+            const rareSats = await ordiscan.getRareSats(taprootAddress);
 
-            const balances = portfolio?.results;
+            let countRareSats = {};
+            for (const sat of rareSats.rareSats) {
+                for (const range of sat.sat_ranges) {
+                    for (const r of range.satributes) {
+                        if (!countRareSats[r]) {
+                            countRareSats[r] = 0;
+                        }
+                        countRareSats[r] += sat.value;
+                    }
+                }
+            }
+
+            let rareSatText = "";
+
+            for (const satribute of Object.keys(countRareSats)) {
+                rareSatText += `${rareSatEmojis[satribute.toLowerCase()] ? rareSatEmojis[satribute.toLowerCase()] : ""} ${satribute} - ${countRareSats[satribute]} sats\n`;
+            }
 
             callback({
-                text: `Runes portfolio for address ${taprootAddress}:\n${balances?.map((item, idx) => `${idx + 1}: ${item?.rune?.spaced_name} - ${item.balance}\n`)}`,
+                text: `Rare sats in the following address: ${taprootAddress}:\n\n${rareSatText}\n\nTotal rare sats: ${Object.keys(countRareSats)?.length || 0}`,
             });
 
             return true;
@@ -81,29 +97,14 @@ export default {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "What does my Runes portfolio look like?",
+                    text: "What rare sats do I own?",
                 },
             },
             {
                 user: "{{user2}}",
                 content: {
-                    text: "Your runes portfolio:",
-                    action: "RUNES_GET_PORTFOLIO",
-                },
-            },
-        ],
-        [
-            {
-                user: "{{user1}}",
-                content: {
-                    text: "What is my runes balance?",
-                },
-            },
-            {
-                user: "{{user2}}",
-                content: {
-                    text: "Your runes portfolio:",
-                    action: "RUNES_GET_PORTFOLIO",
+                    text: "Rare sats in the following address:",
+                    action: "GET_RARE_SATS_ADDRESS",
                 },
             },
         ],

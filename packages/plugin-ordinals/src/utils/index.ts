@@ -71,16 +71,42 @@ export const estimateTransactionSize = (
         31 * outputCounts.p2wpkh +
         43 * outputCounts.taproot +
         43 * outputCounts.opReturn;
-    return (
-        baseSize +
-        taprootInputSize +
-        p2shP2wpkhInputSize +
-        outputSize
-    );
+    return baseSize + taprootInputSize + p2shP2wpkhInputSize + outputSize;
 };
 
-export const dollarFormatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 8
+export const dollarFormatter = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 8,
 });
+
+export const sleep = (ms: number) => {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve(true);
+        }, ms);
+    });
+};
+
+export const rareSatEmojis = {
+    nakamoto: "👤",
+    firstTransaction: "🔗",
+    palindrome: "🔢",
+    vintage: "🍷",
+    pizza: "🍕",
+    block9: "🕘",
+    block78: "🔧",
+    uncommon: "🌱",
+    rare: "🌟",
+    epic: "🔥",
+    blackUncommon: "⚫",
+    blackRare: "⚫",
+    blackEpic: "⚫",
+    uniformPalinception: "🎭",
+    perfectPalinception: "🌌",
+    block9_450x: "🔗",
+    block286: "🔒",
+    jpeg: "🖼️",
+    alpha: "🌅",
+    omega: "🌇",
+};
