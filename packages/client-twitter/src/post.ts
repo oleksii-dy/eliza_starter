@@ -438,44 +438,42 @@ export class TwitterPostClient {
                     twitterPostTemplate,
             });
 
-            elizaLogger.debug("generate post prompt:\n" + context);
-
             const newTweetContent = await generateText({
                 runtime: this.runtime,
                 context,
-                modelClass: ModelClass.SMALL,
+                modelClass: ModelClass.LARGE,
             });
 
-            // First attempt to clean content
-            let cleanedContent = "";
+            // First attempt to clean content using post tags
+            let cleanedContent = this.extractPostContent(newTweetContent);
 
-            // Try parsing as JSON first
-            try {
-                const parsedResponse = JSON.parse(newTweetContent);
-                if (parsedResponse.text) {
-                    cleanedContent = parsedResponse.text;
-                } else if (typeof parsedResponse === "string") {
-                    cleanedContent = parsedResponse;
+            // If no post tags found, fall back to previous cleaning logic
+            if (!cleanedContent) {
+                // Try parsing as JSON first
+                try {
+                    const parsedResponse = JSON.parse(newTweetContent);
+                    if (parsedResponse.text) {
+                        cleanedContent = parsedResponse.text;
+                    } else if (typeof parsedResponse === "string") {
+                        cleanedContent = parsedResponse;
+                    }
+                } catch (error) {
+                    error.linted = true; // make linter happy since catch needs a variable
+                    // If not JSON, clean the raw content
+                    cleanedContent = newTweetContent
+                        .replace(/^\s*{?\s*"text":\s*"|"\s*}?\s*$/g, "") // Remove JSON-like wrapper
+                        .replace(/^['"](.*)['"]$/g, "$1") // Remove quotes
+                        .replace(/\\"/g, '"') // Unescape quotes
+                        .replace(/\\n/g, "\n") // Unescape newlines
+                        .trim();
                 }
-            } catch (error) {
-                error.linted = true; // make linter happy since catch needs a variable
-                // If not JSON, clean the raw content
-                cleanedContent = newTweetContent
-                    .replace(/^\s*{?\s*"text":\s*"|"\s*}?\s*$/g, "") // Remove JSON-like wrapper
-                    .replace(/^['"](.*)['"]$/g, "$1") // Remove quotes
-                    .replace(/\\"/g, '"') // Unescape quotes
-                    .replace(/\\n/g, "\n\n") // Unescape newlines, ensures double spaces
-                    .trim();
             }
 
             if (!cleanedContent) {
-                elizaLogger.error(
-                    "Failed to extract valid content from response:",
-                    {
-                        rawResponse: newTweetContent,
-                        attempted: "JSON parsing",
-                    }
-                );
+                elizaLogger.error("Failed to extract valid content from response:", {
+                    rawResponse: newTweetContent,
+                    attempted: "Post tags and JSON parsing",
+                });
                 return;
             }
 
@@ -539,12 +537,13 @@ export class TwitterPostClient {
         const response = await generateText({
             runtime: this.runtime,
             context: options?.context || context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
         });
         elizaLogger.debug("generate tweet content response:\n" + response);
 
         // First clean up any markdown and newlines
-        const cleanedResponse = response
+        const postContent = this.extractPostContent(response)
+        const cleanedResponse = postContent
             .replace(/```json\s*/g, "") // Remove ```json
             .replace(/```\s*/g, "") // Remove any remaining ```
             .replaceAll(/\\n/g, "\n")
@@ -592,10 +591,17 @@ export class TwitterPostClient {
         );
     }
 
-    /**
-     * Processes tweet actions (likes, retweets, quotes, replies). If isDryRun is true,
-     * only simulates and logs actions without making API calls.
-     */
+    private extractPostContent(text: string) {
+        const postPattern = /<post>\s*([\s\S]*?)\s*<\/post>/;
+        const match = text.match(postPattern);
+
+        if (match) {
+            return match[1].trim(); // Extract and trim the content inside <post> tags
+        }
+
+        return null; // Return null if no <post> tags are found
+    }
+
     private async processTweetActions() {
         if (this.isProcessing) {
             elizaLogger.log("Already processing tweet actions, skipping");
