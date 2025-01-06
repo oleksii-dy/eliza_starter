@@ -3,8 +3,22 @@ import {
     AuthorityMetadata,
     TokenFactoryModuleParams,
     TokenFactoryModuleState,
+    MsgBurn,
+    MsgChangeAdmin,
+    MsgCreateDenom,
+    MsgMint,
+    MsgSetDenomMetadata,
+    TxResponse,
 } from "@injectivelabs/sdk-ts";
 
+import {
+    MsgBurnParams,
+    MsgChangeAdminParams,
+    MsgCreateDenomParams,
+    MsgMintParams,
+    MsgSetDenomMetadataParams,
+} from "../types/index";
+import { freemem } from "os";
 export async function getDenomsFromCreator(
     this: InjectiveGrpcBase,
     params: string
@@ -48,4 +62,59 @@ export async function getTokenFactoryModuleState(
         method: this.chainGrpcTokenFactoryApi.fetchModuleState,
         params: {},
     });
+}
+
+export async function msgBurn(
+    this: InjectiveGrpcBase,
+    params: MsgBurnParams
+): Promise<TxResponse> {
+    const msg = MsgBurn.fromJSON({
+        ...params,
+        sender: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgChangeAdmin(
+    this: InjectiveGrpcBase,
+    params: MsgChangeAdminParams
+): Promise<TxResponse> {
+    const msg = MsgChangeAdmin.fromJSON({
+        ...params,
+        sender: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgCreateDenom(
+    this: InjectiveGrpcBase,
+    params: MsgCreateDenomParams
+): Promise<TxResponse> {
+    const msg = MsgCreateDenom.fromJSON({
+        ...params,
+        sender: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgMint(
+    this: InjectiveGrpcBase,
+    params: MsgMintParams
+): Promise<TxResponse> {
+    const msg = MsgMint.fromJSON({
+        amount: params.totalAmount,
+        sender: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgSetDenomMetadata(
+    this: InjectiveGrpcBase,
+    params: MsgSetDenomMetadataParams
+): Promise<TxResponse> {
+    const msg = MsgSetDenomMetadata.fromJSON({
+        ...params,
+        sender: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
 }

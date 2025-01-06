@@ -7,7 +7,24 @@ import {
     Pagination,
     ContractCodeHistoryEntry,
     CodeInfoResponse,
+    MsgStoreCode,
+    MsgUpdateAdmin,
+    MsgExecuteContract,
+    MsgMigrateContract,
+    MsgInstantiateContract,
+    MsgExecuteContractCompat,
+    MsgPrivilegedExecuteContract,
+    TxResponse,
 } from "@injectivelabs/sdk-ts";
+import {
+    MsgStoreCodeParams,
+    MsgUpdateAdminParams,
+    MsgExecuteContractParams,
+    MsgMigrateContractParams,
+    MsgInstantiateContractParams,
+    MsgExecuteContractCompatParams,
+    MsgPrivilegedExecuteContractParams,
+} from "../types/index";
 import { CosmwasmWasmV1Query } from "@injectivelabs/core-proto-ts";
 
 export async function getContractAccountsBalance(
@@ -150,4 +167,81 @@ export async function getContractCodeContracts(
             ),
         params,
     });
+}
+
+export async function msgStoreCode(
+    this: InjectiveGrpcBase,
+    params: MsgStoreCodeParams
+): Promise<TxResponse> {
+    const msg = MsgStoreCode.fromJSON({
+        ...params,
+        sender: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgUpdateAdmin(
+    this: InjectiveGrpcBase,
+    params: MsgUpdateAdminParams
+): Promise<TxResponse> {
+    const msg = MsgUpdateAdmin.fromJSON({
+        ...params,
+        sender: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgExecuteContract(
+    this: InjectiveGrpcBase,
+    params: MsgExecuteContractParams
+): Promise<TxResponse> {
+    const msg = MsgExecuteContract.fromJSON({
+        ...params,
+        sender: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgMigrateContract(
+    this: InjectiveGrpcBase,
+    params: MsgMigrateContractParams
+): Promise<TxResponse> {
+    const msg = MsgMigrateContract.fromJSON({
+        ...params,
+        sender: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgInstantiateContract(
+    this: InjectiveGrpcBase,
+    params: MsgInstantiateContractParams
+): Promise<TxResponse> {
+    const msg = MsgInstantiateContract.fromJSON({
+        ...params,
+        sender: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgExecuteContractCompat(
+    this: InjectiveGrpcBase,
+    params: MsgExecuteContractCompatParams
+): Promise<TxResponse> {
+    const msg = MsgExecuteContractCompat.fromJSON({
+        ...params,
+        sender: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgPrivilegedExecuteContract(
+    this: InjectiveGrpcBase,
+    params: MsgPrivilegedExecuteContractParams
+): Promise<TxResponse> {
+    const msg = MsgPrivilegedExecuteContract.fromJSON({
+        ...params,
+        sender: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
 }

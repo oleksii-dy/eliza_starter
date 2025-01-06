@@ -7,6 +7,8 @@ import {
     GridStrategyType,
     Msgs,
     GrpcMarketStatus,
+    ExecArgs,
+    ExecPrivilegedArgs,
 } from "@injectivelabs/sdk-ts";
 import { OrderSide, OrderState } from "@injectivelabs/ts-types";
 import {
@@ -14,8 +16,9 @@ import {
     CosmosBaseV1Beta1Coin,
     InjectiveExchangeV1Beta1Exchange,
     InjectiveOracleV1Beta1Oracle,
+    CosmosBankV1Beta1Bank,
 } from "@injectivelabs/core-proto-ts";
-import { msgIBCTransfer } from "../modules/Ibc";
+import { AccessConfig } from "@injectivelabs/core-proto-ts/cjs/cosmwasm/wasm/v1/types";
 
 // Base parameter interfaces
 export interface PaginationParams {
@@ -850,6 +853,33 @@ export interface TokenFactoryParams {
     subDenom: string;
 }
 
+export interface MsgBurnParams {
+    amount: {
+        amount: string;
+        denom: string;
+    };
+}
+export interface MsgChangeAdminParams {
+    denom: string;
+    newAdmin: string;
+}
+
+export interface MsgCreateDenomParams {
+    subdenom: string;
+    decimals?: number;
+    name?: string;
+    symbol?: string;
+}
+export interface MsgMintParams {
+    totalAmount: {
+        amount: string;
+        denom: string;
+    };
+}
+export interface MsgSetDenomMetadataParams {
+    metadata: CosmosBankV1Beta1Bank.Metadata;
+}
+
 // Wasm Module Params
 export interface ContractBalanceParams extends PaginationParams {
     contractAddress: string;
@@ -874,6 +904,71 @@ export interface ContractCodeParams {
     pagination?: PaginationOption;
 }
 
+export interface MsgStoreCodeParams {
+    wasmBytes: Uint8Array | string;
+    instantiatePermission?: AccessConfig;
+}
+export interface MsgUpdateAdminParams {
+    newAdmin: string;
+    contract: string;
+}
+export interface MsgExecuteContractParams {
+    funds?:
+        | {
+              denom: string;
+              amount: string;
+          }
+        | {
+              denom: string;
+              amount: string;
+          }[];
+    sender: string;
+    contractAddress: string;
+    execArgs?: ExecArgs;
+    exec?: {
+        msg: object;
+        action: string;
+    };
+    msg?: object;
+}
+export interface MsgMigrateContractParams {
+    contract: string;
+    codeId: number;
+    msg: object;
+}
+export interface MsgInstantiateContractParams {
+    admin: string;
+    codeId: number;
+    label: string;
+    msg: Object;
+    amount?: {
+        denom: string;
+        amount: string;
+    };
+}
+export interface MsgExecuteContractCompatParams {
+    funds?:
+        | {
+              denom: string;
+              amount: string;
+          }
+        | {
+              denom: string;
+              amount: string;
+          }[];
+    contractAddress: string;
+    execArgs?: ExecArgs;
+    exec?: {
+        msg: Record<string, any>;
+        action: string;
+    };
+    msg?: Record<string, any>;
+}
+export interface MsgPrivilegedExecuteContractParams {
+    funds: string;
+    contractAddress: string;
+    data: ExecPrivilegedArgs;
+}
 // Explorer Module Params
 export interface AccountTxParams extends TimeRangeParams {
     address: string;
