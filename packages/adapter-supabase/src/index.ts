@@ -40,14 +40,14 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         try {
             // Add delay between attempts to allow circuit breaker to stabilize
             await new Promise(resolve => setTimeout(resolve, 100));
-            
+
             // Use a simple query that's less likely to fail
             await this.withDatabase(async () => {
                 const { error } = await this.supabase.from('rooms').select('count');
                 if (error) throw error;
                 return true;
             }, 'resetCircuitBreaker');
-            
+
             elizaLogger.success('Circuit breaker reset successful');
         } catch (error) {
             // Log error but don't throw to prevent test failures
@@ -229,24 +229,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         });
     }
 
-    async getParticipantUserState(roomId: UUID, userId: UUID): Promise<ParticipantState> {
-        elizaLogger.info('Getting participant user state...', { roomId, userId });
-        return await this.withErrorHandling('getParticipantUserState', async () => {
-            const { data, error } = await this.supabase
-                .from('participants')
-                .select('userState')
-                .eq('roomId', roomId)
-                .eq('userId', userId)
-                .single();
 
-            if (error) {
-                throw new Error(`Error getting participant state: ${error.message}`);
-            }
-
-            elizaLogger.success('Participant user state retrieved', { state: data.userState });
-            return data.userState;
-        });
-    }
 
     async setParticipantUserState(
         roomId: UUID,
@@ -283,7 +266,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
 
     async init() {
         elizaLogger.info("Initializing Supabase adapter");
-        
+
         try {
             // Test basic connection first
             elizaLogger.debug("Testing basic connection...", {
@@ -396,19 +379,40 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     }
 
     async getMemoriesByRoomIds(params: { agentId: UUID; roomIds: UUID[]; tableName: string }): Promise<Memory[]> {
-        elizaLogger.info('Getting memories by room IDs...', { roomIds: params.roomIds, tableName: params.tableName });
+        elizaLogger.info('Getting memories by room IDs...', {
+            roomIds: params.roomIds,
+            type: params.tableName,  // Using tableName as the type
+            agentId: params.agentId
+        });
+
         return await this.withErrorHandling('getMemoriesByRoomIds', async () => {
             const { data, error } = await this.supabase
-                .from(params.tableName)
+                .from('memories')  // Always query the memories table
                 .select('*')
-                .in('roomId', params.roomIds);
+                .in('roomId', params.roomIds)
+                .eq('type', params.tableName);  // Use tableName as type filter
 
             if (error) {
+                elizaLogger.error('Failed to get memories', {
+                    error: error.message,
+                    type: params.tableName,
+                    roomCount: params.roomIds.length
+                });
                 throw new Error(`Error getting memories: ${error.message}`);
             }
 
-            elizaLogger.success('Memories retrieved successfully', { count: data.length });
-            return data;
+            elizaLogger.success('Memories retrieved successfully', {
+                count: data.length,
+                type: params.tableName,
+                roomCount: params.roomIds.length
+            });
+
+            return data.map(memory => ({
+                ...memory,
+                content: typeof memory.content === 'string'
+                    ? JSON.parse(memory.content)
+                    : memory.content
+            }));
         });
     }
 
@@ -473,7 +477,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             const actors = (data as unknown as ParticipantRow[]).map(participant => {
                 let details;
                 try {
-                    details = typeof participant.account.details === 'string' 
+                    details = typeof participant.account.details === 'string'
                         ? JSON.parse(participant.account.details)
                         : participant.account.details;
                 } catch (error) {
@@ -499,14 +503,14 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                     }
                 } as Actor;
             });
-            
+
             elizaLogger.success('Actor details retrieved successfully', { count: actors.length });
             return actors;
         });
     }
 
     async searchMemories(params: {
-        tableName: string;
+        tableName: string;  // This will be used as type
         agentId: UUID;
         roomId: UUID;
         embedding: number[];
@@ -516,7 +520,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     }): Promise<Array<Memory & { similarity: number }>> {
         const startTime = performance.now();
         elizaLogger.info('Searching memories...', {
-            tableName: params.tableName,
+            type: params.tableName,
             roomId: params.roomId,
             matchCount: params.match_count,
             threshold: params.match_threshold,
@@ -524,26 +528,29 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         });
 
         const rpcParams = {
-            query_table_name: params.tableName,
+            query_table_name: 'memories',  // Always use memories table
             query_room_id: params.roomId,
             query_embedding: params.embedding,
             query_match_threshold: params.match_threshold,
             query_match_count: params.match_count,
             query_unique: params.unique,
+            query_type: params.tableName  // Add type as a parameter
         };
         elizaLogger.info('RPC parameters:', rpcParams);
 
+
+        // Now perform the search
         const result = await this.supabase.rpc("search_memories", rpcParams);
 
         if (result.error) {
-            elizaLogger.error('Failed to search memories:', { 
+            elizaLogger.error('Failed to search memories:', {
                 error: result.error,
                 code: result.error.code,
                 message: result.error.message,
                 details: result.error.details,
                 hint: result.error.hint
             });
-            throw new Error(JSON.stringify(result.error));
+            throw result.error;
         }
 
         elizaLogger.info('Raw RPC results:', {
@@ -552,6 +559,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                 id: result.data[0].id,
                 similarity: result.data[0].similarity,
                 content: result.data[0].content,
+                type: result.data[0].type,
                 roomId: result.data[0].roomId,
                 agentId: result.data[0].agentId,
                 userId: result.data[0].userId,
@@ -562,23 +570,10 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
 
         const memories = result.data.map((memory) => ({
             ...memory,
-            content: memory.content,
-            embedding: memory.embedding,
+            content: typeof memory.content === 'string'
+                ? JSON.parse(memory.content)
+                : memory.content
         }));
-
-        elizaLogger.info('Processed results:', {
-            count: memories.length,
-            firstMemory: memories[0] ? {
-                id: memories[0].id,
-                similarity: memories[0].similarity,
-                content: memories[0].content,
-                roomId: memories[0].roomId,
-                agentId: memories[0].agentId,
-                userId: memories[0].userId,
-                unique: memories[0].unique,
-                createdAt: memories[0].createdAt
-            } : null
-        });
 
         const duration = performance.now() - startTime;
         elizaLogger.info('Search completed', { duration: `${duration.toFixed(2)}ms` });
@@ -673,9 +668,9 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         start?: number;
         end?: number;
     }): Promise<Memory[]> {
-        elizaLogger.debug('Getting memories', { 
+        elizaLogger.debug('Getting memories', {
             roomId: params.roomId,
-            tableName: params.tableName,
+            type: params.tableName,
             filters: {
                 unique: params.unique,
                 agentId: params.agentId,
@@ -686,16 +681,28 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         });
 
         const query = this.supabase
-            .from(params.tableName)
+            .from('memories')
             .select("*")
-            .eq("roomId", params.roomId);
+            .eq("roomId", params.roomId)
+            .eq("type", params.tableName);
 
+        // Convert timestamp numbers to ISO strings for Postgres
         if (params.start) {
-            query.gte("createdAt", params.start);
+            const startDate = new Date(params.start);
+            if (isNaN(startDate.getTime())) {
+                elizaLogger.warn('Invalid start date', { start: params.start });
+            } else {
+                query.gte("createdAt", startDate.toISOString());
+            }
         }
 
         if (params.end) {
-            query.lte("createdAt", params.end);
+            const endDate = new Date(params.end);
+            if (isNaN(endDate.getTime())) {
+                elizaLogger.warn('Invalid end date', { end: params.end });
+            } else {
+                query.lte("createdAt", endDate.toISOString());
+            }
         }
 
         if (params.unique) {
@@ -717,17 +724,56 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         if (error) {
             elizaLogger.error('Failed to get memories', {
                 error: error.message,
-                code: error.code
+                code: error.code,
+                type: params.tableName
             });
             throw new Error(`Error retrieving memories: ${error.message}`);
         }
 
-        elizaLogger.debug('Memories retrieved', { 
+        elizaLogger.debug('Memories retrieved', {
             count: data?.length,
-            roomId: params.roomId
+            roomId: params.roomId,
+            type: params.tableName
         });
 
-        return data as Memory[];
+        return (data || []).map(memory => ({
+            ...memory,
+            content: typeof memory.content === 'string'
+                ? JSON.parse(memory.content)
+                : memory.content
+        }));
+    }
+
+    async getParticipantUserState(roomId: UUID, userId: UUID): Promise<ParticipantState> {
+        elizaLogger.info('Getting participant user state...', { roomId, userId });
+        return await this.withErrorHandling('getParticipantUserState', async () => {
+            const { data, error } = await this.supabase
+                .from('participants')
+                .select('userState')
+                .eq('roomId', roomId)
+                .eq('userId', userId)
+                .maybeSingle();  // Use maybeSingle instead of single
+
+            if (error) {
+                if (error.message.includes('not found')) {
+                    elizaLogger.debug('No participant state found', { roomId, userId });
+                    return null;
+                }
+                elizaLogger.error('Failed to get participant state', {
+                    error: error.message,
+                    roomId,
+                    userId
+                });
+                throw new Error(`Error getting participant state: ${error.message}`);
+            }
+
+            elizaLogger.success('Participant user state retrieved', {
+                state: data?.userState,
+                roomId,
+                userId
+            });
+            return data?.userState || null;
+        });
     }
 
     async searchMemoriesByEmbedding(
@@ -783,21 +829,21 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     }
 
     async getMemoryById(id: UUID): Promise<Memory | null> {
-        elizaLogger.debug('Getting memory by ID - Validation', { 
+        elizaLogger.debug('Getting memory by ID - Validation', {
             id,
             idType: typeof id,
             idLength: id.length
         });
-        
+
         // Validate UUID format
         const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
         if (!uuidPattern.test(id)) {
-            elizaLogger.warn('Memory retrieval - UUID format issue', { 
+            elizaLogger.warn('Memory retrieval - UUID format issue', {
                 id,
                 length: id.length,
                 matches: id.match(/-/g)?.length || 0
             });
-            
+
             // Try to clean/fix the UUID
             const cleanedUuid = id.toLowerCase().replace(/[^0-9a-f-]/g, '');
             if (uuidPattern.test(cleanedUuid)) {
@@ -810,7 +856,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                 throw new Error('Invalid UUID format');
             }
         }
-        
+
         return await this.withErrorHandling('getMemoryById', async () => {
             try {
                 const { data, error } = await this.supabase
@@ -833,7 +879,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                 }
 
                 if (data.length > 1) {
-                    elizaLogger.error('Multiple memories found with same ID', { 
+                    elizaLogger.error('Multiple memories found with same ID', {
                         id,
                         count: data.length
                     });
@@ -841,7 +887,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                 }
 
                 const memory = data[0];
-                elizaLogger.debug('Memory retrieved', { 
+                elizaLogger.debug('Memory retrieved', {
                     id,
                     hasContent: !!memory.content,
                     hasEmbedding: !!memory.embedding
@@ -898,7 +944,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         }
 
         // Original validation starts here
-        elizaLogger.debug('Creating memory - Initial validation', { 
+        elizaLogger.debug('Creating memory - Initial validation', {
             memoryId: memory.id,
             tableName,
             unique,
@@ -920,7 +966,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             if (!memory.userId) missingFields.push('userId');
             if (!memory.roomId) missingFields.push('roomId');
             if (!memory.content) missingFields.push('content');
-            
+
             elizaLogger.error('Memory validation failed - Missing fields', {
                 memoryId: memory.id,
                 missingFields,
@@ -968,7 +1014,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                     length: value.length,
                     matches: value.match(/-/g)?.length || 0
                 });
-                
+
                 // Try to clean/fix the UUID if possible
                 const cleanedUuid = value.toLowerCase().replace(/[^0-9a-f-]/g, '');
                 if (uuidPattern.test(cleanedUuid)) {
@@ -1206,7 +1252,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
 
     async removeMemory(memoryId: UUID, tableName: string): Promise<void> {
         elizaLogger.debug('Removing memory', { memoryId, tableName });
-        
+
         return await this.withErrorHandling('removeMemory', async () => {
             const { error } = await this.supabase
                 .from(tableName)
@@ -1227,7 +1273,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
 
     async removeAllMemories(roomId: UUID, tableName: string): Promise<void> {
         elizaLogger.debug('Removing all memories', { roomId, tableName });
-        
+
         return await this.withErrorHandling('removeAllMemories', async () => {
             const { error } = await this.supabase.rpc("remove_memories", {
                 query_roomid: roomId,
@@ -1247,12 +1293,12 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     }
 
     async countMemories(roomId: UUID, _unique = false, tableName?: string): Promise<number> {
-        elizaLogger.debug('Counting memories', { 
-            roomId, 
+        elizaLogger.debug('Counting memories', {
+            roomId,
             tableName: tableName || 'memories',
-            unique: _unique 
+            unique: _unique
         });
-        
+
         return await this.withErrorHandling('countMemories', async () => {
             const { count, error } = await this.supabase
                 .from(tableName || 'memories')
@@ -1267,11 +1313,11 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                 throw new Error(`Error counting memories: ${error.message}`);
             }
 
-            elizaLogger.debug('Memories counted', { 
+            elizaLogger.debug('Memories counted', {
                 roomId,
                 count: count || 0
             });
-            
+
             return count || 0;
         });
     }
@@ -1362,6 +1408,193 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         return [...new Set(data.map((row) => row.roomId as UUID))] as UUID[];
     }
 
+    async getCache(keyOrParams: string | { key: string, agentId: string }, agentId?: string): Promise<any> {
+        // Determine key and agentId based on parameter type
+        let finalKey: string;
+        let finalAgentId: string;
+
+        if (typeof keyOrParams === 'object' && keyOrParams !== null) {
+            finalKey = keyOrParams.key;
+            finalAgentId = keyOrParams.agentId;
+            elizaLogger.debug('Using object parameter format', {
+                providedKey: finalKey,
+                providedAgentId: finalAgentId
+            });
+        } else {
+            finalKey = keyOrParams as string;
+            finalAgentId = agentId;
+            elizaLogger.debug('Using split parameter format', {
+                providedKey: finalKey,
+                providedAgentId: finalAgentId
+            });
+        }
+
+        // Validate parameters
+        if (typeof finalKey !== 'string' || typeof finalAgentId !== 'string') {
+            elizaLogger.error('Invalid parameters for getCache after parsing', {
+                keyType: typeof finalKey,
+                agentIdType: typeof finalAgentId,
+                finalKey,
+                finalAgentId
+            });
+            throw new Error('Invalid parameters: Unable to extract valid key and agentId');
+        }
+
+        elizaLogger.info('Getting cache value...', { key: finalKey, agentId: finalAgentId });
+
+        return await this.withErrorHandling('getCache', async () => {
+            const { data, error } = await this.supabase
+                .from('cache')
+                .select('value')
+                .eq('key', finalKey)
+                .eq('agentId', finalAgentId)
+                .maybeSingle();
+
+            if (error) {
+                elizaLogger.error('Failed to get cache value', {
+                    error: error.message,
+                    key: finalKey,
+                    agentId: finalAgentId
+                });
+                throw new Error(`Error getting cache value: ${error.message}`);
+            }
+
+            if (!data) {
+                elizaLogger.debug('Cache miss', { key: finalKey, agentId: finalAgentId });
+                return null;
+            }
+
+            elizaLogger.debug('Cache hit', { key: finalKey, agentId: finalAgentId });
+            return data.value;
+        });
+    }
+
+    async setCache(
+        keyOrParams: string | { key: string, agentId: string, value: any },
+        agentIdOrValue?: string | any,
+        value?: any,
+        ttl?: number
+    ): Promise<void> {
+        // Determine parameters based on input format
+        let finalKey: string;
+        let finalAgentId: string;
+        let finalValue: any;
+        let finalTtl: number | undefined = ttl;
+
+        if (typeof keyOrParams === 'object' && keyOrParams !== null) {
+            finalKey = keyOrParams.key;
+            finalAgentId = keyOrParams.agentId;
+            finalValue = keyOrParams.value;
+            elizaLogger.debug('Using object parameter format for setCache', {
+                providedKey: finalKey,
+                providedAgentId: finalAgentId
+            });
+        } else {
+            finalKey = keyOrParams as string;
+            finalAgentId = agentIdOrValue as string;
+            finalValue = value;
+            elizaLogger.debug('Using split parameter format for setCache', {
+                providedKey: finalKey,
+                providedAgentId: finalAgentId
+            });
+        }
+
+        // Validate parameters
+        if (typeof finalKey !== 'string' || typeof finalAgentId !== 'string') {
+            elizaLogger.error('Invalid parameters for setCache after parsing', {
+                keyType: typeof finalKey,
+                agentIdType: typeof finalAgentId,
+                finalKey,
+                finalAgentId
+            });
+            throw new Error('Invalid parameters: Unable to extract valid key and agentId');
+        }
+
+        elizaLogger.info('Setting cache value...', {
+            key: finalKey,
+            agentId: finalAgentId,
+            ttl: finalTtl
+        });
+
+        return await this.withErrorHandling('setCache', async () => {
+            const expiresAt = finalTtl ? new Date(Date.now() + finalTtl * 1000) : null;
+
+            const { error } = await this.supabase
+                .from('cache')
+                .upsert({
+                    key: finalKey,
+                    agentId: finalAgentId,
+                    value: finalValue,
+                    expiresAt: expiresAt
+                }, {
+                    onConflict: 'key, agentId'
+                });
+
+            if (error) {
+                elizaLogger.error('Failed to set cache value', {
+                    error: error.message,
+                    key: finalKey,
+                    agentId: finalAgentId
+                });
+                throw new Error(`Error setting cache value: ${error.message}`);
+            }
+
+            elizaLogger.debug('Cache value set successfully', {
+                key: finalKey,
+                agentId: finalAgentId
+            });
+        });
+    }
+
+    async deleteCache(keyOrParams: string | { key: string, agentId: string }, agentId?: string): Promise<void> {
+        // Determine parameters based on input format
+        let finalKey: string;
+        let finalAgentId: string;
+
+        if (typeof keyOrParams === 'object' && keyOrParams !== null) {
+            finalKey = keyOrParams.key;
+            finalAgentId = keyOrParams.agentId;
+        } else {
+            finalKey = keyOrParams as string;
+            finalAgentId = agentId;
+        }
+
+        // Validate parameters
+        if (typeof finalKey !== 'string' || typeof finalAgentId !== 'string') {
+            elizaLogger.error('Invalid parameters for deleteCache after parsing', {
+                keyType: typeof finalKey,
+                agentIdType: typeof finalAgentId,
+                finalKey,
+                finalAgentId
+            });
+            throw new Error('Invalid parameters: Unable to extract valid key and agentId');
+        }
+
+        elizaLogger.info('Deleting cache value...', { key: finalKey, agentId: finalAgentId });
+
+        return await this.withErrorHandling('deleteCache', async () => {
+            const { error } = await this.supabase
+                .from('cache')
+                .delete()
+                .eq('key', finalKey)
+                .eq('agentId', finalAgentId);
+
+            if (error) {
+                elizaLogger.error('Failed to delete cache value', {
+                    error: error.message,
+                    key: finalKey,
+                    agentId: finalAgentId
+                });
+                throw new Error(`Error deleting cache value: ${error.message}`);
+            }
+
+            elizaLogger.debug('Cache value deleted successfully', {
+                key: finalKey,
+                agentId: finalAgentId
+            });
+        });
+    }
+
     async createRoom(roomId: UUID): Promise<UUID> {
         const { data, error } = await this.supabase.rpc("create_room", {
             room_id: roomId
@@ -1388,10 +1621,10 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     async addParticipant(userId: UUID, roomId: UUID): Promise<boolean> {
         const { error } = await this.supabase
             .from("participants")
-            .insert({ 
+            .insert({
                 id: uuid() as UUID,
-                userId: userId, 
-                roomId: roomId 
+                userId: userId,
+                roomId: roomId
             });
 
         if (error) {

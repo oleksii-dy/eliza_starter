@@ -1,12 +1,34 @@
--- First drop existing functions
+-- First drop existing functions and triggers
 DROP FUNCTION IF EXISTS create_room(UUID);
 DROP FUNCTION IF EXISTS remove_memories(UUID, TEXT);
 DROP FUNCTION IF EXISTS search_memories(TEXT, UUID, vector, float, integer, boolean);
 DROP FUNCTION IF EXISTS get_embedding_list(TEXT, float, TEXT, TEXT, TEXT, integer);
 DROP FUNCTION IF EXISTS get_goals(boolean, UUID, UUID, integer);
 DROP FUNCTION IF EXISTS check_vector_extension();
+DROP TRIGGER IF EXISTS update_cache_updated_at ON cache;
+DROP FUNCTION IF EXISTS update_updated_at_column();
+DROP FUNCTION IF EXISTS cleanup_expired_cache();
 
--- RPC Functions for Supabase Adapter
+-- Cache Management Setup
+CREATE TABLE IF NOT EXISTS cache (
+    "key" TEXT NOT NULL,
+    "agentId" TEXT NOT NULL,
+    "value" JSONB DEFAULT '{}'::jsonb,
+    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "expiresAt" TIMESTAMP,
+    PRIMARY KEY ("key", "agentId")
+);
+
+-- Create index for expiration lookups
+CREATE INDEX IF NOT EXISTS idx_cache_expires ON cache("expiresAt");
+
+-- Create the cleanup function for expired entries
+CREATE OR REPLACE FUNCTION cleanup_expired_cache()
+RETURNS void AS $$
+BEGIN
+    DELETE FROM cache WHERE "expiresAt" < CURRENT_TIMESTAMP;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Room Creation
 CREATE OR REPLACE FUNCTION create_room(room_id UUID)
@@ -26,14 +48,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Memory Search with Vector Similarity
+-- Updated Memory Search with Vector Similarity and Type Filtering
 CREATE OR REPLACE FUNCTION search_memories(
     query_table_name TEXT,
     query_room_id UUID,
     query_embedding vector,
     query_match_threshold FLOAT,
     query_match_count INTEGER,
-    query_unique BOOLEAN
+    query_unique BOOLEAN,
+    query_type TEXT DEFAULT NULL
 ) RETURNS TABLE (
     id UUID,
     type TEXT,
@@ -47,8 +70,8 @@ CREATE OR REPLACE FUNCTION search_memories(
     similarity FLOAT
 ) AS $$
 BEGIN
-    RETURN QUERY EXECUTE format('
-    SELECT 
+    RETURN QUERY
+    SELECT
         m.id,
         m.type,
         m."createdAt",
@@ -58,15 +81,14 @@ BEGIN
         m."agentId",
         m."roomId",
         m."unique",
-        1 - (m.embedding <-> $1) as similarity
-    FROM %I m
-    WHERE m."roomId" = $2
-    AND 1 - (m.embedding <-> $1) >= $3
-    AND (NOT $4 OR m."unique" = true)
-    ORDER BY m.embedding <-> $1
-    LIMIT $5',
-    query_table_name)
-    USING query_embedding, query_room_id, query_match_threshold, query_unique, query_match_count;
+        1 - (m.embedding <-> query_embedding) as similarity
+    FROM memories m
+    WHERE m."roomId" = query_room_id
+    AND (query_type IS NULL OR m.type = query_type)
+    AND 1 - (m.embedding <-> query_embedding) >= query_match_threshold
+    AND (NOT query_unique OR m."unique" = true)
+    ORDER BY m.embedding <-> query_embedding
+    LIMIT query_match_count;
 END;
 $$ LANGUAGE plpgsql;
 

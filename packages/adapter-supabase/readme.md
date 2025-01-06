@@ -105,6 +105,16 @@
 - You missed Step 5 (rpc_functions.sql)
 - Go back and run rpc_functions.sql
 
+### "memory or cache operations not working correctly"
+- Run the additional fixes in sql_fix.sql:
+  ```sql
+  -- Open sql_fix.sql from your local project
+  -- Copy ALL contents
+  -- Run in SQL Editor
+  -- This will update memory search and cache management
+  ```
+- This ensures all memory operations and caching work correctly
+
 ### "permission denied"
 - You're not using the correct API key
 - Check Step 2 and make sure you're using the "anon/public" key
