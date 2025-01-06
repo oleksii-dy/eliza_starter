@@ -3,9 +3,10 @@
 import { Plugin } from '@elizaos/core';
 import { smsAction } from './actions/sms-action.js';
 import { makeVoiceCallAction, textToSpeechAction } from './actions/voice-action.js';
-import { requestVerificationAction, checkVerificationAction } from './actions/verify-actions.js';
+import { requestVerificationAction, checkVerificationAction, checkVerifiedNumberAction } from './actions/verify-actions.js';
 import { twilioService } from './services/twilio.js';
 import { verifyService } from './services/verify.js';
+import { storageService } from './services/storage.js';
 
 export const TwilioPlugin: Plugin = {
     name: 'twilio',
@@ -15,11 +16,13 @@ export const TwilioPlugin: Plugin = {
         makeVoiceCallAction,
         textToSpeechAction,
         requestVerificationAction,
-        checkVerificationAction
+        checkVerificationAction,
+        checkVerifiedNumberAction
     ],
     services: [
         twilioService,
-        verifyService
+        verifyService,
+        storageService
     ]
 };
 

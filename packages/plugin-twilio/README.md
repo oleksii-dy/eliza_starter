@@ -37,7 +37,7 @@ await voiceTextPlugin.initialize();
 // Use the services
 const twilioService = voiceTextPlugin.getService(ServiceType.TEXT_GENERATION);
 await twilioService.sendMessage(to, message);
-````
+```
 
 6. Create an index.ts file:
 ```typescript:plugin-twilio/src/index.ts
@@ -75,3 +75,47 @@ pnpm build && pnpm test
 
 
 Let me know if you need any adjustments to these files!
+
+## Phone Number Verification
+
+Before sending SMS messages, you need to verify your phone number with the Eliza agent. This is a two-step process:
+
+1. **Request Verification**
+   ```
+   User: verify phone +1234567890
+   Agent: Please reply with the verification code sent to +1234567890
+   ```
+
+2. **Enter Verification Code**
+   ```
+   User: 123456
+   Agent: Phone number +1234567890 has been verified successfully!
+   ```
+
+3. **Check Verified Number** (optional)
+   ```
+   User: show my verified number
+   Agent: Your verified phone number is: +1234567890 (verified on Jan 1, 2024)
+   ```
+
+### Usage Notes
+
+- You can only send SMS messages from verified phone numbers
+- Each user can have one verified phone number at a time
+- Verification codes expire after 10 minutes
+- For trial accounts, you must verify each phone number you want to send messages to
+
+### Environment Setup
+
+Make sure you have the following environment variables set in your `.env` file:
+```
+TWILIO_ACCOUNT_SID=your_account_sid
+TWILIO_AUTH_TOKEN=your_auth_token
+TWILIO_PHONE_NUMBER=your_twilio_number
+```
+
+### Security
+
+- Phone numbers are stored securely in memory
+- Verification state is tied to your user session
+- Failed verification attempts are rate-limited
