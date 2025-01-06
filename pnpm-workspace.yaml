@@ -1,6 +1,7 @@
 packages:
     - "docs"
     - "packages/*"
+    - 'packages/plugin-twilio'
     - "client"
     - "web-agent"
     - "agent"
