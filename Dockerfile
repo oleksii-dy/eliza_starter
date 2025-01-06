@@ -22,6 +22,7 @@ COPY agent ./agent
 COPY packages ./packages
 COPY scripts ./scripts
 COPY characters ./characters
+COPY client ./client
 
 # Install dependencies and build the project
 RUN pnpm install \
@@ -50,6 +51,7 @@ COPY --from=builder /app/agent ./agent
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/characters ./characters
+COPY --from=builder /app/client ./client
 
 # Set the command to run the application
 CMD ["pnpm", "start"]
