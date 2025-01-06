@@ -1,9 +1,5 @@
 // templates/staking.ts
-import {
-    ResponseTemplate,
-    CoinTemplate,
-    PaginationTemplate,
-} from "./types";
+import { ResponseTemplate, CoinTemplate, PaginationTemplate } from "./types";
 
 export interface StakingModuleParams {
     unbondingTime: string;

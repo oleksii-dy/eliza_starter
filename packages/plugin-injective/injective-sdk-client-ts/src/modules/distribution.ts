@@ -3,9 +3,16 @@ import {
     ValidatorRewards,
     DistributionModuleParams,
     Coin,
+    TxResponse,
+    MsgWithdrawDelegatorReward,
+    MsgWithdrawValidatorCommission,
 } from "@injectivelabs/sdk-ts";
+import {
+    MsgWithdrawDelegatorRewardParams,
+    MsgWithdrawValidatorCommissionParams,
+} from "../types/index";
 //All the chain grpc params go here
-export function getDistributionModuleParams(
+export async function getDistributionModuleParams(
     this: InjectiveGrpcBase
 ): Promise<DistributionModuleParams> {
     return this.request({
@@ -14,7 +21,7 @@ export function getDistributionModuleParams(
     });
 }
 
-export function getDelegatorRewardsForValidator(
+export async function getDelegatorRewardsForValidator(
     this: InjectiveGrpcBase,
     delegatorAddress: string,
     validatorAddress: string
@@ -28,7 +35,7 @@ export function getDelegatorRewardsForValidator(
     });
 }
 
-export function getDelegatorRewardsForValidatorNoThrow(
+export async function getDelegatorRewardsForValidatorNoThrow(
     this: InjectiveGrpcBase,
     delegatorAddress: string,
     validatorAddress: string
@@ -43,7 +50,7 @@ export function getDelegatorRewardsForValidatorNoThrow(
     });
 }
 
-export function getDelegatorRewards(
+export async function getDelegatorRewards(
     this: InjectiveGrpcBase,
     injectiveAddress: string
 ): Promise<ValidatorRewards[]> {
@@ -53,7 +60,7 @@ export function getDelegatorRewards(
     });
 }
 
-export function getDelegatorRewardsNoThrow(
+export async function getDelegatorRewardsNoThrow(
     this: InjectiveGrpcBase,
     injectiveAddress: string
 ): Promise<ValidatorRewards[]> {
@@ -61,4 +68,25 @@ export function getDelegatorRewardsNoThrow(
         method: this.chainGrpcDistributionApi.fetchDelegatorRewardsNoThrow,
         params: injectiveAddress,
     });
+}
+
+export async function msgWithdrawDelegatorReward(
+    this: InjectiveGrpcBase,
+    params: MsgWithdrawDelegatorRewardParams
+): Promise<TxResponse> {
+    const msg = MsgWithdrawDelegatorReward.fromJSON({
+        delegatorAddress: params.delegatorAddress,
+        validatorAddress: params.validatorAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgWithdrawValidatorCommission(
+    this: InjectiveGrpcBase,
+    params: MsgWithdrawValidatorCommissionParams
+): Promise<TxResponse> {
+    const msg = MsgWithdrawValidatorCommission.fromJSON({
+        validatorAddress: params.validatorAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
 }

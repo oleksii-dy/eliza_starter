@@ -3,10 +3,14 @@ import {
     AuctionModuleState,
     CurrentBasket,
     Auction,
+    MsgBid,
+    TxResponse,
 } from "@injectivelabs/sdk-ts";
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
-//include chain grpc calls for fetch functions
-export function getAuctionModuleParams(
+import { MsgBidRequestParams } from "../types";
+import { INJ_DENOM } from "@injectivelabs/utils";
+//include chain grpc calls for fetch async functions
+export async function getAuctionModuleParams(
     this: InjectiveGrpcBase
 ): Promise<AuctionModuleStateParams> {
     return this.request({
@@ -14,7 +18,7 @@ export function getAuctionModuleParams(
         params: {},
     });
 }
-export function getAuctionModuleState(
+export async function getAuctionModuleState(
     this: InjectiveGrpcBase
 ): Promise<AuctionModuleState> {
     return this.request({
@@ -23,7 +27,7 @@ export function getAuctionModuleState(
     });
 }
 
-export function getCurrentBasket(
+export async function getCurrentBasket(
     this: InjectiveGrpcBase
 ): Promise<CurrentBasket> {
     return this.request({
@@ -32,7 +36,7 @@ export function getCurrentBasket(
     });
 }
 //include indexer grpc calls
-export function getAuctionRound(
+export async function getAuctionRound(
     this: InjectiveGrpcBase,
     round: number
 ): Promise<Auction> {
@@ -42,7 +46,7 @@ export function getAuctionRound(
     });
 }
 
-export function getAuctions(
+export async function getAuctions(
     this: InjectiveGrpcBase,
     startRound: number,
     limit: number
@@ -51,4 +55,18 @@ export function getAuctions(
         method: this.indexerGrpcAuctionApi.fetchAuctions,
         params: { startRound, limit },
     });
+}
+
+export async function msgBid(
+    this: InjectiveGrpcBase,
+    params: MsgBidRequestParams
+): Promise<TxResponse> {
+    const latestModuleState = await getCurrentBasket.call(this);
+    const amount = { denom: INJ_DENOM, amount: params.amount };
+    const msg = MsgBid.fromJSON({
+        round: latestModuleState.auctionRound,
+        injectiveAddress: this.injAddress,
+        amount: amount,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
 }

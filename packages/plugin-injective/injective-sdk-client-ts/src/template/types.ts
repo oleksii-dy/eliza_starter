@@ -1,4 +1,3 @@
-
 export interface ResponseTemplate {
     template: string;
     description: string;

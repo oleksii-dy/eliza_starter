@@ -8,9 +8,23 @@ import {
     Delegation,
     UnBondingDelegation,
     ReDelegation,
+    MsgBeginRedelegate,
+    MsgDelegate,
+    MsgUndelegate,
+    MsgCreateValidator,
+    MsgEditValidator,
+    MsgCancelUnbondingDelegation,
+    TxResponse,
 } from "@injectivelabs/sdk-ts";
-
-export function getStakingModuleParams(
+import {
+    MsgBeginRedelegateParams,
+    MsgDelegateParams,
+    MsgUndelegateParams,
+    MsgCreateValidatorParams,
+    MsgEditValidatorParams,
+    MsgCancelUnbondingDelegationParams,
+} from "../types/index";
+export async function getStakingModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StakingModuleParams> {
     return this.request({
@@ -19,14 +33,14 @@ export function getStakingModuleParams(
     });
 }
 
-export function getPool(this: InjectiveGrpcBase): Promise<Pool> {
+export async function getPool(this: InjectiveGrpcBase): Promise<Pool> {
     return this.request({
         method: this.chainGrpcStakingApi.fetchPool,
         params: {},
     });
 }
 
-export function getValidators(
+export async function getValidators(
     this: InjectiveGrpcBase,
     pagination?: PaginationOption
 ): Promise<{
@@ -39,7 +53,7 @@ export function getValidators(
     });
 }
 
-export function getValidator(
+export async function getValidator(
     this: InjectiveGrpcBase,
     address: string
 ): Promise<Validator> {
@@ -49,7 +63,7 @@ export function getValidator(
     });
 }
 
-export function getValidatorDelegations(
+export async function getValidatorDelegations(
     this: InjectiveGrpcBase,
     params: {
         validatorAddress: string;
@@ -65,7 +79,7 @@ export function getValidatorDelegations(
     });
 }
 
-export function getValidatorDelegationsNoThrow(
+export async function getValidatorDelegationsNoThrow(
     this: InjectiveGrpcBase,
     params: {
         validatorAddress: string;
@@ -81,7 +95,7 @@ export function getValidatorDelegationsNoThrow(
     });
 }
 
-export function getValidatorUnbondingDelegations(
+export async function getValidatorUnbondingDelegations(
     this: InjectiveGrpcBase,
     params: {
         validatorAddress: string;
@@ -97,7 +111,7 @@ export function getValidatorUnbondingDelegations(
     });
 }
 
-export function getValidatorUnbondingDelegationsNoThrow(
+export async function getValidatorUnbondingDelegationsNoThrow(
     this: InjectiveGrpcBase,
     params: {
         validatorAddress: string;
@@ -114,7 +128,7 @@ export function getValidatorUnbondingDelegationsNoThrow(
     });
 }
 
-export function getDelegation(
+export async function getDelegation(
     this: InjectiveGrpcBase,
     params: {
         injectiveAddress: string;
@@ -127,7 +141,7 @@ export function getDelegation(
     });
 }
 
-export function getDelegations(
+export async function getDelegations(
     this: InjectiveGrpcBase,
     params: {
         injectiveAddress: string;
@@ -143,7 +157,7 @@ export function getDelegations(
     });
 }
 
-export function getDelegationsNoThrow(
+export async function getDelegationsNoThrow(
     this: InjectiveGrpcBase,
     params: {
         injectiveAddress: string;
@@ -159,7 +173,7 @@ export function getDelegationsNoThrow(
     });
 }
 
-export function getDelegators(
+export async function getDelegators(
     this: InjectiveGrpcBase,
     params: {
         validatorAddress: string;
@@ -175,7 +189,7 @@ export function getDelegators(
     });
 }
 
-export function getDelegatorsNoThrow(
+export async function getDelegatorsNoThrow(
     this: InjectiveGrpcBase,
     params: {
         validatorAddress: string;
@@ -191,7 +205,7 @@ export function getDelegatorsNoThrow(
     });
 }
 
-export function getUnbondingDelegations(
+export async function getUnbondingDelegations(
     this: InjectiveGrpcBase,
     params: {
         injectiveAddress: string;
@@ -207,7 +221,7 @@ export function getUnbondingDelegations(
     });
 }
 
-export function getUnbondingDelegationsNoThrow(
+export async function getUnbondingDelegationsNoThrow(
     this: InjectiveGrpcBase,
     params: {
         injectiveAddress: string;
@@ -223,7 +237,7 @@ export function getUnbondingDelegationsNoThrow(
     });
 }
 
-export function getReDelegations(
+export async function getReDelegations(
     this: InjectiveGrpcBase,
     params: {
         injectiveAddress: string;
@@ -239,7 +253,7 @@ export function getReDelegations(
     });
 }
 
-export function getReDelegationsNoThrow(
+export async function getReDelegationsNoThrow(
     this: InjectiveGrpcBase,
     params: {
         injectiveAddress: string;
@@ -253,4 +267,68 @@ export function getReDelegationsNoThrow(
         method: this.chainGrpcStakingApi.fetchReDelegationsNoThrow,
         params,
     });
+}
+
+export async function msgBeginRedelegate(
+    this: InjectiveGrpcBase,
+    params: MsgBeginRedelegateParams
+): Promise<TxResponse> {
+    const msg = MsgBeginRedelegate.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgDelegate(
+    this: InjectiveGrpcBase,
+    params: MsgDelegateParams
+): Promise<TxResponse> {
+    const msg = MsgDelegate.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgUndelegate(
+    this: InjectiveGrpcBase,
+    params: MsgUndelegateParams
+): Promise<TxResponse> {
+    const msg = MsgUndelegate.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgCreateValidator(
+    this: InjectiveGrpcBase,
+    params: MsgCreateValidatorParams
+): Promise<TxResponse> {
+    const msg = MsgCreateValidator.fromJSON({
+        ...params,
+        delegatorAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgEditValidator(
+    this: InjectiveGrpcBase,
+    params: MsgEditValidatorParams
+): Promise<TxResponse> {
+    const msg = MsgEditValidator.fromJSON({
+        ...params,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgCancelUnbondingDelegation(
+    this: InjectiveGrpcBase,
+    params: MsgCancelUnbondingDelegationParams
+): Promise<TxResponse> {
+    const msg = MsgCancelUnbondingDelegation.fromJSON({
+        ...params,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
 }

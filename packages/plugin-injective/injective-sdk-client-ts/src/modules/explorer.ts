@@ -10,7 +10,7 @@ import {
     ExplorerStats,
     ExchangePagination,
 } from "@injectivelabs/sdk-ts";
-export function getTxByHash(
+export async function getTxByHash(
     this: InjectiveGrpcBase,
     hash: string
 ): Promise<Transaction> {
@@ -21,7 +21,7 @@ export function getTxByHash(
     });
 }
 
-export function getAccountTx(
+export async function getAccountTx(
     this: InjectiveGrpcBase,
     params: {
         address: string;
@@ -50,7 +50,7 @@ export function getAccountTx(
     });
 }
 
-export function getValidator(
+export async function getValidator(
     this: InjectiveGrpcBase,
     validatorAddress: string
 ): Promise<ExplorerValidator> {
@@ -61,7 +61,7 @@ export function getValidator(
     });
 }
 
-export function getValidatorUptime(
+export async function getValidatorUptime(
     this: InjectiveGrpcBase,
     validatorAddress: string
 ): Promise<ValidatorUptime[]> {
@@ -72,7 +72,7 @@ export function getValidatorUptime(
     });
 }
 
-export function getPeggyDepositTxs(
+export async function getPeggyDepositTxs(
     this: InjectiveGrpcBase,
     params: {
         receiver?: string;
@@ -92,7 +92,7 @@ export function getPeggyDepositTxs(
     });
 }
 
-export function getPeggyWithdrawalTxs(
+export async function getPeggyWithdrawalTxs(
     this: InjectiveGrpcBase,
     params: {
         sender?: string;
@@ -112,7 +112,7 @@ export function getPeggyWithdrawalTxs(
     });
 }
 
-export function getBlocks(
+export async function getBlocks(
     this: InjectiveGrpcBase,
     params: {
         before?: number;
@@ -134,7 +134,7 @@ export function getBlocks(
     });
 }
 
-export function getBlock(
+export async function getBlock(
     this: InjectiveGrpcBase,
     id: string
 ): Promise<InjectiveExplorerRpc.GetBlockResponse> {
@@ -145,7 +145,7 @@ export function getBlock(
     });
 }
 
-export function getTxs(
+export async function getTxs(
     this: InjectiveGrpcBase,
     params: {
         before?: number;
@@ -173,7 +173,7 @@ export function getTxs(
     });
 }
 
-export function getIBCTransferTxs(
+export async function getIBCTransferTxs(
     this: InjectiveGrpcBase,
     params: {
         sender?: string;
@@ -201,7 +201,7 @@ export function getIBCTransferTxs(
     });
 }
 
-export function getExplorerStats(
+export async function getExplorerStats(
     this: InjectiveGrpcBase
 ): Promise<ExplorerStats> {
     return this.request({

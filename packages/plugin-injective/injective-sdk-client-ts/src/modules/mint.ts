@@ -1,7 +1,7 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
 import { MinModuleParams } from "@injectivelabs/sdk-ts";
 
-export function getMintModuleParams(
+export async function getMintModuleParams(
     this: InjectiveGrpcBase
 ): Promise<MinModuleParams> {
     return this.request({
@@ -10,7 +10,7 @@ export function getMintModuleParams(
     });
 }
 
-export function getInflation(
+export async function getInflation(
     this: InjectiveGrpcBase
 ): Promise<{ inflation: string }> {
     return this.request({
@@ -19,7 +19,7 @@ export function getInflation(
     });
 }
 
-export function getAnnualProvisions(
+export async function getAnnualProvisions(
     this: InjectiveGrpcBase
 ): Promise<{ annualProvisions: string }> {
     return this.request({

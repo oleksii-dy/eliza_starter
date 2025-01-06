@@ -22,7 +22,7 @@ import {
 } from "@injectivelabs/sdk-ts";
 import { Coin } from "@injectivelabs/ts-types";
 
-export function getVault(
+export async function getVault(
     this: InjectiveGrpcBase,
     params: {
         contractAddress?: string;
@@ -35,7 +35,7 @@ export function getVault(
     });
 }
 
-export function getVaults(
+export async function getVaults(
     this: InjectiveGrpcBase,
     params?: {
         limit?: number;
@@ -52,7 +52,7 @@ export function getVaults(
     });
 }
 
-export function getLpTokenPriceChart(
+export async function getLpTokenPriceChart(
     this: InjectiveGrpcBase,
     params: {
         to?: string;
@@ -66,7 +66,7 @@ export function getLpTokenPriceChart(
     });
 }
 
-export function getTVLChart(
+export async function getTVLChart(
     this: InjectiveGrpcBase,
     params: {
         to?: string;
@@ -80,7 +80,7 @@ export function getTVLChart(
     });
 }
 
-export function getVaultsByHolderAddress(
+export async function getVaultsByHolderAddress(
     this: InjectiveGrpcBase,
     params: {
         skip?: number;
@@ -98,7 +98,7 @@ export function getVaultsByHolderAddress(
     });
 }
 
-export function getLPHolders(
+export async function getLPHolders(
     this: InjectiveGrpcBase,
     params: {
         skip?: number;
@@ -116,7 +116,7 @@ export function getLPHolders(
     });
 }
 
-export function getHolderPortfolio(
+export async function getHolderPortfolio(
     this: InjectiveGrpcBase,
     params: {
         holderAddress: string;
@@ -129,7 +129,7 @@ export function getHolderPortfolio(
     });
 }
 
-export function getLeaderboard(
+export async function getLeaderboard(
     this: InjectiveGrpcBase,
     epochId?: number
 ): Promise<MitoLeaderboard> {
@@ -139,7 +139,7 @@ export function getLeaderboard(
     });
 }
 
-export function getTransferHistory(
+export async function getTransferHistory(
     this: InjectiveGrpcBase,
     params?: {
         vault?: string;
@@ -158,7 +158,7 @@ export function getTransferHistory(
     });
 }
 
-export function getLeaderboardEpochs(
+export async function getLeaderboardEpochs(
     this: InjectiveGrpcBase,
     params?: {
         limit?: number;
@@ -175,7 +175,7 @@ export function getLeaderboardEpochs(
     });
 }
 
-export function getStakingPools(
+export async function getStakingPools(
     this: InjectiveGrpcBase,
     params: {
         staker?: string;
@@ -191,7 +191,7 @@ export function getStakingPools(
     });
 }
 
-export function getStakingHistory(
+export async function getStakingHistory(
     this: InjectiveGrpcBase,
     params?: {
         staker?: string;
@@ -218,7 +218,7 @@ export function getStakingHistory(
     });
 }
 
-export function getStakingRewardsByAccount(
+export async function getStakingRewardsByAccount(
     this: InjectiveGrpcBase,
     params: {
         staker: string;
@@ -242,7 +242,7 @@ export function getStakingRewardsByAccount(
     });
 }
 
-export function getMissions(
+export async function getMissions(
     this: InjectiveGrpcBase,
     params: {
         accountAddress: string;
@@ -254,7 +254,7 @@ export function getMissions(
     });
 }
 
-export function getMissionLeaderboard(
+export async function getMissionLeaderboard(
     this: InjectiveGrpcBase,
     userAddress?: string
 ): Promise<MitoMissionLeaderboard> {
@@ -264,7 +264,7 @@ export function getMissionLeaderboard(
     });
 }
 
-export function getIDO(
+export async function getIDO(
     this: InjectiveGrpcBase,
     params: {
         contractAddress: string;
@@ -279,7 +279,7 @@ export function getIDO(
     });
 }
 
-export function getIDOs(
+export async function getIDOs(
     this: InjectiveGrpcBase,
     params?: {
         status?: string;
@@ -298,7 +298,7 @@ export function getIDOs(
     });
 }
 
-export function getIDOSubscribers(
+export async function getIDOSubscribers(
     this: InjectiveGrpcBase,
     params: {
         skip?: number;
@@ -319,7 +319,7 @@ export function getIDOSubscribers(
     });
 }
 
-export function getIDOSubscription(
+export async function getIDOSubscription(
     this: InjectiveGrpcBase,
     params: {
         contractAddress: string;
@@ -334,7 +334,7 @@ export function getIDOSubscription(
     });
 }
 
-export function getIDOActivities(
+export async function getIDOActivities(
     this: InjectiveGrpcBase,
     params?: {
         contractAddress?: string;
@@ -352,7 +352,7 @@ export function getIDOActivities(
     });
 }
 
-export function getIDOWhitelist(
+export async function getIDOWhitelist(
     this: InjectiveGrpcBase,
     params: {
         skip?: number;
@@ -370,7 +370,7 @@ export function getIDOWhitelist(
     });
 }
 
-export function getClaimReferences(
+export async function getClaimReferences(
     this: InjectiveGrpcBase,
     params: {
         skip?: number;

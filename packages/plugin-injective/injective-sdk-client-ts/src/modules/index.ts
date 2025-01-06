@@ -63,10 +63,10 @@ export function getAddressFromPrivateKey(privateKey?: string): string {
 export class GrpcClient extends InjectiveGrpcBase {
     constructor(
         networkType: keyof typeof Network = "Mainnet",
-        privateKey?: string
+        privateKey: string
     ) {
         const ethAddress = getAddressFromPrivateKey(privateKey);
-        super(networkType, ethAddress);
+        super(networkType, ethAddress, privateKey);
     }
     // Auction endpoints
     public getAuctionModuleParams =
@@ -323,4 +323,3 @@ export class GrpcClient extends InjectiveGrpcBase {
     public getExplorerStats = ExplorerModule.getExplorerStats.bind(this);
 }
 export { InjectiveGrpcBase };
-

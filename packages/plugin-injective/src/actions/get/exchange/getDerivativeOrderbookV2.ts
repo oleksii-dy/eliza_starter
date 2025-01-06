@@ -10,28 +10,20 @@ import {
     generateObject,
     ModelClass
 } from "@elizaos/core";
-import { orderbookTemplates } from "@injective/templates/exchange/orderbook";
+import { orderbookTemplates } from "@injective/template/exchange/orderbook";
 import { OrderbookWithSequence } from "@injectivelabs/sdk-ts";
-import { InjectiveGrpcBase } from "@injective/modules";
+import { GrpcClient } from "@injective/modules";
+import { z } from "zod";
 
-// Schema for derivative orderbook request
-const DerivativeOrderbookSchema = {
-    type: "object",
-    properties: {
-        marketId: {
-            type: "string",
-            description: "The ID of the derivative market to fetch orderbook data for"
-        }
-    },
-    required: ["marketId"]
+// Schema for derivative orderbook request using Zod
+const DerivativeOrderbookSchema = z.string({
+    description: "The ID of the derivative market to fetch orderbook data for"
+});
+
+// Type guard for the request content - checking for string
+const isDerivativeOrderbookContent = (content: any): content is string => {
+    return typeof content === "string" && content.length > 0;
 };
-
-// Type guard for the request content
-const isDerivativeOrderbookContent = (content: any): content is { marketId: string } => {
-    return typeof content === "object" && typeof content.marketId === "string";
-};
-
-// Schema and type guard definitions
 
 export const getDerivativeOrderbookAction: Action = {
     name: "GET_DERIVATIVE_ORDERBOOK",
@@ -39,7 +31,6 @@ export const getDerivativeOrderbookAction: Action = {
     
     validate: async (runtime: IAgentRuntime, _message: Memory) => {
         elizaLogger.info("Validating runtime for GET_DERIVATIVE_ORDERBOOK...");
-        // Add any specific validation requirements
         return true;
     },
 
@@ -55,34 +46,30 @@ export const getDerivativeOrderbookAction: Action = {
         try {
             const context = composeContext({
                 state,
-                template: orderbookTemplates
+                template: orderbookTemplates.toString(),
             });
 
-            const orderbookRequest = await generateObject({
+            const derivativeOrderbookRequest = await generateObject({
                 runtime,
                 context,
                 modelClass: ModelClass.SMALL,
                 schema: DerivativeOrderbookSchema
             });
 
-            if (!isDerivativeOrderbookContent(orderbookRequest.object)) {
+            if (!isDerivativeOrderbookContent(derivativeOrderbookRequest.object)) {
                 callback({
-                    text: "Invalid orderbook request details. Please check the market ID.",
+                    text: "Invalid market ID. Please provide a valid market identifier.",
                 }, []);
                 return;
             }
 
-            const { marketId } = orderbookRequest.object;
+            const marketId = derivativeOrderbookRequest.object;
             
-            // Create instance of InjectiveGrpcBase
-            const client = new InjectiveGrpcBase("mainnet");
+            // Create instance of GrpcClient
+            const client = new GrpcClient();
             
             // Fetch the orderbook data
-            const orderbook: OrderbookWithSequence = await client.request({
-                method: (params: string) => client.indexerGrpcDerivativesApi.fetchOrderbookV2(params),
-                params: marketId
-            });
-
+            const orderbook: OrderbookWithSequence = await client.getDerivativeOrderbookV2(marketId);
             elizaLogger.info("Orderbook fetched successfully:", orderbook);
 
             // Format the response

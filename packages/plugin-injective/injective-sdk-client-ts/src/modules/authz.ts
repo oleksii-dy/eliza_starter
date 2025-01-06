@@ -3,10 +3,16 @@ import {
     GrantAuthorizationWithDecodedAuthorization,
     Pagination,
     PaginationOption,
+    MsgGrant,
+    MsgRevoke,
+    MsgAuthzExec,
+    MsgGrantWithAuthorization,
+    TxResponse,
 } from "@injectivelabs/sdk-ts";
+import { MsgGrantParams, MsgAuthzExecParams, MsgRevokeParams } from "../types";
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
-//include chain grpc functions here
-export function getGrants(
+//include chain grpc async functions here
+export async function getGrants(
     this: InjectiveGrpcBase,
     granter: string,
     grantee: string,
@@ -24,7 +30,7 @@ export function getGrants(
         },
     });
 }
-export function getGranterGrants(
+export async function getGranterGrants(
     this: InjectiveGrpcBase,
     granter: string,
     pagination?: PaginationOption
@@ -38,7 +44,7 @@ export function getGranterGrants(
     });
 }
 
-export function getGranteeGrants(
+export async function getGranteeGrants(
     this: InjectiveGrpcBase,
     grantee: string,
     pagination?: PaginationOption
@@ -50,4 +56,44 @@ export function getGranteeGrants(
         method: this.chainGrpcAuthZApi.fetchGranteeGrants,
         params: grantee,
     });
+}
+//Chain client implements these:
+//MsgGrant
+//MsgRevoke
+//MsgExec
+//MsgGrantWithAuthorization
+export async function msgGrant(
+    this: InjectiveGrpcBase,
+    params: MsgGrantParams
+): Promise<TxResponse> {
+    const msg = MsgGrant.fromJSON({
+        messageType: params.messageType,
+        grantee: params.grantee,
+        granter: params.granter,
+    });
+
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgExec(
+    this: InjectiveGrpcBase,
+    params: MsgAuthzExecParams
+): Promise<TxResponse> {
+    const msg = MsgAuthzExec.fromJSON({
+        grantee: params.grantee,
+        msgs: params.msgs,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgRevoke(
+    this: InjectiveGrpcBase,
+    params: MsgRevokeParams
+): Promise<TxResponse> {
+    const msg = MsgRevoke.fromJSON({
+        messageType: params.messageType,
+        grantee: params.grantee,
+        granter: params.granter,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
 }

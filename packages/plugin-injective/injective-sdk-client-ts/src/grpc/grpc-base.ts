@@ -22,6 +22,8 @@ import {
     ChainGrpcTokenFactoryApi,
     ChainGrpcWasmApi,
     ChainGrpcWasmXApi,
+    MsgBroadcasterWithPk,
+    PrivateKey,
 } from "@injectivelabs/sdk-ts";
 //indexer imports
 import {
@@ -110,10 +112,12 @@ export class InjectiveGrpcBase {
 
     protected readonly ethAddress: string;
     protected readonly injAddress: string;
-
+    private privateKey: string;
+    protected msgBroadcaster!: MsgBroadcasterWithPk;
     constructor(
         protected readonly networkType: keyof typeof Network = "Mainnet",
-        protected readonly address: string
+        protected readonly address: string,
+        protected readonly pkKey: string
     ) {
         this.network = Network[networkType];
         this.endpoints = getNetworkEndpoints(this.network);
@@ -199,6 +203,7 @@ export class InjectiveGrpcBase {
         // Initialize EthAddress and InjAddress
         this.ethAddress = address;
         this.injAddress = getInjectiveAddress(this.ethAddress);
+        this.privateKey = pkKey;
     }
     /**
      * Execute a gRPC request for chain transactions
@@ -271,5 +276,20 @@ export class InjectiveGrpcBase {
         } catch {
             return false;
         }
+    }
+    protected async initialize_broadcaster(): Promise<void> {
+        this.msgBroadcaster = new MsgBroadcasterWithPk({
+            network: this.network,
+            privateKey: this.privateKey,
+        });
+    }
+    static async create(
+        network: keyof typeof Network = "Mainnet",
+        address: string,
+        pkKey: string
+    ): Promise<InjectiveGrpcBase> {
+        const instance = new InjectiveGrpcBase(network, address, pkKey);
+        await instance.initialize_broadcaster();
+        return instance;
     }
 }

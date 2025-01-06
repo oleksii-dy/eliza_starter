@@ -2,7 +2,7 @@ import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
 import { PermissionsModuleParams, Namespace } from "@injectivelabs/sdk-ts";
 import { Coin } from "@injectivelabs/core-proto-ts/cjs/cosmos/base/v1beta1/coin.js";
 
-export function getAddressesByRole(
+export async function getAddressesByRole(
     this: InjectiveGrpcBase,
     params: {
         denom: string;
@@ -19,7 +19,7 @@ export function getAddressesByRole(
     });
 }
 
-export function getAddressRoles(
+export async function getAddressRoles(
     this: InjectiveGrpcBase,
     params: {
         address: string;
@@ -36,14 +36,16 @@ export function getAddressRoles(
     });
 }
 
-export function getAllNamespaces(this: InjectiveGrpcBase): Promise<void[]> {
+export async function getAllNamespaces(
+    this: InjectiveGrpcBase
+): Promise<void[]> {
     return this.request({
         method: this.chainGrpcPermissionsApi.fetchAllNamespaces,
         params: {},
     });
 }
 
-export function getPermissionsModuleParams(
+export async function getPermissionsModuleParams(
     this: InjectiveGrpcBase
 ): Promise<PermissionsModuleParams> {
     return this.request({
@@ -52,7 +54,7 @@ export function getPermissionsModuleParams(
     });
 }
 
-export function getNamespaceByDenom(
+export async function getNamespaceByDenom(
     this: InjectiveGrpcBase,
     params: {
         denom: string;
@@ -65,7 +67,7 @@ export function getNamespaceByDenom(
     });
 }
 
-export function getVouchersForAddress(
+export async function getVouchersForAddress(
     this: InjectiveGrpcBase,
     params: {
         address: string;

@@ -5,7 +5,7 @@ import {
     TokenFactoryModuleState,
 } from "@injectivelabs/sdk-ts";
 
-export function getDenomsFromCreator(
+export async function getDenomsFromCreator(
     this: InjectiveGrpcBase,
     params: string
 ): Promise<string[]> {
@@ -15,7 +15,7 @@ export function getDenomsFromCreator(
     });
 }
 
-export function getDenomAuthorityMetadata(
+export async function getDenomAuthorityMetadata(
     this: InjectiveGrpcBase,
     params: {
         creator: string;
@@ -32,7 +32,7 @@ export function getDenomAuthorityMetadata(
     });
 }
 
-export function getTokenFactoryModuleParams(
+export async function getTokenFactoryModuleParams(
     this: InjectiveGrpcBase
 ): Promise<TokenFactoryModuleParams> {
     return this.request({
@@ -41,7 +41,7 @@ export function getTokenFactoryModuleParams(
     });
 }
 
-export function getTokenFactoryModuleState(
+export async function getTokenFactoryModuleState(
     this: InjectiveGrpcBase
 ): Promise<TokenFactoryModuleState> {
     return this.request({

@@ -1,8 +1,4 @@
-import {
-    ResponseTemplate,
-    CoinTemplate,
-    PaginationTemplate,
-} from "./types";
+import { ResponseTemplate, CoinTemplate, PaginationTemplate } from "./types";
 
 export interface SendEnabled {
     denom: string;

@@ -40,6 +40,30 @@ import {
     PnlLeaderboard,
     VolLeaderboard,
     DenomHolders,
+    MsgAdminUpdateBinaryOptionsMarket,
+    MsgBatchCancelBinaryOptionsOrders,
+    MsgBatchCancelDerivativeOrders,
+    MsgBatchCancelSpotOrders,
+    MsgBatchUpdateOrders,
+    MsgCancelBinaryOptionsOrder,
+    MsgCancelDerivativeOrder,
+    MsgCancelSpotOrder,
+    MsgCreateBinaryOptionsLimitOrder,
+    MsgCreateBinaryOptionsMarketOrder,
+    MsgCreateDerivativeLimitOrder,
+    MsgCreateDerivativeMarketOrder,
+    MsgCreateSpotLimitOrder,
+    MsgCreateSpotMarketOrder,
+    MsgDeposit,
+    MsgIncreasePositionMargin,
+    MsgInstantSpotMarketLaunch,
+    MsgLiquidatePosition,
+    MsgReclaimLockedFunds,
+    MsgRewardsOptOut,
+    MsgSignData,
+    MsgWithdraw,
+    MsgExternalTransfer,
+    TxResponse,
 } from "@injectivelabs/sdk-ts";
 import {
     InjectiveAccountRpc,
@@ -49,8 +73,35 @@ import {
 import { QuerySubaccountTradeNonceResponse } from "@injectivelabs/core-proto-ts/cjs/injective/exchange/v1beta1/query.js";
 import { OrderSide, OrderState } from "@injectivelabs/ts-types";
 // TODO: refactor this to take the params from ../types/index.ts
-//All the chain functions go here
-export function getModuleParams(
+import {
+    MsgAdminUpdateBinaryOptionsMarketParams,
+    MsgAuthorizeStakeGrantsParams,
+    MsgBatchCancelBinaryOptionsOrdersParams,
+    MsgBatchCancelDerivativeOrdersParams,
+    MsgBatchCancelSpotOrdersParams,
+    MsgBatchUpdateOrdersParams,
+    MsgCancelBinaryOptionsOrderParams,
+    MsgCancelDerivativeOrderParams,
+    MsgCancelSpotOrderParams,
+    MsgCreateBinaryOptionsLimitOrderParams,
+    MsgCreateBinaryOptionsMarketOrderParams,
+    MsgCreateDerivativeLimitOrderParams,
+    MsgCreateDerivativeMarketOrderParams,
+    MsgCreateSpotLimitOrderParams,
+    MsgCreateSpotMarketOrderParams,
+    MsgDepositParams,
+    MsgExternalTransferParams,
+    MsgIncreasePositionMarginParams,
+    MsgInstantBinaryOptionsMarketLaunchParams,
+    MsgInstantSpotMarketLaunchParams,
+    MsgLiquidatePositionParams,
+    MsgReclaimLockedFundsParams,
+    MsgRewardsOptOutParams,
+    MsgSignDataParams,
+    MsgWithdrawParams,
+} from "../types/index";
+//All the chain async functions go here
+export async function getModuleParams(
     this: InjectiveGrpcBase
 ): Promise<ExchangeModuleParams> {
     return this.request({
@@ -59,14 +110,16 @@ export function getModuleParams(
     });
 }
 
-export function getModuleState(this: InjectiveGrpcBase): Promise<GenesisState> {
+export async function getModuleState(
+    this: InjectiveGrpcBase
+): Promise<GenesisState> {
     return this.request({
         method: this.chainGrpcExchangeApi.fetchModuleState,
         params: {},
     });
 }
 
-export function getFeeDiscountSchedule(
+export async function getFeeDiscountSchedule(
     this: InjectiveGrpcBase
 ): Promise<FeeDiscountSchedule> {
     return this.request({
@@ -75,7 +128,7 @@ export function getFeeDiscountSchedule(
     });
 }
 
-export function getFeeDiscountAccountInfo(
+export async function getFeeDiscountAccountInfo(
     this: InjectiveGrpcBase,
     injectiveAddress: string
 ): Promise<FeeDiscountAccountInfo> {
@@ -85,7 +138,7 @@ export function getFeeDiscountAccountInfo(
     });
 }
 
-export function getTradingRewardsCampaign(
+export async function getTradingRewardsCampaign(
     this: InjectiveGrpcBase
 ): Promise<TradeRewardCampaign> {
     return this.request({
@@ -94,7 +147,7 @@ export function getTradingRewardsCampaign(
     });
 }
 
-export function getTradeRewardPoints(
+export async function getTradeRewardPoints(
     this: InjectiveGrpcBase,
     injectiveAddresses: string[]
 ): Promise<string[]> {
@@ -104,7 +157,7 @@ export function getTradeRewardPoints(
     });
 }
 
-export function getPendingTradeRewardPoints(
+export async function getPendingTradeRewardPoints(
     this: InjectiveGrpcBase,
     injectiveAddresses: string[]
 ): Promise<string[]> {
@@ -114,7 +167,7 @@ export function getPendingTradeRewardPoints(
     });
 }
 
-export function getExchangePositions(
+export async function getExchangePositions(
     this: InjectiveGrpcBase
 ): Promise<ChainDerivativePosition[]> {
     return this.request({
@@ -123,7 +176,7 @@ export function getExchangePositions(
     });
 }
 
-export function getSubaccountTradeNonce(
+export async function getSubaccountTradeNonce(
     this: InjectiveGrpcBase,
     subaccountId: string
 ): Promise<QuerySubaccountTradeNonceResponse> {
@@ -133,7 +186,7 @@ export function getSubaccountTradeNonce(
     });
 }
 
-export function getIsOptedOutOfRewards(
+export async function getIsOptedOutOfRewards(
     this: InjectiveGrpcBase,
     account: string
 ): Promise<IsOptedOutOfRewards> {
@@ -143,8 +196,8 @@ export function getIsOptedOutOfRewards(
     });
 }
 
-//All the indexer functions go here!
-export function getDerivativeMarkets(
+//All the indexer async functions go here!
+export async function getDerivativeMarkets(
     this: InjectiveGrpcBase,
     quoteDenom?: string,
     marketStatus?: string,
@@ -161,7 +214,7 @@ export function getDerivativeMarkets(
     });
 }
 
-export function getDerivativeMarket(
+export async function getDerivativeMarket(
     this: InjectiveGrpcBase,
     marketId: string
 ): Promise<DerivativeMarket> {
@@ -171,7 +224,7 @@ export function getDerivativeMarket(
     });
 }
 
-export function getBinaryOptionsMarkets(
+export async function getBinaryOptionsMarkets(
     this: InjectiveGrpcBase,
     params?: {
         marketStatus?: string;
@@ -194,7 +247,7 @@ export function getBinaryOptionsMarkets(
     });
 }
 
-export function getBinaryOptionsMarket(
+export async function getBinaryOptionsMarket(
     this: InjectiveGrpcBase,
     marketId: string
 ): Promise<BinaryOptionsMarket> {
@@ -204,7 +257,7 @@ export function getBinaryOptionsMarket(
     });
 }
 
-export function getDerivativeOrders(
+export async function getDerivativeOrders(
     this: InjectiveGrpcBase,
     params?: {
         marketId?: string;
@@ -224,7 +277,7 @@ export function getDerivativeOrders(
     });
 }
 
-export function getDerivativeOrderHistory(
+export async function getDerivativeOrderHistory(
     this: InjectiveGrpcBase,
     params?: {
         subaccountId?: string;
@@ -247,7 +300,7 @@ export function getDerivativeOrderHistory(
     });
 }
 
-export function getPositions(
+export async function getPositions(
     this: InjectiveGrpcBase,
     params?: {
         marketId?: string;
@@ -266,7 +319,7 @@ export function getPositions(
     });
 }
 
-export function getPositionsV2(
+export async function getPositionsV2(
     this: InjectiveGrpcBase,
     params?: {
         address?: string;
@@ -286,7 +339,7 @@ export function getPositionsV2(
     });
 }
 
-export function getDerivativeTrades(
+export async function getDerivativeTrades(
     this: InjectiveGrpcBase,
     params?: {
         endTime?: number;
@@ -311,7 +364,7 @@ export function getDerivativeTrades(
     });
 }
 
-export function getFundingPayments(
+export async function getFundingPayments(
     this: InjectiveGrpcBase,
     params?: {
         marketId?: string;
@@ -329,7 +382,7 @@ export function getFundingPayments(
     });
 }
 
-export function getFundingRates(
+export async function getFundingRates(
     this: InjectiveGrpcBase,
     params?: {
         marketId?: string;
@@ -345,7 +398,7 @@ export function getFundingRates(
     });
 }
 
-export function getDerivativeSubaccountOrdersList(
+export async function getDerivativeSubaccountOrdersList(
     this: InjectiveGrpcBase,
     params?: {
         marketId?: string;
@@ -362,7 +415,7 @@ export function getDerivativeSubaccountOrdersList(
     });
 }
 
-export function getDerivativeSubaccountTradesList(
+export async function getDerivativeSubaccountTradesList(
     this: InjectiveGrpcBase,
     params: {
         marketId?: string;
@@ -378,7 +431,7 @@ export function getDerivativeSubaccountTradesList(
     });
 }
 
-export function getDerivativeOrderbooksV2(
+export async function getDerivativeOrderbooksV2(
     this: InjectiveGrpcBase,
     marketIds: string[]
 ): Promise<
@@ -393,7 +446,7 @@ export function getDerivativeOrderbooksV2(
     });
 }
 
-export function getDerivativeOrderbookV2(
+export async function getDerivativeOrderbookV2(
     this: InjectiveGrpcBase,
     marketId: string
 ): Promise<OrderbookWithSequence> {
@@ -403,7 +456,7 @@ export function getDerivativeOrderbookV2(
     });
 }
 
-export function getRewards(
+export async function getRewards(
     this: InjectiveGrpcBase,
     params: {
         address: string;
@@ -416,7 +469,7 @@ export function getRewards(
     });
 }
 
-export function getSubaccountsList(
+export async function getSubaccountsList(
     this: InjectiveGrpcBase,
     address: string
 ): Promise<string[]> {
@@ -426,7 +479,7 @@ export function getSubaccountsList(
     });
 }
 
-export function getSubaccountBalancesList(
+export async function getSubaccountBalancesList(
     this: InjectiveGrpcBase,
     subaccountId: string
 ): Promise<SubaccountBalance[]> {
@@ -436,7 +489,7 @@ export function getSubaccountBalancesList(
     });
 }
 
-export function getSubaccountHistory(
+export async function getSubaccountHistory(
     this: InjectiveGrpcBase,
     params: {
         subaccountId: string;
@@ -454,7 +507,7 @@ export function getSubaccountHistory(
     });
 }
 
-export function getSubaccountOrderSummary(
+export async function getSubaccountOrderSummary(
     this: InjectiveGrpcBase,
     params: {
         subaccountId: string;
@@ -468,7 +521,7 @@ export function getSubaccountOrderSummary(
     });
 }
 
-export function getOrderStates(
+export async function getOrderStates(
     this: InjectiveGrpcBase,
     params?: {
         spotOrderHashes?: string[];
@@ -480,7 +533,7 @@ export function getOrderStates(
         params: params || {},
     });
 }
-export function getAccountPortfolio(
+export async function getAccountPortfolio(
     this: InjectiveGrpcBase,
     address: string
 ): Promise<AccountPortfolioV2> {
@@ -490,7 +543,7 @@ export function getAccountPortfolio(
     });
 }
 
-export function getAccountPortfolioBalances(
+export async function getAccountPortfolioBalances(
     this: InjectiveGrpcBase,
     address: string
 ): Promise<AccountPortfolioBalances> {
@@ -501,7 +554,7 @@ export function getAccountPortfolioBalances(
     });
 }
 
-export function getSpotMarkets(
+export async function getSpotMarkets(
     this: InjectiveGrpcBase,
     params?: {
         baseDenom?: string;
@@ -516,7 +569,7 @@ export function getSpotMarkets(
     });
 }
 
-export function getSpotMarket(
+export async function getSpotMarket(
     this: InjectiveGrpcBase,
     marketId: string
 ): Promise<SpotMarket> {
@@ -526,7 +579,7 @@ export function getSpotMarket(
     });
 }
 
-export function getSpotOrders(
+export async function getSpotOrders(
     this: InjectiveGrpcBase,
     params?: {
         marketId?: string;
@@ -546,7 +599,7 @@ export function getSpotOrders(
     });
 }
 
-export function getSpotOrderHistory(
+export async function getSpotOrderHistory(
     this: InjectiveGrpcBase,
     params?: {
         subaccountId?: string;
@@ -569,7 +622,7 @@ export function getSpotOrderHistory(
     });
 }
 
-export function getSpotTrades(
+export async function getSpotTrades(
     this: InjectiveGrpcBase,
     params?: {
         endTime?: number;
@@ -594,7 +647,7 @@ export function getSpotTrades(
     });
 }
 
-export function getSpotSubaccountOrdersList(
+export async function getSpotSubaccountOrdersList(
     this: InjectiveGrpcBase,
     params?: {
         subaccountId?: string;
@@ -611,7 +664,7 @@ export function getSpotSubaccountOrdersList(
     });
 }
 
-export function getSpotSubaccountTradesList(
+export async function getSpotSubaccountTradesList(
     this: InjectiveGrpcBase,
     params?: {
         subaccountId?: string;
@@ -627,7 +680,7 @@ export function getSpotSubaccountTradesList(
     });
 }
 
-export function getSpotOrderbooksV2(
+export async function getSpotOrderbooksV2(
     this: InjectiveGrpcBase,
     marketIds: string[]
 ): Promise<
@@ -642,7 +695,7 @@ export function getSpotOrderbooksV2(
     });
 }
 
-export function getSpotOrderbookV2(
+export async function getSpotOrderbookV2(
     this: InjectiveGrpcBase,
     marketId: string
 ): Promise<OrderbookWithSequence> {
@@ -652,7 +705,7 @@ export function getSpotOrderbookV2(
     });
 }
 
-export function getAtomicSwapHistory(
+export async function getAtomicSwapHistory(
     this: InjectiveGrpcBase,
     params: {
         address: string;
@@ -669,7 +722,7 @@ export function getAtomicSwapHistory(
     });
 }
 
-export function getGridStrategies(
+export async function getGridStrategies(
     this: InjectiveGrpcBase,
     params: {
         accountAddress?: string;
@@ -688,7 +741,7 @@ export function getGridStrategies(
     });
 }
 
-export function getHistoricalBalance(
+export async function getHistoricalBalance(
     this: InjectiveGrpcBase,
     params: {
         account: string;
@@ -701,7 +754,7 @@ export function getHistoricalBalance(
     });
 }
 
-export function getHistoricalRpnl(
+export async function getHistoricalRpnl(
     this: InjectiveGrpcBase,
     params: {
         account: string;
@@ -714,7 +767,7 @@ export function getHistoricalRpnl(
     });
 }
 
-export function getHistoricalVolumes(
+export async function getHistoricalVolumes(
     this: InjectiveGrpcBase,
     params: {
         account: string;
@@ -727,7 +780,7 @@ export function getHistoricalVolumes(
     });
 }
 
-export function getPnlLeaderboard(
+export async function getPnlLeaderboard(
     this: InjectiveGrpcBase,
     params: {
         startDate: string;
@@ -742,7 +795,7 @@ export function getPnlLeaderboard(
     });
 }
 
-export function getVolLeaderboard(
+export async function getVolLeaderboard(
     this: InjectiveGrpcBase,
     params: {
         startDate: string;
@@ -757,7 +810,7 @@ export function getVolLeaderboard(
     });
 }
 
-export function getPnlLeaderboardFixedResolution(
+export async function getPnlLeaderboardFixedResolution(
     this: InjectiveGrpcBase,
     params: {
         resolution: string;
@@ -771,7 +824,7 @@ export function getPnlLeaderboardFixedResolution(
     });
 }
 
-export function getVolLeaderboardFixedResolution(
+export async function getVolLeaderboardFixedResolution(
     this: InjectiveGrpcBase,
     params: {
         resolution: string;
@@ -785,7 +838,7 @@ export function getVolLeaderboardFixedResolution(
     });
 }
 
-export function getDenomHolders(
+export async function getDenomHolders(
     this: InjectiveGrpcBase,
     params: {
         denom: string;
@@ -797,4 +850,249 @@ export function getDenomHolders(
         method: this.indexerGrpcArchiverApi.fetchDenomHolders,
         params,
     });
+}
+
+export async function msgAdminUpdateBinaryOptionsMarket(
+    this: InjectiveGrpcBase,
+    params: MsgAdminUpdateBinaryOptionsMarketParams
+): Promise<TxResponse> {
+    const msg = MsgAdminUpdateBinaryOptionsMarket.fromJSON({ ...params });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgBatchCancelBinaryOptionsOrders(
+    this: InjectiveGrpcBase,
+    params: MsgBatchCancelBinaryOptionsOrdersParams
+): Promise<TxResponse> {
+    const msg = MsgBatchCancelBinaryOptionsOrders.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgBatchCancelDerivativeOrders(
+    this: InjectiveGrpcBase,
+    params: MsgBatchCancelDerivativeOrdersParams
+): Promise<TxResponse> {
+    const msg = MsgBatchCancelDerivativeOrders.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgBatchCancelSpotOrders(
+    this: InjectiveGrpcBase,
+    params: MsgBatchCancelSpotOrdersParams
+): Promise<TxResponse> {
+    const msg = MsgBatchCancelSpotOrders.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgBatchUpdateOrders(
+    this: InjectiveGrpcBase,
+    params: MsgBatchUpdateOrdersParams
+): Promise<TxResponse> {
+    const msg = MsgBatchUpdateOrders.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgCancelBinaryOptionsOrder(
+    this: InjectiveGrpcBase,
+    params: MsgCancelBinaryOptionsOrderParams
+): Promise<TxResponse> {
+    const msg = MsgCancelBinaryOptionsOrder.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgCancelDerivativeOrder(
+    this: InjectiveGrpcBase,
+    params: MsgCancelDerivativeOrderParams
+): Promise<TxResponse> {
+    const msg = MsgCancelDerivativeOrder.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgCancelSpotOrder(
+    this: InjectiveGrpcBase,
+    params: MsgCancelSpotOrderParams
+): Promise<TxResponse> {
+    const msg = MsgCancelSpotOrder.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgCreateBinaryOptionsLimitOrder(
+    this: InjectiveGrpcBase,
+    params: MsgCreateBinaryOptionsLimitOrderParams
+): Promise<TxResponse> {
+    const msg = MsgCreateBinaryOptionsLimitOrder.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgCreateBinaryOptionsMarketOrder(
+    this: InjectiveGrpcBase,
+    params: MsgCreateBinaryOptionsMarketOrderParams
+): Promise<TxResponse> {
+    const msg = MsgCreateBinaryOptionsMarketOrder.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgCreateDerivativeLimitOrder(
+    this: InjectiveGrpcBase,
+    params: MsgCreateDerivativeLimitOrderParams
+): Promise<TxResponse> {
+    const msg = MsgCreateDerivativeLimitOrder.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgCreateDerivativeMarketOrder(
+    this: InjectiveGrpcBase,
+    params: MsgCreateDerivativeMarketOrderParams
+): Promise<TxResponse> {
+    const msg = MsgCreateDerivativeMarketOrder.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgCreateSpotLimitOrder(
+    this: InjectiveGrpcBase,
+    params: MsgCreateSpotLimitOrderParams
+): Promise<TxResponse> {
+    const msg = MsgCreateSpotLimitOrder.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgCreateSpotMarketOrder(
+    this: InjectiveGrpcBase,
+    params: MsgCreateSpotMarketOrderParams
+): Promise<TxResponse> {
+    const msg = MsgCreateSpotMarketOrder.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgDeposit(
+    this: InjectiveGrpcBase,
+    params: MsgDepositParams
+): Promise<TxResponse> {
+    const msg = MsgDeposit.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgExternalTransfer(
+    this: InjectiveGrpcBase,
+    params: MsgExternalTransferParams
+): Promise<TxResponse> {
+    const msg = MsgExternalTransfer.fromJSON({
+        ...params,
+        amount: params.totalAmount,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgIncreasePositionMargin(
+    this: InjectiveGrpcBase,
+    params: MsgIncreasePositionMarginParams
+): Promise<TxResponse> {
+    const msg = MsgIncreasePositionMargin.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgInstantSpotMarketLaunch(
+    this: InjectiveGrpcBase,
+    params: MsgInstantSpotMarketLaunchParams
+): Promise<TxResponse> {
+    const msg = MsgInstantSpotMarketLaunch.fromJSON({ ...params });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgLiquidatePosition(
+    this: InjectiveGrpcBase,
+    params: MsgLiquidatePositionParams
+): Promise<TxResponse> {
+    const msg = MsgLiquidatePosition.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgReclaimLockedFunds(
+    this: InjectiveGrpcBase,
+    params: MsgReclaimLockedFundsParams
+): Promise<TxResponse> {
+    const msg = MsgReclaimLockedFunds.fromJSON({
+        ...params,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgRewardsOptOut(
+    this: InjectiveGrpcBase,
+    params: MsgRewardsOptOutParams
+): Promise<TxResponse> {
+    const msg = MsgRewardsOptOut.fromJSON({
+        ...params,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgSignData(
+    this: InjectiveGrpcBase,
+    params: MsgSignDataParams
+): Promise<TxResponse> {
+    const msg = MsgSignData.fromJSON({
+        ...params,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgWithdraw(
+    this: InjectiveGrpcBase,
+    params: MsgWithdrawParams
+): Promise<TxResponse> {
+    const msg = MsgWithdraw.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
 }

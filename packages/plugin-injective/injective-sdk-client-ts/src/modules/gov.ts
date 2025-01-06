@@ -8,9 +8,27 @@ import {
     TallyResult,
     PaginationOption,
     Pagination,
+    MsgSubmitProposalExpiryFuturesMarketLaunch,
+    MsgSubmitProposalSpotMarketLaunch,
+    MsgSubmitProposalPerpetualMarketLaunch,
+    MsgVote,
+    MsgSubmitTextProposal,
+    MsgSubmitProposalSpotMarketParamUpdate,
+    MsgSubmitGenericProposal,
+    MsgDeposit,
+    TxResponse,
 } from "@injectivelabs/sdk-ts";
-
-export function getGovernanceModuleParams(
+import {
+    MsgSubmitProposalExpiryFuturesMarketLaunchParams,
+    MsgSubmitProposalSpotMarketLaunchParams,
+    MsgSubmitProposalPerpetualMarketLaunchParams,
+    MsgVoteParams,
+    MsgSubmitTextProposalParams,
+    MsgSubmitProposalSpotMarketParamUpdateParams,
+    MsgSubmitGenericProposalParams,
+    MsgDepositParams,
+} from "../types/index";
+export async function getGovernanceModuleParams(
     this: InjectiveGrpcBase
 ): Promise<GovModuleStateParams> {
     return this.request({
@@ -19,7 +37,7 @@ export function getGovernanceModuleParams(
     });
 }
 
-export function getProposals(
+export async function getProposals(
     this: InjectiveGrpcBase,
     params: {
         status: CosmosGovV1Gov.ProposalStatus;
@@ -35,7 +53,7 @@ export function getProposals(
     });
 }
 
-export function getProposal(
+export async function getProposal(
     this: InjectiveGrpcBase,
     proposalId: number
 ): Promise<Proposal> {
@@ -45,7 +63,7 @@ export function getProposal(
     });
 }
 
-export function getProposalDeposits(
+export async function getProposalDeposits(
     this: InjectiveGrpcBase,
     params: {
         proposalId: number;
@@ -61,7 +79,7 @@ export function getProposalDeposits(
     });
 }
 
-export function getProposalVotes(
+export async function getProposalVotes(
     this: InjectiveGrpcBase,
     params: {
         proposalId: number;
@@ -77,7 +95,7 @@ export function getProposalVotes(
     });
 }
 
-export function getProposalTally(
+export async function getProposalTally(
     this: InjectiveGrpcBase,
     proposalId: number
 ): Promise<TallyResult> {
@@ -85,4 +103,92 @@ export function getProposalTally(
         method: this.chainGrpcGovApi.fetchProposalTally,
         params: proposalId,
     });
+}
+
+export async function msgSubmitProposalExpiryFuturesMarketLaunch(
+    this: InjectiveGrpcBase,
+    params: MsgSubmitProposalExpiryFuturesMarketLaunchParams
+): Promise<TxResponse> {
+    const msg = MsgSubmitProposalExpiryFuturesMarketLaunch.fromJSON({
+        ...params,
+        proposer: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgSubmitProposalSpotMarketLaunch(
+    this: InjectiveGrpcBase,
+    params: MsgSubmitProposalSpotMarketLaunchParams
+): Promise<TxResponse> {
+    const msg = MsgSubmitProposalSpotMarketLaunch.fromJSON({
+        ...params,
+        proposer: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgSubmitProposalPerpetualMarketLaunch(
+    this: InjectiveGrpcBase,
+    params: MsgSubmitProposalPerpetualMarketLaunchParams
+): Promise<TxResponse> {
+    const msg = MsgSubmitProposalPerpetualMarketLaunch.fromJSON({
+        ...params,
+        proposer: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgVote(
+    this: InjectiveGrpcBase,
+    params: MsgVoteParams
+): Promise<TxResponse> {
+    const msg = MsgVote.fromJSON({
+        ...params,
+        voter: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgSubmitTextProposal(
+    this: InjectiveGrpcBase,
+    params: MsgSubmitTextProposalParams
+): Promise<TxResponse> {
+    const msg = MsgSubmitTextProposal.fromJSON({
+        ...params,
+        proposer: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgSubmitProposalSpotMarketParamUpdate(
+    this: InjectiveGrpcBase,
+    params: MsgSubmitProposalSpotMarketParamUpdateParams
+): Promise<TxResponse> {
+    const msg = MsgSubmitProposalSpotMarketParamUpdate.fromJSON({
+        ...params,
+        proposer: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgSubmitGenericProposal(
+    this: InjectiveGrpcBase,
+    params: MsgSubmitGenericProposalParams
+): Promise<TxResponse> {
+    const msg = MsgSubmitGenericProposal.fromJSON({
+        ...params,
+        proposer: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgDeposit(
+    this: InjectiveGrpcBase,
+    params: MsgDepositParams
+): Promise<TxResponse> {
+    const msg = MsgDeposit.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
 }

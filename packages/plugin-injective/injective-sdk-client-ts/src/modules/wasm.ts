@@ -10,7 +10,7 @@ import {
 } from "@injectivelabs/sdk-ts";
 import { CosmwasmWasmV1Query } from "@injectivelabs/core-proto-ts";
 
-export function getContractAccountsBalance(
+export async function getContractAccountsBalance(
     this: InjectiveGrpcBase,
     params: {
         contractAddress: string;
@@ -26,7 +26,7 @@ export function getContractAccountsBalance(
     });
 }
 
-export function getContractState(
+export async function getContractState(
     this: InjectiveGrpcBase,
     params: {
         contractAddress: string;
@@ -42,7 +42,7 @@ export function getContractState(
     });
 }
 
-export function getContractInfo(
+export async function getContractInfo(
     this: InjectiveGrpcBase,
     contractAddress: string
 ): Promise<ContractInfo | undefined> {
@@ -53,7 +53,7 @@ export function getContractInfo(
     });
 }
 
-export function getContractHistory(
+export async function getContractHistory(
     this: InjectiveGrpcBase,
     contractAddress: string
 ): Promise<{
@@ -67,7 +67,7 @@ export function getContractHistory(
     });
 }
 
-export function getSmartContractState(
+export async function getSmartContractState(
     this: InjectiveGrpcBase,
     params: {
         contractAddress: string;
@@ -87,7 +87,7 @@ export function getSmartContractState(
     });
 }
 
-export function getRawContractState(
+export async function getRawContractState(
     this: InjectiveGrpcBase,
     params: {
         contractAddress: string;
@@ -104,7 +104,7 @@ export function getRawContractState(
     });
 }
 
-export function getContractCodes(
+export async function getContractCodes(
     this: InjectiveGrpcBase,
     pagination?: PaginationOption
 ): Promise<{
@@ -118,7 +118,7 @@ export function getContractCodes(
     });
 }
 
-export function getContractCode(
+export async function getContractCode(
     this: InjectiveGrpcBase,
     codeId: number
 ): Promise<{
@@ -132,7 +132,7 @@ export function getContractCode(
     });
 }
 
-export function getContractCodeContracts(
+export async function getContractCodeContracts(
     this: InjectiveGrpcBase,
     params: {
         codeId: number;

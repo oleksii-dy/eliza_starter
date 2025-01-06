@@ -1,7 +1,7 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
 import { OracleModuleParams } from "@injectivelabs/sdk-ts";
 
-export function getOracleModuleParams(
+export async function getOracleModuleParams(
     this: InjectiveGrpcBase
 ): Promise<OracleModuleParams> {
     return this.request({

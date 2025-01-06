@@ -1,7 +1,18 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
-import { InsuranceModuleParams, InsuranceFund } from "@injectivelabs/sdk-ts";
-
-export function getInsuranceModuleParams(
+import {
+    InsuranceModuleParams,
+    InsuranceFund,
+    MsgCreateInsuranceFund,
+    MsgRequestRedemption,
+    MsgUnderwrite,
+    TxResponse,
+} from "@injectivelabs/sdk-ts";
+import {
+    MsgCreateInsuranceFundParams,
+    MsgRequestRedemptionParams,
+    MsgUnderwriteParams,
+} from "../types/index.js";
+export async function getInsuranceModuleParams(
     this: InjectiveGrpcBase
 ): Promise<InsuranceModuleParams> {
     return this.request({
@@ -10,7 +21,7 @@ export function getInsuranceModuleParams(
     });
 }
 
-export function getInsuranceFunds(
+export async function getInsuranceFunds(
     this: InjectiveGrpcBase
 ): Promise<InsuranceFund[]> {
     return this.request({
@@ -19,7 +30,7 @@ export function getInsuranceFunds(
     });
 }
 
-export function getInsuranceFund(
+export async function getInsuranceFund(
     this: InjectiveGrpcBase,
     marketId: string
 ): Promise<InsuranceFund> {
@@ -39,7 +50,7 @@ export interface RedemptionAmount {
     denom: string;
 }
 
-export function getEstimatedRedemptions(
+export async function getEstimatedRedemptions(
     this: InjectiveGrpcBase,
     params: {
         marketId: string;
@@ -52,7 +63,7 @@ export function getEstimatedRedemptions(
     });
 }
 
-export function getPendingRedemptions(
+export async function getPendingRedemptions(
     this: InjectiveGrpcBase,
     params: RedemptionRequest
 ): Promise<RedemptionAmount[]> {
@@ -60,4 +71,37 @@ export function getPendingRedemptions(
         method: this.chainGrpcInsuranceFundApi.fetchPendingRedemptions,
         params,
     });
+}
+
+export async function msgCreateInsuranceFund(
+    this: InjectiveGrpcBase,
+    params: MsgCreateInsuranceFundParams
+): Promise<TxResponse> {
+    const msg = MsgCreateInsuranceFund.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgRequestRedemption(
+    this: InjectiveGrpcBase,
+    params: MsgRequestRedemptionParams
+): Promise<TxResponse> {
+    const msg = MsgRequestRedemption.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
+}
+
+export async function msgUnderwrite(
+    this: InjectiveGrpcBase,
+    params: MsgUnderwriteParams
+): Promise<TxResponse> {
+    const msg = MsgUnderwrite.fromJSON({
+        ...params,
+        injectiveAddress: this.injAddress,
+    });
+    return await this.msgBroadcaster.broadcast({ msgs: msg });
 }
