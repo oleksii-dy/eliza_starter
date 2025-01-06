@@ -1,8 +1,7 @@
 // /packages/plugin-twilio/src/index.ts
 
-export { twilioPlugin as default } from './twilio-plugin.js';
-export { twilioService, type TwilioService } from './services/twilio.js';
-export { voiceService, type VoiceService } from './services/voice.js';
-export { transcriptionService, type TranscriptionService } from './services/transcription.js';
-export { smsAction } from './actions/sms-action.js';
-export { textToSpeechAction, makeVoiceCallAction } from './actions/voice-action.js';
+export { TwilioPlugin as default } from './twilio-plugin.js';
+export * from './actions/sms-action.js';
+export * from './actions/voice-action.js';
+export * from './services/twilio.js';
+export * from './services/transcription.js';

@@ -1,53 +1,100 @@
-import { Action, IAgentRuntime, ActionExample } from '@elizaos/core';
+import { Action, IAgentRuntime, HandlerCallback, Handler, Memory, State } from '@elizaos/core';
 import { twilioService } from '../services/twilio.js';
+import { verifyService } from '../services/verify.js';
 
 interface SMSActionInput {
   to: string;
   message: string;
 }
 
-interface RuntimeWithData extends IAgentRuntime {
-  data: SMSActionInput;
-}
-
 export const smsAction: Action = {
   name: 'SEND_SMS',
-  description: 'Send SMS messages to phone numbers',
   similes: ['send text', 'send message', 'text'],
+  description: 'Send SMS messages to phone numbers',
   examples: [
     [
       {
-        input: 'Send SMS to +1234567890: "Hello!"',
-        output: 'Successfully sent SMS to +1234567890'
+        user: "user1",
+        content: {
+          text: 'Send SMS to +1234567890: "Hello!"'
+        }
+      },
+      {
+        user: "assistant",
+        content: {
+          text: 'Successfully sent SMS to +1234567890',
+          action: 'SEND_SMS',
+          args: {
+            to: '+1234567890',
+            message: 'Hello!'
+          }
+        }
       }
     ]
-  ] as unknown as ActionExample[][],
+  ],
 
-  validate: async (runtime: IAgentRuntime, context?: unknown): Promise<boolean> => {
-    const typedRuntime = runtime as RuntimeWithData;
-    if (!typedRuntime.data) return false;
-    const { to, message } = typedRuntime.data;
-    return typeof to === 'string' && typeof message === 'string';
+  async validate(runtime: IAgentRuntime): Promise<boolean> {
+    return !!(runtime.getSetting("TWILIO_ACCOUNT_SID") &&
+             runtime.getSetting("TWILIO_AUTH_TOKEN") &&
+             runtime.getSetting("TWILIO_PHONE_NUMBER"));
   },
 
-  handler: async (runtime: IAgentRuntime, context?: unknown): Promise<{ text: string }> => {
-    const typedRuntime = runtime as RuntimeWithData;
-    const input = typedRuntime.data;
-
-    if (!input || typeof input !== 'object') {
-      throw new Error('Invalid input: must be an object');
+  handler: (async (
+    runtime: IAgentRuntime,
+    message: Memory,
+    state: State,
+    options: { [key: string]: unknown }
+  ) => {
+    const text = message.content?.text;
+    if (!text) {
+        throw new Error('Missing message text');
     }
 
-    const { to, message } = input;
+    const match = text.match(/(?:send.*?|Sending.*?)(?:message|SMS).*?[\"\'](.*?)[\"\'].*?to\s*([\+\d]+)/i);
+
+    if (!match) {
+        return {
+            text: 'Could not understand the message format. Please use: "send message \'your message\' to +1234567890"'
+        };
+    }
+
+    const [, smsMessage, to] = match;
+
+    const userId = message.userId;
+    if (!userId) {
+        return {
+            text: 'You must be logged in to send SMS messages'
+        };
+    }
+
+    // Check if phone is verified for this user
+    const isVerified = await verifyService.isPhoneVerified(to, userId);
+    if (!isVerified) {
+        return {
+            text: `The number ${to} is not verified. Please verify it first using "verify phone ${to}"`
+        };
+    }
 
     try {
-      await twilioService.sendMessage(to, message);
-      return {
-        text: `Successfully sent SMS to ${to}`
-      };
+        await twilioService.sendMessage(to, smsMessage);
+        return {
+            text: `Successfully sent SMS to ${to}`
+        };
     } catch (error) {
-      console.error('Failed to send SMS:', error);
-      throw new Error(error instanceof Error ? error.message : 'Failed to send SMS');
+        if (error instanceof Error) {
+            const twilioError = error as any;
+            if (twilioError.code === 21608) {
+                return {
+                    text: `Unable to send SMS: The number ${to} needs to be verified first. For trial accounts, verify at twilio.com/user/account/phone-numbers/verified`
+                };
+            }
+            return {
+                text: `Failed to send SMS: ${error.message}`
+            };
+        }
+        return {
+            text: 'An unexpected error occurred while sending the SMS'
+        };
     }
-  }
+  }) as Handler
 };
