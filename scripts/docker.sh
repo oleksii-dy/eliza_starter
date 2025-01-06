@@ -16,8 +16,6 @@ fi
 
 CHARACTER_PATH="characters/$CHARACTER.character.json"
 
-echo "CHARACTER_PATH: $CHARACTER_PATH"
-
 # Execute the corresponding command based on the argument
 case "$1" in
     build)
