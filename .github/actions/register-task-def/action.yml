@@ -1,0 +1,43 @@
+name: Register a new ecs task definition
+description: Registers a new task definition based on family
+inputs:
+  ecs-task-definition-family:
+    description: 'ECS task definition family'
+    required: true
+  ecs-task-container-image:
+    description: 'ECS image to override in task definition'
+    required: true
+  ecs-task-log-group-prefix-name-override:
+    description: 'Rename log group prefix'
+outputs:
+  ecs-task-definition-arn:
+    value: ${{ steps.action.outputs.ecs_task_definition_arn }}
+    description: 'New task definition ARN'
+runs:
+  using: 'composite'
+  steps:
+    - name: Get task definition
+      uses: ./.github/actions/get-task-def
+      with:
+        ecs-task-definition: ${{ inputs.ecs-task-definition-family }}
+
+    - name: Override log group prefix
+      uses: ./.github/actions/override-log-group-prefix
+      if: inputs.ecs-task-log-group-prefix-name-override != ''
+      with:
+        ecs-task-log-group-prefix-name: ${{ inputs.ecs-task-log-group-prefix-name-override }}
+
+    - name: Run ecs task
+      id: action
+      shell: bash
+      env:
+        ecs_task_container_image: "${{ inputs.ecs-task-container-image }}"
+      run: |
+        if [ -n "$ecs_task_container_image" ]; then
+          echo $(cat task-definition.json | jq '.containerDefinitions[0].image = "'$ecs_task_container_image'"') > task-definition.json
+        fi
+
+        ecs_task_definition_arn=$(aws ecs register-task-definition --cli-input-json file://task-definition.json --output text --query 'taskDefinition.taskDefinitionArn')
+        echo "ecs_task_definition_arn=$ecs_task_definition_arn" >> $GITHUB_OUTPUT
+
+

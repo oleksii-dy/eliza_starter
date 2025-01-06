@@ -1,0 +1,50 @@
+name: Build image
+description: Builds and pushes image to ECR registry
+
+inputs:
+  project:
+    description: 'Name of the project to migrate'
+    required: true
+  nodejs-version:
+    description: 'Nodejs version to use to deploy'
+    required: true
+  image-tag:
+    description: 'Image tag'
+    required: true
+  docker-file-location:
+    description: 'Location of the docker file from the root dir of the repo'
+    required: true
+  ecs-container-name:
+    description: 'Ecs container image to override'
+    default: ''
+outputs:
+  image:
+    description: 'Full image url'
+    value: ${{ steps.build-config.outputs.ecr-registry }}:${{ inputs.ecs-container-name }}-latest
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Get build config
+      id: build-config
+      uses: ./.github/actions/build-config
+      with:
+        project: ${{ inputs.project }}
+
+    - name: Create a Dockerfile
+      shell: bash
+      run: |
+        cat infrastructure/base.Dockerfile "${{ inputs.docker-file-location }}" > Dockerfile
+
+    - name: Build and push
+      uses: docker/build-push-action@v5
+      id: build-image
+      with:
+        context: .
+        file: ./Dockerfile
+        platforms: linux/amd64
+        push: true
+        target: app
+        tags: |
+          ${{ steps.build-config.outputs.ecr-registry }}:${{ inputs.ecs-container-name }}-${{ inputs.image-tag }}
+          ${{ steps.build-config.outputs.ecr-registry }}:${{ inputs.ecs-container-name }}-latest

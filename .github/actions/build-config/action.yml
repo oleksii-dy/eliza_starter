@@ -1,0 +1,37 @@
+name: Get build config
+description: Read build config from SSM parameter
+inputs:
+  project:
+    description: 'Name of the project from apps/* folder'
+    required: true
+outputs:
+  ecr-registry:
+    description: "ECR repository url"
+    value: ${{ steps.action.outputs.ecr_registry }}
+  ecs-service:
+    description: "ECS service name"
+    value: ${{ steps.action.outputs.ecs_service }}
+  ecs-cluster:
+    description: "ECS cluster name"
+    value: ${{ steps.action.outputs.ecs_cluster }}
+  ecs-container-name:
+    description: "ECS container name"
+    value: ${{ steps.action.outputs.ecs_container_name }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Get ECR, ECS build configuration
+      id: action
+      shell: bash
+      run: |
+        ssm_config="/doodles-core/ecs-services/${{inputs.project}}"
+        echo "Reading ssm config $ssm_config."
+
+        deploy_config=$(aws ssm get-parameter --name "$ssm_config" --region us-east-1 --query 'Parameter.Value' --output text)
+
+        echo "ecr_registry=$(echo $deploy_config | jq -r '.ecr_registry')" >> $GITHUB_OUTPUT
+        echo "ecs_service=$(echo $deploy_config | jq -r '.ecs_service')" >> $GITHUB_OUTPUT
+        echo "ecs_cluster=$(echo $deploy_config | jq -r '.ecs_cluster')" >> $GITHUB_OUTPUT
+        echo "ecs_container_name=$(echo $deploy_config | jq -r '.ecs_container_name')" >> $GITHUB_OUTPUT
+        echo "Finished reading ssm config."

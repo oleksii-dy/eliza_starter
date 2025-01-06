@@ -1,0 +1,16 @@
+name: Sets AWS creds
+description: Defines AWS creds for the job
+inputs:
+  role-to-assume:
+    description: 'AWS role'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Configure aws credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: ${{ inputs.role-to-assume }}
+        role-session-name: doodles-core-github-workflow
+        aws-region: us-east-1
+        mask-aws-account-id: no

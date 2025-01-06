@@ -1,0 +1,19 @@
+name: Save folder hash to the ssm parameter store
+description: Save folder hash to the ssm parameter store
+
+inputs:
+  folder-hash:
+    description: 'A hash of the folder to save to ssm'
+    required: true
+  ssm-path:
+    description: 'Path to the SSM parameter to store the hash in'
+runs:
+  using: 'composite'
+  steps:
+    - name: Save folder hash
+      shell: bash
+      run: |
+        aws ssm put-parameter --name "${{ inputs.ssm-path }}" --value "${{ inputs.folder-hash }}" --type String --overwrite
+        if [ $? -eq 0 ]; then
+          echo "Updated SSM Parameter with the new hash."
+        fi

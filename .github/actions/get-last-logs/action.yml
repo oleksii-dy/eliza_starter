@@ -1,0 +1,26 @@
+name: Get logs for task
+description: Get logs for task
+inputs:
+  log-group-name:
+    description: 'Log group name'
+    required: true
+  log-prefix-name:
+    description: 'Log prefix name'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Run ecs task
+      shell: bash
+      run: |
+        last_log_stream=$(aws logs describe-log-streams \
+          --log-group-name '${{ inputs.log-group-name }}' \
+          --log-stream-name-prefix '${{ inputs.log-prefix-name }}' \
+          --descending \
+          --max-items 1 \
+          --query 'logStreams[0].logStreamName' | jq -r
+        )
+
+        last_logs=$(aws logs get-log-events --log-group-name '${{ inputs.log-group-name }}' --log-stream-name "$last_log_stream" | jq -r '.events[] | .message')
+
+        echo "$last_logs"

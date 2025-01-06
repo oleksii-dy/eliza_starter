@@ -1,0 +1,104 @@
+name: ECS Deployment Workflow triggered by PR merge
+on:
+    push:
+        branches:
+            - dev
+            - main
+env:
+    nodejs-version: "23.5.0"
+
+jobs:
+    set-environment:
+        name: Set environment
+        runs-on: doodles-core-runner
+        outputs:
+            environment: ${{ steps.set-environment.outputs.environment }}
+        steps:
+            - name: Set environment
+              run: |
+                  if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/prod" ]]; then
+                      echo "environment=production" >> $GITHUB_OUTPUT
+                  else
+                      echo "environment=development" >> $GITHUB_OUTPUT
+                  fi
+              id: set-environment
+
+    deploy:
+        name: Migrate, seed and deploy ${{ matrix.project }} project
+        environment: ${{ needs.set-environment.outputs.environment }}
+        runs-on: doodles-core-runner
+        permissions:
+            id-token: write
+            contents: read
+            actions: write
+        needs:
+            - set-environment
+        strategy:
+            max-parallel: 10
+            fail-fast: false
+            matrix:
+                project: ["ai-agents"]
+        steps:
+            - name: Set params
+              run: |
+                  echo "project=${{ matrix.project }}" >> $GITHUB_OUTPUT
+              id: set-params
+
+            - name: Checkout code
+              uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
+            - name: Override project name
+              uses: ./.github/actions/override-project-name
+              id: override-project-name
+              with:
+                  project: ${{ matrix.project }}
+                  github_ref: ${{ github.ref }}
+
+            - name: Configure aws credentials
+              uses: ./.github/actions/aws-creds
+              with:
+                  role-to-assume: ${{ secrets.AWS_GH_WORKFLOW_ROLE }}
+
+            - name: Login to Amazon ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v1
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Get build config
+              id: build-config
+              uses: ./.github/actions/build-config
+              with:
+                  project: ${{ steps.override-project-name.outputs.project }}
+
+            - name: Build production image
+              id: deploy-build-image
+              uses: ./.github/actions/build-image
+              with:
+                  nodejs-version: ${{ env.nodejs-version }}
+                  project: ${{ steps.override-project-name.outputs.project }}
+                  image-tag: ${{ github.sha }}
+                  docker-file-location: apps/${{ matrix.project }}/infrastructure/docker/production.Dockerfile
+                  ecs-container-name: ${{ steps.override-project-name.outputs.project }}
+
+            - name: Register a new task definition
+              uses: ./.github/actions/register-task-def
+              id: deploy-task-definition
+              with:
+                  ecs-task-definition-family: doodles-core-${{ steps.override-project-name.outputs.project }}
+                  ecs-task-container-image: ${{ steps.deploy-build-image.outputs.image }}
+
+            - name: Get task definition
+              uses: ./.github/actions/get-task-def
+              with:
+                  ecs-task-definition: ${{ steps.deploy-task-definition.outputs.ecs-task-definition-arn }}
+
+            - name: Deploy Amazon ECS task definition
+              uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+              with:
+                  task-definition: task-definition.json
+                  service: ${{ steps.build-config.outputs.ecs-service }}
+                  cluster: ${{ steps.build-config.outputs.ecs-cluster }}
+                  wait-for-service-stability: true

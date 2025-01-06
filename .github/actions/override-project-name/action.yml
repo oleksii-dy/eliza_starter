@@ -1,0 +1,43 @@
+name: Override project names to infra project names
+description: Some projects in code have different names to ECS services we have in AWS, so we need to convert project names
+inputs:
+  github_ref:
+    description: 'The GitHub reference (branch or tag)'
+    required: true
+  project:
+    description: 'Name of the project to override'
+    required: true
+outputs:
+  project:
+    description: 'New project name'
+    value: ${{ steps.action.outputs.project }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Override project name
+      id: action
+      shell: bash
+      run: |
+        project_name="${{ inputs.project }}"
+
+        if [[ "$project_name" == "api-core" ]]; then
+          project_name="core-api"
+        fi
+
+        if [[ "$project_name" == "service-chain-queue-processor" ]]; then
+          project_name="service-processor"
+        fi
+
+        if [[ "$project_name" == "service-images" ]]; then
+          project_name="doodle-images"
+        fi
+
+        if [[ "${{ inputs.github_ref }}" == "refs/heads/prod" && "$project_name" == "service-indexer-base" ]]; then
+          echo "project=indexer-base-v3" >> $GITHUB_OUTPUT
+        elif [[ "${{ inputs.github_ref }}" == "refs/heads/prod" && "$project_name" == "service-indexer-eth" ]]; then
+          echo "project=indexer-eth-v3" >> $GITHUB_OUTPUT
+        elif [[ "${{ inputs.github_ref }}" == "refs/heads/prod" ]]; then
+          echo "project=${project_name}-v3" >> $GITHUB_OUTPUT
+        else
+          echo "project=$project_name" >> $GITHUB_OUTPUT
+        fi

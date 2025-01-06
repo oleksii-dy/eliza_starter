@@ -1,0 +1,16 @@
+name: Get the list of the existing projects
+description: Retuns the JSON of existing projects
+outputs:
+  existing-projects-matrix:
+    description: "Comma-separated list of existing projects"
+    value: ${{ steps.get-existing-projects-matrix.outputs.existing-projects-matrix }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Get the list existing projects
+      id: get-existing-projects-matrix
+      run: |
+        existing_projects_matrix=$(ls apps | jq -R -s 'split("\n")[:-1]' | tr -d '[:space:]')
+        echo "Existing projects: $existing_projects_matrix"
+        echo "existing-projects-matrix=$existing_projects_matrix" >> "$GITHUB_OUTPUT"
+      shell: bash

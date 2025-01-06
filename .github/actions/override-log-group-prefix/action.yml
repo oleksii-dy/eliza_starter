@@ -1,0 +1,18 @@
+name: Override log group prefix
+description: Renames log group prefix to keep some logs separately
+inputs:
+  ecs-task-log-group-prefix-name:
+    description: 'New log group prefix name'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Override log group prefix
+      id: action
+      shell: bash
+      env:
+        ecs_task_log_group_prefix_name: "${{ inputs.ecs-task-log-group-prefix-name}}"
+      run: |
+        echo $(cat task-definition.json | jq '.containerDefinitions[0].logConfiguration.options."awslogs-stream-prefix" = "/'$ecs_task_log_group_prefix_name'"') > task-definition.json
+
+

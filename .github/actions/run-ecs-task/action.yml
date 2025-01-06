@@ -1,0 +1,47 @@
+name: Run a new ecs task
+description: Run ecs task based on task definition
+inputs:
+  ecs-cluster:
+    description: "ECS cluster name to run task in"
+    required: true
+  ecs-service:
+    description: 'ECS service name'
+    required: true
+  ecs-task-definition-arn:
+    description: 'ECS task definition arn to run the task'
+    required: true
+  ecs-container-name:
+    description: "ECS container name"
+    required: true
+  ecs-command-to-run:
+    description: "Command to run in the task"
+    required: true
+outputs:
+  ecs-task-arn:
+    description: 'Ecs ran task'
+    value: ${{ steps.run-ecs-task.outputs.ecs-new-task-arn }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Run a new ecs task
+      id: run-ecs-task
+      shell: bash
+      run: |
+        echo "Obtaining the current network configuration"
+
+        ecs_service_network_configuration=$(aws ecs describe-services --services "${{ inputs.ecs-service }}" \
+          --cluster "${{ inputs.ecs-cluster }}" \
+          --query 'services[0].networkConfiguration')
+
+        echo "Running migration with task definition ${{ inputs.ecs-task-definition-arn }} ..."
+
+        ecs_new_task_arn=$(aws ecs run-task \
+          --overrides '{"containerOverrides": [{"name": "${{ inputs.ecs-container-name }}", "command": ${{ inputs.ecs-command-to-run }} }]}' \
+          --launch-type FARGATE --network-configuration "$ecs_service_network_configuration" \
+          --task-definition "${{ inputs.ecs-task-definition-arn }}" \
+          --cluster "${{ inputs.ecs-cluster }}" --query 'tasks[].taskArn' --output text)
+
+        echo "Wait for tasks to stop for $ecs_new_task_arn"
+        time aws ecs wait tasks-stopped --tasks "$ecs_new_task_arn" --cluster "${{ inputs.ecs-cluster }}"
+
+        echo "ecs-new-task-arn=$ecs_new_task_arn" >> $GITHUB_OUTPUT

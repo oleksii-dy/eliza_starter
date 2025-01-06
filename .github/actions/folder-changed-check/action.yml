@@ -1,0 +1,56 @@
+name: Build image
+description: Builds and pushes image to ECR registry
+
+inputs:
+  folder-path-to-hash:
+    description: 'Path to the folder to calculate the hash of'
+    required: true
+  ssm-path:
+    description: 'Path to the SSM parameter to store the hash in'
+outputs:
+  folder-changed:
+    description: 'Whether folder is changed or not'
+    value: ${{ steps.check.outputs.folder-changed }}
+  folder-hash:
+    description: 'A new folder hash'
+    value: ${{ steps.check.outputs.folder-hash }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Check if migration or seed is needed
+      id: check
+      shell: bash
+      run: |
+        folder_changed="no"
+        folder_hash=""
+
+        echo "Calculating hash for folder: ${{ inputs.folder-path-to-hash }}"
+
+        if [ -d "${{ inputs.folder-path-to-hash }}" ]; then
+          echo "Command to calculate folder hash:"
+          echo "find '${{ inputs.folder-path-to-hash }}' -type f -exec shasum {} + | sort | shasum | cut -d' ' -f1"
+
+          folder_hash=$(find "${{ inputs.folder-path-to-hash }}" -type f -exec shasum {} + | sort | shasum | cut -d' ' -f1)
+          echo "Calculated folder hash: $folder_hash"
+
+          echo "Command to retrieve existing hash from SSM:"
+          echo "aws ssm get-parameter --name '${{ inputs.ssm-path }}' --query 'Parameter.Value' --output text"
+
+          existing_hash=$(aws ssm get-parameter --name "${{ inputs.ssm-path }}" --query 'Parameter.Value' --output text)
+          echo "Existing hash from SSM: $existing_hash"
+
+          if [ "$folder_hash" != "$existing_hash" ]; then
+              folder_changed="yes"
+              echo "Folder has changed."
+          else
+              echo "No changes detected in the folder."
+          fi
+        else
+          echo "Folder does not exist: ${{ inputs.folder-path-to-hash }}, ignoring changes"
+        fi
+
+        echo "folder-changed=$folder_changed"
+        echo "folder-hash=$folder_hash"
+
+        echo "folder-hash=$folder_hash" >> $GITHUB_OUTPUT
+        echo "folder-changed=$folder_changed" >> $GITHUB_OUTPUT

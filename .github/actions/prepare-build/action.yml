@@ -1,0 +1,21 @@
+name: Prepare for building image
+description: Checkout code, obtain AWS creds, login to ecr
+inputs:
+  nodejs-version:
+    description: 'Node js version'
+    required: true
+outputs:
+  ecr-registry:
+    description: 'Registry url'
+    value: ${{ steps.login-ecr.outputs.registry }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Dependencies
+      uses: ./.github/actions/install-dependencies
+      with:
+        nodejs-version: ${{ env.nodejs-version }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1

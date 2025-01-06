@@ -1,0 +1,36 @@
+name: Test NX project
+description: Test NX project action
+inputs:
+  project:
+    description: 'Name of nx project to run tests for'
+    required: true
+  ably-api-key:
+    description: 'Ably api key'
+    required: true
+  nodejs-version:
+    description: 'Node js version'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Dependencies
+      uses: ./.github/actions/install-dependencies
+      with:
+        nodejs-version: ${{ inputs.nodejs-version }}
+
+    - name: Install nx cli
+      run: npm install -g nx
+      shell: bash
+
+    - name: Running tests for ${{ inputs.project }}
+      shell: bash
+      run: |
+        project="apps/${{ inputs.project }}"
+
+        if [ -d "$project" ]; then
+          npx nx test ${{ inputs.project }}
+        else
+          echo "$project does not exist. skipping"
+        fi
+      env:
+        NEXT_PUBLIC_WEARABLES_CDN: 'https://core-storage.dev.doodles.app'

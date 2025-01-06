@@ -1,0 +1,61 @@
+name: Migrate and Seed action
+description: Migrate and Seed action
+inputs:
+  project:
+    description: 'Name of the project to migrate'
+    required: true
+  nodejs-version:
+    description: 'Nodejs version to use to deploy'
+    required: true
+  ecs-cluster:
+    description: 'ECS cluster name to run task in'
+    required: true
+  ecs-service:
+    description: 'ECS service name'
+    required: true
+  ecs-task-definition-arn:
+    description: 'ECS task definition arn to run the task'
+    required: true
+  ecs-container-name:
+    description: 'ECS container name'
+    required: true
+  ecs-task-container-image:
+    description: 'ECR image url'
+    required: true
+  ecs-command-to-run:
+    description: 'Command to run in the task'
+    required: true
+
+outputs:
+  ecs-task-arn:
+    description: 'ECS run task'
+    value: ${{ steps.run-ecs-task.outputs.ecs-task-arn }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Prepare for build
+      id: prepare-for-build
+      uses: ./.github/actions/prepare-build
+      with:
+        nodejs-version: ${{ inputs.nodejs-version }}
+
+    - name: Get build config
+      id: build-config
+      uses: ./.github/actions/build-config
+      with:
+        project: ${{ inputs.project }}
+
+    - name: Run ${{ inputs.ecs-command-to-run }}
+      uses: ./.github/actions/run-ecs-task
+      id: run-ecs-task
+      with:
+        ecs-service: ${{ inputs.ecs-service }}
+        ecs-task-definition-arn: ${{ inputs.ecs-task-definition-arn }}
+        ecs-container-name: ${{ inputs.ecs-container-name }}
+        ecs-command-to-run: ${{ inputs.ecs-command-to-run }}
+        ecs-cluster: ${{ inputs.ecs-cluster }}

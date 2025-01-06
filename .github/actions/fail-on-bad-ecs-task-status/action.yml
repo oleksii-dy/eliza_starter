@@ -1,0 +1,30 @@
+name: Fail on bad ecs task status
+description: Fail on bad ecs task status
+inputs:
+  ecs-cluster:
+    description: "ECS cluster name to run task in"
+    required: true
+  ecs-task-arn:
+    description: 'ECS task to check'
+    required: true
+  on-fail-message:
+    description: 'Message to show on failure'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Get exit code
+      shell: bash
+      id: get-exit-code
+      run: |
+        task_exit_code=$(aws ecs describe-tasks --cluster "${{ inputs.ecs-cluster }}" \
+          --tasks "${{ inputs.ecs-task-arn }}" --query "tasks[0].containers[0].exitCode" --output text)
+
+        echo "task-exit-code=$task_exit_code" >> $GITHUB_OUTPUT
+
+    - name: Check exit code
+      if: steps.get-exit-code.outputs.task-exit-code != '0'
+      uses: actions/github-script@v3
+      with:
+        script: |
+          core.setFailed('${{ inputs.on-fail-message }}')

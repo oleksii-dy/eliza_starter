@@ -1,0 +1,16 @@
+name: Get task definition based on revision and family or ARN
+description: Get task definition based on revision and family or ARN
+inputs:
+  ecs-task-definition:
+    description: 'ECS task definition family or ARN'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Run ecs task
+      shell: bash
+      run: |
+        aws ecs describe-task-definition --task-definition '${{ inputs.ecs-task-definition }}' --query 'taskDefinition' > task-definition.json
+
+        echo $(cat task-definition.json | jq 'del(.runtimePlatform, .revision, .compatibilities, .status, .taskDefinitionArn, .requiresAttributes,  .registeredAt, .registeredBy)') > task-definition.json
+
