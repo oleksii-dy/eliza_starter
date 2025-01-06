@@ -528,7 +528,7 @@ export async function createAgent(
             getSecret(character, "SOLANA_PUBLIC_KEY") ||
             (getSecret(character, "WALLET_PUBLIC_KEY") &&
                 !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
-                ? solanaPlugin
+                ? [solanaPlugin, solanaPluginV2]
                 : null,
             (getSecret(character, "NEAR_ADDRESS") ||
                 getSecret(character, "NEAR_WALLET_PUBLIC_KEY")) &&
@@ -600,7 +600,7 @@ export async function createAgent(
             getSecret(character, "AVALANCHE_PRIVATE_KEY")
                 ? avalanchePlugin
                 : null,
-        ].filter(Boolean),
+        ].flat().filter(Boolean),
         providers: [],
         actions: [],
         services: [],
