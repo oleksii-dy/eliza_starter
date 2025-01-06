@@ -234,7 +234,7 @@
 - fix: duplicate twitter post [\#1472](https://github.com/elizaOS/eliza/pull/1472) ([tcm390](https://github.com/tcm390))
 - fix: cleaner interaction prompts in the Twitter plugin [\#1469](https://github.com/elizaOS/eliza/pull/1469) ([todorkolev](https://github.com/todorkolev))
 - fix: cronoszkEVM -\> cronoszkevm [\#1468](https://github.com/elizaOS/eliza/pull/1468) ([shakkernerd](https://github.com/shakkernerd))
-- chore: update defailt character topic test case [\#1466](https://github.com/elizaOS/eliza/pull/1466) ([shakkernerd](https://github.com/shakkernerd))
+- chore: update default character topic test case [\#1466](https://github.com/elizaOS/eliza/pull/1466) ([shakkernerd](https://github.com/shakkernerd))
 - docs: Fixed Incorrect Model Name in API Integration [\#1465](https://github.com/elizaOS/eliza/pull/1465) ([mdqst](https://github.com/mdqst))
 - feat: Adding plugin for Cronos ZKEVM [\#1464](https://github.com/elizaOS/eliza/pull/1464) ([samarth30](https://github.com/samarth30))
 - fix: client-twitter: fix ENABLE\_ACTION\_PROCESSING logic [\#1463](https://github.com/elizaOS/eliza/pull/1463) ([zkvm](https://github.com/zkvm))
