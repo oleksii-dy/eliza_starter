@@ -23,7 +23,6 @@ import {
     ChainGrpcWasmApi,
     ChainGrpcWasmXApi,
     MsgBroadcasterWithPk,
-    PrivateKey,
 } from "@injectivelabs/sdk-ts";
 //indexer imports
 import {

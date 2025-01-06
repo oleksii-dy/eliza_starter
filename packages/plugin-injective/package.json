@@ -1,8 +1,10 @@
 {
-  "name": "plugin-injective",
-  "version": "1.0.0",
+  "name": "@elizaos/plugin-injective",
+  "version": "0.1.7",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
   "scripts": {
     "build": "tsup --format esm --dts",
     "dev": "tsup --format esm --dts --watch",
@@ -11,8 +13,21 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
   },
+  "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "import": {
+                "@elizaos/source": "./src/index.ts",
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.js"
+            }
+        }
+    },
+  "files": [
+      "dist"
+  ],
   "keywords": [],
-  "author": "",
+  "author": "hrishikesh@injectivelabs.org",
   "license": "ISC",
   "devDependencies": {
     "@types/chai": "^5.0.1",
@@ -36,8 +51,6 @@
     "@injectivelabs/sdk-ts": "^1.14.33",
     "@injectivelabs/utils": "^1.14.33",
     "axios": "^1.7.9",
-    "better-sqlite3": "11.6.0",
-    "injective-sdk-client-ts": "file:../../packages/plugin-injective/injective-sdk-client-ts",
-    "jsonwebtoken": "^9.0.2"
+    "injective-sdk-client-ts": "file:../../packages/plugin-injective/injective-sdk-client-ts"
   }
 }
