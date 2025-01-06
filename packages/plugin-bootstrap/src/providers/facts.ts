@@ -8,7 +8,7 @@ import type { Memory, Provider, State } from "@elizaos/core";
 import { formatFacts } from "../evaluators/fact.ts";
 
 const factsProvider: Provider = {
-    // @ts-expect-error todo
+
     get: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
         const recentMessagesData = state?.recentMessagesData?.slice(-10);
 
@@ -19,11 +19,11 @@ const factsProvider: Provider = {
             actors: state?.actorsData,
         });
 
-        // @ts-expect-error todo
+
         const _embedding = await embed(runtime, recentMessages);
 
         const memoryManager = new MemoryManager({
-            // @ts-expect-error todo
+
             runtime,
             tableName: "facts",
         });
