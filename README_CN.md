@@ -250,7 +250,7 @@ npx --no node-llama-cpp source download --gpu cuda
 几种测试方法的命令行：
 
 ```bash
-pnpm test           # Run tests once
+pnpm test          # Run tests once
 pnpm test:watch    # Run tests in watch mode
 ```
 
