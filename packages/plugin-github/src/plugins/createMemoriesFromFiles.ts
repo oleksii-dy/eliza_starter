@@ -85,14 +85,15 @@ export async function addFilesToMemory(
                     owner,
                 },
             },
-
         } as Memory;
         elizaLogger.info("Memory:", memory);
         await runtime.messageManager.createMemory(memory);
         memories.push(memory);
-
     }
-    await fs.writeFile("memories.json", JSON.stringify(memories, null, 2));
+    await fs.writeFile(
+        "/tmp/plugin-github-add-files-to-memory-memories.json",
+        JSON.stringify(memories, null, 2)
+    );
 }
 
 export const createMemoriesFromFilesAction: Action = {

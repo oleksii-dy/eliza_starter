@@ -19,7 +19,7 @@ import {
     getRepositoryRoomId,
     saveIssuesToMemory,
     GitHubService,
-    savePullRequestsToMemory
+    savePullRequestsToMemory,
 } from "@elizaos/plugin-github";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
@@ -51,7 +51,10 @@ export class GitHubClient extends EventEmitter {
     }
 
     private startOodaLoop() {
-        const interval = 180000; // Default to 1 minute
+        this.processOodaCycle();
+        const interval =
+            Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) ||
+            300000; // Default to 1 minute
         elizaLogger.log("Starting OODA loop with interval:", interval);
         setInterval(() => {
             this.processOodaCycle();
@@ -337,7 +340,7 @@ export class GitHubClient extends EventEmitter {
             userId: userIdUUID,
             agentId: this.runtime.agentId,
             content: {
-                text: `Create memories from files for the repository ${owner}/${repository} @ branch ${branch} and path '/packages/plugin-coinbase'`,
+                text: `Create memories from files for the repository ${owner}/${repository} @ branch ${branch} and path '/packages/plugin-coinbase/src'`,
                 action: "CREATE_MEMORIES_FROM_FILES",
                 source: "github",
                 inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`),

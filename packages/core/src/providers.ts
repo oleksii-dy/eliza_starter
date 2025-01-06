@@ -12,7 +12,10 @@ export async function getProviders(
     message: Memory,
     state?: State
 ) {
-    await fs.writeFile("providers.txt", JSON.stringify(runtime.providers, null, 2));
+    await fs.writeFile(
+        "/tmp/core-providers.txt",
+        JSON.stringify(runtime.providers, null, 2)
+    );
     const providerResults = (
         await Promise.all(
             runtime.providers.map(async (provider) => {
