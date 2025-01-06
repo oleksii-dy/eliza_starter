@@ -5,6 +5,24 @@ export const requestVerificationAction: Action = {
     name: 'REQUEST_VERIFICATION',
     similes: ['verify phone', 'verify number', 'send code'],
     description: 'Send a verification code to a phone number',
+    examples: [
+        [
+            {
+                user: "user1",
+                content: { text: "verify phone +1234567890" }
+            },
+            {
+                user: "assistant",
+                content: { text: "Verification code sent to +1234567890. Please use 'verify code 123456 for +1234567890' to verify." }
+            }
+        ]
+    ],
+
+    async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
+        return !!(runtime.getSetting("TWILIO_ACCOUNT_SID") &&
+                 runtime.getSetting("TWILIO_AUTH_TOKEN") &&
+                 runtime.getSetting("TWILIO_PHONE_NUMBER"));
+    },
 
     handler: (async (
         runtime: IAgentRuntime,
@@ -43,6 +61,24 @@ export const checkVerificationAction: Action = {
     name: 'CHECK_VERIFICATION',
     similes: ['verify code', 'check code', 'confirm code'],
     description: 'Verify a phone number with a received code',
+    examples: [
+        [
+            {
+                user: "user1",
+                content: { text: "verify code 123456 for +1234567890" }
+            },
+            {
+                user: "assistant",
+                content: { text: "Phone number +1234567890 has been verified successfully!" }
+            }
+        ]
+    ],
+
+    async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
+        return !!(runtime.getSetting("TWILIO_ACCOUNT_SID") &&
+                 runtime.getSetting("TWILIO_AUTH_TOKEN") &&
+                 runtime.getSetting("TWILIO_PHONE_NUMBER"));
+    },
 
     handler: (async (
         runtime: IAgentRuntime,
@@ -51,10 +87,8 @@ export const checkVerificationAction: Action = {
         options: { [key: string]: unknown }
     ) => {
         const text = message.content?.text;
-        const userId = message.userId;
-
-        if (!text || !userId) {
-            throw new Error('Missing required information');
+        if (!text) {
+            throw new Error('Missing message text');
         }
 
         const match = text.match(/verify code (\d+) for ([\+\d]+)/i);
@@ -67,10 +101,10 @@ export const checkVerificationAction: Action = {
         const [, code, phoneNumber] = match;
 
         try {
-            const isVerified = await verifyService.checkVerificationCode(phoneNumber, code, userId);
+            const isVerified = await verifyService.checkVerificationCode(phoneNumber, code);
             if (isVerified) {
                 return {
-                    text: `Phone number ${phoneNumber} has been verified and linked to your account!`
+                    text: `Phone number ${phoneNumber} has been verified successfully!`
                 };
             } else {
                 return {

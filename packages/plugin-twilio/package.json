@@ -12,8 +12,7 @@
         "@elizaos/core": "workspace:*",
         "twilio": "^4.19.0",
         "@deepgram/sdk": "^2.4.0",
-        "axios": "^1.6.2",
-        "mongoose": "^8.0.0"
+        "axios": "^1.6.2"
     },
     "devDependencies": {
         "tsup": "^8.0.0",

@@ -1,6 +1,5 @@
-import { Action, IAgentRuntime, HandlerCallback, Handler, Memory, State } from '@elizaos/core';
+import { Action, IAgentRuntime, Handler, Memory, State } from '@elizaos/core';
 import { twilioService } from '../services/twilio.js';
-import { verifyService } from '../services/verify.js';
 
 interface SMSActionInput {
   to: string;
@@ -33,7 +32,7 @@ export const smsAction: Action = {
     ]
   ],
 
-  async validate(runtime: IAgentRuntime): Promise<boolean> {
+  async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
     return !!(runtime.getSetting("TWILIO_ACCOUNT_SID") &&
              runtime.getSetting("TWILIO_AUTH_TOKEN") &&
              runtime.getSetting("TWILIO_PHONE_NUMBER"));
@@ -59,21 +58,6 @@ export const smsAction: Action = {
     }
 
     const [, smsMessage, to] = match;
-
-    const userId = message.userId;
-    if (!userId) {
-        return {
-            text: 'You must be logged in to send SMS messages'
-        };
-    }
-
-    // Check if phone is verified for this user
-    const isVerified = await verifyService.isPhoneVerified(to, userId);
-    if (!isVerified) {
-        return {
-            text: `The number ${to} is not verified. Please verify it first using "verify phone ${to}"`
-        };
-    }
 
     try {
         await twilioService.sendMessage(to, smsMessage);

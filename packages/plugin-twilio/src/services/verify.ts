@@ -1,26 +1,45 @@
+import pkg from 'twilio';
+const { Twilio } = pkg;
 import { Service, ServiceType } from '@elizaos/core';
-import { Twilio } from 'twilio';
-import { VerifiedPhone } from '../models/verified-phone.js';
 
 export class VerifyService implements Service {
     private client: Twilio | null = null;
     private verifyServiceSid: string | null = null;
 
     get serviceType(): ServiceType {
-        return ServiceType.VERIFICATION;
+        return ServiceType.TEXT_GENERATION;
     }
 
     async initialize(): Promise<void> {
-        const accountSid = process.env.TWILIO_ACCOUNT_SID;
-        const authToken = process.env.TWILIO_AUTH_TOKEN;
-        const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
+        try {
+            const accountSid = process.env.TWILIO_ACCOUNT_SID;
+            const authToken = process.env.TWILIO_AUTH_TOKEN;
 
-        if (!accountSid || !authToken || !serviceSid) {
-            throw new Error('Missing required Twilio credentials');
+            if (!accountSid || !authToken) {
+                console.warn('Missing Twilio credentials. Verification service will be disabled.');
+                return;
+            }
+
+            this.client = new Twilio(accountSid, authToken);
+
+            // Create or get existing Verify service
+            const services = await this.client.verify.v2.services.list();
+            const existingService = services.find(s => s.friendlyName === 'ElizaVerification');
+
+            if (existingService) {
+                this.verifyServiceSid = existingService.sid;
+            } else {
+                const service = await this.client.verify.v2.services.create({
+                    friendlyName: 'ElizaVerification'
+                });
+                this.verifyServiceSid = service.sid;
+            }
+
+            console.log('Twilio verification service initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize Twilio verification service:', error);
+            // Don't throw - allow service to initialize in disabled state
         }
-
-        this.client = new Twilio(accountSid, authToken);
-        this.verifyServiceSid = serviceSid;
     }
 
     async sendVerificationCode(phoneNumber: string): Promise<void> {
@@ -34,7 +53,7 @@ export class VerifyService implements Service {
             .create({ to: phoneNumber, channel: 'sms' });
     }
 
-    async checkVerificationCode(phoneNumber: string, code: string, userId: string): Promise<boolean> {
+    async checkVerificationCode(phoneNumber: string, code: string): Promise<boolean> {
         if (!this.client || !this.verifyServiceSid) {
             throw new Error('Verify service not initialized');
         }
@@ -44,24 +63,7 @@ export class VerifyService implements Service {
             .verificationChecks
             .create({ to: phoneNumber, code });
 
-        if (verification.status === 'approved') {
-            // Store the verified phone number
-            await VerifiedPhone.create({
-                userId,
-                phoneNumber
-            });
-            return true;
-        }
-
-        return false;
-    }
-
-    async isPhoneVerified(phoneNumber: string, userId: string): Promise<boolean> {
-        const verifiedPhone = await VerifiedPhone.findOne({
-            userId,
-            phoneNumber
-        });
-        return !!verifiedPhone;
+        return verification.status === 'approved';
     }
 }
 
