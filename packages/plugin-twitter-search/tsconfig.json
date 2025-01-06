@@ -8,7 +8,7 @@
         ],
         "types": [
             "jest",
-            "@types/jest"
+            "@jest/globals"
         ],
         "declaration": true,
         "outDir": "./dist",

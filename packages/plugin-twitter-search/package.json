@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup",
+    "build": "tsup src/index.ts --dts --format cjs,esm",
     "dev": "tsup --watch",
     "test": "jest",
     "lint": "eslint src/**/*.ts"
