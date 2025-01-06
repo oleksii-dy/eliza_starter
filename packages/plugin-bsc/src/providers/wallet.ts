@@ -8,6 +8,7 @@ import type {
     HttpTransport,
     Account,
     PrivateKeyAccount,
+    Hex,
 } from "viem";
 import {
     createPublicClient,
@@ -19,6 +20,7 @@ import { privateKeyToAccount } from "viem/accounts";
 import * as viemChains from "viem/chains";
 
 import type { SupportedChain } from "../types";
+import { ERC20Abi } from "../types";
 
 export class WalletProvider {
     private currentChain: SupportedChain = "bsc";
@@ -74,6 +76,50 @@ export class WalletProvider {
         }
 
         return chain;
+    }
+
+    async transfer(
+        chain: SupportedChain,
+        toAddress: Address,
+        amount: bigint,
+        options?: {
+            gas?: bigint;
+            gasPrice?: bigint;
+            data?: Hex;
+        }
+    ): Promise<Hex> {
+        const walletClient = this.getWalletClient(chain);
+        return walletClient.sendTransaction({
+            account: walletClient.account!,
+            to: toAddress,
+            value: amount,
+            chain: this.getChainConfigs(chain),
+            ...options,
+        });
+    }
+
+    async transferERC20(
+        chain: SupportedChain,
+        tokenAddress: Address,
+        toAddress: Address,
+        amount: bigint,
+        options?: {
+            gas?: bigint;
+            gasPrice?: bigint;
+        }
+    ): Promise<Hex> {
+        const publicClient = this.getPublicClient(chain);
+        const walletClient = this.getWalletClient(chain);
+        const { request } = await publicClient.simulateContract({
+            account: walletClient.account,
+            address: tokenAddress as `0x${string}`,
+            abi: ERC20Abi,
+            functionName: "transfer",
+            args: [toAddress as `0x${string}`, amount],
+            ...options,
+        });
+
+        return await walletClient.writeContract(request);
     }
 
     async getWalletBalance(chainName: SupportedChain): Promise<string | null> {

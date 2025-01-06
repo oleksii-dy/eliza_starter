@@ -43,6 +43,8 @@ export class BridgeAction {
     constructor(private walletProvider: WalletProvider) {}
 
     async bridge(params: BridgeParams): Promise<BridgeResponse> {
+        this.validateBridgeParams(params);
+
         const fromAddress = this.walletProvider.getAddress();
 
         this.walletProvider.switchChain(params.fromChain);
@@ -240,6 +242,15 @@ export class BridgeAction {
             return resp;
         } catch (error) {
             throw new Error(`Bridge failed: ${error.message}`);
+        }
+    }
+
+    validateBridgeParams(params: BridgeParams) {
+        // Both tokens should be either null or both provided
+        if ((params.fromToken === null) !== (params.toToken === null)) {
+            throw new Error(
+                "fromToken and toToken must be either both null or both provided"
+            );
         }
     }
 

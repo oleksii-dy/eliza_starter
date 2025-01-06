@@ -9,6 +9,8 @@ import { transferAction } from "./actions/transfer";
 import { bscWalletProvider } from "./providers/wallet";
 import { getBalanceAction } from "./actions/getBalance";
 import { bridgeAction } from "./actions/bridge";
+import { faucetAction } from "./actions/faucet";
+import { stakeAction } from "./actions/stake";
 import { deployAction } from "./actions/deploy";
 
 export const bscPlugin: Plugin = {
@@ -22,6 +24,8 @@ export const bscPlugin: Plugin = {
         transferAction,
         swapAction,
         bridgeAction,
+        faucetAction,
+        stakeAction,
         deployAction,
     ],
 };

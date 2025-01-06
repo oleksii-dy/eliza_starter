@@ -24,18 +24,15 @@ export { transferTemplate };
 
 // Exported for tests
 export class TransferAction {
-    private readonly BSC_DEFAULT_GAS_PRICE = 3000000000n as const; // 3 Gwei
+    private readonly TRANSFER_GAS = 21000n;
+    private readonly DEFAULT_GAS_PRICE = 3000000000n as const; // 3 Gwei
+
     constructor(private walletProvider: WalletProvider) {}
 
     async transfer(params: TransferParams): Promise<TransferResponse> {
         const fromAddress = this.walletProvider.getAddress();
 
-        if (!params.data) {
-            params.data = "0x";
-        }
-
         this.walletProvider.switchChain(params.chain);
-        const walletClient = this.walletProvider.getWalletClient(params.chain);
 
         try {
             const nativeToken =
@@ -51,7 +48,12 @@ export class TransferAction {
 
             if (!params.token || params.token == nativeToken) {
                 // Native token transfer
+                let options: { gas?: bigint; gasPrice?: bigint; data?: Hex } = {
+                    data: params.data,
+                };
+                let value: bigint;
                 if (!params.amount) {
+                    // Transfer all balance minus gas
                     const publicClient = this.walletProvider.getPublicClient(
                         params.chain
                     );
@@ -59,36 +61,20 @@ export class TransferAction {
                         address: fromAddress,
                     });
 
-                    const value = balance - this.BSC_DEFAULT_GAS_PRICE * 21000n;
-                    const hash = await walletClient.sendTransaction({
-                        account: walletClient.account!,
-                        to: params.toAddress,
-                        value: value,
-                        gas: 21000n,
-                        gasPrice: this.BSC_DEFAULT_GAS_PRICE,
-                        data: params.data as Hex,
-                        chain: this.walletProvider.getChainConfigs(
-                            params.chain
-                        ),
-                    });
-
-                    resp.txHash = hash;
-                    resp.amount = formatEther(value);
+                    value = balance - this.DEFAULT_GAS_PRICE * 21000n;
+                    options.gas = this.TRANSFER_GAS;
+                    options.gasPrice = this.DEFAULT_GAS_PRICE;
                 } else {
-                    const value = parseEther(params.amount);
-                    const hash = await walletClient.sendTransaction({
-                        account: walletClient.account!,
-                        to: params.toAddress,
-                        value: value,
-                        data: params.data as Hex,
-                        chain: this.walletProvider.getChainConfigs(
-                            params.chain
-                        ),
-                    });
-
-                    resp.txHash = hash;
-                    resp.amount = params.amount;
+                    value = parseEther(params.amount);
                 }
+
+                resp.amount = formatEther(value);
+                resp.txHash = await this.walletProvider.transfer(
+                    params.chain,
+                    params.toAddress,
+                    value,
+                    options
+                );
             } else {
                 // ERC20 token transfer
                 let tokenAddress = params.token;
@@ -127,18 +113,13 @@ export class TransferAction {
                     value = parseUnits(params.amount, decimals);
                 }
 
-                const { request } = await publicClient.simulateContract({
-                    account: walletClient.account,
-                    address: tokenAddress as `0x${string}`,
-                    abi: ERC20Abi,
-                    functionName: "transfer",
-                    args: [params.toAddress as `0x${string}`, value],
-                });
-
-                const hash = await walletClient.writeContract(request);
-
-                resp.txHash = hash;
                 resp.amount = formatUnits(value, decimals);
+                resp.txHash = await this.walletProvider.transferERC20(
+                    params.chain,
+                    tokenAddress as `0x${string}`,
+                    params.toAddress,
+                    value
+                );
             }
 
             return resp;
