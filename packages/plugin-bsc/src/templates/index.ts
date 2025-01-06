@@ -99,3 +99,30 @@ Respond with a JSON markdown block containing only the extracted values:
 }
 \`\`\`
 `;
+
+export const ercContractTemplate = `Given the recent messages and wallet information below:
+
+{{recentMessages}}
+
+{{walletInfo}}
+
+Extract the following details for deploying a token contract:
+- **contractType** (string): The type of token contract to deploy (ERC20, ERC721, or ERC1155)
+- **name** (string): The name of the token
+- **symbol** (string): The symbol of the token
+- **network** (string): The blockchain network to deploy on (e.g., base, eth, arb, pol)
+- **baseURI** (string, optional): The base URI for token metadata (required for ERC721 and ERC1155)
+- **totalSupply** (number, optional): The total supply of tokens (only for ERC20)
+
+All fields are required:
+\`\`\`json
+{
+    "contractType": "<contract_type>",
+    "chain": "bsc" | "opBNB" | "bscTestnet" | "opBNBTestnet",
+    "name": string,
+    "symbol": string,
+    "decimals": number,
+    "totalSupply": string
+}
+\`\`\`
+`;

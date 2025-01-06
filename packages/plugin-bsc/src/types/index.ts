@@ -1829,3 +1829,12 @@ export const L2StandardBridgeAbi = [
         anonymous: false,
     },
 ];
+
+export interface DeployParams {
+    contractType: "erc20" | "erc721" | "erc1155";
+    chain: "bsc" | "opBNB" | "bscTestnet" | "opBNBTestnet";
+    name: string;
+    symbol: string;
+    decimals: number;
+    totalSupply: string;
+}
