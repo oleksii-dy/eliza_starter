@@ -400,13 +400,13 @@ export async function generateText({
                     apiKey,
                     baseURL: endpoint,
                     fetch: async (url: string, options: any) => {
-                        // @ts-expect-error todo
                         const chain_id = runtime.getSetting("ETERNALAI_CHAIN_ID") || "45762"
                         if (options?.body) {
                             const body = JSON.parse(options.body);
                             body.chain_id = chain_id;
                             options.body = JSON.stringify(body);
                         }
+                        // @ts-expect-error todo
                         const fetching = await runtime.fetch(url, options);
                         if (
                             parseBooleanFromText(
