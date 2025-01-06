@@ -9,17 +9,19 @@ fi
 # check if second argument is provided
 # if not, then default to using eliza
 if [ -z "$2" ]; then
-    CHARACTER="eliza"
+    CHARACTER="c3po"
 else
     CHARACTER="$2"
 fi
 
 CHARACTER_PATH="characters/$CHARACTER.character.json"
 
+echo "CHARACTER_PATH: $CHARACTER_PATH"
+
 # Execute the corresponding command based on the argument
 case "$1" in
     build)
-        docker build --platform linux/amd64 -t $CHARACTER --build-arg CHARACTER_PATH=$CHARACTER_PATH .
+        docker build --platform linux/amd64 -t $CHARACTER --build-arg CHARACTER_PATH="$CHARACTER_PATH" .
         ;;
     run)
         # Ensure the container is not already running
