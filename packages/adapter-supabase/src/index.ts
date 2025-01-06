@@ -65,21 +65,36 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             resetTimeout: 60000,
             halfOpenMaxAttempts: 3
         });
+        elizaLogger.info("=== Supabase Adapter Initialization Started ===");
         elizaLogger.debug("Initializing Supabase adapter", {
-            url: supabaseUrl.split("@")[1]
+            url: supabaseUrl ? supabaseUrl.split("@")[1] : 'NO_URL',
+            urlLength: supabaseUrl?.length,
+            keyLength: supabaseKey?.length,
+            hasUrl: !!supabaseUrl,
+            hasKey: !!supabaseKey,
+            envUrl: process.env.SUPABASE_URL?.length,
+            envKey: process.env.SUPABASE_KEY?.length
         });
 
         if (!supabaseUrl || !supabaseKey) {
-            elizaLogger.error("Missing Supabase credentials");
+            elizaLogger.error("Missing Supabase credentials", {
+                hasUrl: !!supabaseUrl,
+                hasKey: !!supabaseKey,
+                envUrl: !!process.env.SUPABASE_URL,
+                envKey: !!process.env.SUPABASE_KEY
+            });
             throw new Error("Supabase URL and Key must be provided");
         }
 
         try {
+            elizaLogger.info("Creating Supabase client...");
             this.supabase = createClient(supabaseUrl, supabaseKey);
-            elizaLogger.debug("Supabase client created successfully");
+            elizaLogger.success("=== Supabase Adapter Initialized Successfully ===");
         } catch (error) {
             elizaLogger.error("Failed to create Supabase client", {
-                error: error instanceof Error ? error.message : String(error)
+                error: error instanceof Error ? error.message : String(error),
+                hasUrl: !!supabaseUrl,
+                hasKey: !!supabaseKey
             });
             throw error;
         }
@@ -271,7 +286,13 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         
         try {
             // Test basic connection first
-            elizaLogger.debug("Testing basic connection...");
+            elizaLogger.debug("Testing basic connection...", {
+                hasClient: !!this.supabase,
+                envUrl: process.env.SUPABASE_URL?.split("@")[1],
+                envKeyPresent: !!process.env.SUPABASE_KEY,
+                connectionTest: 'starting'
+            });
+
             const { data: _data, error: connectionError } = await this.supabase
                 .from("rooms")
                 .select("id")
@@ -281,11 +302,18 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                 elizaLogger.error("Connection test failed", {
                     error: connectionError.message,
                     code: connectionError.code,
-                    details: connectionError.details
+                    details: connectionError.details,
+                    envCheck: {
+                        hasEnvUrl: !!process.env.SUPABASE_URL,
+                        hasEnvKey: !!process.env.SUPABASE_KEY
+                    }
                 });
                 throw connectionError;
             }
-            elizaLogger.debug("Basic connection test passed");
+            elizaLogger.debug("Basic connection test passed", {
+                hasData: !!_data,
+                dataLength: _data?.length
+            });
 
             // Validate vector setup - this should fail fast without retries
             elizaLogger.debug("Starting vector setup validation...");
@@ -571,7 +599,15 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             threshold: params.query_threshold
         });
 
-        const result = await this.supabase.rpc("get_embedding_list", params);
+        const result = await this.supabase.rpc("get_embedding_list", {
+            query_table_name: 'memories',  // Always use memories table
+            query_threshold: params.query_threshold,
+            query_input: params.query_input,
+            query_field_name: params.query_field_name,
+            query_field_sub_name: params.query_field_sub_name,
+            query_match_count: params.query_match_count
+        });
+
         if (result.error) {
             elizaLogger.error('Failed to get cached embeddings:', { error: result.error });
             throw new Error(JSON.stringify(result.error));
@@ -637,6 +673,18 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         start?: number;
         end?: number;
     }): Promise<Memory[]> {
+        elizaLogger.debug('Getting memories', { 
+            roomId: params.roomId,
+            tableName: params.tableName,
+            filters: {
+                unique: params.unique,
+                agentId: params.agentId,
+                start: params.start,
+                end: params.end,
+                count: params.count
+            }
+        });
+
         const query = this.supabase
             .from(params.tableName)
             .select("*")
@@ -667,8 +715,17 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         const { data, error } = await query;
 
         if (error) {
+            elizaLogger.error('Failed to get memories', {
+                error: error.message,
+                code: error.code
+            });
             throw new Error(`Error retrieving memories: ${error.message}`);
         }
+
+        elizaLogger.debug('Memories retrieved', { 
+            count: data?.length,
+            roomId: params.roomId
+        });
 
         return data as Memory[];
     }
@@ -684,6 +741,17 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             tableName: string;
         }
     ): Promise<Memory[]> {
+        elizaLogger.debug('Searching memories by embedding', {
+            tableName: params.tableName,
+            filters: {
+                roomId: params.roomId,
+                agentId: params.agentId,
+                threshold: params.match_threshold,
+                count: params.count,
+                unique: params.unique
+            }
+        });
+
         const queryParams: SearchMemoriesQueryParams = {
             query_table_name: params.tableName,
             query_roomId: params.roomId,
@@ -698,138 +766,447 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
 
         const result = await this.supabase.rpc("search_memories", queryParams);
         if (result.error) {
+            elizaLogger.error('Failed to search memories', {
+                error: result.error.message,
+                code: result.error.code
+            });
             throw new Error(JSON.stringify(result.error));
         }
+
+        elizaLogger.debug('Memory search completed', {
+            matchesFound: result.data?.length
+        });
+
         return result.data.map((memory) => ({
             ...memory,
         }));
     }
 
-    async getMemoryById(memoryId: UUID): Promise<Memory | null> {
-        elizaLogger.info('Getting memory by ID...', { memoryId });
+    async getMemoryById(id: UUID): Promise<Memory | null> {
+        elizaLogger.debug('Getting memory by ID - Validation', { 
+            id,
+            idType: typeof id,
+            idLength: id.length
+        });
+        
+        // Validate UUID format
+        const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+        if (!uuidPattern.test(id)) {
+            elizaLogger.warn('Memory retrieval - UUID format issue', { 
+                id,
+                length: id.length,
+                matches: id.match(/-/g)?.length || 0
+            });
+            
+            // Try to clean/fix the UUID
+            const cleanedUuid = id.toLowerCase().replace(/[^0-9a-f-]/g, '');
+            if (uuidPattern.test(cleanedUuid)) {
+                elizaLogger.info('UUID cleaned and valid', {
+                    original: id,
+                    cleaned: cleanedUuid
+                });
+                id = cleanedUuid as UUID;
+            } else {
+                throw new Error('Invalid UUID format');
+            }
+        }
+        
         return await this.withErrorHandling('getMemoryById', async () => {
-            const { data, error } = await this.supabase
-                .from('memories')
-                .select('*')
-                .eq('id', memoryId)
-                .single();
+            try {
+                const { data, error } = await this.supabase
+                    .from('memories')
+                    .select('*')
+                    .eq('id', id);
 
-            if (error) {
-                if (error.message.includes('multiple (or no) rows returned')) {
-                    elizaLogger.warn('Memory not found', { memoryId });
+                if (error) {
+                    elizaLogger.error('Failed to get memory', {
+                        id,
+                        error: error.message,
+                        code: error.code
+                    });
+                    throw new Error(`Error retrieving memory: ${error.message}`);
+                }
+
+                if (!data || data.length === 0) {
+                    elizaLogger.debug('Memory not found', { id });
                     return null;
                 }
-                throw new Error(`Error getting memory: ${error.message}`);
-            }
 
-            elizaLogger.success('Memory retrieved successfully');
-            return data;
+                if (data.length > 1) {
+                    elizaLogger.error('Multiple memories found with same ID', { 
+                        id,
+                        count: data.length
+                    });
+                    throw new Error('Multiple memories found with same ID');
+                }
+
+                const memory = data[0];
+                elizaLogger.debug('Memory retrieved', { 
+                    id,
+                    hasContent: !!memory.content,
+                    hasEmbedding: !!memory.embedding
+                });
+
+                return {
+                    ...memory,
+                    content: typeof memory.content === 'string' ? JSON.parse(memory.content) : memory.content
+                };
+            } catch (error) {
+                // If it's an invalid UUID format error, let it propagate
+                if (error instanceof Error && error.message === 'Invalid UUID format') {
+                    throw error;
+                }
+                elizaLogger.error('Unexpected error during memory retrieval', {
+                    error: error instanceof Error ? error.message : String(error),
+                    stack: error instanceof Error ? error.stack : undefined
+                });
+                throw error;
+            }
         });
     }
 
     async createMemory(memory: Memory, tableName: string, unique = false): Promise<void> {
-        const startTime = performance.now();
-        elizaLogger.info('Creating memory...', { 
-            memoryId: memory.id, 
-            tableName, 
-            unique,
-            contentLength: JSON.stringify(memory.content).length,
-            embeddingSize: memory.embedding?.length
+        // First check connection and environment
+        elizaLogger.info('=== Memory Creation Started ===');
+        elizaLogger.info('Connection Check', {
+            env: {
+                SUPABASE_URL: process.env.SUPABASE_URL ? 'present' : 'missing',
+                SUPABASE_KEY: process.env.SUPABASE_KEY ? 'present' : 'missing',
+                URL_LENGTH: process.env.SUPABASE_URL?.length,
+                KEY_LENGTH: process.env.SUPABASE_KEY?.length
+            }
         });
 
+        // Check if we can list tables
         try {
-            // Validate required fields first, before any database operations
-            if (!memory.id || !memory.userId || !memory.roomId || !memory.content) {
-                throw new Error('Missing required memory fields: id, userId, roomId, or content');
-            }
+            const { data: tableList, error: tableError } = await this.supabase
+                .from('memories')  // Try to directly access memories table
+                .select('id')
+                .limit(1);
 
-            // Validate UUID formats
-            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-            if (!uuidRegex.test(memory.id) || !uuidRegex.test(memory.userId) || !uuidRegex.test(memory.roomId)) {
-                throw new Error('Invalid UUID format for id, userId, or roomId');
-            }
+            elizaLogger.info('Table access check', {
+                success: !tableError,
+                error: tableError?.message,
+                hasAccess: !!tableList,
+                table: 'memories'
+            });
+        } catch (e) {
+            elizaLogger.error('Failed to check table access', {
+                error: e instanceof Error ? e.message : String(e),
+                table: 'memories'
+            });
+        }
 
-            // Validate content structure
-            if (typeof memory.content !== 'object' || typeof memory.content.text !== 'string') {
-                throw new Error('Invalid memory content structure: missing text field');
+        // Original validation starts here
+        elizaLogger.debug('Creating memory - Initial validation', { 
+            memoryId: memory.id,
+            tableName,
+            unique,
+            hasContent: !!memory.content,
+            hasEmbedding: !!memory.embedding,
+            contentType: typeof memory.content,
+            embeddingLength: memory.embedding?.length,
+            contentStructure: {
+                isObject: typeof memory.content === 'object',
+                isNull: memory.content === null,
+                keys: memory.content ? Object.keys(memory.content) : []
             }
+        });
 
-            await this.withDatabase(async () => {
-                // Get the expected embedding dimension
+        // Validate required fields
+        if (!memory.id || !memory.userId || !memory.roomId || !memory.content) {
+            const missingFields = [];
+            if (!memory.id) missingFields.push('id');
+            if (!memory.userId) missingFields.push('userId');
+            if (!memory.roomId) missingFields.push('roomId');
+            if (!memory.content) missingFields.push('content');
+            
+            elizaLogger.error('Memory validation failed - Missing fields', {
+                memoryId: memory.id,
+                missingFields,
+                providedFields: Object.keys(memory)
+            });
+            throw new Error('Missing required memory fields');
+        }
+
+        // Validate content structure
+        if (typeof memory.content !== 'object' || memory.content === null) {
+            elizaLogger.error('Memory validation failed - Invalid content structure', {
+                memoryId: memory.id,
+                contentType: typeof memory.content,
+                isNull: memory.content === null,
+                content: memory.content
+            });
+            throw new Error('Invalid memory content structure');
+        }
+
+        // Validate UUID formats
+        const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+        const uuidFields = {
+            id: memory.id,
+            userId: memory.userId,
+            roomId: memory.roomId,
+            agentId: memory.agentId
+        };
+
+        elizaLogger.debug('Validating UUID fields', {
+            memoryId: memory.id,
+            uuidFields: Object.entries(uuidFields).map(([key, value]) => ({
+                field: key,
+                value: value,
+                isValid: value ? uuidPattern.test(value) : true,
+                length: value?.length
+            }))
+        });
+
+        for (const [field, value] of Object.entries(uuidFields)) {
+            if (value && !uuidPattern.test(value)) {
+                elizaLogger.warn('Memory validation - UUID format issue', {
+                    field,
+                    value,
+                    pattern: uuidPattern.source,
+                    length: value.length,
+                    matches: value.match(/-/g)?.length || 0
+                });
+                
+                // Try to clean/fix the UUID if possible
+                const cleanedUuid = value.toLowerCase().replace(/[^0-9a-f-]/g, '');
+                if (uuidPattern.test(cleanedUuid)) {
+                    elizaLogger.info('UUID cleaned and valid', {
+                        field,
+                        original: value,
+                        cleaned: cleanedUuid
+                    });
+                    // Update the field with cleaned UUID
+                    switch(field) {
+                        case 'id': memory.id = cleanedUuid as UUID; break;
+                        case 'userId': memory.userId = cleanedUuid as UUID; break;
+                        case 'roomId': memory.roomId = cleanedUuid as UUID; break;
+                        case 'agentId': memory.agentId = cleanedUuid as UUID; break;
+                    }
+                } else {
+                    throw new Error(`Invalid UUID format for ${field}`);
+                }
+            }
+        }
+
+        // Validate embedding dimension if present
+        if (memory.embedding) {
+            try {
+                elizaLogger.debug('Starting embedding validation and cleanup', {
+                    memoryId: memory.id,
+                    originalEmbedding: {
+                        length: memory.embedding.length,
+                        sample: memory.embedding.slice(0, 5),
+                        hasNulls: memory.embedding.some(n => n === null),
+                        hasUndefined: memory.embedding.some(n => n === undefined),
+                        hasNaN: memory.embedding.some(isNaN),
+                        allNaN: memory.embedding.every(isNaN),
+                        hasInfinity: memory.embedding.some(x => !isFinite(x))
+                    }
+                });
+
+                // First check if all values are invalid
+                if (memory.embedding.every(isNaN)) {
+                    elizaLogger.error('Memory validation failed - All embedding values are invalid', {
+                        memoryId: memory.id,
+                        sample: memory.embedding.slice(0, 5)
+                    });
+                    throw new Error('Invalid embedding values');
+                }
+
+                // Clean vector like PG version - convert invalid values to 0
+                memory.embedding = memory.embedding.map(n => {
+                    if (!Number.isFinite(n) || n === null || n === undefined) {
+                        return 0;
+                    }
+                    // Limit precision to avoid floating point issues
+                    return Number(n.toFixed(6));
+                });
+
+                elizaLogger.debug('Cleaned embedding vector', {
+                    memoryId: memory.id,
+                    cleanedEmbedding: {
+                        length: memory.embedding.length,
+                        sample: memory.embedding.slice(0, 5),
+                        stats: {
+                            min: Math.min(...memory.embedding),
+                            max: Math.max(...memory.embedding)
+                        }
+                    }
+                });
+
                 const { data: dimensionData, error: dimensionError } = await this.supabase
                     .rpc('get_embedding_dimension');
 
                 if (dimensionError) {
+                    elizaLogger.error('Failed to get embedding dimension', {
+                        error: dimensionError.message,
+                        code: dimensionError.code
+                    });
                     throw new Error(`Error getting embedding dimension: ${dimensionError.message}`);
                 }
 
                 const expectedDimension = dimensionData as number;
+                elizaLogger.info('Validating embedding dimension', {
+                    expected: expectedDimension,
+                    actual: memory.embedding.length,
+                    memoryId: memory.id
+                });
 
-                // Validate embedding dimension
-                if (!Array.isArray(memory.embedding) || memory.embedding.length !== expectedDimension) {
-                    throw new Error(`Error creating memory: expected ${expectedDimension} dimensions, not ${memory.embedding?.length}`);
+                if (memory.embedding.length !== expectedDimension) {
+                    elizaLogger.error('Invalid embedding dimension', {
+                        expected: expectedDimension,
+                        actual: memory.embedding.length,
+                        memoryId: memory.id
+                    });
+                    throw new Error(`expected ${expectedDimension} dimensions`);
                 }
+            } catch (error) {
+                elizaLogger.error('Embedding validation failed', {
+                    error: error instanceof Error ? error.message : String(error),
+                    memoryId: memory.id
+                });
+                throw error;
+            }
+        }
 
-                // Validate embedding values
-                if (!memory.embedding.every(val => typeof val === 'number' && !isNaN(val))) {
-                    throw new Error('Invalid embedding values: all values must be valid numbers');
-                }
+        return await this.withErrorHandling('createMemory', async () => {
+            try {
+                elizaLogger.debug('Preparing database insert', {
+                    table: tableName,
+                    id: memory.id,
+                    contentSize: JSON.stringify(memory.content).length,
+                    hasEmbedding: !!memory.embedding,
+                    type: tableName,
+                    unique
+                });
 
-                // Check for similar memories if unique flag is true
-                if (unique) {
-                    const { data: similarMemories, error: searchError } = await this.supabase
-                        .rpc('search_memories', {
-                            query_table_name: tableName,
-                            query_room_id: memory.roomId,
-                            query_embedding: memory.embedding,
-                            query_match_threshold: 0.95,
-                            query_match_count: 1,
-                            query_unique: true
+                // Check for uniqueness if required and if we have an embedding
+                if (unique && memory.embedding) {
+                    elizaLogger.debug('Checking memory uniqueness', {
+                        memoryId: memory.id,
+                        roomId: memory.roomId,
+                        hasEmbedding: !!memory.embedding
+                    });
+
+                    const similarMemories = await this.searchMemories({
+                        tableName,
+                        agentId: memory.agentId,
+                        roomId: memory.roomId,
+                        embedding: memory.embedding,
+                        match_threshold: 0.95,
+                        match_count: 1,
+                        unique: true
+                    });
+
+                    if (similarMemories.length > 0) {
+                        elizaLogger.warn('Similar memory already exists', {
+                            newMemoryId: memory.id,
+                            existingMemoryId: similarMemories[0].id,
+                            similarity: (similarMemories[0] as any).similarity
                         });
-
-                    if (searchError) {
-                        throw new Error(`Error checking memory uniqueness: ${searchError.message}`);
-                    }
-
-                    if (similarMemories && similarMemories.length > 0) {
                         throw new Error('Similar memory already exists');
                     }
                 }
 
-                const { data: _data, error } = await this.supabase
-                    .from(tableName)
-                    .insert({
-                        id: memory.id,
-                        userId: memory.userId,
-                        agentId: memory.agentId,
-                        roomId: memory.roomId,
-                        content: JSON.stringify(memory.content),
-                        embedding: memory.embedding,
-                        unique: unique,
-                        type: (memory as { type?: string }).type || 'message'
-                    });
+                const insertData = {
+                    id: memory.id,
+                    userId: memory.userId,
+                    agentId: memory.agentId,
+                    roomId: memory.roomId,
+                    content: JSON.stringify(memory.content),
+                    embedding: memory.embedding,
+                    unique: unique,
+                    type: tableName
+                };
 
-                if (error) {
-                    throw new Error(`Error creating memory: ${error.message}`);
+                elizaLogger.debug('Database insert payload prepared', {
+                    memoryId: memory.id,
+                    payloadKeys: Object.keys(insertData),
+                    contentLength: insertData.content.length,
+                    hasEmbedding: !!insertData.embedding,
+                    contentSample: insertData.content.slice(0, 100),
+                    embeddingSample: memory.embedding ? memory.embedding.slice(0, 5) : null,
+                    uuids: {
+                        id: insertData.id,
+                        userId: insertData.userId,
+                        agentId: insertData.agentId,
+                        roomId: insertData.roomId
+                    }
+                });
+
+                elizaLogger.info('Attempting insert with PostgreSQL pattern', {
+                    operation: 'insert',
+                    table: 'memories',
+                    type: tableName,
+                    timestamp: new Date().toISOString()
+                });
+
+                // Try to get table info before insert
+                const { data: tableInfo, error: tableInfoError } = await this.supabase
+                    .from('memories')  // Always query memories table
+                    .select('id')
+                    .limit(1);
+
+                elizaLogger.info('Pre-insert table check', {
+                    canRead: !tableInfoError,
+                    error: tableInfoError?.message,
+                    tableExists: !!tableInfo,
+                    table: 'memories'
+                });
+
+                const result = await this.supabase
+                    .from('memories')  // Always insert into memories table
+                    .insert(insertData);
+
+                elizaLogger.debug('Raw Supabase response', {
+                    hasError: !!result.error,
+                    errorCode: result.error?.code,
+                    errorMessage: result.error?.message,
+                    errorDetails: result.error?.details,
+                    status: result.status,
+                    statusText: result.statusText,
+                    data: result.data ? 'present' : 'null',
+                    table: 'memories',
+                    type: tableName,
+                    requestUrl: result.error?.details || 'no url in error'
+                });
+
+                if (result.error) {
+                    elizaLogger.error('Memory creation failed', {
+                        error: result.error.message || 'No error message',
+                        code: result.error.code || 'No error code',
+                        details: result.error.details || 'No details',
+                        hint: result.error.hint || 'No hint',
+                        memoryId: memory.id,
+                        status: result.status,
+                        statusText: result.statusText
+                    });
+                    throw new Error(`Error creating memory: ${result.error.message || result.statusText || 'Unknown error'}`);
                 }
 
-                elizaLogger.success('Memory created successfully', { memoryId: memory.id });
-            }, 'createMemory');
-
-            const duration = performance.now() - startTime;
-            elizaLogger.info('Memory creation completed', { duration: `${duration.toFixed(2)}ms` });
-        } catch (error) {
-            const duration = performance.now() - startTime;
-            elizaLogger.error('Memory creation failed', { 
-                duration: `${duration.toFixed(2)}ms`,
-                error: error instanceof Error ? error.message : String(error)
-            });
-            throw error;
-        }
+                elizaLogger.debug('Memory created successfully', {
+                    id: memory.id,
+                    table: tableName,
+                    timestamp: new Date().toISOString(),
+                    status: result.status
+                });
+            } catch (error) {
+                elizaLogger.error('Unexpected error during memory creation', {
+                    error: error instanceof Error ? error.message : String(error),
+                    stack: error instanceof Error ? error.stack : undefined,
+                    memoryId: memory.id,
+                    context: 'database_insert'
+                });
+                throw error;
+            }
+        });
     }
 
     async removeMemory(memoryId: UUID, tableName: string): Promise<void> {
-        elizaLogger.info('Removing memory...', { memoryId, tableName });
+        elizaLogger.debug('Removing memory', { memoryId, tableName });
+        
         return await this.withErrorHandling('removeMemory', async () => {
             const { error } = await this.supabase
                 .from(tableName)
@@ -837,15 +1214,20 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                 .eq('id', memoryId);
 
             if (error) {
+                elizaLogger.error('Failed to remove memory', {
+                    error: error.message,
+                    code: error.code
+                });
                 throw new Error(`Error removing memory: ${error.message}`);
             }
 
-            elizaLogger.success('Memory removed successfully');
+            elizaLogger.debug('Memory removed successfully', { memoryId });
         });
     }
 
     async removeAllMemories(roomId: UUID, tableName: string): Promise<void> {
-        elizaLogger.info('Removing all memories...', { roomId, tableName });
+        elizaLogger.debug('Removing all memories', { roomId, tableName });
+        
         return await this.withErrorHandling('removeAllMemories', async () => {
             const { error } = await this.supabase.rpc("remove_memories", {
                 query_roomid: roomId,
@@ -853,15 +1235,24 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             });
 
             if (error) {
+                elizaLogger.error('Failed to remove all memories', {
+                    error: error.message,
+                    code: error.code
+                });
                 throw new Error(`Error removing all memories: ${error.message}`);
             }
 
-            elizaLogger.success('All memories removed successfully');
+            elizaLogger.debug('All memories removed successfully', { roomId });
         });
     }
 
     async countMemories(roomId: UUID, _unique = false, tableName?: string): Promise<number> {
-        elizaLogger.info('Counting memories...', { tableName, roomId });
+        elizaLogger.debug('Counting memories', { 
+            roomId, 
+            tableName: tableName || 'memories',
+            unique: _unique 
+        });
+        
         return await this.withErrorHandling('countMemories', async () => {
             const { count, error } = await this.supabase
                 .from(tableName || 'memories')
@@ -869,10 +1260,18 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                 .eq('roomId', roomId);
 
             if (error) {
+                elizaLogger.error('Failed to count memories', {
+                    error: error.message,
+                    code: error.code
+                });
                 throw new Error(`Error counting memories: ${error.message}`);
             }
 
-            elizaLogger.success('Memories counted successfully', { count });
+            elizaLogger.debug('Memories counted', { 
+                roomId,
+                count: count || 0
+            });
+            
             return count || 0;
         });
     }
