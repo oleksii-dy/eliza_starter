@@ -1,8 +1,8 @@
-import type { Content, IAgentRuntime, Memory, UUID } from "@ai16z/eliza";
+import type { Content, IAgentRuntime, Memory, UUID } from "@elizaos/core";
 import type { NostrProfile, NostrEvent } from "./types";
 import { NostrClient } from "./client";
 import { createNostrEventMemory } from "./memory";
-import { elizaLogger } from "@ai16z/eliza";
+import { elizaLogger } from "@elizaos/core";
 
 export async function publishNote({
     client,

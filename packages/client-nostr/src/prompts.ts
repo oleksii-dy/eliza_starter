@@ -2,7 +2,7 @@ import {
     Character,
     messageCompletionFooter,
     shouldRespondFooter,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 import type { NostrEvent } from "./types";
 
 export const formatNostrEvent = (event: NostrEvent) => {

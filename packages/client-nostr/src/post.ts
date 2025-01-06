@@ -5,9 +5,9 @@ import {
     elizaLogger,
     generateText,
     stringToUuid,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 import { NostrClient } from "./client";
-import { parseBooleanFromText } from "@ai16z/eliza";
+import { parseBooleanFromText } from "@elizaos/core";
 import { postTemplate } from "./prompts";
 export class NostrPostManager {
     private timeout: NodeJS.Timeout | undefined;
@@ -64,9 +64,10 @@ export class NostrPostManager {
             this.runtime.getSetting("NOSTR_POST_IMMEDIATELY") != null &&
             this.runtime.getSetting("NOSTR_POST_IMMEDIATELY") != ""
         ) {
-            postImmediately = parseBooleanFromText(
-                this.runtime.getSetting("NOSTR_POST_IMMEDIATELY") || "false"
-            );
+            postImmediately =
+                parseBooleanFromText(
+                    this.runtime.getSetting("NOSTR_POST_IMMEDIATELY") || "false"
+                ) ?? false;
         }
 
         if (postImmediately) {

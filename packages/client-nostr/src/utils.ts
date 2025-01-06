@@ -1,4 +1,4 @@
-import { stringToUuid } from "@ai16z/eliza";
+import { stringToUuid } from "@elizaos/core";
 
 // Technically, Nostr has no limit, but we'll set a reasonable limit for now
 const MAX_NOSTR_LENGTH = 10000;

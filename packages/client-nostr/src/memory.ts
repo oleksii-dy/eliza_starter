@@ -3,7 +3,7 @@ import {
     IAgentRuntime,
     type Memory,
     type UUID,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 import type { NostrEvent } from "./types";
 import { nostrEventUuid } from "./utils";
 

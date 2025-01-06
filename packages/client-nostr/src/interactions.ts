@@ -1,4 +1,4 @@
-import { elizaLogger, type IAgentRuntime } from "@ai16z/eliza";
+import { elizaLogger, type IAgentRuntime } from "@elizaos/core";
 import { NostrClient } from "./client";
 
 export class NostrInteractionManager {

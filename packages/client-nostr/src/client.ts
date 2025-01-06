@@ -1,4 +1,4 @@
-import { IAgentRuntime, elizaLogger } from "@ai16z/eliza";
+import { IAgentRuntime, elizaLogger } from "@elizaos/core";
 import NDK, { NDKEvent } from "@nostr-dev-kit/ndk";
 import { NostrProfile, NostrEvent } from "./types";
 

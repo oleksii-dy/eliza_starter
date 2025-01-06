@@ -1,4 +1,4 @@
-import { Client, IAgentRuntime, elizaLogger } from "@ai16z/eliza";
+import { Client, IAgentRuntime, elizaLogger } from "@elizaos/core";
 import NDK, { NDKPrivateKeySigner } from "@nostr-dev-kit/ndk";
 import { NostrClient } from "./client";
 import { NostrPostManager } from "./post";
