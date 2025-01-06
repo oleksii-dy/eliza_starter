@@ -182,7 +182,7 @@ export async function msgSubmitGenericProposal(
     return await this.msgBroadcaster.broadcast({ msgs: msg });
 }
 
-export async function msgDeposit(
+export async function msgGovDeposit(
     this: InjectiveGrpcBase,
     params: MsgDepositParams
 ): Promise<TxResponse> {
