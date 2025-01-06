@@ -285,7 +285,7 @@ export class DirectClient {
                 });
 
                 const response = await generateMessageResponse({
-                    runtime: runtime,
+                    runtime: runtime as IAgentRuntime,
                     context,
                     modelClass: ModelClass.LARGE,
                 });
@@ -473,7 +473,7 @@ export class DirectClient {
 
             // Call LLM
             const response = await generateObject({
-                runtime,
+                runtime: runtime as IAgentRuntime,
                 context,
                 modelClass: ModelClass.SMALL, // 1s processing time on openai small
                 schema: hyperfiOutSchema,
@@ -574,13 +574,13 @@ export class DirectClient {
                     res.status(404).send("Agent not found");
                     return;
                 }
-                const images = await generateImage({ ...req.body }, agent);
+                const images = await generateImage({ ...req.body }, agent as IAgentRuntime);
                 const imagesRes: { image: string; caption: string }[] = [];
                 if (images.data && images.data.length > 0) {
                     for (let i = 0; i < images.data.length; i++) {
                         const caption = await generateCaption(
                             { imageUrl: images.data[i] },
-                            agent
+                            agent as IAgentRuntime
                         );
                         imagesRes.push({
                             image: images.data[i],
@@ -770,7 +770,7 @@ export class DirectClient {
                 });
 
                 const response = await generateMessageResponse({
-                    runtime: runtime,
+                    runtime: runtime as IAgentRuntime,
                     context,
                     modelClass: ModelClass.LARGE,
                 });
