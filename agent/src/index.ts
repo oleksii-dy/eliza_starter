@@ -1,5 +1,4 @@
 import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
-import { RedisClient } from "@elizaos/adapter-redis";
 import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
 import { AutoClientInterface } from "@elizaos/client-auto";
 import { DiscordClientInterface } from "@elizaos/client-discord";
@@ -12,16 +11,13 @@ import { TwitterClientInterface } from "@elizaos/client-twitter";
 import {
     AgentRuntime,
     CacheManager,
-    CacheStore,
     Character,
-    Client,
     Clients,
     DbCacheAdapter,
     defaultCharacter,
     elizaLogger,
     FsCacheAdapter,
     IAgentRuntime,
-    ICacheManager,
     IDatabaseAdapter,
     IDatabaseCacheAdapter,
     ModelProviderName,
@@ -627,6 +623,44 @@ export async function createAgent(
                 import("@elizaos/plugin-avalanche").then(
                     (m) => m.avalanchePlugin
                 ),
+        },
+        {
+            secrets: ["ECHOCHAMBERS_API_URL", "ECHOCHAMBERS_API_KEY"],
+            importFn: () =>
+                import("@elizaos/plugin-echochambers").then(
+                    (m) => m.echoChambersPlugin
+                ),
+        },
+        {
+            secrets: ["STARGAZE_ENDPOINT"],
+            importFn: () =>
+                import("@elizaos/plugin-stargaze").then(
+                    (m) => m.stargazePlugin
+                ),
+        },
+        {
+            secrets: ["GENLAYER_PRIVATE_KEY"],
+            importFn: () =>
+                import("@elizaos/plugin-genlayer").then(
+                    (m) => m.genLayerPlugin
+                ),
+        },
+        {
+            secrets: ["AVAIL_SEED", "AVAIL_APP_ID"],
+            importFn: () =>
+                import("@elizaos/plugin-avail").then((m) => m.availPlugin),
+        },
+        {
+            secrets: ["OPEN_WEATHER_API_KEY"],
+            importFn: () =>
+                import("@elizaos/plugin-open-weather").then(
+                    (m) => m.openWeatherPlugin
+                ),
+        },
+        {
+            secrets: ["ARTHERA_PRIVATE_KEY"],
+            importFn: () =>
+                import("@elizaos/plugin-arthera").then((m) => m.artheraPlugin),
         },
         ...(teeMode === "OFF" &&
             walletSecretSalt && [
