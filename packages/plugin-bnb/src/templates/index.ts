@@ -100,26 +100,6 @@ Respond with a JSON markdown block containing only the extracted values:
 \`\`\`
 `;
 
-export const faucetTemplate = `Given the recent messages and wallet information below:
-
-{{recentMessages}}
-
-{{walletInfo}}
-
-Extract the following information about the requested faucet request:
-- Chain to execute on. Must be one of ["bscTestnet", "opBNBTestnet"]. Mainnet is not supported.
-- Recipient address. Must be a valid Ethereum address starting with "0x"
-
-Respond with a JSON markdown block containing only the extracted values. All fields are required:
-
-\`\`\`json
-{
-    "chain": "bscTestnet" | "opBNBTestnet",
-    "toAddress": string
-}
-\`\`\`
-`;
-
 export const stakeTemplate = `Given the recent messages and wallet information below:
 
 {{recentMessages}}
@@ -127,21 +107,15 @@ export const stakeTemplate = `Given the recent messages and wallet information b
 {{walletInfo}}
 
 Extract the following information about the requested stake action:
-- Action to execute. Must be one of ["stake", "unstake", "restake", "claim"].
-- Amount to execute. Must be a string representing the amount in ether (only number without coin symbol, e.g., "0.1")
-- From validator address. Optional, must be a valid Ethereum address starting with "0x". Required for "unstake" "claim" and "restake".
-- To validator address. Optional, must be a valid Ethereum address starting with "0x". Required for "stake" and "restake".
-- Delegate vote power. Optional, must be a boolean. Required for "stake" and "restake". Default is true.
+- Action to execute. Must be one of ["deposit", "withdraw", "claim"].
+- Amount to execute. Optional, must be a string representing the amount in ether (only number without coin symbol, e.g., "0.1"). If the action is "deposit", amount is required.
 
 Respond with a JSON markdown block containing only the extracted values:
 
 \`\`\`json
 {
-    "action": "stake" | "unstake" | "restake" | "claim",
-    "amount": string,
-    "fromValidator": string | null,
-    "toValidator": string | null,
-    "delegateVotePower": boolean | null
+    "action": "deposit" | "withdraw" | "claim",
+    "amount": string | null,
 }
 \`\`\`
 `;
@@ -152,23 +126,30 @@ export const ercContractTemplate = `Given the recent messages and wallet informa
 
 {{walletInfo}}
 
-Extract the following details for deploying a token contract:
-- **contractType** (string): The type of token contract to deploy (ERC20, ERC721, or ERC1155)
-- **name** (string): The name of the token
-- **symbol** (string): The symbol of the token
-- **network** (string): The blockchain network to deploy on (e.g., base, eth, arb, pol)
-- **baseURI** (string, optional): The base URI for token metadata (required for ERC721 and ERC1155)
-- **totalSupply** (number, optional): The total supply of tokens (only for ERC20)
+When user wants to deploy any type of token contract (ERC20/721/1155), this will trigger the DEPLOY_TOKEN action.
 
-All fields are required:
+Extract the following details for deploying a token contract:
+- **contractType** (string): The type of token contract to deploy
+  - For ERC20: Extract name, symbol, decimals, totalSupply
+  - For ERC721: Extract name, symbol, baseURI
+  - For ERC1155: Extract name, baseURI
+- **chain** (string): Must be one of: bsc, opBNB, bscTestnet, opBNBTestnet
+- **name** (string): The name of the token
+- **symbol** (string): The token symbol (only for ERC20/721)
+- **decimals** (number): Token decimals (only for ERC20)
+- **totalSupply** (string): Total supply with decimals (only for ERC20)
+- **baseURI** (string): Base URI for token metadata (only for ERC721/1155)
+
+Required response format:
 \`\`\`json
 {
-    "contractType": "<contract_type>",
+    "contractType": "ERC20" | "ERC721" | "ERC1155",
     "chain": "bsc" | "opBNB" | "bscTestnet" | "opBNBTestnet",
     "name": string,
     "symbol": string,
-    "decimals": number,
-    "totalSupply": string
+    "decimals": number,  // Only for ERC20
+    "totalSupply": string,  // Only for ERC20
+    "baseURI": string   // Only for ERC721/1155
 }
 \`\`\`
 `;

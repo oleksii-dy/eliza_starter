@@ -269,9 +269,9 @@ const genChainsFromRuntime = (
 };
 
 export const initWalletProvider = (runtime: IAgentRuntime) => {
-    const privateKey = runtime.getSetting("BSC_PRIVATE_KEY");
+    const privateKey = runtime.getSetting("BNB_PRIVATE_KEY");
     if (!privateKey) {
-        throw new Error("BSC_PRIVATE_KEY is missing");
+        throw new Error("BNB_PRIVATE_KEY is missing");
     }
 
     const chains = genChainsFromRuntime(runtime);
@@ -279,7 +279,7 @@ export const initWalletProvider = (runtime: IAgentRuntime) => {
     return new WalletProvider(privateKey as `0x${string}`, chains);
 };
 
-export const bscWalletProvider: Provider = {
+export const bnbWalletProvider: Provider = {
     async get(
         runtime: IAgentRuntime,
         _message: Memory,
@@ -290,9 +290,9 @@ export const bscWalletProvider: Provider = {
             const address = walletProvider.getAddress();
             const balance = await walletProvider.getWalletBalance("bsc");
             const chain = walletProvider.getCurrentChain();
-            return `BSC Wallet Address: ${address}\nBalance: ${balance} ${chain.nativeCurrency.symbol}\nChain ID: ${chain.id}, Name: ${chain.name}`;
+            return `BNB chain Wallet Address: ${address}\nBalance: ${balance} ${chain.nativeCurrency.symbol}\nChain ID: ${chain.id}, Name: ${chain.name}`;
         } catch (error) {
-            console.error("Error in BSC wallet provider:", error);
+            console.error("Error in BNB chain wallet provider:", error);
             return null;
         }
     },

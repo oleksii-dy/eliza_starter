@@ -6,28 +6,26 @@ export * from "./types";
 import type { Plugin } from "@elizaos/core";
 import { swapAction } from "./actions/swap";
 import { transferAction } from "./actions/transfer";
-import { bscWalletProvider } from "./providers/wallet";
+import { bnbWalletProvider } from "./providers/wallet";
 import { getBalanceAction } from "./actions/getBalance";
 import { bridgeAction } from "./actions/bridge";
-import { faucetAction } from "./actions/faucet";
 import { stakeAction } from "./actions/stake";
 import { deployAction } from "./actions/deploy";
 
-export const bscPlugin: Plugin = {
-    name: "bsc",
+export const bnbPlugin: Plugin = {
+    name: "bnb",
     description: "BNB Smart Chain integration plugin",
-    providers: [bscWalletProvider],
+    providers: [bnbWalletProvider],
     evaluators: [],
     services: [],
     actions: [
         getBalanceAction,
         transferAction,
         swapAction,
-        bridgeAction,
-        faucetAction,
+        bridgeAction, // NOTE: The bridge action only supports bridge funds between bsc and opBNB for now. We may adding stargate support later.
         stakeAction,
         deployAction,
     ],
 };
 
-export default bscPlugin;
+export default bnbPlugin;

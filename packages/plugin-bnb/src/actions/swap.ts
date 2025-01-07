@@ -146,7 +146,7 @@ export const swapAction = {
     },
     template: swapTemplate,
     validate: async (runtime: IAgentRuntime) => {
-        const privateKey = runtime.getSetting("BSC_PRIVATE_KEY");
+        const privateKey = runtime.getSetting("BNB_PRIVATE_KEY");
         return typeof privateKey === "string" && privateKey.startsWith("0x");
     },
     examples: [

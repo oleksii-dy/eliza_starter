@@ -311,8 +311,9 @@ export class DeployAction {
 }
 
 export const deployAction = {
-    name: "deployErcContract",
-    description: "deploy erc20, erc721, erc1155 contract",
+    name: "DEPLOY_TOKEN",
+    description:
+        "Deploy token contracts (ERC20/721/1155) based on user specifications",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -426,11 +427,31 @@ export const deployAction = {
             {
                 user: "user",
                 content: {
-                    text: "Deploy a erc20 token",
-                    action: "DEPLOY_ERC20",
+                    text: "deploy an ERC20 token",
+                    action: "DEPLOY_TOKEN",
+                },
+            },
+            {
+                user: "user",
+                content: {
+                    text: "Deploy an NFT contract",
+                    action: "DEPLOY_TOKEN",
+                },
+            },
+            {
+                user: "user",
+                content: {
+                    text: "Deploy an ERC1155 contract",
+                    action: "DEPLOY_TOKEN",
                 },
             },
         ],
     ],
-    similes: ["DEPLOY_ERC20"],
+    similes: [
+        "DEPLOY_ERC20",
+        "DEPLOY_ERC721",
+        "DEPLOY_ERC1155",
+        "CREATE_TOKEN",
+        "MINT_TOKEN",
+    ],
 };

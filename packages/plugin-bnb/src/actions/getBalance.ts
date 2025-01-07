@@ -43,50 +43,45 @@ export class GetBalanceAction {
         const chainId = this.walletProvider.getChainConfigs(chain).id;
 
         try {
-            // If specific token is requested and it's not the native token
-            if (token && token !== nativeSymbol) {
-                const balance = await this.getTokenBalance(
-                    chainId,
-                    address,
-                    token
-                );
-                return {
-                    chain,
-                    address,
-                    balances: [{ token, balance }],
-                };
-            }
+            let resp: GetBalanceResponse = {
+                chain,
+                address,
+                balances: [],
+            };
 
             // If no specific token is requested, get all token balances
             if (!token) {
                 const balances = await this.getTokenBalances(chainId, address);
-                return {
-                    chain,
-                    address,
-                    balances,
-                };
+                resp.balances = balances;
             }
 
-            // If native token is requested
-            const nativeBalanceWei = await this.walletProvider
-                .getPublicClient(chain)
-                .getBalance({ address });
-            return {
-                chain,
-                address,
-                balances: [
+            // If specific token is requested and it's not the native token
+            if (token !== nativeSymbol) {
+                const balance = await this.getERC20TokenBalance(
+                    chainId,
+                    address,
+                    token!
+                );
+                resp.balances = [{ token: token!, balance }];
+            } else {
+                // If native token is requested
+                const nativeBalanceWei = await this.walletProvider
+                    .getPublicClient(chain)
+                    .getBalance({ address });
+                resp.balances = [
                     {
                         token: nativeSymbol,
                         balance: formatEther(nativeBalanceWei),
                     },
-                ],
-            };
+                ];
+            }
+            return resp;
         } catch (error) {
             throw new Error(`Get balance failed: ${error.message}`);
         }
     }
 
-    async getTokenBalance(
+    async getERC20TokenBalance(
         chainId: ChainId,
         address: Address,
         tokenSymbol: string

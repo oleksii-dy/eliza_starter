@@ -38,7 +38,6 @@ export class BridgeAction {
         "0x4000698e3De52120DE28181BaACda82B21568416" as const;
     private readonly LEGACY_ERC20_ETH =
         "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000" as const;
-    private readonly L2_DELEGATION_FEE = 600000000000000n as const;
 
     constructor(private walletProvider: WalletProvider) {}
 
@@ -168,6 +167,12 @@ export class BridgeAction {
                     },
                 });
 
+                const delegationFee = await publicClient.readContract({
+                    address: this.L2_BRIDGE_ADDRESS,
+                    abi: L2StandardBridgeAbi,
+                    functionName: "delegationFee",
+                });
+
                 // check ERC20 allowance
                 if (!nativeTokenBridge) {
                     this.checkTokenAllowance(
@@ -186,7 +191,7 @@ export class BridgeAction {
                         1,
                         "0x",
                     ] as const;
-                    const value = amount + this.L2_DELEGATION_FEE;
+                    const value = amount + delegationFee;
                     await l2BridgeContract.simulate.withdraw(args, { value });
                     hash = await l2BridgeContract.write.withdraw(args, {
                         account,
@@ -195,7 +200,7 @@ export class BridgeAction {
                     });
                 } else if (selfBridge && !nativeTokenBridge) {
                     const args = [params.fromToken!, amount, 1, "0x"] as const;
-                    const value = this.L2_DELEGATION_FEE;
+                    const value = delegationFee;
                     await l2BridgeContract.simulate.withdraw(args, { value });
                     hash = await l2BridgeContract.write.withdraw(args, {
                         account,
@@ -210,7 +215,7 @@ export class BridgeAction {
                         1,
                         "0x",
                     ] as const;
-                    const value = amount + this.L2_DELEGATION_FEE;
+                    const value = amount + delegationFee;
                     await l2BridgeContract.simulate.withdrawTo(args, { value });
                     hash = await l2BridgeContract.write.withdrawTo(args, {
                         account,
@@ -225,7 +230,7 @@ export class BridgeAction {
                         1,
                         "0x",
                     ] as const;
-                    const value = this.L2_DELEGATION_FEE;
+                    const value = delegationFee;
                     await l2BridgeContract.simulate.withdrawTo(args, { value });
                     hash = await l2BridgeContract.write.withdrawTo(args, {
                         account,
@@ -285,9 +290,10 @@ export class BridgeAction {
     }
 }
 
+// NOTE: The bridge action only supports bridge funds between bsc and opBNB for now. We may adding stargate support later.
 export const bridgeAction = {
     name: "bridge",
-    description: "Bridge tokens between chains",
+    description: "Bridge tokens between bsc and opBNB",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -344,7 +350,7 @@ export const bridgeAction = {
     },
     template: bridgeTemplate,
     validate: async (runtime: IAgentRuntime) => {
-        const privateKey = runtime.getSetting("BSC_PRIVATE_KEY");
+        const privateKey = runtime.getSetting("BNB_PRIVATE_KEY");
         return typeof privateKey === "string" && privateKey.startsWith("0x");
     },
     examples: [
@@ -357,6 +363,24 @@ export const bridgeAction = {
                 },
             },
         ],
+        [
+            {
+                user: "user",
+                content: {
+                    text: "Deposit 1 BNB from bsc to opBNB",
+                    action: "DEPOSIT",
+                },
+            },
+        ],
+        [
+            {
+                user: "user",
+                content: {
+                    text: "Withdraw 1 BNB from opBNB to bsc",
+                    action: "WITHDRAW",
+                },
+            },
+        ],
     ],
-    similes: ["BRIDGE", "TOKEN_BRIDGE"],
+    similes: ["BRIDGE", "TOKEN_BRIDGE", "DEPOSIT", "WITHDRAW"],
 };
