@@ -54,6 +54,7 @@ import { nearPlugin } from "@elizaos/plugin-near";
 import { nftGenerationPlugin } from "@elizaos/plugin-nft-generation";
 import { createNodePlugin } from "@elizaos/plugin-node";
 import { solanaPlugin } from "@elizaos/plugin-solana";
+import { solanaPluginV2 } from "@elizaos/plugin-solana-v2";
 import { suiPlugin } from "@elizaos/plugin-sui";
 import { TEEMode, teePlugin } from "@elizaos/plugin-tee";
 import { tonPlugin } from "@elizaos/plugin-ton";

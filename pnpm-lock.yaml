@@ -201,6 +201,9 @@ importers:
       '@elizaos/plugin-solana':
         specifier: workspace:*
         version: link:../packages/plugin-solana
+      '@elizaos/plugin-solana-v2':
+        specifier: workspace:*
+        version: link:../packages/plugin-solana-v2
       '@elizaos/plugin-starknet':
         specifier: workspace:*
         version: link:../packages/plugin-starknet
@@ -1682,8 +1685,14 @@ importers:
         specifier: workspace:*
         version: link:../plugin-tee
       '@orca-so/whirlpools':
-        specifier: ^1.0.0
+        specifier: ^1.0.2
         version: 1.0.2(@solana/web3.js@2.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(ws@8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)))
+      '@orca-so/whirlpools-client':
+        specifier: 1.0.2
+        version: 1.0.2(@solana/web3.js@2.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(ws@8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)))
+      '@orca-so/whirlpools-core':
+        specifier: ^1.0.2
+        version: 1.0.2
       '@solana-program/compute-budget':
         specifier: ^0.6.1
         version: 0.6.1(@solana/web3.js@2.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(ws@8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)))
