@@ -181,9 +181,6 @@ importers:
       '@elizaos/plugin-aptos':
         specifier: workspace:*
         version: link:../packages/plugin-aptos
-      '@elizaos/plugin-arthera':
-        specifier: workspace:*
-        version: link:../packages/plugin-arthera
       '@elizaos/plugin-avail':
         specifier: workspace:*
         version: link:../packages/plugin-avail
@@ -37013,7 +37010,7 @@ snapshots:
 
   extract-zip@2.0.1:
     dependencies:
-      debug: 4.3.4
+      debug: 4.4.0(supports-color@8.1.1)
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
