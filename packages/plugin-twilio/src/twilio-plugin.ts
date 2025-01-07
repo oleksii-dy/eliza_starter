@@ -7,6 +7,9 @@ import { requestVerificationAction, checkVerificationAction, checkVerifiedNumber
 import { twilioService } from './services/twilio.js';
 import { verifyService } from './services/verify.js';
 import { storageService } from './services/storage.js';
+import { webhookService } from './services/webhook.js';
+import { RuntimeContext } from './services/runtime-context.js';
+import { ServiceType } from '@elizaos/core';
 
 export const TwilioPlugin: Plugin = {
     name: 'twilio',
@@ -20,9 +23,21 @@ export const TwilioPlugin: Plugin = {
         checkVerifiedNumberAction
     ],
     services: [
-        twilioService,
+        {
+            ...twilioService,
+            serviceType: ServiceType.TEXT_GENERATION,
+            initialize: async (runtime: any) => {
+                RuntimeContext.setRuntime(runtime);
+                await Promise.all([
+                    storageService.initialize(),
+                    twilioService.initialize(),
+                    webhookService.initialize()
+                ]);
+            }
+        },
         verifyService,
-        storageService
+        storageService,
+        webhookService
     ]
 };
 

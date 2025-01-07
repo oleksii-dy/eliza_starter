@@ -12,22 +12,6 @@ Two-way SMS Conversations:
 - The system maintains conversation context between SMS and web interface
 - Uses TwilioService for message handling and VoiceService for text-to-speech
 
-Implementation Notes:
-```typescript
-// Handle incoming SMS
-app.post('/webhook/sms', async (req, res) => {
-  const { From, Body } = req.body;
-  
-  // Get user context from phone number
-  const userContext = await getUserFromPhone(From);
-  
-  // Process message through Eliza
-  const response = await elizaAgent.processMessage(Body, userContext);
-  
-  // Send response via SMS
-  await twilioService.sendMessage(From, response);
-});
-```
 
 Voice Call Capabilities:
 - Users can call a dedicated phone number
@@ -65,23 +49,6 @@ Voice Channel Integration:
     * Bot transcribes them to text
     * Posts both audio link and transcription
 
-Implementation Example:
-```typescript
-// Handle Discord voice channel activity
-discord.on('voiceStateUpdate', async (oldState, newState) => {
-  const channel = newState.channel;
-  if (channel) {
-    // Start recording voice channel
-    const audioStream = await connectToVoice(channel);
-    
-    // Process audio chunks
-    audioStream.on('data', async (chunk) => {
-      const transcription = await transcriptionService.transcribeAudio(chunk);
-      await channel.send(`Transcription: ${transcription}`);
-    });
-  }
-});
-```
 
 3. Eliza Agent in Twitter Spaces:
 
@@ -112,38 +79,6 @@ Content Creation:
   * Responses sent via SMS
   * Option to join audio via phone call
 
-Implementation Flow:
-```typescript
-// Handle new Twitter Space
-async function handleNewSpace(spaceId: string) {
-  // Notify subscribers
-  const subscribers = await getSpaceSubscribers(spaceId);
-  for (const phone of subscribers) {
-    await twilioService.sendMessage(
-      phone,
-      `Space started! Reply JOIN to participate.`
-    );
-  }
-  
-  // Start recording and transcription
-  const spaceStream = await connectToSpace(spaceId);
-  let transcript = '';
-  
-  spaceStream.on('data', async (chunk) => {
-    const text = await transcriptionService.transcribeAudio(chunk);
-    transcript += text;
-    
-    // Process for phone participants
-    await handlePhoneParticipants(spaceId, text);
-  });
-  
-  // Generate and send summary when Space ends
-  spaceStream.on('end', async () => {
-    const summary = await generateSummary(transcript);
-    await sendSummariesToSubscribers(spaceId, summary);
-  });
-}
-```
 
 Key Technical Components:
 1. Twilio Plugin Integration

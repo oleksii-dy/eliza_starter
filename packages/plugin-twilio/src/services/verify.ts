@@ -1,69 +1,84 @@
-import pkg from 'twilio';
-const { Twilio } = pkg;
 import { Service, ServiceType } from '@elizaos/core';
+import { twilioService } from './twilio.js';
+import { storageService } from './storage.js';
 
 export class VerifyService implements Service {
-    private client: Twilio | null = null;
-    private verifyServiceSid: string | null = null;
+    private verificationCodes = new Map<string, string>();
 
     get serviceType(): ServiceType {
         return ServiceType.TEXT_GENERATION;
     }
 
     async initialize(): Promise<void> {
-        try {
-            const accountSid = process.env.TWILIO_ACCOUNT_SID;
-            const authToken = process.env.TWILIO_AUTH_TOKEN;
-
-            if (!accountSid || !authToken) {
-                console.warn('Missing Twilio credentials. Verification service will be disabled.');
-                return;
-            }
-
-            this.client = new Twilio(accountSid, authToken);
-
-            // Create or get existing Verify service
-            const services = await this.client.verify.v2.services.list();
-            const existingService = services.find(s => s.friendlyName === 'ElizaVerification');
-
-            if (existingService) {
-                this.verifyServiceSid = existingService.sid;
-            } else {
-                const service = await this.client.verify.v2.services.create({
-                    friendlyName: 'ElizaVerification'
-                });
-                this.verifyServiceSid = service.sid;
-            }
-
-            console.log('Twilio verification service initialized successfully');
-        } catch (error) {
-            console.error('Failed to initialize Twilio verification service:', error);
-            // Don't throw - allow service to initialize in disabled state
-        }
+        console.log('Twilio verification service initialized successfully');
     }
 
     async sendVerificationCode(phoneNumber: string): Promise<void> {
-        if (!this.client || !this.verifyServiceSid) {
-            throw new Error('Verify service not initialized');
-        }
+        console.log('VerifyService: Starting verification for:', phoneNumber);
 
-        await this.client.verify.v2
-            .services(this.verifyServiceSid)
-            .verifications
-            .create({ to: phoneNumber, channel: 'sms' });
+        // Generate code
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log('VerifyService: Generated code:', code);
+
+        this.verificationCodes.set(phoneNumber, code);
+        console.log('VerifyService: Stored code in map');
+
+        // Send via SMS
+        try {
+            console.log('VerifyService: Attempting to send SMS via twilioService');
+            await twilioService.sendMessage(
+                phoneNumber,
+                `Your verification code is: ${code}. Reply with "verify code ${code}" to verify your number.`
+            );
+            console.log('VerifyService: SMS sent successfully');
+        } catch (error) {
+            console.error('VerifyService: Failed to send SMS:', error as Error);
+            throw error;
+        }
     }
 
-    async checkVerificationCode(phoneNumber: string, code: string): Promise<boolean> {
-        if (!this.client || !this.verifyServiceSid) {
-            throw new Error('Verify service not initialized');
+    async verifyCode(phoneNumber: string, code: string): Promise<boolean> {
+        const storedCode = this.verificationCodes.get(phoneNumber);
+        if (storedCode === code) {
+            await storageService.storeVerifiedUser(phoneNumber, phoneNumber);
+            this.verificationCodes.delete(phoneNumber);
+            return true;
         }
+        return false;
+    }
 
-        const verification = await this.client.verify.v2
-            .services(this.verifyServiceSid)
-            .verificationChecks
-            .create({ to: phoneNumber, code });
+    async getVerifiedUserId(phoneNumber: string): Promise<string | undefined> {
+        const users = await storageService.getAllVerifiedUsers();
+        for (const [userId, data] of users) {
+            if (data.phoneNumber === phoneNumber) {
+                return userId;
+            }
+        }
+        return undefined;
+    }
 
-        return verification.status === 'approved';
+    async sendVoiceVerificationCode(phoneNumber: string): Promise<void> {
+        console.log('Generating voice verification code for:', phoneNumber);
+
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log('Generated code:', code);
+
+        this.verificationCodes.set(phoneNumber, code);
+
+        // Send code via voice call
+        const message = `Your verification code is: ${code.split('').join(', ')}. Again, your code is: ${code.split('').join(', ')}`;
+        await twilioService.makeVoiceCall(phoneNumber, message);
+        console.log('Voice verification call initiated');
+    }
+
+    async storePhoneNumber(phoneNumber: string): Promise<void> {
+        console.log('Storing phone number:', phoneNumber);
+
+        // Remove verification from any other user with this number
+        await storageService.removeVerificationByPhone(phoneNumber);
+
+        // Store the phone number for the current user
+        await storageService.storePhoneNumber(phoneNumber);
     }
 }
 
