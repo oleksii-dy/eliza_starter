@@ -4,12 +4,16 @@ import pkg from 'twilio';
 const { Twilio } = pkg;
 import type { Twilio as TwilioInstance } from 'twilio';
 import { Service, ServiceType } from '@elizaos/core';
-import { RuntimeContext } from './runtime-context.js';
 
-class TwilioService implements Service {
+export class TwilioService implements Service {
   private client: TwilioInstance | null = null;
   private fromNumber: string | null = null;
   private messagingServiceSid: string | null = null;
+  public phoneNumber: string;
+
+  constructor() {
+    this.phoneNumber = process.env.TWILIO_PHONE_NUMBER || '';
+  }
 
   async initialize(): Promise<void> {
     const accountSid = process.env.TWILIO_ACCOUNT_SID ?? '';
@@ -107,9 +111,5 @@ class TwilioService implements Service {
   }
 }
 
-// Create a single instance
-const twilioService = new TwilioService();
-
-// Export the instance and type separately
-export type { TwilioService };
-export { twilioService };
+// Create and export single instance
+export const twilioService = new TwilioService();

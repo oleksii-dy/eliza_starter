@@ -1,5 +1,6 @@
 import { Action, IContext, ActionConfig, HandlerCallback, IAgentRuntime } from '@elizaos/core';
 import { verifyService } from '../services/verify.js';
+import { twilioService } from '../services/twilio.js';
 
 export const requestVerificationAction: Action = {
     name: 'REQUEST_VERIFICATION',
@@ -63,7 +64,7 @@ export const checkVerificationAction: Action = {
     examples: [
         [
             { user: "user1", content: { text: "verify code 123456" } },
-            { user: "assistant", content: { text: "Perfect! Your phone number has been verified! 📱✅" } }
+            { user: "assistant", content: { text: `Perfect! Your phone number has been verified! You can now use all my services by sending an sms to ${twilioService.phoneNumber}! 📱✅` } }
         ]
     ],
     skipLLM: true as any,
@@ -90,9 +91,11 @@ export const checkVerificationAction: Action = {
 
         try {
             const isValid = await verifyService.verifyCode(phoneNumber, code!);
+            const twilioNumber = twilioService.phoneNumber;
+
             return callback?.({
                 text: isValid
-                    ? `Perfect! I've verified your phone number ${phoneNumber}. You can now use all my services! 📱✅`
+                    ? `Perfect! I've verified your phone number ${phoneNumber}. You can now use all my services by sending an sms to ${twilioNumber}! 📱✅`
                     : `That code doesn't match what I sent to ${phoneNumber}. Want to try again or get a new code? Just say 'verify' for a new one! 🔄`
             });
         } catch (error) {
@@ -137,4 +140,39 @@ export const checkVerifiedNumberAction: Action = {
             };
         }
     }
+};
+
+export const getAgentPhoneAction: Action = {
+    name: 'GET_AGENT_PHONE',
+    similes: [
+        "what's your phone number",
+        "what is your phone number",
+        "your phone number",
+        "what's your number",
+        "what is your number",
+        "your number",
+        "phone number"
+    ],
+    description: "Get the agent's phone number",
+    examples: [
+        [
+            { user: "user1", content: { text: "what's your phone number?" } },
+            { user: "assistant", content: { text: `My phone number is ${twilioService.phoneNumber}. Feel free to use this number to test SMS and voice call features.` } }
+        ]
+    ],
+    priority: 1,
+    validate: async () => true,
+    handler: async () => {
+        return {
+            text: `My phone number is ${twilioService.phoneNumber}. Feel free to use this number to test SMS and voice call features.`
+        };
+    }
+};
+
+// Export all actions
+export const verifyActions = {
+    requestVerificationAction,
+    checkVerificationAction,
+    checkVerifiedNumberAction,
+    getAgentPhoneAction
 };
