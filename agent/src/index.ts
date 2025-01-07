@@ -10,99 +10,12 @@ import { SlackClientInterface } from "@/services/elizaos-client-slack";
 import { TelegramClientInterface } from "@/services/elizaos-client-telegram";
 import { TwitterClientInterface } from "@/services/elizaos-client-twitter";
 
-//
 import { registerInstrumentations } from '@opentelemetry/instrumentation';
-//import { diag, DiagConsoleLogger, DiagLogLevel } from '@opentelemetry/api';
-//import { trace } from '@opentelemetry/api';
-//import { NodeSDK } from '@opentelemetry/sdk-node';
 import { SpanExporter, Span } from '@opentelemetry/sdk-trace-base';
-// , ExportResult
-//import { ConsoleSpanExporter } from '@opentelemetry/sdk-trace-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-//import {  PeriodicExportingMetricReader,  ConsoleMetricExporter,} from '@opentelemetry/sdk-metrics';
 import * as opentelemetry from '@opentelemetry/api';
-//import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
-//import { ZipkinExporter } from '@opentelemetry/exporter-zipkin';
 import { Resource } from '@opentelemetry/resources';
-//import {
-  //  ATTR_SERVICE_NAME,
-  //  ATTR_SERVICE_VERSION,
-  //} from '@opentelemetry/semantic-conventions';
-//import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { wrapTracer } from '@opentelemetry/api/experimental';
-
-// //Specify zipkin url. default url is http://localhost:9411/api/v2/spans
-// // docker run -d -p 9411:9411 openzipkin/zipkin
-// const zipkinUrl = 'http://localhost';
-// const zipkinPort = '9411';
-// const zipkinPath = '/api/v2/spans';
-// const zipkinURL = `${zipkinUrl}:${zipkinPort}${zipkinPath}`;
-
-// const options = {
-//     headers: {
-// 	'module': 'mainai16z',
-//     },
-//     url: zipkinURL,
-//     serviceName: 'ai16z',
-
-//     // optional interceptor
-//     getExportRequestHeaders: () => {
-// 	return {
-//             'module': 'mainai16z',
-// 	}
-//     }
-// }
-// const traceExporter_zipkin = new ZipkinExporter(options);
-// const traceExporter = new ConsoleSpanExporter();
-
-
-// export class CustomConsoleSpanExporter implements SpanExporter {
-//     export(spans: Span[], resultCallback: (result: any) => void): void {
-//       elizaLogger.log("test trace", JSON.stringify(spans, null, 2));
-//       //traceExporter.export(spans,resultCallback);
-//       //traceExporter.export(traceExporter_zipkin,resultCallback);
-//       //elizaLogger.log(JSON.stringify(spans, null, 2));
-//     }
-// }
-// const myExporter = new CustomConsoleSpanExporter()
-
-// parts from https://stackoverflow.com/questions/71654897/opentelemetry-typescript-project-zipkin-exporter
-//const { SimpleSpanProcessor } = import('@opentelemetry/sdk-trace-base');
-//import { NodeTracerProvider, SimpleSpanProcessor } from "@opentelemetry/sdk-trace-node";
-//const txz=new SimpleSpanProcessor(traceExporter_zipkin);
-//const tx=new SimpleSpanProcessor(traceExporter);
-//const tx2=new SimpleSpanProcessor(myExporter);
-
-// try {
-//     const serviceName = 'eliza-agent';
-//     const provider = new NodeTracerProvider({
-// 	resource: new Resource({
-// 	  [ATTR_SERVICE_NAME]: serviceName,
-// 	  [ATTR_SERVICE_VERSION]: '1.0',    }),
-//       spanProcessors: [
-// 	txz,
-// 	tx
-// 	//	tx2
-//       ]
-//     });
-
-//   // Initialize the OpenTelemetry APIs to use the NodeTracerProvider bindings
-//   provider.register();
-
-//   registerInstrumentations({
-//     instrumentations: [
-//       getNodeAutoInstrumentations(),
-//       new HttpInstrumentation(),
-//     ],
-//   });
-
-
-//   elizaLogger.log("setup!")
-// } catch(error){
-//   elizaLogger.log("ERROR",error)
-// }
-
-// wrapper
 const tracer = wrapTracer(opentelemetry.trace.getTracer('ai16z-agent'))
 
 import {
@@ -205,7 +118,8 @@ export function parseArguments(): {
             .parseSync();
     } catch (error) {
         elizaLogger.error("Error parsing arguments:", error);
-        return {};
+      //return {};
+      throw error;
     }
 }
 
@@ -218,7 +132,8 @@ function tryLoadFile(filePath: string): string | null {
       return ret;
 
     } catch (e) {
-      return null;
+      //return null;
+      throw e;
     }
   })
 }
@@ -332,7 +247,8 @@ export async function loadCharacters(
                 elizaLogger.error(
                     `Error parsing character from ${resolvedPath}: ${e}`
                 );
-                process.exit(1);
+              //process.exit(1);
+	      throw e;
             }
         }
     }
@@ -481,7 +397,8 @@ function initializeDatabase(dataDir: string) {
                 );
             })
             .catch((error) => {
-                elizaLogger.error("Failed to connect to PostgreSQL:", error);
+              elizaLogger.error("Failed to connect to PostgreSQL:", error);
+	      throw error;
             });
 
         return db;
@@ -848,7 +765,10 @@ async function startAgent(
         elizaLogger.debug(`Started ${character.name} as ${runtime.agentId}`);
 
         return runtime;
-    } catch (error) {
+    }
+  finally {}
+  /*
+catch (error) {
         elizaLogger.error(
             `Error starting agent for character ${character.name}:`,
             error
@@ -874,7 +794,8 @@ async function startAgent(
             await db.close();
         }
         throw error;
-    }
+}
+       */ // dont catch
 }
 
 const checkPortAvailable = (port: number): Promise<boolean> => {
@@ -913,11 +834,13 @@ const startAgents = async () => {
               await startAgent(character, directClient);
 	    } catch (error) {
 	      elizaLogger.error("Error starting agents2:", character, error);
+	      throw error;
 	    }
 	
         }
     } catch (error) {
-        elizaLogger.error("Error starting agents:", error);
+      elizaLogger.error("Error starting agents:", error);
+      throw error;
     }
 
     // Find available port
@@ -948,6 +871,7 @@ const startAgents = async () => {
 export function start() {
   startAgents().catch((error) => {
     elizaLogger.error("Unhandled error in startAgents:", error);
-    process.exit(1);
+    //process.exit(1);
+    throw error;
   });
 }
