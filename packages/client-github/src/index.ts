@@ -362,7 +362,8 @@ export class GitHubClient extends EventEmitter {
             owner,
             repository,
             branch,
-            this.apiToken
+            this.apiToken,
+            5
         );
         // elizaLogger.log("Issues memories:", issuesMemories);
         await fs.writeFile(
@@ -374,7 +375,8 @@ export class GitHubClient extends EventEmitter {
             owner,
             repository,
             branch,
-            this.apiToken
+            this.apiToken,
+            5
         );
         // elizaLogger.log("Pull requests memories:", pullRequestsMemories);
         await fs.writeFile(

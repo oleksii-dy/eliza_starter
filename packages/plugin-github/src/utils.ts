@@ -1264,7 +1264,8 @@ export const saveIssuesToMemory = async (
     owner: string,
     repository: string,
     branch: string,
-    apiToken: string
+    apiToken: string,
+    limit: number = 999999
 ): Promise<Memory[]> => {
     const roomId = stringToUuid(`github-${owner}-${repository}-${branch}`);
     const memories = await runtime.messageManager.getMemories({
@@ -1276,7 +1277,9 @@ export const saveIssuesToMemory = async (
         branch: branch,
         auth: apiToken,
     });
-    const issues = await githubService.getIssues();
+    const allIssues = await githubService.getIssues();
+    elizaLogger.log(`Total issues found: ${allIssues.length}`);
+    const issues = allIssues.slice(0, Math.min(limit, allIssues.length));
     // await fs.writeFile("/tmp/issues.txt", JSON.stringify(issues, null, 2));
     const issuesMemories: Memory[] = [];
     // create memories for each issue if they are not already in the memories
@@ -1542,7 +1545,8 @@ export const savePullRequestsToMemory = async (
     owner: string,
     repository: string,
     branch: string,
-    apiToken: string
+    apiToken: string,
+    limit: number = 999999
 ): Promise<Memory[]> => {
     const roomId = stringToUuid(`github-${owner}-${repository}-${branch}`);
     const memories = await runtime.messageManager.getMemories({
@@ -1553,7 +1557,11 @@ export const savePullRequestsToMemory = async (
         repo: repository,
         auth: apiToken,
     });
-    const pullRequests = await githubService.getPullRequests();
+    const allPullRequests = await githubService.getPullRequests();
+    const pullRequests = allPullRequests.slice(
+        0,
+        Math.min(limit, allPullRequests.length)
+    );
     const pullRequestsMemories: Memory[] = [];
     // create memories for each pull request if they are not already in the memories
     for (const pr of pullRequests) {
