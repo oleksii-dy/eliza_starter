@@ -1,36 +1,29 @@
 import { Provider, IAgentRuntime, Memory, State } from "@elizaos/core";
 import axios from 'axios'; // Note: You'll need to ensure axios is installed
+import { ScrapperResponse } from "../interfaces/scrapper";
 
 const etfsProvider: Provider = {
   get: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     try {
       // Fetch current BTC price from CoinGecko API
-      const response = await axios.get('http://localhost:8080/scrap');
+      const response = await axios.get('https://etfscrapper-349714367197.us-central1.run.app/scrap');
+      const data: ScrapperResponse = response.data
 
-      console.log(response.data);
-      /*
-      [
-      {
-        Ticker: 'BTCO\nBTC',
-        'ETF Name': 'Invesco Galaxy Bitcoin ETF',
-        Price: '$98.57',
-        'Price Change': '+5.65\n+6.08%',
-        Volume: '$7.92M',
-        'Volume %': '81.02K',
-        'Market Cap': '$783.63M'
-      },...,
-    ]
-      */
-      return  `Current ETFs information,
-      ${response.data.map((etf) => {
-        return `- ${etf['ETF Name']}:
-  - Price: ${etf.Price}
-  - Price Change: ${etf['Price Change']}
-  - Volume: ${etf.Volume}
-  - Volume %: ${etf['Volume %']}
-  - Market Cap: ${etf['Market Cap']}`;
-      }
-      ).join('\n')}`;
+      return  `
+        Only use this data when the user asks about it. This is the ETF overview:
+
+        ${data.etfOverview.map(
+        (data) => `Ticker: ${data.ticker}, ETF Name: ${data.etfName}, Volume: ${data.Volume}, Market Cap: ${data.marketCap}`
+        ).join('\n')}
+
+        This is the inflowsBTC data:
+
+        ${data.inflowsBTC.map(
+        (inflow) => `Date: ${inflow.time}, Total: ${inflow.Total}, Breakdown:
+            GBTC: ${inflow.GBTC}, IBIT: ${inflow.IBIT}, FBTC: ${inflow.FBTC}, ARKB: ${inflow.ARKB}, BITB: ${inflow.BITB},
+            BTCO: ${inflow.BTCO}, HODL: ${inflow.HODL}, BRRR: ${inflow.BRRR}, EZBC: ${inflow.EZBC}, BCTW: ${inflow.BCTW}, BTC: ${inflow.BTC}`
+        ).join('\n')}
+    `;
 
 
     } catch (error) {
