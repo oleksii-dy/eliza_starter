@@ -1,7 +1,7 @@
 # Use a specific Node.js version for better reproducibility
 FROM node:23.3.0-slim AS builder
 
-# Install pnpm globally and install necessary build tools
+# Install pnpm globally and build tools
 RUN npm install -g pnpm@9.4.0 && \
     apt-get update && \
     apt-get install -y git python3 make g++ && \
@@ -14,44 +14,36 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json and other configuration files
+# Copy configuration files and app code
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc turbo.json ./
-
-# Copy the rest of the application code
 COPY agent ./agent
 COPY packages ./packages
 COPY scripts ./scripts
 COPY characters ./characters
 
 # Install dependencies and build the project
-RUN pnpm install \
-    && pnpm build-docker \
-    && pnpm prune --prod
+RUN pnpm install && pnpm build-docker && pnpm prune --prod && \
+    rm -rf /app/node_modules/.cache
 
-# Create a new stage for the final image
+# Create the final image
 FROM node:23.3.0-slim
 
-# Install runtime dependencies if needed
+# Install pnpm globally for runtime
 RUN npm install -g pnpm@9.4.0 && \
     apt-get update && \
     apt-get install -y git python3 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# Set the working directory
 WORKDIR /app
 
-# Copy built artifacts and production dependencies from the builder stage
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/pnpm-workspace.yaml ./
-COPY --from=builder /app/.npmrc ./
-COPY --from=builder /app/turbo.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/agent ./agent
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/scripts ./scripts
-COPY --from=builder /app/characters ./characters
+# Copy production files from the builder stage
+COPY --from=builder /app ./
 
-# Set the command to run the application
+# Expose the default port
+EXPOSE 3001
 
+# Set the default command
 CMD ["pnpm", "start", "--non-interactive", "--character=${CHARACTER}"]
 
