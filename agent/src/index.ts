@@ -723,6 +723,22 @@ async function startAgent(
             `Error starting agent for character ${character.name}:`,
             error
         );
+      const e = error;
+         console.log("error object:");
+    console.log(e);
+    console.log();
+
+    console.log("error object toString():");
+    console.log("\t" + e.toString());
+
+    console.log();
+    console.log("error object attributes: ");
+    console.log('\tname: ' + e.name + ' message: ' + e.message + ' at: ' + e.at + ' text: ' + e.text);
+
+    console.log();
+    console.log("error object stack: ");
+      console.log(e.stack);
+      
         elizaLogger.error(error);
         if (db) {
             await db.close();
@@ -762,8 +778,13 @@ const startAgents = async () => {
     }
 
     try {
-        for (const character of characters) {
-            await startAgent(character, directClient);
+      for (const character of characters) {
+	    try {
+              await startAgent(character, directClient);
+	    } catch (error) {
+	      elizaLogger.error("Error starting agents2:", character, error);
+	    }
+	
         }
     } catch (error) {
         elizaLogger.error("Error starting agents:", error);

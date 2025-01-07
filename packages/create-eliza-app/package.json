@@ -6,10 +6,6 @@
     "files": [
         "dist"
     ],
-    "main": "dist/index.cjs",
-    "bin": {
-        "create-eliza-app": "dist/index.mjs"
-    },
     "scripts": {
         "build": "unbuild",
         "lint": "eslint --fix  --cache .",
