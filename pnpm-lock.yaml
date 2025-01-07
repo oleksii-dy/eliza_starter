@@ -1079,9 +1079,6 @@ importers:
       '@lifi/types':
         specifier: 16.3.0
         version: 16.3.0
-      ethers:
-        specifier: 6.13.4
-        version: 6.13.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       solc:
         specifier: ^0.8.28
         version: 0.8.28
@@ -28269,7 +28266,7 @@ snapshots:
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 20.17.9
+      '@types/node': 22.10.2
 
   '@types/cors@2.8.17':
     dependencies:
@@ -28723,11 +28720,11 @@ snapshots:
 
   '@types/ws@7.4.7':
     dependencies:
-      '@types/node': 20.17.9
+      '@types/node': 22.10.2
 
   '@types/ws@8.5.13':
     dependencies:
-      '@types/node': 20.17.9
+      '@types/node': 22.10.2
 
   '@types/ws@8.5.3':
     dependencies:

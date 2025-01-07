@@ -3753,11 +3753,25 @@ export const StakeHubAbi = [
     },
 ] as const;
 
-export interface DeployParams {
-    contractType: "erc20" | "erc721" | "erc1155";
-    chain: "bsc" | "opBNB" | "bscTestnet" | "opBNBTestnet";
+export interface IDeployBasic {
+    privateKey?: string | null;
+    rpcUrl?: string | null;
+}
+
+export interface IDeployToken {
     name: string;
     symbol: string;
     decimals: number;
-    totalSupply: string;
+    totalSupply: number;
+}
+
+export interface IDeployNFT {
+    name: string;
+    symbol: string;
+    baseURI: string;
+}
+
+export interface IDeploy1155 {
+    name: string;
+    baseURI: string;
 }

@@ -36,6 +36,10 @@ export class WalletProvider {
         }
     }
 
+    getAccount(): PrivateKeyAccount {
+        return this.account;
+    }
+
     getAddress(): Address {
         return this.account.address;
     }
