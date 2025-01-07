@@ -61,6 +61,11 @@ import {
     MitoIDOSubscriptionActivity,
     MitoWhitelistAccount,
     MitoClaimReference,
+    ContractAccountsBalanceWithPagination,
+    ContractStateWithPagination,
+    ContractInfo,
+    ContractCodeHistoryEntry,
+    CodeInfoResponse,
 } from "@injectivelabs/sdk-ts";
 import { DenomTrace } from "@injectivelabs/core-proto-ts/cjs/ibc/applications/transfer/v1/transfer.js";
 import { InjectiveExplorerRpc } from "@injectivelabs/indexer-proto-ts";
@@ -71,6 +76,7 @@ import {
     InjectiveExchangeV1Beta1Exchange,
     InjectiveOracleV1Beta1Oracle,
     CosmosBankV1Beta1Bank,
+    CosmwasmWasmV1Query,
 } from "@injectivelabs/core-proto-ts";
 import { AccessConfig } from "@injectivelabs/core-proto-ts/cjs/cosmwasm/wasm/v1/types";
 
