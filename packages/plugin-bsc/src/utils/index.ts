@@ -1,7 +1,7 @@
-import solc from "solc";
+import { elizaLogger } from "@elizaos/core";
 import * as ethers from "ethers";
+import solc from "solc";
 import { erc1155Contract, erc20Contract, erc721Contract } from "./contracts";
-import { elizaLogger, IAgentRuntime } from "@elizaos/core";
 
 export interface IDeployBasic {
     privateKey?: string | null;
@@ -16,7 +16,6 @@ export interface IDeployToken {
 }
 
 export const deployToken = async (
-    runtime: IAgentRuntime,
     basicParams: IDeployBasic,
     deployTokenParams: IDeployToken
 ) => {

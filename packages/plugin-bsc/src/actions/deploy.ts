@@ -61,7 +61,6 @@ export const deployAction = {
         ) {
             elizaLogger.log("start deploy token....");
             result = await deployToken(
-                runtime,
                 {
                     privateKey,
                     rpcUrl,
