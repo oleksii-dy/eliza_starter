@@ -83,7 +83,7 @@ export const TransferAction: Action = {
         "PAY_ON_CRONOSZKEVM",
         "PAY_ON_CRONOSZK",
     ],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (runtime: IAgentRuntime, _message: Memory) => {
         await validateCronosZkevmConfig(runtime);
         return true;
     },
