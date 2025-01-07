@@ -1,12 +1,13 @@
-import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
-import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
-import { AutoClientInterface } from "@elizaos/client-auto";
-import { DiscordClientInterface } from "@elizaos/client-discord";
-import { FarcasterAgentClient } from "@elizaos/client-farcaster";
-import { LensAgentClient } from "@elizaos/client-lens";
-import { SlackClientInterface } from "@elizaos/client-slack";
-import { TelegramClientInterface } from "@elizaos/client-telegram";
-import { TwitterClientInterface } from "@elizaos/client-twitter";
+console.log("ELIZA!!")
+import { PostgresDatabaseAdapter } from "@/services/elizaos-adapter-postgres";
+import { SqliteDatabaseAdapter } from "@/services/elizaos-adapter-sqlite";
+import { AutoClientInterface } from "@/services/elizaos-client-auto";
+import { DiscordClientInterface } from "@/services/elizaos-client-discord";
+import { FarcasterAgentClient } from "@/services/elizaos-client-farcaster";
+import { LensAgentClient } from "@/services/elizaos-client-lens";
+import { SlackClientInterface } from "@/services/elizaos-client-slack";
+import { TelegramClientInterface } from "@/services/elizaos-client-telegram";
+import { TwitterClientInterface } from "@/services/elizaos-client-twitter";
 import {
     AgentRuntime,
     CacheManager,
@@ -27,14 +28,14 @@ import {
     Client,
     ICacheManager,
     parseBooleanFromText,
-} from "@elizaos/core";
-import { RedisClient } from "@elizaos/adapter-redis";
-import { zgPlugin } from "@elizaos/plugin-0g";
-import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
-import createGoatPlugin from "@elizaos/plugin-goat";
-// import { intifacePlugin } from "@elizaos/plugin-intiface";
-import { DirectClient } from "@elizaos/client-direct";
-import { aptosPlugin } from "@elizaos/plugin-aptos";
+} from "@/services/elizaos-core";
+import { RedisClient } from "@/services/elizaos-adapter-redis";
+import { zgPlugin } from "@/services/elizaos-plugin-0g";
+import { bootstrapPlugin } from "@/services/elizaos-plugin-bootstrap";
+import createGoatPlugin from "@/services/elizaos-plugin-goat";
+// import { intifacePlugin } from "@/services/elizaos-plugin-intiface";
+import { DirectClient } from "@/services/elizaos-client-direct";
+import { aptosPlugin } from "@/services/elizaos-plugin-aptos";
 import {
     advancedTradePlugin,
     coinbaseCommercePlugin,
@@ -42,28 +43,28 @@ import {
     tokenContractPlugin,
     tradePlugin,
     webhookPlugin,
-} from "@elizaos/plugin-coinbase";
-import { confluxPlugin } from "@elizaos/plugin-conflux";
-import { evmPlugin } from "@elizaos/plugin-evm";
-import { storyPlugin } from "@elizaos/plugin-story";
-import { flowPlugin } from "@elizaos/plugin-flow";
-import { fuelPlugin } from "@elizaos/plugin-fuel";
-import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
-import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
-import { multiversxPlugin } from "@elizaos/plugin-multiversx";
-import { nearPlugin } from "@elizaos/plugin-near";
-import { nftGenerationPlugin } from "@elizaos/plugin-nft-generation";
-import { createNodePlugin } from "@elizaos/plugin-node";
-import { solanaPlugin } from "@elizaos/plugin-solana";
-import { suiPlugin } from "@elizaos/plugin-sui";
-import { TEEMode, teePlugin } from "@elizaos/plugin-tee";
-import { tonPlugin } from "@elizaos/plugin-ton";
-import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
-import { cronosZkEVMPlugin } from "@elizaos/plugin-cronoszkevm";
-import { abstractPlugin } from "@elizaos/plugin-abstract";
-import { avalanchePlugin } from "@elizaos/plugin-avalanche";
-import { webSearchPlugin } from "@elizaos/plugin-web-search";
-import { echoChamberPlugin } from "@elizaos/plugin-echochambers";
+} from "@/services/elizaos-plugin-coinbase";
+import { confluxPlugin } from "@/services/elizaos-plugin-conflux";
+import { evmPlugin } from "@/services/elizaos-plugin-evm";
+import { storyPlugin } from "@/services/elizaos-plugin-story";
+import { flowPlugin } from "@/services/elizaos-plugin-flow";
+import { fuelPlugin } from "@/services/elizaos-plugin-fuel";
+import { imageGenerationPlugin } from "@/services/elizaos-plugin-image-generation";
+import { ThreeDGenerationPlugin } from "@/services/elizaos-plugin-3d-generation";
+import { multiversxPlugin } from "@/services/elizaos-plugin-multiversx";
+import { nearPlugin } from "@/services/elizaos-plugin-near";
+import { nftGenerationPlugin } from "@/services/elizaos-plugin-nft-generation";
+import { createNodePlugin } from "@/services/elizaos-plugin-node";
+import { solanaPlugin } from "@/services/elizaos-plugin-solana";
+import { suiPlugin } from "@/services/elizaos-plugin-sui";
+import { TEEMode, teePlugin } from "@/services/elizaos-plugin-tee";
+import { tonPlugin } from "@/services/elizaos-plugin-ton";
+import { zksyncEraPlugin } from "@/services/elizaos-plugin-zksync-era";
+import { cronosZkEVMPlugin } from "@/services/elizaos-plugin-cronoszkevm";
+import { abstractPlugin } from "@/services/elizaos-plugin-abstract";
+import { avalanchePlugin } from "@/services/elizaos-plugin-avalanche";
+import { webSearchPlugin } from "@/services/elizaos-plugin-web-search";
+import { echoChamberPlugin } from "@/services/elizaos-plugin-echochambers";
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
@@ -71,8 +72,8 @@ import { fileURLToPath } from "url";
 import yargs from "yargs";
 import net from "net";
 
-const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
-const __dirname = path.dirname(__filename); // get the name of the directory
+//const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
+//const __dirname = path.dirname(__filename); // get the name of the directory
 
 export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
     const waitTime =
@@ -139,22 +140,22 @@ export async function loadCharacters(
                 characterPath, // exact path as specified
                 path.resolve(process.cwd(), characterPath), // relative to cwd
                 path.resolve(process.cwd(), "agent", characterPath), // Add this
-                path.resolve(__dirname, characterPath), // relative to current script
-                path.resolve(
-                    __dirname,
-                    "characters",
-                    path.basename(characterPath)
-                ), // relative to agent/characters
-                path.resolve(
-                    __dirname,
-                    "../characters",
-                    path.basename(characterPath)
-                ), // relative to characters dir from agent
-                path.resolve(
-                    __dirname,
-                    "../../characters",
-                    path.basename(characterPath)
-                ), // relative to project root characters dir
+              //path.resolve(__dirname, characterPath), // relative to current script
+              //path.resolve(
+              //__dirname,
+              //      "characters",
+              //      path.basename(characterPath)
+              //  ), // relative to agent/characters
+	      //                path.resolve(
+              //__dirname,
+              //    "../characters",
+              //      path.basename(characterPath)
+              // ), // relative to characters dir from agent
+              // path.resolve(
+              //     __dirname,
+              //    "../../characters",
+              //     path.basename(characterPath)
+              // ), // relative to project root characters dir
             ];
 
             elizaLogger.info(
@@ -793,7 +794,9 @@ const startAgents = async () => {
     );
 };
 
-startAgents().catch((error) => {
+export function start() {
+  startAgents().catch((error) => {
     elizaLogger.error("Unhandled error in startAgents:", error);
     process.exit(1);
-});
+  });
+}
