@@ -1,3 +1,4 @@
+import { ResponseTemplate } from "../types";
 export const tradeTemplates = {
     trade: {
         template: `

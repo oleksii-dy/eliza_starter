@@ -1,5 +1,5 @@
 {
-  "name": "injective-ts-lib",
+  "name": "@injectivelabs/injective-sdk-client-ts",
   "version": "1.0.0",
   "description": "Injective Protocol TypeScript Library",
   "main": "dist/index.js",

@@ -92,7 +92,13 @@ The base class that provides fundamental gRPC functionality:
 ## Installation
 
 ```bash
-npm install @injectivelabs/sdk-client
+pnpm install
+```
+
+## Build and Use
+To build and use the project, run the following command
+```bash
+pnpm build
 ```
 
 ## Usage
@@ -100,7 +106,7 @@ npm install @injectivelabs/sdk-client
 Basic setup:
 
 ```typescript
-import { InjectiveGrpcClient } from '@injectivelabs/sdk-client'
+import { InjectiveGrpcClient } from '@injectivelabs/injective-sdk-client-ts'
 
 // Initialize client
 const client = new InjectiveGrpcClient({
