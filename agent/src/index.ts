@@ -524,12 +524,8 @@ export async function createAgent(
     db: IDatabaseAdapter,
     cache: ICacheManager,
     token: string
-): AgentRuntime {
-    elizaLogger.success(
-        elizaLogger.successesTitle,
-        "Creating runtime for character",
-        character.name
-    );
+): Promise<AgentRuntime> {
+    elizaLogger.log(`Creating runtime for character ${character.name}`);
 
     nodePlugin ??= createNodePlugin();
 
@@ -677,7 +673,7 @@ export async function createAgent(
             getSecret(character, "OPEN_WEATHER_API_KEY")
                 ? openWeatherPlugin
                 : null,
-          getSecret(character, "ARTHERA_PRIVATE_KEY")?.startsWith("0x")
+            getSecret(character, "ARTHERA_PRIVATE_KEY")?.startsWith("0x")
                 ? artheraPlugin
                 : null,
         ].filter(Boolean),
