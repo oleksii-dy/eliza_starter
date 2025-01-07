@@ -60,7 +60,7 @@ export function getAddressFromPrivateKey(privateKey?: string): string {
         throw error;
     }
 }
-export class GrpcClient extends InjectiveGrpcBase {
+export class InjectiveGrpcClient extends InjectiveGrpcBase {
     constructor(
         networkType: keyof typeof Network = "Mainnet",
         privateKey: string
