@@ -321,8 +321,8 @@ export class InjectiveGrpcClient extends InjectiveGrpcBase {
     public getTxs = ExplorerModule.getTxs.bind(this);
     public getIBCTransferTxs = ExplorerModule.getIBCTransferTxs.bind(this);
     public getExplorerStats = ExplorerModule.getExplorerStats.bind(this);
-    
-    // Messages Broadcasting endpoints 
+
+    // Messages Broadcasting endpoints
     // Auction message functions
     public msgBid = AuctionModule.msgBid.bind(this);
 
@@ -336,50 +336,77 @@ export class InjectiveGrpcClient extends InjectiveGrpcBase {
     public msgMultiSend = BankModule.msgMultiSend.bind(this);
 
     // Distribution message functions
-    public msgWithdrawDelegatorReward = DistributionModule.msgWithdrawDelegatorReward.bind(this);
-    public msgWithdrawValidatorCommission = DistributionModule.msgWithdrawValidatorCommission.bind(this);
+    public msgWithdrawDelegatorReward =
+        DistributionModule.msgWithdrawDelegatorReward.bind(this);
+    public msgWithdrawValidatorCommission =
+        DistributionModule.msgWithdrawValidatorCommission.bind(this);
 
     // Exchange message functions
-    public msgAdminUpdateBinaryOptionsMarket = ExchangeModule.msgAdminUpdateBinaryOptionsMarket.bind(this);
-    public msgBatchCancelBinaryOptionsOrders = ExchangeModule.msgBatchCancelBinaryOptionsOrders.bind(this);
-    public msgBatchCancelDerivativeOrders = ExchangeModule.msgBatchCancelDerivativeOrders.bind(this);
-    public msgBatchCancelSpotOrders = ExchangeModule.msgBatchCancelSpotOrders.bind(this);
-    public msgBatchUpdateOrders = ExchangeModule.msgBatchUpdateOrders.bind(this);
-    public msgCancelBinaryOptionsOrder = ExchangeModule.msgCancelBinaryOptionsOrder.bind(this);
-    public msgCancelDerivativeOrder = ExchangeModule.msgCancelDerivativeOrder.bind(this);
+    public msgAdminUpdateBinaryOptionsMarket =
+        ExchangeModule.msgAdminUpdateBinaryOptionsMarket.bind(this);
+    public msgBatchCancelBinaryOptionsOrders =
+        ExchangeModule.msgBatchCancelBinaryOptionsOrders.bind(this);
+    public msgBatchCancelDerivativeOrders =
+        ExchangeModule.msgBatchCancelDerivativeOrders.bind(this);
+    public msgBatchCancelSpotOrders =
+        ExchangeModule.msgBatchCancelSpotOrders.bind(this);
+    public msgBatchUpdateOrders =
+        ExchangeModule.msgBatchUpdateOrders.bind(this);
+    public msgCancelBinaryOptionsOrder =
+        ExchangeModule.msgCancelBinaryOptionsOrder.bind(this);
+    public msgCancelDerivativeOrder =
+        ExchangeModule.msgCancelDerivativeOrder.bind(this);
     public msgCancelSpotOrder = ExchangeModule.msgCancelSpotOrder.bind(this);
-    public msgCreateBinaryOptionsLimitOrder = ExchangeModule.msgCreateBinaryOptionsLimitOrder.bind(this);
-    public msgCreateBinaryOptionsMarketOrder = ExchangeModule.msgCreateBinaryOptionsMarketOrder.bind(this);
-    public msgCreateDerivativeLimitOrder = ExchangeModule.msgCreateDerivativeLimitOrder.bind(this);
-    public msgCreateDerivativeMarketOrder = ExchangeModule.msgCreateDerivativeMarketOrder.bind(this);
-    public msgCreateSpotLimitOrder = ExchangeModule.msgCreateSpotLimitOrder.bind(this);
-    public msgCreateSpotMarketOrder = ExchangeModule.msgCreateSpotMarketOrder.bind(this);
+    public msgCreateBinaryOptionsLimitOrder =
+        ExchangeModule.msgCreateBinaryOptionsLimitOrder.bind(this);
+    public msgCreateBinaryOptionsMarketOrder =
+        ExchangeModule.msgCreateBinaryOptionsMarketOrder.bind(this);
+    public msgCreateDerivativeLimitOrder =
+        ExchangeModule.msgCreateDerivativeLimitOrder.bind(this);
+    public msgCreateDerivativeMarketOrder =
+        ExchangeModule.msgCreateDerivativeMarketOrder.bind(this);
+    public msgCreateSpotLimitOrder =
+        ExchangeModule.msgCreateSpotLimitOrder.bind(this);
+    public msgCreateSpotMarketOrder =
+        ExchangeModule.msgCreateSpotMarketOrder.bind(this);
     public msgDeposit = ExchangeModule.msgDeposit.bind(this);
     public msgExternalTransfer = ExchangeModule.msgExternalTransfer.bind(this);
-    public msgIncreasePositionMargin = ExchangeModule.msgIncreasePositionMargin.bind(this);
-    public msgInstantSpotMarketLaunch = ExchangeModule.msgInstantSpotMarketLaunch.bind(this);
-    public msgLiquidatePosition = ExchangeModule.msgLiquidatePosition.bind(this);
-    public msgReclaimLockedFunds = ExchangeModule.msgReclaimLockedFunds.bind(this);
+    public msgIncreasePositionMargin =
+        ExchangeModule.msgIncreasePositionMargin.bind(this);
+    public msgInstantSpotMarketLaunch =
+        ExchangeModule.msgInstantSpotMarketLaunch.bind(this);
+    public msgLiquidatePosition =
+        ExchangeModule.msgLiquidatePosition.bind(this);
+    public msgReclaimLockedFunds =
+        ExchangeModule.msgReclaimLockedFunds.bind(this);
     public msgRewardsOptOut = ExchangeModule.msgRewardsOptOut.bind(this);
     public msgSignData = ExchangeModule.msgSignData.bind(this);
     public msgWithdraw = ExchangeModule.msgWithdraw.bind(this);
 
     // Governance message functions
-    public msgSubmitProposalExpiryFuturesMarketLaunch = GovernanceModule.msgSubmitProposalExpiryFuturesMarketLaunch.bind(this);
-    public msgSubmitProposalSpotMarketLaunch = GovernanceModule.msgSubmitProposalSpotMarketLaunch.bind(this);
-    public msgSubmitProposalPerpetualMarketLaunch = GovernanceModule.msgSubmitProposalPerpetualMarketLaunch.bind(this);
+    public msgSubmitProposalExpiryFuturesMarketLaunch =
+        GovernanceModule.msgSubmitProposalExpiryFuturesMarketLaunch.bind(this);
+    public msgSubmitProposalSpotMarketLaunch =
+        GovernanceModule.msgSubmitProposalSpotMarketLaunch.bind(this);
+    public msgSubmitProposalPerpetualMarketLaunch =
+        GovernanceModule.msgSubmitProposalPerpetualMarketLaunch.bind(this);
     public msgVote = GovernanceModule.msgVote.bind(this);
-    public msgSubmitTextProposal = GovernanceModule.msgSubmitTextProposal.bind(this);
-    public msgSubmitProposalSpotMarketParamUpdate = GovernanceModule.msgSubmitProposalSpotMarketParamUpdate.bind(this);
-    public msgSubmitGenericProposal = GovernanceModule.msgSubmitGenericProposal.bind(this);
+    public msgSubmitTextProposal =
+        GovernanceModule.msgSubmitTextProposal.bind(this);
+    public msgSubmitProposalSpotMarketParamUpdate =
+        GovernanceModule.msgSubmitProposalSpotMarketParamUpdate.bind(this);
+    public msgSubmitGenericProposal =
+        GovernanceModule.msgSubmitGenericProposal.bind(this);
     public msgGovDeposit = GovernanceModule.msgGovDeposit.bind(this);
 
     // IBC message functions
     public msgIBCTransfer = IbcModule.msgIBCTransfer.bind(this);
 
     // Insurance Fund message functions
-    public msgCreateInsuranceFund = InsuranceFundModule.msgCreateInsuranceFund.bind(this);
-    public msgRequestRedemption = InsuranceFundModule.msgRequestRedemption.bind(this);
+    public msgCreateInsuranceFund =
+        InsuranceFundModule.msgCreateInsuranceFund.bind(this);
+    public msgRequestRedemption =
+        InsuranceFundModule.msgRequestRedemption.bind(this);
     public msgUnderwrite = InsuranceFundModule.msgUnderwrite.bind(this);
 
     // Peggy message functions
@@ -391,22 +418,27 @@ export class InjectiveGrpcClient extends InjectiveGrpcBase {
     public msgUndelegate = StakingModule.msgUndelegate.bind(this);
     public msgCreateValidator = StakingModule.msgCreateValidator.bind(this);
     public msgEditValidator = StakingModule.msgEditValidator.bind(this);
-    public msgCancelUnbondingDelegation = StakingModule.msgCancelUnbondingDelegation.bind(this);
+    public msgCancelUnbondingDelegation =
+        StakingModule.msgCancelUnbondingDelegation.bind(this);
 
     // Token Factory message functions
     public msgBurn = TokenFactoryModule.msgBurn.bind(this);
     public msgChangeAdmin = TokenFactoryModule.msgChangeAdmin.bind(this);
     public msgCreateDenom = TokenFactoryModule.msgCreateDenom.bind(this);
     public msgMint = TokenFactoryModule.msgMint.bind(this);
-    public msgSetDenomMetadata = TokenFactoryModule.msgSetDenomMetadata.bind(this);
+    public msgSetDenomMetadata =
+        TokenFactoryModule.msgSetDenomMetadata.bind(this);
 
     // Wasm message functions
     public msgStoreCode = WasmModule.msgStoreCode.bind(this);
     public msgUpdateAdmin = WasmModule.msgUpdateAdmin.bind(this);
     public msgExecuteContract = WasmModule.msgExecuteContract.bind(this);
     public msgMigrateContract = WasmModule.msgMigrateContract.bind(this);
-    public msgInstantiateContract = WasmModule.msgInstantiateContract.bind(this);
-    public msgExecuteContractCompat = WasmModule.msgExecuteContractCompat.bind(this);
-    public msgPrivilegedExecuteContract = WasmModule.msgPrivilegedExecuteContract.bind(this);
+    public msgInstantiateContract =
+        WasmModule.msgInstantiateContract.bind(this);
+    public msgExecuteContractCompat =
+        WasmModule.msgExecuteContractCompat.bind(this);
+    public msgPrivilegedExecuteContract =
+        WasmModule.msgPrivilegedExecuteContract.bind(this);
 }
 export { InjectiveGrpcBase };

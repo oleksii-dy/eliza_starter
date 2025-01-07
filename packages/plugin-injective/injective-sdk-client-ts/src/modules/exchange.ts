@@ -93,6 +93,7 @@ import {
     MsgExternalTransferParams,
     MsgIncreasePositionMarginParams,
     MsgInstantBinaryOptionsMarketLaunchParams,
+    GetSpotOrderbookV2Params,
     MsgInstantSpotMarketLaunchParams,
     MsgLiquidatePositionParams,
     MsgReclaimLockedFundsParams,
@@ -697,11 +698,11 @@ export async function getSpotOrderbooksV2(
 
 export async function getSpotOrderbookV2(
     this: InjectiveGrpcBase,
-    marketId: string
+    params: GetSpotOrderbookV2Params
 ): Promise<OrderbookWithSequence> {
     return this.request({
         method: this.indexerGrpcSpotApi.fetchOrderbookV2,
-        params: marketId,
+        params: params.marketId,
     });
 }
 

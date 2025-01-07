@@ -1,16 +1,26 @@
-import {
-    PaginationOption,
-    Coin,
-    Pagination,
-    MsgSend,
-    MsgMultiSend,
-    TxResponse,
-} from "@injectivelabs/sdk-ts";
-import { Metadata } from "@injectivelabs/core-proto-ts/cjs/cosmos/bank/v1beta1/bank.js";
+import { MsgSend, MsgMultiSend, TxResponse } from "@injectivelabs/sdk-ts";
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
-import { MsgSendParams, MsgMultiSendParams } from "../types";
+import {
+    MsgSendParams,
+    MsgMultiSendParams,
+    BankModuleParamsResponse,
+    BankBalanceResponse,
+    BankBalancesResponse,
+    TotalSupplyResponse,
+    SupplyOfResponse,
+    DenomsMetadataResponse,
+    DenomMetadataResponse,
+    DenomOwnersResponse,
+    GetBankBalanceParams,
+    GetBankBalancesParams,
+    GetSupplyOfParams,
+    GetDenomMetadataParams,
+    GetDenomOwnersParams,
+} from "../types";
 // Bank module chain grpc async functions
-export async function getBankModuleParams(this: InjectiveGrpcBase) {
+export async function getBankModuleParams(
+    this: InjectiveGrpcBase
+): Promise<BankModuleParamsResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchModuleParams,
         params: {},
@@ -19,89 +29,81 @@ export async function getBankModuleParams(this: InjectiveGrpcBase) {
 
 export async function getBankBalance(
     this: InjectiveGrpcBase,
-    accountAddress: string,
-    denom: string
-) {
+    params: GetBankBalanceParams
+): Promise<BankBalanceResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchBalance,
         params: {
-            accountAddress,
-            denom,
+            accountAddress: params.accountAddress,
+            denom: params.denom,
         },
     });
 }
 
 export async function getBankBalances(
     this: InjectiveGrpcBase,
-    address: string,
-    pagination?: PaginationOption
-): Promise<{
-    balances: Coin[];
-    pagination: Pagination;
-}> {
+    params: GetBankBalancesParams
+): Promise<BankBalancesResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchBalances,
-        params: address,
+        params: params.address,
     });
 }
 
-export async function getTotalSupply(this: InjectiveGrpcBase): Promise<{
-    supply: { denom: string; amount: string }[];
-    pagination: Pagination;
-}> {
+export async function getTotalSupply(
+    this: InjectiveGrpcBase
+): Promise<TotalSupplyResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchTotalSupply,
         params: {},
     });
 }
 
-export async function getAllTotalSupply(this: InjectiveGrpcBase): Promise<{
-    supply: { denom: string; amount: string }[];
-    pagination: Pagination;
-}> {
+export async function getAllTotalSupply(
+    this: InjectiveGrpcBase
+): Promise<TotalSupplyResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchAllTotalSupply,
         params: {},
     });
 }
 
-export async function getSupplyOf(this: InjectiveGrpcBase, denom: string) {
+export async function getSupplyOf(
+    this: InjectiveGrpcBase,
+    params: GetSupplyOfParams
+): Promise<SupplyOfResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchSupplyOf,
-        params: denom,
+        params: params.denom,
     });
 }
 
-export async function getDenomsMetadata(this: InjectiveGrpcBase): Promise<{
-    metadatas: Metadata[];
-    pagination: Pagination;
-}> {
+export async function getDenomsMetadata(
+    this: InjectiveGrpcBase
+): Promise<DenomsMetadataResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchDenomsMetadata,
         params: {},
     });
 }
 
-export async function getDenomMetadata(this: InjectiveGrpcBase, denom: string) {
+export async function getDenomMetadata(
+    this: InjectiveGrpcBase,
+    params: GetDenomMetadataParams
+): Promise<DenomMetadataResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchDenomMetadata,
-        params: denom,
+        params: params.denom,
     });
 }
 
 export async function getDenomOwners(
     this: InjectiveGrpcBase,
-    denom: string
-): Promise<{
-    denomOwners: {
-        address: string;
-        balance: Coin | undefined;
-    }[];
-    pagination: Pagination;
-}> {
+    params: GetDenomOwnersParams
+): Promise<DenomOwnersResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchDenomOwners,
-        params: denom,
+        params: params.denom,
     });
 }
 

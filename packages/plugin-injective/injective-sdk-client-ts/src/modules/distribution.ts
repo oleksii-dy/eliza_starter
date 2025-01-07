@@ -1,20 +1,22 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
 import {
-    ValidatorRewards,
-    DistributionModuleParams,
-    Coin,
     TxResponse,
     MsgWithdrawDelegatorReward,
     MsgWithdrawValidatorCommission,
 } from "@injectivelabs/sdk-ts";
 import {
+    DistributionModuleParamsResponse,
+    DelegatorRewardsForValidatorResponse,
+    DelegatorRewardsResponse,
+    GetDelegatorRewardsForValidatorParams,
+    GetDelegatorRewardsParams,
     MsgWithdrawDelegatorRewardParams,
     MsgWithdrawValidatorCommissionParams,
 } from "../types/index";
 //All the chain grpc params go here
 export async function getDistributionModuleParams(
     this: InjectiveGrpcBase
-): Promise<DistributionModuleParams> {
+): Promise<DistributionModuleParamsResponse> {
     return this.request({
         method: this.chainGrpcDistributionApi.fetchModuleParams,
         params: {},
@@ -23,53 +25,50 @@ export async function getDistributionModuleParams(
 
 export async function getDelegatorRewardsForValidator(
     this: InjectiveGrpcBase,
-    delegatorAddress: string,
-    validatorAddress: string
-): Promise<Coin[]> {
+    params: GetDelegatorRewardsForValidatorParams
+): Promise<DelegatorRewardsForValidatorResponse> {
     return this.request({
         method: this.chainGrpcDistributionApi.fetchDelegatorRewardsForValidator,
         params: {
-            delegatorAddress,
-            validatorAddress,
+            delegatorAddress: params.delegatorAddress,
+            validatorAddress: params.validatorAddress,
         },
     });
 }
 
 export async function getDelegatorRewardsForValidatorNoThrow(
     this: InjectiveGrpcBase,
-    delegatorAddress: string,
-    validatorAddress: string
-): Promise<Coin[]> {
+    params: GetDelegatorRewardsForValidatorParams
+): Promise<DelegatorRewardsForValidatorResponse> {
     return this.request({
         method: this.chainGrpcDistributionApi
             .fetchDelegatorRewardsForValidatorNoThrow,
         params: {
-            delegatorAddress,
-            validatorAddress,
+            delegatorAddress: params.delegatorAddress,
+            validatorAddress: params.validatorAddress,
         },
     });
 }
 
 export async function getDelegatorRewards(
     this: InjectiveGrpcBase,
-    injectiveAddress: string
-): Promise<ValidatorRewards[]> {
+    params: GetDelegatorRewardsParams
+): Promise<DelegatorRewardsResponse> {
     return this.request({
         method: this.chainGrpcDistributionApi.fetchDelegatorRewards,
-        params: injectiveAddress,
+        params: params.injectiveAddress,
     });
 }
 
 export async function getDelegatorRewardsNoThrow(
     this: InjectiveGrpcBase,
-    injectiveAddress: string
-): Promise<ValidatorRewards[]> {
+    params: GetDelegatorRewardsParams
+): Promise<DelegatorRewardsResponse> {
     return this.request({
         method: this.chainGrpcDistributionApi.fetchDelegatorRewardsNoThrow,
-        params: injectiveAddress,
+        params: params.injectiveAddress,
     });
 }
-
 export async function msgWithdrawDelegatorReward(
     this: InjectiveGrpcBase,
     params: MsgWithdrawDelegatorRewardParams

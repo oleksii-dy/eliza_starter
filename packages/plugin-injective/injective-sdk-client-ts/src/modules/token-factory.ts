@@ -1,8 +1,5 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
 import {
-    AuthorityMetadata,
-    TokenFactoryModuleParams,
-    TokenFactoryModuleState,
     MsgBurn,
     MsgChangeAdmin,
     MsgCreateDenom,
@@ -17,25 +14,28 @@ import {
     MsgCreateDenomParams,
     MsgMintParams,
     MsgSetDenomMetadataParams,
+    GetDenomsFromCreatorResponse,
+    GetDenomAuthorityMetadataResponse,
+    GetTokenFactoryModuleParamsResponse,
+    GetTokenFactoryModuleStateResponse,
+    GetDenomsFromCreatorParams,
+    GetDenomAuthorityMetadataParams,
 } from "../types/index";
-import { freemem } from "os";
+// Query functions
 export async function getDenomsFromCreator(
     this: InjectiveGrpcBase,
-    params: string
-): Promise<string[]> {
+    params: GetDenomsFromCreatorParams
+): Promise<GetDenomsFromCreatorResponse> {
     return this.request({
         method: this.chainGrpcTokenFactoryApi.fetchDenomsFromCreator,
-        params,
+        params: params.creator,
     });
 }
 
 export async function getDenomAuthorityMetadata(
     this: InjectiveGrpcBase,
-    params: {
-        creator: string;
-        subDenom: string;
-    }
-): Promise<AuthorityMetadata> {
+    params: GetDenomAuthorityMetadataParams
+): Promise<GetDenomAuthorityMetadataResponse> {
     return this.request({
         method: (params: { creator: string; subDenom: string }) =>
             this.chainGrpcTokenFactoryApi.fetchDenomAuthorityMetadata(
@@ -48,7 +48,7 @@ export async function getDenomAuthorityMetadata(
 
 export async function getTokenFactoryModuleParams(
     this: InjectiveGrpcBase
-): Promise<TokenFactoryModuleParams> {
+): Promise<GetTokenFactoryModuleParamsResponse> {
     return this.request({
         method: this.chainGrpcTokenFactoryApi.fetchModuleParams,
         params: {},
@@ -57,7 +57,7 @@ export async function getTokenFactoryModuleParams(
 
 export async function getTokenFactoryModuleState(
     this: InjectiveGrpcBase
-): Promise<TokenFactoryModuleState> {
+): Promise<GetTokenFactoryModuleStateResponse> {
     return this.request({
         method: this.chainGrpcTokenFactoryApi.fetchModuleState,
         params: {},

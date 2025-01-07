@@ -1,13 +1,6 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
 import { CosmosGovV1Gov } from "@injectivelabs/core-proto-ts";
 import {
-    GovModuleStateParams,
-    Proposal,
-    ProposalDeposit,
-    Vote,
-    TallyResult,
-    PaginationOption,
-    Pagination,
     MsgSubmitProposalExpiryFuturesMarketLaunch,
     MsgSubmitProposalSpotMarketLaunch,
     MsgSubmitProposalPerpetualMarketLaunch,
@@ -27,10 +20,21 @@ import {
     MsgSubmitProposalSpotMarketParamUpdateParams,
     MsgSubmitGenericProposalParams,
     MsgDepositParams,
+    GovernanceModuleParamsResponse,
+    GetProposalsResponse,
+    GetProposalResponse,
+    GetProposalDepositsResponse,
+    GetProposalVotesResponse,
+    GetProposalTallyResponse,
+    GetProposalsParams,
+    GetProposalParams,
+    GetProposalDepositsParams,
+    GetProposalVotesParams,
+    GetProposalTallyParams,
 } from "../types/index";
 export async function getGovernanceModuleParams(
     this: InjectiveGrpcBase
-): Promise<GovModuleStateParams> {
+): Promise<GovernanceModuleParamsResponse> {
     return this.request({
         method: this.chainGrpcGovApi.fetchModuleParams,
         params: {},
@@ -39,14 +43,8 @@ export async function getGovernanceModuleParams(
 
 export async function getProposals(
     this: InjectiveGrpcBase,
-    params: {
-        status: CosmosGovV1Gov.ProposalStatus;
-        pagination?: PaginationOption;
-    }
-): Promise<{
-    proposals: Proposal[];
-    pagination: Pagination;
-}> {
+    params: GetProposalsParams
+): Promise<GetProposalsResponse> {
     return this.request({
         method: this.chainGrpcGovApi.fetchProposals,
         params,
@@ -55,24 +53,18 @@ export async function getProposals(
 
 export async function getProposal(
     this: InjectiveGrpcBase,
-    proposalId: number
-): Promise<Proposal> {
+    params: GetProposalParams
+): Promise<GetProposalResponse> {
     return this.request({
         method: this.chainGrpcGovApi.fetchProposal,
-        params: proposalId,
+        params: params.proposalId,
     });
 }
 
 export async function getProposalDeposits(
     this: InjectiveGrpcBase,
-    params: {
-        proposalId: number;
-        pagination?: PaginationOption;
-    }
-): Promise<{
-    deposits: ProposalDeposit[];
-    pagination: Pagination;
-}> {
+    params: GetProposalDepositsParams
+): Promise<GetProposalDepositsResponse> {
     return this.request({
         method: this.chainGrpcGovApi.fetchProposalDeposits,
         params,
@@ -81,14 +73,8 @@ export async function getProposalDeposits(
 
 export async function getProposalVotes(
     this: InjectiveGrpcBase,
-    params: {
-        proposalId: number;
-        pagination?: PaginationOption;
-    }
-): Promise<{
-    votes: Vote[];
-    pagination: Pagination;
-}> {
+    params: GetProposalVotesParams
+): Promise<GetProposalVotesResponse> {
     return this.request({
         method: this.chainGrpcGovApi.fetchProposalVotes,
         params,
@@ -97,11 +83,11 @@ export async function getProposalVotes(
 
 export async function getProposalTally(
     this: InjectiveGrpcBase,
-    proposalId: number
-): Promise<TallyResult> {
+    params: GetProposalTallyParams
+): Promise<GetProposalTallyResponse> {
     return this.request({
         method: this.chainGrpcGovApi.fetchProposalTally,
-        params: proposalId,
+        params: params.proposalId,
     });
 }
 

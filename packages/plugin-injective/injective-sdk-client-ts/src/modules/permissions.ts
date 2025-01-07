@@ -1,18 +1,22 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
 import { PermissionsModuleParams, Namespace } from "@injectivelabs/sdk-ts";
 import { Coin } from "@injectivelabs/core-proto-ts/cjs/cosmos/base/v1beta1/coin.js";
-
+import {
+    GetAddressesByRoleParams,
+    GetAddressRolesParams,
+    GetNamespaceByDenomParams,
+    GetVouchersForAddressParams,
+    GetAddressesByRoleResponse,
+    GetAddressRolesResponse,
+    GetAllNamespacesResponse,
+    GetPermissionsModuleParamsResponse,
+    GetNamespaceByDenomResponse,
+    GetVouchersForAddressResponse,
+} from "../types";
 export async function getAddressesByRole(
     this: InjectiveGrpcBase,
-    params: {
-        denom: string;
-        role: string;
-    }
-): Promise<
-    {
-        addresses: string;
-    }[]
-> {
+    params: GetAddressesByRoleParams
+): Promise<GetAddressesByRoleResponse> {
     return this.request({
         method: this.chainGrpcPermissionsApi.fetchAddressesByRole,
         params,
@@ -21,15 +25,8 @@ export async function getAddressesByRole(
 
 export async function getAddressRoles(
     this: InjectiveGrpcBase,
-    params: {
-        address: string;
-        denom: string;
-    }
-): Promise<
-    {
-        roles: string;
-    }[]
-> {
+    params: GetAddressRolesParams
+): Promise<GetAddressRolesResponse> {
     return this.request({
         method: this.chainGrpcPermissionsApi.fetchAddressRoles,
         params,
@@ -38,7 +35,7 @@ export async function getAddressRoles(
 
 export async function getAllNamespaces(
     this: InjectiveGrpcBase
-): Promise<void[]> {
+): Promise<GetAllNamespacesResponse> {
     return this.request({
         method: this.chainGrpcPermissionsApi.fetchAllNamespaces,
         params: {},
@@ -47,7 +44,7 @@ export async function getAllNamespaces(
 
 export async function getPermissionsModuleParams(
     this: InjectiveGrpcBase
-): Promise<PermissionsModuleParams> {
+): Promise<GetPermissionsModuleParamsResponse> {
     return this.request({
         method: this.chainGrpcPermissionsApi.fetchModuleParams,
         params: {},
@@ -56,11 +53,8 @@ export async function getPermissionsModuleParams(
 
 export async function getNamespaceByDenom(
     this: InjectiveGrpcBase,
-    params: {
-        denom: string;
-        includeRoles: boolean;
-    }
-): Promise<Namespace> {
+    params: GetNamespaceByDenomParams
+): Promise<GetNamespaceByDenomResponse> {
     return this.request({
         method: this.chainGrpcPermissionsApi.fetchNamespaceByDenom,
         params,
@@ -69,14 +63,8 @@ export async function getNamespaceByDenom(
 
 export async function getVouchersForAddress(
     this: InjectiveGrpcBase,
-    params: {
-        address: string;
-    }
-): Promise<
-    {
-        vouchers: Coin;
-    }[]
-> {
+    params: GetVouchersForAddressParams
+): Promise<GetVouchersForAddressResponse> {
     return this.request({
         method: this.chainGrpcPermissionsApi.fetchVouchersForAddress,
         params,

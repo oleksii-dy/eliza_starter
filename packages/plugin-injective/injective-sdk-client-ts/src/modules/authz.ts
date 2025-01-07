@@ -1,67 +1,57 @@
 import {
-    GrantWithDecodedAuthorization,
-    GrantAuthorizationWithDecodedAuthorization,
-    Pagination,
-    PaginationOption,
     MsgGrant,
     MsgRevoke,
     MsgAuthzExec,
-    MsgGrantWithAuthorization,
     TxResponse,
 } from "@injectivelabs/sdk-ts";
-import { MsgGrantParams, MsgAuthzExecParams, MsgRevokeParams } from "../types";
+import {
+    MsgGrantParams,
+    MsgAuthzExecParams,
+    MsgRevokeParams,
+    GetGrantsParams,
+    GrantsResponse,
+    GetGranterGrantsParams,
+    GranterGrantsResponse,
+    GetGranteeGrantsParams,
+    GranteeGrantsResponse,
+} from "../types";
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
 //include chain grpc async functions here
 export async function getGrants(
     this: InjectiveGrpcBase,
-    granter: string,
-    grantee: string,
-    pagination?: PaginationOption
-): Promise<{
-    pagination: Pagination;
-    grants: GrantWithDecodedAuthorization[];
-}> {
+    params: GetGrantsParams
+): Promise<GrantsResponse> {
     return this.request({
         method: this.chainGrpcAuthZApi.fetchGrants,
         params: {
-            pagination,
-            granter,
-            grantee,
+            pagination: params.pagination,
+            granter: params.granter,
+            grantee: params.grantee,
         },
     });
 }
+
 export async function getGranterGrants(
     this: InjectiveGrpcBase,
-    granter: string,
-    pagination?: PaginationOption
-): Promise<{
-    pagination: Pagination;
-    grants: GrantAuthorizationWithDecodedAuthorization[];
-}> {
+    params: GetGranterGrantsParams
+): Promise<GranterGrantsResponse> {
     return this.request({
         method: this.chainGrpcAuthZApi.fetchGranterGrants,
-        params: granter,
+        params: params.granter,
     });
 }
 
 export async function getGranteeGrants(
     this: InjectiveGrpcBase,
-    grantee: string,
-    pagination?: PaginationOption
-): Promise<{
-    pagination: Pagination;
-    grants: GrantAuthorizationWithDecodedAuthorization[];
-}> {
+    params: GetGranteeGrantsParams
+): Promise<GranteeGrantsResponse> {
     return this.request({
         method: this.chainGrpcAuthZApi.fetchGranteeGrants,
-        params: grantee,
+        params: params.grantee,
     });
 }
-//Chain client implements these:
-//MsgGrant
-//MsgRevoke
-//MsgExec
-//MsgGrantWithAuthorization
+
+// Message functions
 export async function msgGrant(
     this: InjectiveGrpcBase,
     params: MsgGrantParams

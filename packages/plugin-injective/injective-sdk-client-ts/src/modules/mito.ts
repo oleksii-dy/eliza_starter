@@ -1,34 +1,55 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
 import {
-    MitoVault,
-    MitoPagination,
-    MitoPriceSnapshot,
-    MitoSubscription,
-    MitoHolders,
-    MitoPortfolio,
-    MitoLeaderboard,
-    MitoTransfer,
-    MitoLeaderboardEpoch,
-    MitoStakingPool,
-    MitoMission,
-    MitoMissionLeaderboard,
-    MitoIDO,
-    MitoIDOSubscriber,
-    MitoTokenInfo,
-    MitoIDOSubscription,
-    MitoIDOSubscriptionActivity,
-    MitoWhitelistAccount,
-    MitoClaimReference,
-} from "@injectivelabs/sdk-ts";
-import { Coin } from "@injectivelabs/ts-types";
+    GetVaultParams,
+    GetVaultsParams,
+    GetLpTokenPriceChartParams,
+    GetTVLChartParams,
+    GetVaultsByHolderAddressParams,
+    GetLPHoldersParams,
+    GetVaultResponse,
+    GetVaultsResponse,
+    GetLpTokenPriceChartResponse,
+    GetTVLChartResponse,
+    GetVaultsByHolderAddressResponse,
+    GetLPHoldersResponse,
+    GetHolderPortfolioParams,
+    GetHolderPortfolioResponse,
+    GetLeaderboardParams,
+    GetLeaderboardResponse,
+    GetTransferHistoryParams,
+    GetTransferHistoryResponse,
+    GetLeaderboardEpochsParams,
+    GetStakingPoolsParams,
+    GetStakingHistoryParams,
+    GetStakingRewardsByAccountParams,
+    GetMissionsParams,
+    GetMissionLeaderboardParams,
+    GetIDOParams,
+    GetIDOsParams,
+    GetIDOSubscribersParams,
+    GetIDOSubscriptionParams,
+    GetIDOActivitiesParams,
+    GetIDOWhitelistParams,
+    GetClaimReferencesParams,
+    GetLeaderboardEpochsResponse,
+    GetStakingPoolsResponse,
+    GetStakingHistoryResponse,
+    GetStakingRewardsByAccountResponse,
+    GetMissionsResponse,
+    GetMissionLeaderboardResponse,
+    GetIDOResponse,
+    GetIDOsResponse,
+    GetIDOSubscribersResponse,
+    GetIDOSubscriptionResponse,
+    GetIDOActivitiesResponse,
+    GetIDOWhitelistResponse,
+    GetClaimReferencesResponse,
+} from "../types";
 
 export async function getVault(
     this: InjectiveGrpcBase,
-    params: {
-        contractAddress?: string;
-        slug?: string;
-    }
-): Promise<MitoVault> {
+    params: GetVaultParams
+): Promise<GetVaultResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchVault,
         params,
@@ -37,29 +58,18 @@ export async function getVault(
 
 export async function getVaults(
     this: InjectiveGrpcBase,
-    params?: {
-        limit?: number;
-        codeId?: string;
-        pageIndex?: number;
-    }
-): Promise<{
-    vaults: MitoVault[];
-    pagination?: MitoPagination;
-}> {
+    params: GetVaultsParams = {}
+): Promise<GetVaultsResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchVaults,
-        params: params || {},
+        params,
     });
 }
 
 export async function getLpTokenPriceChart(
     this: InjectiveGrpcBase,
-    params: {
-        to?: string;
-        from?: string;
-        vaultAddress: string;
-    }
-): Promise<MitoPriceSnapshot[]> {
+    params: GetLpTokenPriceChartParams
+): Promise<GetLpTokenPriceChartResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchLpTokenPriceChart,
         params,
@@ -68,12 +78,8 @@ export async function getLpTokenPriceChart(
 
 export async function getTVLChart(
     this: InjectiveGrpcBase,
-    params: {
-        to?: string;
-        from?: string;
-        vaultAddress: string;
-    }
-): Promise<MitoPriceSnapshot[]> {
+    params: GetTVLChartParams
+): Promise<GetTVLChartResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchTVLChartRequest,
         params,
@@ -82,16 +88,8 @@ export async function getTVLChart(
 
 export async function getVaultsByHolderAddress(
     this: InjectiveGrpcBase,
-    params: {
-        skip?: number;
-        limit?: number;
-        holderAddress: string;
-        vaultAddress?: string;
-    }
-): Promise<{
-    subscriptions: MitoSubscription[];
-    pagination: MitoPagination | undefined;
-}> {
+    params: GetVaultsByHolderAddressParams
+): Promise<GetVaultsByHolderAddressResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchVaultsByHolderAddress,
         params,
@@ -100,16 +98,8 @@ export async function getVaultsByHolderAddress(
 
 export async function getLPHolders(
     this: InjectiveGrpcBase,
-    params: {
-        skip?: number;
-        limit?: number;
-        vaultAddress: string;
-        stakingContractAddress: string;
-    }
-): Promise<{
-    holders: MitoHolders[];
-    pagination: MitoPagination | undefined;
-}> {
+    params: GetLPHoldersParams
+): Promise<GetLPHoldersResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchLPHolders,
         params,
@@ -118,11 +108,8 @@ export async function getLPHolders(
 
 export async function getHolderPortfolio(
     this: InjectiveGrpcBase,
-    params: {
-        holderAddress: string;
-        stakingContractAddress: string;
-    }
-): Promise<MitoPortfolio> {
+    params: GetHolderPortfolioParams
+): Promise<GetHolderPortfolioResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchHolderPortfolio,
         params,
@@ -131,60 +118,38 @@ export async function getHolderPortfolio(
 
 export async function getLeaderboard(
     this: InjectiveGrpcBase,
-    epochId?: number
-): Promise<MitoLeaderboard> {
+    params: GetLeaderboardParams
+): Promise<GetLeaderboardResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchLeaderboard,
-        params: epochId,
+        params: params.epochId,
     });
 }
 
 export async function getTransferHistory(
     this: InjectiveGrpcBase,
-    params?: {
-        vault?: string;
-        account?: string;
-        limit?: number;
-        toNumber?: number;
-        fromNumber?: number;
-    }
-): Promise<{
-    transfers: MitoTransfer[];
-    pagination: MitoPagination | undefined;
-}> {
+    params: GetTransferHistoryParams
+): Promise<GetTransferHistoryResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchTransferHistory,
-        params: params || {},
+        params,
     });
 }
 
 export async function getLeaderboardEpochs(
     this: InjectiveGrpcBase,
-    params?: {
-        limit?: number;
-        toEpochId?: number;
-        fromEpochId?: number;
-    }
-): Promise<{
-    epochs: MitoLeaderboardEpoch[];
-    pagination: MitoPagination | undefined;
-}> {
+    params: GetLeaderboardEpochsParams = {}
+): Promise<GetLeaderboardEpochsResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchLeaderboardEpochs,
-        params: params || {},
+        params,
     });
 }
 
 export async function getStakingPools(
     this: InjectiveGrpcBase,
-    params: {
-        staker?: string;
-        stakingContractAddress: string;
-    }
-): Promise<{
-    pools: MitoStakingPool[];
-    pagination: MitoPagination | undefined;
-}> {
+    params: GetStakingPoolsParams
+): Promise<GetStakingPoolsResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchStakingPools,
         params,
@@ -193,49 +158,18 @@ export async function getStakingPools(
 
 export async function getStakingHistory(
     this: InjectiveGrpcBase,
-    params?: {
-        staker?: string;
-        limit?: number;
-        toNumber?: number;
-        fromNumber?: number;
-    }
-): Promise<{
-    activities: {
-        action: string;
-        txHash: string;
-        staker: string;
-        vaultAddress: string;
-        numberByAccount: number;
-        timestamp: number;
-        rewardedTokens: Coin[];
-        stakeAmount: Coin | undefined;
-    }[];
-    pagination: MitoPagination | undefined;
-}> {
+    params: GetStakingHistoryParams = {}
+): Promise<GetStakingHistoryResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchStakingHistory,
-        params: params || {},
+        params,
     });
 }
 
 export async function getStakingRewardsByAccount(
     this: InjectiveGrpcBase,
-    params: {
-        staker: string;
-        stakingContractAddress: string;
-    }
-): Promise<{
-    rewards: {
-        apr: number;
-        vaultName: string;
-        vaultAddress: string;
-        lockTimestamp: number;
-        claimableRewards: Coin[];
-        stakedAmount: Coin | undefined;
-        lockedAmount: Coin | undefined;
-    }[];
-    pagination: MitoPagination | undefined;
-}> {
+    params: GetStakingRewardsByAccountParams
+): Promise<GetStakingRewardsByAccountResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchStakingRewardsByAccount,
         params,
@@ -244,10 +178,8 @@ export async function getStakingRewardsByAccount(
 
 export async function getMissions(
     this: InjectiveGrpcBase,
-    params: {
-        accountAddress: string;
-    }
-): Promise<MitoMission[]> {
+    params: GetMissionsParams
+): Promise<GetMissionsResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchMissions,
         params,
@@ -256,23 +188,18 @@ export async function getMissions(
 
 export async function getMissionLeaderboard(
     this: InjectiveGrpcBase,
-    userAddress?: string
-): Promise<MitoMissionLeaderboard> {
+    params: GetMissionLeaderboardParams = {}
+): Promise<GetMissionLeaderboardResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchMissionLeaderboard,
-        params: userAddress,
+        params: params.userAddress,
     });
 }
 
 export async function getIDO(
     this: InjectiveGrpcBase,
-    params: {
-        contractAddress: string;
-        accountAddress?: string;
-    }
-): Promise<{
-    ido: MitoIDO | undefined;
-}> {
+    params: GetIDOParams
+): Promise<GetIDOResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchIDO,
         params,
@@ -281,38 +208,18 @@ export async function getIDO(
 
 export async function getIDOs(
     this: InjectiveGrpcBase,
-    params?: {
-        status?: string;
-        limit?: number;
-        toNumber?: number;
-        accountAddress?: string;
-        ownerAddress?: string;
-    }
-): Promise<{
-    idos: MitoIDO[];
-    pagination: MitoPagination | undefined;
-}> {
+    params: GetIDOsParams = {}
+): Promise<GetIDOsResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchIDOs,
-        params: params || {},
+        params,
     });
 }
 
 export async function getIDOSubscribers(
     this: InjectiveGrpcBase,
-    params: {
-        skip?: number;
-        limit?: number;
-        sortBy?: string;
-        contractAddress: string;
-    }
-): Promise<{
-    marketId: string;
-    quoteDenom: string;
-    subscribers: MitoIDOSubscriber[];
-    pagination: MitoPagination | undefined;
-    tokenInfo: MitoTokenInfo | undefined;
-}> {
+    params: GetIDOSubscribersParams
+): Promise<GetIDOSubscribersResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchIDOSubscribers,
         params,
@@ -321,13 +228,8 @@ export async function getIDOSubscribers(
 
 export async function getIDOSubscription(
     this: InjectiveGrpcBase,
-    params: {
-        contractAddress: string;
-        accountAddress: string;
-    }
-): Promise<{
-    subscription: MitoIDOSubscription | undefined;
-}> {
+    params: GetIDOSubscriptionParams
+): Promise<GetIDOSubscriptionResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchIDOSubscription,
         params,
@@ -336,34 +238,18 @@ export async function getIDOSubscription(
 
 export async function getIDOActivities(
     this: InjectiveGrpcBase,
-    params?: {
-        contractAddress?: string;
-        accountAddress?: string;
-        limit?: number;
-        toNumber?: string;
-    }
-): Promise<{
-    activities: MitoIDOSubscriptionActivity[];
-    pagination: MitoPagination | undefined;
-}> {
+    params: GetIDOActivitiesParams = {}
+): Promise<GetIDOActivitiesResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchIDOActivities,
-        params: params || {},
+        params,
     });
 }
 
 export async function getIDOWhitelist(
     this: InjectiveGrpcBase,
-    params: {
-        skip?: number;
-        limit?: number;
-        idoAddress: string;
-    }
-): Promise<{
-    idoAddress: string | undefined;
-    accounts: MitoWhitelistAccount[];
-    pagination: MitoPagination | undefined;
-}> {
+    params: GetIDOWhitelistParams
+): Promise<GetIDOWhitelistResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchIDOWhitelist,
         params,
@@ -372,16 +258,8 @@ export async function getIDOWhitelist(
 
 export async function getClaimReferences(
     this: InjectiveGrpcBase,
-    params: {
-        skip?: number;
-        limit?: number;
-        idoAddress: string;
-        accountAddress: string;
-    }
-): Promise<{
-    claimReferences: MitoClaimReference[];
-    pagination?: MitoPagination;
-}> {
+    params: GetClaimReferencesParams
+): Promise<GetClaimReferencesResponse> {
     return this.request({
         method: this.indexerGrpcMitoApi.fetchClaimReferences,
         params,

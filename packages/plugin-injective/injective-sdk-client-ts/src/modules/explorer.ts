@@ -1,209 +1,140 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
-import { InjectiveExplorerRpc } from "@injectivelabs/indexer-proto-ts";
 import {
-    Transaction,
-    ExplorerValidator,
-    ValidatorUptime,
-    PeggyDepositTx,
-    PeggyWithdrawalTx,
-    IBCTransferTx,
-    ExplorerStats,
-    ExchangePagination,
-} from "@injectivelabs/sdk-ts";
+    GetTxByHashResponse,
+    GetAccountTxResponse,
+    GetValidatorResponse,
+    GetValidatorUptimeResponse,
+    GetPeggyDepositTxsResponse,
+    GetPeggyWithdrawalTxsResponse,
+    GetBlocksResponse,
+    GetBlockResponse,
+    GetTxsResponse,
+    GetIBCTransferTxsResponse,
+    GetExplorerStatsResponse,
+    GetTxByHashParams,
+    GetAccountTxParams,
+    GetValidatorParams,
+    GetValidatorUptimeParams,
+    GetPeggyDepositTxsParams,
+    GetPeggyWithdrawalTxsParams,
+    GetBlocksParams,
+    GetBlockParams,
+    GetTxsParams,
+    GetIBCTransferTxsParams,
+} from "../types";
 export async function getTxByHash(
     this: InjectiveGrpcBase,
-    hash: string
-): Promise<Transaction> {
+    params: GetTxByHashParams
+): Promise<GetTxByHashResponse> {
     return this.request({
         method: (params: string) =>
             this.indexerGrpcExplorerApi.fetchTxByHash(params),
-        params: hash,
+        params: params.hash,
     });
 }
 
 export async function getAccountTx(
     this: InjectiveGrpcBase,
-    params: {
-        address: string;
-        limit?: number;
-        type?: string;
-        before?: number;
-        after?: number;
-        startTime?: number;
-        endTime?: number;
-    }
-): Promise<{
-    txs: Transaction[];
-    pagination: ExchangePagination;
-}> {
+    params: GetAccountTxParams
+): Promise<GetAccountTxResponse> {
     return this.request({
-        method: (params: {
-            address: string;
-            limit?: number;
-            type?: string;
-            before?: number;
-            after?: number;
-            startTime?: number;
-            endTime?: number;
-        }) => this.indexerGrpcExplorerApi.fetchAccountTx(params),
+        method: (params: GetAccountTxParams) =>
+            this.indexerGrpcExplorerApi.fetchAccountTx(params),
         params,
     });
 }
 
 export async function getValidator(
     this: InjectiveGrpcBase,
-    validatorAddress: string
-): Promise<ExplorerValidator> {
+    params: GetValidatorParams
+): Promise<GetValidatorResponse> {
     return this.request({
         method: (params: string) =>
             this.indexerGrpcExplorerApi.fetchValidator(params),
-        params: validatorAddress,
+        params: params.validatorAddress,
     });
 }
 
 export async function getValidatorUptime(
     this: InjectiveGrpcBase,
-    validatorAddress: string
-): Promise<ValidatorUptime[]> {
+    params: GetValidatorUptimeParams
+): Promise<GetValidatorUptimeResponse> {
     return this.request({
         method: (params: string) =>
             this.indexerGrpcExplorerApi.fetchValidatorUptime(params),
-        params: validatorAddress,
+        params: params.validatorAddress,
     });
 }
 
 export async function getPeggyDepositTxs(
     this: InjectiveGrpcBase,
-    params: {
-        receiver?: string;
-        sender?: string;
-        limit?: number;
-        skip?: number;
-    }
-): Promise<PeggyDepositTx[]> {
+    params: GetPeggyDepositTxsParams
+): Promise<GetPeggyDepositTxsResponse> {
     return this.request({
-        method: (params: {
-            receiver?: string;
-            sender?: string;
-            limit?: number;
-            skip?: number;
-        }) => this.indexerGrpcExplorerApi.fetchPeggyDepositTxs(params),
+        method: (params: GetPeggyDepositTxsParams) =>
+            this.indexerGrpcExplorerApi.fetchPeggyDepositTxs(params),
         params,
     });
 }
 
 export async function getPeggyWithdrawalTxs(
     this: InjectiveGrpcBase,
-    params: {
-        sender?: string;
-        receiver?: string;
-        limit?: number;
-        skip?: number;
-    }
-): Promise<PeggyWithdrawalTx[]> {
+    params: GetPeggyWithdrawalTxsParams
+): Promise<GetPeggyWithdrawalTxsResponse> {
     return this.request({
-        method: (params: {
-            sender?: string;
-            receiver?: string;
-            limit?: number;
-            skip?: number;
-        }) => this.indexerGrpcExplorerApi.fetchPeggyWithdrawalTxs(params),
+        method: (params: GetPeggyWithdrawalTxsParams) =>
+            this.indexerGrpcExplorerApi.fetchPeggyWithdrawalTxs(params),
         params,
     });
 }
 
 export async function getBlocks(
     this: InjectiveGrpcBase,
-    params: {
-        before?: number;
-        after?: number;
-        limit?: number;
-        from?: number;
-        to?: number;
-    }
-): Promise<InjectiveExplorerRpc.GetBlocksResponse> {
+    params: GetBlocksParams
+): Promise<GetBlocksResponse> {
     return this.request({
-        method: (params: {
-            before?: number;
-            after?: number;
-            limit?: number;
-            from?: number;
-            to?: number;
-        }) => this.indexerGrpcExplorerApi.fetchBlocks(params),
+        method: (params: GetBlocksParams) =>
+            this.indexerGrpcExplorerApi.fetchBlocks(params),
         params,
     });
 }
 
 export async function getBlock(
     this: InjectiveGrpcBase,
-    id: string
-): Promise<InjectiveExplorerRpc.GetBlockResponse> {
+    params: GetBlockParams
+): Promise<GetBlockResponse> {
     return this.request({
         method: (params: string) =>
             this.indexerGrpcExplorerApi.fetchBlock(params),
-        params: id,
+        params: params.id,
     });
 }
 
 export async function getTxs(
     this: InjectiveGrpcBase,
-    params: {
-        before?: number;
-        after?: number;
-        limit?: number;
-        skip?: number;
-        type?: string;
-        startTime?: number;
-        endTime?: number;
-        chainModule?: string;
-    }
-): Promise<InjectiveExplorerRpc.GetTxsResponse> {
+    params: GetTxsParams
+): Promise<GetTxsResponse> {
     return this.request({
-        method: (params: {
-            before?: number;
-            after?: number;
-            limit?: number;
-            skip?: number;
-            type?: string;
-            startTime?: number;
-            endTime?: number;
-            chainModule?: string;
-        }) => this.indexerGrpcExplorerApi.fetchTxs(params),
+        method: (params: GetTxsParams) =>
+            this.indexerGrpcExplorerApi.fetchTxs(params),
         params,
     });
 }
 
 export async function getIBCTransferTxs(
     this: InjectiveGrpcBase,
-    params: {
-        sender?: string;
-        receiver?: string;
-        srcChannel?: string;
-        srcPort?: string;
-        destChannel?: string;
-        destPort?: string;
-        limit?: number;
-        skip?: number;
-    }
-): Promise<IBCTransferTx[]> {
+    params: GetIBCTransferTxsParams
+): Promise<GetIBCTransferTxsResponse> {
     return this.request({
-        method: (params: {
-            sender?: string;
-            receiver?: string;
-            srcChannel?: string;
-            srcPort?: string;
-            destChannel?: string;
-            destPort?: string;
-            limit?: number;
-            skip?: number;
-        }) => this.indexerGrpcExplorerApi.fetchIBCTransferTxs(params),
+        method: (params: GetIBCTransferTxsParams) =>
+            this.indexerGrpcExplorerApi.fetchIBCTransferTxs(params),
         params,
     });
 }
 
 export async function getExplorerStats(
     this: InjectiveGrpcBase
-): Promise<ExplorerStats> {
+): Promise<GetExplorerStatsResponse> {
     return this.request({
         method: (params: any) =>
             this.indexerGrpcExplorerApi.fetchExplorerStats(),

@@ -1,12 +1,6 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
 import {
-    ContractAccountsBalanceWithPagination,
-    ContractStateWithPagination,
-    ContractInfo,
     PaginationOption,
-    Pagination,
-    ContractCodeHistoryEntry,
-    CodeInfoResponse,
     MsgStoreCode,
     MsgUpdateAdmin,
     MsgExecuteContract,
@@ -24,78 +18,75 @@ import {
     MsgInstantiateContractParams,
     MsgExecuteContractCompatParams,
     MsgPrivilegedExecuteContractParams,
-} from "../types/index";
-import { CosmwasmWasmV1Query } from "@injectivelabs/core-proto-ts";
-
+    GetContractAccountsBalanceResponse,
+    GetContractStateResponse,
+    GetContractInfoResponse,
+    GetContractHistoryResponse,
+    GetSmartContractStateResponse,
+    GetRawContractStateResponse,
+    GetContractCodesResponse,
+    GetContractCodeResponse,
+    GetContractCodeContractsResponse,
+    GetContractAccountsBalanceParams,
+    GetContractStateParams,
+    GetContractInfoParams,
+    GetContractHistoryParams,
+    GetSmartContractStateParams,
+    GetRawContractStateParams,
+    GetContractCodesParams,
+    GetContractCodeParams,
+    GetContractCodeContractsParams,
+} from "../types";
 export async function getContractAccountsBalance(
     this: InjectiveGrpcBase,
-    params: {
-        contractAddress: string;
-        pagination?: PaginationOption;
-    }
-): Promise<ContractAccountsBalanceWithPagination> {
+    params: GetContractAccountsBalanceParams
+): Promise<GetContractAccountsBalanceResponse> {
     return this.request({
-        method: (params: {
-            contractAddress: string;
-            pagination?: PaginationOption;
-        }) => this.chainGrpcWasmApi.fetchContractAccountsBalance(params),
+        method: (params: GetContractAccountsBalanceParams) =>
+            this.chainGrpcWasmApi.fetchContractAccountsBalance(params),
         params,
     });
 }
 
 export async function getContractState(
     this: InjectiveGrpcBase,
-    params: {
-        contractAddress: string;
-        pagination?: PaginationOption;
-    }
-): Promise<ContractStateWithPagination> {
+    params: GetContractStateParams
+): Promise<GetContractStateResponse> {
     return this.request({
-        method: (params: {
-            contractAddress: string;
-            pagination?: PaginationOption;
-        }) => this.chainGrpcWasmApi.fetchContractState(params),
+        method: (params: GetContractStateParams) =>
+            this.chainGrpcWasmApi.fetchContractState(params),
         params,
     });
 }
 
 export async function getContractInfo(
     this: InjectiveGrpcBase,
-    contractAddress: string
-): Promise<ContractInfo | undefined> {
+    params: GetContractInfoParams
+): Promise<GetContractInfoResponse> {
     return this.request({
         method: (params: string) =>
             this.chainGrpcWasmApi.fetchContractInfo(params),
-        params: contractAddress,
+        params: params.contractAddress,
     });
 }
 
 export async function getContractHistory(
     this: InjectiveGrpcBase,
-    contractAddress: string
-): Promise<{
-    entriesList: ContractCodeHistoryEntry[];
-    pagination: Pagination;
-}> {
+    params: GetContractHistoryParams
+): Promise<GetContractHistoryResponse> {
     return this.request({
         method: (params: string) =>
             this.chainGrpcWasmApi.fetchContractHistory(params),
-        params: contractAddress,
+        params: params.contractAddress,
     });
 }
 
 export async function getSmartContractState(
     this: InjectiveGrpcBase,
-    params: {
-        contractAddress: string;
-        query?: string | Record<string, any>;
-    }
-): Promise<CosmwasmWasmV1Query.QuerySmartContractStateResponse> {
+    params: GetSmartContractStateParams
+): Promise<GetSmartContractStateResponse> {
     return this.request({
-        method: (params: {
-            contractAddress: string;
-            query?: string | Record<string, any>;
-        }) =>
+        method: (params: GetSmartContractStateParams) =>
             this.chainGrpcWasmApi.fetchSmartContractState(
                 params.contractAddress,
                 params.query
@@ -106,13 +97,10 @@ export async function getSmartContractState(
 
 export async function getRawContractState(
     this: InjectiveGrpcBase,
-    params: {
-        contractAddress: string;
-        query?: string;
-    }
-): Promise<CosmwasmWasmV1Query.QueryRawContractStateResponse> {
+    params: GetRawContractStateParams
+): Promise<GetRawContractStateResponse> {
     return this.request({
-        method: (params: { contractAddress: string; query?: string }) =>
+        method: (params: GetRawContractStateParams) =>
             this.chainGrpcWasmApi.fetchRawContractState(
                 params.contractAddress,
                 params.query
@@ -123,44 +111,32 @@ export async function getRawContractState(
 
 export async function getContractCodes(
     this: InjectiveGrpcBase,
-    pagination?: PaginationOption
-): Promise<{
-    codeInfosList: CodeInfoResponse[];
-    pagination: Pagination;
-}> {
+    params: GetContractCodesParams = {}
+): Promise<GetContractCodesResponse> {
     return this.request({
         method: (params: PaginationOption) =>
             this.chainGrpcWasmApi.fetchContractCodes(params),
-        params: pagination || {},
+        params: params.pagination || {},
     });
 }
 
 export async function getContractCode(
     this: InjectiveGrpcBase,
-    codeId: number
-): Promise<{
-    codeInfo: CodeInfoResponse;
-    data: Uint8Array;
-}> {
+    params: GetContractCodeParams
+): Promise<GetContractCodeResponse> {
     return this.request({
         method: (params: number) =>
             this.chainGrpcWasmApi.fetchContractCode(params),
-        params: codeId,
+        params: params.codeId,
     });
 }
 
 export async function getContractCodeContracts(
     this: InjectiveGrpcBase,
-    params: {
-        codeId: number;
-        pagination?: PaginationOption;
-    }
-): Promise<{
-    contractsList: string[];
-    pagination: Pagination;
-}> {
+    params: GetContractCodeContractsParams
+): Promise<GetContractCodeContractsResponse> {
     return this.request({
-        method: (params: { codeId: number; pagination?: PaginationOption }) =>
+        method: (params: GetContractCodeContractsParams) =>
             this.chainGrpcWasmApi.fetchContractCodeContracts(
                 params.codeId,
                 params.pagination

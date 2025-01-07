@@ -1,7 +1,5 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
 import {
-    InsuranceModuleParams,
-    InsuranceFund,
     MsgCreateInsuranceFund,
     MsgRequestRedemption,
     MsgUnderwrite,
@@ -11,10 +9,18 @@ import {
     MsgCreateInsuranceFundParams,
     MsgRequestRedemptionParams,
     MsgUnderwriteParams,
+    InsuranceModuleParamsResponse,
+    GetInsuranceFundsResponse,
+    GetInsuranceFundResponse,
+    GetEstimatedRedemptionsResponse,
+    GetPendingRedemptionsResponse,
+    GetInsuranceFundParams,
+    GetEstimatedRedemptionsParams,
+    GetPendingRedemptionsParams,
 } from "../types/index.js";
 export async function getInsuranceModuleParams(
     this: InjectiveGrpcBase
-): Promise<InsuranceModuleParams> {
+): Promise<InsuranceModuleParamsResponse> {
     return this.request({
         method: this.chainGrpcInsuranceFundApi.fetchModuleParams,
         params: {},
@@ -23,7 +29,7 @@ export async function getInsuranceModuleParams(
 
 export async function getInsuranceFunds(
     this: InjectiveGrpcBase
-): Promise<InsuranceFund[]> {
+): Promise<GetInsuranceFundsResponse> {
     return this.request({
         method: this.chainGrpcInsuranceFundApi.fetchInsuranceFunds,
         params: {},
@@ -32,31 +38,18 @@ export async function getInsuranceFunds(
 
 export async function getInsuranceFund(
     this: InjectiveGrpcBase,
-    marketId: string
-): Promise<InsuranceFund> {
+    params: GetInsuranceFundParams
+): Promise<GetInsuranceFundResponse> {
     return this.request({
         method: this.chainGrpcInsuranceFundApi.fetchInsuranceFund,
-        params: marketId,
+        params: params.marketId,
     });
-}
-
-export interface RedemptionRequest {
-    marketId: string;
-    address: string;
-}
-
-export interface RedemptionAmount {
-    amount: string;
-    denom: string;
 }
 
 export async function getEstimatedRedemptions(
     this: InjectiveGrpcBase,
-    params: {
-        marketId: string;
-        address: string;
-    }
-): Promise<RedemptionAmount> {
+    params: GetEstimatedRedemptionsParams
+): Promise<GetEstimatedRedemptionsResponse> {
     return this.request({
         method: this.chainGrpcInsuranceFundApi.fetchEstimatedRedemptions,
         params,
@@ -65,8 +58,8 @@ export async function getEstimatedRedemptions(
 
 export async function getPendingRedemptions(
     this: InjectiveGrpcBase,
-    params: RedemptionRequest
-): Promise<RedemptionAmount[]> {
+    params: GetPendingRedemptionsParams
+): Promise<GetPendingRedemptionsResponse> {
     return this.request({
         method: this.chainGrpcInsuranceFundApi.fetchPendingRedemptions,
         params,
