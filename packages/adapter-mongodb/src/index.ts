@@ -9,7 +9,7 @@ import {
     type Goal,
     type Memory,
     type Relationship,
-    type UUID,
+    type UUID, elizaLogger,
 } from "@ai16z/eliza";
 import { v4 } from "uuid";
 
@@ -20,100 +20,125 @@ export class MongoDBDatabaseAdapter
     private database: any;
     private databaseName: string;
     private hasVectorSearch: boolean;
+    private isConnected: boolean = false;
 
     constructor(client: MongoClient, databaseName: string) {
         super();
         this.db = client;
         this.databaseName = databaseName;
         this.hasVectorSearch = false;
+        this.isConnected = false;
     }
 
     async init() {
-        await this.db.connect();
-        this.database = this.db.db(this.databaseName);
-
-        // Track whether vector search is available
-        this.hasVectorSearch = false;
-
-        // Create required indexes
-        await Promise.all([
-            // Try to create vector search index, but don't fail if unavailable
-            (async () => {
-                try {
-                    await this.database.collection('memories').createIndex(
-                        { embedding: "vectorSearch" },
-                        {
-                            name: "vector_index",
-                            definition: {
-                                vectorSearchConfig: {
-                                    dimensions: 1536,
-                                    similarity: "cosine",
-                                    numLists: 100,
-                                    efConstruction: 128
-                                }
-                            }
-                        }
-                    );
-                    this.hasVectorSearch = true;
-                    console.log("Vector search capabilities are available and enabled");
-                } catch (error) {
-                    console.log("Vector search not available, falling back to standard search", error);
-                    // Create a standard index on embedding field instead
-                    await this.database.collection('memories').createIndex(
-                        { embedding: 1 }
-                    );
-                }
-            })(),
-
-            // Regular indexes that should always be created
-            this.database.collection('memories').createIndex(
-                { type: 1, roomId: 1, agentId: 1, createdAt: -1 }
-            ),
-            this.database.collection('participants').createIndex(
-                { userId: 1, roomId: 1 },
-                { unique: true }
-            ),
-            this.database.collection('memories').createIndex(
-                { "content": "text" },
-                { weights: { "content": 10 } }
-            ),
-            this.database.collection('cache').createIndex(
-                { expiresAt: 1 },
-                { expireAfterSeconds: 0 }
-            )
-        ]);
+        if (this.isConnected) {
+            return;
+        }
 
         try {
-            // Enable sharding for better performance
-            await this.database.command({
-                enableSharding: this.database.databaseName
-            });
-            await this.database.command({
-                shardCollection: `${this.database.databaseName}.memories`,
-                key: { roomId: "hashed" }
-            });
+            await this.db.connect();
+            this.isConnected = true;
+            this.database = this.db.db(this.databaseName);
+
+            // Track whether vector search is available
+            this.hasVectorSearch = false;
+
+            // Create required indexes
+            await Promise.all([
+                // Try to create vector search index, but don't fail if unavailable
+                (async () => {
+                    try {
+                        await this.database.collection('memories').createIndex(
+                            { embedding: "vectorSearch" },
+                            {
+                                name: "vector_index",
+                                definition: {
+                                    vectorSearchConfig: {
+                                        dimensions: 1536,
+                                        similarity: "cosine",
+                                        numLists: 100,
+                                        efConstruction: 128
+                                    }
+                                }
+                            }
+                        );
+                        this.hasVectorSearch = true;
+                        console.log("Vector search capabilities are available and enabled");
+                    } catch (error) {
+                        console.log("Vector search not available, falling back to standard search", error);
+                        // Create a standard index on embedding field instead
+                        await this.database.collection('memories').createIndex(
+                            { embedding: 1 }
+                        );
+                    }
+                })(),
+
+                // Regular indexes that should always be created
+                this.database.collection('memories').createIndex(
+                    { type: 1, roomId: 1, agentId: 1, createdAt: -1 }
+                ),
+                this.database.collection('participants').createIndex(
+                    { userId: 1, roomId: 1 },
+                    { unique: true }
+                ),
+                this.database.collection('memories').createIndex(
+                    { "content": "text" },
+                    { weights: { "content": 10 } }
+                ),
+                this.database.collection('cache').createIndex(
+                    { expiresAt: 1 },
+                    { expireAfterSeconds: 0 }
+                )
+            ]);
+
+            try {
+                // Enable sharding for better performance
+                await this.database.command({
+                    enableSharding: this.database.databaseName
+                });
+                await this.database.command({
+                    shardCollection: `${this.database.databaseName}.memories`,
+                    key: { roomId: "hashed" }
+                });
+            } catch (error) {
+                console.log("Sharding may already be enabled or insufficient permissions", error);
+            }
         } catch (error) {
-            console.log("Sharding may already be enabled or insufficient permissions", error);
+            this.isConnected = false;
+            console.error("Failed to initialize MongoDB connection:", error);
+            throw error;
         }
     }
 
     async close() {
-        await this.db.close();
+        if (this.isConnected) {
+            await this.db.close();
+            this.isConnected = false;
+        }
     }
 
-    // Rest of your methods, but replace this.db with this.database when accessing MongoDB collections
+    private async ensureConnection() {
+        if (!this.isConnected) {
+            await this.init();
+        }
+    }
+
+    // Updated database operation methods with connection checks
     async getRoom(roomId: UUID): Promise<UUID | null> {
+        await this.ensureConnection();
         const room = await this.database.collection('rooms').findOne({ id: roomId });
         return room ? room.id : null;
     }
 
     async getParticipantsForAccount(userId: UUID): Promise<Participant[]> {
+        await this.ensureConnection();
         return await this.database.collection('participants')
             .find({ userId })
             .toArray();
     }
 
     async getParticipantsForRoom(roomId: UUID): Promise<UUID[]> {
+        await this.ensureConnection();
         const participants = await this.database.collection('participants')
             .find({ roomId })
             .toArray();
@@ -124,6 +149,7 @@ export class MongoDBDatabaseAdapter
         roomId: UUID,
         userId: UUID
     ): Promise<"FOLLOWED" | "MUTED" | null> {
+        await this.ensureConnection();
         const participant = await this.database.collection('participants')
             .findOne({ roomId, userId });
         return participant?.userState ?? null;
@@ -134,6 +160,7 @@ export class MongoDBDatabaseAdapter
         userId: UUID,
         state: "FOLLOWED" | "MUTED" | null
     ): Promise<void> {
+        await this.ensureConnection();
         await this.database.collection('participants').updateOne(
             { roomId, userId },
             { $set: { userState: state } }
@@ -141,6 +168,7 @@ export class MongoDBDatabaseAdapter
     }
 
     async getAccountById(userId: UUID): Promise<Account | null> {
+        await this.ensureConnection();
         const account = await this.database.collection('accounts').findOne({ id: userId });
         if (!account) return null;
         return {
@@ -151,6 +179,7 @@ export class MongoDBDatabaseAdapter
     }
 
     async createAccount(account: Account): Promise<boolean> {
+        await this.ensureConnection();
         try {
             await this.database.collection('accounts').insertOne({
                 ...account,
@@ -160,12 +189,13 @@ export class MongoDBDatabaseAdapter
             });
             return true;
         } catch (error) {
-            console.log("Error creating account", error);
+            console.error("Error creating account:", error);
             return false;
         }
     }
 
     async getActorDetails(params: { roomId: UUID }): Promise<Actor[]> {
+        await this.ensureConnection();
         const actors = await this.database.collection('participants')
             .aggregate([
                 { $match: { roomId: params.roomId } },
@@ -202,6 +232,7 @@ export class MongoDBDatabaseAdapter
         roomIds: UUID[];
         tableName: string;
     }): Promise<Memory[]> {
+        await this.ensureConnection();
         if (!params.tableName) {
             params.tableName = "messages";
         }
@@ -222,6 +253,7 @@ export class MongoDBDatabaseAdapter
     }
 
     async getMemoryById(memoryId: UUID): Promise<Memory | null> {
+        await this.ensureConnection();
         const memory = await this.database.collection('memories').findOne({ id: memoryId });
         if (!memory) return null;
 
@@ -233,36 +265,54 @@ export class MongoDBDatabaseAdapter
     }
 
     async createMemory(memory: Memory, tableName: string): Promise<void> {
-        let isUnique = true;
 
-        if (memory.embedding) {
-            const similarMemories = await this.searchMemoriesByEmbedding(
-                memory.embedding,
-                {
-                    tableName,
-                    agentId: memory.agentId,
-                    roomId: memory.roomId,
-                    match_threshold: 0.95,
-                    count: 1
-                }
-            );
-            isUnique = similarMemories.length === 0;
+        await this.ensureConnection();
+        try {
+            let isUnique = true;
+
+            if (memory.embedding) {
+                const similarMemories = await this.searchMemories(
+                    {
+                        tableName,
+                        roomId: memory.roomId,
+                        agentId: memory.agentId,
+                        embedding: memory.embedding,
+                        match_threshold: 0.95,
+                        match_count: 1,
+                        unique: isUnique
+                    }
+                )
+                // const similarMemories = await this.searchMemoriesByEmbedding(
+                //     memory.embedding,
+                //     {
+                //         tableName,
+                //         agentId: memory.agentId,
+                //         roomId: memory.roomId,
+                //         match_threshold: 0.95,
+                //         count: 1
+                //     }
+                // );
+                isUnique = similarMemories.length === 0;
+            }
+
+
+            const content = JSON.stringify(memory.content);
+            const createdAt = memory.createdAt ?? Date.now();
+
+            await this.database.collection('memories').insertOne({
+                id: memory.id ?? v4(),
+                type: tableName,
+                content,
+                embedding: memory.embedding ? Array.from(memory.embedding) : null,
+                userId: memory.userId,
+                roomId: memory.roomId,
+                agentId: memory.agentId,
+                unique: isUnique,
+                createdAt: new Date(createdAt)
+            });
+        }catch (e) {
+            elizaLogger.error(e);
         }
-
-        const content = JSON.stringify(memory.content);
-        const createdAt = memory.createdAt ?? Date.now();
-
-        await this.database.collection('memories').insertOne({
-            id: memory.id ?? v4(),
-            type: tableName,
-            content,
-            embedding: new Float32Array(memory.embedding!),
-            userId: memory.userId,
-            roomId: memory.roomId,
-            agentId: memory.agentId,
-            unique: isUnique,
-            createdAt: new Date(createdAt)
-        });
     }
 
     private async searchMemoriesFallback(params: {
@@ -270,6 +320,7 @@ export class MongoDBDatabaseAdapter
         query: any;
         limit?: number;
     }): Promise<Memory[]> {
+        await this.ensureConnection();
         // Implement a basic similarity search using standard MongoDB operations
         const memories = await this.database.collection('memories')
             .find(params.query)
@@ -308,6 +359,7 @@ export class MongoDBDatabaseAdapter
         match_count: number;
         unique: boolean;
     }): Promise<Memory[]> {
+        await this.ensureConnection();
         const query = {
             type: params.tableName,
             roomId: params.roomId,
@@ -360,6 +412,8 @@ export class MongoDBDatabaseAdapter
         });
     }
 
+
+
     async searchMemoriesByEmbedding(
         embedding: number[],
         params: {
@@ -371,11 +425,12 @@ export class MongoDBDatabaseAdapter
             tableName: string;
         }
     ): Promise<Memory[]> {
+        await this.ensureConnection();
         const pipeline = [
             {
                 $search: {
                     vectorSearch: {
-                        queryVector: new Float32Array(embedding),
+                        queryVector: Array.from(embedding),
                         path: "embedding",
                         numCandidates: (params.count ?? 10) * 2,
                         limit: params.count,
@@ -414,6 +469,7 @@ export class MongoDBDatabaseAdapter
         query_field_sub_name: string;
         query_match_count: number;
     }): Promise<{ embedding: number[]; levenshtein_score: number }[]> {
+        await this.ensureConnection();
         const BATCH_SIZE = 1000; // Process in chunks of 1000 documents
         let results: { embedding: number[]; levenshtein_score: number }[] = [];
 
@@ -589,6 +645,7 @@ export class MongoDBDatabaseAdapter
         goalId: UUID;
         status: GoalStatus;
     }): Promise<void> {
+        await this.ensureConnection();
         await this.database.collection('goals').updateOne(
             { id: params.goalId },
             { $set: { status: params.status } }
@@ -601,6 +658,7 @@ export class MongoDBDatabaseAdapter
         roomId: UUID;
         type: string;
     }): Promise<void> {
+        await this.ensureConnection();
         await this.database.collection('logs').insertOne({
             id: v4(),
             body: JSON.stringify(params.body),
@@ -620,6 +678,7 @@ export class MongoDBDatabaseAdapter
         start?: number;
         end?: number;
     }): Promise<Memory[]> {
+        await this.ensureConnection();
         if (!params.tableName) {
             throw new Error("tableName is required");
         }
@@ -658,6 +717,7 @@ export class MongoDBDatabaseAdapter
     }
 
     async removeMemory(memoryId: UUID, tableName: string): Promise<void> {
+        await this.ensureConnection();
         await this.database.collection('memories').deleteOne({
             id: memoryId,
             type: tableName
@@ -665,6 +725,7 @@ export class MongoDBDatabaseAdapter
     }
 
     async removeAllMemories(roomId: UUID, tableName: string): Promise<void> {
+        await this.ensureConnection();
         await this.database.collection('memories').deleteMany({
             roomId,
             type: tableName
@@ -676,6 +737,7 @@ export class MongoDBDatabaseAdapter
         unique = true,
         tableName = ""
     ): Promise<number> {
+        await this.ensureConnection();
         if (!tableName) {
             throw new Error("tableName is required");
         }
@@ -698,6 +760,7 @@ export class MongoDBDatabaseAdapter
         onlyInProgress?: boolean;
         count?: number;
     }): Promise<Goal[]> {
+        await this.ensureConnection();
         const query: any = { roomId: params.roomId };
 
         if (params.userId) {
@@ -721,6 +784,7 @@ export class MongoDBDatabaseAdapter
     }
 
     async updateGoal(goal: Goal): Promise<void> {
+        await this.ensureConnection();
         await this.database.collection('goals').updateOne(
             { id: goal.id },
             {
@@ -734,6 +798,7 @@ export class MongoDBDatabaseAdapter
     }
 
     async createGoal(goal: Goal): Promise<void> {
+        await this.ensureConnection();
         await this.database.collection('goals').insertOne({
             ...goal,
             id: goal.id ?? v4(),
@@ -743,31 +808,42 @@ export class MongoDBDatabaseAdapter
     }
 
     async removeGoal(goalId: UUID): Promise<void> {
+        await this.ensureConnection();
         await this.database.collection('goals').deleteOne({ id: goalId });
     }
 
     async removeAllGoals(roomId: UUID): Promise<void> {
+        await this.ensureConnection();
         await this.database.collection('goals').deleteMany({ roomId });
     }
 
     async createRoom(roomId?: UUID): Promise<UUID> {
+        await this.ensureConnection();
         const newRoomId = roomId || v4() as UUID;
         try {
             await this.database.collection('rooms').insertOne({
                 id: newRoomId,
                 createdAt: new Date()
             });
+            return newRoomId;
         } catch (error) {
-            console.log("Error creating room", error);
+            console.error("Error creating room:", error);
+            throw error; // Throw error instead of silently continuing
         }
-        return newRoomId;
     }
 
     async removeRoom(roomId: UUID): Promise<void> {
-        await this.database.collection('rooms').deleteOne({ id: roomId });
+        await this.ensureConnection();
+        try {
+            await this.database.collection('rooms').deleteOne({ id: roomId });
+        } catch (error) {
+            console.error("Error removing room:", error);
+            throw error;
+        }
     }
 
     async getRoomsForParticipant(userId: UUID): Promise<UUID[]> {
+        await this.ensureConnection();
         const rooms = await this.database.collection('participants')
             .find({ userId })
             .project({ roomId: 1 })
@@ -776,12 +852,14 @@ export class MongoDBDatabaseAdapter
     }
 
     async getRoomsForParticipants(userIds: UUID[]): Promise<UUID[]> {
+        await this.ensureConnection();
         const rooms = await this.database.collection('participants')
             .distinct('roomId', { userId: { $in: userIds } });
         return rooms;
     }
 
     async addParticipant(userId: UUID, roomId: UUID): Promise<boolean> {
+        await this.ensureConnection();
         try {
             await this.database.collection('participants').insertOne({
                 id: v4(),
@@ -797,6 +875,7 @@ export class MongoDBDatabaseAdapter
     }
 
     async removeParticipant(userId: UUID, roomId: UUID): Promise<boolean> {
+        await this.ensureConnection();
         try {
             await this.database.collection('participants').deleteOne({
                 userId,
@@ -813,6 +892,7 @@ export class MongoDBDatabaseAdapter
         userA: UUID;
         userB: UUID;
     }): Promise<boolean> {
+        await this.ensureConnection();
         if (!params.userA || !params.userB) {
             throw new Error("userA and userB are required");
         }
@@ -836,6 +916,7 @@ export class MongoDBDatabaseAdapter
         userA: UUID;
         userB: UUID;
     }): Promise<Relationship | null> {
+        await this.ensureConnection();
         return await this.database.collection('relationships').findOne({
             $or: [
                 { userA: params.userA, userB: params.userB },
@@ -845,6 +926,7 @@ export class MongoDBDatabaseAdapter
     }
 
     async getRelationships(params: { userId: UUID }): Promise<Relationship[]> {
+        await this.ensureConnection();
         return await this.database.collection('relationships')
             .find({
                 $or: [
@@ -859,6 +941,7 @@ export class MongoDBDatabaseAdapter
         key: string;
         agentId: UUID;
     }): Promise<string | undefined> {
+        await this.ensureConnection();
         const cached = await this.database.collection('cache')
             .findOne({
                 key: params.key,
@@ -873,6 +956,7 @@ export class MongoDBDatabaseAdapter
         agentId: UUID;
         value: string;
     }): Promise<boolean> {
+        await this.ensureConnection();
         try {
             await this.database.collection('cache').updateOne(
                 { key: params.key, agentId: params.agentId },
@@ -896,6 +980,7 @@ export class MongoDBDatabaseAdapter
         key: string;
         agentId: UUID;
     }): Promise<boolean> {
+        await this.ensureConnection();
         try {
             await this.database.collection('cache').deleteOne({
                 key: params.key,
@@ -907,4 +992,6 @@ export class MongoDBDatabaseAdapter
             return false;
         }
     }
+
 }
+
