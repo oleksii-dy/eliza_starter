@@ -16,34 +16,36 @@ export class VerifyService implements Service {
     async sendVerificationCode(phoneNumber: string): Promise<void> {
         console.log('VerifyService: Starting verification for:', phoneNumber);
 
-        // Generate code
         const code = Math.floor(100000 + Math.random() * 900000).toString();
-        console.log('VerifyService: Generated code:', code);
+
+        // Add warning for non-US numbers
+        const isUSNumber = phoneNumber.startsWith('+1');
+        if (!isUSNumber) {
+            console.log('Warning: Non-US number may receive SMS from an intermediate carrier');
+        }
 
         this.verificationCodes.set(phoneNumber, code);
-        console.log('VerifyService: Stored code in map');
 
-        // Send via SMS
-        try {
-            console.log('VerifyService: Attempting to send SMS via twilioService');
-            await twilioService.sendMessage(
-                phoneNumber,
-                `Your verification code is: ${code}. Reply with "verify code ${code}" to verify your number.`
-            );
-            console.log('VerifyService: SMS sent successfully');
-        } catch (error) {
-            console.error('VerifyService: Failed to send SMS:', error as Error);
-            throw error;
-        }
+        await twilioService.sendMessage(
+            phoneNumber,
+            `Your verification code is: ${code}. Reply with "verify code ${code}" to verify your number.`
+        );
     }
 
     async verifyCode(phoneNumber: string, code: string): Promise<boolean> {
+        console.log('VerifyService: Checking code:', { phoneNumber, code });
+
         const storedCode = this.verificationCodes.get(phoneNumber);
+        console.log('VerifyService: Stored code:', storedCode);
+
         if (storedCode === code) {
+            console.log('VerifyService: Code matches');
             await storageService.storeVerifiedUser(phoneNumber, phoneNumber);
             this.verificationCodes.delete(phoneNumber);
             return true;
         }
+
+        console.log('VerifyService: Code does not match');
         return false;
     }
 
