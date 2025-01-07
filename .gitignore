@@ -1,6 +1,3 @@
-all_files_content.txt
-repo_compiler.zsh
-
 node_modules
 /out
 
@@ -42,19 +39,23 @@ timeline_cache.json
 
 *.sqlite
 
+characters/
+
 packages/core/src/providers/cache
 packages/core/src/providers/cache/*
 cache/*
-packages/core/cache/*
 packages/plugin-coinbase/src/plugins/transactions.csv
 
 tsup.config.bundled_*.mjs
 
 .turbo
 .cursorrules
+.pnpm-store
 
-.repos
 coverage
 .eslintcache
 
 agent/content
+
+all_files_content.txt
+repo_compiler.zsh
