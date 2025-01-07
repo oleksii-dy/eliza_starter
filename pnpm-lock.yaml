@@ -181,6 +181,9 @@ importers:
       '@elizaos/plugin-aptos':
         specifier: workspace:*
         version: link:../packages/plugin-aptos
+      '@elizaos/plugin-arthera':
+        specifier: workspace:*
+        version: link:../packages/plugin-arthera
       '@elizaos/plugin-avail':
         specifier: workspace:*
         version: link:../packages/plugin-avail

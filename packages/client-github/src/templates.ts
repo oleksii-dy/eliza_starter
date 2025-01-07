@@ -13,8 +13,9 @@ export const oodaTemplate = `
     1. CREATE_ISSUE:
         - When a new bug, feature request, or task is identified that is not already tracked.
         - Criteria:
-            - The issue is not a duplicate of an existing issue.
-            - The problem described in the issue is not already being worked on by another issue.
+            - The issue is not a duplicate of an existing issue. You can find the existing issues under the section "Previous Github Issues".
+            - The problem described in the issue is not already being worked on by another issue. You can find the existing issues under the section "Previous Github Issues".
+            - Make sure the issue title is not a duplicate of an existing issue. You can find the existing issues under the section "Previous Github Issues".
             - The issue has a significant impact on the project.
             - The issue can be clearly described with specific details and examples.
 
