@@ -1,4 +1,4 @@
-import { Action, IContext } from '@elizaos/core';
+import { Action, IContext, ActionConfig, HandlerCallback, IAgentRuntime } from '@elizaos/core';
 import { verifyService } from '../services/verify.js';
 
 export const requestVerificationAction: Action = {
@@ -38,29 +38,18 @@ export const requestVerificationAction: Action = {
         }
 
         if (phoneNumber) {
-            // Store phone number in context state
             context.state = { ...context.state, phoneNumber };
 
             try {
                 const isVoiceVerification = userMessage?.toLowerCase().includes('voice');
-                console.log('REQUEST_VERIFICATION handler - Voice verification:', isVoiceVerification);
+                await verifyService.sendVerificationCode(phoneNumber);
 
-                if (isVoiceVerification) {
-                    await verifyService.sendVoiceVerificationCode(phoneNumber);
-                } else {
-                    await verifyService.sendVerificationCode(phoneNumber);
-                }
-
-                console.log('REQUEST_VERIFICATION handler - Verification initiated successfully');
                 return {
-                    text: isVoiceVerification
-                        ? `Calling ${phoneNumber} with your verification code.`
-                        : `Verification code sent to ${phoneNumber}. Reply with "verify code XXXXXX".`
+                    text: `I've sent a verification code to ${phoneNumber}. Please reply with "verify code" followed by the code you receive.`
                 };
             } catch (error) {
-                console.error('REQUEST_VERIFICATION handler - Error:', error);
                 return {
-                    text: "Sorry, couldn't send verification code. Try again or use 'voice verify'."
+                    text: "Sorry, I couldn't send the verification code. Would you like to try again?"
                 };
             }
         }
@@ -74,54 +63,42 @@ export const checkVerificationAction: Action = {
     examples: [
         [
             { user: "user1", content: { text: "verify code 123456" } },
-            { user: "assistant", content: { text: "Your number has been verified!" } }
+            { user: "assistant", content: { text: "Perfect! Your phone number has been verified! 📱✅" } }
         ]
     ],
-    validate: async () => true,
-    handler: async (context: IContext, message: Memory) => {
-        console.log('CHECK_VERIFICATION handler - Message:', message);
+    skipLLM: true as any,
+    skipValidation: true as any,
+    priority: 1,
 
-        // Extract code from user message
+    validate: async (runtime: IAgentRuntime, message: Memory) => {
         const userMessage = message.content?.text;
         const match = userMessage?.match(/verify code (\d+)/);
+        return !!match;
+    },
 
-        if (!match) {
-            return {
-                text: "Please provide the verification code in the format: verify code XXXXXX"
-            };
-        }
-
-        const code = match[1];
+    handler: async (context: IContext, message: Memory, state?: State, options?: any, callback?: HandlerCallback) => {
+        const userMessage = message.content?.text;
+        const match = userMessage?.match(/verify code (\d+)/);
+        const code = match?.[1];
         const phoneNumber = context.state?.phoneNumber;
 
-        console.log('CHECK_VERIFICATION handler - Verifying:', { code, phoneNumber });
-
         if (!phoneNumber) {
-            return {
+            return callback?.({
                 text: "I couldn't find which phone number you're trying to verify. Please start over with 'verify phone +XXXXXXXXXXXX'"
-            };
+            });
         }
 
         try {
-            const isValid = await verifyService.verifyCode(phoneNumber, code);
-            console.log('CHECK_VERIFICATION handler - Verification result:', isValid);
-
-            // Create response text
-            const responseText = isValid
-                ? `Perfect! I've verified your phone number ${phoneNumber}. You can now use all my services! 📱✅`
-                : `Hmm, that code doesn't seem right for ${phoneNumber}. Want to try again or get a new code? Just say 'verify' for a new one! 🔄`;
-
-            // Return response directly without creating memory
-            // The framework will handle creating the memory automatically
-            return {
-                text: responseText
-            };
-
+            const isValid = await verifyService.verifyCode(phoneNumber, code!);
+            return callback?.({
+                text: isValid
+                    ? `Perfect! I've verified your phone number ${phoneNumber}. You can now use all my services! 📱✅`
+                    : `That code doesn't match what I sent to ${phoneNumber}. Want to try again or get a new code? Just say 'verify' for a new one! 🔄`
+            });
         } catch (error) {
-            console.error('CHECK_VERIFICATION handler - Error:', error);
-            return {
-                text: "Oops! I ran into a problem checking your code. Should we try again or get a new code? 🤔"
-            };
+            return callback?.({
+                text: "I ran into a problem checking your code. Should we try again or get a new code? 🤔"
+            });
         }
     }
 };
