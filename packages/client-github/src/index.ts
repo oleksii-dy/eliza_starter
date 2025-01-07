@@ -356,6 +356,12 @@ export class GitHubClient extends EventEmitter {
             action: createMemoriesFromFilesMemory.content.action,
             userId: this.runtime.agentId,
         });
+
+        const issuesLimit =
+            Number(this.runtime.getSetting("GITHUB_ISSUES_LIMIT")) || 10;
+        const pullRequestsLimit =
+            Number(this.runtime.getSetting("GITHUB_PULL_REQUESTS_LIMIT")) || 10;
+
         // This returns nothing no issue memories or pull request memories
         const issuesMemories = await saveIssuesToMemory(
             this.runtime,
@@ -363,7 +369,7 @@ export class GitHubClient extends EventEmitter {
             repository,
             branch,
             this.apiToken,
-            10
+            issuesLimit
         );
         // elizaLogger.log("Issues memories:", issuesMemories);
         await fs.writeFile(
@@ -376,7 +382,7 @@ export class GitHubClient extends EventEmitter {
             repository,
             branch,
             this.apiToken,
-            10
+            pullRequestsLimit
         );
         // elizaLogger.log("Pull requests memories:", pullRequestsMemories);
         await fs.writeFile(
