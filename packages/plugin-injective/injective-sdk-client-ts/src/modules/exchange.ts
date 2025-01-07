@@ -75,7 +75,6 @@ import { OrderSide, OrderState } from "@injectivelabs/ts-types";
 // TODO: refactor this to take the params from ../types/index.ts
 import {
     MsgAdminUpdateBinaryOptionsMarketParams,
-    MsgAuthorizeStakeGrantsParams,
     MsgBatchCancelBinaryOptionsOrdersParams,
     MsgBatchCancelDerivativeOrdersParams,
     MsgBatchCancelSpotOrdersParams,
@@ -92,7 +91,6 @@ import {
     MsgDepositParams,
     MsgExternalTransferParams,
     MsgIncreasePositionMarginParams,
-    MsgInstantBinaryOptionsMarketLaunchParams,
     GetSpotOrderbookV2Params,
     MsgInstantSpotMarketLaunchParams,
     MsgLiquidatePositionParams,
