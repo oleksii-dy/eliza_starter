@@ -1,180 +1,60 @@
-import { ResponseTemplate, CoinTemplate, PaginationTemplate } from "./types";
+// bank-templates.ts
 
-export interface SendEnabled {
-    denom: string;
-    enabled: boolean;
-}
+export const getBankBalanceTemplate = `
+Extract bank balance parameters:
+- Denom: {{denom}}
+`;
 
-export interface BankModuleParams {
-    sendEnabled: SendEnabled[];
-    defaultSendEnabled: boolean;
-}
+export const getBankBalancesTemplate = `
+Extract bank balances parameters:
+- Address: {{address}}
+- Pagination key: {{paginationKey}}
+- Pagination limit: {{limit}}
+- Pagination reverse : {{reverse}}
+- Pagination countTotal : {{countTotal}}
+- Pagination endTime : {{endTime}}
+- Pagination startTime : {{startTime}}
+- Pagination fromNumber : {{fromNumber}}
+- Pagination toNumber : {{toNumber}}
+if pagination options are not specified assume null
+`;
 
-export interface DenomUnit {
-    denom: string;
-    exponent: number;
-    aliases: string[];
-}
+export const getSupplyOfTemplate = `
+Extract supply parameters:
+- Denom: {{denom}}
+`;
 
-export interface DenomMetadata {
-    description: string;
-    denomUnits: DenomUnit[];
-    base: string;
-    display: string;
-    name: string;
-    symbol: string;
-    uri: string;
-    uriHash: string;
-}
+export const getDenomMetadataTemplate = `
+Extract denom metadata parameters:
+- Denom: {{denom}}
+`;
 
-export interface DenomOwner {
-    address: string;
-    balance: CoinTemplate;
-}
+export const getDenomOwnersTemplate = `
+Extract denom owners parameters:
+- Denom: {{denom}}
+`;
 
-export const bankTemplates = {
-    moduleParams: {
-        template: `
-\`\`\`json
-{
-    "sendEnabled": [
-        {
-            "denom": "{{denom}}",
-            "enabled": {{enabled}}
-        }
-    ],
-    "defaultSendEnabled": {{defaultSendEnabled}}
-}
-\`\`\`
-`,
-        description: `
-Extract the following bank parameters:
-- Send enabled denominations and their status
-- Default send enabled status
-`,
-    } as ResponseTemplate,
+export const msgSendTemplate = `
+Extract send message parameters:
+- Amount: {{amount}}
+- Denom: {{denom}}
+- Source address: {{srcInjectiveAddress}}
+- Destination address: {{dstInjectiveAddress}}
+`;
 
-    balance: {
-        template: `
-\`\`\`json
-{
-    "balance": {
-        "denom": "{{denom}}",
-        "amount": "{{amount}}"
-    }
-}
-\`\`\`
-`,
-        description: `
-Extract the following balance information:
-- Token denomination
-- Token amount
-`,
-    } as ResponseTemplate,
+export const msgMultiSendTemplate = `
+Extract multi-send message parameters:
+Inputs (array of addresses and coins):
+{{#each inputs}}
+Input {{@index + 1}}:
+  - Address: {{address}}
+  - Coins: {{coins}}
+{{/each}}
 
-    balances: {
-        template: `
-\`\`\`json
-{
-    "balances": [
-        {
-            "denom": "{{denom}}",
-            "amount": "{{amount}}"
-        }
-    ],
-    "pagination": {
-        "nextKey": "{{nextKey}}",
-        "total": "{{total}}"
-    }
-}
-\`\`\`
-`,
-        description: `
-Extract the following balances information:
-- List of token balances
-- Pagination details
-`,
-    } as ResponseTemplate,
-
-    totalSupply: {
-        template: `
-\`\`\`json
-{
-    "supply": [
-        {
-            "denom": "{{denom}}",
-            "amount": "{{amount}}"
-        }
-    ],
-    "pagination": {
-        "nextKey": "{{nextKey}}",
-        "total": "{{total}}"
-    }
-}
-\`\`\`
-`,
-        description: `
-Extract the following supply information:
-- List of token supplies
-- Pagination details
-`,
-    } as ResponseTemplate,
-
-    denomMetadata: {
-        template: `
-\`\`\`json
-{
-    "description": "{{description}}",
-    "denomUnits": [
-        {
-            "denom": "{{denom}}",
-            "exponent": {{exponent}},
-            "aliases": []
-        }
-    ],
-    "base": "{{base}}",
-    "display": "{{display}}",
-    "name": "{{name}}",
-    "symbol": "{{symbol}}",
-    "uri": "{{uri}}",
-    "uriHash": "{{uriHash}}"
-}
-\`\`\`
-`,
-        description: `
-Extract the following denomination metadata:
-- Description
-- Denomination units (denom, exponent, aliases)
-- Base and display denominations
-- Name and symbol
-- URI information
-`,
-    } as ResponseTemplate,
-
-    denomOwners: {
-        template: `
-\`\`\`json
-{
-    "denomOwners": [
-        {
-            "address": "{{address}}",
-            "balance": {
-                "denom": "{{denom}}",
-                "amount": "{{amount}}"
-            }
-        }
-    ],
-    "pagination": {
-        "nextKey": "{{nextKey}}",
-        "total": "{{total}}"
-    }
-}
-\`\`\`
-`,
-        description: `
-Extract the following denomination owners information:
-- List of owners and their balances
-- Pagination details
-`,
-    } as ResponseTemplate,
-};
+Outputs (array of addresses and coins):
+{{#each outputs}}
+Output {{@index + 1}}:
+  - Address: {{address}}
+  - Coins: {{coins}}
+{{/each}}
+`;

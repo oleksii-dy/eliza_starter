@@ -1,147 +1,23 @@
-// templates/distribution.ts
-import { ResponseTemplate, CoinTemplate } from "./types";
+// distribution-templates.ts
 
-export interface DistributionModuleParams {
-    communityTax: string;
-    baseProposerReward: string;
-    bonusProposerReward: string;
-    withdrawAddrEnabled: boolean;
-}
+export const getDelegatorRewardsForValidatorTemplate = `
+Extract delegator rewards for validator parameters:
+- Delegator address: {{delegatorAddress}}
+- Validator address: {{validatorAddress}}
+`;
 
-export interface ValidatorRewards {
-    validatorAddress: string;
-    rewards: CoinTemplate[];
-}
+export const getDelegatorRewardsTemplate = `
+Extract delegator rewards parameters:
+- Injective address: {{injectiveAddress}}
+`;
 
-export interface DelegatorReward {
-    validatorAddress: string;
-    reward: CoinTemplate[];
-}
+export const msgWithdrawDelegatorRewardTemplate = `
+Extract withdraw delegator reward parameters:
+- Delegator address: {{delegatorAddress}}
+- Validator address: {{validatorAddress}}
+`;
 
-export const distributionTemplates = {
-    moduleParams: {
-        template: `
-\`\`\`json
-{
-    "communityTax": "{{communityTax}}",
-    "baseProposerReward": "{{baseProposerReward}}",
-    "bonusProposerReward": "{{bonusProposerReward}}",
-    "withdrawAddrEnabled": {{withdrawAddrEnabled}}
-}
-\`\`\`
-`,
-        description: `
-Extract the following distribution parameters:
-- Community tax rate
-- Base proposer reward
-- Bonus proposer reward
-- Withdrawal address enabled status
-`,
-    } as ResponseTemplate,
-
-    delegatorRewardsForValidator: {
-        template: `
-\`\`\`json
-{
-    "rewards": [
-        {
-            "denom": "{{denom}}",
-            "amount": "{{amount}}"
-        }
-    ]
-}
-\`\`\`
-`,
-        description: `
-Extract the following delegator rewards:
-- List of rewards per denomination
-`,
-    } as ResponseTemplate,
-
-    delegatorRewards: {
-        template: `
-\`\`\`json
-{
-    "rewards": [
-        {
-            "validatorAddress": "{{validatorAddress}}",
-            "reward": [
-                {
-                    "denom": "{{denom}}",
-                    "amount": "{{amount}}"
-                }
-            ]
-        }
-    ],
-    "total": [
-        {
-            "denom": "{{denom}}",
-            "amount": "{{amount}}"
-        }
-    ]
-}
-\`\`\`
-`,
-        description: `
-Extract the following delegator rewards information:
-- List of rewards per validator
-- Total rewards per denomination
-`,
-    } as ResponseTemplate,
-
-    validatorOutstandingRewards: {
-        template: `
-\`\`\`json
-{
-    "rewards": {
-        "rewards": [
-            {
-                "denom": "{{denom}}",
-                "amount": "{{amount}}"
-            }
-        ]
-    }
-}
-\`\`\`
-`,
-        description: `
-Extract the following validator outstanding rewards:
-- List of outstanding rewards per denomination
-`,
-    } as ResponseTemplate,
-
-    validatorCommission: {
-        template: `
-\`\`\`json
-{
-    "commission": {
-        "commission": [
-            {
-                "denom": "{{denom}}",
-                "amount": "{{amount}}"
-            }
-        ]
-    }
-}
-\`\`\`
-`,
-        description: `
-Extract the following validator commission information:
-- List of commission rewards per denomination
-`,
-    } as ResponseTemplate,
-
-    withdrawAddress: {
-        template: `
-\`\`\`json
-{
-    "withdrawAddress": "{{withdrawAddress}}"
-}
-\`\`\`
-`,
-        description: `
-Extract the following withdrawal address information:
-- Withdrawal address
-`,
-    } as ResponseTemplate,
-};
+export const msgWithdrawValidatorCommissionTemplate = `
+Extract withdraw validator commission parameters:
+- Validator address: {{validatorAddress}}
+`;

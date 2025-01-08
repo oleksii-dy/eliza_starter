@@ -4,37 +4,23 @@ import {
     MsgAuthzExec,
     TxResponse,
 } from "@injectivelabs/sdk-ts";
-import {
-    MsgGrantParams,
-    MsgAuthzExecParams,
-    MsgRevokeParams,
-    GetGrantsParams,
-    GrantsResponse,
-    GetGranterGrantsParams,
-    GranterGrantsResponse,
-    GetGranteeGrantsParams,
-    GranteeGrantsResponse,
-} from "../types";
+import * as AuthzTypes from "../types/auth";
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
 //include chain grpc async functions here
 export async function getGrants(
     this: InjectiveGrpcBase,
-    params: GetGrantsParams
-): Promise<GrantsResponse> {
+    params: AuthzTypes.GetGrantsParams
+): Promise<AuthzTypes.GrantsResponse> {
     return this.request({
         method: this.chainGrpcAuthZApi.fetchGrants,
-        params: {
-            pagination: params.pagination,
-            granter: params.granter,
-            grantee: params.grantee,
-        },
+        params: params,
     });
 }
 
 export async function getGranterGrants(
     this: InjectiveGrpcBase,
-    params: GetGranterGrantsParams
-): Promise<GranterGrantsResponse> {
+    params: AuthzTypes.GetGranterGrantsParams
+): Promise<AuthzTypes.GranterGrantsResponse> {
     return this.request({
         method: this.chainGrpcAuthZApi.fetchGranterGrants,
         params: params.granter,
@@ -43,8 +29,8 @@ export async function getGranterGrants(
 
 export async function getGranteeGrants(
     this: InjectiveGrpcBase,
-    params: GetGranteeGrantsParams
-): Promise<GranteeGrantsResponse> {
+    params: AuthzTypes.GetGranteeGrantsParams
+): Promise<AuthzTypes.GranteeGrantsResponse> {
     return this.request({
         method: this.chainGrpcAuthZApi.fetchGranteeGrants,
         params: params.grantee,
@@ -54,7 +40,7 @@ export async function getGranteeGrants(
 // Message functions
 export async function msgGrant(
     this: InjectiveGrpcBase,
-    params: MsgGrantParams
+    params: AuthzTypes.MsgGrantParams
 ): Promise<TxResponse> {
     const msg = MsgGrant.fromJSON({
         messageType: params.messageType,
@@ -67,7 +53,7 @@ export async function msgGrant(
 
 export async function msgExec(
     this: InjectiveGrpcBase,
-    params: MsgAuthzExecParams
+    params: AuthzTypes.MsgAuthzExecParams
 ): Promise<TxResponse> {
     const msg = MsgAuthzExec.fromJSON({
         grantee: params.grantee,
@@ -78,7 +64,7 @@ export async function msgExec(
 
 export async function msgRevoke(
     this: InjectiveGrpcBase,
-    params: MsgRevokeParams
+    params: AuthzTypes.MsgRevokeParams
 ): Promise<TxResponse> {
     const msg = MsgRevoke.fromJSON({
         messageType: params.messageType,

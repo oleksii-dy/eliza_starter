@@ -4,19 +4,11 @@ import {
     MsgWithdrawDelegatorReward,
     MsgWithdrawValidatorCommission,
 } from "@injectivelabs/sdk-ts";
-import {
-    DistributionModuleParamsResponse,
-    DelegatorRewardsForValidatorResponse,
-    DelegatorRewardsResponse,
-    GetDelegatorRewardsForValidatorParams,
-    GetDelegatorRewardsParams,
-    MsgWithdrawDelegatorRewardParams,
-    MsgWithdrawValidatorCommissionParams,
-} from "../types/index";
+import * as DistributionTypes from "../types/distribution";
 //All the chain grpc params go here
 export async function getDistributionModuleParams(
     this: InjectiveGrpcBase
-): Promise<DistributionModuleParamsResponse> {
+): Promise<DistributionTypes.DistributionModuleParamsResponse> {
     return this.request({
         method: this.chainGrpcDistributionApi.fetchModuleParams,
         params: {},
@@ -25,8 +17,8 @@ export async function getDistributionModuleParams(
 
 export async function getDelegatorRewardsForValidator(
     this: InjectiveGrpcBase,
-    params: GetDelegatorRewardsForValidatorParams
-): Promise<DelegatorRewardsForValidatorResponse> {
+    params: DistributionTypes.GetDelegatorRewardsForValidatorParams
+): Promise<DistributionTypes.DelegatorRewardsForValidatorResponse> {
     return this.request({
         method: this.chainGrpcDistributionApi.fetchDelegatorRewardsForValidator,
         params: {
@@ -38,8 +30,8 @@ export async function getDelegatorRewardsForValidator(
 
 export async function getDelegatorRewardsForValidatorNoThrow(
     this: InjectiveGrpcBase,
-    params: GetDelegatorRewardsForValidatorParams
-): Promise<DelegatorRewardsForValidatorResponse> {
+    params: DistributionTypes.GetDelegatorRewardsForValidatorParams
+): Promise<DistributionTypes.DelegatorRewardsForValidatorResponse> {
     return this.request({
         method: this.chainGrpcDistributionApi
             .fetchDelegatorRewardsForValidatorNoThrow,
@@ -52,8 +44,8 @@ export async function getDelegatorRewardsForValidatorNoThrow(
 
 export async function getDelegatorRewards(
     this: InjectiveGrpcBase,
-    params: GetDelegatorRewardsParams
-): Promise<DelegatorRewardsResponse> {
+    params: DistributionTypes.GetDelegatorRewardsParams
+): Promise<DistributionTypes.DelegatorRewardsResponse> {
     return this.request({
         method: this.chainGrpcDistributionApi.fetchDelegatorRewards,
         params: params.injectiveAddress,

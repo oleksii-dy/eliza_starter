@@ -1,26 +1,10 @@
 import { MsgSend, MsgMultiSend, TxResponse } from "@injectivelabs/sdk-ts";
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
-import {
-    MsgSendParams,
-    MsgMultiSendParams,
-    BankModuleParamsResponse,
-    BankBalanceResponse,
-    BankBalancesResponse,
-    TotalSupplyResponse,
-    SupplyOfResponse,
-    DenomsMetadataResponse,
-    DenomMetadataResponse,
-    DenomOwnersResponse,
-    GetBankBalanceParams,
-    GetBankBalancesParams,
-    GetSupplyOfParams,
-    GetDenomMetadataParams,
-    GetDenomOwnersParams,
-} from "../types";
+import * as BankTypes from "../types/bank";
 // Bank module chain grpc async functions
 export async function getBankModuleParams(
     this: InjectiveGrpcBase
-): Promise<BankModuleParamsResponse> {
+): Promise<BankTypes.BankModuleParamsResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchModuleParams,
         params: {},
@@ -29,30 +13,30 @@ export async function getBankModuleParams(
 
 export async function getBankBalance(
     this: InjectiveGrpcBase,
-    params: GetBankBalanceParams
-): Promise<BankBalanceResponse> {
+    params: BankTypes.GetBankBalanceParams
+): Promise<BankTypes.BankBalanceResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchBalance,
         params: {
-            accountAddress: params.accountAddress,
-            denom: params.denom,
+            ...params,
+            accountAddress: this.injAddress,
         },
     });
 }
 
 export async function getBankBalances(
     this: InjectiveGrpcBase,
-    params: GetBankBalancesParams
-): Promise<BankBalancesResponse> {
+    params: BankTypes.GetBankBalancesParams
+): Promise<BankTypes.BankBalancesResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchBalances,
-        params: params.address,
+        params: this.injAddress,
     });
 }
 
 export async function getTotalSupply(
     this: InjectiveGrpcBase
-): Promise<TotalSupplyResponse> {
+): Promise<BankTypes.TotalSupplyResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchTotalSupply,
         params: {},
@@ -61,7 +45,7 @@ export async function getTotalSupply(
 
 export async function getAllTotalSupply(
     this: InjectiveGrpcBase
-): Promise<TotalSupplyResponse> {
+): Promise<BankTypes.TotalSupplyResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchAllTotalSupply,
         params: {},
@@ -70,8 +54,8 @@ export async function getAllTotalSupply(
 
 export async function getSupplyOf(
     this: InjectiveGrpcBase,
-    params: GetSupplyOfParams
-): Promise<SupplyOfResponse> {
+    params: BankTypes.GetSupplyOfParams
+): Promise<BankTypes.SupplyOfResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchSupplyOf,
         params: params.denom,
@@ -80,7 +64,7 @@ export async function getSupplyOf(
 
 export async function getDenomsMetadata(
     this: InjectiveGrpcBase
-): Promise<DenomsMetadataResponse> {
+): Promise<BankTypes.DenomsMetadataResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchDenomsMetadata,
         params: {},
@@ -89,8 +73,8 @@ export async function getDenomsMetadata(
 
 export async function getDenomMetadata(
     this: InjectiveGrpcBase,
-    params: GetDenomMetadataParams
-): Promise<DenomMetadataResponse> {
+    params: BankTypes.GetDenomMetadataParams
+): Promise<BankTypes.DenomMetadataResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchDenomMetadata,
         params: params.denom,
@@ -99,8 +83,8 @@ export async function getDenomMetadata(
 
 export async function getDenomOwners(
     this: InjectiveGrpcBase,
-    params: GetDenomOwnersParams
-): Promise<DenomOwnersResponse> {
+    params: BankTypes.GetDenomOwnersParams
+): Promise<BankTypes.DenomOwnersResponse> {
     return this.request({
         method: this.chainGrpcBankApi.fetchDenomOwners,
         params: params.denom,
@@ -109,7 +93,7 @@ export async function getDenomOwners(
 
 export async function msgSend(
     this: InjectiveGrpcBase,
-    params: MsgSendParams
+    params: BankTypes.MsgSendParams
 ): Promise<TxResponse> {
     const msg = MsgSend.fromJSON({
         amount: params.amount,
@@ -121,7 +105,7 @@ export async function msgSend(
 
 export async function msgMultiSend(
     this: InjectiveGrpcBase,
-    params: MsgMultiSendParams
+    params: BankTypes.MsgMultiSendParams
 ): Promise<TxResponse> {
     const msg = MsgMultiSend.fromJSON({
         inputs: params.inputs,

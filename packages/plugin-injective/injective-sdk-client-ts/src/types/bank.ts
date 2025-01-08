@@ -4,12 +4,10 @@ import { DenomParam } from "./base";
 // Bank Module Params
 // Start of Get Bank Request Parameters
 export interface GetBankBalanceParams {
-    accountAddress: string;
     denom: string;
 }
 
 export interface GetBankBalancesParams {
-    address: string;
     pagination?: PaginationOption;
 }
 

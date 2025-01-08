@@ -7,11 +7,7 @@ import {
     TxResponse,
 } from "@injectivelabs/sdk-ts";
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
-import {
-    MsgBidRequestParams,
-    GetAuctionRoundParams,
-    GetAuctionsParams,
-} from "../types";
+import * as AuctionTypes from "../types/auction";
 import { INJ_DENOM } from "@injectivelabs/utils";
 //include chain grpc calls for fetch async functions
 export async function getAuctionModuleParams(
@@ -42,7 +38,7 @@ export async function getCurrentBasket(
 //include indexer grpc calls
 export async function getAuctionRound(
     this: InjectiveGrpcBase,
-    params: GetAuctionRoundParams
+    params: AuctionTypes.GetAuctionRoundParams
 ): Promise<Auction> {
     return this.query({
         method: this.indexerGrpcAuctionApi.fetchAuction,
@@ -52,7 +48,7 @@ export async function getAuctionRound(
 
 export async function getAuctions(
     this: InjectiveGrpcBase,
-    params: GetAuctionsParams
+    params: AuctionTypes.GetAuctionsParams
 ): Promise<Auction[]> {
     return this.query({
         method: this.indexerGrpcAuctionApi.fetchAuctions,
@@ -62,7 +58,7 @@ export async function getAuctions(
 
 export async function msgBid(
     this: InjectiveGrpcBase,
-    params: MsgBidRequestParams
+    params: AuctionTypes.MsgBidRequestParams
 ): Promise<TxResponse> {
     const latestModuleState = await getCurrentBasket.call(this);
     const amount = { denom: INJ_DENOM, amount: params.amount };

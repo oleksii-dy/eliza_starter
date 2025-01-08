@@ -4,10 +4,11 @@ import {
     TradeExecutionType,
     TradeExecutionSide,
     GrpcMarketStatus,
+    MarketType,
+    GridStrategyType,
 } from "@injectivelabs/sdk-ts";
 import { PaginationParams, TimeRangeParams } from "./base";
 import {
-    CosmosGovV1Gov,
     InjectiveExchangeV1Beta1Exchange,
     InjectiveOracleV1Beta1Oracle,
 } from "@injectivelabs/core-proto-ts";
@@ -22,6 +23,312 @@ export interface SubaccountIdParam {
 }
 // Exchange Module
 // Start of Get Exchange Module Params
+export interface GetModuleParamsParams {}
+
+export interface GetModuleStateParams {}
+
+export interface GetFeeDiscountScheduleParams {}
+
+export interface GetFeeDiscountAccountInfoParams {
+    injAddress: string;
+}
+
+export interface GetTradingRewardsCampaignParams {}
+
+export interface GetTradeRewardPointsParams {
+    injectiveAddresses: string[];
+}
+
+export interface GetPendingTradeRewardPointsParams {
+    injectiveAddresses: string[];
+}
+
+export interface GetExchangePositionsParams {}
+
+export interface GetSubaccountTradeNonceParams {
+    subaccountId: string;
+}
+
+export interface GetIsOptedOutOfRewardsParams {
+    account: string;
+}
+
+export interface GetDerivativeMarketsParams {
+    quoteDenom?: string;
+    marketStatus?: string;
+    marketStatuses?: string[];
+}
+
+export interface GetDerivativeMarketParams {
+    marketId: string;
+}
+
+export interface GetBinaryOptionsMarketsParams {
+    marketStatus?: string;
+    quoteDenom?: string;
+    pagination?: PaginationOption;
+}
+
+export interface GetBinaryOptionsMarketParams {
+    marketId: string;
+}
+
+export interface GetDerivativeOrdersParams {
+    marketId?: string;
+    marketIds?: string[];
+    orderSide?: OrderSide;
+    isConditional?: boolean;
+    subaccountId?: string;
+    pagination?: PaginationOption;
+}
+
+export interface GetDerivativeOrderHistoryParams {
+    subaccountId?: string;
+    marketId?: string;
+    marketIds?: string[];
+    orderTypes?: OrderSide[];
+    executionTypes?: TradeExecutionType[];
+    direction?: TradeDirection;
+    isConditional?: boolean;
+    state?: OrderState;
+    pagination?: PaginationOption;
+}
+
+export interface GetPositionsParams {
+    marketId?: string;
+    marketIds?: string[];
+    subaccountId?: string;
+    direction?: TradeDirection;
+    pagination?: PaginationOption;
+}
+
+export interface GetPositionsV2Params {
+    address?: string;
+    marketId?: string;
+    marketIds?: string[];
+    subaccountId?: string;
+    direction?: TradeDirection;
+    pagination?: PaginationOption;
+}
+
+export interface GetDerivativeTradesParams {
+    endTime?: number;
+    tradeId?: string;
+    marketId?: string;
+    startTime?: number;
+    marketIds?: string[];
+    subaccountId?: string;
+    accountAddress?: string;
+    direction?: TradeDirection;
+    pagination?: PaginationOption;
+    executionSide?: TradeExecutionSide;
+    executionTypes?: TradeExecutionType[];
+}
+
+export interface GetFundingPaymentsParams {
+    marketId?: string;
+    marketIds?: string[];
+    subaccountId?: string;
+    pagination?: PaginationOption;
+}
+
+export interface GetFundingRatesParams {
+    marketId?: string;
+    pagination?: PaginationOption;
+}
+
+export interface GetDerivativeSubaccountOrdersListParams {
+    marketId?: string;
+    subaccountId?: string;
+    pagination?: PaginationOption;
+}
+
+export interface GetDerivativeSubaccountTradesListParams {
+    marketId?: string;
+    subaccountId?: string;
+    direction?: TradeDirection;
+    executionType?: TradeExecutionType;
+    pagination?: PaginationOption;
+}
+
+export interface GetDerivativeOrderbooksV2Params {
+    marketIds: string[];
+}
+
+export interface GetDerivativeOrderbookV2Params {
+    marketId: string;
+}
+
+export interface GetRewardsParams {
+    address: string;
+    epoch: number;
+}
+
+export interface GetSubaccountsListParams {
+    address: string;
+}
+
+export interface GetSubaccountBalancesListParams {
+    subaccountId: string;
+}
+
+export interface GetSubaccountHistoryParams {
+    subaccountId: string;
+    denom?: string;
+    transferTypes?: string[];
+    pagination?: PaginationOption;
+}
+
+export interface GetSubaccountOrderSummaryParams {
+    subaccountId: string;
+    marketId?: string;
+    orderDirection?: string;
+}
+
+export interface GetOrderStatesParams {
+    spotOrderHashes?: string[];
+    derivativeOrderHashes?: string[];
+}
+
+export interface GetAccountPortfolioParams {
+    address: string;
+}
+
+export interface GetAccountPortfolioBalancesParams {
+    address: string;
+}
+
+export interface GetSpotMarketsParams {
+    baseDenom?: string;
+    marketStatus?: string;
+    quoteDenom?: string;
+    marketStatuses?: string[];
+}
+
+export interface GetSpotMarketParams {
+    marketId: string;
+}
+
+export interface GetSpotOrdersParams {
+    marketId?: string;
+    marketIds?: string[];
+    subaccountId?: string;
+    orderSide?: OrderSide;
+    isConditional?: boolean;
+    pagination?: PaginationOption;
+}
+
+export interface GetSpotOrderHistoryParams {
+    subaccountId?: string;
+    marketId?: string;
+    marketIds?: string[];
+    orderTypes?: OrderSide[];
+    executionTypes?: TradeExecutionType[];
+    direction?: TradeDirection;
+    isConditional?: boolean;
+    state?: OrderState;
+    pagination?: PaginationOption;
+}
+
+export interface GetSpotTradesParams {
+    endTime?: number;
+    tradeId?: string;
+    marketId?: string;
+    startTime?: number;
+    marketIds?: string[];
+    subaccountId?: string;
+    accountAddress?: string;
+    direction?: TradeDirection;
+    pagination?: PaginationOption;
+    executionSide?: TradeExecutionSide;
+    executionTypes?: TradeExecutionType[];
+}
+
+export interface GetSpotSubaccountOrdersListParams {
+    subaccountId?: string;
+    marketId?: string;
+    pagination?: PaginationOption;
+}
+
+export interface GetSpotSubaccountTradesListParams {
+    subaccountId?: string;
+    marketId?: string;
+    direction?: TradeDirection;
+    executionType?: TradeExecutionType;
+    pagination?: PaginationOption;
+}
+
+export interface GetSpotOrderbooksV2Params {
+    marketIds: string[];
+}
+
+export interface GetSpotOrderbookV2Params {
+    marketId: string;
+}
+
+export interface GetAtomicSwapHistoryParams {
+    address: string;
+    contractAddress: string;
+    pagination?: PaginationOption;
+}
+
+export interface GetGridStrategiesParams {
+    accountAddress?: string;
+    subaccountId?: string;
+    state?: string;
+    marketId?: string;
+    limit?: number;
+    skip?: number;
+    marketType?: MarketType;
+    strategyType?: GridStrategyType[];
+}
+
+export interface GetHistoricalBalanceParams {
+    account: string;
+    resolution: string;
+}
+
+export interface GetHistoricalRpnlParams {
+    account: string;
+    resolution: string;
+}
+
+export interface GetHistoricalVolumesParams {
+    account: string;
+    resolution: string;
+}
+
+export interface GetPnlLeaderboardParams {
+    startDate: string;
+    endDate: string;
+    limit?: number;
+    account?: string;
+}
+
+export interface GetVolLeaderboardParams {
+    startDate: string;
+    endDate: string;
+    limit?: number;
+    account?: string;
+}
+
+export interface GetPnlLeaderboardFixedResolutionParams {
+    resolution: string;
+    limit?: number;
+    account?: string;
+}
+
+export interface GetVolLeaderboardFixedResolutionParams {
+    resolution: string;
+    limit?: number;
+    account?: string;
+}
+
+export interface GetDenomHoldersParams {
+    denom: string;
+    token?: string;
+    limit?: number;
+}
 export interface MarketParams extends PaginationParams {
     baseDenom?: string;
     quoteDenom?: string;
