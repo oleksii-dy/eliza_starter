@@ -67,7 +67,7 @@ import { nftGenerationPlugin } from "@/services/elizaos-plugin-nft-generation";
 import { createNodePlugin } from "@/services/elizaos-plugin-node";
 import { solanaPlugin } from "@/services/elizaos-plugin-solana";
 import { suiPlugin } from "@/services/elizaos-plugin-sui";
-import { TEEMode, teePlugin } from "@/services/elizaos-plugin-tee";
+//import { TEEMode, teePlugin } from "@/services/elizaos-plugin-tee";
 import { tonPlugin } from "@/services/elizaos-plugin-ton";
 import { zksyncEraPlugin } from "@/services/elizaos-plugin-zksync-era";
 import { cronosZkEVMPlugin } from "@/services/elizaos-plugin-cronoszkevm";
@@ -537,24 +537,24 @@ export async function createAgent(
 
     nodePlugin ??= createNodePlugin();
 
-    const teeMode = getSecret(character, "TEE_MODE") || "OFF";
-    const walletSecretSalt = getSecret(character, "WALLET_SECRET_SALT");
+    //    const teeMode = getSecret(character, "TEE_MODE") || "OFF";
+    //const walletSecretSalt = getSecret(character, "WALLET_SECRET_SALT");
 
     // Validate TEE configuration
-    if (teeMode !== TEEMode.OFF && !walletSecretSalt) {
-        elizaLogger.error(
-            "WALLET_SECRET_SALT required when TEE_MODE is enabled"
-        );
-        throw new Error("Invalid TEE configuration");
-    }
+    // if (teeMode !== TEEMode.OFF && !walletSecretSalt) {
+    //     elizaLogger.error(
+    //         "WALLET_SECRET_SALT required when TEE_MODE is enabled"
+    //     );
+    //     throw new Error("Invalid TEE configuration");
+    // }
 
-    let goatPlugin: any | undefined;
+    // let goatPlugin: any | undefined;
 
-    if (getSecret(character, "EVM_PRIVATE_KEY")) {
-        goatPlugin = await createGoatPlugin((secret) =>
-            getSecret(character, secret)
-        );
-    }
+    // if (getSecret(character, "EVM_PRIVATE_KEY")) {
+    //     goatPlugin = await createGoatPlugin((secret) =>
+    //         getSecret(character, secret)
+    //     );
+    // }
 
     return new AgentRuntime({
         databaseAdapter: db,
@@ -606,25 +606,25 @@ export async function createAgent(
             getSecret(character, "LIVEPEER_GATEWAY_URL")
                 ? imageGenerationPlugin
                 : null,
-            getSecret(character, "FAL_API_KEY") ? ThreeDGenerationPlugin : null,
-            ...(getSecret(character, "COINBASE_API_KEY") &&
-            getSecret(character, "COINBASE_PRIVATE_KEY")
-                ? [
-                      coinbaseMassPaymentsPlugin,
-                      tradePlugin,
-                      tokenContractPlugin,
-                      advancedTradePlugin,
-                  ]
-                : []),
-            ...(teeMode !== TEEMode.OFF && walletSecretSalt
-                ? [teePlugin, solanaPlugin]
-                : []),
+            // getSecret(character, "FAL_API_KEY") ? ThreeDGenerationPlugin : null,
+            // ...(getSecret(character, "COINBASE_API_KEY") &&
+            // getSecret(character, "COINBASE_PRIVATE_KEY")
+            //     ? [
+            //           coinbaseMassPaymentsPlugin,
+            //           tradePlugin,
+            //           tokenContractPlugin,
+            //           advancedTradePlugin,
+            //       ]
+            //     : []),
+	  //            ...(teeMode !== TEEMode.OFF && walletSecretSalt
+	  //                ? [teePlugin, solanaPlugin]
+	  //                : []),
             getSecret(character, "COINBASE_API_KEY") &&
             getSecret(character, "COINBASE_PRIVATE_KEY") &&
-            getSecret(character, "COINBASE_NOTIFICATION_URI")
-                ? webhookPlugin
-                : null,
-            goatPlugin,
+              // getSecret(character, "COINBASE_NOTIFICATION_URI")
+              //  ? webhookPlugin
+              //: null,
+	  //            goatPlugin,
             getSecret(character, "ABSTRACT_PRIVATE_KEY")
                 ? abstractPlugin
                 : null,
@@ -682,39 +682,54 @@ function initializeCache(
     baseDir?: string,
     db?: IDatabaseCacheAdapter
 ) {
-  return tracer.withActiveSpan('initializeCache', () => {
+
+  return tracer.startActiveSpan("initializeCache", (span:Span) => {
+    span.setAttribute('cacheStore', cacheStore);
+    //return tracer.withActiveSpan('initializeCache: ${string} `, () => {
     switch (cacheStore) {
-        case CacheStore.REDIS:
-            if (process.env.REDIS_URL) {
-                elizaLogger.info("Connecting to Redis...");
-                const redisClient = new RedisClient(process.env.REDIS_URL);
-                return new CacheManager(
-                    new DbCacheAdapter(redisClient, character.id) // Using DbCacheAdapter since RedisClient also implements IDatabaseCacheAdapter
-                );
-            } else {
-                throw new Error("REDIS_URL environment variable is not set.");
-            }
-
-        case CacheStore.DATABASE:
-            if (db) {
-                elizaLogger.info("Using Database Cache...");
-                return initializeDbCache(character, db);
-            } else {
-                throw new Error(
-                    "Database adapter is not provided for CacheStore.Database."
-                );
-            }
-
-        case CacheStore.FILESYSTEM:
-            elizaLogger.info("Using File System Cache...");
-            return initializeFsCache(baseDir, character);
-
+      case CacheStore.REDIS:
+        if (process.env.REDIS_URL) {
+          elizaLogger.info("Connecting to Redis...");
+	  span.setAttribute('redis_url', process.env.REDIS_URL);
+          const redisClient = new RedisClient(process.env.REDIS_URL);
+          let ret= new CacheManager(
+            new DbCacheAdapter(redisClient, character.id) // Using DbCacheAdapter since RedisClient also implements IDatabaseCacheAdapter
+          );
+	  span.end()
+	  return ret;
+        } else {
+          // throw new Error("REDIS_URL environment variable is not set.");
+        }
+    
+      case CacheStore.DATABASE:
+        if (db) {
+          elizaLogger.info("Using Database Cache...");
+          let ret = initializeDbCache(character, db);
+	  span.end()
+	  return ret
+        } else {
+          throw new Error(
+            "Database adapter is not provided for CacheStore.Database."
+          );
+        }
+    
+      case CacheStore.FILESYSTEM:
+        elizaLogger.info("Using File System Cache...");
+        ret= initializeFsCache(baseDir, character);
+	span.end()
+	return ret;
+    
+    
         default:
             throw new Error(
                 `Invalid cache store: ${cacheStore} or required configuration missing.`
             );
     }
+    span.end()
+    
   });
+
+
 }
 
 async function startAgent(
@@ -798,80 +813,83 @@ catch (error) {
        */ // dont catch
 }
 
-const checkPortAvailable = (port: number): Promise<boolean> => {
-    return new Promise((resolve) => {
-        const server = net.createServer();
+// const checkPortAvailable = (port: number): Promise<boolean> => {
+//     return new Promise((resolve) => {
+//         const server = net.createServer();
 
-        server.once("error", (err: NodeJS.ErrnoException) => {
-            if (err.code === "EADDRINUSE") {
-                resolve(false);
-            }
-        });
+//         server.once("error", (err: NodeJS.ErrnoException) => {
+//             if (err.code === "EADDRINUSE") {
+//                 resolve(false);
+//             }
+//         });
 
-        server.once("listening", () => {
-            server.close();
-            resolve(true);
-        });
+//         server.once("listening", () => {
+//             server.close();
+//             resolve(true);
+//         });
 
-        server.listen(port);
-    });
-};
+//         server.listen(port);
+//     });
+// };
 
-const startAgents = async () => {
-    const directClient = new DirectClient();
-    let serverPort = parseInt(settings.SERVER_PORT || "3000");
-    const args = parseArguments();
-    let charactersArg = args.characters || args.character;
-    let characters = [defaultCharacter];
+// lets reconsider and refactor this code in a fastify plugin that will be called back
+// instead of directly listening. each agent will be called with character name and message from the rest api
+// we want each agent to be a plugin that is started
+// const startAgents = async () => {
+//     const directClient = new DirectClient();
+//     let serverPort = parseInt(settings.SERVER_PORT || "3000");
+//     const args = parseArguments();
+//     let charactersArg = args.characters || args.character;
+//     let characters = [defaultCharacter];
 
-    if (charactersArg) {
-        characters = await loadCharacters(charactersArg);
-    }
+//     if (charactersArg) {
+//         characters = await loadCharacters(charactersArg);
+//     }
 
-    try {
-      for (const character of characters) {
-	    try {
-              await startAgent(character, directClient);
-	    } catch (error) {
-	      elizaLogger.error("Error starting agents2:", character, error);
-	      throw error;
-	    }
+//     try {
+//       for (const character of characters) {
+// 	    try {
+//               await startAgent(character, directClient);
+// 	    } catch (error) {
+// 	      elizaLogger.error("Error starting agents2:", character, error);
+// 	      throw error;
+// 	    }
 	
-        }
-    } catch (error) {
-      elizaLogger.error("Error starting agents:", error);
-      throw error;
-    }
+//         }
+//     } catch (error) {
+//       elizaLogger.error("Error starting agents:", error);
+//       throw error;
+//     }
 
-    // Find available port
-    while (!(await checkPortAvailable(serverPort))) {
-        elizaLogger.warn(
-            `Port ${serverPort} is in use, trying ${serverPort + 1}`
-        );
-        serverPort++;
-    }
+//     // Find available port
+//     while (!(await checkPortAvailable(serverPort))) {
+//         elizaLogger.warn(
+//             `Port ${serverPort} is in use, trying ${serverPort + 1}`
+//         );
+//         serverPort++;
+//     }
 
-    // upload some agent functionality into directClient
-    directClient.startAgent = async (character: Character) => {
-        // wrap it so we don't have to inject directClient later
-        return startAgent(character, directClient);
-    };
+//     // upload some agent functionality into directClient
+//     directClient.startAgent = async (character: Character) => {
+//         // wrap it so we don't have to inject directClient later
+//         return startAgent(character, directClient);
+//     };
 
-    directClient.start(serverPort);
+//     directClient.start(serverPort);
 
-    if (serverPort !== parseInt(settings.SERVER_PORT || "3000")) {
-        elizaLogger.log(`Server started on alternate port ${serverPort}`);
-    }
+//     if (serverPort !== parseInt(settings.SERVER_PORT || "3000")) {
+//       console.log(`Server started on alternate port ${serverPort}`);
+//     }
 
-    elizaLogger.log(
-        "Run `pnpm start:client` to start the client and visit the outputted URL (http://localhost:5173) to chat with your agents. When running multiple agents, use client with different port `SERVER_PORT=3001 pnpm start:client`"
-    );
-};
+//   console.log(
+//         "Run `pnpm start:client` to start the client and visit the outputted URL (http://localhost:5173) to chat with your agents. When running multiple agents, use client with different port `SERVER_PORT=3001 pnpm start:client`"
+//     );
+// };
 
-export function start() {
-  startAgents().catch((error) => {
-    elizaLogger.error("Unhandled error in startAgents:", error);
-    //process.exit(1);
-    throw error;
-  });
-}
+// export function start() {
+//   startAgents().catch((error) => {
+//     elizaLogger.error("Unhandled error in startAgents:", error);
+//     //process.exit(1);
+//     throw error;
+//   });
+// }
