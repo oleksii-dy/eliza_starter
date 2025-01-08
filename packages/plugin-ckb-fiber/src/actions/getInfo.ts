@@ -31,7 +31,7 @@ export const getInfo: Action = {
             const nodeInfo = await service.rpcClient.getNodeInfo();
             const formattedInfo = formatNodeInfo(nodeInfo);
 
-            callback({ text: formattedInfo }, []);
+            callback({ text: formattedInfo, action: "LIST_CHANNELS" }, []);
         } catch (error) {
             elizaLogger.error("Error getting node info:", error);
             callback(

@@ -33,9 +33,9 @@ export const listChannels: Action = {
 
             callback({ text: formattedInfo }, []);
         } catch (error) {
-            elizaLogger.error("Error getting node info:", error);
+            elizaLogger.error("Error getting channels:", error);
             callback(
-                { text: "Fail to get node information. Please try again later." },
+                { text: "Fail to get channels. Please try again later." },
                 []
             );
         }

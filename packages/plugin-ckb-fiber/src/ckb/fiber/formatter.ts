@@ -42,9 +42,9 @@ export function formatNodeInfo(nodeInfo: GetNodeInfoResponse): string {
             config: udt_cfg_infos.find(udt => udtEq(SupportedUDTs[udtType].script, udt.script))
         }))
         .filter(udt => !!udt.config)
-        .map(udt => `- ${udt.name}: ${udt.description}
+        .map(udt => `- $${udt.name.toUpperCase()}: ${udt.description}
         Decimal: ${udt.decimal}
-        Auto Accept Amount: ${toDecimal(udt.config.auto_accept_amount, udt.name)} ${udt.name}`)
+        Auto Accept Amount: ${toDecimal(udt.config.auto_accept_amount, udt.name)} ${udt.name.toUpperCase()}`)
         .join('\n');
 
     const lockScript = {
@@ -132,7 +132,7 @@ export function formatPayment(payment: PaymentResponse): string {
     } = payment;
 
     // Format payment status
-    const statusInfo = failed_error 
+    const statusInfo = failed_error
         ? `Failed: ${failed_error}`
         : `Status: ${status}`;
 
@@ -141,7 +141,7 @@ export function formatPayment(payment: PaymentResponse): string {
     const lastUpdatedDate = new Date(Number(last_updated_at)).toLocaleString();
 
     return `Payment Details:
-- Hash: ${payment_hash}
+- Payment Hash: ${payment_hash} (Not Tx Hash!)
 - Created: ${createdDate}
 - Last Updated: ${lastUpdatedDate}
 - ${statusInfo}
