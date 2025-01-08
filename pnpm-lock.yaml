@@ -292,6 +292,9 @@ importers:
       '@elizaos/plugin-ton':
         specifier: workspace:*
         version: link:../packages/plugin-ton
+      '@elizaos/plugin-treasure':
+        specifier: workspace:*
+        version: link:../packages/plugin-treasure
       '@elizaos/plugin-twitter':
         specifier: workspace:*
         version: link:../packages/plugin-twitter
@@ -2369,6 +2372,21 @@ importers:
         specifier: 7.1.0
         version: 7.1.0
 
+  packages/plugin-treasure:
+    dependencies:
+      '@elizaos/core':
+        specifier: workspace:*
+        version: link:../core
+      tsup:
+        specifier: ^8.3.5
+        version: 8.3.5(@swc/core@1.10.6(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.2)(yaml@2.7.0)
+      web3:
+        specifier: ^4.15.0
+        version: 4.16.0(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.24.1)
+      whatwg-url:
+        specifier: 7.1.0
+        version: 7.1.0
+
   packages/plugin-trustdb:
     dependencies:
       '@elizaos/core':
@@ -2479,27 +2497,6 @@ importers:
       web3-plugin-zksync:
         specifier: ^1.0.8
         version: 1.0.8(bufferutil@4.0.9)(ts-node@10.9.2(@swc/core@1.10.6(@swc/helpers@0.5.15))(@types/node@22.10.5)(typescript@5.7.2))(typescript@5.7.2)(utf-8-validate@5.0.10)(web3@4.16.0(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.2)(utf-8-validate@5.0.10)(zod@3.24.1))
-      whatwg-url:
-        specifier: 7.1.0
-        version: 7.1.0
-
-  packages/treasure-plugin:
-    dependencies:
-      '@ai16z/eliza':
-        specifier: workspace:*
-        version: link:../core
-      '@ai16z/plugin-trustdb':
-        specifier: workspace:*
-        version: link:../plugin-trustdb
-      tsup:
-        specifier: ^8.3.5
-        version: 8.3.5(@swc/core@1.10.1(@swc/helpers@0.5.15))(jiti@2.4.1)(postcss@8.4.49)(typescript@5.6.3)(yaml@2.6.1)
-      viem:
-        specifier: 2.21.53
-        version: 2.21.53(bufferutil@4.0.8)(typescript@5.6.3)(utf-8-validate@5.0.10)(zod@3.23.8)
-      web3:
-        specifier: ^4.15.0
-        version: 4.16.0(bufferutil@4.0.8)(encoding@0.1.13)(typescript@5.6.3)(utf-8-validate@5.0.10)(zod@3.23.8)
       whatwg-url:
         specifier: 7.1.0
         version: 7.1.0
