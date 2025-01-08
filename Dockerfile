@@ -45,5 +45,5 @@ COPY --from=builder /app ./
 EXPOSE 3001
 
 # Set the default command
-CMD ["pnpm", "start"]
+# CMD ["pnpm", "start"]
 
