@@ -61,6 +61,8 @@ export class RpcClient {
     public rpcUrl: string;
     public headers: any;
 
+    public logFunc: (...args: any) => any
+
     private counter: number;
     private autoConvert: boolean;
 
@@ -72,6 +74,8 @@ export class RpcClient {
         this.headers = headers;
         this.autoConvert = autoConvert;
         this.counter = 0;
+
+        this.logFunc = console.log
     }
 
     private generateId(): number {
@@ -80,11 +84,16 @@ export class RpcClient {
     }
 
     public async call<T>(method: string, params: any[]): Promise<T> {
+        const id = this.generateId()
+        this.logFunc?.(`[RPC Call #${id}]`, method, params)
+
         const response = await axios.post(this.rpcUrl, {
-            id: this.generateId(), jsonrpc: '2.0', method, params,
+            id, jsonrpc: '2.0', method, params,
         }, {
             headers: this.headers
         });
+
+        this.logFunc?.(`[RPC Response #${id}]`, response?.data)
 
         if (!response?.data) {
             throw new Error('RPC Error: Empty response');

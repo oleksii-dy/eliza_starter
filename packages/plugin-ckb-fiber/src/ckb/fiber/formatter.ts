@@ -114,7 +114,7 @@ export function formatChannelList(channelList: ChannelListResponse): string {
 
         return `- Channel ${channel_id}:
     To Peer: ${peer_id}
-    State: ${state.state_name} [${state.state_flags.join(', ')}]
+    State: ${state.state_name} [${state?.state_flags?.join?.(', ') || 'null'}]
     Public: ${is_public}${balanceFormat}`;
     });
 

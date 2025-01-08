@@ -23,6 +23,11 @@ export class CKBFiberService extends Service {
     static serviceType = ServiceTypeCKBFiber;
 
     async initialize(runtime: IAgentRuntime): Promise<void> {
+        if (this.state != State.Uninitialized) {
+            elizaLogger.error(`CKBFiberService is ${State[this.state]}`);
+            return;
+        }
+
         this.runtime = runtime;
         this.rpcClient = getClient(env(this.runtime, "RPC_URL"));
 
@@ -52,8 +57,12 @@ export class CKBFiberService extends Service {
             throw new Error('Failed to list channels');
         }
 
-        const ckbChannels = channels.channels.filter(channel => channel.funding_udt_type_script === undefined)
-        const udtChannels = channels.channels.filter(channel => channel.funding_udt_type_script !== undefined)
+        const readyChannels = channels.channels.filter(channel => channel?.state?.state_name == "CHANNEL_READY")
+        elizaLogger.log(`Ready channels: (${readyChannels.length}/${channels.channels.length})`)
+
+        const ckbChannels = readyChannels.filter(channel => channel.funding_udt_type_script == undefined)
+        const udtChannels = readyChannels.filter(channel => channel.funding_udt_type_script != undefined)
+        elizaLogger.log(`CKB channels: ${ckbChannels.length}, UDT channels: ${udtChannels.length}`)
 
         // Open channel if not exist, connect to the default peer, so that we can send payment
         if (ckbChannels.length === 0) {
@@ -62,7 +71,7 @@ export class CKBFiberService extends Service {
             await this.openChannel(peerId, ckbFundingAmount);
             await this.waitChannelReady(peerId);
         } else
-            elizaLogger.log(`CKB channel with peer ${peerId} is ready`)
+            elizaLogger.info(`CKB channel with peer ${peerId} is ready`)
 
         for (const udtType in udtFundingAmounts) {
             const udtAmount = udtFundingAmounts[udtType];
@@ -70,10 +79,10 @@ export class CKBFiberService extends Service {
                 elizaLogger.log(`${udtType} channel with peer ${peerId} is ready`)
                 continue;
             }
-            elizaLogger.log(`Opening channel with peer ${peerId} with ${udtAmount} ${udtType}`)
+            elizaLogger.info(`Opening channel with peer ${peerId} with ${udtAmount} ${udtType}`)
 
             await this.openChannel(peerId, udtAmount, true, udtType);
-            await this.waitChannelReady(peerId);
+            await this.waitChannelReady(peerId, udtType);
         }
     }
 
@@ -90,7 +99,7 @@ export class CKBFiberService extends Service {
     public ensureUDTType(udtType?: UDTType) {
         if (!udtType) return null;
 
-        udtType = udtType.toUpperCase() as UDTType;
+        udtType = udtType.toLowerCase() as UDTType;
 
         if (!SupportedUDTs[udtType]) {
             elizaLogger.error(`Unsupported UDT type: ${udtType}`)
@@ -127,10 +136,13 @@ export class CKBFiberService extends Service {
                 }
 
                 const targetChannels = (udtType ?
-                    channels?.channels?.filter(channel => udtEq(channel.funding_udt_type_script, SupportedUDTs[udtType].script)) :
-                    channels?.channels?.filter(channel => channel.funding_udt_type_script === undefined)) || [];
+                    channels?.channels
+                        ?.filter(channel => channel.funding_udt_type_script != undefined)
+                        ?.filter(channel => udtEq(channel.funding_udt_type_script, SupportedUDTs[udtType].script)) :
+                    channels?.channels?.filter(channel => channel.funding_udt_type_script == undefined)) || [];
 
                 const state = targetChannels[index]?.state
+                elizaLogger.log(`Checking Channel state: ${state?.state_name}`)
                 if (state && state.state_name === 'CHANNEL_READY') {
                     clearInterval(intervalId);
                     resolve(targetChannels[index]);
