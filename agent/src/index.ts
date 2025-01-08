@@ -180,7 +180,13 @@ export async function loadCharacters(
                     const importedPlugins = await Promise.all(
                         character.plugins.map(async (plugin) => {
                             const importedPlugin = await import(plugin);
-                            return importedPlugin.default;
+                            if (importedPlugin.default) {
+                                return importedPlugin.default;
+                            } else {
+                                return importedPlugin[
+                                    Object.keys(importedPlugin)[0]
+                                ];
+                            }
                         })
                     );
                     character.plugins = importedPlugins;
@@ -306,9 +312,9 @@ export function getTokenForProvider(
                 settings.AKASH_CHAT_API_KEY
             );
         default:
-            const errorMessage = `Failed to get token - unsupported model provider: ${provider}`
-            elizaLogger.error(errorMessage)
-            throw new Error(errorMessage)
+            const errorMessage = `Failed to get token - unsupported model provider: ${provider}`;
+            elizaLogger.error(errorMessage);
+            throw new Error(errorMessage);
     }
 }
 
