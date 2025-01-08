@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # @elizaos/plugin-b2
 
 A plugin for interacting with the B2-Network within the ElizaOS ecosystem.
@@ -5,6 +6,15 @@ A plugin for interacting with the B2-Network within the ElizaOS ecosystem.
 ## Description
 
 The Avalanche plugin enables comprehensive DeFi operations on the Avalanche network, including token transfers, YAK swaps, yield strategy management, and token creation via Token Mill.
+=======
+# B2 Network Plugin for Eliza
+
+The B2 Network Plugin for Eliza extends the functionality of the Eliza platform by providing additional actions, providers, evaluators, and more. This plugin is designed to be easily extendable and customizable to fit various use cases.
+
+## Description
+
+The B2 Network Plugin offers a set of features that can be integrated into the Eliza platform to enhance its capabilities. Below is a high-level overview of the different components available in this plugin.
+>>>>>>> b72151cd95a7f17e528fc82a0a765d60104e5246
 
 ## Installation
 
@@ -122,9 +132,13 @@ const TOKENS = {
 1. Clone the repository
 2. Install dependencies:
 
+<<<<<<< HEAD
 ```bash
 pnpm install
 ```
+=======
+To extend the B2 Network Plugin, you can add new actions, providers, evaluators, services, and clients by following the structure provided in the plugin. Each component can be customized to fit your specific requirements.
+>>>>>>> b72151cd95a7f17e528fc82a0a765d60104e5246
 
 3. Build the plugin:
 
