@@ -1,120 +1,219 @@
-import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
+import { InjectiveGrpcBase } from "../grpc/grpc-base";
 import {
     MsgBurn,
     MsgChangeAdmin,
     MsgCreateDenom,
     MsgMint,
     MsgSetDenomMetadata,
-    TxResponse,
 } from "@injectivelabs/sdk-ts";
-
+import * as TokenFactoryTypes from "../types/token-factory";
 import {
-    MsgBurnParams,
-    MsgChangeAdminParams,
-    MsgCreateDenomParams,
-    MsgMintParams,
-    MsgSetDenomMetadataParams,
-    GetDenomsFromCreatorResponse,
-    GetDenomAuthorityMetadataResponse,
-    GetTokenFactoryModuleParamsResponse,
-    GetTokenFactoryModuleStateResponse,
-    GetDenomsFromCreatorParams,
-    GetDenomAuthorityMetadataParams,
+    StandardResponse,
+    createSuccessResponse,
+    createErrorResponse,
 } from "../types/index";
-// Query functions
+
+// Token Factory Module Async Functions with Error Handling
+
+/**
+ * Fetches all denominations created by a specific creator.
+ *
+ * @this InjectiveGrpcBase
+ * @param {TokenFactoryTypes.GetDenomsFromCreatorParams} params - Parameters including the creator's address.
+ * @returns {Promise<StandardResponse>} The standard response containing denominations or an error.
+ */
 export async function getDenomsFromCreator(
     this: InjectiveGrpcBase,
-    params: GetDenomsFromCreatorParams
-): Promise<GetDenomsFromCreatorResponse> {
-    return this.request({
-        method: this.chainGrpcTokenFactoryApi.fetchDenomsFromCreator,
-        params: params.creator,
-    });
+    params: TokenFactoryTypes.GetDenomsFromCreatorParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcTokenFactoryApi.fetchDenomsFromCreator,
+            params: params.creator,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getDenomsFromCreatorError", err);
+    }
 }
 
+/**
+ * Fetches the authority metadata for a specific denomination.
+ *
+ * @this InjectiveGrpcBase
+ * @param {TokenFactoryTypes.GetDenomAuthorityMetadataParams} params - Parameters including creator and sub-denomination.
+ * @returns {Promise<StandardResponse>} The standard response containing authority metadata or an error.
+ */
 export async function getDenomAuthorityMetadata(
     this: InjectiveGrpcBase,
-    params: GetDenomAuthorityMetadataParams
-): Promise<GetDenomAuthorityMetadataResponse> {
-    return this.request({
-        method: (params: { creator: string; subDenom: string }) =>
-            this.chainGrpcTokenFactoryApi.fetchDenomAuthorityMetadata(
-                params.creator,
-                params.subDenom
-            ),
-        params,
-    });
+    params: TokenFactoryTypes.GetDenomAuthorityMetadataParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: (params: { creator: string; subDenom: string }) =>
+                this.chainGrpcTokenFactoryApi.fetchDenomAuthorityMetadata(
+                    params.creator,
+                    params.subDenom
+                ),
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getDenomAuthorityMetadataError", err);
+    }
 }
 
+/**
+ * Fetches the parameters of the Token Factory module.
+ *
+ * @this InjectiveGrpcBase
+ * @returns {Promise<StandardResponse>} The standard response containing module parameters or an error.
+ */
 export async function getTokenFactoryModuleParams(
     this: InjectiveGrpcBase
-): Promise<GetTokenFactoryModuleParamsResponse> {
-    return this.request({
-        method: this.chainGrpcTokenFactoryApi.fetchModuleParams,
-        params: {},
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcTokenFactoryApi.fetchModuleParams,
+            params: {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getTokenFactoryModuleParamsError", err);
+    }
 }
 
+/**
+ * Fetches the current state of the Token Factory module.
+ *
+ * @this InjectiveGrpcBase
+ * @returns {Promise<StandardResponse>} The standard response containing module state or an error.
+ */
 export async function getTokenFactoryModuleState(
     this: InjectiveGrpcBase
-): Promise<GetTokenFactoryModuleStateResponse> {
-    return this.request({
-        method: this.chainGrpcTokenFactoryApi.fetchModuleState,
-        params: {},
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcTokenFactoryApi.fetchModuleState,
+            params: {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getTokenFactoryModuleStateError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to burn tokens.
+ *
+ * @this InjectiveGrpcBase
+ * @param {TokenFactoryTypes.MsgBurnParams} params - Parameters including sender and amount.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgBurn(
     this: InjectiveGrpcBase,
-    params: MsgBurnParams
-): Promise<TxResponse> {
-    const msg = MsgBurn.fromJSON({
-        ...params,
-        sender: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+    params: TokenFactoryTypes.MsgBurnParams
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgBurn.fromJSON({
+            ...params,
+            sender: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgBurnError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to change the admin of a denomination.
+ *
+ * @this InjectiveGrpcBase
+ * @param {TokenFactoryTypes.MsgChangeAdminParams} params - Parameters including sender, denom, and new admin address.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgChangeAdmin(
     this: InjectiveGrpcBase,
-    params: MsgChangeAdminParams
-): Promise<TxResponse> {
-    const msg = MsgChangeAdmin.fromJSON({
-        ...params,
-        sender: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+    params: TokenFactoryTypes.MsgChangeAdminParams
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgChangeAdmin.fromJSON({
+            ...params,
+            sender: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgChangeAdminError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to create a new denomination.
+ *
+ * @this InjectiveGrpcBase
+ * @param {TokenFactoryTypes.MsgCreateDenomParams} params - Parameters including sender and sub-denomination.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgCreateDenom(
     this: InjectiveGrpcBase,
-    params: MsgCreateDenomParams
-): Promise<TxResponse> {
-    const msg = MsgCreateDenom.fromJSON({
-        ...params,
-        sender: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+    params: TokenFactoryTypes.MsgCreateDenomParams
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgCreateDenom.fromJSON({
+            ...params,
+            sender: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgCreateDenomError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to mint new tokens.
+ *
+ * @this InjectiveGrpcBase
+ * @param {TokenFactoryTypes.MsgMintParams} params - Parameters including sender and total amount to mint.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgMint(
     this: InjectiveGrpcBase,
-    params: MsgMintParams
-): Promise<TxResponse> {
-    const msg = MsgMint.fromJSON({
-        amount: params.totalAmount,
-        sender: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+    params: TokenFactoryTypes.MsgMintParams
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgMint.fromJSON({
+            amount: params.totalAmount,
+            sender: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgMintError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to set metadata for a denomination.
+ *
+ * @this InjectiveGrpcBase
+ * @param {TokenFactoryTypes.MsgSetDenomMetadataParams} params - Parameters including sender and metadata details.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgSetDenomMetadata(
     this: InjectiveGrpcBase,
-    params: MsgSetDenomMetadataParams
-): Promise<TxResponse> {
-    const msg = MsgSetDenomMetadata.fromJSON({
-        ...params,
-        sender: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+    params: TokenFactoryTypes.MsgSetDenomMetadataParams
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgSetDenomMetadata.fromJSON({
+            ...params,
+            sender: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgSetDenomMetadataError", err);
+    }
 }

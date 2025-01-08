@@ -1,4 +1,4 @@
-import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
+import { InjectiveGrpcBase } from "../grpc/grpc-base";
 import {
     PaginationOption,
     MsgStoreCode,
@@ -10,214 +10,388 @@ import {
     MsgPrivilegedExecuteContract,
     TxResponse,
 } from "@injectivelabs/sdk-ts";
+import * as WasmTypes from "../types/wasm";
 import {
-    MsgStoreCodeParams,
-    MsgUpdateAdminParams,
-    MsgExecuteContractParams,
-    MsgMigrateContractParams,
-    MsgInstantiateContractParams,
-    MsgExecuteContractCompatParams,
-    MsgPrivilegedExecuteContractParams,
-    GetContractAccountsBalanceResponse,
-    GetContractStateResponse,
-    GetContractInfoResponse,
-    GetContractHistoryResponse,
-    GetSmartContractStateResponse,
-    GetRawContractStateResponse,
-    GetContractCodesResponse,
-    GetContractCodeResponse,
-    GetContractCodeContractsResponse,
-    GetContractAccountsBalanceParams,
-    GetContractStateParams,
-    GetContractInfoParams,
-    GetContractHistoryParams,
-    GetSmartContractStateParams,
-    GetRawContractStateParams,
-    GetContractCodesParams,
-    GetContractCodeParams,
-    GetContractCodeContractsParams,
-} from "../types";
+    StandardResponse,
+    createSuccessResponse,
+    createErrorResponse,
+} from "../types/index";
+
+// Wasm Module Async Functions with Error Handling
+
+/**
+ * Fetches the balance of contract accounts.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.GetContractAccountsBalanceParams} params - Parameters including contract addresses and pagination options.
+ * @returns {Promise<StandardResponse>} The standard response containing contract accounts balance or an error.
+ */
 export async function getContractAccountsBalance(
     this: InjectiveGrpcBase,
-    params: GetContractAccountsBalanceParams
-): Promise<GetContractAccountsBalanceResponse> {
-    return this.request({
-        method: (params: GetContractAccountsBalanceParams) =>
-            this.chainGrpcWasmApi.fetchContractAccountsBalance(params),
-        params,
-    });
+    params: WasmTypes.GetContractAccountsBalanceParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: (params: WasmTypes.GetContractAccountsBalanceParams) =>
+                this.chainGrpcWasmApi.fetchContractAccountsBalance(params),
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getContractAccountsBalanceError", err);
+    }
 }
 
+/**
+ * Fetches the state of a specific contract.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.GetContractStateParams} params - Parameters including the contract address.
+ * @returns {Promise<StandardResponse>} The standard response containing contract state or an error.
+ */
 export async function getContractState(
     this: InjectiveGrpcBase,
-    params: GetContractStateParams
-): Promise<GetContractStateResponse> {
-    return this.request({
-        method: (params: GetContractStateParams) =>
-            this.chainGrpcWasmApi.fetchContractState(params),
-        params,
-    });
+    params: WasmTypes.GetContractStateParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: (params: WasmTypes.GetContractStateParams) =>
+                this.chainGrpcWasmApi.fetchContractState(params),
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getContractStateError", err);
+    }
 }
 
+/**
+ * Fetches information about a specific contract.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.GetContractInfoParams} params - Parameters including the contract address.
+ * @returns {Promise<StandardResponse>} The standard response containing contract info or an error.
+ */
 export async function getContractInfo(
     this: InjectiveGrpcBase,
-    params: GetContractInfoParams
-): Promise<GetContractInfoResponse> {
-    return this.request({
-        method: (params: string) =>
-            this.chainGrpcWasmApi.fetchContractInfo(params),
-        params: params.contractAddress,
-    });
+    params: WasmTypes.GetContractInfoParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: (contractAddress: string) =>
+                this.chainGrpcWasmApi.fetchContractInfo(contractAddress),
+            params: params.contractAddress,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getContractInfoError", err);
+    }
 }
 
+/**
+ * Fetches the history of a specific contract.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.GetContractHistoryParams} params - Parameters including the contract address.
+ * @returns {Promise<StandardResponse>} The standard response containing contract history or an error.
+ */
 export async function getContractHistory(
     this: InjectiveGrpcBase,
-    params: GetContractHistoryParams
-): Promise<GetContractHistoryResponse> {
-    return this.request({
-        method: (params: string) =>
-            this.chainGrpcWasmApi.fetchContractHistory(params),
-        params: params.contractAddress,
-    });
+    params: WasmTypes.GetContractHistoryParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: (contractAddress: string) =>
+                this.chainGrpcWasmApi.fetchContractHistory(contractAddress),
+            params: params.contractAddress,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getContractHistoryError", err);
+    }
 }
 
+/**
+ * Fetches the smart contract state based on a query.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.GetSmartContractStateParams} params - Parameters including contract address and query.
+ * @returns {Promise<StandardResponse>} The standard response containing smart contract state or an error.
+ */
 export async function getSmartContractState(
     this: InjectiveGrpcBase,
-    params: GetSmartContractStateParams
-): Promise<GetSmartContractStateResponse> {
-    return this.request({
-        method: (params: GetSmartContractStateParams) =>
-            this.chainGrpcWasmApi.fetchSmartContractState(
-                params.contractAddress,
-                params.query
-            ),
-        params,
-    });
+    params: WasmTypes.GetSmartContractStateParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: (params: WasmTypes.GetSmartContractStateParams) =>
+                this.chainGrpcWasmApi.fetchSmartContractState(
+                    params.contractAddress,
+                    params.query
+                ),
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getSmartContractStateError", err);
+    }
 }
 
+/**
+ * Fetches the raw state of a specific contract based on a query.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.GetRawContractStateParams} params - Parameters including contract address and query.
+ * @returns {Promise<StandardResponse>} The standard response containing raw contract state or an error.
+ */
 export async function getRawContractState(
     this: InjectiveGrpcBase,
-    params: GetRawContractStateParams
-): Promise<GetRawContractStateResponse> {
-    return this.request({
-        method: (params: GetRawContractStateParams) =>
-            this.chainGrpcWasmApi.fetchRawContractState(
-                params.contractAddress,
-                params.query
-            ),
-        params,
-    });
+    params: WasmTypes.GetRawContractStateParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: (params: WasmTypes.GetRawContractStateParams) =>
+                this.chainGrpcWasmApi.fetchRawContractState(
+                    params.contractAddress,
+                    params.query
+                ),
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getRawContractStateError", err);
+    }
 }
 
+/**
+ * Fetches all contract codes with optional pagination.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.GetContractCodesParams} params - Parameters including pagination options.
+ * @returns {Promise<StandardResponse>} The standard response containing contract codes or an error.
+ */
 export async function getContractCodes(
     this: InjectiveGrpcBase,
-    params: GetContractCodesParams = {}
-): Promise<GetContractCodesResponse> {
-    return this.request({
-        method: (params: PaginationOption) =>
-            this.chainGrpcWasmApi.fetchContractCodes(params),
-        params: params.pagination || {},
-    });
+    params: WasmTypes.GetContractCodesParams = {}
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: (pagination: PaginationOption) =>
+                this.chainGrpcWasmApi.fetchContractCodes(pagination),
+            params: params.pagination || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getContractCodesError", err);
+    }
 }
 
+/**
+ * Fetches a specific contract code by its ID.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.GetContractCodeParams} params - Parameters including the code ID.
+ * @returns {Promise<StandardResponse>} The standard response containing contract code or an error.
+ */
 export async function getContractCode(
     this: InjectiveGrpcBase,
-    params: GetContractCodeParams
-): Promise<GetContractCodeResponse> {
-    return this.request({
-        method: (params: number) =>
-            this.chainGrpcWasmApi.fetchContractCode(params),
-        params: params.codeId,
-    });
+    params: WasmTypes.GetContractCodeParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: (codeId: number) =>
+                this.chainGrpcWasmApi.fetchContractCode(codeId),
+            params: params.codeId,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getContractCodeError", err);
+    }
 }
 
+/**
+ * Fetches contracts associated with a specific contract code with optional pagination.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.GetContractCodeContractsParams} params - Parameters including code ID and pagination options.
+ * @returns {Promise<StandardResponse>} The standard response containing contracts or an error.
+ */
 export async function getContractCodeContracts(
     this: InjectiveGrpcBase,
-    params: GetContractCodeContractsParams
-): Promise<GetContractCodeContractsResponse> {
-    return this.request({
-        method: (params: GetContractCodeContractsParams) =>
-            this.chainGrpcWasmApi.fetchContractCodeContracts(
-                params.codeId,
-                params.pagination
-            ),
-        params,
-    });
+    params: WasmTypes.GetContractCodeContractsParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: (params: WasmTypes.GetContractCodeContractsParams) =>
+                this.chainGrpcWasmApi.fetchContractCodeContracts(
+                    params.codeId,
+                    params.pagination
+                ),
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getContractCodeContractsError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to store new contract code.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.MsgStoreCodeParams} params - Parameters including sender and wasm bytecode.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgStoreCode(
     this: InjectiveGrpcBase,
-    params: MsgStoreCodeParams
-): Promise<TxResponse> {
-    const msg = MsgStoreCode.fromJSON({
-        ...params,
-        sender: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+    params: WasmTypes.MsgStoreCodeParams
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgStoreCode.fromJSON({
+            ...params,
+            sender: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgStoreCodeError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to update the admin of a contract.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.MsgUpdateAdminParams} params - Parameters including sender, contract address, and new admin address.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgUpdateAdmin(
     this: InjectiveGrpcBase,
-    params: MsgUpdateAdminParams
-): Promise<TxResponse> {
-    const msg = MsgUpdateAdmin.fromJSON({
-        ...params,
-        sender: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+    params: WasmTypes.MsgUpdateAdminParams
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgUpdateAdmin.fromJSON({
+            ...params,
+            sender: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgUpdateAdminError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to execute a contract.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.MsgExecuteContractParams} params - Parameters including sender, contract address, and execute message.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgExecuteContract(
     this: InjectiveGrpcBase,
-    params: MsgExecuteContractParams
-): Promise<TxResponse> {
-    const msg = MsgExecuteContract.fromJSON({
-        ...params,
-        sender: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+    params: WasmTypes.MsgExecuteContractParams
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgExecuteContract.fromJSON({
+            ...params,
+            sender: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgExecuteContractError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to migrate a contract to a new code version.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.MsgMigrateContractParams} params - Parameters including sender, contract address, new code ID, and migrate message.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgMigrateContract(
     this: InjectiveGrpcBase,
-    params: MsgMigrateContractParams
-): Promise<TxResponse> {
-    const msg = MsgMigrateContract.fromJSON({
-        ...params,
-        sender: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+    params: WasmTypes.MsgMigrateContractParams
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgMigrateContract.fromJSON({
+            ...params,
+            sender: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgMigrateContractError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to instantiate a new contract.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.MsgInstantiateContractParams} params - Parameters including sender, code ID, instantiate message, and label.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgInstantiateContract(
     this: InjectiveGrpcBase,
-    params: MsgInstantiateContractParams
-): Promise<TxResponse> {
-    const msg = MsgInstantiateContract.fromJSON({
-        ...params,
-        sender: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+    params: WasmTypes.MsgInstantiateContractParams
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgInstantiateContract.fromJSON({
+            ...params,
+            sender: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgInstantiateContractError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to execute a contract using compatibility mode.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.MsgExecuteContractCompatParams} params - Parameters including sender, contract address, and execute message.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgExecuteContractCompat(
     this: InjectiveGrpcBase,
-    params: MsgExecuteContractCompatParams
-): Promise<TxResponse> {
-    const msg = MsgExecuteContractCompat.fromJSON({
-        ...params,
-        sender: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+    params: WasmTypes.MsgExecuteContractCompatParams
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgExecuteContractCompat.fromJSON({
+            ...params,
+            sender: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgExecuteContractCompatError", err);
+    }
 }
 
+/**
+ * Broadcasts a privileged message to execute a contract.
+ *
+ * @this InjectiveGrpcBase
+ * @param {WasmTypes.MsgPrivilegedExecuteContractParams} params - Parameters including sender, contract address, and execute message.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgPrivilegedExecuteContract(
     this: InjectiveGrpcBase,
-    params: MsgPrivilegedExecuteContractParams
-): Promise<TxResponse> {
-    const msg = MsgPrivilegedExecuteContract.fromJSON({
-        ...params,
-        sender: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+    params: WasmTypes.MsgPrivilegedExecuteContractParams
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgPrivilegedExecuteContract.fromJSON({
+            ...params,
+            sender: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgPrivilegedExecuteContractError", err);
+    }
 }

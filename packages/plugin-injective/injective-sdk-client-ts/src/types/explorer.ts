@@ -14,7 +14,9 @@ import { TimeRangeParams } from "./base";
 export interface GetTxByHashParams {
     hash: string;
 }
-
+export interface GetExplorerValidatorParams {
+    address: string;
+}
 export interface GetAccountTxParams {
     address: string;
     limit?: number;

@@ -1,71 +1,138 @@
-import {
-    AuctionModuleStateParams,
-    AuctionModuleState,
-    CurrentBasket,
-    Auction,
-    MsgBid,
-    TxResponse,
-} from "@injectivelabs/sdk-ts";
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
+import { MsgBid } from "@injectivelabs/sdk-ts";
 import * as AuctionTypes from "../types/auction";
+import {
+    StandardResponse,
+    createSuccessResponse,
+    createErrorResponse,
+} from "../types/index";
 import { INJ_DENOM } from "@injectivelabs/utils";
-//include chain grpc calls for fetch async functions
+
+/**
+ * Fetches the auction module parameters.
+ *
+ * @this InjectiveGrpcBase
+ * @returns {Promise<StandardResponse>} The standard response containing module parameters or an error.
+ */
 export async function getAuctionModuleParams(
     this: InjectiveGrpcBase
-): Promise<AuctionModuleStateParams> {
-    return this.request({
-        method: this.chainGrpcAuctionApi.fetchModuleParams,
-        params: {},
-    });
-}
-export async function getAuctionModuleState(
-    this: InjectiveGrpcBase
-): Promise<AuctionModuleState> {
-    return this.request({
-        method: this.chainGrpcAuctionApi.fetchModuleState,
-        params: {},
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcAuctionApi.fetchModuleParams,
+            params: {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getAuctionModuleParamsError", err);
+    }
 }
 
+/**
+ * Fetches the auction module state.
+ *
+ * @this InjectiveGrpcBase
+ * @returns {Promise<StandardResponse>} The standard response containing module state or an error.
+ */
+export async function getAuctionModuleState(
+    this: InjectiveGrpcBase
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcAuctionApi.fetchModuleState,
+            params: {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getAuctionModuleStateError", err);
+    }
+}
+
+/**
+ * Fetches the current auction basket.
+ *
+ * @this InjectiveGrpcBase
+ * @returns {Promise<StandardResponse>} The standard response containing the current basket or an error.
+ */
 export async function getCurrentBasket(
     this: InjectiveGrpcBase
-): Promise<CurrentBasket> {
-    return this.request({
-        method: this.chainGrpcAuctionApi.fetchCurrentBasket,
-        params: {},
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcAuctionApi.fetchCurrentBasket,
+            params: {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getCurrentBasketError", err);
+    }
 }
-//include indexer grpc calls
+
+/**
+ * Fetches details of a specific auction round.
+ *
+ * @this InjectiveGrpcBase
+ * @param {AuctionTypes.GetAuctionRoundParams} params - Parameters including the auction round number.
+ * @returns {Promise<StandardResponse>} The standard response containing auction round details or an error.
+ */
 export async function getAuctionRound(
     this: InjectiveGrpcBase,
     params: AuctionTypes.GetAuctionRoundParams
-): Promise<Auction> {
-    return this.query({
-        method: this.indexerGrpcAuctionApi.fetchAuction,
-        params: params.round,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.query({
+            method: this.indexerGrpcAuctionApi.fetchAuction,
+            params: params.round,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getAuctionRoundError", err);
+    }
 }
 
+/**
+ * Fetches a list of auctions based on provided parameters.
+ *
+ * @this InjectiveGrpcBase
+ * @param {AuctionTypes.GetAuctionsParams} params - Parameters to filter auctions.
+ * @returns {Promise<StandardResponse>} The standard response containing a list of auctions or an error.
+ */
 export async function getAuctions(
     this: InjectiveGrpcBase,
     params: AuctionTypes.GetAuctionsParams
-): Promise<Auction[]> {
-    return this.query({
-        method: this.indexerGrpcAuctionApi.fetchAuctions,
-        params,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.query({
+            method: this.indexerGrpcAuctionApi.fetchAuctions,
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getAuctionsError", err);
+    }
 }
 
+/**
+ * Places a bid in an auction round.
+ *
+ * @this InjectiveGrpcBase
+ * @param {AuctionTypes.MsgBidRequestParams} params - Parameters including round number and bid amount.
+ * @returns {Promise<StandardResponse>} The standard response containing the transaction result or an error.
+ */
 export async function msgBid(
     this: InjectiveGrpcBase,
     params: AuctionTypes.MsgBidRequestParams
-): Promise<TxResponse> {
-    const latestModuleState = await getCurrentBasket.call(this);
-    const amount = { denom: INJ_DENOM, amount: params.amount };
-    const msg = MsgBid.fromJSON({
-        round: latestModuleState.auctionRound,
-        injectiveAddress: this.injAddress,
-        amount: amount,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const amount = { denom: INJ_DENOM, amount: params.amount };
+        const msg = MsgBid.fromJSON({
+            round: params.round,
+            injectiveAddress: this.injAddress,
+            amount: amount,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgBidError", err);
+    }
 }

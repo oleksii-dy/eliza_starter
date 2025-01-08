@@ -1,13 +1,5 @@
-import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
-import { GenesisState } from "@injectivelabs/core-proto-ts/cjs/injective/exchange/v1beta1/genesis.js";
+import { InjectiveGrpcBase } from "../grpc/grpc-base";
 import {
-    ExchangeModuleParams,
-    FeeDiscountSchedule,
-    FeeDiscountAccountInfo,
-    TradeRewardCampaign,
-    ChainDerivativePosition,
-    IsOptedOutOfRewards,
-    DerivativeMarket,
     BinaryOptionsMarket,
     DerivativeLimitOrder,
     DerivativeOrderHistory,
@@ -16,30 +8,13 @@ import {
     DerivativeTrade,
     FundingPayment,
     FundingRate,
-    TradeDirection,
-    TradeExecutionSide,
-    TradeExecutionType,
-    PaginationOption,
     ExchangePagination,
     OrderbookWithSequence,
-    TradingReward,
-    SubaccountBalance,
     SubaccountTransfer,
-    AccountPortfolioV2,
-    AccountPortfolioBalances,
-    SpotMarket,
     SpotLimitOrder,
     SpotOrderHistory,
     SpotTrade,
     AtomicSwap,
-    MarketType,
-    GridStrategyType,
-    HistoricalBalance,
-    HistoricalRPNL,
-    HistoricalVolumes,
-    PnlLeaderboard,
-    VolLeaderboard,
-    DenomHolders,
     MsgAdminUpdateBinaryOptionsMarket,
     MsgBatchCancelBinaryOptionsOrders,
     MsgBatchCancelDerivativeOrders,
@@ -63,911 +38,1856 @@ import {
     MsgSignData,
     MsgWithdraw,
     MsgExternalTransfer,
-    TxResponse,
 } from "@injectivelabs/sdk-ts";
-import {
-    InjectiveAccountRpc,
-    InjectiveTradingRpc,
-} from "@injectivelabs/indexer-proto-ts";
 
-import { QuerySubaccountTradeNonceResponse } from "@injectivelabs/core-proto-ts/cjs/injective/exchange/v1beta1/query.js";
-import { OrderSide, OrderState } from "@injectivelabs/ts-types";
 import * as ExchangeTypes from "../types/exchange";
+import {
+    StandardResponse,
+    createSuccessResponse,
+    createErrorResponse,
+} from "../types/index";
 
-//All the chain async functions go here
+/**
+ * Fetches the exchange module parameters.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetModuleParamsParams} [params] - Optional parameters to filter module parameters.
+ * @returns {Promise<StandardResponse>} The standard response containing module parameters or an error.
+ */
 export async function getModuleParams(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetModuleParamsParams
-): Promise<ExchangeModuleParams> {
-    return this.request({
-        method: this.chainGrpcExchangeApi.fetchModuleParams,
-        params: params || {},
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcExchangeApi.fetchModuleParams,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getModuleParamsError", err);
+    }
 }
 
+/**
+ * Fetches the current state of the exchange module.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetModuleStateParams} [params] - Optional parameters to filter module state.
+ * @returns {Promise<StandardResponse>} The standard response containing module state or an error.
+ */
 export async function getModuleState(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetModuleStateParams
-): Promise<GenesisState> {
-    return this.request({
-        method: this.chainGrpcExchangeApi.fetchModuleState,
-        params: params || {},
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcExchangeApi.fetchModuleState,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getModuleStateError", err);
+    }
 }
 
+/**
+ * Fetches the fee discount schedule.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetFeeDiscountScheduleParams} [params] - Optional parameters to filter fee discount schedule.
+ * @returns {Promise<StandardResponse>} The standard response containing fee discount schedule or an error.
+ */
 export async function getFeeDiscountSchedule(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetFeeDiscountScheduleParams
-): Promise<FeeDiscountSchedule> {
-    return this.request({
-        method: this.chainGrpcExchangeApi.fetchFeeDiscountSchedule,
-        params: params || {},
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcExchangeApi.fetchFeeDiscountSchedule,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getFeeDiscountScheduleError", err);
+    }
 }
 
+/**
+ * Fetches the fee discount account information for a specific Injective address.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetFeeDiscountAccountInfoParams} params - Parameters including the Injective address.
+ * @returns {Promise<StandardResponse>} The standard response containing fee discount account info or an error.
+ */
 export async function getFeeDiscountAccountInfo(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetFeeDiscountAccountInfoParams
-): Promise<FeeDiscountAccountInfo> {
-    return this.request({
-        method: this.chainGrpcExchangeApi.fetchFeeDiscountAccountInfo,
-        params: params.injAddress,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcExchangeApi.fetchFeeDiscountAccountInfo,
+            params: params.injAddress,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getFeeDiscountAccountInfoError", err);
+    }
 }
 
+/**
+ * Fetches the trading rewards campaign details.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetTradingRewardsCampaignParams} [params] - Optional parameters to filter trading rewards campaign.
+ * @returns {Promise<StandardResponse>} The standard response containing trading rewards campaign details or an error.
+ */
 export async function getTradingRewardsCampaign(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetTradingRewardsCampaignParams
-): Promise<TradeRewardCampaign> {
-    return this.request({
-        method: this.chainGrpcExchangeApi.fetchTradingRewardsCampaign,
-        params: params || {},
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcExchangeApi.fetchTradingRewardsCampaign,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getTradingRewardsCampaignError", err);
+    }
 }
 
+/**
+ * Fetches the trade reward points for specified Injective addresses.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetTradeRewardPointsParams} params - Parameters including Injective addresses.
+ * @returns {Promise<StandardResponse>} The standard response containing trade reward points or an error.
+ */
 export async function getTradeRewardPoints(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetTradeRewardPointsParams
-): Promise<string[]> {
-    return this.request({
-        method: this.chainGrpcExchangeApi.fetchTradeRewardPoints,
-        params: params.injectiveAddresses,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcExchangeApi.fetchTradeRewardPoints,
+            params: params.injectiveAddresses,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getTradeRewardPointsError", err);
+    }
 }
 
+/**
+ * Fetches the pending trade reward points for specified Injective addresses.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetPendingTradeRewardPointsParams} params - Parameters including Injective addresses.
+ * @returns {Promise<StandardResponse>} The standard response containing pending trade reward points or an error.
+ */
 export async function getPendingTradeRewardPoints(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetPendingTradeRewardPointsParams
-): Promise<string[]> {
-    return this.request({
-        method: this.chainGrpcExchangeApi.fetchPendingTradeRewardPoints,
-        params: params.injectiveAddresses,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcExchangeApi.fetchPendingTradeRewardPoints,
+            params: params.injectiveAddresses,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getPendingTradeRewardPointsError", err);
+    }
 }
 
+/**
+ * Fetches the exchange positions based on provided parameters.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetExchangePositionsParams} [params] - Optional parameters to filter exchange positions.
+ * @returns {Promise<StandardResponse>} The standard response containing exchange positions or an error.
+ */
 export async function getExchangePositions(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetExchangePositionsParams
-): Promise<ChainDerivativePosition[]> {
-    return this.request({
-        method: this.chainGrpcExchangeApi.fetchPositions,
-        params: params || {},
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcExchangeApi.fetchPositions,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getExchangePositionsError", err);
+    }
 }
 
+/**
+ * Fetches the trade nonce for a specific subaccount.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetSubaccountTradeNonceParams} params - Parameters including the subaccount ID.
+ * @returns {Promise<StandardResponse>} The standard response containing trade nonce or an error.
+ */
 export async function getSubaccountTradeNonce(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetSubaccountTradeNonceParams
-): Promise<QuerySubaccountTradeNonceResponse> {
-    return this.request({
-        method: this.chainGrpcExchangeApi.fetchSubaccountTradeNonce,
-        params: params.subaccountId,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcExchangeApi.fetchSubaccountTradeNonce,
+            params: params.subaccountId,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getSubaccountTradeNonceError", err);
+    }
 }
 
+/**
+ * Checks if an account is opted out of rewards.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetIsOptedOutOfRewardsParams} params - Parameters including the account address.
+ * @returns {Promise<StandardResponse>} The standard response indicating opt-out status or an error.
+ */
 export async function getIsOptedOutOfRewards(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetIsOptedOutOfRewardsParams
-): Promise<IsOptedOutOfRewards> {
-    return this.request({
-        method: this.chainGrpcExchangeApi.fetchIsOptedOutOfRewards,
-        params: params.account,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.chainGrpcExchangeApi.fetchIsOptedOutOfRewards,
+            params: params.account,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getIsOptedOutOfRewardsError", err);
+    }
 }
 
+/**
+ * Fetches all derivative markets.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetDerivativeMarketsParams} [params] - Optional parameters to filter derivative markets.
+ * @returns {Promise<StandardResponse>} The standard response containing derivative markets or an error.
+ */
 export async function getDerivativeMarkets(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetDerivativeMarketsParams
-): Promise<DerivativeMarket[]> {
-    return this.request({
-        method: this.indexerGrpcDerivativesApi.fetchMarkets,
-        params: params || {},
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcDerivativesApi.fetchMarkets,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getDerivativeMarketsError", err);
+    }
 }
 
+/**
+ * Fetches a specific derivative market by its ID.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetDerivativeMarketParams} params - Parameters including the market ID.
+ * @returns {Promise<StandardResponse>} The standard response containing derivative market details or an error.
+ */
 export async function getDerivativeMarket(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetDerivativeMarketParams
-): Promise<DerivativeMarket> {
-    return this.request({
-        method: this.indexerGrpcDerivativesApi.fetchMarket,
-        params: params.marketId,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcDerivativesApi.fetchMarket,
+            params: params.marketId,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getDerivativeMarketError", err);
+    }
 }
 
+/**
+ * Fetches all binary options markets.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetBinaryOptionsMarketsParams} [params] - Optional parameters to filter binary options markets.
+ * @returns {Promise<{
+ *   markets: BinaryOptionsMarket[];
+ *   pagination: ExchangePagination;
+ * } | StandardResponse>} The standard response containing binary options markets or an error.
+ */
 export async function getBinaryOptionsMarkets(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetBinaryOptionsMarketsParams
-): Promise<{
-    markets: BinaryOptionsMarket[];
-    pagination: ExchangePagination;
-}> {
-    return this.request({
-        method: this.indexerGrpcDerivativesApi.fetchBinaryOptionsMarkets,
-        params: params || {},
-    });
+): Promise<
+    | {
+          markets: BinaryOptionsMarket[];
+          pagination: ExchangePagination;
+      }
+    | StandardResponse
+> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcDerivativesApi.fetchBinaryOptionsMarkets,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getBinaryOptionsMarketsError", err);
+    }
 }
 
+/**
+ * Fetches a specific binary options market by its ID.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetBinaryOptionsMarketParams} params - Parameters including the market ID.
+ * @returns {Promise<StandardResponse>} The standard response containing binary options market details or an error.
+ */
 export async function getBinaryOptionsMarket(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetBinaryOptionsMarketParams
-): Promise<BinaryOptionsMarket> {
-    return this.request({
-        method: this.indexerGrpcDerivativesApi.fetchBinaryOptionsMarket,
-        params: params.marketId,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcDerivativesApi.fetchBinaryOptionsMarket,
+            params: params.marketId,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getBinaryOptionsMarketError", err);
+    }
 }
 
+/**
+ * Fetches all derivative orders.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetDerivativeOrdersParams} [params] - Optional parameters to filter derivative orders.
+ * @returns {Promise<{
+ *   orders: DerivativeLimitOrder[];
+ *   pagination: ExchangePagination;
+ * } | StandardResponse>} The standard response containing derivative orders or an error.
+ */
 export async function getDerivativeOrders(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetDerivativeOrdersParams
-): Promise<{
-    orders: DerivativeLimitOrder[];
-    pagination: ExchangePagination;
-}> {
-    return this.request({
-        method: this.indexerGrpcDerivativesApi.fetchOrders,
-        params: params || {},
-    });
+): Promise<
+    | {
+          orders: DerivativeLimitOrder[];
+          pagination: ExchangePagination;
+      }
+    | StandardResponse
+> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcDerivativesApi.fetchOrders,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getDerivativeOrdersError", err);
+    }
 }
 
+/**
+ * Fetches the history of derivative orders.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetDerivativeOrderHistoryParams} [params] - Optional parameters to filter derivative order history.
+ * @returns {Promise<{
+ *   orderHistory: DerivativeOrderHistory[];
+ *   pagination: ExchangePagination;
+ * } | StandardResponse>} The standard response containing derivative order history or an error.
+ */
 export async function getDerivativeOrderHistory(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetDerivativeOrderHistoryParams
-): Promise<{
-    orderHistory: DerivativeOrderHistory[];
-    pagination: ExchangePagination;
-}> {
-    return this.request({
-        method: this.indexerGrpcDerivativesApi.fetchOrderHistory,
-        params: params || {},
-    });
+): Promise<
+    | {
+          orderHistory: DerivativeOrderHistory[];
+          pagination: ExchangePagination;
+      }
+    | StandardResponse
+> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcDerivativesApi.fetchOrderHistory,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getDerivativeOrderHistoryError", err);
+    }
 }
 
+/**
+ * Fetches all positions.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetPositionsParams} [params] - Optional parameters to filter positions.
+ * @returns {Promise<{
+ *   positions: Position[];
+ *   pagination: ExchangePagination;
+ * } | StandardResponse>} The standard response containing positions or an error.
+ */
 export async function getPositions(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetPositionsParams
-): Promise<{
-    positions: Position[];
-    pagination: ExchangePagination;
-}> {
-    return this.request({
-        method: this.indexerGrpcDerivativesApi.fetchPositions,
-        params: params || {},
-    });
+): Promise<
+    | {
+          positions: Position[];
+          pagination: ExchangePagination;
+      }
+    | StandardResponse
+> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcDerivativesApi.fetchPositions,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getPositionsError", err);
+    }
 }
 
+/**
+ * Fetches all positions version 2.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetPositionsV2Params} [params] - Optional parameters to filter positions version 2.
+ * @returns {Promise<{
+ *   positions: PositionV2[];
+ *   pagination: ExchangePagination;
+ * } | StandardResponse>} The standard response containing positions version 2 or an error.
+ */
 export async function getPositionsV2(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetPositionsV2Params
-): Promise<{
-    positions: PositionV2[];
-    pagination: ExchangePagination;
-}> {
-    return this.request({
-        method: this.indexerGrpcDerivativesApi.fetchPositionsV2,
-        params: params || {},
-    });
+): Promise<
+    | {
+          positions: PositionV2[];
+          pagination: ExchangePagination;
+      }
+    | StandardResponse
+> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcDerivativesApi.fetchPositionsV2,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getPositionsV2Error", err);
+    }
 }
 
+/**
+ * Fetches all derivative trades.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetDerivativeTradesParams} [params] - Optional parameters to filter derivative trades.
+ * @returns {Promise<{
+ *   trades: DerivativeTrade[];
+ *   pagination: ExchangePagination;
+ * } | StandardResponse>} The standard response containing derivative trades or an error.
+ */
 export async function getDerivativeTrades(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetDerivativeTradesParams
-): Promise<{
-    trades: DerivativeTrade[];
-    pagination: ExchangePagination;
-}> {
-    return this.request({
-        method: this.indexerGrpcDerivativesApi.fetchTrades,
-        params: params || {},
-    });
+): Promise<
+    | {
+          trades: DerivativeTrade[];
+          pagination: ExchangePagination;
+      }
+    | StandardResponse
+> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcDerivativesApi.fetchTrades,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getDerivativeTradesError", err);
+    }
 }
 
+/**
+ * Fetches all funding payments.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetFundingPaymentsParams} [params] - Optional parameters to filter funding payments.
+ * @returns {Promise<{
+ *   fundingPayments: FundingPayment[];
+ *   pagination: ExchangePagination;
+ * } | StandardResponse>} The standard response containing funding payments or an error.
+ */
 export async function getFundingPayments(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetFundingPaymentsParams
-): Promise<{
-    fundingPayments: FundingPayment[];
-    pagination: ExchangePagination;
-}> {
-    return this.request({
-        method: this.indexerGrpcDerivativesApi.fetchFundingPayments,
-        params: params || {},
-    });
+): Promise<
+    | {
+          fundingPayments: FundingPayment[];
+          pagination: ExchangePagination;
+      }
+    | StandardResponse
+> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcDerivativesApi.fetchFundingPayments,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getFundingPaymentsError", err);
+    }
 }
 
+/**
+ * Fetches all funding rates.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetFundingRatesParams} [params] - Optional parameters to filter funding rates.
+ * @returns {Promise<{
+ *   fundingRates: FundingRate[];
+ *   pagination: ExchangePagination;
+ * } | StandardResponse>} The standard response containing funding rates or an error.
+ */
 export async function getFundingRates(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetFundingRatesParams
-): Promise<{
-    fundingRates: FundingRate[];
-    pagination: ExchangePagination;
-}> {
-    return this.request({
-        method: this.indexerGrpcDerivativesApi.fetchFundingRates,
-        params: params || {},
-    });
+): Promise<
+    | {
+          fundingRates: FundingRate[];
+          pagination: ExchangePagination;
+      }
+    | StandardResponse
+> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcDerivativesApi.fetchFundingRates,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getFundingRatesError", err);
+    }
 }
 
+/**
+ * Fetches the list of derivative subaccount orders.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetDerivativeSubaccountOrdersListParams} [params] - Optional parameters to filter subaccount orders.
+ * @returns {Promise<{
+ *   orders: DerivativeLimitOrder[];
+ *   pagination: ExchangePagination;
+ * } | StandardResponse>} The standard response containing subaccount orders or an error.
+ */
 export async function getDerivativeSubaccountOrdersList(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetDerivativeSubaccountOrdersListParams
-): Promise<{
-    orders: DerivativeLimitOrder[];
-    pagination: ExchangePagination;
-}> {
-    return this.request({
-        method: this.indexerGrpcDerivativesApi.fetchSubaccountOrdersList,
-        params: params || {},
-    });
+): Promise<
+    | {
+          orders: DerivativeLimitOrder[];
+          pagination: ExchangePagination;
+      }
+    | StandardResponse
+> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcDerivativesApi.fetchSubaccountOrdersList,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse(
+            "getDerivativeSubaccountOrdersListError",
+            err
+        );
+    }
 }
 
+/**
+ * Fetches the list of derivative subaccount trades.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetDerivativeSubaccountTradesListParams} [params] - Optional parameters to filter subaccount trades.
+ * @returns {Promise<StandardResponse>} The standard response containing subaccount trades or an error.
+ */
 export async function getDerivativeSubaccountTradesList(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetDerivativeSubaccountTradesListParams
-): Promise<DerivativeTrade[]> {
-    return this.request({
-        method: this.indexerGrpcDerivativesApi.fetchSubaccountTradesList,
-        params,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcDerivativesApi.fetchSubaccountTradesList,
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse(
+            "getDerivativeSubaccountTradesListError",
+            err
+        );
+    }
 }
 
+/**
+ * Fetches the orderbooks version 2 for specified market IDs.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetDerivativeOrderbooksV2Params} params - Parameters including market IDs.
+ * @returns {Promise<{
+ *   marketId: string;
+ *   orderbook: OrderbookWithSequence;
+ * }[] | StandardResponse>} The standard response containing orderbooks or an error.
+ */
 export async function getDerivativeOrderbooksV2(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetDerivativeOrderbooksV2Params
 ): Promise<
-    {
-        marketId: string;
-        orderbook: OrderbookWithSequence;
-    }[]
+    | {
+          marketId: string;
+          orderbook: OrderbookWithSequence;
+      }[]
+    | StandardResponse
 > {
-    return this.request({
-        method: this.indexerGrpcDerivativesApi.fetchOrderbooksV2,
-        params: params.marketIds,
-    });
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcDerivativesApi.fetchOrderbooksV2,
+            params: params.marketIds,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getDerivativeOrderbooksV2Error", err);
+    }
 }
 
+/**
+ * Fetches the orderbook version 2 for a specific market ID.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetDerivativeOrderbookV2Params} params - Parameters including the market ID.
+ * @returns {Promise<StandardResponse>} The standard response containing the orderbook or an error.
+ */
 export async function getDerivativeOrderbookV2(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetDerivativeOrderbookV2Params
-): Promise<OrderbookWithSequence> {
-    return this.request({
-        method: this.indexerGrpcDerivativesApi.fetchOrderbookV2,
-        params: params.marketId,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcDerivativesApi.fetchOrderbookV2,
+            params: params.marketId,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getDerivativeOrderbookV2Error", err);
+    }
 }
 
+/**
+ * Fetches the rewards for specified Injective addresses.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetRewardsParams} params - Parameters including Injective addresses.
+ * @returns {Promise<StandardResponse>} The standard response containing rewards or an error.
+ */
 export async function getRewards(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetRewardsParams
-): Promise<TradingReward[]> {
-    return this.request({
-        method: this.indexerGrpcAccountApi.fetchRewards,
-        params,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcAccountApi.fetchRewards,
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getRewardsError", err);
+    }
 }
 
+/**
+ * Fetches the list of subaccounts for a specific address.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetSubaccountsListParams} params - Parameters including the account address.
+ * @returns {Promise<StandardResponse>} The standard response containing subaccounts list or an error.
+ */
 export async function getSubaccountsList(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetSubaccountsListParams
-): Promise<string[]> {
-    return this.request({
-        method: this.indexerGrpcAccountApi.fetchSubaccountsList,
-        params: params.address,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcAccountApi.fetchSubaccountsList,
+            params: params.address,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getSubaccountsListError", err);
+    }
 }
 
+/**
+ * Fetches the balances list for a specific subaccount.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetSubaccountBalancesListParams} params - Parameters including the subaccount ID.
+ * @returns {Promise<StandardResponse>} The standard response containing subaccount balances list or an error.
+ */
 export async function getSubaccountBalancesList(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetSubaccountBalancesListParams
-): Promise<SubaccountBalance[]> {
-    return this.request({
-        method: this.indexerGrpcAccountApi.fetchSubaccountBalancesList,
-        params: params.subaccountId,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcAccountApi.fetchSubaccountBalancesList,
+            params: params.subaccountId,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getSubaccountBalancesListError", err);
+    }
 }
 
+/**
+ * Fetches the history of a specific subaccount.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetSubaccountHistoryParams} params - Parameters including subaccount details.
+ * @returns {Promise<{
+ *   transfers: SubaccountTransfer[];
+ *   pagination: ExchangePagination;
+ * } | StandardResponse>} The standard response containing subaccount history or an error.
+ */
 export async function getSubaccountHistory(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetSubaccountHistoryParams
-): Promise<{
-    transfers: SubaccountTransfer[];
-    pagination: ExchangePagination;
-}> {
-    return this.request({
-        method: this.indexerGrpcAccountApi.fetchSubaccountHistory,
-        params,
-    });
+): Promise<
+    | {
+          transfers: SubaccountTransfer[];
+          pagination: ExchangePagination;
+      }
+    | StandardResponse
+> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcAccountApi.fetchSubaccountHistory,
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getSubaccountHistoryError", err);
+    }
 }
 
+/**
+ * Fetches the order summary for a specific subaccount.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetSubaccountOrderSummaryParams} params - Parameters including subaccount details.
+ * @returns {Promise<StandardResponse>} The standard response containing subaccount order summary or an error.
+ */
 export async function getSubaccountOrderSummary(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetSubaccountOrderSummaryParams
-): Promise<InjectiveAccountRpc.SubaccountOrderSummaryResponse> {
-    return this.request({
-        method: this.indexerGrpcAccountApi.fetchSubaccountOrderSummary,
-        params,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcAccountApi.fetchSubaccountOrderSummary,
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getSubaccountOrderSummaryError", err);
+    }
 }
 
+/**
+ * Fetches the states of orders.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetOrderStatesParams} [params] - Optional parameters to filter order states.
+ * @returns {Promise<StandardResponse>} The standard response containing order states or an error.
+ */
 export async function getOrderStates(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetOrderStatesParams
-): Promise<InjectiveAccountRpc.OrderStatesResponse> {
-    return this.request({
-        method: this.indexerGrpcAccountApi.fetchOrderStates,
-        params: params || {},
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcAccountApi.fetchOrderStates,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getOrderStatesError", err);
+    }
 }
 
+/**
+ * Fetches the account portfolio for a specific address.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetAccountPortfolioParams} params - Parameters including the account address.
+ * @returns {Promise<StandardResponse>} The standard response containing account portfolio or an error.
+ */
 export async function getAccountPortfolio(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetAccountPortfolioParams
-): Promise<AccountPortfolioV2> {
-    return this.request({
-        method: this.indexerGrpcAccountPortfolioApi.fetchAccountPortfolio,
-        params: params.address,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcAccountPortfolioApi.fetchAccountPortfolio,
+            params: params.address,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getAccountPortfolioError", err);
+    }
 }
 
+/**
+ * Fetches the balances of the account portfolio for a specific address.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetAccountPortfolioBalancesParams} params - Parameters including the account address.
+ * @returns {Promise<StandardResponse>} The standard response containing account portfolio balances or an error.
+ */
 export async function getAccountPortfolioBalances(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetAccountPortfolioBalancesParams
-): Promise<AccountPortfolioBalances> {
-    return this.request({
-        method: this.indexerGrpcAccountPortfolioApi
-            .fetchAccountPortfolioBalances,
-        params: params.address,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcAccountPortfolioApi
+                .fetchAccountPortfolioBalances,
+            params: params.address,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getAccountPortfolioBalancesError", err);
+    }
 }
 
+/**
+ * Fetches all spot markets.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetSpotMarketsParams} [params] - Optional parameters to filter spot markets.
+ * @returns {Promise<StandardResponse>} The standard response containing spot markets or an error.
+ */
 export async function getSpotMarkets(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetSpotMarketsParams
-): Promise<SpotMarket[]> {
-    return this.request({
-        method: this.indexerGrpcSpotApi.fetchMarkets,
-        params: params || {},
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcSpotApi.fetchMarkets,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getSpotMarketsError", err);
+    }
 }
 
+/**
+ * Fetches a specific spot market by its ID.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetSpotMarketParams} params - Parameters including the market ID.
+ * @returns {Promise<StandardResponse>} The standard response containing spot market details or an error.
+ */
 export async function getSpotMarket(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetSpotMarketParams
-): Promise<SpotMarket> {
-    return this.request({
-        method: this.indexerGrpcSpotApi.fetchMarket,
-        params: params.marketId,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcSpotApi.fetchMarket,
+            params: params.marketId,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getSpotMarketError", err);
+    }
 }
 
+/**
+ * Fetches all spot orders.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetSpotOrdersParams} [params] - Optional parameters to filter spot orders.
+ * @returns {Promise<{
+ *   orders: SpotLimitOrder[];
+ *   pagination: ExchangePagination;
+ * } | StandardResponse>} The standard response containing spot orders or an error.
+ */
 export async function getSpotOrders(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetSpotOrdersParams
-): Promise<{
-    orders: SpotLimitOrder[];
-    pagination: ExchangePagination;
-}> {
-    return this.request({
-        method: this.indexerGrpcSpotApi.fetchOrders,
-        params: params || {},
-    });
+): Promise<
+    | {
+          orders: SpotLimitOrder[];
+          pagination: ExchangePagination;
+      }
+    | StandardResponse
+> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcSpotApi.fetchOrders,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getSpotOrdersError", err);
+    }
 }
 
+/**
+ * Fetches the history of spot orders.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetSpotOrderHistoryParams} [params] - Optional parameters to filter spot order history.
+ * @returns {Promise<{
+ *   orderHistory: SpotOrderHistory[];
+ *   pagination: ExchangePagination;
+ * } | StandardResponse>} The standard response containing spot order history or an error.
+ */
 export async function getSpotOrderHistory(
     this: InjectiveGrpcBase,
-    params?: {
-        subaccountId?: string;
-        marketId?: string;
-        marketIds?: string[];
-        orderTypes?: OrderSide[];
-        executionTypes?: TradeExecutionType[];
-        direction?: TradeDirection;
-        isConditional?: boolean;
-        state?: OrderState;
-        pagination?: PaginationOption;
+    params?: ExchangeTypes.GetSpotOrderHistoryParams
+): Promise<
+    | {
+          orderHistory: SpotOrderHistory[];
+          pagination: ExchangePagination;
+      }
+    | StandardResponse
+> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcSpotApi.fetchOrderHistory,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getSpotOrderHistoryError", err);
     }
-): Promise<{
-    orderHistory: SpotOrderHistory[];
-    pagination: ExchangePagination;
-}> {
-    return this.request({
-        method: this.indexerGrpcSpotApi.fetchOrderHistory,
-        params: params || {},
-    });
 }
 
+/**
+ * Fetches all spot trades.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetSpotTradesParams} [params] - Optional parameters to filter spot trades.
+ * @returns {Promise<{
+ *   trades: SpotTrade[];
+ *   pagination: ExchangePagination;
+ * } | StandardResponse>} The standard response containing spot trades or an error.
+ */
 export async function getSpotTrades(
     this: InjectiveGrpcBase,
-    params?: {
-        endTime?: number;
-        tradeId?: string;
-        marketId?: string;
-        startTime?: number;
-        marketIds?: string[];
-        subaccountId?: string;
-        accountAddress?: string;
-        direction?: TradeDirection;
-        pagination?: PaginationOption;
-        executionSide?: TradeExecutionSide;
-        executionTypes?: TradeExecutionType[];
+    params?: ExchangeTypes.GetSpotTradesParams
+): Promise<
+    | {
+          trades: SpotTrade[];
+          pagination: ExchangePagination;
+      }
+    | StandardResponse
+> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcSpotApi.fetchTrades,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getSpotTradesError", err);
     }
-): Promise<{
-    trades: SpotTrade[];
-    pagination: ExchangePagination;
-}> {
-    return this.request({
-        method: this.indexerGrpcSpotApi.fetchTrades,
-        params: params || {},
-    });
 }
 
+/**
+ * Fetches the list of spot subaccount orders.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetSpotSubaccountOrdersListParams} [params] - Optional parameters to filter spot subaccount orders.
+ * @returns {Promise<{
+ *   orders: SpotLimitOrder[];
+ *   pagination: ExchangePagination;
+ * } | StandardResponse>} The standard response containing spot subaccount orders or an error.
+ */
 export async function getSpotSubaccountOrdersList(
     this: InjectiveGrpcBase,
-    params?: {
-        subaccountId?: string;
-        marketId?: string;
-        pagination?: PaginationOption;
+    params?: ExchangeTypes.GetSpotSubaccountOrdersListParams
+): Promise<
+    | {
+          orders: SpotLimitOrder[];
+          pagination: ExchangePagination;
+      }
+    | StandardResponse
+> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcSpotApi.fetchSubaccountOrdersList,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getSpotSubaccountOrdersListError", err);
     }
-): Promise<{
-    orders: SpotLimitOrder[];
-    pagination: ExchangePagination;
-}> {
-    return this.request({
-        method: this.indexerGrpcSpotApi.fetchSubaccountOrdersList,
-        params: params || {},
-    });
 }
 
+/**
+ * Fetches the list of spot subaccount trades.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetSpotSubaccountTradesListParams} [params] - Optional parameters to filter spot subaccount trades.
+ * @returns {Promise<StandardResponse>} The standard response containing spot subaccount trades or an error.
+ */
 export async function getSpotSubaccountTradesList(
     this: InjectiveGrpcBase,
-    params?: {
-        subaccountId?: string;
-        marketId?: string;
-        direction?: TradeDirection;
-        executionType?: TradeExecutionType;
-        pagination?: PaginationOption;
+    params?: ExchangeTypes.GetSpotSubaccountTradesListParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcSpotApi.fetchSubaccountTradesList,
+            params: params || {},
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getSpotSubaccountTradesListError", err);
     }
-): Promise<SpotTrade[]> {
-    return this.request({
-        method: this.indexerGrpcSpotApi.fetchSubaccountTradesList,
-        params: params || {},
-    });
 }
 
+/**
+ * Fetches the orderbooks version 2 for specified spot market IDs.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetSpotOrderbooksV2Params} params - Parameters including spot market IDs.
+ * @returns {Promise<{
+ *   marketId: string;
+ *   orderbook: OrderbookWithSequence;
+ * }[] | StandardResponse>} The standard response containing spot orderbooks or an error.
+ */
 export async function getSpotOrderbooksV2(
     this: InjectiveGrpcBase,
-    marketIds: string[]
+    params: ExchangeTypes.GetSpotOrderbooksV2Params
 ): Promise<
-    {
-        marketId: string;
-        orderbook: OrderbookWithSequence;
-    }[]
+    | {
+          marketId: string;
+          orderbook: OrderbookWithSequence;
+      }[]
+    | StandardResponse
 > {
-    return this.request({
-        method: this.indexerGrpcSpotApi.fetchOrderbooksV2,
-        params: marketIds,
-    });
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcSpotApi.fetchOrderbooksV2,
+            params: params.marketIds,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getSpotOrderbooksV2Error", err);
+    }
 }
 
+/**
+ * Fetches the orderbook version 2 for a specific spot market ID.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetSpotOrderbookV2Params} params - Parameters including the spot market ID.
+ * @returns {Promise<StandardResponse>} The standard response containing the spot orderbook or an error.
+ */
 export async function getSpotOrderbookV2(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetSpotOrderbookV2Params
-): Promise<OrderbookWithSequence> {
-    return this.request({
-        method: this.indexerGrpcSpotApi.fetchOrderbookV2,
-        params: params.marketId,
-    });
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcSpotApi.fetchOrderbookV2,
+            params: params.marketId,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getSpotOrderbookV2Error", err);
+    }
 }
 
+/**
+ * Fetches the atomic swap history.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetAtomicSwapHistoryParams} params - Parameters to filter atomic swap history.
+ * @returns {Promise<{
+ *   swapHistory: AtomicSwap[];
+ *   pagination: ExchangePagination;
+ * } | StandardResponse>} The standard response containing atomic swap history or an error.
+ */
 export async function getAtomicSwapHistory(
     this: InjectiveGrpcBase,
-    params: {
-        address: string;
-        contractAddress: string;
-        pagination?: PaginationOption;
+    params: ExchangeTypes.GetAtomicSwapHistoryParams
+): Promise<
+    | {
+          swapHistory: AtomicSwap[];
+          pagination: ExchangePagination;
+      }
+    | StandardResponse
+> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcSpotApi.fetchAtomicSwapHistory,
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getAtomicSwapHistoryError", err);
     }
-): Promise<{
-    swapHistory: AtomicSwap[];
-    pagination: ExchangePagination;
-}> {
-    return this.request({
-        method: this.indexerGrpcSpotApi.fetchAtomicSwapHistory,
-        params,
-    });
 }
 
+/**
+ * Fetches all grid strategies.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetGridStrategiesParams} params - Parameters to filter grid strategies.
+ * @returns {Promise<StandardResponse>} The standard response containing grid strategies or an error.
+ */
 export async function getGridStrategies(
     this: InjectiveGrpcBase,
-    params: {
-        accountAddress?: string;
-        subaccountId?: string;
-        state?: string;
-        marketId?: string;
-        limit?: number;
-        skip?: number;
-        marketType?: MarketType;
-        strategyType?: GridStrategyType[];
+    params: ExchangeTypes.GetGridStrategiesParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcTradingApi.fetchGridStrategies,
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getGridStrategiesError", err);
     }
-): Promise<InjectiveTradingRpc.ListTradingStrategiesResponse> {
-    return this.request({
-        method: this.indexerGrpcTradingApi.fetchGridStrategies,
-        params,
-    });
 }
 
+/**
+ * Fetches the historical balance.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetHistoricalBalanceParams} params - Parameters to filter historical balance.
+ * @returns {Promise<StandardResponse>} The standard response containing historical balance or an error.
+ */
 export async function getHistoricalBalance(
     this: InjectiveGrpcBase,
-    params: {
-        account: string;
-        resolution: string;
+    params: ExchangeTypes.GetHistoricalBalanceParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcArchiverApi.fetchHistoricalBalance,
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getHistoricalBalanceError", err);
     }
-): Promise<HistoricalBalance> {
-    return this.request({
-        method: this.indexerGrpcArchiverApi.fetchHistoricalBalance,
-        params,
-    });
 }
 
+/**
+ * Fetches the historical realized PnL (Rpnl).
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetHistoricalRpnlParams} params - Parameters to filter historical Rpnl.
+ * @returns {Promise<StandardResponse>} The standard response containing historical Rpnl or an error.
+ */
 export async function getHistoricalRpnl(
     this: InjectiveGrpcBase,
-    params: {
-        account: string;
-        resolution: string;
+    params: ExchangeTypes.GetHistoricalRpnlParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcArchiverApi.fetchHistoricalRpnl,
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getHistoricalRpnlError", err);
     }
-): Promise<HistoricalRPNL> {
-    return this.request({
-        method: this.indexerGrpcArchiverApi.fetchHistoricalRpnl,
-        params,
-    });
 }
 
+/**
+ * Fetches the historical trading volumes.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetHistoricalVolumesParams} params - Parameters to filter historical volumes.
+ * @returns {Promise<StandardResponse>} The standard response containing historical volumes or an error.
+ */
 export async function getHistoricalVolumes(
     this: InjectiveGrpcBase,
-    params: {
-        account: string;
-        resolution: string;
+    params: ExchangeTypes.GetHistoricalVolumesParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcArchiverApi.fetchHistoricalVolumes,
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getHistoricalVolumesError", err);
     }
-): Promise<HistoricalVolumes> {
-    return this.request({
-        method: this.indexerGrpcArchiverApi.fetchHistoricalVolumes,
-        params,
-    });
 }
 
+/**
+ * Fetches the PnL leaderboard.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetPnlLeaderboardParams} params - Parameters to filter PnL leaderboard.
+ * @returns {Promise<StandardResponse>} The standard response containing PnL leaderboard or an error.
+ */
 export async function getPnlLeaderboard(
     this: InjectiveGrpcBase,
-    params: {
-        startDate: string;
-        endDate: string;
-        limit?: number;
-        account?: string;
+    params: ExchangeTypes.GetPnlLeaderboardParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcArchiverApi.fetchPnlLeaderboard,
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getPnlLeaderboardError", err);
     }
-): Promise<PnlLeaderboard> {
-    return this.request({
-        method: this.indexerGrpcArchiverApi.fetchPnlLeaderboard,
-        params,
-    });
 }
 
+/**
+ * Fetches the volume leaderboard.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetVolLeaderboardParams} params - Parameters to filter volume leaderboard.
+ * @returns {Promise<StandardResponse>} The standard response containing volume leaderboard or an error.
+ */
 export async function getVolLeaderboard(
     this: InjectiveGrpcBase,
-    params: {
-        startDate: string;
-        endDate: string;
-        limit?: number;
-        account?: string;
+    params: ExchangeTypes.GetVolLeaderboardParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcArchiverApi.fetchVolLeaderboard,
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getVolLeaderboardError", err);
     }
-): Promise<VolLeaderboard> {
-    return this.request({
-        method: this.indexerGrpcArchiverApi.fetchVolLeaderboard,
-        params,
-    });
 }
 
+/**
+ * Fetches the PnL leaderboard with fixed resolution.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetPnlLeaderboardFixedResolutionParams} params - Parameters to filter PnL leaderboard with fixed resolution.
+ * @returns {Promise<StandardResponse>} The standard response containing PnL leaderboard with fixed resolution or an error.
+ */
 export async function getPnlLeaderboardFixedResolution(
     this: InjectiveGrpcBase,
-    params: {
-        resolution: string;
-        limit?: number;
-        account?: string;
+    params: ExchangeTypes.GetPnlLeaderboardFixedResolutionParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcArchiverApi
+                .fetchPnlLeaderboardFixedResolution,
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse(
+            "getPnlLeaderboardFixedResolutionError",
+            err
+        );
     }
-): Promise<PnlLeaderboard> {
-    return this.request({
-        method: this.indexerGrpcArchiverApi.fetchPnlLeaderboardFixedResolution,
-        params,
-    });
 }
 
+/**
+ * Fetches the volume leaderboard with fixed resolution.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetVolLeaderboardFixedResolutionParams} params - Parameters to filter volume leaderboard with fixed resolution.
+ * @returns {Promise<StandardResponse>} The standard response containing volume leaderboard with fixed resolution or an error.
+ */
 export async function getVolLeaderboardFixedResolution(
     this: InjectiveGrpcBase,
-    params: {
-        resolution: string;
-        limit?: number;
-        account?: string;
+    params: ExchangeTypes.GetVolLeaderboardFixedResolutionParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcArchiverApi
+                .fetchVolLeaderboardFixedResolution,
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse(
+            "getVolLeaderboardFixedResolutionError",
+            err
+        );
     }
-): Promise<VolLeaderboard> {
-    return this.request({
-        method: this.indexerGrpcArchiverApi.fetchVolLeaderboardFixedResolution,
-        params,
-    });
 }
 
+/**
+ * Fetches the holders of a specific denomination.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.GetDenomHoldersParams} params - Parameters including the denomination.
+ * @returns {Promise<StandardResponse>} The standard response containing denomination holders or an error.
+ */
 export async function getDenomHolders(
     this: InjectiveGrpcBase,
-    params: {
-        denom: string;
-        token?: string;
-        limit?: number;
+    params: ExchangeTypes.GetDenomHoldersParams
+): Promise<StandardResponse> {
+    try {
+        const result = await this.request({
+            method: this.indexerGrpcArchiverApi.fetchDenomHolders,
+            params,
+        });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("getDenomHoldersError", err);
     }
-): Promise<DenomHolders> {
-    return this.request({
-        method: this.indexerGrpcArchiverApi.fetchDenomHolders,
-        params,
-    });
 }
 
+/**
+ * Broadcasts a message to update a binary options market as an admin.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgAdminUpdateBinaryOptionsMarketParams} params - Parameters to update the binary options market.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgAdminUpdateBinaryOptionsMarket(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgAdminUpdateBinaryOptionsMarketParams
-): Promise<TxResponse> {
-    const msg = MsgAdminUpdateBinaryOptionsMarket.fromJSON({ ...params });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgAdminUpdateBinaryOptionsMarket.fromJSON({ ...params });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse(
+            "msgAdminUpdateBinaryOptionsMarketError",
+            err
+        );
+    }
 }
 
+/**
+ * Broadcasts a message to batch cancel binary options orders.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgBatchCancelBinaryOptionsOrdersParams} params - Parameters to batch cancel binary options orders.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgBatchCancelBinaryOptionsOrders(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgBatchCancelBinaryOptionsOrdersParams
-): Promise<TxResponse> {
-    const msg = MsgBatchCancelBinaryOptionsOrders.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgBatchCancelBinaryOptionsOrders.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse(
+            "msgBatchCancelBinaryOptionsOrdersError",
+            err
+        );
+    }
 }
 
+/**
+ * Broadcasts a message to batch cancel derivative orders.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgBatchCancelDerivativeOrdersParams} params - Parameters to batch cancel derivative orders.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgBatchCancelDerivativeOrders(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgBatchCancelDerivativeOrdersParams
-): Promise<TxResponse> {
-    const msg = MsgBatchCancelDerivativeOrders.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgBatchCancelDerivativeOrders.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgBatchCancelDerivativeOrdersError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to batch cancel spot orders.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgBatchCancelSpotOrdersParams} params - Parameters to batch cancel spot orders.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgBatchCancelSpotOrders(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgBatchCancelSpotOrdersParams
-): Promise<TxResponse> {
-    const msg = MsgBatchCancelSpotOrders.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgBatchCancelSpotOrders.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgBatchCancelSpotOrdersError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to batch update orders.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgBatchUpdateOrdersParams} params - Parameters to batch update orders.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgBatchUpdateOrders(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgBatchUpdateOrdersParams
-): Promise<TxResponse> {
-    const msg = MsgBatchUpdateOrders.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgBatchUpdateOrders.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgBatchUpdateOrdersError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to cancel a binary options order.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgCancelBinaryOptionsOrderParams} params - Parameters to cancel a binary options order.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgCancelBinaryOptionsOrder(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgCancelBinaryOptionsOrderParams
-): Promise<TxResponse> {
-    const msg = MsgCancelBinaryOptionsOrder.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgCancelBinaryOptionsOrder.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgCancelBinaryOptionsOrderError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to cancel a derivative order.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgCancelDerivativeOrderParams} params - Parameters to cancel a derivative order.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgCancelDerivativeOrder(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgCancelDerivativeOrderParams
-): Promise<TxResponse> {
-    const msg = MsgCancelDerivativeOrder.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgCancelDerivativeOrder.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgCancelDerivativeOrderError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to cancel a spot order.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgCancelSpotOrderParams} params - Parameters to cancel a spot order.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgCancelSpotOrder(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgCancelSpotOrderParams
-): Promise<TxResponse> {
-    const msg = MsgCancelSpotOrder.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgCancelSpotOrder.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgCancelSpotOrderError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to create a binary options limit order.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgCreateBinaryOptionsLimitOrderParams} params - Parameters to create a binary options limit order.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgCreateBinaryOptionsLimitOrder(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgCreateBinaryOptionsLimitOrderParams
-): Promise<TxResponse> {
-    const msg = MsgCreateBinaryOptionsLimitOrder.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgCreateBinaryOptionsLimitOrder.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse(
+            "msgCreateBinaryOptionsLimitOrderError",
+            err
+        );
+    }
 }
 
+/**
+ * Broadcasts a message to create a binary options market order.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgCreateBinaryOptionsMarketOrderParams} params - Parameters to create a binary options market order.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgCreateBinaryOptionsMarketOrder(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgCreateBinaryOptionsMarketOrderParams
-): Promise<TxResponse> {
-    const msg = MsgCreateBinaryOptionsMarketOrder.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgCreateBinaryOptionsMarketOrder.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse(
+            "msgCreateBinaryOptionsMarketOrderError",
+            err
+        );
+    }
 }
 
+/**
+ * Broadcasts a message to create a derivative limit order.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgCreateDerivativeLimitOrderParams} params - Parameters to create a derivative limit order.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgCreateDerivativeLimitOrder(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgCreateDerivativeLimitOrderParams
-): Promise<TxResponse> {
-    const msg = MsgCreateDerivativeLimitOrder.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgCreateDerivativeLimitOrder.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgCreateDerivativeLimitOrderError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to create a derivative market order.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgCreateDerivativeMarketOrderParams} params - Parameters to create a derivative market order.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgCreateDerivativeMarketOrder(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgCreateDerivativeMarketOrderParams
-): Promise<TxResponse> {
-    const msg = MsgCreateDerivativeMarketOrder.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgCreateDerivativeMarketOrder.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgCreateDerivativeMarketOrderError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to create a spot limit order.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgCreateSpotLimitOrderParams} params - Parameters to create a spot limit order.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgCreateSpotLimitOrder(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgCreateSpotLimitOrderParams
-): Promise<TxResponse> {
-    const msg = MsgCreateSpotLimitOrder.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgCreateSpotLimitOrder.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgCreateSpotLimitOrderError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to create a spot market order.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgCreateSpotMarketOrderParams} params - Parameters to create a spot market order.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgCreateSpotMarketOrder(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgCreateSpotMarketOrderParams
-): Promise<TxResponse> {
-    const msg = MsgCreateSpotMarketOrder.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgCreateSpotMarketOrder.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgCreateSpotMarketOrderError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to deposit funds.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgDepositParams} params - Parameters to deposit funds.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgDeposit(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgDepositParams
-): Promise<TxResponse> {
-    const msg = MsgDeposit.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgDeposit.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgDepositError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to perform an external transfer.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgExternalTransferParams} params - Parameters to perform an external transfer.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgExternalTransfer(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgExternalTransferParams
-): Promise<TxResponse> {
-    const msg = MsgExternalTransfer.fromJSON({
-        ...params,
-        amount: params.totalAmount,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgExternalTransfer.fromJSON({
+            ...params,
+            amount: params.totalAmount,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgExternalTransferError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to increase position margin.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgIncreasePositionMarginParams} params - Parameters to increase position margin.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgIncreasePositionMargin(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgIncreasePositionMarginParams
-): Promise<TxResponse> {
-    const msg = MsgIncreasePositionMargin.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgIncreasePositionMargin.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgIncreasePositionMarginError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to instantly launch a spot market.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgInstantSpotMarketLaunchParams} params - Parameters to instantly launch a spot market.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgInstantSpotMarketLaunch(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgInstantSpotMarketLaunchParams
-): Promise<TxResponse> {
-    const msg = MsgInstantSpotMarketLaunch.fromJSON({ ...params });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgInstantSpotMarketLaunch.fromJSON({ ...params });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgInstantSpotMarketLaunchError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to liquidate a position.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgLiquidatePositionParams} params - Parameters to liquidate a position.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgLiquidatePosition(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgLiquidatePositionParams
-): Promise<TxResponse> {
-    const msg = MsgLiquidatePosition.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgLiquidatePosition.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgLiquidatePositionError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to reclaim locked funds.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgReclaimLockedFundsParams} params - Parameters to reclaim locked funds.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgReclaimLockedFunds(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgReclaimLockedFundsParams
-): Promise<TxResponse> {
-    const msg = MsgReclaimLockedFunds.fromJSON({
-        ...params,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgReclaimLockedFunds.fromJSON({
+            ...params,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgReclaimLockedFundsError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to opt out of rewards.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgRewardsOptOutParams} params - Parameters to opt out of rewards.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgRewardsOptOut(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgRewardsOptOutParams
-): Promise<TxResponse> {
-    const msg = MsgRewardsOptOut.fromJSON({
-        ...params,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgRewardsOptOut.fromJSON({
+            ...params,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgRewardsOptOutError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to sign data.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgSignDataParams} params - Parameters to sign data.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgSignData(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgSignDataParams
-): Promise<TxResponse> {
-    const msg = MsgSignData.fromJSON({
-        ...params,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgSignData.fromJSON({
+            ...params,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgSignDataError", err);
+    }
 }
 
+/**
+ * Broadcasts a message to withdraw funds.
+ *
+ * @this InjectiveGrpcBase
+ * @param {ExchangeTypes.MsgWithdrawParams} params - Parameters to withdraw funds.
+ * @returns {Promise<StandardResponse>} The standard response containing the broadcast result or an error.
+ */
 export async function msgWithdraw(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.MsgWithdrawParams
-): Promise<TxResponse> {
-    const msg = MsgWithdraw.fromJSON({
-        ...params,
-        injectiveAddress: this.injAddress,
-    });
-    return await this.msgBroadcaster.broadcast({ msgs: msg });
+): Promise<StandardResponse> {
+    try {
+        const msg = MsgWithdraw.fromJSON({
+            ...params,
+            injectiveAddress: this.injAddress,
+        });
+        const result = await this.msgBroadcaster.broadcast({ msgs: msg });
+        return createSuccessResponse(result);
+    } catch (err) {
+        return createErrorResponse("msgWithdrawError", err);
+    }
 }
