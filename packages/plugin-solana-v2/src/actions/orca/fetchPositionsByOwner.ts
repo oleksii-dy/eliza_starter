@@ -1,5 +1,5 @@
-import { Action, ActionExample, composeContext, Content, elizaLogger, generateObjectArray, HandlerCallback, IAgentRuntime, Memory, ModelClass, settings, State } from "@elizaos/core";
-import { address, Address, createSolanaRpc } from "@solana/web3.js";
+import { Action, ActionExample, Content, elizaLogger, HandlerCallback, IAgentRuntime, Memory, settings, State } from "@elizaos/core";
+import { Address, createSolanaRpc } from "@solana/web3.js";
 import { fetchPositionsForOwner, HydratedPosition } from "@orca-so/whirlpools"
 import { loadWallet } from "../../utils/loadWallet";
 import { fetchWhirlpool, Whirlpool } from "@orca-so/whirlpools-client";
@@ -16,12 +16,6 @@ interface FetchedPositionResponse {
     inRange: boolean;
     distanceCenterPositionFromPoolPriceBps: number;
     positionWidthBps: number;
-}
-
-function isPositionOwnerContent(
-    content: any
-): content is fetchPositionsByOwnerContent {
-    return (typeof content.owner === "string") || (content.owner === null);
 }
 
 export default {
@@ -53,53 +47,14 @@ export default {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        // Compose fetch positions context
-        const fetchPositionsContext = composeContext({
-            state,
-            template: `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
-
-            Example response:
-            \`\`\`json
-            {
-                owner: "BieefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8pump"
-            }
-            \`\`\`
-            `,
-        });
-
-        // Generate fetch positions content
-        const content = await generateObjectArray({
-            runtime,
-            context: fetchPositionsContext,
-            modelClass: ModelClass.LARGE,
-        });
-
-        if(!isPositionOwnerContent(content)) {
-            if (callback) {
-                callback({
-                    text: "Unable to process transfer request. Invalid content provided.",
-                    content: { error: "Invalid transfer content" },
-                });
-            }
-            return false;
-        }
-
         try {
-            let ownerAddress: Address;
-            if (content.owner) {
-                ownerAddress = address(content.owner);
-            } else {
-                const { address } = await loadWallet(
-                    runtime,
-                    true
-                );
-                ownerAddress = address;
-            }
-
+            const { address: ownerAddress } = await loadWallet(
+                runtime,
+                false
+            );
 
             const rpc = createSolanaRpc(settings.RPC_URL!);
             const positions = await fetchPositionsForOwner(rpc, ownerAddress);
-
             const fetchedWhirlpools: Map<string, Whirlpool> = new Map();
             const fetchedMints: Map<string, Mint> = new Map();
             const positionContent: FetchedPositionResponse[] = await Promise.all(positions.map(async (position) => {
