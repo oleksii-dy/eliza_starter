@@ -34,6 +34,18 @@ export const getPrice: Action = {
       elizaLogger.log("[coingecko] Validating ...DONE");
       return true;
     },
-    similes:["fetch_price", "get_price", "load_price", "price_of", "market_price"],
+    similes: [
+      "check price",
+      "token price",
+      "get token price",
+      "price check",
+      "how much is",
+      "what's the price of",
+      "what is the price of",
+      "price of",
+      "show me price",
+      "current price",
+      "market price"
+    ],
     examples: []
 };
