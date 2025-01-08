@@ -15,7 +15,7 @@ const b2WalletProvider: Provider = {
         const privateKey = runtime.getSetting("B2_PRIVATE_KEY");
         if (!privateKey) {
             throw new Error(
-                "AVALANCHE_PRIVATE_KEY not found in environment variables"
+                "B2_PRIVATE_KEY not found in environment variables"
             );
         }
         const account = getAccount(runtime);

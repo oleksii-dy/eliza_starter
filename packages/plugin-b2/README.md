@@ -1,12 +1,7 @@
-<<<<<<< HEAD
 # @elizaos/plugin-b2
 
 A plugin for interacting with the B2-Network within the ElizaOS ecosystem.
 
-## Description
-
-The Avalanche plugin enables comprehensive DeFi operations on the Avalanche network, including token transfers, YAK swaps, yield strategy management, and token creation via Token Mill.
-=======
 # B2 Network Plugin for Eliza
 
 The B2 Network Plugin for Eliza extends the functionality of the Eliza platform by providing additional actions, providers, evaluators, and more. This plugin is designed to be easily extendable and customizable to fit various use cases.
@@ -14,12 +9,11 @@ The B2 Network Plugin for Eliza extends the functionality of the Eliza platform 
 ## Description
 
 The B2 Network Plugin offers a set of features that can be integrated into the Eliza platform to enhance its capabilities. Below is a high-level overview of the different components available in this plugin.
->>>>>>> b72151cd95a7f17e528fc82a0a765d60104e5246
 
 ## Installation
 
 ```bash
-pnpm install @elizaos/plugin-avalanche
+pnpm install @elizaos/plugin-b2
 ```
 
 ## Configuration
@@ -27,49 +21,25 @@ pnpm install @elizaos/plugin-avalanche
 The plugin requires the following environment variable:
 
 ```typescript
-AVALANCHE_PRIVATE_KEY=<Your Avalanche private key>
+B2_PRIVATE_KEY=<Your B2 private key>
 ```
 
 ## Features
 
 ### 1. Token Transfers
 
-- Send native AVAX and ERC20 tokens
+- Send native B2-BTC and ERC20 tokens
 - Support for multiple token standards
 - Built-in address validation
-
-### 2. YAK Swaps
-
-- Decentralized token swaps
-- Automatic best path finding
-- Slippage protection (default: 0.2%)
-- Support for all major tokens
-
-### 3. Yield Strategies
-
-- Deposit tokens into yield-generating strategies
-- Support for multiple strategies including:
-    - YAK staking
-    - USDC Benqi
-    - gmYAK Token Mill
-    - PRINCESS staking
-    - JOE staking
-
-### 4. Token Mill
-
-- Create new tokens
-- Configure custom tokenomics
-- Automatic market creation
 
 ## Supported Tokens
 
 ```typescript
 const TOKENS = {
-    AVAX: "0x0000000000000000000000000000000000000000",
-    WAVAX: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
-    YAK: "0x59414b3089ce2AF0010e7523Dea7E2b35d776ec7",
-    gmYAK: "0x3A30784c1af928CdFce678eE49370220aA716DC3",
-    USDC: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+    "B2-BTC": "0x0000000000000000000000000000000000000000",
+    uBTC: "0x796e4D53067FF374B89b2Ac101ce0c1f72ccaAc2",
+    USDC: "0xE544e8a38aDD9B1ABF21922090445Ba93f74B9E5",
+    USDT: "0x681202351a488040Fa4FdCc24188AfB582c9DD62",
     // ... and more
 };
 ```
@@ -79,34 +49,11 @@ const TOKENS = {
 ### Token Transfer
 
 ```typescript
-// Send AVAX
-"Send 10 AVAX to 0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
+// Send B2-BTC
+"Send 1 B2-BTC to 0x4f9e2dc50B4Cd632CC2D24edaBa3Da2a9338832a";
 
 // Send ERC20
 "Transfer 100 USDC to [address]";
-```
-
-### YAK Swap
-
-```typescript
-// Swap tokens
-"Swap 1 AVAX for USDC";
-"Swap 10 USDC for gmYAK";
-```
-
-### Yield Strategy
-
-```typescript
-// Deposit into strategies
-"Deposit 1 USDC into the strategy";
-"Deposit 10 gmYAK to earn yield";
-```
-
-### Token Creation
-
-```typescript
-// Create new token
-"Create a new memecoin called 'Test Token' with the symbol 'TEST'";
 ```
 
 ## Providers
@@ -114,15 +61,9 @@ const TOKENS = {
 ### 1. Wallet Provider
 
 - Displays wallet balances
-- Shows tokens in yield strategies
 - Real-time balance updates
 
-### 2. Strategies Provider
-
-- Lists available yield strategies
-- Shows deposit token requirements
-
-### 3. Tokens Provider
+### 2. Tokens Provider
 
 - Lists supported tokens
 - Shows token addresses
@@ -131,15 +72,6 @@ const TOKENS = {
 
 1. Clone the repository
 2. Install dependencies:
-
-<<<<<<< HEAD
-```bash
-pnpm install
-```
-=======
-To extend the B2 Network Plugin, you can add new actions, providers, evaluators, services, and clients by following the structure provided in the plugin. Each component can be customized to fit your specific requirements.
->>>>>>> b72151cd95a7f17e528fc82a0a765d60104e5246
-
 3. Build the plugin:
 
 ```bash
@@ -235,32 +167,6 @@ We welcome community feedback and contributions to help prioritize these enhance
 ## Contributing
 
 Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
-
-## Credits
-
-This plugin integrates with and builds upon several key technologies:
-
-- [Avalanche](https://www.avax.network/): High-performance blockchain platform
-- [avalanchejs](https://github.com/ava-labs/avalanchejs): Official Avalanche JavaScript library
-- [YAK Protocol](https://yak.exchange/): Decentralized exchange aggregator
-- [Benqi](https://benqi.fi/): Lending and borrowing protocol
-- [Token Mill](https://tokenmill.xyz/): Token creation platform
-
-Special thanks to:
-
-- The Ava Labs team for developing Avalanche
-- The YAK Protocol development team
-- The Benqi protocol developers
-- The Token Mill platform team
-- The Avalanche Developer community
-- The Eliza community for their contributions and feedback
-
-For more information about Avalanche capabilities:
-
-- [Avalanche Documentation](https://docs.avax.network/)
-- [YAK Protocol Docs](https://yak.exchange/docs)
-- [Benqi Documentation](https://docs.benqi.fi/)
-- [Token Mill Guide](https://docs.tokenmill.xyz/)
 
 ## License
 
