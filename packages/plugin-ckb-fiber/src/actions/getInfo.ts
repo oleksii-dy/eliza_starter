@@ -18,10 +18,12 @@ import {formatNodeInfo} from "../ckb/fiber/formatter.ts";
 
 export const getInfoAction: Action = {
     name: "GET_NODE_INFO",
-    similes: ["GET_NODE", "GET_INFO"],
+    similes: ["GET_NODE", "GET_INFO", "SHOW_INFO", "SHOW_NODE"],
     description: "Get fiber node information",
     validate: async (runtime: IAgentRuntime, _message: Memory) => {
-        return !!runtime.getService(ServiceTypeCKBFiber);
+        if (!await runtime.getService<CKBFiberService>(ServiceTypeCKBFiber)?.checkNode())
+            return false
+        return true;
     },
     handler: async (
         runtime: IAgentRuntime,
@@ -37,9 +39,9 @@ export const getInfoAction: Action = {
 
             callback({ text: formattedInfo }, []);
         } catch (error) {
-            elizaLogger.error("Error creating resource:", error);
+            elizaLogger.error("Error getting node info:", error);
             callback(
-                { text: "Failed to create resource. Please check the logs." },
+                { text: "Fail to get node information. Please try again later." },
                 []
             );
         }
@@ -49,15 +51,7 @@ export const getInfoAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Create a new resource with the name 'Resource1' and type 'TypeA'",
-                },
-            },
-            {
-                user: "{{agentName}}",
-                content: {
-                    text: `Resource created successfully:
-- Name: Resource1
-- Type: TypeA`,
+                    text: "Get your node information",
                 },
             },
         ],
@@ -65,17 +59,9 @@ export const getInfoAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Create a new resource with the name 'Resource2' and type 'TypeB'",
+                    text: "Show your node info",
                 },
-            },
-            {
-                user: "{{agentName}}",
-                content: {
-                    text: `Resource created successfully:
-- Name: Resource2
-- Type: TypeB`,
-                },
-            },
+            }
         ],
     ],
 };

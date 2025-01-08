@@ -1,4 +1,4 @@
-import {elizaLogger, IAgentRuntime, Service, ServiceType} from "../../../../core/src";
+import {elizaLogger, IAgentRuntime, Service, ServiceType} from "@elizaos/core";
 import {
     RpcClient, getClient
 } from "./rpcClient.ts";
@@ -73,6 +73,16 @@ export class CKBFiberService extends Service {
 
             await this.openChannel(peerId, udtAmount, true, udtType);
             await this.waitChannelReady(peerId);
+        }
+    }
+
+    public async checkNode() {
+        try {
+            await this.rpcClient.getNodeInfo()
+            return true
+        } catch (e) {
+            elizaLogger.error("Can‘t access the node, please check your node process or network connection.")
+            return false
         }
     }
 

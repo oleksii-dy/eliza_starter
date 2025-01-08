@@ -1,4 +1,4 @@
-import {IAgentRuntime} from "../../core/src";
+import {IAgentRuntime} from "@elizaos/core";
 import {Script} from "./ckb/fiber/types.ts";
 import {CKBDecimal, EnvDefaults, EnvKeys, SupportedUDTs, UDTType} from "./constants.ts";
 
