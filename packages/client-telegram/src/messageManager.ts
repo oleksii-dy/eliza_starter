@@ -133,12 +133,11 @@ Note that {{agentName}} is capable of reading/seeing/hearing various forms of me
 
 {{messageDirections}}
 
-{{recentMessages}}
+# Task: Generate a reply in the voice, style and perspective of {{agentName}} while using the {{recentMessages}} as additional context:
 
-# Task: Generate a post/reply in the voice, style and perspective of {{agentName}} (@{{twitterUserName}}) while using the thread of tweets as additional context:
 Current Post:
 {{currentPost}}
-Thread of Tweets You Are Replying To:
+
 
 {{formattedConversation}}
 ` + messageCompletionFooter;
