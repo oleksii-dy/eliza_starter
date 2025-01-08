@@ -2,6 +2,7 @@ import {
     Action,
     ActionExample,
     IAgentRuntime,
+    generateObjectDeprecated,
     Memory,
     State,
     HandlerCallback,
@@ -12,10 +13,82 @@ import {
     Content,
 } from "@elizaos/core";
 import { getTxReceipt, sendNativeAsset, sendToken } from "../utils";
-import { Address } from "viem";
+import { Address, Hash } from "viem";
 import { validateB2NetworkConfig } from "../environment";
 import { transferTemplate } from "../templates";
+import { B2WalletProvider } from "../providers";
+import { Transaction, TransferParams } from "../types";
+import { initWalletProvider } from "../providers";
 
+// Exported for tests
+export class TransferAction {
+
+    constructor(private walletProvider: B2WalletProvider) {}
+
+    async transfer(params: TransferParams): Promise<Transaction> {
+        let txHash;
+        if (params.tokenAddress === "0x0000000000000000000000000000000000000000") {
+            txHash = await sendNativeAsset(
+                this.walletProvider,
+                params.recipient as Address,
+                params.amount as number
+            );
+        } else {
+            txHash = await sendToken(
+                this.walletProvider,
+                params.tokenAddress as Address,
+                params.recipient as Address,
+                params.amount as number
+            );
+        }
+        return {
+            hash: txHash,
+            from: this.walletProvider.getAddress(),
+            tokenAddress: params.tokenAddress,
+            recipient: params.recipient,
+            amount: params.amount,
+        };
+    }
+
+    async transferTxReceipt(tx: Hash) {
+        const receipt = await getTxReceipt(this.walletProvider, tx);
+        if (receipt.status === "success") {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    async isTransferContent(content: any): Promise<boolean> {
+        elizaLogger.debug("Content for transfer", content);
+        return (
+            typeof content.tokenAddress === "string" &&
+            typeof content.recipient === "string" &&
+            (typeof content.amount === "string" ||
+                typeof content.amount === "number")
+        );
+    }
+}
+
+
+export const buildTransferDetails = async (
+    state: State,
+    runtime: IAgentRuntime,
+    wp: B2WalletProvider
+): Promise<TransferParams> => {
+    const context = composeContext({
+        state,
+        template: transferTemplate,
+    });
+
+    const transferDetails = (await generateObjectDeprecated({
+        runtime,
+        context,
+        modelClass: ModelClass.SMALL,
+    })) as TransferParams;
+
+    return transferDetails;
+};
 
 export interface TransferContent extends Content {
     tokenAddress: string;
@@ -23,21 +96,7 @@ export interface TransferContent extends Content {
     amount: string | number;
 }
 
-function isTransferContent(
-    runtime: IAgentRuntime,
-    content: any
-): content is TransferContent {
-    elizaLogger.debug("Content for transfer", content);
-    return (
-        typeof content.tokenAddress === "string" &&
-        typeof content.recipient === "string" &&
-        (typeof content.amount === "string" ||
-            typeof content.amount === "number")
-    );
-}
-
-
-export default {
+export const transferAction: Action = {
     name: "SEND_TOKEN",
     similes: [
         "TRANSFER_TOKEN_ON_B2",
@@ -61,17 +120,6 @@ export default {
     ) => {
         elizaLogger.log("Starting SEND_TOKEN handler...");
 
-        // Validate transfer
-        if (message.content.source === "direct") {
-            //
-        } else {
-            callback?.({
-                text: "i can't do that for you.",
-                content: { error: "Transfer not allowed" },
-            });
-            return false;
-        }
-
         // Initialize or update state
         if (!state) {
             state = (await runtime.composeState(message)) as State;
@@ -79,56 +127,26 @@ export default {
             state = await runtime.updateRecentMessageState(state);
         }
 
+        console.log("Transfer action handler called");
+        const walletProvider = await initWalletProvider(runtime);
+        const action = new TransferAction(walletProvider);
+
         // Compose transfer context
-        const transferContext = composeContext({
+        const paramOptions = await buildTransferDetails(
             state,
-            template: transferTemplate,
-        });
-
-        // Generate transfer content
-        const content = await generateObject({
             runtime,
-            context: transferContext,
-            modelClass: ModelClass.SMALL,
-        });
+            walletProvider
+        );
 
-        elizaLogger.debug("Transfer content:", content);
+        elizaLogger.debug("Transfer paramOptions:", paramOptions);
 
-        // Validate transfer content
-        if (!isTransferContent(runtime, content)) {
-            elizaLogger.error("Invalid content for TRANSFER_TOKEN action.");
-            callback?.({
-                text: "Unable to process transfer request. Invalid content provided.",
-                content: { error: "Invalid transfer content" },
-            });
-            return false;
-        }
-
-        let tx;
-        if (
-            content.tokenAddress ===
-            "0x0000000000000000000000000000000000000000"
-        ) {
-            tx = await sendNativeAsset(
-                runtime,
-                content.recipient as Address,
-                content.amount as number
-            );
-        } else {
-            tx = await sendToken(
-                runtime,
-                content.tokenAddress as Address,
-                content.recipient as Address,
-                content.amount as number
-            );
-        }
-
+        let tx = await action.transfer(paramOptions);
         if (tx) {
-            const receipt = await getTxReceipt(runtime, tx);
-            if (receipt.status === "success") {
+            let result = await action.transferTxReceipt(tx.hash);
+            if (result) {
                 callback?.({
                     text: "transfer successful",
-                    content: { success: true, txHash: tx },
+                    content: { success: true, txHash: tx.hash },
                 });
             } else {
                 callback?.({
@@ -142,7 +160,6 @@ export default {
                 content: { error: "Transfer failed" },
             });
         }
-
         return true;
     },
     examples: [
@@ -155,4 +172,4 @@ export default {
             },
         ],
     ] as ActionExample[][],
-} as Action;
+};

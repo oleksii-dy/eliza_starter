@@ -6,63 +6,64 @@ import {
     http,
     Address,
     parseUnits,
+    WalletClient,
 } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
 import { b2Network } from "./chains";
+import { B2WalletProvider } from "../providers";
 
-export const getAccount = (runtime: IAgentRuntime) => {
-    const privateKey =
-        runtime.getSetting("B2_PRIVATE_KEY") ||
-        process.env.B2_PRIVATE_KEY;
-    return privateKeyToAccount(`0x${privateKey.replace("0x", "")}`);
-};
+// export const getAccount = (runtime: IAgentRuntime) => {
+//     const privateKey =
+//         runtime.getSetting("B2_PRIVATE_KEY") ||
+//         process.env.B2_PRIVATE_KEY;
+//     return privateKeyToAccount(`0x${privateKey.replace("0x", "")}`);
+// };
 
-export const getPublicClient = (_runtime: IAgentRuntime) => {
-    return createPublicClient({
-        chain: b2Network,
-        transport: http(),
-    });
-};
+// export const getPublicClient = (_runtime: IAgentRuntime) => {
+//     return createPublicClient({
+//         chain: b2Network,
+//         transport: http(),
+//     });
+// };
 
-export const getWalletClient = (runtime: IAgentRuntime) => {
-    return createWalletClient({
-        account: getAccount(runtime),
-        chain: b2Network,
-        transport: http(),
-    });
-};
+// export const getWalletClient = (runtime: IAgentRuntime) => {
+//     return createWalletClient({
+//         account: getAccount(runtime),
+//         chain: b2Network,
+//         transport: http(),
+//     });
+// };
 
-export const getTxReceipt = async (runtime: IAgentRuntime, tx: Hash) => {
-    const publicClient = getPublicClient(runtime);
+export const getTxReceipt = async (walletProvider: B2WalletProvider, tx: Hash) => {
+    const publicClient = walletProvider.getPublicClient();
     const receipt = await publicClient.waitForTransactionReceipt({
         hash: tx,
     });
     return receipt;
 };
 
-export const getDecimals = async (
-    runtime: IAgentRuntime,
-    tokenAddress: Address
-) => {
-    if (tokenAddress === "0x0000000000000000000000000000000000000000") {
-        return b2Network.nativeCurrency.decimals;
-    }
-    const publicClient = getPublicClient(runtime);
-    const decimals = await publicClient.readContract({
-        address: tokenAddress,
-        abi: [
-            {
-                inputs: [],
-                name: "decimals",
-                outputs: [{ internalType: "uint8", name: "", type: "uint8" }],
-                stateMutability: "view",
-                type: "function",
-            },
-        ],
-        functionName: "decimals",
-    });
-    return decimals;
-};
+// export const getDecimals = async (
+//     runtime: IAgentRuntime,
+//     tokenAddress: Address
+// ) => {
+//     if (tokenAddress === "0x0000000000000000000000000000000000000000") {
+//         return b2Network.nativeCurrency.decimals;
+//     }
+//     const publicClient = getPublicClient(runtime);
+//     const decimals = await publicClient.readContract({
+//         address: tokenAddress,
+//         abi: [
+//             {
+//                 inputs: [],
+//                 name: "decimals",
+//                 outputs: [{ internalType: "uint8", name: "", type: "uint8" }],
+//                 stateMutability: "view",
+//                 type: "function",
+//             },
+//         ],
+//         functionName: "decimals",
+//     });
+//     return decimals;
+// };
 
 export const getNativeBalance = async (
     runtime: IAgentRuntime,
@@ -110,15 +111,12 @@ export const getTokenBalance = async (
 };
 
 export const sendNativeAsset = async (
-    runtime: IAgentRuntime,
+    walletProvider: B2WalletProvider,
     recipient: Address,
     amount: number
 ) => {
-    const walletClient = getWalletClient(runtime);
-    const decimals = await getDecimals(
-        runtime,
-        "0x0000000000000000000000000000000000000000"
-    );
+    const decimals = await walletProvider.getDecimals("0x0000000000000000000000000000000000000000");
+    const walletClient = walletProvider.getWalletClient();
     const tx = await walletClient.sendTransaction({
         to: recipient,
         value: parseUnits(amount.toString(), decimals),
@@ -127,17 +125,16 @@ export const sendNativeAsset = async (
 };
 
 export const sendToken = async (
-    runtime: IAgentRuntime,
+    walletProvider: B2WalletProvider,
     tokenAddress: Address,
     recipient: Address,
     amount: number
 ) => {
-    const decimals = await getDecimals(runtime, tokenAddress);
-    const publicClient = getPublicClient(runtime);
-
+    const decimals = await walletProvider.getDecimals(tokenAddress);
+    const publicClient = walletProvider.getPublicClient();
     try {
         const { result, request } = await publicClient.simulateContract({
-            account: getAccount(runtime),
+            account: walletProvider.getAccount(),
             address: tokenAddress,
             abi: [
                 {

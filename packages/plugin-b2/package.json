@@ -27,7 +27,9 @@
     },
     "scripts": {
         "build": "tsup src/index.ts --format esm --no-dts",
-        "lint": "eslint --fix  --cache ."
+        "dev": "tsup --format esm --dts --watch",
+        "lint": "eslint --fix  --cache .",
+        "test": "vitest run"
     },
     "peerDependencies": {
         "whatwg-url": "7.1.0"
