@@ -1,4 +1,4 @@
-import { Action, ActionExample, composeContext, Content, elizaLogger, generateObject, HandlerCallback, IAgentRuntime, Memory, ModelClass, settings, State } from "@elizaos/core";
+import { Action, ActionExample, composeContext, Content, elizaLogger, generateObjectArray, HandlerCallback, IAgentRuntime, Memory, ModelClass, settings, State } from "@elizaos/core";
 import { address, Address, createSolanaRpc } from "@solana/web3.js";
 import { fetchPositionsForOwner, HydratedPosition } from "@orca-so/whirlpools"
 import { loadWallet } from "../../utils/loadWallet";
@@ -68,7 +68,7 @@ export default {
         });
 
         // Generate fetch positions content
-        const content = await generateObject({
+        const content = await generateObjectArray({
             runtime,
             context: fetchPositionsContext,
             modelClass: ModelClass.LARGE,
