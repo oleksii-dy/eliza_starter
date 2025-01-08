@@ -203,17 +203,9 @@ export async function loadCharacters(
                             try {
                                 // Dynamically import the plugin
                                 const importedPlugin = await import(plugin);
-                                console.log(
-                                    "Imported plugin: ",
-                                    importedPlugin
-                                );
 
                                 // Check if there's a default export
                                 if (importedPlugin.default) {
-                                    console.log(
-                                        "Default Export Found: ",
-                                        importedPlugin.default
-                                    );
                                     return importedPlugin.default;
                                 }
 
@@ -224,10 +216,6 @@ export async function loadCharacters(
                                 )) {
                                     // Check if the export matches the plugin type
                                     if (isPlugin(value)) {
-                                        console.log(
-                                            `Valid Plugin Found in ${plugin}:`,
-                                            key
-                                        );
                                         possiblePlugins.push(value);
                                     }
                                 }
@@ -236,7 +224,7 @@ export async function loadCharacters(
                                     ? possiblePlugins
                                     : null;
                             } catch (error) {
-                                console.error(
+                                elizaLogger.error(
                                     `Failed to import plugin "${plugin}":`,
                                     error
                                 );
@@ -247,7 +235,6 @@ export async function loadCharacters(
 
                     // Flatten and filter out null or empty plugin arrays
                     character.plugins = importedPlugins.flat().filter(Boolean);
-                    console.log("Character Plugins are: ", character.plugins);
                 }
 
                 loadedCharacters.push(character);
