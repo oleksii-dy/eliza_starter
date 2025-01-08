@@ -259,30 +259,10 @@ const genChainsFromRuntime = (
         chains["bsc"] = chain;
     }
 
-    const testnet_rpcurl = runtime.getSetting("BSC_TESTNET_PROVIDER_URL");
-    if (testnet_rpcurl) {
-        const chain = WalletProvider.genChainFromName(
-            "bscTestnet",
-            testnet_rpcurl
-        );
-        chains["bscTestnet"] = chain;
-    }
-
     const opbnb_rpcurl = runtime.getSetting("OPBNB_PROVIDER_URL");
     if (opbnb_rpcurl) {
         const chain = WalletProvider.genChainFromName("opBNB", opbnb_rpcurl);
         chains["opBNB"] = chain;
-    }
-
-    const opbnb_testnet_rpcurl = runtime.getSetting(
-        "OPBNB_TESTNET_PROVIDER_URL"
-    );
-    if (opbnb_testnet_rpcurl) {
-        const chain = WalletProvider.genChainFromName(
-            "opBNBTestnet",
-            opbnb_testnet_rpcurl
-        );
-        chains["opBNBTestnet"] = chain;
     }
 
     return chains;
