@@ -1,6 +1,8 @@
 import type { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import type { EncodeObject } from "@cosmjs/proto-signing";
 import type { Coin, MsgSendEncodeObject } from "@cosmjs/stargate";
+import { MsgTransfer } from "interchain/dist/codegen/ibc/applications/transfer/v1/tx";
+import { generateIbcTransferMessage } from "../helpers/cosmos-messages";
 
 export class CosmosTransactionFeeEstimator {
     private static async estimateGasForTransaction<
@@ -43,6 +45,18 @@ export class CosmosTransactionFeeEstimator {
                     },
                 },
             ],
+            memo
+        );
+    }
+    static estimateGasForIBCTransfer(
+        signingCosmWasmClient: SigningCosmWasmClient,
+        ibcTransferParams: MsgTransfer,
+        memo = ""
+    ): Promise<number> {
+        return this.estimateGasForTransaction(
+            signingCosmWasmClient,
+            ibcTransferParams.sender,
+            [generateIbcTransferMessage(ibcTransferParams)],
             memo
         );
     }

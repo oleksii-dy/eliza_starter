@@ -44,3 +44,10 @@ export interface ICosmosWalletChains {
 export interface ICosmosWalletChainsData {
     [chainName: string]: ICosmosChainWallet;
 }
+
+export interface IBridgeDataProvider {
+    (
+        sourceAssetDenom: string,
+        sourceAssetChainId: string
+    ): Promise<{ channelId: string; portId: string; ibcDenom: string }>;
+}
