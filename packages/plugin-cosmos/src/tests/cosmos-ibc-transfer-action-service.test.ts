@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { CosmosIBCTransferAction } from "../actions/ibc-transfer/services/ibc-transfer-action-service";
+import { IBCTransferAction } from "../actions/ibc-transfer/services/ibc-transfer-action-service";
 import { IBCTransferActionParams } from "../actions/ibc-transfer/types";
 import { getAssetBySymbol, getChainByChainName } from "@chain-registry/utils";
 
@@ -31,7 +31,7 @@ vi.mock("../shared/helpers/cosmos-transaction-receipt.ts", () => ({
     getPaidFeeFromReceipt: vi.fn().mockReturnValue("200000"),
 }));
 
-describe("CosmosIBCTransferAction", () => {
+describe("IBCTransferAction", () => {
     const mockSigningCosmWasmClient = {
         sendTokens: vi.fn().mockResolvedValue({
             transactionHash: "mockTxHash",
@@ -65,7 +65,7 @@ describe("CosmosIBCTransferAction", () => {
             portId: "transfer",
         });
 
-        const cosmosIBCTransferAction = new CosmosIBCTransferAction(
+        const cosmosIBCTransferAction = new IBCTransferAction(
             mockCosmosWalletChains
         );
 
@@ -100,7 +100,7 @@ describe("CosmosIBCTransferAction", () => {
             portId: "transfer",
         });
 
-        const cosmosIBCTransferAction = new CosmosIBCTransferAction(
+        const cosmosIBCTransferAction = new IBCTransferAction(
             mockCosmosWalletChains
         );
 
@@ -126,7 +126,7 @@ describe("CosmosIBCTransferAction", () => {
             portId: "transfer",
         });
 
-        const cosmosIBCTransferAction = new CosmosIBCTransferAction(
+        const cosmosIBCTransferAction = new IBCTransferAction(
             mockCosmosWalletChains
         );
 
@@ -153,7 +153,7 @@ describe("CosmosIBCTransferAction", () => {
             "cosmos1address"
         );
 
-        const cosmosIBCTransferAction = new CosmosIBCTransferAction(
+        const cosmosIBCTransferAction = new IBCTransferAction(
             mockCosmosWalletChains
         );
 
@@ -181,7 +181,7 @@ describe("CosmosIBCTransferAction", () => {
             "cosmos1address"
         );
 
-        const cosmosIBCTransferAction = new CosmosIBCTransferAction(
+        const cosmosIBCTransferAction = new IBCTransferAction(
             mockCosmosWalletChains
         );
 
@@ -209,7 +209,7 @@ describe("CosmosIBCTransferAction", () => {
             "cosmos1address"
         );
 
-        const cosmosIBCTransferAction = new CosmosIBCTransferAction(
+        const cosmosIBCTransferAction = new IBCTransferAction(
             mockCosmosWalletChains
         );
 
@@ -236,7 +236,7 @@ describe("CosmosIBCTransferAction", () => {
             "cosmos1address"
         );
 
-        const cosmosIBCTransferAction = new CosmosIBCTransferAction(
+        const cosmosIBCTransferAction = new IBCTransferAction(
             mockCosmosWalletChains
         );
 
@@ -266,7 +266,7 @@ describe("CosmosIBCTransferAction", () => {
             "cosmos1address"
         );
 
-        const cosmosIBCTransferAction = new CosmosIBCTransferAction(
+        const cosmosIBCTransferAction = new IBCTransferAction(
             mockCosmosWalletChains
         );
 
@@ -298,7 +298,7 @@ describe("CosmosIBCTransferAction", () => {
             "cosmos1address"
         );
 
-        const cosmosIBCTransferAction = new CosmosIBCTransferAction(
+        const cosmosIBCTransferAction = new IBCTransferAction(
             mockCosmosWalletChains
         );
 

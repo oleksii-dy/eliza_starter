@@ -1,36 +1,32 @@
 import {
-    convertDisplayUnitToBaseUnit,
     getAssetBySymbol,
     getChainByChainName,
+    getChainIdByChainName,
 } from "@chain-registry/utils";
 import { assets, chains } from "chain-registry";
-import { getPaidFeeFromReceipt } from "../../../shared/helpers/cosmos-transaction-receipt.ts";
 import type {
-    IBridgeDataProvider,
     ICosmosActionService,
     ICosmosPluginCustomChainData,
     ICosmosTransaction,
     ICosmosWalletChains,
 } from "../../../shared/interfaces.ts";
-import { CosmosTransactionFeeEstimator } from "../../../shared/services/cosmos-transaction-fee-estimator.ts";
 import { getAvailableAssets } from "../../../shared/helpers/cosmos-assets.ts";
-import { MsgTransfer } from "interchain/dist/codegen/ibc/applications/transfer/v1/tx";
 import { IBCTransferActionParams } from "../types.ts";
 
-export class CosmosIBCTransferAction implements ICosmosActionService {
+export class IBCTransferAction implements ICosmosActionService {
     constructor(private cosmosWalletChains: ICosmosWalletChains) {
         this.cosmosWalletChains = cosmosWalletChains;
     }
 
     async execute(
         params: IBCTransferActionParams,
-        bridgeDataProvider: IBridgeDataProvider,
         customChainAssets?: ICosmosPluginCustomChainData["assets"][]
     ): Promise<ICosmosTransaction> {
-        const signingCosmWasmClient =
-            this.cosmosWalletChains.getSigningCosmWasmClient(params.chainName);
-
         const senderAddress = await this.cosmosWalletChains.getWalletAddress(
+            params.chainName
+        );
+
+        const skipClient = this.cosmosWalletChains.getSkipClient(
             params.chainName
         );
 
@@ -64,66 +60,55 @@ export class CosmosIBCTransferAction implements ICosmosActionService {
             params.chainName
         );
 
-        const chain = getChainByChainName(chains, params.chainName);
+        const sourceChain = getChainByChainName(chains, params.chainName);
+        const destChain = getChainByChainName(chains, params.targetChainName);
 
         if (!denom.base) {
             throw new Error("Cannot find asset");
         }
-        if (!chain) {
-            throw new Error("Cannot find chain");
+        if (!sourceChain) {
+            throw new Error("Cannot find source chain");
         }
 
-        const bridgeData = await bridgeDataProvider(denom.base, chain.chain_id);
+        if (!destChain) {
+            throw new Error("Cannot find destination chain");
+        }
 
-        const now = BigInt(Date.now()) * BigInt(1_000_000);
-        const timeout = now + BigInt(5 * 60 * 1_000_000_000);
+        const route = await skipClient.route({
+            destAssetChainID: destChain.chain_id,
+            destAssetDenom: denom.base,
+            sourceAssetChainID: sourceChain.chain_id,
+            sourceAssetDenom: denom.base,
+            amountOut: params.amount,
+        });
 
-        const token: MsgTransfer["token"] = {
-            denom: bridgeData.ibcDenom,
-            amount: convertDisplayUnitToBaseUnit(
-                availableAssets,
-                params.symbol,
-                params.amount
-            ),
-        };
-
-        const message: MsgTransfer = {
-            sender: senderAddress,
-            receiver: params.toAddress,
-            sourceChannel: bridgeData.channelId,
-            sourcePort: bridgeData.portId,
-            timeoutTimestamp: timeout,
-            timeoutHeight: {
-                revisionHeight: BigInt(0),
-                revisionNumber: BigInt(0),
-            },
-            token,
-            memo: "",
-        };
-
-        const gasFee =
-            await CosmosTransactionFeeEstimator.estimateGasForIBCTransfer(
-                signingCosmWasmClient,
-                message
-            );
-
-        const txDeliveryResponse = await signingCosmWasmClient.sendTokens(
-            senderAddress,
-            params.toAddress,
-            [token],
-            {
-                gas: gasFee.toString(),
-                amount: [{ ...token, amount: gasFee.toString() }],
-            }
+        const userAddresses = await Promise.all(
+            route.requiredChainAddresses.map(async (chainID) => {
+                const chainName = getChainIdByChainName(chains, chainID);
+                return {
+                    chainID,
+                    address:
+                        await this.cosmosWalletChains.getWalletAddress(
+                            chainName
+                        ),
+                };
+            })
         );
 
-        const gasPaid = getPaidFeeFromReceipt(txDeliveryResponse);
+        let txHash: string | undefined;
+
+        await skipClient.executeRoute({
+            route,
+            userAddresses,
+            onTransactionCompleted: async (_, executeRouteTxHash) => {
+                txHash = executeRouteTxHash;
+            },
+        });
 
         return {
             from: senderAddress,
             to: params.toAddress,
-            gasPaid,
-            txHash: txDeliveryResponse.transactionHash,
+            txHash,
         };
     }
 }

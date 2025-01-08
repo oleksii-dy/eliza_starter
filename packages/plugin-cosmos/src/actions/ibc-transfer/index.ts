@@ -17,8 +17,7 @@ import type {
     ICosmosWalletChains,
 } from "../../shared/interfaces";
 import { IBCTransferActionParams } from "./types";
-import { CosmosIBCTransferAction } from "./services/ibc-transfer-action-service";
-import { bridgeDataProvider } from "./services/bridge-data-provider";
+import { IBCTransferAction } from "./services/ibc-transfer-action-service";
 
 export const createIBCTransferAction = (
     pluginOptions: ICosmosPluginOptions
@@ -56,7 +55,7 @@ export const createIBCTransferAction = (
             const walletProvider: ICosmosWalletChains =
                 await initWalletChainsData(_runtime);
 
-            const action = new CosmosIBCTransferAction(walletProvider);
+            const action = new IBCTransferAction(walletProvider);
 
             const customAssets = (pluginOptions?.customChainData ?? []).map(
                 (chainData) => chainData.assets
@@ -64,7 +63,6 @@ export const createIBCTransferAction = (
 
             const transferResp = await action.execute(
                 paramOptions,
-                bridgeDataProvider,
                 customAssets
             );
 
