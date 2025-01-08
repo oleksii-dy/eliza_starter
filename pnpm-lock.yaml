@@ -874,7 +874,7 @@ importers:
         specifier: 11.1.6
         version: 11.1.6(rollup@2.79.2)(tslib@2.8.1)(typescript@5.6.3)
       '@solana/web3.js':
-        specifier: 1.95.8
+        specifier: npm:@solana/web3.js@1.95.8
         version: 1.95.8(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@types/fluent-ffmpeg':
         specifier: 2.1.27
@@ -1429,7 +1429,7 @@ importers:
         specifier: ^2.5.6
         version: 2.5.6(bufferutil@4.0.8)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
       '@solana/web3.js':
-        specifier: 1.95.5
+        specifier: npm:@solana/web3.js@1.95.5
         version: 1.95.5(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       bs58:
         specifier: 6.0.0
@@ -1643,7 +1643,7 @@ importers:
         specifier: 0.4.9
         version: 0.4.9(@solana/web3.js@1.95.8(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
       '@solana/web3.js':
-        specifier: 1.95.8
+        specifier: npm:@solana/web3.js@1.95.8
         version: 1.95.8(bufferutil@4.0.8)(encoding@0.1.13)(utf-8-validate@5.0.10)
       bignumber:
         specifier: 1.1.0
