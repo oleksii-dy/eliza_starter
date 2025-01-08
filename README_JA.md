@@ -100,7 +100,6 @@ TWITTER_EMAIL= # アカウントのメール
 TWITTER_API_IO_KEY=elizaOS_public_key_love_truth_future
 #Twitter データ取得用のサードパーティ API キーです。これは共有テストキーのため、QPS制限を避けるに#は https://twitterapi.io で個人キーを取得することをお勧めします。
 
-X_SERVER_URL=
 XAI_API_KEY=
 XAI_MODEL=
 
@@ -123,7 +122,7 @@ BIRDEYE_API_KEY=
 
 SOL_ADDRESS=So11111111111111111111111111111111111111112
 SLIPPAGE=1
-RPC_URL=https://api.mainnet-beta.solana.com
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 HELIUS_API_KEY=
 
 
@@ -148,7 +147,7 @@ CUDA Toolkit、cuDNN、cuBLASをインストールしていることを確認し
 
 ### ローカルでの実行
 
-XAI_MODELを追加し、[Llamaでの実行](#run-with-llama)のオプションのいずれかに設定 - X_SERVER_URLとXAI_API_KEYを空白のままにしておくと、huggingfaceからモデルをダウンロードし、ローカルでクエリを実行します。
+XAI_MODELを追加し、[Llamaでの実行](#run-with-llama)のオプションのいずれかに設定 - XAI_API_KEYを空白のままにしておくと、huggingfaceからモデルをダウンロードし、ローカルでクエリを実行します。
 
 # クライアント
 

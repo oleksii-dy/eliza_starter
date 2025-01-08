@@ -102,7 +102,6 @@ TWITTER_API_IO_KEY=elizaOS_public_key_love_truth_future
 # 在这里获取自己的免费的KEY：https://twitterapi.io 保证稳定性。
 
 
-X_SERVER_URL=
 XAI_API_KEY=
 XAI_MODEL=
 
@@ -125,7 +124,7 @@ BIRDEYE_API_KEY=
 
 SOL_ADDRESS=So11111111111111111111111111111111111111112
 SLIPPAGE=1
-RPC_URL=https://api.mainnet-beta.solana.com
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 HELIUS_API_KEY=
 
 

@@ -67,8 +67,7 @@ export class TrustScoreManager {
     ) {
         this.tokenProvider = tokenProvider;
         this.trustScoreDb = trustScoreDb;
-        // @ts-expect-error todo
-        this.connection = new Connection(runtime.getSetting("RPC_URL"));
+        this.connection = new Connection(runtime.getSetting("SOLANA_RPC_URL"));
         this.baseMint = new PublicKey(
             runtime.getSetting("BASE_MINT") ||
                 "So11111111111111111111111111111111111111112"
@@ -94,7 +93,7 @@ export class TrustScoreManager {
             const balance = parseFloat(tokenBalance);
             return balance;
         } catch (error) {
-            console.error("Error fetching balance", error);
+            elizaLogger.error("Error fetching balance", error);
             return 0;
         }
     }
@@ -115,7 +114,9 @@ export class TrustScoreManager {
     }> {
         const processedData: ProcessedTokenData =
             await this.tokenProvider.getProcessedTokenData();
-        console.log(`Fetched processed token data for token: ${tokenAddress}`);
+        elizaLogger.log(
+            `Fetched processed token data for token: ${tokenAddress}`
+        );
 
         const recommenderMetrics =
             await this.trustScoreDb.getRecommenderMetrics(recommenderId);
@@ -125,7 +126,6 @@ export class TrustScoreManager {
         const suspiciousVolume = await this.suspiciousVolume(tokenAddress);
         const balance = await this.getRecommenederBalance(recommenderWallet);
         const virtualConfidence = balance / 1000000; // TODO: create formula to calculate virtual confidence based on user balance
-        // @ts-expect-error todo
         const lastActive = recommenderMetrics.lastActiveDate;
         const now = new Date();
         const inactiveDays = Math.floor(
@@ -135,7 +135,6 @@ export class TrustScoreManager {
             this.DECAY_RATE,
             Math.min(inactiveDays, this.MAX_DECAY_DAYS)
         );
-        // @ts-expect-error todo
         const decayedScore = recommenderMetrics.trustScore * decayFactor;
         const validationTrustScore =
             this.trustScoreDb.calculateValidationTrust(tokenAddress);
@@ -148,13 +147,11 @@ export class TrustScoreManager {
                 priceChange24h:
                     processedData.tradeData.price_change_24h_percent,
                 volumeChange24h: processedData.tradeData.volume_24h,
-                // @ts-expect-error todo
                 trade_24h_change:
                     processedData.tradeData.trade_24h_change_percent,
                 liquidity:
                     processedData.dexScreenerData.pairs[0]?.liquidity.usd || 0,
                 liquidityChange24h: 0,
-                // @ts-expect-error todo
                 holderChange24h:
                     processedData.tradeData.unique_wallet_24h_change_percent,
                 rugPull: false,
@@ -172,17 +169,11 @@ export class TrustScoreManager {
             },
             recommenderMetrics: {
                 recommenderId: recommenderId,
-                // @ts-expect-error todo
                 trustScore: recommenderMetrics.trustScore,
-                // @ts-expect-error todo
                 totalRecommendations: recommenderMetrics.totalRecommendations,
-                // @ts-expect-error todo
                 successfulRecs: recommenderMetrics.successfulRecs,
-                // @ts-expect-error todo
                 avgTokenPerformance: recommenderMetrics.avgTokenPerformance,
-                // @ts-expect-error todo
                 riskScore: recommenderMetrics.riskScore,
-                // @ts-expect-error todo
                 consistencyScore: recommenderMetrics.consistencyScore,
                 virtualConfidence: virtualConfidence,
                 lastActiveDate: now,
@@ -201,40 +192,31 @@ export class TrustScoreManager {
             await this.trustScoreDb.getRecommenderMetrics(recommenderId);
 
         const totalRecommendations =
-            // @ts-expect-error todo
             recommenderMetrics.totalRecommendations + 1;
         const successfulRecs = tokenPerformance.rugPull
-            // @ts-expect-error todo
             ? recommenderMetrics.successfulRecs
-            // @ts-expect-error todo
             : recommenderMetrics.successfulRecs + 1;
         const avgTokenPerformance =
-            // @ts-expect-error todo
             (recommenderMetrics.avgTokenPerformance *
-                // @ts-expect-error todo
                 recommenderMetrics.totalRecommendations +
                 tokenPerformance.priceChange24h) /
             totalRecommendations;
 
         const overallTrustScore = this.calculateTrustScore(
             tokenPerformance,
-            // @ts-expect-error todo
             recommenderMetrics
         );
         const riskScore = this.calculateOverallRiskScore(
             tokenPerformance,
-            // @ts-expect-error todo
             recommenderMetrics
         );
         const consistencyScore = this.calculateConsistencyScore(
             tokenPerformance,
-            // @ts-expect-error todo
             recommenderMetrics
         );
 
         const balance = await this.getRecommenederBalance(recommenderWallet);
         const virtualConfidence = balance / 1000000; // TODO: create formula to calculate virtual confidence based on user balance
-        // @ts-expect-error todo
         const lastActive = recommenderMetrics.lastActiveDate;
         const now = new Date();
         const inactiveDays = Math.floor(
@@ -244,7 +226,6 @@ export class TrustScoreManager {
             this.DECAY_RATE,
             Math.min(inactiveDays, this.MAX_DECAY_DAYS)
         );
-        // @ts-expect-error todo
         const decayedScore = recommenderMetrics.trustScore * decayFactor;
 
         const newRecommenderMetrics: RecommenderMetrics = {
@@ -323,32 +304,38 @@ export class TrustScoreManager {
         const unique_wallet_24h = processedData.tradeData.unique_wallet_24h;
         const volume_24h = processedData.tradeData.volume_24h;
         const suspiciousVolume = unique_wallet_24h / volume_24h > 0.5;
-        console.log(`Fetched processed token data for token: ${tokenAddress}`);
+        elizaLogger.log(
+            `Fetched processed token data for token: ${tokenAddress}`
+        );
         return suspiciousVolume;
     }
 
     async sustainedGrowth(tokenAddress: string): Promise<boolean> {
         const processedData: ProcessedTokenData =
             await this.tokenProvider.getProcessedTokenData();
-        console.log(`Fetched processed token data for token: ${tokenAddress}`);
+        elizaLogger.log(
+            `Fetched processed token data for token: ${tokenAddress}`
+        );
 
-        // @ts-expect-error todo
         return processedData.tradeData.volume_24h_change_percent > 50;
     }
 
     async isRapidDump(tokenAddress: string): Promise<boolean> {
         const processedData: ProcessedTokenData =
             await this.tokenProvider.getProcessedTokenData();
-        console.log(`Fetched processed token data for token: ${tokenAddress}`);
+        elizaLogger.log(
+            `Fetched processed token data for token: ${tokenAddress}`
+        );
 
-        // @ts-expect-error todo
         return processedData.tradeData.trade_24h_change_percent < -50;
     }
 
     async checkTrustScore(tokenAddress: string): Promise<TokenSecurityData> {
         const processedData: ProcessedTokenData =
             await this.tokenProvider.getProcessedTokenData();
-        console.log(`Fetched processed token data for token: ${tokenAddress}`);
+        elizaLogger.log(
+            `Fetched processed token data for token: ${tokenAddress}`
+        );
 
         return {
             ownerBalance: processedData.security.ownerBalance,
@@ -396,7 +383,6 @@ export class TrustScoreManager {
 
         const creationData = {
             token_address: tokenAddress,
-            // @ts-expect-error todo
             recommender_id: recommender.id,
             buy_price: processedData.tradeData.price,
             sell_price: 0,
@@ -442,12 +428,10 @@ export class TrustScoreManager {
             symbol: processedData.tokenCodex.symbol,
             priceChange24h: processedData.tradeData.price_change_24h_percent,
             volumeChange24h: processedData.tradeData.volume_24h,
-            // @ts-expect-error todo
             trade_24h_change: processedData.tradeData.trade_24h_change_percent,
             liquidity:
                 processedData.dexScreenerData.pairs[0]?.liquidity.usd || 0,
             liquidityChange24h: 0,
-            // @ts-expect-error todo
             holderChange24h:
                 processedData.tradeData.unique_wallet_24h_change_percent,
             rugPull: false,
@@ -519,15 +503,15 @@ export class TrustScoreManager {
                 // If the request is successful, exit the loop
                 return;
             } catch (error) {
-                console.error(
+                elizaLogger.error(
                     `Attempt ${attempt} failed: Error creating trade in backend`,
                     error
                 );
                 if (attempt < retries) {
-                    console.log(`Retrying in ${delayMs} ms...`);
+                    elizaLogger.log(`Retrying in ${delayMs} ms...`);
                     await this.delay(delayMs); // Wait for the specified delay before retrying
                 } else {
-                    console.error("All attempts failed.");
+                    elizaLogger.error("All attempts failed.");
                 }
             }
         }
@@ -568,25 +552,19 @@ export class TrustScoreManager {
             sellDetails.sell_amount * processedData.tradeData.price;
         const trade = await this.trustScoreDb.getLatestTradePerformance(
             tokenAddress,
-            // @ts-expect-error todo
             recommender.id,
             isSimulation
         );
-        // @ts-expect-error todo
         const buyTimeStamp = trade.buy_timeStamp;
         const marketCap =
             processedData.dexScreenerData.pairs[0]?.marketCap || 0;
         const liquidity =
             processedData.dexScreenerData.pairs[0]?.liquidity.usd || 0;
         const sell_price = processedData.tradeData.price;
-        // @ts-expect-error todo
         const profit_usd = sell_value_usd - trade.buy_value_usd;
-        // @ts-expect-error todo
         const profit_percent = (profit_usd / trade.buy_value_usd) * 100;
 
-        // @ts-expect-error todo
         const market_cap_change = marketCap - trade.buy_market_cap;
-        // @ts-expect-error todo
         const liquidity_change = liquidity - trade.buy_liquidity;
 
         const isRapidDump = await this.isRapidDump(tokenAddress);
@@ -608,7 +586,6 @@ export class TrustScoreManager {
         };
         this.trustScoreDb.updateTradePerformanceOnSell(
             tokenAddress,
-            // @ts-expect-error todo
             recommender.id,
             buyTimeStamp,
             sellDetailsData,
@@ -679,16 +656,13 @@ export class TrustScoreManager {
                         );
 
                     const trustScore = this.calculateTrustScore(
-                        // @ts-expect-error todo
                         tokenPerformance,
                         recommenderMetrics
                     );
                     const consistencyScore = this.calculateConsistencyScore(
-                        // @ts-expect-error todo
                         tokenPerformance,
                         recommenderMetrics
                     );
-                    // @ts-expect-error todo
                     const riskScore = this.calculateRiskScore(tokenPerformance);
 
                     // Accumulate scores for averaging
@@ -696,7 +670,6 @@ export class TrustScoreManager {
                     totalRiskScore += riskScore;
                     totalConsistencyScore += consistencyScore;
 
-                    // @ts-expect-error todo
                     recommenderData.push({
                         recommenderId: recommendation.recommenderId,
                         trustScore,
@@ -754,7 +727,7 @@ export const trustScoreProvider: Provider = {
             const userId = message.userId;
 
             if (!userId) {
-                console.error("User ID is missing from the message");
+                elizaLogger.error("User ID is missing from the message");
                 return "";
             }
 
@@ -763,7 +736,10 @@ export const trustScoreProvider: Provider = {
                 await trustScoreDb.getRecommenderMetrics(userId);
 
             if (!recommenderMetrics) {
-                console.error("No recommender metrics found for user:", userId);
+                elizaLogger.error(
+                    "No recommender metrics found for user:",
+                    userId
+                );
                 return "";
             }
 
@@ -773,12 +749,11 @@ export const trustScoreProvider: Provider = {
             const user = await runtime.databaseAdapter.getAccountById(userId);
 
             // Format the trust score string
-            // @ts-expect-error todo
             const trustScoreString = `${user.name}'s trust score: ${trustScore.toFixed(2)}`;
 
             return trustScoreString;
         } catch (error) {
-            console.error("Error in trust score provider:", error.message);
+            elizaLogger.error("Error in trust score provider:", error.message);
             return `Failed to fetch trust score: ${error instanceof Error ? error.message : "Unknown error"}`;
         }
     },

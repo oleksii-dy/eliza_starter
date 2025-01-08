@@ -119,8 +119,6 @@ TWITTER_API_IO_KEY=elizaOS_public_key_love_truth_future
 # Ключ стороннего API Twitter для получения данных.
 # Это общий тестовый ключ - получите персональный ключ на https://twitterapi.io,
 # чтобы избежать ограничений QPS
-
-X_SERVER_URL=
 XAI_API_KEY=
 XAI_MODEL=
 
@@ -143,7 +141,7 @@ BIRDEYE_API_KEY= # API-ключ для BirdEye
 
 SOL_ADDRESS=So11111111111111111111111111111111111111112
 SLIPPAGE=1
-RPC_URL=https://api.mainnet-beta.solana.com
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 HELIUS_API_KEY= # API-ключ Helius
 
 
@@ -169,7 +167,7 @@ npx --no node-llama-cpp source download --gpu cuda
 
 ### Локальный запуск
 
-Добавьте `XAI_MODEL` и установите его в одно из вышеуказанных значений из [Запуск с Llama](#run-with-llama). Вы можете оставить `X_SERVER_URL` и `XAI_API_KEY` пустыми — модель будет загружена с huggingface и обработана локально.
+Добавьте `XAI_MODEL` и установите его в одно из вышеуказанных значений из [Запуск с Llama](#run-with-llama). Вы можете оставить `XAI_API_KEY` пустыми — модель будет загружена с huggingface и обработана локально.
 
 # Клиенты
 

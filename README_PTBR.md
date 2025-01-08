@@ -105,7 +105,6 @@ TWITTER_API_IO_KEY=elizaOS_public_key_love_truth_future
 # This shared key is for testing only.
 # Get your personal key at https://twitterapi.io to avoid QPS limitations
 
-X_SERVER_URL=
 XAI_API_KEY=
 XAI_MODEL=
 
@@ -128,7 +127,7 @@ BIRDEYE_API_KEY=
 
 SOL_ADDRESS=So11111111111111111111111111111111111111112
 SLIPPAGE=1
-RPC_URL=https://api.mainnet-beta.solana.com
+SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
 HELIUS_API_KEY=
 
 
@@ -153,7 +152,7 @@ Certifique-se de ter instalado o CUDA Toolkit, incluindo cuDNN e cuBLAS.
 
 ### Executando localmente
 
-Adicione XAI_MODEL e configure-o para uma das opções acima de [Executar com Llama](#executar-com-llama) - você pode deixar X_SERVER_URL e XAI_API_KEY em branco, ele baixa o modelo do huggingface e faz consultas localmente
+Adicione XAI_MODEL e configure-o para uma das opções acima de [Executar com Llama](#executar-com-llama) - você pode deixar XAI_API_KEY em branco, ele baixa o modelo do huggingface e faz consultas localmente
 
 # Clientes
 
