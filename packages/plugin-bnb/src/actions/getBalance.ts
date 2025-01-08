@@ -42,6 +42,7 @@ export class GetBalanceAction {
             this.walletProvider.getChainConfigs(chain).nativeCurrency.symbol;
         const chainId = this.walletProvider.getChainConfigs(chain).id;
 
+        this.walletProvider.configureLiFiSdk(chain);
         try {
             let resp: GetBalanceResponse = {
                 chain,

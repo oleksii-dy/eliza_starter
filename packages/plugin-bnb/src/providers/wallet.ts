@@ -5,7 +5,7 @@ import {
     type State,
     elizaLogger,
 } from "@elizaos/core";
-import { getToken } from "@lifi/sdk";
+import { EVM, createConfig, getToken } from "@lifi/sdk";
 import type {
     Address,
     WalletClient,
@@ -83,6 +83,28 @@ export class WalletProvider {
         }
 
         return chain;
+    }
+
+    configureLiFiSdk(chainName: SupportedChain) {
+        const chains = Object.values(this.chains);
+        const walletClient = this.getWalletClient(chainName);
+
+        createConfig({
+            integrator: "eliza",
+            providers: [
+                EVM({
+                    getWalletClient: async () => walletClient,
+                    switchChain: async (chainId) =>
+                        createWalletClient({
+                            account: this.account,
+                            chain: chains.find(
+                                (chain) => chain.id == chainId
+                            ) as Chain,
+                            transport: http(),
+                        }),
+                }),
+            ],
+        });
     }
 
     async formatAddress(address: string): Promise<Address> {
