@@ -6,9 +6,8 @@ import {
     elizaLogger,
 } from "@elizaos/core";
 
-export const sampleProvider: Provider = {
+export const walletProvider: Provider = {
     get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
-        // Data retrieval logic for the provider
-        elizaLogger.log("Retrieving data in sampleProvider...");
+        elizaLogger.log("Retrieving data in walletProvider...");
     },
 };
