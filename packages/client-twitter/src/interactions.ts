@@ -90,9 +90,11 @@ Thread of Tweets You Are Replying To:
 export class TwitterInteractionClient {
     client: ClientBase;
     runtime: IAgentRuntime;
+    private isDryRun: boolean;
     constructor(client: ClientBase, runtime: IAgentRuntime) {
         this.client = client;
         this.runtime = runtime;
+        this.isDryRun = this.client.twitterConfig.TWITTER_DRY_RUN;
     }
 
     async start() {
@@ -100,9 +102,8 @@ export class TwitterInteractionClient {
             this.handleTwitterInteractions();
             setTimeout(
                 handleTwitterInteractionsLoop,
-                Number(
-                    this.runtime.getSetting("TWITTER_POLL_INTERVAL") || 120
-                ) * 1000 // Default to 2 minutes
+                // Defaults to 2 minutes
+                this.client.twitterConfig.TWITTER_POLL_INTERVAL * 1000
             );
         };
         handleTwitterInteractionsLoop();
@@ -110,8 +111,6 @@ export class TwitterInteractionClient {
 
     async handleTwitterInteractions() {
         elizaLogger.log("Checking Twitter interactions");
-        // Read from environment variable, fallback to default list if not set
-        const targetUsersStr = this.runtime.getSetting("TWITTER_TARGET_USERS");
 
         const twitterUsername = this.client.profile.username;
         try {
@@ -130,11 +129,9 @@ export class TwitterInteractionClient {
             );
             let uniqueTweetCandidates = [...mentionCandidates];
             // Only process target users if configured
-            if (targetUsersStr && targetUsersStr.trim()) {
-                const TARGET_USERS = targetUsersStr
-                    .split(",")
-                    .map((u) => u.trim())
-                    .filter((u) => u.length > 0); // Filter out empty strings after split
+            if (this.client.twitterConfig.TWITTER_TARGET_USERS.length) {
+                const TARGET_USERS =
+                    this.client.twitterConfig.TWITTER_TARGET_USERS;
 
                 elizaLogger.log("Processing target users:", TARGET_USERS);
 
@@ -347,7 +344,7 @@ export class TwitterInteractionClient {
 
         let state = await this.runtime.composeState(message, {
             twitterClient: this.client.twitterClient,
-            twitterUserName: this.runtime.getSetting("TWITTER_USERNAME"),
+            twitterUserName: this.client.twitterConfig.TWITTER_USERNAME,
             currentPost,
             formattedConversation,
         });
@@ -383,18 +380,9 @@ export class TwitterInteractionClient {
             this.client.saveRequestMessage(message, state);
         }
 
-        // 1. Get the raw target users string from settings
-        const targetUsersStr = this.runtime.getSetting("TWITTER_TARGET_USERS");
-
-        // 2. Process the string to get valid usernames
+        // get usernames into str
         const validTargetUsersStr =
-            targetUsersStr && targetUsersStr.trim()
-                ? targetUsersStr
-                      .split(",") // Split by commas: "user1,user2" -> ["user1", "user2"]
-                      .map((u) => u.trim()) // Remove whitespace: [" user1 ", "user2 "] -> ["user1", "user2"]
-                      .filter((u) => u.length > 0)
-                      .join(",")
-                : "";
+            this.client.twitterConfig.TWITTER_TARGET_USERS.join(",");
 
         const shouldRespondContext = composeContext({
             state,
@@ -444,54 +432,62 @@ export class TwitterInteractionClient {
         response.text = removeQuotes(response.text);
 
         if (response.text) {
-            try {
-                const callback: HandlerCallback = async (response: Content) => {
-                    const memories = await sendTweet(
-                        this.client,
-                        response,
-                        message.roomId,
-                        this.runtime.getSetting("TWITTER_USERNAME"),
-                        tweet.id
-                    );
-                    return memories;
-                };
+            if (this.isDryRun) {
+                elizaLogger.info(
+                    `Dry run: Selected Post: ${tweet.id} - ${tweet.username}: ${tweet.text}\nAgent's Output:\n${response.text}`
+                );
+            } else {
+                try {
+                    const callback: HandlerCallback = async (
+                        response: Content
+                    ) => {
+                        const memories = await sendTweet(
+                            this.client,
+                            response,
+                            message.roomId,
+                            this.client.twitterConfig.TWITTER_USERNAME,
+                            tweet.id
+                        );
+                        return memories;
+                    };
 
-                const responseMessages = await callback(response);
+                    const responseMessages = await callback(response);
 
-                state = (await this.runtime.updateRecentMessageState(
-                    state
-                )) as State;
+                    state = (await this.runtime.updateRecentMessageState(
+                        state
+                    )) as State;
 
-                for (const responseMessage of responseMessages) {
-                    if (
-                        responseMessage ===
-                        responseMessages[responseMessages.length - 1]
-                    ) {
-                        responseMessage.content.action = response.action;
-                    } else {
-                        responseMessage.content.action = "CONTINUE";
+                    for (const responseMessage of responseMessages) {
+                        if (
+                            responseMessage ===
+                            responseMessages[responseMessages.length - 1]
+                        ) {
+                            responseMessage.content.action = response.action;
+                        } else {
+                            responseMessage.content.action = "CONTINUE";
+                        }
+                        await this.runtime.messageManager.createMemory(
+                            responseMessage
+                        );
                     }
-                    await this.runtime.messageManager.createMemory(
-                        responseMessage
+
+                    await this.runtime.processActions(
+                        message,
+                        responseMessages,
+                        state,
+                        callback
                     );
+
+                    const responseInfo = `Context:\n\n${context}\n\nSelected Post: ${tweet.id} - ${tweet.username}: ${tweet.text}\nAgent's Output:\n${response.text}`;
+
+                    await this.runtime.cacheManager.set(
+                        `twitter/tweet_generation_${tweet.id}.txt`,
+                        responseInfo
+                    );
+                    await wait();
+                } catch (error) {
+                    elizaLogger.error(`Error sending response tweet: ${error}`);
                 }
-
-                await this.runtime.processActions(
-                    message,
-                    responseMessages,
-                    state,
-                    callback
-                );
-
-                const responseInfo = `Context:\n\n${context}\n\nSelected Post: ${tweet.id} - ${tweet.username}: ${tweet.text}\nAgent's Output:\n${response.text}`;
-
-                await this.runtime.cacheManager.set(
-                    `twitter/tweet_generation_${tweet.id}.txt`,
-                    responseInfo
-                );
-                await wait();
-            } catch (error) {
-                elizaLogger.error(`Error sending response tweet: ${error}`);
             }
         }
     }
