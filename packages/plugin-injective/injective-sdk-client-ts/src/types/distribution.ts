@@ -5,7 +5,6 @@ import {
     DistributionModuleParams,
     ValidatorRewards,
     Coin,
-
 } from "@injectivelabs/sdk-ts";
 export interface DelegatorValidatorParams {
     delegatorAddress: string;

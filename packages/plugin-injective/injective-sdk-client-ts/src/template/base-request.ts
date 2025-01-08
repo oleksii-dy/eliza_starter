@@ -1,8 +1,11 @@
-
-export const generateParamTemplate = (moduleName: string, functionName: string, parameters: Record<string, string>) => {
+export const generateParamTemplate = (
+    moduleName: string,
+    functionName: string,
+    parameters: Record<string, string>
+) => {
     const parametersList = Object.entries(parameters)
-      .map(([key, type]) => `- ${key} (${type})`)
-      .join('\n');
+        .map(([key, type]) => `- ${key} (${type})`)
+        .join("\n");
 
     return `
   Extract ${moduleName} Module - ${functionName} Parameters from the latest message:
@@ -17,13 +20,13 @@ export const generateParamTemplate = (moduleName: string, functionName: string, 
   Response format:
   {
     ${Object.entries(parameters)
-      .map(([key, type]) => `"${key}": <extracted_${key}> // ${type}`)
-      .join(',\n  ')}
+        .map(([key, type]) => `"${key}": <extracted_${key}> // ${type}`)
+        .join(",\n  ")}
   }
 
   Validation rules:
   ${Object.entries(parameters)
-    .map(([key, type]) => `- ${key}: Must be a valid ${type}`)
-    .join('\n')}
+      .map(([key, type]) => `- ${key}: Must be a valid ${type}`)
+      .join("\n")}
   `;
-  };
+};

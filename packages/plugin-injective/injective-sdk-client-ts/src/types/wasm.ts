@@ -1,4 +1,3 @@
-
 import {
     PaginationOption,
     Pagination,
@@ -18,9 +17,7 @@ import {
     ContractCodeHistoryEntry,
     CodeInfoResponse,
 } from "@injectivelabs/sdk-ts";
-import {
-    CosmwasmWasmV1Query,
-} from "@injectivelabs/core-proto-ts";
+import { CosmwasmWasmV1Query } from "@injectivelabs/core-proto-ts";
 import { AccessConfig } from "@injectivelabs/core-proto-ts/cjs/cosmwasm/wasm/v1/types";
 import { PaginationParams } from "./base";
 // Wasm Module Params
@@ -193,4 +190,3 @@ export interface MsgPrivilegedExecuteContractParams {
     contractAddress: string;
     data: ExecPrivilegedArgs;
 }
-

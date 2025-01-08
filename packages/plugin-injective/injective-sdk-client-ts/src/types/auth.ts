@@ -3,7 +3,7 @@ import {
     GrantWithDecodedAuthorization,
     GrantAuthorizationWithDecodedAuthorization,
     Pagination,
-    Msgs
+    Msgs,
 } from "@injectivelabs/sdk-ts";
 import { AddressParams } from "./base";
 // Auth Module Params

@@ -1,5 +1,3 @@
-
-
 import {
     PaginationOption,
     Pagination,
@@ -9,14 +7,12 @@ import {
     ProposalDeposit,
     Vote,
     TallyResult,
-
 } from "@injectivelabs/sdk-ts";
 import { PaginationParams } from "./base";
 import {
     CosmosGovV1Gov,
     InjectiveExchangeV1Beta1Exchange,
     InjectiveOracleV1Beta1Oracle,
-
 } from "@injectivelabs/core-proto-ts";
 // Governance Module Params
 export interface GetProposalsParams {

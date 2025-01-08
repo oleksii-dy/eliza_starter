@@ -1,7 +1,5 @@
 import {
-
     Coin,
-
     PermissionsModuleParams,
     Namespace,
 } from "@injectivelabs/sdk-ts";

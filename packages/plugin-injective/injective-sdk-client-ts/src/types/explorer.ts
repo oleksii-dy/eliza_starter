@@ -1,4 +1,3 @@
-
 import {
     Transaction,
     ExplorerValidator,
@@ -8,7 +7,6 @@ import {
     IBCTransferTx,
     ExplorerStats,
     ExchangePagination,
-
 } from "@injectivelabs/sdk-ts";
 import { InjectiveExplorerRpc } from "@injectivelabs/indexer-proto-ts";
 import { TimeRangeParams } from "./base";

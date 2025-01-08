@@ -1,4 +1,3 @@
-
 //Peggy
 export interface MsgSendToEthParams {
     amount: {

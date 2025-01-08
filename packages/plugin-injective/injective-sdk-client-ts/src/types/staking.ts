@@ -1,10 +1,6 @@
-
-
 import {
     PaginationOption,
-
     Pagination,
-
     StakingModuleParams,
     Pool,
     Validator,

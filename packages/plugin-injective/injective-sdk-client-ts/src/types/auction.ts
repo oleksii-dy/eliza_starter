@@ -10,4 +10,3 @@ export interface GetAuctionsParams {
     startRound: number;
     limit: number;
 }
-

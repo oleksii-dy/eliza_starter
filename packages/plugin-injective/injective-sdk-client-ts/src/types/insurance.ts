@@ -1,11 +1,5 @@
-
-import {
-    InsuranceFund,
-    InsuranceModuleParams,
-} from "@injectivelabs/sdk-ts";
-import {
-    InjectiveOracleV1Beta1Oracle,
-} from "@injectivelabs/core-proto-ts";
+import { InsuranceFund, InsuranceModuleParams } from "@injectivelabs/sdk-ts";
+import { InjectiveOracleV1Beta1Oracle } from "@injectivelabs/core-proto-ts";
 
 // Insurance Fund Module Params
 export interface GetInsuranceFundParams {
@@ -82,4 +76,3 @@ export interface MsgUnderwriteParams {
         amount: string;
     };
 }
-

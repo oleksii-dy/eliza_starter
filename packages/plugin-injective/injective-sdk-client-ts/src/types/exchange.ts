@@ -1,22 +1,17 @@
-
-
 import {
     PaginationOption,
     TradeDirection,
     TradeExecutionType,
     TradeExecutionSide,
     GrpcMarketStatus,
-
 } from "@injectivelabs/sdk-ts";
 import { PaginationParams, TimeRangeParams } from "./base";
 import {
     CosmosGovV1Gov,
     InjectiveExchangeV1Beta1Exchange,
     InjectiveOracleV1Beta1Oracle,
-
 } from "@injectivelabs/core-proto-ts";
 import { OrderSide, OrderState } from "@injectivelabs/ts-types";
-
 
 export interface MarketIdParam {
     marketId: string;

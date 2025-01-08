@@ -1,6 +1,4 @@
-import {
-    MinModuleParams,
-} from "@injectivelabs/sdk-ts";
+import { MinModuleParams } from "@injectivelabs/sdk-ts";
 // Mint module params
 // Response interfaces
 export interface MintModuleParamsResponse {
