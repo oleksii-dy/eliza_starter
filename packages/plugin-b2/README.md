@@ -1,10 +1,10 @@
-# Sample Plugin for Eliza
+# B2 Network Plugin for Eliza
 
-The Sample Plugin for Eliza extends the functionality of the Eliza platform by providing additional actions, providers, evaluators, and more. This plugin is designed to be easily extendable and customizable to fit various use cases.
+The B2 Network Plugin for Eliza extends the functionality of the Eliza platform by providing additional actions, providers, evaluators, and more. This plugin is designed to be easily extendable and customizable to fit various use cases.
 
 ## Description
 
-The Sample Plugin offers a set of features that can be integrated into the Eliza platform to enhance its capabilities. Below is a high-level overview of the different components available in this plugin.
+The B2 Network Plugin offers a set of features that can be integrated into the Eliza platform to enhance its capabilities. Below is a high-level overview of the different components available in this plugin.
 
 ## Actions
 
@@ -28,7 +28,7 @@ The Sample Plugin offers a set of features that can be integrated into the Eliza
 
 ## How to Extend
 
-To extend the Sample Plugin, you can add new actions, providers, evaluators, services, and clients by following the structure provided in the plugin. Each component can be customized to fit your specific requirements.
+To extend the B2 Network Plugin, you can add new actions, providers, evaluators, services, and clients by following the structure provided in the plugin. Each component can be customized to fit your specific requirements.
 
 1. **Actions**: Add new actions by defining them in the `actions` array.
 2. **Providers**: Add new providers by defining them in the `providers` array.
