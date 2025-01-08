@@ -1,102 +1,57 @@
-import { ResponseTemplate } from "./types";
+// auth-templates.ts
 
-export interface PublicKeyParams {
-    type: string;
-    value: string;
-}
+export const getGrantsTemplate = `
+Extract authorization grants parameters:
+- Granter address: {{granter}}
+- Grantee address: {{grantee}}
+- Pagination key: {{paginationKey}}
+- Pagination limit: {{limit}}
+`;
 
-export interface AuthModuleParams {
-    maxMemoCharacters: number;
-    txSigLimit: number;
-    txSizeCostPerByte: number;
-    sigVerifyCostEd25519: number;
-    sigVerifyCostSecp256k1: number;
-    pubKeyParams: PublicKeyParams[];
-}
+export const getGranterGrantsTemplate = `
+Extract granter grants parameters:
+- Granter address: {{granter}}
+- Pagination key: {{paginationKey}}
+- Pagination limit: {{limit}}
+- Pagination reverse : {{reverse}}
+- Pagination countTotal : {{countTotal}}
+- Pagination endTime : {{endTime}}
+- Pagination startTime : {{startTime}}
+- Pagination fromNumber : {{fromNumber}}
+- Pagination toNumber : {{toNumber}}
+if pagination options are not specified assume null
+`;
 
-export interface Account {
-    address: string;
-    pubKey?: {
-        type: string;
-        key: string;
-    };
-    accountNumber: string;
-    sequence: string;
-}
+export const getGranteeGrantsTemplate = `
+Extract grantee grants parameters:
+- Grantee address: {{grantee}}
+- Pagination key: {{paginationKey}}
+- Pagination limit: {{limit}}
+- Pagination reverse : {{reverse}}
+- Pagination countTotal : {{countTotal}}
+- Pagination endTime : {{endTime}}
+- Pagination startTime : {{startTime}}
+- Pagination fromNumber : {{fromNumber}}
+- Pagination toNumber : {{toNumber}}
+if pagination options are not specified assume null
+`;
 
-export const authTemplates = {
-    moduleParams: {
-        template: `
-\`\`\`json
-{
-    "maxMemoCharacters": {{maxMemoCharacters}},
-    "txSigLimit": {{txSigLimit}},
-    "txSizeCostPerByte": {{txSizeCostPerByte}},
-    "sigVerifyCostEd25519": {{sigVerifyCostEd25519}},
-    "sigVerifyCostSecp256k1": {{sigVerifyCostSecp256k1}},
-    "pubKeyParams": {{pubKeyParams}}
-}
-\`\`\`
-`,
-        description: `
-Extract the following auth parameters:
-- Maximum memo characters allowed
-- Transaction signature limit
-- Transaction size cost per byte
-- Signature verification costs (Ed25519 and Secp256k1)
-- Public key parameters
-`,
-    } as ResponseTemplate,
+export const msgGrantTemplate = `
+Extract grant message parameters:
+- Message type: {{messageType}}
+- Grantee address: {{grantee}}
+- Granter address: {{granter}}
+`;
 
-    account: {
-        template: `
-\`\`\`json
-{
-    "address": "{{address}}",
-    "pubKey": {
-        "type": "{{pubKeyType}}",
-        "key": "{{pubKeyValue}}"
-    },
-    "accountNumber": "{{accountNumber}}",
-    "sequence": "{{sequence}}"
-}
-\`\`\`
-`,
-        description: `
-Extract the following account details:
-- Account address
-- Public key information (type and value)
-- Account number
-- Sequence number
-`,
-    } as ResponseTemplate,
+export const msgAuthzExecTemplate = `
+Extract authorization execution parameters:
+- Grantee address: {{grantee}}
+- Messages: {{msgs}}
+`;
 
-    accounts: {
-        template: `
-\`\`\`json
-{
-    "accounts": [
-        {
-            "address": "{{address}}",
-            "pubKey": {
-                "type": "{{pubKeyType}}",
-                "key": "{{pubKeyValue}}"
-            },
-            "accountNumber": "{{accountNumber}}",
-            "sequence": "{{sequence}}"
-        }
-    ],
-    "pagination": {
-        "nextKey": "{{nextKey}}",
-        "total": "{{total}}"
-    }
-}
-\`\`\`
-`,
-        description: `
-Extract the following accounts information:
-- List of account details
-- Pagination information
-`,
-    } as ResponseTemplate,
-};
+export const msgRevokeTemplate = `
+Extract revoke authorization parameters:
+- Message type: {{messageType}}
+- Grantee address: {{grantee}}
+- Granter address: {{granter}}
+`;

@@ -1,98 +1,48 @@
-// templates/token-factory.ts
-import { ResponseTemplate, CoinTemplate } from "./types";
+// token-factory-templates.ts
 
-export interface TokenFactoryModuleParams {
-    denomCreationFee: CoinTemplate[];
-}
+export const getDenomsFromCreatorTemplate = `
+Extract denoms from creator parameters:
+- Creator address: {{creator}}
+`;
 
-export interface AuthorityMetadata {
-    admin: string;
-}
+export const getDenomAuthorityMetadataTemplate = `
+Extract denom authority metadata parameters:
+- Creator: {{creator}}
+- Sub denom: {{subDenom}}
+`;
 
-export interface TokenFactoryModuleState {
-    params: TokenFactoryModuleParams;
-    factoryDenoms: Array<{
-        denom: string;
-        authorityMetadata: AuthorityMetadata;
-    }>;
-}
+export const msgCreateDenomTemplate = `
+Extract create denom parameters:
+- Subdenom: {{subdenom}}
+- Decimals: {{decimals}}
+- Name: {{name}}
+- Symbol: {{symbol}}
+`;
 
-export const tokenFactoryTemplates = {
-    moduleParams: {
-        template: `
-\`\`\`json
-{
-    "denomCreationFee": [
-        {
-            "denom": "{{denom}}",
-            "amount": "{{amount}}"
-        }
-    ]
-}
-\`\`\`
-`,
-        description: `
-Extract the following token factory parameters:
-- Denomination creation fee details
-`,
-    } as ResponseTemplate,
+export const msgMintTemplate = `
+Extract mint parameters:
+- Amount: {{amount}}
+- Denom: {{denom}}
+`;
 
-    moduleState: {
-        template: `
-\`\`\`json
-{
-    "params": {
-        "denomCreationFee": [
-            {
-                "denom": "{{denom}}",
-                "amount": "{{amount}}"
-            }
-        ]
-    },
-    "factoryDenoms": [
-        {
-            "denom": "{{denom}}",
-            "authorityMetadata": {
-                "admin": "{{admin}}"
-            }
-        }
-    ]
-}
-\`\`\`
-`,
-        description: `
-Extract the following module state information:
-- Module parameters
-- List of factory denominations
-- Authority metadata
-`,
-    } as ResponseTemplate,
+export const msgBurnTemplate = `
+Extract burn parameters:
+- Amount: {{amount}}
+- Denom: {{denom}}
+`;
 
-    denomsFromCreator: {
-        template: `
-\`\`\`json
-{
-    "denoms": ["{{denom}}"]
-}
-\`\`\`
-`,
-        description: `
-Extract the following creator denoms:
-- List of denominations created by address
-`,
-    } as ResponseTemplate,
+export const msgChangeAdminTemplate = `
+Extract change admin parameters:
+- Denom: {{denom}}
+- New admin: {{newAdmin}}
+`;
 
-    denomAuthorityMetadata: {
-        template: `
-\`\`\`json
-{
-    "admin": "{{admin}}"
-}
-\`\`\`
-`,
-        description: `
-Extract the following authority metadata:
-- Admin address for denomination
-`,
-    } as ResponseTemplate,
-};
+export const msgSetDenomMetadataTemplate = `
+Extract set denom metadata parameters:
+- Name: {{name}}
+- Symbol: {{symbol}}
+- Description: {{description}}
+- Display: {{display}}
+- Base: {{base}}
+- Display exponent: {{displayExponent}}
+`;
