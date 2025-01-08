@@ -58,6 +58,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
+import { Plugin } from "@ai16z/eliza/src/types";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -174,22 +175,79 @@ export async function loadCharacters(
                 const character = JSON.parse(content);
                 validateCharacterConfig(character);
 
+                function isPlugin(value: any): value is Plugin {
+                    return (
+                        typeof value === "object" &&
+                        value !== null &&
+                        typeof value.name === "string" &&
+                        typeof value.description === "string" &&
+                        (value.actions === undefined ||
+                            Array.isArray(value.actions)) &&
+                        (value.providers === undefined ||
+                            Array.isArray(value.providers)) &&
+                        (value.evaluators === undefined ||
+                            Array.isArray(value.evaluators)) &&
+                        (value.services === undefined ||
+                            Array.isArray(value.services)) &&
+                        (value.clients === undefined ||
+                            Array.isArray(value.clients))
+                    );
+                }
+
                 // Handle plugins
                 if (isAllStrings(character.plugins)) {
                     elizaLogger.info("Plugins are: ", character.plugins);
+
                     const importedPlugins = await Promise.all(
                         character.plugins.map(async (plugin) => {
-                            const importedPlugin = await import(plugin);
-                            if (importedPlugin.default) {
-                                return importedPlugin.default;
-                            } else {
-                                return importedPlugin[
-                                    Object.keys(importedPlugin)[0]
-                                ];
+                            try {
+                                // Dynamically import the plugin
+                                const importedPlugin = await import(plugin);
+                                console.log(
+                                    "Imported plugin: ",
+                                    importedPlugin
+                                );
+
+                                // Check if there's a default export
+                                if (importedPlugin.default) {
+                                    console.log(
+                                        "Default Export Found: ",
+                                        importedPlugin.default
+                                    );
+                                    return importedPlugin.default;
+                                }
+
+                                // Check other exports for potential plugins
+                                const possiblePlugins = [];
+                                for (const [key, value] of Object.entries(
+                                    importedPlugin
+                                )) {
+                                    // Check if the export matches the plugin type
+                                    if (isPlugin(value)) {
+                                        console.log(
+                                            `Valid Plugin Found in ${plugin}:`,
+                                            key
+                                        );
+                                        possiblePlugins.push(value);
+                                    }
+                                }
+
+                                return possiblePlugins.length > 0
+                                    ? possiblePlugins
+                                    : null;
+                            } catch (error) {
+                                console.error(
+                                    `Failed to import plugin "${plugin}":`,
+                                    error
+                                );
+                                return null; // Return null for failed imports
                             }
                         })
                     );
-                    character.plugins = importedPlugins;
+
+                    // Flatten and filter out null or empty plugin arrays
+                    character.plugins = importedPlugins.flat().filter(Boolean);
+                    console.log("Character Plugins are: ", character.plugins);
                 }
 
                 loadedCharacters.push(character);
