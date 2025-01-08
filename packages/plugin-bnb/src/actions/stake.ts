@@ -34,7 +34,7 @@ export class StakeAction {
     async stake(params: StakeParams): Promise<StakeResponse> {
         this.validateStakeParams(params);
 
-        this.walletProvider.switchChain("bsc"); // only bsc is supported
+        this.walletProvider.switchChain("bsc"); // only BSC is supported
 
         try {
             const actions = {
