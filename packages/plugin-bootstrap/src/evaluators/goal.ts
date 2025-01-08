@@ -53,6 +53,12 @@ async function handler(
     state: State | undefined,
     options: { [key: string]: unknown } = { onlyInProgress: true }
 ): Promise<Goal[]> {
+    // Fetch existing goals
+    let goalsData = await getGoals({
+        runtime,
+        roomId: message.roomId,
+        onlyInProgress: options.onlyInProgress as boolean,
+    });
 
     // Compose state and context for generating new goals
     state = (await runtime.composeState(message)) as State;
@@ -68,14 +74,11 @@ async function handler(
         modelClass: ModelClass.LARGE,
     });
 
-    // Parse the JSON response to extract goal updates
-    const updates = parseJsonArrayFromText(response);
-
-    // get goals
-    const goalsData = await getGoals({
+    // Re-fetch goals to ensure database sync
+    goalsData = await getGoals({
         runtime,
         roomId: message.roomId,
-        onlyInProgress: options.onlyInProgress as boolean,
+        onlyInProgress: true,
     });
 
     // Apply updates to existing goals and collect new goals
