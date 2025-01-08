@@ -1,7 +1,7 @@
 import {
     ChannelListResponse,
     GetNodeInfoResponse,
-    GetNodeInfoResponseNumberKeys,
+    GetNodeInfoResponseNumberKeys, PaymentResponse,
     UdtArgInfoNumberKeys,
 } from "./types.ts";
 import {convert} from "./rpcClient.ts";
@@ -44,7 +44,7 @@ export function formatNodeInfo(nodeInfo: GetNodeInfoResponse): string {
         .filter(udt => !!udt.config)
         .map(udt => `- ${udt.name}: ${udt.description}
         Decimal: ${udt.decimal}
-        Auto Accept Amount: ${udt.config.auto_accept_amount} ${udt.name}`)
+        Auto Accept Amount: ${toDecimal(udt.config.auto_accept_amount, udt.name)} ${udt.name}`)
         .join('\n');
 
     const lockScript = {
@@ -119,4 +119,8 @@ export function formatChannelList(channelList: ChannelListResponse): string {
     });
 
     return `Channels:\n${channels.join('\n\n')}`;
+}
+
+export function formatPayment(payment: PaymentResponse): string {
+
 }

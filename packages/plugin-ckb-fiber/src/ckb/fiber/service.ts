@@ -4,7 +4,7 @@ import {
     RpcClient, getClient
 } from "./rpcClient.ts";
 import {SupportedUDTs, UDTType} from "../../constants.ts";
-import {OpenChannelParams} from "./types.ts";
+import { OpenChannelParams, PaymentResponse } from "./types.ts";
 import {env, fromDecimal, toDecimal, udtEq} from "../../utils.ts";
 
 export const ServiceTypeCKBFiber = 'ckb_fiber' as ServiceType; // ServiceType.CKB_FIBER
@@ -69,7 +69,7 @@ export class CKBFiberService extends Service {
             elizaLogger.log(`Opening channel with peer ${peerId} with ${ckbFundingAmount} CKB`)
 
             await this.openChannel(peerId, ckbFundingAmount);
-            await this.waitChannelReady(peerId);
+            await this.waitForChannelReady(peerId);
         } else
             elizaLogger.info(`CKB channel with peer ${peerId} is ready`)
 
@@ -82,7 +82,7 @@ export class CKBFiberService extends Service {
             elizaLogger.info(`Opening channel with peer ${peerId} with ${udtAmount} ${udtType}`)
 
             await this.openChannel(peerId, udtAmount, true, udtType);
-            await this.waitChannelReady(peerId, udtType);
+            await this.waitForChannelReady(peerId, udtType);
         }
     }
 
@@ -124,10 +124,10 @@ export class CKBFiberService extends Service {
 
         return result.temporary_channel_id;
     }
-    public async waitChannelReady(peerId: string, udtType?: UDTType, index = 0, retry = 30, interval = 3000) {
+    public async waitForChannelReady(peerId: string, udtType?: UDTType, index = 0, retry = 30, interval = 3000) {
         udtType = this.ensureUDTType(udtType);
 
-        return new Promise((resolve, reject) => {
+        return new Promise<Channel>((resolve, reject) => {
             const intervalId = setInterval(async () => {
                 const channels = await this.rpcClient.listChannels({peer_id: peerId});
 
@@ -189,6 +189,32 @@ export class CKBFiberService extends Service {
             throw new Error('Mismatch Token')
         }
 
-        return this.rpcClient.sendPayment({ invoice });
+        const { payment_hash } = await this.rpcClient.sendPayment({ invoice });
+        return await this.waitForPayment(payment_hash);
+    }
+
+    public async waitForPayment(paymentHash: string, retry = 30, interval = 3000) {
+        return new Promise<PaymentResponse>((resolve, reject) => {
+            const intervalId = setInterval(async () => {
+                const payment = await this.rpcClient.getPayment({ payment_hash: paymentHash });
+
+                if (!payment) {
+                    elizaLogger.error('Failed to get payment');
+                }
+
+                elizaLogger.log(`Checking payment status: ${payment.status}`)
+                if (payment.status === 'Success') {
+                    clearInterval(intervalId);
+                    resolve(payment);
+                } else if (payment.status === 'Failed') {
+                    clearInterval(intervalId);
+                    reject(new Error('Payment failed'));
+                } else if (--retry <= 0) {
+                    clearInterval(intervalId);
+                    elizaLogger.error('Payment not completed');
+                    reject(new Error('Payment not completed'));
+                }
+            }, interval);
+        })
     }
 }

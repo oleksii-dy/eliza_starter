@@ -14,15 +14,11 @@ import {CKBFiberService, ServiceTypeCKBFiber} from "../ckb/fiber/service.ts";
 import { z } from "zod";
 
 const schema = z.object({
-    invoice: z.string(),
-    amount: z.string(),
-    tokenType: z.string(),
+    paymentHash: z.string(),
 });
 
 type Content = {
-    invoice: string;
-    amount: number;
-    tokenType: string;
+    paymentHash: string;
 }
 
 const template = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
@@ -30,25 +26,21 @@ const template = `Respond with a JSON markdown block containing only the extract
 Example response:
 \`\`\`json
 {
-    "invoice": "fibt177000000001p53d6ghq0axgfw0pnm6vk7l8tjrkeuqwaknxj0pq9juyuvzkyjr45flh25p0ktwjkswjaurmk0xsemmcq5pc5sztl6p6q99me0rwvyap6wd8m8thl4arfadcv9gteph8ranvt9cyc6ntf2c723khc7t9843ugktdc4htjeredgfacvkl2ljfxvw6njgvn7ww82zf7ly76cqaqnayem5cf07v9jwcqklgrzc25t35rqtm380f4hjzdm4rt5xna7ygclw0l2xcl7vs4pz5z6lwuan3e0lw985thjankl33edg74jt8ncqyadzek",
-    "amount": 177,
-    "tokenType": "CKB",
+    "paymentHash": "0xffb18f0bee5b9554dc388f8ec33145751c14e3cf4714ec070c55aa6a6853912f",
 }
 \`\`\`
 
 {{recentMessages}}
 
 Given the recent messages, extract the following information about the requested token transfer:
-- Invoice
-- Amount
-- Token type (e.g., "USDI", "CKB", default to "CKB")
+- Payment Hash
 
 Respond with a JSON markdown block containing only the extracted values.`
 
-export const sendPayment: Action = {
-    name: "SEND_PAYMENT",
-    similes: ["SEND_FUND", "SEND_TOKEN", "SEND_CKB", "SEND_UDT", "PAY_INVOICE"],
-    description: "Send payment for a invoice",
+export const getPayment: Action = {
+    name: "GET_PAYMENT",
+    similes: ["GET_PAY_RESULT", "GET_INVOICE_RESULT", "PAYMENT_RESULT"],
+    description: "Get the payment result",
     validate: async (runtime: IAgentRuntime, _message: Memory) => {
         if (!await runtime.getService<CKBFiberService>(ServiceTypeCKBFiber)?.checkNode())
             return false
@@ -80,10 +72,9 @@ export const sendPayment: Action = {
                 modelClass: ModelClass.SMALL, schema
             })).object as Content;
 
-            content.tokenType = content.tokenType || "ckb";
-            const udtType = content.tokenType.toLowerCase() === "ckb" ? undefined : content.tokenType.toLowerCase();
+            const paymentHash = content.paymentHash;
 
-            const payment = await service.sendPayment(content.invoice, content.amount, udtType);
+            const payment = await service.rpcClient.getPayment({ payment_hash: paymentHash });
 
             return callback({ text: `Payment sent successfully, payment hash is: ${payment.payment_hash}` }, []);
         } catch (error) {

@@ -21,7 +21,7 @@ export const EnvDefaults = {
     DEFAULT_PEER_ADDRESS: '/ip4/16.162.99.28/tcp/8119/p2p/QmPQ1BpLXmD4HpF9ed9oqkhd4yGyQogGYfeEVA83fR9MVJ',
 
     CKB_FUNDING_AMOUNT: '500',
-    UDT_FUNDING_AMOUNTS: '{"rusd": 10}'
+    UDT_FUNDING_AMOUNTS: '{"usdi": 10, "rusd": 10}'
 } as const
 
 export type SupportedUDT = {
@@ -32,15 +32,15 @@ export type SupportedUDT = {
 
 export const CKBDecimal = 8;
 export const SupportedUDTs: Record<string, SupportedUDT> = {
-    // 'usdi': {
-    //     decimal: 6,
-    //     description: 'USDI Stablecoin',
-    //     script: {
-    //         code_hash: '0xcc9dc33ef234e14bc788c43a4848556a5fb16401a04662fc55db9bb201987037',
-    //         hash_type: 'type',
-    //         args: '0x71fd1985b2971a9903e4d8ed0d59e6710166985217ca0681437883837b86162f'
-    //     }
-    // },
+    'usdi': {
+        decimal: 6,
+        description: 'USDI Stablecoin',
+        script: {
+            code_hash: '0xcc9dc33ef234e14bc788c43a4848556a5fb16401a04662fc55db9bb201987037',
+            hash_type: 'type',
+            args: '0x71fd1985b2971a9903e4d8ed0d59e6710166985217ca0681437883837b86162f'
+        }
+    },
     'rusd': {
         decimal: 6,
         description: 'RUSD Stablecoin',

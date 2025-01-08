@@ -3,7 +3,6 @@ import {
     IAgentRuntime,
     Memory,
     State,
-    elizaLogger,
 } from "@elizaos/core";
 import {CKBFiberService, ServiceTypeCKBFiber} from "../ckb/fiber/service.ts";
 import {formatNodeInfo} from "../ckb/fiber/formatter.ts";
