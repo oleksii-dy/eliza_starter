@@ -232,6 +232,9 @@ importers:
       '@elizaos/plugin-intiface':
         specifier: workspace:*
         version: link:../packages/plugin-intiface
+      '@elizaos/plugin-letzai':
+        specifier: workspace:*
+        version: link:../packages/plugin-letzai
       '@elizaos/plugin-movement':
         specifier: workspace:*
         version: link:../packages/plugin-movement
@@ -250,6 +253,9 @@ importers:
       '@elizaos/plugin-obsidian':
         specifier: workspace:*
         version: link:../packages/plugin-obsidian
+      '@elizaos/plugin-opacity':
+        specifier: workspace:*
+        version: link:../packages/plugin-opacity
       '@elizaos/plugin-open-weather':
         specifier: workspace:*
         version: link:../packages/plugin-open-weather
@@ -1641,6 +1647,15 @@ importers:
         specifier: 7.1.0
         version: 7.1.0
 
+  packages/plugin-letzai:
+    dependencies:
+      '@elizaos/core':
+        specifier: workspace:*
+        version: link:../core
+      tsup:
+        specifier: 8.3.5
+        version: 8.3.5(@swc/core@1.10.4(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.2)(yaml@2.7.0)
+
   packages/plugin-movement:
     dependencies:
       '@aptos-labs/ts-sdk':
@@ -1969,6 +1984,19 @@ importers:
       whatwg-url:
         specifier: 7.1.0
         version: 7.1.0
+
+  packages/plugin-opacity:
+    dependencies:
+      '@elizaos/core':
+        specifier: workspace:*
+        version: link:../core
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.4.7
+    devDependencies:
+      tsup:
+        specifier: ^8.3.5
+        version: 8.3.5(@swc/core@1.10.4(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.2)(yaml@2.7.0)
 
   packages/plugin-open-weather:
     dependencies:
