@@ -1,8 +1,8 @@
 {
     "name": "trump",
-    "clients": [],
+    "clients": ["twitter"],
     "modelProvider": "openai",
-    "settings": {
+    "settings": { 
         "secrets": {},
         "voice": {
             "model": "en_US-male-medium"
