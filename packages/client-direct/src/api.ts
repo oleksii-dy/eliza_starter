@@ -2,12 +2,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 
-import {
-    AgentRuntime,
-    elizaLogger,
-    getEnvVariable,
-    validateCharacterConfig,
-} from "@elizaos/core";
+import { AgentRuntime, getEnvVariable } from "@elizaos/core";
 
 import { REST, Routes } from "discord.js";
 import { DirectClient } from ".";
@@ -15,7 +10,7 @@ import { stringToUuid } from "@elizaos/core";
 
 export function createApiRouter(
     agents: Map<string, AgentRuntime>,
-    directClient: DirectClient
+    _directClient: DirectClient
 ) {
     const router = express.Router();
 
@@ -28,15 +23,15 @@ export function createApiRouter(
         })
     );
 
-    router.get("/", (req, res) => {
+    router.get("/", (_, res) => {
         res.send("Welcome, this is the REST API!");
     });
 
-    router.get("/hello", (req, res) => {
+    router.get("/hello", (_, res) => {
         res.json({ message: "Hello World!" });
     });
 
-    router.get("/agents", (req, res) => {
+    router.get("/agents", (_, res) => {
         const agentsList = Array.from(agents.values()).map((agent) => ({
             id: agent.agentId,
             name: agent.character.name,

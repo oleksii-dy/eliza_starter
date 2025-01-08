@@ -2,6 +2,8 @@ import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
 import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
 import { AutoClientInterface } from "@elizaos/client-auto";
 import { DiscordClientInterface } from "@elizaos/client-discord";
+import { FarcasterAgentClient } from "@elizaos/client-farcaster";
+import { LensAgentClient } from "@elizaos/client-lens";
 import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
@@ -13,6 +15,7 @@ import {
     DbCacheAdapter,
     defaultCharacter,
     elizaLogger,
+    FsCacheAdapter,
     IAgentRuntime,
     IDatabaseAdapter,
     IDatabaseCacheAdapter,
@@ -26,8 +29,21 @@ import {
     parseBooleanFromText,
 } from "@elizaos/core";
 import { RedisClient } from "@elizaos/adapter-redis";
+import { zgPlugin } from "@elizaos/plugin-0g";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
+import createGoatPlugin from "@elizaos/plugin-goat";
+// import { intifacePlugin } from "@elizaos/plugin-intiface";
 import { DirectClient } from "@elizaos/client-direct";
+import { aptosPlugin } from "@elizaos/plugin-aptos";
+import {
+    advancedTradePlugin,
+    coinbaseCommercePlugin,
+    coinbaseMassPaymentsPlugin,
+    tokenContractPlugin,
+    tradePlugin,
+    webhookPlugin,
+} from "@elizaos/plugin-coinbase";
+import { confluxPlugin } from "@elizaos/plugin-conflux";
 import { evmPlugin } from "@elizaos/plugin-evm";
 import { storyPlugin } from "@elizaos/plugin-story";
 import { flowPlugin } from "@elizaos/plugin-flow";
@@ -346,7 +362,6 @@ function initializeDatabase(dataDir: string) {
         const db = new PostgresDatabaseAdapter({
             connectionString: process.env.POSTGRES_URL,
             parseInputs: true,
-            max: 50
         });
 
         // Test the connection
@@ -411,6 +426,11 @@ export async function initializeClients(
             farcasterClient.start();
             clients.farcaster = farcasterClient;
         }
+    }
+    if (clientTypes.includes("lens")) {
+        const lensClient = new LensAgentClient(runtime);
+        lensClient.start();
+        clients.lens = lensClient;
     }
 
     elizaLogger.log("client keys", Object.keys(clients));
@@ -488,6 +508,14 @@ export async function createAgent(
         throw new Error("Invalid TEE configuration");
     }
 
+    let goatPlugin: any | undefined;
+
+    if (getSecret(character, "EVM_PRIVATE_KEY")) {
+        goatPlugin = await createGoatPlugin((secret) =>
+            getSecret(character, secret)
+        );
+    }
+
     return new AgentRuntime({
         databaseAdapter: db,
         token,
@@ -497,6 +525,9 @@ export async function createAgent(
         // character.plugins are handled when clients are added
         plugins: [
             bootstrapPlugin,
+            getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
+                ? confluxPlugin
+                : null,
             nodePlugin,
             getSecret(character, "TAVILY_API_KEY") ? webSearchPlugin : null,
             getSecret(character, "SOLANA_PUBLIC_KEY") ||
@@ -513,6 +544,20 @@ export async function createAgent(
             (getSecret(character, "WALLET_PUBLIC_KEY") &&
                 getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
                 ? evmPlugin
+                : null,
+            (getSecret(character, "SOLANA_PUBLIC_KEY") ||
+                (getSecret(character, "WALLET_PUBLIC_KEY") &&
+                    !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith(
+                        "0x"
+                    ))) &&
+            getSecret(character, "SOLANA_ADMIN_PUBLIC_KEY") &&
+            getSecret(character, "SOLANA_PRIVATE_KEY") &&
+            getSecret(character, "SOLANA_ADMIN_PRIVATE_KEY")
+                ? nftGenerationPlugin
+                : null,
+            getSecret(character, "ZEROG_PRIVATE_KEY") ? zgPlugin : null,
+            getSecret(character, "COINBASE_COMMERCE_KEY")
+                ? coinbaseCommercePlugin
                 : null,
             getSecret(character, "FAL_API_KEY") ||
             getSecret(character, "OPENAI_API_KEY") ||
@@ -572,6 +617,13 @@ export async function createAgent(
         cacheManager: cache,
         fetch: logFetch,
     });
+}
+
+function initializeFsCache(baseDir: string, character: Character) {
+    const cacheDir = path.resolve(baseDir, character.id, "cache");
+
+    const cache = new CacheManager(new FsCacheAdapter(cacheDir));
+    return cache;
 }
 
 function initializeDbCache(character: Character, db: IDatabaseCacheAdapter) {

@@ -148,8 +148,8 @@ export const goalEvaluator: Evaluator = {
         "UPDATE_OBJECTIVES",
     ],
     validate: async (
-        runtime: IAgentRuntime,
-        message: Memory
+        _runtime: IAgentRuntime,
+        _message: Memory
     ): Promise<boolean> => {
         return true;
     },
