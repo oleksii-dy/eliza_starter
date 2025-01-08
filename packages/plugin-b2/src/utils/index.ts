@@ -1,39 +1,13 @@
 import { IAgentRuntime, elizaLogger } from "@elizaos/core";
 import {
-    createPublicClient,
-    createWalletClient,
     Hash,
-    http,
     Address,
     parseUnits,
-    WalletClient,
 } from "viem";
 import { b2Network } from "./chains";
-import { B2WalletProvider } from "../providers";
+import { WalletProvider } from "../providers";
 
-// export const getAccount = (runtime: IAgentRuntime) => {
-//     const privateKey =
-//         runtime.getSetting("B2_PRIVATE_KEY") ||
-//         process.env.B2_PRIVATE_KEY;
-//     return privateKeyToAccount(`0x${privateKey.replace("0x", "")}`);
-// };
-
-// export const getPublicClient = (_runtime: IAgentRuntime) => {
-//     return createPublicClient({
-//         chain: b2Network,
-//         transport: http(),
-//     });
-// };
-
-// export const getWalletClient = (runtime: IAgentRuntime) => {
-//     return createWalletClient({
-//         account: getAccount(runtime),
-//         chain: b2Network,
-//         transport: http(),
-//     });
-// };
-
-export const getTxReceipt = async (walletProvider: B2WalletProvider, tx: Hash) => {
+export const getTxReceipt = async (walletProvider: WalletProvider, tx: Hash) => {
     const publicClient = walletProvider.getPublicClient();
     const receipt = await publicClient.waitForTransactionReceipt({
         hash: tx,
@@ -41,77 +15,8 @@ export const getTxReceipt = async (walletProvider: B2WalletProvider, tx: Hash) =
     return receipt;
 };
 
-// export const getDecimals = async (
-//     runtime: IAgentRuntime,
-//     tokenAddress: Address
-// ) => {
-//     if (tokenAddress === "0x0000000000000000000000000000000000000000") {
-//         return b2Network.nativeCurrency.decimals;
-//     }
-//     const publicClient = getPublicClient(runtime);
-//     const decimals = await publicClient.readContract({
-//         address: tokenAddress,
-//         abi: [
-//             {
-//                 inputs: [],
-//                 name: "decimals",
-//                 outputs: [{ internalType: "uint8", name: "", type: "uint8" }],
-//                 stateMutability: "view",
-//                 type: "function",
-//             },
-//         ],
-//         functionName: "decimals",
-//     });
-//     return decimals;
-// };
-
-export const getNativeBalance = async (
-    runtime: IAgentRuntime,
-    owner: Address
-) => {
-    const publicClient = getPublicClient(runtime);
-    const balance = await publicClient.getBalance({
-        address: owner,
-    });
-    return balance;
-};
-
-export const getTokenBalance = async (
-    runtime: IAgentRuntime,
-    tokenAddress: Address,
-    owner: Address
-) => {
-    if (tokenAddress === "0x0000000000000000000000000000000000000000") {
-        return getNativeBalance(runtime, owner);
-    }
-    const publicClient = getPublicClient(runtime);
-    const balance = await publicClient.readContract({
-        address: tokenAddress,
-        abi: [
-            {
-                inputs: [
-                    {
-                        internalType: "address",
-                        name: "account",
-                        type: "address",
-                    },
-                ],
-                name: "balanceOf",
-                outputs: [
-                    { internalType: "uint256", name: "", type: "uint256" },
-                ],
-                stateMutability: "view",
-                type: "function",
-            },
-        ],
-        functionName: "balanceOf",
-        args: [owner],
-    });
-    return balance;
-};
-
 export const sendNativeAsset = async (
-    walletProvider: B2WalletProvider,
+    walletProvider: WalletProvider,
     recipient: Address,
     amount: number
 ) => {
@@ -125,7 +30,7 @@ export const sendNativeAsset = async (
 };
 
 export const sendToken = async (
-    walletProvider: B2WalletProvider,
+    walletProvider: WalletProvider,
     tokenAddress: Address,
     recipient: Address,
     amount: number
@@ -171,8 +76,7 @@ export const sendToken = async (
         }
 
         elizaLogger.debug("Request:", request);
-
-        const walletClient = getWalletClient(runtime);
+        const walletClient = walletProvider.getWalletClient();
         const tx = await walletClient.writeContract(request);
         elizaLogger.log("Transaction:", tx);
         return tx as Hash;
@@ -183,16 +87,16 @@ export const sendToken = async (
 };
 
 export const approve = async (
-    runtime: IAgentRuntime,
+    walletProvider: WalletProvider,
     tokenAddress: Address,
     spender: Address,
     amount: number
 ) => {
     try {
-        const decimals = await getDecimals(runtime, tokenAddress);
-        const publicClient = getPublicClient(runtime);
+        const decimals = await walletProvider.getDecimals(tokenAddress);
+        const publicClient = walletProvider.getPublicClient();
         const { result, request } = await publicClient.simulateContract({
-            account: getAccount(runtime),
+            account: walletProvider.getAccount(),
             address: tokenAddress,
             abi: [
                 {
@@ -230,7 +134,7 @@ export const approve = async (
 
         elizaLogger.debug("Request:", request);
 
-        const walletClient = getWalletClient(runtime);
+        const walletClient = walletProvider.getWalletClient();
         const tx = await walletClient.writeContract(request);
         elizaLogger.log("Transaction:", tx);
         return tx;
@@ -241,16 +145,16 @@ export const approve = async (
 };
 
 export const deposit = async (
-    runtime: IAgentRuntime,
+    walletProvider: WalletProvider,
     depositTokenAddress: Address,
     strategyAddress: Address,
     amount: number
 ) => {
     try {
-        const decimals = await getDecimals(runtime, depositTokenAddress);
-        const publicClient = getPublicClient(runtime);
+        const decimals = await walletProvider.getDecimals(depositTokenAddress);
+        const publicClient = walletProvider.getPublicClient();
         const { _result, request } = await publicClient.simulateContract({
-            account: getAccount(runtime),
+            account: walletProvider.getAccount(),
             address: strategyAddress,
             abi: [
                 {
@@ -277,7 +181,7 @@ export const deposit = async (
 
         elizaLogger.debug("Request:", request);
 
-        const walletClient = getWalletClient(runtime);
+        const walletClient = walletProvider.getWalletClient();
         const tx = await walletClient.writeContract(request);
         elizaLogger.log("Transaction:", tx);
         return tx;

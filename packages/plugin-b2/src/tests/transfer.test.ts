@@ -1,47 +1,74 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { initWalletProvider, B2WalletProvider } from "../providers";
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { Memory, State } from "@elizaos/core";
+import { describe, it, expect, beforeEach } from "vitest";
+import { generatePrivateKey } from "viem/accounts";
+import { getEnvVariable } from "@elizaos/core";
+
 import { TransferAction } from "../actions/transfer";
+import { WalletProvider } from "../providers";
+import { TransferParams } from "../types";
 
 describe("Transfer Action", () => {
-    let mockRuntime;
-    beforeEach(() => {
-        vi.clearAllMocks();
-        const pk = generatePrivateKey();
-        mockRuntime = {
-            getSetting: vi.fn(),
-        };
-        mockRuntime.getSetting.mockImplementation((key: string) => {
-            const settings = {
-                B2_PRIVATE_KEY: pk,
-            };
-            return settings[key];
-        });
-    });
+    let wp: WalletProvider;
+    let wp1: WalletProvider;
 
-    afterEach(() => {
-        vi.clearAllTimers();
+    beforeEach(async () => {
+        const pk = generatePrivateKey();
+        const pk1 = getEnvVariable("ARTHERA_PRIVATE_KEY") as `0x${string}`;
+        wp = new WalletProvider(pk);
+        console.log(wp.getAddress());
+        if (pk1) {
+            wp1 = new WalletProvider(pk1);
+        }
     });
     describe("Constructor", () => {
-        it("should initialize with wallet provider",async () => {
-            const wp = await initWalletProvider(mockRuntime);
-            expect(wp).toBeDefined();
+        it("should initialize with wallet provider", () => {
+            const ta = new TransferAction(wp);
+
+            expect(ta).toBeDefined();
         });
     });
     describe("Transfer", () => {
         let ta: TransferAction;
+        let ta1: TransferAction;
+        let receiverAddress: `0x${string}`;
+
         beforeEach(() => {
-            ta = new TransferAction(mockRuntime);
-            expect(ta).toBeDefined();
-            // if (wp1) {
-            //     ta1 = new TransferAction(wp1);
-            //     receiverAddress = wp1.getAddress();
-            // }
-            // else {
-            //     receiverAddress = wp.getAddress();
-            // }
+            ta = new TransferAction(wp);
+            if (wp1) {
+                ta1 = new TransferAction(wp1);
+                receiverAddress = wp1.getAddress();
+            }
+            else {
+                receiverAddress = wp.getAddress();
+            }
         });
 
+        it("throws if not enough gas", async () => {
+            const params = {
+                tokenAddress: "0x0000000000000000000000000000000000000000",
+                recipient: receiverAddress,
+                amount: "1",
+            } as TransferParams;
+            await expect(
+                ta.transfer(params)
+            ).rejects.toThrow(
+                "Transfer failed: The total cost (gas * gas fee + value) of executing this transaction exceeds the balance of the account."
+            );
+        });
+
+        if (wp1) {
+            console.log("----------------------------------------------");
+            it("transfers tokens", async () => {
+                const params = {
+                    tokenAddress: "0x0000000000000000000000000000000000000000",
+                    recipient: receiverAddress,
+                    amount: "0.001",
+                } as TransferParams;
+                const tx = await ta1.transfer(params);
+                expect(tx).toBeDefined();
+                expect(tx.from).toEqual(wp1.getAddress());
+                expect(tx.recipient).toEqual(receiverAddress);
+                expect(tx.amount).toEqual(1000000000000000n);
+            });
+        }
     });
 });

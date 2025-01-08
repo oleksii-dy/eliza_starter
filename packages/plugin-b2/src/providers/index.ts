@@ -19,11 +19,10 @@ import {
     createWalletClient,
     PublicClient
 } from "viem";
-import { getTokenBalance } from "../utils";
 import { TOKEN_ADDRESSES } from "../utils/constants";
 import { b2Network } from "../utils/chains";
 
-export class B2WalletProvider implements Provider {
+export class WalletProvider implements Provider {
     private account: PrivateKeyAccount;
 
     constructor(accountOrPrivateKey: PrivateKeyAccount | `0x${string}`) {
@@ -40,6 +39,49 @@ export class B2WalletProvider implements Provider {
         }
     };
 
+    async getNativeBalance (
+        owner: Address
+    ) {
+        const publicClient = this.getPublicClient();
+        const balance = await publicClient.getBalance({
+            address: owner,
+        });
+        return balance;
+    };
+
+    async getTokenBalance (
+        tokenAddress: Address,
+        owner: Address
+    ) {
+        if (tokenAddress === "0x0000000000000000000000000000000000000000") {
+            return this.getNativeBalance(owner);
+        }
+        const publicClient = this.getPublicClient();
+        const balance = await publicClient.readContract({
+            address: tokenAddress,
+            abi: [
+                {
+                    inputs: [
+                        {
+                            internalType: "address",
+                            name: "account",
+                            type: "address",
+                        },
+                    ],
+                    name: "balanceOf",
+                    outputs: [
+                        { internalType: "uint256", name: "", type: "uint256" },
+                    ],
+                    stateMutability: "view",
+                    type: "function",
+                },
+            ],
+            functionName: "balanceOf",
+            args: [owner],
+        });
+        return balance;
+    };
+
     getAccount(): Account {
         return this.account;
     }
@@ -48,8 +90,7 @@ export class B2WalletProvider implements Provider {
         return this.account.address;
     }
 
-    getPublicClient(
-    ): PublicClient<HttpTransport, Chain, Account | undefined> {
+    getPublicClient(): PublicClient<HttpTransport, Chain, Account | undefined> {
         return createPublicClient({
             chain: b2Network,
             transport: http(),
@@ -87,6 +128,48 @@ export class B2WalletProvider implements Provider {
         return decimals;
     }
 
+    async get(
+        runtime: IAgentRuntime,
+        _message: Memory,
+        _state?: State
+    ): Promise<string | null> {
+        elizaLogger.debug("walletProvider::get");
+        try {
+            const privateKey = runtime.getSetting("B2_PRIVATE_KEY");
+            if (!privateKey) {
+                throw new Error(
+                    "B2_PRIVATE_KEY not found in environment variables"
+                );
+            }
+            let accountAddress;
+            if (this.account) {
+                accountAddress = this.getAddress();
+            } else {
+                const walletProvider = await initWalletProvider(runtime);
+                accountAddress = walletProvider.getAddress();
+            }
+
+            let output = `# Wallet Balances\n\n`;
+            output += `## Wallet Address\n\n\`${accountAddress}\`\n\n`;
+
+            output += `## Latest Token Balances\n\n`;
+            for (const [token, address] of Object.entries(TOKEN_ADDRESSES)) {
+                const decimals = await this.getDecimals(address);
+                const balance = await this.getTokenBalance(
+                    address,
+                    accountAddress,
+                );
+                output += `${token}: ${formatUnits(balance, decimals)}\n`;
+            }
+            output += `Note: These balances can be used at any time.\n\n`;
+            elizaLogger.debug("walletProvider::get output:", output);
+            return output;
+        } catch (error) {
+            console.error("Error in b2 wallet provider:", error);
+            return null;
+        }
+    }
+
 };
 
 export const initWalletProvider = async (runtime: IAgentRuntime) => {
@@ -96,10 +179,10 @@ export const initWalletProvider = async (runtime: IAgentRuntime) => {
             "B2_PRIVATE_KEY not found in environment variables"
         );
     }
-    return new B2WalletProvider(privateKey);
+    return new WalletProvider(privateKey);
 };
 
-export const b2WalletProvider: Provider = {
+export const walletProvider: Provider = {
     async get(
         runtime: IAgentRuntime,
         _message: Memory,
@@ -121,8 +204,7 @@ export const b2WalletProvider: Provider = {
             output += `## Latest Token Balances\n\n`;
             for (const [token, address] of Object.entries(TOKEN_ADDRESSES)) {
                 const decimals = await walletProvider.getDecimals(address);
-                const balance = await getTokenBalance(
-                    runtime,
+                const balance = await walletProvider.getTokenBalance(
                     address,
                     account.address
                 );

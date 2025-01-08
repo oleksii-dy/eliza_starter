@@ -1,12 +1,7 @@
 import type { Token } from "@lifi/types";
 import type {
-    Account,
     Address,
-    Chain,
     Hash,
-    HttpTransport,
-    PublicClient,
-    WalletClient,
 } from "viem";
 
 export interface Transaction {
