@@ -1,5 +1,5 @@
-import { samplePlugin } from "./plugins/samplePlugin";
+import { b2Plugin } from "./plugins";
 
-export * from "./plugins/samplePlugin";
+export * from "./plugins";
 
-export default samplePlugin;
+export default b2Plugin;
