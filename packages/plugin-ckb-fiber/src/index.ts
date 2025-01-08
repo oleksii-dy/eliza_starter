@@ -1,16 +1,17 @@
 import {CKBFiberService} from "./ckb/fiber/service.ts";
 
-export * from "./providers/nodeProvider.ts";
 export * from "./types";
 
-import {Plugin} from "../../core/src";
+import {Plugin} from "@elizaos/core";
 import {nodeProvider} from "./providers/nodeProvider.ts";
 import {channelsProvider} from "./providers/channelsProvider.ts";
+import {sendPayment} from "./actions/sendPayment.ts";
+import {getInfo} from "./actions/getInfo.ts";
 
 export const ckbFiberPlugin: Plugin = {
     name: "ckb-fiber",
     description: "Fiber network (Lighting network on CKB) integration plugin",
-    actions: [],
+    actions: [getInfo, sendPayment],
     providers: [nodeProvider, channelsProvider],
     evaluators: [],
     // separate examples will be added for services and clients

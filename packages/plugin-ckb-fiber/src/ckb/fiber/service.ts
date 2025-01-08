@@ -1,10 +1,11 @@
 import {elizaLogger, IAgentRuntime, Service, ServiceType} from "@elizaos/core";
+import {ccc} from "@ckb-ccc/core";
 import {
     RpcClient, getClient
 } from "./rpcClient.ts";
 import {SupportedUDTs, UDTType} from "../../constants.ts";
-import {OpenChannelParams, Script} from "./types.ts";
-import {env, fromDecimal, udtEq} from "../../utils.ts";
+import {OpenChannelParams} from "./types.ts";
+import {env, fromDecimal, toDecimal, udtEq} from "../../utils.ts";
 
 export const ServiceTypeCKBFiber = 'ckb_fiber' as ServiceType; // ServiceType.CKB_FIBER
 
@@ -81,14 +82,28 @@ export class CKBFiberService extends Service {
             await this.rpcClient.getNodeInfo()
             return true
         } catch (e) {
-            elizaLogger.error("Can‘t access the node, please check your node process or network connection.")
+            elizaLogger.error("Can‘t access the node, please check your node process or network connection.", e)
             return false
         }
+    }
+
+    public ensureUDTType(udtType?: UDTType) {
+        if (!udtType) return null;
+
+        udtType = udtType.toUpperCase() as UDTType;
+
+        if (!SupportedUDTs[udtType]) {
+            elizaLogger.error(`Unsupported UDT type: ${udtType}`)
+            throw new Error(`Unsupported UDT type: ${udtType}`)
+        }
+        return udtType;
     }
 
     public async openChannel(peerId: string, fundingAmount: number,
                              isPublic = true, udtType?: UDTType,
                              options: Partial<OpenChannelParams> = {}) {
+        udtType = this.ensureUDTType(udtType);
+
         if (udtType) options.funding_udt_type_script = SupportedUDTs[udtType].script;
 
         const result = await this.rpcClient.openChannel({
@@ -101,7 +116,9 @@ export class CKBFiberService extends Service {
         return result.temporary_channel_id;
     }
     public async waitChannelReady(peerId: string, udtType?: UDTType, index = 0, retry = 20, interval = 2000) {
-        return new Promise(async (resolve, reject) => {
+        udtType = this.ensureUDTType(udtType);
+
+        return new Promise((resolve, reject) => {
             const intervalId = setInterval(async () => {
                 const channels = await this.rpcClient.listChannels({peer_id: peerId});
 
@@ -124,5 +141,42 @@ export class CKBFiberService extends Service {
                 }
             }, interval);
         })
+    }
+
+    public async sendPayment(invoice: string, amount: number, udtType?: UDTType) {
+        udtType = this.ensureUDTType(udtType);
+
+        const invoiceData = await this.rpcClient.parseInvoice({ invoice })
+        if (invoiceData.invoice.amount !== fromDecimal(amount, udtType)) {
+            elizaLogger.error(`Invoice amount does not match transfer amount: Invoice amount ${toDecimal(invoiceData.invoice.amount, udtType)}, Transfer amount ${amount}`)
+            throw new Error(`Invoice amount does not match transfer amount: Invoice amount ${toDecimal(invoiceData.invoice.amount, udtType)}, Transfer amount ${amount}`)
+        }
+
+        // Check udtType
+        const attrs = invoiceData.invoice.data.attrs.map(attr => Object.entries(attr)).flat()
+        const udtScriptAttr = attrs.find(([key]) => key === 'UdtScript')
+
+        // If udt
+        if (udtType) {
+            if (!udtScriptAttr) {
+                elizaLogger.error('UDT script not found in invoice')
+                throw new Error('UDT script not found in invoice')
+            }
+            const script = ccc.Script.fromBytes(udtScriptAttr[1] as string)
+            const script_ = {
+                code_hash: script.codeHash, hash_type: script.hashType, args: script.args
+            }
+            if (!udtEq(script_, SupportedUDTs[udtType].script)) {
+                elizaLogger.error(`Mismatch UDT type: Invoice UDT type ${JSON.stringify(script)}, Transfer UDT type ${udtType}`)
+                throw new Error(`Mismatch UDT type: Invoice UDT type ${JSON.stringify(script)}, Transfer UDT type ${udtType}`)
+            }
+        }
+        // If ckb
+        else if (udtScriptAttr) {
+            elizaLogger.error(`Mismatch Token`)
+            throw new Error('Mismatch Token')
+        }
+
+        return this.rpcClient.sendPayment({ invoice });
     }
 }

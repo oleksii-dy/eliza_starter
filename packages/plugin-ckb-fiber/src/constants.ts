@@ -3,8 +3,10 @@ import {Script} from "./ckb/fiber/types.ts";
 export const EnvKeys = {
     RPC_URL: 'FIBER_RPC_URL',
     RPC_HEADERS: 'FIBER_RPC_HEADERS',
+
     DEFAULT_PEER_ID: 'FIBER_DEFAULT_PEER_ID',
     DEFAULT_PEER_ADDRESS: 'FIBER_DEFAULT_PEER_ADDRESS',
+
     CKB_FUNDING_AMOUNT: 'FIBER_CKB_FUNDING_AMOUNT',
     UDT_FUNDING_AMOUNTS: 'FIBER_UDT_FUNDING_AMOUNTS',
 } as const
@@ -12,10 +14,12 @@ export const EnvKeys = {
 export const EnvDefaults = {
     RPC_URL: 'http://127.0.0.1:8227',
     RPC_HEADERS: '{}',
+
     // JoyId Peer ID
     DEFAULT_PEER_ID: 'QmPQ1BpLXmD4HpF9ed9oqkhd4yGyQogGYfeEVA83fR9MVJ',
     // JoyId Peer Address
     DEFAULT_PEER_ADDRESS: '/ip4/16.162.99.28/tcp/8119/p2p/QmPQ1BpLXmD4HpF9ed9oqkhd4yGyQogGYfeEVA83fR9MVJ',
+
     CKB_FUNDING_AMOUNT: '2000',
     UDT_FUNDING_AMOUNTS: '{"usdi": 500}'
 } as const

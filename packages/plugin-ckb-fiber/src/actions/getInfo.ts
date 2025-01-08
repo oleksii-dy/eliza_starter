@@ -4,19 +4,13 @@ import {
     Memory,
     HandlerCallback,
     State,
-    composeContext,
-    generateObject,
-    ModelClass,
     elizaLogger,
 } from "@elizaos/core";
 
-import { CreateResourceSchema, isCreateResourceContent } from "../types";
-
-import { createResourceTemplate } from "../templates";
 import {CKBFiberService, ServiceTypeCKBFiber} from "../ckb/fiber/service.ts";
 import {formatNodeInfo} from "../ckb/fiber/formatter.ts";
 
-export const getInfoAction: Action = {
+export const getInfo: Action = {
     name: "GET_NODE_INFO",
     similes: ["GET_NODE", "GET_INFO", "SHOW_INFO", "SHOW_NODE"],
     description: "Get fiber node information",
