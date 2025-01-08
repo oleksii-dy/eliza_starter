@@ -46,6 +46,7 @@ import {
     type Memory,
 } from "./types.ts";
 import { stringToUuid } from "./uuid.ts";
+import _ from "lodash";
 
 /**
  * Represents the runtime environment for an agent, handling message processing,
@@ -340,10 +341,12 @@ export class AgentRuntime implements IAgentRuntime {
 
         this.token = opts.token;
 
-        this.plugins = [
+        const allPlugins = [
             ...(opts.character?.plugins ?? []),
             ...(opts.plugins ?? []),
         ];
+
+        this.plugins = _.uniqBy(allPlugins, "name");
 
         this.plugins.forEach((plugin) => {
             plugin.actions?.forEach((action) => {
@@ -410,22 +413,27 @@ export class AgentRuntime implements IAgentRuntime {
     }
 
     async stop() {
-      elizaLogger.debug('runtime::stop - character', this.character)
-      // stop services, they don't have a stop function
+        elizaLogger.debug("runtime::stop - character", this.character);
+        // stop services, they don't have a stop function
         // just initialize
 
-      // plugins
+        // plugins
         // have actions, providers, evaluators (no start/stop)
         // services (just initialized), clients
 
-      // client have a start
-      for(const cStr in this.clients) {
-        const c = this.clients[cStr]
-        elizaLogger.log('runtime::stop - requesting', cStr, 'client stop for', this.character.name)
-        c.stop()
-      }
-      // we don't need to unregister with directClient
-      // don't need to worry about knowledge
+        // client have a start
+        for (const cStr in this.clients) {
+            const c = this.clients[cStr];
+            elizaLogger.log(
+                "runtime::stop - requesting",
+                cStr,
+                "client stop for",
+                this.character.name
+            );
+            c.stop();
+        }
+        // we don't need to unregister with directClient
+        // don't need to worry about knowledge
     }
 
     /**
