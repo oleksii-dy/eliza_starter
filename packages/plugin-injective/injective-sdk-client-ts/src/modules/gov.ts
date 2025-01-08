@@ -1,5 +1,4 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
-import { CosmosGovV1Gov } from "@injectivelabs/core-proto-ts";
 import {
     MsgSubmitProposalExpiryFuturesMarketLaunch,
     MsgSubmitProposalSpotMarketLaunch,
@@ -8,7 +7,7 @@ import {
     MsgSubmitTextProposal,
     MsgSubmitProposalSpotMarketParamUpdate,
     MsgSubmitGenericProposal,
-    MsgDeposit,
+    MsgGovDeposit,
     TxResponse,
 } from "@injectivelabs/sdk-ts";
 import {
@@ -19,7 +18,7 @@ import {
     MsgSubmitTextProposalParams,
     MsgSubmitProposalSpotMarketParamUpdateParams,
     MsgSubmitGenericProposalParams,
-    MsgDepositParams,
+    MsgGovDepositParams,
     GovernanceModuleParamsResponse,
     GetProposalsResponse,
     GetProposalResponse,
@@ -170,11 +169,11 @@ export async function msgSubmitGenericProposal(
 
 export async function msgGovDeposit(
     this: InjectiveGrpcBase,
-    params: MsgDepositParams
+    params: MsgGovDepositParams
 ): Promise<TxResponse> {
-    const msg = MsgDeposit.fromJSON({
+    const msg = MsgGovDeposit.fromJSON({
         ...params,
-        injectiveAddress: this.injAddress,
+        depositor: this.injAddress,
     });
     return await this.msgBroadcaster.broadcast({ msgs: msg });
 }

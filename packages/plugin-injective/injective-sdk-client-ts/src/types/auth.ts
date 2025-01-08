@@ -5,7 +5,7 @@ import {
     Pagination,
     Msgs
 } from "@injectivelabs/sdk-ts";
-
+import { AddressParams } from "./base";
 // Auth Module Params
 // Start of Get Auth Module Request Parameters
 export interface AuthAccountParams extends AddressParams {

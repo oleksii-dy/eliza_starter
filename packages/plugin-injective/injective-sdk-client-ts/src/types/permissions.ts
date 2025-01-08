@@ -1,3 +1,13 @@
+import {
+
+    Coin,
+
+    PermissionsModuleParams,
+    Namespace,
+} from "@injectivelabs/sdk-ts";
+import { AddressParams } from "./base";
+
+// Base parameter interfaces
 // Permissions Module Params
 // Param interfaces
 export interface GetAddressesByRoleParams {

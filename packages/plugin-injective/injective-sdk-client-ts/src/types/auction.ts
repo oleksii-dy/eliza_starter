@@ -11,9 +11,3 @@ export interface GetAuctionsParams {
     limit: number;
 }
 
-export interface MsgExternalTransferParams {
-    srcSubaccountId: string;
-    dstSubaccountId: string;
-    tokenSymbol: string;
-    amount: string;
-}

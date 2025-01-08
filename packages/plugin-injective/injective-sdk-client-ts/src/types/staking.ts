@@ -1,6 +1,21 @@
 
+
+import {
+    PaginationOption,
+
+    Pagination,
+
+    StakingModuleParams,
+    Pool,
+    Validator,
+    Delegation,
+    UnBondingDelegation,
+    ReDelegation,
+} from "@injectivelabs/sdk-ts";
+import { PaginationParams } from "./base";
 // Staking Module Params
 // Param interfaces
+
 export interface GetValidatorsParams {
     pagination?: PaginationOption;
 }

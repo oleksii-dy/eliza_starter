@@ -1,5 +1,12 @@
 // Distribution Module Params
 // Start of Get Distribution Module Parameters
+
+import {
+    DistributionModuleParams,
+    ValidatorRewards,
+    Coin,
+
+} from "@injectivelabs/sdk-ts";
 export interface DelegatorValidatorParams {
     delegatorAddress: string;
     validatorAddress: string;

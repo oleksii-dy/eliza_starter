@@ -51,7 +51,7 @@ export async function getValidator(
     return this.request({
         method: (params: string) =>
             this.indexerGrpcExplorerApi.fetchValidator(params),
-        params: params.validatorAddress,
+        params: params.address,
     });
 }
 

@@ -1,6 +1,31 @@
 
+import {
+
+    Coin,
+    MitoVault,
+    MitoPagination,
+    MitoPriceSnapshot,
+    MitoSubscription,
+    MitoHolders,
+    MitoPortfolio,
+    MitoLeaderboard,
+    MitoTransfer,
+    MitoLeaderboardEpoch,
+    MitoStakingPool,
+    MitoMission,
+    MitoMissionLeaderboard,
+    MitoIDO,
+    MitoIDOSubscriber,
+    MitoTokenInfo,
+    MitoIDOSubscription,
+    MitoIDOSubscriptionActivity,
+    MitoWhitelistAccount,
+    MitoClaimReference,
+} from "@injectivelabs/sdk-ts";
+import { PaginationParams, TimeRangeParams, AddressParams } from "./base";
 // Mito Module Params
 // Param interfaces
+
 export interface GetVaultParams {
     contractAddress?: string;
     slug?: string;
