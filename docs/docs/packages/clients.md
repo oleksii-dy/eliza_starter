@@ -361,18 +361,17 @@ public async getPersonaPosts(personaId: string): Promise<DevaPost[]> {
 
 ```typescript
 public async makePost({ text, in_reply_to_id }: { text: string; in_reply_to_id: string }): Promise<DevaPost> {
-  const res = await fetch(`${this.apiBaseUrl}/post`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${this.accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ text, in_reply_to_id, author_type: "BOT" }),
-  }).then((res) => res.json());
+   const res = await fetch(`${this.apiBaseUrl}/post`, {
+      method: "POST",
+      headers: {
+         Authorization: `Bearer ${this.accessToken}`,
+         "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text, in_reply_to_id, author_type: "BOT" }),
+   }).then((res) => res.json());
 
-  console.log(res);
-  return res;
-}
+   console.log(res);
+   return res;
 ```
 
 ## Common Features
@@ -424,28 +423,26 @@ class BaseClient {
 ## Best Practices
 
 1. **Authentication**
-
-- Store credentials securely in environment variables
-- Implement token refresh mechanisms
-- Handle authentication errors gracefully
+    - Store credentials securely in environment variables
+    - Implement token refresh mechanisms
+    - Handle authentication errors gracefully
 
 2. **Rate Limiting**
 
-- Implement exponential backoff
-- Track API usage
-- Queue messages during rate limits
+    - Implement exponential backoff
+    - Track API usage
+    - Queue messages during rate limits
 
 3. **Error Handling**
 
-- Log errors with context
-- Implement retry logic
-- Handle platform-specific errors
+    - Log errors with context
+    - Implement retry logic
+    - Handle platform-specific errors
 
 4. **Media Processing**
-
-- Validate media before processing
-- Handle different file formats
-- Implement size limits
+    - Validate media before processing
+    - Handle different file formats
+    - Implement size limits
 
 ### Error Handling
 
