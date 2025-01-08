@@ -2,13 +2,9 @@
 
 A plugin for interacting with the B2-Network within the ElizaOS ecosystem.
 
-# B2 Network Plugin for Eliza
-
-The B2 Network Plugin for Eliza extends the functionality of the Eliza platform by providing additional actions, providers, evaluators, and more. This plugin is designed to be easily extendable and customizable to fit various use cases.
-
 ## Description
 
-The B2 Network Plugin offers a set of features that can be integrated into the Eliza platform to enhance its capabilities. Below is a high-level overview of the different components available in this plugin.
+The B2 Network Plugin offers a set of features that can be integrated into the Eliza platform to enhance its capabilities. This plugin enables seamless token transfers on the B2-Network. It provides functionality to transfer both native B2-BTC and ERC20 tokens using secure wallet operations.
 
 ## Installation
 
