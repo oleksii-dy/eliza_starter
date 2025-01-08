@@ -17,12 +17,7 @@ export const currentWeather: Action = {
         "WEATHER_UPDATE",
     ],
     description: "Get the current weather for a given location",
-    validate: async (runtime: IAgentRuntime) => {
-        const nubilaKey = runtime.getSetting("NUBILA_API_KEY");
-        const mapboxKey = runtime.getSetting("MAPBOX_API_KEY");
-        if (!nubilaKey || !mapboxKey) {
-            return false;
-        }
+    validate: async (_runtime: IAgentRuntime) => {
         return true;
     },
     examples: [
@@ -129,7 +124,7 @@ export const currentWeather: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        
+
         try {
             const location = await extractLocationQuestion(
                 state,
