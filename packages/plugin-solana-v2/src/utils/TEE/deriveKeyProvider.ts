@@ -1,9 +1,7 @@
 import { IAgentRuntime, Memory, Provider, State } from "@elizaos/core";
-import { createKeyPairSignerFromBytes, KeyPairSigner } from "@solana/web3.js";
+import { createKeyPairSignerFromBytes, createKeyPairSignerFromPrivateKeyBytes, KeyPairSigner } from "@solana/web3.js";
 import crypto from "crypto";
-import { DeriveKeyResponse, TappdClient } from "@phala/dstack-sdk";
-import { privateKeyToAccount } from "viem/accounts";
-import { PrivateKeyAccount, keccak256 } from "viem";
+import { TappdClient } from "@phala/dstack-sdk";
 import { RemoteAttestationProvider } from "./remoteAttestationProvider";
 import { TEEMode, RemoteAttestationQuote } from "./types";
 
@@ -84,7 +82,7 @@ class DeriveKeyProvider {
             hash.update(uint8ArrayDerivedKey);
             const seed = hash.digest();
             const seedArray = new Uint8Array(seed);
-            const keypair = await createKeyPairSignerFromBytes(seedArray.slice(0, 32));
+            const keypair = await createKeyPairSignerFromPrivateKeyBytes(seedArray.slice(0, 32));
 
             // Generate an attestation for the derived key data for public to verify
             const attestation = await this.generateDeriveKeyAttestation(

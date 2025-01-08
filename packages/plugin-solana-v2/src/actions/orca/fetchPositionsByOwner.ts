@@ -108,7 +108,7 @@ export default {
             console.error("Error during feching positions", error);
             if (callback) {
                 callback({
-                    text: `Error transferring tokens: ${error.message}`,
+                    text: `Error fetching positions: ${error.message}`,
                     content: { error: error.message },
                 });
             }
