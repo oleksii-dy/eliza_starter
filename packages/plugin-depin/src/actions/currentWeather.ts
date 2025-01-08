@@ -4,16 +4,10 @@ import {
     Memory,
     State,
     HandlerCallback,
-    ModelClass,
-    composeContext,
-    generateText,
-    elizaLogger,
 } from "@elizaos/core";
 
-import { currentWeatherTemplate } from "../template";
-import { parseWeatherAnalysis } from "../parsers";
-import { getWeather } from "../services/weather";
-import { extractLocationAndCoordinates } from "../services/map"
+import { askQuickSilver } from "../services/quicksilver";
+import { extractLocationQuestion } from "../services/map"
 
 export const currentWeather: Action = {
     name: "CURRENT_WEATHER",
@@ -135,30 +129,26 @@ export const currentWeather: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-
+        
         try {
-            const coordinates = await extractLocationAndCoordinates(
+            const location = await extractLocationQuestion(
                 state,
                 runtime
             );
-            if (!coordinates) {
+            if (!location) {
                 if (callback) {
                     callback({
-                        text: `Coordinates are not available for the given location, please try again`,
+                        text: `Location is not available for the given location, please try again`,
                         content: { error: "No valid location found" },
                     });
                 }
                 return false;
             }
 
-            const weatherAnalysis = await getAndAnalyzeWeather(
-                state,
-                runtime,
-                coordinates
-            );
+            const weather = await askQuickSilver(location);
             if (callback) {
                 callback({
-                    text: weatherAnalysis,
+                    text: weather,
                     inReplyTo: message.id,
                 });
             }
@@ -177,30 +167,3 @@ export const currentWeather: Action = {
     },
 };
 
-async function getAndAnalyzeWeather(
-    state: State,
-    runtime: IAgentRuntime,
-    coordinates: { lat: number; lon: number }
-) {
-    elizaLogger.log("Looking up the weather for coordinates: ", coordinates);
-
-    const weather = await getWeather(runtime, coordinates);
-
-    state.weatherData = JSON.stringify(weather);
-
-    const weatherContext = composeContext({
-        state,
-        template:
-            // @ts-ignore
-            runtime.character.templates?.currentWeatherTemplate ||
-            currentWeatherTemplate,
-    });
-
-    const weatherText = await generateText({
-        runtime,
-        context: weatherContext,
-        modelClass: ModelClass.LARGE,
-    });
-
-    return parseWeatherAnalysis(weatherText);
-}
