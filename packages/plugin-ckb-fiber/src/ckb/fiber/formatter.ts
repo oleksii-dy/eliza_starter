@@ -122,5 +122,28 @@ export function formatChannelList(channelList: ChannelListResponse): string {
 }
 
 export function formatPayment(payment: PaymentResponse): string {
+    const {
+        payment_hash,
+        status,
+        created_at,
+        last_updated_at,
+        failed_error,
+        fee
+    } = payment;
 
+    // Format payment status
+    const statusInfo = failed_error 
+        ? `Failed: ${failed_error}`
+        : `Status: ${status}`;
+
+    // Format timestamps
+    const createdDate = new Date(Number(created_at)).toLocaleString();
+    const lastUpdatedDate = new Date(Number(last_updated_at)).toLocaleString();
+
+    return `Payment Details:
+- Hash: ${payment_hash}
+- Created: ${createdDate}
+- Last Updated: ${lastUpdatedDate}
+- ${statusInfo}
+- Fee: ${toDecimal(fee)} CKB`;
 }

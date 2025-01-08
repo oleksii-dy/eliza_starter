@@ -12,6 +12,7 @@ import {
 
 import {CKBFiberService, ServiceTypeCKBFiber} from "../ckb/fiber/service.ts";
 import { z } from "zod";
+import {formatPayment} from "../ckb/fiber/formatter.ts";
 
 const schema = z.object({
     paymentHash: z.string(),
@@ -76,7 +77,7 @@ export const getPayment: Action = {
 
             const payment = await service.rpcClient.getPayment({ payment_hash: paymentHash });
 
-            return callback({ text: `Payment sent successfully, payment hash is: ${payment.payment_hash}` }, []);
+            return callback({ text: formatPayment(payment) }, []);
         } catch (error) {
             elizaLogger.error("Error sending payment:", error);
             callback(

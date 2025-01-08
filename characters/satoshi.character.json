@@ -1,7 +1,7 @@
 {
     "name": "satoshi",
-    "clients": [],
-    "modelProvider": "anthropic",
+    "clients": ["discord"],
+    "modelProvider": "openai",
     "settings": {
         "voice": {
             "model": "en_US-male-medium"

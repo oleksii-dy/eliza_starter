@@ -12,6 +12,7 @@ import {
 
 import {CKBFiberService, ServiceTypeCKBFiber} from "../ckb/fiber/service.ts";
 import { z } from "zod";
+import {formatPayment} from "../ckb/fiber/formatter.ts";
 
 const schema = z.object({
     invoice: z.string(),
@@ -85,7 +86,7 @@ export const sendPayment: Action = {
 
             const payment = await service.sendPayment(content.invoice, content.amount, udtType);
 
-            return callback({ text: `Payment sent successfully, payment hash is: ${payment.payment_hash}` }, []);
+            return callback({ text: `Payment sent successfully!\n${formatPayment(payment)}` }, []);
         } catch (error) {
             elizaLogger.error("Error sending payment:", error);
             callback(
