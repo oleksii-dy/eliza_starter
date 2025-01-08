@@ -7,11 +7,12 @@ import {nodeProvider} from "./providers/nodeProvider.ts";
 import {channelsProvider} from "./providers/channelsProvider.ts";
 import {sendPayment} from "./actions/sendPayment.ts";
 import {getInfo} from "./actions/getInfo.ts";
+import {listChannels} from "./actions/listChannels.ts";
 
 export const ckbFiberPlugin: Plugin = {
     name: "ckb-fiber",
     description: "Fiber network (Lighting network on CKB) integration plugin",
-    actions: [getInfo, sendPayment],
+    actions: [getInfo, listChannels, sendPayment],
     providers: [nodeProvider, channelsProvider],
     evaluators: [],
     // separate examples will be added for services and clients

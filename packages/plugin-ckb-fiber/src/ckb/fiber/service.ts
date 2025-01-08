@@ -115,7 +115,7 @@ export class CKBFiberService extends Service {
 
         return result.temporary_channel_id;
     }
-    public async waitChannelReady(peerId: string, udtType?: UDTType, index = 0, retry = 20, interval = 2000) {
+    public async waitChannelReady(peerId: string, udtType?: UDTType, index = 0, retry = 30, interval = 3000) {
         udtType = this.ensureUDTType(udtType);
 
         return new Promise((resolve, reject) => {

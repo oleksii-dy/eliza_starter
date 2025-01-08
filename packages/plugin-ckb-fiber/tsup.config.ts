@@ -16,6 +16,13 @@ export default defineConfig({
         "http",
         "agentkeepalive",
         "safe-buffer",
+        "delayed-stream",
+        "combined-stream",
+        "form-data",
+        "debug",
+        "proxy-from-env",
+        "follow-redirects",
+
         // Add other modules you want to externalize
     ],
 });
