@@ -44,8 +44,6 @@ COPY --from=builder /app ./
 # Expose the default port
 EXPOSE 3001
 
-ENV CHARACTER_FILE="characters/sophia.character.json"
-
 # Set the default command
 CMD ["pnpm", "start"]
 
