@@ -1862,19 +1862,43 @@ importers:
       axios:
         specifier: ^1.6.2
         version: 1.7.9(debug@4.4.0)
+      express:
+        specifier: ^4.18.2
+        version: 4.21.1
+      sqlite:
+        specifier: ^5.1.1
+        version: 5.1.1
+      sqlite3:
+        specifier: ^5.1.7
+        version: 5.1.7
       twilio:
         specifier: ^4.19.0
         version: 4.23.0
     devDependencies:
+      '@jest/globals':
+        specifier: ^29.0.0
+        version: 29.7.0
       '@types/node':
         specifier: ^20.0.0
         version: 20.17.9
+      '@types/sqlite3':
+        specifier: ^3.1.11
+        version: 3.1.11
       '@types/twilio':
         specifier: ^3.19.3
         version: 3.19.3
+      dotenv:
+        specifier: ^16.0.0
+        version: 16.4.7
+      jest:
+        specifier: ^29.0.0
+        version: 29.7.0(@types/node@20.17.9)(ts-node@10.9.2(@swc/core@1.10.4(@swc/helpers@0.5.15))(@types/node@20.17.9)(typescript@5.6.3))
       tsup:
         specifier: ^8.0.0
         version: 8.3.5(@swc/core@1.10.4(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.6.3)(yaml@2.7.0)
+      tsx:
+        specifier: ^4.7.0
+        version: 4.19.2
       typescript:
         specifier: ^5.0.0
         version: 5.6.3
@@ -4755,6 +4779,9 @@ packages:
   '@fuels/vm-asm@0.58.2':
     resolution: {integrity: sha512-1/5azTzKJP508BXbZvM6Y0V5bCCX5JgEnd/8mXdBFmFvNLOhiYbwb25yk26auqOokfBXvthSkdkrvipEFft6jQ==}
 
+  '@gar/promisify@1.1.3':
+    resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
+
   '@goat-sdk/adapter-vercel-ai@0.2.0':
     resolution: {integrity: sha512-NqUyO38i6ELbWXSDHddfkD1k4QCUcvfs3jVQArlJ9OO9NSlkKvnbZjO1tTjoVoERjRKfKsCqfMPgsgo3akx7tA==}
     peerDependencies:
@@ -5738,6 +5765,9 @@ packages:
     engines: {node: ^16.14.0 || >=18.0.0}
     hasBin: true
 
+  '@npmcli/fs@1.1.1':
+    resolution: {integrity: sha512-8KG5RD0GVP4ydEzRn/I4BNDuxDtqVbOdm8675T49OIG/NGhaK0pjPX7ZcDlvKYbA+ulvVK3ztfcF4uBdOxuJbQ==}
+
   '@npmcli/fs@3.1.1':
     resolution: {integrity: sha512-q9CRWjpHCMIh5sVyefoD1cA7PkvILqCZsnSOEUUivORLjxCO/Irmue2DprETiNgEqktDBZaM1Bi+jrarx1XdCg==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
@@ -5758,6 +5788,11 @@ packages:
   '@npmcli/metavuln-calculator@7.1.1':
     resolution: {integrity: sha512-Nkxf96V0lAx3HCpVda7Vw4P23RILgdi/5K1fmj2tZkWIYLpXAN8k2UVVOsW16TsS5F8Ws2I7Cm+PU1/rsVF47g==}
     engines: {node: ^16.14.0 || >=18.0.0}
+
+  '@npmcli/move-file@1.1.2':
+    resolution: {integrity: sha512-1SUf/Cg2GzGDyaf15aR9St9TWlb+XvbZXWpDx8YKs7MLzMH/BCeopv+y9vzrzgkfykCGuWOlSu3mZhj2+FQcrg==}
+    engines: {node: '>=10'}
+    deprecated: This functionality has been moved to @npmcli/fs
 
   '@npmcli/name-from-folder@2.0.0':
     resolution: {integrity: sha512-pwK+BfEBZJbKdNYpHHRTNBwBoqrN/iIMO0AiGvYsp3Hoaq0WbgGSWQR6SCldZovoDpY3yje5lkFUe6gsDgJ2vg==}
@@ -7696,6 +7731,10 @@ packages:
       '@ton/core': '>=0.59.0'
       '@ton/crypto': '>=3.2.0'
 
+  '@tootallnate/once@1.1.2':
+    resolution: {integrity: sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==}
+    engines: {node: '>= 6'}
+
   '@tootallnate/quickjs-emscripten@0.23.0':
     resolution: {integrity: sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA==}
 
@@ -8133,6 +8172,9 @@ packages:
 
   '@types/sql.js@1.4.9':
     resolution: {integrity: sha512-ep8b36RKHlgWPqjNG9ToUrPiwkhwh0AEzy883mO5Xnd+cL6VBH1EvSjBAAuxLUFF2Vn/moE3Me6v9E1Lo+48GQ==}
+
+  '@types/sqlite3@3.1.11':
+    resolution: {integrity: sha512-KYF+QgxAnnAh7DWPdNDroxkDI3/MspH1NMx6m/N/6fT1G6+jvsw4/ZePt8R8cr7ta58aboeTfYFBDxTJ5yv15w==}
 
   '@types/stack-utils@2.0.3':
     resolution: {integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==}
@@ -9518,6 +9560,10 @@ packages:
   cac@6.7.14:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
     engines: {node: '>=8'}
+
+  cacache@15.3.0:
+    resolution: {integrity: sha512-VVdYzXEn+cnbXpFgWs5hTT7OScegHVmLhJIR8Ufqk3iFD6A6j5iSX1KuBTfNEv4tdJWE2PzA6IVFtcLC7fN9wQ==}
+    engines: {node: '>= 10'}
 
   cacache@18.0.4:
     resolution: {integrity: sha512-B+L5iIa9mgcjLbliir2th36yEwPftrzteHYujzsx3dFP/31GCHcIeS8f5MGd80odLOjaOvSpU3EEAmRQptkxLQ==}
@@ -12499,6 +12545,10 @@ packages:
   http-parser-js@0.5.8:
     resolution: {integrity: sha512-SGeBX54F94Wgu5RH3X5jsDtf4eHyRogWX1XGT3b4HuW3tQPM4AaBzoUji/4AAJNXCEOWZ5O0DgZmJw1947gD5Q==}
 
+  http-proxy-agent@4.0.1:
+    resolution: {integrity: sha512-k0zdNgqWTGA6aeIRVpvfVob4fL52dTfaehylg0Y4UvSySvOq/Y+BOyPrgpUrA7HylqvU8vIZGsRuXmspskV0Tg==}
+    engines: {node: '>= 6'}
+
   http-proxy-agent@7.0.2:
     resolution: {integrity: sha512-T1gkAiYYDWYx3V5Bmyu7HcfcvL7mUrTWiM6yOfa3PIphViJ/gFPbvidQ+veqSOHci/PxBcDabeUNCzpOODJZig==}
     engines: {node: '>= 14'}
@@ -12645,6 +12695,9 @@ packages:
   indent-string@5.0.0:
     resolution: {integrity: sha512-m6FAo/spmsW2Ab2fU35JTYwtOKa2yAwXSwgjSv1TJzh4Mh7mC3lzAOVLBprb72XsTrgkEIsl7YrFNAiDiRhIGg==}
     engines: {node: '>=12'}
+
+  infer-owner@1.0.4:
+    resolution: {integrity: sha512-IClj+Xz94+d7irH5qRyfJonOdfTzuDaifE6ZPWfx0N0+/ATZCbuTPq2prFl526urkQd90WyUKIh1DfBQ2hMz9A==}
 
   infima@0.2.0-alpha.45:
     resolution: {integrity: sha512-uyH0zfr1erU1OohLk0fT4Rrb94AOhguWNOcD9uGrSpRvNB+6gZXUoJX5J0NtvzBO10YZ9PgvA4NFgt+fYg8ojw==}
@@ -13974,6 +14027,10 @@ packages:
     resolution: {integrity: sha512-cKTUFc/rbKUd/9meOvgrpJ2WrNzymt6jfRDdwg5UCnVzv9dTpEj9JS5m3wtziXVCjluIXyL8pcaukYqezIzZQA==}
     engines: {node: ^16.14.0 || >=18.0.0}
 
+  make-fetch-happen@9.1.0:
+    resolution: {integrity: sha512-+zopwDy7DNknmwPQplem5lAZX/eCOzSvSNNcSKm5eVwTkOBzoktEfXsa9L23J/GIRhxRsaxzkPEhrJEpE2F4Gg==}
+    engines: {node: '>= 10'}
+
   makeerror@1.0.12:
     resolution: {integrity: sha512-JmqCvUhmt43madlpFzG4BQzG2Z3m6tvQDNKdClZnO3VbIudJYmxsT0FNJMeiB2+JTSlTQTSbU8QdesVmwJcmLg==}
 
@@ -14385,9 +14442,17 @@ packages:
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
 
+  minipass-collect@1.0.2:
+    resolution: {integrity: sha512-6T6lH0H8OG9kITm/Jm6tdooIbogG9e0tLgpY6mphXSm/A9u8Nq1ryBG+Qspiub9LjWlBPsPS3tWQ/Botq4FdxA==}
+    engines: {node: '>= 8'}
+
   minipass-collect@2.0.1:
     resolution: {integrity: sha512-D7V8PO9oaz7PWGLbCACuI1qEOsq7UKfLotx/C0Aet43fCUB/wfQ7DYeq2oR/svFJGYDHPr38SHATeaj/ZoKHKw==}
     engines: {node: '>=16 || 14 >=14.17'}
+
+  minipass-fetch@1.4.1:
+    resolution: {integrity: sha512-CGH1eblLq26Y15+Azk7ey4xh0J/XfJfrCox5LDJiKqI2Q2iwOLOKrlmIaODiSQS8d18jalF6y2K2ePUm0CmShw==}
+    engines: {node: '>=8'}
 
   minipass-fetch@3.0.5:
     resolution: {integrity: sha512-2N8elDQAtSnFV0Dk7gt15KHsS0Fyz6CbYZ360h0WTYV1Ty46li3rAXVOQj1THMNLdmrD9Vt5pBPtWtVkpwGBqg==}
@@ -14736,6 +14801,11 @@ packages:
   node-gyp@10.3.1:
     resolution: {integrity: sha512-Pp3nFHBThHzVtNY7U6JfPjvT/DTE8+o/4xKsLQtBoU+j2HLsGlhcfzflAoUreaJbNmYnX+LlLi0qjV8kpyO6xQ==}
     engines: {node: ^16.14.0 || >=18.0.0}
+    hasBin: true
+
+  node-gyp@8.4.1:
+    resolution: {integrity: sha512-olTJRgUtAb/hOXG0E93wZDs5YiJlgbXxTwQAFHyNlRsXQnYzUaF2aGgujZbw+hR8aF4ZG/rST57bWMWD16jr9w==}
+    engines: {node: '>= 10.12.0'}
     hasBin: true
 
   node-int64@0.4.0:
@@ -17443,6 +17513,10 @@ packages:
   sockjs@0.3.24:
     resolution: {integrity: sha512-GJgLTZ7vYb/JtPSSZ10hsOYIvEYsjbNU+zPdIHcUaWVNUEPivzxku31865sSSud0Da0W4lEeOPlmw93zLQchuQ==}
 
+  socks-proxy-agent@6.2.1:
+    resolution: {integrity: sha512-a6KW9G+6B3nWZ1yB8G7pJwL3ggLy1uTzKAgCb7ttblwqdz9fMGJUuTy3uFzEP48FAs9FLILlmzDlE2JJhVQaXQ==}
+    engines: {node: '>= 10'}
+
   socks-proxy-agent@8.0.5:
     resolution: {integrity: sha512-HehCEsotFqbPW9sJ8WVYB6UbmIMv7kUUORIF2Nncq4VQvBfNBLibW9YZR5dlYCSUhwcD628pRllm7n+E+YTzJw==}
     engines: {node: '>= 14'}
@@ -17573,6 +17647,12 @@ packages:
   sqlite-vec@0.1.6:
     resolution: {integrity: sha512-hQZU700TU2vWPXZYDULODjKXeMio6rKX7UpPN7Tq9qjPW671IEgURGrcC5LDBMl0q9rBvAuzmcmJmImMqVibYQ==}
 
+  sqlite3@5.1.7:
+    resolution: {integrity: sha512-GGIyOiFaG+TUra3JIfkI/zGP8yZYLPQ0pl1bH+ODjiX57sPhrLU5sQJn1y9bDKZUFYkX1crlrPfSYt0BKKdkog==}
+
+  sqlite@5.1.1:
+    resolution: {integrity: sha512-oBkezXa2hnkfuJwUo44Hl9hS3er+YFtueifoajrgidvqsJRQFpc5fKoAkAor1O5ZnLoa28GBScfHXs8j0K358Q==}
+
   srcset@4.0.0:
     resolution: {integrity: sha512-wvLeHgcVHKO8Sc/H/5lkGreJQVeYMm9rlmt8PuR1xE31rIuXhuzznUUqAt8MqLhB3MqJdFzlNAfpcWnxiFUcPw==}
     engines: {node: '>=12'}
@@ -17588,6 +17668,10 @@ packages:
   ssri@10.0.6:
     resolution: {integrity: sha512-MGrFH9Z4NP9Iyhqn16sDtBpRRNJ0Y2hNa6D65h736fVSaPCHr4DM4sWUNvVaSuC+0OBGhwsrydQwmgfg5LncqQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  ssri@8.0.1:
+    resolution: {integrity: sha512-97qShzy1AiyxvPNIkLWoGua7xoQzzPjQ0HAH4B0rWKo7SZ6USuPcrUiAFrws0UH8RrbWmgq3LMTObhPIHbbBeQ==}
+    engines: {node: '>= 8'}
 
   sswr@2.1.0:
     resolution: {integrity: sha512-Cqc355SYlTAaUt8iDPaC/4DPPXK925PePLMxyBKuWd5kKc5mwsG3nT9+Mq2tyguL5s7b4Jg+IRMpTRsNTAfpSQ==}
@@ -18588,6 +18672,9 @@ packages:
   uniq@1.0.1:
     resolution: {integrity: sha512-Gw+zz50YNKPDKXs+9d+aKAjVwpjNwqzvNpLigIruT4HA9lMZNdMqs9x07kKHB/L9WRzqp4+DlTU5s4wG2esdoA==}
 
+  unique-filename@1.1.1:
+    resolution: {integrity: sha512-Vmp0jIp2ln35UTXuryvjzkjGdRyf9b2lTXuSYUiPmzRcl3FDtYqAwOnTJkAngD9SWhnoJzDbTKwaOrZ+STtxNQ==}
+
   unique-filename@3.0.0:
     resolution: {integrity: sha512-afXhuC55wkAmZ0P18QsVE6kp8JaxrEokN2HGIoIVv2ijHQd419H0+6EigAFcIzXeMIkcIkNBpB3L/DXB3cTS/g==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
@@ -18595,6 +18682,9 @@ packages:
   unique-names-generator@4.7.1:
     resolution: {integrity: sha512-lMx9dX+KRmG8sq6gulYYpKWZc9RlGsgBR6aoO8Qsm3qvkSJ+3rAymr+TnV8EDMrIrwuFJ4kruzMWM/OpYzPoow==}
     engines: {node: '>=8'}
+
+  unique-slug@2.0.2:
+    resolution: {integrity: sha512-zoWr9ObaxALD3DOPfjPSqxt4fnZiWblxHIgeWqW8x7UqDzEtHEQLzji2cuJYQFCU6KmoJikOYAZlrTHHebjx2w==}
 
   unique-slug@4.0.0:
     resolution: {integrity: sha512-WrcA6AyEfqDX5bWige/4NQfPZMtASNVxdmWR76WESYQVAACSgWcR6e9i0mofqqBxYFtL4oAxPIptY73/0YE1DQ==}
@@ -23940,6 +24030,9 @@ snapshots:
 
   '@fuels/vm-asm@0.58.2': {}
 
+  '@gar/promisify@1.1.3':
+    optional: true
+
   '@goat-sdk/adapter-vercel-ai@0.2.0(@goat-sdk/core@0.4.0)(ai@3.4.33(openai@4.77.0(encoding@0.1.13)(zod@3.23.8))(react@18.3.1)(sswr@2.1.0(svelte@5.16.1))(svelte@5.16.1)(vue@3.5.13(typescript@5.6.3))(zod@3.23.8))':
     dependencies:
       '@goat-sdk/core': 0.4.0
@@ -25558,6 +25651,12 @@ snapshots:
       - bluebird
       - supports-color
 
+  '@npmcli/fs@1.1.1':
+    dependencies:
+      '@gar/promisify': 1.1.3
+      semver: 7.6.3
+    optional: true
+
   '@npmcli/fs@3.1.1':
     dependencies:
       semver: 7.6.3
@@ -25598,6 +25697,12 @@ snapshots:
     transitivePeerDependencies:
       - bluebird
       - supports-color
+
+  '@npmcli/move-file@1.1.2':
+    dependencies:
+      mkdirp: 1.0.4
+      rimraf: 3.0.2
+    optional: true
 
   '@npmcli/name-from-folder@2.0.0': {}
 
@@ -28195,6 +28300,9 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
+  '@tootallnate/once@1.1.2':
+    optional: true
+
   '@tootallnate/quickjs-emscripten@0.23.0': {}
 
   '@trysound/sax@0.2.0': {}
@@ -28716,6 +28824,10 @@ snapshots:
   '@types/sql.js@1.4.9':
     dependencies:
       '@types/emscripten': 1.39.13
+      '@types/node': 20.17.9
+
+  '@types/sqlite3@3.1.11':
+    dependencies:
       '@types/node': 20.17.9
 
   '@types/stack-utils@2.0.3': {}
@@ -30788,6 +30900,30 @@ snapshots:
       magicast: 0.3.5
 
   cac@6.7.14: {}
+
+  cacache@15.3.0:
+    dependencies:
+      '@npmcli/fs': 1.1.1
+      '@npmcli/move-file': 1.1.2
+      chownr: 2.0.0
+      fs-minipass: 2.1.0
+      glob: 7.2.3
+      infer-owner: 1.0.4
+      lru-cache: 6.0.0
+      minipass: 3.3.6
+      minipass-collect: 1.0.2
+      minipass-flush: 1.0.5
+      minipass-pipeline: 1.2.4
+      mkdirp: 1.0.4
+      p-map: 4.0.0
+      promise-inflight: 1.0.1
+      rimraf: 3.0.2
+      ssri: 8.0.1
+      tar: 6.2.1
+      unique-filename: 1.1.1
+    transitivePeerDependencies:
+      - bluebird
+    optional: true
 
   cacache@18.0.4:
     dependencies:
@@ -32897,7 +33033,6 @@ snapshots:
       '@esbuild/win32-arm64': 0.23.1
       '@esbuild/win32-ia32': 0.23.1
       '@esbuild/win32-x64': 0.23.1
-    optional: true
 
   esbuild@0.24.2:
     optionalDependencies:
@@ -33977,7 +34112,6 @@ snapshots:
   get-tsconfig@4.8.1:
     dependencies:
       resolve-pkg-maps: 1.0.0
-    optional: true
 
   get-uri@6.0.4:
     dependencies:
@@ -34724,6 +34858,15 @@ snapshots:
 
   http-parser-js@0.5.8: {}
 
+  http-proxy-agent@4.0.1:
+    dependencies:
+      '@tootallnate/once': 1.1.2
+      agent-base: 6.0.2
+      debug: 4.4.0(supports-color@8.1.1)
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
+
   http-proxy-agent@7.0.2:
     dependencies:
       agent-base: 7.1.3
@@ -34866,6 +35009,9 @@ snapshots:
   indent-string@4.0.0: {}
 
   indent-string@5.0.0: {}
+
+  infer-owner@1.0.4:
+    optional: true
 
   infima@0.2.0-alpha.45: {}
 
@@ -36737,6 +36883,29 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  make-fetch-happen@9.1.0:
+    dependencies:
+      agentkeepalive: 4.6.0
+      cacache: 15.3.0
+      http-cache-semantics: 4.1.1
+      http-proxy-agent: 4.0.1
+      https-proxy-agent: 5.0.1
+      is-lambda: 1.0.1
+      lru-cache: 6.0.0
+      minipass: 3.3.6
+      minipass-collect: 1.0.2
+      minipass-fetch: 1.4.1
+      minipass-flush: 1.0.5
+      minipass-pipeline: 1.2.4
+      negotiator: 0.6.4
+      promise-retry: 2.0.1
+      socks-proxy-agent: 6.2.1
+      ssri: 8.0.1
+    transitivePeerDependencies:
+      - bluebird
+      - supports-color
+    optional: true
+
   makeerror@1.0.12:
     dependencies:
       tmpl: 1.0.5
@@ -37481,9 +37650,23 @@ snapshots:
 
   minimist@1.2.8: {}
 
+  minipass-collect@1.0.2:
+    dependencies:
+      minipass: 3.3.6
+    optional: true
+
   minipass-collect@2.0.1:
     dependencies:
       minipass: 7.1.2
+
+  minipass-fetch@1.4.1:
+    dependencies:
+      minipass: 3.3.6
+      minipass-sized: 1.0.3
+      minizlib: 2.1.2
+    optionalDependencies:
+      encoding: 0.1.13
+    optional: true
 
   minipass-fetch@3.0.5:
     dependencies:
@@ -37893,6 +38076,23 @@ snapshots:
       which: 4.0.0
     transitivePeerDependencies:
       - supports-color
+
+  node-gyp@8.4.1:
+    dependencies:
+      env-paths: 2.2.1
+      glob: 7.2.3
+      graceful-fs: 4.2.11
+      make-fetch-happen: 9.1.0
+      nopt: 5.0.0
+      npmlog: 6.0.2
+      rimraf: 3.0.2
+      semver: 7.6.3
+      tar: 6.2.1
+      which: 2.0.2
+    transitivePeerDependencies:
+      - bluebird
+      - supports-color
+    optional: true
 
   node-int64@0.4.0: {}
 
@@ -40552,8 +40752,7 @@ snapshots:
 
   resolve-pathname@3.0.0: {}
 
-  resolve-pkg-maps@1.0.0:
-    optional: true
+  resolve-pkg-maps@1.0.0: {}
 
   resolve.exports@2.0.3: {}
 
@@ -41172,6 +41371,15 @@ snapshots:
       uuid: 8.3.2
       websocket-driver: 0.7.4
 
+  socks-proxy-agent@6.2.1:
+    dependencies:
+      agent-base: 6.0.2
+      debug: 4.4.0(supports-color@8.1.1)
+      socks: 2.8.3
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
+
   socks-proxy-agent@8.0.5:
     dependencies:
       agent-base: 7.1.3
@@ -41314,6 +41522,20 @@ snapshots:
       sqlite-vec-linux-x64: 0.1.6
       sqlite-vec-windows-x64: 0.1.6
 
+  sqlite3@5.1.7:
+    dependencies:
+      bindings: 1.5.0
+      node-addon-api: 7.1.1
+      prebuild-install: 7.1.2
+      tar: 6.2.1
+    optionalDependencies:
+      node-gyp: 8.4.1
+    transitivePeerDependencies:
+      - bluebird
+      - supports-color
+
+  sqlite@5.1.1: {}
+
   srcset@4.0.0: {}
 
   srt@0.0.3:
@@ -41335,6 +41557,11 @@ snapshots:
   ssri@10.0.6:
     dependencies:
       minipass: 7.1.2
+
+  ssri@8.0.1:
+    dependencies:
+      minipass: 3.3.6
+    optional: true
 
   sswr@2.1.0(svelte@5.16.1):
     dependencies:
@@ -42180,7 +42407,6 @@ snapshots:
       get-tsconfig: 4.8.1
     optionalDependencies:
       fsevents: 2.3.3
-    optional: true
 
   tty-browserify@0.0.1: {}
 
@@ -42507,11 +42733,21 @@ snapshots:
 
   uniq@1.0.1: {}
 
+  unique-filename@1.1.1:
+    dependencies:
+      unique-slug: 2.0.2
+    optional: true
+
   unique-filename@3.0.0:
     dependencies:
       unique-slug: 4.0.0
 
   unique-names-generator@4.7.1: {}
+
+  unique-slug@2.0.2:
+    dependencies:
+      imurmurhash: 0.1.4
+    optional: true
 
   unique-slug@4.0.0:
     dependencies:

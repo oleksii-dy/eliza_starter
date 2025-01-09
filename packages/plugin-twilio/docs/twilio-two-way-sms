@@ -1,0 +1,51 @@
+## Overview
+
+Twilio two-way SMS and MMS messages allow you to carry on a conversation by both sending and receiving text and multimedia messages. This can enable a contact center agent to engage in an SMS-based chat with a customer, or let customers re-schedule appointments via text and receive automated responses.
+
+## Product
+
+Programmable Messaging 
+
+## Frequently Asked Questions
+
+### How do I Receive Inbound SMS or MMS Text Messages?
+
+You need to define where you want the received message sent to, i.e. what URL we should GET or POST the content to. You can specify this manually in the Console, or via the API. For full details, please see our article for [Configuring Phone Numbers to Receive and Respond to SMS and MMS Messages](https://help.twilio.com/articles/223136047-Configuring-Phone-Numbers-to-Receive-SMS-Messages).
+
+Once your phone number is configured properly, we’ll reach out with an HTTP POST or GET request to the configured URL whenever an incoming SMS or MMS message is received on your phone number. We’ll send you [all the details of the message](https://www.twilio.com/docs/api/twiml/sms/twilio_request), including the from number, to number, message body, and any media they sent such as image files. We also try and share geo-information we can determine from the phone number, like the city, state, and country (when available). Please note this geo-information is derived from the phone number itself, and may not represent the user’s current location.
+
+### How do I Send Outbound SMS Text Messages?
+
+There are two methods for sending an outbound message response:
+
+-   **REST API**: Sending an **HTTP POST** request to [Twilio’s Messages API resource](https://www.twilio.com/docs/api/rest/sending-messages) tells us to send a message. You simply specify the recipient phone number you want to send to, the Twilio resource you’re sending from (phone number, short code, Messaging service, etc. ), and the content of the message (text, pictures, links, etc). This can be in response to a previous inbound message, or initiated independently. For a full walkthrough, please see our guide [How to Receive and Reply to SMS and MMS Messages](https://www.twilio.com/docs/guides/how-to-receive-and-reply).
+-   **TwiML**: The [<Message> TwiML verb](https://www.twilio.com/docs/api/twiml/sms/message) can be used to initiate an outbound message in direct response to an inbound message.
+
+### What Phone Numbers can I use for two-way SMS?
+
+Any Twilio Phone Number that supports SMS can be used for two-way messaging local to the recipients (e.g. a German mobile number for a German audience). SMS support can be checked via a number of methods:
+
+-   **Console**: SMS support for Twilio Phone Numbers can be viewed at [www.twilio.com/console/phone-numbers](http://www.twilio.com/console/phone-numbers). Supported numbers will have an SMS icon under the **CAPABILITIES** heading.
+-   **API**: A GET request to the [IncomingPhoneNumbers API Resource](https://www.twilio.com/docs/api/rest/incoming-phone-numbers) will also return SMS support information for your Twilio Phone Numbers. Our response will include a Capabilities property with boolean true/false values for SMS and MMS capabilities.
+
+### Does Twilio support innternational two-way SMS?
+
+Twilio supports two-way SMS in countries where we offer SMS-capable phone numbers or short codes ([see here](https://help.twilio.com/articles/223183068-Twilio-international-phone-number-availability-and-their-capabilities) for a complete list).
+
+You may be able to conduct two-way SMS when using a number from a different country than your recipients, however this is not guaranteed. As a best practice, always use an SMS-capable Twilio number or short code from the same country as your recipients, where available. For example, we suggest using a UK number for 2-way messaging with UK recipients.
+
+If you are conducting two-way SMS in multiple countries, using a [Messaging Service](https://www.twilio.com/docs/api/rest/messaging-services-and-copilot-overview) can be very helpful to make sure you are always using your best available number to reach your recipients.
+
+Note, short code numbers are only capable of sending within their designated country (e.g. a US short code can only reach US mobile numbers).
+
+**Why can't international (cross-border) 2-way SMS always be guaranteed?** In some countries, carriers may [change your sender ID](https://help.twilio.com/articles/223181088-Why-do-some-SMS-recipients-see-a-Sender-ID-that-is-not-my-Twilio-number-) for recipients to comply with local rules or to help ensure successful delivery. Please see our [SMS Guidelines site](https://www.twilio.com/guidelines/sms) to review what’s possible in countries you’re sending to and from.
+
+### Can Alphanumeric Sender IDs be used for two-way SMS?
+
+Alphanumeric Sender IDs can only be used for one-way messages; the ID used is not a phone number, and thus cannot receive direct replies. We recommend instead that a local phone number is used for sending these messages, or a reply to number be included in the message. For more information, please see our article for [Getting Started with Alphanumeric Sender ID](https://help.twilio.com/articles/223181348-Getting-Started-with-Alphanumeric-Sender-ID-for-Twilio-Programmable-SMS).
+
+## Additional Information
+
+-   [Twilio Programmable SMS API reference](https://www.twilio.com/docs/api/messaging/send-messages)
+-   [Twilio SMS Quickstart step-by-step guides](https://www.twilio.com/docs/quickstart?filter-product=sms)
+-   [Twilio Programmable SMS tutorials for specific use cases](https://www.twilio.com/docs/tutorials?filter-product=sms&order_by=-popularity_rank)

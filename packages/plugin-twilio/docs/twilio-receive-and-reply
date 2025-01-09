@@ -1,0 +1,393 @@
+# Receive and Reply to Incoming Messages - Node.js
+
+
+___
+
+In this guide, we'll show you how to use [Programmable Messaging(link takes you to an external page)](https://www.twilio.com/en-us/messaging/channels/sms "Programmable Messaging") to respond to incoming messages in your Node.js web application. When someone sends a text message to your Twilio number, Twilio can call a **webhook** you create in Node.js from which you can send a reply back using **TwiML**. All this talk of webhooks and TwiML got you feeling anxious? Fear not. This guide will help you master the basics in no time.
+
+(information)
+
+## Info
+
+Twilio can send your web application an HTTP request when certain events happen, such as an incoming text message to one of your Twilio phone numbers. These requests are called _webhooks_, or _status callbacks_. For more, check out our guide to [Getting Started with Twilio Webhooks](https://www.twilio.com/docs/usage/webhooks/getting-started-twilio-webhooks "Getting Started with Twilio Webhooks"). Find other webhook pages, such as a [security guide](https://www.twilio.com/docs/usage/webhooks/webhooks-security "security guide") and an [FAQ](https://www.twilio.com/docs/usage/webhooks/webhooks-faq "FAQ") in the [Webhooks](https://www.twilio.com/docs/usage/webhooks "Webhooks") section of the docs.
+
+The code snippets in this guide are written using modern JavaScript language features in Node.js version 14 or higher, and make use of the following modules:
+
+-   [Express(link takes you to an external page)](https://expressjs.com/ "Express")
+-   [body-parser(link takes you to an external page)](https://github.com/expressjs/body-parser "body-parser")
+-   [Twilio Node.js SDK(link takes you to an external page)](https://github.com/twilio/twilio-node "Twilio Node.js SDK")
+
+Let's get started!
+
+![Incoming SMS Diagram.](https://www.twilio.com/_next/image?url=https%3A%2F%2Fdocs-resources.prod.twilio.com%2Fc15f2bf86138c03fe2b76b46fa25e1dba9bef1bd079c95b3b0cb8bb6ebfb847c.png&w=3840&q=75&dpl=dpl_82EMUXAPMT4WMh4aG41vg5cKQiis)Expand image
+
+___
+
+## What is a Webhook?
+
+[what-is-a-webhook page anchor](https://www.twilio.com/docs/messaging/tutorials/how-to-receive-and-reply/node-js#what-is-a-webhook)
+
+Positive FeedbackNegative Feedback
+
+Webhooks are user-defined [HTTP(link takes you to an external page)](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol "HTTP") callbacks. They are usually triggered by some event, such as receiving an SMS message or an incoming phone call. When that event occurs, Twilio makes an HTTP request (usually a [`POST` or a `GET`(link takes you to an external page)](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol#Request_methods)) to the URL configured for the webhook.
+
+To handle a webhook, you only need to build a small web application that can accept the HTTP requests. Almost all server-side programming languages offer some framework for you to do this. Examples across languages include [ASP.NET MVC(link takes you to an external page)](http://www.asp.net/ "ASP.NET MVC") for C#, [Servlets(link takes you to an external page)](https://en.wikipedia.org/wiki/Java_servlet "Servlets") and [Spark(link takes you to an external page)](http://sparkjava.com/ "Spark") for Java, [Express(link takes you to an external page)](https://expressjs.com/ "Express") for Node.js, [Django(link takes you to an external page)](https://www.djangoproject.com/ "Django") and [Flask(link takes you to an external page)](http://flask.pocoo.org/ "Flask") for Python, and [Rails(link takes you to an external page)](http://rubyonrails.org/ "Rails") and [Sinatra(link takes you to an external page)](http://www.sinatrarb.com/ "Sinatra") for Ruby. [PHP(link takes you to an external page)](https://secure.php.net/ "PHP") has its own web app framework built in, although frameworks like [Laravel(link takes you to an external page)](https://laravel.com/ "Laravel"), [Symfony(link takes you to an external page)](https://symfony.com/ "Symfony") and [Yii(link takes you to an external page)](http://www.yiiframework.com/ "Yii") are also popular.
+
+Whichever framework and language you choose, webhooks function the same for every Twilio application. They will make an HTTP request to a URI that you provide to Twilio. Your application performs whatever logic you feel necessary - read/write from a database, integrate with another API or perform some computation - then replies to Twilio with a TwiML response with the instructions you want Twilio to perform.
+
+### What is TwiML?
+
+[what-is-twiml page anchor](https://www.twilio.com/docs/messaging/tutorials/how-to-receive-and-reply/node-js#what-is-twiml)
+
+Positive FeedbackNegative Feedback
+
+[TwiML](https://www.twilio.com/docs/voice/twiml "TwiML") is the Twilio Markup Language, which is just to say that it's an [XML(link takes you to an external page)](https://en.wikipedia.org/wiki/XML "XML") document with special tags defined by Twilio to help you build your SMS and voice applications. TwiML is easier shown than explained. Here's some TwiML you might use to respond to an incoming phone call:
+
+Copy code block
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say>Thanks for calling!</Say>
+</Response>
+```
+
+And here's some TwiML you might use to respond to an incoming SMS message:
+
+Copy code block
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Message>We got your message, thank you!</Message>
+</Response>
+```
+
+Every TwiML document will have the root **<Response**\> element and within that can contain one or more **verbs**. Verbs are actions you'd like Twilio to take, such as [<Say>](https://www.twilio.com/docs/voice/twiml/say "<Say>") a greeting to a caller, or send an SMS [<Message>](https://www.twilio.com/docs/messaging/twiml/message "<Message>") in reply to an incoming message. For a full reference on everything you can do with TwiML, refer to our [TwiML API Reference](https://www.twilio.com/docs/voice/twiml "TwiML API Reference").
+
+___
+
+## Generating TwiML in your web application
+
+[generating-twiml-in-your-web-application page anchor](https://www.twilio.com/docs/messaging/tutorials/how-to-receive-and-reply/node-js#generating-twiml-in-your-web-application)
+
+Positive FeedbackNegative Feedback
+
+When someone sends a text message to your Twilio number, you can send a reply back using TwiML using your [configured webhook(link takes you to an external page)](https://help.twilio.com/hc/en-us/search#stq=twilio%20basics%20how%20do%20i%20configure%20a%20phone%20number%20to%20receive%20phone%20calls%20or%20sms%20messages&stp=1 "configured webhook"). Here's how to generate TwiML using the helper library.
+
+Respond to an incoming text message[Link to code sample: Respond to an incoming text message](https://www.twilio.com/docs/messaging/tutorials/how-to-receive-and-reply/node-js#code-respond-to-an-incoming-text-message)
+
+Node.js
+
+Copy code block
+
+```
+const express = require('express');
+const { MessagingResponse } = require('twilio').twiml;
+
+const app = express();
+
+app.post('/sms', (req, res) => {
+  const twiml = new MessagingResponse();
+
+  twiml.message('The Robots are coming! Head for the hills!');
+
+  res.type('text/xml').send(twiml.toString());
+});
+
+app.listen(3000, () => {
+  console.log('Express server listening on port 3000');
+});
+```
+
+When you use the helper library, you don't have to worry about generating the raw XML yourself. Of course, if you prefer to do that, then we won't stop you.
+
+You have the code, now you need a URL you can give to Twilio. Twilio can only access public servers on the Internet. That means you need to take your web application and publish it to a web or cloud hosting provider (of which [there are many(link takes you to an external page)](https://www.google.com/#q=cloud+web+hosting "there are many")), you can host it on your own server, or you can use a service such as [ngrok(link takes you to an external page)](https://ngrok.com/ "ngrok") to expose your local development machine to the internet. We generally only recommend the latter for development and testing purposes and not for production deployments.
+
+### Configure Your Webhook URL
+
+[configure-your-webhook-url page anchor](https://www.twilio.com/docs/messaging/tutorials/how-to-receive-and-reply/node-js#configure-your-webhook-url)
+
+Positive FeedbackNegative Feedback
+
+Now that you have a URL for your web application's TwiML reply generating routine, you can configure your Twilio phone number to call your webhook URL whenever a new media message comes in for you.
+
+1.  Log into Twilio.com and go to the [Console's Numbers page](https://www.twilio.com/console/phone-numbers/incoming "Console's Numbers page")
+2.  Click on the phone number you'd like to modify
+3.  Find the Messaging section and the "A MESSAGE COMES IN" option
+4.  Select "Webhook" and paste in the URL you want to use:
+
+![Configure SMS Webhook.](https://www.twilio.com/_next/image?url=https%3A%2F%2Fdocs-resources.prod.twilio.com%2Ff25966b33e960a4214a186c1dbdd0d35aff94f3b3c704f7db85ba8a082ec20d2.png&w=1920&q=75&dpl=dpl_82EMUXAPMT4WMh4aG41vg5cKQiis)Expand image
+
+Make sure you choose `HTTP POST` or `HTTP GET` to correspond to what your web application is expecting. Usually the default of `POST` will be fine.
+
+### Backup Webhook URL
+
+[backup-webhook-url page anchor](https://www.twilio.com/docs/messaging/tutorials/how-to-receive-and-reply/node-js#backup-webhook-url)
+
+Positive FeedbackNegative Feedback
+
+You'll notice in the console that there is also a spot to provide a Webhook URL for when the "PRIMARY HANDLER FAILS." Twilio will call this URL in the event that your primary handler returns an error or does not return a response within 15 seconds. Refer to our [Availability and Reliability guide](https://www.twilio.com/docs/usage/security/availability-reliability "Availability and Reliability guide") for more details on the fallback URL.
+
+(warning)
+
+## Protect your webhooks
+
+Twilio supports HTTP Basic and Digest Authentication. Authentication allows you to password protect your TwiML URLs on your web server so that only you and Twilio can access them.
+
+Learn more about HTTP authentication [here](https://www.twilio.com/docs/usage/security#http-authentication "here"), and check out our full [guide to securing your Express application by validating incoming Twilio requests](https://www.twilio.com/docs/usage/tutorials/how-to-secure-your-express-app-by-validating-incoming-twilio-requests "guide to securing your Express application by validating incoming Twilio requests").
+
+___
+
+## Respond with media message
+
+[respond-with-media-message page anchor](https://www.twilio.com/docs/messaging/tutorials/how-to-receive-and-reply/node-js#respond-with-media-message)
+
+Positive FeedbackNegative Feedback
+
+To send a message containing media (e.g. an image), add an image URL to the text body of your message. If necessary, restart your server, then text your Twilio number again. You should receive a text message that includes an image. You can even send multiple images by adding more **Media** elements to your response. Check out the [API Reference](https://www.twilio.com/docs/messaging/twiml/message "API Reference") for more details.
+
+(information)
+
+## Info
+
+MMS messages can only be sent and received by numbers having MMS capability. You can [check the capabilities(link takes you to an external page)](https://www.twilio.com/console/phone-numbers/search "check the capabilities") of numbers in the account portal or query the [Available Phone Numbers](https://www.twilio.com/docs/phone-numbers/api/availablephonenumber-resource "Available Phone Numbers") resource to search for Twilio numbers that are MMS enabled.
+
+Generate a TwiML Message with Image[Link to code sample: Generate a TwiML Message with Image](https://www.twilio.com/docs/messaging/tutorials/how-to-receive-and-reply/node-js#code-generate-a-twiml-message-with-image)
+
+Node.js
+
+Copy code block
+
+```
+const express = require('express');
+const { MessagingResponse } = require('twilio').twiml;
+
+const app = express();
+
+app.post('/sms', (req, res) => {
+  const twiml = new MessagingResponse();
+
+  const message = twiml.message();
+  message.body('The Robots are coming! Head for the hills!');
+  message.media(
+    'https://farm8.staticflickr.com/7090/6941316406_80b4d6d50e_z_d.jpg'
+  );
+
+  res.type('text/xml').send(twiml.toString());
+});
+
+app.listen(3000, () => {
+  console.log('Express server listening on port 3000');
+});
+```
+
+___
+
+## Custom responses to incoming media messages
+
+[custom-responses-to-incoming-media-messages page anchor](https://www.twilio.com/docs/messaging/tutorials/how-to-receive-and-reply/node-js#custom-responses-to-incoming-media-messages)
+
+Positive FeedbackNegative Feedback
+
+Let's take a look at how we might respond to an incoming media message with a different message depending on the incoming Body parameter from the incoming Twilio Request.
+
+Generate a dynamic TwiML Message[Link to code sample: Generate a dynamic TwiML Message](https://www.twilio.com/docs/messaging/tutorials/how-to-receive-and-reply/node-js#code-generate-a-dynamic-twiml-message)
+
+Node.js
+
+Copy code block
+
+```
+const express = require('express');
+const bodyParser = require('body-parser');
+const { MessagingResponse } = require('twilio').twiml;
+
+const app = express();
+
+app.use(bodyParser.urlencoded({ extended: false }));
+
+app.post('/', (req, res) => {
+  const twiml = new MessagingResponse();
+
+  if (req.body.Body == 'hello') {
+    twiml.message('Hi!');
+  } else if (req.body.Body == 'bye') {
+    twiml.message('Goodbye');
+  } else {
+    twiml.message(
+      'No Body param match, Twilio sends this in the request to your server.'
+    );
+  }
+
+  res.type('text/xml').send(twiml.toString());
+});
+
+app.listen(3000, () => {
+  console.log('Express server listening on port 3000');
+});
+```
+
+Now, try sending your Twilio number a text that says "hi" or "bye", and you should get the corresponding response.
+
+___
+
+## Receive incoming messages without sending a reply
+
+[receive-incoming-messages-without-sending-a-reply page anchor](https://www.twilio.com/docs/messaging/tutorials/how-to-receive-and-reply/node-js#receive-incoming-messages-without-sending-a-reply)
+
+Positive FeedbackNegative Feedback
+
+If you would like to receive incoming messages but not send an outgoing reply message, you can return an empty TwiML response. Twilio still expects to receive TwiML in response to its request to your server, but if the TwiML does not contain any directions, Twilio will accept the empty TwiML without taking any actions.
+
+Receive an incoming message without sending a response[Link to code sample: Receive an incoming message without sending a response](https://www.twilio.com/docs/messaging/tutorials/how-to-receive-and-reply/node-js#code-receive-an-incoming-message-without-sending-a-response)
+
+Node.js
+
+Copy code block
+
+```
+const express = require('express');
+const { MessagingResponse } = require('twilio').twiml;
+
+const app = express();
+
+app.post('/sms', (req, res) => {
+  const twiml = new MessagingResponse();
+
+  res.type('text/xml').send(twiml.toString());
+});
+
+app.listen(3000, () => {
+  console.log('Express server listening on port 3000');
+});
+```
+
+___
+
+## Enhance messages with Twilio Marketplace Add-ons
+
+[enhance-messages-with-twilio-marketplace-add-ons page anchor](https://www.twilio.com/docs/messaging/tutorials/how-to-receive-and-reply/node-js#enhance-messages-with-twilio-marketplace-add-ons)
+
+Positive FeedbackNegative Feedback
+
+Need more information about the phone number that sent the message? Need to analyze the message itself for sentiment or other data? Add-ons are available in the [Twilio Marketplace(link takes you to an external page)](https://twilio.com/console/add-ons "Twilio Marketplace") to accomplish these tasks and more.
+
+To learn how to enable [Add-ons for your incoming SMS messages(link takes you to an external page)](https://console.twilio.com/us1/develop/add-ons/catalog?products=programmable_messaging "Add-ons for your incoming SMS messages"), refer to our [Add-ons tutorial](https://www.twilio.com/docs/marketplace/listings/tutorial "Add-ons tutorial"). To learn how to enable [Add-ons for your incoming SMS messages(link takes you to an external page)](https://console.twilio.com/us1/develop/add-ons/catalog?products=programmable_messaging "Add-ons for your incoming SMS messages"), see the [How to Use Twilio Marketplace Add-on Listings guide](https://www.twilio.com/docs/marketplace/listings/usage#add-on-listings "How to Use Twilio Marketplace Add-on Listings guide").
+
+![Add-ons Diagram.](https://www.twilio.com/_next/image?url=https%3A%2F%2Fdocs-resources.prod.twilio.com%2F2e7432cda6965a10a0fa9c7c5eecddb3b67dc073dde8b9ad03e92d1ac3c8b9fe.png&w=3840&q=75&dpl=dpl_82EMUXAPMT4WMh4aG41vg5cKQiis)Expand image
+
+
+
+
+
+
+
+
+
+
+# Create an SMS Conversation in Node.js
+
+Positive FeedbackNegative Feedback
+
+___
+
+How do you turn a handful of isolated messages to and from the same party into a true conversation? You need some way to remember state between each message that is exchanged. This is because SMS is a stateless protocol. Building traditional web applications has this same hurdle, as HTTP is also a stateless protocol. This problem has been solved for web applications through the use of HTTP cookies and, rather than reinvent the wheel, the Twilio Messaging API uses the same solution.
+
+This guide will show you how to use [Programmable Messaging(link takes you to an external page)](https://www.twilio.com/en-us/messaging/channels/sms "Programmable Messaging") to accomplish this in your Node.js application. The code snippets in this guide are written using modern JavaScript language features in Node.js version 6 or higher, and make use of the following modules:
+
+-   [Express(link takes you to an external page)](https://expressjs.com/ "Express")
+-   [body-parser(link takes you to an external page)](https://github.com/expressjs/body-parser "body-parser")
+-   [express-session(link takes you to an external page)](https://github.com/expressjs/session "express-session")
+-   [Twilio Node.js SDK(link takes you to an external page)](https://github.com/twilio/twilio-node "Twilio Node.js SDK")
+
+If you haven't written your own SMS webhooks with Node.js before, you may want to first check out our guide, [Receive and Reply to SMS and MMS Messages in Node.js](https://www.twilio.com/docs/messaging/tutorials/how-to-receive-and-reply/node-js "Receive and Reply to SMS and MMS Messages in Node.js"). Ready to go? Let's get started!
+
+(information)
+
+## Info
+
+Twilio Conversations, a more recent product offering, is an omni-channel messaging platform that allows you to build engaging conversational, two-way messaging experiences. Be sure to [check out our Conversations product](https://www.twilio.com/docs/conversations "check out our Conversations product") to see if it's a better fit for your needs.
+
+___
+
+## Using HTTP Cookies with Webhooks
+
+[using-http-cookies-with-webhooks page anchor](https://www.twilio.com/docs/messaging/tutorials/how-to-create-sms-conversations/node-js#using-http-cookies-with-webhooks)
+
+Positive FeedbackNegative Feedback
+
+### What is a cookie[?(link takes you to an external page)](https://www.youtube.com/watch?v=BovQyphS8kA "?")
+
+[what-is-a-cookie page anchor](https://www.twilio.com/docs/messaging/tutorials/how-to-create-sms-conversations/node-js#what-is-a-cookie)
+
+Positive FeedbackNegative Feedback
+
+Just like in web applications, a cookie is a small file that your application can store on Twilio's servers to keep track of information, such as a username or account. For Twilio Messaging, cookies are scoped to the "conversation" between two parties — you can have a unique cookie for each To/From phone number pair. For example, you can store a unique cookie for any messages sent between 415-555-2222 and 415-555-1111, which will be different than the cookie used between 415-555-3333 and 415-555-1111.
+
+### Why cookies?
+
+[why-cookies page anchor](https://www.twilio.com/docs/messaging/tutorials/how-to-create-sms-conversations/node-js#why-cookies)
+
+Positive FeedbackNegative Feedback
+
+In web apps, you write a cookie to keep "statefulness" between separate requests from the same browser. Similarly, SMS messages are independent communications between two parties, so Twilio allows you to tie them together as a logical session via cookies. This means you can use server-side sessions to keep track of application state between requests. How cool is that? Twilio will expire the cookies for that conversation after four hours of inactivity, as if the user "closed the browser."
+
+### Storing Conversation Data
+
+[storing-conversation-data page anchor](https://www.twilio.com/docs/messaging/tutorials/how-to-create-sms-conversations/node-js#storing-conversation-data)
+
+Positive FeedbackNegative Feedback
+
+The cookies let you share state across multiple messages allowing you to treat separate messages as a conversation, and store data about the conversation in the cookies for future reference.
+
+You can store the data directly in a cookie, or you can use a session state management framework. The code sample below does the latter, using the express-session module for Node.js and Express.
+
+___
+
+## Track SMS Conversations using a Session
+
+[track-sms-conversations-using-a-session page anchor](https://www.twilio.com/docs/messaging/tutorials/how-to-create-sms-conversations/node-js#track-sms-conversations-using-a-session)
+
+Positive FeedbackNegative Feedback
+
+Let's try using session counters to see if a particular user has messaged us before. If they're a new sender, we'll thank them for the new message. If they've sent us messages before, we'll specify how many messages we've gotten from them.
+
+Tracking SMS Conversations using Cookies[Link to code sample: Tracking SMS Conversations using Cookies](https://www.twilio.com/docs/messaging/tutorials/how-to-create-sms-conversations/node-js#code-tracking-sms-conversations-using-cookies)
+
+Node.js
+
+Copy code block
+
+```
+const http = require('http');
+const express = require('express');
+const session = require('express-session');
+const MessagingResponse = require('twilio').twiml.MessagingResponse;
+
+const app = express();
+
+app.use(session({secret: 'anything-you-want-but-keep-secret'}));
+
+app.post('/sms', (req, res) => {
+  const smsCount = req.session.counter || 0;
+
+  let message = 'Hello, thanks for the new message.';
+
+  if(smsCount > 0) {
+    message = 'Hello, thanks for message number ' + (smsCount + 1);
+  }
+
+  req.session.counter = smsCount + 1;
+
+  const twiml = new MessagingResponse();
+  twiml.message(message);
+
+  res.writeHead(200, {'Content-Type': 'text/xml'});
+  res.end(twiml.toString());
+});
+
+http.createServer(app).listen(1337, () => {
+  console.log('Express server listening on port 1337');
+});
+```

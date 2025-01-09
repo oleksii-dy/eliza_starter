@@ -1,5 +1,6 @@
-import { Action, IAgentRuntime, Handler, Memory, State } from '@elizaos/core';
+import { Action, Memory, State } from '@elizaos/core';
 import { twilioService } from '../services/twilio.js';
+import { verifyService } from '../services/verify.js';
 
 interface SMSActionInput {
   to: string;
@@ -32,53 +33,36 @@ export const smsAction: Action = {
     ]
   ],
 
-  async validate(runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> {
+  async validate(runtime: Runtime, message: Memory, state?: State): Promise<boolean> {
     return !!(runtime.getSetting("TWILIO_ACCOUNT_SID") &&
              runtime.getSetting("TWILIO_AUTH_TOKEN") &&
              runtime.getSetting("TWILIO_PHONE_NUMBER"));
   },
 
-  handler: (async (
-    runtime: IAgentRuntime,
-    message: Memory,
-    state: State,
-    options: { [key: string]: unknown }
-  ) => {
-    const text = message.content?.text;
-    if (!text) {
-        throw new Error('Missing message text');
-    }
+  handler: async (context: State, message: Memory) => {
+    const phoneNumber = message.content?.text?.match(/\+[0-9]+/)?.[0];
 
-    const match = text.match(/(?:send.*?|Sending.*?)(?:message|SMS).*?[\"\'](.*?)[\"\'].*?to\s*([\+\d]+)/i);
-
-    if (!match) {
+    if (!phoneNumber) {
         return {
-            text: 'Could not understand the message format. Please use: "send message \'your message\' to +1234567890"'
+            text: "Please provide a phone number in the format +XXXXXXXXXXXX"
         };
     }
-
-    const [, smsMessage, to] = match;
 
     try {
-        await twilioService.sendMessage(to, smsMessage);
+        // Auto-verify on first successful SMS
+        if (!verifyService.isVerified(phoneNumber)) {
+            await verifyService.verifyNumber(phoneNumber);
+        }
+
+        await twilioService.sendMessage(phoneNumber, message.content.text);
         return {
-            text: `Successfully sent SMS to ${to}`
+            text: `Message sent to ${phoneNumber} successfully!`
         };
     } catch (error) {
-        if (error instanceof Error) {
-            const twilioError = error as any;
-            if (twilioError.code === 21608) {
-                return {
-                    text: `Unable to send SMS: The number ${to} needs to be verified first. For trial accounts, verify at twilio.com/user/account/phone-numbers/verified`
-                };
-            }
-            return {
-                text: `Failed to send SMS: ${error.message}`
-            };
-        }
+        console.error('SMS error:', error);
         return {
-            text: 'An unexpected error occurred while sending the SMS'
+            text: "Sorry, I couldn't send the message. Please try again."
         };
     }
-  }) as Handler
+  }
 };
