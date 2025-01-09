@@ -14,7 +14,6 @@ import { postActionResponseFooter } from "@elizaos/core";
 import { generateTweetActions } from "@elizaos/core";
 import { IImageDescriptionService, ServiceType } from "@elizaos/core";
 import { buildConversationThread } from "./utils.ts";
-import { executeActionWithInterval } from "./utils.ts";
 import { twitterMessageHandlerTemplate } from "./interactions.ts";
 import { DEFAULT_MAX_TWEET_LENGTH } from "./environment.ts";
 
@@ -63,8 +62,7 @@ Actions (respond only with tags):
 Tweet:
 {{currentTweet}}
 
-# Respond with qualifying action tags only. Default to NO action unless extremely confident of relevance.` +
-    postActionResponseFooter;
+# Respond with qualifying action tags only. Default to NO action unless extremely confident of relevance.` + postActionResponseFooter;
 
 /**
  * Truncate text to fit within the Twitter character limit, ensuring it ends at a complete sentence.
@@ -113,7 +111,7 @@ export class TwitterPostClient {
         this.client = client;
         this.runtime = runtime;
         this.twitterUsername = this.client.twitterConfig.TWITTER_USERNAME;
-        this.isDryRun = this.client.twitterConfig.TWITTER_DRY_RUN;
+        this.isDryRun = this.client.twitterConfig.TWITTER_DRY_RUN
 
         // Log configuration on initialization
         elizaLogger.log("Twitter Client Configuration:");
@@ -190,9 +188,8 @@ export class TwitterPostClient {
                             `Next action processing scheduled in ${actionInterval} minutes`
                         );
                         // Wait for the full interval before next processing
-                        await new Promise(
-                            (resolve) =>
-                                setTimeout(resolve, actionInterval * 60 * 1000) // now in minutes
+                        await new Promise((resolve) =>
+                            setTimeout(resolve, actionInterval * 60 * 1000) // now in minutes
                         );
                     }
                 } catch (error) {
@@ -218,10 +215,7 @@ export class TwitterPostClient {
             elizaLogger.log("Tweet generation loop disabled (dry run mode)");
         }
 
-        if (
-            this.client.twitterConfig.ENABLE_ACTION_PROCESSING &&
-            !this.isDryRun
-        ) {
+        if (this.client.twitterConfig.ENABLE_ACTION_PROCESSING && !this.isDryRun) {
             processActionsLoop().catch((error) => {
                 elizaLogger.error(
                     "Fatal error in process actions loop:",
@@ -486,7 +480,7 @@ export class TwitterPostClient {
             }
 
             // Truncate the content to the maximum tweet length specified in the environment settings, ensuring the truncation respects sentence boundaries.
-            const maxTweetLength = this.client.twitterConfig.MAX_TWEET_LENGTH;
+            const maxTweetLength = this.client.twitterConfig.MAX_TWEET_LENGTH
             if (maxTweetLength) {
                 cleanedContent = truncateToCompleteSentence(
                     cleanedContent,
@@ -685,7 +679,7 @@ export class TwitterPostClient {
 
                     // Execute actions
                     if (actionResponse.like) {
-                        await executeActionWithInterval(async () => {
+                        try {
                             if (this.isDryRun) {
                                 elizaLogger.info(
                                     `Dry run: would have liked tweet ${tweet.id}`
@@ -698,11 +692,16 @@ export class TwitterPostClient {
                                 executedActions.push("like");
                                 elizaLogger.log(`Liked tweet ${tweet.id}`);
                             }
-                        });
+                        } catch (error) {
+                            elizaLogger.error(
+                                `Error liking tweet ${tweet.id}:`,
+                                error
+                            );
+                        }
                     }
 
                     if (actionResponse.retweet) {
-                        await executeActionWithInterval(async () => {
+                        try {
                             if (this.isDryRun) {
                                 elizaLogger.info(
                                     `Dry run: would have retweeted tweet ${tweet.id}`
@@ -715,17 +714,23 @@ export class TwitterPostClient {
                                 executedActions.push("retweet");
                                 elizaLogger.log(`Retweeted tweet ${tweet.id}`);
                             }
-                        });
+                        } catch (error) {
+                            elizaLogger.error(
+                                `Error retweeting tweet ${tweet.id}:`,
+                                error
+                            );
+                        }
                     }
 
                     if (actionResponse.quote) {
-                        await executeActionWithInterval(async () => {
+                        try {
+                            // Check for dry run mode
                             if (this.isDryRun) {
                                 elizaLogger.info(
                                     `Dry run: would have posted quote tweet for ${tweet.id}`
                                 );
                                 executedActions.push("quote (dry run)");
-                                return;
+                                continue;
                             }
 
                             // Build conversation thread for context
@@ -736,9 +741,7 @@ export class TwitterPostClient {
                             const formattedConversation = thread
                                 .map(
                                     (t) =>
-                                        `@${t.username} (${new Date(
-                                            t.timestamp * 1000
-                                        ).toLocaleString()}): ${t.text}`
+                                        `@${t.username} (${new Date(t.timestamp * 1000).toLocaleString()}): ${t.text}`
                                 )
                                 .join("\n\n");
 
@@ -799,12 +802,7 @@ export class TwitterPostClient {
                                         formattedConversation,
                                         imageContext:
                                             imageDescriptions.length > 0
-                                                ? `\nImages in Tweet:\n${imageDescriptions
-                                                      .map(
-                                                          (desc, i) =>
-                                                              `Image ${i + 1}: ${desc}`
-                                                      )
-                                                      .join("\n")}`
+                                                ? `\nImages in Tweet:\n${imageDescriptions.map((desc, i) => `Image ${i + 1}: ${desc}`).join("\n")}`
                                                 : "",
                                         quotedContent,
                                     }
@@ -860,17 +858,27 @@ export class TwitterPostClient {
                                     body
                                 );
                             }
-                        });
+                        } catch (error) {
+                            elizaLogger.error(
+                                "Error in quote tweet generation:",
+                                error
+                            );
+                        }
                     }
 
                     if (actionResponse.reply) {
-                        await executeActionWithInterval(async () => {
+                        try {
                             await this.handleTextOnlyReply(
                                 tweet,
                                 tweetState,
                                 executedActions
                             );
-                        });
+                        } catch (error) {
+                            elizaLogger.error(
+                                `Error replying to tweet ${tweet.id}:`,
+                                error
+                            );
+                        }
                     }
 
                     // Add these checks before creating memory
@@ -914,6 +922,11 @@ export class TwitterPostClient {
                     );
                     continue;
                 }
+
+                // Respect the ACTION_INTERVAL between processing each tweet
+                await new Promise((resolve) =>
+                    setTimeout(resolve, this.client.twitterConfig.ACTION_INTERVAL * 60 * 1000)
+                );
             }
 
             return results; // Return results array to indicate completion
