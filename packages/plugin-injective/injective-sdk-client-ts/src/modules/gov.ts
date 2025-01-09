@@ -10,12 +10,16 @@ import {
     MsgGovDeposit,
     TxResponse,
 } from "@injectivelabs/sdk-ts";
-import * as GovernanceTypes from "../types/index";
+import * as GovernanceTypes from "../types/gov";
 import {
     StandardResponse,
     createSuccessResponse,
     createErrorResponse,
 } from "../types/index";
+
+/**
+ * Governance Module Chain GRPC Async Functions with Error Handling
+ */
 
 /**
  * Fetches the governance module parameters.
@@ -27,14 +31,10 @@ export async function getGovernanceModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result: GovernanceTypes.GovernanceModuleParamsResponse =
-            await this.request({
-                method: this.chainGrpcGovApi.fetchModuleParams,
-                params: {},
-            });
+        const result = await this.chainGrpcGovApi.fetchModuleParams();
         return createSuccessResponse(result);
     } catch (err) {
-        return createErrorResponse("getGovernanceModuleParamsError", err);
+        return createErrorResponse("getModuleParamsError", err);
     }
 }
 
@@ -50,12 +50,8 @@ export async function getProposals(
     params: GovernanceTypes.GetProposalsParams
 ): Promise<StandardResponse> {
     try {
-        const result: GovernanceTypes.GetProposalsResponse = await this.request(
-            {
-                method: this.chainGrpcGovApi.fetchProposals,
-                params,
-            }
-        );
+        const result =
+            await this.chainGrpcGovApi.fetchProposals(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getProposalsError", err);
@@ -74,10 +70,8 @@ export async function getProposal(
     params: GovernanceTypes.GetProposalParams
 ): Promise<StandardResponse> {
     try {
-        const result: GovernanceTypes.GetProposalResponse = await this.request({
-            method: this.chainGrpcGovApi.fetchProposal,
-            params: params.proposalId,
-        });
+        const result =
+            await this.chainGrpcGovApi.fetchProposal(params.proposalId);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getProposalError", err);
@@ -96,11 +90,8 @@ export async function getProposalDeposits(
     params: GovernanceTypes.GetProposalDepositsParams
 ): Promise<StandardResponse> {
     try {
-        const result: GovernanceTypes.GetProposalDepositsResponse =
-            await this.request({
-                method: this.chainGrpcGovApi.fetchProposalDeposits,
-                params,
-            });
+        const result =
+            await this.chainGrpcGovApi.fetchProposalDeposits(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getProposalDepositsError", err);
@@ -119,11 +110,8 @@ export async function getProposalVotes(
     params: GovernanceTypes.GetProposalVotesParams
 ): Promise<StandardResponse> {
     try {
-        const result: GovernanceTypes.GetProposalVotesResponse =
-            await this.request({
-                method: this.chainGrpcGovApi.fetchProposalVotes,
-                params,
-            });
+        const result =
+            await this.chainGrpcGovApi.fetchProposalVotes(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getProposalVotesError", err);
@@ -142,11 +130,8 @@ export async function getProposalTally(
     params: GovernanceTypes.GetProposalTallyParams
 ): Promise<StandardResponse> {
     try {
-        const result: GovernanceTypes.GetProposalTallyResponse =
-            await this.request({
-                method: this.chainGrpcGovApi.fetchProposalTally,
-                params: params.proposalId,
-            });
+        const result =
+            await this.chainGrpcGovApi.fetchProposalTally(params.proposalId);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getProposalTallyError", err);
@@ -361,6 +346,6 @@ export async function msgGovDeposit(
         });
         return createSuccessResponse(result);
     } catch (err) {
-        return createErrorResponse("msgGovDepositError", err);
+        return createErrorResponse("msgDepositError", err);
     }
 }

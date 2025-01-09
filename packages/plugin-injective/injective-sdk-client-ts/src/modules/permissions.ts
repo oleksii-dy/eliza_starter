@@ -20,10 +20,7 @@ export async function getAddressesByRole(
     params: PermissionsType.GetAddressesByRoleParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcPermissionsApi.fetchAddressesByRole,
-            params,
-        });
+        const result = await this.chainGrpcPermissionsApi.fetchAddressesByRole(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAddressesByRoleError", err);
@@ -44,10 +41,7 @@ export async function getAddressRoles(
     params: PermissionsType.GetAddressRolesParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcPermissionsApi.fetchAddressRoles,
-            params,
-        });
+        const result = await this.chainGrpcPermissionsApi.fetchAddressRoles(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAddressRolesError", err);
@@ -66,10 +60,7 @@ export async function getAllNamespaces(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcPermissionsApi.fetchAllNamespaces,
-            params: {},
-        });
+        const result = await this.chainGrpcPermissionsApi.fetchAllNamespaces();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAllNamespacesError", err);
@@ -88,10 +79,7 @@ export async function getPermissionsModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcPermissionsApi.fetchModuleParams,
-            params: {},
-        });
+        const result = await this.chainGrpcPermissionsApi.fetchModuleParams();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getPermissionsModuleParamsError", err);
@@ -112,10 +100,7 @@ export async function getNamespaceByDenom(
     params: PermissionsType.GetNamespaceByDenomParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcPermissionsApi.fetchNamespaceByDenom,
-            params,
-        });
+        const result = await this.chainGrpcPermissionsApi.fetchNamespaceByDenom(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getNamespaceByDenomError", err);
@@ -136,10 +121,7 @@ export async function getVouchersForAddress(
     params: PermissionsType.GetVouchersForAddressParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcPermissionsApi.fetchVouchersForAddress,
-            params,
-        });
+        const result = await this.chainGrpcPermissionsApi.fetchVouchersForAddress(params)
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getVouchersForAddressError", err);

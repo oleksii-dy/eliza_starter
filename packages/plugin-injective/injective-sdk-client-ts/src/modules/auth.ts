@@ -4,7 +4,6 @@ import {
     createSuccessResponse,
     createErrorResponse,
 } from "../types";
-import * as AuthTypes from "../types/auth";
 
 /**
  * Fetches the authentication module parameters.
@@ -16,10 +15,8 @@ export async function getAuthModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcAuthApi.fetchModuleParams,
-            params: {},
-        });
+        const result = await this.chainGrpcAuthApi.fetchModuleParams();
+
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAuthModuleParamsError", err);
@@ -36,10 +33,7 @@ export async function getAccountDetails(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcAuthApi.fetchAccount,
-            params: this.injAddress,
-        });
+        const result = await this.chainGrpcAuthApi.fetchAccount(this.injAddress);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAccountDetailsError", err);
@@ -56,10 +50,8 @@ export async function getAccounts(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcAuthApi.fetchAccounts,
-            params: {},
-        });
+        const result = await this.chainGrpcAuthApi.fetchAccounts();
+
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAccountsError", err);

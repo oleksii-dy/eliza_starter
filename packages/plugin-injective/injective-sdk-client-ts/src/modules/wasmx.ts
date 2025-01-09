@@ -19,10 +19,7 @@ export async function getWasmxModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: () => this.chainGrpcWasmXApi.fetchModuleParams(),
-            params: {},
-        });
+        const result = await this.chainGrpcWasmXApi.fetchModuleParams();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getWasmxModuleParamsError", err);
@@ -39,10 +36,7 @@ export async function getWasmxModuleState(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: () => this.chainGrpcWasmXApi.fetchModuleState(),
-            params: {},
-        });
+        const result = await this.chainGrpcWasmXApi.fetchModuleState();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getWasmxModuleStateError", err);

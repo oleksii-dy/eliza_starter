@@ -20,10 +20,7 @@ export async function getVault(
     params: MitoTypes.GetVaultParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchVault,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchVault(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getVaultError", err);
@@ -44,10 +41,7 @@ export async function getVaults(
     params: MitoTypes.GetVaultsParams = {}
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchVaults,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchVaults(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getVaultsError", err);
@@ -68,10 +62,7 @@ export async function getLpTokenPriceChart(
     params: MitoTypes.GetLpTokenPriceChartParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchLpTokenPriceChart,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchLpTokenPriceChart(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getLpTokenPriceChartError", err);
@@ -92,10 +83,7 @@ export async function getTVLChart(
     params: MitoTypes.GetTVLChartParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchTVLChartRequest,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchTVLChartRequest(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getTVLChartError", err);
@@ -116,10 +104,7 @@ export async function getVaultsByHolderAddress(
     params: MitoTypes.GetVaultsByHolderAddressParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchVaultsByHolderAddress,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchVaultsByHolderAddress(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getVaultsByHolderAddressError", err);
@@ -140,10 +125,7 @@ export async function getLPHolders(
     params: MitoTypes.GetLPHoldersParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchLPHolders,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchLPHolders(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getLPHoldersError", err);
@@ -164,10 +146,7 @@ export async function getHolderPortfolio(
     params: MitoTypes.GetHolderPortfolioParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchHolderPortfolio,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchHolderPortfolio(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getHolderPortfolioError", err);
@@ -188,10 +167,7 @@ export async function getLeaderboard(
     params: MitoTypes.GetLeaderboardParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchLeaderboard,
-            params: params.epochId,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchLeaderboard(params.epochId);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getLeaderboardError", err);
@@ -212,10 +188,7 @@ export async function getTransferHistory(
     params: MitoTypes.GetTransferHistoryParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchTransferHistory,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchTransferHistory(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getTransferHistoryError", err);
@@ -236,10 +209,7 @@ export async function getLeaderboardEpochs(
     params: MitoTypes.GetLeaderboardEpochsParams = {}
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchLeaderboardEpochs,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchLeaderboardEpochs(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getLeaderboardEpochsError", err);
@@ -260,10 +230,7 @@ export async function getStakingPools(
     params: MitoTypes.GetStakingPoolsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchStakingPools,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchStakingPools(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getStakingPoolsError", err);
@@ -284,10 +251,7 @@ export async function getStakingHistory(
     params: MitoTypes.GetStakingHistoryParams = {}
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchStakingHistory,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchStakingHistory(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getStakingHistoryError", err);
@@ -308,10 +272,7 @@ export async function getStakingRewardsByAccount(
     params: MitoTypes.GetStakingRewardsByAccountParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchStakingRewardsByAccount,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchStakingRewardsByAccount(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getStakingRewardsByAccountError", err);
@@ -332,10 +293,7 @@ export async function getMissions(
     params: MitoTypes.GetMissionsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchMissions,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchMissions(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getMissionsError", err);
@@ -356,10 +314,7 @@ export async function getMissionLeaderboard(
     params: MitoTypes.GetMissionLeaderboardParams = {}
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchMissionLeaderboard,
-            params: params.userAddress,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchMissionLeaderboard(params.userAddress);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getMissionLeaderboardError", err);
@@ -380,10 +335,7 @@ export async function getIDO(
     params: MitoTypes.GetIDOParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchIDO,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchIDO(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getIDOError", err);
@@ -404,10 +356,7 @@ export async function getIDOs(
     params: MitoTypes.GetIDOsParams = {}
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchIDOs,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchIDOs(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getIDOsError", err);
@@ -428,10 +377,7 @@ export async function getIDOSubscribers(
     params: MitoTypes.GetIDOSubscribersParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchIDOSubscribers,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchIDOSubscribers(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getIDOSubscribersError", err);
@@ -452,10 +398,7 @@ export async function getIDOSubscription(
     params: MitoTypes.GetIDOSubscriptionParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchIDOSubscription,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchIDOSubscription(params)
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getIDOSubscriptionError", err);
@@ -476,10 +419,7 @@ export async function getIDOActivities(
     params: MitoTypes.GetIDOActivitiesParams = {}
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchIDOActivities,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchIDOActivities(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getIDOActivitiesError", err);
@@ -500,10 +440,7 @@ export async function getIDOWhitelist(
     params: MitoTypes.GetIDOWhitelistParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchIDOWhitelist,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchIDOWhitelist(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getIDOWhitelistError", err);
@@ -524,10 +461,7 @@ export async function getClaimReferences(
     params: MitoTypes.GetClaimReferencesParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcMitoApi.fetchClaimReferences,
-            params,
-        });
+        const result = await this.indexerGrpcMitoApi.fetchClaimReferences(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getClaimReferencesError", err);

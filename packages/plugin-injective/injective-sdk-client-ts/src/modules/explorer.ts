@@ -7,6 +7,10 @@ import {
 } from "../types/index";
 
 /**
+ * Explorer Module Chain GRPC Async Functions with Error Handling
+ */
+
+/**
  * Fetches a transaction by its hash.
  *
  * @this InjectiveGrpcBase
@@ -18,10 +22,7 @@ export async function getTxByHash(
     params: ExplorerTypes.GetTxByHashParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcExplorerApi.fetchTxByHash,
-            params: params.hash,
-        });
+        const result = await this.indexerGrpcExplorerApi.fetchTxByHash(params.hash);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getTxByHashError", err);
@@ -40,10 +41,7 @@ export async function getAccountTx(
     params: ExplorerTypes.GetAccountTxParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcExplorerApi.fetchAccountTx,
-            params,
-        });
+        const result = await this.indexerGrpcExplorerApi.fetchAccountTx(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAccountTxError", err);
@@ -54,7 +52,7 @@ export async function getAccountTx(
  * Fetches details of a specific validator.
  *
  * @this InjectiveGrpcBase
- * @param {ExplorerTypes.GetValidatorParams} params - Parameters including the validator's address.
+ * @param {ExplorerTypes.GetExplorerValidatorParams} params - Parameters including the validator's address.
  * @returns {Promise<StandardResponse>} The standard response containing validator details or an error.
  */
 export async function getValidator(
@@ -62,10 +60,7 @@ export async function getValidator(
     params: ExplorerTypes.GetExplorerValidatorParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcExplorerApi.fetchValidator,
-            params: params.address,
-        });
+        const result = await this.indexerGrpcExplorerApi.fetchValidator(params.address);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getValidatorError", err);
@@ -77,17 +72,14 @@ export async function getValidator(
  *
  * @this InjectiveGrpcBase
  * @param {ExplorerTypes.GetValidatorUptimeParams} params - Parameters including the validator's address.
- * @returns {Promise<StandardResponse>} The standard response containing validator uptime or an error.
+ * @returns {Promise<StandardResponse>} The standard response indicating validator uptime or an error.
  */
 export async function getValidatorUptime(
     this: InjectiveGrpcBase,
     params: ExplorerTypes.GetValidatorUptimeParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcExplorerApi.fetchValidatorUptime,
-            params: params.validatorAddress,
-        });
+        const result = await this.indexerGrpcExplorerApi.fetchValidatorUptime(params.validatorAddress);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getValidatorUptimeError", err);
@@ -106,10 +98,7 @@ export async function getPeggyDepositTxs(
     params: ExplorerTypes.GetPeggyDepositTxsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcExplorerApi.fetchPeggyDepositTxs,
-            params,
-        });
+        const result = await this.indexerGrpcExplorerApi.fetchPeggyDepositTxs(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getPeggyDepositTxsError", err);
@@ -128,10 +117,7 @@ export async function getPeggyWithdrawalTxs(
     params: ExplorerTypes.GetPeggyWithdrawalTxsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcExplorerApi.fetchPeggyWithdrawalTxs,
-            params,
-        });
+        const result = await this.indexerGrpcExplorerApi.fetchPeggyWithdrawalTxs(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getPeggyWithdrawalTxsError", err);
@@ -150,10 +136,7 @@ export async function getBlocks(
     params: ExplorerTypes.GetBlocksParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcExplorerApi.fetchBlocks,
-            params,
-        });
+        const result = await this.indexerGrpcExplorerApi.fetchBlocks(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getBlocksError", err);
@@ -172,10 +155,7 @@ export async function getBlock(
     params: ExplorerTypes.GetBlockParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcExplorerApi.fetchBlock,
-            params: params.id,
-        });
+        const result = await this.indexerGrpcExplorerApi.fetchBlock(params.id);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getBlockError", err);
@@ -194,10 +174,7 @@ export async function getTxs(
     params: ExplorerTypes.GetTxsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcExplorerApi.fetchTxs,
-            params,
-        });
+        const result = await this.indexerGrpcExplorerApi.fetchTxs(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getTxsError", err);
@@ -216,10 +193,7 @@ export async function getIBCTransferTxs(
     params: ExplorerTypes.GetIBCTransferTxsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcExplorerApi.fetchIBCTransferTxs,
-            params,
-        });
+        const result = await this.indexerGrpcExplorerApi.fetchIBCTransferTxs(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getIBCTransferTxsError", err);
@@ -236,12 +210,9 @@ export async function getExplorerStats(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.indexerGrpcExplorerApi.fetchExplorerStats,
-            params: {},
-        });
+        const result = await this.indexerGrpcExplorerApi.fetchExplorerStats();
         return createSuccessResponse(result);
     } catch (err) {
-        return createErrorResponse("getExplorerStatsError", err);
+        return createErrorResponse("getStatsError", err);
     }
 }

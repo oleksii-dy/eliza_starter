@@ -31,11 +31,7 @@ export async function getContractAccountsBalance(
     params: WasmTypes.GetContractAccountsBalanceParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: (params: WasmTypes.GetContractAccountsBalanceParams) =>
-                this.chainGrpcWasmApi.fetchContractAccountsBalance(params),
-            params,
-        });
+        const result = await this.chainGrpcWasmApi.fetchContractAccountsBalance(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getContractAccountsBalanceError", err);
@@ -54,11 +50,7 @@ export async function getContractState(
     params: WasmTypes.GetContractStateParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: (params: WasmTypes.GetContractStateParams) =>
-                this.chainGrpcWasmApi.fetchContractState(params),
-            params,
-        });
+        const result = await this.chainGrpcWasmApi.fetchContractState(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getContractStateError", err);
@@ -77,11 +69,7 @@ export async function getContractInfo(
     params: WasmTypes.GetContractInfoParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: (contractAddress: string) =>
-                this.chainGrpcWasmApi.fetchContractInfo(contractAddress),
-            params: params.contractAddress,
-        });
+        const result = await this.chainGrpcWasmApi.fetchContractInfo(params.contractAddress);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getContractInfoError", err);
@@ -100,11 +88,7 @@ export async function getContractHistory(
     params: WasmTypes.GetContractHistoryParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: (contractAddress: string) =>
-                this.chainGrpcWasmApi.fetchContractHistory(contractAddress),
-            params: params.contractAddress,
-        });
+        const result = await this.chainGrpcWasmApi.fetchContractHistory(params.contractAddress);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getContractHistoryError", err);
@@ -123,14 +107,7 @@ export async function getSmartContractState(
     params: WasmTypes.GetSmartContractStateParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: (params: WasmTypes.GetSmartContractStateParams) =>
-                this.chainGrpcWasmApi.fetchSmartContractState(
-                    params.contractAddress,
-                    params.query
-                ),
-            params,
-        });
+        const result = await this.chainGrpcWasmApi.fetchSmartContractState(params.contractAddress, params.query);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getSmartContractStateError", err);
@@ -149,14 +126,8 @@ export async function getRawContractState(
     params: WasmTypes.GetRawContractStateParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: (params: WasmTypes.GetRawContractStateParams) =>
-                this.chainGrpcWasmApi.fetchRawContractState(
-                    params.contractAddress,
-                    params.query
-                ),
-            params,
-        });
+        const result = await this.chainGrpcWasmApi.fetchRawContractState(params.contractAddress, params.query);
+
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getRawContractStateError", err);
@@ -175,11 +146,7 @@ export async function getContractCodes(
     params: WasmTypes.GetContractCodesParams = {}
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: (pagination: PaginationOption) =>
-                this.chainGrpcWasmApi.fetchContractCodes(pagination),
-            params: params.pagination || {},
-        });
+        const result = await this.chainGrpcWasmApi.fetchContractCodes(params.pagination);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getContractCodesError", err);
@@ -198,11 +165,7 @@ export async function getContractCode(
     params: WasmTypes.GetContractCodeParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: (codeId: number) =>
-                this.chainGrpcWasmApi.fetchContractCode(codeId),
-            params: params.codeId,
-        });
+        const result = await this.chainGrpcWasmApi.fetchContractCode(params.codeId);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getContractCodeError", err);
@@ -221,14 +184,10 @@ export async function getContractCodeContracts(
     params: WasmTypes.GetContractCodeContractsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: (params: WasmTypes.GetContractCodeContractsParams) =>
-                this.chainGrpcWasmApi.fetchContractCodeContracts(
+        const result = await this.chainGrpcWasmApi.fetchContractCodeContracts(
                     params.codeId,
                     params.pagination
-                ),
-            params,
-        });
+                );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getContractCodeContractsError", err);

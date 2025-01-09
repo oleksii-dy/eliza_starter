@@ -120,6 +120,7 @@ export class InjectiveGrpcBase {
     ) {
         this.network = Network[networkType];
         this.endpoints = getNetworkEndpoints(this.network);
+        //Initialize the broadcaster
 
         // Initialize Chain gRPCs
         this.chainGrpcAuctionApi = new ChainGrpcAuctionApi(this.endpoints.grpc);
@@ -203,55 +204,11 @@ export class InjectiveGrpcBase {
         this.ethAddress = address;
         this.injAddress = getInjectiveAddress(this.ethAddress);
         this.privateKey = pkKey;
-    }
-    /**
-     * Execute a gRPC request for chain transactions
-     * @param options Request options containing method, parameters and optional endpoint
-     * @returns Promise resolving to the response
-     * @throws Error if the request fails
-     */
-    protected async request<TRequest, TResponse>({
-        method,
-        params,
-    }: GrpcRequestOptions<TRequest>): Promise<TResponse> {
-        try {
-            const response = await method.call(this, params);
-            return response as TResponse;
-        } catch (e) {
-            if (e instanceof Error) {
-                throw new GrpcException(e, UnspecifiedErrorCode, "request");
-            }
-            throw new GrpcException(
-                new Error("Unknown gRPC request error occurred"),
-                UnspecifiedErrorCode,
-                "request"
-            );
-        }
-    }
 
-    /**
-     * Execute a gRPC query for data retrieval
-     * @param options Query options containing method, parameters and optional endpoint
-     * @returns Promise resolving to the response
-     * @throws Error if the query fails
-     */
-    protected async query<TRequest, TResponse>({
-        method,
-        params,
-    }: GrpcQueryOptions<TRequest>): Promise<TResponse> {
-        try {
-            const response = await method.call(this, params);
-            return response as TResponse;
-        } catch (e) {
-            if (e instanceof Error) {
-                throw new GrpcException(e, UnspecifiedErrorCode, "query");
-            }
-            throw new GrpcException(
-                new Error("Unknown gRPC query error occurred"),
-                UnspecifiedErrorCode,
-                "query"
-            );
-        }
+        this.msgBroadcaster = new MsgBroadcasterWithPk({
+            network: this.network,
+            privateKey: this.privateKey,
+        });
     }
     /**
      * Get network configuration
@@ -275,20 +232,5 @@ export class InjectiveGrpcBase {
         } catch {
             return false;
         }
-    }
-    protected async initialize_broadcaster(): Promise<void> {
-        this.msgBroadcaster = new MsgBroadcasterWithPk({
-            network: this.network,
-            privateKey: this.privateKey,
-        });
-    }
-    static async create(
-        network: keyof typeof Network = "Mainnet",
-        address: string,
-        pkKey: string
-    ): Promise<InjectiveGrpcBase> {
-        const instance = new InjectiveGrpcBase(network, address, pkKey);
-        await instance.initialize_broadcaster();
-        return instance;
     }
 }

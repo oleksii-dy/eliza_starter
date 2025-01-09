@@ -1,12 +1,16 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
 import { PaginationOption } from "@injectivelabs/ts-types";
 import { MsgTransfer, TxResponse } from "@injectivelabs/sdk-ts";
-import * as IBCTypes from "../types/index";
+import * as IBCTypes from "../types/ibc"; // Assuming IBC types are in ibc.ts
 import {
     StandardResponse,
     createSuccessResponse,
     createErrorResponse,
 } from "../types/index";
+
+/**
+ * IBC Module Chain GRPC Async Functions with Error Handling
+ */
 
 /**
  * Fetches the denomination trace for a specific hash.
@@ -20,10 +24,7 @@ export async function getDenomTrace(
     params: IBCTypes.GetDenomTraceParams
 ): Promise<StandardResponse> {
     try {
-        const result: IBCTypes.GetDenomTraceResponse = await this.request({
-            method: this.chainGrpcIbcApi.fetchDenomTrace,
-            params: params.hash,
-        });
+        const result = await this.chainGrpcIbcApi.fetchDenomTrace(params.hash);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDenomTraceError", err);
@@ -39,13 +40,10 @@ export async function getDenomTrace(
  */
 export async function getDenomsTrace(
     this: InjectiveGrpcBase,
-    params: IBCTypes.GetDenomsTraceParams = {}
+    params: IBCTypes.GetDenomsTraceParams
 ): Promise<StandardResponse> {
     try {
-        const result: IBCTypes.GetDenomsTraceResponse = await this.request({
-            method: this.chainGrpcIbcApi.fetchDenomsTrace,
-            params: params.pagination || {},
-        });
+        const result = await this.chainGrpcIbcApi.fetchDenomsTrace(params.pagination);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDenomsTraceError", err);

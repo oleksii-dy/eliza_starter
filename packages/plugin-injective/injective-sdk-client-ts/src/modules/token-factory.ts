@@ -27,10 +27,7 @@ export async function getDenomsFromCreator(
     params: TokenFactoryTypes.GetDenomsFromCreatorParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcTokenFactoryApi.fetchDenomsFromCreator,
-            params: params.creator,
-        });
+        const result = await this.chainGrpcTokenFactoryApi.fetchDenomsFromCreator(params.creator);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDenomsFromCreatorError", err);
@@ -49,14 +46,10 @@ export async function getDenomAuthorityMetadata(
     params: TokenFactoryTypes.GetDenomAuthorityMetadataParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: (params: { creator: string; subDenom: string }) =>
-                this.chainGrpcTokenFactoryApi.fetchDenomAuthorityMetadata(
+        const result = await this.chainGrpcTokenFactoryApi.fetchDenomAuthorityMetadata(
                     params.creator,
                     params.subDenom
-                ),
-            params,
-        });
+                );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDenomAuthorityMetadataError", err);
@@ -73,10 +66,7 @@ export async function getTokenFactoryModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcTokenFactoryApi.fetchModuleParams,
-            params: {},
-        });
+        const result = await this.chainGrpcTokenFactoryApi.fetchModuleParams();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getTokenFactoryModuleParamsError", err);
@@ -93,10 +83,7 @@ export async function getTokenFactoryModuleState(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcTokenFactoryApi.fetchModuleState,
-            params: {},
-        });
+        const result = await this.chainGrpcTokenFactoryApi.fetchModuleState();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getTokenFactoryModuleStateError", err);

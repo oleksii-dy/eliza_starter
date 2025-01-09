@@ -1,10 +1,5 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
 import {
-    MintModuleParamsResponse,
-    GetInflationResponse,
-    GetAnnualProvisionsResponse,
-} from "../types";
-import {
     StandardResponse,
     createSuccessResponse,
     createErrorResponse,
@@ -22,11 +17,8 @@ export async function getMintModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcMintApi.fetchModuleParams,
-            params: {},
-        });
-        return createSuccessResponse(result as MintModuleParamsResponse);
+        const result = await this.chainGrpcMintApi.fetchModuleParams();
+        return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getMintModuleParamsError", err);
     }
@@ -44,11 +36,8 @@ export async function getInflation(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcMintApi.fetchInflation,
-            params: {},
-        });
-        return createSuccessResponse(result as GetInflationResponse);
+        const result = await this.chainGrpcMintApi.fetchInflation();
+        return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getInflationError", err);
     }
@@ -66,11 +55,8 @@ export async function getAnnualProvisions(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcMintApi.fetchAnnualProvisions,
-            params: {},
-        });
-        return createSuccessResponse(result as GetAnnualProvisionsResponse);
+        const result = await this.chainGrpcMintApi.fetchAnnualProvisions();
+        return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAnnualProvisionsError", err);
     }

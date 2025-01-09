@@ -1,4 +1,4 @@
-import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
+import { InjectiveGrpcBase } from "../grpc/grpc-base";
 import {
     MsgCreateInsuranceFund,
     MsgRequestRedemption,
@@ -17,12 +17,12 @@ import {
     GetInsuranceFundParams,
     GetEstimatedRedemptionsParams,
     GetPendingRedemptionsParams,
-} from "../types/index.js";
+} from "../types/insurance";
 import {
     StandardResponse,
     createSuccessResponse,
     createErrorResponse,
-} from "../types/index.js";
+} from "../types/index";
 
 /**
  * Fetches the insurance module parameters.
@@ -34,10 +34,8 @@ export async function getInsuranceModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result: InsuranceModuleParamsResponse = await this.request({
-            method: this.chainGrpcInsuranceFundApi.fetchModuleParams,
-            params: {},
-        });
+        const result= await  this.chainGrpcInsuranceFundApi.fetchModuleParams();
+
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getInsuranceModuleParamsError", err);
@@ -54,10 +52,7 @@ export async function getInsuranceFunds(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result: GetInsuranceFundsResponse = await this.request({
-            method: this.chainGrpcInsuranceFundApi.fetchInsuranceFunds,
-            params: {},
-        });
+        const result= await this.chainGrpcInsuranceFundApi.fetchInsuranceFunds()
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getInsuranceFundsError", err);
@@ -76,10 +71,8 @@ export async function getInsuranceFund(
     params: GetInsuranceFundParams
 ): Promise<StandardResponse> {
     try {
-        const result: GetInsuranceFundResponse = await this.request({
-            method: this.chainGrpcInsuranceFundApi.fetchInsuranceFund,
-            params: params.marketId,
-        });
+        const result = await this.chainGrpcInsuranceFundApi.fetchInsuranceFund(params.marketId)
+
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getInsuranceFundError", err);
@@ -98,10 +91,7 @@ export async function getEstimatedRedemptions(
     params: GetEstimatedRedemptionsParams
 ): Promise<StandardResponse> {
     try {
-        const result: GetEstimatedRedemptionsResponse = await this.request({
-            method: this.chainGrpcInsuranceFundApi.fetchEstimatedRedemptions,
-            params,
-        });
+        const result= await this.chainGrpcInsuranceFundApi.fetchEstimatedRedemptions(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getEstimatedRedemptionsError", err);
@@ -120,10 +110,7 @@ export async function getPendingRedemptions(
     params: GetPendingRedemptionsParams
 ): Promise<StandardResponse> {
     try {
-        const result: GetPendingRedemptionsResponse = await this.request({
-            method: this.chainGrpcInsuranceFundApi.fetchPendingRedemptions,
-            params,
-        });
+        const result = await this.chainGrpcInsuranceFundApi.fetchPendingRedemptions(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getPendingRedemptionsError", err);

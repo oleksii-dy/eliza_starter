@@ -1,10 +1,10 @@
-import { InjectiveGrpcBase } from "../grpc/grpc-base.js";
+import { InjectiveGrpcBase } from "../grpc/grpc-base";
 import { OracleModuleParams } from "@injectivelabs/sdk-ts";
 import {
     StandardResponse,
     createSuccessResponse,
     createErrorResponse,
-} from "../types/index.js";
+} from "../types/index";
 
 /**
  * Fetches the parameters of the Oracle module.
@@ -18,10 +18,7 @@ export async function getOracleModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result: OracleModuleParams = await this.request({
-            method: this.chainGrpcOracleApi.fetchModuleParams,
-            params: {},
-        });
+        const result = await this.chainGrpcOracleApi.fetchModuleParams()
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getOracleModuleParamsError", err);

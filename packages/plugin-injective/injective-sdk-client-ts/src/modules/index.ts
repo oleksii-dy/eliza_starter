@@ -1,4 +1,3 @@
-import * as ethUtil from "ethereumjs-util";
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
 import { Network } from "@injectivelabs/networks";
 
@@ -10,7 +9,7 @@ import * as DistributionModule from "./distribution";
 import * as ExchangeModule from "./exchange";
 import * as GovernanceModule from "./gov";
 import * as IbcModule from "./Ibc";
-import * as InsuranceFundModule from "./insurance-fund";
+import * as InsuranceFundModule from "./insurance";
 import * as MintModule from "./mint";
 import * as MitoModule from "./mito";
 import * as ExplorerModule from "./explorer";
@@ -22,51 +21,14 @@ import * as TokenFactoryModule from "./token-factory";
 import * as WasmModule from "./wasm";
 import * as WasmXModule from "./wasmx";
 
-/**
- * Generates an Ethereum address from a private key
- * @param privateKey - Private key as a hex string (with or without '0x' prefix)
- * @returns Checksum Ethereum address
- */
-
-export function getAddressFromPrivateKey(privateKey?: string): string {
-    // Check if privateKey is undefined or empty
-    if (!privateKey) {
-        throw new Error("Private key is required");
-    }
-
-    // Ensure the private key has the '0x' prefix
-    const formattedPrivateKey = privateKey.startsWith("0x")
-        ? privateKey
-        : `0x${privateKey}`;
-
-    try {
-        // Remove '0x' prefix and convert to buffer
-        const privateKeyBuffer = Buffer.from(
-            formattedPrivateKey.slice(2),
-            "hex"
-        );
-        // Validate private key length
-        if (privateKeyBuffer.length !== 32) {
-            throw new Error("Invalid private key length. Must be 32 bytes.");
-        }
-        // Derive public key
-        const publicKey = ethUtil.privateToPublic(privateKeyBuffer);
-        // Generate address from public key
-        const address = ethUtil.publicToAddress(publicKey);
-        // Convert to checksum address
-        return ethUtil.toChecksumAddress(address.toString("hex"));
-    } catch (error) {
-        console.error("Error generating address:", error);
-        throw error;
-    }
-}
 export class InjectiveGrpcClient extends InjectiveGrpcBase {
     constructor(
         networkType: keyof typeof Network = "Mainnet",
+        ethAddress: string,
         privateKey: string
     ) {
-        const ethAddress = getAddressFromPrivateKey(privateKey);
         super(networkType, ethAddress, privateKey);
+        console.log("InjectiveGrpcClient constructor init");
     }
     // Auction endpoints
     public getAuctionModuleParams =
@@ -140,7 +102,6 @@ export class InjectiveGrpcClient extends InjectiveGrpcBase {
     public getDerivativeOrders = ExchangeModule.getDerivativeOrders.bind(this);
     public getDerivativeOrderHistory =
         ExchangeModule.getDerivativeOrderHistory.bind(this);
-    public getPositions = ExchangeModule.getPositions.bind(this);
     public getPositionsV2 = ExchangeModule.getPositionsV2.bind(this);
     public getDerivativeTrades = ExchangeModule.getDerivativeTrades.bind(this);
     public getFundingPayments = ExchangeModule.getFundingPayments.bind(this);
@@ -441,4 +402,3 @@ export class InjectiveGrpcClient extends InjectiveGrpcBase {
     public msgPrivilegedExecuteContract =
         WasmModule.msgPrivilegedExecuteContract.bind(this);
 }
-export { InjectiveGrpcBase };

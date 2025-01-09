@@ -19,10 +19,8 @@ export async function getBankModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcBankApi.fetchModuleParams,
-            params: {},
-        });
+        const result = await this.chainGrpcBankApi.fetchModuleParams();
+
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getBankModuleParamsError", err);
@@ -41,13 +39,9 @@ export async function getBankBalance(
     params: BankTypes.GetBankBalanceParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcBankApi.fetchBalance,
-            params: {
-                ...params,
-                accountAddress: this.injAddress,
-            },
-        });
+        const result = await this.chainGrpcBankApi.fetchBalance({...params,
+            accountAddress: this.injAddress});
+
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getBankBalanceError", err);
@@ -66,10 +60,7 @@ export async function getBankBalances(
     params: BankTypes.GetBankBalancesParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcBankApi.fetchBalances,
-            params: this.injAddress,
-        });
+        const result = await this.chainGrpcBankApi.fetchBalances(this.injAddress)
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getBankBalancesError", err);
@@ -86,10 +77,8 @@ export async function getTotalSupply(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcBankApi.fetchTotalSupply,
-            params: {},
-        });
+        const result = await this.chainGrpcBankApi.fetchTotalSupply();
+
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getTotalSupplyError", err);
@@ -106,10 +95,7 @@ export async function getAllTotalSupply(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcBankApi.fetchAllTotalSupply,
-            params: {},
-        });
+        const result = await this.chainGrpcBankApi.fetchAllTotalSupply();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAllTotalSupplyError", err);
@@ -128,10 +114,7 @@ export async function getSupplyOf(
     params: BankTypes.GetSupplyOfParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcBankApi.fetchSupplyOf,
-            params: params.denom,
-        });
+        const result = await this.chainGrpcBankApi.fetchSupplyOf(params.denom);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getSupplyOfError", err);
@@ -148,10 +131,7 @@ export async function getDenomsMetadata(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcBankApi.fetchDenomsMetadata,
-            params: {},
-        });
+        const result = await this.chainGrpcBankApi.fetchDenomsMetadata()
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDenomsMetadataError", err);
@@ -170,10 +150,7 @@ export async function getDenomMetadata(
     params: BankTypes.GetDenomMetadataParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcBankApi.fetchDenomMetadata,
-            params: params.denom,
-        });
+        const result = await this.chainGrpcBankApi.fetchDenomMetadata(params.denom)
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDenomMetadataError", err);
@@ -192,10 +169,7 @@ export async function getDenomOwners(
     params: BankTypes.GetDenomOwnersParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcBankApi.fetchDenomOwners,
-            params: params.denom,
-        });
+        const result = await  this.chainGrpcBankApi.fetchDenomOwners(params.denom)
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDenomOwnersError", err);

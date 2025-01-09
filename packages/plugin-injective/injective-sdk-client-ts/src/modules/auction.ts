@@ -18,10 +18,8 @@ export async function getAuctionModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcAuctionApi.fetchModuleParams,
-            params: {},
-        });
+        const result = this.chainGrpcAuctionApi.fetchModuleParams();
+
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAuctionModuleParamsError", err);
@@ -38,10 +36,8 @@ export async function getAuctionModuleState(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcAuctionApi.fetchModuleState,
-            params: {},
-        });
+        const result = await this.chainGrpcAuctionApi.fetchModuleState();
+
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAuctionModuleStateError", err);
@@ -58,10 +54,8 @@ export async function getCurrentBasket(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcAuctionApi.fetchCurrentBasket,
-            params: {},
-        });
+        const result = await this.chainGrpcAuctionApi.fetchCurrentBasket();
+
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getCurrentBasketError", err);
@@ -80,10 +74,8 @@ export async function getAuctionRound(
     params: AuctionTypes.GetAuctionRoundParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.query({
-            method: this.indexerGrpcAuctionApi.fetchAuction,
-            params: params.round,
-        });
+        const result = await this.indexerGrpcAuctionApi.fetchAuction(params.round)
+
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAuctionRoundError", err);
@@ -98,14 +90,10 @@ export async function getAuctionRound(
  * @returns {Promise<StandardResponse>} The standard response containing a list of auctions or an error.
  */
 export async function getAuctions(
-    this: InjectiveGrpcBase,
-    params: AuctionTypes.GetAuctionsParams
+    this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.query({
-            method: this.indexerGrpcAuctionApi.fetchAuctions,
-            params,
-        });
+        const result = await this.indexerGrpcAuctionApi.fetchAuctions();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAuctionsError", err);

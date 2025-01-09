@@ -19,10 +19,8 @@ export async function getGrants(
     params: AuthzTypes.GetGrantsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcAuthZApi.fetchGrants,
-            params: params,
-        });
+        const result = await this.chainGrpcAuthZApi.fetchGrants(params);
+
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getGrantsError", err);
@@ -41,10 +39,7 @@ export async function getGranterGrants(
     params: AuthzTypes.GetGranterGrantsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcAuthZApi.fetchGranterGrants,
-            params: params.granter,
-        });
+        const result = await this.chainGrpcAuthZApi.fetchGranterGrants(params.granter);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getGranterGrantsError", err);
@@ -63,10 +58,7 @@ export async function getGranteeGrants(
     params: AuthzTypes.GetGranteeGrantsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.request({
-            method: this.chainGrpcAuthZApi.fetchGranteeGrants,
-            params: params.grantee,
-        });
+        const result = await this.chainGrpcAuthZApi.fetchGranteeGrants(params.grantee)
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getGranteeGrantsError", err);
