@@ -6,12 +6,16 @@ export function env(runtime: IAgentRuntime, key: keyof (typeof EnvKeys)) {
     return runtime.getSetting(EnvKeys[key]) || EnvDefaults[key];
 }
 
+export function getDecimal(udtType?: UDTType) {
+    return udtType ? SupportedUDTs[udtType]?.decimal || 0 : CKBDecimal;
+}
+
 export function toDecimal(amount: number | string, udtType?: UDTType) {
-    return Number(amount) / Math.pow(10, udtType ? SupportedUDTs[udtType].decimal : CKBDecimal);
+    return Number(amount) / Math.pow(10, getDecimal(udtType));
 }
 
 export function fromDecimal(amount: number | string, udtType?: UDTType) {
-    return Number(amount) * Math.pow(10, udtType ? SupportedUDTs[udtType].decimal : CKBDecimal);
+    return Number(amount) * Math.pow(10, getDecimal(udtType));
 }
 
 export function udtEq(a: Script, b: Script) {

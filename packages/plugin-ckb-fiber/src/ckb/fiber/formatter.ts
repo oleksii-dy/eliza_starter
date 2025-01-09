@@ -1,7 +1,7 @@
 import {
     ChannelListResponse,
     GetNodeInfoResponse,
-    GetNodeInfoResponseNumberKeys, PaymentResponse,
+    GetNodeInfoResponseNumberKeys, InvoiceResponse, PaymentResponse,
     UdtArgInfoNumberKeys,
 } from "./types.ts";
 import {convert} from "./rpcClient.ts";
@@ -9,6 +9,7 @@ import {SupportedUDTs, CKBDecimal} from "../../constants.ts";
 import {cccClient} from "../ccc-client.ts";
 import {ccc} from "@ckb-ccc/core";
 import {toDecimal, udtEq} from "../../utils.ts";
+import {elizaLogger} from "@elizaos/core";
 
 export function formatNodeInfo(nodeInfo: GetNodeInfoResponse): string {
     nodeInfo = convert(nodeInfo, GetNodeInfoResponseNumberKeys);
@@ -146,4 +147,41 @@ export function formatPayment(payment: PaymentResponse): string {
 - Last Updated: ${lastUpdatedDate}
 - ${statusInfo}
 - Fee: ${toDecimal(fee)} CKB`;
+}
+
+export function formatInvoice(response: InvoiceResponse): string {
+    const { invoice_address, invoice } = response;
+    const { amount, data } = invoice;
+    const { timestamp, payment_hash, attrs } = data;
+
+    // Get udtType
+    const flattenAttrs = attrs.map((attr) => Object.entries(attr)).flat();
+    const udtScriptAttr = flattenAttrs.find(([key]) => key === "UdtScript");
+
+    let udtType: string = null;
+    if (udtScriptAttr) {
+        const script = ccc.Script.fromBytes(udtScriptAttr[1] as string);
+        const script_ = {
+            code_hash: script.codeHash,
+            hash_type: script.hashType,
+            args: script.args,
+        };
+        const udt = Object.entries(SupportedUDTs).find(([, udt]) => udtEq(script_, udt.script))
+        if (udt) udtType = udt[0];
+        else udtType = '<UNKNOWN TOKEN>';
+    }
+    const displayAmount = toDecimal(amount, udtType);
+
+    // Format timestamp
+    const createdDate = new Date(Number(timestamp)).toLocaleString();
+
+    // Format status if available
+    const statusInfo = 'status' in response ? `\n- Status: ${response.status}` : '';
+
+    return `Invoice Details:
+- Invoice: ${invoice_address} (Use this to receive payment)
+- Payment Hash: ${payment_hash}
+- Created: ${createdDate}
+- Token: ${udtType?.toUpperCase() || 'CKB'}
+- Amount: ${displayAmount}${statusInfo}`;
 }

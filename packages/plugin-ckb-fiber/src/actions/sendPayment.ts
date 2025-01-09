@@ -73,12 +73,11 @@ export const sendPayment: Action = {
             }
 
             // Compose transfer context
-            const transferContext = composeContext({ state, template, });
+            const context = composeContext({ state, template, });
 
             // Generate transfer content
             const content = (await generateObject({
-                runtime, context: transferContext,
-                modelClass: ModelClass.SMALL, schema
+                runtime, context, modelClass: ModelClass.SMALL, schema
             })).object as Content;
 
             content.tokenType = content.tokenType || "ckb";

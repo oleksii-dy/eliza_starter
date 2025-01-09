@@ -354,7 +354,7 @@ export interface NewInvoiceParams {
     amount: string | number;
     description?: string;
     currency: Currency;
-    payment_preimage: Hash256;
+    payment_preimage?: Hash256;
     expiry?: string | number;
     fallback_address?: string;
     final_expiry_delta?: string | number;

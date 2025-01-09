@@ -56,6 +56,7 @@ import {
     UpdateChannelParams,
     UpdateChannelParamsNumberKeys
 } from "./types.ts";
+import { randomBytes } from 'crypto';
 
 export class RpcClient {
     public rpcUrl: string;
@@ -207,8 +208,14 @@ export class RpcClient {
     }
 
     // Invoice Module
+    private generatePreimage() {
+        const buffer = randomBytes(32);
+        return buffer.toString('hex');
+    }
+
     async newInvoice(params: NewInvoiceParams): Promise<InvoiceResponse> {
         params.expiry ||= this.invoiceExpirySecond
+        params.payment_preimage ||= this.generatePreimage();
         params = convert(params, NewInvoiceParamsNumberKeys, true);
         const res = await this.call<InvoiceResponse>('new_invoice', [params]);
         if (this.autoConvert && res.invoice) {
