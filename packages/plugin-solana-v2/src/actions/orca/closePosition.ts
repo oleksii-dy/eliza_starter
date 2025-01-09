@@ -97,6 +97,9 @@ export const closePositionAction: Action = {
                 estimated token B received: ${quote.tokenEstB}\n
                 estimated token A fees: ${feesQuote.feeOwedA}\n
                 estimated token B fees: ${feesQuote.feeOwedB}\n
+                estimated rewards 1: ${rewardsQuote.rewards[0].rewardsOwed}\n
+                estimated rewards 2: ${rewardsQuote.rewards[1].rewardsOwed}\n
+                estimated rewards 3: ${rewardsQuote.rewards[2].rewardsOwed}\n
                 `;
 
             if (callback) {
