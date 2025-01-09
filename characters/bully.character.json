@@ -539,7 +539,7 @@
         ]
     ],
 
-    "quotaExamples": [
+    "quoteExamples": [
         [
             {
                 "user": "{{user1}}",

@@ -14,8 +14,10 @@ import { postActionResponseFooter } from "@elizaos/core";
 import { generateTweetActions } from "@elizaos/core";
 import { IImageDescriptionService, ServiceType } from "@elizaos/core";
 import { buildConversationThread } from "./utils.ts";
-import { twitterMessageHandlerTemplate } from "./interactions.ts";
+// import { twitterMessageHandlerTemplate } from "./interactions.ts";
 import { DEFAULT_MAX_TWEET_LENGTH } from "./environment.ts";
+import { twitterMessageHandlerTemplate1 } from "./utils/templatesT/interactionsT.ts";
+import { twitterQuoteHandlerTemplate } from "./utils/templatesT/quotesT.ts";
 
 const twitterPostTemplate = `
 # Areas of Expertise
@@ -698,6 +700,20 @@ export class TwitterPostClient {
                                 error
                             );
                         }
+
+                        // also replies
+                        try {
+                            await this.handleTextOnlyReply(
+                                tweet,
+                                tweetState,
+                                executedActions
+                            );
+                        } catch (error) {
+                            elizaLogger.error(
+                                `Error replying to tweet ${tweet.id}:`,
+                                error
+                            );
+                        }
                     }
 
                     if (actionResponse.retweet) {
@@ -812,8 +828,8 @@ export class TwitterPostClient {
                                 await this.generateTweetContent(enrichedState, {
                                     template:
                                         this.runtime.character.templates
-                                            ?.twitterMessageHandlerTemplate ||
-                                        twitterMessageHandlerTemplate,
+                                            ?.twitterQuoteHandlerTemplate ||
+                                        twitterQuoteHandlerTemplate,
                                 });
 
                             if (!quoteContent) {
@@ -1009,7 +1025,7 @@ export class TwitterPostClient {
                 template:
                     this.runtime.character.templates
                         ?.twitterMessageHandlerTemplate ||
-                    twitterMessageHandlerTemplate,
+                    twitterMessageHandlerTemplate1,
             });
 
             if (!replyText) {

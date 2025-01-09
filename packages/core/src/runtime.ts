@@ -929,7 +929,7 @@ Text: ${attachment.text}
             })
             .join("\n\n");
 
-        const formattedCharacterQuotaExamples = this.character.quotaExamples
+        const formattedCharacterQuoteExamples = this.character.quoteExamples
             .sort(() => 0.5 - Math.random())
             .slice(0, 5)
             .map((example) => {
@@ -1108,12 +1108,12 @@ Text: ${attachment.text}
                           formattedCharacterMessageExamples
                       )
                     : "",
-            characterQuotaExamples:
-                formattedCharacterQuotaExamples &&
-                formattedCharacterQuotaExamples.replaceAll("\n", "").length > 0
+            characterQuoteExamples:
+                formattedCharacterQuoteExamples &&
+                formattedCharacterQuoteExamples.replaceAll("\n", "").length > 0
                     ? addHeader(
                           `# Example Conversations for ${this.character.name}`,
-                          formattedCharacterQuotaExamples
+                          formattedCharacterQuoteExamples
                       )
                     : "",
             messageDirections:

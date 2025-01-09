@@ -707,6 +707,7 @@ export type Character = {
         twitterPostTemplate?: string;
         twitterMessageHandlerTemplate?: string;
         twitterMessageHandlerTemplate1?: string;
+        twitterQuoteHandlerTemplate ?: string;
         twitterShouldRespondTemplate?: string;
         twitterShouldRespondTemplate1?: string;
         farcasterPostTemplate?: string;
@@ -734,7 +735,7 @@ export type Character = {
     messageExamples: MessageExample[][];
 
     /** quota messages */
-    quotaExamples: MessageExample[][];
+    quoteExamples: MessageExample[][];
 
     /** Example posts */
     postExamples: string[];
