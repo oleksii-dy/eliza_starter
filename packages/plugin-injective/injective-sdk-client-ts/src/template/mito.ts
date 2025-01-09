@@ -1,194 +1,146 @@
-// templates/mito.ts
-import { ResponseTemplate, CoinTemplate } from "./types";
+// mito-templates.ts
+export const getVaultTemplate = `
+Extract vault query parameters:
+- Contract Address: {{contractAddress}} (string?) - Optional contract address
+- Slug: {{slug}} (string?) - Optional vault slug
+`;
 
-export interface MitoVault {
-    contractAddress: string;
-    name: string;
-    description: string;
-    slug: string;
-    tvl: string;
-    lpTokenPrice: string;
-    apy: string;
-    status: string;
-}
+export const getVaultsTemplate = `
+Extract vaults query parameters:
+- Limit: {{limit}} (number?) - Optional result limit
+- Code ID: {{codeId}} (string?) - Optional code identifier
+- Page Index: {{pageIndex}} (number?) - Optional page number
+`;
 
-export interface MitoPriceSnapshot {
-    timestamp: number;
-    value: string;
-}
+export const getLpTokenPriceChartTemplate = `
+Extract LP token price chart parameters:
+- To: {{to}} (string?) - Optional end time
+- From: {{from}} (string?) - Optional start time
+- Vault Address: {{vaultAddress}} (string) - Address of the vault
+`;
 
-export interface MitoSubscription {
-    vaultAddress: string;
-    holderAddress: string;
-    balance: CoinTemplate;
-}
+export const getTVLChartTemplate = `
+Extract TVL chart parameters:
+- To: {{to}} (string?) - Optional end time
+- From: {{from}} (string?) - Optional start time
+- Vault Address: {{vaultAddress}} (string) - Address of the vault
+`;
 
-export interface MitoLeaderboard {
-    round: number;
-    startTime: number;
-    endTime: number;
-    entries: Array<{
-        address: string;
-        score: string;
-        rank: number;
-    }>;
-}
+export const getVaultsByHolderAddressTemplate = `
+Extract vaults by holder parameters:
+- Skip: {{skip}} (number?) - Optional number of results to skip
+- Limit: {{limit}} (number?) - Optional result limit
+- Holder Address: {{holderAddress}} (string) - Address of the holder
+- Vault Address: {{vaultAddress}} (string?) - Optional vault address filter
+`;
 
-export const mitoTemplates = {
-    vault: {
-        template: `
-\`\`\`json
-{
-    "contractAddress": "{{contractAddress}}",
-    "name": "{{name}}",
-    "description": "{{description}}",
-    "slug": "{{slug}}",
-    "tvl": "{{tvl}}",
-    "lpTokenPrice": "{{lpTokenPrice}}",
-    "apy": "{{apy}}",
-    "status": "{{status}}"
-}
-\`\`\`
-`,
-        description: `
-Extract the following vault information:
-- Contract address and identification
-- Vault details (name, description)
-- Performance metrics (TVL, token price, APY)
-- Current status
-`,
-    } as ResponseTemplate,
+export const getLPHoldersTemplate = `
+Extract LP holders parameters:
+- Skip: {{skip}} (number?) - Optional number of results to skip
+- Limit: {{limit}} (number?) - Optional result limit
+- Vault Address: {{vaultAddress}} (string) - Address of the vault
+- Staking Contract Address: {{stakingContractAddress}} (string) - Staking contract address
+`;
 
-    vaults: {
-        template: `
-\`\`\`json
-{
-    "vaults": [
-        {
-            "contractAddress": "{{contractAddress}}",
-            "name": "{{name}}",
-            "description": "{{description}}",
-            "slug": "{{slug}}",
-            "tvl": "{{tvl}}",
-            "lpTokenPrice": "{{lpTokenPrice}}",
-            "apy": "{{apy}}",
-            "status": "{{status}}"
-        }
-    ],
-    "pagination": {
-        "total": "{{total}}",
-        "nextKey": "{{nextKey}}"
-    }
-}
-\`\`\`
-`,
-        description: `
-Extract the following vaults list:
-- Array of vaults with details
-- Pagination information
-`,
-    } as ResponseTemplate,
+export const getHolderPortfolioTemplate = `
+Extract holder portfolio parameters:
+- Holder Address: {{holderAddress}} (string) - Address of the holder
+- Staking Contract Address: {{stakingContractAddress}} (string) - Staking contract address
+`;
 
-    priceChart: {
-        template: `
-\`\`\`json
-{
-    "snapshots": [
-        {
-            "timestamp": {{timestamp}},
-            "value": "{{value}}"
-        }
-    ]
-}
-\`\`\`
-`,
-        description: `
-Extract the following price chart information:
-- Array of price snapshots
-- Timestamp and value pairs
-`,
-    } as ResponseTemplate,
+export const getTransferHistoryTemplate = `
+Extract transfer history parameters:
+- Vault: {{vault}} (string?) - Optional vault address filter
+- Account: {{account}} (string?) - Optional account address filter
+- Limit: {{limit}} (number?) - Optional result limit
+- To Number: {{toNumber}} (number?) - Optional ending number
+- From Number: {{fromNumber}} (number?) - Optional starting number
+`;
 
-    holderPortfolio: {
-        template: `
-\`\`\`json
-{
-    "vaultAddress": "{{vaultAddress}}",
-    "holderAddress": "{{holderAddress}}",
-    "deposits": [
-        {
-            "denom": "{{denom}}",
-            "amount": "{{amount}}"
-        }
-    ],
-    "rewards": [
-        {
-            "denom": "{{denom}}",
-            "amount": "{{amount}}"
-        }
-    ],
-    "totalValueLocked": "{{totalValueLocked}}",
-    "profitLoss": "{{profitLoss}}"
-}
-\`\`\`
-`,
-        description: `
-Extract the following portfolio information:
-- Vault and holder identification
-- Deposit amounts
-- Reward amounts
-- TVL and P&L metrics
-`,
-    } as ResponseTemplate,
+export const getLeaderboardTemplate = `
+Extract leaderboard parameters:
+- Epoch ID: {{epochId}} (number?) - Optional epoch identifier
+`;
 
-    leaderboard: {
-        template: `
-\`\`\`json
-{
-    "round": {{round}},
-    "startTime": {{startTime}},
-    "endTime": {{endTime}},
-    "entries": [
-        {
-            "address": "{{address}}",
-            "score": "{{score}}",
-            "rank": {{rank}}
-        }
-    ]
-}
-\`\`\`
-`,
-        description: `
-Extract the following leaderboard information:
-- Round details and timing
-- Leaderboard entries with rankings
-`,
-    } as ResponseTemplate,
+export const getLeaderboardEpochsTemplate = `
+Extract leaderboard epochs parameters:
+- Limit: {{limit}} (number?) - Optional result limit
+- To Epoch ID: {{toEpochId}} (number?) - Optional ending epoch ID
+- From Epoch ID: {{fromEpochId}} (number?) - Optional starting epoch ID
+`;
 
-    stakingPools: {
-        template: `
-\`\`\`json
-{
-    "pools": [
-        {
-            "contractAddress": "{{contractAddress}}",
-            "stakedAmount": {
-                "denom": "{{denom}}",
-                "amount": "{{amount}}"
-            },
-            "rewardRate": "{{rewardRate}}",
-            "totalStaked": "{{totalStaked}}",
-            "unlockTime": {{unlockTime}}
-        }
-    ]
-}
-\`\`\`
-`,
-        description: `
-Extract the following staking pools information:
-- Pool contract details
-- Staking amounts and rewards
-- Lock period information
-`,
-    } as ResponseTemplate,
-};
+export const getStakingPoolsTemplate = `
+Extract staking pools parameters:
+- Staker: {{staker}} (string?) - Optional staker address
+- Staking Contract Address: {{stakingContractAddress}} (string) - Staking contract address
+`;
+
+export const getStakingHistoryTemplate = `
+Extract staking history parameters:
+- Staker: {{staker}} (string?) - Optional staker address filter
+- Limit: {{limit}} (number?) - Optional result limit
+- To Number: {{toNumber}} (number?) - Optional ending number
+- From Number: {{fromNumber}} (number?) - Optional starting number
+`;
+
+export const getMissionsTemplate = `
+Extract missions parameters:
+- Account Address: {{accountAddress}} (string) - Address to query missions for
+`;
+
+export const getMissionLeaderboardTemplate = `
+Extract mission leaderboard parameters:
+- User Address: {{userAddress}} (string?) - Optional user address filter
+`;
+
+export const getIDOTemplate = `
+Extract IDO parameters:
+- Contract Address: {{contractAddress}} (string) - IDO contract address
+- Account Address: {{accountAddress}} (string?) - Optional account address
+`;
+
+export const getIDOsTemplate = `
+Extract IDOs query parameters:
+- Status: {{status}} (string?) - Optional status filter
+- Limit: {{limit}} (number?) - Optional result limit
+- To Number: {{toNumber}} (number?) - Optional ending number
+- Account Address: {{accountAddress}} (string?) - Optional account filter
+- Owner Address: {{ownerAddress}} (string?) - Optional owner filter
+`;
+
+export const getIDOSubscribersTemplate = `
+Extract IDO subscribers parameters:
+- Skip: {{skip}} (number?) - Optional number to skip
+- Limit: {{limit}} (number?) - Optional result limit
+- Sort By: {{sortBy}} (string?) - Optional sort field
+- Contract Address: {{contractAddress}} (string) - IDO contract address
+`;
+
+export const getIDOSubscriptionTemplate = `
+Extract IDO subscription parameters:
+- Contract Address: {{contractAddress}} (string) - IDO contract address
+- Account Address: {{accountAddress}} (string) - Subscriber account address
+`;
+
+export const getIDOActivitiesTemplate = `
+Extract IDO activities parameters:
+- Contract Address: {{contractAddress}} (string?) - Optional contract address filter
+- Account Address: {{accountAddress}} (string?) - Optional account address filter
+- Limit: {{limit}} (number?) - Optional result limit
+- To Number: {{toNumber}} (string?) - Optional ending number
+`;
+
+export const getIDOWhitelistTemplate = `
+Extract IDO whitelist parameters:
+- Skip: {{skip}} (number?) - Optional number to skip
+- Limit: {{limit}} (number?) - Optional result limit
+- IDO Address: {{idoAddress}} (string) - IDO contract address
+`;
+
+export const getClaimReferencesTemplate = `
+Extract claim references parameters:
+- Skip: {{skip}} (number?) - Optional number to skip
+- Limit: {{limit}} (number?) - Optional result limit
+- IDO Address: {{idoAddress}} (string) - IDO contract address
+- Account Address: {{accountAddress}} (string) - Claimer account address
+`;

@@ -1,262 +1,38 @@
-// templates/ibc.ts
-import { ResponseTemplate, PaginationTemplate } from "./types";
+// ibc-templates.ts
+export const getDenomTraceTemplate = `
+Extract denom trace query parameters:
+- Hash: {{hash}} (string) - Hash of the denomination trace
+`;
 
-export interface DenomTrace {
-    path: string;
-    baseDenom: string;
-}
+export const getDenomsTraceTemplate = `
+Extract denoms trace query parameters:
+- Pagination: {{pagination}} (PaginationOption?) - Optional pagination parameters
+`;
 
-export interface IBCTransfer {
-    sender: string;
-    receiver: string;
-    sourcePort: string;
-    sourceChannel: string;
-    destPort: string;
-    destChannel: string;
-    amount: {
-        denom: string;
-        amount: string;
-    };
-    timeoutHeight: {
-        revisionNumber: string;
-        revisionHeight: string;
-    };
-    timeoutTimestamp: string;
-}
+export const msgIBCTransferTemplate = `
+Extract IBC transfer parameters:
+- Amount: {{amount}} (object) - Amount to transfer
+  - Denom: {{amount.denom}} (string) - Token denomination
+  - Amount: {{amount.amount}} (string) - Transfer amount
+- Memo: {{memo}} (string?) - Optional transfer memo
+- Sender: {{sender}} (string) - Source address
+- Port: {{port}} (string) - Source port ID
+- Receiver: {{receiver}} (string) - Destination address
+- Channel ID: {{channelId}} (string) - Channel identifier
+- Timeout: {{timeout}} (number?) - Optional timeout in seconds
+- Height: {{height}} (object?) - Optional timeout height
+  - Revision Height: {{height.revisionHeight}} (number) - Block height
+  - Revision Number: {{height.revisionNumber}} (number) - Chain revision number
+`;
 
-export const ibcTemplates = {
-    denomTrace: {
-        template: `
-\`\`\`json
-{
-    "path": "{{path}}",
-    "baseDenom": "{{baseDenom}}"
-}
-\`\`\`
-`,
-        description: `
-Extract the following denomination trace information:
-- IBC path
-- Base denomination
-`,
-    } as ResponseTemplate,
-
-    denomsTrace: {
-        template: `
-\`\`\`json
-{
-    "denomTraces": [
-        {
-            "path": "{{path}}",
-            "baseDenom": "{{baseDenom}}"
-        }
-    ],
-    "pagination": {
-        "nextKey": "{{nextKey}}",
-        "total": "{{total}}"
-    }
-}
-\`\`\`
-`,
-        description: `
-Extract the following denominations trace list:
-- Array of denomination traces
-- Pagination information
-`,
-    } as ResponseTemplate,
-
-    transfer: {
-        template: `
-\`\`\`json
-{
-    "sourcePort": "{{sourcePort}}",
-    "sourceChannel": "{{sourceChannel}}",
-    "token": {
-        "denom": "{{denom}}",
-        "amount": "{{amount}}"
-    },
-    "sender": "{{sender}}",
-    "receiver": "{{receiver}}",
-    "timeoutHeight": {
-        "revisionNumber": "{{revisionNumber}}",
-        "revisionHeight": "{{revisionHeight}}"
-    },
-    "timeoutTimestamp": "{{timeoutTimestamp}}"
-}
-\`\`\`
-`,
-        description: `
-Extract the following IBC transfer information:
-- Source port and channel
-- Token details
-- Sender and receiver addresses
-- Timeout configuration
-`,
-    } as ResponseTemplate,
-
-    channel: {
-        template: `
-\`\`\`json
-{
-    "state": "{{state}}",
-    "ordering": "{{ordering}}",
-    "counterparty": {
-        "portId": "{{portId}}",
-        "channelId": "{{channelId}}"
-    },
-    "connectionHops": ["{{connectionHop}}"],
-    "version": "{{version}}"
-}
-\`\`\`
-`,
-        description: `
-Extract the following channel information:
-- Channel state
-- Ordering type
-- Counterparty details
-- Connection hops
-- Protocol version
-`,
-    } as ResponseTemplate,
-
-    channels: {
-        template: `
-\`\`\`json
-{
-    "channels": [
-        {
-            "state": "{{state}}",
-            "ordering": "{{ordering}}",
-            "counterparty": {
-                "portId": "{{portId}}",
-                "channelId": "{{channelId}}"
-            },
-            "connectionHops": ["{{connectionHop}}"],
-            "version": "{{version}}"
-        }
-    ],
-    "pagination": {
-        "nextKey": "{{nextKey}}",
-        "total": "{{total}}"
-    },
-    "height": {
-        "revisionNumber": "{{revisionNumber}}",
-        "revisionHeight": "{{revisionHeight}}"
-    }
-}
-\`\`\`
-`,
-        description: `
-Extract the following channels information:
-- Array of channels with details
-- Pagination information
-- Block height information
-`,
-    } as ResponseTemplate,
-
-    packet: {
-        template: `
-\`\`\`json
-{
-    "sequence": "{{sequence}}",
-    "sourcePort": "{{sourcePort}}",
-    "sourceChannel": "{{sourceChannel}}",
-    "destinationPort": "{{destinationPort}}",
-    "destinationChannel": "{{destinationChannel}}",
-    "data": "{{data}}",
-    "timeoutHeight": {
-        "revisionNumber": "{{revisionNumber}}",
-        "revisionHeight": "{{revisionHeight}}"
-    },
-    "timeoutTimestamp": "{{timeoutTimestamp}}"
-}
-\`\`\`
-`,
-        description: `
-Extract the following packet information:
-- Sequence number
-- Source and destination details
-- Packet data
-- Timeout configuration
-`,
-    } as ResponseTemplate,
-
-    packetCommitment: {
-        template: `
-\`\`\`json
-{
-    "commitment": "{{commitment}}",
-    "proof": "{{proof}}",
-    "proofHeight": {
-        "revisionNumber": "{{revisionNumber}}",
-        "revisionHeight": "{{revisionHeight}}"
-    }
-}
-\`\`\`
-`,
-        description: `
-Extract the following packet commitment information:
-- Commitment hash
-- Proof data
-- Proof height details
-`,
-    } as ResponseTemplate,
-
-    packetAcknowledgement: {
-        template: `
-\`\`\`json
-{
-    "acknowledgement": "{{acknowledgement}}",
-    "proof": "{{proof}}",
-    "proofHeight": {
-        "revisionNumber": "{{revisionNumber}}",
-        "revisionHeight": "{{revisionHeight}}"
-    }
-}
-\`\`\`
-`,
-        description: `
-Extract the following packet acknowledgement information:
-- Acknowledgement data
-- Proof data
-- Proof height details
-`,
-    } as ResponseTemplate,
-
-    clientState: {
-        template: `
-\`\`\`json
-{
-    "chainId": "{{chainId}}",
-    "trustLevel": {
-        "numerator": "{{numerator}}",
-        "denominator": "{{denominator}}"
-    },
-    "trustingPeriod": "{{trustingPeriod}}",
-    "unbondingPeriod": "{{unbondingPeriod}}",
-    "maxClockDrift": "{{maxClockDrift}}",
-    "frozenHeight": {
-        "revisionNumber": "{{revisionNumber}}",
-        "revisionHeight": "{{revisionHeight}}"
-    },
-    "latestHeight": {
-        "revisionNumber": "{{revisionNumber}}",
-        "revisionHeight": "{{revisionHeight}}"
-    },
-    "proofSpecs": [],
-    "upgradePath": ["{{upgradePath}}"],
-    "allowUpdateAfterExpiry": {{allowUpdateAfterExpiry}},
-    "allowUpdateAfterMisbehaviour": {{allowUpdateAfterMisbehaviour}}
-}
-\`\`\`
-`,
-        description: `
-Extract the following client state information:
-- Chain identification
-- Trust parameters
-- Timing configurations
-- Height information
-- Update permissions
-`,
-    } as ResponseTemplate,
-};
+export const ibcTransferParamsTemplate = `
+Extract IBC transfer query parameters:
+- Sender: {{sender}} (string?) - Optional source address filter
+- Receiver: {{receiver}} (string?) - Optional destination address filter
+- Source Channel: {{srcChannel}} (string?) - Optional source channel filter
+- Source Port: {{srcPort}} (string?) - Optional source port filter
+- Destination Channel: {{destChannel}} (string?) - Optional destination channel filter
+- Destination Port: {{destPort}} (string?) - Optional destination port filter
+- Limit: {{limit}} (number?) - Optional result limit
+- Skip: {{skip}} (number?) - Optional number of results to skip
+`;

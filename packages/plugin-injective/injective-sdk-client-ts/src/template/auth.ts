@@ -1,57 +1,44 @@
 // auth-templates.ts
+export const authAccountTemplate = `
+Extract auth account parameters:
+- Account Address: {{accountAddress}} (string) - The address of the account to query
+`;
 
 export const getGrantsTemplate = `
-Extract authorization grants parameters:
-- Granter address: {{granter}}
-- Grantee address: {{grantee}}
-- Pagination key: {{paginationKey}}
-- Pagination limit: {{limit}}
+Extract grants parameters:
+- Granter: {{granter}} (string) - Address of the account that granted permissions
+- Grantee: {{grantee}} (string) - Address of the account that received permissions
+- Pagination: {{pagination}} (PaginationOption?) - Optional pagination parameters
 `;
 
 export const getGranterGrantsTemplate = `
 Extract granter grants parameters:
-- Granter address: {{granter}}
-- Pagination key: {{paginationKey}}
-- Pagination limit: {{limit}}
-- Pagination reverse : {{reverse}}
-- Pagination countTotal : {{countTotal}}
-- Pagination endTime : {{endTime}}
-- Pagination startTime : {{startTime}}
-- Pagination fromNumber : {{fromNumber}}
-- Pagination toNumber : {{toNumber}}
-if pagination options are not specified assume null
+- Granter: {{granter}} (string) - Address of the granter to query authorizations for
+- Pagination: {{pagination}} (PaginationOption?) - Optional pagination parameters
 `;
 
 export const getGranteeGrantsTemplate = `
 Extract grantee grants parameters:
-- Grantee address: {{grantee}}
-- Pagination key: {{paginationKey}}
-- Pagination limit: {{limit}}
-- Pagination reverse : {{reverse}}
-- Pagination countTotal : {{countTotal}}
-- Pagination endTime : {{endTime}}
-- Pagination startTime : {{startTime}}
-- Pagination fromNumber : {{fromNumber}}
-- Pagination toNumber : {{toNumber}}
-if pagination options are not specified assume null
+- Grantee: {{grantee}} (string) - Address of the grantee to query authorizations for
+- Pagination: {{pagination}} (PaginationOption?) - Optional pagination parameters
 `;
 
 export const msgGrantTemplate = `
-Extract grant message parameters:
-- Message type: {{messageType}}
-- Grantee address: {{grantee}}
-- Granter address: {{granter}}
+Extract message grant parameters:
+- Message Type: {{messageType}} (string) - Type of message being authorized
+- Grantee: {{grantee}} (string) - Address receiving the authorization
+- Granter: {{granter}} (string) - Address granting the authorization
 `;
 
 export const msgAuthzExecTemplate = `
 Extract authorization execution parameters:
-- Grantee address: {{grantee}}
-- Messages: {{msgs}}
+- Grantee: {{grantee}} (string) - Address executing the authorized transaction
+- Messages: {{msgs}} (Msgs | Msgs[]) - Messages to execute under authorization
 `;
 
 export const msgRevokeTemplate = `
-Extract revoke authorization parameters:
-- Message type: {{messageType}}
-- Grantee address: {{grantee}}
-- Granter address: {{granter}}
+Extract revocation parameters:
+- Message Type: {{messageType}} (string) - Type of message authorization to revoke
+- Grantee: {{grantee}} (string) - Address whose authorization is being revoked
+- Granter: {{granter}} (string) - Address that granted the authorization
 `;

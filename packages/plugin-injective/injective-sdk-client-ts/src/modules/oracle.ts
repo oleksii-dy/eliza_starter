@@ -1,5 +1,4 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
-import { OracleModuleParams } from "@injectivelabs/sdk-ts";
 import {
     StandardResponse,
     createSuccessResponse,
