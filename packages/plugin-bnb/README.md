@@ -21,9 +21,7 @@ By default, the RPC URL is inferred from the `viem/chains` config. To use custom
 
 ```env
 BSC_PROVIDER_URL=https://your-custom-bsc-rpc-url
-BSC_TESTNET_PROVIDER_URL=https://your-custom-bsc-testnet-rpc-url
 OPBNB_PROVIDER_URL=https://your-custom-opbnb-rpc-url
-OPBNB_TESTNET_PROVIDER_URL=https://your-custom-opbnb-testnet-rpc-url
 ```
 
 ## Provider
@@ -102,7 +100,7 @@ Bridge 1 BNB from BSC to opBNB.
 
 ### Stake
 
-Perform staking operations on BSC through lista Dao. Just specify the:
+Perform staking operations on BSC through [Lista Dao](https://lista.org/liquid-staking/BNB). User will receive sliBNB(0xB0b84D294e0C75A6abe60171b70edEb2EFd14A1B) as staking credit. Just specify the:
 
 - **Action**
 - **Amount**
@@ -110,7 +108,7 @@ Perform staking operations on BSC through lista Dao. Just specify the:
 **Example usage:**
 
 ```bash
-Delegate 1 BNB to lista Dao.
+Deposit 1 BNB to Lista Dao.
 ```
 
 ---
