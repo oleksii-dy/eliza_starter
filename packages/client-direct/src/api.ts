@@ -183,5 +183,48 @@ export function createApiRouter(
         }
     });
 
+    router.post("/agent/start", async (req, res) => {
+        const { characterPath } = req.body;
+        console.log("characterPath", characterPath);
+
+        try {
+            const character = await directClient.loadCharacter(characterPath);
+            const agent = await directClient.startAgent(character);
+            elizaLogger.log(`${character.name} started`);
+
+            res.json({
+                id: character.id,
+                character: character,
+            });
+        } catch (e) {
+            elizaLogger.error(`Error parsing character: ${e}`);
+            res.status(400).json({
+                success: false,
+                message: e.message,
+            });
+            return;
+        }
+    });
+
+    router.post("/agents/:agentId/stop", async (req, res) => {
+        const agentId = req.params.agentId;
+        console.log("agentId", agentId);
+        let agent: AgentRuntime = agents.get(agentId);
+
+        // update character
+        if (agent) {
+            // stop agent
+            const clientCount = Object.keys(agent.clients).length;
+            agent.stop();
+            directClient.unregisterAgent(agent);
+            // if it has a different name, the agentId will change
+            res.json({
+                clientCount,
+            });
+        } else {
+            res.status(404).json({ error: "Agent not found" });
+        }
+    });
+
     return router;
 }
