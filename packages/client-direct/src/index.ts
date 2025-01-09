@@ -178,7 +178,7 @@ export class DirectClient {
                             agentId.toLowerCase()
                     );
                 }
-
+              
                 if (!runtime) {
                     res.status(404).send("Agent not found");
                     return;
