@@ -34,7 +34,7 @@ export class StakeAction {
     async stake(params: StakeParams): Promise<StakeResponse> {
         this.validateStakeParams(params);
 
-        this.walletProvider.switchChain("bsc"); // only bsc is supported
+        this.walletProvider.switchChain("bsc"); // only BSC is supported
 
         try {
             const actions = {
@@ -212,13 +212,12 @@ export const stakeAction = {
             modelClass: ModelClass.LARGE,
         });
 
+        const walletProvider = initWalletProvider(runtime);
+        const action = new StakeAction(walletProvider);
         const paramOptions: StakeParams = {
             action: content.action,
             amount: content.amount,
         };
-
-        const walletProvider = initWalletProvider(runtime);
-        const action = new StakeAction(walletProvider);
         try {
             const stakeResp = await action.stake(paramOptions);
             callback?.({

@@ -1,5 +1,11 @@
-import type { IAgentRuntime, Provider, Memory, State } from "@elizaos/core";
-import { getToken } from "@lifi/sdk";
+import {
+    type IAgentRuntime,
+    type Provider,
+    type Memory,
+    type State,
+    elizaLogger,
+} from "@elizaos/core";
+import { EVM, createConfig, getToken } from "@lifi/sdk";
 import type {
     Address,
     WalletClient,
@@ -18,6 +24,7 @@ import {
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import * as viemChains from "viem/chains";
+import { createWeb3Name } from "@web3-name-sdk/core";
 
 import type { SupportedChain } from "../types";
 import { ERC20Abi } from "../types";
@@ -82,6 +89,45 @@ export class WalletProvider {
         return chain;
     }
 
+    configureLiFiSdk(chainName: SupportedChain) {
+        const chains = Object.values(this.chains);
+        const walletClient = this.getWalletClient(chainName);
+
+        createConfig({
+            integrator: "eliza",
+            providers: [
+                EVM({
+                    getWalletClient: async () => walletClient,
+                    switchChain: async (chainId) =>
+                        createWalletClient({
+                            account: this.account,
+                            chain: chains.find(
+                                (chain) => chain.id == chainId
+                            ) as Chain,
+                            transport: http(),
+                        }),
+                }),
+            ],
+        });
+    }
+
+    async formatAddress(address: string): Promise<Address> {
+        if (address.startsWith("0x") && address.length === 42) {
+            return address as Address;
+        }
+        const resolvedAddress = await this.resolveWeb3Name(address);
+        if (resolvedAddress) {
+            return resolvedAddress as Address;
+        } else {
+            throw new Error("Invalid address");
+        }
+    }
+
+    async resolveWeb3Name(name: string): Promise<string | null> {
+        const nameService = createWeb3Name();
+        return await nameService.getAddress(name);
+    }
+
     async transfer(
         chain: SupportedChain,
         toAddress: Address,
@@ -134,7 +180,7 @@ export class WalletProvider {
             });
             return formatUnits(balance, 18);
         } catch (error) {
-            console.error("Error getting wallet balance:", error);
+            elizaLogger.error("Error getting wallet balance:", error);
             return null;
         }
     }
@@ -150,7 +196,7 @@ export class WalletProvider {
             );
             return token.address;
         } catch (error) {
-            console.error("Error getting token address:", error);
+            elizaLogger.error("Error getting token address:", error);
             return null;
         }
     }
@@ -239,30 +285,10 @@ const genChainsFromRuntime = (
         chains["bsc"] = chain;
     }
 
-    const testnet_rpcurl = runtime.getSetting("BSC_TESTNET_PROVIDER_URL");
-    if (testnet_rpcurl) {
-        const chain = WalletProvider.genChainFromName(
-            "bscTestnet",
-            testnet_rpcurl
-        );
-        chains["bscTestnet"] = chain;
-    }
-
     const opbnb_rpcurl = runtime.getSetting("OPBNB_PROVIDER_URL");
     if (opbnb_rpcurl) {
         const chain = WalletProvider.genChainFromName("opBNB", opbnb_rpcurl);
         chains["opBNB"] = chain;
-    }
-
-    const opbnb_testnet_rpcurl = runtime.getSetting(
-        "OPBNB_TESTNET_PROVIDER_URL"
-    );
-    if (opbnb_testnet_rpcurl) {
-        const chain = WalletProvider.genChainFromName(
-            "opBNBTestnet",
-            opbnb_testnet_rpcurl
-        );
-        chains["opBNBTestnet"] = chain;
     }
 
     return chains;

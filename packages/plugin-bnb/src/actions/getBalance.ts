@@ -42,6 +42,7 @@ export class GetBalanceAction {
             this.walletProvider.getChainConfigs(chain).nativeCurrency.symbol;
         const chainId = this.walletProvider.getChainConfigs(chain).id;
 
+        this.walletProvider.configureLiFiSdk(chain);
         try {
             let resp: GetBalanceResponse = {
                 chain,
@@ -53,28 +54,29 @@ export class GetBalanceAction {
             if (!token) {
                 const balances = await this.getTokenBalances(chainId, address);
                 resp.balances = balances;
+            } else {
+                // If specific token is requested and it's not the native token
+                if (token !== nativeSymbol) {
+                    const balance = await this.getERC20TokenBalance(
+                        chainId,
+                        address,
+                        token!
+                    );
+                    resp.balances = [{ token: token!, balance }];
+                } else {
+                    // If native token is requested
+                    const nativeBalanceWei = await this.walletProvider
+                        .getPublicClient(chain)
+                        .getBalance({ address });
+                    resp.balances = [
+                        {
+                            token: nativeSymbol,
+                            balance: formatEther(nativeBalanceWei),
+                        },
+                    ];
+                }
             }
 
-            // If specific token is requested and it's not the native token
-            if (token !== nativeSymbol) {
-                const balance = await this.getERC20TokenBalance(
-                    chainId,
-                    address,
-                    token!
-                );
-                resp.balances = [{ token: token!, balance }];
-            } else {
-                // If native token is requested
-                const nativeBalanceWei = await this.walletProvider
-                    .getPublicClient(chain)
-                    .getBalance({ address });
-                resp.balances = [
-                    {
-                        token: nativeSymbol,
-                        balance: formatEther(nativeBalanceWei),
-                    },
-                ];
-            }
             return resp;
         } catch (error) {
             throw new Error(`Get balance failed: ${error.message}`);
@@ -138,14 +140,13 @@ export const getBalanceAction = {
             modelClass: ModelClass.LARGE,
         });
 
-        const getBalanceOptions: GetBalanceParams = {
-            chain: content.chain,
-            address: content.address,
-            token: content.token,
-        };
-
         const walletProvider = initWalletProvider(runtime);
         const action = new GetBalanceAction(walletProvider);
+        const getBalanceOptions: GetBalanceParams = {
+            chain: content.chain,
+            address: await walletProvider.formatAddress(content.address),
+            token: content.token,
+        };
         try {
             const getBalanceResp = await action.getBalance(getBalanceOptions);
             if (callback) {

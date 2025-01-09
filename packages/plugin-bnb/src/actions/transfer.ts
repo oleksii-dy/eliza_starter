@@ -168,16 +168,15 @@ export const transferAction = {
             modelClass: ModelClass.LARGE,
         });
 
+        const walletProvider = initWalletProvider(runtime);
+        const action = new TransferAction(walletProvider);
         const paramOptions: TransferParams = {
             chain: content.chain,
             token: content.token,
             amount: content.amount,
-            toAddress: content.toAddress,
+            toAddress: await walletProvider.formatAddress(content.toAddress),
             data: content.data,
         };
-
-        const walletProvider = initWalletProvider(runtime);
-        const action = new TransferAction(walletProvider);
         try {
             const transferResp = await action.transfer(paramOptions);
             callback?.({

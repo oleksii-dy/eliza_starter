@@ -290,10 +290,10 @@ export class BridgeAction {
     }
 }
 
-// NOTE: The bridge action only supports bridge funds between bsc and opBNB for now. We may adding stargate support later.
+// NOTE: The bridge action only supports bridge funds between BSC and opBNB for now. We may adding stargate support later.
 export const bridgeAction = {
     name: "bridge",
-    description: "Bridge tokens between bsc and opBNB",
+    description: "Bridge tokens between BSC and opBNB",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -321,17 +321,16 @@ export const bridgeAction = {
             modelClass: ModelClass.LARGE,
         });
 
+        const walletProvider = initWalletProvider(runtime);
+        const action = new BridgeAction(walletProvider);
         const paramOptions: BridgeParams = {
             fromChain: content.fromChain,
             toChain: content.toChain,
             fromToken: content.fromToken,
             toToken: content.toToken,
             amount: content.amount,
-            toAddress: content.toAddress,
+            toAddress: await walletProvider.formatAddress(content.toAddress),
         };
-
-        const walletProvider = initWalletProvider(runtime);
-        const action = new BridgeAction(walletProvider);
         try {
             const bridgeResp = await action.bridge(paramOptions);
             callback?.({
@@ -358,7 +357,7 @@ export const bridgeAction = {
             {
                 user: "user",
                 content: {
-                    text: "Transfer 1 BNB from bsc to opBNB",
+                    text: "Transfer 1 BNB from BSC to opBNB",
                     action: "BRIDGE",
                 },
             },
@@ -367,7 +366,7 @@ export const bridgeAction = {
             {
                 user: "user",
                 content: {
-                    text: "Deposit 1 BNB from bsc to opBNB",
+                    text: "Deposit 1 BNB from BSC to opBNB",
                     action: "DEPOSIT",
                 },
             },
@@ -376,7 +375,7 @@ export const bridgeAction = {
             {
                 user: "user",
                 content: {
-                    text: "Withdraw 1 BNB from opBNB to bsc",
+                    text: "Withdraw 1 BNB from opBNB to BSC",
                     action: "WITHDRAW",
                 },
             },

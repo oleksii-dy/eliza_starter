@@ -22,7 +22,7 @@ export const bnbPlugin: Plugin = {
         getBalanceAction,
         transferAction,
         swapAction,
-        bridgeAction, // NOTE: The bridge action only supports bridge funds between bsc and opBNB for now. We may adding stargate support later.
+        bridgeAction, // NOTE: The bridge action only supports bridge funds between BSC and opBNB for now. We may adding stargate support later.
         stakeAction,
         deployAction,
     ],

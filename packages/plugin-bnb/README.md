@@ -28,11 +28,10 @@ OPBNB_TESTNET_PROVIDER_URL=https://your-custom-opbnb-testnet-rpc-url
 
 ## Provider
 
-The **Wallet Provider** initializes with bsc as the default. It:
+The **Wallet Provider** initializes with BSC as the default. It:
 
 - Provides the **context** of the currently connected address and its balance.
 - Creates **Public** and **Wallet clients** to interact with the supported chains.
-- Allows adding chains dynamically at runtime.
 
 ---
 
@@ -40,7 +39,7 @@ The **Wallet Provider** initializes with bsc as the default. It:
 
 ### Get Balance
 
-Get the balance of an address on bsc. Just specify the:
+Get the balance of an address on BSC. Just specify the:
 
 - **Chain**
 - **Address**
@@ -49,12 +48,12 @@ Get the balance of an address on bsc. Just specify the:
 **Example usage:**
 
 ```bash
-Get the USDC balance of 0x1234567890 on bsc.
+Get the USDC balance of 0x1234567890 on BSC.
 ```
 
 ### Transfer
 
-Transfer tokens from one address to another on bsc/opBNB. Just specify the:
+Transfer tokens from one address to another on BSC/opBNB. Just specify the:
 
 - **Chain**
 - **Token**
@@ -65,12 +64,12 @@ Transfer tokens from one address to another on bsc/opBNB. Just specify the:
 **Example usage:**
 
 ```bash
-Transfer 1 BNB to 0xRecipient on bsc.
+Transfer 1 BNB to 0xRecipient on BSC.
 ```
 
 ### Swap
 
-Swap tokens from one address to another on bsc. Just specify the:
+Swap tokens from one address to another on BSC. Just specify the:
 
 - **Input Token**
 - **Output Token**
@@ -81,12 +80,12 @@ Swap tokens from one address to another on bsc. Just specify the:
 **Example usage:**
 
 ```bash
-Swap 1 BNB to USDC on bsc.
+Swap 1 BNB to USDC on BSC.
 ```
 
 ### Bridge
 
-Bridge tokens from one chain to another on bsc/opBNB. Just specify the:
+Bridge tokens from one chain to another on BSC/opBNB. Just specify the:
 
 - **From Chain**
 - **To Chain**
@@ -98,36 +97,20 @@ Bridge tokens from one chain to another on bsc/opBNB. Just specify the:
 **Example usage:**
 
 ```bash
-Bridge 1 BNB from bsc to opBNB.
-```
-
-### Faucet
-
-Get testnet tokens for bsc. Just specify the:
-
-- **Chain**
-- **Address**
-
-**Example usage:**
-
-```bash
-Get some testnet tokens for bsc.
+Bridge 1 BNB from BSC to opBNB.
 ```
 
 ### Stake
 
-Perform staking operations on bsc. Just specify the:
+Perform staking operations on BSC through lista Dao. Just specify the:
 
 - **Action**
 - **Amount**
-- **From Validator Address**
-- **To Validator Address**
-- **Delegate Vote Power**(Optional)
 
 **Example usage:**
 
 ```bash
-Stake 1 BNB to validator 0x1234567890.
+Delegate 1 BNB to lista Dao.
 ```
 
 ---

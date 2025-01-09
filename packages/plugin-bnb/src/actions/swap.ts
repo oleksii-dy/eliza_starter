@@ -8,8 +8,8 @@ import {
     type Memory,
     type State,
 } from "@elizaos/core";
-import { createConfig, EVM, executeRoute, getRoutes } from "@lifi/sdk";
-import { Chain, createWalletClient, parseEther, http } from "viem";
+import { executeRoute, getRoutes } from "@lifi/sdk";
+import { parseEther } from "viem";
 
 import { initWalletProvider, WalletProvider } from "../providers/wallet";
 import { swapTemplate } from "../templates";
@@ -28,9 +28,7 @@ export class SwapAction {
         const fromAddress = this.walletProvider.getAddress();
         const chainId = this.walletProvider.getChainConfigs(params.chain).id;
 
-        const chains = Object.values(this.walletProvider.chains);
-        const walletClient = this.walletProvider.getWalletClient(params.chain);
-
+        this.walletProvider.configureLiFiSdk(params.chain);
         try {
             let resp: SwapResponse = {
                 chain: params.chain,
@@ -39,23 +37,6 @@ export class SwapAction {
                 toToken: params.toToken,
                 amount: params.amount,
             };
-
-            createConfig({
-                integrator: "eliza",
-                providers: [
-                    EVM({
-                        getWalletClient: async () => walletClient,
-                        switchChain: async (chainId) =>
-                            createWalletClient({
-                                account: this.walletProvider.account,
-                                chain: chains.find(
-                                    (chain) => chain.id == chainId
-                                ) as Chain,
-                                transport: http(),
-                            }),
-                    }),
-                ],
-            });
 
             const routes = await getRoutes({
                 fromChainId: chainId,
