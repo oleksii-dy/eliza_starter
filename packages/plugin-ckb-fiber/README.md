@@ -30,7 +30,9 @@ You can check the default values in `src/constants.ts`
 
 5. **NEW_INVOICE**: Given an amount and asset type (CKB, USDI, or RUSD), the agent generates a new invoice, enabling others to send funds to the agent-controlled Fiber node.
 
-# Cautions
+# Cautions & Notes
+- **Start Your Fiber Node:** Before using the CKB Fiber Plugin, ensure that your Fiber node is up and running. The Fiber node should be connected to the Fiber network and have sufficient channels opened to facilitate payment transactions. Check [nervosnetwork/fiber](https://github.com/nervosnetwork/fiber) for more information.
+
 - **Network Access Control:** If the Fiber node’s RPC URL is exposed to the external network without proper access control, there could be potential unauthorized access. Ensure the RPC URL is secured or only accessible within the local network to avoid unintended exposure.
 
 - **Sensitive Actions:** Some actions, such as transfers, involve handling sensitive operations. These actions should be properly secured to prevent users from directly triggering them in inappropriate scenarios (e.g., unauthorized transfers). Ensuring proper access control and validation for these actions is critical.
