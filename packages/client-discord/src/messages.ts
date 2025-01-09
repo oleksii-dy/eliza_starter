@@ -390,14 +390,14 @@ export class MessageManager {
                 });
 
                 // simulate discord typing while generating a response
-                const stopTyping = this.simulateTyping(message)
+                const stopTyping = this.simulateTyping(message);
 
                 const responseContent = await this._generateResponse(
                     memory,
                     state,
                     context
                 ).finally(() => {
-                    stopTyping()
+                    stopTyping();
                 });
 
                 responseContent.text = responseContent.text?.trim();
@@ -513,6 +513,10 @@ export class MessageManager {
     }
 
     private _isMessageForMe(message: DiscordMessage): boolean {
+        if (message.channel.type === ChannelType.DM) {
+            return true;
+        }
+
         const isMentioned = message.mentions.users?.has(
             this.client.user?.id as string
         );
@@ -532,25 +536,28 @@ export class MessageManager {
             return false;
         }
 
-        return (
-            isMentioned ||
-            (!this.runtime.character.clientConfig?.discord
-                ?.shouldRespondOnlyToMentions &&
-                (message.content
-                    .toLowerCase()
-                    .includes(
-                        this.client.user?.username.toLowerCase() as string
-                    ) ||
-                    message.content
-                        .toLowerCase()
-                        .includes(
-                            this.client.user?.tag.toLowerCase() as string
-                        ) ||
-                    (nickname &&
-                        message.content
-                            .toLowerCase()
-                            .includes(nickname.toLowerCase()))))
-        );
+        if (isMentioned) {
+            return true;
+        }
+
+        if (
+            this.runtime.character.clientConfig?.discord
+                ?.shouldRespondOnlyToMentions
+        ) {
+            return false;
+        }
+
+        const hasUsername = message.content
+            .toLowerCase()
+            .includes(this.client.user?.username.toLowerCase() as string);
+        const hasTag = message.content
+            .toLowerCase()
+            .includes(this.client.user?.tag.toLowerCase() as string);
+        const hasNickname =
+            nickname &&
+            message.content.toLowerCase().includes(nickname.toLowerCase());
+
+        return hasUsername || hasTag || hasNickname;
     }
 
     async processMessageMedia(
@@ -1332,7 +1339,7 @@ export class MessageManager {
         typingLoop();
 
         return function stopTyping() {
-            typing = false
-        }
+            typing = false;
+        };
     }
 }
