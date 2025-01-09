@@ -923,10 +923,12 @@ export class TwitterPostClient {
                     continue;
                 }
 
-                // Respect the ACTION_INTERVAL between processing each tweet
-                await new Promise((resolve) =>
-                    setTimeout(resolve, this.client.twitterConfig.ACTION_INTERVAL * 60 * 1000)
-                );
+                if (this.client.twitterConfig.ENABLE_ACTION_PROCESSING) {
+                    // Respect the ACTION_INTERVAL between processing each tweet
+                    await new Promise((resolve) =>
+                        setTimeout(resolve, this.client.twitterConfig.ACTION_INTERVAL * 60 * 1000)
+                    );
+                }
             }
 
             return results; // Return results array to indicate completion
