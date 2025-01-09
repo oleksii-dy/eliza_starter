@@ -21,7 +21,7 @@ const bitcoinPriceProvider: Provider = {
 - Price: $${btcPrice.toLocaleString()} USD`;
 
     } catch (error) {
-      console.error("Bitcoin price provider error:", error);
+    //   console.error("Bitcoin price provider error:", error);
       return "Unable to fetch Bitcoin price at the moment";
     }
   }

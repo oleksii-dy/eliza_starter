@@ -1,6 +1,7 @@
 export interface ScrapperResponse {
     etfOverview: EtfOverview[];
-    inflowsBTC:  { [key: string]: null | string }[];
+    dataBTC:  Inflows[];
+    dataUSD: Inflows[]
 }
 
 export interface EtfOverview {
@@ -10,7 +11,7 @@ export interface EtfOverview {
     marketCap: string;
 }
 
-export interface InflowBTC {
+export interface Inflows {
     time: string;
     GBTC: string | null;
     IBIT: string | null;
