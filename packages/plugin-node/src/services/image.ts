@@ -142,7 +142,7 @@ export class ImageDescriptionService
         imageUrl: string
     ): Promise<{ title: string; description: string }> {
         elizaLogger.debug(`Attempting to recognize image: ${imageUrl}`);
-        
+
         const { isValid, mimeType } = this.validateImageFormat(imageUrl);
         if (!isValid) {
             const supportedFormats = Object.keys(ImageDescriptionService.SUPPORTED_FORMATS)
@@ -210,7 +210,7 @@ export class ImageDescriptionService
                 titleLength: title.length,
                 descriptionLength: descriptionParts.join("\n").length
             });
-            
+
             return {
                 title,
                 description: descriptionParts.join("\n"),
