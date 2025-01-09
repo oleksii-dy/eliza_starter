@@ -733,6 +733,9 @@ export type Character = {
     /** Example messages */
     messageExamples: MessageExample[][];
 
+    /** quota messages */
+    quotaExamples: MessageExample[][];
+
     /** Example posts */
     postExamples: string[];
 
