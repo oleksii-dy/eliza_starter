@@ -1,5 +1,5 @@
 // Basic types
-export type Currency = 'fibb' | 'fibt' | 'fibd';
+export type Currency = 'Fibb' | 'Fibt' | 'Fibd';
 export type HashAlgorithm = 'sha256';
 export type Hash256 = string;
 export type PeerId = string;

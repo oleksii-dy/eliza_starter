@@ -7,7 +7,7 @@ import {
 import { ccc } from "@ckb-ccc/core";
 import { getClient, RpcClient } from "./rpcClient.ts";
 import { SupportedUDTs, UDTType } from "../../constants.ts";
-import { OpenChannelParams, PaymentResponse } from "./types.ts";
+import {Channel, OpenChannelParams, PaymentResponse} from "./types.ts";
 import { env, fromDecimal, toDecimal, udtEq } from "../../utils.ts";
 
 export const ServiceTypeCKBFiber = "ckb_fiber" as ServiceType; // ServiceType.CKB_FIBER
@@ -303,7 +303,7 @@ export class CKBFiberService extends Service {
 
         return await this.rpcClient.newInvoice({
             amount: fromDecimal(amount, udtType),
-            currency: "fibt",
+            currency: "Fibt",
         });
     }
 }
