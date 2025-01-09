@@ -1,7 +1,7 @@
 import { KeyPairSigner, Address, createKeyPairSignerFromBytes, address } from "@solana/web3.js";
 import bs58 from "bs58";
 import { IAgentRuntime } from "@elizaos/core";
-import { TEEMode } from "./TEE/types";
+import { TEEMode } from "./TEE/types"
 import { DeriveKeyProvider } from "./TEE/deriveKeyProvider";
 
 export interface WalletResult {
