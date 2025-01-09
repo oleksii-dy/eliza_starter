@@ -1,50 +1,355 @@
-// bank-templates.ts
+// Bank Module Templates
 export const getBankBalanceTemplate = `
-Extract bank balance parameters:
-- Denom: {{denom}} (string) - Denomination of the token to query
+Query bank balance for specific denomination with the following parameters:
+
+Request Format:
+\`\`\`json
+{
+    "denom": string                      // Denomination to query
+}
+\`\`\`
+
+Example Request:
+\`\`\`json
+{
+    "denom": "inj"
+}
+\`\`\`
+
+Response Format:
+\`\`\`json
+{
+    "balance": {
+        "denom": string,                 // Token denomination
+        "amount": string                 // Balance amount
+    }
+}
+\`\`\`
 `;
 
 export const getBankBalancesTemplate = `
-Extract bank balances parameters:
-- Pagination: {{pagination}} (PaginationOption?) - Optional pagination parameters
+Query all bank balances with optional pagination:
+
+Request Format:
+\`\`\`json
+{
+    "pagination": {                      // Optional pagination parameters
+        "limit": number | null,          // Number of items per page
+        "key": string | null,            // Pagination key
+        "reverse": boolean | null        // Reverse order flag
+    }
+}
+\`\`\`
+
+Example Request:
+\`\`\`json
+{
+    "pagination": {
+        "limit": 10
+    }
+}
+\`\`\`
+
+Response Format:
+\`\`\`json
+{
+    "balances": [{
+        "denom": string,                 // Token denomination
+        "amount": string                 // Balance amount
+    }],
+    "pagination": {
+        "next": string | null,           // Next page token
+        "total": number                  // Total number of balances
+    }
+}
+\`\`\`
 `;
 
 export const getSupplyOfTemplate = `
-Extract supply parameters:
-- Denom: {{denom}} (string) - Denomination of the token to query supply for
+Query supply of specific denomination with the following parameters:
+
+Request Format:
+\`\`\`json
+{
+    "denom": string                      // Denomination to query
+}
+\`\`\`
+
+Example Request:
+\`\`\`json
+{
+    "denom": "inj"
+}
+\`\`\`
+
+Response Format:
+\`\`\`json
+{
+    "amount": {
+        "denom": string,                 // Token denomination
+        "amount": string                 // Total supply amount
+    }
+}
+\`\`\`
 `;
 
 export const getDenomMetadataTemplate = `
-Extract denomination metadata parameters:
-- Denom: {{denom}} (string) - Denomination to query metadata for
+Query denomination metadata with the following parameters:
+
+Request Format:
+\`\`\`json
+{
+    "denom": string                      // Denomination to query
+}
+\`\`\`
+
+Example Request:
+\`\`\`json
+{
+    "denom": "inj"
+}
+\`\`\`
+
+Response Format:
+\`\`\`json
+{
+    "metadata": {
+        "description": string,           // Denomination description
+        "denomUnits": [{                 // Denomination units
+            "denom": string,             // Unit name
+            "exponent": number,          // Exponent value
+            "aliases": string[]          // Alternative names
+        }],
+        "base": string,                  // Base denomination
+        "display": string,               // Display denomination
+        "name": string,                  // Token name
+        "symbol": string                 // Token symbol
+    }
+}
+\`\`\`
 `;
 
 export const getDenomOwnersTemplate = `
-Extract denomination owners parameters:
-- Denom: {{denom}} (string) - Denomination to query owners for
+Query denomination owners with the following parameters:
+
+Request Format:
+\`\`\`json
+{
+    "denom": string                      // Denomination to query
+}
+\`\`\`
+
+Example Request:
+\`\`\`json
+{
+    "denom": "inj"
+}
+\`\`\`
+
+Response Format:
+\`\`\`json
+{
+    "denomOwners": [{
+        "address": string,               // Owner address
+        "balance": {                     // Balance information
+            "denom": string,             // Token denomination
+            "amount": string             // Balance amount
+        }
+    }],
+    "pagination": {
+        "next": string | null,           // Next page token
+        "total": number                  // Total number of owners
+    }
+}
+\`\`\`
 `;
 
 export const bankBalanceTemplate = `
-Extract specific bank balance parameters:
-- Account Address: {{accountAddress}} (string) - Address to query balance for
-- Denom: {{denom}} (string) - Denomination of the token
+Query bank balance for specific account and denomination:
+
+Request Format:
+\`\`\`json
+{
+    "accountAddress": string,            // Account address to query
+    "denom": string                      // Denomination to query
+}
+\`\`\`
+
+Example Request:
+\`\`\`json
+{
+    "accountAddress": "inj1...",
+    "denom": "inj"
+}
+\`\`\`
+
+Response Format:
+\`\`\`json
+{
+    "balance": {
+        "denom": string,                 // Token denomination
+        "amount": string                 // Balance amount
+    }
+}
+\`\`\`
 `;
 
 export const msgSendTemplate = `
-Extract send transaction parameters:
-- Amount: {{amount}} (object | object[]) - Amount(s) to send with denomination and amount
-  - Denom: {{amount.denom}} (string) - Token denomination
-  - Amount: {{amount.amount}} (string) - Amount to send
-- Source Address: {{srcInjectiveAddress}} (string) - Address sending the funds
-- Destination Address: {{dstInjectiveAddress}} (string) - Address receiving the funds
+Send tokens with the following parameters:
+
+Request Format:
+\`\`\`json
+{
+    "amount": {                          // Single amount or array of amounts
+        "denom": string,                 // Token denomination
+        "amount": string                 // Amount to send
+    } | [{
+        "denom": string,                 // Token denomination
+        "amount": string                 // Amount to send
+    }],
+    "srcInjectiveAddress": string,       // Source address
+    "dstInjectiveAddress": string        // Destination address
+}
+\`\`\`
+
+Example Request:
+\`\`\`json
+{
+    "amount": {
+        "denom": "inj",
+        "amount": "1000000000000000000"
+    },
+    "srcInjectiveAddress": "inj1...",
+    "dstInjectiveAddress": "inj1..."
+}
+\`\`\`
+
+Response Format:
+\`\`\`json
+{
+    "height": string,                    // Block height
+    "txHash": string,                    // Transaction hash
+    "transfer": {
+        "sender": string,                // Sender address
+        "recipient": string,             // Recipient address
+        "amount": {                      // Transferred amount
+            "denom": string,             // Token denomination
+            "amount": string             // Amount sent
+        },
+        "timestamp": number            // Transfer timestamp
+    }
+}
+\`\`\`
 `;
 
 export const msgMultiSendTemplate = `
-Extract multi-send transaction parameters:
-- Inputs: {{inputs}} (object[]) - Array of source addresses and amounts
-  - Address: {{inputs.address}} (string) - Source address
-  - Coins: {{inputs.coins}} (Coin[]) - Array of coins to send
-- Outputs: {{outputs}} (object[]) - Array of destination addresses and amounts
-  - Address: {{outputs.address}} (string) - Destination address
-  - Coins: {{outputs.coins}} (Coin[]) - Array of coins to receive
+Execute multiple sends with the following parameters:
+
+Request Format:
+\`\`\`json
+{
+    "inputs": [{                         // Array of input addresses and amounts
+        "address": string,               // Input address
+        "coins": [{                      // Array of coins to send
+            "denom": string,             // Token denomination
+            "amount": string             // Amount to send
+        }]
+    }],
+    "outputs": [{                        // Array of output addresses and amounts
+        "address": string,               // Output address
+        "coins": [{                      // Array of coins to receive
+            "denom": string,             // Token denomination
+            "amount": string             // Amount to receive
+        }]
+    }]
+}
+\`\`\`
+
+Example Request:
+\`\`\`json
+{
+    "inputs": [{
+        "address": "inj1...",
+        "coins": [{
+            "denom": "inj",
+            "amount": "1000000000000000000"
+        }]
+    }],
+    "outputs": [{
+        "address": "inj1...",
+        "coins": [{
+            "denom": "inj",
+            "amount": "500000000000000000"
+        }],
+        "address": "inj1...",
+        "coins": [{
+            "denom": "inj",
+            "amount": "500000000000000000"
+        }]
+    }]
+}
+\`\`\`
+
+Response Format:
+\`\`\`json
+{
+    "height": string,                    // Block height
+    "txHash": string,                    // Transaction hash
+    "transfers": [{
+        "sender": string,                // Sender address
+        "recipient": string,             // Recipient address
+        "amount": {                      // Transferred amount
+            "denom": string,             // Token denomination
+            "amount": string             // Amount sent
+        }
+    }],
+    "summary": {
+        "totalInputs": number,           // Total number of inputs
+        "totalOutputs": number,          // Total number of outputs
+        "totalAmount": {                 // Total amount transferred
+            "denom": string,             // Token denomination
+            "amount": string             // Total amount
+        }
+    },
+    "timestamp": number                // Transaction timestamp
+}
+\`\`\`
+`;
+
+export const totalSupplyTemplate = `
+Query total token supply:
+
+Request Format:
+\`\`\`json
+{
+    "pagination": {                      // Optional pagination parameters
+        "limit": number | null,          // Number of items per page
+        "key": string | null,            // Pagination key
+        "reverse": boolean | null        // Reverse order flag
+    }
+}
+\`\`\`
+
+Example Request:
+\`\`\`json
+{
+    "pagination": {
+        "limit": 10
+    }
+}
+\`\`\`
+
+Response Format:
+\`\`\`json
+{
+    "supply": [{
+        "denom": string,                 // Token denomination
+        "amount": string                 // Supply amount
+    }],
+    "pagination": {
+        "next": string | null,           // Next page token
+        "total": number                  // Total number of supply entries
+    }
+}
+\`\`\`
 `;
