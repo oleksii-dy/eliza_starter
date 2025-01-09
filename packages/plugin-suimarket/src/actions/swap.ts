@@ -124,7 +124,6 @@ Example response:
 
 // if we get the token symbol but not the CA, check walet for matching token, and if we have, get the CA for it
 
-<<<<<<< HEAD
 // get all the tokens in the wallet using the wallet provider
 // async function getTokensInWallet(runtime: IAgentRuntime) {
 //     const { publicKey } = await getWalletKey(runtime, false);
@@ -162,14 +161,6 @@ export const executeSwap: Action = {
     similes: ["SUI_SWAP_TOKENS", "SUI_TOKEN_SWAP", "SUI_TRADE_TOKENS", "SUI_EXCHANGE_TOKENS"],
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         // Check if the necessary parameters are provided in the message
-=======
-// swapToken should took CA, not symbol
-
-export const swap: Action = {
-    name: "EXECUTE_SWAP",
-    similes: ["SWAP_TOKENS", "TOKEN_SWAP", "TRADE_TOKENS", "EXCHANGE_TOKENS"],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
->>>>>>> refs/remotes/origin/main
         console.log("Message:", message);
         return true;
     },
@@ -181,22 +172,16 @@ export const swap: Action = {
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
     ): Promise<boolean> => {
-<<<<<<< HEAD
         // composeState
-=======
->>>>>>> refs/remotes/origin/main
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-<<<<<<< HEAD
         console.log("Stateofsuimarket:", state);
         // const walletInfo = await walletProvider.get(runtime, message, state);
 
         // state.walletInfo = walletInfo;
-=======
->>>>>>> refs/remotes/origin/main
 
         const swapContext = composeContext({
             state,
@@ -208,7 +193,6 @@ export const swap: Action = {
             context: swapContext,
             modelClass: ModelClass.LARGE,
         });
-<<<<<<< HEAD
 
         const txid = "DvH9w7EoS3XBsSukB43tkjGp6P5veRe8JfSrBT5RyyAG"
         console.log("Response:", response);
@@ -369,15 +353,6 @@ export const swap: Action = {
 
             const responseMsg = {
                 text: `Swap completed successfully! Transaction ID: ${txid}, ${response.inputTokenSymbol} -> ${response.outputTokenSymbol} ${response.inputTokenType} -> ${response.outputTokenType}, ${response.amount} ${response.inputTokenSymbol}`,
-=======
-
-        elizaLogger.log("swap info:", response);
-
-        try {
-            const responseMsg = {
-                text: `Swap completed successfully! Transaction ID`,
-                response: response
->>>>>>> refs/remotes/origin/main
             };
 
             callback?.(responseMsg);
@@ -394,21 +369,14 @@ export const swap: Action = {
                 user: "{{user1}}",
                 content: {
                     inputTokenSymbol: "SUI",
-<<<<<<< HEAD
                     outputTokenSymbol: "USDT",
                     amount: 10,
                     slippageBps: 50
                 }
-=======
-                    outputTokenSymbol: "USDC",
-                    amount: 0.1,
-                },
->>>>>>> refs/remotes/origin/main
             },
             {
                 user: "{{user2}}",
                 content: {
-<<<<<<< HEAD
                     text: "Initiating swap of 10 SUI for USDT on SUI network...",
                     action: "SUI_TOKEN_SWAP",
                     params: {
@@ -418,16 +386,10 @@ export const swap: Action = {
                         slippageBps: 50
                     }
                 }
-=======
-                    text: "Swapping 0.1 SUI for USDC...",
-                    action: "TOKEN_SWAP",
-                },
->>>>>>> refs/remotes/origin/main
             },
             {
                 user: "{{user2}}",
                 content: {
-<<<<<<< HEAD
                     text: "Swap executed successfully! Transaction digest: {{txDigest}}",
                     transactionDetails: {
                         digest: "8k2x9NM4pB6MiUx9YH1zKwP9K7Z8YfFvH1J5QrLZDvs2",
@@ -437,11 +399,5 @@ export const swap: Action = {
                 }
             }
         ]
-=======
-                    text: "Swap completed successfully! Transaction ID: ...",
-                },
-            },
-        ],
->>>>>>> refs/remotes/origin/main
     ] as ActionExample[][],
 } as Action;
