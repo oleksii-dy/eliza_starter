@@ -214,8 +214,16 @@ export async function sendTweet(
         }
         const result = await client.requestQueue.add(async () =>
             isLongTweet
-                ? client.twitterClient.sendLongTweet(chunk.trim(), previousTweetId, mediaData)
-                : client.twitterClient.sendTweet(chunk.trim(), previousTweetId, mediaData)
+                ? client.twitterClient.sendLongTweet(
+                      chunk.trim(),
+                      previousTweetId,
+                      mediaData
+                  )
+                : client.twitterClient.sendTweet(
+                      chunk.trim(),
+                      previousTweetId,
+                      mediaData
+                  )
         );
 
         const body = await result.json();
@@ -245,7 +253,10 @@ export async function sendTweet(
             sentTweets.push(finalTweet);
             previousTweetId = finalTweet.id;
         } else {
-            elizaLogger.error("Error sending tweet chunk:", { chunk, response: body });
+            elizaLogger.error("Error sending tweet chunk:", {
+                chunk,
+                response: body,
+            });
         }
 
         // Wait a bit between tweets to avoid rate limiting issues
@@ -360,4 +371,14 @@ function splitParagraph(paragraph: string, maxLength: number): string[] {
     }
 
     return chunks;
+}
+
+/**
+ * Executes an action and enforces a delay interval between actions.
+ * @param actionFn Function to execute the action.
+ */
+export async function executeActionWithInterval(actionFn: () => Promise<void>) {
+    const delay = this.twitterConfig.ACTION_INTERVAL * 1000; // Convert seconds to milliseconds
+    await actionFn();
+    await new Promise((resolve) => setTimeout(resolve, delay));
 }

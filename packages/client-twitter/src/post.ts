@@ -14,6 +14,7 @@ import { postActionResponseFooter } from "@elizaos/core";
 import { generateTweetActions } from "@elizaos/core";
 import { IImageDescriptionService, ServiceType } from "@elizaos/core";
 import { buildConversationThread } from "./utils.ts";
+import { executeActionWithInterval } from "./utils.ts";
 import { twitterMessageHandlerTemplate } from "./interactions.ts";
 import { DEFAULT_MAX_TWEET_LENGTH } from "./environment.ts";
 
@@ -607,23 +608,9 @@ export class TwitterPostClient {
             return null;
         }
 
-        const actionInterval =
-            this.client.twitterConfig.ACTION_INTERVAL * 60 * 1000; // Convert minutes to milliseconds
-        const currentTime = Date.now();
-
-        // Ensure the interval is respected
-        if (currentTime - this.lastProcessTime < actionInterval) {
-            const remainingTime =
-                actionInterval - (currentTime - this.lastProcessTime);
-            elizaLogger.log(
-                `Skipping actions. Next run in ${Math.ceil(remainingTime / 60000)} minutes.`
-            );
-            return null;
-        }
-
         try {
             this.isProcessing = true;
-            this.lastProcessTime = currentTime; // Update the timestamp to avoid overlapping execution
+            this.lastProcessTime = Date.now();
 
             elizaLogger.log("Processing tweet actions");
 
@@ -698,7 +685,7 @@ export class TwitterPostClient {
 
                     // Execute actions
                     if (actionResponse.like) {
-                        try {
+                        await executeActionWithInterval(async () => {
                             if (this.isDryRun) {
                                 elizaLogger.info(
                                     `Dry run: would have liked tweet ${tweet.id}`
@@ -711,16 +698,11 @@ export class TwitterPostClient {
                                 executedActions.push("like");
                                 elizaLogger.log(`Liked tweet ${tweet.id}`);
                             }
-                        } catch (error) {
-                            elizaLogger.error(
-                                `Error liking tweet ${tweet.id}:`,
-                                error
-                            );
-                        }
+                        });
                     }
 
                     if (actionResponse.retweet) {
-                        try {
+                        await executeActionWithInterval(async () => {
                             if (this.isDryRun) {
                                 elizaLogger.info(
                                     `Dry run: would have retweeted tweet ${tweet.id}`
@@ -733,22 +715,17 @@ export class TwitterPostClient {
                                 executedActions.push("retweet");
                                 elizaLogger.log(`Retweeted tweet ${tweet.id}`);
                             }
-                        } catch (error) {
-                            elizaLogger.error(
-                                `Error retweeting tweet ${tweet.id}:`,
-                                error
-                            );
-                        }
+                        });
                     }
 
                     if (actionResponse.quote) {
-                        try {
+                        await executeActionWithInterval(async () => {
                             if (this.isDryRun) {
                                 elizaLogger.info(
                                     `Dry run: would have posted quote tweet for ${tweet.id}`
                                 );
                                 executedActions.push("quote (dry run)");
-                                continue;
+                                return;
                             }
 
                             // Build conversation thread for context
@@ -759,7 +736,9 @@ export class TwitterPostClient {
                             const formattedConversation = thread
                                 .map(
                                     (t) =>
-                                        `@${t.username} (${new Date(t.timestamp * 1000).toLocaleString()}): ${t.text}`
+                                        `@${t.username} (${new Date(
+                                            t.timestamp * 1000
+                                        ).toLocaleString()}): ${t.text}`
                                 )
                                 .join("\n\n");
 
@@ -820,7 +799,12 @@ export class TwitterPostClient {
                                         formattedConversation,
                                         imageContext:
                                             imageDescriptions.length > 0
-                                                ? `\nImages in Tweet:\n${imageDescriptions.map((desc, i) => `Image ${i + 1}: ${desc}`).join("\n")}`
+                                                ? `\nImages in Tweet:\n${imageDescriptions
+                                                      .map(
+                                                          (desc, i) =>
+                                                              `Image ${i + 1}: ${desc}`
+                                                      )
+                                                      .join("\n")}`
                                                 : "",
                                         quotedContent,
                                     }
@@ -838,7 +822,7 @@ export class TwitterPostClient {
                                 elizaLogger.error(
                                     "Failed to generate valid quote tweet content"
                                 );
-                                continue;
+                                return;
                             }
 
                             elizaLogger.log(
@@ -876,27 +860,17 @@ export class TwitterPostClient {
                                     body
                                 );
                             }
-                        } catch (error) {
-                            elizaLogger.error(
-                                "Error in quote tweet generation:",
-                                error
-                            );
-                        }
+                        });
                     }
 
                     if (actionResponse.reply) {
-                        try {
+                        await executeActionWithInterval(async () => {
                             await this.handleTextOnlyReply(
                                 tweet,
                                 tweetState,
                                 executedActions
                             );
-                        } catch (error) {
-                            elizaLogger.error(
-                                `Error replying to tweet ${tweet.id}:`,
-                                error
-                            );
-                        }
+                        });
                     }
 
                     // Add these checks before creating memory
