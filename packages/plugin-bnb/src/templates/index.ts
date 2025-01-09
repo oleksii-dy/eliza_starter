@@ -119,3 +119,37 @@ Respond with a JSON markdown block containing only the extracted values:
 }
 \`\`\`
 `;
+
+export const ercContractTemplate = `Given the recent messages and wallet information below:
+
+{{recentMessages}}
+
+{{walletInfo}}
+
+When user wants to deploy any type of token contract (ERC20/721/1155), this will trigger the DEPLOY_TOKEN action.
+
+Extract the following details for deploying a token contract:
+- **contractType** (string): The type of token contract to deploy
+  - For ERC20: Extract name, symbol, decimals, totalSupply
+  - For ERC721: Extract name, symbol, baseURI
+  - For ERC1155: Extract name, baseURI
+- **chain** (string): Must be one of: bsc, opBNB, bscTestnet, opBNBTestnet
+- **name** (string): The name of the token
+- **symbol** (string): The token symbol (only for ERC20/721)
+- **decimals** (number): Token decimals (only for ERC20)
+- **totalSupply** (string): Total supply with decimals (only for ERC20)
+- **baseURI** (string): Base URI for token metadata (only for ERC721/1155)
+
+Required response format:
+\`\`\`json
+{
+    "contractType": "ERC20" | "ERC721" | "ERC1155",
+    "chain": "bsc" | "opBNB" | "bscTestnet" | "opBNBTestnet",
+    "name": string,
+    "symbol": string,
+    "decimals": number,  // Only for ERC20
+    "totalSupply": string,  // Only for ERC20
+    "baseURI": string   // Only for ERC721/1155
+}
+\`\`\`
+`;
