@@ -372,13 +372,3 @@ function splitParagraph(paragraph: string, maxLength: number): string[] {
 
     return chunks;
 }
-
-/**
- * Executes an action and enforces a delay interval between actions.
- * @param actionFn Function to execute the action.
- */
-export async function executeActionWithInterval(actionFn: () => Promise<void>) {
-    const delay = this.twitterConfig.ACTION_INTERVAL * 1000; // Convert seconds to milliseconds
-    await actionFn();
-    await new Promise((resolve) => setTimeout(resolve, delay));
-}
