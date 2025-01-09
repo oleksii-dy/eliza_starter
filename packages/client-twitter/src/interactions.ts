@@ -17,6 +17,7 @@ import {
 } from "@elizaos/core";
 import { ClientBase } from "./base";
 import { buildConversationThread, sendTweet, wait } from "./utils.ts";
+import { twitterShouldRespondTemplate1 } from "./utils/templatesT/interactionsT.ts";
 
 export const twitterMessageHandlerTemplate =
     `
@@ -378,15 +379,15 @@ export class TwitterInteractionClient {
         }
 
         // get usernames into str
-        const validTargetUsersStr = this.client.twitterConfig.TWITTER_TARGET_USERS.join(",");
+        // const validTargetUsersStr = this.client.twitterConfig.TWITTER_TARGET_USERS.join(",");
 
         const shouldRespondContext = composeContext({
             state,
             template:
                 this.runtime.character.templates
-                    ?.twitterShouldRespondTemplate ||
-                this.runtime.character?.templates?.shouldRespondTemplate ||
-                twitterShouldRespondTemplate(validTargetUsersStr),
+                    ?.twitterShouldRespondTemplate1 ||
+                this.runtime.character?.templates?.shouldRespondTemplate1 ||
+                twitterShouldRespondTemplate1,
         });
 
         const shouldRespond = await generateShouldRespond({
