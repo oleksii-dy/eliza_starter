@@ -34,7 +34,7 @@ export class WalletProvider {
     private cacheKey: string = "evm/wallet";
     private currentChain: SupportedChain = "mainnet";
     private CACHE_EXPIRY_SEC = 5;
-    chains: Record<string, Chain> = { mainnet: viemChains.mainnet };
+    chains: Record<string, Chain> = { ...viemChains };
     account: PrivateKeyAccount;
 
     constructor(
@@ -157,7 +157,6 @@ export class WalletProvider {
         const cached = await this.cacheManager.get<T>(
             path.join(this.cacheKey, key)
         );
-        // @ts-expect-error todo
         return cached;
     }
 
@@ -255,7 +254,6 @@ const genChainsFromRuntime = (
     runtime: IAgentRuntime
 ): Record<string, Chain> => {
     const chainNames =
-        // @ts-expect-error todo
         (runtime.character.settings.chains?.evm as SupportedChain[]) || [];
     const chains = {};
 

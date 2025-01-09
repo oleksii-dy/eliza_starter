@@ -17,6 +17,7 @@ import { generateText } from "./generation.ts";
 import { formatGoalsAsString, getGoals } from "./goals.ts";
 import { elizaLogger } from "./index.ts";
 import knowledge from "./knowledge.ts";
+import { RAGKnowledgeManager } from "./ragknowledge.ts";
 import { MemoryManager } from "./memory.ts";
 import { formatActors, formatMessages, getActorDetails } from "./messages.ts";
 import { parseJsonArrayFromText } from "./parsing.ts";
@@ -30,8 +31,10 @@ import {
     IAgentRuntime,
     ICacheManager,
     IDatabaseAdapter,
+    IRAGKnowledgeManager,
     IMemoryManager,
     KnowledgeItem,
+    RAGKnowledgeItem,
     Media,
     ModelClass,
     ModelProviderName,
@@ -46,10 +49,10 @@ import {
     type Evaluator,
     type Memory,
     IVerifiableInferenceAdapter,
-    VerifiableInferenceOptions,
-    VerifiableInferenceProvider,
 } from "./types.ts";
 import { stringToUuid } from "./uuid.ts";
+import { readFile } from 'fs/promises';
+import { join } from 'path';
 
 /**
  * Represents the runtime environment for an agent, handling message processing,
@@ -147,6 +150,8 @@ export class AgentRuntime implements IAgentRuntime {
      * Searchable document fragments
      */
     knowledgeManager: IMemoryManager;
+
+    ragKnowledgeManager: IRAGKnowledgeManager;
 
     services: Map<ServiceType, Service> = new Map();
     memoryManagers: Map<string, IMemoryManager> = new Map();
@@ -270,40 +275,40 @@ export class AgentRuntime implements IAgentRuntime {
             this.ensureParticipantExists(this.agentId, this.agentId);
         });
 
-        elizaLogger.success("Agent ID", this.agentId);
+        elizaLogger.success(`Agent ID: ${this.agentId}`);
 
         this.fetch = (opts.fetch as typeof fetch) ?? this.fetch;
 
         this.cacheManager = opts.cacheManager;
 
         this.messageManager = new MemoryManager({
-            // @ts-expect-error todo
             runtime: this,
             tableName: "messages",
         });
 
         this.descriptionManager = new MemoryManager({
-            // @ts-expect-error todo
             runtime: this,
             tableName: "descriptions",
         });
 
         this.loreManager = new MemoryManager({
-            // @ts-expect-error todo
             runtime: this,
             tableName: "lore",
         });
 
         this.documentsManager = new MemoryManager({
-            // @ts-expect-error todo
             runtime: this,
             tableName: "documents",
         });
 
         this.knowledgeManager = new MemoryManager({
-            // @ts-expect-error todo
             runtime: this,
             tableName: "fragments",
+        });
+
+        this.ragKnowledgeManager = new RAGKnowledgeManager({
+            runtime: this,
+            tableName: 'knowledge'
         });
 
         (opts.managers ?? []).forEach((manager: IMemoryManager) => {
@@ -407,7 +412,6 @@ export class AgentRuntime implements IAgentRuntime {
     async initialize() {
         for (const [serviceType, service] of this.services.entries()) {
             try {
-                // @ts-expect-error todo
                 await service.initialize(this);
                 this.services.set(serviceType, service);
                 elizaLogger.success(
@@ -425,7 +429,6 @@ export class AgentRuntime implements IAgentRuntime {
         for (const plugin of this.plugins) {
             if (plugin.services)
                 await Promise.all(
-                    // @ts-expect-error todo
                     plugin.services?.map((service) => service.initialize(this))
                 );
         }
@@ -435,7 +438,15 @@ export class AgentRuntime implements IAgentRuntime {
             this.character.knowledge &&
             this.character.knowledge.length > 0
         ) {
-            await this.processCharacterKnowledge(this.character.knowledge);
+            if(this.character.settings.ragKnowledge) {
+                await this.processCharacterRAGKnowledge(this.character.knowledge);
+            } else {
+                const stringKnowledge = this.character.knowledge.filter((item): item is string =>
+                    typeof item === 'string'
+                );
+
+                await this.processCharacterKnowledge(stringKnowledge);
+            }
         }
     }
 
@@ -491,6 +502,137 @@ export class AgentRuntime implements IAgentRuntime {
                     text: item,
                 },
             });
+        }
+    }
+
+    /**
+     * Processes character knowledge by creating document memories and fragment memories.
+     * This function takes an array of knowledge items, creates a document knowledge for each item if it doesn't exist,
+     * then chunks the content into fragments, embeds each fragment, and creates fragment knowledge.
+     * An array of knowledge items or objects containing id, path, and content.
+     */
+    private async processCharacterRAGKnowledge(items: (string | { path: string; shared?: boolean })[]) {
+        let hasError = false;
+
+        for (const item of items) {
+            if (!item) continue;
+
+            try {
+                 // Check if item is marked as shared
+                let isShared = false;
+                let contentItem = item;
+
+                // Only treat as shared if explicitly marked
+                if (typeof item === 'object' && 'path' in item) {
+                    isShared = item.shared === true;
+                    contentItem = item.path;
+                } else {
+                    contentItem = item;
+                }
+
+                const knowledgeId = stringToUuid(contentItem);
+                const fileExtension = contentItem.split('.').pop()?.toLowerCase();
+
+                // Check if it's a file or direct knowledge
+                if (fileExtension && ['md', 'txt', 'pdf'].includes(fileExtension)) {
+                    try {
+                        const rootPath = join(process.cwd(), '..');
+                        const filePath = join(rootPath, 'characters', 'knowledge', contentItem);
+                        elizaLogger.info("Attempting to read file from:", filePath);
+
+                        // Get existing knowledge first
+                        const existingKnowledge = await this.ragKnowledgeManager.getKnowledge({
+                            id: knowledgeId,
+                            agentId: this.agentId
+                        });
+
+                        let content: string;
+
+                        content = await readFile(filePath, 'utf8');
+
+                        if (!content) {
+                            hasError = true;
+                            continue;
+                        }
+
+                        // If the file exists in DB, check if content has changed
+                        if (existingKnowledge.length > 0) {
+                            const existingContent = existingKnowledge[0].content.text;
+                            if (existingContent === content) {
+                                elizaLogger.info(`File ${contentItem} unchanged, skipping`);
+                                continue;
+                            } else {
+                                // If content changed, remove old knowledge before adding new
+                                await this.ragKnowledgeManager.removeKnowledge(knowledgeId);
+                                // Also remove any associated chunks
+                                await this.ragKnowledgeManager.removeKnowledge(`${knowledgeId}-chunk-*` as UUID);
+                            }
+                        }
+
+                        elizaLogger.info(
+                            `Successfully read ${fileExtension.toUpperCase()} file content for`,
+                            this.character.name,
+                            "-",
+                            contentItem
+                        );
+
+                        await this.ragKnowledgeManager.processFile({
+                            path: contentItem,
+                            content: content,
+                            type: fileExtension as 'pdf' | 'md' | 'txt',
+                            isShared: isShared
+                        });
+
+                    } catch (error: any) {
+                        hasError = true;
+                        elizaLogger.error(
+                            `Failed to read knowledge file ${contentItem}. Error details:`,
+                            error?.message || error || 'Unknown error'
+                        );
+                        continue; // Continue to next item even if this one fails
+                    }
+                } else {
+                    // Handle direct knowledge string
+                    elizaLogger.info(
+                        "Processing direct knowledge for",
+                        this.character.name,
+                        "-",
+                        contentItem.slice(0, 100)
+                    );
+
+                    const existingKnowledge = await this.ragKnowledgeManager.getKnowledge({
+                        id: knowledgeId,
+                        agentId: this.agentId
+                    });
+
+                    if (existingKnowledge.length > 0) {
+                        elizaLogger.info(`Direct knowledge ${knowledgeId} already exists, skipping`);
+                        continue;
+                    }
+
+                    await this.ragKnowledgeManager.createKnowledge({
+                        id: knowledgeId,
+                        agentId: this.agentId,
+                        content: {
+                            text: contentItem,
+                            metadata: {
+                                type: 'direct'
+                            }
+                        }
+                    });
+                }
+            } catch (error: any) {
+                hasError = true;
+                elizaLogger.error(
+                    `Error processing knowledge item ${item}:`,
+                    error?.message || error || 'Unknown error'
+                );
+                continue; // Continue to next item even if this one fails
+            }
+        }
+
+        if (hasError) {
+            elizaLogger.warn('Some knowledge items failed to process, but continuing with available knowledge');
         }
     }
 
@@ -619,7 +761,6 @@ export class AgentRuntime implements IAgentRuntime {
                 elizaLogger.info(
                     `Executing handler for action: ${action.name}`
                 );
-                // @ts-expect-error todo
                 await action.handler(this, message, state, {}, callback);
             } catch (error) {
                 elizaLogger.error(error);
@@ -635,10 +776,9 @@ export class AgentRuntime implements IAgentRuntime {
      * @param callback The handler callback
      * @returns The results of the evaluation.
      */
-    // @ts-expect-error todo
     async evaluate(
         message: Memory,
-        state?: State,
+        state: State,
         didRespond?: boolean,
         callback?: HandlerCallback
     ) {
@@ -651,7 +791,6 @@ export class AgentRuntime implements IAgentRuntime {
                 if (!didRespond && !evaluator.alwaysRun) {
                     return null;
                 }
-                // @ts-expect-error todo
                 const result = await evaluator.validate(this, message, state);
                 if (result) {
                     return evaluator;
@@ -661,20 +800,19 @@ export class AgentRuntime implements IAgentRuntime {
         );
 
         const resolvedEvaluators = await Promise.all(evaluatorPromises);
-        const evaluatorsData = resolvedEvaluators.filter(Boolean);
+        const evaluatorsData = resolvedEvaluators.filter(
+            (evaluator): evaluator is Evaluator => evaluator !== null
+        );
 
         // if there are no evaluators this frame, return
-        if (evaluatorsData.length === 0) {
+        if (!evaluatorsData || evaluatorsData.length === 0) {
             return [];
         }
 
         const context = composeContext({
-            // @ts-expect-error todo
             state: {
                 ...state,
-                // @ts-expect-error todo
                 evaluators: formatEvaluators(evaluatorsData),
-                // @ts-expect-error todo
                 evaluatorNames: formatEvaluatorNames(evaluatorsData),
             },
             template:
@@ -683,20 +821,20 @@ export class AgentRuntime implements IAgentRuntime {
         });
 
         const result = await generateText({
-            // @ts-expect-error todo
             runtime: this,
             context,
             modelClass: ModelClass.SMALL,
             verifiableInferenceAdapter: this.verifiableInferenceAdapter,
         });
 
-        const evaluators = parseJsonArrayFromText(result);
+        const evaluators = parseJsonArrayFromText(
+            result
+        ) as unknown as string[];
 
         for (const evaluator of this.evaluators) {
             if (!evaluators?.includes(evaluator.name)) continue;
 
             if (evaluator.handler)
-                // @ts-expect-error todo
                 await evaluator.handler(this, message, state, {}, callback);
         }
 
@@ -823,7 +961,6 @@ export class AgentRuntime implements IAgentRuntime {
             Memory[],
             Goal[],
         ] = await Promise.all([
-            // @ts-expect-error todo
             getActorDetails({ runtime: this, roomId }),
             this.messageManager.getMemories({
                 roomId,
@@ -831,7 +968,6 @@ export class AgentRuntime implements IAgentRuntime {
                 unique: false,
             }),
             getGoals({
-                // @ts-expect-error todo
                 runtime: this,
                 count: 10,
                 onlyInProgress: false,
@@ -875,9 +1011,9 @@ export class AgentRuntime implements IAgentRuntime {
             );
 
             if (lastMessageWithAttachment) {
-                const lastMessageTime = lastMessageWithAttachment.createdAt;
+                const lastMessageTime =
+                    lastMessageWithAttachment?.createdAt ?? Date.now();
                 const oneHourBeforeLastMessage =
-                    // @ts-expect-error todo
                     lastMessageTime - 60 * 60 * 1000; // 1 hour before last message
 
                 allAttachments = recentMessagesData
@@ -973,8 +1109,10 @@ Text: ${attachment.text}
                 });
 
             // Sort messages by timestamp in descending order
-            // @ts-expect-error todo
-            existingMemories.sort((a, b) => b.createdAt - a.createdAt);
+            existingMemories.sort(
+                (a, b) =>
+                    (b?.createdAt ?? Date.now()) - (a?.createdAt ?? Date.now())
+            );
 
             // Take the most recent messages
             const recentInteractionsData = existingMemories.slice(0, 20);
@@ -1041,9 +1179,27 @@ Text: ${attachment.text}
                 .join(" ");
         }
 
-        const knowledegeData = await knowledge.get(this, message);
+        let knowledgeData = [];
+        let formattedKnowledge = '';
 
-        const formattedKnowledge = formatKnowledge(knowledegeData);
+        if(this.character.settings?.ragKnowledge) {
+            const recentContext = recentMessagesData
+            .slice(-3) // Last 3 messages
+            .map(msg => msg.content.text)
+            .join(' ');
+
+            knowledgeData = await this.ragKnowledgeManager.getKnowledge({
+                query: message.content.text,
+                conversationContext: recentContext,
+                limit: 5
+            });
+
+            formattedKnowledge = formatKnowledge(knowledgeData);
+        } else {
+            knowledgeData = await knowledge.get(this, message);
+
+            formattedKnowledge = formatKnowledge(knowledgeData);
+        }
 
         const initialState = {
             agentId: this.agentId,
@@ -1060,7 +1216,8 @@ Text: ${attachment.text}
                       ]
                     : "",
             knowledge: formattedKnowledge,
-            knowledgeData: knowledegeData,
+            knowledgeData: knowledgeData,
+            ragKnowledgeData: knowledgeData,
             // Recent interactions between the sender and receiver, formatted as messages
             recentMessageInteractions: formattedMessageInteractions,
             // Recent interactions between the sender and receiver, formatted as posts
@@ -1190,7 +1347,6 @@ Text: ${attachment.text}
         } as State;
 
         const actionPromises = this.actions.map(async (action: Action) => {
-            // @ts-expect-error todo
             const result = await action.validate(this, message, initialState);
             if (result) {
                 return action;
@@ -1200,7 +1356,6 @@ Text: ${attachment.text}
 
         const evaluatorPromises = this.evaluators.map(async (evaluator) => {
             const result = await evaluator.validate(
-                // @ts-expect-error todo
                 this,
                 message,
                 initialState
@@ -1215,7 +1370,6 @@ Text: ${attachment.text}
             await Promise.all([
                 Promise.all(evaluatorPromises),
                 Promise.all(actionPromises),
-                // @ts-expect-error todo
                 getProviders(this, message, initialState),
             ]);
 
@@ -1280,7 +1434,7 @@ Text: ${attachment.text}
             }),
         });
 
-        let allAttachments: Media[] = [];
+        let allAttachments = [];
 
         if (recentMessagesData && Array.isArray(recentMessagesData)) {
             const lastMessageWithAttachment = recentMessagesData.find(
@@ -1290,15 +1444,14 @@ Text: ${attachment.text}
             );
 
             if (lastMessageWithAttachment) {
-                const lastMessageTime = lastMessageWithAttachment.createdAt;
+                const lastMessageTime =
+                    lastMessageWithAttachment?.createdAt ?? Date.now();
                 const oneHourBeforeLastMessage =
-                    // @ts-expect-error todo
                     lastMessageTime - 60 * 60 * 1000; // 1 hour before last message
 
                 allAttachments = recentMessagesData
                     .filter((msg) => {
-                        const msgTime = msg.createdAt;
-                        // @ts-expect-error todo
+                        const msgTime = msg.createdAt ?? Date.now();
                         return msgTime >= oneHourBeforeLastMessage;
                     })
                     .flatMap((msg) => msg.content.attachments || []);
