@@ -1,11 +1,13 @@
-export class RuntimeContext {
-    private static instance: any;
+import { IAgentRuntime } from '@elizaos/core';
 
-    static setRuntime(runtime: any) {
-        this.instance = runtime;
+export class RuntimeContext {
+    private static runtime: IAgentRuntime | null = null;
+
+    static setRuntime(runtime: IAgentRuntime) {
+        this.runtime = runtime;
     }
 
-    static getRuntime() {
-        return this.instance;
+    static getRuntime(): IAgentRuntime | null {
+        return this.runtime;
     }
 }

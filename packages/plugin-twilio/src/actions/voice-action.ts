@@ -1,121 +1,78 @@
-import { Action, IAgentRuntime, HandlerCallback, Handler, Memory, State } from '@elizaos/core';
+import { Action, HandlerCallback } from '@elizaos/core';
 import { twilioService } from '../services/twilio.js';
 import { voiceService } from '../services/voice.js';
 
-interface VoiceCallInput {
-    to: string;
-    message: string;
-}
-
 export const makeVoiceCallAction: Action = {
     name: 'MAKE_VOICE_CALL',
-    similes: ['call', 'phone', 'dial'],
+    similes: ['call', 'phone', 'dial', 'voice call'],
     description: 'Make voice calls and speak messages',
-
-    async validate(runtime: IAgentRuntime): Promise<boolean> {
-        return !!(runtime.getSetting("TWILIO_ACCOUNT_SID") &&
-                 runtime.getSetting("TWILIO_AUTH_TOKEN") &&
-                 runtime.getSetting("TWILIO_PHONE_NUMBER"));
-    },
-
-    handler: (async (
-        runtime: IAgentRuntime,
-        message: Memory,
-        state: State,
-        options: { [key: string]: unknown }
-    ) => {
-        const input = message.content?.args as VoiceCallInput;
-
-        if (!input || typeof input !== 'object') {
-            throw new Error('Invalid input: must be an object');
+    examples: [
+        [
+            { user: "user1", content: { text: "call +1234567890" } },
+            { user: "assistant", content: { text: "Initiating voice call to +1234567890" } }
+        ]
+    ],
+    validate: async () => true,
+    handler: async (context: any, message: any, state?: any, options?: any, callback?: HandlerCallback) => {
+        const match = message.content?.text?.match(/\+\d+/);
+        if (!match) {
+            return {
+                text: "Please provide a phone number in the format +XXXXXXXXXXXX"
+            };
         }
 
-        const { to, message: voiceMessage } = input;
-
-        if (!to || !voiceMessage) {
-            throw new Error('Invalid input: requires "to" and "message" parameters');
-        }
+        const phoneNumber = match[0];
+        const messageToSpeak = "Hello! This is Eliza, your AI assistant. How can I help you today?";
 
         try {
-            const audioBuffer = await voiceService.textToSpeech(voiceMessage);
-            await twilioService.makeVoiceCall(to, audioBuffer);
+            // Convert text to speech using ElevenLabs
+            const audioBuffer = await voiceService.textToSpeech(messageToSpeak);
+
+            // Make the call using Twilio
+            await twilioService.makeVoiceCall(phoneNumber, audioBuffer);
+
             return {
-                text: `Successfully initiated voice call to ${to}`
+                text: `Initiating voice call to ${phoneNumber}`
             };
         } catch (error) {
             console.error('Voice call error:', error);
-            throw new Error(error instanceof Error ? error.message : 'Failed to make voice call');
+            return {
+                text: "Sorry, I couldn't make the voice call. Please try again later."
+            };
         }
-    }) as Handler,
-
-    examples: [
-        [
-            {
-                user: "user1",
-                content: { text: "Call +1234567890 and say 'Hello!'" }
-            },
-            {
-                user: "assistant",
-                content: {
-                    text: "Making a voice call to +1234567890",
-                    action: "MAKE_VOICE_CALL",
-                    args: {
-                        to: "+1234567890",
-                        message: "Hello!"
-                    }
-                }
-            }
-        ]
-    ]
+    }
 };
 
 export const textToSpeechAction: Action = {
     name: 'TEXT_TO_SPEECH',
-    similes: ['convert to speech', 'speak text', 'synthesize speech'],
+    similes: ['speak', 'say', 'pronounce'],
     description: 'Convert text to speech',
+    examples: [
+        [
+            { user: "user1", content: { text: "speak 'Hello world'" } },
+            { user: "assistant", content: { text: "Converting text to speech" } }
+        ]
+    ],
+    validate: async () => true,
+    handler: async (context: any, message: any) => {
+        const text = message.content?.text?.match(/'([^']*)'|"([^"]*)"/)?.slice(1).find(Boolean);
 
-    async validate(runtime: IAgentRuntime): Promise<boolean> {
-        return true;
-    },
-
-    handler: (async (
-        runtime: IAgentRuntime,
-        message: Memory,
-        state: State,
-        options: { [key: string]: unknown }
-    ) => {
-        const input = message.content?.args as { text: string };
-
-        if (!input?.text || typeof input.text !== 'string') {
-            throw new Error('Invalid input: requires "text" parameter');
+        if (!text) {
+            return {
+                text: "Please provide text in quotes to convert to speech"
+            };
         }
 
         try {
-            const audioBuffer = await voiceService.textToSpeech(input.text);
+            await voiceService.textToSpeech(text);
             return {
-                text: 'Successfully converted text to speech',
-                data: { audio: audioBuffer }
+                text: `Successfully converted "${text}" to speech`
             };
         } catch (error) {
             console.error('Text-to-speech error:', error);
-            throw new Error(error instanceof Error ? error.message : 'Failed to convert text to speech');
+            return {
+                text: "Sorry, I couldn't convert the text to speech"
+            };
         }
-    }) as Handler,
-
-    examples: [
-        [
-            {
-                user: "user1",
-                content: { text: "Convert 'Hello world' to speech" }
-            },
-            {
-                user: "assistant",
-                content: {
-                    text: "Converting text to speech",
-                    action: "TEXT_TO_SPEECH",
-                    args: { text: "Hello world" }
-                }
-            }
-        ]
-    ]
+    }
 };

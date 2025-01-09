@@ -18,35 +18,62 @@ export class VerifyService implements Service {
 
         const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Add warning for non-US numbers
+        // Check if it's a US number
         const isUSNumber = phoneNumber.startsWith('+1');
-        if (!isUSNumber) {
-            console.log('Warning: Non-US number may receive SMS from an intermediate carrier');
+
+        try {
+            this.verificationCodes.set(phoneNumber, code);
+
+            if (isUSNumber) {
+                // For US numbers, use messaging service
+                await twilioService.sendMessage(
+                    phoneNumber,
+                    `Your verification code is: ${code}. Reply with "verify code ${code}" to verify your number.`
+                );
+            } else {
+                // For non-US numbers, proceed as normal
+                await twilioService.sendMessage(
+                    phoneNumber,
+                    `Your verification code is: ${code}. Reply with "verify code ${code}" to verify your number.`
+                );
+            }
+        } catch (error: any) {
+            // Remove the code if sending fails
+            this.verificationCodes.delete(phoneNumber);
+
+            if (error.message.includes('A2P 10DLC registration')) {
+                throw new Error(
+                    'Unable to send verification code to US numbers at this time. ' +
+                    'Our messaging service is being upgraded. Please try again later or ' +
+                    'contact support for assistance.'
+                );
+            }
+            throw error;
         }
-
-        this.verificationCodes.set(phoneNumber, code);
-
-        await twilioService.sendMessage(
-            phoneNumber,
-            `Your verification code is: ${code}. Reply with "verify code ${code}" to verify your number.`
-        );
     }
 
     async verifyCode(phoneNumber: string, code: string): Promise<boolean> {
-        console.log('VerifyService: Checking code:', { phoneNumber, code });
+        console.log('Verifying code:', {
+            phoneNumber,
+            receivedCode: code,
+            storedCode: this.verificationCodes.get(phoneNumber)
+        });
 
         const storedCode = this.verificationCodes.get(phoneNumber);
-        console.log('VerifyService: Stored code:', storedCode);
+        const isValid = storedCode === code;
 
-        if (storedCode === code) {
-            console.log('VerifyService: Code matches');
+        console.log('Verification result:', {
+            isValid,
+            storedCode,
+            receivedCode: code
+        });
+
+        if (isValid) {
             await storageService.storeVerifiedUser(phoneNumber, phoneNumber);
             this.verificationCodes.delete(phoneNumber);
-            return true;
         }
 
-        console.log('VerifyService: Code does not match');
-        return false;
+        return isValid;
     }
 
     async getVerifiedUserId(phoneNumber: string): Promise<string | undefined> {
@@ -81,6 +108,10 @@ export class VerifyService implements Service {
 
         // Store the phone number for the current user
         await storageService.storePhoneNumber(phoneNumber);
+    }
+
+    getStoredCodes(): Map<string, string> {
+        return new Map(this.verificationCodes);
     }
 }
 

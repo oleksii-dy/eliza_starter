@@ -1,6 +1,7 @@
 import { Action, IContext, ActionConfig, HandlerCallback, IAgentRuntime } from '@elizaos/core';
 import { verifyService } from '../services/verify.js';
 import { twilioService } from '../services/twilio.js';
+import { storageService } from '../services/storage.js';
 
 export const requestVerificationAction: Action = {
     name: 'REQUEST_VERIFICATION',
@@ -79,9 +80,17 @@ export const checkVerificationAction: Action = {
 
     handler: async (context: IContext, message: Memory, state?: State, options?: any, callback?: HandlerCallback) => {
         const userMessage = message.content?.text;
-        const match = userMessage?.match(/verify code (\d+)/);
+        console.log('Verification attempt - Full message:', userMessage);
+
+        const match = userMessage?.match(/verify code (\d+)/i);
+        console.log('Regex match result:', match);
+
         const code = match?.[1];
         const phoneNumber = context.state?.phoneNumber;
+
+        console.log('Extracted code:', code);
+        console.log('Stored phone number:', phoneNumber);
+        console.log('Stored verification codes:', verifyService.getStoredCodes());
 
         if (!phoneNumber) {
             return callback?.({
@@ -108,17 +117,44 @@ export const checkVerificationAction: Action = {
 
 export const checkVerifiedNumberAction: Action = {
     name: 'CHECK_VERIFIED_NUMBER',
-    similes: ['check number', 'is verified'],
+    similes: ['check number', 'is verified', 'my verified number', 'my number'],
     description: 'Check if a phone number is verified',
     examples: [
         [
-            { user: "user1", content: { text: "is +1234567890 verified?" } },
-            { user: "assistant", content: { text: "Yes, this number is verified." } }
+            { user: "user1", content: { text: "what's my verified phone number?" } },
+            { user: "assistant", content: { text: "Your verified phone number is +16503794635." } }
         ]
     ],
     validate: async () => true,
-    handler: async (context: IContext) => {
-        const match = context.input?.match(/\+\d+/);
+    handler: async (context: any, message: any) => {
+        // Get the input text from message content
+        const input = message.content?.text?.toLowerCase() || '';
+
+        // If asking for their number
+        if (input.includes('my')) {
+            const userId = message.userId;
+            if (!userId) {
+                return {
+                    text: "I couldn't find your user information. Are you logged in?"
+                };
+            }
+
+            const users = await storageService.getAllVerifiedUsers();
+            const userData = users.get(userId);
+
+            if (userData?.phoneNumber) {
+                return {
+                    text: `Your verified phone number is ${userData.phoneNumber}.`
+                };
+            } else {
+                return {
+                    text: "You don't have a verified phone number yet. Would you like to verify one?"
+                };
+            }
+        }
+
+        // If checking a specific number
+        const match = input.match(/\+\d+/);
         if (!match) {
             return {
                 text: "Please provide a phone number in the format +XXXXXXXXXXXX"
@@ -126,19 +162,13 @@ export const checkVerifiedNumberAction: Action = {
         }
 
         const phoneNumber = match[0];
-        try {
-            const userId = await verifyService.getVerifiedUserId(phoneNumber);
-            return {
-                text: userId
-                    ? `Yes, ${phoneNumber} is verified.`
-                    : `No, ${phoneNumber} is not verified.`
-            };
-        } catch (error) {
-            console.error('Error checking verification:', error);
-            return {
-                text: "Sorry, I couldn't check the verification status. Please try again."
-            };
-        }
+        const userId = await verifyService.getVerifiedUserId(phoneNumber);
+
+        return {
+            text: userId
+                ? `Yes, ${phoneNumber} is verified.`
+                : `No, ${phoneNumber} is not verified.`
+        };
     }
 };
 
@@ -157,14 +187,18 @@ export const getAgentPhoneAction: Action = {
     examples: [
         [
             { user: "user1", content: { text: "what's your phone number?" } },
-            { user: "assistant", content: { text: `My phone number is ${twilioService.phoneNumber}. Feel free to use this number to test SMS and voice call features.` } }
+            { user: "assistant", content: { text: "My phone number is ${process.env.TWILIO_PHONE_NUMBER}. Feel free to use this number to test SMS and voice call features." } }
         ]
     ],
     priority: 1,
     validate: async () => true,
     handler: async () => {
+        const phoneNumber = process.env.TWILIO_PHONE_NUMBER;
+        if (!phoneNumber) {
+            throw new Error('TWILIO_PHONE_NUMBER not configured in environment');
+        }
         return {
-            text: `My phone number is ${twilioService.phoneNumber}. Feel free to use this number to test SMS and voice call features.`
+            text: `My phone number is ${phoneNumber}. Feel free to use this number to test SMS and voice call features.`
         };
     }
 };

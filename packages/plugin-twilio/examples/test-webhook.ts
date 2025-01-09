@@ -1,64 +1,107 @@
-import { webhookService } from '../src/services/webhook.js';
-import { storageService } from '../src/services/storage.js';
-import { twilioService } from '../src/services/twilio.js';
+import twilio from 'twilio';
+import axios from 'axios';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { existsSync } from 'fs';
+import crypto from 'crypto';
+
+// Load environment variables
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const rootDir = join(__dirname, '../../../');
+const envPath = join(rootDir, '.env');
+
+if (!existsSync(envPath)) {
+    throw new Error(`.env file not found at ${envPath}`);
+}
+
+dotenv.config({ path: envPath });
+
+// Function to generate Twilio signature
+function generateTwilioSignature(authToken: string, url: string, params: Record<string, string>) {
+    // Sort the params alphabetically as Twilio does
+    const data = Object.keys(params)
+        .sort()
+        .reduce((str, key) => {
+            return str + key + params[key];
+        }, url);
+
+    // Create HMAC with SHA1
+    return crypto
+        .createHmac('sha1', authToken)
+        .update(Buffer.from(data, 'utf-8'))
+        .digest('base64');
+}
+
+// Add debug mode
+const DEBUG = true;
 
 async function testWebhook() {
-    console.log('Starting webhook test...');
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const webhookUrl = process.env.WEBHOOK_URL;
+
+    if (!authToken || !webhookUrl) {
+        console.error('Environment variables not found:');
+        console.error('TWILIO_AUTH_TOKEN:', authToken ? '✓' : '✗');
+        console.error('WEBHOOK_URL:', webhookUrl ? '✓' : '✗');
+        throw new Error('TWILIO_AUTH_TOKEN and WEBHOOK_URL are required');
+    }
+
+    console.log('Testing webhook URL:', webhookUrl);
+
+    // Create test parameters that match what Twilio sends
+    const params = {
+        AccountSid: process.env.TWILIO_ACCOUNT_SID || '',
+        From: process.env.TEST_PHONE_NUMBER || '+33756807075',
+        To: process.env.TWILIO_PHONE_NUMBER || '+12315158479',
+        Body: 'Hello',
+        MessageSid: 'TEST' + Date.now(),
+        MessagingServiceSid: process.env.TWILIO_LOW_VOLUME_SERVICE_SID || '',
+    };
+
+    // Generate Twilio signature
+    const signature = generateTwilioSignature(authToken, webhookUrl, params);
+
+    if (DEBUG) {
+        console.log('\nDebug Info:');
+        console.log('URL:', webhookUrl);
+        console.log('Auth Token:', authToken.substring(0, 8) + '...');
+        console.log('Signature:', signature);
+        console.log('Params:', params);
+        console.log('\nRequest Details:');
+    }
 
     try {
-        // Initialize storage with test user
-        console.log('Initializing storage...');
-        await storageService.initialize();
-        await storageService.storeVerifiedUser('test-user-123', '+33780999517');
-        console.log('Test user stored with phone:', '+33780999517');
+        const formData = new URLSearchParams(params).toString();
 
-        // Create a mock runtime
-        console.log('Creating mock runtime...');
-        const mockRuntime = {
-            processMessage: async (message: any) => {
-                console.log('Processing message:', message);
-                return {
-                    text: `Received your message: "${message.content.text}". This is a test response.`
-                };
+        if (DEBUG) {
+            console.log('Form Data:', formData);
+        }
+
+        const response = await axios.post(webhookUrl,
+            formData,
+            {
+                headers: {
+                    'X-Twilio-Signature': signature,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
             }
-        };
+        );
 
-        // Initialize Twilio service
-        await twilioService.initialize(mockRuntime);
-        console.log('Twilio service initialized');
-
-        // Initialize webhook with mock runtime
-        console.log('Initializing webhook service...');
-        await webhookService.initialize(mockRuntime);
-
-        // Get the actual port from the server
-        const port = webhookService.getPort();
-        console.log(`\n✓ Server successfully started on port ${port}`);
-
-        console.log('\nTest with this command:');
-        console.log('------------------------');
-        console.log(`curl -X POST http://localhost:${port}/webhook/sms \\
-  -d "From=+33780999517" \\
-  -d "To=+38689" \\
-  -d "Body=Hello Eliza" \\
-  -H "Content-Type: application/x-www-form-urlencoded"\n`);
-
-        // Keep the process running
-        console.log('Server is running. Press Ctrl+C to stop.');
-    } catch (error) {
-        console.error('Error during setup:', error);
-        process.exit(1);
+        console.log('\nResponse:');
+        console.log('Status:', response.status);
+        console.log('Data:', response.data);
+    } catch (error: any) {
+        console.error('\nError:');
+        console.error('Status:', error.response?.status);
+        console.error('Data:', error.response?.data);
+        console.error('Headers:', error.response?.headers);
+        throw error;
     }
 }
 
-// Handle graceful shutdown
-process.on('SIGINT', async () => {
-    console.log('\nShutting down...');
-    await webhookService.shutdown();
-    process.exit(0);
-});
-
 testWebhook().catch(error => {
-    console.error('Fatal error:', error);
+    console.error('Test failed:', error);
     process.exit(1);
 });

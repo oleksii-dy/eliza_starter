@@ -1,15 +1,14 @@
 // /packages/plugin-twilio/src/twilio-plugin.ts
 
-import { Plugin } from '@elizaos/core';
-import { smsAction } from './actions/sms-action.js';
-import { makeVoiceCallAction, textToSpeechAction } from './actions/voice-action.js';
-import { verifyActions } from './actions/verify-actions.js';
-import { twilioService } from './services/twilio.js';
-import { verifyService } from './services/verify.js';
-import { storageService } from './services/storage.js';
+import { Plugin, IAgentRuntime, ServiceType } from '@elizaos/core';
 import { webhookService } from './services/webhook.js';
-import { RuntimeContext } from './services/runtime-context.js';
-import { ServiceType } from '@elizaos/core';
+import { twilioService } from './services/twilio.js';
+import { storageService } from './services/storage.js';
+import { verifyService } from './services/verify.js';
+import { voiceService } from './services/voice.js';
+import { smsAction } from './actions/sms-action.js';
+import { makeVoiceCallAction } from './actions/voice-action.js';
+import * as verifyActions from './actions/verify-actions.js';
 
 export const TwilioPlugin: Plugin = {
     name: 'twilio',
@@ -17,7 +16,6 @@ export const TwilioPlugin: Plugin = {
     actions: [
         smsAction,
         makeVoiceCallAction,
-        textToSpeechAction,
         verifyActions.requestVerificationAction,
         verifyActions.checkVerificationAction,
         verifyActions.checkVerifiedNumberAction,
@@ -27,18 +25,27 @@ export const TwilioPlugin: Plugin = {
         {
             ...twilioService,
             serviceType: ServiceType.TEXT_GENERATION,
-            initialize: async (runtime: any) => {
-                RuntimeContext.setRuntime(runtime);
-                await Promise.all([
-                    storageService.initialize(),
-                    twilioService.initialize(),
-                    webhookService.initialize()
-                ]);
+            initialize: async (runtime) => {
+                await storageService.initialize();
+                await twilioService.initialize();
+                await webhookService.initialize(runtime);
             }
         },
-        verifyService,
-        storageService,
-        webhookService
+        {
+            ...voiceService,
+            serviceType: ServiceType.TEXT_GENERATION,
+            initialize: async () => await voiceService.initialize()
+        },
+        {
+            ...verifyService,
+            serviceType: ServiceType.TEXT_GENERATION,
+            initialize: async () => await verifyService.initialize()
+        },
+        {
+            ...storageService,
+            serviceType: ServiceType.TEXT_GENERATION,
+            initialize: async () => await storageService.initialize()
+        }
     ]
 };
 

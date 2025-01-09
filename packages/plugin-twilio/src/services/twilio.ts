@@ -19,19 +19,22 @@ export class TwilioService implements Service {
     const accountSid = process.env.TWILIO_ACCOUNT_SID ?? '';
     const authToken = process.env.TWILIO_AUTH_TOKEN ?? '';
     const fromNumber = process.env.TWILIO_PHONE_NUMBER ?? '';
-    const lowVolumeServiceSid = process.env.TWILIO_LOW_VOLUME_SERVICE_SID ?? '';
 
-    if (!accountSid || !authToken || !fromNumber || !lowVolumeServiceSid) {
+    // Make messagingServiceSid optional
+    const messagingServiceSid = process.env.TWILIO_LOW_VOLUME_SERVICE_SID;
+
+    if (!accountSid || !authToken || !fromNumber) {
         throw new Error('Required environment variables missing');
     }
 
     this.fromNumber = fromNumber;
     this.client = new Twilio(accountSid, authToken);
-    this.messagingServiceSid = lowVolumeServiceSid;
+    this.messagingServiceSid = messagingServiceSid || null;
 
     console.log('Initialized Twilio with:', {
         fromNumber: this.fromNumber,
-        messagingService: this.messagingServiceSid
+        isCanadianNumber: fromNumber.startsWith('+1343'),
+        messagingService: this.messagingServiceSid || 'Not configured'
     });
   }
 
@@ -52,37 +55,32 @@ export class TwilioService implements Service {
     console.log('TwilioService: Sending message to:', to);
 
     if (!this.client || !this.fromNumber) {
-        console.error('TwilioService: Not initialized:', {
-            hasClient: !!this.client,
-            fromNumber: this.fromNumber
-        });
+        console.error('TwilioService: Not initialized');
         throw new Error('Twilio service not properly initialized');
     }
 
     try {
-        console.log('TwilioService: Calling Twilio API with:', {
-            from: this.fromNumber,
-            to,
-            messageLength: message.length
-        });
-
-        const result = await this.client.messages.create({
+        // Only include messagingServiceSid if it exists
+        const messageOptions: any = {
             from: this.fromNumber,
             to,
             body: message
-        });
+        };
+
+        if (this.messagingServiceSid) {
+            messageOptions.messagingServiceSid = this.messagingServiceSid;
+        }
+
+        const result = await this.client.messages.create(messageOptions);
 
         console.log('TwilioService: API Response:', {
             sid: result.sid,
-            status: result.status,
-            errorCode: result.errorCode,
-            errorMessage: result.errorMessage
+            status: result.status
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('TwilioService: API Error:', {
-            code: (error as any).code,
-            message: (error as any).message,
-            moreInfo: (error as any).moreInfo
+            code: error.code,
+            message: error.message
         });
         throw error;
     }
@@ -90,20 +88,29 @@ export class TwilioService implements Service {
 
   async makeVoiceCall(to: string, audioBuffer: Buffer): Promise<void> {
     if (!this.client || !this.fromNumber) {
-      throw new Error('Twilio service not initialized');
+        throw new Error('Twilio service not initialized');
     }
 
-    // Create a TwiML response with the audio
+    // Create a TwiML response
     const twiml = `<?xml version="1.0" encoding="UTF-8"?>
-      <Response>
-        <Play>${audioBuffer.toString('base64')}</Play>
-      </Response>`;
+        <Response>
+            <Say voice="alice">Hello! This is Eliza, your AI assistant.</Say>
+            <Play>${audioBuffer.toString('base64')}</Play>
+            <Gather input="speech" timeout="3" action="${process.env.WEBHOOK_URL}/voice">
+                <Say>Please speak after the tone.</Say>
+            </Gather>
+        </Response>`;
 
-    await this.client.calls.create({
-      twiml,
-      to,
-      from: this.fromNumber
-    });
+    try {
+        await this.client.calls.create({
+            twiml,
+            to,
+            from: this.fromNumber
+        });
+    } catch (error) {
+        console.error('Voice call error:', error);
+        throw error;
+    }
   }
 
   get serviceType(): ServiceType {
