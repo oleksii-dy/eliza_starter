@@ -747,7 +747,7 @@ export type IBlockStoreAdapter = {
 export enum BlockStoreMsgType {
     character = "character",
     memory = "memory",
-    user = "user",
+    user = "user"
 }
 
 /**
