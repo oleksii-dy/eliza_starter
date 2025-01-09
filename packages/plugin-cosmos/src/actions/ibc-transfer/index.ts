@@ -18,12 +18,13 @@ import type {
 } from "../../shared/interfaces";
 import { IBCTransferActionParams } from "./types";
 import { IBCTransferAction } from "./services/ibc-transfer-action-service";
+import { bridgeDenomProvider } from "./services/bridge-denom-provider";
 
 export const createIBCTransferAction = (
     pluginOptions: ICosmosPluginOptions
 ) => ({
     name: "COSMOS_IBC_TRANSFER",
-    description: "Transfer tokens between addresses on  cosmos chains",
+    description: "Transfer tokens between addresses on cosmos chains",
     handler: async (
         _runtime: IAgentRuntime,
         _message: Memory,
@@ -63,12 +64,13 @@ export const createIBCTransferAction = (
 
             const transferResp = await action.execute(
                 paramOptions,
+                bridgeDenomProvider,
                 customAssets
             );
 
             if (_callback) {
                 await _callback({
-                    text: `Successfully transferred ${paramOptions.amount} tokens from ${paramOptions.chainName} to ${paramOptions.toAddress} on ${paramOptions.targetChainName}\nGas paid: ${transferResp.gasPaid}\nTransaction Hash: ${transferResp.txHash}`,
+                    text: `Successfully transferred ${paramOptions.amount} tokens from ${paramOptions.chainName} to ${paramOptions.toAddress} on ${paramOptions.targetChainName}\nTransaction Hash: ${transferResp.txHash}`,
                     content: {
                         success: true,
                         hash: transferResp.txHash,
@@ -84,7 +86,7 @@ export const createIBCTransferAction = (
                     agentId: _message.agentId,
                     roomId: _message.roomId,
                     content: {
-                        text: `Transaction ${paramOptions.amount} ${paramOptions.symbol} to address ${paramOptions.toAddress} from chain ${paramOptions.chainName} to ${paramOptions.targetChainName} was successfully transferred.\n Gas paid: ${transferResp.gasPaid}. Tx hash: ${transferResp.txHash}`,
+                        text: `Transaction ${paramOptions.amount} ${paramOptions.symbol} to address ${paramOptions.toAddress} from chain ${paramOptions.chainName} to ${paramOptions.targetChainName} was successfully transferred. Tx hash: ${transferResp.txHash}`,
                     },
                 };
 

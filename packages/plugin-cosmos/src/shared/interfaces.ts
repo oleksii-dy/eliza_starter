@@ -48,9 +48,10 @@ export interface ICosmosWalletChainsData {
     [chainName: string]: ICosmosChainWallet;
 }
 
-export interface IBridgeDataProvider {
+export interface IDenomProvider {
     (
         sourceAssetDenom: string,
-        sourceAssetChainId: string
-    ): Promise<{ channelId: string; portId: string; ibcDenom: string }>;
+        sourceAssetChainId: string,
+        destChainId: string
+    ): Promise<{ denom: string }>;
 }

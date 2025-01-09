@@ -1,10 +1,12 @@
 import {
+    convertDisplayUnitToBaseUnit,
     getAssetBySymbol,
+    getChainByChainId,
     getChainByChainName,
-    getChainIdByChainName,
 } from "@chain-registry/utils";
 import { assets, chains } from "chain-registry";
 import type {
+    IDenomProvider,
     ICosmosActionService,
     ICosmosPluginCustomChainData,
     ICosmosTransaction,
@@ -20,6 +22,7 @@ export class IBCTransferAction implements ICosmosActionService {
 
     async execute(
         params: IBCTransferActionParams,
+        bridgeDenomProvider: IDenomProvider,
         customChainAssets?: ICosmosPluginCustomChainData["assets"][]
     ): Promise<ICosmosTransaction> {
         const senderAddress = await this.cosmosWalletChains.getWalletAddress(
@@ -66,6 +69,7 @@ export class IBCTransferAction implements ICosmosActionService {
         if (!denom.base) {
             throw new Error("Cannot find asset");
         }
+
         if (!sourceChain) {
             throw new Error("Cannot find source chain");
         }
@@ -74,23 +78,34 @@ export class IBCTransferAction implements ICosmosActionService {
             throw new Error("Cannot find destination chain");
         }
 
+        const { denom: destAssetDenom } = await bridgeDenomProvider(
+            denom.base,
+            sourceChain.chain_id,
+            destChain.chain_id
+        );
+
         const route = await skipClient.route({
             destAssetChainID: destChain.chain_id,
-            destAssetDenom: denom.base,
+            destAssetDenom,
             sourceAssetChainID: sourceChain.chain_id,
             sourceAssetDenom: denom.base,
-            amountOut: params.amount,
+            amountIn: convertDisplayUnitToBaseUnit(
+                availableAssets,
+                params.symbol,
+                params.amount,
+                params.chainName
+            ),
+            cumulativeAffiliateFeeBPS: "0",
         });
 
         const userAddresses = await Promise.all(
             route.requiredChainAddresses.map(async (chainID) => {
-                const chainName = getChainIdByChainName(chains, chainID);
+                const chain = getChainByChainId(chains, chainID);
                 return {
                     chainID,
-                    address:
-                        await this.cosmosWalletChains.getWalletAddress(
-                            chainName
-                        ),
+                    address: await this.cosmosWalletChains.getWalletAddress(
+                        chain.chain_name
+                    ),
                 };
             })
         );
@@ -104,7 +119,6 @@ export class IBCTransferAction implements ICosmosActionService {
                 txHash = executeRouteTxHash;
             },
         });
-
         return {
             from: senderAddress,
             to: params.toAddress,

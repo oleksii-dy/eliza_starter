@@ -65,7 +65,12 @@ export class CosmosWalletChains implements ICosmosWalletChains {
     }
 
     public async getWalletAddress(chainName: string) {
-        return await this.walletChainsData[chainName].wallet.getWalletAddress();
+        const chainWalletsForGivenChain = this.walletChainsData[chainName];
+        if (!chainWalletsForGivenChain) {
+            throw new Error("Invalid chain name");
+        }
+
+        return await chainWalletsForGivenChain.wallet.getWalletAddress();
     }
 
     public getSigningCosmWasmClient(chainName: string) {
@@ -73,10 +78,12 @@ export class CosmosWalletChains implements ICosmosWalletChains {
     }
 
     public getSkipClient(chainName: string): SkipClient {
-        return this.walletChainsData[chainName].skipClient;
-    }
+        const chainWalletsForGivenChain = this.walletChainsData[chainName];
 
-    public async getUserAddress(chainName: string): Promise<string> {
-        return this.walletChainsData[chainName].wallet.getWalletAddress();
+        if (!chainWalletsForGivenChain) {
+            throw new Error("Invalid chain name");
+        }
+
+        return chainWalletsForGivenChain.skipClient;
     }
 }
