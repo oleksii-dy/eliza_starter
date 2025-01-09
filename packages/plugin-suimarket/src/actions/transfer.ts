@@ -126,7 +126,7 @@ export const transferToken: Action = {
             return false;
         }
 
-        elizaLogger.log("About transfer token: ", transferContent);
+        elizaLogger.log("Transfering token >", transferContent);
 
         if (callback) {
             callback({

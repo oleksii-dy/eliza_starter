@@ -7,11 +7,11 @@ import {
 } from "@elizaos/core"
 
 
-const suiWalletProvider: Provider = {
+const coingeckoProvider: Provider = {
     get: async function (runtime: IAgentRuntime, message: Memory, state?: State): Promise<string | null> {
-        elizaLogger.log("[suiWalletProvider] loading ...");
-        return "<suiWalletProvider>";
+        elizaLogger.log("[coingeckoProvider] loading ...");
+        return "<coingeckoProvider>";
     }
 }
 
-export {suiWalletProvider}
+export {coingeckoProvider}
