@@ -27,7 +27,10 @@ export async function getDenomsFromCreator(
     params: TokenFactoryTypes.GetDenomsFromCreatorParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcTokenFactoryApi.fetchDenomsFromCreator(params.creator);
+        const result =
+            await this.chainGrpcTokenFactoryApi.fetchDenomsFromCreator(
+                params.creator
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDenomsFromCreatorError", err);
@@ -46,10 +49,11 @@ export async function getDenomAuthorityMetadata(
     params: TokenFactoryTypes.GetDenomAuthorityMetadataParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcTokenFactoryApi.fetchDenomAuthorityMetadata(
-                    params.creator,
-                    params.subDenom
-                );
+        const result =
+            await this.chainGrpcTokenFactoryApi.fetchDenomAuthorityMetadata(
+                params.creator,
+                params.subDenom
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDenomAuthorityMetadataError", err);

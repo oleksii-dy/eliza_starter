@@ -9,12 +9,12 @@ import {
  * WasmX Module Async Functions with Error Handling
  */
 
- /**
-  * Fetches the parameters of the WasmX module.
-  *
-  * @this InjectiveGrpcBase
-  * @returns {Promise<StandardResponse>} The standard response containing module parameters or an error.
-  */
+/**
+ * Fetches the parameters of the WasmX module.
+ *
+ * @this InjectiveGrpcBase
+ * @returns {Promise<StandardResponse>} The standard response containing module parameters or an error.
+ */
 export async function getWasmxModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {

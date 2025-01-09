@@ -50,8 +50,7 @@ export async function getProposals(
     params: GovernanceTypes.GetProposalsParams
 ): Promise<StandardResponse> {
     try {
-        const result =
-            await this.chainGrpcGovApi.fetchProposals(params);
+        const result = await this.chainGrpcGovApi.fetchProposals(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getProposalsError", err);
@@ -70,8 +69,9 @@ export async function getProposal(
     params: GovernanceTypes.GetProposalParams
 ): Promise<StandardResponse> {
     try {
-        const result =
-            await this.chainGrpcGovApi.fetchProposal(params.proposalId);
+        const result = await this.chainGrpcGovApi.fetchProposal(
+            params.proposalId
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getProposalError", err);
@@ -90,8 +90,7 @@ export async function getProposalDeposits(
     params: GovernanceTypes.GetProposalDepositsParams
 ): Promise<StandardResponse> {
     try {
-        const result =
-            await this.chainGrpcGovApi.fetchProposalDeposits(params);
+        const result = await this.chainGrpcGovApi.fetchProposalDeposits(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getProposalDepositsError", err);
@@ -110,8 +109,7 @@ export async function getProposalVotes(
     params: GovernanceTypes.GetProposalVotesParams
 ): Promise<StandardResponse> {
     try {
-        const result =
-            await this.chainGrpcGovApi.fetchProposalVotes(params);
+        const result = await this.chainGrpcGovApi.fetchProposalVotes(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getProposalVotesError", err);
@@ -130,8 +128,9 @@ export async function getProposalTally(
     params: GovernanceTypes.GetProposalTallyParams
 ): Promise<StandardResponse> {
     try {
-        const result =
-            await this.chainGrpcGovApi.fetchProposalTally(params.proposalId);
+        const result = await this.chainGrpcGovApi.fetchProposalTally(
+            params.proposalId
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getProposalTallyError", err);

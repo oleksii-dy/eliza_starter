@@ -23,7 +23,7 @@ export async function getPeggyModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result=  await this.chainGrpcPeggyApi.fetchModuleParams();
+        const result = await this.chainGrpcPeggyApi.fetchModuleParams();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getPeggyModuleParamsError", err);

@@ -74,7 +74,9 @@ export async function getAuctionRound(
     params: AuctionTypes.GetAuctionRoundParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcAuctionApi.fetchAuction(params.round)
+        const result = await this.indexerGrpcAuctionApi.fetchAuction(
+            params.round
+        );
 
         return createSuccessResponse(result);
     } catch (err) {

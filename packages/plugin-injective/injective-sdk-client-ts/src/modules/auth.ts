@@ -33,7 +33,9 @@ export async function getAccountDetails(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcAuthApi.fetchAccount(this.injAddress);
+        const result = await this.chainGrpcAuthApi.fetchAccount(
+            this.injAddress
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAccountDetailsError", err);

@@ -100,7 +100,8 @@ export async function getFeeDiscountSchedule(
     params?: ExchangeTypes.GetFeeDiscountScheduleParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcExchangeApi.fetchFeeDiscountSchedule();
+        const result =
+            await this.chainGrpcExchangeApi.fetchFeeDiscountSchedule();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getFeeDiscountScheduleError", err);
@@ -119,7 +120,10 @@ export async function getFeeDiscountAccountInfo(
     params: ExchangeTypes.GetFeeDiscountAccountInfoParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcExchangeApi.fetchFeeDiscountAccountInfo(params.injAddress);
+        const result =
+            await this.chainGrpcExchangeApi.fetchFeeDiscountAccountInfo(
+                params.injAddress
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getFeeDiscountAccountInfoError", err);
@@ -138,7 +142,8 @@ export async function getTradingRewardsCampaign(
     params?: ExchangeTypes.GetTradingRewardsCampaignParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcExchangeApi.fetchTradingRewardsCampaign();
+        const result =
+            await this.chainGrpcExchangeApi.fetchTradingRewardsCampaign();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getTradingRewardsCampaignError", err);
@@ -157,7 +162,9 @@ export async function getTradeRewardPoints(
     params: ExchangeTypes.GetTradeRewardPointsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcExchangeApi.fetchTradeRewardPoints(params.injectiveAddresses);
+        const result = await this.chainGrpcExchangeApi.fetchTradeRewardPoints(
+            params.injectiveAddresses
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getTradeRewardPointsError", err);
@@ -176,7 +183,10 @@ export async function getPendingTradeRewardPoints(
     params: ExchangeTypes.GetPendingTradeRewardPointsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcExchangeApi.fetchPendingTradeRewardPoints(params.injectiveAddresses);
+        const result =
+            await this.chainGrpcExchangeApi.fetchPendingTradeRewardPoints(
+                params.injectiveAddresses
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getPendingTradeRewardPointsError", err);
@@ -214,7 +224,10 @@ export async function getSubaccountTradeNonce(
     params: ExchangeTypes.GetSubaccountTradeNonceParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcExchangeApi.fetchSubaccountTradeNonce(params.subaccountId);
+        const result =
+            await this.chainGrpcExchangeApi.fetchSubaccountTradeNonce(
+                params.subaccountId
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getSubaccountTradeNonceError", err);
@@ -233,7 +246,9 @@ export async function getIsOptedOutOfRewards(
     params: ExchangeTypes.GetIsOptedOutOfRewardsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcExchangeApi.fetchIsOptedOutOfRewards(params.account);
+        const result = await this.chainGrpcExchangeApi.fetchIsOptedOutOfRewards(
+            params.account
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getIsOptedOutOfRewardsError", err);
@@ -252,7 +267,9 @@ export async function getDerivativeMarkets(
     params?: ExchangeTypes.GetDerivativeMarketsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcDerivativesApi.fetchMarkets(params || {});
+        const result = await this.indexerGrpcDerivativesApi.fetchMarkets(
+            params || {}
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDerivativeMarketsError", err);
@@ -271,7 +288,9 @@ export async function getDerivativeMarket(
     params: ExchangeTypes.GetDerivativeMarketParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcDerivativesApi.fetchMarket(params.marketId);
+        const result = await this.indexerGrpcDerivativesApi.fetchMarket(
+            params.marketId
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDerivativeMarketError", err);
@@ -299,7 +318,10 @@ export async function getBinaryOptionsMarkets(
     | StandardResponse
 > {
     try {
-        const result = await this.indexerGrpcDerivativesApi.fetchBinaryOptionsMarkets(params || {});
+        const result =
+            await this.indexerGrpcDerivativesApi.fetchBinaryOptionsMarkets(
+                params || {}
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getBinaryOptionsMarketsError", err);
@@ -318,7 +340,10 @@ export async function getBinaryOptionsMarket(
     params: ExchangeTypes.GetBinaryOptionsMarketParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcDerivativesApi.fetchBinaryOptionsMarket(params.marketId);
+        const result =
+            await this.indexerGrpcDerivativesApi.fetchBinaryOptionsMarket(
+                params.marketId
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getBinaryOptionsMarketError", err);
@@ -346,7 +371,9 @@ export async function getDerivativeOrders(
     | StandardResponse
 > {
     try {
-        const result = await this.indexerGrpcDerivativesApi.fetchOrders(params || {});
+        const result = await this.indexerGrpcDerivativesApi.fetchOrders(
+            params || {}
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDerivativeOrdersError", err);
@@ -374,7 +401,9 @@ export async function getDerivativeOrderHistory(
     | StandardResponse
 > {
     try {
-        const result = await this.indexerGrpcDerivativesApi.fetchOrderHistory(params || {});
+        const result = await this.indexerGrpcDerivativesApi.fetchOrderHistory(
+            params || {}
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDerivativeOrderHistoryError", err);
@@ -402,7 +431,9 @@ export async function getPositionsList(
     | StandardResponse
 > {
     try {
-        const result = await this.indexerGrpcDerivativesApi.fetchPositions(params || {});
+        const result = await this.indexerGrpcDerivativesApi.fetchPositions(
+            params || {}
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getPositionsListError", err);
@@ -430,7 +461,9 @@ export async function getPositionsV2(
     | StandardResponse
 > {
     try {
-        const result = await this.indexerGrpcDerivativesApi.fetchPositionsV2(params || {});
+        const result = await this.indexerGrpcDerivativesApi.fetchPositionsV2(
+            params || {}
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getPositionsV2Error", err);
@@ -458,7 +491,9 @@ export async function getDerivativeTrades(
     | StandardResponse
 > {
     try {
-        const result = await this.indexerGrpcDerivativesApi.fetchTrades(params || {});
+        const result = await this.indexerGrpcDerivativesApi.fetchTrades(
+            params || {}
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDerivativeTradesError", err);
@@ -486,7 +521,10 @@ export async function getFundingPayments(
     | StandardResponse
 > {
     try {
-        const result = await this.indexerGrpcDerivativesApi.fetchFundingPayments(params || {});
+        const result =
+            await this.indexerGrpcDerivativesApi.fetchFundingPayments(
+                params || {}
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getFundingPaymentsError", err);
@@ -514,7 +552,9 @@ export async function getFundingRates(
     | StandardResponse
 > {
     try {
-        const result = await this.indexerGrpcDerivativesApi.fetchFundingRates(params || {});
+        const result = await this.indexerGrpcDerivativesApi.fetchFundingRates(
+            params || {}
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getFundingRatesError", err);
@@ -542,10 +582,16 @@ export async function getDerivativeSubaccountOrdersList(
     | StandardResponse
 > {
     try {
-        const result = await this.indexerGrpcDerivativesApi.fetchSubaccountOrdersList(params || {});
+        const result =
+            await this.indexerGrpcDerivativesApi.fetchSubaccountOrdersList(
+                params || {}
+            );
         return createSuccessResponse(result);
     } catch (err) {
-        return createErrorResponse("getDerivativeSubaccountOrdersListError", err);
+        return createErrorResponse(
+            "getDerivativeSubaccountOrdersListError",
+            err
+        );
     }
 }
 
@@ -561,10 +607,16 @@ export async function getDerivativeSubaccountTradesList(
     params: ExchangeTypes.GetDerivativeSubaccountTradesListParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcDerivativesApi.fetchSubaccountTradesList(params);
+        const result =
+            await this.indexerGrpcDerivativesApi.fetchSubaccountTradesList(
+                params
+            );
         return createSuccessResponse(result);
     } catch (err) {
-        return createErrorResponse("getDerivativeSubaccountTradesListError", err);
+        return createErrorResponse(
+            "getDerivativeSubaccountTradesListError",
+            err
+        );
     }
 }
 
@@ -589,7 +641,9 @@ export async function getDerivativeOrderbooksV2(
     | StandardResponse
 > {
     try {
-        const result = await this.indexerGrpcDerivativesApi.fetchOrderbooksV2(params.marketIds);
+        const result = await this.indexerGrpcDerivativesApi.fetchOrderbooksV2(
+            params.marketIds
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDerivativeOrderbooksV2Error", err);
@@ -608,7 +662,9 @@ export async function getDerivativeOrderbookV2(
     params: ExchangeTypes.GetDerivativeOrderbookV2Params
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcDerivativesApi.fetchOrderbookV2(params.marketId);
+        const result = await this.indexerGrpcDerivativesApi.fetchOrderbookV2(
+            params.marketId
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDerivativeOrderbookV2Error", err);
@@ -646,7 +702,9 @@ export async function getSubaccountsList(
     params: ExchangeTypes.GetSubaccountsListParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcAccountApi.fetchSubaccountsList(params.address);
+        const result = await this.indexerGrpcAccountApi.fetchSubaccountsList(
+            params.address
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getSubaccountsListError", err);
@@ -665,7 +723,10 @@ export async function getSubaccountBalancesList(
     params: ExchangeTypes.GetSubaccountBalancesListParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcAccountApi.fetchSubaccountBalancesList(params.subaccountId);
+        const result =
+            await this.indexerGrpcAccountApi.fetchSubaccountBalancesList(
+                params.subaccountId
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getSubaccountBalancesListError", err);
@@ -693,7 +754,8 @@ export async function getSubaccountHistory(
     | StandardResponse
 > {
     try {
-        const result = await this.indexerGrpcAccountApi.fetchSubaccountHistory(params);
+        const result =
+            await this.indexerGrpcAccountApi.fetchSubaccountHistory(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getSubaccountHistoryError", err);
@@ -712,7 +774,10 @@ export async function getSubaccountOrderSummary(
     params: ExchangeTypes.GetSubaccountOrderSummaryParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcAccountApi.fetchSubaccountOrderSummary(params);
+        const result =
+            await this.indexerGrpcAccountApi.fetchSubaccountOrderSummary(
+                params
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getSubaccountOrderSummaryError", err);
@@ -731,7 +796,9 @@ export async function getOrderStates(
     params?: ExchangeTypes.GetOrderStatesParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcAccountApi.fetchOrderStates(params || {});
+        const result = await this.indexerGrpcAccountApi.fetchOrderStates(
+            params || {}
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getOrderStatesError", err);
@@ -750,7 +817,10 @@ export async function getAccountPortfolio(
     params: ExchangeTypes.GetAccountPortfolioParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcAccountPortfolioApi.fetchAccountPortfolio(params.address);
+        const result =
+            await this.indexerGrpcAccountPortfolioApi.fetchAccountPortfolio(
+                params.address
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAccountPortfolioError", err);
@@ -769,7 +839,10 @@ export async function getAccountPortfolioBalances(
     params: ExchangeTypes.GetAccountPortfolioBalancesParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcAccountPortfolioApi.fetchAccountPortfolioBalances(params.address);
+        const result =
+            await this.indexerGrpcAccountPortfolioApi.fetchAccountPortfolioBalances(
+                params.address
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAccountPortfolioBalancesError", err);
@@ -807,7 +880,9 @@ export async function getSpotMarket(
     params: ExchangeTypes.GetSpotMarketParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcSpotApi.fetchMarket(params.marketId);
+        const result = await this.indexerGrpcSpotApi.fetchMarket(
+            params.marketId
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getSpotMarketError", err);
@@ -863,7 +938,9 @@ export async function getSpotOrderHistory(
     | StandardResponse
 > {
     try {
-        const result = await this.indexerGrpcSpotApi.fetchOrderHistory(params || {});
+        const result = await this.indexerGrpcSpotApi.fetchOrderHistory(
+            params || {}
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getSpotOrderHistoryError", err);
@@ -919,7 +996,9 @@ export async function getSpotSubaccountOrdersList(
     | StandardResponse
 > {
     try {
-        const result = await this.indexerGrpcSpotApi.fetchSubaccountOrdersList(params || {});
+        const result = await this.indexerGrpcSpotApi.fetchSubaccountOrdersList(
+            params || {}
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getSpotSubaccountOrdersListError", err);
@@ -938,7 +1017,9 @@ export async function getSpotSubaccountTradesList(
     params?: ExchangeTypes.GetSpotSubaccountTradesListParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcSpotApi.fetchSubaccountTradesList(params || {});
+        const result = await this.indexerGrpcSpotApi.fetchSubaccountTradesList(
+            params || {}
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getSpotSubaccountTradesListError", err);
@@ -966,7 +1047,9 @@ export async function getSpotOrderbooksV2(
     | StandardResponse
 > {
     try {
-        const result = await this.indexerGrpcSpotApi.fetchOrderbooksV2(params.marketIds);
+        const result = await this.indexerGrpcSpotApi.fetchOrderbooksV2(
+            params.marketIds
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getSpotOrderbooksV2Error", err);
@@ -985,7 +1068,9 @@ export async function getSpotOrderbookV2(
     params: ExchangeTypes.GetSpotOrderbookV2Params
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcSpotApi.fetchOrderbookV2(params.marketId);
+        const result = await this.indexerGrpcSpotApi.fetchOrderbookV2(
+            params.marketId
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getSpotOrderbookV2Error", err);
@@ -1013,7 +1098,8 @@ export async function getAtomicSwapHistory(
     | StandardResponse
 > {
     try {
-        const result = await this.indexerGrpcSpotApi.fetchAtomicSwapHistory(params);
+        const result =
+            await this.indexerGrpcSpotApi.fetchAtomicSwapHistory(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getAtomicSwapHistoryError", err);
@@ -1032,7 +1118,8 @@ export async function getGridStrategies(
     params: ExchangeTypes.GetGridStrategiesParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcTradingApi.fetchGridStrategies(params);
+        const result =
+            await this.indexerGrpcTradingApi.fetchGridStrategies(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getGridStrategiesError", err);
@@ -1051,7 +1138,8 @@ export async function getHistoricalBalance(
     params: ExchangeTypes.GetHistoricalBalanceParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcArchiverApi.fetchHistoricalBalance(params);
+        const result =
+            await this.indexerGrpcArchiverApi.fetchHistoricalBalance(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getHistoricalBalanceError", err);
@@ -1070,7 +1158,8 @@ export async function getHistoricalRpnl(
     params: ExchangeTypes.GetHistoricalRpnlParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcArchiverApi.fetchHistoricalRpnl(params);
+        const result =
+            await this.indexerGrpcArchiverApi.fetchHistoricalRpnl(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getHistoricalRpnlError", err);
@@ -1089,7 +1178,8 @@ export async function getHistoricalVolumes(
     params: ExchangeTypes.GetHistoricalVolumesParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcArchiverApi.fetchHistoricalVolumes(params);
+        const result =
+            await this.indexerGrpcArchiverApi.fetchHistoricalVolumes(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getHistoricalVolumesError", err);
@@ -1108,7 +1198,8 @@ export async function getPnlLeaderboard(
     params: ExchangeTypes.GetPnlLeaderboardParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcArchiverApi.fetchPnlLeaderboard(params);
+        const result =
+            await this.indexerGrpcArchiverApi.fetchPnlLeaderboard(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getPnlLeaderboardError", err);
@@ -1127,7 +1218,8 @@ export async function getVolLeaderboard(
     params: ExchangeTypes.GetVolLeaderboardParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcArchiverApi.fetchVolLeaderboard(params);
+        const result =
+            await this.indexerGrpcArchiverApi.fetchVolLeaderboard(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getVolLeaderboardError", err);
@@ -1146,10 +1238,16 @@ export async function getPnlLeaderboardFixedResolution(
     params: ExchangeTypes.GetPnlLeaderboardFixedResolutionParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcArchiverApi.fetchPnlLeaderboardFixedResolution(params);
+        const result =
+            await this.indexerGrpcArchiverApi.fetchPnlLeaderboardFixedResolution(
+                params
+            );
         return createSuccessResponse(result);
     } catch (err) {
-        return createErrorResponse("getPnlLeaderboardFixedResolutionError", err);
+        return createErrorResponse(
+            "getPnlLeaderboardFixedResolutionError",
+            err
+        );
     }
 }
 
@@ -1165,10 +1263,16 @@ export async function getVolLeaderboardFixedResolution(
     params: ExchangeTypes.GetVolLeaderboardFixedResolutionParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcArchiverApi.fetchVolLeaderboardFixedResolution(params);
+        const result =
+            await this.indexerGrpcArchiverApi.fetchVolLeaderboardFixedResolution(
+                params
+            );
         return createSuccessResponse(result);
     } catch (err) {
-        return createErrorResponse("getVolLeaderboardFixedResolutionError", err);
+        return createErrorResponse(
+            "getVolLeaderboardFixedResolutionError",
+            err
+        );
     }
 }
 
@@ -1184,7 +1288,8 @@ export async function getDenomHolders(
     params: ExchangeTypes.GetDenomHoldersParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcArchiverApi.fetchDenomHolders(params);
+        const result =
+            await this.indexerGrpcArchiverApi.fetchDenomHolders(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDenomHoldersError", err);
@@ -1207,7 +1312,10 @@ export async function msgAdminUpdateBinaryOptionsMarket(
         const result = await this.msgBroadcaster.broadcast({ msgs: msg });
         return createSuccessResponse(result);
     } catch (err) {
-        return createErrorResponse("msgAdminUpdateBinaryOptionsMarketError", err);
+        return createErrorResponse(
+            "msgAdminUpdateBinaryOptionsMarketError",
+            err
+        );
     }
 }
 
@@ -1230,7 +1338,10 @@ export async function msgBatchCancelBinaryOptionsOrders(
         const result = await this.msgBroadcaster.broadcast({ msgs: msg });
         return createSuccessResponse(result);
     } catch (err) {
-        return createErrorResponse("msgBatchCancelBinaryOptionsOrdersError", err);
+        return createErrorResponse(
+            "msgBatchCancelBinaryOptionsOrdersError",
+            err
+        );
     }
 }
 
@@ -1391,7 +1502,10 @@ export async function msgCreateBinaryOptionsLimitOrder(
         const result = await this.msgBroadcaster.broadcast({ msgs: msg });
         return createSuccessResponse(result);
     } catch (err) {
-        return createErrorResponse("msgCreateBinaryOptionsLimitOrderError", err);
+        return createErrorResponse(
+            "msgCreateBinaryOptionsLimitOrderError",
+            err
+        );
     }
 }
 
@@ -1414,7 +1528,10 @@ export async function msgCreateBinaryOptionsMarketOrder(
         const result = await this.msgBroadcaster.broadcast({ msgs: msg });
         return createSuccessResponse(result);
     } catch (err) {
-        return createErrorResponse("msgCreateBinaryOptionsMarketOrderError", err);
+        return createErrorResponse(
+            "msgCreateBinaryOptionsMarketOrderError",
+            err
+        );
     }
 }
 

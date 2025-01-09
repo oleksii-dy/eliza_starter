@@ -26,7 +26,7 @@ export async function getStakingModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await  this.chainGrpcStakingApi.fetchModuleParams();
+        const result = await this.chainGrpcStakingApi.fetchModuleParams();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getStakingModuleParamsError", err);
@@ -43,7 +43,7 @@ export async function getPool(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await  this.chainGrpcStakingApi.fetchPool();
+        const result = await this.chainGrpcStakingApi.fetchPool();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getPoolError", err);
@@ -62,7 +62,9 @@ export async function getValidators(
     params: StakingTypes.GetValidatorsParams = {}
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcStakingApi.fetchValidators(params.pagination);
+        const result = await this.chainGrpcStakingApi.fetchValidators(
+            params.pagination
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getValidatorsError", err);
@@ -81,7 +83,9 @@ export async function getValidator(
     params: StakingTypes.GetValidatorParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcStakingApi.fetchValidator(params.address);
+        const result = await this.chainGrpcStakingApi.fetchValidator(
+            params.address
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getValidatorError", err);
@@ -100,7 +104,8 @@ export async function getValidatorDelegations(
     params: StakingTypes.GetValidatorDelegationsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcStakingApi.fetchValidatorDelegations(params);
+        const result =
+            await this.chainGrpcStakingApi.fetchValidatorDelegations(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getValidatorDelegationsError", err);
@@ -119,7 +124,10 @@ export async function getValidatorDelegationsNoThrow(
     params: StakingTypes.GetValidatorDelegationsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcStakingApi.fetchValidatorDelegationsNoThrow(params);
+        const result =
+            await this.chainGrpcStakingApi.fetchValidatorDelegationsNoThrow(
+                params
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getValidatorDelegationsNoThrowError", err);
@@ -138,7 +146,10 @@ export async function getValidatorUnbondingDelegations(
     params: StakingTypes.GetValidatorDelegationsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcStakingApi.fetchValidatorUnbondingDelegations(params);
+        const result =
+            await this.chainGrpcStakingApi.fetchValidatorUnbondingDelegations(
+                params
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse(
@@ -160,8 +171,10 @@ export async function getValidatorUnbondingDelegationsNoThrow(
     params: StakingTypes.GetValidatorDelegationsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcStakingApi
-                .fetchValidatorUnbondingDelegationsNoThrow(params);
+        const result =
+            await this.chainGrpcStakingApi.fetchValidatorUnbondingDelegationsNoThrow(
+                params
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse(
@@ -221,7 +234,8 @@ export async function getDelegationsNoThrow(
     params: StakingTypes.GetDelegationsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcStakingApi.fetchDelegationsNoThrow(params);
+        const result =
+            await this.chainGrpcStakingApi.fetchDelegationsNoThrow(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDelegationsNoThrowError", err);
@@ -259,7 +273,8 @@ export async function getDelegatorsNoThrow(
     params: StakingTypes.GetDelegatorsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcStakingApi.fetchDelegatorsNoThrow(params)
+        const result =
+            await this.chainGrpcStakingApi.fetchDelegatorsNoThrow(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDelegatorsNoThrowError", err);
@@ -278,7 +293,8 @@ export async function getUnbondingDelegations(
     params: StakingTypes.GetUnbondingDelegationsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcStakingApi.fetchUnbondingDelegations(params)
+        const result =
+            await this.chainGrpcStakingApi.fetchUnbondingDelegations(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getUnbondingDelegationsError", err);
@@ -297,7 +313,10 @@ export async function getUnbondingDelegationsNoThrow(
     params: StakingTypes.GetUnbondingDelegationsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcStakingApi.fetchUnbondingDelegationsNoThrow(params)
+        const result =
+            await this.chainGrpcStakingApi.fetchUnbondingDelegationsNoThrow(
+                params
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getUnbondingDelegationsNoThrowError", err);
@@ -316,7 +335,8 @@ export async function getReDelegations(
     params: StakingTypes.GetReDelegationsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcStakingApi.fetchReDelegations(params)
+        const result =
+            await this.chainGrpcStakingApi.fetchReDelegations(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getReDelegationsError", err);
@@ -335,7 +355,8 @@ export async function getReDelegationsNoThrow(
     params: StakingTypes.GetReDelegationsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcStakingApi.fetchReDelegationsNoThrow(params)
+        const result =
+            await this.chainGrpcStakingApi.fetchReDelegationsNoThrow(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getReDelegationsNoThrowError", err);

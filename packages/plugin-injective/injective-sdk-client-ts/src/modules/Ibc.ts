@@ -43,7 +43,9 @@ export async function getDenomsTrace(
     params: IBCTypes.GetDenomsTraceParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcIbcApi.fetchDenomsTrace(params.pagination);
+        const result = await this.chainGrpcIbcApi.fetchDenomsTrace(
+            params.pagination
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDenomsTraceError", err);

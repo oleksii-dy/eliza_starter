@@ -22,7 +22,9 @@ export async function getTxByHash(
     params: ExplorerTypes.GetTxByHashParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcExplorerApi.fetchTxByHash(params.hash);
+        const result = await this.indexerGrpcExplorerApi.fetchTxByHash(
+            params.hash
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getTxByHashError", err);
@@ -60,7 +62,9 @@ export async function getValidator(
     params: ExplorerTypes.GetExplorerValidatorParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcExplorerApi.fetchValidator(params.address);
+        const result = await this.indexerGrpcExplorerApi.fetchValidator(
+            params.address
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getValidatorError", err);
@@ -79,7 +83,9 @@ export async function getValidatorUptime(
     params: ExplorerTypes.GetValidatorUptimeParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcExplorerApi.fetchValidatorUptime(params.validatorAddress);
+        const result = await this.indexerGrpcExplorerApi.fetchValidatorUptime(
+            params.validatorAddress
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getValidatorUptimeError", err);
@@ -98,7 +104,8 @@ export async function getPeggyDepositTxs(
     params: ExplorerTypes.GetPeggyDepositTxsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcExplorerApi.fetchPeggyDepositTxs(params);
+        const result =
+            await this.indexerGrpcExplorerApi.fetchPeggyDepositTxs(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getPeggyDepositTxsError", err);
@@ -117,7 +124,8 @@ export async function getPeggyWithdrawalTxs(
     params: ExplorerTypes.GetPeggyWithdrawalTxsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcExplorerApi.fetchPeggyWithdrawalTxs(params);
+        const result =
+            await this.indexerGrpcExplorerApi.fetchPeggyWithdrawalTxs(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getPeggyWithdrawalTxsError", err);
@@ -193,7 +201,8 @@ export async function getIBCTransferTxs(
     params: ExplorerTypes.GetIBCTransferTxsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcExplorerApi.fetchIBCTransferTxs(params);
+        const result =
+            await this.indexerGrpcExplorerApi.fetchIBCTransferTxs(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getIBCTransferTxsError", err);

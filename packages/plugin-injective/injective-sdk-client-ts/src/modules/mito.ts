@@ -62,7 +62,8 @@ export async function getLpTokenPriceChart(
     params: MitoTypes.GetLpTokenPriceChartParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcMitoApi.fetchLpTokenPriceChart(params);
+        const result =
+            await this.indexerGrpcMitoApi.fetchLpTokenPriceChart(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getLpTokenPriceChartError", err);
@@ -83,7 +84,8 @@ export async function getTVLChart(
     params: MitoTypes.GetTVLChartParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcMitoApi.fetchTVLChartRequest(params);
+        const result =
+            await this.indexerGrpcMitoApi.fetchTVLChartRequest(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getTVLChartError", err);
@@ -104,7 +106,8 @@ export async function getVaultsByHolderAddress(
     params: MitoTypes.GetVaultsByHolderAddressParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcMitoApi.fetchVaultsByHolderAddress(params);
+        const result =
+            await this.indexerGrpcMitoApi.fetchVaultsByHolderAddress(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getVaultsByHolderAddressError", err);
@@ -146,7 +149,8 @@ export async function getHolderPortfolio(
     params: MitoTypes.GetHolderPortfolioParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcMitoApi.fetchHolderPortfolio(params);
+        const result =
+            await this.indexerGrpcMitoApi.fetchHolderPortfolio(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getHolderPortfolioError", err);
@@ -167,7 +171,9 @@ export async function getLeaderboard(
     params: MitoTypes.GetLeaderboardParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcMitoApi.fetchLeaderboard(params.epochId);
+        const result = await this.indexerGrpcMitoApi.fetchLeaderboard(
+            params.epochId
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getLeaderboardError", err);
@@ -188,7 +194,8 @@ export async function getTransferHistory(
     params: MitoTypes.GetTransferHistoryParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcMitoApi.fetchTransferHistory(params);
+        const result =
+            await this.indexerGrpcMitoApi.fetchTransferHistory(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getTransferHistoryError", err);
@@ -209,7 +216,8 @@ export async function getLeaderboardEpochs(
     params: MitoTypes.GetLeaderboardEpochsParams = {}
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcMitoApi.fetchLeaderboardEpochs(params);
+        const result =
+            await this.indexerGrpcMitoApi.fetchLeaderboardEpochs(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getLeaderboardEpochsError", err);
@@ -251,7 +259,8 @@ export async function getStakingHistory(
     params: MitoTypes.GetStakingHistoryParams = {}
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcMitoApi.fetchStakingHistory(params);
+        const result =
+            await this.indexerGrpcMitoApi.fetchStakingHistory(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getStakingHistoryError", err);
@@ -272,7 +281,8 @@ export async function getStakingRewardsByAccount(
     params: MitoTypes.GetStakingRewardsByAccountParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcMitoApi.fetchStakingRewardsByAccount(params);
+        const result =
+            await this.indexerGrpcMitoApi.fetchStakingRewardsByAccount(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getStakingRewardsByAccountError", err);
@@ -314,7 +324,9 @@ export async function getMissionLeaderboard(
     params: MitoTypes.GetMissionLeaderboardParams = {}
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcMitoApi.fetchMissionLeaderboard(params.userAddress);
+        const result = await this.indexerGrpcMitoApi.fetchMissionLeaderboard(
+            params.userAddress
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getMissionLeaderboardError", err);
@@ -377,7 +389,8 @@ export async function getIDOSubscribers(
     params: MitoTypes.GetIDOSubscribersParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcMitoApi.fetchIDOSubscribers(params);
+        const result =
+            await this.indexerGrpcMitoApi.fetchIDOSubscribers(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getIDOSubscribersError", err);
@@ -398,7 +411,8 @@ export async function getIDOSubscription(
     params: MitoTypes.GetIDOSubscriptionParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcMitoApi.fetchIDOSubscription(params)
+        const result =
+            await this.indexerGrpcMitoApi.fetchIDOSubscription(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getIDOSubscriptionError", err);
@@ -461,7 +475,8 @@ export async function getClaimReferences(
     params: MitoTypes.GetClaimReferencesParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.indexerGrpcMitoApi.fetchClaimReferences(params);
+        const result =
+            await this.indexerGrpcMitoApi.fetchClaimReferences(params);
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getClaimReferencesError", err);

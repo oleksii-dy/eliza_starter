@@ -34,7 +34,7 @@ export async function getInsuranceModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result= await  this.chainGrpcInsuranceFundApi.fetchModuleParams();
+        const result = await this.chainGrpcInsuranceFundApi.fetchModuleParams();
 
         return createSuccessResponse(result);
     } catch (err) {
@@ -52,7 +52,8 @@ export async function getInsuranceFunds(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result= await this.chainGrpcInsuranceFundApi.fetchInsuranceFunds()
+        const result =
+            await this.chainGrpcInsuranceFundApi.fetchInsuranceFunds();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getInsuranceFundsError", err);
@@ -71,7 +72,9 @@ export async function getInsuranceFund(
     params: GetInsuranceFundParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcInsuranceFundApi.fetchInsuranceFund(params.marketId)
+        const result = await this.chainGrpcInsuranceFundApi.fetchInsuranceFund(
+            params.marketId
+        );
 
         return createSuccessResponse(result);
     } catch (err) {
@@ -91,7 +94,10 @@ export async function getEstimatedRedemptions(
     params: GetEstimatedRedemptionsParams
 ): Promise<StandardResponse> {
     try {
-        const result= await this.chainGrpcInsuranceFundApi.fetchEstimatedRedemptions(params);
+        const result =
+            await this.chainGrpcInsuranceFundApi.fetchEstimatedRedemptions(
+                params
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getEstimatedRedemptionsError", err);
@@ -110,7 +116,10 @@ export async function getPendingRedemptions(
     params: GetPendingRedemptionsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcInsuranceFundApi.fetchPendingRedemptions(params);
+        const result =
+            await this.chainGrpcInsuranceFundApi.fetchPendingRedemptions(
+                params
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getPendingRedemptionsError", err);

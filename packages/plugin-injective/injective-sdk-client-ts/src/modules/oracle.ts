@@ -17,7 +17,7 @@ export async function getOracleModuleParams(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcOracleApi.fetchModuleParams()
+        const result = await this.chainGrpcOracleApi.fetchModuleParams();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getOracleModuleParamsError", err);

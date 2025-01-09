@@ -41,11 +41,13 @@ export async function getDelegatorRewardsForValidator(
     params: DistributionTypes.GetDelegatorRewardsForValidatorParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcDistributionApi
-                .fetchDelegatorRewardsForValidator({
+        const result =
+            await this.chainGrpcDistributionApi.fetchDelegatorRewardsForValidator(
+                {
                     delegatorAddress: params.delegatorAddress,
                     validatorAddress: params.validatorAddress,
-                });
+                }
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDelegatorRewardsForValidatorError", err);
@@ -64,11 +66,13 @@ export async function getDelegatorRewardsForValidatorNoThrow(
     params: DistributionTypes.GetDelegatorRewardsForValidatorParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcDistributionApi
-                .fetchDelegatorRewardsForValidatorNoThrow({
+        const result =
+            await this.chainGrpcDistributionApi.fetchDelegatorRewardsForValidatorNoThrow(
+                {
                     delegatorAddress: params.delegatorAddress,
                     validatorAddress: params.validatorAddress,
-                })
+                }
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse(
@@ -90,7 +94,10 @@ export async function getDelegatorRewards(
     params: DistributionTypes.GetDelegatorRewardsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcDistributionApi.fetchDelegatorRewards(params.injectiveAddress);
+        const result =
+            await this.chainGrpcDistributionApi.fetchDelegatorRewards(
+                params.injectiveAddress
+            );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDelegatorRewardsError", err);
@@ -109,7 +116,10 @@ export async function getDelegatorRewardsNoThrow(
     params: DistributionTypes.GetDelegatorRewardsParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcDistributionApi.fetchDelegatorRewardsNoThrow(params.injectiveAddress);
+        const result =
+            await this.chainGrpcDistributionApi.fetchDelegatorRewardsNoThrow(
+                params.injectiveAddress
+            );
 
         return createSuccessResponse(result);
     } catch (err) {

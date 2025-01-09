@@ -39,8 +39,10 @@ export async function getBankBalance(
     params: BankTypes.GetBankBalanceParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcBankApi.fetchBalance({...params,
-            accountAddress: this.injAddress});
+        const result = await this.chainGrpcBankApi.fetchBalance({
+            ...params,
+            accountAddress: this.injAddress,
+        });
 
         return createSuccessResponse(result);
     } catch (err) {
@@ -60,7 +62,9 @@ export async function getBankBalances(
     params: BankTypes.GetBankBalancesParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcBankApi.fetchBalances(this.injAddress)
+        const result = await this.chainGrpcBankApi.fetchBalances(
+            this.injAddress
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getBankBalancesError", err);
@@ -131,7 +135,7 @@ export async function getDenomsMetadata(
     this: InjectiveGrpcBase
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcBankApi.fetchDenomsMetadata()
+        const result = await this.chainGrpcBankApi.fetchDenomsMetadata();
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDenomsMetadataError", err);
@@ -150,7 +154,9 @@ export async function getDenomMetadata(
     params: BankTypes.GetDenomMetadataParams
 ): Promise<StandardResponse> {
     try {
-        const result = await this.chainGrpcBankApi.fetchDenomMetadata(params.denom)
+        const result = await this.chainGrpcBankApi.fetchDenomMetadata(
+            params.denom
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDenomMetadataError", err);
@@ -169,7 +175,9 @@ export async function getDenomOwners(
     params: BankTypes.GetDenomOwnersParams
 ): Promise<StandardResponse> {
     try {
-        const result = await  this.chainGrpcBankApi.fetchDenomOwners(params.denom)
+        const result = await this.chainGrpcBankApi.fetchDenomOwners(
+            params.denom
+        );
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getDenomOwnersError", err);
