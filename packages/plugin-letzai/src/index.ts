@@ -258,7 +258,10 @@ export const letzAiImageGeneration = {
     ],
 };
 
-export const letzAIPlugin = {
+export const letzAIPlugin:Plugin = {
     name: "letzai",
+    description: "LetzAI Image Generation Plugin",
     actions: [letzAiImageGeneration],
+    evaluators: [],
+    providers: [],
 };
