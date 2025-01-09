@@ -137,6 +137,28 @@ CREATE TABLE IF NOT EXISTS  relationships (
     CONSTRAINT fk_user FOREIGN KEY ("userId") REFERENCES accounts("id") ON DELETE CASCADE
 );
 
+CREATE TABLE cache (
+    "key" TEXT NOT NULL,
+    "agentId" TEXT NOT NULL,
+    "value" JSONB DEFAULT '{}'::jsonb,
+    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "expiresAt" TIMESTAMP,
+    PRIMARY KEY ("key", "agentId")
+);
+
+CREATE TABLE knowledge (
+    "id" UUID PRIMARY KEY,
+    "agentId" UUID REFERENCES accounts("id"),
+    "content" JSONB NOT NULL,
+    "embedding" vector(1536),
+    "createdAt" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    "isMain" BOOLEAN DEFAULT FALSE,
+    "originalId" UUID REFERENCES knowledge("id"),
+    "chunkIndex" INTEGER,
+    "isShared" BOOLEAN DEFAULT FALSE,
+    CHECK((isShared = true AND "agentId" IS NULL) OR (isShared = false AND "agentId" IS NOT NULL))
+);
+
 CREATE TABLE IF NOT EXISTS  cache (
     "key" TEXT NOT NULL,
     "agentId" TEXT NOT NULL,
