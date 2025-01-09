@@ -329,7 +329,7 @@ function initializeDatabase(dataDir: string) {
         elizaLogger.info("Initializing PostgreSQL connection...");
         const db = new PostgresDatabaseAdapter({
             connectionString: process.env.POSTGRES_URL,
-            parseInputs: true,
+            max: 15,
         });
 
         // Test the connection
