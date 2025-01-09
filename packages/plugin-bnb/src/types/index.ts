@@ -2797,7 +2797,7 @@ export const ListaDaoAbi = [
     { stateMutability: "payable", type: "receive" },
 ] as const;
 
-export interface IDeployToken {
+export interface IDeployERC20Params {
     chain: SupportedChain;
     name: string;
     symbol: string;
@@ -2805,14 +2805,14 @@ export interface IDeployToken {
     totalSupply: number;
 }
 
-export interface IDeployNFT {
+export interface IDeployERC721Params {
     chain: SupportedChain;
     name: string;
     symbol: string;
     baseURI: string;
 }
 
-export interface IDeploy1155 {
+export interface IDeployERC1155Params {
     chain: SupportedChain;
     name: string;
     baseURI: string;

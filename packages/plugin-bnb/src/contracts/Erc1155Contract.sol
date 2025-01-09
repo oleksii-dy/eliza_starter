@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol";
 
-contract Erc1155Contract is ERC1155, Ownable {
+contract ERC1155Contract is ERC1155, Ownable {
     string public name;
 
     constructor(

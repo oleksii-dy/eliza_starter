@@ -12,7 +12,11 @@ import solc from "solc";
 import { Abi, formatEther, formatUnits, parseUnits } from "viem";
 import { initWalletProvider, WalletProvider } from "../providers/wallet";
 import { ercContractTemplate } from "../templates";
-import { IDeploy1155, IDeployNFT, IDeployToken } from "../types";
+import {
+    IDeployERC1155Params,
+    IDeployERC721Params,
+    IDeployERC20Params,
+} from "../types";
 import { compileSolidity } from "../utils/contracts";
 
 export { ercContractTemplate };
@@ -65,7 +69,7 @@ export class DeployAction {
         };
     }
 
-    async deployToken(deployTokenParams: IDeployToken) {
+    async deployERC20(deployTokenParams: IDeployERC20Params) {
         elizaLogger.log("deployTokenParams", deployTokenParams);
         const { name, symbol, decimals, totalSupply, chain } =
             deployTokenParams;
@@ -77,7 +81,7 @@ export class DeployAction {
         const walletClient = this.walletProvider.getWalletClient(chain);
 
         try {
-            const { abi, bytecode } = await compileSolidity("Erc20Contract");
+            const { abi, bytecode } = await compileSolidity("ERC20Contract");
 
             if (!bytecode) {
                 throw new Error("Bytecode is empty after compilation");
@@ -136,7 +140,7 @@ export class DeployAction {
         }
     }
 
-    async deployNFT(deployNftParams: IDeployNFT) {
+    async deployERC721(deployNftParams: IDeployERC721Params) {
         elizaLogger.log("deployNftParams", deployNftParams);
         const { baseURI, name, symbol, chain } = deployNftParams;
 
@@ -147,7 +151,7 @@ export class DeployAction {
         const walletClient = this.walletProvider.getWalletClient(chain);
 
         try {
-            const { abi, bytecode } = await compileSolidity("Erc721Contract");
+            const { abi, bytecode } = await compileSolidity("ERC721Contract");
             if (!bytecode) {
                 throw new Error("Bytecode is empty after compilation");
             }
@@ -189,7 +193,7 @@ export class DeployAction {
         }
     }
 
-    async deploy1155(deploy1155Params: IDeploy1155) {
+    async deployERC1155(deploy1155Params: IDeployERC1155Params) {
         const { baseURI, name, chain } = deploy1155Params;
 
         this.walletProvider.switchChain(chain);
@@ -199,7 +203,7 @@ export class DeployAction {
         const walletClient = this.walletProvider.getWalletClient(chain);
 
         try {
-            const { bytecode, abi } = await compileSolidity("Erc1155Contract");
+            const { bytecode, abi } = await compileSolidity("ERC1155Contract");
 
             if (!bytecode) {
                 throw new Error("Bytecode is empty after compilation");
@@ -282,7 +286,7 @@ export const deployAction = {
         let result;
         switch (contractType.toLocaleLowerCase()) {
             case "erc20":
-                result = await action.deployToken({
+                result = await action.deployERC20({
                     chain: content.chain,
                     decimals: content.decimals,
                     symbol: content.symbol,
@@ -291,7 +295,7 @@ export const deployAction = {
                 });
                 break;
             case "erc721":
-                result = await action.deployNFT({
+                result = await action.deployERC721({
                     chain: content.chain,
                     name: content.name,
                     symbol: content.symbol,
@@ -299,7 +303,7 @@ export const deployAction = {
                 });
                 break;
             case "erc1155":
-                result = await action.deploy1155({
+                result = await action.deployERC1155({
                     chain: content.chain,
                     name: content.name,
                     baseURI: content.baseURI,
@@ -347,7 +351,7 @@ export const deployAction = {
             {
                 user: "user",
                 content: {
-                    text: "Deploy a NFT contract",
+                    text: "Deploy an ERC721 NFT contract",
                     action: "DEPLOY_TOKEN",
                 },
             },

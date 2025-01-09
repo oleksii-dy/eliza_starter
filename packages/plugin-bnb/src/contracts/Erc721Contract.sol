@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
-contract Erc721Contract is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
+contract ERC721Contract is ERC721, ERC721URIStorage, ERC721Enumerable, Ownable {
     string private _baseTokenURI;
 
     constructor(

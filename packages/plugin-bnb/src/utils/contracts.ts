@@ -5,34 +5,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import solc from "solc";
 
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename)
-
 const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const baseDir = path.resolve(__dirname, "../../plugin-bnb/src/contracts");
-
-function getOpenZeppelinContract(contractPath: string): string {
-    try {
-        // 找到 @openzeppelin/contracts 包的根目录
-        const packageJsonPath = require.resolve(
-            "@openzeppelin/contracts/package.json"
-        );
-        const packageRoot = path.dirname(packageJsonPath);
-
-        // 构建完整的合约文件路径
-        const fullPath = path.join(packageRoot, contractPath);
-
-        console.log("Reading contract from:", fullPath);
-
-        // 读取合约文件
-        return fs.readFileSync(fullPath, "utf8");
-    } catch (error) {
-        console.error("Error reading OpenZeppelin contract:", error);
-        throw error;
-    }
-}
 
 function getContractSource(contractPath: string) {
     return fs.readFileSync(contractPath, "utf8");
@@ -59,15 +35,10 @@ function findImports(importPath: string) {
 }
 
 export async function compileSolidity(contractFileName: string) {
-    // const contractPath = path.resolve("./contracts", contractFileName);
     const contractPath = path.join(baseDir, contractFileName + ".sol");
     elizaLogger.log("baseDir", __dirname, baseDir, contractPath);
 
-    // const xx = getOpenZeppelinContract(contractPath);
-    // elizaLogger.log("xx", xx);
-
     const source = getContractSource(contractPath);
-    // elizaLogger.log("source", source);
 
     const input = {
         language: "Solidity",
