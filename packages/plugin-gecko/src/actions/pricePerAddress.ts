@@ -14,8 +14,8 @@ import type { PriceResponse } from "../types.ts";
 
 // Template for extracting chain and address
 export const addressTemplate = `
-Extract the blockchain name/chain ID and token address being asked about.
-Normalize chain names: ethereum, polygon, solana, base, etc.
+From previous sentence extract only the platform name and token address being asked about.
+Normalize platform names to lowercase names: ethereum, polygon, solana, base, ordinals etc.
 Token address should be the full address string.
 
 Respond with a JSON markdown block containing the extracted values:

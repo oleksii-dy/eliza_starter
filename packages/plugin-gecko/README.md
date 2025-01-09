@@ -3,8 +3,8 @@
 This plugin provides actions and providers for interacting with CoinGecko API, using free version
 https://docs.coingecko.com/v3.0.1/reference/introduction
 
-to get the Free Public API access, create your API key here
-https://www.coingecko.com/en/developers/dashboard
+to get the Free Public API access, read here how to get an API
+https://support.coingecko.com/hc/en-us/articles/21880397454233-User-Guide-How-to-sign-up-for-CoinGecko-Demo-API-and-generate-an-API-key
 
 ---
 
@@ -12,11 +12,14 @@ https://www.coingecko.com/en/developers/dashboard
 
 ### Default Setup
 
-By default, \*_CoinGecko plugin_ is enabled. To use it, simply add your API key to the `.env` file:
+By default, CoinGecko plugin is enabled. To use it, simply add your API key to the `.env` file:
 
 ```env
 COINGECKO_API_KEY=your-gecko-key-here
+COINGECKO_PRO=FALSE
 ```
+
+If using Paid version, add COINGECKO_PRO to TRUE so different endpoints can be used.
 
 ## Provider
 
