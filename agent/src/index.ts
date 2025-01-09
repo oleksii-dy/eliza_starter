@@ -504,6 +504,7 @@ const copilotProvider: Provider = {
             modelClass: ModelClass.LARGE,
         });
         if (!shouldCopilot) {
+            elizaLogger.info("Messari Copilot is not needed");
             return null;
         }
 
