@@ -30,13 +30,6 @@ You can check the default values in `src/constants.ts`
 
 5. **NEW_INVOICE**: Given an amount and asset type (CKB, USDI, or RUSD), the agent generates a new invoice, enabling others to send funds to the agent-controlled Fiber node.
 
-# Benefits
-- **Fiber Network Integration:** The plugin enables the Eliza agent to interact with the Fiber Network, facilitating cross-chain asset transfers and payments.
-
-- **Payment Management:** The agent can send and receive payments, manage channels, and generate invoices using the Fiber Network.
-
-- **Fiber RPC Client:** The plugin includes a standalone Fiber Network RPC client, enabling the agents / developers to interact with the Fiber node more easily. 
-
 # Cautions
 - **Network Access Control:** If the Fiber node’s RPC URL is exposed to the external network without proper access control, there could be potential unauthorized access. Ensure the RPC URL is secured or only accessible within the local network to avoid unintended exposure.
 
@@ -44,13 +37,64 @@ You can check the default values in `src/constants.ts`
 
 - **Channel and Network Connectivity:** If the Fiber node is not connected to the network or doesn't have enough channels opened, SEND_PAYMENT action will fail. This could affect the overall functionality and cause disruptions in the intended operations of the Fiber node and Eliza Agent interactions.
 
-# Roadmap
+# Benefits
 
+### Seamless CKB Integration
+
+- **Native CKB Support**: Effortlessly integrate CKB blockchain functionalities into your applications.
+- **Efficient Transaction Handling**: Streamlined processes for sending and receiving CKB transactions.
+
+### Robust Financial Operations
+
+- **Automated Payment Processing**: Facilitate automated payments for services such as API calls, content generation, and more.
+- **Multi-Layer Transaction Support**: Handle both on-chain and Layer 2 transactions for enhanced flexibility and scalability.
+- **Real-Time Balance Monitoring**: Keep track of wallet balances with up-to-date information and notifications.
+
+### Flexible Payment Options
+
+- **Multi-Currency Support**: Accept payments in various cryptocurrencies and fiat currencies with automatic conversion.
+- **Customizable Fee Structures**: Adjust transaction fees based on real-time market data and user preferences.
+- **Recurring Payments**: Set up recurring billing for subscription-based services, ensuring consistent revenue streams.
+
+### Enhanced Security
+
+- **Secure Key Management**: Protect private keys using environment variables and secure storage solutions.
+- **Advanced Encryption**: Ensure all sensitive data is encrypted both in transit and at rest to maintain user privacy.
+
+# Implementation Status
+
+### Core CKB Functionality
+
+- Full support for CKB blockchain operations, including transaction creation and validation.
+- Integration with CKB's native wallets and APIs for seamless user interactions.
+
+### Fiber Framework Integration
+
+- Seamless incorporation with the Fiber web framework, ensuring high performance and scalability.
+- Middleware support for efficient request handling and processing within Fiber applications.
+
+### Payment Processing Features
+
+- Automated payment workflows implemented, enabling smooth financial transactions between agents.
+- Support for both on-chain and Layer 2 transactions to cater to different scalability and cost requirements.
+
+### USD Denomination Support
+
+- Enable USD-denominated transactions with automatic cryptocurrency conversion based on real-time exchange rates.
+- Integration of real-time price feeds to ensure accurate fee estimation and financial reporting.
+
+### Upcoming Features
+
+- **Enhanced Analytics**: Development of advanced dashboards for monitoring transaction metrics and user activity (planned).
+- **Extended Protocol Support**: Ongoing work to integrate additional blockchain protocols, expanding the plugin's versatility and applicability.
+
+<!--
 - [x] **Payment Actions:** Implement actions to send and receive payments using the Fiber Network.
 - [ ] **Channel Management:** Implement actions to manage channels, including opening, closing, and updating channels.
 - [ ] **CKB functionality:** Implement actions to interact with CKB, such as querying balances, sending CKB transactions, and managing UDTs.
 - [ ] **Payment History:** Implement actions to retrieve payment history and details for the agent-controlled Fiber node.
 - [ ] **Authorization and Access Control:** Because some actions involve sensitive operations, implementing proper authorization and access control mechanisms is essential.
+-->
 
 # Testing
 ``` bash
