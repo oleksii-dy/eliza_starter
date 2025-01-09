@@ -391,12 +391,6 @@ export async function initializeClients(
 
     // TODO: Add Slack client to the list
     // Initialize clients as an object
-
-    if (clientTypes.includes("slack")) {
-        const slackClient = await SlackClientInterface.start(runtime);
-        if (slackClient) clients.slack = slackClient; // Use object property instead of push
-    }
-
     function determineClientType(client: Client): string {
         // Check if client has a direct type identifier
         if ("type" in client) {
