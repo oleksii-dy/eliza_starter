@@ -408,7 +408,6 @@ export class MessageManager {
                 if (!responseContent.text) {
                     return;
                 }
-
                 const callback: HandlerCallback = async (
                     content: Content,
                     files: any[]
@@ -466,7 +465,24 @@ export class MessageManager {
                     }
                 };
 
-                const responseMessages = await callback(responseContent);
+                let responseMessages: Memory[] = [];
+                if (responseContent.generatePreActionResponse) {
+                    responseMessages = await callback(responseContent);
+                } else {
+                    // If we're not generating a pre-action response, create a single memory
+                    const memory: Memory = {
+                        id: stringToUuid(
+                            message.id + "-response-" + this.runtime.agentId
+                        ),
+                        userId: this.runtime.agentId,
+                        agentId: this.runtime.agentId,
+                        content: responseContent,
+                        roomId,
+                        embedding: getEmbeddingZeroVector(),
+                        createdAt: Date.now(),
+                    };
+                    responseMessages = [memory];
+                }
 
                 state = await this.runtime.updateRecentMessageState(state);
 
