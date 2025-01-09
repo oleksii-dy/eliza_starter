@@ -83,9 +83,9 @@ export const newInvoice: Action = {
 
             return callback({ text: formatInvoice(invoice) }, []);
         } catch (error) {
-            elizaLogger.error("Error getting payment:", error);
+            elizaLogger.error("Error create invoice:", error);
             callback(
-                { text: `Fail to get payment, message: ${error.message}` },
+                { text: `Fail to create invoice, message: ${error.message}` },
                 []
             );
         }
