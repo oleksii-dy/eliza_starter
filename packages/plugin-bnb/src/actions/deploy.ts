@@ -9,25 +9,11 @@ import {
     type State,
 } from "@elizaos/core";
 import solc from "solc";
-import {
-    Abi,
-    Address,
-    createWalletClient,
-    formatEther,
-    formatUnits,
-    http,
-    parseUnits,
-} from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { bscTestnet } from "viem/chains";
-import {
-    erc1155Contract,
-    erc20Contract,
-    erc721Contract,
-} from "../constants/contracts";
+import { Abi, formatEther, formatUnits, parseUnits } from "viem";
 import { initWalletProvider, WalletProvider } from "../providers/wallet";
 import { ercContractTemplate } from "../templates";
-import { IDeploy1155, IDeployBasic, IDeployNFT, IDeployToken } from "../types";
+import { IDeploy1155, IDeployNFT, IDeployToken } from "../types";
+import { compileSolidity } from "../utils/contracts";
 
 export { ercContractTemplate };
 
@@ -79,40 +65,19 @@ export class DeployAction {
         };
     }
 
-    async deployToken(
-        basicParams: IDeployBasic,
-        deployTokenParams: IDeployToken
-    ) {
-        elizaLogger.log("basicParams", basicParams);
+    async deployToken(deployTokenParams: IDeployToken) {
         elizaLogger.log("deployTokenParams", deployTokenParams);
-        const { privateKey, rpcUrl } = basicParams;
-        const { name, symbol, decimals, totalSupply } = deployTokenParams;
+        const { name, symbol, decimals, totalSupply, chain } =
+            deployTokenParams;
 
-        const publicClient = this.walletProvider.getPublicClient("bscTestnet");
+        this.walletProvider.switchChain(chain);
 
-        // check private key
-        if (!privateKey) {
-            elizaLogger.error(
-                "Private key is not set in environment variables"
-            );
-            return;
-        }
-        elizaLogger.log("Connecting to rpc node...");
-        if (!rpcUrl) {
-            elizaLogger.error("rpc url is required");
-            return;
-        }
-        const walletClient = createWalletClient({
-            account: privateKeyToAccount(privateKey as Address),
-            chain: bscTestnet,
-            transport: http(rpcUrl),
-        });
+        const chainConfig = this.walletProvider.getChainConfigs(chain);
+        const publicClient = this.walletProvider.getPublicClient(chain);
+        const walletClient = this.walletProvider.getWalletClient(chain);
 
         try {
-            const { abi, bytecode } = await this.compileSolidity(
-                "CustomERC20",
-                erc20Contract
-            );
+            const { abi, bytecode } = await compileSolidity("Erc20Contract");
 
             if (!bytecode) {
                 throw new Error("Bytecode is empty after compilation");
@@ -137,6 +102,7 @@ export class DeployAction {
                 abi,
                 bytecode,
                 args: [name, symbol, decimals, totalSupplyWithDecimals],
+                chain: chainConfig,
             });
 
             elizaLogger.log("Waiting for deployment transaction...", hash);
@@ -170,37 +136,18 @@ export class DeployAction {
         }
     }
 
-    async deployNFT(basicParams: IDeployBasic, deployNftParams: IDeployNFT) {
-        elizaLogger.log("basicParams", basicParams);
+    async deployNFT(deployNftParams: IDeployNFT) {
         elizaLogger.log("deployNftParams", deployNftParams);
+        const { baseURI, name, symbol, chain } = deployNftParams;
 
-        const { privateKey, rpcUrl } = basicParams;
-        const { baseURI, name, symbol } = deployNftParams;
+        this.walletProvider.switchChain(chain);
 
-        const publicClient = this.walletProvider.getPublicClient("bscTestnet");
-        // check private key
-        if (!privateKey) {
-            elizaLogger.error(
-                "Private key is not set in environment variables"
-            );
-            return;
-        }
-        elizaLogger.log("Connecting to rpc node...");
-        if (!rpcUrl) {
-            elizaLogger.error("rpc url is required");
-            return;
-        }
-        const walletClient = createWalletClient({
-            account: privateKeyToAccount(privateKey as Address),
-            chain: bscTestnet,
-            transport: http(rpcUrl),
-        });
+        const chainConfig = this.walletProvider.getChainConfigs(chain);
+        const publicClient = this.walletProvider.getPublicClient(chain);
+        const walletClient = this.walletProvider.getWalletClient(chain);
 
         try {
-            const { abi, bytecode } = await this.compileSolidity(
-                "CustomERC721",
-                erc721Contract
-            );
+            const { abi, bytecode } = await compileSolidity("Erc721Contract");
             if (!bytecode) {
                 throw new Error("Bytecode is empty after compilation");
             }
@@ -220,6 +167,7 @@ export class DeployAction {
                 abi,
                 bytecode,
                 args: [name, symbol, baseURI],
+                chain: chainConfig,
             });
 
             elizaLogger.log("Waiting for deployment transaction...", hash);
@@ -241,34 +189,17 @@ export class DeployAction {
         }
     }
 
-    async deploy1155(basicParams: IDeployBasic, deploy1155Params: IDeploy1155) {
-        const { privateKey, rpcUrl } = basicParams;
-        const { baseURI, name } = deploy1155Params;
+    async deploy1155(deploy1155Params: IDeploy1155) {
+        const { baseURI, name, chain } = deploy1155Params;
 
-        const publicClient = this.walletProvider.getPublicClient("bscTestnet");
-        // check private key
-        if (!privateKey) {
-            elizaLogger.error(
-                "Private key is not set in environment variables"
-            );
-            return;
-        }
-        elizaLogger.log("Connecting to rpc node...");
-        if (!rpcUrl) {
-            elizaLogger.error("rpc url is required");
-            return;
-        }
-        const walletClient = createWalletClient({
-            account: privateKeyToAccount(privateKey as Address),
-            chain: bscTestnet,
-            transport: http(rpcUrl),
-        });
+        this.walletProvider.switchChain(chain);
+
+        const chainConfig = this.walletProvider.getChainConfigs(chain);
+        const publicClient = this.walletProvider.getPublicClient(chain);
+        const walletClient = this.walletProvider.getWalletClient(chain);
 
         try {
-            const { bytecode, abi } = await this.compileSolidity(
-                "CustomERC1155",
-                erc1155Contract
-            );
+            const { bytecode, abi } = await compileSolidity("Erc1155Contract");
 
             if (!bytecode) {
                 throw new Error("Bytecode is empty after compilation");
@@ -288,6 +219,7 @@ export class DeployAction {
                 abi,
                 bytecode,
                 args: [name, baseURI],
+                chain: chainConfig,
             });
 
             elizaLogger.log("Waiting for deployment transaction...", hash);
@@ -330,7 +262,7 @@ export const deployAction = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        // Compose swap context
+        // Compose context
         const context = composeContext({
             state,
             template: ercContractTemplate,
@@ -343,9 +275,6 @@ export const deployAction = {
 
         elizaLogger.log("content", content);
 
-        const privateKey = runtime.getSetting("BSC_PRIVATE_KEY");
-        const rpcUrl = runtime.getSetting("BSC_TESTNET_PROVIDER_URL");
-
         const walletProvider = initWalletProvider(runtime);
         const action = new DeployAction(walletProvider);
 
@@ -353,44 +282,28 @@ export const deployAction = {
         let result;
         switch (contractType.toLocaleLowerCase()) {
             case "erc20":
-                elizaLogger.log("start deploy token....");
-                result = await action.deployToken(
-                    {
-                        privateKey,
-                        rpcUrl,
-                    },
-                    {
-                        decimals: content.decimals,
-                        symbol: content.symbol,
-                        name: content.name,
-                        totalSupply: content.totalSupply,
-                    }
-                );
+                result = await action.deployToken({
+                    chain: content.chain,
+                    decimals: content.decimals,
+                    symbol: content.symbol,
+                    name: content.name,
+                    totalSupply: content.totalSupply,
+                });
                 break;
             case "erc721":
-                result = await action.deployNFT(
-                    {
-                        privateKey,
-                        rpcUrl,
-                    },
-                    {
-                        name: content.name,
-                        symbol: content.symbol,
-                        baseURI: content.baseURI,
-                    }
-                );
+                result = await action.deployNFT({
+                    chain: content.chain,
+                    name: content.name,
+                    symbol: content.symbol,
+                    baseURI: content.baseURI,
+                });
                 break;
             case "erc1155":
-                result = await action.deploy1155(
-                    {
-                        privateKey,
-                        rpcUrl,
-                    },
-                    {
-                        name: content.name,
-                        baseURI: content.baseURI,
-                    }
-                );
+                result = await action.deploy1155({
+                    chain: content.chain,
+                    name: content.name,
+                    baseURI: content.baseURI,
+                });
                 break;
         }
 
@@ -434,7 +347,7 @@ export const deployAction = {
             {
                 user: "user",
                 content: {
-                    text: "Deploy an NFT contract",
+                    text: "Deploy a NFT contract",
                     action: "DEPLOY_TOKEN",
                 },
             },
@@ -452,6 +365,5 @@ export const deployAction = {
         "DEPLOY_ERC721",
         "DEPLOY_ERC1155",
         "CREATE_TOKEN",
-        "MINT_TOKEN",
     ],
 };

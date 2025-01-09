@@ -2797,12 +2797,8 @@ export const ListaDaoAbi = [
     { stateMutability: "payable", type: "receive" },
 ] as const;
 
-export interface IDeployBasic {
-    privateKey?: string | null;
-    rpcUrl?: string | null;
-}
-
 export interface IDeployToken {
+    chain: SupportedChain;
     name: string;
     symbol: string;
     decimals: number;
@@ -2810,12 +2806,14 @@ export interface IDeployToken {
 }
 
 export interface IDeployNFT {
+    chain: SupportedChain;
     name: string;
     symbol: string;
     baseURI: string;
 }
 
 export interface IDeploy1155 {
+    chain: SupportedChain;
     name: string;
     baseURI: string;
 }
