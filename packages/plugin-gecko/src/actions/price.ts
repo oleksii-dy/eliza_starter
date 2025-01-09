@@ -8,6 +8,7 @@ import {
     composeContext,
     generateMessageResponse,
     ModelClass,
+    getEmbeddingZeroVector,
 } from "@elizaos/core";
 
 import { coingeckoProvider } from "../providers/coins";
@@ -44,6 +45,25 @@ function getBaseUrl(runtime: IAgentRuntime): string {
         ? "https://pro-api.coingecko.com/api/v3"
         : "https://api.coingecko.com/api/v3";
 }
+
+const createTokenMemory = async (
+    runtime: IAgentRuntime,
+    state: State,
+    formattedOutput: string
+): Promise<Memory> => {
+    const memory: Memory = {
+        userId: runtime.agentId,
+        agentId: runtime.agentId,
+        roomId: state.roomId,
+        content: {
+            text: formattedOutput,
+        },
+        createdAt: Date.now(),
+        embedding: getEmbeddingZeroVector(),
+    };
+    await runtime.messageManager.createMemory(memory);
+    return memory;
+};
 
 export const getPriceAction: Action = {
     name: "GET_COIN_PRICE",
@@ -190,9 +210,17 @@ export const getPriceAction: Action = {
 
             elizaLogger.log(multipleMatchesNote);
 
+            const formattedOutput = `Current price for ${coin.name} (${coin.symbol.toUpperCase()}): ${price.toFixed(2)} USD\nMarket Cap: ${formattedMarketCap} USD${multipleMatchesNote}`;
+
+            // Update state using createTokenMemory
+            (await runtime.composeState(
+                await createTokenMemory(runtime, state, formattedOutput)
+            )) as State;
+
+            // Make the callback with the formatted output
             callback(
                 {
-                    text: `Current price for ${coin.name} (${coin.symbol.toUpperCase()}): ${price.toFixed(2)} USD\nMarket Cap: ${formattedMarketCap} USD${multipleMatchesNote}`,
+                    text: formattedOutput,
                 },
                 []
             );

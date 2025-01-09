@@ -8,6 +8,7 @@ import {
     composeContext,
     generateMessageResponse,
     ModelClass,
+    getEmbeddingZeroVector,
 } from "@elizaos/core";
 
 import type { PriceResponse } from "../types.ts";
@@ -47,6 +48,25 @@ function getBaseUrl(runtime: IAgentRuntime): string {
         ? "https://pro-api.coingecko.com/api/v3"
         : "https://api.coingecko.com/api/v3";
 }
+
+const createTokenMemory = async (
+    runtime: IAgentRuntime,
+    state: State,
+    formattedOutput: string
+): Promise<Memory> => {
+    const memory: Memory = {
+        userId: runtime.agentId,
+        agentId: runtime.agentId,
+        roomId: state.roomId,
+        content: {
+            text: formattedOutput,
+        },
+        createdAt: Date.now(),
+        embedding: getEmbeddingZeroVector(),
+    };
+    await runtime.messageManager.createMemory(memory);
+    return memory;
+};
 
 export const getPriceByAddressAction: Action = {
     name: "GET_TOKEN_PRICE_BY_ADDRESS",
@@ -191,9 +211,15 @@ export const getPriceByAddressAction: Action = {
                     ? `${tokenName} (${tokenSymbol})`
                     : `token`;
 
+            const formattedOutput = `Current price for ${tokenIdentifier}\nAddress: ${tokenAddress}\nChain: ${chainId}\nPrice: ${price.toFixed(6)} USD${formattedMarketCap}`;
+
+            (await runtime.composeState(
+                await createTokenMemory(runtime, state, formattedOutput)
+            )) as State;
+
             callback(
                 {
-                    text: `Current price for ${tokenIdentifier}\nAddress: ${tokenAddress}\nChain: ${chainId}\nPrice: ${price.toFixed(6)} USD${formattedMarketCap}`,
+                    text: formattedOutput,
                 },
                 []
             );
