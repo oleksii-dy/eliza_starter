@@ -1346,7 +1346,7 @@ importers:
         version: 1.7.9(debug@4.4.0)
       injective-sdk-client-ts:
         specifier: file:../../packages/plugin-injective/injective-sdk-client-ts
-        version: injective-ts-lib@file:packages/plugin-injective/injective-sdk-client-ts(@types/react@18.3.12)(bufferutil@4.0.9)(google-protobuf@3.21.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)
+        version: '@injectivelabs/injective-sdk-client-ts@file:packages/plugin-injective/injective-sdk-client-ts(@types/react@18.3.12)(bufferutil@4.0.9)(google-protobuf@3.21.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)'
     devDependencies:
       '@types/chai':
         specifier: ^5.0.1
@@ -5106,6 +5106,9 @@ packages:
 
   '@injectivelabs/indexer-proto-ts@1.13.3':
     resolution: {integrity: sha512-rLesVPCARl+OC82vj063/pUawYu0ISty/2+xg6ya4Lwk6PDbXmtRvw8wpNP6K+pAsBOKaSkRnO4ThP5qbX+E6A==}
+
+  '@injectivelabs/injective-sdk-client-ts@file:packages/plugin-injective/injective-sdk-client-ts':
+    resolution: {directory: packages/plugin-injective/injective-sdk-client-ts, type: directory}
 
   '@injectivelabs/mito-proto-ts@1.13.0':
     resolution: {integrity: sha512-DE9iK7PkEnkWAMTDJDH01R8jxkxVCNuurfVp/09Te9wY3dm3mRx9M6R756JywP2Sd/ggJl2UbavGAQe2pZ7v1w==}
@@ -12855,9 +12858,6 @@ packages:
   init-package-json@6.0.3:
     resolution: {integrity: sha512-Zfeb5ol+H+eqJWHTaGca9BovufyGeIfr4zaaBorPmJBMrJ+KBnN+kQx2ZtXdsotUTgldHmHQV44xvUWOUA7E2w==}
     engines: {node: ^16.14.0 || >=18.0.0}
-
-  injective-ts-lib@file:packages/plugin-injective/injective-sdk-client-ts:
-    resolution: {directory: packages/plugin-injective/injective-sdk-client-ts, type: directory}
 
   inline-source-map@0.6.3:
     resolution: {integrity: sha512-1aVsPEsJWMJq/pdMU61CDlm1URcW702MTB4w9/zUjMus6H/Py8o7g68Pr9D4I6QluWGt/KdmswuRhaA05xVR1w==}
@@ -24707,6 +24707,27 @@ snapshots:
       protobufjs: 7.4.0
       rxjs: 7.8.1
 
+  '@injectivelabs/injective-sdk-client-ts@file:packages/plugin-injective/injective-sdk-client-ts(@types/react@18.3.12)(bufferutil@4.0.9)(google-protobuf@3.21.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
+      '@injectivelabs/networks': 1.14.33(google-protobuf@3.21.4)
+      '@injectivelabs/sdk-ts': 1.14.33(@types/react@18.3.12)(bufferutil@4.0.9)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)
+      '@injectivelabs/token-metadata': 1.14.11(google-protobuf@3.21.4)
+      '@injectivelabs/ts-types': 1.14.33
+      '@injectivelabs/utils': 1.14.33(google-protobuf@3.21.4)
+      axios: 1.7.9(debug@4.4.0)
+      bignumber.js: 9.1.2
+    transitivePeerDependencies:
+      - '@types/react'
+      - bufferutil
+      - debug
+      - google-protobuf
+      - graphql-ws
+      - react
+      - react-dom
+      - subscriptions-transport-ws
+      - utf-8-validate
+
   '@injectivelabs/mito-proto-ts@1.13.0':
     dependencies:
       '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
@@ -35659,27 +35680,6 @@ snapshots:
       validate-npm-package-name: 5.0.1
     transitivePeerDependencies:
       - bluebird
-
-  injective-ts-lib@file:packages/plugin-injective/injective-sdk-client-ts(@types/react@18.3.12)(bufferutil@4.0.9)(google-protobuf@3.21.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10):
-    dependencies:
-      '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
-      '@injectivelabs/networks': 1.14.33(google-protobuf@3.21.4)
-      '@injectivelabs/sdk-ts': 1.14.33(@types/react@18.3.12)(bufferutil@4.0.9)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(utf-8-validate@5.0.10)
-      '@injectivelabs/token-metadata': 1.14.11(google-protobuf@3.21.4)
-      '@injectivelabs/ts-types': 1.14.33
-      '@injectivelabs/utils': 1.14.33(google-protobuf@3.21.4)
-      axios: 1.7.9(debug@4.4.0)
-      bignumber.js: 9.1.2
-    transitivePeerDependencies:
-      - '@types/react'
-      - bufferutil
-      - debug
-      - google-protobuf
-      - graphql-ws
-      - react
-      - react-dom
-      - subscriptions-transport-ws
-      - utf-8-validate
 
   inline-source-map@0.6.3:
     dependencies:
