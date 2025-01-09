@@ -40,14 +40,11 @@ import {
     IndexerGrpcWeb3GwApi,
 } from "@injectivelabs/sdk-ts";
 //minimal rest imports
-//TODO: move to rest base import
 import {
     ChainRestAuthApi,
     ChainRestTendermintApi,
     getInjectiveAddress,
 } from "@injectivelabs/sdk-ts";
-import { UnspecifiedErrorCode } from "@injectivelabs/exceptions";
-import { GrpcException } from "../exceptions/GrpcException";
 
 export type RequestMethod<TRequest, TResponse> = (
     request: TRequest
