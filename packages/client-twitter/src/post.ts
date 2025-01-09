@@ -18,6 +18,7 @@ import { buildConversationThread } from "./utils.ts";
 import { DEFAULT_MAX_TWEET_LENGTH } from "./environment.ts";
 import { twitterMessageHandlerTemplate1 } from "./utils/templatesT/interactionsT.ts";
 import { twitterQuoteHandlerTemplate } from "./utils/templatesT/quotesT.ts";
+import { generateQuery } from "./utils/scraping/post.ts";
 
 const twitterPostTemplate = `
 # Areas of Expertise
@@ -68,7 +69,8 @@ Actions (respond only with tags):
 Tweet:
 {{currentTweet}}
 
-# Respond with qualifying action tags only. Default to NO action unless extremely confident of relevance.` + postActionResponseFooter;
+# Respond with qualifying action tags only. Default to NO action unless extremely confident of relevance.` +
+    postActionResponseFooter;
 
 /**
  * Truncate text to fit within the Twitter character limit, ensuring it ends at a complete sentence.
@@ -117,7 +119,7 @@ export class TwitterPostClient {
         this.client = client;
         this.runtime = runtime;
         this.twitterUsername = this.client.twitterConfig.TWITTER_USERNAME;
-        this.isDryRun = this.client.twitterConfig.TWITTER_DRY_RUN
+        this.isDryRun = this.client.twitterConfig.TWITTER_DRY_RUN;
 
         // Log configuration on initialization
         elizaLogger.log("Twitter Client Configuration:");
@@ -194,8 +196,9 @@ export class TwitterPostClient {
                             `Next action processing scheduled in ${actionInterval} minutes`
                         );
                         // Wait for the full interval before next processing
-                        await new Promise((resolve) =>
-                            setTimeout(resolve, actionInterval * 60 * 1000) // now in minutes
+                        await new Promise(
+                            (resolve) =>
+                                setTimeout(resolve, actionInterval * 60 * 1000) // now in minutes
                         );
                     }
                 } catch (error) {
@@ -221,7 +224,10 @@ export class TwitterPostClient {
             elizaLogger.log("Tweet generation loop disabled (dry run mode)");
         }
 
-        if (this.client.twitterConfig.ENABLE_ACTION_PROCESSING && !this.isDryRun) {
+        if (
+            this.client.twitterConfig.ENABLE_ACTION_PROCESSING &&
+            !this.isDryRun
+        ) {
             processActionsLoop().catch((error) => {
                 elizaLogger.error(
                     "Fatal error in process actions loop:",
@@ -486,7 +492,7 @@ export class TwitterPostClient {
             }
 
             // Truncate the content to the maximum tweet length specified in the environment settings, ensuring the truncation respects sentence boundaries.
-            const maxTweetLength = this.client.twitterConfig.MAX_TWEET_LENGTH
+            const maxTweetLength = this.client.twitterConfig.MAX_TWEET_LENGTH;
             if (maxTweetLength) {
                 cleanedContent = truncateToCompleteSentence(
                     cleanedContent,
@@ -626,10 +632,16 @@ export class TwitterPostClient {
                 "twitter"
             );
 
-            const homeTimeline = await this.client.fetchTimelineForActions(15);
+            const homeTimeline = await this.client.fetchTimelineForActions(10);
             const results = [];
 
-            for (const tweet of homeTimeline) {
+            const query = generateQuery();
+            const actionableTweets =
+                await this.client.fetchPossibleActionTweets(10, query);
+
+            const combinedTimeline = [...homeTimeline, ...actionableTweets];
+
+            for (const tweet of combinedTimeline) {
                 try {
                     // Skip if we've already processed this tweet
                     const memory =
@@ -667,6 +679,7 @@ export class TwitterPostClient {
                                 ?.twitterActionTemplate ||
                             twitterActionTemplate,
                     });
+                    console.log("actionContext1",actionContext)
 
                     const actionResponse = await generateTweetActions({
                         runtime: this.runtime,

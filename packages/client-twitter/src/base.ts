@@ -317,6 +317,33 @@ export class ClientBase extends EventEmitter {
         return processedTimeline;
     }
 
+    async fetchPossibleActionTweets(
+        count: number,
+        searchQuery: string
+    ): Promise<Tweet[]> {
+        console.log("fetching possible action tweets");
+
+        try {
+
+
+            const tweetCandidates = (
+                await this.twitterClient.fetchSearchTweets(
+                    searchQuery,
+                    count,
+                    SearchMode.Latest
+                )
+            ).tweets;
+
+            const uniqueTweetCandidates = [...new Set(tweetCandidates)];
+            console.log("fetching possible action tweets4");
+
+            return uniqueTweetCandidates;
+        } catch (error) {
+            console.error("Error fetching tweets:", error);
+            return [];
+        }
+    }
+
     async fetchTimelineForActions(count: number): Promise<Tweet[]> {
         elizaLogger.debug("fetching timeline for actions");
 
