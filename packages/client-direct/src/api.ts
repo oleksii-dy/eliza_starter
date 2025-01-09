@@ -96,6 +96,30 @@ export function createApiRouter(
         });
     });
 
+    router.post("/agents/new", async (req, res) => {
+        // load character from body
+        const character = req.body;
+        try {
+            validateCharacterConfig(character);
+        } catch (e) {
+            elizaLogger.error(`Error parsing character: ${e}`);
+            res.status(400).json({
+                success: false,
+                message: e.message,
+            });
+            return;
+        }
+
+        // start it up (and register it)
+        let agent: AgentRuntime = await directClient.startAgent(character);
+        elizaLogger.log(`${character.name} started`);
+
+        res.json({
+            id: character.id,
+            character: character,
+        });
+    });
+
     router.get("/agents/:agentId/channels", async (req, res) => {
         const agentId = req.params.agentId;
         const runtime = agents.get(agentId);

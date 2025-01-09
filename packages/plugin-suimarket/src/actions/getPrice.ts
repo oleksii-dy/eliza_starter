@@ -7,6 +7,8 @@ import {
     Action
 } from "@elizaos/core";
 
+// import { collectMarketData } from "../utils/market";
+
 export const getPrice: Action = {
   name: 'getPrice',
   description: 'Get coin price from CoinGecko API',
@@ -16,9 +18,11 @@ export const getPrice: Action = {
                     options: { [key: string]: unknown },
                     callback: HandlerCallback) => {
         try{
-            elizaLogger.log("[coingecko] Handle with message ...");
+            elizaLogger.log("[coingecko] default call btc info ...");
+            // const info = await collectMarketData('0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82');
+            // elizaLogger.log("panckake >", info);
             callback({
-              text: "Price is 100K! Bullish!",
+              text: "you must be bullish!!!",
               attachments: []
             })
             elizaLogger.log("[coingecko] Handle with message ...DONE!");
