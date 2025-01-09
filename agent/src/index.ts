@@ -35,6 +35,7 @@ import createGoatPlugin from "@elizaos/plugin-goat";
 // import { intifacePlugin } from "@elizaos/plugin-intiface";
 import { DirectClient } from "@elizaos/client-direct";
 import { aptosPlugin } from "@elizaos/plugin-aptos";
+import { bnbPlugin } from "@elizaos/plugin-bnb";
 import {
     advancedTradePlugin,
     coinbaseCommercePlugin,
@@ -608,6 +609,11 @@ export async function createAgent(
             getSecret(character, "ECHOCHAMBERS_API_URL") &&
             getSecret(character, "ECHOCHAMBERS_API_KEY")
                 ? echoChamberPlugin
+                : null,
+            getSecret(character, "BNB_PRIVATE_KEY") ||
+            (getSecret(character, "BNB_PUBLIC_KEY") &&
+                getSecret(character, "BNB_PUBLIC_KEY")?.startsWith("0x"))
+                ? bnbPlugin
                 : null,
         ].filter(Boolean),
         providers: [],
