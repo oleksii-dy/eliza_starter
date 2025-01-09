@@ -43,14 +43,14 @@ export const twitterMessageHandlerTemplate1 =
 
 {{providers}}
 
-{{characterPostExamples}}
+{{characterMessageExamples}}
 
-{{postDirections}}
+{{MessageDirections}}
 
 Recent interactions between {{agentName}} and other users:
-{{recentPostInteractions}}
+{{recentMessageInteractions}}
 
-{{recentPosts}}
+{{recentMessages}}
 
 # TASK: Generate a post/reply in the voice, style and perspective of {{agentName}} (@{{twitterUserName}}) while using the thread of tweets as additional context:
 

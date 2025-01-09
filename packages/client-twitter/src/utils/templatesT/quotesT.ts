@@ -12,7 +12,7 @@ export const twitterQuoteHandlerTemplate =
 
 {{providers}}
 
-{{characterPostExamples}}
+{{characterQuoteExamples}}
 
 {{postDirections}}
 

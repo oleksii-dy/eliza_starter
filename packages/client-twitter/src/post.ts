@@ -41,8 +41,12 @@ Your response should not contain any questions. Brief, concise statements only. 
 
 export const twitterActionTemplate =
     `
+# Areas of Expertise
+{{knowledge}}
+
 # INSTRUCTIONS: Determine actions for {{agentName}} (@{{twitterUserName}}) based on:
 {{bio}}
+{{lore}}
 {{postDirections}}
 
 Guidelines:
