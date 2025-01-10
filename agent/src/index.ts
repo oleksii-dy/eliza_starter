@@ -506,7 +506,7 @@ export async function createAgent(
         elizaLogger.error(
             "WALLET_SECRET_SALT required when TEE_MODE is enabled"
         );
-        throw new Error("Invalid TEE configuration");
+        throw new Error("Invalid TEES configuration");
     }
 
     let goatPlugin: any | undefined;
