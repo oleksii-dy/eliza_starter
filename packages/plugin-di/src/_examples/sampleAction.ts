@@ -5,10 +5,13 @@ import {
     State,
     elizaLogger,
 } from "@elizaos/core";
+import { z } from "zod";
+import { inject, injectable } from "inversify";
 import { BaseInjactableAction } from "../actions";
 import { ActionOptions } from "../types";
 import { property } from "../decorators";
-import { z } from "zod";
+import { globalContainer } from "../di";
+import { SampleProvider } from "./sampleProvider";
 
 /**
  * The content class for the action
@@ -83,8 +86,15 @@ const options: ActionOptions<CreateResourceContent> = {
     contentClass: CreateResourceContent,
 };
 
+/**
+ * CreateResourceAction
+ */
+@injectable()
 export class CreateResourceAction extends BaseInjactableAction<CreateResourceContent> {
-    constructor() {
+    constructor(
+        @inject(SampleProvider)
+        private readonly sampleProvider: SampleProvider
+    ) {
         super(options);
     }
 
@@ -98,9 +108,9 @@ export class CreateResourceAction extends BaseInjactableAction<CreateResourceCon
 
     async execute(
         content: CreateResourceContent | null,
-        _runtime: IAgentRuntime,
-        _message: Memory,
-        _state: State,
+        runtime: IAgentRuntime,
+        message: Memory,
+        state: State,
         callback?: HandlerCallback
     ): Promise<any | null> {
         if (!content) {
@@ -108,6 +118,9 @@ export class CreateResourceAction extends BaseInjactableAction<CreateResourceCon
             await callback?.({ text: "Failed to process the content." }, []);
             return;
         }
+
+        // Call injected provider to do some work
+        this.sampleProvider.get(runtime, message, state);
 
         // persist relevant data if needed to memory/knowledge
         // const memory = {
@@ -132,3 +145,6 @@ Resource has been stored in memory.`,
         );
     }
 }
+
+// Register the action with the global container
+globalContainer.bind(CreateResourceAction).toSelf();
