@@ -226,6 +226,7 @@ export type Models = {
     [ModelProviderName.NINETEEN_AI]: Model;
     [ModelProviderName.AKASH_CHAT_API]: Model;
     [ModelProviderName.LIVEPEER]: Model;
+    [ModelProviderName.INFERA]: Model;
 };
 
 /**
@@ -1336,7 +1337,13 @@ export interface IAwsS3Service extends Service {
 
 export interface ITeeLogService extends Service {
     getInstance(): ITeeLogService;
-    log(agentId: string, roomId: string, userId: string, type: string, content: string): Promise<boolean>;
+    log(
+        agentId: string,
+        roomId: string,
+        userId: string,
+        type: string,
+        content: string
+    ): Promise<boolean>;
 }
 
 export type SearchImage = {
