@@ -164,7 +164,7 @@ export abstract class BaseInjectableAction<T> implements InjectableAction<T> {
             runtime,
             context: actionContext,
             modelClass: ModelClass.SMALL,
-            schema: this.contentSchema as any,
+            schema: this.contentSchema,
         });
 
         elizaLogger.debug("Response: ", resourceDetails.object);
