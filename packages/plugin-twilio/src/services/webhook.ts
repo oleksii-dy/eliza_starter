@@ -48,9 +48,38 @@ export class WebhookService implements Service {
     }
 
     private setupMiddleware() {
+        // Add logging to debug route registration
+        console.log('Setting up webhook middleware...');
+
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
+
+        // Register routes
         this.setupSMSWebhook();
+        this.setupVoiceWebhook();
+
+        // Add a catch-all route for debugging
+        this.app.use((req, res, next) => {
+            console.log(`Received ${req.method} request to ${req.path}`);
+            next();
+        });
+
+        // Log registered routes
+        console.log('Registered routes:',
+            this.app._router.stack
+                .filter(r => r.route)
+                .map(r => `${Object.keys(r.route.methods)} ${r.route.path}`)
+        );
+
+        // Add health check endpoint
+        this.app.get('/health', (req, res) => {
+            res.status(200).json({
+                status: 'ok',
+                routes: this.app._router.stack
+                    .filter(r => r.route)
+                    .map(r => `${Object.keys(r.route.methods)} ${r.route.path}`)
+            });
+        });
     }
 
     private async startServer() {
@@ -197,6 +226,151 @@ export class WebhookService implements Service {
                 }
             }
         );
+    }
+
+    private setupVoiceWebhook() {
+        console.log('Setting up voice webhook at /webhook/voice');
+
+        this.app.post('/webhook/voice',
+            express.urlencoded({ extended: false }),
+            twilio.webhook({ validate: false }),
+            async (req, res) => {
+                console.log('Received voice webhook request:', {
+                    method: req.method,
+                    path: req.path,
+                    body: req.body
+                });
+
+                try {
+                    const phoneNumber = req.body.From;
+                    const userInput = req.body.SpeechResult; // Get speech input if available
+                    const twiml = new twilio.twiml.VoiceResponse();
+
+                    if (!this.characterConfig) {
+                        twiml.say('Sorry, I am not configured properly at the moment.');
+                        res.type('text/xml').send(twiml.toString());
+                        return;
+                    }
+
+                    // Generate AI response
+                    const response = await this.generateVoiceResponse(phoneNumber, userInput);
+
+                    // Convert response to speech
+                    twiml.say({
+                        voice: 'Polly.Matthew',
+                        language: 'en-US'
+                    }, response);
+
+                    // Add gather for user input
+                    const gather = twiml.gather({
+                        input: 'speech',
+                        language: 'en-US',
+                        speechTimeout: 'auto',
+                        action: '/webhook/voice', // Post back to same URL
+                        method: 'POST'
+                    });
+
+                    // Optional: Add a prompt for the user
+                    gather.say({
+                        voice: 'Polly.Matthew',
+                        language: 'en-US'
+                    }, 'Feel free to respond or ask me another question!');
+
+                    // If no input received, redirect back to same URL to keep conversation going
+                    twiml.redirect('/webhook/voice');
+
+                    const twimlResponse = twiml.toString();
+                    console.log('Sending TwiML response:', twimlResponse);
+
+                    res.type('text/xml').send(twimlResponse);
+                } catch (error) {
+                    console.error('Voice webhook error:', error);
+                    const twiml = new twilio.twiml.VoiceResponse();
+                    twiml.say('Sorry, I encountered an error. Please try again later.');
+                    res.type('text/xml').send(twiml.toString());
+                }
+            }
+        );
+    }
+
+    private async generateVoiceResponse(phoneNumber: string, userInput?: string): Promise<string> {
+        if (!this.anthropicClient) {
+            throw new Error('Anthropic client not available');
+        }
+
+        const systemPrompt = `
+            ${this.characterConfig.config.systemPrompt}
+
+            Additional instructions:
+            - Keep responses short and conversational (30-60 words)
+            - Use natural speech patterns suitable for voice
+            - Include appropriate pauses with commas
+            - Avoid complex words or hard-to-pronounce terms
+            - Keep the dad jokes simple and clear for voice delivery
+            - If user asks a question, acknowledge it before responding
+            - Do NOT use text actions like *clears throat*, *pauses*, etc.
+            - Only introduce yourself as "${this.characterConfig.name}" in the first message
+            - After first message, just tell jokes or respond naturally
+
+            Additional context:
+            - Your name is: ${this.characterConfig.name}
+            - Your personality: ${this.characterConfig.personality}
+            - You're speaking on the phone
+        `;
+
+        const isFirstMessage = !userInput;
+        const promptContent = isFirstMessage
+            ? `Introduce yourself briefly and tell a dad joke`
+            : userInput || 'Tell me a dad joke';
+
+        const response = await this.anthropicClient.messages.create({
+            model: 'claude-3-sonnet-20240229',
+            max_tokens: 100,
+            temperature: 0.7,
+            messages: [{
+                role: 'user',
+                content: promptContent
+            }],
+            system: systemPrompt
+        });
+
+        if (!response || !response.content[0].text) {
+            throw new Error('Failed to generate voice response');
+        }
+
+        // Clean up the response text
+        let cleanedText = response.content[0].text
+            .replace(/\*[^*]+\*/g, '') // Remove *actions*
+            .replace(/\s+/g, ' ')      // Remove extra spaces
+            .trim();
+
+        return cleanedText;
+    }
+
+    async makeVoiceCall(toNumber: string, message: string) {
+        try {
+            if (!this.initialized) {
+                throw new Error('Webhook service not initialized');
+            }
+
+            const twilioClient = twilio(
+                process.env.TWILIO_ACCOUNT_SID,
+                process.env.TWILIO_AUTH_TOKEN
+            );
+
+            const call = await twilioClient.calls.create({
+                twiml: `<Response><Say voice="Polly.Matthew" language="en-US">${message}</Say></Response>`,
+                to: toNumber,
+                from: process.env.TWILIO_PHONE_NUMBER
+            });
+
+            console.log('Voice call initiated:', call.sid);
+            return call.sid;
+
+        } catch (error) {
+            console.error('Failed to make voice call:', error);
+            throw error;
+        }
     }
 }
 
