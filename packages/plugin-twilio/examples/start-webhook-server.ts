@@ -1,35 +1,106 @@
-import { IAgent, IAgentConfig, AgentRuntime } from '@elizaos/core';
-import { TwilioPlugin } from '../src/index.js';
-import { webhookService } from '../src/services/webhook.js';
-import dotenv from 'dotenv';
+//  /packages/plugin-twilio/examples/start-webhook-server.ts
 
-// Load environment variables
-dotenv.config();
+import { modelConfig } from '../src/modelConfig.js';
+import { AgentRuntime, IAgentConfig, ModelProviderName, generateMessageResponse, ServiceType } from '@elizaos/core';
+import plugin from '../src/index.js';
+import { webhookService } from '../src/services/webhook.js';
+import { storageService } from '../src/services/storage.js';
+import { twilioService } from '../src/services/twilio.js';
+import { readFile } from 'fs/promises';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+import { createAgentConfig } from '../src/config.js';
+import { randomUUID } from 'crypto';
+import { Anthropic } from '@anthropic-ai/sdk';
+
+// Get current file path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables from parent directory's .env file
+dotenv.config({
+    path: join(__dirname, '../../../.env')
+});
+
+// Log API key presence for debugging
+console.log('ANTHROPIC_API_KEY is set:', !!process.env.ANTHROPIC_API_KEY);
+
+// Force environment variables
+process.env.MODEL_PROVIDER = 'anthropic';
+process.env.FORCE_MODEL_PROVIDER = 'anthropic';
+process.env.DEFAULT_MODEL_PROVIDER = 'anthropic';
+process.env.USE_LOCAL_MODELS = 'false';
+process.env.DISABLE_LOCAL_MODELS = 'true';
+process.env.PROVIDER = 'anthropic';
 
 async function startServer() {
     try {
-        // Create agent configuration
-        const config: IAgentConfig = {
-            id: 'sms-agent',
-            name: 'SMS Agent',
-            description: 'An agent that handles SMS conversations',
-            model: process.env.MEDIUM_OPENAI_MODEL || 'gpt-4',
-            plugins: [TwilioPlugin],
-            temperature: 0.7,
-            systemPrompt: `You are a helpful AI assistant communicating via SMS.
-                Be concise but friendly in your responses.
-                Always provide meaningful responses to user questions.
-                Never respond with just 'OK'.`
+        // Initialize storage service first
+        await storageService.initialize();
+        console.log('Storage service initialized');
+
+        // Initialize Twilio service
+        await twilioService.initialize({
+            accountSid: process.env.TWILIO_ACCOUNT_SID,
+            authToken: process.env.TWILIO_AUTH_TOKEN,
+            phoneNumber: process.env.TWILIO_PHONE_NUMBER
+        });
+        console.log('Twilio service initialized');
+
+        // Load character configuration
+        const characterPath = join(__dirname, '../../../characters/test-character.json');
+        console.log('Loading character from:', characterPath);
+
+        const data = await readFile(characterPath, 'utf-8');
+        const characterConfig = JSON.parse(data);
+
+        // Initialize webhook service first with character config
+        console.log('Pre-initializing webhook service...');
+        await webhookService.initialize(null, characterConfig);
+        console.log('Webhook service pre-initialized with character:', characterConfig.name);
+
+        // Create runtime options
+        const runtimeOptions: RuntimeOptions = {
+            databaseAdapter: storageService.getDatabaseAdapter(),
+            token: randomUUID(),
+            modelProvider: ModelProviderName.ANTHROPIC,
+            character: characterConfig,
+            plugins: [plugin],
+            providers: ['anthropic'],
+            settings: {
+                secrets: {
+                    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY
+                },
+                providers: {
+                    anthropic: {
+                        apiKey: process.env.ANTHROPIC_API_KEY,
+                        headers: {
+                            'x-api-key': process.env.ANTHROPIC_API_KEY,
+                            'anthropic-version': '2023-06-01',
+                            'content-type': 'application/json',
+                            'accept': 'application/json',
+                            'client-sdk': '@anthropic-ai/sdk@0.10.2'
+                        },
+                        defaultModel: 'claude-3-sonnet-20240229'
+                    }
+                }
+            },
+            services: [webhookService]
         };
 
-        // Initialize the agent runtime
-        const runtime = new AgentRuntime(config);
+        // Initialize runtime with pre-initialized webhook service
+        console.log('Initializing runtime...');
+        const runtime = new AgentRuntime(runtimeOptions);
         await runtime.initialize();
+        console.log('Runtime initialized with character:', characterConfig.name);
 
-        // Initialize webhook service with runtime
-        await webhookService.initialize(runtime);
+        // Update webhook service with runtime reference
+        await webhookService.setRuntime(runtime);
+        console.log('Webhook service updated with runtime');
 
-        console.log('SMS Agent and webhook server started successfully');
+        console.log('SMS Agent started successfully with character:', characterConfig.name);
+
     } catch (error) {
         console.error('Failed to start server:', error);
         process.exit(1);
