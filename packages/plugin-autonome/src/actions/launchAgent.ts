@@ -20,7 +20,7 @@ export interface LaunchAgentContent extends Content {
 
 function isLaunchAgentContent(content: any): content is LaunchAgentContent {
     elizaLogger.log("Content for launchAgent", content);
-    return typeof content.name === "string";
+    return typeof content.name === "string" && typeof content.config === "string";
 }
 
 const launchTeample = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
