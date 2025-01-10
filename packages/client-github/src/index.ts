@@ -209,7 +209,7 @@ export class GitHubClient extends EventEmitter {
             roomId,
             createdAt: timestamp,
         };
-        elizaLogger.log("New memory to be created:", newMemory);
+        // elizaLogger.log("New memory to be created:", newMemory);
 
         try {
             await this.runtime.messageManager.createMemory(newMemory);

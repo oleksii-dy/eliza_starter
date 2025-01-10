@@ -56,9 +56,9 @@ export const createIssueAction: Action = {
             message,
             [],
             true,
-            true,
+            true
         );
-        elizaLogger.info("State:", updatedState);
+        // elizaLogger.info("State:", updatedState);
 
         const context = composeContext({
             state: updatedState,

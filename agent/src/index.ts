@@ -613,6 +613,9 @@ export async function createAgent(
     }
 
     return new AgentRuntime({
+        conversationLength: Number(
+            getSecret(character, "CONVERSATION_LENGTH") || "32"
+        ),
         databaseAdapter: db,
         token,
         modelProvider: character.modelProvider,

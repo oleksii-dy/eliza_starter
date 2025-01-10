@@ -264,37 +264,41 @@ export class GitHubService {
     }
 
     // Get all issues
-    async getIssues(): Promise<
-        RestEndpointMethodTypes["issues"]["list"]["response"]["data"]
-    > {
+    async getIssues(
+        per_page: number = 999999
+    ): Promise<RestEndpointMethodTypes["issues"]["list"]["response"]["data"]> {
         const response = await this.octokit.issues.listForRepo({
             owner: this.config.owner,
             repo: this.config.repo,
             branch: this.config.branch,
+            per_page: per_page,
         });
         return response.data;
     }
 
     // Get all pull requests
-    async getPullRequests(): Promise<
-        RestEndpointMethodTypes["pulls"]["list"]["response"]["data"]
-    > {
+    async getPullRequests(
+        per_page: number = 999999
+    ): Promise<RestEndpointMethodTypes["pulls"]["list"]["response"]["data"]> {
         const response = await this.octokit.pulls.list({
             owner: this.config.owner,
             repo: this.config.repo,
             branch: this.config.branch,
+            per_page: per_page,
         });
         return response.data;
     }
 
     // Get open pull requests
     async getPullRequestsByState(
-        state: "open" | "closed" | "all" = "open"
+        state: "open" | "closed" | "all" = "open",
+        per_page: number = 999999
     ): Promise<RestEndpointMethodTypes["pulls"]["list"]["response"]["data"]> {
         const response = await this.octokit.pulls.list({
             owner: this.config.owner,
             repo: this.config.repo,
             state,
+            per_page: per_page,
         });
         return response.data;
     }

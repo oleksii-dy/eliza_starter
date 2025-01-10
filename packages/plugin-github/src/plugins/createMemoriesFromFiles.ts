@@ -86,7 +86,7 @@ export async function addFilesToMemory(
                 },
             },
         } as Memory;
-        elizaLogger.info("Memory:", memory);
+        // elizaLogger.info("Memory:", memory);
         await runtime.messageManager.createMemory(memory);
         memories.push(memory);
     }
