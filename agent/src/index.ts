@@ -685,9 +685,9 @@ export async function createAgent(
                 : []),
             ...(teeMode !== TEEMode.OFF && walletSecretSalt ? [teePlugin] : []),
             getSecret(character, "SGX") ? sgxPlugin : null,
-            getSecret(character, "ENABLE_TEE_LOG") &&
-            ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
-                getSecret(character, "SGX"))
+            (getSecret(character, "ENABLE_TEE_LOG") &&
+                ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
+                    getSecret(character, "SGX")))
                 ? teeLogPlugin
                 : null,
             getSecret(character, "COINBASE_API_KEY") &&
