@@ -23,7 +23,7 @@ function isLaunchAgentContent(content: any): content is LaunchAgentContent {
     return typeof content.name === "string" && typeof content.config === "string";
 }
 
-const launchTeample = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
+const launchTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 
 Example response:
 \`\`\`json
@@ -64,7 +64,7 @@ export default {
         // Compose launch context
         const launchContext = composeContext({
             state,
-            template: launchTeample,
+            template: launchTemplate,
         });
 
         // Generate launch content
