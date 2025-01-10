@@ -15,12 +15,12 @@ export function buildContentOutputTemplate(
     let propDesc = "";
     Object.entries(properties).forEach(([key, { description, examples }]) => {
         propDesc += `- Field **"${key}"**: ${description}.`;
-        if (examples.length > 0) {
+        if (examples?.length > 0) {
             propDesc += " Examples or Rules for this field:\n";
         } else {
             propDesc += "\n";
         }
-        examples.forEach((example, index) => {
+        examples?.forEach((example, index) => {
             propDesc += `    ${index + 1}. ${example}\n`;
         });
     });
