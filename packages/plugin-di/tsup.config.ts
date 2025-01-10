@@ -15,5 +15,9 @@ export default defineConfig({
         "agentkeepalive",
         "safe-buffer",
         // Add other modules you want to externalize
+        "inversify",
+        "reflect-metadata",
+        "zod",
+        "uuid",
     ],
 });
