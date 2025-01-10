@@ -151,6 +151,9 @@ importers:
       '@elizaos/client-farcaster':
         specifier: workspace:*
         version: link:../packages/client-farcaster
+      '@elizaos/client-github':
+        specifier: workspace:*
+        version: link:../packages/client-github
       '@elizaos/client-lens':
         specifier: workspace:*
         version: link:../packages/client-lens

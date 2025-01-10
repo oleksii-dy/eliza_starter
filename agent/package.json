@@ -30,6 +30,7 @@
         "@elizaos/client-telegram": "workspace:*",
         "@elizaos/client-twitter": "workspace:*",
         "@elizaos/client-slack": "workspace:*",
+        "@elizaos/client-github": "workspace:*",
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-0g": "workspace:*",
         "@elizaos/plugin-abstract": "workspace:*",

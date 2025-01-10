@@ -242,7 +242,20 @@ export class GitHubClient extends EventEmitter {
         // 8) update the state with the new memory
         //
         const state = await this.runtime.composeState(newMemory);
+
+        // write state to file
+        await fs.writeFile(
+            "/tmp/client-github-state.txt",
+            JSON.stringify(state, null, 2)
+        );
+
         const newState = await this.runtime.updateRecentMessageState(state);
+
+        // write new state to file
+        await fs.writeFile(
+            "/tmp/client-github-newState.txt",
+            JSON.stringify(newState, null, 2)
+        );
 
         //
         // 9) process the actions with the new memory and state
