@@ -1,5 +1,5 @@
 # CKB Fiber Plugin
-This PR introduces a new plugin: the CKB Fiber Plugin, enabling the Eliza agent to interact with the Fiber Network by managing a Fiber node. We implemented a standalone Fiber Network RPC client and developed a series of actions within the Eliza framework. These actions leverage the RPC client to send RPC requests and facilitate communication with the Fiber node.
+[Fiber](https://github.com/nervosnetwork/fiber) is a type of Lightning Network that enables AI Agents to make stablecoin payments using the Lightning Network. This PR introduces a new plugin: the CKB Fiber Plugin, enabling the Eliza agent to interact with the Fiber Network by managing a Fiber node. We implemented a standalone Fiber Network RPC client and developed a series of actions within the Eliza framework. These actions leverage the RPC client to send RPC requests and facilitate communication with the Fiber node.
 
 # Configuration
 The plugin requires the following environment variables:
