@@ -58,5 +58,9 @@ coverage
 
 agent/content
 
+eliza.manifest
+eliza.manifest.sgx
+eliza.sig
+
 all_files_content.txt
 repo_compiler.zsh
