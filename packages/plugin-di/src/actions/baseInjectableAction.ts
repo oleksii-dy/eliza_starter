@@ -1,7 +1,6 @@
 import { injectable, unmanaged } from "inversify";
 import { z } from "zod";
 import {
-    Action,
     ActionExample,
     composeContext,
     elizaLogger,
@@ -17,20 +16,8 @@ import {
     createZodSchema,
     loadPropertyDescriptions,
 } from "../decorators";
-import { InjactableAction } from "../types";
+import { ActionOptions, InjactableAction } from "../types";
 import { buildContentOutputTemplate } from "../templates";
-
-/**
- * Action options
- */
-export type ActionOptions<T> = Pick<
-    Action,
-    "name" | "similes" | "description" | "examples" | "suppressInitialMessage"
-> & {
-    contentClass: ContentClass<T>;
-    template?: string;
-    contentSchema?: z.ZodSchema<T>;
-};
 
 /**
  * Base abstract class for injectable actions

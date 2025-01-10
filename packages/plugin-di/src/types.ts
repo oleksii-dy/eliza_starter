@@ -8,6 +8,8 @@ import {
     Provider,
     State,
 } from "@elizaos/core";
+import { ContentClass } from "./decorators";
+import { z } from "zod";
 
 // ----------- Interfaces for Injectable Providers and Actions, etc -----------
 
@@ -28,6 +30,18 @@ export interface InjectableProvider<T> extends Provider {
 export type InjectableProviderClass<T = any, Args extends any[] = any[]> = new (
     ...args: Args
 ) => InjectableProvider<T>;
+
+/**
+ * Action options
+ */
+export type ActionOptions<T> = Pick<
+    Action,
+    "name" | "similes" | "description" | "examples" | "suppressInitialMessage"
+> & {
+    contentClass: ContentClass<T>;
+    template?: string;
+    contentSchema?: z.ZodSchema<T>;
+};
 
 /**
  * Interface of Injectable Action
