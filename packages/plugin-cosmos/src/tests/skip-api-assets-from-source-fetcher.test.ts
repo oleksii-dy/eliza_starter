@@ -1,20 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { BridgeDataFetcher } from "../shared/services/bridge-data-fetcher";
 import axios from "axios";
+import { SkipApiAssetsFromSourceFetcher } from "../shared/services/skip-api/assets-from-source-fetcher/skip-api-assets-from-source-fetcher";
 
 vi.mock("axios");
 
-describe("BridgeDataFetcher", () => {
-    let fetcher: BridgeDataFetcher;
+describe("SkipApiAssetsFromSourceFetcher", () => {
+    let fetcher: SkipApiAssetsFromSourceFetcher;
 
     beforeEach(() => {
-        fetcher = BridgeDataFetcher.getInstance();
+        fetcher = SkipApiAssetsFromSourceFetcher.getInstance();
         vi.clearAllMocks();
     });
 
     it("should return the same instance from getInstance", () => {
-        const fetcher1 = BridgeDataFetcher.getInstance();
-        const fetcher2 = BridgeDataFetcher.getInstance();
+        const fetcher1 = SkipApiAssetsFromSourceFetcher.getInstance();
+        const fetcher2 = SkipApiAssetsFromSourceFetcher.getInstance();
         expect(fetcher1).toBe(fetcher2);
     });
 
@@ -46,12 +46,12 @@ describe("BridgeDataFetcher", () => {
         const sourceAssetDenom = "atom";
         const sourceAssetChainId = "cosmos";
 
-        await fetcher.fetchBridgeData(sourceAssetDenom, sourceAssetChainId);
+        await fetcher.fetch(sourceAssetDenom, sourceAssetChainId);
 
         expect(axios.post).toHaveBeenCalledTimes(1);
 
-        await fetcher.fetchBridgeData(sourceAssetDenom, sourceAssetChainId);
-        expect(axios.post).toHaveBeenCalledTimes(1); // axios nie powinien być wywołany ponownie
+        await fetcher.fetch(sourceAssetDenom, sourceAssetChainId);
+        expect(axios.post).toHaveBeenCalledTimes(1);
     });
 
     it("should fetch and cache data correctly", async () => {
@@ -82,7 +82,7 @@ describe("BridgeDataFetcher", () => {
         const sourceAssetDenom = "atom";
         const sourceAssetChainId = "cosmos";
 
-        const result = await fetcher.fetchBridgeData(
+        const result = await fetcher.fetch(
             sourceAssetDenom,
             sourceAssetChainId
         );
@@ -92,7 +92,7 @@ describe("BridgeDataFetcher", () => {
         const cacheKey = `${sourceAssetDenom}_${sourceAssetChainId}`;
         expect(fetcher["cache"].has(cacheKey)).toBe(true);
 
-        const cachedResult = await fetcher.fetchBridgeData(
+        const cachedResult = await fetcher.fetch(
             sourceAssetDenom,
             sourceAssetChainId
         );

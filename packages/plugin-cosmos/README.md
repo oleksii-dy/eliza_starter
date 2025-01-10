@@ -1,4 +1,4 @@
-# `@ai16z/plugin-cosmos`
+# `@elizaos/plugin-cosmos`
 
 This plugin provides actions and utilities for interacting with Cosmos-compatible blockchains.
 
@@ -7,14 +7,14 @@ This plugin provides actions and utilities for interacting with Cosmos-compatibl
 ## Development
 
 Prepare Eliza according to [README](../../README.md)
-Add variables required for `@ai16z/plugin-cosmos` :
+Add variables required for `@elizaos/plugin-cosmos` :
 
 ```
 COSMOS_RECOVERY_PHRASE=your recovery phrase words
 COSMOS_AVAILABLE_CHAINS=chain1,chain2,chain3
 ```
 
-Ensure the appropriate environment variables are added for the plugin. If they are correctly configured, the project will run with `@ai16z/plugin-cosmos`
+Ensure the appropriate environment variables are added for the plugin. If they are correctly configured, the project will run with `@elizaos/plugin-cosmos`
 
 Run Eliza
 

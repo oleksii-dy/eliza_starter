@@ -1,11 +1,11 @@
 import { vi, expect, it, beforeEach, describe } from "vitest";
-import { BridgeDataFetcher } from "../shared/services/bridge-data-fetcher";
 import { bridgeDenomProvider } from "../actions/ibc-transfer/services/bridge-denom-provider";
+import { SkipApiAssetsFromSourceFetcher } from "../shared/services/skip-api/assets-from-source-fetcher/skip-api-assets-from-source-fetcher";
 
 vi.mock("./bridge-data-fetcher", () => ({
     BridgeDataFetcher: {
         getInstance: vi.fn().mockReturnValue({
-            fetchBridgeData: vi.fn(),
+            fetch: vi.fn(),
         }),
     },
 }));
@@ -16,7 +16,8 @@ describe("bridgeDataProvider", () => {
 
     beforeEach(() => {
         mockFetchBridgeData = vi.fn();
-        BridgeDataFetcher.getInstance().fetchBridgeData = mockFetchBridgeData;
+        SkipApiAssetsFromSourceFetcher.getInstance().fetch =
+            mockFetchBridgeData;
     });
 
     it("should return correct channelId and ibcDenom when valid data is returned", async () => {

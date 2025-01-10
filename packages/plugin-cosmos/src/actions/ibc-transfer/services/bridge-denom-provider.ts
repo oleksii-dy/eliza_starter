@@ -1,13 +1,14 @@
 import { IDenomProvider } from "../../../shared/interfaces";
-import { BridgeDataFetcher } from "../../../shared/services/bridge-data-fetcher";
+import { SkipApiAssetsFromSourceFetcher } from "../../../shared/services/skip-api/assets-from-source-fetcher/skip-api-assets-from-source-fetcher";
 
 export const bridgeDenomProvider: IDenomProvider = async (
     sourceAssetDenom: string,
     sourceAssetChainId: string,
     destChainId: string
 ) => {
-    const bridgeDataFetcher = BridgeDataFetcher.getInstance();
-    const bridgeData = await bridgeDataFetcher.fetchBridgeData(
+    const skipApiAssetsFromSourceFetcher =
+        SkipApiAssetsFromSourceFetcher.getInstance();
+    const bridgeData = await skipApiAssetsFromSourceFetcher.fetch(
         sourceAssetDenom,
         sourceAssetChainId
     );
