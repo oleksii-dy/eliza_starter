@@ -13,6 +13,7 @@ export const recentNews: Action = {
     name: "NEWS",
     similes: [],
     description: "Provide real time news",
+    suppressInitialMessage: true,
     validate: async (_runtime: IAgentRuntime) => {
         return true;
     },

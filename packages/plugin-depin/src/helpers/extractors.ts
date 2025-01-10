@@ -13,12 +13,17 @@ import {
 } from "../template";
 import { parseTagContent } from "./parsers";
 
+const NUM_RECENT_MESSAGES = 7;
+
 export async function extractLocationQuestion(
     state: State,
     runtime: IAgentRuntime
 ): Promise<string> {
     const locationExtractionContext = composeContext({
-        state,
+        state: {
+            ...state,
+            recentMessages: getLastMessages(state, NUM_RECENT_MESSAGES),
+        },
         template:
             // @ts-ignore
             runtime.character.templates?.locationExtractionTemplate ||
@@ -42,7 +47,10 @@ export async function extractNewsQuery(
     runtime: IAgentRuntime
 ): Promise<string> {
     const newsExtractionContext = composeContext({
-        state,
+        state: {
+            ...state,
+            recentMessages: getLastMessages(state, NUM_RECENT_MESSAGES),
+        },
         template:
             // @ts-ignore
             runtime.character.templates?.newsExtractionTemplate ||
@@ -59,4 +67,8 @@ export async function extractNewsQuery(
     elizaLogger.log("Extracted news query is: ", parsedNewsQuery);
 
     return parsedNewsQuery;
+}
+
+function getLastMessages(state: State, numMessages: number): string {
+    return state.recentMessages.split("\n").slice(-numMessages, -1).join("\n");
 }
