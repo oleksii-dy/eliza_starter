@@ -1694,65 +1694,6 @@ This query retrieves the atomic swap history based on provided parameters within
 \`\`\`
 `;
 
-export const msgBidTemplate = `
-### Place Derivative Bid
-
-**Description**:
-This message broadcasts a transaction to place a bid in a specific derivative auction round within the Exchange module. Placing a bid allows participants to compete for the auctioned derivative contracts by offering a certain amount of INJ tokens. Successfully placing a bid updates the bid records, reflecting the participant's commitment to acquire the derivative assets. Monitoring bids is essential for understanding market participation, assessing bid competitiveness, and strategizing future bidding behaviors.
-
-**Request Format**:
-\`\`\`json
-{
-    "round": number,             // Auction round number to bid in (e.g., 1, 2, 3)
-    "amount": string             // Amount to bid (e.g., "1000") in INJ_DENOM
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "round": 1,
-    "amount": "1000"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125024,
-    "txHash": "XYZ789bidsuccessxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpidWlkAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"bid\", \"attributes\": [{\"key\": \"round\", \"value\": \"1\"}, {\"key\": \"injective_address\", \"value\": \"inj1sender123...\"}, {\"key\": \"amount\", \"value\": \"1000INJ\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 200000,
-    "gasUsed": 160000,
-    "timestamp": "2025-10-25T10:00:00Z",
-    "events": []
-}
-\`\`\`
-`;
-
 export const msgAdminUpdateBinaryOptionsMarketTemplate = `
 ### Admin Update Binary Options Market
 
