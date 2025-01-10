@@ -67,7 +67,7 @@ export class CosmosWalletChains implements ICosmosWalletChains {
     public async getWalletAddress(chainName: string) {
         const chainWalletsForGivenChain = this.walletChainsData[chainName];
         if (!chainWalletsForGivenChain) {
-            throw new Error("Invalid chain name");
+            throw new Error(`Invalid chain name. If ${chainName} is required, it should be added to env file.`);
         }
 
         return await chainWalletsForGivenChain.wallet.getWalletAddress();

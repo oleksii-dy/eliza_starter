@@ -1,17 +1,20 @@
-import {assets, chains } from "chain-registry";
+import { assets, chains } from "chain-registry";
 import {
-    ICosmosActionService, ICosmosPluginCustomChainData,
+    ICosmosActionService,
+    ICosmosPluginCustomChainData,
     ICosmosSwap,
     ICosmosWalletChains,
 } from "../../../shared/interfaces.ts";
 import { IBCSwapActionParams } from "../types.ts";
 import {
-    getAssetBySymbol,
     getChainByChainName,
-    getChainNameByChainId
+    getChainNameByChainId,
+    getDenomBySymbol,
+    getExponentByDenom,
 } from "@chain-registry/utils";
 import { getAvailableAssets } from "../../../shared/helpers/cosmos-assets.ts";
-import {HandlerCallback} from "@elizaos/core";
+import { HandlerCallback } from "@elizaos/core";
+import { calculateAmountInDenomFromDisplayUnit } from "./utils.ts";
 
 export class IBCSwapAction implements ICosmosActionService {
     constructor(private cosmosWalletChains: ICosmosWalletChains) {
@@ -26,60 +29,52 @@ export class IBCSwapAction implements ICosmosActionService {
         const fromChain = getChainByChainName(chains, params.fromChainName);
         const toChain = getChainByChainName(chains, params.toChainName);
 
-        const availableAssets = getAvailableAssets(assets, customChainAssets)
+        const availableAssets = getAvailableAssets(assets, customChainAssets);
 
-        const denomFrom = getAssetBySymbol(
+        const denomFrom =
+            params.fromTokenDenom ||
+            getDenomBySymbol(
+                availableAssets,
+                params.fromTokenSymbol,
+                params.fromChainName
+            );
+
+        const exponentFrom = getExponentByDenom(
             availableAssets,
-            params.fromTokenSymbol,
+            denomFrom,
             params.fromChainName
         );
 
-        const denomTo = getAssetBySymbol(
-            availableAssets,
-            params.toTokenSymbol,
-            params.toChainName
+        const denomTo =
+            params.toTokenDenom ||
+            getDenomBySymbol(
+                availableAssets,
+                params.toTokenSymbol,
+                params.toChainName
+            );
+
+        console.log(
+            `Swap data: Swapping token ${denomFrom} with exponent ${exponentFrom} to token ${denomTo}`
         );
-
-        console.log('denomFrom: ',JSON.stringify(denomFrom.base, null, 2));
-        console.log('denomTo: ',JSON.stringify(denomTo.base, null, 2));
-
-        if( !denomFrom ) {
-            //TODO: use skip endpoint
-        }
-
-        if( !denomTo ) {
-            //TODO: use skip endpoint
-        }
-
-        console.log('denomFrom: ',JSON.stringify(denomFrom.base, null, 2));
-        console.log('denomTo: ',JSON.stringify(denomTo.base, null, 2));
-
-
 
         const skipClient = this.cosmosWalletChains.getSkipClient(
             params.fromChainName
         );
 
-
         const route = await skipClient.route({
             smartSwapOptions: {},
-            amountIn: params.fromTokenAmount,
-            sourceAssetDenom: denomFrom.base,
+            amountOut: calculateAmountInDenomFromDisplayUnit(
+                params.fromTokenAmount,
+                exponentFrom
+            ),
+            sourceAssetDenom: denomFrom,
             sourceAssetChainID: fromChain.chain_id,
-            destAssetDenom: denomTo.base,
+            destAssetDenom: denomTo,
             destAssetChainID: toChain.chain_id,
         });
 
-        // const route = await skipClient.route({
-        //     amountIn: params.fromTokenAmount,
-        //     sourceAssetDenom: "uosmo",
-        //     sourceAssetChainID: "osmo-test-5",
-        //     destAssetDenom: "ibc/6D3D88AFE4BFF8F478277916EFEB6CD4507E1E791CB7847A9F42264BA236B6F7",
-        //     destAssetChainID: "pion-1",
-        //     cumulativeAffiliateFeeBPS: "0",
-        // });
-
-        // TODO: remember to add chain to available chains in .env !!
+        // Required chains must be added to env file. Note that swaps can use intermediate chains to complete the swap request
+        // These chains should also be included
         const userAddresses = await Promise.all(
             route.requiredChainAddresses.map(async (chainID) => {
                 const chainName = getChainNameByChainId(chains, chainID);
@@ -92,19 +87,6 @@ export class IBCSwapAction implements ICosmosActionService {
                 };
             })
         );
-
-        // console.log('addresses: ',JSON.stringify(userAddresses, null, 2));
-
-        // const userAddresses: UserAddress[] = [
-        //     {
-        //         chainID: "osmo-test-5",
-        //         address: "osmo16cnsf5txawpde3wgycz83ukxlthsucdwhkgztv",
-        //     },
-        //     {
-        //         chainID: "pion-1",
-        //         address: "neutron16cnsf5txawpde3wgycz83ukxlthsucdwmjjs8e",
-        //     },
-        // ];
 
         if (_callback) {
             await _callback({
@@ -122,16 +104,11 @@ export class IBCSwapAction implements ICosmosActionService {
                     `Route completed with tx hash: ${txHash} & status: ${status.state}`
                 );
 
-                //if state != STATE_COMPLETED || STATE_COMPLETED_SUCCESS
-                //throw error ??
-
                 result = {
                     fromChainName: params.fromChainName,
                     fromTokenAmount: params.fromTokenAmount,
                     fromTokenSymbol: params.fromTokenSymbol,
-                    gasPaid: 0,
                     toChainName: params.toChainName,
-                    toTokenAmount: "ile??", //todo: get exchange result
                     toTokenSymbol: params.toTokenSymbol,
                     txHash,
                 };

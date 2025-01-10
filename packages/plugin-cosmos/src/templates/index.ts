@@ -110,6 +110,14 @@ Extract the following information about the requested IBC swap:
 5. **toTokenSymbol**:
    - The symbol must be a string representing the result token's display denomination (e.g., "OM", "ATOM", etc.).
 
+6. **toTokenDenom**:
+    - optional parameter, if present must be a string. (uom, uatom, usomo, ibc/53046FFF6CAD109D8F9B2C7C9913853AD241928CD05CDDE419343D176025DA74 or other ibc/ values)
+
+7. **fromTokenDenom**:
+    - optional parameter, if present must be a string. (uom, uatom, usomo, ibc/53046FFF6CAD109D8F9B2C7C9913853AD241928CD05CDDE419343D176025DA74 or other ibc/ values)
+
+Keep in mind that toTokenDenom and fromTokenDenom are optional parameters and
+
 Respond with a JSON markdown block containing only the extracted values. All fields are required:
 \`\`\`json
 {
@@ -118,6 +126,8 @@ Respond with a JSON markdown block containing only the extracted values. All fie
     "fromTokenAmount": string, // Amount of tokens to be swapped (String).
     "toChainName": string, // Name of chain on which result token is hosted (String).
     "toTokenSymbol": string // Symbol of result token (String).
+    "fromTokenDenom": string // denom of token to be swapped (String). Optional, might not be present.
+    "toTokenDenom": string // denom of result token (String). Optional, might not be present.
 }
 \`\`\`
 
@@ -127,8 +137,49 @@ Example response for the input: "Swap {{1}} {{ATOM}} from {{cosmoshub}} to {{OM}
     "fromChainName": "cosmoshub",
     "fromTokenSymbol": "ATOM",
     "fromTokenAmount": "1",
+    "fromTokenDenom": null,
     "toChainName": "mantrachain",
-    "toTokenSymbol": "OM"
+    "toTokenSymbol": "OM",
+    "fromTokenDenom": null
+}
+\`\`\`
+
+
+Example response for the input: "Swap {{1}} {{ATOM}} with denom {{uatom}} from {{cosmoshub}} to {{OM}} on {{mantrachain}}", the response should be:
+\`\`\`json
+{
+    "fromChainName": "cosmoshub",
+    "fromTokenSymbol": "ATOM",
+    "fromTokenAmount": "1",
+    "fromTokenDenom": "uatom",
+    "toChainName": "mantrachain",
+    "toTokenSymbol": "OM",
+    "fromTokenDenom": null
+}
+\`\`\`
+
+Example response for the input: "Swap {{1}} {{ATOM}} with denom {{uatom}} from {{cosmoshub}} to {{OM}} (denom: {{ibc/53046FFF6CAD109D8F9B2C7C9913853AD241928CD05CDDE419343D176025DA74}} ) on {{mantrachain}}", the response should be:
+\`\`\`json
+{
+    "fromChainName": "cosmoshub",
+    "fromTokenSymbol": "ATOM",
+    "fromTokenAmount": "1",
+    "fromTokenDenom": "uatom",
+    "toChainName": "mantrachain",
+    "toTokenSymbol": "OM",
+    "toTokenDenom": "ibc/53046FFF6CAD109D8F9B2C7C9913853AD241928CD05CDDE419343D176025DA74"
+}
+\`\`\`
+
+Example response for the input: "Swap {{100}} {{USDC}} with denom {{uusdc}} from {{axelar}} to {{ATOM}} on {{cosmoshub}}", the response should be:
+\`\`\`json
+{
+    "fromChainName": "axelar",
+    "fromTokenSymbol": "USDC",
+    "fromTokenAmount": "1",
+    "fromTokenDenom": "uusdc",
+    "toChainName": "cosmoshub",
+    "toTokenSymbol": "ATOM",
 }
 \`\`\`
 

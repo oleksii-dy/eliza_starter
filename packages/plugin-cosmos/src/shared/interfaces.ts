@@ -28,10 +28,8 @@ export interface ICosmosSwap {
     fromTokenSymbol: string;
     fromTokenAmount: string;
     toTokenSymbol: string;
-    toTokenAmount: string;
     toChainName: string;
     txHash: string;
-    gasPaid: number;
 }
 
 export interface ICosmosWallet {

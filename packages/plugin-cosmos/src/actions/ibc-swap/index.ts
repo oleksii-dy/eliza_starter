@@ -5,26 +5,22 @@ import {
     IAgentRuntime,
     Memory,
     ModelClass,
-    State
+    State,
 } from "@elizaos/core";
 
 import { initWalletChainsData } from "../../providers/wallet/utils";
-import {
-    cosmosIBCSwapTemplate,
-    cosmosTransferTemplate,
-} from "../../templates";
+import { cosmosIBCSwapTemplate, cosmosTransferTemplate } from "../../templates";
 import type {
     ICosmosPluginOptions,
     ICosmosWalletChains,
 } from "../../shared/interfaces";
-import {IBCSwapActionParams} from "./types.ts";
-import {IBCSwapAction} from "./services/ibc-swap-action-service.ts";
+import { IBCSwapActionParams } from "./types.ts";
+import { IBCSwapAction } from "./services/ibc-swap-action-service.ts";
+import { prepareAmbiguityErrorMessage } from "./services/utils.ts";
 
-export const createIBCSwapAction = (
-    pluginOptions: ICosmosPluginOptions
-) => ({
+export const createIBCSwapAction = (pluginOptions: ICosmosPluginOptions) => ({
     name: "COSMOS_IBC_SWAP",
-    description: "Swaps tokens between addresses on  cosmos chains",
+    description: "Swaps tokens on cosmos chains",
     handler: async (
         _runtime: IAgentRuntime,
         _message: Memory,
@@ -50,15 +46,20 @@ export const createIBCSwapAction = (
             fromTokenAmount: cosmosIBCSwapContent.fromTokenAmount,
             toTokenSymbol: cosmosIBCSwapContent.toTokenSymbol,
             toChainName: cosmosIBCSwapContent.toChainName,
+            toTokenDenom: cosmosIBCSwapContent?.toTokenDenom || undefined,
+            fromTokenDenom: cosmosIBCSwapContent?.fromTokenDenom || undefined,
         };
 
-        console.log('ParamOptions: ',JSON.stringify(paramOptions, null, 2));
+        console.log(
+            "Parameters extracted from user prompt: ",
+            JSON.stringify(paramOptions, null, 2)
+        );
 
         try {
             const walletProvider: ICosmosWalletChains =
                 await initWalletChainsData(_runtime);
 
-            const action = new IBCSwapAction(walletProvider)
+            const action = new IBCSwapAction(walletProvider);
 
             const customAssets = (pluginOptions?.customChainData ?? []).map(
                 (chainData) => chainData.assets
@@ -72,52 +73,46 @@ export const createIBCSwapAction = (
 
             if (_callback) {
                 await _callback({
-                    text: `Successfully swapped ${transferResp.fromTokenAmount} ${transferResp.fromTokenSymbol} tokens to ${transferResp.toTokenAmount} ${transferResp.toTokenSymbol} on chain ${transferResp.toChainName} \nGas paid: ${transferResp.gasPaid}\nTransaction Hash: ${transferResp.txHash}`,
+                    text: `Successfully swapped ${transferResp.fromTokenAmount} ${transferResp.fromTokenSymbol} tokens to ${transferResp.toTokenSymbol} on chain ${transferResp.toChainName}.\nTransaction Hash: ${transferResp.txHash}`,
                     content: {
                         success: true,
                         hash: transferResp.txHash,
                         fromTokenAmount: paramOptions.fromTokenAmount,
                         fromToken: paramOptions.fromTokenSymbol,
-                        toTokenAmount: 'not provided yet',
                         toToken: paramOptions.toTokenSymbol,
                         fromChain: paramOptions.fromChainName,
                         toChain: paramOptions.toChainName,
                     },
                 });
-
-                const newMemory: Memory = {
-                    userId: _message.agentId,
-                    agentId: _message.agentId,
-                    roomId: _message.roomId,
-                    content: {
-                        text: `Swap of ${transferResp.fromTokenAmount} ${transferResp.fromTokenSymbol} to address ${transferResp.toTokenAmount} ${transferResp.toTokenSymbol} on chain ${transferResp.toChainName} was successful.\n Gas paid: ${transferResp.gasPaid}. Tx hash: ${transferResp.txHash}`,
-                    },
-                };
-
-                await _runtime.messageManager.createMemory(newMemory);
             }
             return true;
         } catch (error) {
-            console.error("Error during ibc token swap:", error);
+            console.error("Error during ibc token transfer:", error);
 
-            if (_callback) {
-                await _callback({
-                    text: `Error ibc swapping tokens: ${error.message}`,
-                    content: { error: error.message },
-                });
+            const regex =
+                /Ambiguity Error.*value:([^\s.]+)\s+chainName:([^\s.]+)/;
+            const match = error.message.match(regex);
+
+            if (match) {
+                const value = match[1];
+                const chainName = match[2];
+
+                if (_callback) {
+                    await _callback({
+                        text: prepareAmbiguityErrorMessage(value, chainName),
+                        content: { error: error.message },
+                    });
+                }
+            } else {
+                console.error("Unhandled error:", error);
+
+                if (_callback) {
+                    await _callback({
+                        text: `Error ibc transferring tokens: ${error.message}`,
+                        content: { error: error.message },
+                    });
+                }
             }
-
-            const newMemory: Memory = {
-                userId: _message.agentId,
-                agentId: _message.agentId,
-                roomId: _message.roomId,
-                content: {
-                    text: `Swap of ${paramOptions.fromTokenAmount} ${paramOptions.fromTokenSymbol} to ${paramOptions.toTokenSymbol} on chain ${paramOptions.toChainName} was unsuccessful.`,
-                },
-            };
-
-            await _runtime.messageManager.createMemory(newMemory);
-
             return false;
         }
     },
@@ -191,8 +186,5 @@ export const createIBCSwapAction = (
             },
         ],
     ],
-    similes: [
-        "COSMOS_SWAP",
-        "COSMOS_SWAP_IBC",
-    ],
+    similes: ["COSMOS_SWAP", "COSMOS_SWAP_IBC"],
 });

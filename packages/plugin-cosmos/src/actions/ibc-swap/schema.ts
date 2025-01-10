@@ -6,4 +6,6 @@ export const IBCSwapParamsSchema = z.object({
     fromTokenAmount: z.string(),
     toTokenSymbol: z.string(),
     toChainName: z.string(),
+    toTokenDenom: z.string(),
+    fromTokenDenom: z.string(),
 });
