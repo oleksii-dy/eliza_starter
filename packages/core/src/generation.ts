@@ -562,6 +562,9 @@ export async function generateText({
                 throw new Error(errorMessage);
             }
         }
+        elizaLogger.info(`[LLM] system: ${runtime.character.system ?? settings.SYSTEM_PROMPT ?? undefined}`)
+        elizaLogger.info(`[LLM] prompt: ${context}`)
+        elizaLogger.info(`[LLM] response: ${response}`);
 
         return response;
     } catch (error) {
@@ -952,10 +955,10 @@ export const generateImage = async (
         runtime.imageModelProvider === runtime.modelProvider
             ? runtime.token
             : (runtime.getSetting("HEURIST_API_KEY") ??
-              runtime.getSetting("TOGETHER_API_KEY") ??
-              runtime.getSetting("FAL_API_KEY") ??
-              runtime.getSetting("OPENAI_API_KEY") ??
-              runtime.getSetting("VENICE_API_KEY"));
+                runtime.getSetting("TOGETHER_API_KEY") ??
+                runtime.getSetting("FAL_API_KEY") ??
+                runtime.getSetting("OPENAI_API_KEY") ??
+                runtime.getSetting("VENICE_API_KEY"));
 
     try {
         if (runtime.imageModelProvider === ModelProviderName.HEURIST) {
@@ -1071,13 +1074,13 @@ export const generateImage = async (
                 seed: data.seed ?? 6252023,
                 ...(runtime.getSetting("FAL_AI_LORA_PATH")
                     ? {
-                          loras: [
-                              {
-                                  path: runtime.getSetting("FAL_AI_LORA_PATH"),
-                                  scale: 1,
-                              },
-                          ],
-                      }
+                        loras: [
+                            {
+                                path: runtime.getSetting("FAL_AI_LORA_PATH"),
+                                scale: 1,
+                            },
+                        ],
+                    }
                     : {}),
             };
 

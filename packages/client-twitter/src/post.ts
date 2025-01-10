@@ -109,6 +109,7 @@ export class TwitterPostClient {
 
         const generateNewTweetLoop = async () => {
             if (this.stopProcessingActions) { return; }
+            elizaLogger.info("KEEP GOING TWEETS");
             const lastPost = await this.runtime.cacheManager.get<{
                 timestamp: number;
             }>(
@@ -125,11 +126,9 @@ export class TwitterPostClient {
             const randomMinutes =
                 Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) +
                 minMinutes;
-            const delay = randomMinutes * 60 * 1000;
+            const delay = 2 * 60 * 1000;
 
-            if (Date.now() > lastPostTimestamp + delay) {
-                await this.generateNewTweet();
-            }
+            await this.generateNewTweet();
 
             setTimeout(() => {
                 generateNewTweetLoop(); // Set up next iteration
@@ -139,11 +138,10 @@ export class TwitterPostClient {
         };
 
         const processActionsLoop = async () => {
-            const actionInterval = parseInt(
-                this.runtime.getSetting("ACTION_INTERVAL")
-            ) || 300000; // Default to 5 minutes
+            const actionInterval = 2 * 60 * 1000;
 
             while (!this.stopProcessingActions) {
+                elizaLogger.info("KEEP GOING ACTIONS");
                 try {
                     const results = await this.processTweetActions();
                     if (results) {
@@ -177,14 +175,11 @@ export class TwitterPostClient {
         const enableActionProcessing = parseBooleanFromText(
             this.runtime.getSetting("ENABLE_ACTION_PROCESSING") ?? "true"
         );
-
-        if (enableActionProcessing) {
-            processActionsLoop().catch(error => {
-                elizaLogger.error("Fatal error in process actions loop:", error);
-            });
-        } else {
-            elizaLogger.log("Action processing loop disabled by configuration");
-        }
+        /*
+        processActionsLoop().catch(error => {
+            elizaLogger.error("Fatal error in process actions loop:", error);
+        });
+        */
         generateNewTweetLoop();
     }
 

@@ -1,4 +1,4 @@
-[@ai16z/eliza v0.1.5-alpha.5](../index.md) / AgentRuntime
+[@ai16z/eliza v0.1.6-alpha.4](../index.md) / AgentRuntime
 
 # Class: AgentRuntime
 
@@ -83,7 +83,7 @@ Custom fetch function to use for making requests.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:209](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L209)
+[packages/core/src/runtime.ts:210](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L210)
 
 ## Properties
 
@@ -99,7 +99,7 @@ The ID of the agent
 
 #### Defined in
 
-[packages/core/src/runtime.ts:63](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L63)
+[packages/core/src/runtime.ts:64](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L64)
 
 ***
 
@@ -115,7 +115,7 @@ The base URL of the server where the agent's requests are processed.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:67](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L67)
+[packages/core/src/runtime.ts:68](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L68)
 
 ***
 
@@ -131,7 +131,7 @@ The database adapter used for interacting with the database.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:72](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L72)
+[packages/core/src/runtime.ts:73](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L73)
 
 ***
 
@@ -147,7 +147,7 @@ Authentication token used for securing requests.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:77](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L77)
+[packages/core/src/runtime.ts:78](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L78)
 
 ***
 
@@ -163,7 +163,7 @@ Custom actions that the agent can perform.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:82](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L82)
+[packages/core/src/runtime.ts:83](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L83)
 
 ***
 
@@ -179,7 +179,7 @@ Evaluators used to assess and guide the agent's responses.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:87](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L87)
+[packages/core/src/runtime.ts:88](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L88)
 
 ***
 
@@ -195,7 +195,7 @@ Context providers used to provide context for message generation.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:92](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L92)
+[packages/core/src/runtime.ts:93](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L93)
 
 ***
 
@@ -209,7 +209,7 @@ Context providers used to provide context for message generation.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:94](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L94)
+[packages/core/src/runtime.ts:95](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L95)
 
 ***
 
@@ -225,7 +225,7 @@ The model to use for generateText.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:99](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L99)
+[packages/core/src/runtime.ts:100](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L100)
 
 ***
 
@@ -241,13 +241,13 @@ The model to use for generateImage.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:104](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L104)
+[packages/core/src/runtime.ts:105](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L105)
 
 ***
 
 ### fetch()
 
-> **fetch**: (`input`, `init`?) => `Promise`\<`Response`\>
+> **fetch**: (`input`, `init`?) => `Promise`\<`Response`\>(`input`, `init`?) => `Promise`\<`Response`\>
 
 Fetch function to use
 Some environments may not have access to the global fetch function and need a custom fetch override.
@@ -264,13 +264,23 @@ Some environments may not have access to the global fetch function and need a cu
 
 `Promise`\<`Response`\>
 
+#### Parameters
+
+• **input**: `string` \| `Request` \| `URL`
+
+• **init?**: `RequestInit`
+
+#### Returns
+
+`Promise`\<`Response`\>
+
 #### Implementation of
 
 [`IAgentRuntime`](../interfaces/IAgentRuntime.md).[`fetch`](../interfaces/IAgentRuntime.md#fetch)
 
 #### Defined in
 
-[packages/core/src/runtime.ts:110](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L110)
+[packages/core/src/runtime.ts:111](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L111)
 
 ***
 
@@ -286,7 +296,7 @@ The character to use for the agent
 
 #### Defined in
 
-[packages/core/src/runtime.ts:115](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L115)
+[packages/core/src/runtime.ts:116](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L116)
 
 ***
 
@@ -302,7 +312,7 @@ Store messages that are sent and received by the agent.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:120](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L120)
+[packages/core/src/runtime.ts:121](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L121)
 
 ***
 
@@ -318,7 +328,7 @@ Store and recall descriptions of users based on conversations.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:125](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L125)
+[packages/core/src/runtime.ts:126](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L126)
 
 ***
 
@@ -334,7 +344,7 @@ Manage the creation and recall of static information (documents, historical game
 
 #### Defined in
 
-[packages/core/src/runtime.ts:130](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L130)
+[packages/core/src/runtime.ts:131](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L131)
 
 ***
 
@@ -350,7 +360,7 @@ Hold large documents that can be referenced
 
 #### Defined in
 
-[packages/core/src/runtime.ts:135](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L135)
+[packages/core/src/runtime.ts:136](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L136)
 
 ***
 
@@ -366,7 +376,7 @@ Searchable document fragments
 
 #### Defined in
 
-[packages/core/src/runtime.ts:140](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L140)
+[packages/core/src/runtime.ts:141](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L141)
 
 ***
 
@@ -380,7 +390,7 @@ Searchable document fragments
 
 #### Defined in
 
-[packages/core/src/runtime.ts:142](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L142)
+[packages/core/src/runtime.ts:143](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L143)
 
 ***
 
@@ -390,7 +400,7 @@ Searchable document fragments
 
 #### Defined in
 
-[packages/core/src/runtime.ts:143](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L143)
+[packages/core/src/runtime.ts:144](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L144)
 
 ***
 
@@ -404,7 +414,7 @@ Searchable document fragments
 
 #### Defined in
 
-[packages/core/src/runtime.ts:144](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L144)
+[packages/core/src/runtime.ts:145](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L145)
 
 ***
 
@@ -421,7 +431,7 @@ but I think the real solution is forthcoming as a base client interface
 
 #### Defined in
 
-[packages/core/src/runtime.ts:145](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L145)
+[packages/core/src/runtime.ts:146](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L146)
 
 ## Methods
 
@@ -443,7 +453,7 @@ but I think the real solution is forthcoming as a base client interface
 
 #### Defined in
 
-[packages/core/src/runtime.ts:147](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L147)
+[packages/core/src/runtime.ts:148](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L148)
 
 ***
 
@@ -465,7 +475,7 @@ but I think the real solution is forthcoming as a base client interface
 
 #### Defined in
 
-[packages/core/src/runtime.ts:162](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L162)
+[packages/core/src/runtime.ts:163](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L163)
 
 ***
 
@@ -491,7 +501,7 @@ but I think the real solution is forthcoming as a base client interface
 
 #### Defined in
 
-[packages/core/src/runtime.ts:166](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L166)
+[packages/core/src/runtime.ts:167](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L167)
 
 ***
 
@@ -513,7 +523,7 @@ but I think the real solution is forthcoming as a base client interface
 
 #### Defined in
 
-[packages/core/src/runtime.ts:175](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L175)
+[packages/core/src/runtime.ts:176](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L176)
 
 ***
 
@@ -531,7 +541,7 @@ but I think the real solution is forthcoming as a base client interface
 
 #### Defined in
 
-[packages/core/src/runtime.ts:376](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L376)
+[packages/core/src/runtime.ts:377](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L377)
 
 ***
 
@@ -545,7 +555,7 @@ but I think the real solution is forthcoming as a base client interface
 
 #### Defined in
 
-[packages/core/src/runtime.ts:409](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L409)
+[packages/core/src/runtime.ts:410](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L410)
 
 ***
 
@@ -567,7 +577,7 @@ but I think the real solution is forthcoming as a base client interface
 
 #### Defined in
 
-[packages/core/src/runtime.ts:459](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L459)
+[packages/core/src/runtime.ts:460](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L460)
 
 ***
 
@@ -589,7 +599,7 @@ The number of recent messages to be kept in memory.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:481](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L481)
+[packages/core/src/runtime.ts:483](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L483)
 
 ***
 
@@ -615,7 +625,7 @@ The action to register.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:489](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L489)
+[packages/core/src/runtime.ts:491](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L491)
 
 ***
 
@@ -637,7 +647,7 @@ The evaluator to register.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:498](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L498)
+[packages/core/src/runtime.ts:500](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L500)
 
 ***
 
@@ -659,7 +669,7 @@ The context provider to register.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:506](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L506)
+[packages/core/src/runtime.ts:508](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L508)
 
 ***
 
@@ -691,7 +701,7 @@ The message to process.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:515](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L515)
+[packages/core/src/runtime.ts:517](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L517)
 
 ***
 
@@ -731,7 +741,7 @@ The results of the evaluation.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:599](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L599)
+[packages/core/src/runtime.ts:601](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L601)
 
 ***
 
@@ -763,7 +773,7 @@ An error if the participant cannot be added.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:666](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L666)
+[packages/core/src/runtime.ts:668](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L668)
 
 ***
 
@@ -799,7 +809,7 @@ The user name to ensure the existence of.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:682](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L682)
+[packages/core/src/runtime.ts:684](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L684)
 
 ***
 
@@ -823,7 +833,7 @@ The user name to ensure the existence of.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:702](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L702)
+[packages/core/src/runtime.ts:704](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L704)
 
 ***
 
@@ -853,7 +863,7 @@ The user name to ensure the existence of.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:719](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L719)
+[packages/core/src/runtime.ts:721](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L721)
 
 ***
 
@@ -884,7 +894,7 @@ An error if the room cannot be created.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:755](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L755)
+[packages/core/src/runtime.ts:757](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L757)
 
 ***
 
@@ -914,7 +924,7 @@ The state of the agent.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:768](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L768)
+[packages/core/src/runtime.ts:770](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L770)
 
 ***
 
@@ -936,4 +946,4 @@ The state of the agent.
 
 #### Defined in
 
-[packages/core/src/runtime.ts:1214](https://github.com/ai16z/eliza/blob/main/packages/core/src/runtime.ts#L1214)
+[packages/core/src/runtime.ts:1216](https://github.com/HeySquib/eliza/blob/main/packages/core/src/runtime.ts#L1216)
