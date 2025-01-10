@@ -1,39 +1,139 @@
-# Sample Plugin for Eliza
+# Dependency Injection Plugin for Eliza
 
-The Sample Plugin for Eliza extends the functionality of the Eliza platform by providing additional actions, providers, evaluators, and more. This plugin is designed to be easily extendable and customizable to fit various use cases.
+This plugin provides a dependency injection system for Eliza plugins.
 
-## Description
+## What is Dependency Injection?
 
-The Sample Plugin offers a set of features that can be integrated into the Eliza platform to enhance its capabilities. Below is a high-level overview of the different components available in this plugin.
+Dependency Injection is a design pattern that allows you to inject dependencies into a class or function. This pattern is useful for decoupling components and making your code more modular and testable.
 
-## Actions
+## Examples of How to build a Plugin using Dependency Injection
 
-- **createResourceAction**: This action enables the creation and management of generic resources. It can be customized to handle different types of resources and integrate with various data sources.
+Check the [example](./src/_examples/) folder for a simple example of how to create a plugin using Dependency Injection.
 
-## Providers
+## Decorators for Dependency Injection
 
-- **sampleProvider**: This provider offers a mechanism to supply data or services to the plugin. It can be extended to include additional providers as needed.
+This plugin provides a set of decorators that you can use to inject dependencies into your classes or functions.
 
-## Evaluators
+### From inversify
 
-- **sampleEvaluator**: This evaluator provides a way to assess or analyze data within the plugin. It can be extended to include additional evaluators as needed.
+We use the [inversify](https://inversify.io/) library to provide the dependency injection system.
+The following decorators are provided by the [inversify](https://inversify.io/) library.
 
-## Services
+#### `@injectable`
 
-- **[ServiceName]**: Description of the service and its functionality. This can be extended to include additional services as needed.
+> Category: Class Decorator
 
-## Clients
+This decorator marks a class as injectable. This means that you can inject this class into other classes using the `@inject` decorator.
 
-- **[ClientName]**: Description of the client and its functionality. This can be extended to include additional clients as needed.
+```typescript
+import { injectable } from "inversify";
 
-## How to Extend
+@injectable()
+class SampleClass {
+}
+```
 
-To extend the Sample Plugin, you can add new actions, providers, evaluators, services, and clients by following the structure provided in the plugin. Each component can be customized to fit your specific requirements.
+Remember to register the class with the container before injecting it into other classes.
 
-1. **Actions**: Add new actions by defining them in the `actions` array.
-2. **Providers**: Add new providers by defining them in the `providers` array.
-3. **Evaluators**: Add new evaluators by defining them in the `evaluators` array.
-4. **Services**: Add new services by defining them in the `services` array.
-5. **Clients**: Add new clients by defining them in the `clients` array.
+```typescript
+import { globalContainer } from "@elizaos/plugin-di";
 
-For more detailed information on how to extend the plugin, refer to the documentation provided in the Eliza platform.
+// Register the class with the container as a singleton, this means that the class will be instantiated only once.
+globalContainer.bind(SingletonClass).toSelf().inSingletonScope();
+// Register the class with the container as a request context, this means that the class will be instantiated for each request(in this case means each Character).
+globalContainer.bind(CharactorContextClass).toSelf().inRequestScope();
+```
+
+#### `@inject`
+
+> Category: Parameter Decorator
+
+This decorator marks a parameter as an injection target. This means that the parameter will be injected with the appropriate dependency when the class is instantiated.
+
+```typescript
+import { injectable, inject } from "inversify";
+
+@injectable()
+class SampleClass {
+  constructor(
+    // Inject the SampleDependency as a public property of the class.
+    @inject("SampleDependency") public sampleDependency: SampleDependency
+  ) {}
+}
+```
+
+### From di plugin
+
+DI plugin provides abstract classes that you can extend to create Injectable actions or evaluators.
+And that provides the following decorators to improve the readability of the code.
+
+#### `@property`
+
+> Category: Property Decorator
+
+This decorator is used to define a property in an action content class  which will be used to generate the action content object Schema and content description template for LLM object generation.
+
+```typescript
+import { z } from 'zod';
+import { property } from "@elizaos/plugin-di";
+
+class SampleActionContent {
+  @property({
+    description: "Sample property description",
+    schema: z.string(),
+  })
+  sampleProperty: string;
+}
+```
+
+## Abstract Classes for Injaectable Actions and Evaluators
+
+This plugin provides abstract classes that you can extend to create Injectable actions or evaluators.
+
+### `BaseInjactableAction`
+
+This abstract class simplify the creation of injectable actions.
+You don't need to think about the template for content generation, it will be generated automatically based on the properties of the content Class.
+What you need to implement is the `execute` method.
+
+```typescript
+import { injectable } from "inversify";
+import { BaseInjactableAction } from "@elizaos/plugin-di";
+
+class SampleActionContent {
+    @property({
+        description: "Sample property description",
+        schema: z.string(),
+    })
+    property1: string;
+}
+
+@injectable()
+class SampleAction extends BaseInjactableAction<SampleActionContent> {
+    constructor() {
+        super({
+            /** general action constent options */
+            contentClass: SampleActionContent,
+        });
+    }
+
+    /**
+     * It will be called by `handler` function when the action is triggered.
+     */
+    async execute(
+        content: SampleActionContent | null,
+        runtime: IAgentRuntime,
+        message: Memory,
+        state: State,
+        callback?: HandlerCallback
+    ): Promise<void> {
+        // Your action logic here
+    }
+}
+```
+
+### `BaseInjactableEvaluator`
+
+This abstract class simplify the creation of injectable evaluators.
+
+Please refer to the [sampleEvalutor](./src/_examples/sampleEvalutor.ts) for an example of how to create an evaluator.
