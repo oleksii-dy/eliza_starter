@@ -84,3 +84,54 @@ Example response for the input: "Make an IBC transfer of 0.0001 ATOM to osmo1pcn
 
 Now respond with a JSON markdown block containing only the extracted values.
 `;
+
+
+
+export const cosmosIBCSwapTemplate = `Given the recent messages and cosmos wallet information below:
+{{recentMessages}}
+{{walletInfo}}
+Extract the following information about the requested IBC swap:
+
+1. **fromChainName**:
+   - Identify the source chain mentioned in the instruction (e.g., cosmoshub, osmosis, axelar).
+   - Provide this as a string.
+
+2. **fromTokenSymbol**:
+   - The symbol must be a string representing the token's display denomination (e.g., "ATOM", "OSMO", etc.).
+
+3. **fromTokenAmount**:
+   - Extract only the numeric value from the instruction.
+   - The value must be a string representing the amount in the display denomination (e.g., "0.0001" for ATOM, OSMO, etc.). Do not include the symbol.
+
+4. **toChainName**:
+   - Identify the target chain mentioned in the instruction (e.g., cosmoshub, osmosis, axelar).
+   - Provide this as a string.
+
+5. **toTokenSymbol**:
+   - The symbol must be a string representing the result token's display denomination (e.g., "OM", "ATOM", etc.).
+
+Respond with a JSON markdown block containing only the extracted values. All fields are required:
+\`\`\`json
+{
+    "fromChainName": string, // Source chain from which tokens will be taken to swap (String).
+    "fromTokenSymbol": string, // Symbol of token to be swapped (String).
+    "fromTokenAmount": string, // Amount of tokens to be swapped (String).
+    "toChainName": string, // Name of chain on which result token is hosted (String).
+    "toTokenSymbol": string // Symbol of result token (String).
+}
+\`\`\`
+
+Example response for the input: "Swap {{1}} {{ATOM}} from {{cosmoshub}} to {{OM}} on {{mantrachain}}", the response should be:
+\`\`\`json
+{
+    "fromChainName": "cosmoshub",
+    "fromTokenSymbol": "ATOM",
+    "fromTokenAmount": "1",
+    "toChainName": "mantrachain",
+    "toTokenSymbol": "OM"
+}
+\`\`\`
+
+Now respond with a JSON markdown block containing only the extracted values.
+`;
+

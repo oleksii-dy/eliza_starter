@@ -23,6 +23,17 @@ export interface ICosmosTransaction {
     gasPaid?: number;
 }
 
+export interface ICosmosSwap {
+    fromChainName: string;
+    fromTokenSymbol: string;
+    fromTokenAmount: string;
+    toTokenSymbol: string;
+    toTokenAmount: string;
+    toChainName: string;
+    txHash: string;
+    gasPaid: number;
+}
+
 export interface ICosmosWallet {
     directSecp256k1HdWallet: DirectSecp256k1HdWallet;
 
