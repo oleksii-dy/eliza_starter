@@ -16,7 +16,7 @@ import {
     createZodSchema,
     loadPropertyDescriptions,
 } from "../decorators";
-import type { ActionOptions, InjactableAction } from "../types";
+import type { ActionOptions, InjectableAction } from "../types";
 import { buildContentOutputTemplate } from "../templates";
 
 /**
