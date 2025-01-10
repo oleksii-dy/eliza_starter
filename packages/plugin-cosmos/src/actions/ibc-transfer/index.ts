@@ -218,9 +218,9 @@ export const createIBCTransferAction = (
         ],
     ],
     similes: [
-        "COSMOS_TRANSFER",
-        "COSMOS_SEND_TOKENS",
-        "COSMOS_TOKEN_TRANSFER",
-        "COSMOS_MOVE_TOKENS",
+        "COSMOS_BRIDGE_TOKEN",
+        "COSMOS_IBC_SEND_TOKEN",
+        "COSMOS_TOKEN_IBC_TRANSFER",
+        "COSMOS_MOVE_IBC_TOKENS",
     ],
 });
