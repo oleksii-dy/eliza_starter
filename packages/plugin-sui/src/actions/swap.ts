@@ -15,10 +15,7 @@ import { z } from "zod";
 
 import { SuiClient, getFullnodeUrl } from "@mysten/sui/client";
 import { SUI_DECIMALS } from "@mysten/sui/utils";
-import {
-    Aftermath,
-    RouterCompleteTradeRoute as AftermathRouterCompleteTradeRoute,
-} from "aftermath-ts-sdk";
+import { Aftermath } from "aftermath-ts-sdk";
 
 import { walletProvider } from "../providers/wallet";
 import { parseAccount } from "../utils";
