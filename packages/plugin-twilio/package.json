@@ -6,7 +6,7 @@
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "scripts": {
-        "build": "tsup src/index.ts --format esm --dts --clean",
+        "build": "tsup src/index.ts --format esm --dts --clean --external @elizaos/core",
         "test": "jest",
         "test:sms": "tsx examples/test-sms.ts",
         "test:webhook": "tsx examples/test-webhook.ts",
@@ -15,7 +15,7 @@
     "dependencies": {
         "@anthropic-ai/sdk": "0.33.1",
         "@deepgram/sdk": "^2.4.0",
-        "@elizaos/core": "*",
+        "@elizaos/core": "workspace:*",
         "@elizaos/plugin-bootstrap": "^0.1.7",
         "@elizaos/plugin-node": "^0.1.7",
         "axios": "^1.6.2",

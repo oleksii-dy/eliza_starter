@@ -1,24 +1,17 @@
 {
     "compilerOptions": {
-        "target": "ES2022",
-        "module": "NodeNext",
-        "moduleResolution": "NodeNext",
-        "lib": [
-            "ES2022"
-        ],
-        "declaration": true,
+        "target": "ES2020",
+        "module": "ES2020",
+        "moduleResolution": "node",
+        "esModuleInterop": true,
         "outDir": "./dist",
         "rootDir": "./src",
         "strict": true,
-        "esModuleInterop": true,
+        "declaration": true,
         "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "resolveJsonModule": true,
-        "allowJs": true,
-        "baseUrl": ".",
         "paths": {
             "@elizaos/core": [
-                "../../core/src"
+                "../../node_modules/@elizaos/core/dist"
             ]
         }
     },
@@ -29,10 +22,5 @@
         "node_modules",
         "dist",
         "test"
-    ],
-    "references": [
-        {
-            "path": "../../core"
-        }
     ]
 }

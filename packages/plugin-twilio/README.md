@@ -1,240 +1,181 @@
-# @elizaos/plugin-twilio
+# Eliza Twilio Plugin
 
-A plugin for Eliza agents that enables SMS messaging, voice calls, and phone number verification using Twilio services.
+Add SMS and voice capabilities to your Eliza agent using Twilio. This plugin enables two-way SMS conversations and voice interactions with your agent.
+
+> Official plugin documentation and support available at [boolkeys.com/eliza/plugin-twilio](https://www.boolkeys.com/eliza/plugin-twilio/)
 
 ## Features
 
-### SMS Integration
-- Two-way SMS conversations with AI agent
-- Context preservation between web and SMS interfaces
-- Phone number verification with secure code handling
-- Webhook integration for real-time message processing
+* Send SMS messages through your Eliza chatbot
+* Make voice calls with natural text-to-speech
+* Verify phone numbers for secure communication
+* Track message delivery status
+* Support for international numbers
+* Easy integration with existing Eliza configurations
 
-### Voice Capabilities
-- Voice calls using ElevenLabs synthesis
-- Speech-to-text with Deepgram
-- Real-time conversation processing
+## Prerequisites
+
+1. **Twilio Account**
+   - Sign up for a [Twilio account](https://www.twilio.com/try-twilio)
+   - Get a Twilio phone number with SMS and Voice capabilities
+   - Note your Account SID and Auth Token
+
+2. **Anthropic Account**
+   - Get an [Anthropic API key](https://www.anthropic.com/)
+   - The plugin uses Claude for consistent responses
+
+3. **Environment Setup**
+   Create a `.env` file in your project root:
+   ```env
+   ANTHROPIC_API_KEY=sk-ant-xxx
+   TWILIO_ACCOUNT_SID=ACxxx
+   TWILIO_AUTH_TOKEN=xxx
+   TWILIO_PHONE_NUMBER=+1234567890
+   WEBHOOK_PORT=3003  # Optional, defaults to 3003
+   ```
 
 ## Installation
 
-```bash
-pnpm add @elizaos/plugin-twilio
-```
+1. **Add the plugin to your Eliza project**
+   ```bash
+   pnpm add @elizaos/plugin-twilio
+   ```
 
-## Setup
+2. **Register the plugin in your agent's configuration**
+   ```typescript
+   import { TwilioPlugin } from '@elizaos/plugin-twilio';
 
-1. Environment Configuration
-```env
-# Required Twilio credentials
-TWILIO_ACCOUNT_SID=your_account_sid
-TWILIO_AUTH_TOKEN=your_auth_token
-TWILIO_PHONE_NUMBER=your_twilio_number
-
-# Webhook Configuration (one of these is required)
-WEBHOOK_URL=https://your-domain.com/webhook/sms    # Full webhook URL
-# OR
-NGROK_URL=https://your-ngrok-url.ngrok.io         # Base ngrok URL (plugin will append /webhook/sms)
-
-# Optional settings
-WEBHOOK_PORT=4000  # Default: 4000
-```
-
-2. Register Plugin
-```typescript
-import { TwilioPlugin } from '@elizaos/plugin-twilio';
-
-// In your agent configuration
-plugins: [
-    TwilioPlugin
-]
-```
+   const agentConfig = {
+     // ... your existing config
+     plugins: [
+       TwilioPlugin,
+       // ... other plugins
+     ]
+   };
+   ```
 
 ## Webhook Setup
 
-### Local Development
-1. Start ngrok:
-```bash
-ngrok http 4000
-```
+The plugin requires a publicly accessible URL for Twilio webhooks. For development:
 
-2. Update your .env with the ngrok URL:
-```env
-# Option 1: Set full webhook URL
-WEBHOOK_URL=https://abc123-xyz-456.ngrok.io/webhook/sms
+1. **Install ngrok**
+   ```bash
+   npm install -g ngrok
+   ```
 
-# Option 2: Set base ngrok URL (plugin will append /webhook/sms)
-NGROK_URL=https://abc123-xyz-456.ngrok.io
-```
+2. **Start ngrok**
+   ```bash
+   ngrok http 3003
+   ```
 
-### Production
-For production environments:
-1. Set up a stable domain for your webhook
-2. Configure SSL certificate
-3. Update .env:
-```env
-WEBHOOK_URL=https://your-domain.com/webhook/sms
-```
-
-The plugin will automatically:
-1. Create a Messaging Service if none exists
-2. Configure the webhook URL for incoming messages
-3. Add your Twilio phone number to the service
+3. **Configure Twilio Webhooks**
+   - Go to your [Twilio Console](https://console.twilio.com)
+   - Select your phone number
+   - Set webhook URLs:
+     - SMS: `https://your-ngrok-url/webhook/sms`
+     - Voice: `https://your-ngrok-url/webhook/voice`
 
 ## Usage
 
-### Phone Verification
-Before using SMS features, users must verify their phone number:
+1. **Start the Webhook Server**
+
+   Create a startup file (e.g., `start.ts`):
+   ```typescript
+   import { startWebhookServer } from '@elizaos/plugin-twilio/examples/start-webhook-server';
+   import path from 'path';
+
+   // Start the webhook server
+   startWebhookServer({
+     // Path to your character file
+     characterFile: path.resolve(__dirname, 'characters/your-character.json'),
+     // Optional: custom port (defaults to 3003)
+     port: process.env.WEBHOOK_PORT ? parseInt(process.env.WEBHOOK_PORT) : 3003
+   });
+   ```
+
+   Then run it:
+   ```bash
+   # Using ts-node
+   ts-node start.ts
+
+   # Or using node with typescript
+   tsc start.ts && node start.js
+   ```
+
+   The server will:
+   - Initialize the storage service (SQLite database)
+   - Set up Twilio service with your credentials
+   - Start the webhook server
+   - Load your character configuration
+   - Configure the runtime with your character
+
+2. **Send SMS Messages**
+   ```typescript
+   import { twilioService } from '@elizaos/plugin-twilio';
+
+   await twilioService.sendMessage(
+     '+1234567890',
+     'Hello from your Eliza agent!'
+   );
+   ```
+
+3. **Make Voice Calls**
+   ```typescript
+   import { webhookService } from '@elizaos/plugin-twilio';
+
+   await webhookService.makeVoiceCall(
+     '+1234567890',
+     'Hello, this is your Eliza agent calling!'
+   );
+   ```
+
+## Character Configuration
+
+Your character file should include these additional settings for optimal SMS/voice interaction:
+
+```json
+{
+  "name": "Your Agent Name",
+  "config": {
+    "model": "claude-3-sonnet-20240229",
+    "temperature": 0.7
+  },
+  "personality": "Keep responses friendly and concise, perfect for SMS"
+}
 ```
-User: verify phone +1234567890
-Agent: Please reply with the verification code sent to +1234567890
-User: 123456
-Agent: Phone number +1234567890 has been verified successfully!
-```
 
-### Check Verified Number
-```
-User: show my verified number
-Agent: Your verified phone number is: +1234567890 (verified on Jan 1, 2024)
-```
+## Limitations
 
-### SMS Conversation
-Once verified, users can:
-- Send SMS to the Twilio number
-- Receive AI responses via SMS
-- Maintain conversation context between web and SMS
+- SMS messages are limited to 160 characters
+- Voice calls require proper punctuation for natural pauses
+- Webhook server must be publicly accessible
+- Character responses should be configured for brevity
 
-## Development
+## Troubleshooting
 
-### Local Testing
-1. Start ngrok:
-```bash
-ngrok http 4000
-```
+1. **Webhook Not Receiving Messages**
+   - Verify ngrok is running
+   - Check Twilio webhook configuration
+   - Ensure port 3003 is available
 
-2. Configure Twilio webhook:
-- Go to Twilio Console → Phone Numbers → Active Numbers
-- Set webhook URL to: `https://your-ngrok-url/webhook/sms`
-- Method: POST
+2. **Messages Not Sending**
+   - Verify Twilio credentials
+   - Check phone number capabilities
+   - Review error logs
 
-3. Test webhook:
-```bash
-curl -X POST http://localhost:4000/webhook/sms \
-  -d "From=+1234567890" \
-  -d "Body=Hello AI" \
-  -H "Content-Type: application/x-www-form-urlencoded"
-```
+3. **Character Not Responding Correctly**
+   - Check character file path
+   - Verify Anthropic API key
+   - Review system prompts
 
-### A2P Campaign Setup
-For production use:
-1. Register an A2P campaign in Twilio Console
-2. Provide campaign details and sample messages
-3. Wait for approval before using production SMS
+## Support
 
-## Security
-- Phone numbers stored securely in memory
-- Verification required before SMS usage
-- Rate limiting on verification attempts
-- Secure webhook handling
-
-## API Reference
-
-### Actions
-- `REQUEST_VERIFICATION`: Send verification code
-- `CHECK_VERIFICATION`: Verify phone number
-- `CHECK_VERIFIED_NUMBER`: Show verified number
-- `SEND_SMS`: Send SMS message
-
-### Services
-- `TwilioService`: SMS and voice call handling
-- `VerifyService`: Phone number verification
-- `WebhookService`: Incoming SMS processing
-
-## Contributing
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for development guidelines.
+- Documentation: [boolkeys.com/eliza/plugin-twilio](https://www.boolkeys.com/eliza/plugin-twilio/)
+- Email: arwen@boolkeys.com
+- Issues: [Open an issue](https://github.com/your-repo/issues) on the repository
 
 ## License
+
 MIT
 
-## International SMS Considerations
-
-### Using Your Twilio Number Directly
-
-When sending SMS internationally using your US Twilio number (+1), be aware of:
-
-1. **Costs & Pricing**
-- Higher rates for international SMS
-- Additional fees may apply for specific countries
-- Pricing varies by destination country
-- Check [Twilio's pricing page](https://www.twilio.com/sms/pricing) for current rates
-
-2. **Deliverability**
-- Lower delivery rates compared to local numbers
-- Messages may be filtered as spam more frequently
-- Some countries restrict messages from international numbers
-- Delivery speed might be slower
-
-3. **Regulatory Requirements**
-- A2P (Application-to-Person) registration required for many countries
-- Country-specific sender ID regulations
-- Some destinations require pre-registration of message templates
-- Compliance with local messaging laws
-
-### Alternative: Using Messaging Services
-
-For better deliverability, consider using Twilio's Messaging Service which:
-- Uses local numbers for each country
-- Optimizes delivery rates
-- Often has lower costs
-- Handles regulatory compliance automatically
-- Maintains conversation continuity (users can reply)
-
-#### How Replies Work with Messaging Services
-1. **Session Stickiness**
-   - Twilio maintains a consistent sender number for each recipient
-   - The same local number is used for ongoing conversations
-   - User replies are forwarded to your webhook
-
-2. **Webhook Configuration**
-```typescript
-// Configure Messaging Service with webhook
-const service = await client.messaging.v1.services.create({
-    friendlyName: 'ElizaMessaging',
-    inboundRequestUrl: webhookUrl,
-    useInboundWebhookOnNumber: true,
-    stickyService: true  // Ensures conversation continuity
-});
-```
-
-3. **Example Flow**
-```
-User -> Your Twilio Number (+1XXXXXXXXXX)
-Twilio -> Local Number (+38XXXXXXXXX)
-User receives from & replies to +38XXXXXXXXX
-Your webhook receives all messages
-```
-
-Note: The main difference is that users will see and reply to a local number instead of your US Twilio number, but all functionality remains the same.
-
-```typescript
-// Example: Using Messaging Service
-const messageOptions = {
-    messagingServiceSid: 'MGXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-    to: '+33612345678',
-    body: 'Your message'
-};
-```
-
-### Best Practices
-
-1. **For Testing**
-- Use direct number sending during development
-- Test with verified numbers only
-- Monitor delivery rates and costs
-
-2. **For Production**
-- Consider using Messaging Services for scale
-- Complete A2P registration for target countries
-- Monitor costs and adjust strategy as needed
-- Implement proper error handling for failed deliveries
-
-[Source: Twilio International SMS Guidelines](https://www.twilio.com/docs/messaging/guidelines/international-sms-messaging-guidelines)
+© 2025 Boolkeys. All rights reserved.

@@ -1,14 +1,24 @@
 // /packages/plugin-twilio/src/index.ts
 
-import { Plugin } from '@elizaos/core';
+import { Plugin, ServiceType } from '@elizaos/core';
 import { webhookService } from './services/webhook.js';
-import { smsActions } from './actions/sms-action.js';
+import { twilioService } from './services/twilio.js';
+import { storageService } from './services/storage.js';
 
-export const plugin: Plugin = {
+export interface TwilioPluginConfig {
+    accountSid?: string;
+    authToken?: string;
+    phoneNumber?: string;
+}
+
+const plugin: Plugin = {
     name: 'twilio',
-    description: 'A plugin for handling SMS interactions via Twilio',
+    description: 'Twilio plugin for SMS and voice calls',
     services: [webhookService],
-    actions: Object.values(smsActions)  // Add the SMS action
 };
 
+// Export plugin instance
 export default plugin;
+
+// Export services for direct access if needed
+export { webhookService, twilioService, storageService };

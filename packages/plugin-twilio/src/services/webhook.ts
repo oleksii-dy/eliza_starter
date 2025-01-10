@@ -1,14 +1,23 @@
 //  /packages/plugin-twilio/src/services/webhook.ts
 
-import { Service, ServiceType, IAgentRuntime, Memory, Content, generateMessageResponse } from '@elizaos/core';
+import { Service, ServiceType, IAgentRuntime } from '@elizaos/core';
 import express from 'express';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import { twilioService } from './twilio.js';
-import { verifyService } from './verify.js';
 import twilio from 'twilio';
 import { randomUUID } from 'crypto';
 import { Anthropic } from '@anthropic-ai/sdk';
+import { LogSanitizer } from '../utils/sanitizer.js';
+
+// Add types for router stack
+interface RouteInfo {
+    route?: {
+        path: string;
+        methods: { [key: string]: boolean };
+    };
+}
+
+// Add type for Gather input
+type GatherInput = 'speech' | 'dtmf';
 
 // API key validation helper
 const validateApiKey = (apiKey: string | undefined): string => {
@@ -24,6 +33,14 @@ const validateApiKey = (apiKey: string | undefined): string => {
     }
     return cleanKey;
 };
+
+// Add proper type for Anthropic response
+interface AnthropicResponse {
+    content: Array<{
+        type: string;
+        text: string;
+    }>;
+}
 
 export class WebhookService implements Service {
     private static instance: WebhookService | null = null;
@@ -48,36 +65,32 @@ export class WebhookService implements Service {
     }
 
     private setupMiddleware() {
-        // Add logging to debug route registration
         console.log('Setting up webhook middleware...');
 
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
 
-        // Register routes
-        this.setupSMSWebhook();
-        this.setupVoiceWebhook();
+        this.setupWebhooks();
 
-        // Add a catch-all route for debugging
+        // Add catch-all route with proper typing
         this.app.use((req, res, next) => {
             console.log(`Received ${req.method} request to ${req.path}`);
             next();
         });
 
-        // Log registered routes
+        // Log routes with proper typing
         console.log('Registered routes:',
-            this.app._router.stack
-                .filter(r => r.route)
-                .map(r => `${Object.keys(r.route.methods)} ${r.route.path}`)
+            (this.app._router.stack as RouteInfo[])
+                .filter((r: RouteInfo) => r.route)
+                .map((r: RouteInfo) => `${Object.keys(r.route?.methods || {})} ${r.route?.path}`)
         );
 
-        // Add health check endpoint
         this.app.get('/health', (req, res) => {
             res.status(200).json({
                 status: 'ok',
-                routes: this.app._router.stack
-                    .filter(r => r.route)
-                    .map(r => `${Object.keys(r.route.methods)} ${r.route.path}`)
+                routes: (this.app._router.stack as RouteInfo[])
+                    .filter((r: RouteInfo) => r.route)
+                    .map((r: RouteInfo) => `${Object.keys(r.route?.methods || {})} ${r.route?.path}`)
             });
         });
     }
@@ -101,25 +114,13 @@ export class WebhookService implements Service {
         console.log('Runtime set in webhook service');
     }
 
-    async initialize(runtime?: IAgentRuntime, characterConfig?: any): Promise<void> {
+    async initialize(): Promise<void> {
         if (this.initialized) {
             console.log('WebhookService already initialized');
             return;
         }
 
         try {
-            // Validate character config first
-            if (!characterConfig) {
-                throw new Error('Character configuration is required');
-            }
-
-            // Store character config
-            this.characterConfig = characterConfig;
-            console.log('Webhook service storing character config:', {
-                name: this.characterConfig.name,
-                hasConfig: !!this.characterConfig
-            });
-
             // Initialize Anthropic client
             const apiKey = validateApiKey(process.env.ANTHROPIC_API_KEY);
             this.anthropicClient = new Anthropic({
@@ -130,75 +131,80 @@ export class WebhookService implements Service {
             await this.startServer();
             this.initialized = true;
 
-            // Store runtime if provided
-            if (runtime) {
-                this.runtime = runtime;
-                console.log('Runtime stored in webhook service');
-            }
-
-            console.log('Webhook service initialized with character:', this.characterConfig.name);
+            console.log('Webhook service initialized');
         } catch (error) {
             console.error('Webhook Service Initialization Error:', error);
             throw error;
         }
     }
 
+    async configure(runtime?: IAgentRuntime, characterConfig?: any): Promise<void> {
+        if (!characterConfig) {
+            throw new Error('Character configuration is required');
+        }
+
+        // Store configs
+        this.characterConfig = characterConfig;
+        if (runtime) {
+            this.runtime = runtime;
+            console.log(`Runtime configured with character: ${characterConfig.name}`);
+        }
+
+        // Ensure Anthropic client is initialized
+        if (!this.anthropicClient) {
+            const apiKey = validateApiKey(process.env.ANTHROPIC_API_KEY);
+            this.anthropicClient = new Anthropic({
+                apiKey: apiKey,
+            });
+        }
+
+        // Log successful configuration
+        console.log(`Webhook service configured with character: ${characterConfig.name}`);
+        console.log('Character config:', {
+            name: characterConfig.name,
+            model: characterConfig.config?.model,
+            personality: characterConfig.personality?.substring(0, 50) + '...'
+        });
+    }
+
     private async handleSMSMessage(phoneNumber: string, text: string) {
         try {
-            if (!this.runtime || !this.anthropicClient) {
-                throw new Error('Runtime or Anthropic client not available');
+            if (!this.runtime || !this.anthropicClient || !this.characterConfig) {
+                throw new Error('Runtime, Anthropic client, or character config not available');
             }
 
-            if (!this.characterConfig) {
-                throw new Error('Character configuration not available');
-            }
+            // Use character's model settings if available
+            const model = this.characterConfig.config.model || 'claude-3-sonnet-20240229';
+            const temperature = this.characterConfig.config.temperature || 0.7;
 
-            // Build system prompt from character config with SMS-specific instructions
-            const systemPrompt = `
-                ${this.characterConfig.config.systemPrompt}
-
-                Additional instructions:
-                - Keep your responses very short (max 160 characters) since these are SMS messages
-                - Get straight to the point or joke
-                - No introductions or lengthy explanations
-                - One joke/response per message
-                - Skip greetings unless specifically asked to greet
-
-                Additional context:
-                - Your name is: ${this.characterConfig.name}
-                - Your personality: ${this.characterConfig.personality}
-                - Your phone number: ${process.env.TWILIO_PHONE_NUMBER}
-            `;
-
-            // Use Anthropic client with character context and reduced max tokens
             const response = await this.anthropicClient.messages.create({
-                model: 'claude-3-sonnet-20240229',
-                max_tokens: 100, // Reduced from 1024 to encourage shorter responses
-                temperature: 0.7,
+                model,
+                max_tokens: 100,
+                temperature,
                 messages: [{
                     role: 'user',
                     content: text
                 }],
-                system: systemPrompt
-            });
+                system: this.getSystemPrompt()
+            }) as AnthropicResponse;
 
-            if (!response || !response.content[0].text) {
+            if (!response?.content?.[0]?.text) {
                 throw new Error('Failed to generate response');
             }
 
-            // Trim any extra whitespace and limit length if needed
-            let responseText = response.content[0].text.trim();
-            if (responseText.length > 160) {
-                responseText = responseText.substring(0, 157) + '...';
-            }
-
-            await twilioService.sendMessage(phoneNumber, responseText);
+            const responseText = response.content[0].text.trim();
+            console.log(this.sanitizeLog(`Sending SMS to ${phoneNumber}: ${responseText}`));
+            await twilioService.sendMessage(phoneNumber,
+                responseText.length > 160 ?
+                    responseText.substring(0, 157) + '...' :
+                    responseText
+            );
 
         } catch (error: any) {
-            console.error('SMS Handler Error:', error);
+            console.error(this.sanitizeLog('SMS Handler Error: ' + error.message));
             await twilioService.sendMessage(
                 phoneNumber,
-                "Sorry, I hit a snag. Try again!"  // Shorter error message
+                "Sorry, I hit a snag. Try again!"
             );
             throw error;
         }
@@ -229,21 +235,13 @@ export class WebhookService implements Service {
     }
 
     private setupVoiceWebhook() {
-        console.log('Setting up voice webhook at /webhook/voice');
-
         this.app.post('/webhook/voice',
             express.urlencoded({ extended: false }),
             twilio.webhook({ validate: false }),
             async (req, res) => {
-                console.log('Received voice webhook request:', {
-                    method: req.method,
-                    path: req.path,
-                    body: req.body
-                });
-
                 try {
                     const phoneNumber = req.body.From;
-                    const userInput = req.body.SpeechResult; // Get speech input if available
+                    const userInput = req.body.SpeechResult ?? undefined;
                     const twiml = new twilio.twiml.VoiceResponse();
 
                     if (!this.characterConfig) {
@@ -252,37 +250,29 @@ export class WebhookService implements Service {
                         return;
                     }
 
-                    // Generate AI response
                     const response = await this.generateVoiceResponse(phoneNumber, userInput);
 
-                    // Convert response to speech
                     twiml.say({
                         voice: 'Polly.Matthew',
                         language: 'en-US'
                     }, response);
 
-                    // Add gather for user input
                     const gather = twiml.gather({
-                        input: 'speech',
+                        input: ['speech'] as GatherInput[],
                         language: 'en-US',
                         speechTimeout: 'auto',
-                        action: '/webhook/voice', // Post back to same URL
+                        action: '/webhook/voice',
                         method: 'POST'
                     });
 
-                    // Optional: Add a prompt for the user
                     gather.say({
                         voice: 'Polly.Matthew',
                         language: 'en-US'
                     }, 'Feel free to respond or ask me another question!');
 
-                    // If no input received, redirect back to same URL to keep conversation going
                     twiml.redirect('/webhook/voice');
 
-                    const twimlResponse = twiml.toString();
-                    console.log('Sending TwiML response:', twimlResponse);
-
-                    res.type('text/xml').send(twimlResponse);
+                    res.type('text/xml').send(twiml.toString());
                 } catch (error) {
                     console.error('Voice webhook error:', error);
                     const twiml = new twilio.twiml.VoiceResponse();
@@ -298,70 +288,87 @@ export class WebhookService implements Service {
             throw new Error('Anthropic client not available');
         }
 
-        const systemPrompt = `
-            ${this.characterConfig.config.systemPrompt}
-
-            Additional instructions:
-            - Keep responses short and conversational (30-60 words)
-            - Use natural speech patterns suitable for voice
-            - Include appropriate pauses with commas
-            - Avoid complex words or hard-to-pronounce terms
-            - Keep the dad jokes simple and clear for voice delivery
-            - If user asks a question, acknowledge it before responding
-            - Do NOT use text actions like *clears throat*, *pauses*, etc.
-            - Only introduce yourself as "${this.characterConfig.name}" in the first message
-            - After first message, just tell jokes or respond naturally
-
-            Additional context:
-            - Your name is: ${this.characterConfig.name}
-            - Your personality: ${this.characterConfig.personality}
-            - You're speaking on the phone
-        `;
-
-        const isFirstMessage = !userInput;
-        const promptContent = isFirstMessage
-            ? `Introduce yourself briefly and tell a dad joke`
-            : userInput || 'Tell me a dad joke';
-
-        const response = await this.anthropicClient.messages.create({
-            model: 'claude-3-sonnet-20240229',
-            max_tokens: 100,
-            temperature: 0.7,
-            messages: [{
-                role: 'user',
-                content: promptContent
-            }],
-            system: systemPrompt
-        });
-
-        if (!response || !response.content[0].text) {
-            throw new Error('Failed to generate voice response');
+        if (!this.characterConfig) {
+            throw new Error('Character configuration not available');
         }
 
-        // Clean up the response text
-        let cleanedText = response.content[0].text
-            .replace(/\*[^*]+\*/g, '') // Remove *actions*
-            .replace(/\s+/g, ' ')      // Remove extra spaces
-            .trim();
+        const defaultResponse = 'Tell me a dad joke';
+        const promptContent = userInput || defaultResponse;
 
-        return cleanedText;
+        try {
+            const response = await this.anthropicClient.messages.create({
+                model: 'claude-3-sonnet-20240229',
+                max_tokens: 100,
+                temperature: 0.7,
+                messages: [{
+                    role: 'user',
+                    content: promptContent
+                }],
+                system: this.getSystemPrompt()
+            }) as AnthropicResponse;
+
+            // Ensure text is a string before returning
+            const text = response?.content?.[0]?.text;
+            if (typeof text !== 'string') {
+                return 'Sorry, I had trouble generating a response. Let me try again!';
+            }
+
+            return text.trim();
+        } catch (error) {
+            return 'Sorry, I encountered an error. Please try again!';
+        }
     }
 
-    async makeVoiceCall(toNumber: string, message: string) {
+    private getSystemPrompt(): string {
+        if (!this.characterConfig) {
+            throw new Error('Character configuration not available');
+        }
+
+        // Get character's system prompt and personality
+        const systemPrompt = this.characterConfig.config.systemPrompt || '';
+        const personality = this.characterConfig.personality || '';
+        const name = this.characterConfig.name || '';
+
+        return `
+            ${systemPrompt}
+            ${personality}
+
+            Critical Instructions:
+            - NEVER use text actions like *clears throat*, *pauses*, etc.
+            - NEVER use emojis or special characters
+            - Keep responses under 160 characters but NEVER cut a joke or sentence mid-way
+            - For first message only: "Hi, I'm ${name}! Want to hear a dad joke?"
+            - For all other messages: Just tell the joke directly without any introduction
+            - Never mention your name after first message
+            - Keep responses light and fun
+            - Use simple language suitable for SMS and voice
+            - Include natural pauses with commas
+            - If user asks a question, acknowledge it before responding
+            - Focus on delivering complete jokes, even if short
+            - Use only plain text - no symbols, emojis, or formatting
+        `;
+    }
+
+    async makeVoiceCall(toNumber: string, message: string): Promise<string> {
         try {
             if (!this.initialized) {
                 throw new Error('Webhook service not initialized');
             }
 
-            const twilioClient = twilio(
-                process.env.TWILIO_ACCOUNT_SID,
-                process.env.TWILIO_AUTH_TOKEN
-            );
+            const accountSid = process.env.TWILIO_ACCOUNT_SID;
+            const authToken = process.env.TWILIO_AUTH_TOKEN;
+            const fromNumber = process.env.TWILIO_PHONE_NUMBER;
+
+            if (!accountSid || !authToken || !fromNumber) {
+                throw new Error('Required Twilio credentials are not set');
+            }
+
+            const twilioClient = twilio(accountSid, authToken);
 
             const call = await twilioClient.calls.create({
                 twiml: `<Response><Say voice="Polly.Matthew" language="en-US">${message}</Say></Response>`,
                 to: toNumber,
-                from: process.env.TWILIO_PHONE_NUMBER
+                from: fromNumber
             });
 
             console.log('Voice call initiated:', call.sid);
@@ -371,6 +378,43 @@ export class WebhookService implements Service {
             console.error('Failed to make voice call:', error);
             throw error;
         }
+    }
+
+    private setupWebhooks() {
+        // Existing webhooks
+        this.setupSMSWebhook();
+        this.setupVoiceWebhook();
+
+        // Future integrations
+        this.setupDiscordWebhook();
+        this.setupTwitterWebhook();
+    }
+
+    private setupDiscordWebhook() {
+        this.app.post('/webhook/discord',
+            express.json(),
+            async (req, res) => {
+                // Handle Discord events
+                // Use same AI response generation
+                // Just different output formatting
+            }
+        );
+    }
+
+    private setupTwitterWebhook() {
+        this.app.post('/webhook/twitter',
+            express.json(),
+            async (req, res) => {
+                // Handle Twitter events
+                // Use same voice transcription
+                // Use same AI response generation
+            }
+        );
+    }
+
+    // Add log sanitization
+    private sanitizeLog(log: string): string {
+        return LogSanitizer.sanitize(log);
     }
 }
 

@@ -1,180 +1,236 @@
 import { Service, ServiceType } from '@elizaos/core';
 import sqlite3 from 'sqlite3';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 import { mkdir } from 'fs/promises';
-import { promisify } from 'util';
+import { dirname } from 'path';
 
 export class StorageService implements Service {
-    private db: sqlite3.Database;
-    private initialized = false;
+    private static instance: StorageService | null = null;
+    private db: sqlite3.Database | null = null;
 
     get serviceType(): ServiceType {
-        return ServiceType.STORAGE;
+        return ServiceType.TEXT_GENERATION;
+    }
+
+    constructor() {
+        if (StorageService.instance) {
+            return StorageService.instance;
+        }
+        StorageService.instance = this;
     }
 
     async initialize(): Promise<void> {
-        if (this.initialized) return;
+        const dbPath = 'data/plugin-twilio.db';
+        await mkdir(dirname(dbPath), { recursive: true });
 
+        this.db = new sqlite3.Database(dbPath);
+        if (!this.db) throw new Error('Failed to initialize database');
+
+        // Create tables one by one to ensure proper creation
+        await this.run(`
+            CREATE TABLE IF NOT EXISTS messages (
+                id TEXT PRIMARY KEY,
+                phoneNumber TEXT NOT NULL,
+                message TEXT NOT NULL,
+                timestamp INTEGER NOT NULL
+            )
+        `);
+
+        await this.run(`
+            CREATE TABLE IF NOT EXISTS rooms (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                created_at INTEGER NOT NULL
+            )
+        `);
+
+        await this.run(`
+            CREATE TABLE IF NOT EXISTS accounts (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                created_at INTEGER NOT NULL
+            )
+        `);
+
+        console.log('Storage service initialized with tables: messages, rooms, accounts');
+    }
+
+    // Helper methods for database operations
+    private async run(sql: string, params: any[] = []): Promise<void> {
+        if (!this.db) throw new Error('Database not initialized');
+        return new Promise((resolve, reject) => {
+            this.db!.run(sql, params, (err) => {
+                if (err) reject(err);
+                else resolve();
+            });
+        });
+    }
+
+    private async get(sql: string, params: any[] = []): Promise<any> {
+        if (!this.db) throw new Error('Database not initialized');
+        return new Promise((resolve, reject) => {
+            this.db!.get(sql, params, (err, row) => {
+                if (err) reject(err);
+                else resolve(row);
+            });
+        });
+    }
+
+    // Public methods
+    async saveMessage(data: { id: string; phoneNumber: string; message: string; timestamp: number }): Promise<void> {
+        await this.run(
+            'INSERT INTO messages (id, phoneNumber, message, timestamp) VALUES (?, ?, ?, ?)',
+            [data.id, data.phoneNumber, data.message, data.timestamp]
+        );
+    }
+
+    async getMessage(id: string): Promise<any> {
+        return this.get('SELECT * FROM messages WHERE id = ?', [id]);
+    }
+
+    // Add required room methods
+    async getRoom(roomId: string): Promise<any> {
         try {
-            // Setup database path
-            const __filename = fileURLToPath(import.meta.url);
-            const __dirname = dirname(__filename);
-            const rootDir = join(__dirname, '../../../../');
-            const dataDir = join(rootDir, 'data');
-            const dbPath = join(dataDir, 'plugin-twilio.db');
-
-            // Create data directory
-            await mkdir(dataDir, { recursive: true });
-
-            // Initialize SQLite database
-            this.db = new sqlite3.Database(dbPath);
-
-            // Promisify database methods
-            const run = promisify(this.db.run.bind(this.db));
-            const get = promisify(this.db.get.bind(this.db));
-            const all = promisify(this.db.all.bind(this.db));
-            const exec = promisify(this.db.exec.bind(this.db));
-
-            // Create tables
-            await exec(`
-                CREATE TABLE IF NOT EXISTS verified_users (
-                    phone_number TEXT PRIMARY KEY,
-                    verified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-
-                CREATE TABLE IF NOT EXISTS accounts (
-                    id TEXT PRIMARY KEY,
-                    name TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-
-                CREATE TABLE IF NOT EXISTS rooms (
-                    id TEXT PRIMARY KEY,
-                    name TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );
-
-                CREATE TABLE IF NOT EXISTS participants (
-                    id TEXT PRIMARY KEY,
-                    room_id TEXT,
-                    account_id TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY(room_id) REFERENCES rooms(id),
-                    FOREIGN KEY(account_id) REFERENCES accounts(id)
-                );
-
-                CREATE TABLE IF NOT EXISTS messages (
-                    id TEXT PRIMARY KEY,
-                    room_id TEXT,
-                    user_id TEXT,
-                    content TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY(room_id) REFERENCES rooms(id),
-                    FOREIGN KEY(user_id) REFERENCES accounts(id)
-                );
-            `);
-
-            // Create database adapter methods
-            this.databaseAdapter = {
-                exec: async (sql: string) => exec(sql),
-                run: async (sql: string, params: any[]) => run(sql, params),
-                get: async (sql: string, params: any[]) => get(sql, params),
-                all: async (sql: string, params?: any[]) => all(sql, params || []),
-
-                // Account methods
-                getAccountById: async (userId: string) => {
-                    return get('SELECT * FROM accounts WHERE id = ?', [userId]);
-                },
-                createAccount: async (userId: string, name: string) => {
-                    try {
-                        await run(`
-                            INSERT INTO accounts (id, name)
-                            VALUES (?, ?)
-                            ON CONFLICT(id) DO UPDATE SET
-                            name = excluded.name
-                        `, [userId, name]);
-                        return { id: userId, name };
-                    } catch (error) {
-                        // If insert fails, try to get existing account
-                        const account = await get('SELECT * FROM accounts WHERE id = ?', [userId]);
-                        if (account) return account;
-                        throw error;
-                    }
-                },
-
-                // Room methods
-                getRoom: async (roomId: string) => {
-                    return get('SELECT * FROM rooms WHERE id = ?', [roomId]);
-                },
-                createRoom: async (roomId: string, name: string) => {
-                    await run('INSERT INTO rooms (id, name) VALUES (?, ?)', [roomId, name]);
-                    return { id: roomId, name };
-                },
-
-                // Message methods
-                saveMessage: async (message: any) => {
-                    await run(
-                        'INSERT INTO messages (id, room_id, user_id, content) VALUES (?, ?, ?, ?)',
-                        [message.id, message.roomId, message.userId, JSON.stringify(message.content)]
-                    );
-                    return message;
-                },
-                getRoomMessages: async (roomId: string) => {
-                    return all('SELECT * FROM messages WHERE room_id = ? ORDER BY created_at ASC', [roomId]);
-                },
-
-                // Participant methods
-                getParticipantsForAccount: async (userId: string) => {
-                    return all(`
-                        SELECT p.*, r.name as room_name
-                        FROM participants p
-                        JOIN rooms r ON p.room_id = r.id
-                        WHERE p.account_id = ?
-                        ORDER BY p.created_at DESC
-                    `, [userId]);
-                },
-                addParticipant: async (userId: string, roomId: string) => {
-                    const id = `participant_${Date.now()}`;
-                    try {
-                        await run(
-                            'INSERT INTO participants (id, room_id, account_id) VALUES (?, ?, ?)',
-                            [id, roomId, userId]
-                        );
-                        return { id, roomId, accountId: userId };
-                    } catch (error) {
-                        // Check if participant already exists
-                        const existing = await get(
-                            'SELECT * FROM participants WHERE room_id = ? AND account_id = ?',
-                            [roomId, userId]
-                        );
-                        if (existing) return existing;
-                        throw error;
-                    }
-                },
-                getParticipant: async (roomId: string, accountId: string) => {
-                    return get(
-                        'SELECT * FROM participants WHERE room_id = ? AND account_id = ?',
-                        [roomId, accountId]
-                    );
-                }
-            };
-
-            this.initialized = true;
-            console.log('Storage service initialized with database at:', dbPath);
+            const room = await this.get('SELECT * FROM rooms WHERE id = ?', [roomId]);
+            if (!room) {
+                // Create default room if not found
+                await this.createRoom(roomId, `Room ${roomId}`);
+                return this.get('SELECT * FROM rooms WHERE id = ?', [roomId]);
+            }
+            return room;
         } catch (error) {
-            console.error('Failed to initialize storage:', error);
+            console.error('Failed to get/create room:', error);
             throw error;
         }
     }
 
-    private databaseAdapter: any;
-
-    getDatabaseAdapter() {
-        if (!this.initialized) {
-            throw new Error('Storage service not initialized');
+    async createRoom(roomId: string, name: string): Promise<void> {
+        if (!roomId) {
+            throw new Error('Room ID is required');
         }
-        return this.databaseAdapter;
+
+        // Set default name if not provided
+        const roomName = name || `Room ${roomId}`;
+
+        try {
+            await this.run(
+                'INSERT OR IGNORE INTO rooms (id, name, created_at) VALUES (?, ?, ?)',
+                [roomId, roomName, Date.now()]
+            );
+        } catch (error) {
+            console.error('Failed to create room:', error);
+            // Check if room already exists
+            const existingRoom = await this.getRoom(roomId);
+            if (!existingRoom) {
+                throw error;
+            }
+        }
+    }
+
+    // Add account methods
+    async getAccountById(accountId: string): Promise<any> {
+        try {
+            const account = await this.get('SELECT * FROM accounts WHERE id = ?', [accountId]);
+            if (!account) {
+                // Create default account if not found
+                await this.createAccount(accountId, `User ${accountId}`);
+                return this.get('SELECT * FROM accounts WHERE id = ?', [accountId]);
+            }
+            return account;
+        } catch (error) {
+            console.error('Failed to get/create account:', error);
+            throw error;
+        }
+    }
+
+    async createAccount(accountId: string, name: string): Promise<void> {
+        if (!accountId) {
+            throw new Error('Account ID is required');
+        }
+
+        // Set default name if not provided
+        const accountName = name || `User ${accountId}`;
+
+        try {
+            await this.run(
+                'INSERT OR IGNORE INTO accounts (id, name, created_at) VALUES (?, ?, ?)',
+                [accountId, accountName, Date.now()]
+            );
+        } catch (error) {
+            console.error('Failed to create account:', error);
+            // Check if account already exists
+            const existingAccount = await this.getAccountById(accountId);
+            if (!existingAccount) {
+                throw error;
+            }
+        }
+    }
+
+    // Add participant methods
+    async getParticipantsForAccount(accountId: string): Promise<any[]> {
+        if (!this.db) throw new Error('Database not initialized');
+
+        await this.run(`
+            CREATE TABLE IF NOT EXISTS participants (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                room_id TEXT NOT NULL,
+                created_at INTEGER NOT NULL,
+                FOREIGN KEY (account_id) REFERENCES accounts(id),
+                FOREIGN KEY (room_id) REFERENCES rooms(id)
+            )
+        `);
+
+        return new Promise((resolve, reject) => {
+            this.db!.all(
+                'SELECT * FROM participants WHERE account_id = ?',
+                [accountId],
+                (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
+                }
+            );
+        });
+    }
+
+    async addParticipant(accountId: string, roomId: string): Promise<void> {
+        if (!accountId?.trim()) {
+            throw new Error('Account ID is required');
+        }
+        if (!roomId?.trim()) {
+            throw new Error('Room ID is required');
+        }
+
+        const participantId = `${accountId}_${roomId}`;
+
+        try {
+            // Ensure account exists
+            await this.getAccountById(accountId);
+            // Ensure room exists
+            await this.getRoom(roomId);
+
+            await this.run(
+                'INSERT OR IGNORE INTO participants (id, account_id, room_id, created_at) VALUES (?, ?, ?, ?)',
+                [participantId, accountId, roomId, Date.now()]
+            );
+        } catch (error) {
+            console.error('Failed to add participant:', error);
+            throw error;
+        }
+    }
+
+    // Update database adapter
+    getDatabaseAdapter() {
+        return {
+            db: this.db,
+            getRoom: this.getRoom.bind(this),
+            createRoom: this.createRoom.bind(this),
+            getAccountById: this.getAccountById.bind(this),
+            createAccount: this.createAccount.bind(this),
+            getParticipantsForAccount: this.getParticipantsForAccount.bind(this),
+            addParticipant: this.addParticipant.bind(this),
+            saveMessage: this.saveMessage.bind(this),
+            getMessage: this.getMessage.bind(this)
+        };
     }
 }
 

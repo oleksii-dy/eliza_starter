@@ -4,11 +4,12 @@ import pkg from 'twilio';
 const { Twilio } = pkg;
 import type { Twilio as TwilioInstance } from 'twilio';
 import { Service, ServiceType } from '@elizaos/core';
+import { LogSanitizer } from '../utils/sanitizer.js';
 
 export class TwilioService implements Service {
   private client: TwilioInstance | null = null;
-  private fromNumber: string | null = null;
-  private messagingServiceSid: string | null = null;
+  private fromNumber: string | undefined = undefined;
+  private messagingServiceSid: string | undefined = undefined;
   public phoneNumber: string;
 
   constructor() {
@@ -20,8 +21,8 @@ export class TwilioService implements Service {
     const authToken = process.env.TWILIO_AUTH_TOKEN ?? '';
     const fromNumber = process.env.TWILIO_PHONE_NUMBER ?? '';
 
-    // Make messagingServiceSid optional
-    const messagingServiceSid = process.env.TWILIO_LOW_VOLUME_SERVICE_SID;
+    // Make messagingServiceSid optional but undefined instead of null
+    const messagingServiceSid = process.env.TWILIO_LOW_VOLUME_SERVICE_SID || undefined;
 
     if (!accountSid || !authToken || !fromNumber) {
         throw new Error('Required environment variables missing');
@@ -29,13 +30,13 @@ export class TwilioService implements Service {
 
     this.fromNumber = fromNumber;
     this.client = new Twilio(accountSid, authToken);
-    this.messagingServiceSid = messagingServiceSid || null;
+    this.messagingServiceSid = messagingServiceSid;
 
-    console.log('Initialized Twilio with:', {
+    console.log('Initialized Twilio with:', LogSanitizer.sanitize(JSON.stringify({
         fromNumber: this.fromNumber,
         isCanadianNumber: fromNumber.startsWith('+1343'),
         messagingService: this.messagingServiceSid || 'Not configured'
-    });
+    })));
   }
 
   private async getPhoneNumberSid(phoneNumber: string): Promise<string> {
@@ -51,37 +52,27 @@ export class TwilioService implements Service {
     return number.sid;
   }
 
-  async sendMessage(to: string, message: string): Promise<void> {
-    console.log('TwilioService: Sending message to:', to);
+  private sanitizeLog(log: string): string {
+    return LogSanitizer.sanitize(log);
+  }
 
+  async sendMessage(to: string, message: string): Promise<any> {
     if (!this.client || !this.fromNumber) {
-        console.error('TwilioService: Not initialized');
         throw new Error('Twilio service not properly initialized');
     }
 
     try {
-        // Only include messagingServiceSid if it exists
-        const messageOptions: any = {
-            from: this.fromNumber,
+        console.log(this.sanitizeLog(`TwilioService: Sending message to: ${to}`));
+        const response = await this.client.messages.create({
             to,
-            body: message
-        };
-
-        if (this.messagingServiceSid) {
-            messageOptions.messagingServiceSid = this.messagingServiceSid;
-        }
-
-        const result = await this.client.messages.create(messageOptions);
-
-        console.log('TwilioService: API Response:', {
-            sid: result.sid,
-            status: result.status
+            from: this.fromNumber,
+            body: message,
+            ...(this.messagingServiceSid ? { messagingServiceSid: this.messagingServiceSid } : {})
         });
-    } catch (error: any) {
-        console.error('TwilioService: API Error:', {
-            code: error.code,
-            message: error.message
-        });
+        console.log(this.sanitizeLog(`TwilioService: API Response: ${JSON.stringify(response)}`));
+        return response;
+    } catch (error) {
+        console.error(this.sanitizeLog(`TwilioService: Failed to send message to ${to}`), error);
         throw error;
     }
   }
