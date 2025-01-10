@@ -21,6 +21,5 @@ export default defineConfig({
         "@cosmjs/proto-signing",
         "@cosmjs/cosmwasm-stargate",
         "zod",
-        "@ai16z/eliza",
     ],
 });

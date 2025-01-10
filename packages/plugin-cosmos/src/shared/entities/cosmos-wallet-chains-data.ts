@@ -86,7 +86,6 @@ export class CosmosWalletChains implements ICosmosWalletChains {
 
         return chainWalletsForGivenChain.skipClient;
     }
-
     public async getUserAddress(chainName: string): Promise<string> {
         return this.walletChainsData[chainName].wallet.getWalletAddress();
     }

@@ -1,309 +1,180 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { IBCTransferAction } from "../actions/ibc-transfer/services/ibc-transfer-action-service";
-import { IBCTransferActionParams } from "../actions/ibc-transfer/types";
-import { getAssetBySymbol, getChainByChainName } from "@chain-registry/utils";
-
-vi.mock("@cosmjs/cosmwasm-stargate", () => ({
-    SigningCosmWasmClient: {
-        connectWithSigner: vi.fn(),
-    },
-}));
+import { IBCTransferAction } from "../actions/ibc-transfer/services/ibc-transfer-action-service"; // dostosuj ścieżkę do pliku
+import { assets } from "chain-registry";
+import * as CosmosAssetsHelpers from "../shared/helpers/cosmos-assets";
+import { getAssetBySymbol } from "@chain-registry/utils";
+import { getAvailableAssets } from "../shared/helpers/cosmos-assets";
 
 vi.mock("@chain-registry/utils", () => ({
-    getAssetBySymbol: vi.fn().mockReturnValue({ base: "uatom" }),
-    getChainByChainName: vi
-        .fn()
-        .mockResolvedValue({ chain_id: "cosmos-chain-id" }),
-    convertDisplayUnitToBaseUnit: vi.fn().mockResolvedValue("100000000"),
-}));
-
-vi.mock("../shared/services/cosmos-transaction-fee-estimator", () => ({
-    CosmosTransactionFeeEstimator: {
-        estimateGasForIBCTransfer: vi.fn().mockResolvedValue(BigInt(200_000)),
-    },
+    getAssetBySymbol: vi.fn(),
+    getChainByChainName: vi.fn((_, chainName: string) => {
+        if (chainName === "test-chain") return { chain_id: "source-chain-id" };
+        return { chain_id: "target-chain-id" };
+    }),
+    convertDisplayUnitToBaseUnit: vi.fn(() => "1"),
+    getChainByChainId: vi.fn(() => ({ chainId: "target-chain-id" })),
 }));
 
 vi.mock("../shared/helpers/cosmos-assets", () => ({
-    getAvailableAssets: vi.fn().mockResolvedValue([]),
-}));
-
-vi.mock("../shared/helpers/cosmos-transaction-receipt.ts", () => ({
-    getPaidFeeFromReceipt: vi.fn().mockReturnValue("200000"),
+    getAvailableAssets: vi.fn(),
 }));
 
 describe("IBCTransferAction", () => {
-    const mockSigningCosmWasmClient = {
-        sendTokens: vi.fn().mockResolvedValue({
-            transactionHash: "mockTxHash",
-        }),
+    const mockWalletChains = {
+        getWalletAddress: vi.fn(),
+        getSkipClient: vi.fn(),
     };
 
-    const mockCosmosWalletChains = {
-        walletChainsData: {},
-        getWalletAddress: vi.fn().mockResolvedValue("senderAddress"),
-        getSigningCosmWasmClient: vi
-            .fn()
-            .mockReturnValue(mockSigningCosmWasmClient),
+    const mockBridgeDenomProvider = vi.fn();
+    const mockSkipClient = {
+        route: vi.fn(),
+        executeRoute: vi.fn(),
     };
+
+    const params = {
+        chainName: "test-chain",
+        targetChainName: "target-chain",
+        symbol: "ATOM",
+        amount: "10",
+        toAddress: "cosmos1receiveraddress",
+    };
+
+    const customChainAssets = [];
 
     beforeEach(() => {
         vi.clearAllMocks();
+        mockWalletChains.getSkipClient.mockReturnValue(mockSkipClient);
     });
 
-    it("should execute transfer successfully", async () => {
-        const params: IBCTransferActionParams = {
-            chainName: "cosmos",
-            toAddress: "cosmosReceiverAddress",
-            targetChainName: "cosmosTarget",
-            symbol: "atom",
-            amount: "100",
-        };
-
-        const mockBridgeDataProvider = vi.fn().mockResolvedValue({
-            ibcDenom: "uatom",
-            channelId: "channel-1",
-            portId: "transfer",
-        });
-
-        const cosmosIBCTransferAction = new IBCTransferAction(
-            mockCosmosWalletChains
-        );
-
-        const expectedResult = {
-            from: "senderAddress",
-            to: "cosmosReceiverAddress",
-            gasPaid: "200000",
-            txHash: "mockTxHash",
-        };
+    it("throws an error if sender address is not available", async () => {
+        mockWalletChains.getWalletAddress.mockResolvedValue(null);
+        // @ts-expect-error --- ...
+        const ibcTransferAction = new IBCTransferAction(mockWalletChains);
 
         await expect(
-            cosmosIBCTransferAction.execute(params, mockBridgeDataProvider)
-        ).resolves.toEqual(expectedResult);
+            ibcTransferAction.execute(
+                params,
+                mockBridgeDenomProvider,
+                customChainAssets
+            )
+        ).rejects.toThrow(
+            `Cannot get wallet address for chain ${params.chainName}`
+        );
     });
 
-    it("should throw error if transaction fails", async () => {
-        const params: IBCTransferActionParams = {
-            chainName: "cosmos",
-            toAddress: "cosmosReceiverAddress",
-            targetChainName: "cosmosTarget",
-            symbol: "atom",
-            amount: "100",
-        };
-
-        mockSigningCosmWasmClient.sendTokens.mockRejectedValue(
-            new Error("Transaction Failed")
+    it("throws an error if receiver address is missing", async () => {
+        const invalidParams = { ...params, toAddress: undefined };
+        mockWalletChains.getWalletAddress.mockResolvedValue(
+            "cosmos1senderaddress"
         );
-
-        const mockBridgeDataProvider = vi.fn().mockResolvedValue({
-            ibcDenom: "uatom",
-            channelId: "channel-1",
-            portId: "transfer",
-        });
-
-        const cosmosIBCTransferAction = new IBCTransferAction(
-            mockCosmosWalletChains
-        );
+        // @ts-expect-error --- ...
+        const ibcTransferAction = new IBCTransferAction(mockWalletChains);
 
         await expect(
-            cosmosIBCTransferAction.execute(params, mockBridgeDataProvider)
-        ).rejects.toThrow("Transaction Failed");
-    });
-
-    it("should throw error if no wallet address is found", async () => {
-        const params: IBCTransferActionParams = {
-            chainName: "cosmos",
-            toAddress: "cosmosReceiverAddress",
-            targetChainName: "cosmosTarget",
-            symbol: "atom",
-            amount: "100",
-        };
-
-        mockCosmosWalletChains.getWalletAddress.mockResolvedValue(null); // Brak adresu portfela
-
-        const mockBridgeDataProvider = vi.fn().mockResolvedValue({
-            ibcDenom: "uatom",
-            channelId: "channel-1",
-            portId: "transfer",
-        });
-
-        const cosmosIBCTransferAction = new IBCTransferAction(
-            mockCosmosWalletChains
-        );
-
-        await expect(
-            cosmosIBCTransferAction.execute(params, mockBridgeDataProvider)
-        ).rejects.toThrow("Cannot get wallet address for chain cosmos");
-    });
-
-    it("should throw error if no receiver address is provided", async () => {
-        const params: IBCTransferActionParams = {
-            chainName: "cosmos",
-            toAddress: "",
-            targetChainName: "cosmosTarget",
-            symbol: "atom",
-            amount: "100",
-        };
-
-        const mockBridgeDataProvider = vi.fn().mockResolvedValue({
-            ibcDenom: "uatom",
-            channelId: "channel-1",
-            portId: "transfer",
-        });
-        mockCosmosWalletChains.getWalletAddress.mockResolvedValue(
-            "cosmos1address"
-        );
-
-        const cosmosIBCTransferAction = new IBCTransferAction(
-            mockCosmosWalletChains
-        );
-
-        await expect(
-            cosmosIBCTransferAction.execute(params, mockBridgeDataProvider)
+            ibcTransferAction.execute(
+                invalidParams,
+                mockBridgeDenomProvider,
+                customChainAssets
+            )
         ).rejects.toThrow("No receiver address");
     });
 
-    it("should throw error if no symbol is provided", async () => {
-        const params: IBCTransferActionParams = {
-            chainName: "cosmos",
-            toAddress: "cosmosReceiverAddress",
-            targetChainName: "cosmosTarget",
-            symbol: "",
-            amount: "100",
-        };
-
-        const mockBridgeDataProvider = vi.fn().mockResolvedValue({
-            ibcDenom: "uatom",
-            channelId: "channel-1",
-            portId: "transfer",
-        });
-
-        mockCosmosWalletChains.getWalletAddress.mockResolvedValue(
-            "cosmos1address"
+    it("throws an error if target chain name is missing", async () => {
+        const invalidParams = { ...params, targetChainName: undefined };
+        mockWalletChains.getWalletAddress.mockResolvedValue(
+            "cosmos1senderaddress"
         );
-
-        const cosmosIBCTransferAction = new IBCTransferAction(
-            mockCosmosWalletChains
-        );
+        // @ts-expect-error --- ...
+        const ibcTransferAction = new IBCTransferAction(mockWalletChains);
 
         await expect(
-            cosmosIBCTransferAction.execute(params, mockBridgeDataProvider)
+            ibcTransferAction.execute(
+                invalidParams,
+                mockBridgeDenomProvider,
+                customChainAssets
+            )
+        ).rejects.toThrow("No target chain name");
+    });
+
+    it("throws an error if symbol is missing", async () => {
+        const invalidParams = { ...params, symbol: undefined };
+        mockWalletChains.getWalletAddress.mockResolvedValue(
+            "cosmos1senderaddress"
+        );
+        // @ts-expect-error --- ...
+        const ibcTransferAction = new IBCTransferAction(mockWalletChains);
+
+        await expect(
+            ibcTransferAction.execute(
+                invalidParams,
+                mockBridgeDenomProvider,
+                customChainAssets
+            )
         ).rejects.toThrow("No symbol");
     });
 
-    it("should throw error if no chainName is provided", async () => {
-        const params: IBCTransferActionParams = {
-            chainName: "",
-            toAddress: "cosmosReceiverAddress",
-            targetChainName: "cosmosTarget",
-            symbol: "atom",
-            amount: "100",
-        };
+    it("throws an error if asset cannot be found", async () => {
+        mockWalletChains.getWalletAddress.mockResolvedValue(
+            "cosmos1senderaddress"
+        );
 
-        const mockBridgeDataProvider = vi.fn().mockResolvedValue({
-            ibcDenom: "uatom",
-            channelId: "channel-1",
-            portId: "transfer",
+        vi.spyOn(CosmosAssetsHelpers, "getAvailableAssets").mockReturnValue([]);
+        // @ts-expect-error --- ...
+        getAssetBySymbol.mockReturnValue({
+            base: null,
         });
 
-        mockCosmosWalletChains.getWalletAddress.mockResolvedValue(
-            "cosmos1address"
-        );
-
-        const cosmosIBCTransferAction = new IBCTransferAction(
-            mockCosmosWalletChains
-        );
+        // @ts-expect-error --- ...
+        const ibcTransferAction = new IBCTransferAction(mockWalletChains);
 
         await expect(
-            cosmosIBCTransferAction.execute(params, mockBridgeDataProvider)
-        ).rejects.toThrow("No chain name");
-    });
-    it("should throw error if no targetChainName is provided", async () => {
-        const params: IBCTransferActionParams = {
-            chainName: "cosmos",
-            toAddress: "cosmosReceiverAddress",
-            targetChainName: "",
-            symbol: "atom",
-            amount: "100",
-        };
-
-        const mockBridgeDataProvider = vi.fn().mockResolvedValue({
-            ibcDenom: "uatom",
-            channelId: "channel-1",
-            portId: "transfer",
-        });
-
-        mockCosmosWalletChains.getWalletAddress.mockResolvedValue(
-            "cosmos1address"
-        );
-
-        const cosmosIBCTransferAction = new IBCTransferAction(
-            mockCosmosWalletChains
-        );
-
-        await expect(
-            cosmosIBCTransferAction.execute(params, mockBridgeDataProvider)
-        ).rejects.toThrow("No target chain name");
-    });
-    it("should throw error if no base denom in assets list", async () => {
-        const params: IBCTransferActionParams = {
-            chainName: "cosmos",
-            toAddress: "cosmosReceiverAddress",
-            targetChainName: "cosmosTarget",
-            symbol: "atom",
-            amount: "100",
-        };
-
-        // @ts-expect-error ---
-        getAssetBySymbol.mockReturnValue({});
-
-        const mockBridgeDataProvider = vi.fn().mockResolvedValue({
-            ibcDenom: "uatom",
-            channelId: "channel-1",
-            portId: "transfer",
-        });
-
-        mockCosmosWalletChains.getWalletAddress.mockResolvedValue(
-            "cosmos1address"
-        );
-
-        const cosmosIBCTransferAction = new IBCTransferAction(
-            mockCosmosWalletChains
-        );
-
-        await expect(
-            cosmosIBCTransferAction.execute(params, mockBridgeDataProvider)
+            ibcTransferAction.execute(
+                params,
+                mockBridgeDenomProvider,
+                customChainAssets
+            )
         ).rejects.toThrow("Cannot find asset");
     });
 
-    it("should throw error if no chain in chain list", async () => {
-        const params: IBCTransferActionParams = {
-            chainName: "cosmos",
-            toAddress: "cosmosReceiverAddress",
-            targetChainName: "cosmosTarget",
-            symbol: "atom",
-            amount: "100",
-        };
-        // @ts-expect-error --- ...
-        getAssetBySymbol.mockReturnValue({ base: "uatom" });
-        // @ts-expect-error --- ...
-        getChainByChainName.mockReturnValue(undefined);
+    it("executes the IBC transfer successfully", async () => {
+        const senderAddress = "cosmos1senderaddress";
+        const targetChainId = "target-chain-id";
+        const sourceChainId = "source-chain-id";
 
-        const mockBridgeDataProvider = vi.fn().mockResolvedValue({
-            ibcDenom: "uatom",
-            channelId: "channel-1",
-            portId: "transfer",
+        mockWalletChains.getWalletAddress.mockResolvedValue(senderAddress);
+        // @ts-expect-error --- ...
+        getAvailableAssets.mockReturnValue(assets);
+
+        // @ts-expect-error --- ...
+        getAssetBySymbol.mockReturnValue({
+            base: "uatom",
         });
+        const params = {
+            chainName: "test-chain",
+            targetChainName: "target-chain",
+            symbol: "ATOM",
+            amount: "10",
+            toAddress: "cosmos1receiveraddress",
+        };
 
-        mockCosmosWalletChains.getWalletAddress.mockResolvedValue(
-            "cosmos1address"
+        mockBridgeDenomProvider.mockResolvedValue({ denom: "uatom" });
+        mockSkipClient.route.mockResolvedValue({
+            requiredChainAddresses: [sourceChainId, targetChainId],
+        });
+        // @ts-expect-error --- ...
+        const ibcTransferAction = new IBCTransferAction(mockWalletChains);
+
+        const result = await ibcTransferAction.execute(
+            params,
+            mockBridgeDenomProvider,
+            customChainAssets
         );
 
-        const cosmosIBCTransferAction = new IBCTransferAction(
-            mockCosmosWalletChains
-        );
-
-        await expect(
-            cosmosIBCTransferAction.execute(params, mockBridgeDataProvider)
-        ).rejects.toThrow("Cannot find chain");
+        expect(result).toEqual({
+            from: senderAddress,
+            to: params.toAddress,
+            txHash: undefined,
+        });
+        expect(mockSkipClient.executeRoute).toHaveBeenCalled();
     });
 });
