@@ -13,20 +13,6 @@ export function createPlugin(ctx: interfaces.Context): PluginFactory {
             options: opts,
         };
 
-        // Handle actions - if provided, map through them
-        // For class constructors (functions), get instance from container
-        // For regular actions, use as-is
-        if (typeof opts.actions !== "undefined") {
-            plugin.actions = await Promise.all(
-                opts.actions.map(
-                    async (action) =>
-                        typeof action === "function"
-                            ? await ctx.container.getAsync(action) // Get instance from DI container
-                            : action // Use action directly
-                )
-            );
-        }
-
         // Handle providers - if provided, map through them
         // For class constructors (functions), get instance from container
         // For regular providers, use as-is
@@ -38,6 +24,20 @@ export function createPlugin(ctx: interfaces.Context): PluginFactory {
                     }
                     return provider; // Use provider directly
                 })
+            );
+        }
+
+        // Handle actions - if provided, map through them
+        // For class constructors (functions), get instance from container
+        // For regular actions, use as-is
+        if (typeof opts.actions !== "undefined") {
+            plugin.actions = await Promise.all(
+                opts.actions.map(
+                    async (action) =>
+                        typeof action === "function"
+                            ? await ctx.container.getAsync(action) // Get instance from DI container
+                            : action // Use action directly
+                )
             );
         }
 

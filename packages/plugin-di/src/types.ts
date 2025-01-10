@@ -69,6 +69,14 @@ export type InjectableActionClass<T = any, Args extends any[] = any[]> = new (
 ) => InjactableAction<T>;
 
 /**
+ * Evaluator options
+ */
+export type EvaluatorOptions = Pick<
+    Evaluator,
+    "name" | "similes" | "description" | "examples" | "alwaysRun"
+>;
+
+/**
  * Interface of Injectable Evaluator
  */
 export type InjactableEvaluator = Evaluator;

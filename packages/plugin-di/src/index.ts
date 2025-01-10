@@ -6,4 +6,4 @@ export * from "./factories";
 export * from "./templates";
 export * from "./di";
 export * from "./actions";
-export * from "./evalutors";
+export * from "./evaluators";
