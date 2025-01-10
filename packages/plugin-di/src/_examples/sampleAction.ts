@@ -147,4 +147,4 @@ Resource has been stored in memory.`,
 }
 
 // Register the action with the global container
-globalContainer.bind(CreateResourceAction).toSelf();
+globalContainer.bind(CreateResourceAction).toSelf().inRequestScope();

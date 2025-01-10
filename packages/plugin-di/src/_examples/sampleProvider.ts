@@ -1,4 +1,4 @@
-import { injectable } from "inversify";
+import { inject, injectable } from "inversify";
 import {
     Provider,
     IAgentRuntime,
@@ -9,6 +9,14 @@ import {
 import { InjectableProvider } from "../types";
 import { globalContainer } from "../di";
 
+// Dynamic Data Provider
+
+globalContainer
+    .bind<Record<string, string>>("DYNAMIC_DATA")
+    .toDynamicValue(async () => {
+        return Promise.resolve({ key: "value" });
+    });
+
 /**
  * Sample Provider
  */
@@ -17,6 +25,11 @@ export class SampleProvider
     implements InjectableProvider<Record<string, string>>, Provider
 {
     private _sharedInstance: Record<string, string>;
+
+    constructor(
+        @inject("DYNAMIC_DATA")
+        private readonly dynamicData: Record<string, string>
+    ) {}
 
     // ---- Implementing the InjectableProvider interface ----
 
@@ -34,11 +47,14 @@ export class SampleProvider
     async get(
         _runtime: IAgentRuntime,
         _message: Memory,
-        _state: State
-    ): Promise<void> {
+        _state?: State
+    ): Promise<string> {
         elizaLogger.log("Retrieving data in sampleProvider...");
+        return `Shared instance data: ${JSON.stringify(this._sharedInstance)}
+Dynamic data: ${JSON.stringify(this.dynamicData)}
+`;
     }
 }
 
 // Register the provider with the global container
-globalContainer.bind(SampleProvider).toSelf();
+globalContainer.bind(SampleProvider).toSelf().inSingletonScope();

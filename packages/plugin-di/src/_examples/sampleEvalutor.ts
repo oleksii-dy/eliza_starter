@@ -60,4 +60,4 @@ export class SampleEvaluator extends BaseInjactableEvaluator {
 }
 
 // Register the sample evaluator with the global container
-globalContainer.bind(SampleEvaluator).toSelf();
+globalContainer.bind(SampleEvaluator).toSelf().inRequestScope();

@@ -6,7 +6,7 @@ import {
     State,
     HandlerCallback,
 } from "@elizaos/core";
-import { EvaluatorOptions, InjactableEvaluator } from "../types";
+import type { EvaluatorOptions, InjactableEvaluator } from "../types";
 
 /**
  * Base abstract class for injectable actions
