@@ -33,6 +33,7 @@ import {
 import { zgPlugin } from "@elizaos/plugin-0g";
 
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
+import { normalizeCharacter } from "@elizaos/plugin-di";
 import createGoatPlugin from "@elizaos/plugin-goat";
 // import { intifacePlugin } from "@elizaos/plugin-intiface";
 import { DirectClient } from "@elizaos/client-direct";
@@ -900,6 +901,9 @@ const startAgents = async () => {
     if (charactersArg) {
         characters = await loadCharacters(charactersArg);
     }
+
+    // Normalize characters for injactable plugins
+    characters = await Promise.all(characters.map(normalizeCharacter));
 
     try {
         for (const character of characters) {
