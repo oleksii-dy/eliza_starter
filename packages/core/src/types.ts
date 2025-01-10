@@ -223,8 +223,10 @@ export type Models = {
     [ModelProviderName.NANOGPT]: Model;
     [ModelProviderName.HYPERBOLIC]: Model;
     [ModelProviderName.VENICE]: Model;
+    [ModelProviderName.NINETEEN_AI]: Model;
     [ModelProviderName.AKASH_CHAT_API]: Model;
     [ModelProviderName.LIVEPEER]: Model;
+    [ModelProviderName.INFERA]: Model;
 };
 
 /**
@@ -253,8 +255,10 @@ export enum ModelProviderName {
     NANOGPT = "nanogpt",
     HYPERBOLIC = "hyperbolic",
     VENICE = "venice",
+    NINETEEN_AI = "nineteen_ai",
     AKASH_CHAT_API = "akash_chat_api",
     LIVEPEER = "livepeer",
+    LETZAI = "letzai",
     INFERA = "infera",
 }
 
@@ -338,6 +342,8 @@ export interface State {
     knowledge?: string;
     /** Optional knowledge data */
     knowledgeData?: KnowledgeItem[];
+    /** Optional knowledge data */
+    ragKnowledgeData?: RAGKnowledgeItem[];
 
     /** Additional dynamic properties */
     [key: string]: unknown;
@@ -761,7 +767,7 @@ export type Character = {
     adjectives: string[];
 
     /** Optional knowledge base */
-    knowledge?: string[];
+    knowledge?: (string | { path: string; shared?: boolean })[];
 
     /** Supported client platforms */
     clients: Clients[];
@@ -809,6 +815,7 @@ export type Character = {
             [key: string]: any[];
         };
         transcription?: TranscriptionProvider;
+        ragKnowledge?: boolean;
     };
 
     /** Optional client-specific config */
@@ -1021,6 +1028,26 @@ export interface IDatabaseAdapter {
     }): Promise<Relationship | null>;
 
     getRelationships(params: { userId: UUID }): Promise<Relationship[]>;
+
+    getKnowledge(params: {
+        id?: UUID;
+        agentId: UUID;
+        limit?: number;
+        query?: string;
+        conversationContext?: string;
+    }): Promise<RAGKnowledgeItem[]>;
+
+    searchKnowledge(params: {
+        agentId: UUID;
+        embedding: Float32Array;
+        match_threshold: number;
+        match_count: number;
+        searchText?: string;
+    }): Promise<RAGKnowledgeItem[]>;
+
+    createKnowledge(knowledge: RAGKnowledgeItem): Promise<void>;
+    removeKnowledge(id: UUID): Promise<void>;
+    clearKnowledge(agentId: UUID, shared?: boolean): Promise<void>;
 }
 
 export interface IDatabaseCacheAdapter {
@@ -1076,6 +1103,35 @@ export interface IMemoryManager {
     removeAllMemories(roomId: UUID): Promise<void>;
 
     countMemories(roomId: UUID, unique?: boolean): Promise<number>;
+}
+
+export interface IRAGKnowledgeManager {
+    runtime: IAgentRuntime;
+    tableName: string;
+
+    getKnowledge(params: {
+        query?: string;
+        id?: UUID;
+        limit?: number;
+        conversationContext?: string;
+        agentId?: UUID;
+    }): Promise<RAGKnowledgeItem[]>;
+    createKnowledge(item: RAGKnowledgeItem): Promise<void>;
+    removeKnowledge(id: UUID): Promise<void>;
+    searchKnowledge(params: {
+        agentId: UUID;
+        embedding: Float32Array | number[];
+        match_threshold?: number;
+        match_count?: number;
+        searchText?: string;
+    }): Promise<RAGKnowledgeItem[]>;
+    clearKnowledge(shared?: boolean): Promise<void>;
+    processFile(file: {
+        path: string;
+        content: string;
+        type: "pdf" | "md" | "txt";
+        isShared: boolean;
+    }): Promise<void>;
 }
 
 export type CacheOptions = {
@@ -1137,6 +1193,7 @@ export interface IAgentRuntime {
     descriptionManager: IMemoryManager;
     documentsManager: IMemoryManager;
     knowledgeManager: IMemoryManager;
+    ragKnowledgeManager: IRAGKnowledgeManager;
     loreManager: IMemoryManager;
 
     cacheManager: ICacheManager;
@@ -1282,6 +1339,58 @@ export interface IAwsS3Service extends Service {
     generateSignedUrl(fileName: string, expiresIn: number): Promise<string>;
 }
 
+export interface UploadIrysResult {
+    success: boolean;
+    url?: string;
+    error?: string;
+    data?: any;
+}
+
+export interface DataIrysFetchedFromGQL {
+    success: boolean;
+    data: any;
+    error?: string;
+}
+
+export interface GraphQLTag {
+    name: string;
+    values: any[];
+}
+
+export const enum IrysMessageType {
+    REQUEST = "REQUEST",
+    DATA_STORAGE = "DATA_STORAGE",
+    REQUEST_RESPONSE = "REQUEST_RESPONSE",
+}
+
+export const enum IrysDataType {
+    FILE = "FILE",
+    IMAGE = "IMAGE",
+    OTHER = "OTHER",
+}
+
+export interface IrysTimestamp {
+    from: number;
+    to: number;
+}
+
+export interface IIrysService extends Service {
+    getDataFromAnAgent(agentsWalletPublicKeys: string[], tags: GraphQLTag[], timestamp: IrysTimestamp): Promise<DataIrysFetchedFromGQL>;
+    workerUploadDataOnIrys(data: any, dataType: IrysDataType, messageType: IrysMessageType, serviceCategory: string[], protocol: string[], validationThreshold: number[], minimumProviders: number[], testProvider: boolean[], reputation: number[]): Promise<UploadIrysResult>;
+    providerUploadDataOnIrys(data: any, dataType: IrysDataType, serviceCategory: string[], protocol: string[]): Promise<UploadIrysResult>;
+}
+
+export interface ITeeLogService extends Service {
+    getInstance(): ITeeLogService;
+    log(
+        agentId: string,
+        roomId: string,
+        userId: string,
+        type: string,
+        content: string
+    ): Promise<boolean>;
+}
+
 export type SearchImage = {
     url: string;
     description?: string;
@@ -1316,6 +1425,8 @@ export enum ServiceType {
     AWS_S3 = "aws_s3",
     BUTTPLUG = "buttplug",
     SLACK = "slack",
+    IRYS = "irys",
+    TEE_LOG = "tee_log",
     GOPLUS_SECURITY = "goplus_security",
 }
 
@@ -1329,6 +1440,28 @@ export type KnowledgeItem = {
     id: UUID;
     content: Content;
 };
+
+export interface RAGKnowledgeItem {
+    id: UUID;
+    agentId: UUID;
+    content: {
+        text: string;
+        metadata?: {
+            isMain?: boolean;
+            isChunk?: boolean;
+            originalId?: UUID;
+            chunkIndex?: number;
+            source?: string;
+            type?: string;
+            isShared?: boolean;
+            [key: string]: unknown;
+        };
+    };
+    embedding?: Float32Array;
+    createdAt?: number;
+    similarity?: number;
+    score?: number;
+}
 
 export interface ActionResponse {
     like: boolean;
@@ -1345,7 +1478,7 @@ export interface ISlackService extends Service {
  * Available verifiable inference providers
  */
 export enum VerifiableInferenceProvider {
-    RECLAIM = "reclaim",
+    OPACITY = "opacity",
 }
 
 /**
@@ -1366,8 +1499,10 @@ export interface VerifiableInferenceOptions {
 export interface VerifiableInferenceResult {
     /** Generated text */
     text: string;
-    /** Proof data */
-    proof: unknown;
+    /** Proof */
+    proof: any;
+    /** Proof id */
+    id?: string;
     /** Provider information */
     provider: VerifiableInferenceProvider;
     /** Timestamp */
@@ -1378,6 +1513,7 @@ export interface VerifiableInferenceResult {
  * Interface for verifiable inference adapters
  */
 export interface IVerifiableInferenceAdapter {
+    options: any;
     /**
      * Generate text with verifiable proof
      * @param context The input text/prompt
