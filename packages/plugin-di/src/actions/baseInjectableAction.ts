@@ -83,7 +83,7 @@ export abstract class BaseInjactableAction<T> implements InjactableAction<T> {
      * @param callback The callback function to pass the result to Eliza runtime
      */
     abstract execute(
-        content: T,
+        content: T | null,
         runtime: IAgentRuntime,
         message: Memory,
         state?: State,
@@ -113,6 +113,10 @@ export abstract class BaseInjactableAction<T> implements InjactableAction<T> {
     /**
      * Default implementation of the preparation of action context
      * You can override this method to add custom logic
+     *
+     * @param runtime The runtime object from Eliza framework
+     * @param message The message object from Eliza framework
+     * @param state The state object from Eliza framework
      */
     protected async prepareActionContext(
         runtime: IAgentRuntime,
@@ -204,7 +208,7 @@ export abstract class BaseInjactableAction<T> implements InjactableAction<T> {
             elizaLogger.error("Error in processing messages:", err.message);
 
             if (callback) {
-                callback({
+                await callback?.({
                     text:
                         "Unable to process transfer request. Invalid content: " +
                         err.message,
@@ -213,11 +217,6 @@ export abstract class BaseInjactableAction<T> implements InjactableAction<T> {
                     },
                 });
             }
-            return;
-        }
-
-        if (!content) {
-            elizaLogger.warn("No content generated");
             return;
         }
 

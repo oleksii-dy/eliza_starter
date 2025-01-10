@@ -53,7 +53,7 @@ export interface InjactableAction<T> extends Action {
      * @param callback The callback function to pass the result to Eliza runtime
      */
     execute(
-        content: T,
+        content: T | null,
         runtime: IAgentRuntime,
         message: Memory,
         state?: State,

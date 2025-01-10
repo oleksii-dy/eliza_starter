@@ -1,79 +1,51 @@
 import {
-    Action,
     IAgentRuntime,
     Memory,
     HandlerCallback,
     State,
-    composeContext,
-    generateObject,
-    ModelClass,
     elizaLogger,
 } from "@elizaos/core";
+import { BaseInjactableAction } from "../actions";
+import { ActionOptions } from "../types";
+import { property } from "../decorators";
+import { z } from "zod";
 
-import { CreateResourceSchema, isCreateResourceContent } from "../types";
+/**
+ * The content class for the action
+ */
+export class CreateResourceContent {
+    @property({
+        description: "Name of the resource",
+        schema: z.string(),
+    })
+    name: string;
 
-import { createResourceTemplate } from "../templates";
+    @property({
+        description: "Type of resource (document, image, video)",
+        schema: z.string(),
+    })
+    type: string;
 
-export const createResourceAction: Action = {
+    @property({
+        description: "Description of the resource",
+        schema: z.string(),
+    })
+    description: string;
+
+    @property({
+        description: "Array of tags to categorize the resource",
+        schema: z.array(z.string()),
+    })
+    tags: string[];
+}
+
+/**
+ * Options for the CreateResource action
+ */
+const options: ActionOptions<CreateResourceContent> = {
     name: "CREATE_RESOURCE",
+    similes: [],
     description: "Create a new resource with the specified details",
-    validate: async (runtime: IAgentRuntime, _message: Memory) => {
-        return !!runtime.character.settings.secrets?.API_KEY;
-    },
-    handler: async (
-        runtime: IAgentRuntime,
-        _message: Memory,
-        state: State,
-        _options: any,
-        callback: HandlerCallback
-    ) => {
-        try {
-            const context = composeContext({
-                state,
-                template: createResourceTemplate,
-            });
-
-            const resourceDetails = await generateObject({
-                runtime,
-                context,
-                modelClass: ModelClass.SMALL,
-                schema: CreateResourceSchema,
-            });
-
-            if (!isCreateResourceContent(resourceDetails.object)) {
-                callback({ text: "Invalid resource details provided." }, []);
-                return;
-            }
-
-            // persist relevant data if needed to memory/knowledge
-            // const memory = {
-            //     type: "resource",
-            //     content: resourceDetails.object,
-            //     timestamp: new Date().toISOString()
-            // };
-
-            // await runtime.storeMemory(memory);
-
-            callback(
-                {
-                    text: `Resource created successfully:
-- Name: ${resourceDetails.object.name}
-- Type: ${resourceDetails.object.type}
-- Description: ${resourceDetails.object.description}
-- Tags: ${resourceDetails.object.tags.join(", ")}
-
-Resource has been stored in memory.`,
-                },
-                []
-            );
-        } catch (error) {
-            elizaLogger.error("Error creating resource:", error);
-            callback(
-                { text: "Failed to create resource. Please check the logs." },
-                []
-            );
-        }
-    },
     examples: [
         [
             {
@@ -108,4 +80,55 @@ Resource has been stored in memory.`,
             },
         ],
     ],
+    contentClass: CreateResourceContent,
 };
+
+export class CreateResourceAction extends BaseInjactableAction<CreateResourceContent> {
+    constructor() {
+        super(options);
+    }
+
+    async validate(
+        runtime: IAgentRuntime,
+        _message: Memory,
+        _state?: State
+    ): Promise<boolean> {
+        return !!runtime.character.settings.secrets?.API_KEY;
+    }
+
+    async execute(
+        content: CreateResourceContent | null,
+        _runtime: IAgentRuntime,
+        _message: Memory,
+        _state: State,
+        callback?: HandlerCallback
+    ): Promise<any | null> {
+        if (!content) {
+            elizaLogger.warn("No content provided for the action.");
+            await callback?.({ text: "Failed to process the content." }, []);
+            return;
+        }
+
+        // persist relevant data if needed to memory/knowledge
+        // const memory = {
+        //     type: "resource",
+        //     content: resourceDetails.object,
+        //     timestamp: new Date().toISOString()
+        // };
+
+        // await runtime.storeMemory(memory);
+
+        callback(
+            {
+                text: `Resource created successfully:
+- Name: ${content.name}
+- Type: ${content.type}
+- Description: ${content.description}
+- Tags: ${content.tags.join(", ")}
+
+Resource has been stored in memory.`,
+            },
+            []
+        );
+    }
+}
