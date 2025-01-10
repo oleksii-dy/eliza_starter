@@ -17,8 +17,8 @@ export async function normalizeCharacter(
 
     const normalizePlugin = async (plugin: any) => {
         if (
-            typeof plugin.name === "string" &&
-            typeof plugin.description === "string"
+            typeof plugin?.name === "string" &&
+            typeof plugin?.description === "string"
         ) {
             try {
                 const normalized = await createPlugin(plugin);
@@ -29,11 +29,9 @@ export async function normalizeCharacter(
                     `Error normalizing plugin: ${plugin.name}`,
                     e.message
                 );
-                return undefined;
             }
-        } else {
-            return undefined;
         }
+        return plugin;
     };
 
     let plugins: Plugin[] = [];
