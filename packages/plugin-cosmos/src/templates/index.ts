@@ -85,11 +85,11 @@ Example response for the input: "Make an IBC transfer of 0.0001 ATOM to osmo1pcn
 Now respond with a JSON markdown block containing only the extracted values.
 `;
 
-
-
 export const cosmosIBCSwapTemplate = `Given the recent messages and cosmos wallet information below:
 {{recentMessages}}
 {{walletInfo}}
+Make sure that you extracted latest info about requested swap from recent messages. Espessialy if there was another one placed before.
+Also the extracted info MUST match the confirmed by user data in latest prompt in which you asked for confirmation!
 Extract the following information about the requested IBC swap:
 
 1. **fromChainName**:
@@ -116,7 +116,7 @@ Extract the following information about the requested IBC swap:
 7. **fromTokenDenom**:
     - optional parameter, if present must be a string. (uom, uatom, usomo, ibc/53046FFF6CAD109D8F9B2C7C9913853AD241928CD05CDDE419343D176025DA74 or other ibc/ values)
 
-Keep in mind that toTokenDenom and fromTokenDenom are optional parameters and
+Keep in mind that toTokenDenom and fromTokenDenom are optional parameters.
 
 Respond with a JSON markdown block containing only the extracted values. All fields are required:
 \`\`\`json
@@ -185,4 +185,3 @@ Example response for the input: "Swap {{100}} {{USDC}} with denom {{uusdc}} from
 
 Now respond with a JSON markdown block containing only the extracted values.
 `;
-

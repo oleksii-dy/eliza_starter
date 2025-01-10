@@ -1,7 +1,7 @@
 import type { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
 import type { Coin, DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import type { assets, chains } from "chain-registry";
-import { SkipClient } from "@skip-go/client";
+import {SkipClient, StatusState} from "@skip-go/client";
 
 export interface ICosmosPluginCustomChainData {
     chainData: (typeof chains)[number];
@@ -24,6 +24,7 @@ export interface ICosmosTransaction {
 }
 
 export interface ICosmosSwap {
+    status: StatusState;
     fromChainName: string;
     fromTokenSymbol: string;
     fromTokenAmount: string;

@@ -16,7 +16,7 @@ import type {
 } from "../../shared/interfaces";
 import { IBCSwapActionParams } from "./types.ts";
 import { IBCSwapAction } from "./services/ibc-swap-action-service.ts";
-import { prepareAmbiguityErrorMessage } from "./services/utils.ts";
+import { prepareAmbiguityErrorMessage } from "./services/ibc-swap-utils.ts";
 
 export const createIBCSwapAction = (pluginOptions: ICosmosPluginOptions) => ({
     name: "COSMOS_IBC_SWAP",
@@ -72,10 +72,15 @@ export const createIBCSwapAction = (pluginOptions: ICosmosPluginOptions) => ({
             );
 
             if (_callback) {
+                const text =
+                    transferResp.status === "STATE_COMPLETED_SUCCESS"
+                        ? `Successfully swapped ${transferResp.fromTokenAmount} ${transferResp.fromTokenSymbol} tokens to ${transferResp.toTokenSymbol} on chain ${transferResp.toChainName}.\nTransaction Hash: ${transferResp.txHash}`
+                        : `Error occured swapping ${transferResp.fromTokenAmount} ${transferResp.fromTokenSymbol} tokens to ${transferResp.toTokenSymbol} on chain ${transferResp.toChainName}.\nTransaction Hash: ${transferResp.txHash}, try again`;
                 await _callback({
-                    text: `Successfully swapped ${transferResp.fromTokenAmount} ${transferResp.fromTokenSymbol} tokens to ${transferResp.toTokenSymbol} on chain ${transferResp.toChainName}.\nTransaction Hash: ${transferResp.txHash}`,
+                    text: text,
                     content: {
-                        success: true,
+                        success:
+                            transferResp.status === "STATE_COMPLETED_SUCCESS",
                         hash: transferResp.txHash,
                         fromTokenAmount: paramOptions.fromTokenAmount,
                         fromToken: paramOptions.fromTokenSymbol,

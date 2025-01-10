@@ -23,13 +23,13 @@ export const prepareAmbiguityErrorMessage = (
 /**
  * Calculates amount passed in display unit
  * @param tokenAmount
- * @param exponet
+ * @param exponent
  */
 export const calculateAmountInDenomFromDisplayUnit = (
     tokenAmount: string,
-    exponet: number
+    exponent: number
 ) => {
     return new BigNumber(tokenAmount)
-        .multipliedBy(new BigNumber(10).pow(exponet))
+        .multipliedBy(new BigNumber(10).pow(exponent))
         .toString();
 };

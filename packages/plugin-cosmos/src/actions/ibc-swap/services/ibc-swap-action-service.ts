@@ -14,7 +14,7 @@ import {
 } from "@chain-registry/utils";
 import { getAvailableAssets } from "../../../shared/helpers/cosmos-assets.ts";
 import { HandlerCallback } from "@elizaos/core";
-import { calculateAmountInDenomFromDisplayUnit } from "./utils.ts";
+import { calculateAmountInDenomFromDisplayUnit } from "./ibc-swap-utils.ts";
 
 export class IBCSwapAction implements ICosmosActionService {
     constructor(private cosmosWalletChains: ICosmosWalletChains) {
@@ -105,6 +105,7 @@ export class IBCSwapAction implements ICosmosActionService {
                 );
 
                 result = {
+                    status: status.state,
                     fromChainName: params.fromChainName,
                     fromTokenAmount: params.fromTokenAmount,
                     fromTokenSymbol: params.fromTokenSymbol,
