@@ -9,10 +9,11 @@ import {
 import { adaptQSResponse, askQuickSilver } from "../services/quicksilver";
 import { extractLocationQuestion } from "../helpers/extractors";
 
-export const currentWeather: Action = {
-    name: "CURRENT_WEATHER",
+export const weather: Action = {
+    name: "GET_WEATHER",
     similes: ["WEATHER", "WEATHER_REPORT", "WEATHER_UPDATE"],
-    description: "Get the current weather for a given location",
+    description:
+        "Get the current weather or weather forecast for a given location",
     validate: async (_runtime: IAgentRuntime) => {
         return true;
     },
@@ -104,6 +105,21 @@ export const currentWeather: Action = {
                 content: {
                     text: "Sydney's current temperature is 26°C (feels like 28°C), ranging from 22°C to 29°C. Clear sky conditions with 60% humidity, UV index of 9, and coastal winds at 15 km/h.",
                     action: "CURRENT_WEATHER",
+                },
+            },
+        ],
+        [
+            {
+                user: "user",
+                content: {
+                    text: "What's the weather in Tokyo for the next 3 days?",
+                },
+            },
+            {
+                user: "assistant",
+                content: {
+                    text: "The weather in Tokyo for the next 3 days is sunny with a temperature of 20°C.",
+                    action: "WEATHER",
                 },
             },
         ],
