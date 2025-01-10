@@ -52,6 +52,21 @@ const MessageExampleSchema = z.object({
         .and(z.record(z.string(), z.unknown())), // For additional properties
 });
 
+// Helper schemas for nested types
+const QuoteExampleSchema = z.object({
+    user: z.string(),
+    content: z
+        .object({
+            text: z.string(),
+            action: z.string().optional(),
+            source: z.string().optional(),
+            url: z.string().optional(),
+            inReplyTo: z.string().uuid().optional(),
+            attachments: z.array(z.any()).optional(),
+        })
+        .and(z.record(z.string(), z.unknown())), // For additional properties
+});
+
 const PluginSchema = z.object({
     name: z.string(),
     description: z.string(),
@@ -73,6 +88,7 @@ export const CharacterSchema = z.object({
     bio: z.union([z.string(), z.array(z.string())]),
     lore: z.array(z.string()),
     messageExamples: z.array(z.array(MessageExampleSchema)),
+    quoteExamples: z.array(z.array(QuoteExampleSchema)),
     postExamples: z.array(z.string()),
     topics: z.array(z.string()),
     adjectives: z.array(z.string()),
