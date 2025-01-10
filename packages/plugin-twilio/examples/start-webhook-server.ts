@@ -1,19 +1,17 @@
 //  /packages/plugin-twilio/examples/start-webhook-server.ts
 
-import { modelConfig } from '../src/modelConfig.js';
-import { AgentRuntime, IAgentConfig, ModelProviderName, generateMessageResponse, ServiceType, RuntimeOptions } from '@elizaos/core';
+import { AgentRuntime, ServiceType, RuntimeOptions, ModelProviderName } from '@elizaos/core';
 import plugin from '../src/index.js';
 import { webhookService } from '../src/services/webhook.js';
 import { storageService } from '../src/services/storage.js';
 import { twilioService } from '../src/services/twilio.js';
-import { readFile } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-import { randomUUID } from 'crypto';
-import { Anthropic } from '@anthropic-ai/sdk';
 import path from 'path';
 import fs from 'fs/promises';
+import { SafeLogger } from '../src/utils/logger.js';
+import { randomUUID } from 'crypto';
 
 // Get current file path
 const __filename = fileURLToPath(import.meta.url);
@@ -24,8 +22,8 @@ dotenv.config({
     path: join(__dirname, '../../../.env')
 });
 
-// Log API key presence for debugging
-console.log('ANTHROPIC_API_KEY is set:', !!process.env.ANTHROPIC_API_KEY);
+// Replace console.log with SafeLogger
+SafeLogger.info('ANTHROPIC_API_KEY status:', !!process.env.ANTHROPIC_API_KEY);
 
 // Force environment variables
 process.env.MODEL_PROVIDER = 'anthropic';
@@ -34,6 +32,12 @@ process.env.DEFAULT_MODEL_PROVIDER = 'anthropic';
 process.env.USE_LOCAL_MODELS = 'false';
 process.env.DISABLE_LOCAL_MODELS = 'true';
 process.env.PROVIDER = 'anthropic';
+
+// Get process arguments in a safe way
+const processArgs = {
+    ARGV: process.argv,
+    CWD: process.cwd()
+};
 
 // Add helper function for runtime initialization
 async function initializeRuntime(characterConfig: any) {
@@ -52,7 +56,6 @@ async function initializeRuntime(characterConfig: any) {
                 anthropic: {
                     apiKey: process.env.ANTHROPIC_API_KEY,
                     headers: {
-                        'x-api-key': process.env.ANTHROPIC_API_KEY,
                         'anthropic-version': '2023-06-01',
                         'content-type': 'application/json',
                         'accept': 'application/json',
@@ -62,55 +65,53 @@ async function initializeRuntime(characterConfig: any) {
                 }
             }
         },
-        services: [webhookService]
+        services: []
     };
 
-    console.log('Initializing runtime...');
+    SafeLogger.runtime('Initializing', { status: 'starting' });
     const runtime = new AgentRuntime(runtimeOptions);
     await runtime.initialize();
-    console.log('Runtime initialized with character:', characterConfig.name);
+
+    // Use agent logger instead of runtime for agent-specific info
+    SafeLogger.agent('Initialized', {
+        character: characterConfig.name,
+        model: characterConfig.config?.model
+    });
+
     return runtime;
 }
 
 // Add character file constant
 const characterFile = 'dad-bot-3000.character.json';
 
+// Disable debug logging
+SafeLogger.setDebugMode(false);
+
 async function startServer() {
     try {
-        // Initialize storage service first
+        SafeLogger.info('Starting SMS agent...');
+
         await storageService.initialize();
-        console.log('Storage service initialized');
-
-        // Initialize Twilio service
-        await twilioService.initialize({
-            accountSid: process.env.TWILIO_ACCOUNT_SID,
-            authToken: process.env.TWILIO_AUTH_TOKEN,
-            phoneNumber: process.env.TWILIO_PHONE_NUMBER
-        });
-        console.log('Twilio service initialized');
-
-        // Initialize webhook service first
+        await twilioService.initialize();
         await webhookService.initialize();
 
-        // Load character configuration
         const characterPath = path.resolve(process.cwd(), '../..', 'characters', characterFile);
         const characterConfig = JSON.parse(await fs.readFile(characterPath, 'utf-8'));
 
-        // Configure webhook service with character
-        await webhookService.configure(undefined, characterConfig);
-
-        // Initialize runtime with character config
         const runtime = await initializeRuntime(characterConfig);
-
-        // Update webhook service with runtime
         await webhookService.configure(runtime, characterConfig);
 
-        console.log('SMS Agent started successfully with character:', characterConfig.name);
-
+        SafeLogger.info('SMS agent ready');
     } catch (error) {
-        console.error('Failed to start server:', error);
+        SafeLogger.error('Startup failed:', error);
         process.exit(1);
     }
 }
+
+// Core logger wrapping
+SafeLogger.wrapCoreLogger('Loading settings', {
+    ARGV: '[REDACTED]',
+    CWD: '[REDACTED]'
+});
 
 startServer();

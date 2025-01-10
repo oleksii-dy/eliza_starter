@@ -81,4 +81,38 @@ export class LogSanitizer {
 
         return sanitized;
     }
+
+    static sanitizeAnthropicDebug(log: any): any {
+        if (!log) return log;
+
+        const sanitized = JSON.parse(JSON.stringify(log));
+
+        // Sanitize headers
+        if (sanitized.headers) {
+            if (sanitized.headers['x-api-key']) {
+                sanitized.headers['x-api-key'] = 'sk-***';
+            }
+        }
+
+        // Sanitize body
+        if (sanitized.body) {
+            // Remove phone number from system prompt
+            if (sanitized.body.system) {
+                sanitized.body.system = sanitized.body.system.replace(
+                    /My phone number is \${[^}]+}/g,
+                    'I am a friendly AI assistant'
+                );
+            }
+
+            // Sanitize messages array
+            if (Array.isArray(sanitized.body.messages)) {
+                sanitized.body.messages = sanitized.body.messages.map(msg => ({
+                    ...msg,
+                    content: this.sanitize(msg.content)
+                }));
+            }
+        }
+
+        return sanitized;
+    }
 }

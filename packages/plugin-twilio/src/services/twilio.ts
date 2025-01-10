@@ -5,6 +5,7 @@ const { Twilio } = pkg;
 import type { Twilio as TwilioInstance } from 'twilio';
 import { Service, ServiceType } from '@elizaos/core';
 import { LogSanitizer } from '../utils/sanitizer.js';
+import { SafeLogger } from '../utils/logger.js';
 
 export class TwilioService implements Service {
   private client: TwilioInstance | null = null;
@@ -32,11 +33,11 @@ export class TwilioService implements Service {
     this.client = new Twilio(accountSid, authToken);
     this.messagingServiceSid = messagingServiceSid;
 
-    console.log('Initialized Twilio with:', LogSanitizer.sanitize(JSON.stringify({
+    SafeLogger.init('Twilio', {
         fromNumber: this.fromNumber,
         isCanadianNumber: fromNumber.startsWith('+1343'),
         messagingService: this.messagingServiceSid || 'Not configured'
-    })));
+    });
   }
 
   private async getPhoneNumberSid(phoneNumber: string): Promise<string> {

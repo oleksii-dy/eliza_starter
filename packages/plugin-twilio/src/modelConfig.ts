@@ -1,12 +1,8 @@
-import { IModelConfig } from '@elizaos/core';
+import { ModelProviderName } from '@elizaos/core';
 
-export const modelConfig: IModelConfig = {
-  provider: 'anthropic',
-  name: 'claude-3-sonnet-20240229',
-  forceProvider: true,
-  settings: {
-    temperature: 0.7,
-    modelProvider: 'anthropic',
-    disableLocalModels: true
-  }
+export const modelConfig = {
+  provider: ModelProviderName.ANTHROPIC,
+  model: 'claude-3-sonnet-20240229',
+  temperature: 0.7,
+  maxTokens: 100
 };

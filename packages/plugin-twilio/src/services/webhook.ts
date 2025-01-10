@@ -4,9 +4,21 @@ import { Service, ServiceType, IAgentRuntime } from '@elizaos/core';
 import express from 'express';
 import { twilioService } from './twilio.js';
 import twilio from 'twilio';
-import { randomUUID } from 'crypto';
 import { Anthropic } from '@anthropic-ai/sdk';
-import { LogSanitizer } from '../utils/sanitizer.js';
+import { SafeLogger } from '../utils/logger.js';
+
+// Add proper typing for Anthropic response
+interface AnthropicMessage {
+    role: 'user' | 'assistant';
+    content: string;
+}
+
+interface AnthropicResponse {
+    content: Array<{
+        type: string;
+        text: string;
+    }>;
+}
 
 // Add types for router stack
 interface RouteInfo {
@@ -34,14 +46,6 @@ const validateApiKey = (apiKey: string | undefined): string => {
     return cleanKey;
 };
 
-// Add proper type for Anthropic response
-interface AnthropicResponse {
-    content: Array<{
-        type: string;
-        text: string;
-    }>;
-}
-
 export class WebhookService implements Service {
     private static instance: WebhookService | null = null;
     private static expressApp: express.Express | null = null;
@@ -51,6 +55,7 @@ export class WebhookService implements Service {
     private initialized: boolean = false;
     private characterConfig: any = null;
     private anthropicClient: Anthropic | null = null;
+    private conversations: Map<string, { isFirstMessage: boolean }> = new Map();
 
     constructor() {
         if (WebhookService.instance) {
@@ -65,7 +70,7 @@ export class WebhookService implements Service {
     }
 
     private setupMiddleware() {
-        console.log('Setting up webhook middleware...');
+        SafeLogger.info('Setting up webhook middleware...');
 
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true }));
@@ -74,12 +79,15 @@ export class WebhookService implements Service {
 
         // Add catch-all route with proper typing
         this.app.use((req, res, next) => {
-            console.log(`Received ${req.method} request to ${req.path}`);
+            SafeLogger.debug('Request received:', {
+                method: req.method,
+                path: req.path
+            });
             next();
         });
 
         // Log routes with proper typing
-        console.log('Registered routes:',
+        SafeLogger.info('Routes registered:',
             (this.app._router.stack as RouteInfo[])
                 .filter((r: RouteInfo) => r.route)
                 .map((r: RouteInfo) => `${Object.keys(r.route?.methods || {})} ${r.route?.path}`)
@@ -100,7 +108,7 @@ export class WebhookService implements Service {
 
         return new Promise((resolve) => {
             WebhookService.server = this.app.listen(port, '0.0.0.0', () => {
-                console.log(`Webhook server listening on http://0.0.0.0:${port}`);
+                SafeLogger.service('Webhook', `listening on port ${port}`);
                 resolve(true);
             });
         });
@@ -111,29 +119,23 @@ export class WebhookService implements Service {
             throw new Error('Runtime is required');
         }
         this.runtime = runtime;
-        console.log('Runtime set in webhook service');
+        SafeLogger.service('Runtime', 'set in webhook service');
     }
 
     async initialize(): Promise<void> {
         if (this.initialized) {
-            console.log('WebhookService already initialized');
+            SafeLogger.service('Webhook', 'already initialized');
             return;
         }
 
         try {
-            // Initialize Anthropic client
             const apiKey = validateApiKey(process.env.ANTHROPIC_API_KEY);
-            this.anthropicClient = new Anthropic({
-                apiKey: apiKey,
-            });
-
-            // Start server
+            this.anthropicClient = new Anthropic({ apiKey });
             await this.startServer();
             this.initialized = true;
-
-            console.log('Webhook service initialized');
+            SafeLogger.service('Webhook', 'initialized');
         } catch (error) {
-            console.error('Webhook Service Initialization Error:', error);
+            SafeLogger.error('Webhook Service Initialization Error:', error);
             throw error;
         }
     }
@@ -145,67 +147,84 @@ export class WebhookService implements Service {
 
         // Store configs
         this.characterConfig = characterConfig;
+
+        // Configure runtime if provided
         if (runtime) {
             this.runtime = runtime;
-            console.log(`Runtime configured with character: ${characterConfig.name}`);
+            SafeLogger.agent('Runtime configured', {
+                character: characterConfig.name,
+                model: characterConfig.config?.model
+            });
+        }
+
+        // Only log character config once
+        if (!this.initialized) {
+            SafeLogger.character(characterConfig.name, characterConfig);
+            this.initialized = true;
         }
 
         // Ensure Anthropic client is initialized
         if (!this.anthropicClient) {
             const apiKey = validateApiKey(process.env.ANTHROPIC_API_KEY);
-            this.anthropicClient = new Anthropic({
-                apiKey: apiKey,
-            });
+            this.anthropicClient = new Anthropic({ apiKey });
         }
 
-        // Log successful configuration
-        console.log(`Webhook service configured with character: ${characterConfig.name}`);
-        console.log('Character config:', {
-            name: characterConfig.name,
-            model: characterConfig.config?.model,
-            personality: characterConfig.personality?.substring(0, 50) + '...'
-        });
+        // Log service status only if not already configured
+        if (!this.initialized) {
+            SafeLogger.service('Webhook', 'configured');
+        }
     }
 
     private async handleSMSMessage(phoneNumber: string, text: string) {
         try {
-            if (!this.runtime || !this.anthropicClient || !this.characterConfig) {
-                throw new Error('Runtime, Anthropic client, or character config not available');
+            if (!this.anthropicClient || !this.characterConfig) {
+                throw new Error('Anthropic client or character config not available');
             }
 
-            // Use character's model settings if available
-            const model = this.characterConfig.config.model || 'claude-3-sonnet-20240229';
-            const temperature = this.characterConfig.config.temperature || 0.7;
+            // Check if this is the first message for this number
+            const conversation = this.conversations.get(phoneNumber) || { isFirstMessage: true };
+
+            // Only log essential request info
+            SafeLogger.info('Processing message:', {
+                type: 'inbound',
+                isFirstMessage: conversation.isFirstMessage
+            });
 
             const response = await this.anthropicClient.messages.create({
-                model,
+                model: this.characterConfig.config.model || 'claude-3-sonnet-20240229',
                 max_tokens: 100,
-                temperature,
+                temperature: 0.7,
                 messages: [{
                     role: 'user',
                     content: text
                 }],
-                system: this.getSystemPrompt()
+                system: this.getSystemPrompt(conversation.isFirstMessage)
             }) as AnthropicResponse;
 
-            if (!response?.content?.[0]?.text) {
-                throw new Error('Failed to generate response');
+            // Mark that we've handled the first message
+            if (conversation.isFirstMessage) {
+                this.conversations.set(phoneNumber, { isFirstMessage: false });
             }
 
-            const responseText = response.content[0].text.trim();
-            console.log(this.sanitizeLog(`Sending SMS to ${phoneNumber}: ${responseText}`));
+            const responseText = response?.content?.[0]?.text?.trim();
+            if (!responseText) {
+                throw new Error('Invalid response format');
+            }
+
+            // Only log essential response info
+            SafeLogger.info('Sending response:', {
+                type: 'outbound',
+                length: responseText.length
+            });
+
             await twilioService.sendMessage(phoneNumber,
                 responseText.length > 160 ?
                     responseText.substring(0, 157) + '...' :
                     responseText
             );
 
-        } catch (error: any) {
-            console.error(this.sanitizeLog('SMS Handler Error: ' + error.message));
-            await twilioService.sendMessage(
-                phoneNumber,
-                "Sorry, I hit a snag. Try again!"
-            );
+        } catch (error) {
+            SafeLogger.error('SMS Error:', error);
             throw error;
         }
     }
@@ -227,7 +246,7 @@ export class WebhookService implements Service {
                     // Return empty TwiML response to prevent automatic reply
                     res.status(200).type('text/xml').send('<Response></Response>');
                 } catch (error) {
-                    console.error('SMS webhook error:', error);
+                    SafeLogger.error('SMS webhook error:', error);
                     res.status(500).type('text/xml').send('<Response></Response>');
                 }
             }
@@ -274,7 +293,7 @@ export class WebhookService implements Service {
 
                     res.type('text/xml').send(twiml.toString());
                 } catch (error) {
-                    console.error('Voice webhook error:', error);
+                    SafeLogger.error('Voice webhook error:', error);
                     const twiml = new twilio.twiml.VoiceResponse();
                     twiml.say('Sorry, I encountered an error. Please try again later.');
                     res.type('text/xml').send(twiml.toString());
@@ -284,47 +303,62 @@ export class WebhookService implements Service {
     }
 
     private async generateVoiceResponse(phoneNumber: string, userInput?: string): Promise<string> {
-        if (!this.anthropicClient) {
-            throw new Error('Anthropic client not available');
-        }
-
-        if (!this.characterConfig) {
-            throw new Error('Character configuration not available');
-        }
-
-        const defaultResponse = 'Tell me a dad joke';
-        const promptContent = userInput || defaultResponse;
-
         try {
+            if (!this.anthropicClient || !this.characterConfig) {
+                throw new Error('Anthropic client or character config not available');
+            }
+
+            const conversation = this.conversations.get(phoneNumber) || { isFirstMessage: true };
+            const defaultResponse = 'Tell me about yourself';
+            const promptContent = userInput || defaultResponse;
+
+            // Only log essential request info
+            SafeLogger.info('Processing voice:', {
+                type: 'inbound',
+                isFirstMessage: conversation.isFirstMessage,
+                hasUserInput: !!userInput
+            });
+
             const response = await this.anthropicClient.messages.create({
-                model: 'claude-3-sonnet-20240229',
+                model: this.characterConfig.config.model || 'claude-3-sonnet-20240229',
                 max_tokens: 100,
                 temperature: 0.7,
                 messages: [{
                     role: 'user',
                     content: promptContent
                 }],
-                system: this.getSystemPrompt()
+                system: this.getSystemPrompt(conversation.isFirstMessage)
             }) as AnthropicResponse;
 
-            // Ensure text is a string before returning
-            const text = response?.content?.[0]?.text;
-            if (typeof text !== 'string') {
-                return 'Sorry, I had trouble generating a response. Let me try again!';
+            const responseText = response?.content?.[0]?.text?.trim();
+            if (!responseText) {
+                throw new Error('Invalid response format');
             }
 
-            return text.trim();
+            // Only log essential response info
+            SafeLogger.info('Sending voice response:', {
+                type: 'outbound',
+                length: responseText.length
+            });
+
+            // Update conversation state after successful response
+            if (conversation.isFirstMessage) {
+                this.conversations.set(phoneNumber, { isFirstMessage: false });
+            }
+
+            return responseText;
         } catch (error) {
+            SafeLogger.error('Voice Error:', error);
             return 'Sorry, I encountered an error. Please try again!';
         }
     }
 
-    private getSystemPrompt(): string {
+    private getSystemPrompt(isFirstMessage: boolean): string {
         if (!this.characterConfig) {
             throw new Error('Character configuration not available');
         }
 
-        // Get character's system prompt and personality
+        // Get character's configuration
         const systemPrompt = this.characterConfig.config.systemPrompt || '';
         const personality = this.characterConfig.personality || '';
         const name = this.characterConfig.name || '';
@@ -333,18 +367,19 @@ export class WebhookService implements Service {
             ${systemPrompt}
             ${personality}
 
-            Critical Instructions:
+            Critical SMS/Voice Instructions:
+            ${isFirstMessage ?
+                `- For this first message, respond EXACTLY with: "Hi, I'm ${name}! Want to chat?"` :
+                `- Since user has already received the introduction, respond directly to their message
+                 - If user says "yes" or similar, engage with them based on your character
+                 - If user asks a question, acknowledge it then respond appropriately`
+            }
             - NEVER use text actions like *clears throat*, *pauses*, etc.
             - NEVER use emojis or special characters
-            - Keep responses under 160 characters but NEVER cut a joke or sentence mid-way
-            - For first message only: "Hi, I'm ${name}! Want to hear a dad joke?"
-            - For all other messages: Just tell the joke directly without any introduction
-            - Never mention your name after first message
-            - Keep responses light and fun
+            - Keep responses under 300 characters but NEVER EVER cut sentences nor ideas nor concepts mid-way
+            - NEVER mention your name after the first message
             - Use simple language suitable for SMS and voice
             - Include natural pauses with commas
-            - If user asks a question, acknowledge it before responding
-            - Focus on delivering complete jokes, even if short
             - Use only plain text - no symbols, emojis, or formatting
         `;
     }
@@ -355,6 +390,11 @@ export class WebhookService implements Service {
                 throw new Error('Webhook service not initialized');
             }
 
+            SafeLogger.info('Initiating voice call:', {
+                type: 'outbound',
+                length: message.length
+            });
+
             const accountSid = process.env.TWILIO_ACCOUNT_SID;
             const authToken = process.env.TWILIO_AUTH_TOKEN;
             const fromNumber = process.env.TWILIO_PHONE_NUMBER;
@@ -364,18 +404,17 @@ export class WebhookService implements Service {
             }
 
             const twilioClient = twilio(accountSid, authToken);
-
             const call = await twilioClient.calls.create({
                 twiml: `<Response><Say voice="Polly.Matthew" language="en-US">${message}</Say></Response>`,
                 to: toNumber,
                 from: fromNumber
             });
 
-            console.log('Voice call initiated:', call.sid);
+            SafeLogger.info('Voice call connected:', { sid: '***' });
             return call.sid;
 
         } catch (error) {
-            console.error('Failed to make voice call:', error);
+            SafeLogger.error('Voice call failed:', error);
             throw error;
         }
     }
@@ -410,11 +449,6 @@ export class WebhookService implements Service {
                 // Use same AI response generation
             }
         );
-    }
-
-    // Add log sanitization
-    private sanitizeLog(log: string): string {
-        return LogSanitizer.sanitize(log);
     }
 }
 
