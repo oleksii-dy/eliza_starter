@@ -124,29 +124,28 @@ export class WebhookService implements Service {
                 throw new Error('Character configuration not available');
             }
 
-            // Build system prompt from character config
+            // Build system prompt from character config with SMS-specific instructions
             const systemPrompt = `
                 ${this.characterConfig.config.systemPrompt}
+
+                Additional instructions:
+                - Keep your responses very short (max 160 characters) since these are SMS messages
+                - Get straight to the point or joke
+                - No introductions or lengthy explanations
+                - One joke/response per message
+                - Skip greetings unless specifically asked to greet
 
                 Additional context:
                 - Your name is: ${this.characterConfig.name}
                 - Your personality: ${this.characterConfig.personality}
-                - Your capabilities: ${this.characterConfig.capabilities.join(', ')}
                 - Your phone number: ${process.env.TWILIO_PHONE_NUMBER}
-
-                Remember to ALWAYS respond as ${this.characterConfig.name} and maintain your character's personality.
             `;
 
-            console.log('Using character:', {
-                name: this.characterConfig.name,
-                personality: this.characterConfig.personality?.substring(0, 50) + '...',
-                capabilities: this.characterConfig.capabilities?.length
-            });
-
-            // Use Anthropic client with character context
+            // Use Anthropic client with character context and reduced max tokens
             const response = await this.anthropicClient.messages.create({
                 model: 'claude-3-sonnet-20240229',
-                max_tokens: 1024,
+                max_tokens: 100, // Reduced from 1024 to encourage shorter responses
+                temperature: 0.7,
                 messages: [{
                     role: 'user',
                     content: text
@@ -158,29 +157,19 @@ export class WebhookService implements Service {
                 throw new Error('Failed to generate response');
             }
 
-            console.log('AI Response:', {
-                text: response.content[0].text,
-                matchesCharacter: {
-                    mentionsName: response.content[0].text.includes(this.characterConfig.name),
-                    usesCapabilities: this.characterConfig.capabilities.some(cap =>
-                        response.content[0].text.toLowerCase().includes(cap.toLowerCase())
-                    ),
-                    followsFormat: response.content[0].text.includes('SEND_SMS') ||
-                                 response.content[0].text.includes('sending sms message')
-                }
-            });
+            // Trim any extra whitespace and limit length if needed
+            let responseText = response.content[0].text.trim();
+            if (responseText.length > 160) {
+                responseText = responseText.substring(0, 157) + '...';
+            }
 
-            await twilioService.sendMessage(phoneNumber, response.content[0].text);
+            await twilioService.sendMessage(phoneNumber, responseText);
 
         } catch (error: any) {
-            console.error('SMS Handler Error:', {
-                name: error?.name || 'Unknown Error',
-                message: error?.message || 'An unknown error occurred',
-                stack: error?.stack
-            });
+            console.error('SMS Handler Error:', error);
             await twilioService.sendMessage(
                 phoneNumber,
-                "I'm sorry, I encountered an error processing your message. Please try again."
+                "Sorry, I hit a snag. Try again!"  // Shorter error message
             );
             throw error;
         }
@@ -196,14 +185,15 @@ export class WebhookService implements Service {
                     const text = req.body.Body?.trim();
 
                     if (!text || phoneNumber === process.env.TWILIO_PHONE_NUMBER) {
-                        return res.sendStatus(200);
+                        return res.status(200).type('text/xml').send('<Response></Response>');
                     }
 
                     await this.handleSMSMessage(phoneNumber, text);
-                    res.sendStatus(200);
+                    // Return empty TwiML response to prevent automatic reply
+                    res.status(200).type('text/xml').send('<Response></Response>');
                 } catch (error) {
                     console.error('SMS webhook error:', error);
-                    res.status(500).send('Internal error');
+                    res.status(500).type('text/xml').send('<Response></Response>');
                 }
             }
         );

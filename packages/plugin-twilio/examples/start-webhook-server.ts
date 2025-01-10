@@ -49,7 +49,7 @@ async function startServer() {
         console.log('Twilio service initialized');
 
         // Load character configuration
-        const characterPath = join(__dirname, '../../../characters/test-character.json');
+        const characterPath = join(__dirname, '../../../characters/dad-bot-3000.character.json');
         console.log('Loading character from:', characterPath);
 
         const data = await readFile(characterPath, 'utf-8');
