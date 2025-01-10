@@ -1,10 +1,13 @@
+import { IAgentRuntime, Memory, Provider, settings, State } from "@elizaos/core";
+import { createSolanaRpc } from "@solana/web3.js";
+import { loadWallet } from "../../utils/loadWallet";
 import { Address, Rpc, SolanaRpcApi } from "@solana/web3.js";
 import { fetchPositionsForOwner, HydratedPosition } from "@orca-so/whirlpools"
 import { fetchWhirlpool, Whirlpool } from "@orca-so/whirlpools-client";
 import { sqrtPriceToPrice, tickIndexToPrice } from "@orca-so/whirlpools-core";
 import { fetchMint, Mint } from "@solana-program/token-2022"
 
-interface FetchedPositionResponse {
+export interface FetchedPositionStatistics {
     whirlpoolAddress: Address;
     positionMint: Address;
     inRange: boolean;
@@ -12,12 +15,37 @@ interface FetchedPositionResponse {
     positionWidthBps: number;
 }
 
-export const fetchPositions = async (rpc: Rpc<SolanaRpcApi>, ownerAddress: Address): Promise<string> => {
+export const positionProvider: Provider = {
+    get: async (
+        runtime: IAgentRuntime,
+        _message: Memory,
+        _state?: State
+    ) => {
+        try {
+            const { address: ownerAddress } = await loadWallet(
+                runtime,
+                false
+            );
+            const rpc = createSolanaRpc(settings.RPC_URL!);
+            const positions = await fetchPositions(rpc, ownerAddress);
+
+            return JSON.stringify({
+                positions,
+                lastPositionCheck: Date.now()
+            }, null, 3);
+        } catch (error) {
+            console.error("Error in wallet provider:", error);
+            return null;
+        }
+    },
+};
+
+const fetchPositions = async (rpc: Rpc<SolanaRpcApi>, ownerAddress: Address): Promise<FetchedPositionStatistics[]> => {
     try {
         const positions = await fetchPositionsForOwner(rpc, ownerAddress);
         const fetchedWhirlpools: Map<string, Whirlpool> = new Map();
         const fetchedMints: Map<string, Mint> = new Map();
-        const positionContent: FetchedPositionResponse[] = await Promise.all(positions.map(async (position) => {
+        const FetchedPositionsStatistics: FetchedPositionStatistics[] = await Promise.all(positions.map(async (position) => {
             const positionData = (position as HydratedPosition).data;
             const positionMint = positionData.positionMint
             const whirlpoolAddress = positionData.whirlpool;
@@ -43,7 +71,7 @@ export const fetchPositions = async (rpc: Rpc<SolanaRpcApi>, ownerAddress: Addre
             const positionLowerPrice = tickIndexToPrice(positionData.tickLowerIndex, mintA.decimals, mintB.decimals);
             const positionUpperPrice = tickIndexToPrice(positionData.tickUpperIndex, mintA.decimals, mintB.decimals);
 
-            const inRange = currentPrice >= positionLowerPrice && currentPrice <= positionUpperPrice;
+            const inRange = whirlpool.tickCurrentIndex >= positionData.tickLowerIndex && whirlpool.tickCurrentIndex <= positionData.tickUpperIndex;
             const positionCenterPrice = (positionLowerPrice + positionUpperPrice) / 2;
             const distanceCenterPositionFromPoolPriceBps = Math.abs(currentPrice - positionCenterPrice) / currentPrice * 10000;
             const positionWidthBps = (positionUpperPrice - positionLowerPrice) / positionCenterPrice * 10000;
@@ -54,10 +82,10 @@ export const fetchPositions = async (rpc: Rpc<SolanaRpcApi>, ownerAddress: Addre
                 inRange,
                 distanceCenterPositionFromPoolPriceBps,
                 positionWidthBps,
-            } as FetchedPositionResponse;
+            } as FetchedPositionStatistics;
         }));
 
-        return JSON.stringify(positionContent, null, 2);
+        return FetchedPositionsStatistics
     } catch (error) {
         throw new Error("Error during feching positions");
     }
