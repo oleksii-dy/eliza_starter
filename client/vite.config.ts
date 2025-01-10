@@ -24,8 +24,5 @@ export default defineConfig({
         alias: {
             "@": "/src",
         },
-        host: process.env.VITE_HOST || "localhost",
-        port: process.env.VITE_PORT || 5173,
-        strictPort: true,
     },
 });

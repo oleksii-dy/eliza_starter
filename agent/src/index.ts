@@ -9,8 +9,8 @@ import { LensAgentClient } from "@elizaos/client-lens";
 import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
+import { GitHubClientInterface } from "@elizaos/client-github";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
-import { DirectClient } from "@elizaos/client-direct";
 import {
     AgentRuntime,
     CacheManager,
@@ -32,6 +32,11 @@ import {
     validateCharacterConfig,
 } from "@elizaos/core";
 import { zgPlugin } from "@elizaos/plugin-0g";
+
+import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
+import createGoatPlugin from "@elizaos/plugin-goat";
+// import { intifacePlugin } from "@elizaos/plugin-intiface";
+import { DirectClient } from "@elizaos/client-direct";
 import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
 import { abstractPlugin } from "@elizaos/plugin-abstract";
 import { alloraPlugin } from "@elizaos/plugin-allora";
@@ -40,7 +45,6 @@ import { artheraPlugin } from "@elizaos/plugin-arthera";
 import { availPlugin } from "@elizaos/plugin-avail";
 import { avalanchePlugin } from "@elizaos/plugin-avalanche";
 import { binancePlugin } from "@elizaos/plugin-binance";
-import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import {
     advancedTradePlugin,
     coinbaseCommercePlugin,
@@ -59,7 +63,6 @@ import { evmPlugin } from "@elizaos/plugin-evm";
 import { flowPlugin } from "@elizaos/plugin-flow";
 import { fuelPlugin } from "@elizaos/plugin-fuel";
 import { genLayerPlugin } from "@elizaos/plugin-genlayer";
-import createGoatPlugin from "@elizaos/plugin-goat";
 import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
 import { multiversxPlugin } from "@elizaos/plugin-multiversx";
 import { nearPlugin } from "@elizaos/plugin-near";
@@ -70,7 +73,9 @@ import { solanaPlugin } from "@elizaos/plugin-solana";
 import { solanaAgentkitPlguin } from "@elizaos/plugin-solana-agentkit";
 import { storyPlugin } from "@elizaos/plugin-story";
 import { suiPlugin } from "@elizaos/plugin-sui";
+import { sgxPlugin } from "@elizaos/plugin-sgx";
 import { TEEMode, teePlugin } from "@elizaos/plugin-tee";
+import { teeLogPlugin } from "@elizaos/plugin-tee-log";
 import { teeMarlinPlugin } from "@elizaos/plugin-tee-marlin";
 import { tonPlugin } from "@elizaos/plugin-ton";
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
@@ -480,25 +485,41 @@ export async function initializeClients(
             clients.farcaster = farcasterClient;
         }
     }
-    if (clientTypes.includes(Clients.LENS)) {
+    if (clientTypes.includes("lens")) {
         const lensClient = new LensAgentClient(runtime);
         lensClient.start();
         clients.lens = lensClient;
     }
-
-    if (clientTypes.includes(Clients.SLACK)) {
-        const slackClient = await SlackClientInterface.start(runtime);
-        if (slackClient) clients.slack = slackClient; // Use object property instead of push
-    }
-
-    if (clientTypes.includes(Clients.GITHUB)) {
+    if (clientTypes.includes("github")) {
         const githubClient = await GitHubClientInterface.start(runtime);
         if (githubClient) clients.github = githubClient;
     }
 
     elizaLogger.log("client keys", Object.keys(clients));
 
+    // TODO: Add Slack client to the list
     // Initialize clients as an object
+
+    if (clientTypes.includes("slack")) {
+        const slackClient = await SlackClientInterface.start(runtime);
+        if (slackClient) clients.slack = slackClient; // Use object property instead of push
+    }
+
+    function determineClientType(client: Client): string {
+        // Check if client has a direct type identifier
+        if ("type" in client) {
+            return (client as any).type;
+        }
+
+        // Check constructor name
+        const constructorName = client.constructor?.name;
+        if (constructorName && !constructorName.includes("Object")) {
+            return constructorName.toLowerCase().replace("client", "");
+        }
+
+        // Fallback: Generate a unique identifier
+        return `client_${Date.now()}`;
+    }
 
     if (character.plugins?.length > 0) {
         for (const plugin of character.plugins) {
@@ -600,7 +621,6 @@ export async function createAgent(
         // character.plugins are handled when clients are added
         plugins: [
             bootstrapPlugin,
-            dominosPlugin,
             getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
                 ? confluxPlugin
                 : null,
@@ -664,6 +684,12 @@ export async function createAgent(
                   ]
                 : []),
             ...(teeMode !== TEEMode.OFF && walletSecretSalt ? [teePlugin] : []),
+            getSecret(character, "SGX") ? sgxPlugin : null,
+            getSecret(character, "ENABLE_TEE_LOG") &&
+            ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
+                getSecret(character, "SGX"))
+                ? teeLogPlugin
+                : null,
             getSecret(character, "COINBASE_API_KEY") &&
             getSecret(character, "COINBASE_PRIVATE_KEY") &&
             getSecret(character, "COINBASE_NOTIFICATION_URI")
@@ -834,7 +860,14 @@ async function startAgent(
         db = initializeDatabase(dataDir) as IDatabaseAdapter &
             IDatabaseCacheAdapter;
 
-        const cache = initializeDbCache(character, db);
+        await db.init();
+
+        const cache = initializeCache(
+            process.env.CACHE_STORE ?? CacheStore.DATABASE,
+            character,
+            "",
+            db
+        ); // "" should be replaced with dir for file system caching. THOUGHTS: might probably make this into an env
         const runtime: AgentRuntime = await createAgent(
             character,
             db,
