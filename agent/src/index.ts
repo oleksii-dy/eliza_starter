@@ -485,25 +485,41 @@ export async function initializeClients(
             clients.farcaster = farcasterClient;
         }
     }
-    if (clientTypes.includes(Clients.LENS)) {
+    if (clientTypes.includes("lens")) {
         const lensClient = new LensAgentClient(runtime);
         lensClient.start();
         clients.lens = lensClient;
     }
-
-    if (clientTypes.includes(Clients.SLACK)) {
-        const slackClient = await SlackClientInterface.start(runtime);
-        if (slackClient) clients.slack = slackClient; // Use object property instead of push
-    }
-
-    if (clientTypes.includes(Clients.GITHUB)) {
+    if (clientTypes.includes("github")) {
         const githubClient = await GitHubClientInterface.start(runtime);
         if (githubClient) clients.github = githubClient;
     }
 
     elizaLogger.log("client keys", Object.keys(clients));
 
+    // TODO: Add Slack client to the list
     // Initialize clients as an object
+
+    if (clientTypes.includes("slack")) {
+        const slackClient = await SlackClientInterface.start(runtime);
+        if (slackClient) clients.slack = slackClient; // Use object property instead of push
+    }
+
+    function determineClientType(client: Client): string {
+        // Check if client has a direct type identifier
+        if ("type" in client) {
+            return (client as any).type;
+        }
+
+        // Check constructor name
+        const constructorName = client.constructor?.name;
+        if (constructorName && !constructorName.includes("Object")) {
+            return constructorName.toLowerCase().replace("client", "");
+        }
+
+        // Fallback: Generate a unique identifier
+        return `client_${Date.now()}`;
+    }
 
     if (character.plugins?.length > 0) {
         for (const plugin of character.plugins) {
@@ -669,9 +685,9 @@ export async function createAgent(
                 : []),
             ...(teeMode !== TEEMode.OFF && walletSecretSalt ? [teePlugin] : []),
             getSecret(character, "SGX") ? sgxPlugin : null,
-            (getSecret(character, "ENABLE_TEE_LOG") &&
-                ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
-                    getSecret(character, "SGX")))
+            getSecret(character, "ENABLE_TEE_LOG") &&
+            ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
+                getSecret(character, "SGX"))
                 ? teeLogPlugin
                 : null,
             getSecret(character, "COINBASE_API_KEY") &&
@@ -844,7 +860,14 @@ async function startAgent(
         db = initializeDatabase(dataDir) as IDatabaseAdapter &
             IDatabaseCacheAdapter;
 
-        const cache = initializeDbCache(character, db);
+        await db.init();
+
+        const cache = initializeCache(
+            process.env.CACHE_STORE ?? CacheStore.DATABASE,
+            character,
+            "",
+            db
+        ); // "" should be replaced with dir for file system caching. THOUGHTS: might probably make this into an env
         const runtime: AgentRuntime = await createAgent(
             character,
             db,

@@ -391,8 +391,7 @@ export async function generateText({
                     apiKey,
                     baseURL: endpoint,
                     fetch: async (url: string, options: any) => {
-                        const chain_id =
-                            runtime.getSetting("ETERNALAI_CHAIN_ID") || "45762";
+                        const chain_id = runtime.getSetting("ETERNALAI_CHAIN_ID") || "45762"
                         if (options?.body) {
                             const body = JSON.parse(options.body);
                             body.chain_id = chain_id;

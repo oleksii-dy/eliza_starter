@@ -1,5 +1,5 @@
 import { IAgentRuntime, State, type Memory } from "./types.ts";
-import fs from "fs/promises";
+
 /**
  * Formats provider outputs into a string which can be injected into the context.
  * @param runtime The AgentRuntime object.
@@ -12,10 +12,6 @@ export async function getProviders(
     message: Memory,
     state?: State
 ) {
-    await fs.writeFile(
-        "/tmp/core-providers.txt",
-        JSON.stringify(runtime.providers, null, 2)
-    );
     const providerResults = (
         await Promise.all(
             runtime.providers.map(async (provider) => {

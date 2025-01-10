@@ -193,6 +193,7 @@ export async function embed(runtime: IAgentRuntime, input: string) {
 
     const config = getEmbeddingConfig();
     const isNode = typeof process !== "undefined" && process.versions?.node;
+
     // Determine which embedding path to use
     if (config.provider === EmbeddingProvider.OpenAI) {
         return await getRemoteEmbedding(input, {
