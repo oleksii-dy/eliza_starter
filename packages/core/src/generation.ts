@@ -2,46 +2,48 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { fal } from "@fal-ai/client";
+import { AutoTokenizer } from "@huggingface/transformers";
+import { tavily } from "@tavily/core";
 import {
     generateObject as aiGenerateObject,
     generateText as aiGenerateText,
+    StepResult as AIStepResult,
     CoreTool,
     GenerateObjectResult,
-    StepResult as AIStepResult,
 } from "ai";
 import { Buffer } from "buffer";
+import https from 'https';
+import { encodingForModel, TiktokenModel } from "js-tiktoken";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { createOllama } from "ollama-ai-provider";
 import OpenAI from "openai";
-import { encodingForModel, TiktokenModel } from "js-tiktoken";
-import { AutoTokenizer } from "@huggingface/transformers";
 import Together from "together-ai";
 import { ZodSchema } from "zod";
 import { elizaLogger } from "./index.ts";
 import { getModel, models } from "./models.ts";
 import {
+    parseActionResponseFromText,
     parseBooleanFromText,
     parseJsonArrayFromText,
     parseJSONObjectFromText,
     parseShouldRespondFromText,
-    parseActionResponseFromText,
 } from "./parsing.ts";
 import settings from "./settings.ts";
 import {
+    ActionResponse,
     Content,
     IAgentRuntime,
     IImageDescriptionService,
     ITextGenerationService,
     ModelClass,
     ModelProviderName,
-    ServiceType,
     SearchResponse,
-    ActionResponse,
+    SerperSearchResponse,
+    ServiceType,
     TelemetrySettings,
     TokenizerType,
 } from "./types.ts";
-import { fal } from "@fal-ai/client";
-import { tavily } from "@tavily/core";
 
 type Tool = CoreTool<any, any>;
 type StepResult = AIStepResult<any>;
@@ -1501,12 +1503,81 @@ export const generateWebSearch = async (
             includeAnswer: true,
             maxResults: 3, // 5 (default)
             topic: "general", // "general"(default) "news"
-            searchDepth: "basic", // "basic"(default) "advanced"
+            searchDepth: "advanced", // "basic"(default) "advanced"
             includeImages: false, // false (default) true
         });
+        console.log(`TVLY RES`,response);
         return response;
     } catch (error) {
         elizaLogger.error("Error:", error);
+    }
+};
+export const generateSerperSearch = async (
+    query: string,
+    runtime: IAgentRuntime
+): Promise<SerperSearchResponse> => {
+    try {
+        const apiKey = runtime.getSetting("SERPER_API_KEY") as string;
+        if (!apiKey) {
+            throw new Error("SERPER_API_KEY is not set");
+        }
+        //const cleanedQuery =  query.replace(/@\S+/g, '');
+        //console.log(`CLEANED QUERY`,cleanedQuery)
+        const data = JSON.stringify({
+            q: query
+        });
+
+        const options = {
+            hostname: 'google.serper.dev',
+            port: 443,
+            path: '/search',
+            method: 'POST',
+            headers: {
+                'X-API-KEY': apiKey,
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(data),
+            }
+        };
+
+        const sendRequest = (): Promise<SerperSearchResponse> => {
+            return new Promise((resolve, reject) => {
+                const req = https.request(options, (res) => {
+                    let body = '';
+
+                    res.on('data', (chunk) => {
+                        body += chunk;
+                    });
+
+                    res.on('end', () => {
+                        if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+                            try {
+                                const parsedData = JSON.parse(body) as SerperSearchResponse;
+                                resolve(parsedData);
+                            } catch (err) {
+                                reject(new Error(`Failed to parse response: ${err}`));
+                            }
+                        } else {
+                            reject(new Error(`Request failed with status code: ${res.statusCode}`));
+                        }
+                    });
+                });
+
+                req.on('error', (err) => {
+                    reject(err);
+                });
+
+                // Write data to the request body
+                req.write(data);
+                req.end();
+            });
+        };
+
+        const response = await sendRequest();
+        console.log(`TVLY RES`, response);
+        return response;
+    } catch (error) {
+        elizaLogger.error("Error:", error);
+        throw error; // Re-throw the error for the caller to handle.
     }
 };
 /**

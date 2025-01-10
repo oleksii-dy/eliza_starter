@@ -1,20 +1,20 @@
-import { SearchMode, Tweet } from "agent-twitter-client";
 import {
     composeContext,
+    Content,
+    elizaLogger,
     generateMessageResponse,
     generateShouldRespond,
-    messageCompletionFooter,
-    shouldRespondFooter,
-    Content,
+    getEmbeddingZeroVector,
     HandlerCallback,
     IAgentRuntime,
     Memory,
+    messageCompletionFooter,
     ModelClass,
+    shouldRespondFooter,
     State,
     stringToUuid,
-    elizaLogger,
-    getEmbeddingZeroVector,
 } from "@elizaos/core";
+import { SearchMode, Tweet } from "agent-twitter-client";
 import { ClientBase } from "./base";
 import { buildConversationThread, sendTweet, wait } from "./utils.ts";
 
@@ -397,6 +397,7 @@ export class TwitterInteractionClient {
 
         // Promise<"RESPOND" | "IGNORE" | "STOP" | null> {
         if (shouldRespond !== "RESPOND") {
+            console.log("NOTR",shouldRespond);
             elizaLogger.log("Not responding to message");
             return { text: "Response Decision:", action: shouldRespond };
         }
