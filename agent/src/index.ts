@@ -902,7 +902,7 @@ const startAgents = async () => {
         characters = await loadCharacters(charactersArg);
     }
 
-    // Normalize characters for injactable plugins
+    // Normalize characters for injectable plugins
     characters = await Promise.all(characters.map(normalizeCharacter));
 
     try {
