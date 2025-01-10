@@ -6,16 +6,12 @@ import {
     HandlerCallback,
 } from "@elizaos/core";
 
-import { askQuickSilver } from "../services/quicksilver";
-import { extractLocationQuestion } from "../services/map"
+import { adaptQSResponse, askQuickSilver } from "../services/quicksilver";
+import { extractLocationQuestion } from "../helpers/extractors";
 
 export const currentWeather: Action = {
     name: "CURRENT_WEATHER",
-    similes: [
-        "WEATHER",
-        "WEATHER_REPORT",
-        "WEATHER_UPDATE",
-    ],
+    similes: ["WEATHER", "WEATHER_REPORT", "WEATHER_UPDATE"],
     description: "Get the current weather for a given location",
     validate: async (_runtime: IAgentRuntime) => {
         return true;
@@ -126,10 +122,7 @@ export const currentWeather: Action = {
         }
 
         try {
-            const location = await extractLocationQuestion(
-                state,
-                runtime
-            );
+            const location = await extractLocationQuestion(state, runtime);
             if (!location) {
                 if (callback) {
                     callback({
@@ -141,9 +134,15 @@ export const currentWeather: Action = {
             }
 
             const weather = await askQuickSilver(location);
+            const adaptedResponse = await adaptQSResponse(
+                state,
+                runtime,
+                weather
+            );
+
             if (callback) {
                 callback({
-                    text: weather,
+                    text: adaptedResponse,
                     inReplyTo: message.id,
                 });
             }
@@ -161,4 +160,3 @@ export const currentWeather: Action = {
         }
     },
 };
-
