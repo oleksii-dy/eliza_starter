@@ -23,7 +23,7 @@ import { buildContentOutputTemplate } from "../templates";
  * Base abstract class for injectable actions
  */
 @injectable()
-export abstract class BaseInjactableAction<T> implements InjactableAction<T> {
+export abstract class BaseInjectableAction<T> implements InjectableAction<T> {
     // -------- Properties --------
     public name: string;
     public similes: string[];
