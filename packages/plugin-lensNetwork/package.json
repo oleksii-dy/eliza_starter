@@ -1,5 +1,5 @@
 {
-    "name": "@elizaos/plugin-starknet",
+    "name": "@elizaos/plugin-lensNetwork",
     "version": "0.1.7",
     "type": "module",
     "main": "dist/index.js",
@@ -20,21 +20,16 @@
     ],
     "dependencies": {
         "@elizaos/core": "workspace:*",
-        "@elizaos/plugin-trustdb": "workspace:*",
-        "@avnu/avnu-sdk": "2.1.1",
-        "@uniswap/sdk-core": "6.0.0",
-        "unruggable-sdk": "1.4.0",
-        "@unruggable_starknet/core": "0.1.0",
-        "starknet": "6.18.0",
-        "tsup": "8.3.5",
-        "vitest": "2.1.5"
+        "tsup": "^8.3.5",
+        "web3": "^4.15.0",
+        "@lens-network/sdk": "^0.0.0-canary-20241203140504",
+
+    "dotenv": "^16.0.3",
+    "ethers": "^6.0.0",
+    "zksync-ethers": "^6.0.0"
     },
     "scripts": {
-        "build": "tsup --format esm --dts",
-        "dev": "tsup --format esm --dts --watch",
-        "test": "vitest run",
-        "test:watch": "vitest",
-        "lint": "eslint --fix  --cache ."
+        "build": "tsup --format esm --dts"
     },
     "peerDependencies": {
         "whatwg-url": "7.1.0"
