@@ -52,7 +52,7 @@ export class TransferAction {
         }
     }
 
-    async transferTxReceipt(tx: Hash) {
+    async txReceipt(tx: Hash) {
         const receipt = await getTxReceipt(this.walletProvider, tx);
         if (receipt.status === "success") {
             return true;
@@ -87,7 +87,7 @@ export const transferAction: Action = {
         "TRANSFER_TOKEN_ON_B2",
         "TRANSFER_TOKENS_ON_B2",
         "SEND_TOKENS_ON_B2",
-        "SEND_AVAX_ON_B2",
+        "SEND_B2BTC_ON_B2",
         "PAY_ON_B2",
     ],
     validate: async (runtime: IAgentRuntime, _message: Memory) => {
@@ -127,7 +127,7 @@ export const transferAction: Action = {
 
         let tx = await action.transfer(paramOptions);
         if (tx) {
-            let result = await action.transferTxReceipt(tx.hash);
+            let result = await action.txReceipt(tx.hash);
             if (result) {
                 callback?.({
                     text: "transfer successful",

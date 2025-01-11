@@ -3,6 +3,7 @@ import {
     Hash,
     Address,
     parseUnits,
+    encodeFunctionData,
 } from "viem";
 import { b2Network } from "./chains";
 import { WalletProvider } from "../providers";
@@ -140,6 +141,141 @@ export const approve = async (
         return tx;
     } catch (error) {
         elizaLogger.error("Error approving:", error);
+        return;
+    }
+};
+
+export const depositBTC = async (
+    walletProvider: WalletProvider,
+    farmAddress: Address,
+    amount: string | number
+) => {
+    try {
+        const decimals = b2Network.nativeCurrency.decimals;
+        // const publicClient = walletProvider.getPublicClient();
+
+        const walletClient = walletProvider.getWalletClient();
+        const data = encodeFunctionData({
+            abi: [
+                {
+                    "inputs": [
+
+                    ],
+                    "name": "depositBTC",
+                    "outputs": [
+
+                    ],
+                    "stateMutability": "payable",
+                    "type": "function"
+                },
+            ],
+            functionName: 'depositBTC',
+            args: [],
+        });
+        const txHash = await walletClient.sendTransaction({
+            account: walletProvider.getAddress(),
+            to: farmAddress,
+            data,
+            value: parseUnits(amount.toString(), decimals),
+        });
+
+        elizaLogger.log("Transaction hash:", txHash);
+        return txHash;
+    } catch (error) {
+        elizaLogger.error("Error depositBTC:", error);
+        return;
+    }
+};
+
+// function unstake(uint256 _pid, uint256 _amount) public {}
+export const unstake = async (
+    walletProvider: WalletProvider,
+    farmAddress: Address,
+    amount: string | number
+) => {
+    try {
+        const BTC_PID = 0;
+        const decimals = b2Network.nativeCurrency.decimals;
+        const publicClient = walletProvider.getPublicClient();
+        const { _result, request } = await publicClient.simulateContract({
+            account: walletProvider.getAccount(),
+            address: farmAddress,
+            abi: [
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "_pid",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "_amount",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "unstake",
+                    "outputs": [
+
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+            ],
+            functionName: "unstake",
+            args: [BigInt(BTC_PID), parseUnits(amount.toString(), decimals)],
+        });
+        elizaLogger.debug("Request:", request);
+
+        const walletClient = walletProvider.getWalletClient();
+        const tx = await walletClient.writeContract(request);
+        elizaLogger.log("Transaction:", tx);
+        return tx;
+    } catch (error) {
+        elizaLogger.error("Error unstake:", error);
+        return;
+    }
+};
+
+// function withdraw(uint256 _pid) public {}
+export const withdraw = async (
+    walletProvider: WalletProvider,
+    farmAddress: Address,
+) => {
+    try {
+        const BTC_PID = 0;
+        const publicClient = walletProvider.getPublicClient();
+        const { _result, request } = await publicClient.simulateContract({
+            account: walletProvider.getAccount(),
+            address: farmAddress,
+            abi: [
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "_pid",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "withdraw",
+                    "outputs": [
+
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+            ],
+            functionName: "withdraw",
+            args: [BigInt(BTC_PID)],
+        });
+        elizaLogger.debug("Request:", request);
+
+        const walletClient = walletProvider.getWalletClient();
+        const tx = await walletClient.writeContract(request);
+        elizaLogger.log("Transaction:", tx);
+        return tx;
+    } catch (error) {
+        elizaLogger.error("Error withdraw:", error);
         return;
     }
 };

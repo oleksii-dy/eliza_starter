@@ -20,7 +20,7 @@ describe("Transfer Action", () => {
         }
     });
     describe("Constructor", () => {
-        it("should initialize with wallet provider", () => {
+        it("should initialize with transfer action", () => {
             const ta = new TransferAction(wp);
 
             expect(ta).toBeDefined();

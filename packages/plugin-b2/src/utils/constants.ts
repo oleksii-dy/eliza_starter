@@ -7,6 +7,9 @@ const TOKEN_ADDRESSES: Record<string, Address> = {
     USDT: "0x681202351a488040Fa4FdCc24188AfB582c9DD62",
 };
 
+const FARM_ADDRESS: Address = "0xd5B5f1CA0fa5636ac54b0a0007BA374A1513346e";
+
 export {
     TOKEN_ADDRESSES,
+    FARM_ADDRESS,
 };

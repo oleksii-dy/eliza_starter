@@ -17,3 +17,14 @@ export interface TransferParams {
     recipient: string;
     amount: string | number;
 }
+
+export interface StakeParams {
+    amount: string | number;
+}
+
+export interface UnstakeParams {
+    amount: string | number;
+}
+
+export interface WithdrawParams {
+}

@@ -31,12 +31,10 @@ describe("B2 Network Wallet Provider", () => {
             const pk = generatePrivateKey();
             const ta = new WalletProvider(pk);
             expect(ta).toBeDefined();
-            console.log(`wallet.address {}`, ta.getAddress());
         });
         it("init wallet provider",async () => {
             const ta = await initWalletProvider(mockRuntime);
             expect(ta).toBeDefined();
-            console.log(`wallet.address {}`, ta.getAddress());
         });
     });
 });
