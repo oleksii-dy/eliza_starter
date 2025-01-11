@@ -6,13 +6,13 @@ import {
     State,
     HandlerCallback,
 } from "@elizaos/core";
-import type { EvaluatorOptions, InjactableEvaluator } from "../types";
+import type { EvaluatorOptions, InjectableEvaluator } from "../types";
 
 /**
  * Base abstract class for injectable actions
  */
 @injectable()
-export abstract class BaseInjactableEvaluator implements InjactableEvaluator {
+export abstract class BaseInjectableEvaluator implements InjectableEvaluator {
     // -------- Properties --------
     public alwaysRun: boolean;
     public name: string;

@@ -90,7 +90,7 @@ class SampleActionContent {
 
 This plugin provides abstract classes that you can extend to create Injectable actions or evaluators.
 
-### `BaseInjactableAction`
+### `BaseInjectableAction`
 
 This abstract class simplify the creation of injectable actions.
 You don't need to think about the template for content generation, it will be generated automatically based on the properties of the content Class.
@@ -98,7 +98,7 @@ What you need to implement is the `execute` method.
 
 ```typescript
 import { injectable } from "inversify";
-import { BaseInjactableAction } from "@elizaos/plugin-di";
+import { BaseInjectableAction } from "@elizaos/plugin-di";
 
 class SampleActionContent {
     @property({
@@ -109,7 +109,7 @@ class SampleActionContent {
 }
 
 @injectable()
-class SampleAction extends BaseInjactableAction<SampleActionContent> {
+class SampleAction extends BaseInjectableAction<SampleActionContent> {
     constructor() {
         super({
             /** general action constent options */
@@ -132,7 +132,7 @@ class SampleAction extends BaseInjactableAction<SampleActionContent> {
 }
 ```
 
-### `BaseInjactableEvaluator`
+### `BaseInjectableEvaluator`
 
 This abstract class simplify the creation of injectable evaluators.
 

@@ -1,6 +1,6 @@
 import { IAgentRuntime, Memory, State, elizaLogger } from "@elizaos/core";
 import { injectable } from "inversify";
-import { BaseInjactableEvaluator } from "../evaluators";
+import { BaseInjectableEvaluator } from "../evaluators";
 import { EvaluatorOptions } from "../types";
 import { globalContainer } from "../di";
 
@@ -33,7 +33,7 @@ const options: EvaluatorOptions = {
 };
 
 @injectable()
-export class SampleEvaluator extends BaseInjactableEvaluator {
+export class SampleEvaluator extends BaseInjectableEvaluator {
     constructor() {
         super(options);
     }

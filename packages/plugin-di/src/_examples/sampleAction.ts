@@ -7,7 +7,7 @@ import {
 } from "@elizaos/core";
 import { z } from "zod";
 import { inject, injectable } from "inversify";
-import { BaseInjactableAction } from "../actions";
+import { BaseInjectableAction } from "../actions";
 import { ActionOptions } from "../types";
 import { property } from "../decorators";
 import { globalContainer } from "../di";
@@ -90,7 +90,7 @@ const options: ActionOptions<CreateResourceContent> = {
  * CreateResourceAction
  */
 @injectable()
-export class CreateResourceAction extends BaseInjactableAction<CreateResourceContent> {
+export class CreateResourceAction extends BaseInjectableAction<CreateResourceContent> {
     constructor(
         @inject(SampleProvider)
         private readonly sampleProvider: SampleProvider

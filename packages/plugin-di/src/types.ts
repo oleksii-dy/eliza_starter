@@ -46,7 +46,7 @@ export type ActionOptions<T> = Pick<
 /**
  * Interface of Injectable Action
  */
-export interface InjactableAction<T> extends Action {
+export interface InjectableAction<T> extends Action {
     /**
      * Execute the action
      * @param content The content from processMessages
@@ -66,7 +66,7 @@ export interface InjactableAction<T> extends Action {
  */
 export type InjectableActionClass<T = any, Args extends any[] = any[]> = new (
     ...args: Args
-) => InjactableAction<T>;
+) => InjectableAction<T>;
 
 /**
  * Evaluator options
@@ -79,14 +79,14 @@ export type EvaluatorOptions = Pick<
 /**
  * Interface of Injectable Evaluator
  */
-export type InjactableEvaluator = Evaluator;
+export type InjectableEvaluator = Evaluator;
 
 /**
  * The Class of Injectable Evaluator
  */
 export type InjectableEvaluatorClass<Args extends any[] = any[]> = new (
     ...args: Args
-) => InjactableEvaluator;
+) => InjectableEvaluator;
 
 // ----------- Interfaces for Plugin -----------
 
