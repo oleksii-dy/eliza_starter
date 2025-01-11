@@ -1002,6 +1002,107 @@ export async function generateText({
                 elizaLogger.error(errorMessage);
                 throw new Error(errorMessage);
             }
+
+            case ModelProviderName.LIVEPEER: {
+                elizaLogger.debug("Initializing Livepeer model.");
+
+                if (!endpoint) {
+                    throw new Error("Livepeer Gateway URL is not defined");
+                }
+
+                // Format the request body to exactly match the working curl command
+                const requestBody = {
+                    model: model, // Use the model parameter passed in
+                    messages: [
+                        {
+                            role: "system",
+                            content: runtime.character.system ?? settings.SYSTEM_PROMPT ?? "You are a helpful assistant"
+                        },
+                        {
+                            role: "user",
+                            content: context
+                        }
+                    ],
+                    max_tokens: max_response_length,
+                    stream: false // Keep stream false as in curl
+                };
+
+                // Remove temperature since it's not in working curl
+
+                elizaLogger.debug("Livepeer request:", {
+                    url: endpoint + "/llm",
+                    body: requestBody
+                });
+
+                let attempts = 0;
+                const maxAttempts = 3;
+                const retryDelay = 1000; // 1 second
+
+                while (attempts < maxAttempts) {
+                    try {
+                        // Add -N and --no-buffer equivalent options
+                        const controller = new AbortController();
+                        const signal = controller.signal;
+
+                        const fetchResponse = await runtime.fetch(endpoint+'/llm', {
+                            method: "POST",
+                            headers: {
+                                "accept": "text/event-stream",
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify(requestBody),
+                            signal, // Add signal for no buffering
+                            keepalive: true // Similar to -N in curl
+                        });
+
+                        elizaLogger.log("Livepeer response status:", fetchResponse.status, fetchResponse.statusText);
+
+                        if (!fetchResponse.ok) {
+                            const errorText = await fetchResponse.text();
+                            throw new Error(
+                                `Livepeer request failed (${fetchResponse.status}): ${errorText}`
+                            );
+                        }
+                        const json = await fetchResponse.json();
+                        elizaLogger.log("Livepeer response:", json);
+
+                        if (
+                            !json ||
+                            !json.choices ||
+                            !json.choices[0] ||
+                            !json.choices[0].delta ||
+                            !json.choices[0].delta.content
+                        ) {
+                            throw new Error("Invalid response format from Livepeer");
+                        }
+
+                        // Just return the content as a string since generateText should return a string
+                        response = json.choices[0].delta.content;
+
+                        // Log the actual content to debug
+                        elizaLogger.debug("Livepeer response content:", response);
+                        elizaLogger.debug("Successfully received response from Livepeer model");
+
+                        // If we get here, the request was successful, so break the retry loop
+                        break;
+
+                    } catch (err) {
+                        attempts++;
+                        elizaLogger.error(`Livepeer request attempt ${attempts} failed:`, err);
+
+                        if (attempts === maxAttempts) {
+                            // If we've exhausted all attempts, rethrow the error
+                            throw err;
+                        }
+
+                        // Wait before retrying
+                        await new Promise(resolve => setTimeout(resolve, retryDelay));
+                        elizaLogger.debug(`Retrying Livepeer request, attempt ${attempts + 1} of ${maxAttempts}`);
+                    }
+                }
+
+                break;
+            }
         }
 
         return response;
