@@ -18,7 +18,7 @@ services:
             - tee:/app/packages/client-twitter/src/tweetcache
             - tee:/app/db.sqlite
         environment:
-            - OPENAI_API_KEY= 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 
+            - OPENAI_API_KEY= 
             - REDPILL_API_KEY=
             - ELEVENLABS_XI_API_KEY=
             - ELEVENLABS_MODEL_ID=eleven_multilingual_v2
