@@ -1,5 +1,5 @@
 // Export all files for Eliza on Flow
-export * as "symbols" from "./symbols";
+export * as symbols from "./symbols";
 export * from "./decorators";
 export * from "./types";
 export * from "./factories";

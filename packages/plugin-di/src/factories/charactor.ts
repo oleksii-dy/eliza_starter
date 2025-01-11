@@ -36,9 +36,18 @@ export async function normalizeCharacter(
 
     let plugins: Plugin[] = [];
     if (character.plugins?.length > 0) {
-        plugins = (
-            await Promise.all(character.plugins.map(normalizePlugin))
-        ).filter((plugin) => plugin !== undefined) as Plugin[];
+        const normalizedPlugins = await Promise.all(
+            character.plugins.map(normalizePlugin)
+        );
+        const validPlugins = normalizedPlugins.filter(
+            (plugin): plugin is Plugin => plugin !== undefined
+        );
+        if (validPlugins.length !== character.plugins.length) {
+            elizaLogger.warn(
+                `Some plugins failed to normalize: ${character.plugins.length - validPlugins.length} failed`
+            );
+        }
+        plugins = validPlugins;
     }
     return Object.assign({}, character, { plugins }) as Character;
 }
