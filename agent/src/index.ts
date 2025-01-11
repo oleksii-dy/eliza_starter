@@ -11,6 +11,9 @@ import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 import { GitHubClientInterface } from "@elizaos/client-github";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
+import { DirectClient } from "@elizaos/client-direct";
+import { PrimusAdapter } from "@elizaos/plugin-primus";
+
 import {
     AgentRuntime,
     CacheManager,
@@ -99,6 +102,7 @@ import net from "net";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
+import {dominosPlugin} from "@elizaos/plugin-dominos";
 
 import {
     githubInitializePlugin,
@@ -638,6 +642,19 @@ export async function createAgent(
         elizaLogger.log("opacityProverUrl", process.env.OPACITY_PROVER_URL);
         elizaLogger.log("modelProvider", character.modelProvider);
         elizaLogger.log("token", token);
+    }
+    if (
+        process.env.PRIMUS_APP_ID &&
+        process.env.PRIMUS_APP_SECRET &&
+        process.env.VERIFIABLE_INFERENCE_ENABLED === "true"){
+        verifiableInferenceAdapter = new PrimusAdapter({
+            appId: process.env.PRIMUS_APP_ID,
+            appSecret: process.env.PRIMUS_APP_SECRET,
+            attMode: "proxytls",
+            modelProvider: character.modelProvider,
+            token,
+        });
+        elizaLogger.log("Verifiable inference primus adapter initialized");
     }
 
     return new AgentRuntime({
