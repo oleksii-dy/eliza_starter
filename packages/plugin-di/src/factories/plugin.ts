@@ -17,7 +17,7 @@ import type { PluginFactory, PluginOptions } from "../types";
  */
 async function getInstanceFromContainer<T>(
     ctx: interfaces.Context,
-    item: T | Function,
+    item: T | (new (...args: any[]) => T),
     type: string
 ): Promise<T | undefined> {
     if (typeof item === "function") {

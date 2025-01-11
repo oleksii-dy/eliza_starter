@@ -38,23 +38,33 @@ export class SampleEvaluator extends BaseInjectableEvaluator {
         super(options);
     }
 
-    async handler(runtime: IAgentRuntime, memory: Memory, _state?: State) {
+    async handler(runtime: IAgentRuntime, memory: Memory) {
         // Evaluation logic for the evaluator
         elizaLogger.log("Evaluating data in sampleEvaluator...");
+        try {
+            if (!memory.content || typeof memory.content.text !== 'string') {
+                return {
+                    score: 0,
+                    reason: "Invalid memory content structure",
+                };
+            }
 
-        // Example evaluation logic
-        if (memory.content?.text?.includes("important")) {
-            elizaLogger.log("Important content found in memory.");
-            return {
-                score: 1,
-                reason: "Memory contains important content.",
-            };
-        } else {
-            elizaLogger.log("No important content found in memory.");
-            return {
-                score: 0,
-                reason: "Memory does not contain important content.",
-            };
+            if (memory.content.text.includes("important")) {
+                elizaLogger.log("Important content found in memory.");
+                return {
+                    score: 1,
+                    reason: "Memory contains important content.",
+                };
+            } else {
+                elizaLogger.log("No important content found in memory.");
+                return {
+                    score: 0,
+                    reason: "Memory does not contain important content.",
+                };
+            }
+        } catch (error) {
+            elizaLogger.error("Error in sampleEvaluator:", error);
+            throw error;
         }
     }
 }
