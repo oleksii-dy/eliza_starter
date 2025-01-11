@@ -588,7 +588,8 @@ export class AgentRuntime implements IAgentRuntime {
                                 await this.ragKnowledgeManager.removeKnowledge(
                                     knowledgeId
                                 );
-                                // Also remove any associated chunks
+                                // Also remove any associated chunks - this is needed for non-PostgreSQL adapters
+                                // PostgreSQL adapter handles chunks internally via foreign keys
                                 await this.ragKnowledgeManager.removeKnowledge(
                                     `${knowledgeId}-chunk-*` as UUID
                                 );
