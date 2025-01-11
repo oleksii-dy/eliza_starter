@@ -121,7 +121,21 @@ export class CreateResourceAction extends BaseInjectableAction<CreateResourceCon
         }
 
         // Call injected provider to do some work
-        await this.sampleProvider.get(runtime, message, state);
+        try {
+            const result = await this.sampleProvider.get(
+                runtime,
+                message,
+                state
+            );
+            if (!result) {
+                elizaLogger.warn("Provider did not return a result.");
+            } else {
+                elizaLogger.info("Privder result:", result);
+            }
+            // Use result in callback
+        } catch (error) {
+            elizaLogger.error("Provider error:", error);
+        }
 
         // persist relevant data if needed to memory/knowledge
         // const memory = {
