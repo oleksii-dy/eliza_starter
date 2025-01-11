@@ -71,6 +71,7 @@ import { fuelPlugin } from "@elizaos/plugin-fuel";
 import { genLayerPlugin } from "@elizaos/plugin-genlayer";
 import { giphyPlugin } from "@elizaos/plugin-giphy";
 import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
+import { initiaPlugin } from "@elizaos/plugin-initia";
 import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
 import { lensPlugin } from "@elizaos/plugin-lensNetwork";
 import { letzAIPlugin } from "@elizaos/plugin-letzai";
@@ -897,6 +898,7 @@ export async function createAgent(
             getSecret(character, "RESERVOIR_API_KEY")
                 ? createNFTCollectionsPlugin()
                 : null,
+            getSecret(characeter, "INITIA_PRIVATE_KEY") ? initiaPlugin : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
