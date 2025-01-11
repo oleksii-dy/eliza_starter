@@ -45,7 +45,7 @@ return new AgentRuntime({
 ```
 
 ### 4. Verification Steps:
-- Ensure you see ["✓ Registering action: <plugin actions>"] in the console to verify successful integration.
+- Ensure you see ["✓ Registering action: GET_INFERENCE"] in the console to verify successful integration.
 
 ### Important Notes:
 - Make sure to have the plugin dependencies listed in the package.json file.
@@ -55,22 +55,7 @@ return new AgentRuntime({
 ## Configuration Documentation
 
 ### Required Environment Variables
-- `DB_HOST`: the host name of the database server
-- `DB_USER`: the username used to connect to the database
-- `DB_PASSWORD`: the password used to connect to the database
-- `SECRET_KEY`: the secret key used for encryption
-
-### .env Example File
-```plaintext
-DB_HOST=localhost
-DB_USER=myusername
-DB_PASSWORD=mypassword
-SECRET_KEY=mysecretkey
-```
-
-### Configuration Instructions
-- Configuration is done in the .env file
-- Ensure to set the .env file in the .gitignore to prevent it from being committed to the repository
+- This code does not require any Environment Variables
 
 ## Features
 
@@ -80,7 +65,7 @@ Get inference from Allora Network
 
 #### Properties
 - Name: GET_INFERENCE
-- Similes: 
+- Similes:
   - GET_ALLORA_INFERENCE
   - GET_TOPIC_INFERENCE
   - ALLORA_INFERENCE
