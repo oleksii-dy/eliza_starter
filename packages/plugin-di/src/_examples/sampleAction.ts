@@ -120,7 +120,7 @@ export class CreateResourceAction extends BaseInjectableAction<CreateResourceCon
         }
 
         // Call injected provider to do some work
-        this.sampleProvider.get(runtime, message, state);
+        await this.sampleProvider.get(runtime, message, state);
 
         // persist relevant data if needed to memory/knowledge
         // const memory = {
