@@ -1,6 +1,6 @@
 import { CreateResourceAction } from "./sampleAction";
 import { SampleProvider } from "./sampleProvider";
-import { SampleEvaluator } from "./sampleEvalutor";
+import { SampleEvaluator } from "./sampleEvaluator";
 import { PluginOptions } from "../types";
 
 export const samplePlugin: PluginOptions = {

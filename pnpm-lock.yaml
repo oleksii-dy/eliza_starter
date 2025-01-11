@@ -1566,18 +1566,6 @@ importers:
         specifier: 7.1.0
         version: 7.1.0
 
-  packages/plugin-defillama:
-    dependencies:
-      '@elizaos/core':
-        specifier: workspace:*
-        version: link:../core
-      axios:
-        specifier: ^1.6.0
-        version: 1.7.9(debug@4.4.0)
-      tsup:
-        specifier: ^8.3.5
-        version: 8.3.5(@swc/core@1.10.6(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.2)(yaml@2.7.0)
-
   packages/plugin-depin:
     dependencies:
       '@elizaos/core':
@@ -1608,8 +1596,8 @@ importers:
         specifier: 11.0.3
         version: 11.0.3
       zod:
-        specifier: ^3.24.1
-        version: 3.24.1
+        specifier: 3.23.8
+        version: 3.23.8
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -2511,6 +2499,9 @@ importers:
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
+      '@elizaos/plugin-trustdb':
+        specifier: workspace:*
+        version: link:../plugin-trustdb
       '@uniswap/sdk-core':
         specifier: 6.0.0
         version: 6.0.0
@@ -39081,7 +39072,7 @@ snapshots:
 
   extract-zip@2.0.1:
     dependencies:
-      debug: 4.3.4
+      debug: 4.4.0(supports-color@5.5.0)
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:

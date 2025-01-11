@@ -136,4 +136,4 @@ class SampleAction extends BaseInjectableAction<SampleActionContent> {
 
 This abstract class simplify the creation of injectable evaluators.
 
-Please refer to the [sampleEvalutor](./src/_examples/sampleEvalutor.ts) for an example of how to create an evaluator.
+Please refer to the [sampleEvaluator](./src/_examples/sampleEvaluator.ts) for an example of how to create an evaluator.

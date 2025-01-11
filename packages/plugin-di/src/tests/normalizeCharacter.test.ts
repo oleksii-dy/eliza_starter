@@ -15,6 +15,13 @@ describe("Normalize Character", () => {
         normalizedCharacter = await normalizeCharacter(sampleCharacter);
     });
 
+    // Add these test cases:
+    it("should handle empty plugins array", async () => {
+        const emptyPluginsChar = { ...defaultCharacter, plugins: [] };
+        const normalized = await normalizeCharacter(emptyPluginsChar);
+        expect(normalized.plugins).toEqual([]);
+    });
+
     describe("Elements", () => {
         it("should have a valid character", () => {
             expect(normalizedCharacter).toBeTypeOf("object");
