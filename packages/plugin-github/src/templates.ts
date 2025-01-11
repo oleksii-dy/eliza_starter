@@ -86,12 +86,105 @@ Here are the recent user messages for context:
 
 export const createPullRequestTemplate = `
 Extract the details for creating a pull request in the GitHub repository:
-- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
-- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
-- **branch** (string): The branch of the GitHub repository (e.g., "main")
-- **title** (string): The title of the pull request (e.g., "Add new documentation")
-- **description** (string): The description of the pull request (optional)
+- **owner** (string): The owner of the GitHub repository (e.g., "elizaOS")
+- **repo** (string): The name of the GitHub repository (e.g., "eliza")
+- **branch** (string): The branch of the GitHub repository (e.g., "develop")
+- **title** (string): The title of the pull request (e.g., "docs: Add new documentation") please generate the title following the format of the title in the pull request template below.
+- **description** (string): The description of the pull request. Please use the pull request template below to fill in the details.
 - **files** (array): An array of files to commit with their content
+
+${contextTemplate}
+
+Title Format: The title should follow this pattern: ^(feat|fix|docs|style|refactor|test|chore)(\([a-zA-Z0-9-]+\))?:\ .+
+
+description format:
+\`\`\`markdown
+<!-- Use this template by filling in information and copying and pasting relevant items out of the HTML comments. -->
+
+# Relates to
+
+<!-- LINK TO ISSUE OR TICKET -->
+
+<!-- This risks section must be filled out before the final review and merge. -->
+
+# Risks
+
+<!--
+Low, medium, large. List what kind of risks and what could be affected.
+-->
+
+# Background
+
+## What does this PR do?
+
+## What kind of change is this?
+
+<!--
+Bug fixes (non-breaking change which fixes an issue)
+Improvements (misc. changes to existing features)
+Features (non-breaking change which adds functionality)
+Updates (new versions of included code)
+-->
+
+<!-- This "Why" section is most relevant if there are no linked issues explaining why. If there is a related issue, it might make sense to skip this why section. -->
+<!--
+## Why are we doing this? Any context or related work?
+-->
+
+# Documentation changes needed?
+
+<!--
+My changes do not require a change to the project documentation.
+My changes require a change to the project documentation.
+If documentation change is needed: I have updated the documentation accordingly.
+-->
+
+<!-- Please show how you tested the PR. This will really help if the PR needs to be retested and probably help the PR get merged quicker. -->
+
+# Testing
+
+## Where should a reviewer start?
+
+## Detailed testing steps
+
+<!--
+None: Automated tests are acceptable.
+-->
+
+<!--
+- As [anon/admin], go to [link]
+  - [do action]
+  - verify [result]
+-->
+
+<!-- If there is a UI change, please include before and after screenshots or videos. This will speed up PRs being merged. It is extra nice to annotate screenshots with arrows or boxes pointing out the differences. -->
+<!--
+## Screenshots
+### Before
+### After
+-->
+
+<!-- If there is anything about the deployment, please make a note. -->
+<!--
+# Deploy Notes
+-->
+
+<!--  Copy and paste command line output. -->
+<!--
+## Database changes
+-->
+
+<!--  Please specify deploy instructions if there is something more than the automated steps. -->
+<!--
+## Deployment instructions
+-->
+
+<!-- If you are on Discord, please join https://discord.gg/ai16z and state your Discord username here for the contributor role and join us in #development-feed -->
+<!--
+## Discord username
+
+-->
+\`\`\`
 
 Provide the pull request details in the following JSON format:
 
@@ -101,7 +194,7 @@ Provide the pull request details in the following JSON format:
     "repo": "<repo>",
     "branch": "<branch>",
     "title": "<title>",
-    "description": "<description>"
+    "description": "<description>",
     "files": [
         {
             "path": "<path>",
@@ -111,8 +204,212 @@ Provide the pull request details in the following JSON format:
 }
 \`\`\`
 
-Here are the recent user messages for context:
-{{recentMessages}}
+Example:
+\`\`\`json
+{
+    "owner": "elizaOS",
+    "repo": "eliza",
+    "branch": "develop",
+    "title": "feat: implement multi-file changes",
+    "description": "This pull request implements changes across multiple files to enhance the project functionality.",
+    "files": [
+        {
+            "path": "src/featureA.js",
+            "content": "import { utility } from './utils/utility';\nconsole.log('Feature A implementation');\nconst resultA = utility();\nconsole.log('Utility function result for Feature A:', resultA);"
+        },
+        {
+            "path": "src/featureB.js",
+            "content": "import { helper } from './utils/helper';\nconsole.log('Feature B implementation');\nconst resultB = helper();\nconsole.log('Helper function result for Feature B:', resultB);"
+        }
+    ]
+}
+\`\`\`
+\`\`\`json
+{
+    "owner": "elizaOS",
+    "repo": "eliza",
+    "branch": "develop",
+    "title": "fix: resolve issues in multiple modules",
+    "description": "This pull request resolves issues found in multiple modules of the project.",
+    "files": [
+        {
+            "path": "src/moduleA.js",
+            "content": "export const moduleAFunction = () => {\n    console.log('Executing module A function');\n    return 'Module A function executed';\n};"
+        },
+        {
+            "path": "src/moduleB.js",
+            "content": "export const moduleBFunction = () => {\n    console.log('Executing module B function');\n    return 'Module B function executed';\n};"
+        }
+    ]
+}
+\`\`\`
+
+\`\`\`json
+{
+    "owner": "elizaOS",
+    "repo": "eliza",
+    "branch": "develop",
+    "title": "docs: update README with new instructions",
+    "description": "This pull request updates the README file with new setup instructions and usage examples.",
+    "files": [
+        {
+            "path": "README.md",
+            "content": "# Project Title\n\n## New Setup Instructions\n\n1. Clone the repository\n2. Install dependencies\n3. Run the application\n\n## Usage Examples\n\n- Example 1: Running the app\n- Example 2: Testing the app"
+        }
+    ]
+}
+\`\`\`
+
+\`\`\`json
+{
+    "owner": "elizaOS",
+    "repo": "eliza",
+    "branch": "develop",
+    "title": "style: improve code formatting",
+    "description": "This pull request improves the code formatting across several files for better readability.",
+    "files": [
+        {
+            "path": "src/formatting.js",
+            "content": "function formatCode() {\n    console.log('Improving code formatting');\n    return 'Code formatted';\n}"
+        }
+    ]
+}
+\`\`\`
+
+\`\`\`json
+{
+    "owner": "elizaOS",
+    "repo": "eliza",
+    "branch": "develop",
+    "title": "refactor: optimize data processing logic",
+    "description": "This pull request refactors the data processing logic to enhance performance and maintainability.",
+    "files": [
+        {
+            "path": "src/dataProcessor.js",
+            "content": "export const processData = (data) => {\n    console.log('Optimizing data processing');\n    return data.map(item => item * 2);\n};"
+        }
+    ]
+}
+\`\`\`
+
+\`\`\`json
+{
+    "owner": "elizaOS",
+    "repo": "eliza",
+    "branch": "develop",
+    "title": "test: add unit tests for utility functions",
+    "description": "This pull request adds unit tests for the utility functions to ensure their correctness.",
+    "files": [
+        {
+            "path": "tests/utility.test.js",
+            "content": "import { utility } from '../src/utils/utility';\ntest('utility function should return expected result', () => {\n    expect(utility()).toBe('expected result');\n});"
+        }
+    ]
+}
+\`\`\`
+
+\`\`\`json
+{
+    "owner": "elizaOS",
+    "repo": "eliza",
+    "branch": "develop",
+    "title": "chore: update dependencies to latest versions",
+    "description": "This pull request updates the project dependencies to their latest versions to ensure compatibility and security.",
+    "files": [
+        {
+            "path": "package.json",
+            "content": "{\n  \"dependencies\": {\n    \"libraryA\": \"^2.0.0\",\n    \"libraryB\": \"^3.1.0\"\n  }\n}"
+        }
+    ]
+}
+\`\`\`
+`;
+
+export const generateCodeFileChangesTemplate = `
+Using the files in the repository, generate the code file changes (please modify existing files, before creating new files unless you are explicitly asked to create a new file) to implement the following issue. Please keep the language consistent with the existing files and ensure that only the files specified are modified or created as needed:
+Issue: {{specificIssue}}
+Files: {{files}}
+
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **feature** (string): The feature to be implemented (e.g., "Add a new feature to the project")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+- **files** (array): An array of changes to be made, each with a file path and the new content. Only the specified files should be modified or created.
+
+${contextTemplate}
+Provide the code file changes in the following JSON format:
+
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>",
+    "feature": "<feature>",
+    "files": [
+        {
+            "path": "<path>",
+            "content": "<new_content>"
+        }
+    ]
+}
+\`\`\`
+
+**Examples:**
+
+**Example 1: Modifying Existing Files and Creating a New File**
+
+\`\`\`json:path/to/packages/plugin-github/src/templates.ts
+{
+    "owner": "octocat",
+    "repo": "hello-world",
+    "branch": "feature-branch",
+    "feature": "Implement user authentication",
+    "files": [
+        {
+            "path": "src/authentication.js",
+            "content": "export const authenticateUser = (credentials) => {\n    // Authentication logic here\n};"
+        },
+        {
+            "path": "src/utils/authHelper.js",
+            "content": "export const validateCredentials = (credentials) => {\n    // Validation logic here\n};"
+        }
+    ]
+}
+\`\`\`
+
+**Example 2: Creating a New File Only**
+
+\`\`\`json:path/to/packages/plugin-github/src/templates.ts
+{
+    "owner": "octocat",
+    "repo": "hello-world",
+    "branch": "feature-readme-update",
+    "feature": "Add detailed setup instructions",
+    "files": [
+        {
+            "path": "docs/setup.md",
+            "content": "# Setup Instructions\n\nFollow these steps to set up the project:\n1. Clone the repository.\n2. Install dependencies.\n3. Run the development server."
+        }
+    ]
+}
+\`\`\`
+
+**Example 3: Modifying a Single Existing File**
+
+\`\`\`json:path/to/packages/plugin-github/src/templates.ts
+{
+    "owner": "octocat",
+    "repo": "hello-world",
+    "branch": "bugfix-login",
+    "feature": "Fix login issue causing crashes",
+    "files": [
+        {
+            "path": "src/login.js",
+            "content": "export const login = (username, password) => {\n    try {\n        // Login logic\n    } catch (error) {\n        console.error('Login failed:', error);\n    }\n};"
+        }
+    ]
+}
+\`\`\`
 `;
 
 export const createCommitTemplate = `
@@ -166,13 +463,17 @@ Here are the recent user messages for context:
 
 export const createIssueTemplate = createTemplate(
     `Create a new GitHub issue, ensure it is distinct from existing issues by comparing the title, body, and labels with previous issues, using a similarity threshold to determine if the issue should be created. Align the issue with the character's goals and the user's request to ensure its relevance and necessity.
-Incorporate examples from the provided files to clarify the issue details. Generate the title, body, and labels based on the character's goals and the user's request, ensuring the owner and repository remain unchanged. Assign relevant labels as appropriate:
-- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
-- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
-- **branch** (string): The branch of the GitHub repository (e.g., "main")
-- **title** (string): The title of the issue (e.g., "Add new documentation")
-- **body** (string): The body of the issue (e.g., "Add new documentation")
-- **labels** (array): The labels of the issue (optional)
+    Incorporate examples from the provided files to clarify the issue details. Generate the title, body, and labels based on the character's goals and the user's request, ensuring the owner and repository remain unchanged. Assign relevant labels as appropriate:
+    - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+    - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+    - **branch** (string): The branch of the GitHub repository (e.g., "main")
+    - **title** (string): The title of the issue (e.g., "Add new documentation")
+    - **body** (string): The body of the issue (e.g., "Add new documentation")
+    - **labels** (array): The labels of the issue (optional)
+
+    Here is the request from the user:
+    {{message}}
+
 Complete the issue template for the body of the issue generated by the agent.
 If it is a bug report use:
 \`\`\`
@@ -196,11 +497,14 @@ If it is a bug report use:
 
 <!-- Add any other context about the problem here, including code snippets and file references. -->
 
-**Related Issues** (if any)
+**Related Issues/PRs** (if any)
 
-<!-- Reference any related issues with their URLs if relevant. -->
-{{#each previousIssues}}
+<!-- Reference any related issues/PRs with their URLs if relevant. -->
+{{#each relatedIssues}}
 - [Issue #{{this.number}}]({{this.url}})
+{{/each}}
+{{#each relatedPRs}}
+- [PR #{{this.number}}]({{this.url}})
 {{/each}}
 \`\`\`
 
@@ -223,11 +527,14 @@ If it is a feature request use:
 
 <!-- Add any other context or screenshots about the feature request here, including code snippets and file references. -->
 
-**Related Issues**
+**Related Issues/PRs**
 
-<!-- Reference any related issues with their URLs if relevant. -->
-{{#each previousIssues}}
+<!-- Reference any related issues/PRs with their URLs if relevant. -->
+{{#each relatedIssues}}
 - [Issue #{{this.number}}]({{this.url}})
+{{/each}}
+{{#each relatedPRs}}
+- [PR #{{this.number}}]({{this.url}})
 {{/each}}
 \`\`\``,
     `
@@ -405,6 +712,7 @@ Would integrate with observability stack and help with:
 - [Issue #456](https://github.com/octocat/hello-world/issues/456)
 \`\`\`
 
+More thorough examples:
 ### 1. Architecture & Design
 #### Feature Request: Implement Singleton Design Pattern
 \`\`\`json
@@ -1257,6 +1565,56 @@ Examples with emoji reactions:
 {
     "comment": "",
     "emojiReaction": null
+}
+\`\`\`
+
+`;
+
+export const implementFeatureTemplate = `
+Extract the details for implementing a feature in the GitHub repository:
+Ensure the owner, repository, branch, and feature remain unchanged. Provide examples as appropriate:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "realitySpiral/demo")
+- **base** (string): The base branch of the GitHub repository (e.g., "develop")
+- **feature** (string): The feature to be implemented (e.g., "Replace console.log with elizaLogger.log")
+
+${contextTemplate}
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>",
+    "base": "<base>",
+    "feature": "<feature>"
+}
+\`\`\`
+
+Examples:
+\`\`\`json
+{
+    "owner": "octocat",
+    "repo": "hello-world",
+    "branch": "main",
+    "feature": "Replace console.log with elizaLogger.log for better logging"
+}
+\`\`\`
+\`\`\`json
+{
+    "owner": "octocat",
+    "repo": "hello-world",
+    "branch": "develop",
+    "base": "develop",
+    "feature": "Update all API calls to use async/await syntax"
+}
+\`\`\`
+\`\`\`json
+{
+    "owner": "octocat",
+    "repo": "hello-world",
+    "branch": "feature/ui-enhancements",
+    "base": "develop",
+    "feature": "Redesign the user interface for the settings page"
 }
 \`\`\`
 

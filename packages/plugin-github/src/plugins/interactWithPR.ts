@@ -9,6 +9,7 @@ import {
     generateObject,
     ModelClass,
     Plugin,
+    Content,
 } from "@elizaos/core";
 import { GitHubService } from "../services/github";
 import {
@@ -16,9 +17,17 @@ import {
     AddCommentToPRSchema,
     ClosePRActionContent,
     ClosePRActionSchema,
+    CreateCommitContent,
+    CreateCommitSchema,
+    CreatePullRequestContent,
+    CreatePullRequestSchema,
+    GenerateCodeFileChangesContent,
+    GenerateCodeFileChangesSchema,
     GenerateCommentForASpecificPRSchema,
     GeneratePRCommentReplyContent,
     GeneratePRCommentReplySchema,
+    ImplementFeatureContent,
+    ImplementFeatureSchema,
     MergePRActionContent,
     MergePRActionSchema,
     ReactToPRContent,
@@ -27,8 +36,12 @@ import {
     ReplyToPRCommentSchema,
     isAddCommentToPRContent,
     isClosePRActionContent,
+    isCreateCommitContent,
+    isCreatePullRequestContent,
+    isGenerateCodeFileChangesContent,
     isGenerateCommentForASpecificPRSchema,
     isGeneratePRCommentReplyContent,
+    isImplementFeatureContent,
     isMergePRActionContent,
     isReactToPRContent,
     isReplyToPRCommentContent,
@@ -40,13 +53,20 @@ import {
 import {
     addCommentToPRTemplate,
     closePRActionTemplate,
+    createCommitTemplate,
+    createPullRequestTemplate,
+    generateCodeFileChangesTemplate,
     generateCommentForASpecificPRTemplate,
     generatePRCommentReplyTemplate,
+    implementFeatureTemplate,
     mergePRActionTemplate,
     reactToPRTemplate,
     replyToPRCommentTemplate,
 } from "../templates";
 import fs from "fs/promises";
+import { createIssueAction } from "./createIssue";
+import { createCommitAction } from "./createCommit";
+import { createPullRequestAction } from "./createPullRequest";
 
 export const reactToPRAction: Action = {
     name: "REACT_TO_PR",
@@ -80,7 +100,7 @@ export const reactToPRAction: Action = {
             runtime,
             message,
             [],
-            false,
+            true,
             true
         );
         elizaLogger.info("State:", updatedState);
@@ -247,7 +267,7 @@ export const addCommentToPRAction: Action = {
             runtime,
             message,
             [],
-            false,
+            true,
             true
         );
         elizaLogger.info("State:", updatedState);
@@ -549,7 +569,7 @@ export const closePRAction: Action = {
             runtime,
             message,
             [],
-            false,
+            true,
             true
         );
         elizaLogger.info("State:", updatedState);
@@ -664,7 +684,7 @@ export const mergePRAction: Action = {
             runtime,
             message,
             [],
-            false,
+            true,
             true
         );
         elizaLogger.info("State:", updatedState);
@@ -823,7 +843,7 @@ export const replyToPRCommentAction: Action = {
             runtime,
             message,
             [],
-            false,
+            true,
             true
         );
         elizaLogger.info("State:", updatedState);
@@ -951,6 +971,159 @@ export const replyToPRCommentAction: Action = {
     ],
 };
 
+export const implementFeatureAction: Action = {
+    name: "IMPLEMENT_FEATURE",
+    similes: ["IMPLEMENT_FEATURE", "REPLACE_LOGS"],
+    description: "Creates an issue, commits changes, and creates a pull request for a specified feature.",
+    validate: async (runtime: IAgentRuntime) => {
+        const token = !!runtime.getSetting("GITHUB_API_TOKEN");
+        return token;
+    },
+    handler: async (
+        runtime: IAgentRuntime,
+        message: Memory,
+        state: State,
+        options: any,
+        callback?: HandlerCallback
+    ) => {
+        elizaLogger.log("[implementFeature] Composing state for message:", message);
+        if (!state) {
+            state = (await runtime.composeState(message)) as State;
+        } else {
+            state = await runtime.updateRecentMessageState(state);
+        }
+        const updatedState = await incorporateRepositoryState(
+            state,
+            runtime,
+            message,
+            [],
+            true,
+            true
+        );
+        elizaLogger.info("State:", updatedState);
+
+        const context = composeContext({
+            state: updatedState,
+            template: implementFeatureTemplate,
+        });
+        const details = await generateObject({
+            runtime,
+            context,
+            modelClass: ModelClass.LARGE,
+            schema: ImplementFeatureSchema,
+        });
+
+        if (!isImplementFeatureContent(details.object)) {
+            elizaLogger.error("Invalid content:", details.object);
+            throw new Error("Invalid content");
+        }
+
+        const content = details.object as ImplementFeatureContent;
+        await fs.writeFile("implementFeatureContent.json", JSON.stringify(content, null, 2));
+        const githubService = new GitHubService({
+            owner: content.owner,
+            repo: content.repo,
+            auth: runtime.getSetting("GITHUB_API_TOKEN"),
+        });
+        try {
+            let issue;
+            if (content.issue != null) {
+                elizaLogger.info(`Getting issue ${content.issue} from repository ${content.owner}/${content.repo}`);
+                issue = await githubService.getIssue(content.issue);
+            } else {
+                message.content.text = `Create an issue for ${content.feature} in repository ${content.owner}/${content.repo}`;
+                issue = await createIssueAction.handler(runtime, message, updatedState, options);
+                elizaLogger.info(`Created issue successfully!`);
+            }
+            await fs.writeFile("issue.json", JSON.stringify(issue, null, 2));
+            updatedState.specificIssue = JSON.stringify(issue, null, 2)
+            // Generate code file changes
+            const codeFileChangesContext = composeContext({
+                state: updatedState,
+                template: generateCodeFileChangesTemplate,
+            });
+            await fs.writeFile("codeFileChangesContext.json", JSON.stringify(codeFileChangesContext, null, 2));
+            const codeFileChangesDetails = await generateObject({
+                runtime,
+                context: codeFileChangesContext,
+                modelClass: ModelClass.LARGE,
+                schema: GenerateCodeFileChangesSchema,
+            });
+            await fs.writeFile("codeFileChanges.json", JSON.stringify(codeFileChangesDetails.object, null, 2));
+            if (!isGenerateCodeFileChangesContent(codeFileChangesDetails.object)) {
+                elizaLogger.error("Invalid code file changes content:", codeFileChangesDetails.object);
+                throw new Error("Invalid code file changes content");
+            }
+
+            const codeFileChangesContent = codeFileChangesDetails.object as GenerateCodeFileChangesContent;
+            updatedState.codeFileChanges = codeFileChangesContent.files;
+            elizaLogger.info(`Generated code file changes successfully!`, JSON.stringify(codeFileChangesContent, null, 2));
+            message.content.text = `Commit changes to the repository ${content.owner}/${content.repo} on branch realitySpiral/demoPR with the commit message: ${content.feature}`;
+            // Commit changes
+            const commit = await createCommitAction.handler(runtime, message, updatedState, options);
+            updatedState.specificCommit = commit;
+            elizaLogger.info(`Committed changes successfully!`, JSON.stringify(commit, null, 2));
+            await fs.writeFile("commit.json", JSON.stringify(commit, null, 2));
+            message.content.text = `Create a pull request on repository ${content.owner}/${content.repo} with branch '${content.branch}', title '${content.feature}' against base '${content.base}' and files ${JSON.stringify([])}`;
+            // Create pull request
+            const pullRequest = await createPullRequestAction.handler(runtime, message, updatedState, options);
+            elizaLogger.info(`Pull request created successfully!`);
+            await fs.writeFile("pullRequest.json", JSON.stringify(pullRequest, null, 2));
+            if (callback) {
+                callback({
+                    text: `Pull request created successfully!`,
+                    attachments: [],
+                });
+            }
+        } catch (error) {
+            elizaLogger.error(
+                `Error implementing feature in repository ${content.owner}/${content.repo} on branch ${content.branch}:`,
+                error
+            );
+            if (callback) {
+                callback(
+                    {
+                        text: `Error implementing feature in repository ${content.owner}/${content.repo}. Please try again.`,
+                    },
+                    []
+                );
+            }
+        }
+    },
+    examples: [
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Implement replacing console.log with elizaLogger.log across the repo on repository elizaOS/eliza branch realitySpiral/demo against base develop",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Pull request created successfully! URL: https://github.com/elizaOS/eliza/pull/1",
+                    action: "IMPLEMENT_FEATURE",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "Implement feature for issue #42 in repository elizaOS/eliza branch develop against base develop",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Pull request created successfully! URL: https://github.com/elizaOS/eliza/pull/2",
+                    action: "IMPLEMENT_FEATURE",
+                },
+            },
+        ],
+    ],
+};
+
 export const githubInteractWithPRPlugin: Plugin = {
     name: "githubInteractWithPR",
     description:
@@ -961,6 +1134,7 @@ export const githubInteractWithPRPlugin: Plugin = {
         closePRAction,
         mergePRAction,
         replyToPRCommentAction,
+        implementFeatureAction,
     ],
     evaluators: [],
     providers: [],

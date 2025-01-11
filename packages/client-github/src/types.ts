@@ -7,9 +7,7 @@ export const OODASchema = z.object({
         "NOTHING",
         "COMMENT_ON_ISSUE",
         "COMMENT_ON_PULL_REQUEST",
-        "REACT_TO_ISSUE",
         "MERGE_PULL_REQUEST",
-        "REACT_TO_PULL_REQUEST",
         "CLOSE_ISSUE",
         "CLOSE_PULL_REQUEST",
     ]),
@@ -23,7 +21,7 @@ export const OODASchema = z.object({
     message: z.string().nullable().optional(),
     labels: z.array(z.string()).nullable().optional(),
     issue: z.number().nullable().optional(),
-    reasoning: z.string(),
+    reasoning: z.string().nullable().optional(),
     reaction: z.enum(githubReactions as [string, ...string[]]).nullable().optional(),
 })
 

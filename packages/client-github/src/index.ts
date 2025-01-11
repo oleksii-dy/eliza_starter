@@ -18,10 +18,11 @@ import {
     incorporateRepositoryState,
     getRepositoryRoomId,
     saveIssuesToMemory,
+    GitHubService,
+    savePullRequestsToMemory,
 } from "@elizaos/plugin-github";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
-import { savePullRequestsToMemory } from "./utils";
 import fs from "fs/promises";
 
 export class GitHubClient extends EventEmitter {
@@ -52,7 +53,8 @@ export class GitHubClient extends EventEmitter {
     private startOodaLoop() {
         this.processOodaCycle();
         const interval =
-            Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) || 60000; // Default to 1 minute
+            Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) ||
+            300000; // Default to 1 minute
         elizaLogger.log("Starting OODA loop with interval:", interval);
         setInterval(() => {
             this.processOodaCycle();
@@ -68,6 +70,16 @@ export class GitHubClient extends EventEmitter {
         const { owner, repository, branch } = getRepositorySettings(
             this.runtime
         );
+        // const client = new GitHubService({
+        //     owner,
+        //     repo: repository,
+        //     branch,
+        //     auth: this.apiToken,
+        // });
+        // const issue = await client.getIssue(1);
+        // await fs.writeFile("/tmp/client-github-issue.txt", JSON.stringify(issue, null, 2));
+        // const res = await client.addLabelsToLabelable(issue.node_id, ["agent-commented"]);
+        // await fs.writeFile("/tmp/client-github-response.txt", JSON.stringify(res, null, 2));
 
         //
         // 2) prepare the room id
@@ -135,10 +147,10 @@ export class GitHubClient extends EventEmitter {
             true
         );
         // elizaLogger.log("Original state:", originalState);
-        await fs.writeFile(
-            "/tmp/client-github-originalState.txt",
-            JSON.stringify(originalState, null, 2)
-        );
+        // await fs.writeFile(
+        //     "/tmp/client-github-originalState.txt",
+        //     JSON.stringify(originalState, null, 2)
+        // );
 
         //
         // 5) compose the context
@@ -197,7 +209,7 @@ export class GitHubClient extends EventEmitter {
             roomId,
             createdAt: timestamp,
         };
-        elizaLogger.log("New memory to be created:", newMemory);
+        // elizaLogger.log("New memory to be created:", newMemory);
 
         try {
             await this.runtime.messageManager.createMemory(newMemory);
@@ -230,7 +242,20 @@ export class GitHubClient extends EventEmitter {
         // 8) update the state with the new memory
         //
         const state = await this.runtime.composeState(newMemory);
+
+        // write state to file
+        await fs.writeFile(
+            "/tmp/client-github-state.txt",
+            JSON.stringify(state, null, 2)
+        );
+
         const newState = await this.runtime.updateRecentMessageState(state);
+
+        // write new state to file
+        await fs.writeFile(
+            "/tmp/client-github-newState.txt",
+            JSON.stringify(newState, null, 2)
+        );
 
         //
         // 9) process the actions with the new memory and state
@@ -328,7 +353,7 @@ export class GitHubClient extends EventEmitter {
             userId: userIdUUID,
             agentId: this.runtime.agentId,
             content: {
-                text: `Create memories from files for the repository ${owner}/${repository} @ branch ${branch} and path '/'`,
+                text: `Create memories from files for the repository ${owner}/${repository} @ branch ${branch} and path '/packages/plugin-coinbase/src'`,
                 action: "CREATE_MEMORIES_FROM_FILES",
                 source: "github",
                 inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`),
@@ -344,13 +369,20 @@ export class GitHubClient extends EventEmitter {
             action: createMemoriesFromFilesMemory.content.action,
             userId: this.runtime.agentId,
         });
+
+        const issuesLimit =
+            Number(this.runtime.getSetting("GITHUB_ISSUES_LIMIT")) || 10;
+        const pullRequestsLimit =
+            Number(this.runtime.getSetting("GITHUB_PULL_REQUESTS_LIMIT")) || 10;
+
         // This returns nothing no issue memories or pull request memories
         const issuesMemories = await saveIssuesToMemory(
             this.runtime,
             owner,
             repository,
             branch,
-            this.apiToken
+            this.apiToken,
+            issuesLimit
         );
         // elizaLogger.log("Issues memories:", issuesMemories);
         await fs.writeFile(
@@ -362,7 +394,8 @@ export class GitHubClient extends EventEmitter {
             owner,
             repository,
             branch,
-            this.apiToken
+            this.apiToken,
+            pullRequestsLimit
         );
         // elizaLogger.log("Pull requests memories:", pullRequestsMemories);
         await fs.writeFile(
@@ -412,7 +445,5 @@ export const GitHubClientInterface: Client = {
         }
     },
 };
-
-export * from "./utils";
 
 export default GitHubClientInterface;

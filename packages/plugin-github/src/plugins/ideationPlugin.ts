@@ -10,6 +10,7 @@ import {
     Plugin,
     State,
     stringToUuid,
+    getEmbeddingZeroVector,
 } from "@elizaos/core";
 import { ideationTemplate } from "../templates";
 import { IdeationSchema, isIdeationContent } from "../types";
@@ -101,6 +102,7 @@ export const ideationAction: Action = {
             },
             roomId,
             createdAt: timestamp,
+
         };
         await runtime.messageManager.createMemory(newMemory);
         if (callback) {

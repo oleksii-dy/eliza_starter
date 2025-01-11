@@ -21,13 +21,9 @@ import {
     getRepoPath,
     writeFiles,
     checkoutBranch,
-    getFilesFromMemories,
+    incorporateRepositoryState,
 } from "../utils";
-import { sourceCodeProvider } from "../providers/sourceCode";
-import { testFilesProvider } from "../providers/testFiles";
-import { workflowFilesProvider } from "../providers/workflowFiles";
-import { documentationFilesProvider } from "../providers/documentationFiles";
-import { releasesProvider } from "../providers/releases";
+import fs from "fs/promises";
 
 export const createCommitAction: Action = {
     name: "CREATE_COMMIT",
@@ -54,18 +50,25 @@ export const createCommitAction: Action = {
         callback: HandlerCallback
     ) => {
         elizaLogger.log("[createCommit] Composing state for message:", message);
-        const files = await getFilesFromMemories(runtime, message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
+        const updatedState = await incorporateRepositoryState(
+            state,
+            runtime,
+            message,
+            [],
+            true,
+            true
+        );
 
         const context = composeContext({
-            state,
+            state: updatedState,
             template: createCommitTemplate,
         });
-
+        await fs.writeFile("createCommitContext.json", JSON.stringify(context, null, 2));
         const details = await generateObject({
             runtime,
             context,
@@ -79,7 +82,7 @@ export const createCommitAction: Action = {
         }
 
         const content = details.object as CreateCommitContent;
-
+        await fs.writeFile("createCommit.json", JSON.stringify(content, null, 2));
         elizaLogger.info(
             `Committing changes to the repository ${content.owner}/${content.repo} on branch ${content.branch}...`
         );
@@ -87,33 +90,35 @@ export const createCommitAction: Action = {
         const repoPath = getRepoPath(content.owner, content.repo);
 
         try {
-            await checkoutBranch(repoPath, content.branch, true);
+            await checkoutBranch(repoPath, 'realitySpiral/demoPR', true);
             await writeFiles(repoPath, content.files);
-            const { hash } = await commitAndPushChanges(
+            const commit = await commitAndPushChanges(
                 repoPath,
                 content.message,
-                content.branch
+                'realitySpiral/demoPR'
             );
-
+            const hash = commit.commit;
             elizaLogger.info(
-                `Commited changes to the repository ${content.owner}/${content.repo} successfully to branch '${content.branch}'! commit hash: ${hash}`
+                `Commited changes to the repository ${content.owner}/${content.repo} successfully to branch 'realitySpiral/demoPR'! commit hash: ${hash}`
             );
-
-            callback({
-                text: `Changes commited to repository ${content.owner}/${content.repo} successfully to branch '${content.branch}'! commit hash: ${hash}`,
-                attachments: [],
-            });
+            if (callback) {
+                callback({
+                    text: `Changes commited to repository ${content.owner}/${content.repo} successfully to branch 'realitySpiral/demoPR'! commit hash: ${hash}`,
+                    attachments: [],
+                });
+            }
+            return commit;
         } catch (error) {
             elizaLogger.error(
-                `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}:`,
-                error
+                `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}: See error: ${error.message}`,
             );
-            callback(
-                {
-                    text: `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}. Please try again.`,
-                },
-                []
-            );
+            if (callback) {
+                callback(
+                    {
+                        text: `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}. Please try again See error: ${error.message}.`,
+                    },
+                    []);
+            }
         }
     },
     examples: [

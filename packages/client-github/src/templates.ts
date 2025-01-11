@@ -13,54 +13,38 @@ export const oodaTemplate = `
     1. CREATE_ISSUE:
         - When a new bug, feature request, or task is identified that is not already tracked.
         - Criteria:
-            - The issue is not a duplicate of an existing issue.
-            - The problem described in the issue is not already being worked on by another issue.
+            - The issue is not a duplicate of an existing issue. You can find the existing issues under the section "Previous Github Issues".
+            - The problem described in the issue is not already being worked on by another issue. You can find the existing issues under the section "Previous Github Issues".
+            - Make sure the issue title is not a duplicate of an existing issue. You can find the existing issues under the section "Previous Github Issues".
             - The issue has a significant impact on the project.
             - The issue can be clearly described with specific details and examples.
 
-    2. COMMENT_ON_ISSUE:
-        - When additional information or clarification is needed for an existing issue.
-        - Criteria:
-            - The comment provides valuable insights or updates.
-            - The comment helps in progressing the resolution of the issue.
-
-    3. COMMENT_ON_PULL_REQUEST:
+    2. COMMENT_ON_PULL_REQUEST:
         - When feedback or suggestions are needed for an open pull request.
         - Criteria:
             - The comment addresses specific lines of code or overall implementation.
             - The comment is constructive and helps improve the pull request.
-
-    4. REACT_TO_ISSUE:
-        - When expressing agreement, disagreement, or other reactions to an issue.
+    3. COMMENT_ON_ISSUE:
+        - When additional information or clarification is needed for an existing issue.
         - Criteria:
-            - The reaction is appropriate and adds value to the discussion.
-            - The reaction helps in gauging the community's sentiment.
-
-    5. REACT_TO_PR:
-        - When expressing agreement, disagreement, or other reactions to a pull request.
-        - Criteria:
-            - The reaction is appropriate and adds value to the discussion.
-            - The reaction helps in gauging the community's sentiment.
-
-    6. CLOSE_ISSUE:
+            - The comment provides valuable insights or updates.
+            - The comment helps in progressing the resolution of the issue.
+    4. CLOSE_ISSUE:
         - When an issue has been resolved or is no longer relevant.
         - Criteria:
             - The issue has been fixed, and the solution has been verified.
             - The issue is a duplicate or no longer applicable.
-
-    7. CLOSE_PR:
+    5. CLOSE_PR:
         - When a pull request is no longer needed or has been superseded.
         - Criteria:
             - The pull request has been merged or is no longer relevant.
             - The pull request does not meet the project's standards or requirements.
-
-    8. MERGE_PR:
+    6. MERGE_PR:
         - When a pull request has been approved and is ready to be merged.
         - Criteria:
             - The pull request has been approved by the necessary reviewers.
             - The pull request is ready to be merged into the target branch.
-
-    9. NOTHING:
+    7. NOTHING:
         - This action should ONLY be chosen as an absolute last resort, after exhaustively evaluating all other possible actions.
         - Criteria:
             - Every other action (CREATE_ISSUE, COMMENT_ON_ISSUE, etc.) has been carefully considered and definitively ruled out.

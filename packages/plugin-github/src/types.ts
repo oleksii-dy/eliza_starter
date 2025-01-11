@@ -48,10 +48,11 @@ export const isCreateMemoriesFromFilesContent = (
     return false;
 };
 
+
 export const CreatePullRequestSchema = z.object({
     owner: z.string().min(1, "GitHub owner is required"),
     repo: z.string().min(1, "GitHub repo is required"),
-    base: z.string().optional(),
+    base: z.string().optional().default("main"),
     branch: z.string().min(1, "GitHub pull request branch is required"),
     title: z.string().min(1, "Pull request title is required"),
     description: z.string().optional(),
@@ -129,7 +130,6 @@ export const isFetchFilesContent = (
 export const CreateIssueSchema = z.object({
     owner: z.string().min(1, "GitHub owner is required"),
     repo: z.string().min(1, "GitHub repo is required"),
-    branch: z.string().min(1, "GitHub branch is required"),
     title: z.string().min(1, "Issue title is required"),
     body: z.string().min(1, "Issue body is required"),
     labels: z.array(z.string()).optional(),
@@ -138,7 +138,6 @@ export const CreateIssueSchema = z.object({
 export interface CreateIssueContent {
     owner: string;
     repo: string;
-    branch: string;
     title: string;
     body: string;
     labels?: string[];
@@ -448,4 +447,67 @@ export const isGeneratePRCommentReplyContent = (
     object: any
 ): object is GeneratePRCommentReplyContent => {
     return GeneratePRCommentReplySchema.safeParse(object).success;
+};
+export const ImplementFeatureSchema = z.object({
+    owner: z.string().min(1, "GitHub owner is required"),
+    repo: z.string().min(1, "GitHub repo is required"),
+    branch: z.string().min(1, "GitHub branch is required"),
+    feature: z.string().nullable().optional(),
+    issue: z.number().nullable().optional(),
+    base: z.string().default("develop"),
+});
+
+export interface ImplementFeatureContent {
+    owner: string;
+    repo: string;
+    branch: string;
+    feature?: string;
+    issue?: number;
+    base?: string;
+}
+
+export const isImplementFeatureContent = (
+    object: any
+): object is ImplementFeatureContent => {
+    if (ImplementFeatureSchema.safeParse(object).success) {
+        return true;
+    }
+    elizaLogger.error("Invalid content: ", object);
+    return false;
+};
+
+export const GenerateCodeFileChangesSchema = z.object({
+    owner: z.string().min(1, "GitHub owner is required"),
+    repo: z.string().min(1, "GitHub repo is required"),
+    branch: z.string().min(1, "GitHub branch is required"),
+    feature: z.string().min(1, "Feature is required"),
+    base: z.string().default("develop"),
+    files: z.array(
+        z.object({
+            path: z.string().min(1, "File path is required"),
+            content: z.string().min(1, "File content is required"),
+        })
+    ).nonempty("At least one file change is required"),
+});
+
+export interface GenerateCodeFileChangesContent {
+    owner: string;
+    repo: string;
+    branch: string;
+    feature: string;
+    base?: string;
+    files: Array<{
+        path: string;
+        content: string;
+    }>;
+}
+
+export const isGenerateCodeFileChangesContent = (
+    object: any
+): object is GenerateCodeFileChangesContent => {
+    if (GenerateCodeFileChangesSchema.safeParse(object).success) {
+        return true;
+    }
+    elizaLogger.error("Invalid content: ", object);
+    return false;
 };
