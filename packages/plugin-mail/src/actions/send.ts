@@ -7,6 +7,7 @@ import {
     composeContext,
     generateText,
     ModelClass,
+    HandlerCallback,
 } from "@elizaos/core";
 import { SendEmailParams } from "../types";
 
@@ -82,7 +83,7 @@ export const sendEmailAction: Action = {
         message: Memory,
         state: State,
         _options: any,
-        callback?: any
+        callback?: HandlerCallback
     ) => {
         const action = new SendEmailAction();
 
@@ -123,7 +124,7 @@ export const sendEmailAction: Action = {
             const result = await action.send(params);
 
             if (callback) {
-                callback({
+                await callback({
                     text: result.message,
                     content: result,
                 });
@@ -132,7 +133,7 @@ export const sendEmailAction: Action = {
         } catch (error) {
             elizaLogger.error("Error in send email handler:", error);
             if (callback) {
-                callback({ text: `Error: ${error.message}` });
+                await callback({ text: `Error: ${error.message}` });
             }
             return false;
         }

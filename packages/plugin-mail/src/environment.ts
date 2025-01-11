@@ -1,6 +1,9 @@
 import { elizaLogger, IAgentRuntime } from "@elizaos/core";
 import { MailConfig } from "./types";
 
+export const DEFAULT_CHECK_INTERVAL = 300; // 5 minutes in seconds
+export const DEFAULT_MAX_EMAILS = 10;
+
 export function validateMailConfig(runtime: IAgentRuntime): MailConfig {
     const mailConfig: MailConfig = {
         imap: {
@@ -31,6 +34,16 @@ export function validateMailConfig(runtime: IAgentRuntime): MailConfig {
                 servername: runtime.getSetting("EMAIL_SMTP_HOST") || undefined,
             },
         },
+        checkInterval: parseInt(
+            runtime.getSetting("EMAIL_CHECK_INTERVAL") ||
+                String(DEFAULT_CHECK_INTERVAL),
+            10
+        ),
+        maxEmails: parseInt(
+            runtime.getSetting("EMAIL_MAX_EMAILS") ||
+                String(DEFAULT_MAX_EMAILS),
+            10
+        ),
     };
 
     elizaLogger.info("Mail configuration validation", {
@@ -46,6 +59,7 @@ export function validateMailConfig(runtime: IAgentRuntime): MailConfig {
             secure: mailConfig.smtp.secure,
             tls: mailConfig.smtp.tls,
         },
+        checkInterval: mailConfig.checkInterval,
     });
 
     if (!mailConfig.imap.host) {
@@ -70,6 +84,18 @@ export function validateMailConfig(runtime: IAgentRuntime): MailConfig {
 
     if (!mailConfig.smtp.auth.pass) {
         throw new Error("EMAIL_SMTP_PASSWORD is required");
+    }
+
+    if (mailConfig.checkInterval < 10) {
+        elizaLogger.warn(
+            "EMAIL_CHECK_INTERVAL is less than 10 seconds, using default"
+        );
+        mailConfig.checkInterval = DEFAULT_CHECK_INTERVAL;
+    }
+
+    if (mailConfig.maxEmails < 1) {
+        elizaLogger.warn("EMAIL_MAX_EMAILS must be at least 1, using default");
+        mailConfig.maxEmails = DEFAULT_MAX_EMAILS;
     }
 
     return mailConfig;
