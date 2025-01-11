@@ -1,11 +1,13 @@
 import bodyParser from "body-parser";
 import cors from "cors";
-import express, { Request as ExpressRequest } from "express";
+import express
+// , { Request as ExpressRequest}
+        from "express";
 import multer from "multer";
 import {
     elizaLogger,
-    generateCaption,
-    generateImage,
+    // generateCaption,
+    // generateImage,
     Media,
     getEmbeddingZeroVector
 } from "@elizaos/core";
@@ -22,7 +24,7 @@ import {
 } from "@elizaos/core";
 import { stringToUuid } from "@elizaos/core";
 import { settings } from "@elizaos/core";
-import { createApiRouter } from "./api.ts";
+import  createApiRouter from "./routes/index";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -78,7 +80,6 @@ export class DirectClient {
     private agents: Map<string, AgentRuntime>; // container management
     private server: any; // Store server instance
     public startAgent: Function; // Store startAgent functor
-
     constructor() {
         elizaLogger.log("DirectClient constructor");
         this.app = express();
@@ -89,74 +90,74 @@ export class DirectClient {
         this.app.use(bodyParser.urlencoded({ extended: true }));
 
         // Serve both uploads and generated images
-        this.app.use(
-            "/media/uploads",
-            express.static(path.join(process.cwd(), "/data/uploads"))
-        );
-        this.app.use(
-            "/media/generated",
-            express.static(path.join(process.cwd(), "/generatedImages"))
-        );
+        // this.app.use(
+        //     "/media/uploads",
+        //     express.static(path.join(process.cwd(), "/data/uploads"))
+        // );
+        // this.app.use(
+        //     "/media/generated",
+        //     express.static(path.join(process.cwd(), "/generatedImages"))
+        // );
 
         const apiRouter = createApiRouter(this.agents, this);
         this.app.use(apiRouter);
 
         // Define an interface that extends the Express Request interface
-        interface CustomRequest extends ExpressRequest {
-            file?: Express.Multer.File;
-        }
+            // interface CustomRequest extends ExpressRequest {
+            //     file?: Express.Multer.File;
+            // }
 
         // Update the route handler to use CustomRequest instead of express.Request
-        this.app.post(
-            "/:agentId/whisper",
-            upload.single("file"),
-            async (req: CustomRequest, res: express.Response) => {
-                const audioFile = req.file; // Access the uploaded file using req.file
-                const agentId = req.params.agentId;
+        // this.app.post(
+        //     "/:agentId/whisper",
+        //     upload.single("file"),
+        //     async (req: CustomRequest, res: express.Response) => {
+        //         const audioFile = req.file; // Access the uploaded file using req.file
+        //         const agentId = req.params.agentId;
 
-                if (!audioFile) {
-                    res.status(400).send("No audio file provided");
-                    return;
-                }
+        //         if (!audioFile) {
+        //             res.status(400).send("No audio file provided");
+        //             return;
+        //         }
 
-                let runtime = this.agents.get(agentId);
+        //         let runtime = this.agents.get(agentId);
 
-                // if runtime is null, look for runtime with the same name
-                if (!runtime) {
-                    runtime = Array.from(this.agents.values()).find(
-                        (a) =>
-                            a.character.name.toLowerCase() ===
-                            agentId.toLowerCase()
-                    );
-                }
+        //         // if runtime is null, look for runtime with the same name
+        //         if (!runtime) {
+        //             runtime = Array.from(this.agents.values()).find(
+        //                 (a) =>
+        //                     a.character.name.toLowerCase() ===
+        //                     agentId.toLowerCase()
+        //             );
+        //         }
 
-                if (!runtime) {
-                    res.status(404).send("Agent not found");
-                    return;
-                }
+        //         if (!runtime) {
+        //             res.status(404).send("Agent not found");
+        //             return;
+        //         }
 
-                const formData = new FormData();
-                const audioBlob = new Blob([audioFile.buffer], {
-                    type: audioFile.mimetype,
-                });
-                formData.append("file", audioBlob, audioFile.originalname);
-                formData.append("model", "whisper-1");
+        //         const formData = new FormData();
+        //         const audioBlob = new Blob([audioFile.buffer], {
+        //             type: audioFile.mimetype,
+        //         });
+        //         formData.append("file", audioBlob, audioFile.originalname);
+        //         formData.append("model", "whisper-1");
 
-                const response = await fetch(
-                    "https://api.openai.com/v1/audio/transcriptions",
-                    {
-                        method: "POST",
-                        headers: {
-                            Authorization: `Bearer ${runtime.token}`,
-                        },
-                        body: formData,
-                    }
-                );
+        //         const response = await fetch(
+        //             "https://api.openai.com/v1/audio/transcriptions",
+        //             {
+        //                 method: "POST",
+        //                 headers: {
+        //                     Authorization: `Bearer ${runtime.token}`,
+        //                 },
+        //                 body: formData,
+        //             }
+        //         );
 
-                const data = await response.json();
-                res.json(data);
-            }
-        );
+        //         const data = await response.json();
+        //         res.json(data);
+        //     }
+        // );
 
         this.app.post(
             "/:agentId/message",
@@ -178,7 +179,7 @@ export class DirectClient {
                             agentId.toLowerCase()
                     );
                 }
-              
+
                 if (!runtime) {
                     res.status(404).send("Agent not found");
                     return;
@@ -314,290 +315,290 @@ export class DirectClient {
             }
         );
 
-        this.app.post(
-            "/:agentId/image",
-            async (req: express.Request, res: express.Response) => {
-                const agentId = req.params.agentId;
-                const agent = this.agents.get(agentId);
-                if (!agent) {
-                    res.status(404).send("Agent not found");
-                    return;
-                }
+        // this.app.post(
+        //     "/:agentId/image",
+        //     async (req: express.Request, res: express.Response) => {
+        //         const agentId = req.params.agentId;
+        //         const agent = this.agents.get(agentId);
+        //         if (!agent) {
+        //             res.status(404).send("Agent not found");
+        //             return;
+        //         }
 
-                const images = await generateImage({ ...req.body }, agent);
-                const imagesRes: { image: string; caption: string }[] = [];
-                if (images.data && images.data.length > 0) {
-                    for (let i = 0; i < images.data.length; i++) {
-                        const caption = await generateCaption(
-                            { imageUrl: images.data[i] },
-                            agent
-                        );
-                        imagesRes.push({
-                            image: images.data[i],
-                            caption: caption.title,
-                        });
-                    }
-                }
-                res.json({ images: imagesRes });
-            }
-        );
+        //         const images = await generateImage({ ...req.body }, agent);
+        //         const imagesRes: { image: string; caption: string }[] = [];
+        //         if (images.data && images.data.length > 0) {
+        //             for (let i = 0; i < images.data.length; i++) {
+        //                 const caption = await generateCaption(
+        //                     { imageUrl: images.data[i] },
+        //                     agent
+        //                 );
+        //                 imagesRes.push({
+        //                     image: images.data[i],
+        //                     caption: caption.title,
+        //                 });
+        //             }
+        //         }
+        //         res.json({ images: imagesRes });
+        //     }
+        // );
 
-        this.app.post(
-            "/fine-tune",
-            async (req: express.Request, res: express.Response) => {
-                try {
-                    const response = await fetch(
-                        "https://api.bageldb.ai/api/v1/asset",
-                        {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-API-KEY": `${process.env.BAGEL_API_KEY}`,
-                            },
-                            body: JSON.stringify(req.body),
-                        }
-                    );
+        // this.app.post(
+        //     "/fine-tune",
+        //     async (req: express.Request, res: express.Response) => {
+        //         try {
+        //             const response = await fetch(
+        //                 "https://api.bageldb.ai/api/v1/asset",
+        //                 {
+        //                     method: "POST",
+        //                     headers: {
+        //                         "Content-Type": "application/json",
+        //                         "X-API-KEY": `${process.env.BAGEL_API_KEY}`,
+        //                     },
+        //                     body: JSON.stringify(req.body),
+        //                 }
+        //             );
 
-                    const data = await response.json();
-                    res.json(data);
-                } catch (error) {
-                    res.status(500).json({
-                        error: "Please create an account at bakery.bagel.net and get an API key. Then set the BAGEL_API_KEY environment variable.",
-                        details: error.message,
-                    });
-                }
-            }
-        );
-        this.app.get(
-            "/fine-tune/:assetId",
-            async (req: express.Request, res: express.Response) => {
-                const assetId = req.params.assetId;
-                const downloadDir = path.join(
-                    process.cwd(),
-                    "downloads",
-                    assetId
-                );
+        //             const data = await response.json();
+        //             res.json(data);
+        //         } catch (error) {
+        //             res.status(500).json({
+        //                 error: "Please create an account at bakery.bagel.net and get an API key. Then set the BAGEL_API_KEY environment variable.",
+        //                 details: error.message,
+        //             });
+        //         }
+        //     }
+        // );
+        // this.app.get(
+        //     "/fine-tune/:assetId",
+        //     async (req: express.Request, res: express.Response) => {
+        //         const assetId = req.params.assetId;
+        //         const downloadDir = path.join(
+        //             process.cwd(),
+        //             "downloads",
+        //             assetId
+        //         );
 
-                console.log("Download directory:", downloadDir);
+        //         console.log("Download directory:", downloadDir);
 
-                try {
-                    console.log("Creating directory...");
-                    await fs.promises.mkdir(downloadDir, { recursive: true });
+        //         try {
+        //             console.log("Creating directory...");
+        //             await fs.promises.mkdir(downloadDir, { recursive: true });
 
-                    console.log("Fetching file...");
-                    const fileResponse = await fetch(
-                        `https://api.bageldb.ai/api/v1/asset/${assetId}/download`,
-                        {
-                            headers: {
-                                "X-API-KEY": `${process.env.BAGEL_API_KEY}`,
-                            },
-                        }
-                    );
+        //             console.log("Fetching file...");
+        //             const fileResponse = await fetch(
+        //                 `https://api.bageldb.ai/api/v1/asset/${assetId}/download`,
+        //                 {
+        //                     headers: {
+        //                         "X-API-KEY": `${process.env.BAGEL_API_KEY}`,
+        //                     },
+        //                 }
+        //             );
 
-                    if (!fileResponse.ok) {
-                        throw new Error(
-                            `API responded with status ${fileResponse.status}: ${await fileResponse.text()}`
-                        );
-                    }
+        //             if (!fileResponse.ok) {
+        //                 throw new Error(
+        //                     `API responded with status ${fileResponse.status}: ${await fileResponse.text()}`
+        //                 );
+        //             }
 
-                    console.log("Response headers:", fileResponse.headers);
+        //             console.log("Response headers:", fileResponse.headers);
 
-                    const fileName =
-                        fileResponse.headers
-                            .get("content-disposition")
-                            ?.split("filename=")[1]
-                            ?.replace(/"/g, /* " */ "") || "default_name.txt";
+        //             const fileName =
+        //                 fileResponse.headers
+        //                     .get("content-disposition")
+        //                     ?.split("filename=")[1]
+        //                     ?.replace(/"/g, /* " */ "") || "default_name.txt";
 
-                    console.log("Saving as:", fileName);
+        //             console.log("Saving as:", fileName);
 
-                    const arrayBuffer = await fileResponse.arrayBuffer();
-                    const buffer = Buffer.from(arrayBuffer);
+        //             const arrayBuffer = await fileResponse.arrayBuffer();
+        //             const buffer = Buffer.from(arrayBuffer);
 
-                    const filePath = path.join(downloadDir, fileName);
-                    console.log("Full file path:", filePath);
+        //             const filePath = path.join(downloadDir, fileName);
+        //             console.log("Full file path:", filePath);
 
-                    await fs.promises.writeFile(filePath, buffer);
+        //             await fs.promises.writeFile(filePath, buffer);
 
-                    // Verify file was written
-                    const stats = await fs.promises.stat(filePath);
-                    console.log(
-                        "File written successfully. Size:",
-                        stats.size,
-                        "bytes"
-                    );
+        //             // Verify file was written
+        //             const stats = await fs.promises.stat(filePath);
+        //             console.log(
+        //                 "File written successfully. Size:",
+        //                 stats.size,
+        //                 "bytes"
+        //             );
 
-                    res.json({
-                        success: true,
-                        message: "Single file downloaded successfully",
-                        downloadPath: downloadDir,
-                        fileCount: 1,
-                        fileName: fileName,
-                        fileSize: stats.size,
-                    });
-                } catch (error) {
-                    console.error("Detailed error:", error);
-                    res.status(500).json({
-                        error: "Failed to download files from BagelDB",
-                        details: error.message,
-                        stack: error.stack,
-                    });
-                }
-            }
-        );
+        //             res.json({
+        //                 success: true,
+        //                 message: "Single file downloaded successfully",
+        //                 downloadPath: downloadDir,
+        //                 fileCount: 1,
+        //                 fileName: fileName,
+        //                 fileSize: stats.size,
+        //             });
+        //         } catch (error) {
+        //             console.error("Detailed error:", error);
+        //             res.status(500).json({
+        //                 error: "Failed to download files from BagelDB",
+        //                 details: error.message,
+        //                 stack: error.stack,
+        //             });
+        //         }
+        //     }
+        // );
 
-        this.app.post("/:agentId/speak", async (req, res) => {
-            const agentId = req.params.agentId;
-            const roomId = stringToUuid(req.body.roomId ?? "default-room-" + agentId);
-            const userId = stringToUuid(req.body.userId ?? "user");
-            const text = req.body.text;
+        // this.app.post("/:agentId/speak", async (req, res) => {
+        //     const agentId = req.params.agentId;
+        //     const roomId = stringToUuid(req.body.roomId ?? "default-room-" + agentId);
+        //     const userId = stringToUuid(req.body.userId ?? "user");
+        //     const text = req.body.text;
 
-            if (!text) {
-                res.status(400).send("No text provided");
-                return;
-            }
+        //     if (!text) {
+        //         res.status(400).send("No text provided");
+        //         return;
+        //     }
 
-            let runtime = this.agents.get(agentId);
+        //     let runtime = this.agents.get(agentId);
 
-            // if runtime is null, look for runtime with the same name
-            if (!runtime) {
-                runtime = Array.from(this.agents.values()).find(
-                    (a) => a.character.name.toLowerCase() === agentId.toLowerCase()
-                );
-            }
+        //     // if runtime is null, look for runtime with the same name
+        //     if (!runtime) {
+        //         runtime = Array.from(this.agents.values()).find(
+        //             (a) => a.character.name.toLowerCase() === agentId.toLowerCase()
+        //         );
+        //     }
 
-            if (!runtime) {
-                res.status(404).send("Agent not found");
-                return;
-            }
+        //     if (!runtime) {
+        //         res.status(404).send("Agent not found");
+        //         return;
+        //     }
 
-            try {
-                // Process message through agent (same as /message endpoint)
-                await runtime.ensureConnection(
-                    userId,
-                    roomId,
-                    req.body.userName,
-                    req.body.name,
-                    "direct"
-                );
+        //     try {
+        //         // Process message through agent (same as /message endpoint)
+        //         await runtime.ensureConnection(
+        //             userId,
+        //             roomId,
+        //             req.body.userName,
+        //             req.body.name,
+        //             "direct"
+        //         );
 
-                const messageId = stringToUuid(Date.now().toString());
+        //         const messageId = stringToUuid(Date.now().toString());
 
-                const content: Content = {
-                    text,
-                    attachments: [],
-                    source: "direct",
-                    inReplyTo: undefined,
-                };
+        //         const content: Content = {
+        //             text,
+        //             attachments: [],
+        //             source: "direct",
+        //             inReplyTo: undefined,
+        //         };
 
-                const userMessage = {
-                    content,
-                    userId,
-                    roomId,
-                    agentId: runtime.agentId,
-                };
+        //         const userMessage = {
+        //             content,
+        //             userId,
+        //             roomId,
+        //             agentId: runtime.agentId,
+        //         };
 
-                const memory: Memory = {
-                    id: messageId,
-                    agentId: runtime.agentId,
-                    userId,
-                    roomId,
-                    content,
-                    createdAt: Date.now(),
-                };
+        //         const memory: Memory = {
+        //             id: messageId,
+        //             agentId: runtime.agentId,
+        //             userId,
+        //             roomId,
+        //             content,
+        //             createdAt: Date.now(),
+        //         };
 
-                await runtime.messageManager.createMemory(memory);
+        //         await runtime.messageManager.createMemory(memory);
 
-                const state = await runtime.composeState(userMessage, {
-                    agentName: runtime.character.name,
-                });
+        //         const state = await runtime.composeState(userMessage, {
+        //             agentName: runtime.character.name,
+        //         });
 
-                const context = composeContext({
-                    state,
-                    template: messageHandlerTemplate,
-                });
+        //         const context = composeContext({
+        //             state,
+        //             template: messageHandlerTemplate,
+        //         });
 
-                const response = await generateMessageResponse({
-                    runtime: runtime,
-                    context,
-                    modelClass: ModelClass.LARGE,
-                });
+        //         const response = await generateMessageResponse({
+        //             runtime: runtime,
+        //             context,
+        //             modelClass: ModelClass.LARGE,
+        //         });
 
-                // save response to memory
-                const responseMessage = {
-                    ...userMessage,
-                    userId: runtime.agentId,
-                    content: response,
-                };
+        //         // save response to memory
+        //         const responseMessage = {
+        //             ...userMessage,
+        //             userId: runtime.agentId,
+        //             content: response,
+        //         };
 
-                await runtime.messageManager.createMemory(responseMessage);
+        //         await runtime.messageManager.createMemory(responseMessage);
 
-                if (!response) {
-                    res.status(500).send("No response from generateMessageResponse");
-                    return;
-                }
+        //         if (!response) {
+        //             res.status(500).send("No response from generateMessageResponse");
+        //             return;
+        //         }
 
-                await runtime.evaluate(memory, state);
+        //         await runtime.evaluate(memory, state);
 
-                const _result = await runtime.processActions(
-                    memory,
-                    [responseMessage],
-                    state,
-                    async () => {
-                        return [memory];
-                    }
-                );
+        //         const _result = await runtime.processActions(
+        //             memory,
+        //             [responseMessage],
+        //             state,
+        //             async () => {
+        //                 return [memory];
+        //             }
+        //         );
 
-                // Get the text to convert to speech
-                const textToSpeak = response.text;
+        //         // Get the text to convert to speech
+        //         const textToSpeak = response.text;
 
-                // Convert to speech using ElevenLabs
-                const elevenLabsApiUrl = `https://api.elevenlabs.io/v1/text-to-speech/${process.env.ELEVENLABS_VOICE_ID}`;
-                const apiKey = process.env.ELEVENLABS_XI_API_KEY;
+        //         // Convert to speech using ElevenLabs
+        //         const elevenLabsApiUrl = `https://api.elevenlabs.io/v1/text-to-speech/${process.env.ELEVENLABS_VOICE_ID}`;
+        //         const apiKey = process.env.ELEVENLABS_XI_API_KEY;
 
-                if (!apiKey) {
-                    throw new Error("ELEVENLABS_XI_API_KEY not configured");
-                }
+        //         if (!apiKey) {
+        //             throw new Error("ELEVENLABS_XI_API_KEY not configured");
+        //         }
 
-                const speechResponse = await fetch(elevenLabsApiUrl, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "xi-api-key": apiKey,
-                    },
-                    body: JSON.stringify({
-                        text: textToSpeak,
-                        model_id: process.env.ELEVENLABS_MODEL_ID || "eleven_multilingual_v2",
-                        voice_settings: {
-                            stability: parseFloat(process.env.ELEVENLABS_VOICE_STABILITY || "0.5"),
-                            similarity_boost: parseFloat(process.env.ELEVENLABS_VOICE_SIMILARITY_BOOST || "0.9"),
-                            style: parseFloat(process.env.ELEVENLABS_VOICE_STYLE || "0.66"),
-                            use_speaker_boost: process.env.ELEVENLABS_VOICE_USE_SPEAKER_BOOST === "true",
-                        },
-                    }),
-                });
+        //         const speechResponse = await fetch(elevenLabsApiUrl, {
+        //             method: "POST",
+        //             headers: {
+        //                 "Content-Type": "application/json",
+        //                 "xi-api-key": apiKey,
+        //             },
+        //             body: JSON.stringify({
+        //                 text: textToSpeak,
+        //                 model_id: process.env.ELEVENLABS_MODEL_ID || "eleven_multilingual_v2",
+        //                 voice_settings: {
+        //                     stability: parseFloat(process.env.ELEVENLABS_VOICE_STABILITY || "0.5"),
+        //                     similarity_boost: parseFloat(process.env.ELEVENLABS_VOICE_SIMILARITY_BOOST || "0.9"),
+        //                     style: parseFloat(process.env.ELEVENLABS_VOICE_STYLE || "0.66"),
+        //                     use_speaker_boost: process.env.ELEVENLABS_VOICE_USE_SPEAKER_BOOST === "true",
+        //                 },
+        //             }),
+        //         });
 
-                if (!speechResponse.ok) {
-                    throw new Error(`ElevenLabs API error: ${speechResponse.statusText}`);
-                }
+        //         if (!speechResponse.ok) {
+        //             throw new Error(`ElevenLabs API error: ${speechResponse.statusText}`);
+        //         }
 
-                const audioBuffer = await speechResponse.arrayBuffer();
+        //         const audioBuffer = await speechResponse.arrayBuffer();
 
-                // Set appropriate headers for audio streaming
-                res.set({
-                    'Content-Type': 'audio/mpeg',
-                    'Transfer-Encoding': 'chunked'
-                });
+        //         // Set appropriate headers for audio streaming
+        //         res.set({
+        //             'Content-Type': 'audio/mpeg',
+        //             'Transfer-Encoding': 'chunked'
+        //         });
 
-                res.send(Buffer.from(audioBuffer));
+        //         res.send(Buffer.from(audioBuffer));
 
-            } catch (error) {
-                console.error("Error processing message or generating speech:", error);
-                res.status(500).json({
-                    error: "Error processing message or generating speech",
-                    details: error.message
-                });
-            }
-        });
+        //     } catch (error) {
+        //         console.error("Error processing message or generating speech:", error);
+        //         res.status(500).json({
+        //             error: "Error processing message or generating speech",
+        //             details: error.message
+        //         });
+        //     }
+        // });
     }
 
     // agent/src/index.ts:startAgent calls this

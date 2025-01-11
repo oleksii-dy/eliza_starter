@@ -10,10 +10,10 @@ import {
 } from "@elizaos/core";
 
 import { REST, Routes } from "discord.js";
-import { DirectClient } from ".";
+import { DirectClient } from "../index";
 import { stringToUuid } from "@elizaos/core";
-
-export function createApiRouter(
+// import authMiddleware from "../middleware/auth";
+export default function createAgentRouter(
     agents: Map<string, AgentRuntime>,
     directClient: DirectClient
 ) {
@@ -28,15 +28,15 @@ export function createApiRouter(
         })
     );
 
+    // router.get("/", (req, res) => {
+    //     res.send("Welcome, this is the REST API!");
+    // });
+
+    // router.get("/hello", (req, res) => {
+    //     res.json({ message: "Hello World!" });
+    // });
+
     router.get("/", (req, res) => {
-        res.send("Welcome, this is the REST API!");
-    });
-
-    router.get("/hello", (req, res) => {
-        res.json({ message: "Hello World!" });
-    });
-
-    router.get("/agents", (req, res) => {
         const agentsList = Array.from(agents.values()).map((agent) => ({
             id: agent.agentId,
             name: agent.character.name,
@@ -45,7 +45,7 @@ export function createApiRouter(
         res.json({ agents: agentsList });
     });
 
-    router.get("/agents/:agentId", (req, res) => {
+    router.get("/:agentId", (req, res) => {
         const agentId = req.params.agentId;
         const agent = agents.get(agentId);
 
@@ -60,7 +60,7 @@ export function createApiRouter(
         });
     });
 
-    router.post("/agents/:agentId/set", async (req, res) => {
+    router.post("/:agentId/set", async (req, res) => {
         const agentId = req.params.agentId;
         console.log("agentId", agentId);
         let agent: AgentRuntime = agents.get(agentId);
@@ -96,7 +96,7 @@ export function createApiRouter(
         });
     });
 
-    router.post("/agents/new", async (req, res) => {
+    router.post("/new", async (req, res) => {
         // load character from body
         const character = req.body;
         try {
@@ -111,7 +111,7 @@ export function createApiRouter(
         }
 
         // start it up (and register it)
-        let agent: AgentRuntime = await directClient.startAgent(character);
+        await directClient.startAgent(character);
         elizaLogger.log(`${character.name} started`);
 
         res.json({
@@ -120,7 +120,7 @@ export function createApiRouter(
         });
     });
 
-    router.get("/agents/:agentId/channels", async (req, res) => {
+    router.get("/:agentId/channels",async (req, res) => {
         const agentId = req.params.agentId;
         const runtime = agents.get(agentId);
 
@@ -146,7 +146,7 @@ export function createApiRouter(
         }
     });
 
-    router.get("/agents/:agentId/:roomId/memories", async (req, res) => {
+    router.get("/:agentId/:roomId/memories", async (req, res) => {
         const agentId = req.params.agentId;
         const roomId = stringToUuid(req.params.roomId);
         let runtime = agents.get(agentId);
@@ -206,6 +206,9 @@ export function createApiRouter(
             res.status(500).json({ error: "Failed to fetch memories" });
         }
     });
+    // router.get("/agents/:agentId/:userId", async (req, res) => {
 
+
+    // })
     return router;
 }

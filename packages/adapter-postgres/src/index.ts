@@ -210,11 +210,11 @@ export class PostgresDatabaseAdapter
                 await client.query("SET app.use_gaianet_embedding = 'false'");
             }
 
-            const schema = fs.readFileSync(
-                path.resolve(__dirname, "../schema.sql"),
-                "utf8"
-            );
-            await client.query(schema);
+            // const schema = fs.readFileSync(
+            //     path.resolve(__dirname, "../schema.sql"),
+            //     "utf8"
+            // );
+            // await client.query(schema);
 
             await client.query("COMMIT");
         } catch (error) {

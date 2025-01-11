@@ -71,6 +71,25 @@ export class RedisClient implements IDatabaseCacheAdapter {
     private buildKey(agentId: UUID, key: string): string {
         return `${agentId}:${key}`; // Constructs a unique key based on agentId and key
     }
+
+    async setValue(params: { key: string; value: string }): Promise<boolean> {
+        try {
+            await this.client.set(params.key, params.value);
+            return true;
+        } catch (err) {
+            elizaLogger.error("Error setting value:", err);
+            return false;
+        }
+    }
+    async getValue(params: { key: string }): Promise<string | undefined> {
+        try {
+            const value = await this.client.get(params.key);
+            return value || undefined;
+        } catch (err) {
+            elizaLogger.error("Error getting value:", err);
+            return undefined;
+        }
+    }
 }
 
 export default RedisClient;
