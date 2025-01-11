@@ -1719,51 +1719,66 @@ export const generateImage = async (
                 if (!baseUrl.protocol.startsWith("http")) {
                     throw new Error("Invalid Livepeer Gateway URL protocol");
                 }
-                const response = await fetch(
-                    `${baseUrl.toString()}text-to-image`,
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            model_id: model,
-                            prompt: data.prompt,
-                            width: data.width || 1024,
-                            height: data.height || 1024,
-                        }),
+
+                let lastError;
+                for (let attempt = 1; attempt <= 3; attempt++) {
+                    try {
+                        const response = await fetch(
+                            `${baseUrl.toString()}text-to-image`,
+                            {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({
+                                    model_id:
+                                        data.modelId || "ByteDance/SDXL-Lightning",
+                                    prompt: data.prompt,
+                                    width: data.width || 1024,
+                                    height: data.height || 1024,
+                                }),
+                            }
+                        );
+                        const result = await response.json();
+                        if (!result.images?.length) {
+                            throw new Error("No images generated");
+                        }
+                        const base64Images = await Promise.all(
+                            result.images.map(async (image) => {
+                                console.log("imageUrl console log", image.url);
+                                let imageUrl;
+                                if (image.url.includes("http")) {
+                                    imageUrl = image.url;
+                                } else {
+                                    imageUrl = `${apiKey}${image.url}`;
+                                }
+                                const imageResponse = await fetch(imageUrl);
+                                if (!imageResponse.ok) {
+                                    throw new Error(
+                                        `Failed to fetch image: ${imageResponse.statusText}`
+                                    );
+                                }
+                                const blob = await imageResponse.blob();
+                                const arrayBuffer = await blob.arrayBuffer();
+                                const base64 =
+                                    Buffer.from(arrayBuffer).toString("base64");
+                                return `data:image/jpeg;base64,${base64}`;
+                            })
+                        );
+                        return {
+                            success: true,
+                            data: base64Images,
+                        };
+                    } catch (error) {
+                        lastError = error;
+                        if (attempt < 3) {
+                            await new Promise(resolve => setTimeout(resolve, 1000));
+                            continue;
+                        }
                     }
-                );
-                const result = await response.json();
-                if (!result.images?.length) {
-                    throw new Error("No images generated");
                 }
-                const base64Images = await Promise.all(
-                    result.images.map(async (image) => {
-                        console.log("imageUrl console log", image.url);
-                        let imageUrl;
-                        if (image.url.includes("http")) {
-                            imageUrl = image.url;
-                        } else {
-                            imageUrl = `${apiKey}${image.url}`;
-                        }
-                        const imageResponse = await fetch(imageUrl);
-                        if (!imageResponse.ok) {
-                            throw new Error(
-                                `Failed to fetch image: ${imageResponse.statusText}`
-                            );
-                        }
-                        const blob = await imageResponse.blob();
-                        const arrayBuffer = await blob.arrayBuffer();
-                        const base64 =
-                            Buffer.from(arrayBuffer).toString("base64");
-                        return `data:image/jpeg;base64,${base64}`;
-                    })
-                );
-                return {
-                    success: true,
-                    data: base64Images,
-                };
+                console.error(lastError);
+                return { success: false, error: lastError };
             } catch (error) {
                 console.error(error);
                 return { success: false, error: error };
