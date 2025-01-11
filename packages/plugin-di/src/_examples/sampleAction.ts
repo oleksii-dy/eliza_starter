@@ -114,8 +114,9 @@ export class CreateResourceAction extends BaseInjectableAction<CreateResourceCon
         callback?: HandlerCallback
     ): Promise<any | null> {
         if (!content) {
-            elizaLogger.warn("No content provided for the action.");
-            await callback?.({ text: "Failed to process the content." }, []);
+            const error = "No content provided for the action.";
+            elizaLogger.warn(error);
+            await callback?.({ text: error }, []);
             return;
         }
 

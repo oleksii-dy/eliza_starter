@@ -1,6 +1,38 @@
 import { interfaces } from "inversify";
-import { elizaLogger, Plugin } from "@elizaos/core";
+import {
+    Action,
+    elizaLogger,
+    Evaluator,
+    Plugin,
+    Provider,
+} from "@elizaos/core";
 import type { PluginFactory, PluginOptions } from "../types";
+
+/**
+ * Get an instance from the container
+ * @param ctx
+ * @param item
+ * @param type
+ * @returns
+ */
+async function getInstanceFromContainer<T>(
+    ctx: interfaces.Context,
+    item: T | Function,
+    type: string
+): Promise<T | undefined> {
+    if (typeof item === "function") {
+        try {
+            return await ctx.container.getAsync(item);
+        } catch (e) {
+            elizaLogger.error(
+                `Error normalizing ${type}: ${(item as Function).name}`,
+                e.message
+            );
+            return undefined;
+        }
+    }
+    return item;
+}
 
 /**
  * Create a plugin factory
@@ -19,22 +51,15 @@ export function createPlugin(ctx: interfaces.Context): PluginFactory {
         if (typeof opts.providers !== "undefined") {
             plugin.providers = (
                 await Promise.all(
-                    opts.providers.map(async (provider) => {
-                        if (typeof provider === "function") {
-                            try {
-                                return await ctx.container.getAsync(provider); // Get instance from DI container
-                            } catch (e) {
-                                elizaLogger.error(
-                                    `Error normalizing provider: ${provider.name}`,
-                                    e.message
-                                );
-                                return undefined; // Return undefined if failed to get instance
-                            }
-                        }
-                        return provider; // Use provider directly
-                    })
+                    opts.providers.map((provider) =>
+                        getInstanceFromContainer<Provider>(
+                            ctx,
+                            provider,
+                            "provider"
+                        )
+                    )
                 )
-            ).filter((provider) => provider !== undefined); // Filter out undefined providers
+            ).filter(Boolean); // Filter out undefined providers
         }
 
         // Handle actions - if provided, map through them
@@ -43,24 +68,11 @@ export function createPlugin(ctx: interfaces.Context): PluginFactory {
         if (typeof opts.actions !== "undefined") {
             plugin.actions = (
                 await Promise.all(
-                    opts.actions.map(async (action) => {
-                        if (typeof action === "function") {
-                            try {
-                                return await ctx.container.getAsync(action); // Get instance from DI container
-                            } catch (e) {
-                                elizaLogger.error(
-                                    `Error normalizing action: ${action.name}`,
-                                    e.message
-                                );
-                                console.error(e);
-                                return undefined; // Return undefined if failed to get instance
-                            }
-                        } else {
-                            return action; // Use action directly
-                        }
-                    })
+                    opts.actions.map((action) =>
+                        getInstanceFromContainer<Action>(ctx, action, "action")
+                    )
                 )
-            ).filter((action) => action !== undefined); // Filter out undefined actions
+            ).filter(Boolean); // Filter out undefined actions
         }
 
         // Handle evaluators - if provided, map through them
@@ -69,23 +81,15 @@ export function createPlugin(ctx: interfaces.Context): PluginFactory {
         if (typeof opts.evaluators !== "undefined") {
             plugin.evaluators = (
                 await Promise.all(
-                    opts.evaluators.map(async (evaluator) => {
-                        if (typeof evaluator === "function") {
-                            try {
-                                return await ctx.container.getAsync(evaluator); // Get instance from DI container
-                            } catch (e) {
-                                elizaLogger.error(
-                                    `Error normalizing evaluator: ${evaluator.name}`,
-                                    e.message
-                                );
-                                return undefined; // Return undefined if failed to get instance
-                            }
-                        } else {
-                            return evaluator; // Use evaluator directly
-                        }
-                    })
+                    opts.evaluators.map((evaluator) =>
+                        getInstanceFromContainer<Evaluator>(
+                            ctx,
+                            evaluator,
+                            "evaluator"
+                        )
+                    )
                 )
-            ).filter((evaluator) => evaluator !== undefined); // Filter out undefined evaluators
+            ).filter(Boolean); // Filter out undefined evaluators
         }
 
         // Handle services - if provided, assign directly
