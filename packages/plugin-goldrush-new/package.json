@@ -1,0 +1,35 @@
+{
+    "name": "@elizaos/plugin-goldrush",
+    "version": "0.1.0",
+    "description": "Covalent GoldRush SDK integration for wallet monitoring and analytics",
+    "type": "module",
+    "main": "dist/index.js",
+    "module": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "@elizaos/source": "./src/index.ts",
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "lint": "eslint src/**/*.ts",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage"
+    },
+    "dependencies": {
+        "@elizaos/core": "workspace:*",
+        "@covalenthq/client-sdk": "^0.7.3"
+    },
+    "devDependencies": {
+        "tsup": "^8.0.1",
+        "vitest": "^1.2.1"
+    }
+}
