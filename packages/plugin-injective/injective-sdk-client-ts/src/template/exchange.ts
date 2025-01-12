@@ -1351,7 +1351,6 @@ Here are the recent user messages for context:
 {{recentMessages}}
 `;
 
-
 export const getOrderStatesTemplate = `
 Extract the following details for order states:
 - **spotOrderHashes** (string[], optional): Spot order hashes
@@ -1504,7 +1503,6 @@ Here are the recent user messages for context:
 {{recentMessages}}
 `;
 
-
 export const getSubaccountsListTemplate = `
 Extract the following details for subaccounts list:
 - **address** (string): Account address
@@ -1562,7 +1560,6 @@ Response format:
 Here are the recent user messages for context:
 {{recentMessages}}
 `;
-
 
 export const getOrderbooksV2Template = `
 Extract the following details for orderbooks V2:
@@ -1699,7 +1696,6 @@ Response format:
 Here are the recent user messages for context:
 {{recentMessages}}
 `;
-
 
 export const getFundingPaymentsTemplate = `
 Extract the following details for funding payments:

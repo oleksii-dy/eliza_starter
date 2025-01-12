@@ -554,7 +554,6 @@ Here are the recent user messages for context:
 {{recentMessages}}
 `;
 
-
 export const msgInstantiateContractTemplate = `
 Extract the following details for instantiating contract:
 - **sender** (string): Sender address
