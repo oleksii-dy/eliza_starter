@@ -1,6 +1,10 @@
-# Eliza
+# Nayari🤖
 
-<img src="./docs/static/img/eliza_banner.jpg" alt="Eliza Banner" width="100%" />
+<div align="center">
+  <img src="./docs/static/img/nayari_banner.png" alt="Nayari Banner" width="100%" />
+</div>
+
+<div align="center">
 
 ## Fonctionnalités
 
