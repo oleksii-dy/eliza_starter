@@ -9,7 +9,7 @@ services:
       - /var/run/tappd.sock:/var/run/tappd.sock
       - tee:/app/packages/client-twitter/src/tweetcache
       # docker will copy existing files into the new volumn
-      - akash-data:/app/packages/packages/plugin-akash/src/
+      - akash-plugin-data:/app/packages/plugin-akash/src/
       - tee:/app/db.sqlite
     environment:
       # FIXME: passing secrets via env is not best practice, use secrets
@@ -62,4 +62,4 @@ services:
     restart: always
 volumes:
     tee:
-    akash-data:
+    akash-plugin-data:
