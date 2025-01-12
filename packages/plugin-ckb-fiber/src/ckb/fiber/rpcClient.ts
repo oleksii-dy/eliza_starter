@@ -146,6 +146,7 @@ export class RpcClient {
     }
 
     async shutdownChannel(params: ShutdownChannelParams): Promise<void> {
+        params.fee_rate ||= 1020;
         params = convert(params, ShutdownChannelParamsNumberKeys, true);
         await this.call<void>('shutdown_channel', [params]);
     }

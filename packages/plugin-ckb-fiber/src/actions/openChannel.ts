@@ -16,7 +16,7 @@ import { z } from "zod";
 const schema = z.object({
     peerId: z.string(),
     fundingAmount: z.number(),
-    tokenType: z.string(),
+    tokenType: z.string().optional(),
 });
 
 type Content = {
