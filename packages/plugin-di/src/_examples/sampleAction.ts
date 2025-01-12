@@ -146,7 +146,7 @@ export class CreateResourceAction extends BaseInjectableAction<CreateResourceCon
 
         // await runtime.storeMemory(memory);
 
-        callback(
+        callback?.(
             {
                 text: `Resource created successfully:
 - Name: ${content.name}
