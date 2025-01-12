@@ -53,10 +53,6 @@ import {
     type Memory,
 } from "./types.ts";
 import { stringToUuid } from "./uuid.ts";
-import _ from "lodash";
-import { readFile } from 'fs/promises';
-import { join } from 'path';
-
 
 /**
  * Represents the runtime environment for an agent, handling message processing,
@@ -375,12 +371,19 @@ export class AgentRuntime implements IAgentRuntime {
 
         this.token = opts.token;
 
-        const allPlugins = [
+        const combinedPlugins = [
             ...(opts.character?.plugins ?? []),
             ...(opts.plugins ?? []),
         ];
 
-        this.plugins = _.uniqBy(allPlugins, "name");
+        const seen = new Set();
+        this.plugins = combinedPlugins.filter((plugin) => {
+            if (seen.has(plugin.name)) {
+                return false;
+            }
+            seen.add(plugin.name);
+            return true;
+        });
 
         this.plugins.forEach((plugin) => {
             plugin.actions?.forEach((action) => {
