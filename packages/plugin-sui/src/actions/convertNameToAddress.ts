@@ -47,7 +47,7 @@ Extract the SUI domain name (ending in .sui) that needs to be converted to an ad
 If no valid .sui domain is found, return null.`;
 
 export default {
-    name: "CONVERT_SUINS_TO_ADDRESS",
+    name: "CONVERT_NAME_TO_ADDRESS",
     similes: [
         "CONVERT_SUI_NAME_TO_ADDRESS",
         "CONVERT_DOMAIN_TO_ADDRESS",
@@ -86,7 +86,7 @@ export default {
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
     ): Promise<boolean> => {
-        elizaLogger.log("Starting CONVERT_SUINS_TO_ADDRESS handler...");
+        elizaLogger.log("Starting CONVERT_NAME_TO_ADDRESS handler...");
         const walletInfo = await walletProvider.get(runtime, message, state);
         state.walletInfo = walletInfo;
 
@@ -121,7 +121,7 @@ export default {
         // Validate transfer content
         if (!isNameToAddressContent(nameToAddressContent)) {
             console.error(
-                "Invalid content for CONVERT_SUINS_TO_ADDRESS action."
+                "Invalid content for CONVERT_NAME_TO_ADDRESS action."
             );
             if (callback) {
                 callback({
@@ -187,7 +187,7 @@ export default {
                 user: "{{user2}}",
                 content: {
                     text: "Converting adeniyi.sui to address...",
-                    action: "CONVERT_SUINS_TO_ADDRESS",
+                    action: "CONVERT_NAME_TO_ADDRESS",
                 },
             },
             {
