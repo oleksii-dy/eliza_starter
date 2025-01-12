@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # debug
 
 `pnpm start:debug --characters=./characters/eliza.character.json`
@@ -12,9 +11,6 @@ git checkout   feature/opentelemetry
 pnpm start --characters=characters/eliza.character.json`
 ```
 
-=======
-
->>>>>>> e8873f50f (readme)
 # Eliza 🤖
 
 <div align="center">
