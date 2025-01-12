@@ -24,6 +24,7 @@ export default defineConfig({
         "buffer",
         "querystring",
         "amqplib",
+        "axios"
         // Add other modules you want to externalize
     ],
 });
