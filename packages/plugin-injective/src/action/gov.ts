@@ -1,5 +1,5 @@
 // src/actions/governance/governance-actions.ts
-import { createGenericAction } from "../../base";
+import { createGenericAction } from "./base";
 import * as GovTemplates from "@injective/template/gov";
 import * as GovExamples from "@injective/examples/gov";
 

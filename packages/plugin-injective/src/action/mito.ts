@@ -1,4 +1,4 @@
-import { createGenericAction } from "../../base";
+import { createGenericAction } from "./base";
 import * as MitoTemplates from "@injective/template/mito";
 import * as MitoExamples from "@injective/examples/mito";
 

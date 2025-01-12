@@ -1,5 +1,5 @@
 // src/actions/explorer/explorer-actions.ts
-import { createGenericAction } from "../../base";
+import { createGenericAction } from "./base";
 import * as ExplorerTemplates from "@injective/template/explorer";
 import * as ExplorerExamples from "@injective/examples/explorer";
 
@@ -27,8 +27,8 @@ export const GetAccountTxAction = createGenericAction({
     validateContent: () => true,
 });
 
-export const GetValidatorAction = createGenericAction({
-    name: "GET_VALIDATOR",
+export const GetExplorerValidatorAction = createGenericAction({
+    name: "GET_EXPLORER_VALIDATOR",
     description: "Fetches details of a specific validator",
     template: ExplorerTemplates.getValidatorTemplate,
     examples: ExplorerExamples.getValidatorExample,
@@ -129,7 +129,7 @@ export const GetExplorerStatsAction = createGenericAction({
 export const ExplorerActions = {
     GetTxByHashAction,
     GetAccountTxAction,
-    GetValidatorAction,
+    GetExplorerValidatorAction,
     GetValidatorUptimeAction,
     GetPeggyDepositTxsAction,
     GetPeggyWithdrawalTxsAction,

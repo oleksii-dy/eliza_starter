@@ -1,4 +1,4 @@
-import { createGenericAction } from "../../base";
+import { createGenericAction } from "./base";
 import * as MintTemplates from "@injective/template/mint";
 import * as MintExamples from "@injective/examples/mint";
 
