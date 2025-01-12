@@ -178,7 +178,7 @@ export interface ShutdownChannelParams {
     channel_id: Hash256;
     close_script: Script;
     force?: boolean;
-    fee_rate: string | number;
+    fee_rate?: string | number;
 }
 
 export const ShutdownChannelParamsNumberKeys = [
