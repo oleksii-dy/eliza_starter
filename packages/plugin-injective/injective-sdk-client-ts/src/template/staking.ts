@@ -1,439 +1,664 @@
-// Staking Module Message Templates
+// Staking Module Templates Aligned with Actions
 
-export const msgBeginRedelegateTemplate = `
-### Begin Redelegation of Tokens
+export const getStakingModuleParamsTemplate = `
+Request to fetch staking module parameters. No parameters required.
 
-**Description**:
-This message allows a delegator to redelegate a specified amount of tokens from one validator to another. Redelegation is useful for optimizing staking strategies without unbonding tokens.
+Response will contain module parameters:
+- **unbondingTime** (number): Time in seconds for unbonding period
+- **maxValidators** (number): Maximum number of validators
+- **maxEntries** (number): Maximum entries for unbonding delegation
+- **historicalEntries** (number): Number of historical entries to persist
+- **bondDenom** (string): Native token denomination for staking
 
-**Request Format**:
+Response format:
+
 \`\`\`json
 {
-    "delegatorAddress": string,       // Address of the delegator
-    "validatorSrcAddress": string,    // Address of the source validator
-    "validatorDstAddress": string,    // Address of the destination validator
-    "amount": {
-        "denom": string,              // Denomination of the tokens
-        "amount": string              // Amount of tokens to redelegate
-    }
+    "unbondingTime": 1209600,
+    "maxValidators": 100,
+    "maxEntries": 7,
+    "historicalEntries": 10000,
+    "bondDenom": "inj"
 }
 \`\`\`
 
-**Example Request**:
-\`\`\`json
-{
-    "delegatorAddress": "inj1delegator...",
-    "validatorSrcAddress": "inj1validatorSrc...",
-    "validatorDstAddress": "inj1validatorDst...",
-    "amount": {
-        "denom": "inj",
-        "amount": "500"
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123470,
-    "txHash": "XYZ789mnopqrst...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgJicmVuAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"begin_redelegate\", \"attributes\": [{\"key\": \"delegator\", \"value\": \"inj1delegator...\"}, {\"key\": \"validator_src\", \"value\": \"inj1validatorSrc...\"}, {\"key\": \"validator_dst\", \"value\": \"inj1validatorDst...\"}, {\"key\": \"amount\", \"value\": \"500inj\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 250000,
-    "gasUsed": 200000,
-    "timestamp": "2025-02-01T10:00:00Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
-export const msgDelegateTemplate = `
-### Delegate Tokens to a Validator
+export const getPoolTemplate = `
+Request to fetch staking pool information. No parameters required.
 
-**Description**:
-This message allows a delegator to delegate a specific amount of tokens to a validator, contributing to the validator's stake and earning staking rewards.
+Response will contain pool details:
+- **notBondedTokens** (string): Amount of tokens not bonded
+- **bondedTokens** (string): Amount of tokens bonded
 
-**Request Format**:
+Response format:
+
 \`\`\`json
 {
-    "delegatorAddress": string,       // Address of the delegator
-    "validatorAddress": string,       // Address of the validator
-    "amount": {
-        "denom": string,              // Denomination of the tokens
-        "amount": string              // Amount of tokens to delegate
-    }
+    "notBondedTokens": "1000000000000000000",
+    "bondedTokens": "5000000000000000000"
 }
 \`\`\`
 
-**Example Request**:
-\`\`\`json
-{
-    "delegatorAddress": "inj1delegator...",
-    "validatorAddress": "inj1validator...",
-    "amount": {
-        "denom": "inj",
-        "amount": "1000"
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123471,
-    "txHash": "ABC456uvwxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgBkZWxlZ2F0ZQ==",
-    "rawLog": "[{\"events\": [{\"type\": \"delegate\", \"attributes\": [{\"key\": \"delegator\", \"value\": \"inj1delegator...\"}, {\"key\": \"validator\", \"value\": \"inj1validator...\"}, {\"key\": \"amount\", \"value\": \"1000inj\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 200000,
-    "gasUsed": 150000,
-    "timestamp": "2025-02-02T11:15:30Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
-export const msgUndelegateTemplate = `
-### Undelegate Tokens from a Validator
+export const getValidatorsTemplate = `
+Extract the following details for fetching validators:
+- **pagination** (object): Optional pagination parameters
+  - **key** (string): Page key
+  - **offset** (number): Page offset
+  - **limit** (number): Page size
+  - **countTotal** (boolean): Whether to count total
 
-**Description**:
-This message allows a delegator to undelegate a specific amount of tokens from a validator, initiating the unbonding process. Undelegated tokens will be locked for a specified unbonding period before they become available.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "delegatorAddress": string,       // Address of the delegator
-    "validatorAddress": string,       // Address of the validator
-    "amount": {
-        "denom": string,              // Denomination of the tokens
-        "amount": string              // Amount of tokens to undelegate
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
     }
 }
 \`\`\`
 
-**Example Request**:
+Response will contain validator list and pagination details.
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getValidatorTemplate = `
+Extract the following details for fetching a specific validator:
+- **address** (string): Validator operator address
+
+Request format:
+
 \`\`\`json
 {
-    "delegatorAddress": "inj1delegator...",
-    "validatorAddress": "inj1validator...",
-    "amount": {
-        "denom": "inj",
-        "amount": "500"
+    "address": "injvaloper1..."
+}
+\`\`\`
+
+Response will contain validator details including description, commission rates, and delegation information.
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getValidatorDelegationsTemplate = `
+Extract the following details for fetching validator delegations:
+- **validatorAddress** (string): Validator address
+- **pagination** (object): Optional pagination parameters
+
+Request format:
+
+\`\`\`json
+{
+    "validatorAddress": "injvaloper1...",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
     }
 }
 \`\`\`
 
-**Response Format**:
+Response will contain list of delegations to this validator.
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getValidatorDelegationsNoThrowTemplate = `
+Extract the following details for fetching validator delegations (safe version):
+- **validatorAddress** (string): Validator address
+- **pagination** (object): Optional pagination parameters
+
+Request format:
+
 \`\`\`json
 {
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
+    "validatorAddress": "injvaloper1...",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
 }
 \`\`\`
 
-**Example Response**:
+Response will contain list of delegations to this validator. This version handles errors gracefully.
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getValidatorUnbondingDelegationsTemplate = `
+Extract the following details for fetching validator unbonding delegations:
+- **validatorAddress** (string): Validator address
+- **pagination** (object): Optional pagination parameters
+
+Request format:
+
 \`\`\`json
 {
-    "height": 123472,
-    "txHash": "DEF789abcdefgh...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgB1bmRlZ2F0ZQ==",
-    "rawLog": "[{\"events\": [{\"type\": \"undelegate\", \"attributes\": [{\"key\": \"delegator\", \"value\": \"inj1delegator...\"}, {\"key\": \"validator\", \"value\": \"inj1validator...\"}, {\"key\": \"amount\", \"value\": \"500inj\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 180000,
-    "gasUsed": 130000,
-    "timestamp": "2025-02-03T09:30:45Z",
-    "events": []
+    "validatorAddress": "injvaloper1...",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
 }
 \`\`\`
+
+Response will contain list of unbonding delegations from this validator.
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getValidatorUnbondingDelegationsNoThrowTemplate = `
+Extract the following details for fetching validator unbonding delegations (safe version):
+- **validatorAddress** (string): Validator address
+- **pagination** (object): Optional pagination parameters
+
+Request format:
+
+\`\`\`json
+{
+    "validatorAddress": "injvaloper1...",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
+}
+\`\`\`
+
+Response will contain list of unbonding delegations from this validator. This version handles errors gracefully.
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getDelegationsTemplate = `
+Extract the following details for fetching all delegations:
+- **injectiveAddress** (string): Delegator address
+- **pagination** (object): Optional pagination parameters
+
+Request format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
+}
+\`\`\`
+
+Response will contain list of all delegations for this address.
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getDelegationsNoThrowTemplate = `
+Extract the following details for fetching all delegations (safe version):
+- **injectiveAddress** (string): Delegator address
+- **pagination** (object): Optional pagination parameters
+
+Request format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
+}
+\`\`\`
+
+Response will contain list of all delegations for this address. This version handles errors gracefully.
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getUnbondingDelegationsTemplate = `
+Extract the following details for fetching unbonding delegations:
+- **injectiveAddress** (string): Delegator address
+- **pagination** (object): Optional pagination parameters
+
+Request format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
+}
+\`\`\`
+
+Response will contain list of unbonding delegations for this address.
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getReDelegationsTemplate = `
+Extract the following details for fetching redelegations:
+- **injectiveAddress** (string): Delegator address
+- **pagination** (object): Optional pagination parameters
+
+Request format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
+}
+\`\`\`
+
+Response will contain list of redelegations for this address.
+
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const msgCreateValidatorTemplate = `
-### Create a New Validator
+Extract the following details for creating a validator:
+- **moniker** (string): Validator name
+- **identity** (string): Optional identity string (e.g., Keybase)
+- **website** (string): Optional website URL
+- **securityContact** (string): Optional security contact
+- **details** (string): Optional validator details
+- **rate** (string): Commission rate (e.g., "0.100000000000000000")
+- **maxRate** (string): Maximum commission rate
+- **maxChangeRate** (string): Maximum commission change rate
+- **minSelfDelegation** (string): Minimum self-delegation amount
+- **delegatorAddress** (string): Delegator address
+- **validatorAddress** (string): Validator address
+- **pubkey** (string): Validator public key
+- **value** (object): Initial self-delegation
+  - **denom** (string): Token denomination
+  - **amount** (string): Token amount
 
-**Description**:
-This message allows a user to create a new validator by delegating tokens and providing validator-specific details such as commission rates and minimum self-delegation. Creating a validator contributes to the network's security and decentralization.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "delegatorAddress": string,       // Address of the delegator
-    "validatorAddress": string,       // Address of the validator
     "description": {
-        "moniker": string,            // Human-readable name for the validator
-        "identity": string,           // Optional identity information
-        "website": string,            // Optional website URL
-        "securityContact": string,    // Optional security contact information
-        "details": string             // Optional detailed description
+        "moniker": "Validator Name",
+        "identity": "keybase-id",
+        "website": "https://validator.com",
+        "securityContact": "security@validator.com",
+        "details": "Validator details"
     },
     "commission": {
-        "rate": string,               // Commission rate (e.g., "0.10" for 10%)
-        "maxRate": string,            // Maximum commission rate
-        "maxChangeRate": string        // Maximum commission rate change per day
+        "rate": "0.100000000000000000",
+        "maxRate": "0.200000000000000000",
+        "maxChangeRate": "0.010000000000000000"
     },
-    "minSelfDelegation": string,      // Minimum amount of tokens the validator must self-delegate
-    "amount": {
-        "denom": string,              // Denomination of the tokens
-        "amount": string              // Amount of tokens to delegate
-    }
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "delegatorAddress": "inj1delegator...",
-    "validatorAddress": "inj1validator...",
-    "description": {
-        "moniker": "Validator One",
-        "identity": "ID123456",
-        "website": "https://validatorone.com",
-        "securityContact": "security@validatorone.com",
-        "details": "Leading validator in the Injective network."
-    },
-    "commission": {
-        "rate": "0.10",
-        "maxRate": "0.20",
-        "maxChangeRate": "0.01"
-    },
-    "minSelfDelegation": "1000",
-    "amount": {
+    "minSelfDelegation": "1000000000000000000",
+    "delegatorAddress": "inj1...",
+    "validatorAddress": "injvaloper1...",
+    "pubkey": "injvalconspub1...",
+    "value": {
         "denom": "inj",
-        "amount": "5000"
+        "amount": "1000000000000000000"
     }
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123473,
-    "txHash": "GHI012ijklmn...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgNjcmVhdGVfdmFsaWRhdG9yAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"create_validator\", \"attributes\": [{\"key\": \"delegator\", \"value\": \"inj1delegator...\"}, {\"key\": \"validator\", \"value\": \"inj1validator...\"}, {\"key\": \"moniker\", \"value\": \"Validator One\"}, {\"key\": \"commission_rate\", \"value\": \"0.10\"}, {\"key\": \"commission_max_rate\", \"value\": \"0.20\"}, {\"key\": \"commission_max_change_rate\", \"value\": \"0.01\"}, {\"key\": \"min_self_delegation\", \"value\": \"1000inj\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 400000,
-    "gasUsed": 350000,
-    "timestamp": "2025-02-04T14:45:00Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const msgEditValidatorTemplate = `
-### Edit an Existing Validator
+Extract the following details for editing a validator:
+- **description** (object): Updated validator description
+  - **moniker** (string): Optional new validator name
+  - **identity** (string): Optional new identity string
+  - **website** (string): Optional new website URL
+  - **securityContact** (string): Optional new security contact
+  - **details** (string): Optional new validator details
+- **validatorAddress** (string): Validator address
+- **commissionRate** (string): Optional new commission rate
+- **minSelfDelegation** (string): Optional new minimum self-delegation amount
 
-**Description**:
-This message allows a validator to update their information, such as description, commission rates, or minimum self-delegation. Only the validator's operator address can perform this action.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "validatorAddress": string,       // Address of the validator to edit
     "description": {
-        "moniker": string,            // (Optional) New moniker
-        "identity": string,           // (Optional) New identity information
-        "website": string,            // (Optional) New website URL
-        "securityContact": string,    // (Optional) New security contact information
-        "details": string             // (Optional) New detailed description
+        "moniker": "New Validator Name",
+        "identity": "new-keybase-id",
+        "website": "https://new-website.com",
+        "securityContact": "new-security@validator.com",
+        "details": "Updated validator details"
     },
-    "commission": {
-        "rate": string,               // (Optional) New commission rate
-        "maxRate": string,            // (Optional) New maximum commission rate
-        "maxChangeRate": string        // (Optional) New maximum commission rate change per day
-    },
-    "minSelfDelegation": string        // (Optional) New minimum self-delegation
+    "validatorAddress": "injvaloper1...",
+    "commissionRate": "0.150000000000000000",
+    "minSelfDelegation": "2000000000000000000"
 }
 \`\`\`
 
-**Example Request**:
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgDelegateTemplate = `
+Extract the following details for delegating tokens:
+- **delegatorAddress** (string): Delegator address
+- **validatorAddress** (string): Validator address
+- **amount** (object): Delegation amount
+  - **denom** (string): Token denomination
+  - **amount** (string): Token amount
+
+Request format:
+
 \`\`\`json
 {
-    "validatorAddress": "inj1validator...",
-    "description": {
-        "moniker": "Validator One Updated",
-        "website": "https://validatoroneupdated.com",
-        "details": "Updated details for Validator One."
-    },
-    "commission": {
-        "rate": "0.12",
-        "maxRate": "0.22",
-        "maxChangeRate": "0.02"
-    },
-    "minSelfDelegation": "1500"
+    "delegatorAddress": "inj1...",
+    "validatorAddress": "injvaloper1...",
+    "amount": {
+        "denom": "inj",
+        "amount": "1000000000000000000"
+    }
 }
 \`\`\`
 
-**Response Format**:
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgBeginRedelegateTemplate = `
+Extract the following details for beginning a redelegation:
+- **delegatorAddress** (string): Delegator address
+- **validatorSrcAddress** (string): Source validator address
+- **validatorDstAddress** (string): Destination validator address
+- **amount** (object): Amount to redelegate
+  - **denom** (string): Token denomination
+  - **amount** (string): Token amount
+
+Request format:
+
 \`\`\`json
 {
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
+    "delegatorAddress": "inj1...",
+    "validatorSrcAddress": "injvaloper1...",
+    "validatorDstAddress": "injvaloper2...",
+    "amount": {
+        "denom": "inj",
+        "amount": "1000000000000000000"
+    }
 }
 \`\`\`
 
-**Example Response**:
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Staking Module Templates - Part 2 (Message Templates Continued)
+
+export const msgUndelegateTemplate = `
+Extract the following details for undelegating tokens:
+- **delegatorAddress** (string): Delegator address
+- **validatorAddress** (string): Validator address
+- **amount** (object): Amount to undelegate
+  - **denom** (string): Token denomination
+  - **amount** (string): Token amount
+
+Request format:
+
 \`\`\`json
 {
-    "height": 123474,
-    "txHash": "JKL345mnopqr...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgVlbGRpdGVfdmFsaWRhdG9yAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"edit_validator\", \"attributes\": [{\"key\": \"validator\", \"value\": \"inj1validator...\"}, {\"key\": \"moniker\", \"value\": \"Validator One Updated\"}, {\"key\": \"commission_rate\", \"value\": \"0.12\"}, {\"key\": \"commission_max_rate\", \"value\": \"0.22\"}, {\"key\": \"commission_max_change_rate\", \"value\": \"0.02\"}, {\"key\": \"min_self_delegation\", \"value\": \"1500inj\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 300000,
-    "gasUsed": 250000,
-    "timestamp": "2025-02-05T16:00:00Z",
-    "events": []
+    "delegatorAddress": "inj1...",
+    "validatorAddress": "injvaloper1...",
+    "amount": {
+        "denom": "inj",
+        "amount": "1000000000000000000"
+    }
 }
 \`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const msgCancelUnbondingDelegationTemplate = `
-### Cancel Unbonding Delegation
+Extract the following details for canceling an unbonding delegation:
+- **delegatorAddress** (string): Delegator address
+- **validatorAddress** (string): Validator address
+- **amount** (object): Amount to cancel unbonding
+  - **denom** (string): Token denomination
+  - **amount** (string): Token amount
+- **creationHeight** (number): Original unbonding creation height
 
-**Description**:
-This message allows a delegator to cancel an ongoing unbonding delegation from a validator. Cancelling an unbonding delegation halts the unbonding process and returns the tokens to the delegator's available balance.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "delegatorAddress": string,           // Address of the delegator
-    "validatorAddress": string,           // Address of the validator
-    "completionTime": string              // ISO8601 timestamp when the unbonding delegation completes
+    "delegatorAddress": "inj1...",
+    "validatorAddress": "injvaloper1...",
+    "amount": {
+        "denom": "inj",
+        "amount": "1000000000000000000"
+    },
+    "creationHeight": 1000000
 }
 \`\`\`
 
-**Example Request**:
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getDelegationTemplate = `
+Extract the following details for fetching a specific delegation:
+- **injectiveAddress** (string): Delegator address
+- **validatorAddress** (string): Validator address
+
+Request format:
+
 \`\`\`json
 {
-    "delegatorAddress": "inj1delegator...",
-    "validatorAddress": "inj1validator...",
-    "completionTime": "2025-03-01T12:00:00Z"
+    "injectiveAddress": "inj1...",
+    "validatorAddress": "injvaloper1..."
 }
 \`\`\`
 
-**Response Format**:
+Response will contain delegation details:
+- **delegation** (object): Delegation information
+  - **delegatorAddress** (string): Delegator address
+  - **validatorAddress** (string): Validator address
+  - **shares** (string): Delegation shares
+- **balance** (object): Balance information
+  - **denom** (string): Token denomination
+  - **amount** (string): Token amount
+
+Response format:
+
 \`\`\`json
 {
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                       // Optional
-    "rawLog": string,
-    "logs": [],                           // Optional
-    "info": string,                       // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                          // Optional
+    "delegation": {
+        "delegatorAddress": "inj1...",
+        "validatorAddress": "injvaloper1...",
+        "shares": "1000000000000000000"
+    },
+    "balance": {
+        "denom": "inj",
+        "amount": "1000000000000000000"
+    }
 }
 \`\`\`
 
-**Example Response**:
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getDelegatorsTemplate = `
+Extract the following details for fetching all delegators of a validator:
+- **validatorAddress** (string): Validator address
+- **pagination** (object): Optional pagination parameters
+  - **key** (string): Page key
+  - **offset** (number): Page offset
+  - **limit** (number): Page size
+  - **countTotal** (boolean): Whether to count total
+
+Request format:
+
 \`\`\`json
 {
-    "height": 123475,
-    "txHash": "MNO678qrstuv...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgNjYW5jZWxfaW5iZ25vZGVnYXRpb24AA==",
-    "rawLog": "[{\"events\": [{\"type\": \"cancel_unbonding_delegation\", \"attributes\": [{\"key\": \"delegator\", \"value\": \"inj1delegator...\"}, {\"key\": \"validator\", \"value\": \"inj1validator...\"}, {\"key\": \"completion_time\", \"value\": \"2025-03-01T12:00:00Z\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 220000,
-    "gasUsed": 180000,
-    "timestamp": "2025-02-06T18:30:15Z",
-    "events": []
+    "validatorAddress": "injvaloper1...",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
 }
 \`\`\`
+
+Response will contain delegations and pagination:
+- **delegations** (array): List of delegations
+- **pagination** (object): Pagination information
+  - **nextKey** (string): Next page key
+  - **total** (string): Total count if requested
+
+Response format:
+
+\`\`\`json
+{
+    "delegations": [
+        {
+            "delegation": {
+                "delegatorAddress": "inj1...",
+                "validatorAddress": "injvaloper1...",
+                "shares": "1000000000000000000"
+            },
+            "balance": {
+                "denom": "inj",
+                "amount": "1000000000000000000"
+            }
+        }
+    ],
+    "pagination": {
+        "nextKey": "xyz789...",
+        "total": "50"
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Template for NoThrow versions (handling errors gracefully)
+export const getDelegatorsNoThrowTemplate = `
+Extract the following details for fetching all delegators (safe version):
+- **validatorAddress** (string): Validator address
+- **pagination** (object): Optional pagination parameters
+  - **key** (string): Page key
+  - **offset** (number): Page offset
+  - **limit** (number): Page size
+  - **countTotal** (boolean): Whether to count total
+
+Request format:
+
+\`\`\`json
+{
+    "validatorAddress": "injvaloper1...",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
+}
+\`\`\`
+
+Response will contain delegations and pagination (same format as getDelegatorsTemplate).
+This version handles errors gracefully and won't throw exceptions.
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Additional NoThrow templates for other endpoints
+export const getUnbondingDelegationsNoThrowTemplate = `
+Extract the following details for fetching unbonding delegations (safe version):
+- **injectiveAddress** (string): Delegator address
+- **pagination** (object): Optional pagination parameters
+
+Request format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
+}
+\`\`\`
+
+Response will contain list of unbonding delegations.
+This version handles errors gracefully and won't throw exceptions.
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getReDelegationsNoThrowTemplate = `
+Extract the following details for fetching redelegations (safe version):
+- **injectiveAddress** (string): Delegator address
+- **pagination** (object): Optional pagination parameters
+
+Request format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
+}
+\`\`\`
+
+Response will contain list of redelegations.
+This version handles errors gracefully and won't throw exceptions.
+
+Here are the recent user messages for context:
+{{recentMessages}}
 `;

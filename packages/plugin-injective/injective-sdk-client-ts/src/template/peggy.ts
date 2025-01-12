@@ -1,74 +1,99 @@
+// Peggy Module Templates
+
+export const getPeggyModuleParamsTemplate = `
+Extract the Peggy module parameters.
+
+Response will contain the following parameters:
+- **bridgeParams** (object): Bridge parameters containing:
+  - **bridgeChainId** (string): Chain ID for the bridge
+  - **peggyId** (string): Unique identifier for the Peggy bridge
+  - **signedValsetsWindow** (string): Window for signed validator sets
+  - **signedBatchesWindow** (string): Window for signed batches
+  - **signedClaimsWindow** (string): Window for signed claims
+  - **targetBatchTimeout** (string): Target timeout for batches
+  - **averageBlockTime** (string): Average block time
+  - **averageEthereumBlockTime** (string): Average Ethereum block time
+  - **slashFractionValset** (string): Slash fraction for validator sets
+  - **slashFractionBatch** (string): Slash fraction for batches
+  - **slashFractionClaim** (string): Slash fraction for claims
+  - **slashFractionConflictingClaim** (string): Slash fraction for conflicting claims
+  - **unbondSlashingValsetsWindow** (string): Unbond slashing window for validator sets
+  - **bridgeContractAddress** (string): Ethereum bridge contract address
+  - **bridgeActive** (boolean): Whether the bridge is active
+  - **oracles** (string[]): List of oracle addresses
+
+Response format:
+
+\`\`\`json
+{
+    "bridgeParams": {
+        "bridgeChainId": "1",
+        "peggyId": "peggy1",
+        "signedValsetsWindow": "10000",
+        "signedBatchesWindow": "10000",
+        "signedClaimsWindow": "10000",
+        "targetBatchTimeout": "43200000",
+        "averageBlockTime": "5000",
+        "averageEthereumBlockTime": "15000",
+        "slashFractionValset": "0.001",
+        "slashFractionBatch": "0.001",
+        "slashFractionClaim": "0.001",
+        "slashFractionConflictingClaim": "0.001",
+        "unbondSlashingValsetsWindow": "10000",
+        "bridgeContractAddress": "0x...",
+        "bridgeActive": true,
+        "oracles": [
+            "0x..."
+        ]
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
 export const msgSendToEthTemplate = `
-### Send Tokens to Ethereum via IBC Transfer
+Extract the following details for sending tokens to Ethereum:
+- **amount** (object): Token amount containing:
+  - **denom** (string): Token denomination
+  - **amount** (string): Token amount
+- **bridgeFee** (object): Bridge fee containing:
+  - **denom** (string): Fee denomination
+  - **amount** (string): Fee amount
+- **ethDest** (string): Destination Ethereum address
 
-**Description**:
-This message facilitates the transfer of tokens from the Injective chain to an Ethereum address using Inter-Blockchain Communication (IBC). It enables seamless cross-chain asset transfers, allowing users to leverage their tokens across different blockchain ecosystems. Proper handling of addresses and transfer details ensures the security and accuracy of the transfer process.
+Ensure that:
+1. Amount is positive and properly formatted
+2. Bridge fee is sufficient for the transfer
+3. Ethereum destination address is valid
+4. Token denomination is supported by the bridge
 
-**Request Format**:
+Request format:
+
 \`\`\`json
 {
-    "recipient": string,               // Ethereum address to receive the tokens
-    "amount": {
-        "denom": string,                // Denomination of the tokens to send
-        "amount": string                // Amount of tokens to send
-    },
-    "bridgeFee": {
-        "denom": string,                // Denomination of the bridge fee
-        "amount": string                // Amount of bridge fee to include
-    },
-    "timeout": string                   // (Optional) ISO8601 timestamp for transfer timeout
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "recipient": "0xEthereumAddress1234567890abcdef",
     "amount": {
         "denom": "inj",
-        "amount": "1000"
+        "amount": "1000000000000000000"
     },
     "bridgeFee": {
         "denom": "inj",
-        "amount": "10"
+        "amount": "1000000000000000"
     },
-    "timeout": "2025-03-01T12:00:00Z"
+    "ethDest": "0x..."
 }
 \`\`\`
 
-**Response Format**:
+Success response format:
+
 \`\`\`json
 {
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
+    "txHash": "0x...",
+    "success": true
 }
 \`\`\`
 
-**Example Response**:
-\`\`\`json
-{
-    "height": 123491,
-    "txHash": "OPQ345rstuvw...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgZtZ3NlbmRfdG9fZXRoAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"send_to_eth\", \"attributes\": [{\"key\": \"recipient\", \"value\": \"0xEthereumAddress1234567890abcdef\"}, {\"key\": \"amount\", \"value\": \"1000inj\"}, {\"key\": \"bridge_fee\", \"value\": \"10inj\"}, {\"key\": \"timeout\", \"value\": \"2025-03-01T12:00:00Z\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 250000,
-    "gasUsed": 200000,
-    "timestamp": "2025-02-21T11:15:30Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;

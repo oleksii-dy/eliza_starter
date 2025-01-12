@@ -1,160 +1,65 @@
-// Mint Module Query Templates
+// Mint Module Templates
 
 export const getMintModuleParamsTemplate = `
-### Get Mint Module Parameters
+Extract the mint module parameters.
 
-**Description**:
-This query retrieves the current parameters of the Mint module. The Mint module is responsible for controlling the inflation of the native token, managing the issuance of new tokens, and setting policies related to token supply. Understanding these parameters is essential for monitoring inflation rates, supply dynamics, and economic policies within the network.
+The response will contain:
+- **mintDenom** (string): Type of coin to mint
+- **inflationRateChange** (string): Maximum annual change in inflation rate
+- **inflationMax** (string): Maximum inflation rate
+- **inflationMin** (string): Minimum inflation rate
+- **goalBonded** (string): Goal of percent bonded atoms
+- **blocksPerYear** (string): Expected blocks per year
 
-**Request Format**:
-\`\`\`json
-{}
-\`\`\`
+Response format:
 
-**Example Request**:
-\`\`\`json
-{}
-\`\`\`
-
-**Response Format**:
 \`\`\`json
 {
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing Mint module parameters
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
+    "mintDenom": "inj",
+    "inflationRateChange": "0.130000000000000000",
+    "inflationMax": "0.200000000000000000",
+    "inflationMin": "0.070000000000000000",
+    "goalBonded": "0.670000000000000000",
+    "blocksPerYear": "6311520"
 }
 \`\`\`
 
-**Example Response**:
-\`\`\`json
-{
-    "height": 123600,
-    "txHash": "ABC123mintxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "Cg1taW50X21vZHVsZV9wYXJhbWV0ZXJzAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_mint_module_params\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 100000,
-    "gasUsed": 80000,
-    "timestamp": "2025-04-01T10:00:00Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const getInflationTemplate = `
-### Get Current Inflation Rate
+Extract the current inflation rate.
 
-**Description**:
-This query retrieves the current inflation rate of the native token within the Mint module. The inflation rate determines the rate at which new tokens are minted and introduced into the circulating supply. Monitoring the inflation rate is crucial for understanding tokenomics, predicting supply changes, and making informed investment decisions.
+The response will contain:
+- **inflation** (string): Current inflation rate
 
-**Request Format**:
-\`\`\`json
-{}
-\`\`\`
+Response format:
 
-**Example Request**:
-\`\`\`json
-{}
-\`\`\`
-
-**Response Format**:
 \`\`\`json
 {
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing the inflation rate
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
+    "inflation": "0.130000000000000000"
 }
 \`\`\`
 
-**Example Response**:
-\`\`\`json
-{
-    "height": 123601,
-    "txHash": "DEF456inflation...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgVpbmZsYXRpb24AA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_inflation\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 90000,
-    "gasUsed": 70000,
-    "timestamp": "2025-04-02T11:15:30Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const getAnnualProvisionsTemplate = `
-### Get Annual Provisions
+Extract the current annual provisions.
 
-**Description**:
-This query retrieves the annual provisions from the Mint module. Annual provisions refer to the total amount of tokens minted and distributed over a year, typically allocated for ecosystem growth, developer incentives, and other strategic purposes. Understanding annual provisions helps in assessing the long-term supply strategy and sustainability of the token economy.
+The response will contain:
+- **annualProvisions** (string): Current annual provisions
 
-**Request Format**:
-\`\`\`json
-{}
-\`\`\`
+Response format:
 
-**Example Request**:
-\`\`\`json
-{}
-\`\`\`
-
-**Response Format**:
 \`\`\`json
 {
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing annual provisions
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
+    "annualProvisions": "5000000000000000000000000"
 }
 \`\`\`
 
-**Example Response**:
-\`\`\`json
-{
-    "height": 123602,
-    "txHash": "GHI789provisions...",
-    "codespace": "",
-    "code": 0,
-    "data": "Cg1hbm51YWxfaHJlc2lwb25zAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_annual_provisions\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 95000,
-    "gasUsed": 75000,
-    "timestamp": "2025-04-03T12:20:40Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;

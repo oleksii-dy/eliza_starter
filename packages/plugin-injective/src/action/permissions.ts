@@ -1,4 +1,4 @@
-import { createGenericAction } from "../../base";
+import { createGenericAction } from "./base";
 import * as PermissionsTemplates from "@injective/template/permissions";
 import * as PermissionsExamples from "@injective/examples/permissions";
 

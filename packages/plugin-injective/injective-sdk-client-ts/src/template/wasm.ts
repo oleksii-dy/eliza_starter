@@ -1,536 +1,849 @@
-// Wasm Module Templates
+// WASM and WasmX Module Templates
+
+// WasmX Module Templates
+
+export const getWasmxModuleParamsTemplate = `
+Request to fetch WasmX module parameters. No parameters required.
+
+Response will contain module parameters as per the WasmX params structure:
+- **params** (object): Module parameters and settings
+
+Response format:
+
+\`\`\`json
+{
+    "params": {
+        "is_execution_enabled": true,
+        "registration_fee": {
+            "denom": "inj",
+            "amount": "100000000000000000000"
+        },
+        "max_begin_block_tx_gas": 1000000,
+        "max_contract_gas_limit": 500000,
+        "min_gas_price": "1000000000"
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getWasmxModuleStateTemplate = `
+Request to fetch WasmX module state. No parameters required.
+
+Response will contain the complete module state:
+- **params** (object): Module parameters
+- **registered_contracts** (array): List of registered contracts
+  - **address** (string): Contract address
+  - **gas_limit** (number): Gas limit
+  - **gas_price** (string): Gas price
+  - **is_executable** (boolean): Execution status
+  - **code_id** (number): Contract code ID
+
+Response format:
+
+\`\`\`json
+{
+    "params": {
+        "is_execution_enabled": true,
+        "registration_fee": {
+            "denom": "inj",
+            "amount": "100000000000000000000"
+        },
+        "max_begin_block_tx_gas": 1000000,
+        "max_contract_gas_limit": 500000,
+        "min_gas_price": "1000000000"
+    },
+    "registered_contracts": [
+        {
+            "address": "inj1...",
+            "gas_limit": 1000000,
+            "gas_price": "1000000000",
+            "is_executable": true,
+            "code_id": 1
+        }
+    ]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Standard WASM Module Templates
+
+export const getContractAccountsBalanceTemplate = `
+Extract the following details for fetching contract accounts balance:
+- **contractAddress** (string): Contract address
+- **pagination** (object): Optional pagination parameters
+  - **key** (string): Page key
+  - **offset** (number): Page offset
+  - **limit** (number): Page size
+  - **countTotal** (boolean): Whether to count total
+
+Request format:
+
+\`\`\`json
+{
+    "contractAddress": "inj1...",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
+}
+\`\`\`
+
+Response will contain contract balances and information:
+- **tokenInfo** (object): Token information
+  - **name** (string): Token name
+  - **symbol** (string): Token symbol
+  - **decimals** (number): Token decimals
+  - **total_supply** (string): Total supply
+  - **mint** (string): Mint address
+- **contractInfo** (object): Contract information
+  - **codeId** (number): Code ID
+  - **creator** (string): Creator address
+  - **admin** (string): Admin address
+  - **label** (string): Contract label
+- **marketingInfo** (object): Marketing information
+  - **project** (string): Project name
+  - **description** (string): Project description
+  - **logo** (object): Logo information
+    - **url** (string): Logo URL
+  - **marketing** (string): Marketing info
+- **contractAccountsBalance** (array): List of account balances
+  - **account** (string): Account address
+  - **balance** (string): Account balance
+
+Response format:
+
+\`\`\`json
+{
+    "tokenInfo": {
+        "name": "Example Token",
+        "symbol": "EXT",
+        "decimals": 18,
+        "total_supply": "1000000000000000000000000",
+        "mint": "inj1..."
+    },
+    "contractInfo": {
+        "codeId": 1,
+        "creator": "inj1...",
+        "admin": "inj1...",
+        "label": "Example Contract"
+    },
+    "marketingInfo": {
+        "project": "Example Project",
+        "description": "Example Description",
+        "logo": {
+            "url": "https://example.com/logo.png"
+        },
+        "marketing": "Example Marketing Info"
+    },
+    "contractAccountsBalance": [
+        {
+            "account": "inj1...",
+            "balance": "1000000000000000000"
+        }
+    ],
+    "pagination": {
+        "nextKey": "xyz789...",
+        "total": "100"
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getContractStateTemplate = `
+Extract the following details for fetching contract state:
+- **contractAddress** (string): Contract address
+- **pagination** (object): Optional pagination parameters
+
+Request format:
+
+\`\`\`json
+{
+    "contractAddress": "inj1...",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
+}
+\`\`\`
+
+Response will contain contract state with same structure as getContractAccountsBalanceTemplate.
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getContractInfoTemplate = `
+Extract the following details for fetching contract information:
+- **contractAddress** (string): Contract address
+
+Request format:
+
+\`\`\`json
+{
+    "contractAddress": "inj1..."
+}
+\`\`\`
+
+Response will contain contract information:
+- **codeId** (number): Code ID
+- **creator** (string): Creator address
+- **admin** (string): Admin address
+- **label** (string): Contract label
+- **created** (object): Creation information
+  - **blockHeight** (number): Block height
+  - **txIndex** (number): Transaction index
+- **ibcPortId** (string): IBC port ID
+- **extension** (object): Optional extension data
+
+Response format:
+
+\`\`\`json
+{
+    "codeId": 1,
+    "creator": "inj1...",
+    "admin": "inj1...",
+    "label": "Example Contract",
+    "created": {
+        "blockHeight": 1000000,
+        "txIndex": 0
+    },
+    "ibcPortId": "wasm.1",
+    "extension": {
+        "typeUrl": "example",
+        "value": "base64encodeddata"
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getContractHistoryTemplate = `
+Extract the following details for fetching contract history:
+- **contractAddress** (string): Contract address
+
+Request format:
+
+\`\`\`json
+{
+    "contractAddress": "inj1..."
+}
+\`\`\`
+
+Response will contain contract history:
+- **entriesList** (array): List of history entries
+  - **operation** (string): Operation type
+  - **codeId** (number): Code ID
+  - **updated** (object): Update information
+    - **blockHeight** (number): Block height
+    - **txIndex** (number): Transaction index
+  - **msg** (string): Operation message
+- **pagination** (object): Pagination information
+
+Response format:
+
+\`\`\`json
+{
+    "entriesList": [
+        {
+            "operation": "CONTRACT_CODE_HISTORY_OPERATION_TYPE_INIT",
+            "codeId": 1,
+            "updated": {
+                "blockHeight": 1000000,
+                "txIndex": 0
+            },
+            "msg": "base64encodeddata"
+        }
+    ],
+    "pagination": {
+        "nextKey": "xyz789...",
+        "total": "10"
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getSmartContractStateTemplate = `
+Extract the following details for fetching smart contract state:
+- **contractAddress** (string): Contract address
+- **query** (string or object): Query parameters
+
+Request format:
+
+\`\`\`json
+{
+    "contractAddress": "inj1...",
+    "query": {
+        "get_state": {}
+    }
+}
+\`\`\`
+
+Response will contain contract-specific state data.
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getRawContractStateTemplate = `
+Extract the following details for fetching raw contract state:
+- **contractAddress** (string): Contract address
+- **query** (string): Query key
+
+Request format:
+
+\`\`\`json
+{
+    "contractAddress": "inj1...",
+    "query": "base64encodedkey"
+}
+\`\`\`
+
+Response will contain raw contract state data.
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getContractCodesTemplate = `
+Extract the following details for fetching contract codes:
+- **pagination** (object): Optional pagination parameters
+
+Request format:
+
+\`\`\`json
+{
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
+}
+\`\`\`
+
+Response will contain list of code information:
+- **codeInfosList** (array): List of code information
+  - **codeId** (number): Code ID
+  - **creator** (string): Creator address
+  - **dataHash** (string): Code data hash
+- **pagination** (object): Pagination information
+
+Response format:
+
+\`\`\`json
+{
+    "codeInfosList": [
+        {
+            "codeId": 1,
+            "creator": "inj1...",
+            "dataHash": "base64encodeddata"
+        }
+    ],
+    "pagination": {
+        "nextKey": "xyz789...",
+        "total": "50"
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getContractCodeTemplate = `
+Extract the following details for fetching contract code:
+- **codeId** (number): Code ID
+
+Request format:
+
+\`\`\`json
+{
+    "codeId": 1
+}
+\`\`\`
+
+Response will contain code information and data:
+- **codeInfo** (object): Code information
+  - **codeId** (number): Code ID
+  - **creator** (string): Creator address
+  - **dataHash** (string): Code data hash
+- **data** (string): Base64 encoded WASM bytecode
+
+Response format:
+
+\`\`\`json
+{
+    "codeInfo": {
+        "codeId": 1,
+        "creator": "inj1...",
+        "dataHash": "base64encodeddata"
+    },
+    "data": "base64encodedwasmcode"
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getContractCodeContractsTemplate = `
+Extract the following details for fetching contracts by code ID:
+- **codeId** (number): Code ID
+- **pagination** (object): Optional pagination parameters
+
+Request format:
+
+\`\`\`json
+{
+    "codeId": 1,
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
+}
+\`\`\`
+
+Response will contain list of contracts:
+- **contractsList** (array): List of contract addresses
+- **pagination** (object): Pagination information
+
+Response format:
+
+\`\`\`json
+{
+    "contractsList": [
+        "inj1...",
+        "inj2..."
+    ],
+    "pagination": {
+        "nextKey": "xyz789...",
+        "total": "20"
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Message Templates
 
 export const msgStoreCodeTemplate = `
-Store new Wasm code on the injective blockchain:
+Extract the following details for storing contract code:
+- **sender** (string): Sender address
+- **wasmByteCode** (string): Base64 encoded WASM bytecode
+- **instantiatePermission** (object): Optional instantiation permission
+  - **permission** (string): Permission type
+  - **address** (string): Restricted address
 
-**Description**:
-This message uploads new Wasm bytecode to the injective blockchain, enabling the instantiation of new smart contracts based on this code. Optional instantiation permissions can be set to restrict who can instantiate contracts from this code.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "wasmBytes": string | Uint8Array,         // Raw Wasm bytecode as a base64 encoded string or binary
-    "instantiatePermission": {                // (Optional) Permissions for instantiation
-        "permission": string,                 // Permission type (e.g., "Everybody", "OnlyAddress")
-        "address": string                     // (Optional) Address allowed to instantiate
-    }
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "wasmBytes": "AGFzbQEAAAABBgFgAX8BfwMCAQAHBwEDfwMCAQAHBwEDfwMCAQAHBg==",
+    "sender": "inj1...",
+    "wasmByteCode": "base64encodedwasmcode",
     "instantiatePermission": {
-        "permission": "OnlyAddress",
-        "address": "inj1admin..."
+        "permission": "Everybody",
+        "address": ""
     }
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123462,
-    "txHash": "ABC123abcdef...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgNzdG9yZQ==",
-    "rawLog": "[{\"events\": [{\"type\": \"store_code\", \"attributes\": [{\"key\": \"code_id\", \"value\": \"5\"}, {\"key\": \"creator\", \"value\": \"inj1admin...\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 350000,
-    "gasUsed": 300000,
-    "timestamp": "2025-01-15T10:20:30Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const msgUpdateAdminTemplate = `
-Update the admin of a specific contract:
+Extract the following details for updating contract admin:
+- **sender** (string): Current admin address
+- **newAdmin** (string): New admin address
+- **contract** (string): Contract address
 
-**Description**:
-This message transfers administrative control of a specific smart contract to a new admin address. Only the current admin can initiate this change.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "newAdmin": string,        // Address of the new admin
-    "contract": string         // Address of the contract to update
+    "sender": "inj1...",
+    "newAdmin": "inj2...",
+    "contract": "inj3..."
 }
 \`\`\`
 
-**Example Request**:
-\`\`\`json
-{
-    "newAdmin": "inj3newadmin...",
-    "contract": "inj1contract1..."
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123463,
-    "txHash": "DEF456ghijkl...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgZ1cGRhdGVfYWRtaW4AA==",
-    "rawLog": "[{\"events\": [{\"type\": \"update_admin\", \"attributes\": [{\"key\": \"contract\", \"value\": \"inj1contract1...\"}, {\"key\": \"new_admin\", \"value\": \"inj3newadmin...\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 280000,
-    "gasUsed": 240000,
-    "timestamp": "2025-01-16T07:35:50Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const msgExecuteContractTemplate = `
-Execute a smart contract with optional funds:
+Extract the following details for executing contract:
+- **sender** (string): Sender address
+- **contract** (string): Contract address
+- **msg** (string or object): Execute message
+- **funds** (array): Optional funds to send
+  - **denom** (string): Token denomination
+  - **amount** (string): Token amount
 
-**Description**:
-This message allows users to execute functions within a smart contract. Funds can be optionally sent along with the execution. The execution can include custom arguments or actions defined by the contract.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "funds": [
-        {
-            "denom": string,    // Denomination of the funds
-            "amount": string    // Amount of the funds
+    "sender": "inj1...",
+    "contract": "inj2...",
+    "msg": {
+        "execute": {
+            "action": "transfer",
+            "amount": "1000000000000000000",
+            "recipient": "inj3..."
         }
-    ],
-    "sender": string,             // Address of the sender executing the contract
-    "contractAddress": string,    // Address of the smart contract to execute
-    "execArgs": object,           // (Optional) Execution arguments
-    "exec": {                      // (Optional) Execution with action
-        "msg": object,             // Message to send to the contract
-        "action": string           // Action identifier
     },
-    "msg": object                  // (Optional) Alternative message structure
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
     "funds": [
         {
             "denom": "inj",
-            "amount": "1000"
+            "amount": "1000000000000000000"
         }
-    ],
-    "sender": "inj1sender...",
-    "contractAddress": "inj1contract1...",
-    "execArgs": {
-        "action": "transfer",
-        "params": {
-            "recipient": "inj1recipient...",
-            "amount": "500"
-        }
-    },
-    "exec": {
-        "msg": {
-            "transfer": {
-                "recipient": "inj1recipient...",
-                "amount": "500"
-            }
-        },
-        "action": "transfer"
-    },
-    "msg": {
-        "transfer": {
-            "recipient": "inj1recipient...",
-            "amount": "500"
-        }
-    }
+    ]
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123464,
-    "txHash": "GHI789mnopqr...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgVleGVjdXRlAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"execute_contract\", \"attributes\": [{\"key\": \"sender\", \"value\": \"inj1sender...\"}, {\"key\": \"contract\", \"value\": \"inj1contract1...\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 400000,
-    "gasUsed": 350000,
-    "timestamp": "2025-01-17T11:25:35Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const msgMigrateContractTemplate = `
-Migrate a smart contract to a new code version:
+Extract the following details for migrating contract:
+- **sender** (string): Admin address
+- **contract** (string): Contract address
+- **codeId** (number): New code ID
+- **msg** (string or object): Migration message
 
-**Description**:
-This message updates a smart contract to a new code version, allowing for upgrades and improvements without changing the contract address. Only the current admin can perform migrations.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "contract": string,        // Address of the contract to migrate
-    "codeId": number,          // ID of the new code to migrate to
-    "msg": object               // Migration message with parameters
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "contract": "inj1contract1...",
-    "codeId": 6,
+    "sender": "inj1...",
+    "contract": "inj2...",
+    "codeId": 2,
     "msg": {
-        "upgrade": {
-            "new_owner": "inj1newadmin..."
+        "migrate": {
+            "new_parameter": "value"
         }
     }
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123465,
-    "txHash": "JKL012stuvwx...",
-    "codespace": "",
-    "code": 0,
-    "data": "Cg1taWdyaXRhdGUAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"migrate_contract\", \"attributes\": [{\"key\": \"contract\", \"value\": \"inj1contract1...\"}, {\"key\": \"new_code_id\", \"value\": \"6\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 450000,
-    "gasUsed": 400000,
-    "timestamp": "2025-01-18T13:50:10Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
+
 export const msgInstantiateContractTemplate = `
-Instantiate a new smart contract:
+Extract the following details for instantiating contract:
+- **sender** (string): Sender address
+- **admin** (string): Optional admin address
+- **codeId** (number): Code ID to instantiate
+- **label** (string): Contract label
+- **msg** (object): Instantiation message
+- **funds** (array): Optional funds to send
+  - **denom** (string): Token denomination
+  - **amount** (string): Token amount
 
-**Description**:
-This message creates a new instance of a smart contract using stored Wasm code. Optional funds can be sent along with the instantiation. The contract is initialized with specific parameters defined in the initialization message.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "admin": string,            // Address of the contract admin
-    "codeId": number,           // ID of the code to instantiate
-    "label": string,            // Human-readable label for the contract
-    "msg": object,              // Initialization message with parameters
-    "amount": [                 // (Optional) Funds to send with instantiation
-        {
-            "denom": string,    // Denomination of the funds
-            "amount": string    // Amount of the funds
-        }
-    ]
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "admin": "inj1admin...",
-    "codeId": 5,
-    "label": "MySmartContractInstance",
+    "sender": "inj1...",
+    "admin": "inj2...",
+    "codeId": 1,
+    "label": "Example Contract",
     "msg": {
-        "init": {
-            "owner": "inj1admin...",
-            "config": {
-                "theme": "dark"
+        "name": "Example Token",
+        "symbol": "EXT",
+        "decimals": 18,
+        "initial_balances": [
+            {
+                "address": "inj3...",
+                "amount": "1000000000000000000000000"
             }
-        }
+        ]
     },
-    "amount": [
+    "funds": [
         {
             "denom": "inj",
-            "amount": "1000"
+            "amount": "1000000000000000000"
         }
     ]
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                           // Optional
-    "rawLog": string,
-    "logs": [],                               // Optional
-    "info": string,                           // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                              // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123466,
-    "txHash": "MNO345yzabcd...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgRpbnN0YW50aWF0ZQ==",
-    "rawLog": "[{\"events\": [{\"type\": \"instantiate_contract\", \"attributes\": [{\"key\": \"admin\", \"value\": \"inj1admin...\"}, {\"key\": \"code_id\", \"value\": \"5\"}, {\"key\": \"contract_address\", \"value\": \"inj1newcontract...\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 500000,
-    "gasUsed": 450000,
-    "timestamp": "2025-01-19T18:00:00Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const msgExecuteContractCompatTemplate = `
-Execute a smart contract with compatibility options:
+Extract the following details for executing contract in compatibility mode:
+- **sender** (string): Sender address
+- **contract** (string): Contract address
+- **msg** (object): Execute message in compatibility format
+- **funds** (array): Optional funds to send
+  - **denom** (string): Token denomination
+  - **amount** (string): Token amount
 
-**Description**:
-This message provides additional flexibility when executing smart contracts by allowing alternative message structures and execution parameters. It supports both standard and customized execution methods.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "funds": [
-        {
-            "denom": string,    // Denomination of the funds
-            "amount": string    // Amount of the funds
+    "sender": "inj1...",
+    "contract": "inj2...",
+    "msg": {
+        "send": {
+            "to": "inj3...",
+            "amount": "1000000000000000000"
         }
-    ],
-    "contractAddress": string,    // Address of the smart contract to execute
-    "execArgs": object,           // (Optional) Execution arguments
-    "exec": {                      // (Optional) Execution with action
-        "msg": Record<string, any>, // Message to send to the contract
-        "action": string           // Action identifier
     },
-    "msg": Record<string, any>    // (Optional) Alternative message structure
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
     "funds": [
         {
             "denom": "inj",
-            "amount": "2000"
+            "amount": "1000000000000000000"
         }
-    ],
-    "contractAddress": "inj1contract1...",
-    "execArgs": {
-        "action": "deposit",
-        "params": {
-            "amount": "2000"
-        }
-    },
-    "exec": {
-        "msg": {
-            "deposit": {
-                "amount": "2000"
-            }
-        },
-        "action": "deposit"
-    },
-    "msg": {
-        "deposit": {
-            "amount": "2000"
-        }
-    }
+    ]
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123467,
-    "txHash": "PQR678ghijkl...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgVleGVjdXRlAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"execute_contract_compat\", \"attributes\": [{\"key\": \"contract\", \"value\": \"inj1contract1...\"}, {\"key\": \"action\", \"value\": \"deposit\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 420000,
-    "gasUsed": 380000,
-    "timestamp": "2025-01-20T21:15:35Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const msgPrivilegedExecuteContractTemplate = `
-Privileged execution of a smart contract:
+Extract the following details for privileged contract execution:
+- **sender** (string): Privileged sender address
+- **contract** (string): Contract address
+- **msg** (object): Privileged execute message
 
-**Description**:
-This message allows privileged users to execute functions within a smart contract, potentially bypassing certain restrictions or enabling administrative actions. It should be used with caution to maintain contract integrity and security.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "funds": string,                 // Funds to send as a JSON string
-    "contractAddress": string,       // Address of the smart contract to execute
-    "data": {                        // Execution arguments with privileged access
-        "msg": object,                // Message to send to the contract
-        "action": string              // Action identifier
+    "sender": "inj1...",
+    "contract": "inj2...",
+    "msg": {
+        "privileged_action": {
+            "parameter": "value"
+        }
     }
 }
 \`\`\`
 
-**Example Request**:
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Additional Query Templates for Contract State
+
+export const getContractStateByKeyTemplate = `
+Extract the following details for fetching contract state by key:
+- **contractAddress** (string): Contract address
+- **key** (string): State key in base64 format
+
+Request format:
+
 \`\`\`json
 {
-    "funds": "[{\"denom\": \"inj\", \"amount\": \"500\"}]",
-    "contractAddress": "inj1contract1...",
-    "data": {
-        "msg": {
-            "update_config": {
-                "theme": "light"
-            }
-        },
-        "action": "update_config"
+    "contractAddress": "inj1...",
+    "key": "base64encodedkey"
+}
+\`\`\`
+
+Response will contain state value for the given key in base64 format.
+
+Response format:
+
+\`\`\`json
+{
+    "data": "base64encodedvalue"
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getContractHistoryByOperationTemplate = `
+Extract the following details for fetching contract history by operation type:
+- **contractAddress** (string): Contract address
+- **operationType** (string): Operation type (Init/Migrate/Genesis)
+
+Request format:
+
+\`\`\`json
+{
+    "contractAddress": "inj1...",
+    "operationType": "Init"
+}
+\`\`\`
+
+Response will contain filtered history entries:
+- **entries** (array): List of history entries matching the operation type
+  - **operation** (string): Operation type
+  - **codeId** (number): Code ID
+  - **updated** (object): Update information
+    - **blockHeight** (number): Block height
+    - **txIndex** (number): Transaction index
+  - **msg** (string): Operation message
+
+Response format:
+
+\`\`\`json
+{
+    "entries": [
+        {
+            "operation": "Init",
+            "codeId": 1,
+            "updated": {
+                "blockHeight": 1000000,
+                "txIndex": 0
+            },
+            "msg": "base64encodeddata"
+        }
+    ]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getContractCodeHistoryTemplate = `
+Extract the following details for fetching complete contract code history:
+- **contractAddress** (string): Contract address
+- **pagination** (object): Optional pagination parameters
+
+Request format:
+
+\`\`\`json
+{
+    "contractAddress": "inj1...",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
     }
 }
 \`\`\`
 
-**Response Format**:
+Response will contain complete code history:
+- **history** (array): List of all code changes
+  - **codeId** (number): Code ID
+  - **timeStamp** (string): Change timestamp
+  - **operation** (string): Operation type
+  - **msg** (string): Operation message
+  - **initiator** (string): Change initiator address
+- **pagination** (object): Pagination information
+
+Response format:
+
 \`\`\`json
 {
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
+    "history": [
+        {
+            "codeId": 1,
+            "timeStamp": "2024-01-01T00:00:00Z",
+            "operation": "Init",
+            "msg": "base64encodeddata",
+            "initiator": "inj1..."
+        }
+    ],
+    "pagination": {
+        "nextKey": "xyz789...",
+        "total": "10"
+    }
 }
 \`\`\`
 
-**Example Response**:
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Templates for Contract Events and Logs
+
+export const getContractEventsTemplate = `
+Extract the following details for fetching contract events:
+- **contractAddress** (string): Contract address
+- **eventType** (string): Optional event type filter
+- **pagination** (object): Optional pagination parameters
+
+Request format:
+
 \`\`\`json
 {
-    "height": 123468,
-    "txHash": "STU901mnopqr...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgZwcml2aWxlZ2VkAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"privileged_execute_contract\", \"attributes\": [{\"key\": \"contract\", \"value\": \"inj1contract1...\"}, {\"key\": \"action\", \"value\": \"update_config\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 500000,
-    "gasUsed": 450000,
-    "timestamp": "2025-01-21T05:40:25Z",
-    "events": []
+    "contractAddress": "inj1...",
+    "eventType": "wasm",
+    "pagination": {
+        "key": "abc123...",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
+    }
 }
 \`\`\`
+
+Response will contain contract events:
+- **events** (array): List of contract events
+  - **type** (string): Event type
+  - **attributes** (array): Event attributes
+    - **key** (string): Attribute key
+    - **value** (string): Attribute value
+  - **blockHeight** (number): Block height
+  - **txHash** (string): Transaction hash
+- **pagination** (object): Pagination information
+
+Response format:
+
+\`\`\`json
+{
+    "events": [
+        {
+            "type": "wasm",
+            "attributes": [
+                {
+                    "key": "action",
+                    "value": "transfer"
+                },
+                {
+                    "key": "amount",
+                    "value": "1000000000000000000"
+                }
+            ],
+            "blockHeight": 1000000,
+            "txHash": "0x..."
+        }
+    ],
+    "pagination": {
+        "nextKey": "xyz789...",
+        "total": "100"
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
 `;

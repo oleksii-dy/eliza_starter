@@ -1,190 +1,135 @@
 // IBC Module Templates
 
 export const getDenomTraceTemplate = `
-### Get Denomination Trace
+Extract the following details to get denom trace information:
+- **hash** (string): The hash of the denomination to trace
 
-**Description**:
-This query retrieves the denomination trace for a specific hash within the IBC (Inter-Blockchain Communication) module. Denomination traces are essential for tracking the origin and path of tokens as they move across different blockchain networks. Understanding denomination traces helps in verifying token authenticity, preventing double-spending, and ensuring seamless cross-chain operations.
+Provide the request in the following JSON format:
 
-**Request Format**:
 \`\`\`json
 {
-    "hash": string   // Denomination trace hash (e.g., "transfer/channel-0/uatom")
+    "hash": "hash_string"
 }
 \`\`\`
 
-**Example Request**:
+The response will contain:
+- **path** (string): Chain of port/channel identifiers used for tracing
+- **baseDenom** (string): Base denomination of the relayed fungible token
+
+Response format:
+
 \`\`\`json
 {
-    "hash": "transfer/channel-0/uatom"
+    "path": "transfer/channel-0/transfer/channel-1",
+    "baseDenom": "uatom"
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing denomination trace details
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123700,
-    "txHash": "ABC123denomtrace...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgdkZXRvaW5fdHJhY2UAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_denom_trace\", \"attributes\": [{\"key\": \"hash\", \"value\": \"transfer/channel-0/uatom\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 80000,
-    "gasUsed": 60000,
-    "timestamp": "2025-05-01T10:00:00Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const getDenomsTraceTemplate = `
-### Get List of Denomination Traces
+Extract the following details to get multiple denom traces:
+- **pagination** (object): Optional pagination parameters containing:
+  - **key** (string): Pagination key
+  - **offset** (number): Pagination offset
+  - **limit** (number): Number of records to return
+  - **countTotal** (boolean): Whether to count total records
 
-**Description**:
-This query fetches a list of all denomination traces within the IBC module, with optional pagination parameters. Denomination traces track the movement and origin of tokens across different chains, ensuring transparency and security in cross-chain transactions. Monitoring denomination traces helps in auditing token flows, identifying token sources, and maintaining the integrity of the token ecosystem.
+Provide the request in the following JSON format:
 
-**Request Format**:
 \`\`\`json
 {
     "pagination": {
-        "limit": number,                // (Optional) Number of denomination traces to retrieve
-        "offset": number                // (Optional) Starting point for retrieval
+        "key": "",
+        "offset": 0,
+        "limit": 100,
+        "countTotal": true
     }
 }
 \`\`\`
 
-**Example Request**:
+The response will contain an array of denom traces:
+- **denomTraces** (array): List of denomination traces, each containing:
+  - **path** (string): Chain of port/channel identifiers
+  - **baseDenom** (string): Base denomination
+- **pagination** (object): Pagination response information
+
+Response format:
+
 \`\`\`json
 {
+    "denomTraces": [
+        {
+            "path": "transfer/channel-0/transfer/channel-1",
+            "baseDenom": "uatom"
+        },
+        {
+            "path": "transfer/channel-2",
+            "baseDenom": "uosmo"
+        }
+    ],
     "pagination": {
-        "limit": 10,
-        "offset": 0
+        "nextKey": "",
+        "total": 10
     }
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing list of denomination traces
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123701,
-    "txHash": "DEF456denomsxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "W3siaGFzaCI6ICJ0cmFuc2Zlci9jaGFubmVsLTAvdWF0b20iLCAibmFtZSI6ICJ1YXRvbSJ9LCB7Imhhc2giOiAidHJhbnNmZXIvY2hhbm5lbC0xL3VhdG9tIiwgIm5hbWUiOiAidWF0b20ifV0=",
-    "rawLog": "[{\"events\": [{\"type\": \"get_denoms_trace\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 100000,
-    "gasUsed": 85000,
-    "timestamp": "2025-05-02T11:15:30Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const msgIBCTransferTemplate = `
-### IBC Transfer
+Extract the following details for IBC token transfer:
+- **sourcePort** (string): Source port ID (e.g., "transfer")
+- **sourceChannel** (string): Source channel ID
+- **token** (object): Token to transfer containing:
+  - **denom** (string): Token denomination
+  - **amount** (string): Token amount
+- **receiver** (string): Receiver address on destination chain
+- **timeoutHeight** (object): Optional timeout height containing:
+  - **revisionNumber** (string): Chain revision number
+  - **revisionHeight** (string): Block height for timeout
+- **timeoutTimestamp** (string): Optional timeout timestamp in nanoseconds
+- **memo** (string): Optional transfer memo
 
-**Description**:
-This message broadcasts a transaction to perform an IBC (Inter-Blockchain Communication) transfer. IBC transfers enable the movement of tokens between different blockchain networks, facilitating interoperability and expanding the utility of assets across multiple ecosystems. Successfully executing an IBC transfer ensures that tokens are securely and accurately moved to the intended recipient on the target chain.
+Ensure that:
+1. Port ID and channel ID are valid
+2. Token amount is positive
+3. Receiver address is valid for destination chain
+4. Either timeoutHeight or timeoutTimestamp is specified
 
-**Request Format**:
+Provide the transfer details in the following JSON format:
+
 \`\`\`json
 {
-    "sender": string,                    // Address of the sender initiating the transfer (e.g., "inj1sender123...")
-    "receiver": string,                  // Address of the receiver on the target chain (e.g., "cosmos1receiver...")
-    "sourceChannel": string,             // IBC source channel (e.g., "transfer/channel-0")
-    "destinationChannel": string,        // IBC destination channel on the target chain (e.g., "transfer/channel-1")
-    "denom": string,                     // Denomination of the token to transfer (e.g., "uatom")
-    "amount": string,                    // Amount of tokens to transfer (e.g., "1000")
-    "timeoutTimestamp": string           // (Optional) Timeout timestamp in nanoseconds since epoch
+    "sourcePort": "transfer",
+    "sourceChannel": "channel-0",
+    "token": {
+        "denom": "inj",
+        "amount": "1000000000000000000"
+    },
+    "receiver": "cosmos1...",
+    "timeoutHeight": {
+        "revisionNumber": "1",
+        "revisionHeight": "1000000"
+    },
+    "timeoutTimestamp": "1640995200000000000",
+    "memo": "Optional transfer memo"
 }
 \`\`\`
 
-**Example Request**:
+Success response format:
+
 \`\`\`json
 {
-    "sender": "inj1sender1234567890...",
-    "receiver": "cosmos1receiver1234567890...",
-    "sourceChannel": "transfer/channel-0",
-    "destinationChannel": "transfer/channel-1",
-    "denom": "uatom",
-    "amount": "1000",
-    "timeoutTimestamp": "1704067200000000000"  // Represents a future timestamp
+    "txHash": "0x...",
+    "success": true
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123702,
-    "txHash": "GHI789ibctransfer...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgVtZ3NUcmFuc2ZlcgA=",
-    "rawLog": "[{\"events\": [{\"type\": \"ibc_transfer\", \"attributes\": [{\"key\": \"sender\", \"value\": \"inj1sender1234567890...\"}, {\"key\": \"receiver\", \"value\": \"cosmos1receiver1234567890...\"}, {\"key\": \"amount\", \"value\": \"1000uatom\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 200000,
-    "gasUsed": 150000,
-    "timestamp": "2025-05-03T12:20:40Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;

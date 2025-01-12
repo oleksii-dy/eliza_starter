@@ -1,3076 +1,3128 @@
-// Exchange Module Templates
+export const getAccountPortfolioTemplate = `
+Extract the following details for account portfolio:
+- **address** (string): Account address
 
-export const getModuleParamsTemplate = `
-### Get Exchange Module Parameters
+Provide the request in the following JSON format:
 
-**Description**:
-This query retrieves the current parameters of the Exchange module. The Exchange module manages various aspects of trading, including market configurations, fee structures, and discount schedules. Understanding these parameters is essential for monitoring trading rules, fee policies, and ensuring the smooth operation of the exchange functionalities within the blockchain ecosystem.
-
-**Request Format**:
 \`\`\`json
 {
-    "filter": {
-        "paramName": string   // (Optional) Specific parameter name to retrieve
-    }
+    "address": "inj1..."
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "filter": {
-        "paramName": "trading_fee"
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing exchange module parameters
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125000,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "Cg1leGNoYW5nZV9tb2R1bGVfcGFyYW1zAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_module_params\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 80000,
-    "gasUsed": 60000,
-    "timestamp": "2025-10-01T10:00:00Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const getModuleStateTemplate = `
-### Get Exchange Module State
-
-**Description**:
-This query retrieves the current state of the Exchange module. The Exchange module state includes information about active markets, trading statistics, and ongoing campaigns. Monitoring the module state is crucial for understanding the current trading environment, assessing market health, and making informed decisions based on real-time exchange data.
-
-**Request Format**:
-\`\`\`json
-{
-    "filter": {
-        "stateType": string   // (Optional) Specific state type to retrieve (e.g., "active_markets")
-    }
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "stateType": "active_markets"
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing exchange module state
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125001,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "Cg9leGNoYW5nZV9tb2R1bGVfc3RhdGUAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_module_state\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 85000,
-    "gasUsed": 65000,
-    "timestamp": "2025-10-02T11:15:30Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const getFeeDiscountScheduleTemplate = `
-### Get Fee Discount Schedule
-
-**Description**:
-This query retrieves the fee discount schedule within the Exchange module. The fee discount schedule outlines the various discount tiers based on trading volumes or other criteria. Monitoring the fee discount schedule is essential for users to understand potential savings, strategize trading activities, and optimize their trading costs.
-
-**Request Format**:
-\`\`\`json
-{
-    "filter": {
-        "tier": number   // (Optional) Specific discount tier to retrieve
-    }
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "tier": 2
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing fee discount schedule
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125002,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "Cg1mZWVfZGlzY291bnRfc2NoZWR1bGUAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_fee_discount_schedule\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 90000,
-    "gasUsed": 70000,
-    "timestamp": "2025-10-03T12:20:40Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const getFeeDiscountAccountInfoTemplate = `
-### Get Fee Discount Account Info
-
-**Description**:
-This query retrieves the fee discount account information for a specific Injective address within the Exchange module. The fee discount account info includes details about the user's current discount tier, eligibility, and accumulated rewards. Monitoring this information is essential for users to track their fee discounts, understand their standing in the discount hierarchy, and make informed trading decisions to maximize savings.
-
-**Request Format**:
-\`\`\`json
-{
-    "injAddress": string   // Injective address of the user (e.g., "inj1account123...")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "injAddress": "inj1account123..."
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing fee discount account info
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125003,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "Cg5mZWVfZGlzY291bnRfYWNjb3VudF9pbmZvAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_fee_discount_account_info\", \"attributes\": [{\"key\": \"inj_address\", \"value\": \"inj1account123...\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 95000,
-    "gasUsed": 75000,
-    "timestamp": "2025-10-04T13:25:50Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const getTradingRewardsCampaignTemplate = `
-### Get Trading Rewards Campaign
-
-**Description**:
-This query retrieves the details of the current trading rewards campaign within the Exchange module. The trading rewards campaign outlines incentives for traders based on their trading activities, such as volume-based rewards, bonuses, and promotional offers. Monitoring the trading rewards campaign is essential for users to leverage available incentives, maximize their rewards, and optimize their trading strategies accordingly.
-
-**Request Format**:
-\`\`\`json
-{
-    "filter": {
-        "campaignId": string   // (Optional) Specific campaign ID to retrieve
-    }
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "campaignId": "TRC2025"
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing trading rewards campaign details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125004,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "Cg10dHJhZGluZ19yZXdhcmRzX2NhbXBhaWduAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_trading_rewards_campaign\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 100000,
-    "gasUsed": 80000,
-    "timestamp": "2025-10-05T14:30:00Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const getTradeRewardPointsTemplate = `
-### Get Trade Reward Points
-
-**Description**:
-This query retrieves the trade reward points for specified Injective addresses within the Exchange module. Trade reward points are accumulated based on users' trading activities, such as trade volumes, frequency, and participation in campaigns. Monitoring trade reward points is essential for users to track their progress, redeem rewards, and strategize their trading efforts to maximize benefits.
-
-**Request Format**:
-\`\`\`json
-{
-    "injectiveAddresses": [
-        string   // List of Injective addresses (e.g., ["inj1account123...", "inj1account456..."])
+    "accountAddress": "inj1...",
+    "bankBalancesList": [
+        {
+            "amount": "1000000",
+            "denom": "inj"
+        }
+    ],
+    "subaccountsList": [
+        {
+            "subaccountId": "subaccount_id",
+            "denom": "inj",
+            "deposit": {
+                "totalBalance": "1000000",
+                "availableBalance": "900000"
+            }
+        }
+    ],
+    "positionsWithUpnlList": [
+        {
+            "position": {
+                "marketId": "market_id",
+                "subaccountId": "subaccount_id",
+                "direction": "long",
+                "quantity": "1.5",
+                "entryPrice": "25000.5",
+                "margin": "1000",
+                "liquidationPrice": "24000.0",
+                "markPrice": "25100.0",
+                "ticker": "BTC/USDT"
+            },
+            "unrealizedPnl": "150.75"
+        }
     ]
 }
 \`\`\`
 
-**Example Request**:
-\`\`\`json
-{
-    "injectiveAddresses": ["inj1account123...", "inj1account456..."]
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing trade reward points
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125005,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkcmV3YXJkX3BvaW50cw==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_trade_reward_points\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 105000,
-    "gasUsed": 85000,
-    "timestamp": "2025-10-06T15:35:10Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
-export const getPendingTradeRewardPointsTemplate = `
-### Get Pending Trade Reward Points
+export const getSubaccountHistoryTemplate = `
+Extract the following details for subaccount history:
+- **subaccountId** (string): Subaccount ID
+- **denom** (string, optional): Token denomination
+- **transferTypes** (string[], optional): Types of transfers to include
+- **pagination** (object, optional): Pagination options
 
-**Description**:
-This query retrieves the pending trade reward points for specified Injective addresses within the Exchange module. Pending trade reward points are those that have been earned through trading activities but are yet to be claimed or redeemed. Monitoring pending trade reward points is essential for users to understand their available rewards, plan their redemption strategies, and ensure they maximize their earned incentives.
+Provide the request in the following JSON format:
 
-**Request Format**:
 \`\`\`json
 {
-    "injectiveAddresses": [
-        string   // List of Injective addresses (e.g., ["inj1account123...", "inj1account456..."])
-    ]
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "injectiveAddresses": ["inj1account123...", "inj1account456..."]
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing pending trade reward points
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125006,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkcGVuZGluZ19kcmV3YXJkX3BvaW50cw==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_pending_trade_reward_points\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 110000,
-    "gasUsed": 90000,
-    "timestamp": "2025-10-07T16:40:20Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const getExchangePositionsTemplate = `
-### Get Exchange Positions
-
-**Description**:
-This query retrieves the exchange positions based on provided parameters within the Exchange module. Exchange positions represent users' holdings in various trading instruments, including spot, derivative, and binary options markets. Monitoring exchange positions is essential for users to manage their investments, assess their exposure, and make informed trading decisions based on their portfolio's performance.
-
-**Request Format**:
-\`\`\`json
-{
-    "filter": {
-        "positionType": string,   // (Optional) Type of position to retrieve (e.g., "spot", "derivative")
-        "marketId": string        // (Optional) Specific market ID to filter positions
-    },
+    "subaccountId": "subaccount_id",
+    "denom": "inj",
+    "transferTypes": ["deposit", "withdraw"],
     "pagination": {
-        "limit": number,          // (Optional) Number of positions to retrieve
-        "offset": number          // (Optional) Starting point for retrieval
+        "from": 1,
+        "to": 100,
+        "limit": 10
     }
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "filter": {
-        "positionType": "derivative",
-        "marketId": "BTC-USD"
-    },
+    "transfers": [
+        {
+            "transferType": "deposit",
+            "srcSubaccountId": "src_subaccount_id",
+            "srcSubaccountAddress": "inj1...",
+            "dstSubaccountId": "dst_subaccount_id",
+            "dstSubaccountAddress": "inj1...",
+            "amount": {
+                "amount": "1000000",
+                "denom": "inj"
+            },
+            "executedAt": 1641859200
+        }
+    ],
     "pagination": {
-        "limit": 10,
-        "offset": 0
+        "total": 100
     }
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing exchange positions
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125007,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgdkZXJpdmF0aXZlX3Bvc2l0aW9ucw==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_exchange_positions\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 115000,
-    "gasUsed": 95000,
-    "timestamp": "2025-10-08T17:45:30Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
-export const getSubaccountTradeNonceTemplate = `
-### Get Subaccount Trade Nonce
+export const getSpotMarketTemplate = `
+Extract the following details for spot market lookup:
+- **marketId** (string): Market ID
 
-**Description**:
-This query retrieves the trade nonce for a specific subaccount within the Exchange module. The trade nonce is a unique identifier used to prevent replay attacks and ensure the integrity of trading operations. Monitoring the trade nonce is essential for users to maintain secure trading activities and verify the uniqueness of their transactions.
+Provide the request in the following JSON format:
 
-**Request Format**:
 \`\`\`json
 {
-    "subaccountId": string   // Subaccount ID (e.g., "sub1account123...")
+    "marketId": "market_id"
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "subaccountId": "sub1account123..."
+    "marketId": "market_id",
+    "marketStatus": "active",
+    "ticker": "INJ/USDT",
+    "baseDenom": "inj",
+    "quoteDenom": "usdt",
+    "makerFeeRate": "0.001",
+    "takerFeeRate": "0.002",
+    "serviceProviderFee": "0.4",
+    "minPriceTickSize": 0.000001,
+    "minQuantityTickSize": 0.000001
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing trade nonce
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125008,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpncmV3YW5kX25vbmNlAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_subaccount_trade_nonce\", \"attributes\": [{\"key\": \"subaccount_id\", \"value\": \"sub1account123...\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 120000,
-    "gasUsed": 100000,
-    "timestamp": "2025-10-09T18:50:40Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const getIsOptedOutOfRewardsTemplate = `
-### Get Opt-Out Status of Rewards
-
-**Description**:
-This query checks whether an account has opted out of receiving trading rewards within the Exchange module. Opting out of rewards means the user will not accumulate or receive any trading incentives. Monitoring opt-out status is essential for users to manage their participation in rewards programs and ensure their preferences are accurately reflected.
-
-**Request Format**:
-\`\`\`json
-{
-    "account": string   // Account address (e.g., "inj1account123...")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "account": "inj1account123..."
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data indicating opt-out status
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125009,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgZpc19vcHRlZAA=",
-    "rawLog": "[{\"events\": [{\"type\": \"get_is_opted_out_of_rewards\", \"attributes\": [{\"key\": \"account\", \"value\": \"inj1account123...\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 125000,
-    "gasUsed": 105000,
-    "timestamp": "2025-10-10T19:55:50Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const getDerivativeMarketsTemplate = `
-### Get Derivative Markets
-
-**Description**:
-This query retrieves all derivative markets based on provided parameters within the Exchange module. Derivative markets involve trading instruments like futures and options, where participants speculate on the future price movements of underlying assets. Monitoring derivative markets is essential for users to identify available trading opportunities, assess market liquidity, and manage their investment strategies effectively.
-
-**Request Format**:
-\`\`\`json
-{
-    "filter": {
-        "baseAsset": string,   // (Optional) Base asset of the derivative (e.g., "BTC")
-        "quoteAsset": string   // (Optional) Quote asset of the derivative (e.g., "USD")
-    },
-    "pagination": {
-        "limit": number,        // (Optional) Number of markets to retrieve
-        "offset": number        // (Optional) Starting point for retrieval
-    }
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "baseAsset": "BTC",
-        "quoteAsset": "USD"
-    },
-    "pagination": {
-        "limit": 5,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing derivative markets
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125010,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkZXJpdmF0aXZlX21hcmtldHMAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_derivative_markets\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 130000,
-    "gasUsed": 110000,
-    "timestamp": "2025-10-11T20:00:00Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const getDerivativeMarketTemplate = `
-### Get Derivative Market Details
+Extract the following details for derivative market lookup:
+- **marketId** (string): Market ID
 
-**Description**:
-This query retrieves the details of a specific derivative market by its ID within the Exchange module. Derivative market details include information such as contract specifications, trading rules, margin requirements, and current market status. Monitoring specific derivative markets is essential for users to make informed trading decisions, assess market conditions, and manage their positions effectively.
+Provide the request in the following JSON format:
 
-**Request Format**:
 \`\`\`json
 {
-    "marketId": string   // Derivative market ID (e.g., "BTC-USD-202510")
+    "marketId": "market_id"
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "marketId": "BTC-USD-202510"
+    "marketId": "market_id",
+    "marketStatus": "active",
+    "ticker": "BTC/USDT PERP",
+    "oracleBase": "BTC",
+    "oracleQuote": "USDT",
+    "quoteDenom": "usdt",
+    "makerFeeRate": "0.001",
+    "takerFeeRate": "0.002",
+    "serviceProviderFee": "0.4",
+    "initialMarginRatio": "0.05",
+    "maintenanceMarginRatio": "0.02",
+    "isPerpetual": true,
+    "minPriceTickSize": 0.01,
+    "minQuantityTickSize": 0.001
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing derivative market details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125011,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkZXJpdmF0aXZlX21hcmtldF9kZXRhaWxzAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_derivative_market\", \"attributes\": [{\"key\": \"market_id\", \"value\": \"BTC-USD-202510\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 135000,
-    "gasUsed": 115000,
-    "timestamp": "2025-10-12T21:05:10Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
-export const getBinaryOptionsMarketsTemplate = `
-### Get Binary Options Markets
+export const getPositionsTemplate = `
+Extract the following details for positions query:
+- **marketId** (string, optional): Market ID filter
+- **marketIds** (string[], optional): Multiple market IDs filter
+- **subaccountId** (string, optional): Subaccount ID filter
+- **direction** (string, optional): Position direction filter
+- **pagination** (object, optional): Pagination options
 
-**Description**:
-This query retrieves all binary options markets based on provided parameters within the Exchange module. Binary options are financial instruments that offer a fixed payout based on whether a specific condition is met at expiration. Monitoring binary options markets is essential for users to identify available trading opportunities, assess market liquidity, and manage their trading strategies effectively.
+Provide the request in the following JSON format:
 
-**Request Format**:
 \`\`\`json
 {
-    "filter": {
-        "baseAsset": string,   // (Optional) Base asset of the binary options (e.g., "ETH")
-        "quoteAsset": string   // (Optional) Quote asset of the binary options (e.g., "USD")
-    },
+    "marketId": "market_id",
+    "marketIds": ["market_id1", "market_id2"],
+    "subaccountId": "subaccount_id",
+    "direction": "long",
     "pagination": {
-        "limit": number,        // (Optional) Number of binary options markets to retrieve
-        "offset": number        // (Optional) Starting point for retrieval
+        "from": 1,
+        "to": 100,
+        "limit": 10
     }
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "filter": {
-        "baseAsset": "ETH",
-        "quoteAsset": "USD"
-    },
+    "positions": [
+        {
+            "marketId": "market_id",
+            "subaccountId": "subaccount_id",
+            "direction": "long",
+            "quantity": "1.5",
+            "entryPrice": "25000.5",
+            "margin": "1000",
+            "liquidationPrice": "24000.0",
+            "markPrice": "25100.0",
+            "ticker": "BTC/USDT"
+        }
+    ],
     "pagination": {
-        "limit": 3,
-        "offset": 0
+        "total": 100
     }
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing binary options markets
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125012,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpiX2JpbmFyeV9vcHRpb25zX21hcmtldHMAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_binary_options_markets\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 140000,
-    "gasUsed": 120000,
-    "timestamp": "2025-10-13T22:10:20Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
-export const getBinaryOptionsMarketTemplate = `
-### Get Binary Options Market Details
+export const getInsuranceFundsTemplate = `
+Extract insurance funds information.
 
-**Description**:
-This query retrieves the details of a specific binary options market by its ID within the Exchange module. Binary options market details include information such as contract specifications, trading rules, payout structures, and current market status. Monitoring specific binary options markets is essential for users to make informed trading decisions, assess market conditions, and manage their trading strategies effectively.
+Response format:
 
-**Request Format**:
 \`\`\`json
 {
-    "marketId": string   // Binary options market ID (e.g., "ETH-USD-202510")
+    "funds": [
+        {
+            "depositDenom": "inj",
+            "insurancePoolTokenDenom": "insurance_pool_token",
+            "redemptionNoticePeriodDuration": 1209600,
+            "balance": "1000000",
+            "totalShare": "1000000",
+            "marketId": "market_id",
+            "marketTicker": "BTC/USDT PERP",
+            "oracleBase": "BTC",
+            "oracleQuote": "USDT",
+            "oracleType": "band",
+            "expiry": 0
+        }
+    ]
 }
 \`\`\`
 
-**Example Request**:
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getRedemptionsTemplate = `
+Extract the following details for redemptions query:
+- **address** (string): Account address
+- **denom** (string, optional): Token denomination
+- **status** (string, optional): Redemption status
+
+Provide the request in the following JSON format:
+
 \`\`\`json
 {
-    "marketId": "ETH-USD-202510"
+    "address": "inj1...",
+    "denom": "inj",
+    "status": "pending"
 }
 \`\`\`
 
-**Response Format**:
+Response format:
+
 \`\`\`json
 {
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing binary options market details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
+    "redemptions": [
+        {
+            "redemptionId": 1,
+            "status": "pending",
+            "redeemer": "inj1...",
+            "claimableRedemptionTime": 1641859200,
+            "redemptionAmount": "1000000",
+            "redemptionDenom": "inj",
+            "requestedAt": 1641772800,
+            "disbursedAmount": "0",
+            "disbursedDenom": "",
+            "disbursedAt": 0
+        }
+    ]
 }
 \`\`\`
 
-**Example Response**:
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getSpotOrdersTemplate = `
+Extract the following details for spot orders query:
+- **marketId** (string, optional): Market ID filter
+- **marketIds** (string[], optional): Multiple market IDs filter
+- **subaccountId** (string, optional): Subaccount ID filter
+- **orderSide** (string, optional): Order side (buy/sell)
+- **isConditional** (boolean, optional): Whether order is conditional
+- **pagination** (object, optional): Pagination options
+
+Provide the request in the following JSON format:
+
 \`\`\`json
 {
-    "height": 125013,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpiX2JpbmFyeV9vcHRpb25zX21hcmtldF9kZXRhaWxzAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_binary_options_market\", \"attributes\": [{\"key\": \"market_id\", \"value\": \"ETH-USD-202510\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 145000,
-    "gasUsed": 125000,
-    "timestamp": "2025-10-14T23:15:30Z",
-    "events": []
+    "marketId": "market_id",
+    "marketIds": ["market_id1", "market_id2"],
+    "subaccountId": "subaccount_id",
+    "orderSide": "buy",
+    "isConditional": false,
+    "pagination": {
+        "from": 1,
+        "to": 100,
+        "limit": 10
+    }
 }
 \`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "orders": [
+        {
+            "orderHash": "0x...",
+            "orderSide": "buy",
+            "marketId": "market_id",
+            "subaccountId": "subaccount_id",
+            "price": "25000.5",
+            "quantity": "1.5",
+            "unfilledQuantity": "0.5",
+            "triggerPrice": "0",
+            "feeRecipient": "inj1...",
+            "state": "booked",
+            "createdAt": 1641859200,
+            "updatedAt": 1641859200
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const getDerivativeOrdersTemplate = `
-### Get Derivative Orders
+Extract the following details for derivative orders query:
+- **marketId** (string, optional): Market ID filter
+- **marketIds** (string[], optional): Multiple market IDs filter
+- **subaccountId** (string, optional): Subaccount ID filter
+- **orderSide** (string, optional): Order side (buy/sell)
+- **isConditional** (boolean, optional): Whether order is conditional
+- **pagination** (object, optional): Pagination options
 
-**Description**:
-This query retrieves all derivative orders based on provided parameters within the Exchange module. Derivative orders include limit and market orders placed in derivative markets. Monitoring derivative orders is essential for users to track their trading activities, manage open positions, and analyze market trends effectively.
+Provide the request in the following JSON format:
 
-**Request Format**:
 \`\`\`json
 {
-    "filter": {
-        "subaccountId": string,   // (Optional) Subaccount ID to filter orders
-        "marketId": string,       // (Optional) Market ID to filter orders
-        "orderType": string       // (Optional) Type of order (e.g., "limit", "market")
-    },
+    "marketId": "market_id",
+    "marketIds": ["market_id1", "market_id2"],
+    "subaccountId": "subaccount_id",
+    "orderSide": "buy",
+    "isConditional": false,
     "pagination": {
-        "limit": number,          // (Optional) Number of orders to retrieve
-        "offset": number          // (Optional) Starting point for retrieval
+        "from": 1,
+        "to": 100,
+        "limit": 10
     }
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "filter": {
-        "subaccountId": "sub1account123...",
-        "marketId": "BTC-USD-202510",
-        "orderType": "limit"
-    },
+    "orders": [
+        {
+            "orderHash": "0x...",
+            "orderSide": "buy",
+            "marketId": "market_id",
+            "subaccountId": "subaccount_id",
+            "margin": "1000",
+            "price": "25000.5",
+            "quantity": "1.5",
+            "unfilledQuantity": "0.5",
+            "triggerPrice": "0",
+            "feeRecipient": "inj1...",
+            "state": "booked",
+            "createdAt": 1641859200,
+            "updatedAt": 1641859200
+        }
+    ],
     "pagination": {
-        "limit": 10,
-        "offset": 0
+        "total": 100
     }
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing derivative orders
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125014,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkZXJpdmF0aXZlX29yZGVycw==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_derivative_orders\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 150000,
-    "gasUsed": 130000,
-    "timestamp": "2025-10-15T00:20:40Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
-export const getDerivativeOrderHistoryTemplate = `
-### Get Derivative Order History
+export const getHistoricalTradesTemplate = `
+Extract the following details for historical trades query:
+- **marketId** (string, optional): Market ID filter
+- **marketIds** (string[], optional): Multiple market IDs filter
+- **subaccountId** (string, optional): Subaccount ID filter
+- **endTime** (number, optional): End timestamp
+- **startTime** (number, optional): Start timestamp
+- **direction** (string, optional): Trade direction
+- **pagination** (object, optional): Pagination options
 
-**Description**:
-This query retrieves the history of derivative orders based on provided parameters within the Exchange module. Derivative order history includes past orders, their statuses, execution details, and outcomes. Monitoring derivative order history is essential for users to analyze their trading performance, review past trading activities, and optimize future trading strategies.
+Provide the request in the following JSON format:
 
-**Request Format**:
 \`\`\`json
 {
-    "filter": {
-        "subaccountId": string,   // (Optional) Subaccount ID to filter order history
-        "marketId": string,       // (Optional) Market ID to filter order history
-        "status": string          // (Optional) Status of orders to filter (e.g., "filled", "cancelled")
-    },
+    "marketId": "market_id",
+    "marketIds": ["market_id1", "market_id2"],
+    "subaccountId": "subaccount_id",
+    "endTime": 1641945600,
+    "startTime": 1641859200,
+    "direction": "buy",
     "pagination": {
-        "limit": number,          // (Optional) Number of historical orders to retrieve
-        "offset": number          // (Optional) Starting point for retrieval
+        "from": 1,
+        "to": 100,
+        "limit": 10
     }
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "filter": {
-        "subaccountId": "sub1account123...",
-        "marketId": "BTC-USD-202510",
-        "status": "filled"
-    },
+    "trades": [
+        {
+            "orderHash": "0x...",
+            "subaccountId": "subaccount_id",
+            "marketId": "market_id",
+            "tradeId": "trade_id",
+            "executedAt": 1641859200,
+            "tradeExecutionType": "limit",
+            "tradeDirection": "buy",
+            "executionPrice": "25000.5",
+            "executionQuantity": "1.5",
+            "fee": "0.5",
+            "feeRecipient": "inj1..."
+        }
+    ],
     "pagination": {
-        "limit": 20,
-        "offset": 0
+        "total": 100
     }
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing derivative order history
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125015,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkZXJpdmF0aXZlX29yZGVyX2hpc3RvcnkAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_derivative_order_history\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 155000,
-    "gasUsed": 135000,
-    "timestamp": "2025-10-16T01:25:50Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const getPositionsListTemplate = `
-### Get Positions List
-
-**Description**:
-This query retrieves all exchange positions based on provided parameters within the Exchange module. Exchange positions represent users' holdings in various trading instruments, including spot, derivative, and binary options markets. Monitoring positions helps users manage their investments, assess exposure, and make informed trading decisions.
-
-**Request Format**:
-\`\`\`json
-{
-    "filter": {
-        "subaccountId": string,   // (Optional) Subaccount ID to filter positions
-        "marketId": string        // (Optional) Market ID to filter positions
-    },
-    "pagination": {
-        "limit": number,          // (Optional) Number of positions to retrieve
-        "offset": number          // (Optional) Starting point for retrieval
-    }
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "subaccountId": "sub1account123...",
-        "marketId": "ETH-USD-202510"
-    },
-    "pagination": {
-        "limit": 15,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing exchange positions
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125016,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkZXJpdmF0aXZlX3Bvc2l0aW9ucw==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_positions_list\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 160000,
-    "gasUsed": 140000,
-    "timestamp": "2025-10-17T02:30:00Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const getPositionsV2Template = `
-### Get Positions V2
-
-**Description**:
-This query retrieves all exchange positions version 2 based on provided parameters within the Exchange module. Positions V2 may include enhanced features such as improved data structures, additional metadata, and expanded functionalities. Monitoring Positions V2 helps users leverage the latest features, manage their investments more effectively, and gain deeper insights into their trading activities.
-
-**Request Format**:
-\`\`\`json
-{
-    "filter": {
-        "subaccountId": string,   // (Optional) Subaccount ID to filter positions
-        "marketId": string        // (Optional) Market ID to filter positions
-    },
-    "pagination": {
-        "limit": number,          // (Optional) Number of positions to retrieve
-        "offset": number          // (Optional) Starting point for retrieval
-    }
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "subaccountId": "sub1account123...",
-        "marketId": "ETH-USD-202510"
-    },
-    "pagination": {
-        "limit": 20,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing exchange positions V2
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125017,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkZXJpdmF0aXZlX3Bvc2l0aW9uc192Mg==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_positions_v2\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 165000,
-    "gasUsed": 145000,
-    "timestamp": "2025-10-18T03:35:10Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const getDerivativeTradesTemplate = `
-### Get Derivative Trades
-
-**Description**:
-This query retrieves all derivative trades based on provided parameters within the Exchange module. Derivative trades include executed trades in derivative markets, encompassing details such as trade price, volume, and counterparties. Monitoring derivative trades is essential for users to analyze their trading performance, assess market liquidity, and identify trading patterns.
-
-**Request Format**:
-\`\`\`json
-{
-    "filter": {
-        "subaccountId": string,   // (Optional) Subaccount ID to filter trades
-        "marketId": string,       // (Optional) Market ID to filter trades
-        "tradeType": string       // (Optional) Type of trade (e.g., "buy", "sell")
-    },
-    "pagination": {
-        "limit": number,          // (Optional) Number of trades to retrieve
-        "offset": number          // (Optional) Starting point for retrieval
-    }
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "subaccountId": "sub1account123...",
-        "marketId": "ETH-USD-202510",
-        "tradeType": "buy"
-    },
-    "pagination": {
-        "limit": 25,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing derivative trades
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125018,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkZXJpdmF0aXZlX3RyYWRlcw==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_derivative_trades\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 170000,
-    "gasUsed": 150000,
-    "timestamp": "2025-10-19T04:40:20Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const getFundingPaymentsTemplate = `
-### Get Funding Payments
-
-**Description**:
-This query retrieves all funding payments based on provided parameters within the Exchange module. Funding payments are periodic payments exchanged between traders to ensure that the perpetual swap price aligns with the underlying asset price. Monitoring funding payments is essential for users to understand their funding obligations, manage margin requirements, and assess the cost of maintaining positions.
-
-**Request Format**:
-\`\`\`json
-{
-    "filter": {
-        "subaccountId": string,   // (Optional) Subaccount ID to filter funding payments
-        "marketId": string        // (Optional) Market ID to filter funding payments
-    },
-    "pagination": {
-        "limit": number,          // (Optional) Number of funding payments to retrieve
-        "offset": number          // (Optional) Starting point for retrieval
-    }
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "subaccountId": "sub1account123...",
-        "marketId": "BTC-USD-202510"
-    },
-    "pagination": {
-        "limit": 10,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing funding payments
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125019,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpmdW5kaW5nX3BheW1lbnRzAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_funding_payments\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 175000,
-    "gasUsed": 155000,
-    "timestamp": "2025-10-20T05:45:30Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const getFundingRatesTemplate = `
-### Get Funding Rates
+Extract the following details for funding rates query:
+- **marketId** (string, optional): Market ID filter
+- **pagination** (object, optional): Pagination options
 
-**Description**:
-This query retrieves all funding rates based on provided parameters within the Exchange module. Funding rates are periodic rates that traders pay or receive based on their positions in perpetual swap contracts. Monitoring funding rates is essential for users to understand the cost or benefit of maintaining long or short positions, manage their margin requirements, and make informed trading decisions.
+Provide the request in the following JSON format:
 
-**Request Format**:
 \`\`\`json
 {
-    "filter": {
-        "marketId": string,       // (Optional) Market ID to filter funding rates
-        "timestamp": string       // (Optional) Specific timestamp to retrieve funding rates
-    },
+    "marketId": "market_id",
     "pagination": {
-        "limit": number,          // (Optional) Number of funding rates to retrieve
-        "offset": number          // (Optional) Starting point for retrieval
+        "from": 1,
+        "to": 100,
+        "limit": 10
     }
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "filter": {
-        "marketId": "ETH-USD-202510",
-        "timestamp": "2025-10-15T00:00:00Z"
-    },
-    "pagination": {
-        "limit": 5,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing funding rates
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125020,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpmdW5kaW5nX3JhdGVzAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_funding_rates\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 180000,
-    "gasUsed": 160000,
-    "timestamp": "2025-10-21T06:50:40Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const getDerivativeSubaccountOrdersListTemplate = `
-### Get Derivative Subaccount Orders List
-
-**Description**:
-This query retrieves the list of derivative subaccount orders based on provided parameters within the Exchange module. Derivative subaccount orders include all orders placed by a specific subaccount in derivative markets. Monitoring subaccount orders helps users manage their open positions, track order statuses, and analyze trading performance.
-
-**Request Format**:
-\`\`\`json
-{
-    "subaccountId": string,   // Subaccount ID (e.g., "sub1account123...")
-    "filter": {
-        "marketId": string,   // (Optional) Market ID to filter orders
-        "orderType": string   // (Optional) Type of order (e.g., "limit", "market")
-    },
-    "pagination": {
-        "limit": number,      // (Optional) Number of orders to retrieve
-        "offset": number      // (Optional) Starting point for retrieval
-    }
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "subaccountId": "sub1account123...",
-    "filter": {
-        "marketId": "BTC-USD-202510",
-        "orderType": "limit"
-    },
-    "pagination": {
-        "limit": 10,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing derivative subaccount orders
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125021,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkZXJpdmF0aXZlX3N1YmFjY291bnRfZXJkZXJzAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_derivative_subaccount_orders_list\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 185000,
-    "gasUsed": 165000,
-    "timestamp": "2025-10-22T07:55:50Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const getDerivativeSubaccountTradesListTemplate = `
-### Get Derivative Subaccount Trades List
-
-**Description**:
-This query retrieves the list of derivative subaccount trades based on provided parameters within the Exchange module. Derivative subaccount trades include all executed trades by a specific subaccount in derivative markets. Monitoring subaccount trades helps users analyze their trading performance, track trade histories, and assess the effectiveness of their trading strategies.
-
-**Request Format**:
-\`\`\`json
-{
-    "subaccountId": string,   // Subaccount ID (e.g., "sub1account123...")
-    "filter": {
-        "marketId": string,   // (Optional) Market ID to filter trades
-        "tradeType": string   // (Optional) Type of trade (e.g., "buy", "sell")
-    },
-    "pagination": {
-        "limit": number,      // (Optional) Number of trades to retrieve
-        "offset": number      // (Optional) Starting point for retrieval
-    }
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "subaccountId": "sub1account123...",
-    "filter": {
-        "marketId": "ETH-USD-202510",
-        "tradeType": "buy"
-    },
-    "pagination": {
-        "limit": 15,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing derivative subaccount trades
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125022,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkZXJpdmF0aXZlX3N1YmFjY291bnRfZHJhZGVzAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_derivative_subaccount_trades_list\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 190000,
-    "gasUsed": 170000,
-    "timestamp": "2025-10-23T08:00:00Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const getDerivativeOrderbooksV2Template = `
-### Get Derivative Orderbooks V2
-
-**Description**:
-This query retrieves the orderbooks version 2 for specified derivative market IDs within the Exchange module. Orderbooks V2 provide detailed information about buy and sell orders, including prices, volumes, and order sequences. Monitoring orderbooks is essential for users to assess market liquidity, identify price trends, and execute informed trading strategies.
-
-**Request Format**:
-\`\`\`json
-{
-    "marketIds": [
-        string   // List of derivative market IDs (e.g., ["BTC-USD-202510", "ETH-USD-202510"])
-    ]
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "marketIds": ["BTC-USD-202510", "ETH-USD-202510"]
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-[
-    {
-        "marketId": string,
-        "orderbook": {
-            "buyOrders": [
-                {
-                    "price": string,
-                    "volume": string,
-                    "sequence": number
-                }
-            ],
-            "sellOrders": [
-                {
-                    "price": string,
-                    "volume": string,
-                    "sequence": number
-                }
-            ]
-        }
-    }
-] | StandardResponse
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-[
-    {
-        "marketId": "BTC-USD-202510",
-        "orderbook": {
-            "buyOrders": [
-                {
-                    "price": "50000",
-                    "volume": "1.5",
-                    "sequence": 1001
-                },
-                {
-                    "price": "49950",
-                    "volume": "2.0",
-                    "sequence": 1002
-                }
-            ],
-            "sellOrders": [
-                {
-                    "price": "50100",
-                    "volume": "1.0",
-                    "sequence": 2001
-                },
-                {
-                    "price": "50200",
-                    "volume": "1.2",
-                    "sequence": 2002
-                }
-            ]
-        }
-    },
-    {
-        "marketId": "ETH-USD-202510",
-        "orderbook": {
-            "buyOrders": [
-                {
-                    "price": "4000",
-                    "volume": "3.0",
-                    "sequence": 1003
-                },
-                {
-                    "price": "3990",
-                    "volume": "4.0",
-                    "sequence": 1004
-                }
-            ],
-            "sellOrders": [
-                {
-                    "price": "4010",
-                    "volume": "2.5",
-                    "sequence": 2003
-                },
-                {
-                    "price": "4020",
-                    "volume": "3.0",
-                    "sequence": 2004
-                }
-            ]
-        }
-    }
-] | StandardResponse
-\`\`\`
-`;
-
-export const getAtomicSwapHistoryTemplate = `
-### Get Atomic Swap History
-
-**Description**:
-This query retrieves the atomic swap history based on provided parameters within the Exchange module. Atomic swaps facilitate the trustless exchange of assets between users without the need for intermediaries. Monitoring atomic swap history is essential for users to track their swap activities, analyze trading patterns, and ensure the security of their transactions.
-
-**Request Format**:
-\`\`\`json
-{
-    "filter": {
-        "subaccountId": string,   // (Optional) Subaccount ID to filter swap history
-        "asset": string,          // (Optional) Asset involved in the swap (e.g., "INJ")
-        "status": string          // (Optional) Status of swaps to filter (e.g., "completed", "pending")
-    },
-    "pagination": {
-        "limit": number,          // (Optional) Number of swap records to retrieve
-        "offset": number          // (Optional) Starting point for retrieval
-    }
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "subaccountId": "sub1account123...",
-        "asset": "INJ",
-        "status": "completed"
-    },
-    "pagination": {
-        "limit": 10,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Empty string for queries
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing atomic swap history
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125023,
-    "txHash": "",
-    "codespace": "",
-    "code": 0,
-    "data": "CgppbmthbWl0X3N3YXBfaGlzdG9yeQAA",
-    "rawLog": "[{\"events\": [{\"type\": \"get_atomic_swap_history\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 195000,
-    "gasUsed": 175000,
-    "timestamp": "2025-10-24T09:55:10Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgAdminUpdateBinaryOptionsMarketTemplate = `
-### Admin Update Binary Options Market
-
-**Description**:
-This message broadcasts a transaction to update a binary options market as an admin within the Exchange module. Admin updates can include changes to market parameters, configurations, and operational settings. Successfully updating a binary options market ensures that the market adheres to the latest standards, regulations, and user requirements. Monitoring admin actions is essential for maintaining market integrity, ensuring compliance, and adapting to evolving trading environments.
-
-**Request Format**:
-\`\`\`json
-{
-    "marketId": string,              // Binary options market ID to update (e.g., "ETH-USD-202510")
-    "newParameters": object          // Object containing the parameters to update
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "marketId": "ETH-USD-202510",
-    "newParameters": {
-        "expiration": "2025-12-31T23:59:59Z",
-        "strikePrice": "4000"
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125025,
-    "txHash": "YZA678grantauthxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgZhdWR0AA==",
-    "rawLog": "[{\"events\": [{\"type\": \"admin_update_binary_options_market\", \"attributes\": [{\"key\": \"market_id\", \"value\": \"ETH-USD-202510\"}, {\"key\": \"parameter\", \"value\": \"expiration\"}, {\"key\": \"value\", \"value\": \"2025-12-31T23:59:59Z\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 250000,
-    "gasUsed": 220000,
-    "timestamp": "2025-10-26T11:05:10Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgBatchCancelBinaryOptionsOrdersTemplate = `
-### Batch Cancel Binary Options Orders
-
-**Description**:
-This message broadcasts a transaction to batch cancel multiple binary options orders within the Exchange module. Batch cancel operations allow users to efficiently cancel multiple orders simultaneously, reducing the number of transactions and associated fees. Successfully canceling orders updates the system state, removing the specified orders from the order books.
-
-**Request Format**:
-\`\`\`json
-{
-    "orderIds": [
-        string   // List of binary options order IDs to cancel (e.g., ["order123", "order456"])
-    ]
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "orderIds": ["order123", "order456"]
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125026,
-    "txHash": "BCD901batchcancelbinaryxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpiYXRjaF9jYW5jZWwAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"batch_cancel_binary_options_orders\", \"attributes\": [{\"key\": \"order_ids\", \"value\": \"order123,order456\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 210000,
-    "gasUsed": 180000,
-    "timestamp": "2025-10-27T12:10:20Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgBatchCancelDerivativeOrdersTemplate = `
-### Batch Cancel Derivative Orders
-
-**Description**:
-This message broadcasts a transaction to batch cancel multiple derivative orders within the Exchange module. Batch cancel operations allow users to efficiently cancel multiple orders simultaneously, reducing the number of transactions and associated fees. Successfully canceling orders updates the system state, removing the specified orders from the order books.
-
-**Request Format**:
-\`\`\`json
-{
-    "orderIds": [
-        string   // List of derivative order IDs to cancel (e.g., ["derivOrder123", "derivOrder456"])
-    ]
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "orderIds": ["derivOrder123", "derivOrder456"]
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125027,
-    "txHash": "EFG234batchcancelderivativexyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkYXRjaF9jYW5jZWwAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"batch_cancel_derivative_orders\", \"attributes\": [{\"key\": \"order_ids\", \"value\": \"derivOrder123,derivOrder456\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 215000,
-    "gasUsed": 185000,
-    "timestamp": "2025-10-28T13:15:30Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgBatchCancelSpotOrdersTemplate = `
-### Batch Cancel Spot Orders
-
-**Description**:
-This message broadcasts a transaction to batch cancel multiple spot orders within the Exchange module. Batch cancel operations allow users to efficiently cancel multiple orders simultaneously, reducing the number of transactions and associated fees. Successfully canceling orders updates the system state, removing the specified orders from the order books.
-
-**Request Format**:
-\`\`\`json
-{
-    "orderIds": [
-        string   // List of spot order IDs to cancel (e.g., ["spotOrder123", "spotOrder456"])
-    ]
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "orderIds": ["spotOrder123", "spotOrder456"]
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125028,
-    "txHash": "UVW345batchcancelsportxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkYXRjaF9jYW5jZWwAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"batch_cancel_spot_orders\", \"attributes\": [{\"key\": \"order_ids\", \"value\": \"spotOrder123,spotOrder456\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 220000,
-    "gasUsed": 190000,
-    "timestamp": "2025-10-29T14:20:40Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgBatchUpdateOrdersTemplate = `
-### Batch Update Orders
-
-**Description**:
-This message broadcasts a transaction to batch update multiple orders within the Exchange module. Batch update operations allow users to modify multiple orders simultaneously, such as updating order prices or volumes, thereby enhancing trading efficiency and reducing the number of transactions. Successfully updating orders reflects the changes in the system state, adjusting the specified orders accordingly.
-
-**Request Format**:
-\`\`\`json
-{
-    "updates": [
+    "fundingRates": [
         {
-            "orderId": string,       // Order ID to update (e.g., "order123")
-            "newPrice": string,      // New price for the order
-            "newVolume": string      // New volume for the order
+            "marketId": "market_id",
+            "rate": "0.0001",
+            "timestamp": 1641859200
         }
-    ]
+    ],
+    "pagination": {
+        "total": 100
+    }
 }
 \`\`\`
 
-**Example Request**:
-\`\`\`json
-{
-    "updates": [
-        {
-            "orderId": "order123",
-            "newPrice": "51000",
-            "newVolume": "1.8"
-        },
-        {
-            "orderId": "order456",
-            "newPrice": "52000",
-            "newVolume": "2.0"
-        }
-    ]
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125029,
-    "txHash": "ABC456batchupdateordersxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgptYXRjaF91cGRhdGUAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"batch_update_orders\", \"attributes\": [{\"key\": \"order_ids\", \"value\": \"order123,order456\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 225000,
-    "gasUsed": 195000,
-    "timestamp": "2025-10-30T15:25:50Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
-export const msgCancelBinaryOptionsOrderTemplate = `
-### Cancel Binary Options Order
-
-**Description**:
-This message broadcasts a transaction to cancel a specific binary options order within the Exchange module. Canceling an order removes it from the order book, preventing it from being executed if it hasn't been filled yet. Successfully canceling an order updates the system state, reflecting the cancellation and freeing up available resources.
-
-**Request Format**:
-\`\`\`json
-{
-    "orderId": string   // Binary options order ID to cancel (e.g., "binaryOrder123")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "orderId": "binaryOrder123"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125030,
-    "txHash": "DEF567cancelbinaryxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpjYW5jZWxfbW9kdWxlAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"cancel_binary_options_order\", \"attributes\": [{\"key\": \"order_id\", \"value\": \"binaryOrder123\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 230000,
-    "gasUsed": 200000,
-    "timestamp": "2025-10-31T16:30:00Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgCancelDerivativeOrderTemplate = `
-### Cancel Derivative Order
-
-**Description**:
-This message broadcasts a transaction to cancel a specific derivative order within the Exchange module. Canceling an order removes it from the order book, preventing it from being executed if it hasn't been filled yet. Successfully canceling an order updates the system state, reflecting the cancellation and freeing up available resources.
-
-**Request Format**:
-\`\`\`json
-{
-    "orderId": string   // Derivative order ID to cancel (e.g., "derivOrder123")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "orderId": "derivOrder123"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125031,
-    "txHash": "GHI678cancelderivativexyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpjYW5jZWxfbW9kdWxlAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"cancel_derivative_order\", \"attributes\": [{\"key\": \"order_id\", \"value\": \"derivOrder123\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 235000,
-    "gasUsed": 205000,
-    "timestamp": "2025-11-01T17:35:10Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgCancelSpotOrderTemplate = `
-### Cancel Spot Order
-
-**Description**:
-This message broadcasts a transaction to cancel a specific spot order within the Exchange module. Canceling an order removes it from the order book, preventing it from being executed if it hasn't been filled yet. Successfully canceling an order updates the system state, reflecting the cancellation and freeing up available resources.
-
-**Request Format**:
-\`\`\`json
-{
-    "orderId": string   // Spot order ID to cancel (e.g., "spotOrder123")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "orderId": "spotOrder123"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125032,
-    "txHash": "JKL789cancelsportxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpjYW5jZWxfbW9kdWxlAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"cancel_spot_order\", \"attributes\": [{\"key\": \"order_id\", \"value\": \"spotOrder123\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 240000,
-    "gasUsed": 210000,
-    "timestamp": "2025-11-02T18:40:20Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgCreateBinaryOptionsLimitOrderTemplate = `
-### Create Binary Options Limit Order
-
-**Description**:
-This message broadcasts a transaction to create a binary options limit order within the Exchange module. A binary options limit order allows users to set specific parameters for their order, such as price and volume, to be executed when market conditions meet the defined criteria. Successfully creating a limit order adds it to the order book, making it available for matching with opposing orders.
-
-**Request Format**:
-\`\`\`json
-{
-    "marketId": string,      // Binary options market ID (e.g., "ETH-USD-202510")
-    "price": string,         // Price at which to place the limit order (e.g., "4000")
-    "volume": string         // Volume of the order (e.g., "1.5")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "marketId": "ETH-USD-202510",
-    "price": "4000",
-    "volume": "1.5"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125033,
-    "txHash": "LMN012createbinaryxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkYXRjaF9sbWl0X29yZGVyAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"create_binary_options_limit_order\", \"attributes\": [{\"key\": \"market_id\", \"value\": \"ETH-USD-202510\"}, {\"key\": \"price\", \"value\": \"4000\"}, {\"key\": \"volume\", \"value\": \"1.5\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 245000,
-    "gasUsed": 215000,
-    "timestamp": "2025-11-03T19:45:30Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgCreateBinaryOptionsMarketOrderTemplate = `
-### Create Binary Options Market Order
-
-**Description**:
-This message broadcasts a transaction to create a binary options market order within the Exchange module. A binary options market order allows users to execute trades immediately at the current market price without specifying a price limit. Successfully creating a market order facilitates swift trade execution, enhancing trading flexibility and responsiveness to market conditions.
-
-**Request Format**:
-\`\`\`json
-{
-    "marketId": string,      // Binary options market ID (e.g., "ETH-USD-202510")
-    "volume": string         // Volume of the order (e.g., "2.0")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "marketId": "ETH-USD-202510",
-    "volume": "2.0"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125034,
-    "txHash": "NOP345createbinarymarketxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkYXRjaF9tYXJrZXRlAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"create_binary_options_market_order\", \"attributes\": [{\"key\": \"market_id\", \"value\": \"ETH-USD-202510\"}, {\"key\": \"volume\", \"value\": \"2.0\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 250000,
-    "gasUsed": 220000,
-    "timestamp": "2025-11-04T20:50:40Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgCreateDerivativeLimitOrderTemplate = `
-### Create Derivative Limit Order
-
-**Description**:
-This message broadcasts a transaction to create a derivative limit order within the Exchange module. A derivative limit order allows users to set specific parameters for their order, such as price and volume, to be executed when market conditions meet the defined criteria. Successfully creating a limit order adds it to the derivative order book, making it available for matching with opposing orders.
-
-**Request Format**:
-\`\`\`json
-{
-    "marketId": string,      // Derivative market ID (e.g., "BTC-USD-202510")
-    "price": string,         // Price at which to place the limit order (e.g., "50000")
-    "volume": string         // Volume of the order (e.g., "1.2")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "marketId": "BTC-USD-202510",
-    "price": "50000",
-    "volume": "1.2"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125035,
-    "txHash": "QRS678createderivativexyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkYXRjaF9saW1pdF9vcmRlcg==",
-    "rawLog": "[{\"events\": [{\"type\": \"create_derivative_limit_order\", \"attributes\": [{\"key\": \"market_id\", \"value\": \"BTC-USD-202510\"}, {\"key\": \"price\", \"value\": \"50000\"}, {\"key\": \"volume\", \"value\": \"1.2\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 255000,
-    "gasUsed": 225000,
-    "timestamp": "2025-11-05T21:55:50Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgCreateDerivativeMarketOrderTemplate = `
-### Create Derivative Market Order
-
-**Description**:
-This message broadcasts a transaction to create a derivative market order within the Exchange module. A derivative market order allows users to execute trades immediately at the current market price without specifying a price limit. Successfully creating a market order facilitates swift trade execution, enhancing trading flexibility and responsiveness to market conditions.
-
-**Request Format**:
-\`\`\`json
-{
-    "marketId": string,      // Derivative market ID (e.g., "BTC-USD-202510")
-    "volume": string         // Volume of the order (e.g., "2.5")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "marketId": "BTC-USD-202510",
-    "volume": "2.5"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125036,
-    "txHash": "TUV901createderivativedetailsxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkYXRjaF9tYXJrZXRlAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"create_derivative_market_order\", \"attributes\": [{\"key\": \"market_id\", \"value\": \"BTC-USD-202510\"}, {\"key\": \"volume\", \"value\": \"2.5\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 260000,
-    "gasUsed": 230000,
-    "timestamp": "2025-11-06T23:00:00Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgCreateSpotLimitOrderTemplate = `
-### Create Spot Limit Order
-
-**Description**:
-This message broadcasts a transaction to create a spot limit order within the Exchange module. A spot limit order allows users to set specific parameters for their order, such as price and volume, to be executed when market conditions meet the defined criteria. Successfully creating a limit order adds it to the spot order book, making it available for matching with opposing orders.
-
-**Request Format**:
-\`\`\`json
-{
-    "marketId": string,      // Spot market ID (e.g., "ETH-USD")
-    "price": string,         // Price at which to place the limit order (e.g., "2500")
-    "volume": string         // Volume of the order (e.g., "3.0")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "marketId": "ETH-USD",
-    "price": "2500",
-    "volume": "3.0"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125037,
-    "txHash": "UVW012createspotlimitxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpjYW5jZWxfbW9kdWxlAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"create_spot_limit_order\", \"attributes\": [{\"key\": \"market_id\", \"value\": \"ETH-USD\"}, {\"key\": \"price\", \"value\": \"2500\"}, {\"key\": \"volume\", \"value\": \"3.0\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 265000,
-    "gasUsed": 235000,
-    "timestamp": "2025-11-07T00:05:10Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgCreateSpotMarketOrderTemplate = `
-### Create Spot Market Order
-
-**Description**:
-This message broadcasts a transaction to create a spot market order within the Exchange module. A spot market order allows users to execute trades immediately at the current market price without specifying a price limit. Successfully creating a market order facilitates swift trade execution, enhancing trading flexibility and responsiveness to market conditions.
-
-**Request Format**:
-\`\`\`json
-{
-    "marketId": string,      // Spot market ID (e.g., "ETH-USD")
-    "volume": string         // Volume of the order (e.g., "2.5")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "marketId": "ETH-USD",
-    "volume": "2.5"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125038,
-    "txHash": "XYZ345createspotmarketxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpjYW5jZWxfbW9kdWxlAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"create_spot_market_order\", \"attributes\": [{\"key\": \"market_id\", \"value\": \"ETH-USD\"}, {\"key\": \"volume\", \"value\": \"2.5\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 270000,
-    "gasUsed": 240000,
-    "timestamp": "2025-11-08T01:10:20Z",
-    "events": []
-}
-\`\`\`
-`;
-
+// Account & Portfolio Related Templates
 export const msgDepositTemplate = `
-### Deposit Funds
+Extract the following details for deposit:
+- **injectiveAddress** (string): Injective sender address
+- **subaccountId** (string): Subaccount ID to deposit to
+- **amount** (string): Amount to deposit
 
-**Description**:
-This message broadcasts a transaction to deposit funds into a specific account within the Exchange module. Depositing funds increases the user's balance, enabling them to participate in trading activities such as placing orders, bidding, and staking. Successfully depositing funds updates the account's balance, reflecting the new deposit amount.
+Provide the request in the following JSON format:
 
-**Request Format**:
 \`\`\`json
 {
-    "amount": string,         // Amount to deposit (e.g., "1000")
-    "denom": string           // Denomination of the asset (e.g., "INJ")
+    "injectiveAddress": "inj1...",
+    "subaccountId": "0x...",
+    "amount": "1000000"
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "amount": "1000",
-    "denom": "INJ"
+    "success": true,
+    "txHash": "0x..."
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125039,
-    "txHash": "ABC567depositsuccessxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpkZXBvc2l0AA==",
-    "rawLog": "[{\"events\": [{\"type\": \"deposit\", \"attributes\": [{\"key\": \"amount\", \"value\": \"1000INJ\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 275000,
-    "gasUsed": 245000,
-    "timestamp": "2025-11-09T02:15:30Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgExternalTransferTemplate = `
-### External Transfer
-
-**Description**:
-This message broadcasts a transaction to perform an external transfer of funds within the Exchange module. External transfers enable users to move funds between different platforms or external wallets securely. Successfully performing an external transfer updates the account balances accordingly, reflecting the transferred amounts.
-
-**Request Format**:
-\`\`\`json
-{
-    "recipientAddress": string,   // Recipient's Injective address (e.g., "inj1recipient123...")
-    "totalAmount": string,        // Total amount to transfer (e.g., "500")
-    "denom": string               // Denomination of the asset (e.g., "INJ")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "recipientAddress": "inj1recipient123...",
-    "totalAmount": "500",
-    "denom": "INJ"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125040,
-    "txHash": "DEF678externaltransferxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpleHRlcm5hbF90cmFuc2ZlcmUA",
-    "rawLog": "[{\"events\": [{\"type\": \"external_transfer\", \"attributes\": [{\"key\": \"recipient_address\", \"value\": \"inj1recipient123...\"}, {\"key\": \"amount\", \"value\": \"500INJ\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 280000,
-    "gasUsed": 250000,
-    "timestamp": "2025-11-10T03:20:40Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgIncreasePositionMarginTemplate = `
-### Increase Position Margin
-
-**Description**:
-This message broadcasts a transaction to increase the margin of an existing position within the Exchange module. Increasing position margin enhances the leverage and reduces the liquidation risk of a position. Successfully increasing margin updates the position's margin balance, providing additional collateral for maintaining the position.
-
-**Request Format**:
-\`\`\`json
-{
-    "positionId": string,      // Position ID to increase margin (e.g., "position123")
-    "additionalMargin": string,// Additional margin amount to add (e.g., "100")
-    "denom": string            // Denomination of the margin asset (e.g., "INJ")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "positionId": "position123",
-    "additionalMargin": "100",
-    "denom": "INJ"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125041,
-    "txHash": "GHI789increasemarginxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgppbmNyZWFzZV9tYXJnaW5AA==",
-    "rawLog": "[{\"events\": [{\"type\": \"increase_position_margin\", \"attributes\": [{\"key\": \"position_id\", \"value\": \"position123\"}, {\"key\": \"additional_margin\", \"value\": \"100INJ\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 285000,
-    "gasUsed": 255000,
-    "timestamp": "2025-11-11T04:25:50Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgInstantSpotMarketLaunchTemplate = `
-### Instant Spot Market Launch
-
-**Description**:
-This message broadcasts a transaction to instantly launch a new spot market within the Exchange module. Instantly launching a spot market allows administrators to create new trading pairs quickly, enabling users to start trading without delay. Successfully launching a spot market adds it to the active markets list, making it available for trading activities.
-
-**Request Format**:
-\`\`\`json
-{
-    "baseAsset": string,      // Base asset of the new market (e.g., "LINK")
-    "quoteAsset": string,     // Quote asset of the new market (e.g., "USD")
-    "minPriceTick": string,   // Minimum price tick size (e.g., "0.01")
-    "minQuantityTick": string // Minimum quantity tick size (e.g., "0.1")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "baseAsset": "LINK",
-    "quoteAsset": "USD",
-    "minPriceTick": "0.01",
-    "minQuantityTick": "0.1"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125042,
-    "txHash": "JKL012launchspotmarketxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgppbnN0YW50X3Nwb3RfbWFya2V0AA==",
-    "rawLog": "[{\"events\": [{\"type\": \"instant_spot_market_launch\", \"attributes\": [{\"key\": \"base_asset\", \"value\": \"LINK\"}, {\"key\": \"quote_asset\", \"value\": \"USD\"}, {\"key\": \"min_price_tick\", \"value\": \"0.01\"}, {\"key\": \"min_quantity_tick\", \"value\": \"0.1\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 290000,
-    "gasUsed": 260000,
-    "timestamp": "2025-11-12T05:30:00Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgLiquidatePositionTemplate = `
-### Liquidate Position
-
-**Description**:
-This message broadcasts a transaction to liquidate a specific position within the Exchange module. Liquidation occurs when a position's margin falls below the required maintenance margin, leading to the automatic closure of the position to prevent further losses. Successfully liquidating a position updates the system state, reflecting the closure and any associated fees or penalties.
-
-**Request Format**:
-\`\`\`json
-{
-    "positionId": string,      // Position ID to liquidate (e.g., "position123")
-    "marketId": string         // Market ID of the position (e.g., "BTC-USD-202510")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "positionId": "position123",
-    "marketId": "BTC-USD-202510"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125043,
-    "txHash": "MNO345liquidatepositionxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpsaXF1aWRhdGVfcG9zaXRpb24AA==",
-    "rawLog": "[{\"events\": [{\"type\": \"liquidate_position\", \"attributes\": [{\"key\": \"position_id\", \"value\": \"position123\"}, {\"key\": \"market_id\", \"value\": \"BTC-USD-202510\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 295000,
-    "gasUsed": 265000,
-    "timestamp": "2025-11-13T06:35:10Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgReclaimLockedFundsTemplate = `
-### Reclaim Locked Funds
-
-**Description**:
-This message broadcasts a transaction to reclaim locked funds within the Exchange module. Reclaiming locked funds allows users to retrieve assets that were previously locked as collateral or margin for their positions. Successfully reclaiming funds updates the account balances, freeing up the specified assets for other uses.
-
-**Request Format**:
-\`\`\`json
-{
-    "subaccountId": string,   // Subaccount ID to reclaim funds from (e.g., "sub1account123...")
-    "amount": string,         // Amount to reclaim (e.g., "500")
-    "denom": string           // Denomination of the asset (e.g., "INJ")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "subaccountId": "sub1account123...",
-    "amount": "500",
-    "denom": "INJ"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125044,
-    "txHash": "PQR678reclaimfundsxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgpyZWNsaWFtX2xvY2tlZF9mdW5kcw==",
-    "rawLog": "[{\"events\": [{\"type\": \"reclaim_locked_funds\", \"attributes\": [{\"key\": \"subaccount_id\", \"value\": \"sub1account123...\"}, {\"key\": \"amount\", \"value\": \"500INJ\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 300000,
-    "gasUsed": 270000,
-    "timestamp": "2025-11-14T07:40:20Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgRewardsOptOutTemplate = `
-### Opt Out of Rewards
-
-**Description**:
-This message broadcasts a transaction to opt out of receiving trading rewards within the Exchange module. Opting out means the user will no longer accumulate or receive any trading incentives or bonuses. Successfully opting out updates the account settings, reflecting the user's preference to exclude themselves from rewards programs.
-
-**Request Format**:
-\`\`\`json
-{
-    "account": string   // Account address opting out of rewards (e.g., "inj1account123...")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "account": "inj1account123..."
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125045,
-    "txHash": "STU901optoutrewardsxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "Cgppb3B0X291dF9yZXdhcmRzAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"opt_out_of_rewards\", \"attributes\": [{\"key\": \"account\", \"value\": \"inj1account123...\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 305000,
-    "gasUsed": 275000,
-    "timestamp": "2025-11-15T08:45:30Z",
-    "events": []
-}
-\`\`\`
-`;
-
-export const msgSignDataTemplate = `
-### Sign Data
-
-**Description**:
-This message broadcasts a transaction to sign arbitrary data within the Exchange module. Signing data allows users to provide cryptographic proof of ownership or authorization for specific actions. Successfully signing data updates the system state, recording the signed data for verification purposes.
-
-**Request Format**:
-\`\`\`json
-{
-    "data": string   // Data to be signed (e.g., "transaction details")
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "data": "transaction details"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing signature details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 125046,
-    "txHash": "VWX234signdataxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "Cgppc19zaWduZGF0YQAA",
-    "rawLog": "[{\"events\": [{\"type\": \"sign_data\", \"attributes\": [{\"key\": \"data\", \"value\": \"transaction details\"}, {\"key\": \"signature\", \"value\": \"abcdef123456\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 310000,
-    "gasUsed": 280000,
-    "timestamp": "2025-11-16T09:50:40Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const msgWithdrawTemplate = `
-### Withdraw Funds
+Extract the following details for withdrawal:
+- **injectiveAddress** (string): Injective sender address
+- **subaccountId** (string): Subaccount ID to withdraw from
+- **amount** (string): Amount to withdraw
 
-**Description**:
-This message broadcasts a transaction to withdraw funds from a specific account within the Exchange module. Withdrawing funds decreases the user's balance, enabling them to transfer assets to external wallets or other platforms. Successfully withdrawing funds updates the account's balance, reflecting the withdrawn amount.
+Provide the request in the following JSON format:
 
-**Request Format**:
 \`\`\`json
 {
-    "amount": string,         // Amount to withdraw (e.g., "300")
-    "denom": string           // Denomination of the asset (e.g., "INJ")
+    "injectiveAddress": "inj1...",
+    "subaccountId": "0x...",
+    "amount": "1000000"
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "amount": "300",
-    "denom": "INJ"
+    "success": true,
+    "txHash": "0x..."
 }
 \`\`\`
 
-**Response Format**:
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Order Related Templates
+export const msgCreateSpotMarketOrderTemplate = `
+Extract the following details for creating spot market order:
+- **marketId** (string): Market ID
+- **subaccountId** (string): Subaccount ID
+- **injectiveAddress** (string): Injective sender address
+- **orderType** (string): Order type (BUY/SELL)
+- **price** (string): Order price
+- **quantity** (string): Order quantity
+
+Provide the request in the following JSON format:
+
 \`\`\`json
 {
-    "height": number,
-    "txHash": string,               // Transaction hash
-    "codespace": string,
-    "code": number,
-    "data": string,                 // Optional: Base64 encoded data containing transaction details
-    "rawLog": string,
-    "logs": [],                     // Optional
-    "info": string,                 // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                    // Optional
+    "marketId": "0x...",
+    "subaccountId": "0x...",
+    "injectiveAddress": "inj1...",
+    "orderType": "BUY",
+    "price": "25000.5",
+    "quantity": "0.5"
 }
 \`\`\`
 
-**Example Response**:
+Response format:
+
 \`\`\`json
 {
-    "height": 125047,
-    "txHash": "XYZ567withdrawsuccessxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "Cgpkd2l0aGRyYXcAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"withdraw\", \"attributes\": [{\"key\": \"amount\", \"value\": \"300INJ\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 315000,
-    "gasUsed": 285000,
-    "timestamp": "2025-11-17T10:55:50Z",
-    "events": []
+    "orderHash": "0x...",
+    "txHash": "0x..."
 }
 \`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgCreateDerivativeMarketOrderTemplate = `
+Extract the following details for creating derivative market order:
+- **marketId** (string): Market ID
+- **subaccountId** (string): Subaccount ID
+- **injectiveAddress** (string): Injective sender address
+- **orderType** (string): Order type (BUY/SELL)
+- **price** (string): Order price
+- **quantity** (string): Order quantity
+- **margin** (string): Order margin
+- **leverage** (string): Order leverage
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "marketId": "0x...",
+    "subaccountId": "0x...",
+    "injectiveAddress": "inj1...",
+    "orderType": "BUY",
+    "price": "25000.5",
+    "quantity": "0.5",
+    "margin": "1000",
+    "leverage": "10"
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "orderHash": "0x...",
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgBatchCancelOrdersTemplate = `
+Extract the following details for batch canceling orders:
+- **injectiveAddress** (string): Injective sender address
+- **orders** (array): List of orders to cancel containing:
+  - marketId (string)
+  - subaccountId (string)
+  - orderHash (string)
+  - orderMask (number)
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "orders": [
+        {
+            "marketId": "0x...",
+            "subaccountId": "0x...",
+            "orderHash": "0x...",
+            "orderMask": 1
+        }
+    ]
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgBatchUpdateOrdersTemplate = `
+Extract the following details for batch updating orders:
+- **injectiveAddress** (string): Injective sender address
+- **spotOrders** (array, optional): List of spot orders to update
+- **derivativeOrders** (array, optional): List of derivative orders to update
+Each order contains:
+  - marketId (string)
+  - subaccountId (string)
+  - orderHash (string, optional)
+  - orderType (string)
+  - price (string)
+  - quantity (string)
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "spotOrders": [
+        {
+            "marketId": "0x...",
+            "subaccountId": "0x...",
+            "orderHash": "0x...",
+            "orderType": "BUY",
+            "price": "25000.5",
+            "quantity": "0.5"
+        }
+    ],
+    "derivativeOrders": [
+        {
+            "marketId": "0x...",
+            "subaccountId": "0x...",
+            "orderHash": "0x...",
+            "orderType": "SELL",
+            "price": "25100.5",
+            "quantity": "1.0"
+        }
+    ]
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "spotOrderHashes": ["0x..."],
+    "derivativeOrderHashes": ["0x..."],
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgExternalTransferTemplate = `
+Extract the following details for external transfer:
+- **injectiveAddress** (string): Injective sender address 
+- **sourceSubaccountId** (string): Source subaccount ID
+- **destinationSubaccountId** (string): Destination subaccount ID
+- **amount** (string): Amount to transfer
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "sourceSubaccountId": "0x...",
+    "destinationSubaccountId": "0x...",
+    "amount": "1000000"
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgIncreasePositionMarginTemplate = `
+Extract the following details for increasing position margin:
+- **injectiveAddress** (string): Injective sender address
+- **marketId** (string): Market ID
+- **sourceSubaccountId** (string): Source subaccount ID
+- **destinationSubaccountId** (string): Destination subaccount ID
+- **amount** (string): Margin amount to add
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "marketId": "0x...",
+    "sourceSubaccountId": "0x...",
+    "destinationSubaccountId": "0x...",
+    "amount": "1000000"
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgRewardsOptOutTemplate = `
+Extract the following details for opting out of rewards:
+- **injectiveAddress** (string): Injective sender address
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Admin Related Templates
+export const msgAdminUpdateBinaryOptionsMarketTemplate = `
+Extract the following details for admin updating binary options market:
+- **injectiveAddress** (string): Admin injective address
+- **marketId** (string): Market ID
+- **settlementPrice** (string): Settlement price
+- **expiryTime** (number): Expiry timestamp
+- **settlementTime** (number): Settlement timestamp
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "marketId": "0x...",
+    "settlementPrice": "25000.5",
+    "expiryTime": 1641859200,
+    "settlementTime": 1641945600
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Module State & Parameters
+export const getModuleStateTemplate = `
+Extract module state information.
+
+Response format:
+
+\`\`\`json
+{
+    "moduleState": {
+        "params": {
+            "spotMarketInstantListingFee": {
+                "amount": "100000000",
+                "denom": "inj"
+            },
+            "derivativeMarketInstantListingFee": {
+                "amount": "1000000000",
+                "denom": "inj"
+            },
+            "defaultSpotMakerFeeRate": "0.001",
+            "defaultSpotTakerFeeRate": "0.002",
+            "defaultDerivativeMakerFeeRate": "0.001",
+            "defaultDerivativeTakerFeeRate": "0.002",
+            "defaultInitialMarginRatio": "0.05",
+            "defaultMaintenanceMarginRatio": "0.02",
+            "defaultFundingInterval": 3600,
+            "fundingMultiple": 3600
+        },
+        "spotMarkets": [],
+        "derivativeMarkets": [],
+        "spotOrderbooks": [],
+        "derivativeOrderbooks": [],
+        "balances": [],
+        "positions": []
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getFeeDiscountScheduleTemplate = `
+Extract fee discount schedule information.
+
+Response format:
+
+\`\`\`json
+{
+    "bucketCount": 10,
+    "bucketDuration": 1209600,
+    "quoteDenomsList": ["inj"],
+    "tierInfosList": [
+        {
+            "makerDiscountRate": "0.001",
+            "takerDiscountRate": "0.001",
+            "stakedAmount": "10000000000",
+            "volume": "100000000"
+        }
+    ],
+    "disqualifiedMarketIdsList": []
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getFeeDiscountAccountInfoTemplate = `
+Extract the following details for fee discount account info:
+- **injAddress** (string): Injective address
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injAddress": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "tierLevel": 1,
+    "accountInfo": {
+        "makerDiscountRate": "0.001",
+        "takerDiscountRate": "0.001",
+        "stakedAmount": "10000000000",
+        "volume": "100000000"
+    },
+    "accountTtl": {
+        "tier": 1,
+        "ttlTimestamp": 1641945600
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Trading Rewards
+export const getTradingRewardsCampaignTemplate = `
+Extract trading rewards campaign information.
+
+Response format:
+
+\`\`\`json
+{
+    "tradingRewardCampaignInfo": {
+        "campaignDurationSeconds": 604800,
+        "quoteDenomsList": ["inj"],
+        "tradingRewardBoostInfo": {
+            "boostedSpotMarketIdsList": [],
+            "spotMarketMultipliersList": [],
+            "boostedDerivativeMarketIdsList": [],
+            "derivativeMarketMultipliersList": []
+        },
+        "disqualifiedMarketIdsList": []
+    },
+    "tradingRewardPoolCampaignScheduleList": [
+        {
+            "startTimestamp": 1641859200,
+            "maxCampaignRewardsList": [
+                {
+                    "amount": "1000000000",
+                    "denom": "inj"
+                }
+            ]
+        }
+    ],
+    "totalTradeRewardPoints": "1000000",
+    "pendingTradingRewardPoolCampaignScheduleList": [],
+    "pendingTotalTradeRewardPointsList": []
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getTradeRewardPointsTemplate = `
+Extract the following details for trade reward points:
+- **injectiveAddresses** (string[]): List of Injective addresses
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddresses": ["inj1...", "inj2..."]
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "rewardPoints": ["100", "200"]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getPendingTradeRewardPointsTemplate = `
+Extract the following details for pending trade reward points:
+- **injectiveAddresses** (string[]): List of Injective addresses
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddresses": ["inj1...", "inj2..."]
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "rewardPoints": ["100", "200"]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Binary Options Markets
+export const msgCreateBinaryOptionsMarketTemplate = `
+Extract the following details for creating binary options market:
+- **oracle** (string): Oracle provider
+- **symbol** (string): Trading symbol
+- **expiryTime** (number): Market expiry timestamp
+- **settlementTime** (number): Settlement timestamp
+- **admin** (string): Admin address
+- **quoteDenom** (string): Quote denomination
+- **minPriceTickSize** (string): Minimum price tick size
+- **minQuantityTickSize** (string): Minimum quantity tick size
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "oracle": "band",
+    "symbol": "BTC/USD",
+    "expiryTime": 1641945600,
+    "settlementTime": 1641945600,
+    "admin": "inj1...",
+    "quoteDenom": "inj",
+    "minPriceTickSize": "0.000001",
+    "minQuantityTickSize": "0.000001"
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "marketId": "0x...",
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Subaccount Trade Nonce
+export const getSubaccountTradeNonceTemplate = `
+Extract the following details for subaccount trade nonce:
+- **subaccountId** (string): Subaccount ID
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "subaccountId": "subaccount_id"
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "nonce": 5
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Position History
+export const getPositionsV2Template = `
+Extract the following details for positions V2 query:
+- **address** (string, optional): Account address
+- **marketId** (string, optional): Market ID
+- **marketIds** (string[], optional): Multiple market IDs
+- **subaccountId** (string, optional): Subaccount ID
+- **direction** (string, optional): Position direction
+- **pagination** (object, optional): Pagination options
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "address": "inj1...",
+    "marketId": "market_id",
+    "marketIds": ["market_id1", "market_id2"],
+    "subaccountId": "subaccount_id",
+    "direction": "long",
+    "pagination": {
+        "from": 1,
+        "to": 100,
+        "limit": 10
+    }
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "positions": [
+        {
+            "marketId": "market_id",
+            "subaccountId": "subaccount_id",
+            "direction": "long",
+            "quantity": "1.5",
+            "entryPrice": "25000.5",
+            "margin": "1000",
+            "liquidationPrice": "24000.0",
+            "markPrice": "25100.0",
+            "ticker": "BTC/USDT",
+            "aggregateReduceOnlyQuantity": "0",
+            "updatedAt": 1641859200
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Historical Data
+export const getHistoricalBalanceTemplate = `
+Extract the following details for historical balance:
+- **account** (string): Account address
+- **resolution** (string): Time resolution for data points
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "account": "inj1...",
+    "resolution": "1d"
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "t": [1641859200, 1641945600],
+    "v": [1000.5, 1100.75]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Denom Holders
+export const getDenomHoldersTemplate = `
+Extract the following details for denom holders:
+- **denom** (string): Token denomination
+- **token** (string, optional): Token address
+- **limit** (number, optional): Number of results
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "denom": "inj",
+    "token": "0x...",
+    "limit": 100
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "holders": [
+        {
+            "accountAddress": "inj1...",
+            "balance": "1000000"
+        }
+    ],
+    "next": ["next_key"]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Grid Strategies
+export const getGridStrategiesTemplate = `
+Extract the following details for grid strategies:
+- **skip** (number, optional): Number of items to skip
+- **limit** (number, optional): Number of items to return
+- **state** (string, optional): Strategy state
+- **marketId** (string, optional): Market ID
+- **marketType** (string, optional): Market type
+- **strategyType** (string[], optional): Strategy types
+- **subaccountId** (string, optional): Subaccount ID
+- **accountAddress** (string, optional): Account address
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "skip": 0,
+    "limit": 100,
+    "state": "active",
+    "marketId": "market_id",
+    "marketType": "spot",
+    "strategyType": ["uniform"],
+    "subaccountId": "subaccount_id",
+    "accountAddress": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "strategies": [
+        {
+            "id": "strategy_id",
+            "accountAddress": "inj1...",
+            "subaccountId": "subaccount_id",
+            "marketId": "market_id",
+            "strategyType": "uniform",
+            "tickSize": "0.1",
+            "minPrice": "24000.0",
+            "maxPrice": "26000.0",
+            "gridCount": 20,
+            "state": "active",
+            "totalVolume": "100000.5",
+            "currentPnL": "1000.25",
+            "createdAt": 1641859200,
+            "updatedAt": 1641945600
+        }
+    ]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+// Instant Market Launch
+export const msgInstantSpotMarketLaunchTemplate = `
+Extract the following details for instant spot market launch:
+- **ticker** (string): Market ticker
+- **baseDenom** (string): Base denomination
+- **quoteDenom** (string): Quote denomination
+- **minPriceTickSize** (string): Minimum price tick size
+- **minQuantityTickSize** (string): Minimum quantity tick size
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "ticker": "INJ/USDT",
+    "baseDenom": "inj",
+    "quoteDenom": "usdt",
+    "minPriceTickSize": "0.000001",
+    "minQuantityTickSize": "0.000001"
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "marketId": "0x...",
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getModuleParamsTemplate = `
+Extract module parameters information.
+
+Response format:
+
+\`\`\`json
+{
+    "spotMarketInstantListingFee": {
+        "amount": "100000000",
+        "denom": "inj"
+    },
+    "derivativeMarketInstantListingFee": {
+        "amount": "1000000000",
+        "denom": "inj"
+    },
+    "defaultSpotMakerFeeRate": "0.001",
+    "defaultSpotTakerFeeRate": "0.002",
+    "defaultDerivativeMakerFeeRate": "0.001",
+    "defaultDerivativeTakerFeeRate": "0.002",
+    "defaultInitialMarginRatio": "0.05",
+    "defaultMaintenanceMarginRatio": "0.02",
+    "defaultFundingInterval": 3600,
+    "fundingMultiple": 3600,
+    "relayerFeeShareRate": "0.4",
+    "exchangeModuleAdmin": "inj1..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+
+export const getOrderStatesTemplate = `
+Extract the following details for order states:
+- **spotOrderHashes** (string[], optional): Spot order hashes
+- **derivativeOrderHashes** (string[], optional): Derivative order hashes
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "spotOrderHashes": ["0x..."],
+    "derivativeOrderHashes": ["0x..."]
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "spotOrderStates": {
+        "orderHash": "OrderState"
+    },
+    "derivativeOrderStates": {
+        "orderHash": "OrderState"
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getSubaccountOrderSummaryTemplate = `
+Extract the following details for subaccount order summary:
+- **subaccountId** (string): Subaccount ID
+- **marketId** (string, optional): Market ID filter
+- **orderDirection** (string, optional): Order direction filter
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "subaccountId": "0x...",
+    "marketId": "0x...",
+    "orderDirection": "buy"
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "spotOrdersTotal": "10",
+    "derivativeOrdersTotal": "5",
+    "spotOrdersActiveTotal": "3",
+    "derivativeOrdersActiveTotal": "2",
+    "spotOrdersCancelledTotal": "5",
+    "derivativeOrdersCancelledTotal": "2",
+    "spotOrdersFilledTotal": "2",
+    "derivativeOrdersFilledTotal": "1"
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getDerivativeMarketsTemplate = `
+Extract the following details for derivative markets:
+- **quoteDenom** (string, optional): Quote denomination filter
+- **marketStatus** (string, optional): Market status filter
+- **marketStatuses** (string[], optional): Multiple market status filter
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "quoteDenom": "usdt",
+    "marketStatus": "active",
+    "marketStatuses": ["active", "paused"]
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "markets": [
+        {
+            "marketId": "0x...",
+            "marketStatus": "active",
+            "ticker": "BTC/USDT PERP",
+            "oracleBase": "BTC",
+            "oracleQuote": "USDT",
+            "quoteDenom": "usdt",
+            "makerFeeRate": "0.001",
+            "takerFeeRate": "0.002",
+            "serviceProviderFee": "0.4",
+            "isPerpetual": true,
+            "minPriceTickSize": 0.01,
+            "minQuantityTickSize": 0.001
+        }
+    ]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getSpotMarketsTemplate = `
+Extract the following details for spot markets:
+- **baseDenom** (string, optional): Base denomination filter
+- **quoteDenom** (string, optional): Quote denomination filter
+- **marketStatus** (string, optional): Market status filter
+- **marketStatuses** (string[], optional): Multiple market status filter
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "baseDenom": "inj",
+    "quoteDenom": "usdt",
+    "marketStatus": "active",
+    "marketStatuses": ["active", "paused"]
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "markets": [
+        {
+            "marketId": "0x...",
+            "marketStatus": "active",
+            "ticker": "INJ/USDT",
+            "baseDenom": "inj",
+            "quoteDenom": "usdt",
+            "makerFeeRate": "0.001",
+            "takerFeeRate": "0.002",
+            "serviceProviderFee": "0.4",
+            "minPriceTickSize": 0.000001,
+            "minQuantityTickSize": 0.000001
+        }
+    ]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+
+export const getSubaccountsListTemplate = `
+Extract the following details for subaccounts list:
+- **address** (string): Account address
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "address": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "subaccounts": ["0x..."]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getSubaccountBalancesListTemplate = `
+Extract the following details for subaccount balances:
+- **subaccountId** (string): Subaccount ID
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "subaccountId": "0x..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "balances": [
+        {
+            "subaccountId": "0x...",
+            "accountAddress": "inj1...",
+            "denom": "inj",
+            "deposit": {
+                "totalBalance": "1000000",
+                "availableBalance": "900000"
+            }
+        }
+    ]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+
+export const getOrderbooksV2Template = `
+Extract the following details for orderbooks V2:
+- **marketIds** (string[]): List of market IDs
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "marketIds": ["0x..."]
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "orderbooks": [
+        {
+            "marketId": "0x...",
+            "orderbook": {
+                "sequence": "123",
+                "buys": [
+                    {
+                        "price": "25000.5",
+                        "quantity": "1.5",
+                        "timestamp": 1641859200
+                    }
+                ],
+                "sells": [
+                    {
+                        "price": "25100.5",
+                        "quantity": "0.5",
+                        "timestamp": 1641859200
+                    }
+                ]
+            }
+        }
+    ]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getTradingRewardsTemplate = `
+Extract the following details for trading rewards:
+- **address** (string): Account address
+- **epoch** (number): Reward epoch
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "address": "inj1...",
+    "epoch": 1
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "rewards": [
+        {
+            "accountAddress": "inj1...",
+            "rewards": [
+                {
+                    "amount": "1000000",
+                    "denom": "inj"
+                }
+            ],
+            "distributedAt": 1641859200
+        }
+    ]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getHistoricalRpnlTemplate = `
+Extract the following details for historical RPNL:
+- **account** (string): Account address
+- **resolution** (string): Time resolution for data points
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "account": "inj1...",
+    "resolution": "1d"
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "t": [1641859200, 1641945600],
+    "v": [1000.5, 1100.75]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getHistoricalVolumesTemplate = `
+Extract the following details for historical volumes:
+- **account** (string): Account address
+- **resolution** (string): Time resolution for data points
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "account": "inj1...",
+    "resolution": "1d"
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "t": [1641859200, 1641945600],
+    "v": [50000.5, 75000.25]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+
+export const getFundingPaymentsTemplate = `
+Extract the following details for funding payments:
+- **marketId** (string, optional): Market ID filter
+- **marketIds** (string[], optional): Multiple market IDs filter
+- **subaccountId** (string, optional): Subaccount ID filter
+- **pagination** (object, optional): Pagination options
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "marketId": "0x...",
+    "marketIds": ["0x..."],
+    "subaccountId": "0x...",
+    "pagination": {
+        "from": 1,
+        "to": 100,
+        "limit": 10
+    }
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "fundingPayments": [
+        {
+            "marketId": "0x...",
+            "subaccountId": "0x...",
+            "amount": "100.5",
+            "timestamp": 1641859200
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getPnlLeaderboardTemplate = `
+Extract the following details for PnL leaderboard:
+- **startDate** (string): Start date
+- **endDate** (string): End date
+- **limit** (number, optional): Number of results
+- **account** (string, optional): Account address filter
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "startDate": "2024-01-01",
+    "endDate": "2024-01-31",
+    "limit": 100,
+    "account": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "firstDate": "2024-01-01",
+    "lastDate": "2024-01-31",
+    "leaders": [
+        {
+            "account": "inj1...",
+            "pnl": 100000.5,
+            "volume": 1000000.0,
+            "rank": 1
+        }
+    ],
+    "accountRow": {
+        "account": "inj1...",
+        "pnl": 50000.25,
+        "volume": 500000.0,
+        "rank": 10
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getVolLeaderboardTemplate = `
+Extract the following details for volume leaderboard:
+- **startDate** (string): Start date
+- **endDate** (string): End date
+- **limit** (number, optional): Number of results
+- **account** (string, optional): Account address filter
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "startDate": "2024-01-01",
+    "endDate": "2024-01-31",
+    "limit": 100,
+    "account": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "firstDate": "2024-01-01",
+    "lastDate": "2024-01-31",
+    "leaders": [
+        {
+            "account": "inj1...",
+            "volume": 1000000.0,
+            "rank": 1
+        }
+    ],
+    "accountRow": {
+        "account": "inj1...",
+        "volume": 500000.0,
+        "rank": 10
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getPnlLeaderboardFixedResolutionTemplate = `
+Extract the following details for PnL leaderboard with fixed resolution:
+- **resolution** (string): Time resolution
+- **limit** (number, optional): Number of results
+- **account** (string, optional): Account address filter
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "resolution": "1d",
+    "limit": 100,
+    "account": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "firstDate": "2024-01-01",
+    "lastDate": "2024-01-31",
+    "leaders": [
+        {
+            "account": "inj1...",
+            "pnl": 100000.5,
+            "volume": 1000000.0,
+            "rank": 1
+        }
+    ],
+    "accountRow": {
+        "account": "inj1...",
+        "pnl": 50000.25,
+        "volume": 500000.0,
+        "rank": 10
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getVolLeaderboardFixedResolutionTemplate = `
+Extract the following details for volume leaderboard with fixed resolution:
+- **resolution** (string): Time resolution
+- **limit** (number, optional): Number of results
+- **account** (string, optional): Account address filter
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "resolution": "1d",
+    "limit": 100,
+    "account": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "firstDate": "2024-01-01",
+    "lastDate": "2024-01-31",
+    "leaders": [
+        {
+            "account": "inj1...",
+            "volume": 1000000.0,
+            "rank": 1
+        }
+    ],
+    "accountRow": {
+        "account": "inj1...",
+        "volume": 500000.0,
+        "rank": 10
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getAtomicSwapHistoryTemplate = `
+Extract the following details for atomic swap history:
+- **address** (string): Account address
+- **contractAddress** (string): Contract address
+- **pagination** (object, optional): Pagination options
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "address": "inj1...",
+    "contractAddress": "0x...",
+    "pagination": {
+        "from": 1,
+        "to": 100,
+        "limit": 10
+    }
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "swapHistory": [
+        {
+            "sender": "inj1...",
+            "route": "route_id",
+            "sourceCoin": {
+                "amount": "1000000",
+                "denom": "inj"
+            },
+            "destinationCoin": {
+                "amount": "900000",
+                "denom": "usdt"
+            },
+            "fees": [
+                {
+                    "amount": "1000",
+                    "denom": "inj"
+                }
+            ],
+            "contractAddress": "0x...",
+            "indexBySender": 1,
+            "indexBySenderContract": 1,
+            "txHash": "0x...",
+            "executedAt": 1641859200
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getIsOptedOutOfRewardsTemplate = `
+Extract the following details for rewards opt-out status:
+- **account** (string): Account address
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "account": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "isOptedOut": true
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getBinaryOptionsMarketsTemplate = `
+Extract the following details for binary options markets:
+- **marketStatus** (string, optional): Market status filter
+- **quoteDenom** (string, optional): Quote denomination filter
+- **pagination** (object, optional): Pagination options
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "marketStatus": "active",
+    "quoteDenom": "usdt",
+    "pagination": {
+        "from": 1,
+        "to": 100,
+        "limit": 10
+    }
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "markets": [
+        {
+            "marketId": "0x...",
+            "marketStatus": "active",
+            "ticker": "BTC>25000-240630",
+            "oracleSymbol": "BTC",
+            "oracleProvider": "band",
+            "oracleScaleFactor": 6,
+            "quoteDenom": "usdt",
+            "makerFeeRate": "0.001",
+            "takerFeeRate": "0.002",
+            "expirationTimestamp": 1719705600,
+            "settlementTimestamp": 1719792000,
+            "serviceProviderFee": "0.4",
+            "minPriceTickSize": 0.01,
+            "minQuantityTickSize": 0.001
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getBinaryOptionsMarketTemplate = `
+Extract the following details for binary options market lookup:
+- **marketId** (string): Market ID
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "marketId": "0x..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "market": {
+        "marketId": "0x...",
+        "marketStatus": "active",
+        "ticker": "BTC>25000-240630",
+        "oracleSymbol": "BTC",
+        "oracleProvider": "band",
+        "oracleScaleFactor": 6,
+        "quoteDenom": "usdt",
+        "makerFeeRate": "0.001",
+        "takerFeeRate": "0.002",
+        "expirationTimestamp": 1719705600,
+        "settlementTimestamp": 1719792000,
+        "serviceProviderFee": "0.4",
+        "minPriceTickSize": 0.01,
+        "minQuantityTickSize": 0.001
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getDerivativeOrderHistoryTemplate = `
+Extract the following details for derivative order history:
+- **subaccountId** (string, optional): Subaccount ID filter
+- **marketId** (string, optional): Market ID filter
+- **marketIds** (string[], optional): Multiple market IDs filter
+- **orderTypes** (string[], optional): Order types filter
+- **executionTypes** (string[], optional): Execution types filter
+- **direction** (string, optional): Order direction filter
+- **isConditional** (boolean, optional): Whether order is conditional
+- **state** (string, optional): Order state filter
+- **pagination** (object, optional): Pagination options
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "subaccountId": "0x...",
+    "marketId": "0x...",
+    "marketIds": ["0x..."],
+    "orderTypes": ["limit", "market"],
+    "executionTypes": ["limit", "market"],
+    "direction": "buy",
+    "isConditional": false,
+    "state": "booked",
+    "pagination": {
+        "from": 1,
+        "to": 100,
+        "limit": 10
+    }
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "orderHistory": [
+        {
+            "orderHash": "0x...",
+            "marketId": "0x...",
+            "isActive": true,
+            "subaccountId": "0x...",
+            "executionType": "limit",
+            "orderType": "buy",
+            "price": "25000.5",
+            "triggerPrice": "0",
+            "quantity": "1.5",
+            "filledQuantity": "0.5",
+            "state": "booked",
+            "createdAt": 1641859200,
+            "updatedAt": 1641859200,
+            "direction": "buy",
+            "isConditional": false,
+            "triggerAt": 0,
+            "margin": "1000"
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getPositionsListTemplate = `
+Extract the following details for positions list:
+- **marketId** (string, optional): Market ID filter
+- **marketIds** (string[], optional): Multiple market IDs filter
+- **subaccountId** (string, optional): Subaccount ID filter
+- **direction** (string, optional): Position direction filter
+- **pagination** (object, optional): Pagination options
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "marketId": "0x...",
+    "marketIds": ["0x..."],
+    "subaccountId": "0x...",
+    "direction": "long",
+    "pagination": {
+        "from": 1,
+        "to": 100,
+        "limit": 10
+    }
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "positions": [
+        {
+            "marketId": "0x...",
+            "subaccountId": "0x...",
+            "direction": "long",
+            "quantity": "1.5",
+            "entryPrice": "25000.5",
+            "margin": "1000",
+            "liquidationPrice": "24000.0",
+            "markPrice": "25100.0",
+            "ticker": "BTC/USDT"
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getDerivativeTradesTemplate = `
+Extract the following details for derivative trades:
+- **marketId** (string, optional): Market ID filter
+- **marketIds** (string[], optional): Multiple market IDs filter
+- **subaccountId** (string, optional): Subaccount ID filter
+- **executionSide** (string, optional): Execution side filter
+- **direction** (string, optional): Trade direction filter
+- **executionTypes** (string[], optional): Execution types filter
+- **pagination** (object, optional): Pagination options
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "marketId": "0x...",
+    "marketIds": ["0x..."],
+    "subaccountId": "0x...",
+    "executionSide": "taker",
+    "direction": "buy",
+    "executionTypes": ["market", "limit"],
+    "pagination": {
+        "from": 1,
+        "to": 100,
+        "limit": 10
+    }
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "trades": [
+        {
+            "orderHash": "0x...",
+            "subaccountId": "0x...",
+            "marketId": "0x...",
+            "tradeId": "trade_id",
+            "executedAt": 1641859200,
+            "tradeExecutionType": "market",
+            "executionSide": "taker",
+            "tradeDirection": "buy",
+            "executionPrice": "25000.5",
+            "executionQuantity": "1.5",
+            "executionMargin": "1000",
+            "fee": "25.0",
+            "feeRecipient": "inj1...",
+            "isLiquidation": false,
+            "payout": "37525.75"
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getDerivativeSubaccountOrdersListTemplate = `
+Extract the following details for derivative subaccount orders:
+- **subaccountId** (string): Subaccount ID
+- **marketId** (string, optional): Market ID filter
+- **pagination** (object, optional): Pagination options
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "subaccountId": "0x...",
+    "marketId": "0x...",
+    "pagination": {
+        "from": 1,
+        "to": 100,
+        "limit": 10
+    }
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "orders": [
+        {
+            "orderHash": "0x...",
+            "orderSide": "buy",
+            "marketId": "0x...",
+            "subaccountId": "0x...",
+            "isReduceOnly": false,
+            "margin": "1000",
+            "price": "25000.5",
+            "quantity": "1.5",
+            "unfilledQuantity": "0.5",
+            "triggerPrice": "0",
+            "feeRecipient": "inj1...",
+            "state": "booked",
+            "createdAt": 1641859200,
+            "updatedAt": 1641859200,
+            "orderNumber": 1,
+            "orderType": "limit",
+            "isConditional": false,
+            "triggerAt": 0,
+            "placedOrderHash": "0x...",
+            "executionType": "limit"
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getOrderbooksTemplate = `
+Extract the following details for orderbooks:
+- **marketIds** (string[]): Market IDs
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "marketIds": ["0x..."]
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "orderbooks": [
+        {
+            "marketId": "0x...",
+            "orderbook": {
+                "sequence": "123",
+                "buys": [
+                    {
+                        "price": "25000.5",
+                        "quantity": "1.5",
+                        "timestamp": 1641859200
+                    }
+                ],
+                "sells": [
+                    {
+                        "price": "25100.5",
+                        "quantity": "0.5",
+                        "timestamp": 1641859200
+                    }
+                ]
+            }
+        }
+    ]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgBatchCancelBinaryOptionsOrdersTemplate = `
+Extract the following details for batch canceling binary options orders:
+- **injectiveAddress** (string): Injective sender address
+- **orders** (array): List of orders to cancel containing:
+  - marketId (string)
+  - subaccountId (string)
+  - orderHash (string)
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "orders": [
+        {
+            "marketId": "0x...",
+            "subaccountId": "0x...",
+            "orderHash": "0x..."
+        }
+    ]
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgCancelBinaryOptionsOrderTemplate = `
+Extract the following details for canceling a binary options order:
+- **injectiveAddress** (string): Injective sender address
+- **marketId** (string): Market ID
+- **subaccountId** (string): Subaccount ID
+- **orderHash** (string): Order hash
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "marketId": "0x...",
+    "subaccountId": "0x...",
+    "orderHash": "0x..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgCreateBinaryOptionsLimitOrderTemplate = `
+Extract the following details for creating binary options limit order:
+- **injectiveAddress** (string): Injective sender address
+- **marketId** (string): Market ID
+- **subaccountId** (string): Subaccount ID
+- **feeRecipient** (string): Fee recipient address
+- **price** (string): Order price
+- **quantity** (string): Order quantity
+- **orderType** (string): Order type (BUY/SELL)
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "marketId": "0x...",
+    "subaccountId": "0x...",
+    "feeRecipient": "inj1...",
+    "price": "25000.5",
+    "quantity": "1.5",
+    "orderType": "BUY"
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "orderHash": "0x...",
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgLiquidatePositionTemplate = `
+Extract the following details for liquidating a position:
+- **injectiveAddress** (string): Injective sender address
+- **subaccountId** (string): Subaccount ID to liquidate
+- **marketId** (string): Market ID
+- **order** (object): Liquidation order details containing:
+  - marketId (string)
+  - orderType (string)
+  - price (string)
+  - quantity (string)
+  - margin (string)
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "subaccountId": "0x...",
+    "marketId": "0x...",
+    "order": {
+        "marketId": "0x...",
+        "orderType": "SELL",
+        "price": "24000.0",
+        "quantity": "1.5",
+        "margin": "1000"
+    }
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgReclaimLockedFundsTemplate = `
+Extract the following details for reclaiming locked funds:
+- **injectiveAddress** (string): Injective sender address
+- **lockedAccountPubKey** (string): Public key of the locked account
+- **lockedAccountSignature** (string): Signature from the locked account
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "lockedAccountPubKey": "0x...",
+    "lockedAccountSignature": "0x..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgSignDataTemplate = `
+Extract the following details for signing data:
+- **injectiveAddress** (string): Injective sender address
+- **data** (string): Data to sign
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "data": "0x..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "signature": "0x...",
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgCreateSpotLimitOrderTemplate = `
+Extract the following details for creating spot limit order:
+- **injectiveAddress** (string): Injective sender address
+- **marketId** (string): Market ID
+- **subaccountId** (string): Subaccount ID
+- **orderType** (string): Order type (BUY/SELL)
+- **price** (string): Order price
+- **quantity** (string): Order quantity
+- **feeRecipient** (string): Fee recipient address
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "marketId": "0x...",
+    "subaccountId": "0x...",
+    "orderType": "BUY",
+    "price": "25000.5",
+    "quantity": "1.5",
+    "feeRecipient": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "orderHash": "0x...",
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgCreateDerivativeLimitOrderTemplate = `
+Extract the following details for creating derivative limit order:
+- **injectiveAddress** (string): Injective sender address
+- **marketId** (string): Market ID
+- **subaccountId** (string): Subaccount ID
+- **orderType** (string): Order type (BUY/SELL)
+- **price** (string): Order price
+- **quantity** (string): Order quantity
+- **margin** (string): Order margin
+- **feeRecipient** (string): Fee recipient address
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "marketId": "0x...",
+    "subaccountId": "0x...",
+    "orderType": "BUY",
+    "price": "25000.5",
+    "quantity": "1.5",
+    "margin": "1000",
+    "feeRecipient": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "orderHash": "0x...",
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgBatchCancelSpotOrdersTemplate = `
+Extract the following details for batch canceling spot orders:
+- **injectiveAddress** (string): Injective sender address
+- **orders** (array): List of orders to cancel containing:
+  - marketId (string)
+  - subaccountId (string)
+  - orderHash (string)
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "orders": [
+        {
+            "marketId": "0x...",
+            "subaccountId": "0x...",
+            "orderHash": "0x..."
+        }
+    ]
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgBatchCancelDerivativeOrdersTemplate = `
+Extract the following details for batch canceling derivative orders:
+- **injectiveAddress** (string): Injective sender address
+- **orders** (array): List of orders to cancel containing:
+  - marketId (string)
+  - subaccountId (string)
+  - orderHash (string)
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "orders": [
+        {
+            "marketId": "0x...",
+            "subaccountId": "0x...",
+            "orderHash": "0x..."
+        }
+    ]
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgCancelSpotOrderTemplate = `
+Extract the following details for canceling a spot order:
+- **injectiveAddress** (string): Injective sender address
+- **marketId** (string): Market ID
+- **subaccountId** (string): Subaccount ID
+- **orderHash** (string): Order hash
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "marketId": "0x...",
+    "subaccountId": "0x...",
+    "orderHash": "0x..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgCancelDerivativeOrderTemplate = `
+Extract the following details for canceling a derivative order:
+- **injectiveAddress** (string): Injective sender address
+- **marketId** (string): Market ID
+- **subaccountId** (string): Subaccount ID
+- **orderHash** (string): Order hash
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "marketId": "0x...",
+    "subaccountId": "0x...",
+    "orderHash": "0x..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "success": true,
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getSpotSubaccountOrdersListTemplate = `
+Extract the following details for spot subaccount orders:
+- **subaccountId** (string): Subaccount ID
+- **marketId** (string, optional): Market ID filter
+- **pagination** (object, optional): Pagination options
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "subaccountId": "0x...",
+    "marketId": "0x...",
+    "pagination": {
+        "from": 1,
+        "to": 100,
+        "limit": 10
+    }
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "orders": [
+        {
+            "orderHash": "0x...",
+            "orderSide": "buy",
+            "marketId": "0x...",
+            "subaccountId": "0x...",
+            "price": "25000.5",
+            "quantity": "1.5",
+            "unfilledQuantity": "0.5",
+            "triggerPrice": "0",
+            "feeRecipient": "inj1...",
+            "state": "booked",
+            "createdAt": 1641859200,
+            "updatedAt": 1641859200
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getSpotSubaccountTradesListTemplate = `
+Extract the following details for spot subaccount trades:
+- **subaccountId** (string): Subaccount ID
+- **marketId** (string, optional): Market ID filter
+- **direction** (string, optional): Trade direction
+- **executionType** (string, optional): Execution type
+- **pagination** (object, optional): Pagination options
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "subaccountId": "0x...",
+    "marketId": "0x...",
+    "direction": "buy",
+    "executionType": "market",
+    "pagination": {
+        "from": 1,
+        "to": 100,
+        "limit": 10
+    }
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "trades": [
+        {
+            "orderHash": "0x...",
+            "subaccountId": "0x...",
+            "marketId": "0x...",
+            "tradeId": "trade_id",
+            "executedAt": 1641859200,
+            "executionSide": "taker",
+            "tradeExecutionType": "market",
+            "tradeDirection": "buy",
+            "executionPrice": "25000.5",
+            "executionQuantity": "1.5",
+            "fee": "25.0",
+            "feeRecipient": "inj1..."
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const msgCreateBinaryOptionsMarketOrderTemplate = `
+Extract the following details for creating binary options market order:
+- **injectiveAddress** (string): Injective sender address
+- **marketId** (string): Market ID
+- **subaccountId** (string): Subaccount ID
+- **feeRecipient** (string): Fee recipient address
+- **price** (string): Order price
+- **quantity** (string): Order quantity
+- **orderType** (string): Order type (BUY/SELL)
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "injectiveAddress": "inj1...",
+    "marketId": "0x...",
+    "subaccountId": "0x...",
+    "feeRecipient": "inj1...",
+    "price": "25000.5",
+    "quantity": "1.5",
+    "orderType": "BUY"
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "orderHash": "0x...",
+    "txHash": "0x..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getSpotOrderHistoryTemplate = `
+Extract the following details for spot order history:
+- **subaccountId** (string, optional): Subaccount ID filter
+- **marketId** (string, optional): Market ID filter
+- **marketIds** (string[], optional): Multiple market IDs filter
+- **orderTypes** (string[], optional): Order types filter
+- **executionTypes** (string[], optional): Execution types filter
+- **direction** (string, optional): Order direction filter
+- **isConditional** (boolean, optional): Whether order is conditional
+- **state** (string, optional): Order state filter
+- **pagination** (object, optional): Pagination options
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "subaccountId": "0x...",
+    "marketId": "0x...",
+    "marketIds": ["0x..."],
+    "orderTypes": ["limit", "market"],
+    "executionTypes": ["limit", "market"],
+    "direction": "buy",
+    "isConditional": false,
+    "state": "booked",
+    "pagination": {
+        "from": 1,
+        "to": 100,
+        "limit": 10
+    }
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "orderHistory": [
+        {
+            "orderHash": "0x...",
+            "marketId": "0x...",
+            "active": true,
+            "subaccountId": "0x...",
+            "executionType": "limit",
+            "orderType": "buy",
+            "price": "25000.5",
+            "triggerPrice": "0",
+            "quantity": "1.5",
+            "filledQuantity": "0.5",
+            "state": "booked",
+            "createdAt": 1641859200,
+            "updatedAt": 1641859200,
+            "direction": "buy"
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getSpotTradesTemplate = `
+Extract the following details for spot trades:
+- **marketId** (string, optional): Market ID filter
+- **marketIds** (string[], optional): Multiple market IDs filter
+- **subaccountId** (string, optional): Subaccount ID filter
+- **executionSide** (string, optional): Execution side filter
+- **direction** (string, optional): Trade direction filter
+- **executionTypes** (string[], optional): Execution types filter
+- **pagination** (object, optional): Pagination options
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "marketId": "0x...",
+    "marketIds": ["0x..."],
+    "subaccountId": "0x...",
+    "executionSide": "taker",
+    "direction": "buy",
+    "executionTypes": ["market", "limit"],
+    "pagination": {
+        "from": 1,
+        "to": 100,
+        "limit": 10
+    }
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "trades": [
+        {
+            "orderHash": "0x...",
+            "subaccountId": "0x...",
+            "marketId": "0x...",
+            "tradeId": "trade_id",
+            "executedAt": 1641859200,
+            "executionSide": "taker",
+            "tradeExecutionType": "market",
+            "tradeDirection": "buy",
+            "price": "25000.5",
+            "quantity": "1.5",
+            "fee": "25.0",
+            "feeRecipient": "inj1..."
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getAccountPortfolioBalancesTemplate = `
+Extract the following details for account portfolio balances:
+- **address** (string): Account address
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "address": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "balances": [
+        {
+            "denom": "inj",
+            "totalBalance": "1000000",
+            "availableBalance": "900000",
+            "lockedBalance": "100000"
+        }
+    ],
+    "subaccountBalances": [
+        {
+            "subaccountId": "0x...",
+            "denom": "inj",
+            "deposit": {
+                "totalBalance": "1000000",
+                "availableBalance": "900000"
+            }
+        }
+    ]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getRewardsTemplate = `
+Extract the following details for rewards:
+- **address** (string): Account address
+- **epoch** (number): Reward epoch
+
+Provide the request in the following JSON format:
+
+\`\`\`json
+{
+    "address": "inj1...",
+    "epoch": 1
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "rewards": [
+        {
+            "accountAddress": "inj1...",
+            "rewards": [
+                {
+                    "amount": "1000000",
+                    "denom": "inj"
+                }
+            ],
+            "distributedAt": 1641859200
+        }
+    ]
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
 `;

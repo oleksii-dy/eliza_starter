@@ -1,4 +1,4 @@
-import { createGenericAction } from "../../base";
+import { createGenericAction } from "./base";
 import * as TokenFactoryTemplates from "@injective/template/token-factory";
 import * as TokenFactoryExamples from "@injective/examples/token-factory";
 

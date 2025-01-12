@@ -1,1473 +1,990 @@
-// Mito Module Query Templates
+// Mito Module Templates
 
 export const getVaultTemplate = `
-### Get Vault Details
+Extract the following details for retrieving a specific vault:
+- **contractAddress** (string): Optional contract address
+- **slug** (string): Optional vault slug
 
-**Description**:
-This query retrieves the details of a specific vault within the Mito module. Vaults are specialized contracts or accounts that manage assets, participate in liquidity pools, or execute specific financial strategies. Understanding vault details is essential for monitoring asset management and strategy execution.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "vaultId": string   // Identifier of the vault (e.g., "vault123")
+    "contractAddress": "inj1...",
+    "slug": "vault-slug"
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "vaultId": "vault123"
+    "contractAddress": "inj1...",
+    "codeId": "1",
+    "vaultName": "Example Vault",
+    "marketId": "0x123...",
+    "currentTvl": 1000000,
+    "profits": {
+        "allTimeChange": 10.5,
+        "threeMonthsChange": 5.2,
+        "oneMonthChange": 2.1,
+        "oneDayChange": 0.5,
+        "oneWeekChange": 1.2,
+        "oneYearChange": 15.3,
+        "threeYearsChange": 45.6,
+        "sixMonthsChange": 8.4
+    },
+    "updatedAt": 1632150400,
+    "vaultType": "perpetual",
+    "lpTokenPrice": 1.05,
+    "subaccountInfo": {
+        "subaccountId": "0x123...",
+        "balancesList": [
+            {
+                "denom": "inj",
+                "totalBalance": "1000000000"
+            }
+        ]
+    },
+    "masterContractAddress": "inj1...",
+    "totalLpAmount": "1000000",
+    "slug": "vault-slug",
+    "createdAt": 1632150400,
+    "notionalValueCap": "10000000",
+    "tvlChanges": {
+        "allTimeChange": 20.5
+    },
+    "apy": 15.2,
+    "apy7D": 14.8,
+    "apy7DFq": 14.9,
+    "apyue": 15.0,
+    "apyV3": 15.1,
+    "registrationMode": "open"
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing vault details
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123500,
-    "txHash": "ABC123efghij...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgdkZXRhaWxzX3ZhcnVsdAA==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_vault\", \"attributes\": [{\"key\": \"vault_id\", \"value\": \"vault123\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 120000,
-    "gasUsed": 90000,
-    "timestamp": "2025-03-01T10:00:00Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const getVaultsTemplate = `
-### Get List of Vaults
+Extract the following details for retrieving vaults:
+- **limit** (number): Optional number of records
+- **codeId** (string): Optional code ID filter
+- **pageIndex** (number): Optional page index
 
-**Description**:
-This query fetches a list of all vaults within the Mito module, with optional filtering parameters. It is useful for monitoring the overall state of vaults, assessing asset distribution, and analyzing vault performance across different strategies or asset classes.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "filter": {
-        "status": string,               // (Optional) Filter by vault status (e.g., "active", "inactive")
-        "asset": string,                // (Optional) Filter by asset denomination (e.g., "inj")
-        "owner": string                 // (Optional) Filter by owner address
-    },
+    "limit": 10,
+    "codeId": "1",
+    "pageIndex": 0
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "vaults": [
+        {
+            "contractAddress": "inj1...",
+            "vaultName": "Example Vault",
+            "currentTvl": 1000000,
+            "lpTokenPrice": 1.05,
+            "apy": 15.2
+        }
+    ],
     "pagination": {
-        "limit": number,                // (Optional) Number of vaults to retrieve
-        "offset": number                // (Optional) Starting point for retrieval
+        "total": 100
     }
 }
 \`\`\`
 
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "status": "active",
-        "asset": "inj"
-    },
-    "pagination": {
-        "limit": 10,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing list of vaults
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123501,
-    "txHash": "DEF456klmnop...",
-    "codespace": "",
-    "code": 0,
-    "data": "W3sidmFydWxfaWQiOiAidmFydWx0MTIzIiwgInN0YXR1cyI6ICJhY3RpdmUiLCAiYXNzZXQiOiAiaW5qIn1d",
-    "rawLog": "[{\"events\": [{\"type\": \"get_vaults\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 150000,
-    "gasUsed": 110000,
-    "timestamp": "2025-03-02T11:10:20Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const getLpTokenPriceChartTemplate = `
-### Get LP Token Price Chart Data
+Extract the following details for LP token price chart:
+- **to** (string): Optional end timestamp
+- **from** (string): Optional start timestamp
+- **vaultAddress** (string): Vault address
 
-**Description**:
-This query retrieves the price chart data for Liquidity Provider (LP) tokens within the Mito module. LP tokens represent a user's share in a liquidity pool and their corresponding value over time. Analyzing price charts helps in understanding liquidity trends, token valuation, and overall market dynamics.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "lpTokenId": string,              // Identifier of the LP token (e.g., "lp123")
-    "chartOptions": {
-        "timeRange": string,           // Time range for the chart (e.g., "30d" for 30 days)
-        "interval": string             // Data interval (e.g., "1h", "1d")
-    }
+    "to": "1640995200",
+    "from": "1633360000",
+    "vaultAddress": "inj1..."
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "lpTokenId": "lp123",
-    "chartOptions": {
-        "timeRange": "30d",
-        "interval": "1d"
-    }
+    "priceSnapshots": [
+        {
+            "price": 1.05,
+            "updatedAt": 1633360000
+        }
+    ]
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing price chart points
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123502,
-    "txHash": "GHI789mnopqr...",
-    "codespace": "",
-    "code": 0,
-    "data": "W3siaWQiOiAxLCJwcmVpY2UiOiAxMDAwLjAwfSwgeyJpZCI6IDIsInByZWljZSI6IDEwMjAuMDB9XQ==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_lp_token_price_chart\", \"attributes\": [{\"key\": \"lp_token_id\", \"value\": \"lp123\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 200000,
-    "gasUsed": 160000,
-    "timestamp": "2025-03-03T12:20:30Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
 
 export const getTVLChartTemplate = `
-### Get Total Value Locked (TVL) Chart Data
+Extract the following details for TVL chart:
+- **to** (string): Optional end timestamp
+- **from** (string): Optional start timestamp
+- **vaultAddress** (string): Vault address
 
-**Description**:
-This query retrieves the Total Value Locked (TVL) chart data within the Mito module. TVL represents the total value of assets locked in the protocol's smart contracts, indicating the overall health and adoption of the platform. Analyzing TVL charts helps in assessing liquidity, user participation, and market confidence.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "chartOptions": {
-        "timeRange": string,           // Time range for the chart (e.g., "90d" for 90 days)
-        "interval": string             // Data interval (e.g., "1d", "7d")
-    }
+    "to": "1640995200",
+    "from": "1633360000",
+    "vaultAddress": "inj1..."
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "chartOptions": {
-        "timeRange": "90d",
-        "interval": "7d"
-    }
+    "priceSnapshots": [
+        {
+            "price": 1000000,
+            "updatedAt": 1633360000
+        }
+    ]
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing TVL chart points
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123503,
-    "txHash": "JKL012qrstuv...",
-    "codespace": "",
-    "code": 0,
-    "data": "W3sidGltZSI6ICIyMDIyLTAzLTAzVDEyOjAwOjAwWiIsICJ0dmwiOiAxMDAwMDAwfSwgeyJ0aW1lIjogIjIwMjItMDMtMDNUMTI6MDA6MDBaIiwgInR2bCI6IDEyMDAwMDB9XQ==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_tvl_chart\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 180000,
-    "gasUsed": 140000,
-    "timestamp": "2025-03-04T13:25:40Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
 export const getVaultsByHolderAddressTemplate = `
-### Get Vaults by Holder Address
+Extract the following details for vaults by holder:
+- **skip** (number): Optional skip count
+- **limit** (number): Optional number of records
+- **holderAddress** (string): Holder address
+- **vaultAddress** (string): Optional vault address
 
-**Description**:
-This query retrieves all vaults associated with a specific holder address within the Mito module. It is useful for monitoring an individual's or entity's asset management, participation in liquidity pools, and engagement with various financial strategies offered by the platform.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "holderAddress": string   // Address of the holder (e.g., "inj1holder123...")
+    "skip": 0,
+    "limit": 10,
+    "holderAddress": "inj1...",
+    "vaultAddress": "inj1..."
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "holderAddress": "inj1holder1234567890..."
+    "subscriptions": [
+        {
+            "vaultInfo": {
+                "contractAddress": "inj1...",
+                "vaultName": "Example Vault",
+                "currentTvl": 1000000
+            },
+            "lpAmount": "1000000",
+            "holderAddress": "inj1...",
+            "lpAmountPercentage": 0.1
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing list of vaults
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123504,
-    "txHash": "MNO345stuvwx...",
-    "codespace": "",
-    "code": 0,
-    "data": "WyJ2YXIxMjMiLCAidmFydWx0NDU2Il0=",
-    "rawLog": "[{\"events\": [{\"type\": \"get_vaults_by_holder_address\", \"attributes\": [{\"key\": \"holder_address\", \"value\": \"inj1holder1234567890...\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 170000,
-    "gasUsed": 130000,
-    "timestamp": "2025-03-05T14:30:50Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
 export const getLPHoldersTemplate = `
-### Get LP Token Holders
+Extract the following details for LP holders:
+- **skip** (number): Optional skip count
+- **limit** (number): Optional number of records
+- **vaultAddress** (string): Vault address
+- **stakingContractAddress** (string): Staking contract address
 
-**Description**:
-This query retrieves a list of holders for a specific Liquidity Provider (LP) token within the Mito module. LP token holders are users who have provided liquidity to pools and hold corresponding LP tokens representing their share. Analyzing LP holders helps in understanding liquidity distribution and user engagement.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "lpTokenId": string,              // Identifier of the LP token (e.g., "lp123")
-    "filter": {
-        "minHoldings": string,         // (Optional) Minimum amount of LP tokens held
-        "maxHoldings": string          // (Optional) Maximum amount of LP tokens held
-    },
+    "skip": 0,
+    "limit": 10,
+    "vaultAddress": "inj1...",
+    "stakingContractAddress": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "holders": [
+        {
+            "holderAddress": "inj1...",
+            "vaultAddress": "inj1...",
+            "amount": "1000000",
+            "updatedAt": 1633360000,
+            "lpAmountPercentage": 0.1,
+            "redemptionLockTime": "1640995200",
+            "stakedAmount": "500000"
+        }
+    ],
     "pagination": {
-        "limit": number,                // (Optional) Number of holders to retrieve
-        "offset": number                // (Optional) Starting point for retrieval
+        "total": 100
     }
 }
 \`\`\`
 
-**Example Request**:
-\`\`\`json
-{
-    "lpTokenId": "lp123",
-    "filter": {
-        "minHoldings": "100",
-        "maxHoldings": "1000"
-    },
-    "pagination": {
-        "limit": 50,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing list of LP holders
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123505,
-    "txHash": "PQR678uvwxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "WyJob2xkZXIxMjMiLCAiaG9sZGVyNDU2Il0=",
-    "rawLog": "[{\"events\": [{\"type\": \"get_lp_holders\", \"attributes\": [{\"key\": \"lp_token_id\", \"value\": \"lp123\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 160000,
-    "gasUsed": 120000,
-    "timestamp": "2025-03-06T15:35:00Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
 export const getHolderPortfolioTemplate = `
-### Get Holder Portfolio
+Extract the following details for holder portfolio:
+- **holderAddress** (string): Holder address
+- **stakingContractAddress** (string): Staking contract address
 
-**Description**:
-This query retrieves the portfolio details of a specific holder within the Mito module. The portfolio includes information about the assets held, their quantities, and their respective vaults or liquidity pools. Analyzing portfolio data helps in assessing the holder's asset distribution and investment strategies.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "holderAddress": string   // Address of the holder (e.g., "inj1holder123...")
+    "holderAddress": "inj1...",
+    "stakingContractAddress": "inj1..."
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "holderAddress": "inj1holder1234567890..."
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing portfolio details
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123506,
-    "txHash": "STU901vwxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "WyJhc3NldDEyMyIsICIxMDAwIiwgInZhcnVsdDEyMyJd",
-    "rawLog": "[{\"events\": [{\"type\": \"get_holder_portfolio\", \"attributes\": [{\"key\": \"holder_address\", \"value\": \"inj1holder1234567890...\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 190000,
-    "gasUsed": 140000,
-    "timestamp": "2025-03-07T16:40:10Z",
-    "events": []
-}
-\`\`\`
-`;
-export const getTransferHistoryTemplate = `
-### Get Transfer History
-
-**Description**:
-This query retrieves the transfer history based on provided parameters within the Mito module. Transfer history includes all token movements, deposits, withdrawals, and other asset transfers, providing a comprehensive overview of asset flows within the platform.
-
-**Request Format**:
-\`\`\`json
-{
-    "filter": {
-        "senderAddress": string,        // (Optional) Address of the sender
-        "recipientAddress": string,     // (Optional) Address of the recipient
-        "asset": string,                // (Optional) Denomination of the asset transferred
-        "dateRange": {
-            "start": string,             // (Optional) Start date in ISO8601 format
-            "end": string                // (Optional) End date in ISO8601 format
+    "totalValue": 1000000,
+    "pnl": 50000,
+    "totalValueChartList": [
+        {
+            "price": 1000000,
+            "updatedAt": 1633360000
         }
-    },
-    "pagination": {
-        "limit": number,                // (Optional) Number of transfer records to retrieve
-        "offset": number                // (Optional) Starting point for retrieval
-    }
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "senderAddress": "inj1sender123...",
-        "asset": "inj",
-        "dateRange": {
-            "start": "2025-01-01T00:00:00Z",
-            "end": "2025-03-01T00:00:00Z"
+    ],
+    "pnlChartList": [
+        {
+            "price": 50000,
+            "updatedAt": 1633360000
         }
-    },
-    "pagination": {
-        "limit": 20,
-        "offset": 0
-    }
+    ],
+    "updatedAt": 1633360000
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing transfer history records
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123508,
-    "txHash": "XYZ567mnopqr...",
-    "codespace": "",
-    "code": 0,
-    "data": "WyJzZW5kZXIxMjMiLCAicmVjaXBpZW50MTIzIiwgImluamEiLCAiMjAyNS0wMS0wMVQwMDowMDowMFoiXSwgeyJzZW5kZXIxMjMiLCAicmVjaXBpZW50NDU2IiwgImluamEiLCAiMjAyNS0wMi0wMVQwMDowMDowMFoiXQ==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_transfer_history\", \"attributes\": [{\"key\": \"sender_address\", \"value\": \"inj1sender123...\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 220000,
-    "gasUsed": 170000,
-    "timestamp": "2025-03-09T18:50:30Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
 export const getLeaderboardTemplate = `
-### Get Leaderboard for Epoch
+Extract the following details for leaderboard:
+- **epochId** (number): Optional epoch ID
 
-**Description**:
-This query retrieves the leaderboard for a specific epoch within the Mito module. The leaderboard showcases top-performing vaults, LP token holders, or other metrics based on predefined criteria. Analyzing leaderboard data helps in recognizing top contributors and incentivizing participation.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "epochId": string   // Identifier of the epoch (e.g., "epoch1")
+    "epochId": 1
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "epochId": "epoch1"
+    "entriesList": [
+        {
+            "address": "inj1...",
+            "pnl": 50000
+        }
+    ],
+    "snapshotBlock": "1000000",
+    "updatedAt": 1633360000,
+    "epochId": 1
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing leaderboard details
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123507,
-    "txHash": "UVW234xyzabc...",
-    "codespace": "",
-    "code": 0,
-    "data": "WyJ1c2VyMTIzIiwgInZhbHVsdDEyMyIsICIzMDAwIl0=",
-    "rawLog": "[{\"events\": [{\"type\": \"get_leaderboard\", \"attributes\": [{\"key\": \"epoch_id\", \"value\": \"epoch1\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 210000,
-    "gasUsed": 160000,
-    "timestamp": "2025-03-08T17:45:20Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
 export const getLeaderboardEpochsTemplate = `
-### Get Leaderboard Epochs
+Extract the following details for leaderboard epochs:
+- **limit** (number): Optional number of records
+- **toEpochId** (number): Optional end epoch ID
+- **fromEpochId** (number): Optional start epoch ID
 
-**Description**:
-This query retrieves the epochs associated with leaderboards within the Mito module. Epochs are defined time periods during which specific activities, such as staking or trading, are measured and ranked. Understanding epoch-based leaderboards helps in tracking performance over time and recognizing consistent top performers.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "filter": {
-        "startEpoch": number,           // (Optional) Starting epoch number
-        "endEpoch": number              // (Optional) Ending epoch number
-    },
+    "limit": 10,
+    "toEpochId": 10,
+    "fromEpochId": 1
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "epochs": [
+        {
+            "epochId": 1,
+            "startAt": 1633360000,
+            "endAt": 1640995200,
+            "isLive": true
+        }
+    ],
     "pagination": {
-        "limit": number,                // (Optional) Number of epochs to retrieve
-        "offset": number                // (Optional) Starting point for retrieval
+        "total": 10
     }
 }
 \`\`\`
 
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "startEpoch": 1,
-        "endEpoch": 10
-    },
-    "pagination": {
-        "limit": 5,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing leaderboard epochs
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123509,
-    "txHash": "ABC890qrstuv...",
-    "codespace": "",
-    "code": 0,
-    "data": "W3siZXBvaCI6IDEsICJ0ZXJtIjogIjEiLCAibGVhZGVyYm9hcmQiOiAxMDB9LCB7ImVwb2giOiAyLCAidGVybSI6ICIyIiwgImxlYWRlcmJvYXJkIjogMjAwfV0=",
-    "rawLog": "[{\"events\": [{\"type\": \"get_leaderboard_epochs\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 140000,
-    "gasUsed": 100000,
-    "timestamp": "2025-03-10T19:55:40Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
+export const getTransferHistoryTemplate = `
+Extract the following details for transfer history:
+- **vault** (string): Optional vault address
+- **account** (string): Optional account address
+- **limit** (number): Optional number of records
+- **toNumber** (number): Optional end number
+- **fromNumber** (number): Optional start number
+
+Request format:
+
+\`\`\`json
+{
+    "vault": "inj1...",
+    "account": "inj1...",
+    "limit": 10,
+    "toNumber": 100,
+    "fromNumber": 1
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "transfers": [
+        {
+            "lpAmount": "1000000",
+            "coins": [
+                {
+                    "denom": "inj",
+                    "amount": "1000000"
+                }
+            ],
+            "usdValue": "1000000",
+            "isDeposit": true,
+            "executedAt": 1633360000,
+            "account": "inj1...",
+            "vault": "inj1...",
+            "txHash": "0x...",
+            "tidByVault": 1,
+            "tidByAccount": 1
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
 export const getStakingPoolsTemplate = `
-### Get Staking Pools
+Extract the following details for staking pools:
+- **staker** (string): Optional staker address
+- **stakingContractAddress** (string): Staking contract address
 
-**Description**:
-This query retrieves information about staking pools within the Mito module. Staking pools are groups of assets delegated by multiple users to support validators, enhancing network security and earning staking rewards. Analyzing staking pools helps in understanding liquidity distribution, pool performance, and user participation.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "filter": {
-        "poolId": string,               // (Optional) Identifier of the staking pool
-        "validatorAddress": string      // (Optional) Address of the validator associated with the pool
-    },
+    "staker": "inj1...",
+    "stakingContractAddress": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "pools": [
+        {
+            "vaultName": "Example Vault",
+            "vaultAddress": "inj1...",
+            "stakeDenom": "inj",
+            "gauges": [
+                {
+                    "id": "1",
+                    "owner": "inj1...",
+                    "startTimestamp": 1633360000,
+                    "endTimestamp": 1640995200,
+                    "rewardTokens": [
+                        {
+                            "denom": "inj",
+                            "amount": "1000000"
+                        }
+                    ],
+                    "lastDistribution": 1633360000,
+                    "status": "active"
+                }
+            ],
+            "apr": 15.2,
+            "totalLiquidity": 1000000,
+            "stakingAddress": "inj1...",
+            "aprBreakdown": {
+                "inj": 15.2
+            }
+        }
+    ],
     "pagination": {
-        "limit": number,                // (Optional) Number of staking pools to retrieve
-        "offset": number                // (Optional) Starting point for retrieval
+        "total": 10
     }
 }
 \`\`\`
 
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "validatorAddress": "inj1validator..."
-    },
-    "pagination": {
-        "limit": 10,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing staking pool details
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123510,
-    "txHash": "DEF123uvwxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "W3sicG9vbElkIjogIjEwMjMiLCAidmFsaWRhdG9yIjogImluamF2YWxpZGF0b3IxMjMiLCAiYW1vdW50IjogIjUwMDAwIn0seyJwb29sSWQiOiAiNDU2NyIsICJ2YWxpZGF0b3IiOiAiSW5qVmFsaWRhdG9yNDU2NyIsICJhbW91bnQiOiAiNTAwMDAifV0=",
-    "rawLog": "[{\"events\": [{\"type\": \"get_staking_pools\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 160000,
-    "gasUsed": 120000,
-    "timestamp": "2025-03-11T20:00:50Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
 export const getStakingHistoryTemplate = `
-### Get Staking History
+Extract the following details for staking history:
+- **staker** (string): Optional staker address
+- **toNumber** (number): Optional end number
+- **limit** (number): Optional number of records
+- **fromNumber** (number): Optional start number
 
-**Description**:
-This query retrieves the staking history based on provided parameters within the Mito module. Staking history includes all staking-related activities such as delegations, redelegations, and undelegations, offering a comprehensive view of asset management and network participation over time.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "filter": {
-        "delegatorAddress": string,        // (Optional) Address of the delegator
-        "validatorAddress": string,        // (Optional) Address of the validator
-        "action": string,                  // (Optional) Type of action (e.g., "delegate", "undelegate")
-        "dateRange": {
-            "start": string,                // (Optional) Start date in ISO8601 format
-            "end": string                   // (Optional) End date in ISO8601 format
+    "staker": "inj1...",
+    "toNumber": 100,
+    "limit": 10,
+    "fromNumber": 1
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "activities": [
+        {
+            "action": "stake",
+            "txHash": "0x...",
+            "staker": "inj1...",
+            "vaultAddress": "inj1...",
+            "numberByAccount": 1,
+            "timestamp": 1633360000,
+            "rewardedTokens": [
+                {
+                    "denom": "inj",
+                    "amount": "1000000"
+                }
+            ],
+            "stakeAmount": {
+                "denom": "inj",
+                "amount": "1000000"
+            }
         }
-    },
+    ],
     "pagination": {
-        "limit": number,                    // (Optional) Number of history records to retrieve
-        "offset": number                    // (Optional) Starting point for retrieval
+        "total": 100
     }
 }
 \`\`\`
 
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "delegatorAddress": "inj1delegator...",
-        "action": "delegate",
-        "dateRange": {
-            "start": "2025-01-01T00:00:00Z",
-            "end": "2025-03-01T00:00:00Z"
-        }
-    },
-    "pagination": {
-        "limit": 25,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing staking history records
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123511,
-    "txHash": "GHI456mnopqr...",
-    "codespace": "",
-    "code": 0,
-    "data": "WyJkZWxlZ2F0aW9uMTIzIiwgInVubmRlZ2F0aW9uNDU2Il0=",
-    "rawLog": "[{\"events\": [{\"type\": \"get_staking_history\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 200000,
-    "gasUsed": 150000,
-    "timestamp": "2025-03-12T21:05:00Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
 export const getStakingRewardsByAccountTemplate = `
-### Get Staking Rewards by Account
+Extract the following details for staking rewards:
+- **staker** (string): Staker address
+- **stakingContractAddress** (string): Staking contract address
 
-**Description**:
-This query retrieves staking rewards for a specific account within the Mito module. Staking rewards are incentives given to delegators and validators for their participation in securing the network. Understanding staking rewards helps users track their earnings and optimize their staking strategies.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "accountAddress": string   // Address of the account (e.g., "inj1account123...")
+    "staker": "inj1...",
+    "stakingContractAddress": "inj1..."
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "accountAddress": "inj1account1234567890..."
+    "rewards": [
+        {
+            "apr": 15.2,
+            "vaultName": "Example Vault",
+            "vaultAddress": "inj1...",
+            "lockTimestamp": 1633360000,
+            "claimableRewards": [
+                {
+                    "denom": "inj",
+                    "amount": "1000000"
+                }
+            ],
+            "stakedAmount": {
+                "denom": "inj",
+                "amount": "1000000"
+            },
+            "lockedAmount": {
+                "denom": "inj",
+                "amount": "1000000"
+            }
+        }
+    ],
+    "pagination": {
+        "total": 10
+    }
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing staking rewards details
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123512,
-    "txHash": "JKL789qrstuv...",
-    "codespace": "",
-    "code": 0,
-    "data": "WyJ3ZWFyZDEyMyIsICJ3ZWFyZDU0NiJd",
-    "rawLog": "[{\"events\": [{\"type\": \"get_staking_rewards_by_account\", \"attributes\": [{\"key\": \"account_address\", \"value\": \"inj1account1234567890...\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 180000,
-    "gasUsed": 140000,
-    "timestamp": "2025-03-13T22:10:10Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
 export const getMissionsTemplate = `
-### Get Missions
+Extract the following details for retrieving missions:
+- **accountAddress** (string): Account address
 
-**Description**:
-This query retrieves a list of missions within the Mito module based on provided parameters. Missions represent specific tasks or objectives that users can complete to earn rewards or recognition. Analyzing missions helps in understanding user engagement, task distribution, and reward mechanisms.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "filter": {
-        "missionType": string,          // (Optional) Type of mission (e.g., "staking", "trading")
-        "status": string,               // (Optional) Status of the mission (e.g., "active", "completed")
-        "dateRange": {
-            "start": string,             // (Optional) Start date in ISO8601 format
-            "end": string                // (Optional) End date in ISO8601 format
+    "accountAddress": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "missions": [
+        {
+            "id": "mission1",
+            "points": "100",
+            "completed": true,
+            "accruedPoints": "50",
+            "updatedAt": 1633360000,
+            "progress": 0.5,
+            "expected": 100
         }
-    },
-    "pagination": {
-        "limit": number,                  // (Optional) Number of missions to retrieve
-        "offset": number                  // (Optional) Starting point for retrieval
-    }
+    ]
 }
 \`\`\`
 
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "missionType": "staking",
-        "status": "active",
-        "dateRange": {
-            "start": "2025-01-01T00:00:00Z",
-            "end": "2025-03-01T00:00:00Z"
-        }
-    },
-    "pagination": {
-        "limit": 15,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing list of missions
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123513,
-    "txHash": "NOP012uvwxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "WyJtaXNzaW9uMTIzIiwgIm1pc3Npb240NTYiXQ==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_missions\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 160000,
-    "gasUsed": 120000,
-    "timestamp": "2025-03-14T23:15:20Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
 export const getMissionLeaderboardTemplate = `
-### Get Mission Leaderboard
+Extract the following details for mission leaderboard:
+- **userAddress** (string): Optional user address
 
-**Description**:
-This query retrieves the mission leaderboard based on the user's address within the Mito module. The leaderboard ranks users based on their mission completions, achievements, or contributions. Analyzing the leaderboard helps in fostering competition, recognizing top performers, and incentivizing participation.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "userAddress": string,              // Address of the user (e.g., "inj1user123...")
-    "epochId": string                   // (Optional) Identifier of the epoch (e.g., "epoch1")
+    "userAddress": "inj1..."
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "userAddress": "inj1user1234567890...",
-    "epochId": "epoch1"
+    "entries": [
+        {
+            "address": "inj1...",
+            "accruedPoints": "100"
+        }
+    ],
+    "updatedAt": 1633360000,
+    "rank": "1"
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                       // Optional: Base64 encoded data containing leaderboard details
-    "rawLog": string,
-    "logs": [],                           // Optional
-    "info": string,                       // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                          // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123514,
-    "txHash": "QRS345tuvwxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "WyJ1c2VyMTIzIiwgIjEwMCIsICI1MCJd",
-    "rawLog": "[{\"events\": [{\"type\": \"get_mission_leaderboard\", \"attributes\": [{\"key\": \"user_address\", \"value\": \"inj1user1234567890...\"}, {\"key\": \"epoch_id\", \"value\": \"epoch1\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 190000,
-    "gasUsed": 140000,
-    "timestamp": "2025-03-15T00:20:30Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
 export const getIDOTemplate = `
-### Get Initial DEX Offering (IDO) Details
+Extract the following details for IDO information:
+- **contractAddress** (string): Contract address
+- **accountAddress** (string): Optional account address
 
-**Description**:
-This query retrieves the details of a specific Initial DEX Offering (IDO) within the Mito module. IDOs are fundraising events where projects launch their tokens to the public through decentralized exchanges. Understanding IDO details is crucial for participants to make informed investment decisions and for tracking project developments.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "idoId": string   // Identifier of the IDO (e.g., "ido123")
+    "contractAddress": "inj1...",
+    "accountAddress": "inj1..."
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "idoId": "ido123"
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                       // Optional: Base64 encoded data containing IDO details
-    "rawLog": string,
-    "logs": [],                           // Optional
-    "info": string,                       // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                          // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123515,
-    "txHash": "TUV678wxyzab...",
-    "codespace": "",
-    "code": 0,
-    "data": "CgdpZG8xMjMA",
-    "rawLog": "[{\"events\": [{\"type\": \"get_ido\", \"attributes\": [{\"key\": \"ido_id\", \"value\": \"ido123\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 200000,
-    "gasUsed": 150000,
-    "timestamp": "2025-03-16T01:25:40Z",
-    "events": []
-}
-\`\`\`
-`;
-export const getIDOsTemplate = `
-### Get List of Initial DEX Offerings (IDOs)
-
-**Description**:
-This query fetches a list of all Initial DEX Offerings (IDOs) within the Mito module, with optional filtering parameters. It is useful for monitoring ongoing and past IDOs, assessing project participation, and analyzing fundraising trends within the ecosystem.
-
-**Request Format**:
-\`\`\`json
-{
-    "filter": {
-        "status": string,               // (Optional) Status of the IDO (e.g., "active", "completed")
-        "projectName": string,          // (Optional) Name of the project conducting the IDO
-        "startDate": string,            // (Optional) Start date in ISO8601 format
-        "endDate": string               // (Optional) End date in ISO8601 format
-    },
-    "pagination": {
-        "limit": number,                // (Optional) Number of IDOs to retrieve
-        "offset": number                // (Optional) Starting point for retrieval
-    }
-}
-\`\`\`
-
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
+    "ido": {
+        "startTime": 1633360000,
+        "endTime": 1640995200,
+        "owner": "inj1...",
         "status": "active",
-        "projectName": "ProjectX"
-    },
-    "pagination": {
-        "limit": 10,
-        "offset": 0
+        "tokenInfo": {
+            "denom": "inj",
+            "supply": "1000000",
+            "symbol": "INJ",
+            "decimal": 18,
+            "logoUrl": "https://example.com/logo.png"
+        },
+        "capPerAddress": "1000000",
+        "contractAddress": "inj1...",
+        "subscribedAmount": "500000",
+        "projectTokenAmount": "1000000",
+        "targetAmountInQuoteDenom": "1000000",
+        "secondBeforeStartToSetQuotePrice": 3600,
+        "targetAmountInUsd": "1000000",
+        "tokenPrice": 1.0,
+        "isAccountWhiteListed": true,
+        "isLaunchWithVault": true,
+        "isVestingScheduleEnabled": true,
+        "name": "Example IDO",
+        "progress": [
+            {
+                "status": "active",
+                "timestamp": 1633360000
+            }
+        ],
+        "quoteDenom": "inj",
+        "stakeToSubscription": [
+            {
+                "stakedAmount": "1000000",
+                "subscribableAmount": "500000"
+            }
+        ],
+        "useWhitelist": true,
+        "marketId": "0x...",
+        "vaultAddress": "inj1..."
     }
 }
 \`\`\`
 
-**Response Format**:
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getIDOsTemplate = `
+Extract the following details for retrieving IDOs:
+- **status** (string): Optional status filter
+- **limit** (number): Optional number of records
+- **toNumber** (number): Optional end number
+- **accountAddress** (string): Optional account address
+- **ownerAddress** (string): Optional owner address
+
+Request format:
+
 \`\`\`json
 {
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing list of IDOs
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
+    "status": "active",
+    "limit": 10,
+    "toNumber": 100,
+    "accountAddress": "inj1...",
+    "ownerAddress": "inj1..."
 }
 \`\`\`
 
-**Example Response**:
+Response format:
+
 \`\`\`json
 {
-    "height": 123516,
-    "txHash": "XYZ901abcdefghijkl...",
-    "codespace": "",
-    "code": 0,
-    "data": "W3siaWRvSWQiOiAiaWRvMTIzIiwgInN0YXR1cyI6ICJhY3RpdmUiLCAicHJvamVjdE5hbWUiOiAiUHJvamVjdFh9XQ==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_idos\", \"attributes\": []}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 210000,
-    "gasUsed": 160000,
-    "timestamp": "2025-03-17T02:30:50Z",
-    "events": []
+    "idos": [
+        {
+            "startTime": 1633360000,
+            "endTime": 1640995200,
+            "owner": "inj1...",
+            "status": "active",
+            "contractAddress": "inj1...",
+            "name": "Example IDO"
+        }
+    ],
+    "pagination": {
+        "total": 100
+    }
 }
 \`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
 export const getIDOSubscribersTemplate = `
-### Get IDO Subscribers
+Extract the following details for IDO subscribers:
+- **skip** (number): Optional skip count
+- **limit** (number): Optional number of records
+- **sortBy** (string): Optional sort field
+- **contractAddress** (string): Contract address
 
-**Description**:
-This query retrieves the list of subscribers for a specific Initial DEX Offering (IDO) within the Mito module. Subscribers are users who have committed funds or shown interest in participating in the IDO. Analyzing subscriber data helps in understanding investor interest, distribution of participation, and the overall success of the IDO.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "idoId": string,                   // Identifier of the IDO (e.g., "ido123")
-    "filter": {
-        "minContribution": string,     // (Optional) Minimum contribution amount
-        "maxContribution": string      // (Optional) Maximum contribution amount
-    },
+    "skip": 0,
+    "limit": 10,
+    "sortBy": "subscribedAmount",
+    "contractAddress": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "marketId": "0x...",
+    "quoteDenom": "inj",
+    "subscribers": [
+        {
+            "address": "inj1...",
+            "subscribedCoin": {
+                "denom": "inj",
+                "amount": "1000000"
+            },
+            "lastSubscribeTime": 1633360000,
+            "estimateTokenReceived": {
+                "denom": "token",
+                "amount": "500000"
+            },
+            "createdAt": 1633360000
+        }
+    ],
     "pagination": {
-        "limit": number,                // (Optional) Number of subscribers to retrieve
-        "offset": number                // (Optional) Starting point for retrieval
+        "total": 100
+    },
+    "tokenInfo": {
+        "denom": "inj",
+        "supply": "1000000",
+        "symbol": "INJ",
+        "decimal": 18,
+        "logoUrl": "https://example.com/logo.png"
     }
 }
 \`\`\`
 
-**Example Request**:
-\`\`\`json
-{
-    "idoId": "ido123",
-    "filter": {
-        "minContribution": "100",
-        "maxContribution": "1000"
-    },
-    "pagination": {
-        "limit": 20,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                   // Optional: Base64 encoded data containing list of subscribers
-    "rawLog": string,
-    "logs": [],                       // Optional
-    "info": string,                   // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                      // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123517,
-    "txHash": "STU234abcdefgh...",
-    "codespace": "",
-    "code": 0,
-    "data": "WyJzdWJzY3JpYmVyMTIzIiwgInN1YnNjcmliZXI0NTYiXQ==",
-    "rawLog": "[{\"events\": [{\"type\": \"get_ido_subscribers\", \"attributes\": [{\"key\": \"ido_id\", \"value\": \"ido123\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 180000,
-    "gasUsed": 140000,
-    "timestamp": "2025-03-18T03:35:00Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
 export const getIDOSubscriptionTemplate = `
-### Get IDO Subscription Details
+Extract the following details for IDO subscription:
+- **contractAddress** (string): Contract address
+- **accountAddress** (string): Account address
 
-**Description**:
-This query retrieves the subscription details for a specific Initial DEX Offering (IDO) within the Mito module. Subscription details include information about the user's participation, allocated tokens, and contribution amounts. Analyzing subscription data helps users track their investments and understand their stake in the IDO.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "idoId": string,                   // Identifier of the IDO (e.g., "ido123")
-    "userAddress": string              // Address of the user (e.g., "inj1user123...")
+    "contractAddress": "inj1...",
+    "accountAddress": "inj1..."
 }
 \`\`\`
 
-**Example Request**:
+Response format:
+
 \`\`\`json
 {
-    "idoId": "ido123",
-    "userAddress": "inj1user1234567890..."
+    "subscription": {
+        "maxSubscriptionCoin": {
+            "denom": "inj",
+            "amount": "1000000"
+        },
+        "committedAmount": "500000",
+        "price": 1.0,
+        "claimableCoins": [
+            {
+                "denom": "token",
+                "amount": "500000"
+            }
+        ],
+        "rewardClaimed": false,
+        "tokenInfo": {
+            "denom": "inj",
+            "supply": "1000000",
+            "symbol": "INJ",
+            "decimal": 18,
+            "logoUrl": "https://example.com/logo.png"
+        },
+        "quoteDenom": "inj",
+        "updatedAt": 1633360000,
+        "stakedAmount": "1000000",
+        "marketId": "0x..."
+    }
 }
 \`\`\`
 
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                       // Optional: Base64 encoded data containing subscription details
-    "rawLog": string,
-    "logs": [],                           // Optional
-    "info": string,                       // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                          // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123518,
-    "txHash": "UVW567mnopqr...",
-    "codespace": "",
-    "code": 0,
-    "data": "WyJ1c2VyMTIzIiwgIjEwMCIsICIxMDAwIl0=",
-    "rawLog": "[{\"events\": [{\"type\": \"get_ido_subscription\", \"attributes\": [{\"key\": \"ido_id\", \"value\": \"ido123\"}, {\"key\": \"user_address\", \"value\": \"inj1user1234567890...\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 190000,
-    "gasUsed": 150000,
-    "timestamp": "2025-03-19T04:40:10Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
 export const getIDOActivitiesTemplate = `
-### Get IDO Activities
+Extract the following details for IDO activities:
+- **contractAddress** (string): Optional contract address
+- **accountAddress** (string): Optional account address
+- **limit** (number): Optional number of records
+- **toNumber** (string): Optional end number
 
-**Description**:
-This query retrieves activities related to a specific Initial DEX Offering (IDO) within the Mito module. Activities include token distributions, milestone completions, and other significant events that occur during the lifecycle of an IDO. Analyzing IDO activities helps in tracking project progress and ensuring transparency.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "idoId": string,                   // Identifier of the IDO (e.g., "ido123")
-    "filter": {
-        "activityType": string,        // (Optional) Type of activity (e.g., "distribution", "milestone")
-        "dateRange": {
-            "start": string,            // (Optional) Start date in ISO8601 format
-            "end": string               // (Optional) End date in ISO8601 format
+    "contractAddress": "inj1...",
+    "accountAddress": "inj1...",
+    "limit": 10,
+    "toNumber": "100"
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "activities": [
+        {
+            "address": "inj1...",
+            "subscribedCoin": {
+                "denom": "inj",
+                "amount": "1000000"
+            },
+            "usdValue": 1000000,
+            "timestamp": 1633360000,
+            "txHash": "0x..."
         }
-    },
+    ],
     "pagination": {
-        "limit": number,                // (Optional) Number of activities to retrieve
-        "offset": number                // (Optional) Starting point for retrieval
+        "total": 100
     }
 }
 \`\`\`
 
-**Example Request**:
-\`\`\`json
-{
-    "idoId": "ido123",
-    "filter": {
-        "activityType": "distribution",
-        "dateRange": {
-            "start": "2025-01-15T00:00:00Z",
-            "end": "2025-03-15T00:00:00Z"
-        }
-    },
-    "pagination": {
-        "limit": 10,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                       // Optional: Base64 encoded data containing IDO activities
-    "rawLog": string,
-    "logs": [],                           // Optional
-    "info": string,                       // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                          // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123519,
-    "txHash": "YZA678mnopqr...",
-    "codespace": "",
-    "code": 0,
-    "data": "W3siYWN0aXZpdHlUeXBlIjogImRpc3RyYnV0aW9uIiwgImRhdGUiOiAiMjAyNS0wMS0xNVQwMDowMDowMFoiLCAiZGVzY3JpcHRpb24iOiAiQ2Rpc3RyYnV0aW9uIG9mIHRva2VuIDEyMy4ifV0=",
-    "rawLog": "[{\"events\": [{\"type\": \"get_ido_activities\", \"attributes\": [{\"key\": \"ido_id\", \"value\": \"ido123\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 200000,
-    "gasUsed": 160000,
-    "timestamp": "2025-03-20T05:45:20Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
 export const getIDOWhitelistTemplate = `
-### Get IDO Whitelist
+Extract the following details for IDO whitelist:
+- **skip** (number): Optional skip count
+- **limit** (number): Optional number of records
+- **idoAddress** (string): IDO address
 
-**Description**:
-This query retrieves the whitelist for a specific Initial DEX Offering (IDO) within the Mito module. The whitelist contains addresses of users who are authorized to participate in the IDO, ensuring controlled and fair distribution of tokens. Analyzing the whitelist helps in managing participation and preventing unauthorized access.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "idoId": string,                   // Identifier of the IDO (e.g., "ido123")
-    "filter": {
-        "status": string                // (Optional) Status of whitelist entries (e.g., "active", "inactive")
-    },
+    "skip": 0,
+    "limit": 10,
+    "idoAddress": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "idoAddress": "inj1...",
+    "accounts": [
+        {
+            "accountAddress": "inj1...",
+            "updatedAt": 1633360000,
+            "weight": "1.0"
+        }
+    ],
     "pagination": {
-        "limit": number,                // (Optional) Number of whitelist entries to retrieve
-        "offset": number                // (Optional) Starting point for retrieval
+        "total": 100
     }
 }
 \`\`\`
 
-**Example Request**:
-\`\`\`json
-{
-    "idoId": "ido123",
-    "filter": {
-        "status": "active"
-    },
-    "pagination": {
-        "limit": 50,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                       // Optional: Base64 encoded data containing whitelist entries
-    "rawLog": string,
-    "logs": [],                           // Optional
-    "info": string,                       // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                          // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123520,
-    "txHash": "BCD789uvwxyz...",
-    "codespace": "",
-    "code": 0,
-    "data": "WyJhZGRyZXNzMTIzIiwgImFkbWluIl0=",
-    "rawLog": "[{\"events\": [{\"type\": \"get_ido_whitelist\", \"attributes\": [{\"key\": \"ido_id\", \"value\": \"ido123\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 170000,
-    "gasUsed": 130000,
-    "timestamp": "2025-03-21T06:50:30Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;
+
 export const getClaimReferencesTemplate = `
-### Get Claim References
+Extract the following details for claim references:
+- **skip** (number): Optional skip count
+- **limit** (number): Optional number of records
+- **idoAddress** (string): IDO address
+- **accountAddress** (string): Account address
 
-**Description**:
-This query retrieves claim references based on provided parameters within the Mito module. Claim references are records that link specific actions, rewards, or events to user accounts, enabling users to claim their entitlements. Analyzing claim references helps in managing user rewards and ensuring accurate distribution.
+Request format:
 
-**Request Format**:
 \`\`\`json
 {
-    "filter": {
-        "userAddress": string,           // (Optional) Address of the user
-        "claimType": string,             // (Optional) Type of claim (e.g., "reward", "bonus")
-        "status": string,                // (Optional) Status of the claim (e.g., "pending", "completed")
-        "dateRange": {
-            "start": string,              // (Optional) Start date in ISO8601 format
-            "end": string                 // (Optional) End date in ISO8601 format
+    "skip": 0,
+    "limit": 10,
+    "idoAddress": "inj1...",
+    "accountAddress": "inj1..."
+}
+\`\`\`
+
+Response format:
+
+\`\`\`json
+{
+    "claimReferences": [
+        {
+            "denom": "inj",
+            "updatedAt": 1633360000,
+            "claimedAmount": "500000",
+            "claimableAmount": "1000000",
+            "accountAddress": "inj1...",
+            "cwContractAddress": "inj1...",
+            "idoContractAddress": "inj1...",
+            "startVestingTime": 1633360000,
+            "vestingDurationSeconds": 2592000
         }
-    },
+    ],
     "pagination": {
-        "limit": number,                  // (Optional) Number of claim references to retrieve
-        "offset": number                  // (Optional) Starting point for retrieval
+        "total": 100
     }
 }
 \`\`\`
 
-**Example Request**:
-\`\`\`json
-{
-    "filter": {
-        "userAddress": "inj1user123...",
-        "claimType": "reward",
-        "status": "pending",
-        "dateRange": {
-            "start": "2025-02-01T00:00:00Z",
-            "end": "2025-03-01T00:00:00Z"
-        }
-    },
-    "pagination": {
-        "limit": 30,
-        "offset": 0
-    }
-}
-\`\`\`
-
-**Response Format**:
-\`\`\`json
-{
-    "height": number,
-    "txHash": string,
-    "codespace": string,
-    "code": number,
-    "data": string,                       // Optional: Base64 encoded data containing claim references
-    "rawLog": string,
-    "logs": [],                           // Optional
-    "info": string,                       // Optional
-    "gasWanted": number,
-    "gasUsed": number,
-    "timestamp": string,
-    "events": []                          // Optional
-}
-\`\`\`
-
-**Example Response**:
-\`\`\`json
-{
-    "height": 123521,
-    "txHash": "EFG012mnopqr...",
-    "codespace": "",
-    "code": 0,
-    "data": "WyJjbGFpbjEyMyIsICJyZWFybWQiLCAicGVuZGluZyJd",
-    "rawLog": "[{\"events\": [{\"type\": \"get_claim_references\", \"attributes\": [{\"key\": \"user_address\", \"value\": \"inj1user123...\"}]}]}]",
-    "logs": [],
-    "info": "",
-    "gasWanted": 160000,
-    "gasUsed": 120000,
-    "timestamp": "2025-03-22T07:55:40Z",
-    "events": []
-}
-\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
 `;

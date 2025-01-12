@@ -1,4 +1,4 @@
-import { createGenericAction } from "../../base";
+import { createGenericAction } from "./base";
 import * as StakingTemplates from "@injective/template/staking";
 import * as StakingExamples from "@injective/examples/staking";
 
