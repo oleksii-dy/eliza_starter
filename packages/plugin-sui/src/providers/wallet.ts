@@ -13,6 +13,7 @@ import BigNumber from "bignumber.js";
 import NodeCache from "node-cache";
 import * as path from "path";
 import { parseAccount } from "../utils";
+import { SuiNetwork } from "../types";
 
 // Provider configuration
 const PROVIDER_CONFIG = {
@@ -28,8 +29,6 @@ interface WalletPortfolio {
 interface Prices {
     sui: { usd: string };
 }
-
-type SuiNetwork = "mainnet" | "testnet" | "devnet" | "localnet";
 
 export class WalletProvider {
     private cache: NodeCache;

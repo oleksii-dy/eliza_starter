@@ -19,8 +19,7 @@ import { Aftermath } from "aftermath-ts-sdk";
 
 import { walletProvider } from "../providers/wallet";
 import { parseAccount } from "../utils";
-
-type SuiNetwork = "mainnet" | "testnet" | "devnet" | "localnet";
+import { SuiNetwork } from "../types";
 
 export interface SwapContent extends Content {
     recipient: string;
@@ -148,10 +147,7 @@ export default {
             const suiClient = new SuiClient({
                 url: getFullnodeUrl(network as SuiNetwork),
             });
-            // TODO: make this dynamic
             const router = new Aftermath("MAINNET").Router();
-
-            // TODO: change this to use the correct decimals for any coin
             const adjustedAmount = BigInt(
                 Number(swapContent.amount) * Math.pow(10, SUI_DECIMALS)
             );

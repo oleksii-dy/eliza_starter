@@ -19,8 +19,7 @@ import { isValidSuiNSName, SUI_DECIMALS } from "@mysten/sui/utils";
 
 import { walletProvider } from "../providers/wallet";
 import { parseAccount, getSuiAddress } from "../utils";
-
-type SuiNetwork = "mainnet" | "testnet" | "devnet" | "localnet";
+import { SuiNetwork } from "../types";
 
 export interface TransferContent extends Content {
     recipient: string;

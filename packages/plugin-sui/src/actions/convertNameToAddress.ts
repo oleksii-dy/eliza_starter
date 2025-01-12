@@ -17,8 +17,7 @@ import { SuiClient, getFullnodeUrl } from "@mysten/sui/client";
 import { SuinsClient } from "@mysten/suins";
 
 import { walletProvider } from "../providers/wallet";
-
-type SuiNetwork = "mainnet" | "testnet" | "devnet" | "localnet";
+import { SuiNetwork } from "../types";
 
 export interface NameToAddressContent extends Content {
     recipientName: string;
