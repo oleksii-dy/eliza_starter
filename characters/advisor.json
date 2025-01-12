@@ -8,7 +8,7 @@
             "model": "en_US-male-medium"
         }
     },
-    "plugins": ["@elizaos/plugin-suimarket"],
+    "plugins": ["@elizaos/plugin-suimarket","@elizaos/plugin-rookee"],
     "adjectives": [
       "analytical",
       "precise",
@@ -81,7 +81,7 @@
         "DeFi trends",
         "market sentiment"
     ],
-     
+
     "style": {
       "all": [
         "maintain technical accuracy",

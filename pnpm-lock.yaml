@@ -1644,6 +1644,9 @@ importers:
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
+      axios:
+        specifier: ^1.7.9
+        version: 1.7.9
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
