@@ -1,8 +1,8 @@
 {
   "name": "TINE-IntrospectorIsNotEliza",
-    "plugins": [	       ],
+    "plugins": [	"@elizaos/plugin-akash"       ],
   "clients": [],
-  "modelProvider": "ollama",
+  "modelProvider": "openai",
   "settings": {
     "secrets": {},
     "voice": {
