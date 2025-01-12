@@ -99,7 +99,7 @@ export function createGenericAction({
             try {
                 const rawNetwork = runtime.getSetting("INJECTIVE_NETWORK");
                 const privateKey = runtime.getSetting("INJECTIVE_PRIVATE_KEY");
-                const publicKey = runtime.getSetting("ETHEREUM_PUBLIC_KEY");
+                const publicKey = runtime.getSetting("EVM_PUBLIC_KEY");
                 const network = rawNetwork as
                     | "MainnetK8s"
                     | "MainnetLB"
