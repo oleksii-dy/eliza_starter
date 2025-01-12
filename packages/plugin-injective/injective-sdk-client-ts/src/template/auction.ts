@@ -17,7 +17,7 @@ This query retrieves the current parameters of the Auction module. The Auction m
 \`\`\`
 
 **Response Format**:
-\`\`\`json
+\`\`\`jso
 {
     "height": number,
     "txHash": string,               // Empty string for queries

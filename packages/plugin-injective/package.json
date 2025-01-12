@@ -11,6 +11,7 @@
     "lint": "eslint --fix  --cache .",
     "test": "jest",
     "test:watch": "jest --watch",
+    "format": "prettier --write \"src/**/*.ts\"",
     "test:coverage": "jest --coverage"
   },
   "exports": {

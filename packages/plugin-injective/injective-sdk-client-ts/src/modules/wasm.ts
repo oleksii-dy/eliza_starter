@@ -1,6 +1,5 @@
 import { InjectiveGrpcBase } from "../grpc/grpc-base";
 import {
-    PaginationOption,
     MsgStoreCode,
     MsgUpdateAdmin,
     MsgExecuteContract,
@@ -8,7 +7,6 @@ import {
     MsgInstantiateContract,
     MsgExecuteContractCompat,
     MsgPrivilegedExecuteContract,
-    TxResponse,
 } from "@injectivelabs/sdk-ts";
 import * as WasmTypes from "../types/wasm";
 import {
