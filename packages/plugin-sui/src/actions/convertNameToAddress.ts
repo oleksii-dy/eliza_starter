@@ -167,8 +167,8 @@ export default {
             console.error("Error during name to address conversion:", error);
             if (callback) {
                 callback({
-                    text: `Error during name to address conversion: ${error.message}`,
-                    content: { error: error.message },
+                    text: "An error occurred during name to address conversion.",
+                    content: { error: "ConversionError" },
                 });
             }
             return false;
