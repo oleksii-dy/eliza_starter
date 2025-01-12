@@ -179,7 +179,7 @@ export const MsgGovDepositAction = createGenericAction({
 });
 
 // Export all actions as a group
-export const GovernanceActions = {
+export const GovActions = [
     GetGovernanceModuleParamsAction,
     GetProposalsAction,
     GetProposalAction,
@@ -194,4 +194,4 @@ export const GovernanceActions = {
     MsgSubmitProposalSpotMarketParamUpdateAction,
     MsgSubmitGenericProposalAction,
     MsgGovDepositAction,
-};
+];

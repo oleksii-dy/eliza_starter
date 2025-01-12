@@ -98,7 +98,7 @@ export const MsgWithdrawValidatorCommissionAction = createGenericAction({
 });
 
 // Export all actions as a group
-export const DistributionActions = {
+export const DistributionActions = [
     GetDistributionModuleParamsAction,
     GetDelegatorRewardsForValidatorAction,
     GetDelegatorRewardsForValidatorNoThrowAction,
@@ -106,4 +106,4 @@ export const DistributionActions = {
     GetDelegatorRewardsNoThrowAction,
     MsgWithdrawDelegatorRewardAction,
     MsgWithdrawValidatorCommissionAction,
-};
+];

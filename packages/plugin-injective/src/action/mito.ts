@@ -232,7 +232,7 @@ export const GetClaimReferencesAction = createGenericAction({
 });
 
 // Export all actions as a group
-export const MitoActions = {
+export const MitoActions = [
     GetVaultAction,
     GetVaultsAction,
     GetVaultsByHolderAddressAction,
@@ -255,4 +255,4 @@ export const MitoActions = {
     GetIDOActivitiesAction,
     GetIDOWhitelistAction,
     GetClaimReferencesAction,
-};
+];

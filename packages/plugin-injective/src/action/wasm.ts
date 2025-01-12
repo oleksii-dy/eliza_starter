@@ -214,7 +214,7 @@ export const GetWasmxModuleStateAction = createGenericAction({
 });
 
 // Export all actions as a group
-export const WasmActions = {
+export const WasmActions = [
     // Contract Query Actions
     GetContractAccountsBalanceAction,
     GetContractStateAction,
@@ -240,4 +240,4 @@ export const WasmActions = {
     // WasmX Query Actions
     GetWasmxModuleParamsAction,
     GetWasmxModuleStateAction,
-};
+];

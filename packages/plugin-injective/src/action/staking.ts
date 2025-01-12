@@ -286,7 +286,7 @@ export const MsgCancelUnbondingDelegationAction = createGenericAction({
 });
 
 // Export all actions as a group
-export const StakingActions = {
+export const StakingActions = [
     // Module and Pool Actions
     GetStakingModuleParamsAction,
     GetPoolAction,
@@ -317,4 +317,4 @@ export const StakingActions = {
     MsgCreateValidatorAction,
     MsgEditValidatorAction,
     MsgCancelUnbondingDelegationAction,
-};
+];

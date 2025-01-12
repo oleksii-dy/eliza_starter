@@ -30,7 +30,4 @@ export const MsgSendToEthAction = createGenericAction({
 });
 
 // Export all actions as a group
-export const PeggyActions = {
-    GetPeggyModuleParamsAction,
-    MsgSendToEthAction,
-};
+export const PeggyActions = [GetPeggyModuleParamsAction, MsgSendToEthAction];

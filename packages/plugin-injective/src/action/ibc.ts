@@ -42,8 +42,8 @@ export const MsgIBCTransferAction = createGenericAction({
 });
 
 // Export all actions as a group
-export const IBCActions = {
+export const IbcActions = [
     GetDenomTraceAction,
     GetDenomsTraceAction,
     MsgIBCTransferAction,
-};
+];

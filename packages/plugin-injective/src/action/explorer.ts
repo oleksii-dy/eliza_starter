@@ -126,7 +126,7 @@ export const GetExplorerStatsAction = createGenericAction({
 });
 
 // Export all actions as a group
-export const ExplorerActions = {
+export const ExplorerActions = [
     GetTxByHashAction,
     GetAccountTxAction,
     GetExplorerValidatorAction,
@@ -138,4 +138,4 @@ export const ExplorerActions = {
     GetTxsAction,
     GetIBCTransferTxsAction,
     GetExplorerStatsAction,
-};
+];

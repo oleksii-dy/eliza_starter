@@ -84,11 +84,11 @@ export const GetVouchersForAddressAction = createGenericAction({
 });
 
 // Export all actions as a group
-export const PermissionsActions = {
+export const PermissionsActions = [
     GetAddressesByRoleAction,
     GetAddressRolesAction,
     GetAllNamespacesAction,
     GetPermissionsModuleParamsAction,
     GetNamespaceByDenomAction,
     GetVouchersForAddressAction,
-};
+];

@@ -114,7 +114,7 @@ export const MsgMultiSendAction = createGenericAction({
     validateContent: () => true,
 });
 
-export const BankActions = {
+export const BankActions = [
     GetBankModuleParamsAction,
     GetBankBalanceAction,
     GetBankBalancesAction,
@@ -126,4 +126,4 @@ export const BankActions = {
     GetDenomOwnersAction,
     MsgSendAction,
     MsgMultiSendAction,
-};
+];

@@ -62,11 +62,11 @@ export const MsgBidAction = createGenericAction({
     validateContent: () => true,
 });
 
-export const AuctionActions = {
+export const AuctionActions = [
     GetAuctionModuleParamsAction,
     GetAuctionModuleStateAction,
     GetCurrentBasketAction,
     GetAuctionRoundAction,
     GetAuctionsAction,
     MsgBidAction,
-};
+];

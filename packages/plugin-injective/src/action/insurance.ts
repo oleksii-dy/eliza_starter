@@ -103,7 +103,7 @@ export const MsgUnderwriteAction = createGenericAction({
 });
 
 // Export all actions as a group
-export const InsuranceActions = {
+export const InsuranceActions = [
     GetInsuranceModuleParamsAction,
     GetInsuranceFundsAction,
     GetInsuranceFundAction,
@@ -112,4 +112,4 @@ export const InsuranceActions = {
     MsgCreateInsuranceFundAction,
     MsgRequestRedemptionAction,
     MsgUnderwriteAction,
-};
+];

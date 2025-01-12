@@ -115,7 +115,7 @@ export const MsgSetDenomMetadataAction = createGenericAction({
 });
 
 // Export all actions as a group
-export const TokenFactoryActions = {
+export const TokenFactoryActions = [
     // Query Actions
     GetDenomsFromCreatorAction,
     GetDenomAuthorityMetadataAction,
@@ -128,4 +128,4 @@ export const TokenFactoryActions = {
     MsgCreateDenomAction,
     MsgMintAction,
     MsgSetDenomMetadataAction,
-};
+];

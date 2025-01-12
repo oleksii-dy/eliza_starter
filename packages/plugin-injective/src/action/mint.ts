@@ -41,8 +41,8 @@ export const GetAnnualProvisionsAction = createGenericAction({
 });
 
 // Export all actions as a group
-export const MintActions = {
+export const MintActions = [
     GetMintModuleParamsAction,
     GetInflationAction,
     GetAnnualProvisionsAction,
-};
+];

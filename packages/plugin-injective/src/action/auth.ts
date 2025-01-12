@@ -102,7 +102,7 @@ export const MsgRevokeAction = createGenericAction({
     validateContent: () => true,
 });
 
-export const AuthActions = {
+export const AuthActions = [
     GetAuthModuleParamsAction,
     GetAccountDetailsAction,
     GetAccountsAction,
@@ -112,4 +112,4 @@ export const AuthActions = {
     MsgGrantAction,
     MsgExecAction,
     MsgRevokeAction,
-};
+];

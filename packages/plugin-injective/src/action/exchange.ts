@@ -875,7 +875,7 @@ export const MsgAdminUpdateBinaryOptionsMarketAction = createGenericAction({
 });
 
 // Export all actions as a group
-export const ExchangeActions = {
+export const ExchangeActions = [
     // Module Parameters and State
     GetModuleParamsAction,
     GetModuleStateAction,
@@ -985,4 +985,4 @@ export const ExchangeActions = {
     MsgSignDataAction,
     MsgExternalTransferAction,
     MsgAdminUpdateBinaryOptionsMarketAction,
-};
+];
