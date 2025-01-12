@@ -68,6 +68,8 @@ export async function generateText({
         return "";
     }
 
+    console.log("generateText context:", context);
+
     elizaLogger.log("Generating text...");
 
     elizaLogger.info("Generating text with options:", {

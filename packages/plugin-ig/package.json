@@ -1,0 +1,22 @@
+{
+  "name": "@elizaos/plugin-ig",
+  "version": "0.1.7-alpha.2",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "dependencies": {
+    "@elizaos/core": "workspace:*",
+    "axios": "^1.6.0",
+    "zod": "^3.22.0"
+  },
+  "scripts": {
+    "build": "tsup --format esm --dts"
+  }
+}
