@@ -310,6 +310,54 @@ export class ReservoirService {
             attributes?: Record<string, string>;
         }>
     > {
-        return Promise.resolve([]);
+        try {
+            const endpoint = "/users/tokens/v1";
+            const params = {
+                users: owner,
+                limit: 100, // Configurable limit
+                includeAttributes: true,
+            };
+
+            const response = await this.makeRequest<{
+                tokens: Array<{
+                    token: {
+                        tokenId: string;
+                        collection: {
+                            id: string;
+                            name: string;
+                        };
+                        image: string;
+                        attributes?: Array<{
+                            key: string;
+                            value: string;
+                        }>;
+                    };
+                }>;
+            }>(endpoint, params, 1, {} as IAgentRuntime);
+
+            return response.tokens.map((token) => ({
+                tokenId: token.token.tokenId,
+                collectionAddress: token.token.collection.id,
+                name: token.token.collection.name,
+                imageUrl: token.token.image,
+                attributes: token.token.attributes
+                    ? Object.fromEntries(
+                          token.token.attributes.map((attr) => [
+                              attr.key,
+                              attr.value,
+                          ])
+                      )
+                    : undefined,
+            }));
+        } catch (error) {
+            const nftError = NFTErrorFactory.create(
+                ErrorType.API,
+                ErrorCode.API_ERROR,
+                `Failed to fetch owned NFTs for owner ${owner}`,
+                { owner }
+            );
+            this.errorHandler.handleError(nftError);
+            return [];
+        }
     }
 }
