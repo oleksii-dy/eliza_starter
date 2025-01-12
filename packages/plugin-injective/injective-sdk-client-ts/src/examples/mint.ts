@@ -6,7 +6,7 @@ export const getMintModuleParamsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve mint module parameters, including mintDenom, inflationRateChange, inflationMax, inflationMin, goalBonded, and blocksPerYear."
+            text: "Retrieve mint module parameters, including mintDenom, inflationRateChange, inflationMax, inflationMin, goalBonded, and blocksPerYear.",
         },
     },
     {
@@ -20,7 +20,7 @@ export const getMintModuleParamsExample = [
                 inflationMax: "0.200000000000000000",
                 inflationMin: "0.070000000000000000",
                 goalBonded: "0.670000000000000000",
-                blocksPerYear: "6311520"
+                blocksPerYear: "6311520",
             },
         },
     },
@@ -30,7 +30,7 @@ export const getInflationExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve the current inflation rate."
+            text: "Retrieve the current inflation rate.",
         },
     },
     {
@@ -39,7 +39,7 @@ export const getInflationExample = [
             text: "Current inflation rate retrieved successfully.",
             action: "GET_INFLATION",
             content: {
-                inflation: "0.130000000000000000"
+                inflation: "0.130000000000000000",
             },
         },
     },
@@ -49,7 +49,7 @@ export const getAnnualProvisionsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve the current annual provisions."
+            text: "Retrieve the current annual provisions.",
         },
     },
     {
@@ -58,7 +58,7 @@ export const getAnnualProvisionsExample = [
             text: "Annual provisions retrieved successfully.",
             action: "GET_ANNUAL_PROVISIONS",
             content: {
-                annualProvisions: "5000000000000000000000000"
+                annualProvisions: "5000000000000000000000000",
             },
         },
     },

@@ -6,7 +6,7 @@ export const getInsuranceModuleParamsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve insurance module parameters, including the default redemption notice period duration."
+            text: "Retrieve insurance module parameters, including the default redemption notice period duration.",
         },
     },
     {
@@ -15,7 +15,7 @@ export const getInsuranceModuleParamsExample = [
             text: "Insurance module parameters retrieved successfully.",
             action: "GET_INSURANCE_MODULE_PARAMS",
             content: {
-                defaultRedemptionNoticePeriodDuration: 1209600
+                defaultRedemptionNoticePeriodDuration: 1209600,
             },
         },
     },
@@ -25,7 +25,7 @@ export const getInsuranceFundsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Fetch all insurance funds."
+            text: "Fetch all insurance funds.",
         },
     },
     {
@@ -46,7 +46,7 @@ export const getInsuranceFundsExample = [
                         oracleBase: "BTC",
                         oracleQuote: "USDT",
                         oracleType: 1,
-                        expiry: 1640995200
+                        expiry: 1640995200,
                     },
                     {
                         depositDenom: "inj",
@@ -59,10 +59,10 @@ export const getInsuranceFundsExample = [
                         oracleBase: "ETH",
                         oracleQuote: "USDT",
                         oracleType: 1,
-                        expiry: 1643587200
-                    }
+                        expiry: 1643587200,
+                    },
                     // ...additional insurance funds
-                ]
+                ],
             },
         },
     },
@@ -72,7 +72,7 @@ export const getInsuranceFundExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve details for the insurance fund with market ID 0x1234abcd..."
+            text: "Retrieve details for the insurance fund with market ID 0x1234abcd...",
         },
     },
     {
@@ -91,7 +91,7 @@ export const getInsuranceFundExample = [
                 oracleBase: "BTC",
                 oracleQuote: "USDT",
                 oracleType: 1,
-                expiry: 1640995200
+                expiry: 1640995200,
             },
         },
     },
@@ -101,7 +101,7 @@ export const getEstimatedRedemptionsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Get estimated redemptions for market ID 0x1234abcd... and address inj1useraddress..."
+            text: "Get estimated redemptions for market ID 0x1234abcd... and address inj1useraddress...",
         },
     },
     {
@@ -113,13 +113,13 @@ export const getEstimatedRedemptionsExample = [
                 amounts: [
                     {
                         amount: "1000000000000000000",
-                        denom: "inj"
+                        denom: "inj",
                     },
                     {
                         amount: "500000000000000000",
-                        denom: "share1"
-                    }
-                ]
+                        denom: "share1",
+                    },
+                ],
             },
         },
     },
@@ -129,7 +129,7 @@ export const getPendingRedemptionsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve pending redemptions for market ID 0x1234abcd... and address inj1useraddress..."
+            text: "Retrieve pending redemptions for market ID 0x1234abcd... and address inj1useraddress...",
         },
     },
     {
@@ -141,9 +141,9 @@ export const getPendingRedemptionsExample = [
                 amounts: [
                     {
                         amount: "500000000000000000",
-                        denom: "inj"
-                    }
-                ]
+                        denom: "inj",
+                    },
+                ],
             },
         },
     },
@@ -153,7 +153,7 @@ export const msgCreateInsuranceFundExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Create a new insurance fund with market ID 0x1234abcd..., ticker 'BTC/USDT', and an initial deposit of 1,000,000,000 inj."
+            text: "Create a new insurance fund with market ID 0x1234abcd..., ticker 'BTC/USDT', and an initial deposit of 1,000,000,000 inj.",
         },
     },
     {
@@ -163,7 +163,7 @@ export const msgCreateInsuranceFundExample = [
             action: "MSG_CREATE_INSURANCE_FUND",
             content: {
                 txHash: "0xcreateinsurancefundhash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -173,7 +173,7 @@ export const msgRequestRedemptionExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Request a redemption of 1,000,000,000 share1 from insurance fund with market ID 0x1234abcd..."
+            text: "Request a redemption of 1,000,000,000 share1 from insurance fund with market ID 0x1234abcd...",
         },
     },
     {
@@ -183,7 +183,7 @@ export const msgRequestRedemptionExample = [
             action: "MSG_REQUEST_REDEMPTION",
             content: {
                 txHash: "0xrequestredemptionhash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -193,7 +193,7 @@ export const msgUnderwriteExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Underwrite 1,000,000,000 inj to insurance fund with market ID 0x1234abcd..."
+            text: "Underwrite 1,000,000,000 inj to insurance fund with market ID 0x1234abcd...",
         },
     },
     {
@@ -203,7 +203,7 @@ export const msgUnderwriteExample = [
             action: "MSG_UNDERWRITE",
             content: {
                 txHash: "0xunderwritehash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },

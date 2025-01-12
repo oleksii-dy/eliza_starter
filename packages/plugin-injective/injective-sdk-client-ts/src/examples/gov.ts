@@ -2,7 +2,7 @@ export const getGovernanceModuleParamsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve governance module parameters, including votingParams, tallyParams, and depositParams."
+            text: "Retrieve governance module parameters, including votingParams, tallyParams, and depositParams.",
         },
     },
     {
@@ -12,22 +12,22 @@ export const getGovernanceModuleParamsExample = [
             action: "GET_GOVERNANCE_MODULE_PARAMS",
             content: {
                 votingParams: {
-                    votingPeriod: 604800
+                    votingPeriod: 604800,
                 },
                 tallyParams: {
                     quorum: "0.334",
                     threshold: "0.5",
-                    vetoThreshold: "0.334"
+                    vetoThreshold: "0.334",
                 },
                 depositParams: {
                     minDepositList: [
                         {
                             denom: "inj",
-                            amount: "100000000000000000000"
-                        }
+                            amount: "100000000000000000000",
+                        },
                     ],
-                    maxDepositPeriod: 1209600
-                }
+                    maxDepositPeriod: 1209600,
+                },
             },
         },
     },
@@ -37,7 +37,7 @@ export const getProposalsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve proposals with status 2 and paginate the results with a limit of 100."
+            text: "Retrieve proposals with status 2 and paginate the results with a limit of 100.",
         },
     },
     {
@@ -57,7 +57,7 @@ export const getProposalsExample = [
                             yesCount: "100",
                             abstainCount: "10",
                             noCount: "5",
-                            noWithVetoCount: "2"
+                            noWithVetoCount: "2",
                         },
                         submitTime: 1632150400,
                         depositEndTime: 1633360000,
@@ -66,16 +66,16 @@ export const getProposalsExample = [
                         totalDeposits: [
                             {
                                 denom: "inj",
-                                amount: "100000000000000000000"
-                            }
-                        ]
+                                amount: "100000000000000000000",
+                            },
+                        ],
                     },
                     // ...additional proposals
                 ],
                 pagination: {
                     nextKey: "",
-                    total: 100
-                }
+                    total: 100,
+                },
             },
         },
     },
@@ -85,7 +85,7 @@ export const getProposalExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve details for proposal with ID 1."
+            text: "Retrieve details for proposal with ID 1.",
         },
     },
     {
@@ -103,7 +103,7 @@ export const getProposalExample = [
                     yesCount: "100",
                     abstainCount: "10",
                     noCount: "5",
-                    noWithVetoCount: "2"
+                    noWithVetoCount: "2",
                 },
                 submitTime: 1632150400,
                 depositEndTime: 1633360000,
@@ -112,9 +112,9 @@ export const getProposalExample = [
                 totalDeposits: [
                     {
                         denom: "inj",
-                        amount: "100000000000000000000"
-                    }
-                ]
+                        amount: "100000000000000000000",
+                    },
+                ],
             },
         },
     },
@@ -124,7 +124,7 @@ export const getProposalDepositsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve deposits for proposal ID 1 with pagination parameters."
+            text: "Retrieve deposits for proposal ID 1 with pagination parameters.",
         },
     },
     {
@@ -139,16 +139,16 @@ export const getProposalDepositsExample = [
                         amounts: [
                             {
                                 denom: "inj",
-                                amount: "100000000000000000000"
-                            }
-                        ]
+                                amount: "100000000000000000000",
+                            },
+                        ],
                     },
                     // ...additional deposits
                 ],
                 pagination: {
                     nextKey: "",
-                    total: 10
-                }
+                    total: 10,
+                },
             },
         },
     },
@@ -158,7 +158,7 @@ export const getProposalVotesExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve votes for proposal ID 1 with pagination parameters."
+            text: "Retrieve votes for proposal ID 1 with pagination parameters.",
         },
     },
     {
@@ -174,17 +174,17 @@ export const getProposalVotesExample = [
                         options: [
                             {
                                 option: 1,
-                                weight: "1.0"
-                            }
+                                weight: "1.0",
+                            },
                         ],
-                        metadata: ""
+                        metadata: "",
                     },
                     // ...additional votes
                 ],
                 pagination: {
                     nextKey: "",
-                    total: 100
-                }
+                    total: 100,
+                },
             },
         },
     },
@@ -194,7 +194,7 @@ export const getProposalTallyExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve tally results for proposal ID 1."
+            text: "Retrieve tally results for proposal ID 1.",
         },
     },
     {
@@ -206,7 +206,7 @@ export const getProposalTallyExample = [
                 yesCount: "100",
                 abstainCount: "10",
                 noCount: "5",
-                noWithVetoCount: "2"
+                noWithVetoCount: "2",
             },
         },
     },
@@ -216,7 +216,7 @@ export const msgSubmitProposalExpiryFuturesMarketLaunchExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Submit an expiry futures market launch proposal titled 'Launch BTC-USDT Quarterly Futures'."
+            text: "Submit an expiry futures market launch proposal titled 'Launch BTC-USDT Quarterly Futures'.",
         },
     },
     {
@@ -226,7 +226,7 @@ export const msgSubmitProposalExpiryFuturesMarketLaunchExample = [
             action: "MSG_SUBMIT_PROPOSAL_EXPIRY_FUTURES_MARKET_LAUNCH",
             content: {
                 txHash: "0xsubmitproposalexpiryfutureshash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -236,7 +236,7 @@ export const msgSubmitProposalSpotMarketLaunchExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Submit a spot market launch proposal titled 'Launch INJ-USDT Spot Market'."
+            text: "Submit a spot market launch proposal titled 'Launch INJ-USDT Spot Market'.",
         },
     },
     {
@@ -246,7 +246,7 @@ export const msgSubmitProposalSpotMarketLaunchExample = [
             action: "MSG_SUBMIT_PROPOSAL_SPOT_MARKET_LAUNCH",
             content: {
                 txHash: "0xsubmitproposalspotmarkethash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -256,7 +256,7 @@ export const msgSubmitProposalPerpetualMarketLaunchExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Submit a perpetual market launch proposal titled 'Launch ETH-USDT Perpetual'."
+            text: "Submit a perpetual market launch proposal titled 'Launch ETH-USDT Perpetual'.",
         },
     },
     {
@@ -266,7 +266,7 @@ export const msgSubmitProposalPerpetualMarketLaunchExample = [
             action: "MSG_SUBMIT_PROPOSAL_PERPETUAL_MARKET_LAUNCH",
             content: {
                 txHash: "0xsubmitproposalperpetualmarkethash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -276,7 +276,7 @@ export const msgVoteExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Submit a vote for proposal ID 1 with option 1 and weight 1.0."
+            text: "Submit a vote for proposal ID 1 with option 1 and weight 1.0.",
         },
     },
     {
@@ -286,7 +286,7 @@ export const msgVoteExample = [
             action: "MSG_VOTE",
             content: {
                 txHash: "0xvotehash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -296,7 +296,7 @@ export const msgSubmitTextProposalExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Submit a text proposal titled 'Community Pool Spend'."
+            text: "Submit a text proposal titled 'Community Pool Spend'.",
         },
     },
     {
@@ -306,7 +306,7 @@ export const msgSubmitTextProposalExample = [
             action: "MSG_SUBMIT_TEXT_PROPOSAL",
             content: {
                 txHash: "0xsubmittextproposalhash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -316,7 +316,7 @@ export const msgSubmitProposalSpotMarketParamUpdateExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Submit a spot market parameter update proposal titled 'Update INJ-USDT Spot Market Parameters'."
+            text: "Submit a spot market parameter update proposal titled 'Update INJ-USDT Spot Market Parameters'.",
         },
     },
     {
@@ -326,7 +326,7 @@ export const msgSubmitProposalSpotMarketParamUpdateExample = [
             action: "MSG_SUBMIT_PROPOSAL_SPOT_MARKET_PARAM_UPDATE",
             content: {
                 txHash: "0xsubmitproposalspotmarketparamupdatehash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -336,7 +336,7 @@ export const msgSubmitGenericProposalExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Submit a generic governance proposal titled 'Generic Proposal'."
+            text: "Submit a generic governance proposal titled 'Generic Proposal'.",
         },
     },
     {
@@ -346,7 +346,7 @@ export const msgSubmitGenericProposalExample = [
             action: "MSG_SUBMIT_GENERIC_PROPOSAL",
             content: {
                 txHash: "0xsubmitgenericproposalhash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -356,7 +356,7 @@ export const msgGovDepositExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Deposit 100 INJ to proposal ID 1."
+            text: "Deposit 100 INJ to proposal ID 1.",
         },
     },
     {
@@ -366,7 +366,7 @@ export const msgGovDepositExample = [
             action: "MSG_GOV_DEPOSIT",
             content: {
                 txHash: "0xgovdeposithash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },

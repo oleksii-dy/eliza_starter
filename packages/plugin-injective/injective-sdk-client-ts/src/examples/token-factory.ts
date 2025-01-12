@@ -6,7 +6,7 @@ export const getDenomsFromCreatorExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve all denominations created by creator address 'inj1creator...'."
+            text: "Retrieve all denominations created by creator address 'inj1creator...'.",
         },
     },
     {
@@ -18,9 +18,9 @@ export const getDenomsFromCreatorExample = [
                 denoms: [
                     "peggy0xabc...",
                     "peggy0xdef...",
-                    "peggy0xghi..."
+                    "peggy0xghi...",
                     // ...additional denominations
-                ]
+                ],
             },
         },
     },
@@ -30,7 +30,7 @@ export const getDenomAuthorityMetadataExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Fetch authority metadata for denomination 'peggy0xabc...' created by 'inj1creator...'."
+            text: "Fetch authority metadata for denomination 'peggy0xabc...' created by 'inj1creator...'.",
         },
     },
     {
@@ -42,8 +42,8 @@ export const getDenomAuthorityMetadataExample = [
                 authorityMetadata: {
                     admin: "inj1admin...",
                     mintRestricted: false,
-                    burnRestricted: true
-                }
+                    burnRestricted: true,
+                },
             },
         },
     },
@@ -53,7 +53,7 @@ export const getTokenFactoryModuleParamsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve Token Factory module parameters."
+            text: "Retrieve Token Factory module parameters.",
         },
     },
     {
@@ -64,7 +64,7 @@ export const getTokenFactoryModuleParamsExample = [
             content: {
                 mintDenom: "inj",
                 mintDenomMinAmount: "1000",
-                mintDenomMaxAmount: "1000000"
+                mintDenomMaxAmount: "1000000",
             },
         },
     },
@@ -74,7 +74,7 @@ export const getTokenFactoryModuleStateExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Fetch current state of the Token Factory module."
+            text: "Fetch current state of the Token Factory module.",
         },
     },
     {
@@ -85,7 +85,7 @@ export const getTokenFactoryModuleStateExample = [
             content: {
                 totalDenoms: 150,
                 activeDenoms: 145,
-                pausedDenoms: 5
+                pausedDenoms: 5,
             },
         },
     },
@@ -95,7 +95,7 @@ export const msgBurnExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Burn 5000000 peggy0xabc... from sender address 'inj1sender...'."
+            text: "Burn 5000000 peggy0xabc... from sender address 'inj1sender...'.",
         },
     },
     {
@@ -105,7 +105,7 @@ export const msgBurnExample = [
             action: "MSG_BURN",
             content: {
                 txHash: "0xburntxhash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -115,7 +115,7 @@ export const msgChangeAdminExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Change admin of denomination 'peggy0xabc...' to new admin address 'inj1newadmin...'."
+            text: "Change admin of denomination 'peggy0xabc...' to new admin address 'inj1newadmin...'.",
         },
     },
     {
@@ -125,7 +125,7 @@ export const msgChangeAdminExample = [
             action: "MSG_CHANGE_ADMIN",
             content: {
                 txHash: "0xchangeadminhash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -135,7 +135,7 @@ export const msgCreateDenomExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Create a new denomination 'peggy0xjkl...' with sub-denomination 'subdenom'."
+            text: "Create a new denomination 'peggy0xjkl...' with sub-denomination 'subdenom'.",
         },
     },
     {
@@ -145,7 +145,7 @@ export const msgCreateDenomExample = [
             action: "MSG_CREATE_DENOM",
             content: {
                 txHash: "0xcreatedenomhash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -155,7 +155,7 @@ export const msgMintExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Mint 10000000 peggy0xabc... to creator address 'inj1creator...'."
+            text: "Mint 10000000 peggy0xabc... to creator address 'inj1creator...'.",
         },
     },
     {
@@ -165,7 +165,7 @@ export const msgMintExample = [
             action: "MSG_MINT",
             content: {
                 txHash: "0xminttxhash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -175,7 +175,7 @@ export const msgSetDenomMetadataExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Set metadata for denomination 'peggy0xabc...' with name 'Peggy Token', symbol 'PEG', description 'Peggy token description', and display denomination 'peg'."
+            text: "Set metadata for denomination 'peggy0xabc...' with name 'Peggy Token', symbol 'PEG', description 'Peggy token description', and display denomination 'peg'.",
         },
     },
     {
@@ -185,7 +185,7 @@ export const msgSetDenomMetadataExample = [
             action: "MSG_SET_DENOM_METADATA",
             content: {
                 txHash: "0xsetmetadatahash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },

@@ -6,7 +6,7 @@ export const getStakingModuleParamsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve staking module parameters including unbonding time, max validators, max entries, historical entries, and bond denomination."
+            text: "Retrieve staking module parameters including unbonding time, max validators, max entries, historical entries, and bond denomination.",
         },
     },
     {
@@ -19,7 +19,7 @@ export const getStakingModuleParamsExample = [
                 maxValidators: 100,
                 maxEntries: 7,
                 historicalEntries: 10000,
-                bondDenom: "inj"
+                bondDenom: "inj",
             },
         },
     },
@@ -29,7 +29,7 @@ export const getPoolExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Fetch staking pool information."
+            text: "Fetch staking pool information.",
         },
     },
     {
@@ -39,7 +39,7 @@ export const getPoolExample = [
             action: "GET_POOL",
             content: {
                 notBondedTokens: "1000000000000000000",
-                bondedTokens: "5000000000000000000"
+                bondedTokens: "5000000000000000000",
             },
         },
     },
@@ -49,7 +49,7 @@ export const getValidatorsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve validators with pagination key 'abc123...', offset 0, limit 100, and count total."
+            text: "Retrieve validators with pagination key 'abc123...', offset 0, limit 100, and count total.",
         },
     },
     {
@@ -71,7 +71,7 @@ export const getValidatorsExample = [
                             identity: "",
                             website: "https://validatorone.com",
                             securityContact: "security@validatorone.com",
-                            details: "Leading validator in the network."
+                            details: "Leading validator in the network.",
                         },
                         unbondingHeight: "0",
                         unbondingTime: "0",
@@ -79,18 +79,18 @@ export const getValidatorsExample = [
                             commissionRates: {
                                 rate: "0.100000000000000000",
                                 maxRate: "0.200000000000000000",
-                                maxChangeRate: "0.010000000000000000"
+                                maxChangeRate: "0.010000000000000000",
                             },
-                            updateTime: "0"
+                            updateTime: "0",
                         },
-                        minSelfDelegation: "1000000"
+                        minSelfDelegation: "1000000",
                     },
                     // ...additional validators
                 ],
                 pagination: {
                     nextKey: "def456...",
-                    total: "100"
-                }
+                    total: "100",
+                },
             },
         },
     },
@@ -100,7 +100,7 @@ export const getValidatorExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Fetch details for validator with address 'injvaloper1...'."
+            text: "Fetch details for validator with address 'injvaloper1...'.",
         },
     },
     {
@@ -120,7 +120,7 @@ export const getValidatorExample = [
                     identity: "",
                     website: "https://validatorone.com",
                     securityContact: "security@validatorone.com",
-                    details: "Leading validator in the network."
+                    details: "Leading validator in the network.",
                 },
                 unbondingHeight: "0",
                 unbondingTime: "0",
@@ -128,11 +128,11 @@ export const getValidatorExample = [
                     commissionRates: {
                         rate: "0.100000000000000000",
                         maxRate: "0.200000000000000000",
-                        maxChangeRate: "0.010000000000000000"
+                        maxChangeRate: "0.010000000000000000",
                     },
-                    updateTime: "0"
+                    updateTime: "0",
                 },
-                minSelfDelegation: "1000000"
+                minSelfDelegation: "1000000",
             },
         },
     },
@@ -142,7 +142,7 @@ export const getValidatorDelegationsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve delegations for validator 'injvaloper1...' with pagination key 'abc123...', offset 0, limit 100, and count total."
+            text: "Retrieve delegations for validator 'injvaloper1...' with pagination key 'abc123...', offset 0, limit 100, and count total.",
         },
     },
     {
@@ -156,19 +156,19 @@ export const getValidatorDelegationsExample = [
                         delegation: {
                             delegatorAddress: "inj1delegator1...",
                             validatorAddress: "injvaloper1...",
-                            shares: "1000000.000000000000000000"
+                            shares: "1000000.000000000000000000",
                         },
                         balance: {
                             denom: "inj",
-                            amount: "1000000000000000000"
-                        }
+                            amount: "1000000000000000000",
+                        },
                     },
                     // ...additional delegations
                 ],
                 pagination: {
                     nextKey: "ghi789...",
-                    total: "50"
-                }
+                    total: "50",
+                },
             },
         },
     },
@@ -178,7 +178,7 @@ export const getValidatorDelegationsNoThrowExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Safely retrieve delegations for validator 'injvaloper1...' with pagination key 'abc123...', offset 0, limit 100, and count total."
+            text: "Safely retrieve delegations for validator 'injvaloper1...' with pagination key 'abc123...', offset 0, limit 100, and count total.",
         },
     },
     {
@@ -192,19 +192,19 @@ export const getValidatorDelegationsNoThrowExample = [
                         delegation: {
                             delegatorAddress: "inj1delegator1...",
                             validatorAddress: "injvaloper1...",
-                            shares: "1000000.000000000000000000"
+                            shares: "1000000.000000000000000000",
                         },
                         balance: {
                             denom: "inj",
-                            amount: "1000000000000000000"
-                        }
+                            amount: "1000000000000000000",
+                        },
                     },
                     // ...additional delegations
                 ],
                 pagination: {
                     nextKey: "ghi789...",
-                    total: "50"
-                }
+                    total: "50",
+                },
             },
         },
     },
@@ -214,7 +214,7 @@ export const getValidatorUnbondingDelegationsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Fetch unbonding delegations for validator 'injvaloper1...' with pagination key 'abc123...', offset 0, limit 100, and count total."
+            text: "Fetch unbonding delegations for validator 'injvaloper1...' with pagination key 'abc123...', offset 0, limit 100, and count total.",
         },
     },
     {
@@ -232,16 +232,16 @@ export const getValidatorUnbondingDelegationsExample = [
                                 creationHeight: "1000000",
                                 completionTime: "1633446400",
                                 initialBalance: "1000000000000000000",
-                                balance: "1000000000000000000"
-                            }
-                        ]
+                                balance: "1000000000000000000",
+                            },
+                        ],
                     },
                     // ...additional unbonding delegations
                 ],
                 pagination: {
                     nextKey: "jkl012...",
-                    total: "20"
-                }
+                    total: "20",
+                },
             },
         },
     },
@@ -251,7 +251,7 @@ export const getValidatorUnbondingDelegationsNoThrowExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Safely fetch unbonding delegations for validator 'injvaloper1...' with pagination key 'abc123...', offset 0, limit 100, and count total."
+            text: "Safely fetch unbonding delegations for validator 'injvaloper1...' with pagination key 'abc123...', offset 0, limit 100, and count total.",
         },
     },
     {
@@ -269,16 +269,16 @@ export const getValidatorUnbondingDelegationsNoThrowExample = [
                                 creationHeight: "1000000",
                                 completionTime: "1633446400",
                                 initialBalance: "1000000000000000000",
-                                balance: "1000000000000000000"
-                            }
-                        ]
+                                balance: "1000000000000000000",
+                            },
+                        ],
                     },
                     // ...additional unbonding delegations
                 ],
                 pagination: {
                     nextKey: "jkl012...",
-                    total: "20"
-                }
+                    total: "20",
+                },
             },
         },
     },
@@ -288,7 +288,7 @@ export const getDelegationsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Fetch all delegations for delegator address 'inj1...' with pagination key 'abc123...', offset 0, limit 100, and count total."
+            text: "Fetch all delegations for delegator address 'inj1...' with pagination key 'abc123...', offset 0, limit 100, and count total.",
         },
     },
     {
@@ -302,19 +302,19 @@ export const getDelegationsExample = [
                         delegation: {
                             delegatorAddress: "inj1...",
                             validatorAddress: "injvaloper1...",
-                            shares: "1000000.000000000000000000"
+                            shares: "1000000.000000000000000000",
                         },
                         balance: {
                             denom: "inj",
-                            amount: "1000000000000000000"
-                        }
+                            amount: "1000000000000000000",
+                        },
                     },
                     // ...additional delegations
                 ],
                 pagination: {
                     nextKey: "mno345...",
-                    total: "100"
-                }
+                    total: "100",
+                },
             },
         },
     },
@@ -324,7 +324,7 @@ export const getDelegationsNoThrowExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Safely fetch all delegations for delegator address 'inj1...' with pagination key 'abc123...', offset 0, limit 100, and count total."
+            text: "Safely fetch all delegations for delegator address 'inj1...' with pagination key 'abc123...', offset 0, limit 100, and count total.",
         },
     },
     {
@@ -338,19 +338,19 @@ export const getDelegationsNoThrowExample = [
                         delegation: {
                             delegatorAddress: "inj1...",
                             validatorAddress: "injvaloper1...",
-                            shares: "1000000.000000000000000000"
+                            shares: "1000000.000000000000000000",
                         },
                         balance: {
                             denom: "inj",
-                            amount: "1000000000000000000"
-                        }
+                            amount: "1000000000000000000",
+                        },
                     },
                     // ...additional delegations
                 ],
                 pagination: {
                     nextKey: "mno345...",
-                    total: "100"
-                }
+                    total: "100",
+                },
             },
         },
     },
@@ -360,7 +360,7 @@ export const getUnbondingDelegationsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve unbonding delegations for delegator address 'inj1...' with pagination key 'abc123...', offset 0, limit 100, and count total."
+            text: "Retrieve unbonding delegations for delegator address 'inj1...' with pagination key 'abc123...', offset 0, limit 100, and count total.",
         },
     },
     {
@@ -378,16 +378,16 @@ export const getUnbondingDelegationsExample = [
                                 creationHeight: "1000000",
                                 completionTime: "1633446400",
                                 initialBalance: "1000000000000000000",
-                                balance: "1000000000000000000"
-                            }
-                        ]
+                                balance: "1000000000000000000",
+                            },
+                        ],
                     },
                     // ...additional unbonding delegations
                 ],
                 pagination: {
                     nextKey: "ghi789...",
-                    total: "30"
-                }
+                    total: "30",
+                },
             },
         },
     },
@@ -397,7 +397,7 @@ export const getReDelegationsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Fetch redelegations for delegator address 'inj1...' with pagination key 'abc123...', offset 0, limit 100, and count total."
+            text: "Fetch redelegations for delegator address 'inj1...' with pagination key 'abc123...', offset 0, limit 100, and count total.",
         },
     },
     {
@@ -416,16 +416,16 @@ export const getReDelegationsExample = [
                                 creationHeight: "1000000",
                                 completionTime: "1633446400",
                                 initialBalance: "500000000000000000",
-                                sharesDst: "500000.000000000000000000"
-                            }
-                        ]
+                                sharesDst: "500000.000000000000000000",
+                            },
+                        ],
                     },
                     // ...additional redelegations
                 ],
                 pagination: {
                     nextKey: "stu901...",
-                    total: "40"
-                }
+                    total: "40",
+                },
             },
         },
     },
@@ -435,7 +435,7 @@ export const msgCreateValidatorExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Create a new validator with moniker 'Validator One', identity 'keybase-id', website 'https://validatorone.com', security contact 'security@validatorone.com', details 'Leading validator in the network.', commission rate 0.10, max rate 0.20, max change rate 0.01, minimum self-delegation of 1000000000000000000 inj, delegator address 'inj1...', validator address 'injvaloper1...', public key 'injvalconspub1...', and initial self-delegation of 1000000000000000000 inj."
+            text: "Create a new validator with moniker 'Validator One', identity 'keybase-id', website 'https://validatorone.com', security contact 'security@validatorone.com', details 'Leading validator in the network.', commission rate 0.10, max rate 0.20, max change rate 0.01, minimum self-delegation of 1000000000000000000 inj, delegator address 'inj1...', validator address 'injvaloper1...', public key 'injvalconspub1...', and initial self-delegation of 1000000000000000000 inj.",
         },
     },
     {
@@ -445,7 +445,7 @@ export const msgCreateValidatorExample = [
             action: "MSG_CREATE_VALIDATOR",
             content: {
                 txHash: "0xcreatevalidatorhash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -455,7 +455,7 @@ export const msgEditValidatorExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Edit validator 'injvaloper1...' with new moniker 'Validator One Updated', new identity 'new-keybase-id', new website 'https://new-validatorone.com', new security contact 'newsecurity@validatorone.com', new details 'Updated details.', new commission rate 0.15, and new minimum self-delegation of 2000000000000000000 inj."
+            text: "Edit validator 'injvaloper1...' with new moniker 'Validator One Updated', new identity 'new-keybase-id', new website 'https://new-validatorone.com', new security contact 'newsecurity@validatorone.com', new details 'Updated details.', new commission rate 0.15, and new minimum self-delegation of 2000000000000000000 inj.",
         },
     },
     {
@@ -465,7 +465,7 @@ export const msgEditValidatorExample = [
             action: "MSG_EDIT_VALIDATOR",
             content: {
                 txHash: "0xeditvalidatorhash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -475,7 +475,7 @@ export const msgDelegateExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Delegate 1000000000000000000 inj from delegator address 'inj1...' to validator address 'injvaloper1...'."
+            text: "Delegate 1000000000000000000 inj from delegator address 'inj1...' to validator address 'injvaloper1...'.",
         },
     },
     {
@@ -485,7 +485,7 @@ export const msgDelegateExample = [
             action: "MSG_DELEGATE",
             content: {
                 txHash: "0xdelegationhash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -495,7 +495,7 @@ export const msgBeginRedelegateExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Begin redelegating 1000000000000000000 inj from validator 'injvaloper1...' to validator 'injvaloper2...'."
+            text: "Begin redelegating 1000000000000000000 inj from validator 'injvaloper1...' to validator 'injvaloper2...'.",
         },
     },
     {
@@ -505,7 +505,7 @@ export const msgBeginRedelegateExample = [
             action: "MSG_BEGIN_REDELEGATE",
             content: {
                 txHash: "0xredelegationhash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -515,7 +515,7 @@ export const msgUndelegateExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Undelegate 1000000000000000000 inj from delegator address 'inj1...' to validator address 'injvaloper1...'."
+            text: "Undelegate 1000000000000000000 inj from delegator address 'inj1...' to validator address 'injvaloper1...'.",
         },
     },
     {
@@ -525,7 +525,7 @@ export const msgUndelegateExample = [
             action: "MSG_UNDELEGATE",
             content: {
                 txHash: "0xundelegationhash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -535,7 +535,7 @@ export const msgCancelUnbondingDelegationExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Cancel undelegation of 1000000000000000000 inj from delegator address 'inj1...' to validator address 'injvaloper1...' initiated at height 1000000."
+            text: "Cancel undelegation of 1000000000000000000 inj from delegator address 'inj1...' to validator address 'injvaloper1...' initiated at height 1000000.",
         },
     },
     {
@@ -545,7 +545,7 @@ export const msgCancelUnbondingDelegationExample = [
             action: "MSG_CANCEL_UNBONDING_DELEGATION",
             content: {
                 txHash: "0xcancelundelegationhash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },
@@ -555,7 +555,7 @@ export const getDelegationExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Fetch delegation details for delegator address 'inj1...' and validator address 'injvaloper1...'."
+            text: "Fetch delegation details for delegator address 'inj1...' and validator address 'injvaloper1...'.",
         },
     },
     {
@@ -567,12 +567,12 @@ export const getDelegationExample = [
                 delegation: {
                     delegatorAddress: "inj1...",
                     validatorAddress: "injvaloper1...",
-                    shares: "1000000000000000000"
+                    shares: "1000000000000000000",
                 },
                 balance: {
                     denom: "inj",
-                    amount: "1000000000000000000"
-                }
+                    amount: "1000000000000000000",
+                },
             },
         },
     },
@@ -582,7 +582,7 @@ export const getDelegatorsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve all delegators for validator 'injvaloper1...' with pagination key 'abc123...', offset 0, limit 100, and count total."
+            text: "Retrieve all delegators for validator 'injvaloper1...' with pagination key 'abc123...', offset 0, limit 100, and count total.",
         },
     },
     {
@@ -596,19 +596,19 @@ export const getDelegatorsExample = [
                         delegation: {
                             delegatorAddress: "inj1delegator1...",
                             validatorAddress: "injvaloper1...",
-                            shares: "1000000.000000000000000000"
+                            shares: "1000000.000000000000000000",
                         },
                         balance: {
                             denom: "inj",
-                            amount: "1000000000000000000"
-                        }
+                            amount: "1000000000000000000",
+                        },
                     },
                     // ...additional delegators
                 ],
                 pagination: {
                     nextKey: "def456...",
-                    total: "50"
-                }
+                    total: "50",
+                },
             },
         },
     },
@@ -618,7 +618,7 @@ export const getDelegatorsNoThrowExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Safely retrieve all delegators for validator 'injvaloper1...' with pagination key 'abc123...', offset 0, limit 100, and count total."
+            text: "Safely retrieve all delegators for validator 'injvaloper1...' with pagination key 'abc123...', offset 0, limit 100, and count total.",
         },
     },
     {
@@ -632,19 +632,19 @@ export const getDelegatorsNoThrowExample = [
                         delegation: {
                             delegatorAddress: "inj1delegator1...",
                             validatorAddress: "injvaloper1...",
-                            shares: "1000000.000000000000000000"
+                            shares: "1000000.000000000000000000",
                         },
                         balance: {
                             denom: "inj",
-                            amount: "1000000000000000000"
-                        }
+                            amount: "1000000000000000000",
+                        },
                     },
                     // ...additional delegators
                 ],
                 pagination: {
                     nextKey: "def456...",
-                    total: "50"
-                }
+                    total: "50",
+                },
             },
         },
     },
@@ -654,7 +654,7 @@ export const getUnbondingDelegationsNoThrowExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Safely retrieve unbonding delegations for delegator address 'inj1...' with pagination key 'abc123...', offset 0, limit 100, and count total."
+            text: "Safely retrieve unbonding delegations for delegator address 'inj1...' with pagination key 'abc123...', offset 0, limit 100, and count total.",
         },
     },
     {
@@ -672,16 +672,16 @@ export const getUnbondingDelegationsNoThrowExample = [
                                 creationHeight: "1000000",
                                 completionTime: "1633446400",
                                 initialBalance: "1000000000000000000",
-                                balance: "1000000000000000000"
-                            }
-                        ]
+                                balance: "1000000000000000000",
+                            },
+                        ],
                     },
                     // ...additional unbonding delegations
                 ],
                 pagination: {
                     nextKey: "ghi789...",
-                    total: "30"
-                }
+                    total: "30",
+                },
             },
         },
     },
@@ -691,7 +691,7 @@ export const getReDelegationsNoThrowExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Safely fetch redelegations for delegator address 'inj1...' with pagination key 'abc123...', offset 0, limit 100, and count total."
+            text: "Safely fetch redelegations for delegator address 'inj1...' with pagination key 'abc123...', offset 0, limit 100, and count total.",
         },
     },
     {
@@ -710,16 +710,16 @@ export const getReDelegationsNoThrowExample = [
                                 creationHeight: "1000000",
                                 completionTime: "1633446400",
                                 initialBalance: "500000000000000000",
-                                sharesDst: "500000.000000000000000000"
-                            }
-                        ]
+                                sharesDst: "500000.000000000000000000",
+                            },
+                        ],
                     },
                     // ...additional redelegations
                 ],
                 pagination: {
                     nextKey: "stu901...",
-                    total: "40"
-                }
+                    total: "40",
+                },
             },
         },
     },

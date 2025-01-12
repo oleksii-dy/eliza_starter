@@ -6,7 +6,7 @@ export const getAddressesByRoleExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve all addresses with the role 'minter' for denomination 'peggy0x...'."
+            text: "Retrieve all addresses with the role 'minter' for denomination 'peggy0x...'.",
         },
     },
     {
@@ -18,8 +18,8 @@ export const getAddressesByRoleExample = [
                 addresses: [
                     "inj1address1...",
                     "inj1address2...",
-                    "inj1address3..."
-                ]
+                    "inj1address3...",
+                ],
             },
         },
     },
@@ -29,7 +29,7 @@ export const getAddressRolesExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Fetch roles for address 'inj1address1...' and denomination 'peggy0x...'."
+            text: "Fetch roles for address 'inj1address1...' and denomination 'peggy0x...'.",
         },
     },
     {
@@ -38,10 +38,7 @@ export const getAddressRolesExample = [
             text: "Roles for address 'inj1address1...' retrieved successfully.",
             action: "GET_ADDRESS_ROLES",
             content: {
-                roles: [
-                    "minter",
-                    "burner"
-                ]
+                roles: ["minter", "burner"],
             },
         },
     },
@@ -51,7 +48,7 @@ export const getAllNamespacesExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Fetch all namespaces."
+            text: "Fetch all namespaces.",
         },
     },
     {
@@ -70,23 +67,23 @@ export const getAllNamespacesExample = [
                         rolePermissions: [
                             {
                                 role: "minter",
-                                permissions: 1
+                                permissions: 1,
                             },
                             {
                                 role: "burner",
-                                permissions: 2
-                            }
+                                permissions: 2,
+                            },
                         ],
                         addressRoles: [
                             {
                                 address: "inj1address1...",
-                                roles: ["minter"]
+                                roles: ["minter"],
                             },
                             {
                                 address: "inj1address2...",
-                                roles: ["burner"]
-                            }
-                        ]
+                                roles: ["burner"],
+                            },
+                        ],
                     },
                     {
                         denom: "peggy0xabc...",
@@ -97,18 +94,18 @@ export const getAllNamespacesExample = [
                         rolePermissions: [
                             {
                                 role: "minter",
-                                permissions: 1
-                            }
+                                permissions: 1,
+                            },
                         ],
                         addressRoles: [
                             {
                                 address: "inj1address3...",
-                                roles: ["minter"]
-                            }
-                        ]
-                    }
+                                roles: ["minter"],
+                            },
+                        ],
+                    },
                     // ...additional namespaces
-                ]
+                ],
             },
         },
     },
@@ -118,7 +115,7 @@ export const getPermissionsModuleParamsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve Peggy module parameters, including bridge settings and oracle addresses."
+            text: "Retrieve Peggy module parameters, including bridge settings and oracle addresses.",
         },
     },
     {
@@ -127,7 +124,7 @@ export const getPermissionsModuleParamsExample = [
             text: "Peggy module parameters retrieved successfully.",
             action: "GET_PERMISSIONS_MODULE_PARAMS",
             content: {
-                wasmHookQueryMaxGas: "1000000"
+                wasmHookQueryMaxGas: "1000000",
             },
         },
     },
@@ -137,7 +134,7 @@ export const getNamespaceByDenomExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Fetch namespace details for denomination 'peggy0x...' and include role information."
+            text: "Fetch namespace details for denomination 'peggy0x...' and include role information.",
         },
     },
     {
@@ -155,16 +152,16 @@ export const getNamespaceByDenomExample = [
                     rolePermissions: [
                         {
                             role: "minter",
-                            permissions: 1
-                        }
+                            permissions: 1,
+                        },
                     ],
                     addressRoles: [
                         {
                             address: "inj1address1...",
-                            roles: ["minter"]
-                        }
-                    ]
-                }
+                            roles: ["minter"],
+                        },
+                    ],
+                },
             },
         },
     },
@@ -174,7 +171,7 @@ export const getVouchersForAddressExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve vouchers for address 'inj1address1...'."
+            text: "Retrieve vouchers for address 'inj1address1...'.",
         },
     },
     {
@@ -188,24 +185,24 @@ export const getVouchersForAddressExample = [
                         coins: [
                             {
                                 amount: "1000000000000000000",
-                                denom: "peggy0x..."
+                                denom: "peggy0x...",
                             },
                             {
                                 amount: "500000000000000000",
-                                denom: "peggy0xabc..."
-                            }
-                        ]
+                                denom: "peggy0xabc...",
+                            },
+                        ],
                     },
                     {
                         coins: [
                             {
                                 amount: "2000000000000000000",
-                                denom: "peggy0xdef..."
-                            }
-                        ]
-                    }
+                                denom: "peggy0xdef...",
+                            },
+                        ],
+                    },
                     // ...additional vouchers
-                ]
+                ],
             },
         },
     },

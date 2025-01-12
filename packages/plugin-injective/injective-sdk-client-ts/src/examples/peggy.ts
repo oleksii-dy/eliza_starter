@@ -6,7 +6,7 @@ export const getPeggyModuleParamsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve Peggy module parameters, including bridgeChainId, peggyId, signedValsetsWindow, signedBatchesWindow, signedClaimsWindow, targetBatchTimeout, averageBlockTime, averageEthereumBlockTime, slash fractions, unbondSlashingValsetsWindow, bridgeContractAddress, bridgeActive status, and oracles."
+            text: "Retrieve Peggy module parameters, including bridgeChainId, peggyId, signedValsetsWindow, signedBatchesWindow, signedClaimsWindow, targetBatchTimeout, averageBlockTime, averageEthereumBlockTime, slash fractions, unbondSlashingValsetsWindow, bridgeContractAddress, bridgeActive status, and oracles.",
         },
     },
     {
@@ -33,10 +33,10 @@ export const getPeggyModuleParamsExample = [
                     bridgeActive: true,
                     oracles: [
                         "0xOracleAddress1...",
-                        "0xOracleAddress2..."
+                        "0xOracleAddress2...",
                         // ...additional oracle addresses
-                    ]
-                }
+                    ],
+                },
             },
         },
     },
@@ -46,7 +46,7 @@ export const msgSendToEthExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Send 1,000,000,000 inj with a bridge fee of 1,000,000 inj to Ethereum address 0xEthereumAddress..."
+            text: "Send 1,000,000,000 inj with a bridge fee of 1,000,000 inj to Ethereum address 0xEthereumAddress...",
         },
     },
     {
@@ -56,7 +56,7 @@ export const msgSendToEthExample = [
             action: "MSG_SEND_TO_ETH",
             content: {
                 txHash: "0xibctransferhash123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
+                success: true,
             },
         },
     },

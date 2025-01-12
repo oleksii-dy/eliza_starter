@@ -2,7 +2,7 @@ export const getAuctionModuleParamsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve the auction module parameters, including the auction period and the minimum next bid increment rate."
+            text: "Retrieve the auction module parameters, including the auction period and the minimum next bid increment rate.",
         },
     },
     {
@@ -12,7 +12,7 @@ export const getAuctionModuleParamsExample = [
             action: "GET_AUCTION_MODULE_PARAMS",
             content: {
                 auctionPeriod: 7200,
-                minNextBidIncrementRate: "0.05"
+                minNextBidIncrementRate: "0.05",
             },
         },
     },
@@ -22,7 +22,7 @@ export const getAuctionModuleStateExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Get the current state of the auction module, including parameters, auction round, highest bid, and auction ending timestamp."
+            text: "Get the current state of the auction module, including parameters, auction round, highest bid, and auction ending timestamp.",
         },
     },
     {
@@ -33,14 +33,14 @@ export const getAuctionModuleStateExample = [
             content: {
                 params: {
                     auctionPeriod: 7200,
-                    minNextBidIncrementRate: "0.05"
+                    minNextBidIncrementRate: "0.05",
                 },
                 auctionRound: 12,
                 highestBid: {
                     bidder: "inj1xmpl3bidderaddress",
-                    amount: "2500000000"
+                    amount: "2500000000",
                 },
-                auctionEndingTimestamp: 1700000000
+                auctionEndingTimestamp: 1700000000,
             },
         },
     },
@@ -50,7 +50,7 @@ export const getCurrentBasketExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Fetch the details of the current auction basket, including the list of amounts, auction round, closing time, highest bidder, and highest bid amount."
+            text: "Fetch the details of the current auction basket, including the list of amounts, auction round, closing time, highest bidder, and highest bid amount.",
         },
     },
     {
@@ -62,17 +62,17 @@ export const getCurrentBasketExample = [
                 amountList: [
                     {
                         denom: "inj",
-                        amount: "500000000"
+                        amount: "500000000",
                     },
                     {
                         denom: "usdt",
-                        amount: "1000000"
-                    }
+                        amount: "1000000",
+                    },
                 ],
                 auctionRound: 12,
                 auctionClosingTime: 1700003600,
                 highestBidder: "inj1xmpl3bidderaddress",
-                highestBidAmount: "2500000000"
+                highestBidAmount: "2500000000",
             },
         },
     },
@@ -82,7 +82,7 @@ export const getAuctionRoundExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve information for auction round number 12."
+            text: "Retrieve information for auction round number 12.",
         },
     },
     {
@@ -96,30 +96,30 @@ export const getAuctionRoundExample = [
                     basketList: [
                         {
                             denom: "inj",
-                            amount: "500000000"
+                            amount: "500000000",
                         },
                         {
                             denom: "usdt",
-                            amount: "1000000"
-                        }
+                            amount: "1000000",
+                        },
                     ],
                     winningBidAmount: "2500000000",
                     round: 12,
                     endTimestamp: 1700000000,
-                    updatedAt: 1700000000
+                    updatedAt: 1700000000,
                 },
                 bids: [
                     {
                         bidder: "inj1bidder1address",
                         bidAmount: "2000000000",
-                        bidTimestamp: 1699999000
+                        bidTimestamp: 1699999000,
                     },
                     {
                         bidder: "inj1bidder2address",
                         bidAmount: "2500000000",
-                        bidTimestamp: 1699999500
-                    }
-                ]
+                        bidTimestamp: 1699999500,
+                    },
+                ],
             },
         },
     },
@@ -129,7 +129,7 @@ export const getAuctionsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve the list of all past auctions with their details."
+            text: "Retrieve the list of all past auctions with their details.",
         },
     },
     {
@@ -143,36 +143,36 @@ export const getAuctionsExample = [
                     basketList: [
                         {
                             denom: "inj",
-                            amount: "500000000"
+                            amount: "500000000",
                         },
                         {
                             denom: "usdt",
-                            amount: "1000000"
-                        }
+                            amount: "1000000",
+                        },
                     ],
                     winningBidAmount: "2500000000",
                     round: 12,
                     endTimestamp: 1700000000,
-                    updatedAt: 1700000000
+                    updatedAt: 1700000000,
                 },
                 {
                     winner: "inj1w1nn3raddress2",
                     basketList: [
                         {
                             denom: "inj",
-                            amount: "750000000"
+                            amount: "750000000",
                         },
                         {
                             denom: "usdt",
-                            amount: "1500000"
-                        }
+                            amount: "1500000",
+                        },
                     ],
                     winningBidAmount: "3500000000",
                     round: 11,
                     endTimestamp: 1699996400,
-                    updatedAt: 1699996400
-                }
-            ]
+                    updatedAt: 1699996400,
+                },
+            ],
         },
     },
 ];
@@ -181,7 +181,7 @@ export const msgBidExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Place a bid of 2600000000 INJ_DENOM in auction round 12."
+            text: "Place a bid of 2600000000 INJ_DENOM in auction round 12.",
         },
     },
     {
@@ -191,8 +191,8 @@ export const msgBidExample = [
             action: "PLACE_BID",
             content: {
                 round: 12,
-                amount: "2600000000"
-            }
+                amount: "2600000000",
+            },
         },
     },
 ];
@@ -201,7 +201,7 @@ export const msgBidResponseExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Confirm the bid transaction."
+            text: "Confirm the bid transaction.",
         },
     },
     {
@@ -211,8 +211,8 @@ export const msgBidResponseExample = [
             action: "BID_TRANSACTION_RESPONSE",
             content: {
                 txHash: "0xabc123def456ghi789jkl012mno345pqr678stu901vwx234yz",
-                success: true
-            }
+                success: true,
+            },
         },
     },
 ];
