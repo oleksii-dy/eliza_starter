@@ -242,7 +242,85 @@ export class ReservoirService {
             marketplace: string;
         }>
     > {
-        return Promise.resolve([]);
+        const endOperation = this.performanceMonitor.startOperation(
+            "getFloorListings",
+            { options }
+        );
+
+        try {
+            // Validate required parameters
+            if (!options.collection) {
+                throw new Error("Collection address is required");
+            }
+
+            // Default values
+            const limit = options.limit || 10;
+            const sortBy = options.sortBy || "price";
+
+            // Construct query parameters
+            const queryParams = {
+                collection: options.collection,
+                limit: limit.toString(),
+                sortBy: sortBy === "price" ? "floorAskPrice" : "rarity", // Reservoir API specific sorting
+                includeAttributes: sortBy === "rarity" ? "true" : "false",
+            };
+
+            const response = await this.makeRequest<{
+                asks: Array<{
+                    token: {
+                        tokenId: string;
+                        collection: {
+                            id: string;
+                        };
+                    };
+                    price: {
+                        amount: {
+                            native: number;
+                            usd?: number;
+                        };
+                    };
+                    maker: string;
+                    source: {
+                        name: string;
+                    };
+                }>;
+            }>("/collections/floor/v2", queryParams, 1, {} as IAgentRuntime);
+
+            // Transform Reservoir API response to our expected format
+            const floorListings = response.asks.map((ask) => ({
+                tokenId: ask.token.tokenId,
+                price: ask.price.amount.native,
+                seller: ask.maker,
+                marketplace: ask.source?.name || "Reservoir",
+            }));
+
+            endOperation();
+            return floorListings;
+        } catch (error) {
+            this.performanceMonitor.recordMetric({
+                operation: "getFloorListings",
+                duration: 0,
+                success: false,
+                metadata: {
+                    error: error.message,
+                    collection: options.collection,
+                },
+            });
+
+            const nftError = NFTErrorFactory.create(
+                ErrorType.API,
+                ErrorCode.API_ERROR,
+                "Failed to fetch floor listings",
+                {
+                    originalError: error,
+                    collection: options.collection,
+                },
+                true
+            );
+            this.errorHandler.handleError(nftError);
+
+            throw error;
+        }
     }
 
     async executeBuy(options: {
