@@ -85,4 +85,5 @@ jobs:
               uses: meta-introspector/build-push-action@v6.10.0
               with:
                 push: true
-                tags: h4ckermike/elizaos-eliza:akash
+                # FIXME add in better names for tag
+                tags: h4ckermike/elizaos-eliza:micro
