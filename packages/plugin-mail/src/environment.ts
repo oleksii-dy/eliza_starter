@@ -1,38 +1,26 @@
-import { elizaLogger, IAgentRuntime } from "@elizaos/core";
+import { IAgentRuntime, elizaLogger } from "@elizaos/core";
 import { MailConfig } from "./types";
 
-export const DEFAULT_CHECK_INTERVAL = 300; // 5 minutes in seconds
+export const DEFAULT_TYPE = "imap-smtp";
+export const DEFAULT_CHECK_INTERVAL = 60000;
 export const DEFAULT_MAX_EMAILS = 10;
 
 export function validateMailConfig(runtime: IAgentRuntime): MailConfig {
     const mailConfig: MailConfig = {
+        type: (runtime.getSetting("EMAIL_TYPE") || DEFAULT_TYPE) as "imap-smtp",
         imap: {
-            user: runtime.getSetting("EMAIL_IMAP_USER") || "",
-            password: runtime.getSetting("EMAIL_IMAP_PASSWORD") || "",
             host: runtime.getSetting("EMAIL_IMAP_HOST") || "",
             port: parseInt(runtime.getSetting("EMAIL_IMAP_PORT") || "993", 10),
-            tls: runtime.getSetting("EMAIL_IMAP_TLS") !== "false",
-            tlsOptions: {
-                rejectUnauthorized:
-                    runtime.getSetting("EMAIL_IMAP_REJECT_UNAUTHORIZED") !==
-                    "false",
-                servername: runtime.getSetting("EMAIL_IMAP_HOST") || undefined,
-            },
+            secure: runtime.getSetting("EMAIL_IMAP_TLS") === "true",
+            user: runtime.getSetting("EMAIL_IMAP_USER") || "",
+            password: runtime.getSetting("EMAIL_IMAP_PASSWORD") || "",
         },
         smtp: {
             host: runtime.getSetting("EMAIL_SMTP_HOST") || "",
             port: parseInt(runtime.getSetting("EMAIL_SMTP_PORT") || "587", 10),
-            secure: runtime.getSetting("EMAIL_SMTP_SECURE") === "true",
-            auth: {
-                user: runtime.getSetting("EMAIL_SMTP_USER") || "",
-                pass: runtime.getSetting("EMAIL_SMTP_PASSWORD") || "",
-            },
-            tls: {
-                rejectUnauthorized:
-                    runtime.getSetting("EMAIL_SMTP_REJECT_UNAUTHORIZED") !==
-                    "false",
-                servername: runtime.getSetting("EMAIL_SMTP_HOST") || undefined,
-            },
+            secure: runtime.getSetting("EMAIL_SMTP_PORT") === "465",
+            user: runtime.getSetting("EMAIL_SMTP_USER") || "",
+            password: runtime.getSetting("EMAIL_SMTP_PASSWORD") || "",
         },
         checkInterval: parseInt(
             runtime.getSetting("EMAIL_CHECK_INTERVAL") ||
@@ -50,16 +38,15 @@ export function validateMailConfig(runtime: IAgentRuntime): MailConfig {
         imap: {
             host: mailConfig.imap.host,
             port: mailConfig.imap.port,
-            tls: mailConfig.imap.tls,
-            tlsOptions: mailConfig.imap.tlsOptions,
+            secure: mailConfig.imap.secure,
         },
         smtp: {
             host: mailConfig.smtp.host,
             port: mailConfig.smtp.port,
             secure: mailConfig.smtp.secure,
-            tls: mailConfig.smtp.tls,
         },
         checkInterval: mailConfig.checkInterval,
+        maxEmails: mailConfig.maxEmails,
     });
 
     if (!mailConfig.imap.host) {
@@ -78,19 +65,12 @@ export function validateMailConfig(runtime: IAgentRuntime): MailConfig {
         throw new Error("EMAIL_SMTP_HOST is required");
     }
 
-    if (!mailConfig.smtp.auth.user) {
+    if (!mailConfig.smtp.user) {
         throw new Error("EMAIL_SMTP_USER is required");
     }
 
-    if (!mailConfig.smtp.auth.pass) {
+    if (!mailConfig.smtp.password) {
         throw new Error("EMAIL_SMTP_PASSWORD is required");
-    }
-
-    if (mailConfig.checkInterval < 10) {
-        elizaLogger.warn(
-            "EMAIL_CHECK_INTERVAL is less than 10 seconds, using default"
-        );
-        mailConfig.checkInterval = DEFAULT_CHECK_INTERVAL;
     }
 
     if (mailConfig.maxEmails < 1) {

@@ -26,12 +26,11 @@
     },
     "dependencies": {
         "@elizaos/core": "workspace:*",
-        "imap": "^0.8.19",
+        "imapflow": "^1.0.174",
         "mailparser": "^3.6.5",
         "nodemailer": "^6.9.7"
     },
     "devDependencies": {
-        "@types/imap": "^0.8.40",
         "@types/mailparser": "^3.4.4",
         "@types/nodemailer": "^6.4.14",
         "tsup": "8.3.5",

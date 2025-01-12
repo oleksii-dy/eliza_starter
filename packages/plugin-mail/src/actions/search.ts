@@ -1,85 +1,137 @@
 import {
     Action,
     elizaLogger,
-    IAgentRuntime,
+    generateText,
+    ModelClass,
     Memory,
     HandlerCallback,
+    IAgentRuntime,
 } from "@elizaos/core";
-
-export interface SearchEmailsParams {
-    criteria: string[];
-    markSeen?: boolean;
-}
+import { SearchCriteria } from "../types";
 
 export const searchEmailsAction: Action = {
     name: "searchEmails",
-    similes: ["search", "find", "locate"],
-    description: "Search emails using IMAP search criteria",
+    description: "Search emails using various criteria",
+    similes: ["search", "find", "look for", "check for"],
     examples: [
-        [{ user: "user", content: { text: "search for emails from john" } }],
         [
             {
                 user: "user",
-                content: { text: "find emails about the new product" },
+                content: { text: "search for emails from sarah@example.com" },
             },
         ],
-        [{ user: "user", content: { text: "locate emails from last week" } }],
+        [
+            {
+                user: "user",
+                content: { text: "find unread emails about meetings" },
+            },
+        ],
+        [
+            {
+                user: "user",
+                content: {
+                    text: "look for emails with attachments from last week",
+                },
+            },
+        ],
+        [
+            {
+                user: "user",
+                content: {
+                    text: "search for emails with subject containing 'urgent'",
+                },
+            },
+        ],
     ],
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: any,
-        options: any,
+        _state: any,
+        _options: any,
         callback?: HandlerCallback
     ) => {
         if (!global.mailService) {
-            throw new Error("Mail service not initialized");
+            await callback?.({ text: "Email service is not initialized" });
+            return false;
         }
 
-        const criteria = options?.criteria || [];
-        const markSeen = options?.markSeen || false;
+        const searchContext = `Given this request: "${message.content.text}", extract search criteria for emails. Format as a JSON object with these optional fields:
+        {
+            "from": "email address",
+            "to": "email address",
+            "subject": "text to find in subject",
+            "body": "text to find in body",
+            "since": "YYYY-MM-DD",
+            "before": "YYYY-MM-DD",
+            "seen": boolean,
+            "flagged": boolean,
+            "minSize": number,
+            "maxSize": number
+        }
 
+        Example outputs:
+        - {"from": "john@example.com", "subject": "meeting"}
+        - {"seen": false, "since": "2024-01-01"}
+        - {"flagged": true, "minSize": 5000000}`;
+
+        const searchTerms = await generateText({
+            runtime,
+            context: searchContext,
+            modelClass: ModelClass.SMALL,
+        });
+
+        let criteria: SearchCriteria;
+        try {
+            const parsed = JSON.parse(searchTerms.trim());
+            criteria = {
+                ...parsed,
+                since: parsed.since ? new Date(parsed.since) : undefined,
+                before: parsed.before ? new Date(parsed.before) : undefined,
+            };
+        } catch (err) {
+            elizaLogger.error("Failed to parse search criteria", {
+                searchTerms,
+                error: err,
+            });
+            await callback?.({
+                text: "I couldn't understand the search criteria. Please try rephrasing your request.",
+            });
+            return false;
+        }
+
+        elizaLogger.debug("Searching with criteria", { criteria });
         try {
             const emails = await global.mailService.searchEmails(criteria);
-
             if (emails.length === 0) {
-                if (callback) {
-                    await callback({
-                        text: "No emails found matching the search criteria.",
-                    });
-                }
+                await callback?.({
+                    text: "No emails found matching your search criteria.",
+                });
                 return true;
             }
 
-            const formattedEmails = emails
-                .map((email, index) => {
-                    const from =
-                        email.from?.text ||
-                        email.from?.value?.[0]?.address ||
-                        "Unknown Sender";
-                    return `Email ${index + 1}:\nFrom: ${from}\nSubject: ${email.subject || "No Subject"}\nDate: ${email.date?.toLocaleString() || "Unknown Date"}\n---\n${email.text || "No Content"}`;
-                })
+            const summary = emails
+                .map(
+                    (email, i) =>
+                        `${i + 1}. From: ${email.from?.text || "Unknown"}\n   Subject: ${email.subject || "No subject"}\n   Date: ${email.date?.toLocaleString() || "Unknown"}`
+                )
                 .join("\n\n");
 
-            if (markSeen) {
-                for (const email of emails) {
-                    if (email.uid) {
-                        await global.mailService.markAsRead(email.uid);
-                    }
-                }
-            }
-
-            if (callback) {
-                await callback({
-                    text: `Found ${emails.length} email(s):\n\n${formattedEmails}`,
-                });
-            }
-
+            await callback?.({
+                text: `Found ${emails.length} matching email(s):\n\n${summary}`,
+            });
             return true;
-        } catch (error) {
-            elizaLogger.error("Error searching emails:", error);
-            throw error;
+        } catch (err) {
+            elizaLogger.error("Error searching emails", {
+                criteria,
+                error: err,
+            });
+            await callback?.({
+                text: "Sorry, I encountered an error while searching emails. Please try again.",
+            });
+            return false;
         }
     },
-    validate: async () => true,
+    validate: async (runtime: IAgentRuntime) => {
+        return !!global.mailService;
+    },
 };

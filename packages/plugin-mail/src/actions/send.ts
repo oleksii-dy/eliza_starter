@@ -1,13 +1,13 @@
 import {
     Action,
+    composeContext,
+    elizaLogger,
+    generateText,
+    HandlerCallback,
     IAgentRuntime,
     Memory,
-    elizaLogger,
-    State,
-    composeContext,
-    generateText,
     ModelClass,
-    HandlerCallback,
+    State,
 } from "@elizaos/core";
 import { SendEmailParams } from "../types";
 
@@ -38,9 +38,11 @@ export class SendEmailAction {
         if (!params.to) {
             throw new Error("Recipient (to) is required");
         }
+
         if (!params.subject) {
             throw new Error("Subject is required");
         }
+
         if (!params.text) {
             throw new Error("Email text content is required");
         }
@@ -58,8 +60,8 @@ export class SendEmailAction {
 
 export const sendEmailAction: Action = {
     name: "sendEmail",
-    description: "Send an email",
-    similes: ["send", "compose", "write"],
+    description: "Send an email to a recipient",
+    similes: ["send", "compose", "write", "email"],
     examples: [
         [
             {
@@ -73,7 +75,15 @@ export const sendEmailAction: Action = {
             {
                 user: "user",
                 content: {
-                    text: "write an email to jane@example.com with subject Project Update that Here's the latest update",
+                    text: "write an email to sarah@example.com with subject Project Update saying Here's the latest progress on the project",
+                },
+            },
+        ],
+        [
+            {
+                user: "user",
+                content: {
+                    text: "email the report to team@company.com",
                 },
             },
         ],
@@ -126,14 +136,20 @@ export const sendEmailAction: Action = {
             if (callback) {
                 await callback({
                     text: result.message,
-                    content: result,
                 });
             }
             return true;
-        } catch (error) {
-            elizaLogger.error("Error in send email handler:", error);
+        } catch (error: any) {
+            elizaLogger.error("Error in send email handler:", {
+                code: error.code,
+                command: error.command,
+                message: error.message,
+                stack: error.stack,
+            });
             if (callback) {
-                await callback({ text: `Error: ${error.message}` });
+                await callback({
+                    text: `Failed to send email: ${error.message}`,
+                });
             }
             return false;
         }
