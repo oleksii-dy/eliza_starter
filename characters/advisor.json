@@ -8,7 +8,7 @@
             "model": "en_US-male-medium"
         }
     },
-    "plugins": ["@elizaos/plugin-suimarket","@elizaos/plugin-rookee"],
+    "plugins": ["@elizaos/plugin-suimarket"],
     "adjectives": [
       "analytical",
       "precise",
