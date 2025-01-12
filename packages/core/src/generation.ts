@@ -1,5 +1,6 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createMistral } from "@ai-sdk/mistral";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -412,7 +413,6 @@ export async function generateText({
             case ModelProviderName.HYPERBOLIC:
             case ModelProviderName.TOGETHER:
             case ModelProviderName.NINETEEN_AI:
-            case ModelProviderName.TOGETHER:
             case ModelProviderName.AKASH_CHAT_API: {
                 elizaLogger.debug("Initializing OpenAI model with Cloudflare check");
                 const baseURL = getCloudflareGatewayBaseURL(runtime, 'openai') || endpoint;
@@ -525,6 +525,27 @@ export async function generateText({
 
                 response = googleResponse;
                 elizaLogger.debug("Received response from Google model.");
+                break;
+            }
+
+            case ModelProviderName.MISTRAL: {
+                const mistral = createMistral();
+
+                const { text: mistralResponse } = await aiGenerateText({
+                    model: mistral(model),
+                    prompt: context,
+                    system:
+                        runtime.character.system ??
+                        settings.SYSTEM_PROMPT ??
+                        undefined,
+                    temperature: temperature,
+                    maxTokens: max_response_length,
+                    frequencyPenalty: frequency_penalty,
+                    presencePenalty: presence_penalty,
+                });
+
+                response = mistralResponse;
+                elizaLogger.debug("Received response from Mistral model.");
                 break;
             }
 
@@ -941,6 +962,37 @@ export async function generateText({
 
                 response = veniceResponse;
                 elizaLogger.debug("Received response from Venice model.");
+                break;
+            }
+
+            case ModelProviderName.DEEPSEEK: {
+                elizaLogger.debug("Initializing Deepseek model.");
+                const serverUrl = models[provider].endpoint;
+                const deepseek = createOpenAI({
+                    apiKey,
+                    baseURL: serverUrl,
+                    fetch: runtime.fetch,
+                });
+
+                const { text: deepseekResponse } = await aiGenerateText({
+                    model: deepseek.languageModel(model),
+                    prompt: context,
+                    temperature: temperature,
+                    system:
+                        runtime.character.system ??
+                        settings.SYSTEM_PROMPT ??
+                        undefined,
+                    tools: tools,
+                    onStepFinish: onStepFinish,
+                    maxSteps: maxSteps,
+                    maxTokens: max_response_length,
+                    frequencyPenalty: frequency_penalty,
+                    presencePenalty: presence_penalty,
+                    experimental_telemetry: experimental_telemetry,
+                });
+
+                response = deepseekResponse;
+                elizaLogger.debug("Received response from Deepseek model.");
                 break;
             }
 
@@ -1863,12 +1915,16 @@ export async function handleProvider(
             });
         case ModelProviderName.GOOGLE:
             return await handleGoogle(options);
+        case ModelProviderName.MISTRAL:
+            return await handleMistral(options);
         case ModelProviderName.REDPILL:
             return await handleRedPill(options);
         case ModelProviderName.OPENROUTER:
             return await handleOpenRouter(options);
         case ModelProviderName.OLLAMA:
             return await handleOllama(options);
+        case ModelProviderName.DEEPSEEK:
+            return await handleDeepSeek(options);
         default: {
             const errorMessage = `Unsupported provider: ${provider}`;
             elizaLogger.error(errorMessage);
@@ -1890,7 +1946,7 @@ async function handleOpenAI({
     schemaDescription,
     mode = "json",
     modelOptions,
-    provider,
+    provider: _provider,
     runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     const baseURL = getCloudflareGatewayBaseURL(runtime, 'openai') || models.openai.endpoint;
@@ -2020,6 +2076,31 @@ async function handleGoogle({
 }
 
 /**
+ * Handles object generation for Mistral models.
+ *
+ * @param {ProviderOptions} options - Options specific to Mistral.
+ * @returns {Promise<GenerateObjectResult<unknown>>} - A promise that resolves to generated objects.
+ */
+async function handleMistral({
+    model,
+    schema,
+    schemaName,
+    schemaDescription,
+    mode,
+    modelOptions,
+}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+    const mistral = createMistral();
+    return await aiGenerateObject({
+        model: mistral(model),
+        schema,
+        schemaName,
+        schemaDescription,
+        mode,
+        ...modelOptions,
+    });
+}
+
+/**
  * Handles object generation for Redpill models.
  *
  * @param {ProviderOptions} options - Options specific to Redpill.
@@ -2095,6 +2176,32 @@ async function handleOllama({
     const ollama = ollamaProvider(model);
     return await aiGenerateObject({
         model: ollama,
+        schema,
+        schemaName,
+        schemaDescription,
+        mode,
+        ...modelOptions,
+    });
+}
+
+/**
+ * Handles object generation for DeepSeek models.
+ *
+ * @param {ProviderOptions} options - Options specific to DeepSeek.
+ * @returns {Promise<GenerateObjectResult<unknown>>} - A promise that resolves to generated objects.
+ */
+async function handleDeepSeek({
+    model,
+    apiKey,
+    schema,
+    schemaName,
+    schemaDescription,
+    mode,
+    modelOptions,
+}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+    const openai = createOpenAI({ apiKey, baseURL: models.deepseek.endpoint });
+    return await aiGenerateObject({
+        model: openai.languageModel(model),
         schema,
         schemaName,
         schemaDescription,
