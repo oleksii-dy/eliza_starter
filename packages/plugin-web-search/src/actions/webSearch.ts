@@ -44,6 +44,7 @@ export const webSearch: Action = {
         "ONLINE_SEARCH",
         "FIND_INFORMATION",
     ],
+    suppressInitialMessage: true,
     description:
         "Perform a web search to find information related to the message.",
     validate: async (runtime: IAgentRuntime, message: Memory) => {
