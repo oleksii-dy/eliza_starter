@@ -35,7 +35,6 @@ export interface SendEmailParams {
 }
 
 export interface IMailAdapter {
-    connect(): Promise<void>;
     getRecentEmails(): Promise<EmailMessage[]>;
     searchEmails(criteria: SearchCriteria): Promise<EmailMessage[]>;
     sendEmail(params: SendEmailParams): Promise<void>;

@@ -33,25 +33,14 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
                 user: config.imap.user,
                 pass: config.imap.password,
             },
-            disableAutoIdle: true,
-            connectionTimeout: 30000,
-            authTimeout: 20000,
         });
 
         this.config = config;
     }
 
-    async connect(): Promise<void> {
-        if (!this.client.usable) {
-            elizaLogger.info("Attempting to connect to IMAP server...");
-            await this.client.connect();
-            elizaLogger.info("Successfully connected to IMAP server");
-        } else {
-            elizaLogger.info("Already connected to IMAP server");
-        }
-    }
-
     async getRecentEmails(): Promise<EmailMessage[]> {
+        await this.client.connect();
+
         elizaLogger.debug("Fetching new emails", {
             lastUID: this.lastUID,
             uidValidity: this.uidValidity,
@@ -115,12 +104,16 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
     }
 
     async searchEmails(criteria: SearchCriteria): Promise<EmailMessage[]> {
+        await this.client.connect();
+
         const imapCriteria = this.convertToImapCriteria(criteria);
+
         elizaLogger.debug("Searching emails with criteria", {
             criteria: imapCriteria,
         });
 
         const lock = await this.client.getMailboxLock("INBOX");
+
         try {
             const emails: EmailMessage[] = [];
             for await (const message of this.client.fetch(imapCriteria, {
@@ -218,6 +211,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
     }
 
     async markAsRead(messageId: string): Promise<void> {
+        await this.client.connect();
         const lock = await this.client.getMailboxLock("INBOX");
         try {
             await this.client.messageFlagsAdd(messageId, ["\\Seen"]);

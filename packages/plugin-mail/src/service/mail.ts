@@ -21,10 +21,6 @@ export class MailService {
         }
     }
 
-    async connect(): Promise<void> {
-        await this.adapter.connect();
-    }
-
     async getRecentEmails(): Promise<any[]> {
         return this.adapter.getRecentEmails();
     }
