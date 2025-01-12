@@ -280,12 +280,77 @@ export class ReservoirService {
         transactionHash?: string;
         marketplaceUrl: string;
     }> {
-        return Promise.resolve({
-            listingId: "",
-            status: "",
-            transactionHash: undefined,
-            marketplaceUrl: "",
-        });
+        const endOperation = this.performanceMonitor.startOperation(
+            "createListing",
+            { options }
+        );
+
+        try {
+            // Validate required parameters
+            if (
+                !options.tokenId ||
+                !options.collectionAddress ||
+                !options.price
+            ) {
+                throw new Error("Missing required listing parameters");
+            }
+
+            // Default values
+            const currency = options.currency || "ETH";
+            const quantity = options.quantity || 1;
+            const expirationTime =
+                options.expirationTime ||
+                Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // 30 days from now
+
+            const listingParams = {
+                maker: "", // Will be set by runtime or current wallet
+                token: `${options.collectionAddress}:${options.tokenId}`,
+                quantity: quantity.toString(),
+                price: options.price.toString(),
+                currency,
+                expirationTime: expirationTime.toString(),
+            };
+
+            const response = await this.makeRequest<{
+                listing: {
+                    id: string;
+                    status: string;
+                    transactionHash?: string;
+                };
+            }>("/listings/v5/create", listingParams, 1, {} as IAgentRuntime);
+
+            const result = {
+                listingId: response.listing.id,
+                status: response.listing.status,
+                transactionHash: response.listing.transactionHash,
+                marketplaceUrl: `https://reservoir.market/collections/${options.collectionAddress}/tokens/${options.tokenId}`,
+            };
+
+            endOperation();
+            return result;
+        } catch (error) {
+            this.performanceMonitor.recordMetric({
+                operation: "createListing",
+                duration: 0,
+                success: false,
+                metadata: { error: error.message, options },
+            });
+
+            const nftError = NFTErrorFactory.create(
+                ErrorType.API,
+                ErrorCode.API_ERROR,
+                "Failed to create NFT listing",
+                {
+                    originalError: error,
+                    collectionAddress: options.collectionAddress,
+                    tokenId: options.tokenId,
+                },
+                true
+            );
+            this.errorHandler.handleError(nftError);
+
+            throw error;
+        }
     }
 
     async cancelListing(options: {
