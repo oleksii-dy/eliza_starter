@@ -22,6 +22,11 @@ services:
           mount: /app/packages/plugin-akash/src/
           readOnly: false
     env:
+      - >-
+        OPENAI_API_KEY=FIXME
+      - >-
+        AKASH_MNEMONIC=FIXME
+      - AKASH_WALLET_ADDRESS=FIXME
       - AKASH_ENV=mainnet
       - AKASH_NET=https://raw.githubusercontent.com/ovrclk/net/master/mainnet
       - RPC_ENDPOINT=https://rpc.akashnet.net:443
