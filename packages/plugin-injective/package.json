@@ -6,25 +6,25 @@
     "types": "dist/index.d.ts",
     "type": "module",
     "scripts": {
-      "build": "tsup",
-      "dev": "tsup --watch",
-      "lint": "eslint --fix .",
+      "build": "tsup --format esm --dts",
+      "dev": "tsup --format esm --dts --watch",
+      "lint": "eslint --fix  --cache .",
       "test": "jest",
       "test:watch": "jest --watch",
       "format": "prettier --write \"src/**/*.ts\"",
       "test:coverage": "jest --coverage"
     },
     "exports": {
-      "./package.json": "./package.json",
-      ".": {
-        "import": {
-          "@elizaos/source": "./src/index.ts",
-          "types": "./dist/index.d.ts",
-          "default": "./dist/index.js"
-        }
-      }
-    },
-    "files": ["dist"],
+          "./package.json": "./package.json",
+          ".": {
+            "require": "./dist/index.cjs",
+              "import": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+          }
+      },
+    "files": [
+        "dist"
+    ],
     "keywords": [],
     "author": "hrishikesh@injectivelabs.org",
     "license": "ISC",
@@ -46,7 +46,6 @@
     "dependencies": {
       "@elizaos/adapter-sqlite": "0.1.7-alpha.2",
       "@elizaos/core": "workspace:*",
-      "axios": "^1.7.9",
-      "injective-sdk-client-ts": "workspace:*"
+      "injective-sdk-client-ts": "file:../../packages/plugin-injective/injective-sdk-client-ts"
     }
   }

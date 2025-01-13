@@ -1,30 +1,48 @@
-
 import { defineConfig } from 'tsup';
 import { builtinModules } from 'module';
 import pkg from './package.json';
 
 export default defineConfig({
-  entry: ['src/index.ts'], // Adjust if your entry point is different
-  format: ['esm'], // ESM output
-  dts: true, // Generate TypeScript declaration files
-  sourcemap: true, // Optional: Generate source maps
-  clean: true, // Clean output directory before build
-  splitting: false, // Disable code splitting unless needed
-  minify: false, // Disable minification for easier debugging
-  platform: 'node', // Target Node.js
-  target: 'node23', // Specify Node.js version without minor/patch
+  entry: ['src/index.ts'],
+  format: ['cjs', 'esm'],
+  dts: true,
+  sourcemap: true,
+  clean: true,
+  splitting: false,
+  minify: false,
+  platform: 'node',
+  target: 'node23',
 
-  // Externalize Node.js built-in modules and dependencies
-  external: [
-    // Node.js built-in modules
-    ...builtinModules,
-
-    // Externalize all dependencies
-    ...Object.keys(pkg.dependencies || {}),
+  noExternal: [
+    '@injectivelabs/networks',
+    '@injectivelabs/sdk-ts',
+    '@injectivelabs/token-metadata',
+    '@injectivelabs/ts-types',
+    '@injectivelabs/utils',
+    'form-data',
+    'combined-stream'
   ],
 
-  esbuildOptions: (esbuild) => {
-    // Optional: Define global constants or polyfills if needed
-    // esbuild.define = { 'process.env.NODE_ENV': '"production"' };
-  },
+  external: [
+    ...builtinModules.filter(mod => mod !== 'util'),
+    ...Object.keys(pkg.dependencies || {})
+            .filter(dep => !dep.startsWith('@injectivelabs/'))
+  ],
+
+  esbuildOptions: (options) => {
+    options.mainFields = ['module', 'main'];
+    options.banner = {
+      js: `
+        import { createRequire } from 'module';
+        import { fileURLToPath } from 'url';
+        import { dirname } from 'path';
+        const require = createRequire(import.meta.url);
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = dirname(__filename);
+      `
+    };
+    options.define = {
+      'process.env.NODE_ENV': '"production"'
+    };
+  }
 });

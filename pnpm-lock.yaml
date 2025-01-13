@@ -1032,7 +1032,7 @@ importers:
         version: 10.0.0
       ai:
         specifier: 3.4.33
-        version: 3.4.33(openai@4.73.0(encoding@0.1.13)(zod@3.23.8))(react@19.0.0)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)(vue@3.5.13(typescript@5.6.3))(zod@3.23.8)
+        version: 3.4.33(openai@4.73.0(encoding@0.1.13)(zod@3.23.8))(react@19.0.0)(sswr@2.1.0(svelte@5.17.4))(svelte@5.17.4)(vue@3.5.13(typescript@5.6.3))(zod@3.23.8)
       anthropic-vertex-ai:
         specifier: 1.0.2
         version: 1.0.2(encoding@0.1.13)(zod@3.23.8)
@@ -1920,16 +1920,13 @@ importers:
     dependencies:
       '@elizaos/adapter-sqlite':
         specifier: 0.1.7-alpha.2
-        version: 0.1.7-alpha.2(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(@langchain/groq@0.1.3(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13))(axios@1.7.9)(encoding@0.1.13)(react@19.0.0)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)(whatwg-url@14.1.0)
+        version: 0.1.7-alpha.2(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(@langchain/groq@0.1.3(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13))(axios@1.7.9)(encoding@0.1.13)(react@19.0.0)(sswr@2.1.0(svelte@5.17.4))(svelte@5.17.4)(whatwg-url@14.1.0)
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
-      axios:
-        specifier: ^1.7.9
-        version: 1.7.9(debug@4.4.0)
       injective-sdk-client-ts:
         specifier: file:../../packages/plugin-injective/injective-sdk-client-ts
-        version: '@injectivelabs/injective-sdk-client-ts@file:packages/plugin-injective/injective-sdk-client-ts(@types/react@19.0.6)(bufferutil@4.0.9)(google-protobuf@3.21.4)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@5.0.10)'
+        version: '@injectivelabs/injective-sdk-client-ts@file:packages/plugin-injective/injective-sdk-client-ts(@types/react@19.0.6)(bufferutil@4.0.9)(google-protobuf@3.21.4)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@6.0.5)'
     devDependencies:
       '@types/chai':
         specifier: ^5.0.1
@@ -4534,9 +4531,6 @@ packages:
   '@cosmjs/amino@0.27.1':
     resolution: {integrity: sha512-w56ar/nK9+qlvWDpBPRmD0Blk2wfkkLqRi1COs1x7Ll1LF0AtkIBUjbRKplENLbNovK0T3h+w8bHiFm+GBGQOA==}
 
-  '@cosmjs/amino@0.30.1':
-    resolution: {integrity: sha512-yNHnzmvAlkETDYIpeCTdVqgvrdt1qgkOXwuRVi8s27UKI5hfqyE9fJ/fuunXE6ZZPnKkjIecDznmuUOMrMvw4w==}
-
   '@cosmjs/amino@0.31.3':
     resolution: {integrity: sha512-36emtUq895sPRX8PTSOnG+lhJDCVyIcE0Tr5ct59sUbgQiI14y43vj/4WAlJ/utSOxy+Zhj9wxcs4AZfu0BHsw==}
 
@@ -4552,9 +4546,6 @@ packages:
   '@cosmjs/crypto@0.27.1':
     resolution: {integrity: sha512-vbcxwSt99tIYJg8Spp00wc3zx72qx+pY3ozGuBN8gAvySnagK9dQ/jHwtWQWdammmdD6oW+75WfIHZ+gNa+Ybg==}
 
-  '@cosmjs/crypto@0.30.1':
-    resolution: {integrity: sha512-rAljUlake3MSXs9xAm87mu34GfBLN0h/1uPPV6jEwClWjNkAMotzjC0ab9MARy5FFAvYHL3lWb57bhkbt2GtzQ==}
-
   '@cosmjs/crypto@0.31.3':
     resolution: {integrity: sha512-vRbvM9ZKR2017TO73dtJ50KxoGcFzKtKI7C8iO302BQ5p+DuB+AirUg1952UpSoLfv5ki9O416MFANNg8UN/EQ==}
 
@@ -4564,17 +4555,11 @@ packages:
   '@cosmjs/encoding@0.27.1':
     resolution: {integrity: sha512-rayLsA0ojHeniaRfWWcqSsrE/T1rl1gl0OXVNtXlPwLJifKBeLEefGbOUiAQaT0wgJ8VNGBazVtAZBpJidfDhw==}
 
-  '@cosmjs/encoding@0.30.1':
-    resolution: {integrity: sha512-rXmrTbgqwihORwJ3xYhIgQFfMSrwLu1s43RIK9I8EBudPx3KmnmyAKzMOVsRDo9edLFNuZ9GIvysUCwQfq3WlQ==}
-
   '@cosmjs/encoding@0.31.3':
     resolution: {integrity: sha512-6IRtG0fiVYwyP7n+8e54uTx2pLYijO48V3t9TLiROERm5aUAIzIlz6Wp0NYaI5he9nh1lcEGJ1lkquVKFw3sUg==}
 
   '@cosmjs/encoding@0.32.4':
     resolution: {integrity: sha512-tjvaEy6ZGxJchiizzTn7HVRiyTg1i4CObRRaTRPknm5EalE13SV+TCHq38gIDfyUeden4fCuaBVEdBR5+ti7Hw==}
-
-  '@cosmjs/json-rpc@0.30.1':
-    resolution: {integrity: sha512-pitfC/2YN9t+kXZCbNuyrZ6M8abnCC2n62m+JtU9vQUfaEtVsgy+1Fk4TRQ175+pIWSdBMFi2wT8FWVEE4RhxQ==}
 
   '@cosmjs/json-rpc@0.31.3':
     resolution: {integrity: sha512-7LVYerXjnm69qqYR3uA6LGCrBW2EO5/F7lfJxAmY+iII2C7xO3a0vAjMSt5zBBh29PXrJVS6c2qRP22W1Le2Wg==}
@@ -4588,17 +4573,11 @@ packages:
   '@cosmjs/math@0.27.1':
     resolution: {integrity: sha512-cHWVjmfIjtRc7f80n7x+J5k8pe+vTVTQ0lA82tIxUgqUvgS6rogPP/TmGtTiZ4+NxWxd11DUISY6gVpr18/VNQ==}
 
-  '@cosmjs/math@0.30.1':
-    resolution: {integrity: sha512-yaoeI23pin9ZiPHIisa6qqLngfnBR/25tSaWpkTm8Cy10MX70UF5oN4+/t1heLaM6SSmRrhk3psRkV4+7mH51Q==}
-
   '@cosmjs/math@0.31.3':
     resolution: {integrity: sha512-kZ2C6glA5HDb9hLz1WrftAjqdTBb3fWQsRR+Us2HsjAYdeE6M3VdXMsYCP5M3yiihal1WDwAY2U7HmfJw7Uh4A==}
 
   '@cosmjs/math@0.32.4':
     resolution: {integrity: sha512-++dqq2TJkoB8zsPVYCvrt88oJWsy1vMOuSOKcdlnXuOA/ASheTJuYy4+oZlTQ3Fr8eALDLGGPhJI02W2HyAQaw==}
-
-  '@cosmjs/proto-signing@0.30.1':
-    resolution: {integrity: sha512-tXh8pPYXV4aiJVhTKHGyeZekjj+K9s2KKojMB93Gcob2DxUjfKapFYBMJSgfKPuWUPEmyr8Q9km2hplI38ILgQ==}
 
   '@cosmjs/proto-signing@0.31.3':
     resolution: {integrity: sha512-24+10/cGl6lLS4VCrGTCJeDRPQTn1K5JfknzXzDIHOx8THR31JxA7/HV5eWGHqWgAbudA7ccdSvEK08lEHHtLA==}
@@ -4609,17 +4588,11 @@ packages:
   '@cosmjs/proto-signing@0.32.4':
     resolution: {integrity: sha512-QdyQDbezvdRI4xxSlyM1rSVBO2st5sqtbEIl3IX03uJ7YiZIQHyv6vaHVf1V4mapusCqguiHJzm4N4gsFdLBbQ==}
 
-  '@cosmjs/socket@0.30.1':
-    resolution: {integrity: sha512-r6MpDL+9N+qOS/D5VaxnPaMJ3flwQ36G+vPvYJsXArj93BjgyFB7BwWwXCQDzZ+23cfChPUfhbINOenr8N2Kow==}
-
   '@cosmjs/socket@0.31.3':
     resolution: {integrity: sha512-aqrDGGi7os/hsz5p++avI4L0ZushJ+ItnzbqA7C6hamFSCJwgOkXaOUs+K9hXZdX4rhY7rXO4PH9IH8q09JkTw==}
 
   '@cosmjs/socket@0.32.4':
     resolution: {integrity: sha512-davcyYziBhkzfXQTu1l5NrpDYv0K9GekZCC9apBRvL1dvMc9F/ygM7iemHjUA+z8tJkxKxrt/YPjJ6XNHzLrkw==}
-
-  '@cosmjs/stargate@0.30.1':
-    resolution: {integrity: sha512-RdbYKZCGOH8gWebO7r6WvNnQMxHrNXInY/gPHPzMjbQF6UatA6fNM2G2tdgS5j5u7FTqlCI10stNXrknaNdzog==}
 
   '@cosmjs/stargate@0.31.3':
     resolution: {integrity: sha512-53NxnzmB9FfXpG4KjOUAYAvWLYKdEmZKsutcat/u2BrDXNZ7BN8jim/ENcpwXfs9/Og0K24lEIdvA4gsq3JDQw==}
@@ -4630,17 +4603,11 @@ packages:
   '@cosmjs/stargate@0.32.4':
     resolution: {integrity: sha512-usj08LxBSsPRq9sbpCeVdyLx2guEcOHfJS9mHGCLCXpdAPEIEQEtWLDpEUc0LEhWOx6+k/ChXTc5NpFkdrtGUQ==}
 
-  '@cosmjs/stream@0.30.1':
-    resolution: {integrity: sha512-Fg0pWz1zXQdoxQZpdHRMGvUH5RqS6tPv+j9Eh7Q953UjMlrwZVo0YFLC8OTf/HKVf10E4i0u6aM8D69Q6cNkgQ==}
-
   '@cosmjs/stream@0.31.3':
     resolution: {integrity: sha512-8keYyI7X0RjsLyVcZuBeNjSv5FA4IHwbFKx7H60NHFXszN8/MvXL6aZbNIvxtcIHHsW7K9QSQos26eoEWlAd+w==}
 
   '@cosmjs/stream@0.32.4':
     resolution: {integrity: sha512-Gih++NYHEiP+oyD4jNEUxU9antoC0pFSg+33Hpp0JlHwH0wXhtD3OOKnzSfDB7OIoEbrzLJUpEjOgpCp5Z+W3A==}
-
-  '@cosmjs/tendermint-rpc@0.30.1':
-    resolution: {integrity: sha512-Z3nCwhXSbPZJ++v85zHObeUggrEHVfm1u18ZRwXxFE9ZMl5mXTybnwYhczuYOl7KRskgwlB+rID0WYACxj4wdQ==}
 
   '@cosmjs/tendermint-rpc@0.31.3':
     resolution: {integrity: sha512-s3TiWkPCW4QceTQjpYqn4xttUJH36mTPqplMl+qyocdqk5+X5mergzExU/pHZRWQ4pbby8bnR7kMvG4OC1aZ8g==}
@@ -4653,9 +4620,6 @@ packages:
 
   '@cosmjs/utils@0.27.1':
     resolution: {integrity: sha512-VG7QPDiMUzVPxRdJahDV8PXxVdnuAHiIuG56hldV4yPnOz/si/DLNd7VAUUA5923b6jS1Hhev0Hr6AhEkcxBMg==}
-
-  '@cosmjs/utils@0.30.1':
-    resolution: {integrity: sha512-KvvX58MGMWh7xA+N+deCfunkA/ZNDvFLw4YbOmX3f/XBIkqrVY7qlotfy2aNb1kgp6h4B6Yc8YawJPDTfvWX7g==}
 
   '@cosmjs/utils@0.31.3':
     resolution: {integrity: sha512-VBhAgzrrYdIe0O5IbKRqwszbQa7ZyQLx9nEQuHQ3HUplQW7P44COG/ye2n6AzCudtqxmwdX7nyX8ta1J07GoqA==}
@@ -5335,12 +5299,6 @@ packages:
 
   '@emotion/weak-memoize@0.4.0':
     resolution: {integrity: sha512-snKqtPW01tN0ui7yu9rGv69aJXr/a/Ywvl11sUjNtEcRc+ng/mQriFL0wLXMef74iHa/EkftbDzU9F8iFbH+zg==}
-
-  '@ensdomains/ens-validation@0.1.0':
-    resolution: {integrity: sha512-rbDh2K6GfqXvBcJUISaTTYEt3f079WA4ohTE5Lh4/8EaaPAk/9vk3EisMUQV2UVxeFIZQEEyRCIOmRTpqN0W7A==}
-
-  '@ensdomains/eth-ens-namehash@2.0.15':
-    resolution: {integrity: sha512-JRDFP6+Hczb1E0/HhIg0PONgBYasfGfDheujmfxaZaAv/NAH4jE6Kf48WbqfRZdxt4IZI3jl3Ri7sZ1nP09lgw==}
 
   '@es-joy/jsdoccomment@0.41.0':
     resolution: {integrity: sha512-aKUhyn1QI5Ksbqcr3fFJj16p99QdjUxXAEuFst1Z47DRyoiMwivIH9MV/ARcJOCXVjPfjITciej8ZD2O/6qUmw==}
@@ -6474,17 +6432,14 @@ packages:
     peerDependencies:
       google-protobuf: ^3.14.0
 
-  '@injectivelabs/core-proto-ts@0.0.18':
-    resolution: {integrity: sha512-WSZS7SQ+I/m8jdc7fhzkMTUhA7i5nVTeKbN6QGqKmOwQ/F+PqM75vDHD9Y9NbLPx9P+m7hyUzSHz4zmajth5jw==}
-
   '@injectivelabs/core-proto-ts@1.13.4':
     resolution: {integrity: sha512-81+bwey0qzNgOzUASsxYghSahcWzH5l6bSceW8FdR7w42+Knp+bAgbg12sSyS1hiOO2kMXx6tBvmYkCmnghM1Q==}
 
-  '@injectivelabs/dmm-proto-ts@1.0.19':
-    resolution: {integrity: sha512-2FCzCziy1RhzmnkAVIU+Asby/GXAVQqKt5/o1s52j0LJXfJMpiCrV6soLfnjTebj61T+1WvJBPFoZCCiVYBpcw==}
-
   '@injectivelabs/exceptions@1.14.33':
     resolution: {integrity: sha512-2c8YzLgwTOOsyc1WheqdM8jEfgGBhVrXN4cZ0jsikFVsLF619IDRn3hjIYqTeNERaEpeRPiuJGfZDu0DomwFrQ==}
+
+  '@injectivelabs/exceptions@1.14.34-beta.5':
+    resolution: {integrity: sha512-Tr6JYYp1WgJbr9QwuNrxM1xyeLRtZ9ah8jaIn37RBJzX00uxgAc46H5n2pSsr84G7R7c5gfEFfJ98o7X875dNQ==}
 
   '@injectivelabs/grpc-web-node-http-transport@0.0.2':
     resolution: {integrity: sha512-rpyhXLiGY/UMs6v6YmgWHJHiO9l0AgDyVNv+jcutNVt4tQrmNvnpvz2wCAGOFtq5LuX/E9ChtTVpk3gWGqXcGA==}
@@ -6501,56 +6456,56 @@ packages:
     peerDependencies:
       google-protobuf: ^3.14.0
 
-  '@injectivelabs/indexer-proto-ts@1.11.22':
-    resolution: {integrity: sha512-Mx90Q6F2lW03FlqXqw6MKCtKl3Rxuhla2CBlhhXe6XrmZWt+LpkiYinlZCyQDnmwjuqzCqurlMx4/sEjuy5WhA==}
-
   '@injectivelabs/indexer-proto-ts@1.13.3':
     resolution: {integrity: sha512-rLesVPCARl+OC82vj063/pUawYu0ISty/2+xg6ya4Lwk6PDbXmtRvw8wpNP6K+pAsBOKaSkRnO4ThP5qbX+E6A==}
 
   '@injectivelabs/injective-sdk-client-ts@file:packages/plugin-injective/injective-sdk-client-ts':
     resolution: {directory: packages/plugin-injective/injective-sdk-client-ts, type: directory}
 
-  '@injectivelabs/mito-proto-ts@1.0.52':
-    resolution: {integrity: sha512-esqrLXy9GheL5DAGTSxhUYOJZXE8g/3NnYVqz/x9MxZHQwYhj3LoV2G8CWB0Ly2i7VEOc0osesgJk08hrgLa+w==}
-
   '@injectivelabs/mito-proto-ts@1.13.0':
     resolution: {integrity: sha512-DE9iK7PkEnkWAMTDJDH01R8jxkxVCNuurfVp/09Te9wY3dm3mRx9M6R756JywP2Sd/ggJl2UbavGAQe2pZ7v1w==}
-
-  '@injectivelabs/networks@1.14.3':
-    resolution: {integrity: sha512-AgsIs/UnO5bCmXGZFzIDB92onBGVxE3F12U3rEUPRPtTF3ZO825Jyv+9qYq3X0pKmITds/YnSfi9thsYlX9kAQ==}
 
   '@injectivelabs/networks@1.14.33':
     resolution: {integrity: sha512-XDhAYwWYKdKBRfwO/MIfMyKjKRWz/AliMJG9yaM1C/cDlGHmA3EY7Au2Nf+PdkRhuxl2FzLV2Hp4uWeC0g8BYw==}
 
+  '@injectivelabs/networks@1.14.34-beta.2':
+    resolution: {integrity: sha512-OleogANWicpKUcGMdybfFvxOubXY9fvj5MKea49Q2XO8ErTicaUijsWHUWSdTrW+XQJwH5FXaKHX/1jS7UbRFQ==}
+
+  '@injectivelabs/networks@1.14.34-beta.5':
+    resolution: {integrity: sha512-VCgDhWfgpP5nyEwKelTm1IZWCKXgonkRlaRSMOxifkjcut5q2rwjpGuM5X0s18UkW3iV44C4p9otPDZCGML0NQ==}
+
   '@injectivelabs/olp-proto-ts@1.13.1':
     resolution: {integrity: sha512-dKxse7mZpmvRhm00Wn8Yy93EVEvFD7FPWeWFfxga0Patow3HK0D7k43VV7fE5kX9CDM1bxTatEVQ7WYGq4w0Eg==}
-
-  '@injectivelabs/sdk-ts@1.14.3':
-    resolution: {integrity: sha512-ODXfm46hJg4v1DiVluQL5w9PkH+G8iftUfP2X0foWAc488bPoOSyIJqh5YcYa9O4HNDrc98ksxDC4+GvhANpow==}
-    engines: {node: '>=16.0.0 <17.0.0'}
 
   '@injectivelabs/sdk-ts@1.14.33':
     resolution: {integrity: sha512-qEuu6yzhy8t8rtviCBqV1VMR+JAaDSy59Eebd23i+1P5zqQ9X2lZLLLxz+gWjiglWb8uQYsoLN3TFh2509WNzQ==}
 
+  '@injectivelabs/sdk-ts@1.14.34-beta.2':
+    resolution: {integrity: sha512-L5T/GCm+3b0CjRS5SSNpT4Rq9OgsbtcnH3xcB2V/I9a/u+6AssNiG3CiNRnqjeU74GqH5+M3y/tKIIS0bsnrRw==}
+
   '@injectivelabs/test-utils@1.14.33':
     resolution: {integrity: sha512-1SfIRsMnWcJAYNrrpY+ZUWmbD62lWWdIvD6c+FYmFKS14zU3yDIK9NXe9g1lTM/GdUVkVKQgGg2QAYZ5f2G/xA==}
+
+  '@injectivelabs/test-utils@1.14.34-beta.8':
+    resolution: {integrity: sha512-X63Uqo7aCMBBAcnaxoKyQROtl/n/353epDL0JHLj8Uk4FIWfhox3bTdZcHGtwwZabJMadPlQliHIe5WhGxA/hA==}
 
   '@injectivelabs/token-metadata@1.14.11':
     resolution: {integrity: sha512-WKJlvjKiTRHxpOeez4kYrzIwgWmpspD1IMxWclkTysAcwGltUfUsvUhu1cKuACleIjFFWmiZv/HoGRFdvEAZ8w==}
 
-  '@injectivelabs/ts-types@1.14.3':
-    resolution: {integrity: sha512-VGMp5HZnOguMGD7C5vPBz5nWPjqH384P1SWmzIbfxkzAek3Y+OhzEgIottsoBXpQqJ5WV93L5zy2dwz+/ueXrg==}
-    engines: {node: '>=16.0.0 <17.0.0'}
-
   '@injectivelabs/ts-types@1.14.33':
     resolution: {integrity: sha512-sJZzMNJtZFFZoPKZ91G09bxrZqQ5aS9omoTjQWy+7OxfiRAakzhsarTueX47hm6oTaN0XeBgD3wkMukkWUaobw==}
 
-  '@injectivelabs/utils@1.14.3':
-    resolution: {integrity: sha512-CWN7J4xP2a6TUnjhDxejb1vYLly03sEEYXCC5zOwpa4oZbwihhA0JoRMaiPSz1kHVF6lxRIjJuw3009G1iEvHQ==}
-    engines: {node: '>=16.0.0 <17.0.0'}
+  '@injectivelabs/ts-types@1.14.34-beta.2':
+    resolution: {integrity: sha512-iK50g0TI71Q8lxjl8DLa2qCdypxaPqEHRM/LZt7+vYuazX+2SVuavV4V81Dt0vUcu39DC9yB46FVwcjniCl60Q==}
 
   '@injectivelabs/utils@1.14.33':
     resolution: {integrity: sha512-zsezML4dTujF0xGLhcGmWBCghfJiy9MW+r6VqR8zJUlxnmnEdNpmsvBhBI6cmmov6Se4FL+yALAIFRvTm3txbg==}
+
+  '@injectivelabs/utils@1.14.34-beta.2':
+    resolution: {integrity: sha512-M1TCXZz4jr06zCZoFmoCLLyEuwQ1sObRAIngiUUf3R725oX0c1dpfWEqUmDR/U/MUvJI3Kna7wzyZ7NnBhU23A==}
+
+  '@injectivelabs/utils@1.14.34-beta.5':
+    resolution: {integrity: sha512-x15HVMii1lwOVHUIgvgP0/QoRHNvMXHZSVswiQvcHDiy83IuUCZxc8/W0ELjKKfkIw66zM2pd0UBwJ0IMaJLzw==}
 
   '@ioredis/commands@1.2.0':
     resolution: {integrity: sha512-Sx1pU8EM64o2BrqNpEO1CNLtKQwyhuXuqyfH7oGKCk+1a33d2r5saW8zNwm3j6BTExtjrv2BxTgzzkMwts6vGg==}
@@ -12674,9 +12629,6 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
-
-  cosmjs-types@0.7.2:
-    resolution: {integrity: sha512-vf2uLyktjr/XVAgEq0DjMxeAWh1yYREe7AMHDKd7EiHVqxBPCaBS+qEEQUkXbR9ndnckqr1sUG8BQhazh4X5lA==}
 
   cosmjs-types@0.8.0:
     resolution: {integrity: sha512-Q2Mj95Fl0PYMWEhA2LuGEIhipF7mQwd9gTQ85DdP9jjjopeoGaDxvmPa5nakNzsq7FnO1DMTatXTAx6bxMH7Lg==}
@@ -20869,8 +20821,8 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  svelte@5.17.3:
-    resolution: {integrity: sha512-eLgtpR2JiTgeuNQRCDcLx35Z7Lu9Qe09GPOz+gvtR9nmIZu5xgFd6oFiLGQlxLD0/u7xVyF5AUkjDVyFHe6Bvw==}
+  svelte@5.17.4:
+    resolution: {integrity: sha512-ne4IhhVBwzpUByjo1ocxQnqRoWsRilc9Ry1j+0uPWhHmg4jS/nnlSwYYfx7Ium8okCZ4hYM89rg0B5G0hQzk+g==}
     engines: {node: '>=18'}
 
   svg-parser@2.0.4:
@@ -23224,13 +23176,13 @@ snapshots:
     transitivePeerDependencies:
       - zod
 
-  '@ai-sdk/svelte@0.0.57(svelte@5.17.3)(zod@3.23.8)':
+  '@ai-sdk/svelte@0.0.57(svelte@5.17.4)(zod@3.23.8)':
     dependencies:
       '@ai-sdk/provider-utils': 1.0.22(zod@3.23.8)
       '@ai-sdk/ui-utils': 0.0.50(zod@3.23.8)
-      sswr: 2.1.0(svelte@5.17.3)
+      sswr: 2.1.0(svelte@5.17.4)
     optionalDependencies:
-      svelte: 5.17.3
+      svelte: 5.17.4
     transitivePeerDependencies:
       - zod
 
@@ -25535,13 +25487,6 @@ snapshots:
       '@cosmjs/math': 0.27.1
       '@cosmjs/utils': 0.27.1
 
-  '@cosmjs/amino@0.30.1':
-    dependencies:
-      '@cosmjs/crypto': 0.30.1
-      '@cosmjs/encoding': 0.30.1
-      '@cosmjs/math': 0.30.1
-      '@cosmjs/utils': 0.30.1
-
   '@cosmjs/amino@0.31.3':
     dependencies:
       '@cosmjs/crypto': 0.31.3
@@ -25593,16 +25538,6 @@ snapshots:
       ripemd160: 2.0.2
       sha.js: 2.4.11
 
-  '@cosmjs/crypto@0.30.1':
-    dependencies:
-      '@cosmjs/encoding': 0.30.1
-      '@cosmjs/math': 0.30.1
-      '@cosmjs/utils': 0.30.1
-      '@noble/hashes': 1.7.0
-      bn.js: 5.2.1
-      elliptic: 6.6.1
-      libsodium-wrappers: 0.7.15
-
   '@cosmjs/crypto@0.31.3':
     dependencies:
       '@cosmjs/encoding': 0.31.3
@@ -25629,12 +25564,6 @@ snapshots:
       bech32: 1.1.4
       readonly-date: 1.0.0
 
-  '@cosmjs/encoding@0.30.1':
-    dependencies:
-      base64-js: 1.5.1
-      bech32: 1.1.4
-      readonly-date: 1.0.0
-
   '@cosmjs/encoding@0.31.3':
     dependencies:
       base64-js: 1.5.1
@@ -25646,11 +25575,6 @@ snapshots:
       base64-js: 1.5.1
       bech32: 1.1.4
       readonly-date: 1.0.0
-
-  '@cosmjs/json-rpc@0.30.1':
-    dependencies:
-      '@cosmjs/stream': 0.30.1
-      xstream: 11.14.0
 
   '@cosmjs/json-rpc@0.31.3':
     dependencies:
@@ -25678,10 +25602,6 @@ snapshots:
     dependencies:
       bn.js: 5.2.1
 
-  '@cosmjs/math@0.30.1':
-    dependencies:
-      bn.js: 5.2.1
-
   '@cosmjs/math@0.31.3':
     dependencies:
       bn.js: 5.2.1
@@ -25689,16 +25609,6 @@ snapshots:
   '@cosmjs/math@0.32.4':
     dependencies:
       bn.js: 5.2.1
-
-  '@cosmjs/proto-signing@0.30.1':
-    dependencies:
-      '@cosmjs/amino': 0.30.1
-      '@cosmjs/crypto': 0.30.1
-      '@cosmjs/encoding': 0.30.1
-      '@cosmjs/math': 0.30.1
-      '@cosmjs/utils': 0.30.1
-      cosmjs-types: 0.7.2
-      long: 4.0.0
 
   '@cosmjs/proto-signing@0.31.3':
     dependencies:
@@ -25728,16 +25638,6 @@ snapshots:
       '@cosmjs/utils': 0.32.4
       cosmjs-types: 0.9.0
 
-  '@cosmjs/socket@0.30.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@cosmjs/stream': 0.30.1
-      isomorphic-ws: 4.0.1(ws@7.5.10(bufferutil@4.0.9)(utf-8-validate@5.0.10))
-      ws: 7.5.10(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      xstream: 11.14.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
   '@cosmjs/socket@0.31.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)':
     dependencies:
       '@cosmjs/stream': 0.31.3
@@ -25766,25 +25666,6 @@ snapshots:
       xstream: 11.14.0
     transitivePeerDependencies:
       - bufferutil
-      - utf-8-validate
-
-  '@cosmjs/stargate@0.30.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@confio/ics23': 0.6.8
-      '@cosmjs/amino': 0.30.1
-      '@cosmjs/encoding': 0.30.1
-      '@cosmjs/math': 0.30.1
-      '@cosmjs/proto-signing': 0.30.1
-      '@cosmjs/stream': 0.30.1
-      '@cosmjs/tendermint-rpc': 0.30.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      '@cosmjs/utils': 0.30.1
-      cosmjs-types: 0.7.2
-      long: 4.0.0
-      protobufjs: 6.11.4
-      xstream: 11.14.0
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
       - utf-8-validate
 
   '@cosmjs/stargate@0.31.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)':
@@ -25857,10 +25738,6 @@ snapshots:
       - debug
       - utf-8-validate
 
-  '@cosmjs/stream@0.30.1':
-    dependencies:
-      xstream: 11.14.0
-
   '@cosmjs/stream@0.31.3':
     dependencies:
       xstream: 11.14.0
@@ -25868,23 +25745,6 @@ snapshots:
   '@cosmjs/stream@0.32.4':
     dependencies:
       xstream: 11.14.0
-
-  '@cosmjs/tendermint-rpc@0.30.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@cosmjs/crypto': 0.30.1
-      '@cosmjs/encoding': 0.30.1
-      '@cosmjs/json-rpc': 0.30.1
-      '@cosmjs/math': 0.30.1
-      '@cosmjs/socket': 0.30.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      '@cosmjs/stream': 0.30.1
-      '@cosmjs/utils': 0.30.1
-      axios: 0.21.4
-      readonly-date: 1.0.0
-      xstream: 11.14.0
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - utf-8-validate
 
   '@cosmjs/tendermint-rpc@0.31.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)':
     dependencies:
@@ -25955,8 +25815,6 @@ snapshots:
       - utf-8-validate
 
   '@cosmjs/utils@0.27.1': {}
-
-  '@cosmjs/utils@0.30.1': {}
 
   '@cosmjs/utils@0.31.3': {}
 
@@ -27247,9 +27105,9 @@ snapshots:
 
   '@electric-sql/pglite@0.2.15': {}
 
-  '@elizaos/adapter-sqlite@0.1.7-alpha.2(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(@langchain/groq@0.1.3(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13))(axios@1.7.9)(encoding@0.1.13)(react@19.0.0)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)(whatwg-url@14.1.0)':
+  '@elizaos/adapter-sqlite@0.1.7-alpha.2(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(@langchain/groq@0.1.3(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13))(axios@1.7.9)(encoding@0.1.13)(react@19.0.0)(sswr@2.1.0(svelte@5.17.4))(svelte@5.17.4)(whatwg-url@14.1.0)':
     dependencies:
-      '@elizaos/core': 0.1.7-alpha.2(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(@langchain/groq@0.1.3(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13))(axios@1.7.9)(encoding@0.1.13)(react@19.0.0)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)
+      '@elizaos/core': 0.1.7-alpha.2(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(@langchain/groq@0.1.3(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13))(axios@1.7.9)(encoding@0.1.13)(react@19.0.0)(sswr@2.1.0(svelte@5.17.4))(svelte@5.17.4)
       '@types/better-sqlite3': 7.6.12
       better-sqlite3: 11.6.0
       sqlite-vec: 0.1.6
@@ -27277,7 +27135,7 @@ snapshots:
       - typeorm
       - vue
 
-  '@elizaos/core@0.1.7-alpha.2(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(@langchain/groq@0.1.3(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13))(axios@1.7.9)(encoding@0.1.13)(react@19.0.0)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)':
+  '@elizaos/core@0.1.7-alpha.2(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(@langchain/groq@0.1.3(@langchain/core@0.3.30(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13))(axios@1.7.9)(encoding@0.1.13)(react@19.0.0)(sswr@2.1.0(svelte@5.17.4))(svelte@5.17.4)':
     dependencies:
       '@ai-sdk/anthropic': 0.0.56(zod@3.23.8)
       '@ai-sdk/google': 0.0.55(zod@3.23.8)
@@ -27287,7 +27145,7 @@ snapshots:
       '@anthropic-ai/sdk': 0.30.1(encoding@0.1.13)
       '@fal-ai/client': 1.2.0
       '@types/uuid': 10.0.0
-      ai: 3.4.33(openai@4.73.0(encoding@0.1.13)(zod@3.23.8))(react@19.0.0)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)(vue@3.5.13(typescript@5.6.3))(zod@3.23.8)
+      ai: 3.4.33(openai@4.73.0(encoding@0.1.13)(zod@3.23.8))(react@19.0.0)(sswr@2.1.0(svelte@5.17.4))(svelte@5.17.4)(vue@3.5.13(typescript@5.6.3))(zod@3.23.8)
       anthropic-vertex-ai: 1.0.2(encoding@0.1.13)(zod@3.23.8)
       fastembed: 1.14.1
       fastestsmallesttextencoderdecoder: 1.0.22
@@ -27422,10 +27280,6 @@ snapshots:
   '@emotion/utils@1.4.2': {}
 
   '@emotion/weak-memoize@0.4.0': {}
-
-  '@ensdomains/ens-validation@0.1.0': {}
-
-  '@ensdomains/eth-ens-namehash@2.0.15': {}
 
   '@es-joy/jsdoccomment@0.41.0':
     dependencies:
@@ -28596,21 +28450,7 @@ snapshots:
       browser-headers: 0.4.1
       google-protobuf: 3.21.4
 
-  '@injectivelabs/core-proto-ts@0.0.18':
-    dependencies:
-      '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
-      google-protobuf: 3.21.4
-      protobufjs: 7.4.0
-      rxjs: 7.8.1
-
   '@injectivelabs/core-proto-ts@1.13.4':
-    dependencies:
-      '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
-      google-protobuf: 3.21.4
-      protobufjs: 7.4.0
-      rxjs: 7.8.1
-
-  '@injectivelabs/dmm-proto-ts@1.0.19':
     dependencies:
       '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
       google-protobuf: 3.21.4
@@ -28621,6 +28461,15 @@ snapshots:
     dependencies:
       '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
       '@injectivelabs/ts-types': 1.14.33
+      http-status-codes: 2.3.0
+      shx: 0.3.4
+    transitivePeerDependencies:
+      - google-protobuf
+
+  '@injectivelabs/exceptions@1.14.34-beta.5(google-protobuf@3.21.4)':
+    dependencies:
+      '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
+      '@injectivelabs/ts-types': 1.14.34-beta.2
       http-status-codes: 2.3.0
       shx: 0.3.4
     transitivePeerDependencies:
@@ -28639,13 +28488,6 @@ snapshots:
       browser-headers: 0.4.1
       google-protobuf: 3.21.4
 
-  '@injectivelabs/indexer-proto-ts@1.11.22':
-    dependencies:
-      '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
-      google-protobuf: 3.21.4
-      protobufjs: 7.4.0
-      rxjs: 7.8.1
-
   '@injectivelabs/indexer-proto-ts@1.13.3':
     dependencies:
       '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
@@ -28653,14 +28495,13 @@ snapshots:
       protobufjs: 7.4.0
       rxjs: 7.8.1
 
-  '@injectivelabs/injective-sdk-client-ts@file:packages/plugin-injective/injective-sdk-client-ts(@types/react@19.0.6)(bufferutil@4.0.9)(google-protobuf@3.21.4)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@5.0.10)':
+  '@injectivelabs/injective-sdk-client-ts@file:packages/plugin-injective/injective-sdk-client-ts(@types/react@19.0.6)(bufferutil@4.0.9)(google-protobuf@3.21.4)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@6.0.5)':
     dependencies:
-      '@injectivelabs/networks': 1.14.3(google-protobuf@3.21.4)
-      '@injectivelabs/sdk-ts': 1.14.3(@types/react@19.0.6)(bufferutil@4.0.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@5.0.10)
+      '@injectivelabs/networks': 1.14.34-beta.2(google-protobuf@3.21.4)
+      '@injectivelabs/sdk-ts': 1.14.34-beta.2(@types/react@19.0.6)(bufferutil@4.0.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@6.0.5)
       '@injectivelabs/token-metadata': 1.14.11(google-protobuf@3.21.4)
-      '@injectivelabs/ts-types': 1.14.3
-      '@injectivelabs/utils': 1.14.3(google-protobuf@3.21.4)
-      axios: 1.7.9(debug@4.4.0)
+      '@injectivelabs/ts-types': 1.14.34-beta.2
+      '@injectivelabs/utils': 1.14.34-beta.2(google-protobuf@3.21.4)
       bignumber.js: 9.1.2
     transitivePeerDependencies:
       - '@types/react'
@@ -28673,30 +28514,12 @@ snapshots:
       - subscriptions-transport-ws
       - utf-8-validate
 
-  '@injectivelabs/mito-proto-ts@1.0.52':
-    dependencies:
-      '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
-      google-protobuf: 3.21.4
-      protobufjs: 7.4.0
-      rxjs: 7.8.1
-
   '@injectivelabs/mito-proto-ts@1.13.0':
     dependencies:
       '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
       google-protobuf: 3.21.4
       protobufjs: 7.4.0
       rxjs: 7.8.1
-
-  '@injectivelabs/networks@1.14.3(google-protobuf@3.21.4)':
-    dependencies:
-      '@injectivelabs/exceptions': 1.14.33(google-protobuf@3.21.4)
-      '@injectivelabs/ts-types': 1.14.3
-      '@injectivelabs/utils': 1.14.3(google-protobuf@3.21.4)
-      link-module-alias: 1.2.0
-      shx: 0.3.4
-    transitivePeerDependencies:
-      - debug
-      - google-protobuf
 
   '@injectivelabs/networks@1.14.33(google-protobuf@3.21.4)':
     dependencies:
@@ -28708,62 +28531,32 @@ snapshots:
       - debug
       - google-protobuf
 
+  '@injectivelabs/networks@1.14.34-beta.2(google-protobuf@3.21.4)':
+    dependencies:
+      '@injectivelabs/exceptions': 1.14.34-beta.5(google-protobuf@3.21.4)
+      '@injectivelabs/ts-types': 1.14.34-beta.2
+      '@injectivelabs/utils': 1.14.34-beta.2(google-protobuf@3.21.4)
+      shx: 0.3.4
+    transitivePeerDependencies:
+      - debug
+      - google-protobuf
+
+  '@injectivelabs/networks@1.14.34-beta.5(google-protobuf@3.21.4)':
+    dependencies:
+      '@injectivelabs/exceptions': 1.14.34-beta.5(google-protobuf@3.21.4)
+      '@injectivelabs/ts-types': 1.14.34-beta.2
+      '@injectivelabs/utils': 1.14.34-beta.5(google-protobuf@3.21.4)
+      shx: 0.3.4
+    transitivePeerDependencies:
+      - debug
+      - google-protobuf
+
   '@injectivelabs/olp-proto-ts@1.13.1':
     dependencies:
       '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
       google-protobuf: 3.21.4
       protobufjs: 7.4.0
       rxjs: 7.8.1
-
-  '@injectivelabs/sdk-ts@1.14.3(@types/react@19.0.6)(bufferutil@4.0.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@apollo/client': 3.12.5(@types/react@19.0.6)(graphql@16.10.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@cosmjs/amino': 0.30.1
-      '@cosmjs/proto-signing': 0.30.1
-      '@cosmjs/stargate': 0.30.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      '@ensdomains/ens-validation': 0.1.0
-      '@ensdomains/eth-ens-namehash': 2.0.15
-      '@ethersproject/bytes': 5.7.0
-      '@injectivelabs/core-proto-ts': 0.0.18
-      '@injectivelabs/dmm-proto-ts': 1.0.19
-      '@injectivelabs/exceptions': 1.14.33(google-protobuf@3.21.4)
-      '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
-      '@injectivelabs/grpc-web-node-http-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.4))
-      '@injectivelabs/grpc-web-react-native-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.4))
-      '@injectivelabs/indexer-proto-ts': 1.11.22
-      '@injectivelabs/mito-proto-ts': 1.0.52
-      '@injectivelabs/networks': 1.14.3(google-protobuf@3.21.4)
-      '@injectivelabs/test-utils': 1.14.33(google-protobuf@3.21.4)
-      '@injectivelabs/token-metadata': 1.14.11(google-protobuf@3.21.4)
-      '@injectivelabs/ts-types': 1.14.3
-      '@injectivelabs/utils': 1.14.3(google-protobuf@3.21.4)
-      '@metamask/eth-sig-util': 4.0.1
-      axios: 0.27.2
-      bech32: 2.0.0
-      bip39: 3.1.0
-      cosmjs-types: 0.7.2
-      ethereumjs-util: 7.1.5
-      ethers: 5.7.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      google-protobuf: 3.21.4
-      graphql: 16.10.0
-      http-status-codes: 2.3.0
-      js-sha3: 0.8.0
-      jscrypto: 1.0.3
-      keccak256: 1.0.6
-      link-module-alias: 1.2.0
-      rxjs: 7.8.1
-      secp256k1: 4.0.4
-      shx: 0.3.4
-      snakecase-keys: 5.5.0
-    transitivePeerDependencies:
-      - '@types/react'
-      - bufferutil
-      - debug
-      - graphql-ws
-      - react
-      - react-dom
-      - subscriptions-transport-ws
-      - utf-8-validate
 
   '@injectivelabs/sdk-ts@1.14.33(@types/react@19.0.6)(bufferutil@4.0.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@6.0.5)':
     dependencies:
@@ -28811,12 +28604,73 @@ snapshots:
       - subscriptions-transport-ws
       - utf-8-validate
 
+  '@injectivelabs/sdk-ts@1.14.34-beta.2(@types/react@19.0.6)(bufferutil@4.0.9)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(utf-8-validate@6.0.5)':
+    dependencies:
+      '@apollo/client': 3.12.5(@types/react@19.0.6)(graphql@16.10.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@cosmjs/amino': 0.32.4
+      '@cosmjs/proto-signing': 0.32.4
+      '@cosmjs/stargate': 0.32.4(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+      '@ethersproject/bytes': 5.7.0
+      '@injectivelabs/core-proto-ts': 1.13.4
+      '@injectivelabs/exceptions': 1.14.33(google-protobuf@3.21.4)
+      '@injectivelabs/grpc-web': 0.0.1(google-protobuf@3.21.4)
+      '@injectivelabs/grpc-web-node-http-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.4))
+      '@injectivelabs/grpc-web-react-native-transport': 0.0.2(@injectivelabs/grpc-web@0.0.1(google-protobuf@3.21.4))
+      '@injectivelabs/indexer-proto-ts': 1.13.3
+      '@injectivelabs/mito-proto-ts': 1.13.0
+      '@injectivelabs/networks': 1.14.33(google-protobuf@3.21.4)
+      '@injectivelabs/olp-proto-ts': 1.13.1
+      '@injectivelabs/test-utils': 1.14.34-beta.8(google-protobuf@3.21.4)
+      '@injectivelabs/ts-types': 1.14.33
+      '@injectivelabs/utils': 1.14.33(google-protobuf@3.21.4)
+      '@metamask/eth-sig-util': 4.0.1
+      '@noble/curves': 1.8.0
+      axios: 1.7.9(debug@4.4.0)
+      bech32: 2.0.0
+      bip39: 3.1.0
+      cosmjs-types: 0.9.0
+      ethereumjs-util: 7.1.5
+      ethers: 6.13.4(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+      google-protobuf: 3.21.4
+      graphql: 16.10.0
+      http-status-codes: 2.3.0
+      js-sha3: 0.8.0
+      jscrypto: 1.0.3
+      keccak256: 1.0.6
+      secp256k1: 4.0.4
+      shx: 0.3.4
+      snakecase-keys: 5.5.0
+    transitivePeerDependencies:
+      - '@types/react'
+      - bufferutil
+      - debug
+      - graphql-ws
+      - react
+      - react-dom
+      - subscriptions-transport-ws
+      - utf-8-validate
+
   '@injectivelabs/test-utils@1.14.33(google-protobuf@3.21.4)':
     dependencies:
       '@injectivelabs/exceptions': 1.14.33(google-protobuf@3.21.4)
       '@injectivelabs/networks': 1.14.33(google-protobuf@3.21.4)
       '@injectivelabs/ts-types': 1.14.33
       '@injectivelabs/utils': 1.14.33(google-protobuf@3.21.4)
+      axios: 1.7.9(debug@4.4.0)
+      bignumber.js: 9.1.2
+      shx: 0.3.4
+      snakecase-keys: 5.5.0
+      store2: 2.14.4
+    transitivePeerDependencies:
+      - debug
+      - google-protobuf
+
+  '@injectivelabs/test-utils@1.14.34-beta.8(google-protobuf@3.21.4)':
+    dependencies:
+      '@injectivelabs/exceptions': 1.14.34-beta.5(google-protobuf@3.21.4)
+      '@injectivelabs/networks': 1.14.34-beta.5(google-protobuf@3.21.4)
+      '@injectivelabs/ts-types': 1.14.34-beta.2
+      '@injectivelabs/utils': 1.14.34-beta.5(google-protobuf@3.21.4)
       axios: 1.7.9(debug@4.4.0)
       bignumber.js: 9.1.2
       shx: 0.3.4
@@ -28843,23 +28697,21 @@ snapshots:
       - debug
       - google-protobuf
 
-  '@injectivelabs/ts-types@1.14.3':
-    dependencies:
-      link-module-alias: 1.2.0
-      shx: 0.3.4
-
   '@injectivelabs/ts-types@1.14.33':
     dependencies:
       shx: 0.3.4
 
-  '@injectivelabs/utils@1.14.3(google-protobuf@3.21.4)':
+  '@injectivelabs/ts-types@1.14.34-beta.2':
+    dependencies:
+      shx: 0.3.4
+
+  '@injectivelabs/utils@1.14.33(google-protobuf@3.21.4)':
     dependencies:
       '@injectivelabs/exceptions': 1.14.33(google-protobuf@3.21.4)
-      '@injectivelabs/ts-types': 1.14.3
-      axios: 0.21.4
+      '@injectivelabs/ts-types': 1.14.33
+      axios: 1.7.9(debug@4.4.0)
       bignumber.js: 9.1.2
       http-status-codes: 2.3.0
-      link-module-alias: 1.2.0
       shx: 0.3.4
       snakecase-keys: 5.5.0
       store2: 2.14.4
@@ -28867,10 +28719,24 @@ snapshots:
       - debug
       - google-protobuf
 
-  '@injectivelabs/utils@1.14.33(google-protobuf@3.21.4)':
+  '@injectivelabs/utils@1.14.34-beta.2(google-protobuf@3.21.4)':
     dependencies:
-      '@injectivelabs/exceptions': 1.14.33(google-protobuf@3.21.4)
-      '@injectivelabs/ts-types': 1.14.33
+      '@injectivelabs/exceptions': 1.14.34-beta.5(google-protobuf@3.21.4)
+      '@injectivelabs/ts-types': 1.14.34-beta.2
+      axios: 1.7.9(debug@4.4.0)
+      bignumber.js: 9.1.2
+      http-status-codes: 2.3.0
+      shx: 0.3.4
+      snakecase-keys: 5.5.0
+      store2: 2.14.4
+    transitivePeerDependencies:
+      - debug
+      - google-protobuf
+
+  '@injectivelabs/utils@1.14.34-beta.5(google-protobuf@3.21.4)':
+    dependencies:
+      '@injectivelabs/exceptions': 1.14.34-beta.5(google-protobuf@3.21.4)
+      '@injectivelabs/ts-types': 1.14.34-beta.2
       axios: 1.7.9(debug@4.4.0)
       bignumber.js: 9.1.2
       http-status-codes: 2.3.0
@@ -33852,7 +33718,7 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.26.0
       '@noble/curves': 1.8.0
-      '@noble/hashes': 1.5.0
+      '@noble/hashes': 1.7.0
       '@solana/buffer-layout': 4.0.1
       agentkeepalive: 4.6.0
       bigint-buffer: 1.1.5
@@ -36749,13 +36615,13 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ai@3.4.33(openai@4.73.0(encoding@0.1.13)(zod@3.23.8))(react@19.0.0)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)(vue@3.5.13(typescript@5.6.3))(zod@3.23.8):
+  ai@3.4.33(openai@4.73.0(encoding@0.1.13)(zod@3.23.8))(react@19.0.0)(sswr@2.1.0(svelte@5.17.4))(svelte@5.17.4)(vue@3.5.13(typescript@5.6.3))(zod@3.23.8):
     dependencies:
       '@ai-sdk/provider': 0.0.26
       '@ai-sdk/provider-utils': 1.0.22(zod@3.23.8)
       '@ai-sdk/react': 0.0.70(react@19.0.0)(zod@3.23.8)
       '@ai-sdk/solid': 0.0.54(zod@3.23.8)
-      '@ai-sdk/svelte': 0.0.57(svelte@5.17.3)(zod@3.23.8)
+      '@ai-sdk/svelte': 0.0.57(svelte@5.17.4)(zod@3.23.8)
       '@ai-sdk/ui-utils': 0.0.50(zod@3.23.8)
       '@ai-sdk/vue': 0.0.59(vue@3.5.13(typescript@5.6.3))(zod@3.23.8)
       '@opentelemetry/api': 1.9.0
@@ -36767,8 +36633,8 @@ snapshots:
     optionalDependencies:
       openai: 4.73.0(encoding@0.1.13)(zod@3.23.8)
       react: 19.0.0
-      sswr: 2.1.0(svelte@5.17.3)
-      svelte: 5.17.3
+      sswr: 2.1.0(svelte@5.17.4)
+      svelte: 5.17.4
       zod: 3.23.8
     transitivePeerDependencies:
       - solid-js
@@ -38816,11 +38682,6 @@ snapshots:
       path-type: 4.0.0
     optionalDependencies:
       typescript: 5.7.3
-
-  cosmjs-types@0.7.2:
-    dependencies:
-      long: 4.0.0
-      protobufjs: 6.11.4
 
   cosmjs-types@0.8.0:
     dependencies:
@@ -41024,7 +40885,7 @@ snapshots:
 
   extract-zip@2.0.1:
     dependencies:
-      debug: 4.3.4
+      debug: 4.4.0(supports-color@5.5.0)
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
@@ -49555,9 +49416,9 @@ snapshots:
     dependencies:
       minipass: 7.1.2
 
-  sswr@2.1.0(svelte@5.17.3):
+  sswr@2.1.0(svelte@5.17.4):
     dependencies:
-      svelte: 5.17.3
+      svelte: 5.17.4
       swrev: 4.0.0
 
   stable-hash@0.0.4: {}
@@ -49858,7 +49719,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  svelte@5.17.3:
+  svelte@5.17.4:
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@jridgewell/sourcemap-codec': 1.5.0

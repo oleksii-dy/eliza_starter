@@ -9,11 +9,15 @@
         ],
         "baseUrl": ".",
         "paths": {
-            "@injective/*": ["injective-sdk-client-ts/src/*"]
+            "@injective/*": [
+                "injective-sdk-client-ts/src/*"
+            ]
         },
-        "types": ["node"]
+        "types": [
+            "node"
+        ]
     },
-    "include" : [
+    "include": [
         "src/**/*.ts",
         "injective-sdk-client-ts/**/*.ts",
     ]

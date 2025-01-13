@@ -4,23 +4,30 @@
     "description": "Injective Protocol TypeScript Library",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
-    "type": "module",
     "scripts": {
-      "build": "tsup",
-      "dev": "tsup --watch",
-      "lint": "eslint .",
+      "build": "tsc",
+      "test": "jest",
+      "lint": "eslint . ",
       "lint:fix": "eslint . --fix",
       "format": "prettier --write \"src/**/*.ts\"",
-      "test": "jest",
       "test:integration": "vitest integration --reporter verbose",
+      "dev": "tsc --watch",
       "type-check": "tsc --noEmit"
     },
+    "exports": {
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+      },
+
     "dependencies": {
-      "@injectivelabs/networks": "1.14.3",
-      "@injectivelabs/sdk-ts": "1.14.3",
+      "@injectivelabs/networks": "1.14.34-beta.2",
+      "@injectivelabs/sdk-ts": "1.14.34-beta.2",
       "@injectivelabs/token-metadata": "1.14.11",
-      "@injectivelabs/ts-types": "1.14.3",
-      "@injectivelabs/utils": "1.14.3",
+      "@injectivelabs/ts-types": "1.14.34-beta.2",
+      "@injectivelabs/utils": "1.14.34-beta.2",
       "bignumber.js": "^9.1.2"
     },
     "devDependencies": {
