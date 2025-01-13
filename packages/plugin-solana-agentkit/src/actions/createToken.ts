@@ -13,7 +13,12 @@ import {
 } from "@elizaos/core";
 
 import { SolanaAgentKit } from "solana-agent-kit";
-
+//   agent: SolanaAgentKit,
+//   tokenName: string,
+//   tokenTicker: string,
+//   description: string,
+//   imageUrl: string,
+//   options?: PumpFunTokenOptions,
 export interface CreateTokenContent extends Content {
     name: string;
     uri: string;
