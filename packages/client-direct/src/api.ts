@@ -9,6 +9,7 @@ import {
     UUID,
     validateCharacterConfig,
     ServiceType,
+    Memory,
 } from "@elizaos/core";
 
 import { TeeLogQuery, TeeLogService } from "@elizaos/plugin-tee-log";
@@ -197,36 +198,15 @@ export function createApiRouter(
             const memories = await runtime.messageManager.getMemories({
                 roomId,
             });
-            const response = {
+            const response: {
+                agentId: UUID;
+                roomId: UUID;
+                memories: Memory[];
+            } = {
                 agentId,
                 roomId,
-                memories: memories.map((memory) => ({
-                    id: memory.id,
-                    userId: memory.userId,
-                    agentId: memory.agentId,
-                    createdAt: memory.createdAt,
-                    content: {
-                        text: memory.content.text,
-                        action: memory.content.action,
-                        source: memory.content.source,
-                        url: memory.content.url,
-                        inReplyTo: memory.content.inReplyTo,
-                        attachments: memory.content.attachments?.map(
-                            (attachment) => ({
-                                id: attachment.id,
-                                url: attachment.url,
-                                title: attachment.title,
-                                source: attachment.source,
-                                description: attachment.description,
-                                text: attachment.text,
-                                contentType: attachment.contentType,
-                            })
-                        ),
-                    },
-                    embedding: memory.embedding,
-                    roomId: memory.roomId,
-                    unique: memory.unique,
-                    similarity: memory.similarity,
+                memories: memories.map((memory: Memory) => ({
+                    ...memory,
                 })),
             };
 
