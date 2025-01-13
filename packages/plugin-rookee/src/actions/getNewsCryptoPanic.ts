@@ -30,13 +30,16 @@ const newsCyptoPanicTemplate = `Respond with a JSON markdown block containing on
                 Look for common crypto symbols (BTC, ETH, SOL, SUI, etc.)
                 Convert all symbols to uppercase
                 If multiple currencies found, join them with commas
+                Must be wrapped in double quotes
                 Recognize variations like "bitcoin"/"btc", "ethereum"/"eth"
                 Look for connecting words like "and", "&", "," between symbols
                 If no currencies specified, return "BTC,ETH,SUI"
+
     kind: Content type must be one of:
         all (default if not specified)
         news
-        media
+        media (must be wrapped in double quotes)
+        Recognize variations like "NEWS", "MEDIA"
     filter: Content category must be one of:
             rising
             hot (default if not specified)
@@ -44,9 +47,14 @@ const newsCyptoPanicTemplate = `Respond with a JSON markdown block containing on
             bearish
             important
             saved
-            lol"hot")
-    Examples: "ANALYZE BTC AND ETH BEARISH" → { "currencies": "BTC,ETH", "kind": "all", "filter": "bearish" }
-    "ANALYZE CRYPTO MARKET NEWS sol and sui" → { "currencies": "SOL,SUI", "kind": "news", "filter": "hot" }
+            lol (must be wrapped in double quotes)
+            Recognize variations like "RISING", "HOT", "BULLISH", "BEARISH", "IMPORTANT", "SAVED", "LOL"
+    VALIDATION RULES:
+            All property names must use double quotes
+            All string values must use double quotes
+            null values should not use quotes
+            No trailing commas allowed
+            No single quotes anywhere in the JSON
     Respond with a JSON markdown block containing only the extracted values.`;
 
 
@@ -86,14 +94,16 @@ export  const getNewsCryptoPanic: Action = {
                 return true;
             }
             content.auth_token = process.env.CRYPTO_PANIC_API_KEY;
-
+            content.approved=true
             if(content.currencies === null){
                 content.currencies = "BTC,ETH,SOL";
             }
-            if(content.kind === "all"){
+            if(content.kind === "all" || content.kind === null){
                 delete content.kind;
             }
-
+            if( content.filter === null){
+                content.filter = "hot"
+            }
             const requestOptions = {
                     method: "GET",
                     headers: {
@@ -104,18 +114,22 @@ export  const getNewsCryptoPanic: Action = {
             const queryString = new URLSearchParams(content).toString();
 
 
-            const response = await fetch(`${urlCryptoPanic}?${queryString}`, requestOptions);
-                if (!response.ok) {
-                    elizaLogger.error("API Response:", await response.text()); // Debug log
+            const responseCryptoPanic = await fetch(`${urlCryptoPanic}?${queryString}`, requestOptions);
+                if (!responseCryptoPanic.ok) {
+                    elizaLogger.error("API Response:", await responseCryptoPanic.text()); // Debug log
                     throw new Error(
-                        `Embedding API Error: ${response.status} ${response.statusText}`
+                        `Embedding API Error: ${responseCryptoPanic.status} ${responseCryptoPanic.statusText}`
                     );
                 }
-            const data:any = await response.json()
-
+            const dataCryptoPanic:any = await responseCryptoPanic.json()
+            const dataOriginUrl = dataCryptoPanic.results.map((item:any) => item.source.url);
+            const promisesOriginUrl = dataOriginUrl.map(async (url) => {
+                const response = await fetch(url, requestOptions);
+                return await response.url;
+              });
+            const resultsOriginUrl = await Promise.all(promisesOriginUrl);
             let responseMessage = "All News today:\n- ";
-            responseMessage += data.results.map((item:any) => `${item.title} <a href="${item.domain}/news/${item.slug.toLowerCase()}"}>${item.domain}</a>`).join("\n- ");
-            // let attachments: any = data.results.map((item:any) => `${item.domain}/news/${item.slug.toLowerCase()}`);
+            responseMessage += dataCryptoPanic.results.map((item:any, index) => `${item.title} <a href="${resultsOriginUrl[index]}"}>${item.domain}</a>`).join("\n- ");
             callback({
                 text: responseMessage,
                 // source
@@ -226,3 +240,6 @@ export  const getNewsCryptoPanic: Action = {
         ]
       ] as ActionExample[][]
 };
+
+
+
