@@ -110,4 +110,12 @@ export const apiClient = {
             body: formData,
         });
     },
+    stringToUuid: async (value: string): Promise<UUID> => {
+        const response = await fetcher({
+            url: "/utils/string-to-uuid",
+            method: "POST",
+            body: { value },
+        });
+        return response.uuid;
+    },
 };
