@@ -21,6 +21,8 @@ import download_media from "./actions/download_media.ts";
 import joinvoice from "./actions/joinvoice.ts";
 import leavevoice from "./actions/leavevoice.ts";
 import summarize from "./actions/summarize_conversation.ts";
+import searchHat from "./actions/search_hat.ts";
+import linkRole from "./actions/link_role.ts";
 import transcribe_media from "./actions/transcribe_media.ts";
 import { MessageManager } from "./messages.ts";
 import channelStateProvider from "./providers/channelState.ts";
@@ -71,6 +73,8 @@ export class DiscordClient extends EventEmitter {
         this.runtime.registerAction(joinvoice);
         this.runtime.registerAction(leavevoice);
         this.runtime.registerAction(summarize);
+        this.runtime.registerAction(searchHat);
+        this.runtime.registerAction(linkRole);
         this.runtime.registerAction(chat_with_attachments);
         this.runtime.registerAction(transcribe_media);
         this.runtime.registerAction(download_media);
