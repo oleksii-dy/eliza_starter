@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 
-interface PerformanceMetric {
+export interface PerformanceMetric {
     operation: string;
     duration: number;
     timestamp: Date;
@@ -8,7 +8,7 @@ interface PerformanceMetric {
     metadata?: Record<string, unknown>;
 }
 
-interface PerformanceAlert {
+export interface PerformanceAlert {
     type: "LATENCY" | "ERROR_RATE" | "THROUGHPUT";
     threshold: number;
     current: number;
@@ -16,57 +16,99 @@ interface PerformanceAlert {
     timestamp: Date;
 }
 
+export interface PerformanceConfig {
+    maxMetrics?: number;
+    alertThresholds?: {
+        latency?: number;
+        errorRate?: number;
+        throughput?: number;
+    };
+    logFunction?: (message: string, level?: "info" | "warn" | "error") => void;
+}
+
 export class PerformanceMonitor extends EventEmitter {
     private static instance: PerformanceMonitor;
     private metrics: PerformanceMetric[] = [];
-    private readonly maxMetrics: number = 1000;
-    private alertThresholds = {
-        latency: 2000, // 2 seconds
-        errorRate: 0.1, // 10%
-        throughput: 10, // requests per second
+    private config: Required<PerformanceConfig> = {
+        maxMetrics: 1000,
+        alertThresholds: {
+            latency: 2000, // 2 seconds
+            errorRate: 0.1, // 10%
+            throughput: 10, // requests per second
+        },
+        logFunction: console.log,
     };
 
-    private constructor() {
+    private constructor(config?: PerformanceConfig) {
         super();
+        this.configure(config);
         this.startPeriodicCheck();
     }
 
-    static getInstance(): PerformanceMonitor {
+    static getInstance(config?: PerformanceConfig): PerformanceMonitor {
         if (!PerformanceMonitor.instance) {
-            PerformanceMonitor.instance = new PerformanceMonitor();
+            PerformanceMonitor.instance = new PerformanceMonitor(config);
         }
         return PerformanceMonitor.instance;
     }
 
-    // Record a performance metric
-    recordMetric(metric: Omit<PerformanceMetric, "timestamp">): void {
-        const fullMetric = {
-            ...metric,
-            timestamp: new Date(),
-        };
-
-        this.metrics.push(fullMetric);
-        if (this.metrics.length > this.maxMetrics) {
-            this.metrics.shift();
+    // Configure performance monitor
+    configure(config?: PerformanceConfig): void {
+        if (config) {
+            this.config = {
+                maxMetrics: config.maxMetrics ?? this.config.maxMetrics,
+                alertThresholds: {
+                    ...this.config.alertThresholds,
+                    ...config.alertThresholds,
+                },
+                logFunction: config.logFunction ?? this.config.logFunction,
+            };
         }
-
-        this.checkThresholds(fullMetric);
     }
 
-    // Start measuring operation duration
+    // Record a performance metric with improved error handling
+    recordMetric(metric: Omit<PerformanceMetric, "timestamp">): void {
+        try {
+            const fullMetric = {
+                ...metric,
+                timestamp: new Date(),
+            };
+
+            this.metrics.push(fullMetric);
+            if (this.metrics.length > this.config.maxMetrics) {
+                this.metrics.shift();
+            }
+
+            this.checkThresholds(fullMetric);
+        } catch (error) {
+            this.config.logFunction(
+                `Error recording metric: ${error}`,
+                "error"
+            );
+        }
+    }
+
+    // Start measuring operation duration with error tracking
     startOperation(
         operation: string,
         metadata?: Record<string, unknown>
     ): () => void {
         const startTime = performance.now();
         return () => {
-            const duration = performance.now() - startTime;
-            this.recordMetric({
-                operation,
-                duration,
-                success: true,
-                metadata,
-            });
+            try {
+                const duration = performance.now() - startTime;
+                this.recordMetric({
+                    operation,
+                    duration,
+                    success: true,
+                    metadata,
+                });
+            } catch (error) {
+                this.config.logFunction(
+                    `Error in operation tracking: ${error}`,
+                    "error"
+                );
+            }
         };
     }
 
@@ -122,14 +164,6 @@ export class PerformanceMonitor extends EventEmitter {
         return summary;
     }
 
-    // Set alert thresholds
-    setAlertThresholds(thresholds: Partial<typeof this.alertThresholds>): void {
-        this.alertThresholds = {
-            ...this.alertThresholds,
-            ...thresholds,
-        };
-    }
-
     private getRecentMetrics(
         operation: string,
         timeWindowMs: number
@@ -144,39 +178,48 @@ export class PerformanceMonitor extends EventEmitter {
     }
 
     private checkThresholds(metric: PerformanceMetric): void {
-        // Check latency threshold
-        if (metric.duration > this.alertThresholds.latency) {
-            this.emitAlert({
-                type: "LATENCY",
-                threshold: this.alertThresholds.latency,
-                current: metric.duration,
-                operation: metric.operation,
-                timestamp: new Date(),
-            });
-        }
+        const { alertThresholds } = this.config;
 
-        // Check error rate threshold
-        const errorRate = this.getErrorRate(metric.operation);
-        if (errorRate > this.alertThresholds.errorRate) {
-            this.emitAlert({
-                type: "ERROR_RATE",
-                threshold: this.alertThresholds.errorRate,
-                current: errorRate,
-                operation: metric.operation,
-                timestamp: new Date(),
-            });
-        }
+        try {
+            // Latency check
+            if (metric.duration > alertThresholds.latency) {
+                this.emitAlert({
+                    type: "LATENCY",
+                    threshold: alertThresholds.latency,
+                    current: metric.duration,
+                    operation: metric.operation,
+                    timestamp: new Date(),
+                });
+            }
 
-        // Check throughput threshold
-        const throughput = this.getThroughput(metric.operation);
-        if (throughput > this.alertThresholds.throughput) {
-            this.emitAlert({
-                type: "THROUGHPUT",
-                threshold: this.alertThresholds.throughput,
-                current: throughput,
-                operation: metric.operation,
-                timestamp: new Date(),
-            });
+            // Error rate check
+            const errorRate = this.getErrorRate(metric.operation);
+            if (errorRate > alertThresholds.errorRate) {
+                this.emitAlert({
+                    type: "ERROR_RATE",
+                    threshold: alertThresholds.errorRate,
+                    current: errorRate,
+                    operation: metric.operation,
+                    timestamp: new Date(),
+                });
+            }
+
+            // Throughput check
+            const throughput = this.getThroughput(metric.operation);
+            if (throughput > alertThresholds.throughput) {
+                this.emitAlert({
+                    type: "THROUGHPUT",
+                    threshold: alertThresholds.throughput,
+                    current: throughput,
+                    operation: metric.operation,
+                    timestamp: new Date(),
+                });
+            }
+        } catch (error) {
+            this.config.logFunction(
+                `Error in threshold checking: ${error}`,
+                "error"
+            );
         }
     }
 
@@ -192,31 +235,17 @@ export class PerformanceMonitor extends EventEmitter {
     }
 }
 
-// Usage Example:
+// Enhanced usage example
 /*
-const monitor = PerformanceMonitor.getInstance();
-
-// Record operation start
-const end = monitor.startOperation('fetchCollection', { collectionId: '123' });
-
-try {
-    // Your operation here
-    end(); // Record successful completion
-} catch (error) {
-    monitor.recordMetric({
-        operation: 'fetchCollection',
-        duration: 0,
-        success: false,
-        metadata: { error: error.message },
-    });
-}
-
-// Listen for alerts
-monitor.on('alert', (alert: PerformanceAlert) => {
-    console.log(`Performance alert: ${alert.type} threshold exceeded for ${alert.operation}`);
+const monitor = PerformanceMonitor.getInstance({
+    maxMetrics: 500,
+    alertThresholds: {
+        latency: 1500, // more aggressive latency threshold
+        errorRate: 0.05 // tighter error rate
+    },
+    logFunction: (msg, level) => {
+        // Custom logging, e.g., to a file or monitoring service
+        console[level ?? 'log'](msg);
+    }
 });
-
-// Get performance summary
-const summary = monitor.getPerformanceSummary();
-console.log('Performance summary:', summary);
 */
