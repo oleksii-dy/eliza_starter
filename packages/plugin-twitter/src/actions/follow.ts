@@ -160,7 +160,7 @@ export const followAction: Action = {
         [
             {
                 user: "{{user1}}",
-                content: { text: "Follow me on X @username}" },
+                content: { text: "Follow me on X @username" },
             },
             {
                 user: "{{agentName}}",
