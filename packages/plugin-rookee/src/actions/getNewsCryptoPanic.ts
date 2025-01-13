@@ -98,6 +98,7 @@ export  const getNewsCryptoPanic: Action = {
             }
             content.auth_token = process.env.CRYPTO_PANIC_API_KEY;
             content.approved=true
+
             if(content.currencies === null){
                 content.currencies = "BTC,ETH,SOL";
             }
@@ -115,8 +116,6 @@ export  const getNewsCryptoPanic: Action = {
 
                 };
             const queryString = new URLSearchParams(content).toString();
-
-
             const responseCryptoPanic = await fetch(`${urlCryptoPanic}?${queryString}`, requestOptions);
                 if (!responseCryptoPanic.ok) {
                     elizaLogger.error("API Response:", await responseCryptoPanic.text()); // Debug log
@@ -131,19 +130,19 @@ export  const getNewsCryptoPanic: Action = {
                 return await response.url;
               });
             const resultsOriginUrl = await Promise.all(promisesOriginUrl);
-            let dataResponse = dataCryptoPanic.results.map((item:any, index) => {
+            const dataResponse = dataCryptoPanic.results.map((item:any, index) => {
                 return {
                     title: item.title,
                     url: resultsOriginUrl[index]
                 }
             });
             let responseMessage = "All News today:\n- ";
-            responseMessage += dataCryptoPanic.results.map((item:any) => `${item.title}`).join("\n- ");
+            responseMessage += dataCryptoPanic.results.slice(0,5).map((item:any) => `${item.title}`).join("\n- ");
             callback({
                 text: responseMessage,
                 result:{
                     type: "news",
-                    data: dataResponse
+                    data: dataResponse.slice(0,5)
                 }
               })
             // elizaLogger.log("[coingecko] Handle with message ...DONE!");

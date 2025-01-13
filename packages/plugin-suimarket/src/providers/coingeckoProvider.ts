@@ -32,9 +32,9 @@ export class CoingeckoProvider {
     try {
       const response = await this.axiosInstance.get("/search/trending");
       return response.data.coins.map((coin: any) => ({
-          id: coin.item.id, 
-          name: coin.item.name, 
-          symbol: coin.item.symbol.toUpperCase(), 
+          id: coin.item.id,
+          name: coin.item.name,
+          symbol: coin.item.symbol.toUpperCase(),
           market_cap_rank: coin.item.market_cap_rank,
           price: coin.item.data.price,
           total_volume: coin.item.data.total_volume,
@@ -102,7 +102,7 @@ export class CoingeckoProvider {
     }
   }
 
-  //@fixme 
+  //@fixme
   async getTrendingMemeCoinsOnSui(limit: number = 10) {
     try {
       const categoriesResponse = await this.axiosInstance.get(`/coins/categories`);
@@ -135,18 +135,34 @@ export class CoingeckoProvider {
     }
   }
 
-  async getTopMarketInfo(currency: string = "usd", limit: number = 10) {
+  async getTopMarketInfo(
+    currency: string = "usd",
+    ids: string = "bitcoin,ethereum,solana,bnb,cardano,sui",
+    category: string = "layer-1",
+    order: string = "market_cap_desc",
+    per_page: number = 10,
+    page: number = 1,
+    price_change_percentage: string = "1h",
+    locale: string = "en",
+    precision: string = "8"
+
+) {
     try {
       const response = await this.axiosInstance.get("/coins/markets", {
         params: {
           vs_currency: currency,
-          order: "market_cap_desc",
-          per_page: limit,
-          page: 1,
+          order: order,
+          per_page: per_page,
+          page: page,
           sparkline: false,
+          ids,
+          category,
+          price_change_percentage,
+          locale,
+          precision
         },
       });
-
+      
       return response.data.map((coin: any) => ({
           name: coin.name,
           symbol: coin.symbol.toUpperCase(),

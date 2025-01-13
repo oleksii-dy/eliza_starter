@@ -113,7 +113,7 @@ export default function createAgentRouter(
         // start it up (and register it)
         await directClient.startAgent(character);
         elizaLogger.log(`${character.name} started`);
-
+        
         res.json({
             id: character.id,
             character: character,
