@@ -30,13 +30,16 @@ const newsCyptoPanicTemplate = `Respond with a JSON markdown block containing on
                 Look for common crypto symbols (BTC, ETH, SOL, SUI, etc.)
                 Convert all symbols to uppercase
                 If multiple currencies found, join them with commas
+                Must be wrapped in double quotes
                 Recognize variations like "bitcoin"/"btc", "ethereum"/"eth"
                 Look for connecting words like "and", "&", "," between symbols
                 If no currencies specified, return "BTC,ETH,SUI"
+
     kind: Content type must be one of:
         all (default if not specified)
         news
-        media
+        media (must be wrapped in double quotes)
+        Recognize variations like "NEWS", "MEDIA"
     filter: Content category must be one of:
             rising
             hot (default if not specified)
@@ -44,26 +47,14 @@ const newsCyptoPanicTemplate = `Respond with a JSON markdown block containing on
             bearish
             important
             saved
-            lol"hot")
-    Examples: "ANALYZE BTC AND ETH BEARISH"
-            response:
-                \`\`\`json
-                {
-                    currencies:"BTC,ETH",
-                    kind: "all",
-                    filter: "bearish"
-                }
-                \`\`\`
-
-    "ANALYZE CRYPTO MARKET NEWS sol and sui"
-            response:
-                        \`\`\`json
-                        {
-                            currencies:"SOL,SUI",
-                            kind: "news",
-                            filter: "hot"
-                        }
-                        \`\`\`
+            lol (must be wrapped in double quotes)
+            Recognize variations like "RISING", "HOT", "BULLISH", "BEARISH", "IMPORTANT", "SAVED", "LOL"
+    VALIDATION RULES:
+            All property names must use double quotes
+            All string values must use double quotes
+            null values should not use quotes
+            No trailing commas allowed
+            No single quotes anywhere in the JSON
     Respond with a JSON markdown block containing only the extracted values.`;
 
 
@@ -107,10 +98,12 @@ export  const getNewsCryptoPanic: Action = {
             if(content.currencies === null){
                 content.currencies = "BTC,ETH,SOL";
             }
-            if(content.kind === "all"){
+            if(content.kind === "all" || content.kind === null){
                 delete content.kind;
             }
-
+            if( content.filter === null){
+                content.filter = "hot"
+            }
             const requestOptions = {
                     method: "GET",
                     headers: {
