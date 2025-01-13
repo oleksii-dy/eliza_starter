@@ -1,5 +1,19 @@
 import { z } from "zod";
-import { getAddress, isAddress } from "ethers/lib/utils";
+
+// Custom Ethereum address validation
+function isAddress(address: string): boolean {
+    // Basic Ethereum address validation regex
+    const ethereumAddressRegex = /^0x[a-fA-F0-9]{40}$/;
+    return ethereumAddressRegex.test(address);
+}
+
+function getAddress(address: string): string {
+    // Basic address normalization (lowercase)
+    if (!isAddress(address)) {
+        throw new Error("Invalid Ethereum address");
+    }
+    return address.toLowerCase();
+}
 
 // Enhanced NFT Collection Schema with strict validation
 export const NFTCollectionSchema = z.object({

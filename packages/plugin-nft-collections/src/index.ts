@@ -49,6 +49,7 @@ function createNFTCollectionsPlugin(): Plugin {
               windowMs: config.security.rateLimit.windowMs,
           })
         : null;
+
     const reservoirService = new ReservoirService({
         cacheManager,
         rateLimiter,
@@ -63,8 +64,8 @@ function createNFTCollectionsPlugin(): Plugin {
     });
 
     const socialAnalyticsService = new SocialAnalyticsService({
-        cacheManager,
-        rateLimiter,
+        twitterApiKey: process.env.TWITTER_API_KEY,
+        duneApiKey: process.env.DUNE_API_KEY,
     });
 
     const nftCollectionProvider = createNftCollectionProvider(
