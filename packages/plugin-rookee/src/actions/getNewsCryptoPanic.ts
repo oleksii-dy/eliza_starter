@@ -25,6 +25,9 @@ const newsCyptoPanicTemplate = `Respond with a JSON markdown block containing on
     }
     \`\`\`
     {{recentMessages}}
+    
+    Extract ONLY from the current message (ignore any previous context or messages):
+
     Given the recent messages, extract the following information:
     currencies: Extract cryptocurrency symbols, following these rules:
                 Look for common crypto symbols (BTC, ETH, SOL, SUI, etc.)
@@ -128,17 +131,27 @@ export  const getNewsCryptoPanic: Action = {
                 return await response.url;
               });
             const resultsOriginUrl = await Promise.all(promisesOriginUrl);
+            let dataResponse = dataCryptoPanic.results.map((item:any, index) => {
+
+                return {
+                    title: item.title,
+                    domain: resultsOriginUrl[index]
+                }
+            });
             let responseMessage = "All News today:\n- ";
-            responseMessage += dataCryptoPanic.results.map((item:any, index) => `${item.title} <a href="${resultsOriginUrl[index]}"}>${item.domain}</a>`).join("\n- ");
+            responseMessage += dataCryptoPanic.results.map((item:any) => `${item.title}`).join("\n- ");
             callback({
                 text: responseMessage,
-                // source
+                result:{
+                    type: "news",
+                    data: dataResponse
+                }
               })
             // elizaLogger.log("[coingecko] Handle with message ...DONE!");
             return true;
         }
         catch(error){
-            elizaLogger.error("[coingecko] %s", error);
+            elizaLogger.error("[analyzeCryptoNewsPanic] %s", error);
             return false;
         }
     },
