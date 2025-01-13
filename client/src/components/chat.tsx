@@ -27,6 +27,7 @@ interface ExtraContentFields {
     user: string;
     createdAt: number;
     isLoading?: boolean;
+    isHistory?: boolean; // Indicates if the message is loaded from agent memory
 }
 
 type ContentWithUser = Content & ExtraContentFields;
@@ -183,21 +184,19 @@ export default function Page({ agentId }: { agentId: UUID }) {
 
                 // Sort messages in ascending order by timestamp
                 const sortedMemories = [...response.memories].sort(
-                    // Here we assume certainty that memory timestamp exists
                     (a, b) => a.createdAt! - b.createdAt!
                 );
 
-                // Transform and normalize the user field
                 queryClient.setQueryData(
                     ["messages", agentId],
                     sortedMemories.map((memory) => ({
                         ...memory.content,
-                        // Here we identify if the message comes from the user or from the agent
                         user:
                             memory.content.source === "direct"
                                 ? "user"
                                 : undefined,
                         createdAt: memory.createdAt,
+                        isHistory: true,
                     }))
                 );
             } finally {
@@ -242,9 +241,13 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                             isLoading={message?.isLoading}
                                         >
                                             {message?.user !== "user" ? (
-                                                <AIWriter>
-                                                    {message?.text}
-                                                </AIWriter>
+                                                message?.isHistory ? (
+                                                    message?.text
+                                                ) : (
+                                                    <AIWriter>
+                                                        {message?.text}
+                                                    </AIWriter>
+                                                )
                                             ) : (
                                                 message?.text
                                             )}
