@@ -25,7 +25,7 @@ const newsCyptoPanicTemplate = `Respond with a JSON markdown block containing on
     }
     \`\`\`
     {{recentMessages}}
-    
+
     Extract ONLY from the current message (ignore any previous context or messages):
 
     Given the recent messages, extract the following information:
@@ -132,10 +132,9 @@ export  const getNewsCryptoPanic: Action = {
               });
             const resultsOriginUrl = await Promise.all(promisesOriginUrl);
             let dataResponse = dataCryptoPanic.results.map((item:any, index) => {
-
                 return {
                     title: item.title,
-                    domain: resultsOriginUrl[index]
+                    url: resultsOriginUrl[index]
                 }
             });
             let responseMessage = "All News today:\n- ";
