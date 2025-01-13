@@ -6,7 +6,7 @@ import {
     Memory,
     Plugin,
     State,
-    ModelClass,
+    ModelClass
 } from "@elizaos/core";
 import { generateImage } from "@elizaos/core";
 import fs from "fs";
@@ -39,7 +39,6 @@ export async function saveHeuristImage(
     imageUrl: string,
     filename: string
 ): Promise<string> {
-    console.log("Saving image from URL:", imageUrl);
     const imageDir = path.join(process.cwd(), "generatedImages");
     if (!fs.existsSync(imageDir)) {
         fs.mkdirSync(imageDir, { recursive: true });
@@ -82,15 +81,12 @@ const imageGeneration: Action = {
         await validateImageGenConfig(runtime);
 
         const anthropicApiKeyOk = !!runtime.getSetting("ANTHROPIC_API_KEY");
-        const nineteenAiApiKeyOk = !!runtime.getSetting("NINETEEN_AI_API_KEY");
         const togetherApiKeyOk = !!runtime.getSetting("TOGETHER_API_KEY");
         const heuristApiKeyOk = !!runtime.getSetting("HEURIST_API_KEY");
         const falApiKeyOk = !!runtime.getSetting("FAL_API_KEY");
         const openAiApiKeyOk = !!runtime.getSetting("OPENAI_API_KEY");
         const veniceApiKeyOk = !!runtime.getSetting("VENICE_API_KEY");
-        const livepeerGatewayUrlOk = !!runtime.getSetting(
-            "LIVEPEER_GATEWAY_URL"
-        );
+        const livepeerGatewayUrlOk = !!runtime.getSetting("LIVEPEER_GATEWAY_URL");
 
         return (
             anthropicApiKeyOk ||
@@ -99,7 +95,6 @@ const imageGeneration: Action = {
             falApiKeyOk ||
             openAiApiKeyOk ||
             veniceApiKeyOk ||
-            nineteenAiApiKeyOk ||
             livepeerGatewayUrlOk
         );
     },
@@ -129,7 +124,7 @@ const imageGeneration: Action = {
 
         const CONTENT = message.content.text;
         const IMAGE_SYSTEM_PROMPT = `You are an expert in writing prompts for AI art generation. You excel at creating detailed and creative visual descriptions. Incorporating specific elements naturally. Always aim for clear, descriptive language that generates a creative picture. Your output should only contain the description of the image contents, but NOT an instruction like "create an image that..."`;
-        const STYLE = "classic, nostalgic, retro, 80s";
+        const STYLE = "futuristic with vibrant colors";
 
         const IMAGE_PROMPT_INPUT = `You are tasked with generating an image prompt based on a content and a specified style.
             Your goal is to create a detailed and vivid image prompt that captures the essence of the content while incorporating an appropriate subject based on your analysis of the content.\n\nYou will be given the following inputs:\n<content>\n${CONTENT}\n</content>\n\n<style>\n${STYLE}\n</style>\n\nA good image prompt consists of the following elements:\n\n
@@ -194,57 +189,15 @@ Ensure that your prompt is detailed, vivid, and incorporates all the elements me
                 prompt: imagePrompt,
                 width: options.width || imageSettings.width || 1024,
                 height: options.height || imageSettings.height || 1024,
-                ...(options.count != null || imageSettings.count != null
-                    ? { count: options.count || imageSettings.count || 1 }
-                    : {}),
-                ...(options.negativePrompt != null ||
-                imageSettings.negativePrompt != null
-                    ? {
-                          negativePrompt:
-                              options.negativePrompt ||
-                              imageSettings.negativePrompt,
-                      }
-                    : {}),
-                ...(options.numIterations != null ||
-                imageSettings.numIterations != null
-                    ? {
-                          numIterations:
-                              options.numIterations ||
-                              imageSettings.numIterations,
-                      }
-                    : {}),
-                ...(options.guidanceScale != null ||
-                imageSettings.guidanceScale != null
-                    ? {
-                          guidanceScale:
-                              options.guidanceScale ||
-                              imageSettings.guidanceScale,
-                      }
-                    : {}),
-                ...(options.seed != null || imageSettings.seed != null
-                    ? { seed: options.seed || imageSettings.seed }
-                    : {}),
-                ...(options.modelId != null || imageSettings.modelId != null
-                    ? { modelId: options.modelId || imageSettings.modelId }
-                    : {}),
-                ...(options.jobId != null || imageSettings.jobId != null
-                    ? { jobId: options.jobId || imageSettings.jobId }
-                    : {}),
-                ...(options.stylePreset != null ||
-                imageSettings.stylePreset != null
-                    ? {
-                          stylePreset:
-                              options.stylePreset || imageSettings.stylePreset,
-                      }
-                    : {}),
-                ...(options.hideWatermark != null ||
-                imageSettings.hideWatermark != null
-                    ? {
-                          hideWatermark:
-                              options.hideWatermark ||
-                              imageSettings.hideWatermark,
-                      }
-                    : {}),
+                ...(options.count != null || imageSettings.count != null ? { count: options.count || imageSettings.count || 1 } : {}),
+                ...(options.negativePrompt != null || imageSettings.negativePrompt != null ? { negativePrompt: options.negativePrompt || imageSettings.negativePrompt } : {}),
+                ...(options.numIterations != null || imageSettings.numIterations != null ? { numIterations: options.numIterations || imageSettings.numIterations } : {}),
+                ...(options.guidanceScale != null || imageSettings.guidanceScale != null ? { guidanceScale: options.guidanceScale || imageSettings.guidanceScale } : {}),
+                ...(options.seed != null || imageSettings.seed != null ? { seed: options.seed || imageSettings.seed } : {}),
+                ...(options.modelId != null || imageSettings.modelId != null ? { modelId: options.modelId || imageSettings.modelId } : {}),
+                ...(options.jobId != null || imageSettings.jobId != null ? { jobId: options.jobId || imageSettings.jobId } : {}),
+                ...(options.stylePreset != null || imageSettings.stylePreset != null ? { stylePreset: options.stylePreset || imageSettings.stylePreset } : {}),
+                ...(options.hideWatermark != null || imageSettings.hideWatermark != null ? { hideWatermark: options.hideWatermark || imageSettings.hideWatermark } : {}),
             },
             runtime
         );
@@ -255,78 +208,72 @@ Ensure that your prompt is detailed, vivid, and incorporates all the elements me
                 images.data.length
             );
             for (let i = 0; i < images.data.length; i++) {
+                const image = images.data[i];
+
+                // Save the image and get filepath
+                const filename = `generated_${Date.now()}_${i}`;
+
+                // Choose save function based on image data format
+                const filepath = image.startsWith("http")
+                    ? await saveHeuristImage(image, filename)
+                    : saveBase64Image(image, filename);
+
+                elizaLogger.log(`Processing image ${i + 1}:`, filename);
+
+                //just dont even add a caption or a description just have it generate & send
+                /*
                 try {
-                    const image = images.data[i];
-                    const filename = `generated_${Date.now()}_${i}`;
-
-                    elizaLogger.log(`Processing image ${i + 1}:`, {
-                        isUrl: image.startsWith("http"),
-                        filename
-                    });
-
-                    // Save locally
-                    let filepath;
-                    try {
-                        filepath = image.startsWith("http")
-                            ? await saveHeuristImage(image, filename)
-                            : saveBase64Image(image, filename);
-                        elizaLogger.log(`Successfully saved image to: ${filepath}`);
-                    } catch (saveError) {
-                        elizaLogger.error(`Failed to save image ${i + 1}:`, {
-                            error: saveError,
-                            filename,
-                            isUrl: image.startsWith("http")
-                        });
-                        throw saveError;
+                    const imageService = runtime.getService(ServiceType.IMAGE_DESCRIPTION);
+                    if (imageService && typeof imageService.describeImage === 'function') {
+                        const caption = await imageService.describeImage({ imageUrl: filepath });
+                        captionText = caption.description;
+                        captionTitle = caption.title;
                     }
-
-                    // Use the original URL if it's a URL, or the local path if it's base64
-                    const imageUrl = image.startsWith("http") ? image : filepath;
-
-                    elizaLogger.log(`Sending callback for image ${i + 1}`, {
-                        filepath,
-                        imageUrl
-                    });
-
-                    callback(
-                        {
-                            text: `Here's your generated image! ${imageUrl}`,
-                            attachments: [
-                                {
-                                    id: crypto.randomUUID(),
-                                    url: filepath,
-                                    title: "Generated image",
-                                    source: "imageGeneration",
-                                    description: `Generated image - URL: ${imageUrl}`,
-                                    text: `Image URL: ${imageUrl}`,
-                                    contentType: "image/png",
-                                },
-                            ],
-                        },
-                        [
-                            {
-                                attachment: filepath,
-                                name: `${filename}.png`,
-                                url: imageUrl
-                            },
-                        ]
-                    );
                 } catch (error) {
-                    elizaLogger.error(`Error processing image ${i + 1}:`, {
-                        error,
-                        imageIndex: i,
-                        totalImages: images.data.length
-                    });
-                    // Continue processing other images even if one fails
-                    continue;
-                }
+                    elizaLogger.error("Caption generation failed, using default caption:", error);
+                }*/
+
+                const _caption = "...";
+                /*= await generateCaption(
+                    {
+                        imageUrl: image,
+                    },
+                    runtime
+                );*/
+
+                res.push({ image: filepath, caption: "..." }); //caption.title });
+
+                elizaLogger.log(
+                    `Generated caption for image ${i + 1}:`,
+                    "..." //caption.title
+                );
+                //res.push({ image: image, caption: caption.title });
+
+                callback(
+                    {
+                        text: "...", //caption.description,
+                        attachments: [
+                            {
+                                id: crypto.randomUUID(),
+                                url: filepath,
+                                title: "Generated image",
+                                source: "imageGeneration",
+                                description: "...", //caption.title,
+                                text: "...", //caption.description,
+                                contentType: "image/png",
+                            },
+                        ],
+                    },
+                    [
+                        {
+                            attachment: filepath,
+                            name: `${filename}.png`,
+                        },
+                    ]
+                );
             }
         } else {
-            elizaLogger.error("Image generation failed or returned no data", {
-                success: images.success,
-                hasData: !!images.data,
-                dataLength: images.data?.length
-            });
+            elizaLogger.error("Image generation failed or returned no data.");
         }
     },
     examples: [
@@ -407,5 +354,3 @@ export const imageGenerationPlugin: Plugin = {
     evaluators: [],
     providers: [],
 };
-
-export default imageGenerationPlugin;
