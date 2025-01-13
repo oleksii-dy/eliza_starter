@@ -1,6 +1,10 @@
 import { Plugin } from "@elizaos/core";
 import { createNftCollectionProvider } from "./providers/nft-collections";
-import { getCollectionsAction } from "./actions/get-collections";
+import {
+    getCollectionsAction,
+    getThinFloorNFTsAction,
+    manageWatchlistAction,
+} from "./actions/get-collections";
 import { listNFTAction } from "./actions/list-nft";
 import { sweepFloorAction } from "./actions/sweep-floor";
 
@@ -78,6 +82,8 @@ function createNFTCollectionsPlugin(): Plugin {
             getCollectionsAction(nftCollectionProvider),
             listNFTAction(reservoirService),
             sweepFloorAction(reservoirService),
+            getThinFloorNFTsAction(nftCollectionProvider, reservoirService),
+            manageWatchlistAction(nftCollectionProvider),
         ],
         evaluators: [],
     };
