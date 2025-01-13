@@ -166,14 +166,23 @@ export class TwitterPostClient {
             const delay = randomMinutes * 60 * 1000;
 
             if (Date.now() > lastPostTimestamp + delay) {
-                // Ensure only your tweets are processed
-                const tweets = await this.client.fetchTimelineForActions(15);
-                const myTweets = tweets.filter(tweet => tweet.username.toLowerCase() === '0x_sero');
+                // Get target users from config
+                const targetUsers = this.client.twitterConfig.TWITTER_TARGET_USERS;
 
-                if (myTweets.length > 0) {
+                // Fetch timeline tweets
+                const tweets = await this.client.fetchTimelineForActions(15);
+
+                // Filter tweets from target users
+                const targetTweets = tweets.filter(tweet =>
+                    targetUsers.some(user =>
+                        tweet.username.toLowerCase() === user.toLowerCase()
+                    )
+                );
+
+                if (targetTweets.length > 0) {
                     await this.generateNewTweet();
                 } else {
-                    elizaLogger.log("No tweets from 0x_sero to process");
+                    elizaLogger.log(`No tweets from target users (${targetUsers.join(', ')}) to process`);
                 }
             }
 
