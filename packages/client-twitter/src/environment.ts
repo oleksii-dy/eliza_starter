@@ -65,7 +65,7 @@ export const twitterEnvSchema = z.object({
         .optional()
         .default(''),
     */
-    TWITTER_MAX_TWEETS_PER_DAY: z.number().int().default(10),
+    TWITTER_MAX_TWEETS_PER_DAY: z.number().int().min(1).default(10),
     POST_INTERVAL_MIN: z.number().int(),
     POST_INTERVAL_MAX: z.number().int(),
     ENABLE_ACTION_PROCESSING: z.boolean(),

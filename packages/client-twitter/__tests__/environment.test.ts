@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { validateTwitterConfig } from '../src/environment';
 import { IAgentRuntime } from '@elizaos/core';
-import { TestAgentRuntime } from './test-utils';
+import { TestAgentRuntime, asIAgentRuntime } from './test-utils';
 
 describe('Twitter Environment Configuration', () => {
     const mockRuntime = {
@@ -64,7 +64,7 @@ describe('Twitter Environment Configuration', () => {
             }
         } as TestAgentRuntime;
 
-        const config = await validateTwitterConfig(wildcardRuntime as IAgentRuntime);
+        const config = await validateTwitterConfig(asIAgentRuntime(wildcardRuntime));
         expect(config.TWITTER_USERNAME).toBe('*');
     });
 
