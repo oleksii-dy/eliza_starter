@@ -1,6 +1,6 @@
 {
     "name": "Dobby",
-    "clients": ["twitter"],
+    "clients": [],
     "modelProvider": "anthropic",
     "settings": {
         "voice": {

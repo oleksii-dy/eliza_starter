@@ -6,25 +6,60 @@ import {
     TransactionMessage,
     VersionedTransaction,
 } from "@solana/web3.js";
-
 import {
     ActionExample,
     Content,
     HandlerCallback,
     IAgentRuntime,
     Memory,
+    ModelClass,
     State,
     type Action,
 } from "@elizaos/core";
+import { composeContext } from "@elizaos/core";
 import { getWalletKey } from "../keypairUtils";
+import { generateObjectDeprecated } from "@elizaos/core";
+
+interface SolTransferContent extends Content {
+    recipient: string;
+    amount: number;
+}
+
+function isSolTransferContent(
+    content: any
+): content is SolTransferContent {
+    return (
+        typeof content.recipient === "string" &&
+        typeof content.amount === "number"
+    );
+}
+
+const solTransferTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
+
+Example response:
+\`\`\`json
+{
+    "recipient": "9jW8FPr6BSSsemWPV22UUCzSqkVdTp6HTyPqeqyuBbCa",
+    "amount": 1.5
+}
+\`\`\`
+
+{{recentMessages}}
+
+Extract the following information about the requested SOL transfer:
+- Recipient wallet address
+- Amount of SOL to transfer
+`;
 
 export default {
     name: "SEND_SOL",
     similes: ["TRANSFER_SOL", "PAY_SOL"],
     validate: async (runtime: IAgentRuntime, message: Memory) => {
+        // Always return true for SOL transfers, letting the handler deal with specifics
+        elizaLogger.log("Validating SOL transfer from user:", message.userId);
         return true;
     },
-    description: "Transfer native SOL from the agent's wallet to specified address",
+    description: "Transfer native SOL from agent's wallet to specified address",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -34,27 +69,46 @@ export default {
     ): Promise<boolean> => {
         elizaLogger.log("Starting SEND_SOL handler...");
 
-        const RECIPIENT = "Ae8GkmtaJmr3MS3oKStkZyPHuQf3hawn53XD4bQjVQiu";
-        const AMOUNT = 0.0001; // SOL amount
+        if (!state) {
+            state = (await runtime.composeState(message)) as State;
+        } else {
+            state = await runtime.updateRecentMessageState(state);
+        }
+
+        const transferContext = composeContext({
+            state,
+            template: solTransferTemplate,
+        });
+
+        const content = await generateObjectDeprecated({
+            runtime,
+            context: transferContext,
+            modelClass: ModelClass.LARGE,
+        });
+
+        if (!isSolTransferContent(content)) {
+            if (callback) {
+                callback({
+                    text: "yo, i need like, an address and amount to send the SOL. pretty basic stuff.",
+                    content: { error: "Invalid transfer content" },
+                });
+            }
+            return false;
+        }
 
         try {
             const { keypair: senderKeypair } = await getWalletKey(runtime, true);
             const connection = new Connection(settings.SOLANA_RPC_URL!);
-            const recipientPubkey = new PublicKey(RECIPIENT);
+            const recipientPubkey = new PublicKey(content.recipient);
 
-            console.log("Using RPC endpoint:", connection.rpcEndpoint);
+            const lamports = content.amount * 1e9;
 
-            // Convert SOL amount to lamports (1 SOL = 1e9 lamports)
-            const lamports = AMOUNT * 1e9;
-
-            // Create SOL transfer instruction
             const instruction = SystemProgram.transfer({
                 fromPubkey: senderKeypair.publicKey,
                 toPubkey: recipientPubkey,
-                lamports: lamports,
+                lamports,
             });
 
-            // Create and sign versioned transaction
             const messageV0 = new TransactionMessage({
                 payerKey: senderKeypair.publicKey,
                 recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
@@ -64,29 +118,26 @@ export default {
             const transaction = new VersionedTransaction(messageV0);
             transaction.sign([senderKeypair]);
 
-            // Send transaction
             const signature = await connection.sendTransaction(transaction);
-
-            console.log("Transfer successful:", signature);
 
             if (callback) {
                 callback({
-                    text: `Successfully transferred ${AMOUNT} SOL to ${RECIPIENT}\nTransaction: ${signature}`,
+                    text: `sent ${content.amount} SOL, basically fine. here's the proof: ${signature}`,
                     content: {
                         success: true,
                         signature,
-                        amount: AMOUNT,
-                        recipient: RECIPIENT,
+                        amount: content.amount,
+                        recipient: content.recipient,
                     },
                 });
             }
 
             return true;
         } catch (error) {
-            console.error("Error during SOL transfer:", error);
+            elizaLogger.error("Error during SOL transfer:", error);
             if (callback) {
                 callback({
-                    text: `Error transferring SOL: ${error.message}`,
+                    text: `uh... slight problem with the SOL transfer: ${error.message}`,
                     content: { error: error.message },
                 });
             }
@@ -99,13 +150,13 @@ export default {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Send SOL",
+                    text: "Send 1.5 SOL to 9jW8FPr6BSSsemWPV22UUCzSqkVdTp6HTyPqeqyuBbCa",
                 },
             },
             {
                 user: "{{user2}}",
                 content: {
-                    text: "I'll send 0.0001 SOL now...",
+                    text: "sure thing, sending that SOL now...",
                     action: "SEND_SOL",
                 },
             },

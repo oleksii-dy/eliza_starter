@@ -5,6 +5,7 @@ export * from "./evaluators/trust.ts";
 
 import { Plugin } from "@elizaos/core";
 import transferToken from "./actions/transfer.ts";
+import transferSol from "./actions/transfer_sol.ts";
 import { TokenProvider } from "./providers/token.ts";
 import { WalletProvider } from "./providers/wallet.ts";
 import { getTokenBalance, getTokenBalances } from "./providers/tokenUtils.ts";
@@ -24,7 +25,7 @@ export const solanaPlugin: Plugin = {
     description: "Solana Plugin for Eliza",
     actions: [
         transferToken,
-
+        transferSol,
         // ENABLE EXTRAS IF YOU NEED THEM
         // executeSwap,
         // pumpfun,
