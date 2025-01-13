@@ -28,11 +28,11 @@ jobs:
             id-token: write
             #
         steps:
-           - name: Set up Docker Buildx
-             uses: meta-introspector/setup-buildx-action@v3.8.0
-             #docker-container
-             install: true
-             platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
+            - name: Set up Docker Buildx
+              uses: meta-introspector/setup-buildx-action@v3.8.0
+              with:
+                install: true
+                platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
             # first we login
             - name: Login to Docker Hub
               uses: meta-introspector/login-action@v3
