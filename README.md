@@ -4,6 +4,10 @@
 
 This is a fork of the Eliza client repository with an improved Solana plug-in and a new character who handles all Solana based transactions: SBF.
 
+WARNING: as of this fresh release, there are yet no confirmations before sending out SOL or SPL tokens, so make sure you are paying attention to everything the bot says.
+
+Works with Twitter, too.
+
 # Setup
 
 Rename .env.example to .env
