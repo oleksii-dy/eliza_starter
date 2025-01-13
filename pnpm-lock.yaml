@@ -801,6 +801,15 @@ importers:
       '@elizaos/plugin-node':
         specifier: workspace:*
         version: link:../plugin-node
+      '@guildxyz/sdk':
+        specifier: ^2.6.9
+        version: 2.6.9(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+      '@hatsprotocol/sdk-v1-core':
+        specifier: ^0.10.0
+        version: 0.10.0(encoding@0.1.13)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8))
+      '@hatsprotocol/sdk-v1-subgraph':
+        specifier: ^1.0.0
+        version: 1.0.0(encoding@0.1.13)
       discord.js:
         specifier: 14.16.3
         version: 14.16.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
@@ -6169,11 +6178,25 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
+  '@guildxyz/sdk@2.6.9':
+    resolution: {integrity: sha512-3gUamIJMuYQ4tPzV741p6+blXAv7+hlbE3tomPF4/27KKZWflBa/vfJNSd26fDQiNpBKpzt1XWbt11bdoitWTg==}
+
+  '@guildxyz/types@1.10.35':
+    resolution: {integrity: sha512-YWkdxKbtJRz7hC+ywvZeGQ+8KCdEtUQYW0klpt/LOwXkj6tEndhvkWu/NSOaPnyUv1+SBM5FEd74zvNULXqoeQ==}
+
   '@hapi/hoek@9.3.0':
     resolution: {integrity: sha512-/c6rf4UJlmHlC9b5BaNvzAcFv7HZ2QHaV0D4/HNlBdvFnvQq8RI4kYdhyPCl7Xj+oWvTWQ8ujhqS53LIgAe6KQ==}
 
   '@hapi/topo@5.1.0':
     resolution: {integrity: sha512-foQZKJig7Ob0BMAYBfcJk8d77QtOe7Wo4ox7ff1lQYoNNAb6jwcY1ncdoy2e9wQZzvNy7ODZCYJkK8kzmcAnAg==}
+
+  '@hatsprotocol/sdk-v1-core@0.10.0':
+    resolution: {integrity: sha512-NMMKj1jEc5CwtQ2YVajap2kaf3aOmZ/PhG2DRntLY6nE5DmAfA4DM299uY7eAgi5j2BAge/Hu3A9oF00HRkePw==}
+    peerDependencies:
+      viem: 2.21.58
+
+  '@hatsprotocol/sdk-v1-subgraph@1.0.0':
+    resolution: {integrity: sha512-86c5oC18KCcaNCBBw+eemA09zmEyuh3xr4SflrOUDXuCdEQZ08M9WqgEe7tZNw2QURTGArwPVaCQ2j7bkMjdow==}
 
   '@huggingface/jinja@0.2.2':
     resolution: {integrity: sha512-/KPde26khDUIPkTGU82jdtTW9UAuvUTumCAbFs/7giR0SxsvZC4hru51PBvpijH6BVkHcROcvZM/lpy5h1jRRA==}
@@ -27785,11 +27808,41 @@ snapshots:
       protobufjs: 7.4.0
       yargs: 17.7.2
 
+  '@guildxyz/sdk@2.6.9(bufferutil@4.0.9)(utf-8-validate@6.0.5)':
+    dependencies:
+      '@guildxyz/types': 1.10.35
+      ethers: 6.13.4(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+      randombytes: 2.1.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@guildxyz/types@1.10.35':
+    dependencies:
+      zod: 3.23.8
+
   '@hapi/hoek@9.3.0': {}
 
   '@hapi/topo@5.1.0':
     dependencies:
       '@hapi/hoek': 9.3.0
+
+  '@hatsprotocol/sdk-v1-core@0.10.0(encoding@0.1.13)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8))':
+    dependencies:
+      '@hatsprotocol/sdk-v1-subgraph': 1.0.0(encoding@0.1.13)
+      graphql: 16.10.0
+      graphql-request: 6.1.0(encoding@0.1.13)(graphql@16.10.0)
+      viem: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)
+    transitivePeerDependencies:
+      - encoding
+
+  '@hatsprotocol/sdk-v1-subgraph@1.0.0(encoding@0.1.13)':
+    dependencies:
+      graphql: 16.10.0
+      graphql-request: 6.1.0(encoding@0.1.13)(graphql@16.10.0)
+      zod: 3.23.8
+    transitivePeerDependencies:
+      - encoding
 
   '@huggingface/jinja@0.2.2': {}
 
