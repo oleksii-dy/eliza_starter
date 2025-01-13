@@ -50,10 +50,10 @@ export const createNftCollectionProvider = (
                                 collection.address
                             );
                         response += "Market Intelligence:\n";
-                        response += `• Wash Trading Score: ${marketIntelligence.washTradingMetrics.washTradingScore}\n`;
-                        response += `• Suspicious Volume (24h): ${marketIntelligence.washTradingMetrics.suspiciousVolume24h} ETH\n`;
-                        response += `• Best Bid: ${marketIntelligence.liquidityMetrics.bestBid} ETH\n`;
-                        response += `• Best Ask: ${marketIntelligence.liquidityMetrics.bestAsk} ETH\n\n`;
+                        response += `• Best Offer: ${marketIntelligence.bestOffer || "N/A"} ETH\n`;
+                        response += `• 24h Volume: ${marketIntelligence.volume24h || "N/A"} ETH\n`;
+                        response += `• 7d Volume: ${marketIntelligence.volume7d || "N/A"} ETH\n`;
+                        response += `• 30d Volume: ${marketIntelligence.volume30d || "N/A"} ETH\n\n`;
                     } catch (error) {
                         console.error(
                             "Failed to fetch market intelligence:",
@@ -65,26 +65,18 @@ export const createNftCollectionProvider = (
                 // Social analytics data (optional)
                 if (socialAnalyticsService) {
                     try {
-                        const [socialMetrics, communityMetrics] =
-                            await Promise.all([
-                                socialAnalyticsService.getSocialMetrics(
-                                    collection.address
-                                ),
-                                socialAnalyticsService.getCommunityMetrics(
-                                    collection.address
-                                ),
-                            ]);
+                        const socialMetrics =
+                            await socialAnalyticsService.getSocialMetrics(
+                                collection.address
+                            );
 
                         response += "Social Metrics:\n";
-                        response += `• Twitter Followers: ${socialMetrics.twitter.followers}\n`;
-                        response += `• Twitter Engagement: ${socialMetrics.twitter.engagement.likes + socialMetrics.twitter.engagement.retweets + socialMetrics.twitter.engagement.replies} interactions\n`;
-                        response += `• Trending: ${socialMetrics.trending ? "Yes" : "No"}\n\n`;
-
-                        response += "Community Metrics:\n";
-                        response += `• Total Members: ${communityMetrics.totalMembers}\n`;
-                        response += `• Growth Rate: ${communityMetrics.growthRate}%\n`;
-                        response += `• Active Users: ${communityMetrics.engagement.activeUsers}\n`;
-                        response += `• Messages per Day: ${communityMetrics.engagement.messagesPerDay}\n`;
+                        response += `• Twitter Followers: ${socialMetrics.twitterFollowers || "N/A"}\n`;
+                        response += `• Twitter Engagement: ${socialMetrics.twitterEngagement || "N/A"}\n`;
+                        response += `• Discord Members: ${socialMetrics.discordMembers || "N/A"}\n`;
+                        response += `• Discord Active: ${socialMetrics.discordActive || "N/A"}\n`;
+                        response += `• Telegram Members: ${socialMetrics.telegramMembers || "N/A"}\n`;
+                        response += `• Telegram Active: ${socialMetrics.telegramActive || "N/A"}\n\n`;
                     } catch (error) {
                         console.error(
                             "Failed to fetch social analytics:",
