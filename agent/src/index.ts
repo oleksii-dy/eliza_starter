@@ -760,8 +760,8 @@ export async function createAgent(
                 getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
                 ? evmPlugin
                 : null,
-            getSecret(character, "EVM_PUBLIC_KEY") &&
-                getSecret(character, "INJECTIVE_PRIVATE_KEY")
+            ((getSecret(character, "EVM_PUBLIC_KEY") || getSecret(character, "INJECTIVE_PUBLIC_KEY")) &&
+                getSecret(character, "INJECTIVE_PRIVATE_KEY"))
                 ? injectivePlugin
                 : null,
             getSecret(character, "COSMOS_RECOVERY_PHRASE") &&

@@ -24,10 +24,14 @@ import * as WasmXModule from "./wasmx";
 export class InjectiveGrpcClient extends InjectiveGrpcBase {
     constructor(
         networkType: keyof typeof Network = "Mainnet",
-        ethAddress: string,
-        privateKey: string
+        injectivePrivateKey: string,
+        ethPublicKey?: string,
+        injPublicKey?: string
     ) {
-        super(networkType, ethAddress, privateKey);
+        if (!ethPublicKey && !injPublicKey) {
+            throw new Error("Either eth or inj public key is required");
+        }
+        super(networkType, injectivePrivateKey, ethPublicKey, injPublicKey);
         console.log("InjectiveGrpcClient constructor init");
     }
     // Auction endpoints

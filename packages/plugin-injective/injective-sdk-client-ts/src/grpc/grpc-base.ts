@@ -44,6 +44,7 @@ import {
     ChainRestAuthApi,
     ChainRestTendermintApi,
     getInjectiveAddress,
+    getEthereumAddress,
 } from "@injectivelabs/sdk-ts";
 
 export type RequestMethod<TRequest, TResponse> = (
@@ -112,8 +113,9 @@ export class InjectiveGrpcBase {
     protected msgBroadcaster!: MsgBroadcasterWithPk;
     constructor(
         protected readonly networkType: keyof typeof Network = "Mainnet",
-        protected readonly address: string,
-        protected readonly pkKey: string
+        protected readonly injectivePrivateKey: string,
+        protected readonly ethPublicKey?: string,
+        protected readonly injPublicKey?: string
     ) {
         this.network = Network[networkType];
         this.endpoints = getNetworkEndpoints(this.network);
@@ -198,9 +200,15 @@ export class InjectiveGrpcBase {
         );
 
         // Initialize EthAddress and InjAddress
-        this.ethAddress = address;
-        this.injAddress = getInjectiveAddress(this.ethAddress);
-        this.privateKey = pkKey;
+        this.ethAddress =
+            ethPublicKey ||
+            (injPublicKey ? getEthereumAddress(injPublicKey) : "");
+
+        this.injAddress =
+            injPublicKey ||
+            (ethPublicKey ? getInjectiveAddress(ethPublicKey) : "");
+
+        this.privateKey = injectivePrivateKey;
 
         this.msgBroadcaster = new MsgBroadcasterWithPk({
             network: this.network,

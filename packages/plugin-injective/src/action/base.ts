@@ -99,7 +99,8 @@ export function createGenericAction({
             try {
                 const rawNetwork = runtime.getSetting("INJECTIVE_NETWORK");
                 const privateKey = runtime.getSetting("INJECTIVE_PRIVATE_KEY");
-                const publicKey = runtime.getSetting("EVM_PUBLIC_KEY");
+                const evmPublicKey = runtime.getSetting("EVM_PUBLIC_KEY");
+                const injectivePublicKey = runtime.getSetting("INJECTIVE_PUBLIC_KEY");
                 const network = rawNetwork as
                     | "MainnetK8s"
                     | "MainnetLB"
@@ -116,8 +117,8 @@ export function createGenericAction({
                     | "Devnet2"
                     | "Devnet"
                     | "Local";
-                if (!privateKey || !publicKey || !network) {
-                    throw new Error("Private key not configured");
+                if (!privateKey || !evmPublicKey || !network) {
+                    throw new Error("Incorrect configuration");
                 }
 
                 const client = new InjectiveGrpcClient(
