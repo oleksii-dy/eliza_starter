@@ -1,6 +1,7 @@
-import { Action, IAgentRuntime, Memory, State } from "@elizaos/core";
+import { Action, IAgentRuntime, Memory, Provider, State } from "@elizaos/core";
 import { ReservoirService } from "../services/reservoir";
 import { HandlerCallback } from "@elizaos/core";
+import { z } from "zod";
 
 // Helper function to extract NFT listing details from the message
 function extractListingDetails(text: string): {
@@ -29,6 +30,16 @@ interface ExtendedReservoirService extends ReservoirService {
         tokenId: string;
     }) => Promise<number | undefined>;
 }
+
+// Offer Acceptance Schema
+const OfferAcceptanceSchema = z.object({
+    tokenId: z.string(),
+    collection: z.string(),
+    offerPrice: z.number(),
+    listingPrice: z.number(),
+    acceptanceThreshold: z.number().optional().default(0.95), // 5% below listing price
+    maxAcceptanceDiscount: z.number().optional().default(0.1), // Max 10% below listing
+});
 
 export const listNFTAction = (nftService: ExtendedReservoirService): Action => {
     return {
@@ -209,3 +220,181 @@ export const listNFTAction = (nftService: ExtendedReservoirService): Action => {
         ],
     };
 };
+
+export const acceptNFTOfferAction = (
+    nftCollectionProvider: Provider,
+    reservoirService: any
+): Action => {
+    return {
+        name: "ACCEPT_NFT_OFFER",
+        similes: ["SELL_NFT", "PROCESS_OFFER"],
+        description:
+            "Intelligently accept NFT offers based on pricing strategy",
+        validate: async (runtime: IAgentRuntime, message: Memory) => {
+            const lowercaseText = message.content.text.toLowerCase();
+            return [
+                "accept offer",
+                "sell nft",
+                "process offer",
+                "accept bid",
+            ].some((term) => lowercaseText.includes(term));
+        },
+        handler: async (
+            runtime: IAgentRuntime,
+            message: Memory,
+            state: State,
+            options: any,
+            callback: HandlerCallback
+        ) => {
+            try {
+                // Extract offer details from message
+                const offerDetails = await extractOfferDetails(
+                    message.content.text,
+                    reservoirService
+                );
+
+                // Validate offer details
+                const validatedOffer = OfferAcceptanceSchema.parse({
+                    tokenId: offerDetails.tokenId,
+                    collection: offerDetails.collection,
+                    offerPrice: offerDetails.offerPrice,
+                    listingPrice: offerDetails.listingPrice,
+                });
+
+                // Fetch current market context
+                const [currentListings, recentSales] = await Promise.all([
+                    reservoirService.getListings({
+                        collection: validatedOffer.collection,
+                        limit: 10,
+                    }),
+                    reservoirService.getSalesHistory({
+                        collection: validatedOffer.collection,
+                        limit: 20,
+                    }),
+                ]);
+
+                // Calculate market average price
+                const averageSalePrice =
+                    recentSales.length > 0
+                        ? recentSales.reduce(
+                              (sum, sale) => sum + sale.price,
+                              0
+                          ) / recentSales.length
+                        : validatedOffer.listingPrice;
+
+                // Intelligent offer acceptance logic
+                const shouldAcceptOffer =
+                    // Offer is at or above 95% of listing price
+                    validatedOffer.offerPrice >=
+                        validatedOffer.listingPrice *
+                            validatedOffer.acceptanceThreshold ||
+                    // Offer is within 10% of average recent sale price
+                    (validatedOffer.offerPrice >=
+                        averageSalePrice *
+                            (1 - validatedOffer.maxAcceptanceDiscount) &&
+                        validatedOffer.offerPrice <=
+                            averageSalePrice *
+                                (1 + validatedOffer.maxAcceptanceDiscount));
+
+                if (shouldAcceptOffer) {
+                    // Execute offer acceptance
+                    const acceptanceResult = await reservoirService.acceptOffer(
+                        {
+                            tokenId: validatedOffer.tokenId,
+                            collection: validatedOffer.collection,
+                            offerPrice: validatedOffer.offerPrice,
+                        }
+                    );
+
+                    // Prepare response
+                    const responseText = `✅ Offer Accepted!
+🏷️ Collection: ${validatedOffer.collection}
+🖼️ Token ID: ${validatedOffer.tokenId}
+💰 Offer Price: ${validatedOffer.offerPrice.toFixed(3)} ETH
+📊 Market Context: Avg Recent Sale ${averageSalePrice.toFixed(3)} ETH`;
+
+                    callback({ text: responseText });
+
+                    // Optional: Log the transaction
+                    console.log("NFT Offer Accepted:", {
+                        collection: validatedOffer.collection,
+                        tokenId: validatedOffer.tokenId,
+                        offerPrice: validatedOffer.offerPrice,
+                        marketAveragePrice: averageSalePrice,
+                    });
+
+                    return true;
+                } else {
+                    callback({
+                        text: `❌ Offer Rejected.
+Offer Price: ${validatedOffer.offerPrice.toFixed(3)} ETH
+Listing Price: ${validatedOffer.listingPrice.toFixed(3)} ETH
+Market Average: ${averageSalePrice.toFixed(3)} ETH`,
+                    });
+                    return false;
+                }
+            } catch (error) {
+                console.error("Error processing NFT offer:", error);
+                callback({ text: "Failed to process NFT offer." });
+                return false;
+            }
+        },
+        examples: [
+            [
+                {
+                    user: "{{user1}}",
+                    content: {
+                        text: "Accept offer for token 123 in collection 0x...",
+                    },
+                },
+                {
+                    user: "{{user2}}",
+                    content: { text: "Offer accepted successfully!" },
+                },
+            ],
+        ],
+    };
+};
+
+// Fetch current listing price for a specific token
+async function fetchCurrentListingPrice(
+    collection: string,
+    tokenId: string,
+    reservoirService: any
+) {
+    try {
+        const listings = await reservoirService.getListings({
+            collection,
+            tokenId,
+            limit: 1,
+        });
+        return listings.length > 0 ? listings[0].price : null;
+    } catch (error) {
+        console.error("Error fetching listing price:", error);
+        return null;
+    }
+}
+
+// Helper function to extract offer details from message
+async function extractOfferDetails(messageText: string, reservoirService: any) {
+    // Implement intelligent parsing of offer details
+    // This is a placeholder and should be enhanced with more robust parsing
+    const tokenIdMatch = messageText.match(/token\s*(\d+)/i);
+    const collectionMatch = messageText.match(/0x[a-fA-F0-9]{40}/);
+    const priceMatch = messageText.match(/(\d+(\.\d+)?)\s*ETH/i);
+
+    if (!tokenIdMatch || !collectionMatch || !priceMatch) {
+        throw new Error("Insufficient offer details");
+    }
+
+    return {
+        tokenId: tokenIdMatch[1],
+        collection: collectionMatch[0],
+        offerPrice: parseFloat(priceMatch[1]),
+        listingPrice: await fetchCurrentListingPrice(
+            collectionMatch[0],
+            tokenIdMatch[1],
+            reservoirService
+        ),
+    };
+}
