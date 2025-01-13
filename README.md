@@ -1,6 +1,6 @@
 ![SBF](sbf.png)
 
-# GODS 🤖
+# Solana GODS 🤖
 
 This is a fork of the Eliza client repository with an improved Solana plug-in and a new character who handles all Solana based transactions: SBF.
 
