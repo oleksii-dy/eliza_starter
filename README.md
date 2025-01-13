@@ -1,3 +1,7 @@
+
+Tetsing Building locally with 
+`docker build --platform linux/arm64 .`
+
 # debug
 
 `pnpm start:debug --characters=./characters/eliza.character.json`

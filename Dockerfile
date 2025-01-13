@@ -1,7 +1,7 @@
 # Use a specific Node.js version for better reproducibility
 #FROM node:23.3.0-slim AS builder
 # note this architecture is listed twice in this file!
-FROM amd64/node:23-bookworm-slim AS builder
+FROM arm64v8/node:23-bookworm-slim AS builder
 
 # Install pnpm globally and install necessary build tools
 RUN npm install -g pnpm@9.4.0 && \
@@ -32,7 +32,7 @@ RUN pnpm install \
 
 # Create a new stage for the final image
 #FROM node:23.3.0-slim
-FROM amd64/node:23-bookworm-slim
+FROM arm64v8/node:23-bookworm-slim
 
 # Install runtime dependencies if needed
 RUN npm install -g pnpm@9.4.0 && \
