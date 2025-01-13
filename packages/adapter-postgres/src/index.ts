@@ -1,41 +1,43 @@
 import { v4 } from "uuid";
 
-import postgres from "pg";
-const { Pool } = postgres;
-type PoolType = typeof postgres.Pool;
+// Import the entire module as default
+import pg from "pg";
+type Pool = pg.Pool;
 
+import {
+    Account,
+    Actor,
+    DatabaseAdapter,
+    EmbeddingProvider,
+    GoalStatus,
+    Participant,
+    RAGKnowledgeItem,
+    elizaLogger,
+    getEmbeddingConfig,
+    type Goal,
+    type IDatabaseCacheAdapter,
+    type Memory,
+    type Relationship,
+    type UUID,
+} from "@elizaos/core";
+import fs from "fs";
+import path from "path";
 import {
     QueryConfig,
     QueryConfigValues,
     QueryResult,
     QueryResultRow,
 } from "pg";
-import {
-    Account,
-    Actor,
-    GoalStatus,
-    type Goal,
-    type Memory,
-    type Relationship,
-    type UUID,
-    type IDatabaseCacheAdapter,
-    Participant,
-    DatabaseAdapter,
-    elizaLogger,
-    getEmbeddingConfig,
-} from "@ai16z/eliza";
-import fs from "fs";
 import { fileURLToPath } from "url";
-import path from "path";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
 export class PostgresDatabaseAdapter
-    extends DatabaseAdapter<PoolType>
+    extends DatabaseAdapter<Pool>
     implements IDatabaseCacheAdapter
 {
-    private pool: InstanceType<PoolType>;
+    private pool: Pool;
     private readonly maxRetries: number = 3;
     private readonly baseDelay: number = 1000; // 1 second
     private readonly maxDelay: number = 10000; // 10 seconds
@@ -43,7 +45,12 @@ export class PostgresDatabaseAdapter
     private readonly connectionTimeout: number = 5000; // 5 seconds
 
     constructor(connectionConfig: any) {
-        super();
+        super({
+            //circuitbreaker stuff
+            failureThreshold: 5,
+            resetTimeout: 60000,
+            halfOpenMaxAttempts: 3,
+        });
 
         const defaultConfig = {
             max: 20,
@@ -51,7 +58,7 @@ export class PostgresDatabaseAdapter
             connectionTimeoutMillis: this.connectionTimeout,
         };
 
-        this.pool = new Pool({
+        this.pool = new pg.Pool({
             ...defaultConfig,
             ...connectionConfig, // Allow overriding defaults
         });
@@ -75,6 +82,19 @@ export class PostgresDatabaseAdapter
             await this.cleanup();
             process.exit(0);
         });
+
+        process.on("beforeExit", async () => {
+            await this.cleanup();
+        });
+    }
+
+    private async withDatabase<T>(
+        operation: () => Promise<T>,
+        context: string
+    ): Promise<T> {
+        return this.withCircuitBreaker(async () => {
+            return this.withRetry(operation);
+        }, context);
     }
 
     private async withRetry<T>(operation: () => Promise<T>): Promise<T> {
@@ -137,7 +157,7 @@ export class PostgresDatabaseAdapter
             await this.pool.end();
 
             // Create new pool
-            this.pool = new Pool({
+            this.pool = new pg.Pool({
                 ...this.pool.options,
                 connectionTimeoutMillis: this.connectionTimeout,
             });
@@ -159,15 +179,29 @@ export class PostgresDatabaseAdapter
         queryTextOrConfig: string | QueryConfig<I>,
         values?: QueryConfigValues<I>
     ): Promise<QueryResult<R>> {
-        const client = await this.pool.connect();
+        return this.withDatabase(async () => {
+            return await this.pool.query(queryTextOrConfig, values);
+        }, "query");
+    }
 
+    private async validateVectorSetup(): Promise<boolean> {
         try {
-            return client.query(queryTextOrConfig, values);
+            const vectorExt = await this.query(`
+                SELECT 1 FROM pg_extension WHERE extname = 'vector'
+            `);
+            const hasVector = vectorExt.rows.length > 0;
+
+            if (!hasVector) {
+                elizaLogger.error("Vector extension not found in database");
+                return false;
+            }
+
+            return true;
         } catch (error) {
-            elizaLogger.error(error);
-            throw error;
-        } finally {
-            client.release();
+            elizaLogger.error("Failed to validate vector extension:", {
+                error: error instanceof Error ? error.message : String(error),
+            });
+            return false;
         }
     }
 
@@ -178,6 +212,25 @@ export class PostgresDatabaseAdapter
         try {
             await client.query("BEGIN");
 
+            // Set application settings for embedding dimension
+            const embeddingConfig = getEmbeddingConfig();
+            if (embeddingConfig.provider === EmbeddingProvider.OpenAI) {
+                await client.query("SET app.use_openai_embedding = 'true'");
+                await client.query("SET app.use_ollama_embedding = 'false'");
+                await client.query("SET app.use_gaianet_embedding = 'false'");
+            } else if (embeddingConfig.provider === EmbeddingProvider.Ollama) {
+                await client.query("SET app.use_openai_embedding = 'false'");
+                await client.query("SET app.use_ollama_embedding = 'true'");
+                await client.query("SET app.use_gaianet_embedding = 'false'");
+            } else if (embeddingConfig.provider === EmbeddingProvider.GaiaNet) {
+                await client.query("SET app.use_openai_embedding = 'false'");
+                await client.query("SET app.use_ollama_embedding = 'false'");
+                await client.query("SET app.use_gaianet_embedding = 'true'");
+            } else {
+                await client.query("SET app.use_openai_embedding = 'false'");
+                await client.query("SET app.use_ollama_embedding = 'false'");
+            }
+
             // Check if schema already exists (check for a core table)
             const { rows } = await client.query(`
                 SELECT EXISTS (
@@ -186,7 +239,10 @@ export class PostgresDatabaseAdapter
                 );
             `);
 
-            if (!rows[0].exists) {
+            if (!rows[0].exists || !(await this.validateVectorSetup())) {
+                elizaLogger.info(
+                    "Applying database schema - tables or vector extension missing"
+                );
                 const schema = fs.readFileSync(
                     path.resolve(__dirname, "../schema.sql"),
                     "utf8"
@@ -237,17 +293,17 @@ export class PostgresDatabaseAdapter
     }
 
     async getRoom(roomId: UUID): Promise<UUID | null> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             const { rows } = await this.pool.query(
                 "SELECT id FROM rooms WHERE id = $1",
                 [roomId]
             );
             return rows.length > 0 ? (rows[0].id as UUID) : null;
-        });
+        }, "getRoom");
     }
 
     async getParticipantsForAccount(userId: UUID): Promise<Participant[]> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             const { rows } = await this.pool.query(
                 `SELECT id, "userId", "roomId", "last_message_read"
                 FROM participants
@@ -255,28 +311,29 @@ export class PostgresDatabaseAdapter
                 [userId]
             );
             return rows as Participant[];
-        });
+        }, "getParticipantsForAccount");
     }
 
     async getParticipantUserState(
         roomId: UUID,
         userId: UUID
     ): Promise<"FOLLOWED" | "MUTED" | null> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             const { rows } = await this.pool.query(
                 `SELECT "userState" FROM participants WHERE "roomId" = $1 AND "userId" = $2`,
                 [roomId, userId]
             );
             return rows.length > 0 ? rows[0].userState : null;
-        });
+        }, "getParticipantUserState");
     }
 
     async getMemoriesByRoomIds(params: {
         roomIds: UUID[];
         agentId?: UUID;
         tableName: string;
+        limit?: number;
     }): Promise<Memory[]> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             if (params.roomIds.length === 0) return [];
             const placeholders = params.roomIds
                 .map((_, i) => `$${i + 2}`)
@@ -290,6 +347,13 @@ export class PostgresDatabaseAdapter
                 queryParams = [...queryParams, params.agentId];
             }
 
+            // Add sorting, and conditionally add LIMIT if provided
+            query += ` ORDER BY "createdAt" DESC`;
+            if (params.limit) {
+                query += ` LIMIT $${queryParams.length + 1}`;
+                queryParams.push(params.limit.toString());
+            }
+
             const { rows } = await this.pool.query(query, queryParams);
             return rows.map((row) => ({
                 ...row,
@@ -298,7 +362,7 @@ export class PostgresDatabaseAdapter
                         ? JSON.parse(row.content)
                         : row.content,
             }));
-        });
+        }, "getMemoriesByRoomIds");
     }
 
     async setParticipantUserState(
@@ -306,26 +370,26 @@ export class PostgresDatabaseAdapter
         userId: UUID,
         state: "FOLLOWED" | "MUTED" | null
     ): Promise<void> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             await this.pool.query(
                 `UPDATE participants SET "userState" = $1 WHERE "roomId" = $2 AND "userId" = $3`,
                 [state, roomId, userId]
             );
-        });
+        }, "setParticipantUserState");
     }
 
     async getParticipantsForRoom(roomId: UUID): Promise<UUID[]> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             const { rows } = await this.pool.query(
                 'SELECT "userId" FROM participants WHERE "roomId" = $1',
                 [roomId]
             );
             return rows.map((row) => row.userId);
-        });
+        }, "getParticipantsForRoom");
     }
 
     async getAccountById(userId: UUID): Promise<Account | null> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             const { rows } = await this.pool.query(
                 "SELECT * FROM accounts WHERE id = $1",
                 [userId]
@@ -348,11 +412,11 @@ export class PostgresDatabaseAdapter
                         ? JSON.parse(account.details)
                         : account.details,
             };
-        });
+        }, "getAccountById");
     }
 
     async createAccount(account: Account): Promise<boolean> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             try {
                 const accountId = account.id ?? v4();
                 await this.pool.query(
@@ -380,11 +444,11 @@ export class PostgresDatabaseAdapter
                 });
                 return false; // Return false instead of throwing to maintain existing behavior
             }
-        });
+        }, "createAccount");
     }
 
     async getActorById(params: { roomId: UUID }): Promise<Actor[]> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             const { rows } = await this.pool.query(
                 `SELECT a.id, a.name, a.username, a.details
                 FROM participants p
@@ -421,7 +485,7 @@ export class PostgresDatabaseAdapter
                     };
                 }
             });
-        }).catch((error) => {
+        }, "getActorById").catch((error) => {
             elizaLogger.error("Failed to get actors:", {
                 roomId: params.roomId,
                 error: error.message,
@@ -431,7 +495,7 @@ export class PostgresDatabaseAdapter
     }
 
     async getMemoryById(id: UUID): Promise<Memory | null> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             const { rows } = await this.pool.query(
                 "SELECT * FROM memories WHERE id = $1",
                 [id]
@@ -445,11 +509,11 @@ export class PostgresDatabaseAdapter
                         ? JSON.parse(rows[0].content)
                         : rows[0].content,
             };
-        });
+        }, "getMemoryById");
     }
 
     async createMemory(memory: Memory, tableName: string): Promise<void> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             elizaLogger.debug("PostgresAdapter createMemory:", {
                 memoryId: memory.id,
                 embeddingLength: memory.embedding?.length,
@@ -486,7 +550,7 @@ export class PostgresDatabaseAdapter
                     Date.now(),
                 ]
             );
-        });
+        }, "createMemory");
     }
 
     async searchMemories(params: {
@@ -521,7 +585,7 @@ export class PostgresDatabaseAdapter
         if (!params.tableName) throw new Error("tableName is required");
         if (!params.roomId) throw new Error("roomId is required");
 
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             // Build query
             let sql = `SELECT * FROM memories WHERE type = $1 AND "roomId" = $2`;
             const values: any[] = [params.tableName, params.roomId];
@@ -587,7 +651,7 @@ export class PostgresDatabaseAdapter
                         ? JSON.parse(row.content)
                         : row.content,
             }));
-        });
+        }, "getMemories");
     }
 
     async getGoals(params: {
@@ -596,7 +660,7 @@ export class PostgresDatabaseAdapter
         onlyInProgress?: boolean;
         count?: number;
     }): Promise<Goal[]> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             let sql = `SELECT * FROM goals WHERE "roomId" = $1`;
             const values: any[] = [params.roomId];
             let paramCount = 1;
@@ -625,11 +689,11 @@ export class PostgresDatabaseAdapter
                         ? JSON.parse(row.objectives)
                         : row.objectives,
             }));
-        });
+        }, "getGoals");
     }
 
     async updateGoal(goal: Goal): Promise<void> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             try {
                 await this.pool.query(
                     `UPDATE goals SET name = $1, status = $2, objectives = $3 WHERE id = $4`,
@@ -649,11 +713,11 @@ export class PostgresDatabaseAdapter
                 });
                 throw error;
             }
-        });
+        }, "updateGoal");
     }
 
     async createGoal(goal: Goal): Promise<void> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             await this.pool.query(
                 `INSERT INTO goals (id, "roomId", "userId", name, status, objectives)
                 VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -666,13 +730,13 @@ export class PostgresDatabaseAdapter
                     JSON.stringify(goal.objectives),
                 ]
             );
-        });
+        }, "createGoal");
     }
 
     async removeGoal(goalId: UUID): Promise<void> {
         if (!goalId) throw new Error("Goal ID is required");
 
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             try {
                 const result = await this.pool.query(
                     "DELETE FROM goals WHERE id = $1 RETURNING id",
@@ -691,23 +755,23 @@ export class PostgresDatabaseAdapter
                 });
                 throw error;
             }
-        });
+        }, "removeGoal");
     }
 
     async createRoom(roomId?: UUID): Promise<UUID> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             const newRoomId = roomId || v4();
             await this.pool.query("INSERT INTO rooms (id) VALUES ($1)", [
                 newRoomId,
             ]);
             return newRoomId as UUID;
-        });
+        }, "createRoom");
     }
 
     async removeRoom(roomId: UUID): Promise<void> {
         if (!roomId) throw new Error("Room ID is required");
 
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             const client = await this.pool.connect();
             try {
                 await client.query("BEGIN");
@@ -759,9 +823,9 @@ export class PostgresDatabaseAdapter
                 });
                 throw error;
             } finally {
-                client.release();
+                if (client) client.release();
             }
-        });
+        }, "removeRoom");
     }
 
     async createRelationship(params: {
@@ -773,7 +837,7 @@ export class PostgresDatabaseAdapter
             throw new Error("userA and userB are required");
         }
 
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             try {
                 const relationshipId = v4();
                 await this.pool.query(
@@ -814,7 +878,7 @@ export class PostgresDatabaseAdapter
                 }
                 return false;
             }
-        });
+        }, "createRelationship");
     }
 
     async getRelationship(params: {
@@ -825,7 +889,7 @@ export class PostgresDatabaseAdapter
             throw new Error("userA and userB are required");
         }
 
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             try {
                 const { rows } = await this.pool.query(
                     `SELECT * FROM relationships
@@ -857,7 +921,7 @@ export class PostgresDatabaseAdapter
                 });
                 throw error;
             }
-        });
+        }, "getRelationship");
     }
 
     async getRelationships(params: { userId: UUID }): Promise<Relationship[]> {
@@ -865,7 +929,7 @@ export class PostgresDatabaseAdapter
             throw new Error("userId is required");
         }
 
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             try {
                 const { rows } = await this.pool.query(
                     `SELECT * FROM relationships
@@ -888,7 +952,7 @@ export class PostgresDatabaseAdapter
                 });
                 throw error;
             }
-        });
+        }, "getRelationships");
     }
 
     async getCachedEmbeddings(opts: {
@@ -910,7 +974,7 @@ export class PostgresDatabaseAdapter
         if (opts.query_match_count <= 0)
             throw new Error("query_match_count must be positive");
 
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             try {
                 elizaLogger.debug("Fetching cached embeddings:", {
                     tableName: opts.query_table_name,
@@ -996,7 +1060,7 @@ export class PostgresDatabaseAdapter
                 });
                 throw error;
             }
-        });
+        }, "getCachedEmbeddings");
     }
 
     async log(params: {
@@ -1013,7 +1077,7 @@ export class PostgresDatabaseAdapter
             throw new Error("body must be a valid object");
         }
 
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             try {
                 const logId = v4(); // Generate ID for tracking
                 await this.pool.query(
@@ -1052,7 +1116,7 @@ export class PostgresDatabaseAdapter
                 });
                 throw error;
             }
-        });
+        }, "log");
     }
 
     async searchMemoriesByEmbedding(
@@ -1066,7 +1130,7 @@ export class PostgresDatabaseAdapter
             tableName: string;
         }
     ): Promise<Memory[]> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             elizaLogger.debug("Incoming vector:", {
                 length: embedding.length,
                 sample: embedding.slice(0, 5),
@@ -1154,11 +1218,11 @@ export class PostgresDatabaseAdapter
                         : row.content,
                 similarity: row.similarity,
             }));
-        });
+        }, "searchMemoriesByEmbedding");
     }
 
     async addParticipant(userId: UUID, roomId: UUID): Promise<boolean> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             try {
                 await this.pool.query(
                     `INSERT INTO participants (id, "userId", "roomId")
@@ -1170,11 +1234,11 @@ export class PostgresDatabaseAdapter
                 console.log("Error adding participant", error);
                 return false;
             }
-        });
+        }, "addParticpant");
     }
 
     async removeParticipant(userId: UUID, roomId: UUID): Promise<boolean> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             try {
                 await this.pool.query(
                     `DELETE FROM participants WHERE "userId" = $1 AND "roomId" = $2`,
@@ -1185,37 +1249,37 @@ export class PostgresDatabaseAdapter
                 console.log("Error removing participant", error);
                 return false;
             }
-        });
+        }, "removeParticipant");
     }
 
     async updateGoalStatus(params: {
         goalId: UUID;
         status: GoalStatus;
     }): Promise<void> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             await this.pool.query(
                 "UPDATE goals SET status = $1 WHERE id = $2",
                 [params.status, params.goalId]
             );
-        });
+        }, "updateGoalStatus");
     }
 
     async removeMemory(memoryId: UUID, tableName: string): Promise<void> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             await this.pool.query(
                 "DELETE FROM memories WHERE type = $1 AND id = $2",
                 [tableName, memoryId]
             );
-        });
+        }, "removeMemory");
     }
 
     async removeAllMemories(roomId: UUID, tableName: string): Promise<void> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             await this.pool.query(
                 `DELETE FROM memories WHERE type = $1 AND "roomId" = $2`,
                 [tableName, roomId]
             );
-        });
+        }, "removeAllMemories");
     }
 
     async countMemories(
@@ -1225,7 +1289,7 @@ export class PostgresDatabaseAdapter
     ): Promise<number> {
         if (!tableName) throw new Error("tableName is required");
 
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             let sql = `SELECT COUNT(*) as count FROM memories WHERE type = $1 AND "roomId" = $2`;
             if (unique) {
                 sql += ` AND "unique" = true`;
@@ -1233,36 +1297,36 @@ export class PostgresDatabaseAdapter
 
             const { rows } = await this.pool.query(sql, [tableName, roomId]);
             return parseInt(rows[0].count);
-        });
+        }, "countMemories");
     }
 
     async removeAllGoals(roomId: UUID): Promise<void> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             await this.pool.query(`DELETE FROM goals WHERE "roomId" = $1`, [
                 roomId,
             ]);
-        });
+        }, "removeAllGoals");
     }
 
     async getRoomsForParticipant(userId: UUID): Promise<UUID[]> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             const { rows } = await this.pool.query(
                 `SELECT "roomId" FROM participants WHERE "userId" = $1`,
                 [userId]
             );
             return rows.map((row) => row.roomId);
-        });
+        }, "getRoomsForParticipant");
     }
 
     async getRoomsForParticipants(userIds: UUID[]): Promise<UUID[]> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             const placeholders = userIds.map((_, i) => `$${i + 1}`).join(", ");
             const { rows } = await this.pool.query(
                 `SELECT DISTINCT "roomId" FROM participants WHERE "userId" IN (${placeholders})`,
                 userIds
             );
             return rows.map((row) => row.roomId);
-        });
+        }, "getRoomsForParticipants");
     }
 
     async getActorDetails(params: { roomId: string }): Promise<Actor[]> {
@@ -1270,7 +1334,7 @@ export class PostgresDatabaseAdapter
             throw new Error("roomId is required");
         }
 
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             try {
                 const sql = `
                     SELECT
@@ -1327,14 +1391,14 @@ export class PostgresDatabaseAdapter
                     `Failed to fetch actor details: ${error instanceof Error ? error.message : String(error)}`
                 );
             }
-        });
+        }, "getActorDetails");
     }
 
     async getCache(params: {
         key: string;
         agentId: UUID;
     }): Promise<string | undefined> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             try {
                 const sql = `SELECT "value"::TEXT FROM cache WHERE "key" = $1 AND "agentId" = $2`;
                 const { rows } = await this.query<{ value: string }>(sql, [
@@ -1351,7 +1415,7 @@ export class PostgresDatabaseAdapter
                 });
                 return undefined;
             }
-        });
+        }, "getCache");
     }
 
     async setCache(params: {
@@ -1359,7 +1423,7 @@ export class PostgresDatabaseAdapter
         agentId: UUID;
         value: string;
     }): Promise<boolean> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             try {
                 const client = await this.pool.connect();
                 try {
@@ -1385,7 +1449,7 @@ export class PostgresDatabaseAdapter
                     });
                     return false;
                 } finally {
-                    client.release();
+                    if (client) client.release();
                 }
             } catch (error) {
                 elizaLogger.error(
@@ -1394,14 +1458,14 @@ export class PostgresDatabaseAdapter
                 );
                 return false;
             }
-        });
+        }, "setCache");
     }
 
     async deleteCache(params: {
         key: string;
         agentId: UUID;
     }): Promise<boolean> {
-        return this.withRetry(async () => {
+        return this.withDatabase(async () => {
             try {
                 const client = await this.pool.connect();
                 try {
@@ -1433,7 +1497,291 @@ export class PostgresDatabaseAdapter
                 );
                 return false;
             }
-        });
+        }, "deleteCache");
+    }
+
+    async getKnowledge(params: {
+        id?: UUID;
+        agentId: UUID;
+        limit?: number;
+        query?: string;
+    }): Promise<RAGKnowledgeItem[]> {
+        return this.withDatabase(async () => {
+            let sql = `SELECT * FROM knowledge WHERE ("agentId" = $1 OR "isShared" = true)`;
+            const queryParams: any[] = [params.agentId];
+            let paramCount = 1;
+
+            if (params.id) {
+                paramCount++;
+                sql += ` AND id = $${paramCount}`;
+                queryParams.push(params.id);
+            }
+
+            if (params.limit) {
+                paramCount++;
+                sql += ` LIMIT $${paramCount}`;
+                queryParams.push(params.limit);
+            }
+
+            const { rows } = await this.pool.query(sql, queryParams);
+
+            return rows.map((row) => ({
+                id: row.id,
+                agentId: row.agentId,
+                content:
+                    typeof row.content === "string"
+                        ? JSON.parse(row.content)
+                        : row.content,
+                embedding: row.embedding
+                    ? new Float32Array(row.embedding)
+                    : undefined,
+                createdAt: row.createdAt.getTime(),
+            }));
+        }, "getKnowledge");
+    }
+
+    async searchKnowledge(params: {
+        agentId: UUID;
+        embedding: Float32Array;
+        match_threshold: number;
+        match_count: number;
+        searchText?: string;
+    }): Promise<RAGKnowledgeItem[]> {
+        return this.withDatabase(async () => {
+            const cacheKey = `embedding_${params.agentId}_${params.searchText}`;
+            const cachedResult = await this.getCache({
+                key: cacheKey,
+                agentId: params.agentId,
+            });
+
+            if (cachedResult) {
+                return JSON.parse(cachedResult);
+            }
+
+            const vectorStr = `[${Array.from(params.embedding).join(",")}]`;
+
+            const sql = `
+                WITH vector_scores AS (
+                    SELECT id,
+                        1 - (embedding <-> $1::vector) as vector_score
+                    FROM knowledge
+                    WHERE ("agentId" IS NULL AND "isShared" = true) OR "agentId" = $2
+                    AND embedding IS NOT NULL
+                ),
+                keyword_matches AS (
+                    SELECT id,
+                    CASE
+                        WHEN content->>'text' ILIKE $3 THEN 3.0
+                        ELSE 1.0
+                    END *
+                    CASE
+                        WHEN (content->'metadata'->>'isChunk')::boolean = true THEN 1.5
+                        WHEN (content->'metadata'->>'isMain')::boolean = true THEN 1.2
+                        ELSE 1.0
+                    END as keyword_score
+                    FROM knowledge
+                    WHERE ("agentId" IS NULL AND "isShared" = true) OR "agentId" = $2
+                )
+                SELECT k.*,
+                    v.vector_score,
+                    kw.keyword_score,
+                    (v.vector_score * kw.keyword_score) as combined_score
+                FROM knowledge k
+                JOIN vector_scores v ON k.id = v.id
+                LEFT JOIN keyword_matches kw ON k.id = kw.id
+                WHERE ("agentId" IS NULL AND "isShared" = true) OR k."agentId" = $2
+                AND (
+                    v.vector_score >= $4
+                    OR (kw.keyword_score > 1.0 AND v.vector_score >= 0.3)
+                )
+                ORDER BY combined_score DESC
+                LIMIT $5
+            `;
+
+            const { rows } = await this.pool.query(sql, [
+                vectorStr,
+                params.agentId,
+                `%${params.searchText || ""}%`,
+                params.match_threshold,
+                params.match_count,
+            ]);
+
+            const results = rows.map((row) => ({
+                id: row.id,
+                agentId: row.agentId,
+                content:
+                    typeof row.content === "string"
+                        ? JSON.parse(row.content)
+                        : row.content,
+                embedding: row.embedding
+                    ? new Float32Array(row.embedding)
+                    : undefined,
+                createdAt: row.createdAt.getTime(),
+                similarity: row.combined_score,
+            }));
+
+            await this.setCache({
+                key: cacheKey,
+                agentId: params.agentId,
+                value: JSON.stringify(results),
+            });
+
+            return results;
+        }, "searchKnowledge");
+    }
+
+    async createKnowledge(knowledge: RAGKnowledgeItem): Promise<void> {
+        return this.withDatabase(async () => {
+            const client = await this.pool.connect();
+            try {
+                await client.query("BEGIN");
+
+                const metadata = knowledge.content.metadata || {};
+                const vectorStr = knowledge.embedding
+                    ? `[${Array.from(knowledge.embedding).join(",")}]`
+                    : null;
+
+                // If this is a chunk, use createKnowledgeChunk
+                if (metadata.isChunk && metadata.originalId) {
+                    await this.createKnowledgeChunk({
+                        id: knowledge.id,
+                        originalId: metadata.originalId,
+                        agentId: metadata.isShared ? null : knowledge.agentId,
+                        content: knowledge.content,
+                        embedding: knowledge.embedding,
+                        chunkIndex: metadata.chunkIndex || 0,
+                        isShared: metadata.isShared || false,
+                        createdAt: knowledge.createdAt || Date.now(),
+                    });
+                } else {
+                    // This is a main knowledge item
+                    await client.query(
+                        `
+                        INSERT INTO knowledge (
+                            id, "agentId", content, embedding, "createdAt",
+                            "isMain", "originalId", "chunkIndex", "isShared"
+                        ) VALUES ($1, $2, $3, $4, to_timestamp($5/1000.0), $6, $7, $8, $9)
+                        ON CONFLICT (id) DO NOTHING
+                    `,
+                        [
+                            knowledge.id,
+                            metadata.isShared ? null : knowledge.agentId,
+                            knowledge.content,
+                            vectorStr,
+                            knowledge.createdAt || Date.now(),
+                            true,
+                            null,
+                            null,
+                            metadata.isShared || false,
+                        ]
+                    );
+                }
+
+                await client.query("COMMIT");
+            } catch (error) {
+                await client.query("ROLLBACK");
+                throw error;
+            } finally {
+                client.release();
+            }
+        }, "createKnowledge");
+    }
+
+    async removeKnowledge(id: UUID): Promise<void> {
+        return this.withDatabase(async () => {
+            const client = await this.pool.connect();
+            try {
+                await client.query("BEGIN");
+
+                // Check if this is a pattern-based chunk deletion (e.g., "id-chunk-*")
+                if (typeof id === "string" && id.includes("-chunk-*")) {
+                    const mainId = id.split("-chunk-")[0];
+                    // Delete chunks for this main ID
+                    await client.query(
+                        'DELETE FROM knowledge WHERE "originalId" = $1',
+                        [mainId]
+                    );
+                } else {
+                    // First delete all chunks associated with this knowledge item
+                    await client.query(
+                        'DELETE FROM knowledge WHERE "originalId" = $1',
+                        [id]
+                    );
+                    // Then delete the main knowledge item
+                    await client.query("DELETE FROM knowledge WHERE id = $1", [
+                        id,
+                    ]);
+                }
+
+                await client.query("COMMIT");
+            } catch (error) {
+                await client.query("ROLLBACK");
+                elizaLogger.error("Error removing knowledge", {
+                    error:
+                        error instanceof Error ? error.message : String(error),
+                    id,
+                });
+                throw error;
+            } finally {
+                client.release();
+            }
+        }, "removeKnowledge");
+    }
+
+    async clearKnowledge(agentId: UUID, shared?: boolean): Promise<void> {
+        return this.withDatabase(async () => {
+            const sql = shared
+                ? 'DELETE FROM knowledge WHERE ("agentId" = $1 OR "isShared" = true)'
+                : 'DELETE FROM knowledge WHERE "agentId" = $1';
+
+            await this.pool.query(sql, [agentId]);
+        }, "clearKnowledge");
+    }
+
+    private async createKnowledgeChunk(params: {
+        id: UUID;
+        originalId: UUID;
+        agentId: UUID | null;
+        content: any;
+        embedding: Float32Array | undefined | null;
+        chunkIndex: number;
+        isShared: boolean;
+        createdAt: number;
+    }): Promise<void> {
+        const vectorStr = params.embedding
+            ? `[${Array.from(params.embedding).join(",")}]`
+            : null;
+
+        // Store the pattern-based ID in the content metadata for compatibility
+        const patternId = `${params.originalId}-chunk-${params.chunkIndex}`;
+        const contentWithPatternId = {
+            ...params.content,
+            metadata: {
+                ...params.content.metadata,
+                patternId,
+            },
+        };
+
+        await this.pool.query(
+            `
+            INSERT INTO knowledge (
+                id, "agentId", content, embedding, "createdAt",
+                "isMain", "originalId", "chunkIndex", "isShared"
+            ) VALUES ($1, $2, $3, $4, to_timestamp($5/1000.0), $6, $7, $8, $9)
+            ON CONFLICT (id) DO NOTHING
+        `,
+            [
+                v4(), // Generate a proper UUID for PostgreSQL
+                params.agentId,
+                contentWithPatternId, // Store the pattern ID in metadata
+                vectorStr,
+                params.createdAt,
+                false,
+                params.originalId,
+                params.chunkIndex,
+                params.isShared,
+            ]
+        );
     }
 }
 

@@ -5,7 +5,7 @@ import { DeriveProvider } from "../providers/dreriveProvider.ts";
 
 describe("DeriveProvider", () => {
     let deriveProvider: DeriveProvider;
-    const teeEndpoint = "http://localhost:8090";
+    const teeEndpoint = "LOCAL";
     beforeEach(() => {
         deriveProvider = new DeriveProvider(teeEndpoint);
     });

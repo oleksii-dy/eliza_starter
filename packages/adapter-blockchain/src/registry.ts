@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 import { RegistryABI } from './contract/abi';
-import { elizaLogger } from '@ai16z/eliza';
+import { elizaLogger } from '@elizaos/core';
 
 export class Registry {
     private contract;

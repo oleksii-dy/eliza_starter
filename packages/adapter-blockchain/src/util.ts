@@ -8,7 +8,7 @@ import {
     Character,
     elizaLogger,
     type Memory,
- } from "@ai16z/eliza";
+ } from "@elizaos/core";
 
 export class BlockStoreUtil {
     private blockChain: IBlockchain;

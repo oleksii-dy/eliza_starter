@@ -18,13 +18,13 @@ describe("SQLite3VerifiableDAO", () => {
 
     let verifiableLogProvider: VerifiableLogProvider;
 
-    const teeEndpoint = "http://localhost:8090";
+    const teeEndpoint = "LOCAL";
     beforeEach(() => {
         const tempDir = os.tmpdir();
         const filePath = path.join(tempDir, "test2-db.sqlite");
         db = new Database(filePath);
         sqLite3VerifiableDAO = new SQLite3VerifiableDAO(db);
-        verifiableLogProvider = new VerifiableLogProvider(sqLite3VerifiableDAO);
+        verifiableLogProvider = new VerifiableLogProvider(sqLite3VerifiableDAO,"LOCAL");
     });
     describe("VerifiableLogProvider Management", () => {
         it("should verifiableLogProvider.log when available", async () => {
@@ -66,7 +66,7 @@ describe("SQLite3VerifiableDAO", () => {
             console.log("pageResult1:", pageResult1);
             expect(pageResult1).not.toBeNull();
 
-            const stringPromise =await verifiableLogProvider.generateAttestation({ agentId: testAgentId ,publicKey: pageResult1.agent_keypair_vlog_pk}, teeEndpoint);
+            const stringPromise =await verifiableLogProvider.generateAttestation({ agentId: testAgentId ,publicKey: pageResult1.agent_keypair_vlog_pk});
             console.log("stringPromise:", stringPromise);
             expect(stringPromise).not.toBeNull();
         });

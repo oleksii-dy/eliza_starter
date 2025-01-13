@@ -1,12 +1,12 @@
 {
-    "name": "@ai16z/adapter-blockchain",
+    "name": "@elizaos/adapter-blockchain",
     "version": "0.1.4-alpha.3",
     "main": "dist/index.js",
     "type": "module",
     "types": "dist/index.d.ts",
     "dependencies": {
-        "@ai16z/eliza": "workspace:*",
-        "@ai16z/plugin-tee-verifiable-log": "workspace:*",
+        "@elizaos/core": "workspace:*",
+        "@elizaos/plugin-tee-verifiable-log": "workspace:*",
         "queue": "^7.0.0",
         "web3": "^4.16.0"
     },

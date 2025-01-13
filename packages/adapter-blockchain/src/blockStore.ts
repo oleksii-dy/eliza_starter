@@ -5,7 +5,7 @@ import {
     Character,
     IDatabaseAdapter,
     elizaLogger,
-} from '@ai16z/eliza';
+} from '@elizaos/core';
 import { IBlockchain, Message } from './types';
 import { createBlockchain } from "./blockchain";
 import { Registry } from './registry';

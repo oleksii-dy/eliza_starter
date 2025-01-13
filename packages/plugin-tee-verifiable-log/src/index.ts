@@ -1,4 +1,4 @@
-import { IAgentRuntime, type Plugin, Service, ServiceType } from "@ai16z/eliza";
+import { IAgentRuntime, type Plugin, Service, ServiceType } from "@elizaos/core";
 import { VerifiableLogProvider } from "./providers/verifiableLogProvider.ts";
 import { SQLite3VerifiableDAO } from "./adapters/sqliteVerifiableDAO.ts";
 import {
@@ -25,6 +25,7 @@ export class VerifiableLogService extends Service {
     private verifiableDAO: VerifiableDAO;
 
     private teeEndpoint: string;
+    private teeMode: string;
     private vlogOpen: boolean = false;
 
     // Add abstract initialize method that must be implemented by derived classes
@@ -35,11 +36,22 @@ export class VerifiableLogService extends Service {
         if (runtime.getSetting("DSTACK_SIMULATOR_ENDPOINT") === null) {
             throw new Error("DSTACK_SIMULATOR_ENDPOINT is not set.");
         }
+        if (runtime.getSetting("TEE_MODE") === null) {
+            throw new Error("TEE_MODE is not set.");
+        }
+        if (runtime.getSetting("WALLET_SECRET_SALT") === null) {
+            throw new Error("WALLET_SECRET_SALT is not set.");
+        }
+        this.teeMode = runtime.getSetting("TEE_MODE");
+        const value = runtime.getSetting("VLOG");
+        const truthyValues = ["yes", "true", "YES", "TRUE", "Yes", "True", "1"];
+        this.vlogOpen = truthyValues.includes(value.toLowerCase());
         this.verifiableDAO = new SQLite3VerifiableDAO(
             runtime.databaseAdapter.db
         );
         this.verifiableLogProvider = new VerifiableLogProvider(
-            this.verifiableDAO
+            this.verifiableDAO,
+            this.teeMode
         );
         this.teeEndpoint = runtime.getSetting("DSTACK_SIMULATOR_ENDPOINT");
         const value = runtime.getSetting("VLOG");
@@ -48,7 +60,7 @@ export class VerifiableLogService extends Service {
 
         const isOK = await this.verifiableLogProvider.registerAgent(
             { agentId: runtime?.agentId, agentName: runtime?.character?.name },
-            this.teeEndpoint
+            this.teeMode
         );
         if (!isOK) {
             throw new Error(`Failed to register agent.${runtime.agentId}`);
@@ -64,7 +76,7 @@ export class VerifiableLogService extends Service {
         content: string;
     }): Promise<boolean> {
         if (this.vlogOpen) {
-            return this.verifiableLogProvider.log(params, this.teeEndpoint);
+            return this.verifiableLogProvider.log(params, this.teeMode);
         }
         return false;
     }
@@ -76,7 +88,6 @@ export class VerifiableLogService extends Service {
         if (this.vlogOpen) {
             return this.verifiableLogProvider.generateAttestation(
                 params,
-                this.teeEndpoint
             );
         }
         return "";
@@ -93,7 +104,6 @@ export class VerifiableLogService extends Service {
     ): Promise<PageQuery<VerifiableLog[]>> {
         return this.verifiableDAO.pageQueryLogs(query, page, pageSize);
     }
-
 }
 
 export const verifiableLogPlugin: Plugin = {

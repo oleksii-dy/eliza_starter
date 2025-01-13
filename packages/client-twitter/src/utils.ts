@@ -1,13 +1,14 @@
 import { Tweet } from "agent-twitter-client";
-import { getEmbeddingZeroVector } from "@ai16z/eliza";
-import { Content, Memory, UUID } from "@ai16z/eliza";
-import { stringToUuid } from "@ai16z/eliza";
+import { getEmbeddingZeroVector } from "@elizaos/core";
+import { Content, Memory, UUID } from "@elizaos/core";
+import { stringToUuid } from "@elizaos/core";
 import { ClientBase } from "./base";
-import { elizaLogger } from "@ai16z/eliza";
+import { elizaLogger } from "@elizaos/core";
+import { Media } from "@elizaos/core";
+import fs from "fs";
+import path from "path";
 import Heurist from "heurist";
 import axios from "axios";
-
-const MAX_TWEET_LENGTH = 280; // Updated to Twitter's current character limit
 
 export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
     const waitTime =
@@ -173,59 +174,29 @@ export async function sendTweet(
     inReplyTo: string,
     inReplyText: string
 ): Promise<Memory[]> {
-    const tweetChunks = splitTweetContent(content.text);
+    const maxTweetLength = client.twitterConfig.MAX_TWEET_LENGTH;
+    const isLongTweet = maxTweetLength > 280;
+
+    const tweetChunks = splitTweetContent(content.text, maxTweetLength);
     const sentTweets: Tweet[] = [];
     let previousTweetId = inReplyTo;
 
     for (const chunk of tweetChunks) {
-        let result: Response;
-        const keywords = ["image", "img", "picture"];
-        if (
-            inReplyText &&
-            keywords.some(keyword => inReplyText.includes(keyword))
-        ) {
-            try {
-                elizaLogger.info("===start genImage:", content.text);
-                const apiKey = this.runtime.getSetting("HEURIST_API_KEY");
-                const imageData = await genImage(apiKey, content.text);
-                elizaLogger.info("==end genImage:", imageData);
-
-                if (imageData) {
-                    result = await client.requestQueue.add(
-                        async () =>
-                            await client.twitterClient.sendTweet(
-                                chunk.trim(),
-                                previousTweetId,
-                                imageData
-                            )
-                    );
-                }
-            }catch (e) {
-                elizaLogger.error("Error genImage:", e);
-                result = await client.requestQueue.add(
-                    async () =>
-                        await client.twitterClient.sendTweet(
-                            chunk.trim(),
-                            previousTweetId
-                        )
-                );
-            }
-        } else {
-            result = await client.requestQueue.add(
-                async () =>
-                    await client.twitterClient.sendTweet(
-                        chunk.trim(),
-                        previousTweetId
-                    )
-            );
-        }
-
+        const result = await client.requestQueue.add(
+            async () =>
+                await client.twitterClient.sendTweet(
+                    chunk.trim(),
+                    previousTweetId
+                )
+        );
         const body = await result.json();
+        const tweetResult = isLongTweet
+            ? body?.data?.notetweet_create?.tweet_results?.result
+            : body?.data?.create_tweet?.tweet_results?.result;
 
         // if we have a response
-        if (body?.data?.create_tweet?.tweet_results?.result) {
+        if (tweetResult) {
             // Parse the response
-            const tweetResult = body.data.create_tweet.tweet_results.result;
             const finalTweet: Tweet = {
                 id: tweetResult.rest_id,
                 text: tweetResult.legacy.full_text,
@@ -245,7 +216,10 @@ export async function sendTweet(
             sentTweets.push(finalTweet);
             previousTweetId = finalTweet.id;
         } else {
-            console.error("Error sending chunk", chunk, "repsonse:", body);
+            elizaLogger.error("Error sending tweet chunk:", {
+                chunk,
+                response: body,
+            });
         }
 
         // Wait a bit between tweets to avoid rate limiting issues
@@ -274,8 +248,7 @@ export async function sendTweet(
     return memories;
 }
 
-function splitTweetContent(content: string): string[] {
-    const maxLength = MAX_TWEET_LENGTH;
+function splitTweetContent(content: string, maxLength: number): string[] {
     const paragraphs = content.split("\n\n").map((p) => p.trim());
     const tweets: string[] = [];
     let currentTweet = "";
@@ -311,11 +284,31 @@ function splitTweetContent(content: string): string[] {
     return tweets;
 }
 
-function splitParagraph(paragraph: string, maxLength: number): string[] {
-    // eslint-disable-next-line
-    const sentences = paragraph.match(/[^\.!\?]+[\.!\?]+|[^\.!\?]+$/g) || [
-        paragraph,
-    ];
+function extractUrls(paragraph: string): {
+    textWithPlaceholders: string;
+    placeholderMap: Map<string, string>;
+} {
+    // replace https urls with placeholder
+    const urlRegex = /https?:\/\/[^\s]+/g;
+    const placeholderMap = new Map<string, string>();
+
+    let urlIndex = 0;
+    const textWithPlaceholders = paragraph.replace(urlRegex, (match) => {
+        // twitter url would be considered as 23 characters
+        // <<URL_CONSIDERER_23_1>> is also 23 characters
+        const placeholder = `<<URL_CONSIDERER_23_${urlIndex}>>`; // Placeholder without . ? ! etc
+        placeholderMap.set(placeholder, match);
+        urlIndex++;
+        return placeholder;
+    });
+
+    return { textWithPlaceholders, placeholderMap };
+}
+
+function splitSentencesAndWords(text: string, maxLength: number): string[] {
+    // Split by periods, question marks and exclamation marks
+    // Note that URLs in text have been replaced with `<<URL_xxx>>` and won't be split by dots
+    const sentences = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [text];
     const chunks: string[] = [];
     let currentChunk = "";
 
@@ -327,13 +320,16 @@ function splitParagraph(paragraph: string, maxLength: number): string[] {
                 currentChunk = sentence;
             }
         } else {
+            // Can't fit more, push currentChunk to results
             if (currentChunk) {
                 chunks.push(currentChunk.trim());
             }
+
+            // If current sentence itself is less than or equal to maxLength
             if (sentence.length <= maxLength) {
                 currentChunk = sentence;
             } else {
-                // Split long sentence into smaller pieces
+                // Need to split sentence by spaces
                 const words = sentence.split(" ");
                 currentChunk = "";
                 for (const word of words) {
@@ -356,54 +352,10 @@ function splitParagraph(paragraph: string, maxLength: number): string[] {
         }
     }
 
+    // Handle remaining content
     if (currentChunk) {
         chunks.push(currentChunk.trim());
     }
 
     return chunks;
-}
-
-export async function genImage(heuristApiKey: string,strPrompt: string): Promise<any> {
-    const heurist = new Heurist({
-        apiKey: heuristApiKey,
-    });
-
-    try {
-        const heuristResponse = await heurist.images.generate({
-            model: "SDXLUnstableDiffusersV11",
-            prompt: strPrompt,
-            neg_prompt: "worst quality",
-            num_iterations: 25,
-            guidance_scale: 7.5,
-            width: 1024,
-            height: 768,
-            seed: -1,
-        });
-
-        elizaLogger.debug("Gen image result:", heuristResponse);
-
-        if (heuristResponse.url) {
-            const imageUrl = heuristResponse.url;
-
-            // Download an image from a URL.
-            const axiosResponse = await axios.get(imageUrl, {
-                responseType: "arraybuffer",
-            });
-
-            // Convert to media data.
-            const mediaData = [
-                {
-                    data: Buffer.from(axiosResponse.data),
-                    mediaType: "image/png",
-                },
-            ];
-            return mediaData;
-        } else {
-            elizaLogger.error("No URL returned in the response.");
-            return null;
-        }
-    } catch (error) {
-        elizaLogger.error("Error generating image:", error);
-        throw error;
-    }
 }

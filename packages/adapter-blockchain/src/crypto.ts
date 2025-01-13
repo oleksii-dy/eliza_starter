@@ -1,5 +1,5 @@
-import { DeriveProvider } from "@ai16z/plugin-tee-verifiable-log";
-import { elizaLogger } from "@ai16z/eliza";
+import { DeriveProvider } from "@elizaos/plugin-tee-verifiable-log";
+import { elizaLogger } from "@elizaos/core";
 
 export class Crypto {
     private deriveProvider?: DeriveProvider;

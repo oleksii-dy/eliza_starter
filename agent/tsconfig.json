@@ -5,11 +5,12 @@
         "rootDir": ".",
         "module": "ESNext",
         "moduleResolution": "Bundler",
-        "types": [
-            "node"
-        ]
+        "types": ["node", "jest"]
     },
-    "include": [
-        "src"
-    ]
+    "ts-node": {
+        "experimentalSpecifierResolution": "node",
+        "transpileOnly": true,
+        "esm": true
+    },
+    "include": ["src"]
 }

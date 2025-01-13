@@ -2,7 +2,7 @@ import {
     Character,
     Memory,
     elizaLogger,
- } from "@ai16z/eliza";
+ } from "@elizaos/core";
  import { IBlockchain, Message } from "./types";
  import Web3 from 'web3';
 

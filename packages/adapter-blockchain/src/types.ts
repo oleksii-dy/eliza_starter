@@ -1,4 +1,4 @@
-import { BlockStoreMsgType } from "@ai16z/eliza";
+import { BlockStoreMsgType } from "@elizaos/core";
 
 /**
  * Header for demonstration

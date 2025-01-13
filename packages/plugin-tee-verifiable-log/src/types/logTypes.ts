@@ -1,4 +1,3 @@
-import { UUID } from "@ai16z/eliza";
 
 export interface VerifiableLog {
     id: string; // Primary Key UUID
@@ -10,7 +9,6 @@ export interface VerifiableLog {
     content: string; // Not null
     signature: string; // Not null
 }
-
 export interface VerifiableLogQuery {
     idEq: string;
     agentIdEq: string;
