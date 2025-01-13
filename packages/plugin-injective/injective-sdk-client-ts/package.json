@@ -16,11 +16,11 @@
   },
   "dependencies": {
     "@injectivelabs/grpc-web": "0.0.1",
-    "@injectivelabs/networks": "1.14.33",
-    "@injectivelabs/sdk-ts": "1.14.33",
+    "@injectivelabs/networks": "1.14.34-beta.2",
+    "@injectivelabs/sdk-ts": "1.14.34-beta.2",
     "@injectivelabs/token-metadata": "1.14.11",
-    "@injectivelabs/ts-types": "1.14.33",
-    "@injectivelabs/utils": "1.14.33",
+    "@injectivelabs/ts-types": "1.14.34-beta.2",
+    "@injectivelabs/utils": "1.14.34-beta.2",
     "axios": "^1.6.2",
     "bignumber.js": "^9.1.2",
     "jscrypto": "latest"

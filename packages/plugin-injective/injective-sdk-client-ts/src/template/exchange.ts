@@ -225,7 +225,7 @@ Here are the recent user messages for context:
 {{recentMessages}}
 `;
 
-export const getInsuranceFundsTemplate = `
+export const getExchangeInsuranceFundsTemplate = `
 Extract insurance funds information.
 
 Response format:
@@ -733,7 +733,7 @@ Here are the recent user messages for context:
 
 export const msgExternalTransferTemplate = `
 Extract the following details for external transfer:
-- **injectiveAddress** (string): Injective sender address 
+- **injectiveAddress** (string): Injective sender address
 - **sourceSubaccountId** (string): Source subaccount ID
 - **destinationSubaccountId** (string): Destination subaccount ID
 - **amount** (string): Amount to transfer

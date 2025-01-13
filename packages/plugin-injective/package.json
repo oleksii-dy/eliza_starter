@@ -48,9 +48,6 @@
   "dependencies": {
     "@elizaos/adapter-sqlite": "0.1.7-alpha.2",
     "@elizaos/core": "workspace:*",
-    "@injectivelabs/grpc-web": "0.0.1",
-    "@injectivelabs/sdk-ts": "^1.14.33",
-    "@injectivelabs/utils": "^1.14.33",
     "axios": "^1.7.9",
     "injective-sdk-client-ts": "file:../../packages/plugin-injective/injective-sdk-client-ts"
   }

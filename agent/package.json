@@ -58,7 +58,7 @@
         "@elizaos/plugin-nft-generation": "workspace:*",
         "@elizaos/plugin-node": "workspace:*",
         "@elizaos/plugin-solana": "workspace:*",
-        "@lideralia/plugin-injective": "workspace:*",
+        "@elizaos/plugin-injective": "workspace:*",
         "@elizaos/plugin-solana-agentkit": "workspace:*",
         "@elizaos/plugin-autonome": "workspace:*",
         "@elizaos/plugin-starknet": "workspace:*",
