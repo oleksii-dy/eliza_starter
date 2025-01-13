@@ -62,20 +62,23 @@ export const createPullRequestAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        const updatedState = await incorporateRepositoryState(
-            state,
-            runtime,
-            message,
-            [],
-            true,
-            true
-        );
+        // state = await incorporateRepositoryState(
+        //     state,
+        //     runtime,
+        //     message,
+        //     [],
+        //     true,
+        //     true
+        // );
 
         const context = composeContext({
-            state: updatedState,
+            state,
             template: createPullRequestTemplate,
         });
-        await fs.writeFile("createPullRequestContext.json", JSON.stringify(context, null, 2));
+        await fs.writeFile(
+            "createPullRequestContext.json",
+            JSON.stringify(context, null, 2)
+        );
         const details = await generateObject({
             runtime,
             context,
@@ -89,7 +92,10 @@ export const createPullRequestAction: Action = {
         }
 
         const content = details.object as CreatePullRequestContent;
-        await fs.writeFile("createPullRequest.json", JSON.stringify(content, null, 2));
+        await fs.writeFile(
+            "createPullRequest.json",
+            JSON.stringify(content, null, 2)
+        );
         elizaLogger.info("Creating a pull request...");
 
         const repoPath = getRepoPath(content.owner, content.repo);
@@ -107,9 +113,18 @@ export const createPullRequestAction: Action = {
                 content.description,
                 content.base
             );
-            await saveCreatedPullRequestToMemory(runtime, pullRequest, content.owner, content.repo, content.branch, runtime.getSetting("GITHUB_API_TOKEN"));
+            await saveCreatedPullRequestToMemory(
+                runtime,
+                pullRequest,
+                content.owner,
+                content.repo,
+                content.branch,
+                runtime.getSetting("GITHUB_API_TOKEN")
+            );
 
-            elizaLogger.info(`Pull request created successfully! URL: ${pullRequest.html_url}`);
+            elizaLogger.info(
+                `Pull request created successfully! URL: ${pullRequest.html_url}`
+            );
             if (callback) {
                 callback({
                     text: `Pull request created successfully! URL: ${pullRequest.html_url}`,
@@ -123,12 +138,12 @@ export const createPullRequestAction: Action = {
                 error
             );
             if (callback) {
-              callback(
-                {
-                    text: `Error creating pull request on ${content.owner}/${content.repo} branch ${content.branch}. Please try again.`,
-                },
-                []
-            );
+                callback(
+                    {
+                        text: `Error creating pull request on ${content.owner}/${content.repo} branch ${content.branch}. Please try again.`,
+                    },
+                    []
+                );
             }
         }
     },

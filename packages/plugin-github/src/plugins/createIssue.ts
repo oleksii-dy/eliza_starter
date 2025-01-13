@@ -50,18 +50,18 @@ export const createIssueAction: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        const updatedState = await incorporateRepositoryState(
-            state,
-            runtime,
-            message,
-            [],
-            true,
-            true
-        );
+        // state = await incorporateRepositoryState(
+        //     state,
+        //     runtime,
+        //     message,
+        //     [],
+        //     true,
+        //     true
+        // );
         // elizaLogger.info("State:", updatedState);
 
         const context = composeContext({
-            state: updatedState,
+            state,
             template: createIssueTemplate,
         });
         // elizaLogger.info("Context:", context);

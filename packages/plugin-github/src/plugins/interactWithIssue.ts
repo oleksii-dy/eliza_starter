@@ -64,18 +64,18 @@ export const addCommentToIssueAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        const updatedState = await incorporateRepositoryState(
-            state,
-            runtime,
-            message,
-            [],
-            true,
-            true
-        );
-        elizaLogger.info("State:", updatedState);
+        // state = await incorporateRepositoryState(
+        //     state,
+        //     runtime,
+        //     message,
+        //     [],
+        //     true,
+        //     true
+        // );
+        // elizaLogger.info("State:", state);
 
         const context = composeContext({
-            state: updatedState,
+            state,
             template: addCommentToIssueTemplate,
         });
         // Test all all values from the state are being loaded into the context (files, previousIssues, previousPRs, all issues all prs )
@@ -120,12 +120,12 @@ export const addCommentToIssueAction: Action = {
                 ),
                 body: issueData.body,
             };
-            updatedState.specificIssue = JSON.stringify(issueDetails);
+            state.specificIssue = JSON.stringify(issueDetails);
         } else {
-            updatedState.specificIssue = JSON.stringify(issue.content);
+            state.specificIssue = JSON.stringify(issue.content);
         }
         const commentContext = composeContext({
-            state: updatedState,
+            state,
             template: generateCommentForASpecificIssueTemplate,
         });
 
@@ -283,18 +283,18 @@ export const reactToIssueAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        const updatedState = await incorporateRepositoryState(
-            state,
-            runtime,
-            message,
-            [],
-            true,
-            true
-        );
-        elizaLogger.info("State:", updatedState);
+        // state = await incorporateRepositoryState(
+        //     state,
+        //     runtime,
+        //     message,
+        //     [],
+        //     true,
+        //     true
+        // );
+        // elizaLogger.info("State:", state);
 
         const context = composeContext({
-            state: updatedState,
+            state,
             template: reactToIssueTemplate,
         });
         const details = await generateObject({
@@ -435,18 +435,18 @@ export const closeIssueAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        const updatedState = await incorporateRepositoryState(
-            state,
-            runtime,
-            message,
-            [],
-            true,
-            true
-        );
-        elizaLogger.info("State:", updatedState);
+        // state = await incorporateRepositoryState(
+        //     state,
+        //     runtime,
+        //     message,
+        //     [],
+        //     true,
+        //     true
+        // );
+        // elizaLogger.info("State:", state);
 
         const context = composeContext({
-            state: updatedState,
+            state,
             template: closeIssueTemplate,
         });
         const details = await generateObject({

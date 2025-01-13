@@ -618,6 +618,9 @@ export const saveIssuesToMemory = async (
 };
 
 export async function incorporateRepositoryState(
+    owner: string,
+    repository: string,
+    branch: string,
     state: State,
     runtime: IAgentRuntime,
     message: Memory,
@@ -655,19 +658,11 @@ export async function incorporateRepositoryState(
     // TODO:
     // We need to actually save goals, knowledge,facts, we only save memories for now
     // We need to dynamically update the goals, knoweldge, facts, bio, lore, we should add actions to update these and chain them to the OODA cycle
-    const owner = runtime.getSetting("GITHUB_OWNER") ?? ("" as string);
     state.owner = owner;
-    const repository = runtime.getSetting("GITHUB_REPO") ?? ("" as string);
     state.repository = repository;
-    const branch = runtime.getSetting("GITHUB_BRANCH") ?? ("main" as string);
     state.branch = branch;
     state.message = message.content.text;
-    if (owner === "" || repository === "" || branch === "") {
-        elizaLogger.error(
-            "GITHUB_OWNER or GITHUB_REPO or GITHUB_BRANCH is not set, skipping OODA cycle."
-        );
-        throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
-    }
+
     if (isIssuesFlow) {
         const previousIssues = await getIssuesFromMemories(
             runtime,
@@ -734,21 +729,6 @@ export async function getPullRequestsFromMemories(
     );
     return prMemories;
 }
-
-export const getRepositoryRoomId = (runtime: IAgentRuntime): UUID => {
-    const owner = runtime.getSetting("GITHUB_OWNER") ?? ("" as string);
-    const repository = runtime.getSetting("GITHUB_REPO") ?? ("" as string);
-    const branch = runtime.getSetting("GITHUB_BRANCH") ?? ("main" as string);
-    if (owner === "" || repository === "" || branch === "") {
-        elizaLogger.error(
-            "GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle."
-        );
-        throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
-    }
-    const roomId = stringToUuid(`github-${owner}-${repository}-${branch}`);
-    elizaLogger.log("Generated repository room ID:", roomId);
-    return roomId;
-};
 
 function sanitizeMemories(memories: Memory[]): Partial<Memory>[] {
     return memories.map((memory) => ({
