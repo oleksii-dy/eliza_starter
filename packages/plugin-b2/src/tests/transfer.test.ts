@@ -5,6 +5,7 @@ import { getEnvVariable } from "@elizaos/core";
 import { TransferAction } from "../actions/transfer";
 import { WalletProvider } from "../providers";
 import { TransferParams } from "../types";
+import { TOKEN_ADDRESSES } from "../utils/constants";
 
 describe("Transfer Action", () => {
     let wp: WalletProvider;
@@ -44,7 +45,7 @@ describe("Transfer Action", () => {
 
         it("throws if not enough gas", async () => {
             const params = {
-                tokenAddress: "0x0000000000000000000000000000000000000000",
+                tokenAddress: TOKEN_ADDRESSES["B2-BTC"],
                 recipient: receiverAddress,
                 amount: "1",
             } as TransferParams;
@@ -59,7 +60,7 @@ describe("Transfer Action", () => {
             console.log("----------------------------------------------");
             it("transfers tokens", async () => {
                 const params = {
-                    tokenAddress: "0x0000000000000000000000000000000000000000",
+                    tokenAddress: TOKEN_ADDRESSES["B2-BTC"],
                     recipient: receiverAddress,
                     amount: "0.001",
                 } as TransferParams;

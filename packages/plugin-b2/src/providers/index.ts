@@ -53,7 +53,7 @@ export class WalletProvider implements Provider {
         tokenAddress: Address,
         owner: Address
     ) {
-        if (tokenAddress === "0x0000000000000000000000000000000000000000") {
+        if (tokenAddress === TOKEN_ADDRESSES["B2-BTC"]) {
             return this.getNativeBalance(owner);
         }
         const publicClient = this.getPublicClient();
@@ -108,7 +108,7 @@ export class WalletProvider implements Provider {
     }
 
     async getDecimals(tokenAddress: Address) {
-        if (tokenAddress === "0x0000000000000000000000000000000000000000") {
+        if (tokenAddress === TOKEN_ADDRESSES["B2-BTC"]) {
             return b2Network.nativeCurrency.decimals;
         }
         const publicClient = this.getPublicClient();
