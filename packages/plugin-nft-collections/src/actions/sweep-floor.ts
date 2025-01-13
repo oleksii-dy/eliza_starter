@@ -1,34 +1,125 @@
 import { Action, IAgentRuntime, Memory, State } from "@elizaos/core";
 import { ReservoirService } from "../services/reservoir";
 import { HandlerCallback } from "@elizaos/core";
+import { z } from "zod";
 
-// Helper function to extract NFT details from the message
-function extractNFTDetails(text: string): {
-    collectionAddress: string | null;
-    quantity: number;
-} {
-    const addressMatch = text.match(/0x[a-fA-F0-9]{40}/);
-    const quantityMatch = text.match(/\d+/);
+// Recreate the WatchlistEntrySchema from get-collections.ts
+const WatchlistEntrySchema = z.object({
+    address: z.string(),
+    name: z.string().optional(),
+    maxThinnessThreshold: z.number().optional().default(15),
+    category: z.string().optional(),
+});
 
-    return {
-        collectionAddress: addressMatch ? addressMatch[0] : null,
-        quantity: quantityMatch ? parseInt(quantityMatch[0]) : 1,
-    };
+type WatchlistEntry = z.infer<typeof WatchlistEntrySchema>;
+
+// Define types for marketplace interactions
+interface ListingDetails {
+    tokenId: string;
+    price: number;
+    seller?: string;
+    marketplace?: string;
 }
 
-export const sweepFloorAction = (nftService: ReservoirService): Action => {
+interface BuyResult {
+    path: string;
+    steps: Array<{ action: string; status: string }>;
+    status?: string;
+}
+
+interface ListResult {
+    status: string;
+    marketplaceUrl?: string;
+    transactionHash?: string;
+}
+
+interface ArbitrageOpportunity {
+    collection: string;
+    lowestPrice: number;
+    secondLowestPrice: number;
+    thinnessPercentage: number;
+    tokenIds: string[];
+}
+
+export const sweepFloorArbitrageAction = (
+    nftService: ReservoirService,
+    reservoirService: any
+): Action => {
+    // Mock watchlist for demonstration
+    const mockWatchlist: WatchlistEntry[] = [
+        {
+            address: "0x...", // QQL Collection Address
+            name: "QQL by Tyler Hobbs",
+            category: "Art",
+            maxThinnessThreshold: 50,
+        },
+    ];
+
+    const detectThinFloorOpportunities = async (): Promise<
+        ArbitrageOpportunity[]
+    > => {
+        const watchlistCollections = mockWatchlist.filter(
+            (collection) => collection.category === "Art"
+        );
+
+        const opportunities: ArbitrageOpportunity[] = [];
+
+        for (const collection of watchlistCollections) {
+            try {
+                const listings = await reservoirService.getListings({
+                    collection: collection.address,
+                    sortBy: "price_asc",
+                    limit: 10,
+                    includeTokenDetails: true,
+                });
+
+                if (listings.length >= 2) {
+                    const [lowestListing, secondLowestListing] = listings;
+                    const priceDifference =
+                        secondLowestListing.price - lowestListing.price;
+                    const thinnessPercentage =
+                        (priceDifference / lowestListing.price) * 100;
+
+                    // Use collection's custom thinness threshold or default to 50%
+                    const thinnessThreshold =
+                        collection.maxThinnessThreshold || 50;
+
+                    if (thinnessPercentage > thinnessThreshold) {
+                        opportunities.push({
+                            collection: collection.address,
+                            lowestPrice: lowestListing.price,
+                            secondLowestPrice: secondLowestListing.price,
+                            thinnessPercentage,
+                            tokenIds: [lowestListing.tokenId],
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error(
+                    `Thin floor detection error for ${collection.address}:`,
+                    error
+                );
+            }
+        }
+
+        return opportunities.sort(
+            (a, b) => b.thinnessPercentage - a.thinnessPercentage
+        );
+    };
+
     return {
-        name: "SWEEP_FLOOR_NFT",
-        similes: ["BUY_FLOOR_NFT", "PURCHASE_FLOOR_NFT"],
+        name: "SWEEP_FLOOR_ARBITRAGE",
+        similes: ["AUTO_BUY_FLOOR_NFT", "QUICK_FLIP_NFT"],
         description:
-            "Sweeps the floor of a specified EVM NFT collection by purchasing the lowest-priced available NFTs.",
+            "Automatically detect and execute thin floor arbitrage opportunities in art collections",
 
         validate: async (runtime: IAgentRuntime, message: Memory) => {
             const content = message.content.text.toLowerCase();
             return (
-                (content.includes("sweep") || content.includes("buy")) &&
-                content.includes("nft") &&
-                (content.includes("0x") || content.includes("floor"))
+                (content.includes("arbitrage") ||
+                    content.includes("auto buy")) &&
+                content.includes("art") &&
+                content.includes("nft")
             );
         },
 
@@ -40,71 +131,75 @@ export const sweepFloorAction = (nftService: ReservoirService): Action => {
             callback: HandlerCallback
         ) => {
             try {
-                const { collectionAddress, quantity } = extractNFTDetails(
-                    message.content.text
-                );
+                // Detect thin floor opportunities
+                const opportunities = await detectThinFloorOpportunities();
 
-                if (!collectionAddress) {
-                    throw new Error(
-                        "No valid collection address found in message"
-                    );
+                if (opportunities.length === 0) {
+                    callback({
+                        text: "No thin floor arbitrage opportunities found.",
+                    });
+                    return false;
                 }
 
-                if (!nftService) {
-                    throw new Error("NFT service not found");
+                const results = [];
+
+                // Process top 3 opportunities
+                for (const opportunity of opportunities.slice(0, 3)) {
+                    // Buy floor NFT
+                    const buyResult: BuyResult = await nftService.executeBuy({
+                        listings: [
+                            {
+                                tokenId: opportunity.tokenIds[0],
+                                price: opportunity.lowestPrice,
+                                seller: "marketplace",
+                                marketplace: "ikigailabs",
+                            },
+                        ],
+                        taker: message.userId,
+                    });
+
+                    // Relist at 2x price
+                    const relistPrice = opportunity.secondLowestPrice * 2;
+                    const listResult: ListResult =
+                        await nftService.createListing({
+                            tokenId: opportunity.tokenIds[0],
+                            collectionAddress: opportunity.collection,
+                            price: relistPrice,
+                            marketplace: "ikigailabs",
+                            expirationTime:
+                                Math.floor(Date.now() / 1000) +
+                                30 * 24 * 60 * 60, // 30 days
+                        });
+
+                    results.push({
+                        collection: opportunity.collection,
+                        buyPrice: opportunity.lowestPrice,
+                        relistPrice,
+                        thinnessPercentage: opportunity.thinnessPercentage,
+                        buyStatus: buyResult.steps[0]?.status || "Unknown",
+                        listStatus: listResult.status,
+                    });
                 }
 
-                // Get floor listings sorted by price
-                const floorListings = await nftService.getFloorListings({
-                    collection: collectionAddress,
-                    limit: quantity,
-                    sortBy: "price",
-                });
+                const response = results
+                    .map(
+                        (result) =>
+                            `🔥 Arbitrage Opportunity 🔥\n` +
+                            `Collection: ${result.collection}\n` +
+                            `Buy Price: ${result.buyPrice.toFixed(3)} ETH\n` +
+                            `Relist Price: ${result.relistPrice.toFixed(3)} ETH\n` +
+                            `Thinness: ${result.thinnessPercentage.toFixed(2)}%\n` +
+                            `Buy Status: ${result.buyStatus}\n` +
+                            `List Status: ${result.listStatus}`
+                    )
+                    .join("\n\n");
 
-                if (floorListings.length < quantity) {
-                    throw new Error(
-                        `Only ${floorListings.length} NFTs available at floor price`
-                    );
-                }
-
-                // Execute the buy transaction
-                const result = await nftService.executeBuy({
-                    listings: floorListings,
-                    taker: message.userId, // Assuming userId is the wallet address
-                });
-
-                const totalPrice = floorListings.reduce(
-                    (sum, listing) => sum + listing.price,
-                    0
-                );
-                const response =
-                    `Successfully initiated sweep of ${quantity} NFTs from collection ${collectionAddress}:\n` +
-                    `• Total Cost: ${totalPrice} ETH\n` +
-                    `• Average Price: ${(totalPrice / quantity).toFixed(4)} ETH\n` +
-                    `• Transaction Path: ${result.path}\n` +
-                    `• Status: ${result.steps.map((step) => `${step.action} - ${step.status}`).join(", ")}`;
-                callback({
-                    text: response,
-                });
-                await runtime.messageManager.createMemory({
-                    id: message.id,
-                    content: { text: response },
-                    roomId: message.roomId,
-                    userId: message.userId,
-                    agentId: runtime.agentId,
-                });
-
+                callback({ text: response });
                 return true;
             } catch (error) {
-                console.error("Floor sweep failed:", error);
-                await runtime.messageManager.createMemory({
-                    id: message.id,
-                    content: {
-                        text: `Failed to sweep floor NFTs: ${error.message}`,
-                    },
-                    roomId: message.roomId,
-                    userId: message.userId,
-                    agentId: runtime.agentId,
+                console.error("Arbitrage workflow failed:", error);
+                callback({
+                    text: `Arbitrage workflow failed: ${error.message}`,
                 });
                 return false;
             }
@@ -114,15 +209,13 @@ export const sweepFloorAction = (nftService: ReservoirService): Action => {
             [
                 {
                     user: "{{user1}}",
-                    content: {
-                        text: "Sweep 5 NFTs from collection 0x1234...abcd at floor price",
-                    },
+                    content: { text: "Run art NFT arbitrage workflow" },
                 },
                 {
                     user: "{{user2}}",
                     content: {
-                        text: "Executing floor sweep for 5 NFTs...",
-                        action: "SWEEP_FLOOR_NFT",
+                        text: "Executing automated thin floor arbitrage for art collections...",
+                        action: "SWEEP_FLOOR_ARBITRAGE",
                     },
                 },
             ],

@@ -6,7 +6,7 @@ import {
     manageWatchlistAction,
 } from "./actions/get-collections";
 import { listNFTAction } from "./actions/list-nft";
-import { sweepFloorAction } from "./actions/sweep-floor";
+import { sweepFloorArbitrageAction } from "./actions/sweep-floor";
 
 import { ReservoirService } from "./services/reservoir";
 import { MemoryCacheManager } from "./services/cache-manager";
@@ -81,7 +81,7 @@ function createNFTCollectionsPlugin(): Plugin {
         actions: [
             getCollectionsAction(nftCollectionProvider),
             listNFTAction(reservoirService),
-            sweepFloorAction(reservoirService),
+            sweepFloorArbitrageAction(reservoirService, nftCollectionProvider),
             getThinFloorNFTsAction(nftCollectionProvider, reservoirService),
             manageWatchlistAction(nftCollectionProvider),
         ],

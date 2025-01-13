@@ -7,29 +7,42 @@ function extractListingDetails(text: string): {
     tokenId: string | null;
     collectionAddress: string | null;
     price?: number | null;
+    arbitrageMode?: boolean;
 } {
     const addressMatch = text.match(/(?:collection|from)\s*(0x[a-fA-F0-9]+)/i);
     const tokenIdMatch = text.match(/(?:token|nft)\s*#?\s*(\d+)/i);
     const priceMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:eth|Ξ)/i);
+    const arbitrageModeMatch = text.match(/(?:arbitrage|auto)/i);
 
     return {
         collectionAddress: addressMatch ? addressMatch[1] : null,
         tokenId: tokenIdMatch ? tokenIdMatch[1] : null,
         price: priceMatch ? parseFloat(priceMatch[1]) : undefined,
+        arbitrageMode: !!arbitrageModeMatch,
     };
 }
 
-export const listNFTAction = (nftService: ReservoirService): Action => {
+// Extended interface to handle potential methods
+interface ExtendedReservoirService extends ReservoirService {
+    getLastSalePrice?: (params: {
+        collectionAddress: string;
+        tokenId: string;
+    }) => Promise<number | undefined>;
+}
+
+export const listNFTAction = (nftService: ExtendedReservoirService): Action => {
     return {
         name: "LIST_NFT",
-        similes: ["SELL_NFT", "CREATE_LISTING"],
+        similes: ["SELL_NFT", "CREATE_LISTING", "ARBITRAGE_LISTING"],
         description:
-            "Lists an NFT for sale on ikigailabs.xyz marketplace at double the purchase price.",
+            "Lists an NFT for sale on ikigailabs.xyz marketplace, with optional arbitrage mode for automatic 2x pricing.",
 
         validate: async (runtime: IAgentRuntime, message: Memory) => {
             const content = message.content.text.toLowerCase();
             return (
-                (content.includes("list") || content.includes("sell")) &&
+                (content.includes("list") ||
+                    content.includes("sell") ||
+                    content.includes("arbitrage")) &&
                 content.includes("nft") &&
                 (content.includes("0x") ||
                     content.includes("token") ||
@@ -49,6 +62,7 @@ export const listNFTAction = (nftService: ReservoirService): Action => {
                     collectionAddress,
                     tokenId,
                     price: userSpecifiedPrice,
+                    arbitrageMode,
                 } = extractListingDetails(message.content.text);
 
                 if (!collectionAddress || !tokenId) {
@@ -74,11 +88,48 @@ export const listNFTAction = (nftService: ReservoirService): Action => {
                     throw new Error("You don't own this NFT");
                 }
 
+                // Determine listing price
+                let listingPrice: number;
+                if (userSpecifiedPrice) {
+                    listingPrice = userSpecifiedPrice;
+                } else if (arbitrageMode) {
+                    // In arbitrage mode, try to get the last sale price and double it
+                    let lastSalePrice: number | undefined;
+
+                    // Check if the method exists, otherwise use a fallback
+                    if (typeof nftService.getLastSalePrice === "function") {
+                        lastSalePrice = await nftService.getLastSalePrice({
+                            collectionAddress,
+                            tokenId,
+                        });
+                    }
+
+                    // Fallback: use floor price
+                    if (!lastSalePrice) {
+                        const floorListings = await nftService.getFloorListings(
+                            {
+                                collection: collectionAddress,
+                                limit: 1,
+                                sortBy: "price",
+                            }
+                        );
+
+                        lastSalePrice =
+                            floorListings.length > 0
+                                ? floorListings[0].price
+                                : undefined;
+                    }
+
+                    listingPrice = lastSalePrice ? lastSalePrice * 2 : 0;
+                } else {
+                    listingPrice = 0; // Default to market price
+                }
+
                 // Create the listing on ikigailabs
                 const listing = await nftService.createListing({
                     tokenId,
                     collectionAddress,
-                    price: userSpecifiedPrice || 0, // Default to 0 if no price specified
+                    price: listingPrice,
                     marketplace: "ikigailabs",
                     expirationTime:
                         Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60, // 30 days
@@ -88,7 +139,8 @@ export const listNFTAction = (nftService: ReservoirService): Action => {
                     `Successfully created listing on ikigailabs.xyz:\n` +
                     `• Collection: ${collectionAddress}\n` +
                     `• Token ID: ${tokenId}\n` +
-                    `• Listing Price: ${userSpecifiedPrice} ETH\n` +
+                    `• Listing Price: ${listingPrice.toFixed(3)} ETH\n` +
+                    `• Listing Mode: ${arbitrageMode ? "Arbitrage" : "Standard"}\n` +
                     `• Status: ${listing.status}\n` +
                     `• Listing URL: ${listing.marketplaceUrl}\n` +
                     (listing.transactionHash
@@ -128,13 +180,13 @@ export const listNFTAction = (nftService: ReservoirService): Action => {
                 {
                     user: "{{user1}}",
                     content: {
-                        text: "List token #123 from collection 0x1234...abcd",
+                        text: "List token #123 from collection 0x1234...abcd in arbitrage mode",
                     },
                 },
                 {
                     user: "{{user2}}",
                     content: {
-                        text: "Creating listing on ikigailabs.xyz at 2x purchase price...",
+                        text: "Creating arbitrage listing on ikigailabs.xyz at 2x last sale price...",
                         action: "LIST_NFT",
                     },
                 },
