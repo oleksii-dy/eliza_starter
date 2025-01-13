@@ -57,8 +57,9 @@ ${topOpportunities
     .map(
         (opp, index) => `
 ${index + 1}. ${opp.name || "Mystery Collection"}
-💰 Lowest: ${opp.lowestPrice.toFixed(3)} ETH
-📈 Potential Profit: ${((opp.potentialProfit - 1) * 100).toFixed(2)}%
+💰 Floor: ${opp.lowestPrice.toFixed(3)} ETH
+📈 Profit: ${((opp.potentialProfit - 1) * 100).toFixed(2)}%
+💸 Latest Sale: ${opp.historicalSales[0].latestSalePrice.toFixed(3)} ETH
 🔗 https://ikigailabs.xyz/collection/${opp.collection}`
     )
     .join("\n")}
