@@ -65,6 +65,7 @@ import { TEEMode, teePlugin } from "@elizaos/plugin-tee";
 import { tonPlugin } from "@elizaos/plugin-ton";
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
+import { cryptoNewsPlugin } from "@srise/plugin-crypto-news";
 import Database from "better-sqlite3";
 import fs from "fs";
 import net from "net";
@@ -536,6 +537,7 @@ export async function createAgent(
             getSecret(character, "SERPER_API_KEY")
                 ? webSearchPlugin
                 : null,
+            getSecret(character, "SERPER_API_KEY") ? cryptoNewsPlugin : null,
             getSecret(character, "SOLANA_PUBLIC_KEY") ||
             (getSecret(character, "WALLET_PUBLIC_KEY") &&
                 !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
@@ -619,6 +621,9 @@ export async function createAgent(
             getSecret(character, "ECHOCHAMBERS_API_KEY")
                 ? echoChamberPlugin
                 : null,
+            // getSecret(character, "BIRDEYE_API_KEY")
+            //     ? marketAnalisysPlugin
+            //     : null,
         ].filter(Boolean),
         providers: [],
         actions: [],

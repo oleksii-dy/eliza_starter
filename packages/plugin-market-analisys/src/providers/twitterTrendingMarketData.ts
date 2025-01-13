@@ -1,5 +1,5 @@
 import { elizaLogger, Provider } from "@elizaos/core";
-import { fetchTrendingTokens, fetchTokenOverview } from "../utils/birdeye";
+import { fetchTokenOverview, fetchTrendingTokens } from "../utils/birdeye";
 
 interface FormattedMarketData {
     symbol: string;
@@ -54,7 +54,9 @@ export const twitterTrendingMarketData: Provider = {
                 runtime.character.settings.secrets.BIRDEYE_API_KEY
             );
 
-            const randomIndex = Math.floor(Math.random() * Math.min(10, trendingTokens.tokens.length));
+            const randomIndex = Math.floor(
+                Math.random() * Math.min(10, trendingTokens.tokens.length)
+            );
             const selectedToken = trendingTokens.tokens[randomIndex];
 
             const tokenData = await fetchTokenOverview(
@@ -66,7 +68,9 @@ export const twitterTrendingMarketData: Provider = {
                 symbol: tokenData.symbol,
                 name: tokenData.name,
                 price: formatNumber(tokenData.price),
-                priceChange24h: formatPercentage(tokenData.priceChange24hPercent),
+                priceChange24h: formatPercentage(
+                    tokenData.priceChange24hPercent
+                ),
                 priceChange1h: formatPercentage(tokenData.priceChange1hPercent),
                 volume24h: formatNumber(tokenData.v24hUSD),
                 volume1h: formatNumber(tokenData.v1hUSD),
@@ -104,10 +108,12 @@ export const twitterTrendingMarketData: Provider = {
             elizaLogger.log(report);
 
             return report;
-
         } catch (error) {
-            console.error("Error in twitterTrendingMarketData provider:", error);
+            console.error(
+                "Error in twitterTrendingMarketData provider:",
+                error
+            );
             return "";
         }
-    }
+    },
 };

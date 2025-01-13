@@ -1,21 +1,22 @@
-import { Tweet } from "agent-twitter-client";
 import {
     composeContext,
+    elizaLogger,
     generateText,
+    generateTweetActions,
     getEmbeddingZeroVector,
     IAgentRuntime,
+    IImageDescriptionService,
     ModelClass,
+    postActionResponseFooter,
+    ServiceType,
     stringToUuid,
     UUID,
 } from "@elizaos/core";
-import { elizaLogger } from "@elizaos/core";
+import { Tweet } from "agent-twitter-client";
 import { ClientBase } from "./base.ts";
-import { postActionResponseFooter } from "@elizaos/core";
-import { generateTweetActions } from "@elizaos/core";
-import { IImageDescriptionService, ServiceType } from "@elizaos/core";
-import { buildConversationThread } from "./utils.ts";
-import { twitterMessageHandlerTemplate } from "./interactions.ts";
 import { DEFAULT_MAX_TWEET_LENGTH } from "./environment.ts";
+import { twitterMessageHandlerTemplate } from "./interactions.ts";
+import { buildConversationThread } from "./utils.ts";
 
 const twitterPostTemplate = `
 # Areas of Expertise
@@ -34,6 +35,7 @@ const twitterPostTemplate = `
 
 # Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
 Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
+Your response should include the summary of the # NEWS above
 Your response should be 1, 2, or 3 sentences (choose the length at random).
 Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than {{maxTweetLength}}. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.`;
 
@@ -62,7 +64,8 @@ Actions (respond only with tags):
 Tweet:
 {{currentTweet}}
 
-# Respond with qualifying action tags only. Default to NO action unless extremely confident of relevance.` + postActionResponseFooter;
+# Respond with qualifying action tags only. Default to NO action unless extremely confident of relevance.` +
+    postActionResponseFooter;
 
 /**
  * Truncate text to fit within the Twitter character limit, ensuring it ends at a complete sentence.
@@ -111,7 +114,7 @@ export class TwitterPostClient {
         this.client = client;
         this.runtime = runtime;
         this.twitterUsername = this.client.twitterConfig.TWITTER_USERNAME;
-        this.isDryRun = this.client.twitterConfig.TWITTER_DRY_RUN
+        this.isDryRun = this.client.twitterConfig.TWITTER_DRY_RUN;
 
         // Log configuration on initialization
         elizaLogger.log("Twitter Client Configuration:");
@@ -188,8 +191,9 @@ export class TwitterPostClient {
                             `Next action processing scheduled in ${actionInterval} minutes`
                         );
                         // Wait for the full interval before next processing
-                        await new Promise((resolve) =>
-                            setTimeout(resolve, actionInterval * 60 * 1000) // now in minutes
+                        await new Promise(
+                            (resolve) =>
+                                setTimeout(resolve, actionInterval * 60 * 1000) // now in minutes
                         );
                     }
                 } catch (error) {
@@ -215,7 +219,10 @@ export class TwitterPostClient {
             elizaLogger.log("Tweet generation loop disabled (dry run mode)");
         }
 
-        if (this.client.twitterConfig.ENABLE_ACTION_PROCESSING && !this.isDryRun) {
+        if (
+            this.client.twitterConfig.ENABLE_ACTION_PROCESSING &&
+            !this.isDryRun
+        ) {
             processActionsLoop().catch((error) => {
                 elizaLogger.error(
                     "Fatal error in process actions loop:",
@@ -401,7 +408,7 @@ export class TwitterPostClient {
      * Generates and posts a new tweet. If isDryRun is true, only logs what would have been posted.
      */
     private async generateNewTweet() {
-        elizaLogger.log("Generating new tweet");
+        elizaLogger.log("Generating new tweet cuk");
 
         try {
             const roomId = stringToUuid(
@@ -437,7 +444,7 @@ export class TwitterPostClient {
                     this.runtime.character.templates?.twitterPostTemplate ||
                     twitterPostTemplate,
             });
-
+            console.log("PROMPT", context);
             elizaLogger.debug("generate post prompt:\n" + context);
 
             const newTweetContent = await generateText({
@@ -480,7 +487,7 @@ export class TwitterPostClient {
             }
 
             // Truncate the content to the maximum tweet length specified in the environment settings, ensuring the truncation respects sentence boundaries.
-            const maxTweetLength = this.client.twitterConfig.MAX_TWEET_LENGTH
+            const maxTweetLength = this.client.twitterConfig.MAX_TWEET_LENGTH;
             if (maxTweetLength) {
                 cleanedContent = truncateToCompleteSentence(
                     cleanedContent,
