@@ -1,0 +1,35 @@
+{
+    "name": "@jawk/plugin-polygon",
+    "version": "0.0.1",
+    "main": "dist/index.js",
+    "type": "module",
+    "types": "dist/index.d.ts",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "import": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.js"
+            }
+        }
+    },
+    "dependencies": {
+        "@elizaos/core": "workspace:*",
+        "@jawk/utils": "workspace:*",
+        "@polygon.io/client-js": "v7.3.2",
+        "@types/puppeteer": "^7.0.4",
+        "canvas": "^3.0.1",
+        "chart.js": "^4.4.7",
+        "chartjs-node-canvas": "^4.1.6",
+        "puppeteer": "^23.11.1"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "tsup": "8.3.5"
+    },
+    "scripts": {
+        "build": "tsup --format esm --dts",
+        "dev": "tsup --format esm --dts --watch",
+        "lint": "eslint --fix  --cache ."
+    }
+}
