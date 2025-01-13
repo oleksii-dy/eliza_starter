@@ -198,6 +198,7 @@ export function createApiRouter(
         try {
             const memories = await runtime.messageManager.getMemories({
                 roomId,
+                unique: false,
             });
             const response: {
                 agentId: UUID;
