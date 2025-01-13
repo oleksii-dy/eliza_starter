@@ -328,6 +328,9 @@ importers:
       '@elizaos/plugin-tee-marlin':
         specifier: workspace:*
         version: link:../packages/plugin-tee-marlin
+      '@elizaos/plugin-tee-verifiable-log':
+        specifier: workspace:*
+        version: link:../packages/plugin-tee-verifiable-log
       '@elizaos/plugin-thirdweb':
         specifier: workspace:*
         version: link:../packages/plugin-thirdweb
@@ -746,6 +749,9 @@ importers:
       '@elizaos/plugin-tee-log':
         specifier: workspace:*
         version: link:../plugin-tee-log
+      '@elizaos/plugin-tee-verifiable-log':
+        specifier: workspace:*
+        version: link:../plugin-tee-verifiable-log
       '@types/body-parser':
         specifier: 1.19.5
         version: 1.19.5
@@ -1218,6 +1224,9 @@ importers:
 
   packages/plugin-abstract:
     dependencies:
+      '@abstract-foundation/agw-client':
+        specifier: ^0.1.7
+        version: 0.1.8(abitype@1.0.8(typescript@5.7.3)(zod@3.24.1))(typescript@5.7.3)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1))
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
@@ -2853,6 +2862,43 @@ importers:
         specifier: 7.1.0
         version: 7.1.0
 
+  packages/plugin-tee-verifiable-log:
+    dependencies:
+      '@elizaos/core':
+        specifier: workspace:*
+        version: link:../core
+      '@elizaos/plugin-tee':
+        specifier: workspace:*
+        version: link:../plugin-tee
+      dompurify:
+        specifier: 3.2.2
+        version: 3.2.2
+      elliptic:
+        specifier: ^6.6.1
+        version: 6.6.1
+      ethereum-cryptography:
+        specifier: ^3.0.0
+        version: 3.0.0
+      tsup:
+        specifier: 8.3.5
+        version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.5.0)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
+      uuid:
+        specifier: 11.0.3
+        version: 11.0.3
+      vitest:
+        specifier: 2.1.5
+        version: 2.1.5(@types/node@22.10.6)(jsdom@25.0.1(bufferutil@4.0.9)(canvas@2.11.2(encoding@0.1.13))(utf-8-validate@6.0.5))(terser@5.37.0)
+      whatwg-url:
+        specifier: 7.1.0
+        version: 7.1.0
+    devDependencies:
+      '@types/dompurify':
+        specifier: 3.2.0
+        version: 3.2.0
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@swc/core@1.10.7(@swc/helpers@0.5.15))(@types/node@22.10.6)(typescript@5.7.3)
+
   packages/plugin-thirdweb:
     dependencies:
       '@elizaos/core':
@@ -3035,6 +3081,16 @@ packages:
 
   '@3land/listings-sdk@0.0.4':
     resolution: {integrity: sha512-Ljq8R4e7y+wl4m8BGhiInFPCHEzHZZFz1qghnbc8B3bLEKXWM9+2gZOCAa84rdUKuLfzenEdeS2LclTKhdKTFQ==}
+
+  '@abstract-foundation/agw-client@0.1.8':
+    resolution: {integrity: sha512-MEPfFRWtEVXUuWkE43Vrqxzk7s+23cRtY2ctzqiZSiqJ+Hg4uPCymowmqPATdYgGNQXPCzUYNQN4tFxFWRMaFA==}
+    peerDependencies:
+      abitype: ^1.0.0
+      typescript: '>=5.0.4'
+      viem: 2.21.58
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   '@acuminous/bitsyntax@0.1.2':
     resolution: {integrity: sha512-29lUK80d1muEQqiUsSo+3A0yP6CdspgC95EnKBMi22Xlwt79i/En4Vr67+cXhU+cZjbti3TgGGC5wy1stIywVQ==}
@@ -7143,6 +7199,10 @@ packages:
     resolution: {integrity: sha512-OwFscSdoGGsgamty5wHMBdLlK4gBGiBhQP8iMbqHZUAPBuGbb8Hx4MFUxGqxq/e2l3Tulr1p32GjWD10X4C0hA==}
     engines: {node: '>=19.9.0'}
 
+  '@noble/ciphers@1.0.0':
+    resolution: {integrity: sha512-wH5EHOmLi0rEazphPbecAzmjd12I6/Yv/SiHdkA9LSycsQk7RuuTp7am5/o62qYr0RScE7Pc9icXGBbsr6cesA==}
+    engines: {node: ^14.21.3 || >=16}
+
   '@noble/curves@1.2.0':
     resolution: {integrity: sha512-oYclrNgRaM9SsBUBVbb8M6DTV7ZHRTKugureoYEncY5c65HOmRzvSiTE3y5CYaPYJA/GVkrhXEoF0M3Ya9PMnw==}
 
@@ -7151,6 +7211,10 @@ packages:
 
   '@noble/curves@1.4.2':
     resolution: {integrity: sha512-TavHr8qycMChk8UwMld0ZDRvatedkzWfH8IiaeGCfymOP5i0hSCozz9vHOL0nkwk7HRMlFnAiKpS2jrUmSybcw==}
+
+  '@noble/curves@1.6.0':
+    resolution: {integrity: sha512-TlaHRXDehJuRNR9TfZDNQ45mMEd5dwUwmicsafcIX4SsNiqnCHKjE/1alYPd/lDRVhxdhUAlv8uEhMCI5zjIJQ==}
+    engines: {node: ^14.21.3 || >=16}
 
   '@noble/curves@1.7.0':
     resolution: {integrity: sha512-UTMhXK9SeDhFJVrHeUJ5uZlI6ajXg10O6Ddocf9S6GjbSBVZsJo88HzKwXznNfGpMTRDyJkqMjNDPYgf0qFWnw==}
@@ -8836,6 +8900,9 @@ packages:
   '@scure/bip32@1.4.0':
     resolution: {integrity: sha512-sVUpc0Vq3tXCkDGYVWGIZTRfnvu8LoTDaev7vbwh0omSvVORONr960MQWdKqJDCReIEmTj3PAr73O3aoxz7OPg==}
 
+  '@scure/bip32@1.5.0':
+    resolution: {integrity: sha512-8EnFYkqEQdnkuGBVpCzKxyIwDCBLDVj3oiX0EKUFre/tOjL/Hqba1D6n/8RcmaQy4f95qQFrO2A8Sr6ybh4NRw==}
+
   '@scure/bip32@1.6.0':
     resolution: {integrity: sha512-82q1QfklrUUdXJzjuRU7iG7D7XiFx5PHYVS0+oeNKhyDLT7WPqs6pBcM2W5ZdwOwKCwoE1Vy1se+DHjcXwCYnA==}
 
@@ -8844,6 +8911,9 @@ packages:
 
   '@scure/bip39@1.3.0':
     resolution: {integrity: sha512-disdg7gHuTDZtY+ZdkmLpPCk7fxZSu3gBiEGuoC1XYxv9cGx3Z6cpTggCgW6odSOOIXCiDjuGejW+aJKCY/pIQ==}
+
+  '@scure/bip39@1.4.0':
+    resolution: {integrity: sha512-BEEm6p8IueV/ZTfQLp/0vhw4NPnT9oWf5+28nvmeUICjP99f4vr2d+qc7AVGDDtwRep6ifR43Yed9ERVmiITzw==}
 
   '@scure/bip39@1.5.0':
     resolution: {integrity: sha512-Dop+ASYhnrwm9+HA/HwXg7j2ZqM6yk2fyLWb5znexjctFY3+E+eU8cIWI0Pql0Qx4hPZCijlGq4OL71g+Uz30A==}
@@ -8895,9 +8965,9 @@ packages:
     resolution: {integrity: sha512-JzBqdVIyqm2FRQCulY6nbQzMpJJpSiJ8XXWMhtOX9eKgaXXpfNOF53lzQEjIydlStnd/eFtuC1dW4VYdD93oRg==}
     engines: {node: ^16.14.0 || >=18.0.0}
 
-  '@sigstore/protobuf-specs@0.3.3':
-    resolution: {integrity: sha512-RpacQhBlwpBWd7KEJsRKcBQalbV28fvkxwTOJIqhIuDysMMaJW47V4OqW30iJB9uRpqOSxxEAQFdr8tTattReQ==}
-    engines: {node: ^18.17.0 || >=20.5.0}
+  '@sigstore/protobuf-specs@0.3.2':
+    resolution: {integrity: sha512-c6B0ehIWxMI8wiS/bj6rHMPqeFvngFV7cDU/MY+B16P9Z3Mp9k8L93eYZ7BYzSickzuqAQqAq0V956b3Ju6mLw==}
+    engines: {node: ^16.14.0 || >=18.0.0}
 
   '@sigstore/sign@2.3.2':
     resolution: {integrity: sha512-5Vz5dPVuunIIvC5vBb0APwo7qKA4G9yM48kPWJT+OEERs40md5GoUR1yedwpekWZ4m0Hhw44m6zU+ObsON+iDA==}
@@ -13918,6 +13988,10 @@ packages:
 
   ethereum-cryptography@2.2.1:
     resolution: {integrity: sha512-r/W8lkHSiTLxUxW8Rf3u4HGB0xQweG2RyETjywylKZSzLWoWAijRz8WCuOtJ6wah+avllXBqZuk29HCCvhEIRg==}
+
+  ethereum-cryptography@3.0.0:
+    resolution: {integrity: sha512-Ij7U9OgVZc4MAui8BttPCEaWUrAXy+eo2IbVfIxZyfzfFxMQrbIWXRUbrsRBqRrIhJ75T8P+KQRKpKTaG0Du8Q==}
+    engines: {node: ^14.21.3 || >=16, npm: '>=9'}
 
   ethereumjs-abi@0.6.8:
     resolution: {integrity: sha512-Tx0r/iXI6r+lRsdvkFDlut0N08jWMnKRZ6Gkq+Nmw75lZe4e6o3EkSnkaBP5NF6+m5PTGAr9JP43N3LyeoglsA==}
@@ -22936,6 +23010,13 @@ snapshots:
       - typescript
       - utf-8-validate
 
+  '@abstract-foundation/agw-client@0.1.8(abitype@1.0.8(typescript@5.7.3)(zod@3.24.1))(typescript@5.7.3)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1))':
+    dependencies:
+      abitype: 1.0.8(typescript@5.7.3)(zod@3.24.1)
+      viem: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)
+    optionalDependencies:
+      typescript: 5.7.3
+
   '@acuminous/bitsyntax@0.1.2':
     dependencies:
       buffer-more-ints: 1.0.0
@@ -30419,6 +30500,8 @@ snapshots:
       - utf-8-validate
       - zod
 
+  '@noble/ciphers@1.0.0': {}
+
   '@noble/curves@1.2.0':
     dependencies:
       '@noble/hashes': 1.3.2
@@ -30430,6 +30513,10 @@ snapshots:
   '@noble/curves@1.4.2':
     dependencies:
       '@noble/hashes': 1.4.0
+
+  '@noble/curves@1.6.0':
+    dependencies:
+      '@noble/hashes': 1.5.0
 
   '@noble/curves@1.7.0':
     dependencies:
@@ -32642,6 +32729,12 @@ snapshots:
       '@noble/hashes': 1.4.0
       '@scure/base': 1.1.9
 
+  '@scure/bip32@1.5.0':
+    dependencies:
+      '@noble/curves': 1.6.0
+      '@noble/hashes': 1.5.0
+      '@scure/base': 1.1.9
+
   '@scure/bip32@1.6.0':
     dependencies:
       '@noble/curves': 1.7.0
@@ -32657,6 +32750,11 @@ snapshots:
   '@scure/bip39@1.3.0':
     dependencies:
       '@noble/hashes': 1.4.0
+      '@scure/base': 1.1.9
+
+  '@scure/bip39@1.4.0':
+    dependencies:
+      '@noble/hashes': 1.5.0
       '@scure/base': 1.1.9
 
   '@scure/bip39@1.5.0':
@@ -32724,17 +32822,17 @@ snapshots:
 
   '@sigstore/bundle@2.3.2':
     dependencies:
-      '@sigstore/protobuf-specs': 0.3.3
+      '@sigstore/protobuf-specs': 0.3.2
 
   '@sigstore/core@1.1.0': {}
 
-  '@sigstore/protobuf-specs@0.3.3': {}
+  '@sigstore/protobuf-specs@0.3.2': {}
 
   '@sigstore/sign@2.3.2':
     dependencies:
       '@sigstore/bundle': 2.3.2
       '@sigstore/core': 1.1.0
-      '@sigstore/protobuf-specs': 0.3.3
+      '@sigstore/protobuf-specs': 0.3.2
       make-fetch-happen: 13.0.1
       proc-log: 4.2.0
       promise-retry: 2.0.1
@@ -32743,7 +32841,7 @@ snapshots:
 
   '@sigstore/tuf@2.3.4':
     dependencies:
-      '@sigstore/protobuf-specs': 0.3.3
+      '@sigstore/protobuf-specs': 0.3.2
       tuf-js: 2.2.1
     transitivePeerDependencies:
       - supports-color
@@ -32752,7 +32850,7 @@ snapshots:
     dependencies:
       '@sigstore/bundle': 2.3.2
       '@sigstore/core': 1.1.0
-      '@sigstore/protobuf-specs': 0.3.3
+      '@sigstore/protobuf-specs': 0.3.2
 
   '@simplewebauthn/typescript-types@7.4.0': {}
 
@@ -33626,7 +33724,7 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.26.0
       '@noble/curves': 1.8.0
-      '@noble/hashes': 1.5.0
+      '@noble/hashes': 1.7.0
       '@solana/buffer-layout': 4.0.1
       agentkeepalive: 4.6.0
       bigint-buffer: 1.1.5
@@ -36440,6 +36538,11 @@ snapshots:
       typescript: 5.7.3
       zod: 3.23.8
 
+  abitype@1.0.8(typescript@5.7.3)(zod@3.24.1):
+    optionalDependencies:
+      typescript: 5.7.3
+      zod: 3.24.1
+
   abort-controller@3.0.0:
     dependencies:
       event-target-shim: 5.0.1
@@ -37391,7 +37494,7 @@ snapshots:
 
   bip39@3.1.0:
     dependencies:
-      '@noble/hashes': 1.7.0
+      '@noble/hashes': 1.3.0
 
   bitcoinjs-lib@7.0.0-rc.0(typescript@5.7.3):
     dependencies:
@@ -40490,6 +40593,14 @@ snapshots:
       '@scure/bip32': 1.4.0
       '@scure/bip39': 1.3.0
 
+  ethereum-cryptography@3.0.0:
+    dependencies:
+      '@noble/ciphers': 1.0.0
+      '@noble/curves': 1.6.0
+      '@noble/hashes': 1.5.0
+      '@scure/bip32': 1.5.0
+      '@scure/bip39': 1.4.0
+
   ethereumjs-abi@0.6.8:
     dependencies:
       bn.js: 4.12.1
@@ -43168,7 +43279,7 @@ snapshots:
 
   jest-diff@29.7.0:
     dependencies:
-      chalk: 4.1.0
+      chalk: 4.1.2
       diff-sequences: 29.6.3
       jest-get-type: 29.6.3
       pretty-format: 29.7.0
@@ -44371,7 +44482,7 @@ snapshots:
 
   md5.js@1.3.5:
     dependencies:
-      hash-base: 3.1.0
+      hash-base: 3.0.5
       inherits: 2.0.4
       safe-buffer: 5.2.1
 
@@ -45290,7 +45401,7 @@ snapshots:
       array-differ: 3.0.0
       array-union: 2.1.0
       arrify: 2.0.1
-      minimatch: 3.0.5
+      minimatch: 3.1.2
 
   multistream@4.1.0:
     dependencies:
@@ -45737,7 +45848,7 @@ snapshots:
       '@yarnpkg/parsers': 3.0.0-rc.46
       '@zkochan/js-yaml': 0.0.7
       axios: 1.7.9(debug@4.4.0)
-      chalk: 4.1.0
+      chalk: 4.1.2
       cli-cursor: 3.1.0
       cli-spinners: 2.6.1
       cliui: 8.0.1
@@ -46035,7 +46146,7 @@ snapshots:
   ora@5.3.0:
     dependencies:
       bl: 4.1.0
-      chalk: 4.1.0
+      chalk: 4.1.2
       cli-cursor: 3.1.0
       cli-spinners: 2.6.1
       is-interactive: 1.0.0
@@ -48927,7 +49038,7 @@ snapshots:
     dependencies:
       '@sigstore/bundle': 2.3.2
       '@sigstore/core': 1.1.0
-      '@sigstore/protobuf-specs': 0.3.3
+      '@sigstore/protobuf-specs': 0.3.2
       '@sigstore/sign': 2.3.2
       '@sigstore/tuf': 2.3.4
       '@sigstore/verify': 1.2.1
@@ -50252,6 +50363,26 @@ snapshots:
     optionalDependencies:
       '@swc/core': 1.10.7(@swc/helpers@0.5.15)
     optional: true
+
+  ts-node@10.9.2(@swc/core@1.10.7(@swc/helpers@0.5.15))(@types/node@22.10.6)(typescript@5.7.3):
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      '@tsconfig/node10': 1.0.11
+      '@tsconfig/node12': 1.0.11
+      '@tsconfig/node14': 1.0.3
+      '@tsconfig/node16': 1.0.4
+      '@types/node': 22.10.6
+      acorn: 8.14.0
+      acorn-walk: 8.3.4
+      arg: 4.1.3
+      create-require: 1.1.1
+      diff: 4.0.2
+      make-error: 1.3.6
+      typescript: 5.7.3
+      v8-compile-cache-lib: 3.0.1
+      yn: 3.1.1
+    optionalDependencies:
+      '@swc/core': 1.10.7(@swc/helpers@0.5.15)
 
   ts-node@10.9.2(@swc/core@1.10.7(@swc/helpers@0.5.15))(@types/node@22.8.4)(typescript@5.6.3):
     dependencies:
