@@ -1582,3 +1582,81 @@ graph TD
     P --> R[Usage Patterns]
     P --> S[Optimization Suggestions]
 ```
+
+## Thin Floor Buying Opportunities
+
+### Market Intelligence: Thin Floor Detection
+
+The NFT Collections Plugin introduces an advanced market intelligence feature for identifying high-potential buying opportunities through "Thin Floor" detection. This strategy focuses on finding NFT collections with significant price disparities between the lowest and second-lowest listings.
+
+#### Key Features
+
+- **Thin Floor Analysis**: Automatically detect collections with substantial price differences
+- **Watchlist Management**: Track and monitor specific collections of interest
+- **Configurable Thresholds**: Customize thinness and opportunity detection parameters
+
+#### How Thin Floor Detection Works
+
+```typescript
+// Example of thin floor opportunity detection
+const thinFloorOpportunities = await nftService.getThinFloorNFTs({
+    maxThinnessThreshold: 0.2, // 20% price difference
+    minFloorPrice: 0.5, // Minimum floor price in ETH
+    maxFloorPrice: 10, // Maximum floor price in ETH
+});
+```
+
+#### Buying Opportunity Strategies
+
+1. **Price Arbitrage**: Identify collections where you can quickly buy and relist at a higher price
+2. **Market Inefficiency Exploitation**: Detect pricing inconsistencies across marketplaces
+3. **Rapid Profit Potential**: Find collections with quick flip opportunities
+
+#### Watchlist Management
+
+```typescript
+// Add a collection to the watchlist for thin floor monitoring
+await watchlist.addToWatchlist({
+    address: "0x1234...",
+    maxThinnessThreshold: 0.15, // 15% thinness threshold
+    category: "PFP",
+    notificationPreferences: {
+        email: true,
+        telegram: true,
+    },
+});
+```
+
+#### Advanced Filtering
+
+```typescript
+// Filter thin floor opportunities with advanced criteria
+const filteredOpportunities = watchlist.getWatchlist({
+    category: "Art",
+    priceRange: { min: 1, max: 5 },
+    thinnessRange: { min: 0.1, max: 0.3 },
+});
+```
+
+#### Notification System
+
+- **Real-time Alerts**: Get instant notifications for thin floor opportunities
+- **Multi-channel Support**: Email, Telegram, Discord webhooks
+- **Customizable Filters**: Set personal thresholds and preferences
+
+### Performance Considerations
+
+- **Reduced API Calls**: Intelligent watchlist management
+- **Configurable Batch Processing**: Optimize resource utilization
+- **Caching Mechanisms**: Fast and efficient opportunity detection
+
+### Best Practices
+
+1. Start with a small, diverse watchlist
+2. Experiment with different thinness thresholds
+3. Monitor and adjust your strategy regularly
+4. Use multiple marketplaces for comprehensive analysis
+
+### Disclaimer
+
+Trading NFTs involves significant risk. Always conduct thorough research and never invest more than you can afford to lose.
