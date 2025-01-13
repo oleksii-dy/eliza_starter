@@ -1,4 +1,3 @@
-// packages/plugin-injective/tsup.config.ts
 
 import { defineConfig } from 'tsup';
 import { builtinModules } from 'module';
@@ -14,13 +13,16 @@ export default defineConfig({
   minify: false, // Disable minification for easier debugging
   platform: 'node', // Target Node.js
   target: 'node23', // Specify Node.js version without minor/patch
+
+  // Externalize Node.js built-in modules and dependencies
   external: [
     // Node.js built-in modules
     ...builtinModules,
 
-    // Externalize dependencies to prevent bundling
+    // Externalize all dependencies
     ...Object.keys(pkg.dependencies || {}),
   ],
+
   esbuildOptions: (esbuild) => {
     // Optional: Define global constants or polyfills if needed
     // esbuild.define = { 'process.env.NODE_ENV': '"production"' };
