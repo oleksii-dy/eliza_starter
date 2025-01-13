@@ -13,6 +13,7 @@
 
 
 CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
 
 BEGIN;
 
@@ -191,5 +192,35 @@ CREATE INDEX idx_knowledge_original ON knowledge("originalId");
 CREATE INDEX idx_knowledge_created ON knowledge("agentId", "createdAt");
 CREATE INDEX idx_knowledge_shared ON knowledge("isShared");
 CREATE INDEX idx_knowledge_embedding ON knowledge USING ivfflat (embedding vector_cosine_ops);
+
+CREATE OR REPLACE FUNCTION "public"."insert_memory_trigger"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $_$
+DECLARE
+    target_table TEXT;
+BEGIN
+    -- Determine the correct table based on embedding dimension
+    IF cardinality(NEW."embedding") = 1536 THEN
+        target_table := 'public.memories_1536';
+    ELSIF cardinality(NEW."embedding") = 1024 THEN
+        target_table := 'public.memories_1024';
+    ELSIF cardinality(NEW."embedding") = 768 THEN
+        target_table := 'public.memories_768';
+    ELSIF cardinality(NEW."embedding") = 384 THEN
+        target_table := 'public.memories_384';
+    ELSE
+        RAISE EXCEPTION 'Unsupported embedding dimension';
+    END IF;
+
+    -- Directly insert into the correct table without modifying timestamps
+    EXECUTE format(
+        'INSERT INTO %I ("id", "type", "createdAt", "content", "embedding", "userId", "roomId", "unique")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+        target_table
+    ) USING NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."roomId", NEW."unique";
+
+    RETURN NULL;
+END;
+$_$;
 
 COMMIT;
