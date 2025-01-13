@@ -4,9 +4,11 @@ import {
     Address,
     parseUnits,
     encodeFunctionData,
+    SendTransactionParameters,
 } from "viem";
 import { b2Network } from "./chains";
 import { WalletProvider } from "../providers";
+import { TOKEN_ADDRESSES } from "./constants";
 
 export const getTxReceipt = async (walletProvider: WalletProvider, tx: Hash) => {
     const publicClient = walletProvider.getPublicClient();
@@ -21,12 +23,14 @@ export const sendNativeAsset = async (
     recipient: Address,
     amount: number
 ) => {
-    const decimals = await walletProvider.getDecimals("0x0000000000000000000000000000000000000000");
+    const decimals = await walletProvider.getDecimals(TOKEN_ADDRESSES["B2-BTC"]);
     const walletClient = walletProvider.getWalletClient();
-    const tx = await walletClient.sendTransaction({
+
+    const args = {
         to: recipient,
         value: parseUnits(amount.toString(), decimals),
-    });
+    };
+    const tx = await walletClient.sendTransaction(args);
     return tx as Hash;
 };
 
@@ -79,7 +83,7 @@ export const sendToken = async (
         elizaLogger.debug("Request:", request);
         const walletClient = walletProvider.getWalletClient();
         const tx = await walletClient.writeContract(request);
-        elizaLogger.log("Transaction:", tx);
+        elizaLogger.debug("Transaction:", tx);
         return tx as Hash;
     } catch (error) {
         elizaLogger.error("Error simulating contract:", error);
@@ -132,12 +136,10 @@ export const approve = async (
         if (!result) {
             throw new Error("Approve failed");
         }
-
         elizaLogger.debug("Request:", request);
-
         const walletClient = walletProvider.getWalletClient();
         const tx = await walletClient.writeContract(request);
-        elizaLogger.log("Transaction:", tx);
+        elizaLogger.debug("Transaction:", tx);
         return tx;
     } catch (error) {
         elizaLogger.error("Error approving:", error);
@@ -172,14 +174,16 @@ export const depositBTC = async (
             functionName: 'depositBTC',
             args: [],
         });
-        const txHash = await walletClient.sendTransaction({
+
+        const args = {
             account: walletProvider.getAddress(),
             to: farmAddress,
             data,
             value: parseUnits(amount.toString(), decimals),
-        });
+        };
+        const txHash = await walletClient.sendTransaction(args);
 
-        elizaLogger.log("Transaction hash:", txHash);
+        elizaLogger.debug("Transaction hash:", txHash);
         return txHash;
     } catch (error) {
         elizaLogger.error("Error depositBTC:", error);
@@ -229,7 +233,7 @@ export const unstake = async (
 
         const walletClient = walletProvider.getWalletClient();
         const tx = await walletClient.writeContract(request);
-        elizaLogger.log("Transaction:", tx);
+        elizaLogger.debug("Transaction:", tx);
         return tx;
     } catch (error) {
         elizaLogger.error("Error unstake:", error);
@@ -272,57 +276,10 @@ export const withdraw = async (
 
         const walletClient = walletProvider.getWalletClient();
         const tx = await walletClient.writeContract(request);
-        elizaLogger.log("Transaction:", tx);
+        elizaLogger.debug("Transaction:", tx);
         return tx;
     } catch (error) {
         elizaLogger.error("Error withdraw:", error);
-        return;
-    }
-};
-
-export const deposit = async (
-    walletProvider: WalletProvider,
-    depositTokenAddress: Address,
-    strategyAddress: Address,
-    amount: number
-) => {
-    try {
-        const decimals = await walletProvider.getDecimals(depositTokenAddress);
-        const publicClient = walletProvider.getPublicClient();
-        const { _result, request } = await publicClient.simulateContract({
-            account: walletProvider.getAccount(),
-            address: strategyAddress,
-            abi: [
-                {
-                    inputs: [
-                        {
-                            internalType: "uint256",
-                            name: "_amount",
-                            type: "uint256",
-                        },
-                    ],
-                    name: "deposit",
-                    outputs: [],
-                    stateMutability: "nonpayable",
-                    type: "function",
-                },
-            ],
-            functionName: "deposit",
-            args: [parseUnits(amount.toString(), decimals)],
-        });
-
-        // if (!result) {
-        //     throw new Error('Deposit failed')
-        // }
-
-        elizaLogger.debug("Request:", request);
-
-        const walletClient = walletProvider.getWalletClient();
-        const tx = await walletClient.writeContract(request);
-        elizaLogger.log("Transaction:", tx);
-        return tx;
-    } catch (error) {
-        elizaLogger.error("Error depositing:", error);
         return;
     }
 };

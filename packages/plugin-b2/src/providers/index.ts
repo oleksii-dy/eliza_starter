@@ -165,7 +165,7 @@ export class WalletProvider implements Provider {
             elizaLogger.debug("walletProvider::get output:", output);
             return output;
         } catch (error) {
-            console.error("Error in b2 wallet provider:", error);
+            elizaLogger.error("Error in b2 wallet provider:", error);
             return null;
         }
     }
@@ -214,7 +214,7 @@ export const walletProvider: Provider = {
             elizaLogger.debug("walletProvider::get output:", output);
             return output;
         } catch (error) {
-            console.error("Error in b2 wallet provider:", error);
+            elizaLogger.error("Error in b2 wallet provider:", error);
             return null;
         }
     }

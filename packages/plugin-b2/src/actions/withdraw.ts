@@ -26,19 +26,18 @@ export class WithdrawAction {
 
     async withdraw(_params: WithdrawParams): Promise<Hash> {
         try {
-            let balance = await this.walletProvider.getNativeBalance(this.walletProvider.getAddress());
-            if ( balance == 0 ) {
+            const balance = await this.walletProvider.getNativeBalance(this.walletProvider.getAddress());
+            if ( balance == BigInt(0) ) {
                 throw new Error(`The total cost (gas * gas fee + value) of executing this transaction exceeds the balance of the account.`);
             }
-            let txHash = await withdraw(
+            const txHash = await withdraw(
                 this.walletProvider,
                 FARM_ADDRESS,
             );
             return txHash;
         } catch(error) {
-            console.log(`Withdraw failed: ${error.message}`);
+            elizaLogger.log(`Withdraw failed: ${error.message}`);
             throw new Error(`Withdraw failed: ${error.message}`);
-            // throw new Error(`Withdraw failed: The total cost (gas * gas fee + value) of executing this transaction exceeds the balance of the account.`)
         }
     }
 
@@ -54,7 +53,6 @@ export class WithdrawAction {
     async buildWithdrawDetails(
         state: State,
         runtime: IAgentRuntime,
-        wp: WalletProvider
     ): Promise<WithdrawParams> {
         const context = composeContext({
             state,
@@ -84,7 +82,7 @@ export const withdrawAction: Action = {
         return true;
     },
     description:
-        "withdraw native btc.",
+        "withdraw B2-BTC.",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -92,7 +90,7 @@ export const withdrawAction: Action = {
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log("Starting WITHDRAW handler...");
+        elizaLogger.debug("Starting WITHDRAW handler...");
 
         // Initialize or update state
         if (!state) {
@@ -101,23 +99,20 @@ export const withdrawAction: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        console.log("withdraw action handler called");
+        elizaLogger.debug("withdraw action handler called");
         const walletProvider = await initWalletProvider(runtime);
         const action = new WithdrawAction(walletProvider);
 
-        // TODO check 是否需要Withdraw
-         // Compose unstake context
-         const paramOptions = await action.buildWithdrawDetails(
+        // Compose unstake context
+        const paramOptions = await action.buildWithdrawDetails(
             state,
             runtime,
-            walletProvider
         );
-
         elizaLogger.debug("Unstake paramOptions:", paramOptions);
 
-        let txHash = await action.withdraw(paramOptions);
+        const txHash = await action.withdraw(paramOptions);
         if (txHash) {
-            let result = await action.txReceipt(txHash);
+            const result = await action.txReceipt(txHash);
             if (result) {
                 callback?.({
                     text: "withdraw successful",

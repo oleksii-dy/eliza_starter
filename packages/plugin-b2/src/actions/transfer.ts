@@ -17,7 +17,7 @@ import { transferTemplate } from "../templates";
 import { WalletProvider } from "../providers";
 import { Transaction, TransferParams } from "../types";
 import { initWalletProvider } from "../providers";
-
+import { TOKEN_ADDRESSES } from "../utils/constants"
 // Exported for tests
 export class TransferAction {
 
@@ -25,8 +25,8 @@ export class TransferAction {
 
     async transfer(params: TransferParams): Promise<Transaction> {
         try {
-            let txHash;
-            if (params.tokenAddress === "0x0000000000000000000000000000000000000000") {
+            let txHash: Hash;
+            if (params.tokenAddress === TOKEN_ADDRESSES["B2-BTC"]) {
                 txHash = await sendNativeAsset(
                     this.walletProvider,
                     params.recipient as Address,
@@ -48,6 +48,7 @@ export class TransferAction {
                 amount: params.amount,
             };
         } catch(error) {
+            elizaLogger.error(`Transfer failed: ${error.message}`);
             throw new Error(`Transfer failed: ${error.message}`);
         }
     }
@@ -64,7 +65,6 @@ export class TransferAction {
     async buildTransferDetails(
         state: State,
         runtime: IAgentRuntime,
-        wp: WalletProvider
     ): Promise<TransferParams> {
         const context = composeContext({
             state,
@@ -103,7 +103,7 @@ export const transferAction: Action = {
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log("Starting SEND_TOKEN handler...");
+        elizaLogger.debug("Starting SEND_TOKEN handler...");
 
         // Initialize or update state
         if (!state) {
@@ -112,7 +112,7 @@ export const transferAction: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        console.log("Transfer action handler called");
+        elizaLogger.debug("Transfer action handler called");
         const walletProvider = await initWalletProvider(runtime);
         const action = new TransferAction(walletProvider);
 
@@ -120,14 +120,13 @@ export const transferAction: Action = {
         const paramOptions = await action.buildTransferDetails(
             state,
             runtime,
-            walletProvider
         );
 
         elizaLogger.debug("Transfer paramOptions:", paramOptions);
 
-        let tx = await action.transfer(paramOptions);
+        const tx = await action.transfer(paramOptions);
         if (tx) {
-            let result = await action.txReceipt(tx.hash);
+            const result = await action.txReceipt(tx.hash);
             if (result) {
                 callback?.({
                     text: "transfer successful",

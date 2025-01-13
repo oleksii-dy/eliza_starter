@@ -26,20 +26,19 @@ export class StakeAction {
 
     async stake(params: StakeParams): Promise<Hash> {
         try {
-            let balance = await this.walletProvider.getNativeBalance(this.walletProvider.getAddress());
-            if ( balance == 0 ) {
+            const balance = await this.walletProvider.getNativeBalance(this.walletProvider.getAddress());
+            if ( balance == BigInt(0) ) {
                 throw new Error(`The total cost (gas * gas fee + value) of executing this transaction exceeds the balance of the account.`);
             }
-            let txHash = await depositBTC(
+            const txHash = await depositBTC(
                 this.walletProvider,
                 FARM_ADDRESS,
                 params.amount,
             );
             return txHash;
         } catch(error) {
-            console.log(`Stake failed: ${error.message}`);
+            elizaLogger.error(`Stake failed: ${error.message}`);
             throw new Error(`Stake failed: ${error.message}`);
-            // throw new Error(`Stake failed: The total cost (gas * gas fee + value) of executing this transaction exceeds the balance of the account.`)
         }
     }
 
@@ -55,7 +54,6 @@ export class StakeAction {
     async buildStakeDetails(
         state: State,
         runtime: IAgentRuntime,
-        wp: WalletProvider
     ): Promise<StakeParams> {
         const context = composeContext({
             state,
@@ -85,7 +83,7 @@ export const stakeAction: Action = {
         return true;
     },
     description:
-        "stake native btc.",
+        "stake B2-BTC.",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -93,7 +91,7 @@ export const stakeAction: Action = {
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log("Starting STAKE handler...");
+        elizaLogger.debug("Starting STAKE handler...");
 
         // Initialize or update state
         if (!state) {
@@ -102,7 +100,7 @@ export const stakeAction: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        console.log("stake action handler called");
+        elizaLogger.debug("stake action handler called");
         const walletProvider = await initWalletProvider(runtime);
         const action = new StakeAction(walletProvider);
 
@@ -110,14 +108,13 @@ export const stakeAction: Action = {
         const paramOptions = await action.buildStakeDetails(
             state,
             runtime,
-            walletProvider
         );
 
         elizaLogger.debug("Stake paramOptions:", paramOptions);
 
-        let txHash = await action.stake(paramOptions);
+        const txHash = await action.stake(paramOptions);
         if (txHash) {
-            let result = await action.txReceipt(txHash);
+            const result = await action.txReceipt(txHash);
             if (result) {
                 callback?.({
                     text: "stake successful",
