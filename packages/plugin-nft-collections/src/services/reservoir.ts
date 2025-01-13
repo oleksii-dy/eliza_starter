@@ -128,8 +128,15 @@ export class ReservoirService {
                 ErrorType.API,
                 ErrorCode.API_ERROR,
                 `API request failed: ${endpoint}`,
-                { originalError: error },
-                true
+                {
+                    details: {
+                        originalError: error.message,
+                        endpoint,
+                        params,
+                    },
+                    retryable: true,
+                    severity: "HIGH",
+                }
             );
             this.errorHandler.handleError(nftError);
             throw error;
@@ -206,8 +213,14 @@ export class ReservoirService {
                 ErrorType.API,
                 ErrorCode.API_ERROR,
                 "Failed to fetch top collections",
-                { originalError: error },
-                true
+                {
+                    details: {
+                        originalError: error.message,
+                        limit,
+                    },
+                    retryable: true,
+                    severity: "MEDIUM",
+                }
             );
             this.errorHandler.handleError(nftError);
             throw error;
@@ -312,10 +325,14 @@ export class ReservoirService {
                 ErrorCode.API_ERROR,
                 "Failed to fetch floor listings",
                 {
-                    originalError: error,
-                    collection: options.collection,
-                },
-                true
+                    details: {
+                        originalError: error.message,
+                        collection: options.collection,
+                        limit: options.limit,
+                    },
+                    retryable: true,
+                    severity: "HIGH",
+                }
             );
             this.errorHandler.handleError(nftError);
 
@@ -419,11 +436,15 @@ export class ReservoirService {
                 ErrorCode.API_ERROR,
                 "Failed to create NFT listing",
                 {
-                    originalError: error,
-                    collectionAddress: options.collectionAddress,
-                    tokenId: options.tokenId,
-                },
-                true
+                    details: {
+                        originalError: error.message,
+                        collectionAddress: options.collectionAddress,
+                        tokenId: options.tokenId,
+                        price: options.price,
+                    },
+                    retryable: true,
+                    severity: "HIGH",
+                }
             );
             this.errorHandler.handleError(nftError);
 
@@ -496,8 +517,15 @@ export class ReservoirService {
             const nftError = NFTErrorFactory.create(
                 ErrorType.API,
                 ErrorCode.API_ERROR,
-                `Failed to fetch owned NFTs for owner ${owner}`,
-                { owner }
+                `Failed to fetch owned NFTs for owner`,
+                {
+                    details: {
+                        owner,
+                        originalError: error.message,
+                    },
+                    retryable: false,
+                    severity: "MEDIUM",
+                }
             );
             this.errorHandler.handleError(nftError);
             return [];
