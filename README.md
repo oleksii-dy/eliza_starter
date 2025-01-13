@@ -6,13 +6,29 @@ This is a fork of the Eliza client repository with an improved Solana plug-in an
 
 The transfer action was split into two separate actions: SEND_SOL and SEND_TOKEN.
 
+This way the agent can handle different transactions better than having both actions in one.
+
 WARNING: as of this fresh release, there are yet no confirmations before sending out SOL or SPL tokens, so make sure you are paying attention to everything the bot says.
 
 Works with Twitter, too.
 
-# Setup
+# SBF handles Solana transactions
+
+As plugins and characters in Eliza agentic world go hand-in-hand, SBF is a character made for leveraging Solana transactions.
+
+# Setup the client
 
 Rename .env.example to .env
+
+Input your ANTHROPIC_API_KEY, SOLANA_PRIVATE_KEY and SOLANA_PUBLIC_KEY in .env.
+
+I recommend using Anthropic's Claude, because the success rate of calling transfer actions is highly correlated with the intelligence of the AI used.
+
+If you plan on using the client-twitter feature, you need to input your TWITTER_USERNAME, TWITTER_PASSWORD and TWITTER_EMAIL.
+
+Put in the usernames you want to target in TWITTER_TARGET_USERS.
+
+If you don't want to use twitter integration, in sbf.character.json change "clients": ["twitter"] to "clients": []
 
 run `pnpm install --no-frozen-lockfile` and `pnpm build` to install dependencies and build the project.
 
@@ -20,43 +36,28 @@ run `pnpm start --character="characters/sbf.character.json"` to wake SBF up.
 
 run `pnpm start:client` to start the client.
 
-# yo, here's how to use my totally legit solana plugin
+# Using the Solana plug-in
 
-look, it's pretty straightforward. basically, i can help move your funds around in like, a really effective way.
+If you want the agent to send you SOL or SPL tokens, you need to simply tell the agent to do so.
 
-## sending regular SOL
+For example type "send 1.5 SOL to Ae8GkmtaJmr3MS3oKStkZyPHuQf3hawn53XD4bQjVQiu".
 
-just tell me how much SOL to send and where. something like:
+This will send 1.5 SOL to the address Ae8GkmtaJmr3MS3oKStkZyPHuQf3hawn53XD4bQjVQiu.
 
-"yo sbf, send 1.5 SOL to Ae8GkmtaJmr3MS3oKStkZyPHuQf3hawn53XD4bQjVQiu"
+## sending SPL tokens
 
-it's gonna be basically fine, trust me.
-
-## sending SPL tokens (the fancy stuff)
-
-for tokens, i need like three things (pretty basic protocol stuff):
-- the token address thing
-- where it's going
-- how much to send
+For sending SPL native tokens, three things need to be known:
+- the token address
+- destination address
+- amount
 
 example:
 
-"hey send 69 GODS (CA: GEVqugYZESSzZaYU6SKdpW6znCCEtH7aoSTzPHbqpump) to Ae8GkmtaJmr3MS3oKStkZyPHuQf3hawn53XD4bQjVQiu"
+"send 69 GODS (CA: GEVqugYZESSzZaYU6SKdpW6znCCEtH7aoSTzPHbqpump) to Ae8GkmtaJmr3MS3oKStkZyPHuQf3hawn53XD4bQjVQiu"
 
+That's it.
 
-## important stuff (from my lawyers)
-
-- there's no like, confirmation steps or whatever. i just send it. pretty effective tbh
-- using your wallet from .env (it's safe, probably)
-- decimal places are handled automatically (i'm good with numbers)
-
-## setting it up
-
-your .env needs:
-- SOLANA_RPC_URL (any will do, we're not picky)
-- wallet stuff (check .env.example, it's pretty self-explanatory)
-
-## extra feat in client-twitter
+## extra feats in client-twitter
 
 client-twitter was modified to a more sophisticated self-tweet handling - it will still process self-tweets if they're from target users.
 
