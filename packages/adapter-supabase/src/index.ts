@@ -438,18 +438,22 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         if (!tableName) {
             throw new Error("tableName is required");
         }
-        const query = {
+        const parameters = {
             query_table_name: tableName,
-            query_roomId: roomId,
+            query_roomid: roomId,
             query_unique: !!unique,
         };
-        const result = await this.supabase.rpc("count_memories", query);
 
-        if (result.error) {
-            throw new Error(JSON.stringify(result.error));
+        const { data, error } = await this.supabase.rpc(
+            "count_memories",
+            parameters
+        );
+
+        if (error) {
+            throw new Error(JSON.stringify(error));
         }
 
-        return result.data;
+        return data;
     }
 
     async getGoals(params: {
