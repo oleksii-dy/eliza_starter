@@ -8,13 +8,13 @@ The transfer action was split into two separate actions: SEND_SOL and SEND_TOKEN
 
 This way the agent can handle different transactions better than having both actions in one.
 
-WARNING: as of this fresh release, there are yet no confirmations before sending out SOL or SPL tokens, so make sure you are paying attention to everything the bot says.
+WARNING: as of this fresh release, there are yet no confirmations before sending out SOL or SPL tokens, so use for experimentation only.
 
 Works with Twitter, too.
 
 # SBF handles Solana transactions
 
-As plugins and characters in Eliza agentic world go hand-in-hand, SBF is a character made for leveraging Solana transactions.
+As plugins and characters in Eliza agentic world go hand-in-hand, SBF is a character made for leveraging Solana plugin.
 
 # Setup the client
 
@@ -22,19 +22,19 @@ Rename .env.example to .env
 
 Input your ANTHROPIC_API_KEY, SOLANA_PRIVATE_KEY and SOLANA_PUBLIC_KEY in .env.
 
-I recommend using Anthropic's Claude, because the success rate of calling transfer actions is highly correlated with the intelligence of the AI used.
+I recommend using Anthropic's Claude, because the success rate of calling transfer actions is highly correlated with the intelligence of the AI used, but instead of ANTHROPIC_API_KEY, you can use any other model, so long as you specify it in the character.json file.
 
 If you plan on using the client-twitter feature, you need to input your TWITTER_USERNAME, TWITTER_PASSWORD and TWITTER_EMAIL.
 
-Put in the usernames you want to target in TWITTER_TARGET_USERS.
+Put in the usernames you want to target in TWITTER_TARGET_USERS separated by commas.
 
 If you don't want to use twitter integration, in sbf.character.json change "clients": ["twitter"] to "clients": []
 
 run `pnpm install --no-frozen-lockfile` and `pnpm build` to install dependencies and build the project.
 
-run `pnpm start --character="characters/sbf.character.json"` to wake SBF up.
+run `pnpm start --character="characters/sbf.character.json"` to start SBF agent up.
 
-run `pnpm start:client` to start the client.
+run `pnpm start:client` to start the client and chat with SBF using the client.
 
 # Using the Solana plug-in
 
@@ -44,18 +44,14 @@ For example type "send 1.5 SOL to Ae8GkmtaJmr3MS3oKStkZyPHuQf3hawn53XD4bQjVQiu".
 
 This will send 1.5 SOL to the address Ae8GkmtaJmr3MS3oKStkZyPHuQf3hawn53XD4bQjVQiu.
 
-## sending SPL tokens
+For sending SPL native tokens, apart from the destination address and amount, the token contract address is also needed.
 
-For sending SPL native tokens, three things need to be known:
-- the token address
-- destination address
-- amount
 
 example:
 
 "send 69 GODS (CA: GEVqugYZESSzZaYU6SKdpW6znCCEtH7aoSTzPHbqpump) to Ae8GkmtaJmr3MS3oKStkZyPHuQf3hawn53XD4bQjVQiu"
 
-That's it.
+That's it. Upon success, you will be sent a transaction hash.
 
 ## extra feats in client-twitter
 
