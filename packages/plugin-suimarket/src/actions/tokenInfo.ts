@@ -15,6 +15,10 @@ import { z } from "zod";
 
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
 
+async function formatOutput(params: any): Promise<string> {
+  return  JSON.stringify(params);
+}
+
 export interface InfoContent extends Content {
     coinId: string;
 }
@@ -45,6 +49,7 @@ Respond with a JSON markdown block containing only the extracted values.`;
 
 export const tokenInfo: Action = {
     name: "tokenInfo",
+
     similes: [
         "GET_TOKEN",
         "TOKEN_DATA",
@@ -61,77 +66,14 @@ export const tokenInfo: Action = {
         "TOKEN_METRICS",
         "TOKEN_STATS"
     ],
+
     examples: [],
-    // examples: [
-    //   [
-    //   {
-    //       user: "{{user1}}",
-    //       content: {
-    //           text: "What's the current price of Bitcoin?",
-    //       },
-    //   },
-    //   {
-    //       user: "{{user2}}",
-    //       content: {
-    //           text: "I'll check the Bitcoin price for you",
-    //           action: "GET_PRICE",
-    //       },
-    //   },
-    //   {
-    //       user: "{{user2}}",
-    //       content: {
-    //           text: "Bitcoin is currently trading at $42,000 USD with 24h volume of $28B",
-    //       },
-    //   }
-    // ],
-    //   [
-    //     {
-    //         user: "{{user1}}",
-    //         content: {
-    //             text: "What's the current price of ADA?",
-    //         },
-    //     },
-    //     {
-    //         user: "{{user2}}",
-    //         content: {
-    //             text: "I'll check the Cardano (ADA) price for you",
-    //             action: "GET_PRICE",
-    //         },
-    //     },
-    //     {
-    //         user: "{{user2}}",
-    //         content: {
-    //             text: "Cardano (ADA) is currently trading at $0.45 USD with 24h volume of $150M",
-    //         },
-    //     }
-    // ],
-    // [
-    //     {
-    //         user: "{{user1}}",
-    //         content: {
-    //             text: "What's the current price of ETH?",
-    //         },
-    //     },
-    //     {
-    //         user: "{{user2}}",
-    //         content: {
-    //             text: "I'll check the Ethereum (ETH) price for you",
-    //             action: "GET_PRICE",
-    //         },
-    //     },
-    //     {
-    //         user: "{{user2}}",
-    //         content: {
-    //             text: "Ethereum (ETH) is currently trading at $2,200 USD with 24h volume of $15B",
-    //         },
-    //     }
-    // ]
-    // ] as ActionExample [][],
-    
+   
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         return true;
     },
-    description: "Get Token info from coingecko",
+
+    description: "Get detail of token",
     
     handler: async (
         runtime: IAgentRuntime,
@@ -164,9 +106,9 @@ export const tokenInfo: Action = {
             modelClass: ModelClass.SMALL,
         });
 
-        const transferContent = content.object as InfoContent;
+        const parsedContent = content.object as InfoContent;
 
-        if (!isInfoContent(transferContent)) {
+        if (!isInfoContent(parsedContent)) {
             console.error("Invalid content for coin info");
             if (callback) {
                 callback({
@@ -177,15 +119,15 @@ export const tokenInfo: Action = {
             return false;
         }
 
-        elizaLogger.log("[coinInfo]", transferContent);
+        elizaLogger.log("[coinInfo] parsed content: ", parsedContent);
 
         let coinGecko = new CoingeckoProvider();
-        let info = await coinGecko.getCoinDetails(transferContent.coinId);
-        elizaLogger.info("btc info>", JSON.stringify(info));
+        let info = await coinGecko.getToken(parsedContent.coinId);
+        elizaLogger.info("[coinInfo] details: ", JSON.stringify(info));
 
         if (callback) {
             callback({
-                text: `Coin info: ` + JSON.stringify(info),
+                text: `[coinInfo]` + (await formatOutput(info)),
                 action: 'tokenInfo'
             });
         }

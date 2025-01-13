@@ -15,8 +15,12 @@ import { z } from "zod";
 
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
 
-export const nftList: Action = {
-    name: "nftList",
+async function formatOutput(params: any): Promise<string> {
+    return  JSON.stringify(params);
+}
+
+export const trendingNft: Action = {
+    name: "trendingNft",
     similes: [
         "show available NFTs",
         "display NFT marketplace",
@@ -36,7 +40,8 @@ export const nftList: Action = {
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         return true;
     },
-    description: "Get NFT list",
+
+    description: "Get trending NFTs",
     
     handler: async (
         runtime: IAgentRuntime,
@@ -45,7 +50,7 @@ export const nftList: Action = {
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
     ): Promise<boolean> => {
-        elizaLogger.log("[nftList]");
+        elizaLogger.log("[trendingNft]");
 
         if (!state) {
             state = (await runtime.composeState(message)) as State;
@@ -53,15 +58,13 @@ export const nftList: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        elizaLogger.log("[nftList]", );
-
         let coinGecko = new CoingeckoProvider();
         let info = await coinGecko.getTrendingNFTs();
 
         if (callback) {
             callback({
-                text: `Info: ` + JSON.stringify(info),
-                action: 'nftList'
+                text: `trendingNft: ` + (await formatOutput(info)),
+                action: 'trendingNft'
             });
         }
 

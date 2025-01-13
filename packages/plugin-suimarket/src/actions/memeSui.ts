@@ -14,6 +14,10 @@ import {
 
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
 
+async function formatOutput(params: any): Promise<string> {
+    return  JSON.stringify(params);
+}
+
 export const memeSui: Action = {
     name: "memeSui",
     similes: [
@@ -37,6 +41,7 @@ export const memeSui: Action = {
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         return true;
     },
+
     description: "Get meme on Sui",
     
     handler: async (
@@ -54,14 +59,12 @@ export const memeSui: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        elizaLogger.log("[memeSui]", );
-
         let coinGecko = new CoingeckoProvider();
         let info = await coinGecko.getTrendingMemeCoinsOnSui();
 
         if (callback) {
             callback({
-                text: `Info: ` + JSON.stringify(info),
+                text: `[memeSui] ` + formatOutput(info),
                 action: 'memeSui'
             });
         }

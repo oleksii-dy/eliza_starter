@@ -28,18 +28,25 @@ export class CoingeckoProvider {
     }
   }
 
-  async listCoins() {
+  async getTrendingTokens() {
     try {
-      const response = await this.axiosInstance.get("/coins/list");
-      return response.data;
+      const response = await this.axiosInstance.get("/search/trending");
+      return response.data.coins.map((coin: any) => ({
+          id: coin.item.id, 
+          name: coin.item.name, 
+          symbol: coin.item.symbol.toUpperCase(), 
+          market_cap_rank: coin.item.market_cap_rank,
+          price: coin.item.data.price,
+          total_volume: coin.item.data.total_volume,
+          market_cap: coin.item.data.market_cap,
+      }));
     } catch (error) {
-      console.error("Error fetching coins list:", error);
-      throw new Error("Failed to fetch coins list");
+      console.error("Error fetching trending tokens:", error);
+      throw new Error("Failed to fetch trending tokens");
     }
   }
 
-
-  async getCoinDetails(coinId: string) {
+  async getToken(coinId: string) {
     try {
       const response = await this.axiosInstance.get(`/simple/price`, {
         params: {
@@ -85,16 +92,17 @@ export class CoingeckoProvider {
     }
   }
 
-  async getTrendingCategories() {
+  async getTrendingCategories(limit: number = 5) {
     try {
       const response = await this.axiosInstance.get("/coins/categories");
-      return response.data;
+      return response.data.slice(0, limit);
     } catch (error) {
       console.error("Error fetching trending categories:", error);
       throw new Error("Failed to fetch trending categories");
     }
   }
 
+  //@fixme 
   async getTrendingMemeCoinsOnSui(limit: number = 10) {
     try {
       const categoriesResponse = await this.axiosInstance.get(`/coins/categories`);
@@ -124,6 +132,31 @@ export class CoingeckoProvider {
     } catch (error) {
       console.error("Error fetching trending meme coins on Sui:", error);
       throw new Error("Failed to fetch trending meme coins on Sui network");
+    }
+  }
+
+  async getTopMarketInfo(currency: string = "usd", limit: number = 10) {
+    try {
+      const response = await this.axiosInstance.get("/coins/markets", {
+        params: {
+          vs_currency: currency,
+          order: "market_cap_desc",
+          per_page: limit,
+          page: 1,
+          sparkline: false,
+        },
+      });
+
+      return response.data.map((coin: any) => ({
+          name: coin.name,
+          symbol: coin.symbol.toUpperCase(),
+          current_price: coin.current_price,
+          market_cap: coin.market_cap,
+          price_change_percentage_24h: coin.price_change_percentage_24h,
+      }));
+    } catch (error) {
+      console.error("Error fetching top market info:", error);
+      throw new Error("Failed to fetch top market info");
     }
   }
 }

@@ -15,6 +15,10 @@ import { z } from "zod";
 
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
 
+function formatOutput(params: any): string {
+    return  JSON.stringify(params);
+}
+
 export const trendingCat: Action = {
     name: "trendingCat",
     similes: [
@@ -31,7 +35,8 @@ export const trendingCat: Action = {
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         return true;
     },
-    description: "Get Token info from coingecko",
+
+    description: "Get trending categories",
     
     handler: async (
         runtime: IAgentRuntime,
@@ -48,14 +53,12 @@ export const trendingCat: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        elizaLogger.log("[trendingCat]", );
-
         let coinGecko = new CoingeckoProvider();
         let info = await coinGecko.getTrendingCategories();
 
         if (callback) {
             callback({
-                text: `Coin info: ` + JSON.stringify(info),
+                text: `trending cat:` + (await formatOutput(info)),
                 action: 'trendingCat'
             });
         }
