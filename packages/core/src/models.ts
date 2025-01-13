@@ -937,37 +937,28 @@ export const models: Models = {
             [ModelClass.SMALL]: {
                 name:
                     settings.SMALL_LIVEPEER_MODEL ||
-                    settings.LIVEPEER_MODEL ||
                     "meta-llama/Meta-Llama-3.1-8B-Instruct",
                 stop: [],
-                maxInputTokens: 128000,
+                maxInputTokens: 8000,
                 maxOutputTokens: 8192,
-                frequency_penalty: 0.4,
-                presence_penalty: 0.4,
                 temperature: 0,
             },
             [ModelClass.MEDIUM]: {
                 name:
                     settings.MEDIUM_LIVEPEER_MODEL ||
-                    settings.LIVEPEER_MODEL ||
                     "meta-llama/Meta-Llama-3.1-8B-Instruct",
                 stop: [],
-                maxInputTokens: 128000,
+                maxInputTokens: 8000,
                 maxOutputTokens: 8192,
-                frequency_penalty: 0.4,
-                presence_penalty: 0.4,
                 temperature: 0,
             },
             [ModelClass.LARGE]: {
                 name:
                     settings.LARGE_LIVEPEER_MODEL ||
-                    settings.LIVEPEER_MODEL ||
                     "meta-llama/Meta-Llama-3.1-8B-Instruct",
                 stop: [],
-                maxInputTokens: 128000,
+                maxInputTokens: 8000,
                 maxOutputTokens: 8192,
-                frequency_penalty: 0.4,
-                presence_penalty: 0.4,
                 temperature: 0,
             },
             [ModelClass.IMAGE]: {
@@ -984,21 +975,21 @@ export const models: Models = {
                 stop: [],
                 maxInputTokens: 128000,
                 maxOutputTokens: 8192,
-                temperature: 0.6,
+                temperature: 0,
             },
             [ModelClass.MEDIUM]: {
                 name: settings.MEDIUM_INFERA_MODEL || "mistral-nemo:latest",
                 stop: [],
                 maxInputTokens: 128000,
                 maxOutputTokens: 8192,
-                temperature: 0.6,
+                temperature: 0,
             },
             [ModelClass.LARGE]: {
                 name: settings.LARGE_INFERA_MODEL || "mistral-small:latest",
                 stop: [],
                 maxInputTokens: 128000,
                 maxOutputTokens: 8192,
-                temperature: 0.6,
+                temperature: 0,
             },
         },
     },
