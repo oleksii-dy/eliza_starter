@@ -1,4 +1,5 @@
 import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
+import { RedisClient } from "@elizaos/adapter-redis";
 import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
 import { AutoClientInterface } from "@elizaos/client-auto";
 import { DiscordClientInterface } from "@elizaos/client-discord";
@@ -7,24 +8,23 @@ import { TwitterClientInterface } from "@elizaos/client-twitter";
 import {
     AgentRuntime,
     CacheManager,
+    CacheStore,
     Character,
+    Client,
     Clients,
     DbCacheAdapter,
     defaultCharacter,
     elizaLogger,
     FsCacheAdapter,
     IAgentRuntime,
+    ICacheManager,
     IDatabaseAdapter,
     IDatabaseCacheAdapter,
     ModelProviderName,
     settings,
     stringToUuid,
     validateCharacterConfig,
-    CacheStore,
-    Client,
-    ICacheManager,
 } from "@elizaos/core";
-import { RedisClient } from "@elizaos/adapter-redis";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import { DirectClient } from "@elizaos/client-direct";
 import { evmPlugin } from "@elizaos/plugin-evm";
@@ -34,10 +34,10 @@ import { TEEMode, teePlugin } from "@elizaos/plugin-tee";
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
 import Database from "better-sqlite3";
 import fs from "fs";
+import net from "net";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
-import net from "net";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -84,9 +84,60 @@ function tryLoadFile(filePath: string): string | null {
         return null;
     }
 }
+function mergeCharacters(base: Character, child: Character): Character {
+    const mergeObjects = (baseObj: any, childObj: any) => {
+        const result: any = {};
+        const keys = new Set([...Object.keys(baseObj || {}), ...Object.keys(childObj || {})]);
+        keys.forEach(key => {
+            if (typeof baseObj[key] === 'object' && typeof childObj[key] === 'object' && !Array.isArray(baseObj[key]) && !Array.isArray(childObj[key])) {
+                result[key] = mergeObjects(baseObj[key], childObj[key]);
+            } else if (Array.isArray(baseObj[key]) || Array.isArray(childObj[key])) {
+                result[key] = [...(baseObj[key] || []), ...(childObj[key] || [])];
+            } else {
+                result[key] = childObj[key] !== undefined ? childObj[key] : baseObj[key];
+            }
+        });
+        return result;
+    };
+    return mergeObjects(base, child);
+}
+async function loadCharacter(filePath: string): Promise<Character> {
+    const content = tryLoadFile(filePath);
+    if (!content) {
+        throw new Error(`Character file not found: ${filePath}`);
+    }
+    let character = JSON.parse(content);
+    validateCharacterConfig(character);
 
-function isAllStrings(arr: unknown[]): boolean {
-    return Array.isArray(arr) && arr.every((item) => typeof item === "string");
+     // .id isn't really valid
+     const characterId = character.id || character.name;
+     const characterPrefix = `CHARACTER.${characterId.toUpperCase().replace(/ /g, "_")}.`;
+     const characterSettings = Object.entries(process.env)
+         .filter(([key]) => key.startsWith(characterPrefix))
+         .reduce((settings, [key, value]) => {
+             const settingKey = key.slice(characterPrefix.length);
+             return { ...settings, [settingKey]: value };
+         }, {});
+     if (Object.keys(characterSettings).length > 0) {
+         character.settings = character.settings || {};
+         character.settings.secrets = {
+             ...characterSettings,
+             ...character.settings.secrets,
+         };
+     }
+     // Handle plugins
+     character.plugins = await handlePluginImporting(
+        character.plugins
+    );
+    if (character.extends) {
+        elizaLogger.info(`Merging  ${character.name} character with parent characters`);
+        for (const extendPath of character.extends) {
+            const baseCharacter = await loadCharacter(path.resolve(path.dirname(filePath), extendPath));
+            character = mergeCharacters(baseCharacter, character);
+            elizaLogger.info(`Merged ${character.name} with ${baseCharacter.name}`);
+        }
+    }
+    return character;
 }
 
 export async function loadCharacters(
@@ -95,11 +146,11 @@ export async function loadCharacters(
     let characterPaths = charactersArg
         ?.split(",")
         .map((filePath) => filePath.trim());
-    const loadedCharacters = [];
+    const loadedCharacters: Character[] = [];
 
     if (characterPaths?.length > 0) {
         for (const characterPath of characterPaths) {
-            let content = null;
+            let content: string | null = null;
             let resolvedPath = "";
 
             // Try different path resolutions in order
@@ -151,39 +202,7 @@ export async function loadCharacters(
             }
 
             try {
-                const character = JSON.parse(content);
-                validateCharacterConfig(character);
-
-                // .id isn't really valid
-                const characterId = character.id || character.name;
-                const characterPrefix = `CHARACTER.${characterId.toUpperCase().replace(/ /g, "_")}.`;
-
-                const characterSettings = Object.entries(process.env)
-                    .filter(([key]) => key.startsWith(characterPrefix))
-                    .reduce((settings, [key, value]) => {
-                        const settingKey = key.slice(characterPrefix.length);
-                        return { ...settings, [settingKey]: value };
-                    }, {});
-
-                if (Object.keys(characterSettings).length > 0) {
-                    character.settings = character.settings || {};
-                    character.settings.secrets = {
-                        ...characterSettings,
-                        ...character.settings.secrets,
-                    };
-                }
-
-                // Handle plugins
-                if (isAllStrings(character.plugins)) {
-                    elizaLogger.info("Plugins are: ", character.plugins);
-                    const importedPlugins = await Promise.all(
-                        character.plugins.map(async (plugin) => {
-                            const importedPlugin = await import(plugin);
-                            return importedPlugin.default;
-                        })
-                    );
-                    character.plugins = importedPlugins;
-                }
+                const character: Character = await loadCharacter(resolvedPath);
 
                 loadedCharacters.push(character);
                 elizaLogger.info(
@@ -206,10 +225,40 @@ export async function loadCharacters(
     return loadedCharacters;
 }
 
+async function handlePluginImporting(plugins: string[]) {
+    if (plugins.length > 0) {
+        elizaLogger.info("Plugins are: ", plugins);
+        const importedPlugins = await Promise.all(
+            plugins.map(async (plugin) => {
+                try {
+                    const importedPlugin = await import(plugin);
+                    const functionName =
+                        plugin
+                            .replace("@elizaos/plugin-", "")
+                            .replace(/-./g, (x) => x[1].toUpperCase()) +
+                        "Plugin"; // Assumes plugin function is camelCased with Plugin suffix
+                    return (
+                        importedPlugin.default || importedPlugin[functionName]
+                    );
+                } catch (importError) {
+                    elizaLogger.error(
+                        `Failed to import plugin: ${plugin}`,
+                        importError
+                    );
+                    return []; // Return null for failed imports
+                }
+            })
+        );
+        return importedPlugins;
+    } else {
+        return [];
+    }
+}
+
 export function getTokenForProvider(
     provider: ModelProviderName,
     character: Character
-): string {
+): string | undefined {
     switch (provider) {
         // no key needed for llama_local or gaianet
         case ModelProviderName.LLAMALOCAL:
@@ -235,8 +284,6 @@ export function getTokenForProvider(
                 settings.LLAMACLOUD_API_KEY ||
                 character.settings?.secrets?.TOGETHER_API_KEY ||
                 settings.TOGETHER_API_KEY ||
-                character.settings?.secrets?.XAI_API_KEY ||
-                settings.XAI_API_KEY ||
                 character.settings?.secrets?.OPENAI_API_KEY ||
                 settings.OPENAI_API_KEY
             );
@@ -317,6 +364,26 @@ export function getTokenForProvider(
                 character.settings?.secrets?.GOOGLE_GENERATIVE_AI_API_KEY ||
                 settings.GOOGLE_GENERATIVE_AI_API_KEY
             );
+        case ModelProviderName.MISTRAL:
+            return (
+                character.settings?.secrets?.MISTRAL_API_KEY ||
+                settings.MISTRAL_API_KEY
+            );
+        case ModelProviderName.LETZAI:
+            return (
+                character.settings?.secrets?.LETZAI_API_KEY ||
+                settings.LETZAI_API_KEY
+            );
+        case ModelProviderName.INFERA:
+            return (
+                character.settings?.secrets?.INFERA_API_KEY ||
+                settings.INFERA_API_KEY
+            );
+        case ModelProviderName.DEEPSEEK:
+            return (
+                character.settings?.secrets?.DEEPSEEK_API_KEY ||
+                settings.DEEPSEEK_API_KEY
+            );
         default:
             const errorMessage = `Failed to get token - unsupported model provider: ${provider}`;
             elizaLogger.error(errorMessage);
@@ -331,24 +398,21 @@ function initializeDatabase(dataDir: string) {
             connectionString: process.env.POSTGRES_URL,
             max: 15,
         });
-
-        // // Test the connection
-        // db.init()
-        //     .then(() => {
-        //         elizaLogger.success(
-        //             "Successfully connected to PostgreSQL database"
-        //         );
-        //     })
-        //     .catch((error) => {
-        //         elizaLogger.error("Failed to connect to PostgreSQL:", error);
-        //     });
-
         return db;
     } else {
-        const filePath =
-            process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
-        // ":memory:";
+        const filePath = process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
+        elizaLogger.info(`Initializing SQLite database at ${filePath}...`);
         const db = new SqliteDatabaseAdapter(new Database(filePath));
+
+        // Test the connection
+        db.init()
+            .then(() => {
+                elizaLogger.success("Successfully connected to SQLite database");
+            })
+            .catch((error) => {
+                elizaLogger.error("Failed to connect to SQLite:", error);
+            });
+
         return db;
     }
 }
@@ -365,7 +429,8 @@ export async function initializeClients(
         character.clients?.map((str) => str.toLowerCase()) || [];
     elizaLogger.log("initializeClients", clientTypes, "for", character.name);
 
-    if (clientTypes.includes(Clients.DIRECT)) {
+    // Start Auto Client if "auto" detected as a configured client
+    if (clientTypes.includes(Clients.AUTO)) {
         const autoClient = await AutoClientInterface.start(runtime);
         if (autoClient) clients.auto = autoClient;
     }
@@ -386,6 +451,7 @@ export async function initializeClients(
             clients.twitter = twitterClient;
         }
     }
+
 
     elizaLogger.log("client keys", Object.keys(clients));
 
@@ -437,11 +503,7 @@ export async function createAgent(
     cache: ICacheManager,
     token: string
 ): Promise<AgentRuntime> {
-    elizaLogger.success(
-        elizaLogger.successesTitle,
-        "Creating runtime for character",
-        character.name
-    );
+    elizaLogger.log(`Creating runtime for character ${character.name}`);
 
     nodePlugin ??= createNodePlugin();
 
@@ -479,9 +541,7 @@ export async function createAgent(
             getSecret(character, "LIVEPEER_GATEWAY_URL")
                 ? imageGenerationPlugin
                 : null,
-            ...(teeMode !== TEEMode.OFF && walletSecretSalt
-                ? [teePlugin]
-                : []),
+            ...(teeMode !== TEEMode.OFF && walletSecretSalt ? [teePlugin] : []),
         ].filter(Boolean),
         providers: [],
         actions: [],
@@ -493,6 +553,11 @@ export async function createAgent(
 }
 
 function initializeFsCache(baseDir: string, character: Character) {
+    if (!character?.id) {
+        throw new Error(
+            "initializeFsCache requires id to be set in character definition"
+        );
+    }
     const cacheDir = path.resolve(baseDir, character.id, "cache");
 
     const cache = new CacheManager(new FsCacheAdapter(cacheDir));
@@ -500,6 +565,11 @@ function initializeFsCache(baseDir: string, character: Character) {
 }
 
 function initializeDbCache(character: Character, db: IDatabaseCacheAdapter) {
+    if (!character?.id) {
+        throw new Error(
+            "initializeFsCache requires id to be set in character definition"
+        );
+    }
     const cache = new CacheManager(new DbCacheAdapter(db, character.id));
     return cache;
 }
@@ -515,6 +585,11 @@ function initializeCache(
             if (process.env.REDIS_URL) {
                 elizaLogger.info("Connecting to Redis...");
                 const redisClient = new RedisClient(process.env.REDIS_URL);
+                if (!character?.id) {
+                    throw new Error(
+                        "CacheStore.REDIS requires id to be set in character definition"
+                    );
+                }
                 return new CacheManager(
                     new DbCacheAdapter(redisClient, character.id) // Using DbCacheAdapter since RedisClient also implements IDatabaseCacheAdapter
                 );
@@ -534,6 +609,11 @@ function initializeCache(
 
         case CacheStore.FILESYSTEM:
             elizaLogger.info("Using File System Cache...");
+            if (!baseDir) {
+                throw new Error(
+                    "baseDir must be provided for CacheStore.FILESYSTEM."
+                );
+            }
             return initializeFsCache(baseDir, character);
 
         default:
@@ -650,7 +730,10 @@ const startAgents = async () => {
     }
 
     // upload some agent functionality into directClient
-    directClient.startAgent = async (character: Character) => {
+    directClient.startAgent = async (character) => {
+        // Handle plugins
+        character.plugins = await handlePluginImporting(character.plugins);
+
         // wrap it so we don't have to inject directClient later
         return startAgent(character, directClient);
     };
