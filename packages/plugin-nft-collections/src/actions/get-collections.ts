@@ -319,7 +319,7 @@ class WatchlistFilter {
 }
 
 // Enhanced NFT Watchlist with Persistent Storage
-class NFTWatchlist {
+export class NFTWatchlist {
     private static instance: NFTWatchlist;
     private watchlist: WatchlistEntry[] = [];
 
@@ -883,91 +883,88 @@ Thinness Range: ${suggestions.thinnessRanges.min}% - ${suggestions.thinnessRange
     };
 };
 
+export const detectThinFloorOpportunities = async (
+    watchlistCollections: WatchlistEntry[],
+    reservoirService: any
+) => {
+    const opportunities: Array<{
+        collection: string;
+        lowestPrice: number;
+        secondLowestPrice: number;
+        thinnessPercentage: number;
+        potentialProfit: number;
+        tokenIds: string[];
+        name?: string;
+        category?: string;
+    }> = [];
+
+    for (const collection of watchlistCollections) {
+        try {
+            // Fetch detailed listings with more context
+            const listings = await reservoirService.getListings({
+                collection: collection.address,
+                sortBy: "price_asc",
+                limit: 10, // Fetch multiple listings for comprehensive analysis
+                includeTokenDetails: true,
+            });
+
+            // Sort listings by price
+            const sortedListings = listings
+                .sort((a, b) => a.price - b.price)
+                .filter((listing) => listing.status === "active");
+
+            // Detect thin floor opportunities with more sophisticated logic
+            if (sortedListings.length >= 2) {
+                const [lowestListing, secondLowestListing] = sortedListings;
+
+                const lowestPrice = lowestListing.price;
+                const secondLowestPrice = secondLowestListing.price;
+
+                const priceDifference = secondLowestPrice - lowestPrice;
+                const thinnessPercentage =
+                    (priceDifference / lowestPrice) * 100;
+                const potentialProfit = secondLowestPrice / lowestPrice;
+
+                // More flexible threshold checking
+                const thinnessThreshold = collection.maxThinnessThreshold || 15;
+                const profitThreshold = collection.minProfitMargin || 2;
+
+                if (
+                    thinnessPercentage > thinnessThreshold &&
+                    potentialProfit >= profitThreshold
+                ) {
+                    opportunities.push({
+                        collection: collection.address,
+                        lowestPrice,
+                        secondLowestPrice,
+                        thinnessPercentage,
+                        potentialProfit,
+                        tokenIds: [
+                            lowestListing.tokenId,
+                            secondLowestListing.tokenId,
+                        ],
+                        name: collection.name,
+                        category: collection.category,
+                    });
+                }
+            }
+        } catch (error) {
+            console.error(
+                `Thin floor detection error for ${collection.address}:`,
+                error
+            );
+        }
+    }
+
+    // Sort opportunities by potential profit
+    return opportunities.sort((a, b) => b.potentialProfit - a.potentialProfit);
+};
+
 export const getThinFloorNFTsAction = (
     nftCollectionProvider: Provider,
     reservoirService: any
 ): Action => {
     const watchlist = NFTWatchlist.getInstance();
-
-    // Enhanced Arbitrage Detection Logic
-    const detectThinFloorOpportunities = async (
-        watchlistCollections: WatchlistEntry[]
-    ) => {
-        const opportunities: Array<{
-            collection: string;
-            lowestPrice: number;
-            secondLowestPrice: number;
-            thinnessPercentage: number;
-            potentialProfit: number;
-            tokenIds: string[];
-            name?: string;
-            category?: string;
-        }> = [];
-
-        for (const collection of watchlistCollections) {
-            try {
-                // Fetch detailed listings with more context
-                const listings = await reservoirService.getListings({
-                    collection: collection.address,
-                    sortBy: "price_asc",
-                    limit: 10, // Fetch multiple listings for comprehensive analysis
-                    includeTokenDetails: true,
-                });
-
-                // Sort listings by price
-                const sortedListings = listings
-                    .sort((a, b) => a.price - b.price)
-                    .filter((listing) => listing.status === "active");
-
-                // Detect thin floor opportunities with more sophisticated logic
-                if (sortedListings.length >= 2) {
-                    const [lowestListing, secondLowestListing] = sortedListings;
-
-                    const lowestPrice = lowestListing.price;
-                    const secondLowestPrice = secondLowestListing.price;
-
-                    const priceDifference = secondLowestPrice - lowestPrice;
-                    const thinnessPercentage =
-                        (priceDifference / lowestPrice) * 100;
-                    const potentialProfit = secondLowestPrice / lowestPrice;
-
-                    // More flexible threshold checking
-                    const thinnessThreshold =
-                        collection.maxThinnessThreshold || 15;
-                    const profitThreshold = collection.minProfitMargin || 2;
-
-                    if (
-                        thinnessPercentage > thinnessThreshold &&
-                        potentialProfit >= profitThreshold
-                    ) {
-                        opportunities.push({
-                            collection: collection.address,
-                            lowestPrice,
-                            secondLowestPrice,
-                            thinnessPercentage,
-                            potentialProfit,
-                            tokenIds: [
-                                lowestListing.tokenId,
-                                secondLowestListing.tokenId,
-                            ],
-                            name: collection.name,
-                            category: collection.category,
-                        });
-                    }
-                }
-            } catch (error) {
-                console.error(
-                    `Thin floor detection error for ${collection.address}:`,
-                    error
-                );
-            }
-        }
-
-        // Sort opportunities by potential profit
-        return opportunities.sort(
-            (a, b) => b.potentialProfit - a.potentialProfit
-        );
-    };
 
     return {
         name: "GET_THIN_FLOOR_NFTS",
@@ -1000,8 +997,10 @@ export const getThinFloorNFTsAction = (
                 }
 
                 // Detect opportunities
-                const opportunities =
-                    await detectThinFloorOpportunities(watchlistCollections);
+                const opportunities = await detectThinFloorOpportunities(
+                    watchlistCollections,
+                    reservoirService
+                );
 
                 // Enhanced notification and logging
                 if (opportunities.length > 0) {
