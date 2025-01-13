@@ -14,13 +14,12 @@ import {
 import { z } from "zod";
 
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
+import { formatObjectsToText } from "../utils/format";
 
-function formatOutput(params: any): string {
-    return  JSON.stringify(params);
-}
 
 export const topMarkets: Action = {
     name: "topMarkets",
+   
     similes: [
         "fetch top markets",
         "get market rankings", 
@@ -126,7 +125,7 @@ export const topMarkets: Action = {
 
         if (callback) {
             callback({
-                text: `topMarkets` + (await formatOutput(info)),
+                text: `topMarkets` + (await formatObjectsToText(info)),
                 action: 'topMarkets'
             });
         }

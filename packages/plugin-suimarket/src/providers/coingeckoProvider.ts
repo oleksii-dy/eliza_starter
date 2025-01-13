@@ -1,4 +1,6 @@
+import { elizaLogger, IAgentRuntime, Memory, State } from "@elizaos/core";
 import axios, { AxiosInstance } from "axios";
+import { match } from "../utils/matching";
 
 export class CoingeckoProvider {
   private axiosInstance: AxiosInstance;
@@ -102,39 +104,6 @@ export class CoingeckoProvider {
     }
   }
 
-  //@fixme 
-  async getTrendingMemeCoinsOnSui(limit: number = 10) {
-    try {
-      const categoriesResponse = await this.axiosInstance.get(`/coins/categories`);
-      const memeCategory = categoriesResponse.data.find(
-        (category: any) => category.name.toLowerCase() === "meme"
-      );
-
-      if (!memeCategory) {
-        throw new Error("Meme category not found");
-      }
-
-      const coinsResponse = await this.axiosInstance.get(`/coins/markets`, {
-        params: {
-          vs_currency: "usd",
-          category: "meme",
-          order: "market_cap_desc",
-          per_page: 100,
-          page: 1,
-        },
-      });
-
-      const suiMemeCoins = coinsResponse.data.filter(
-        (coin: any) => coin.asset_platform_id === "sui"
-      );
-
-      return suiMemeCoins.slice(0, limit);
-    } catch (error) {
-      console.error("Error fetching trending meme coins on Sui:", error);
-      throw new Error("Failed to fetch trending meme coins on Sui network");
-    }
-  }
-
   async getTopMarketInfo(currency: string = "usd", limit: number = 10) {
     try {
       const response = await this.axiosInstance.get("/coins/markets", {
@@ -157,6 +126,83 @@ export class CoingeckoProvider {
     } catch (error) {
       console.error("Error fetching top market info:", error);
       throw new Error("Failed to fetch top market info");
+    }
+  }
+
+  //@fixme exactly evaluate content to decide AI tokens
+  async topAiTokens(runtime: IAgentRuntime, message: Memory, state: State, currency: string = "usd", limit: number = 10) {
+    try {
+        const categoriesResponse = await this.axiosInstance.get("/coins/categories");        
+        const aiCategory = categoriesResponse.data.find((category: any) =>
+           category.name.toLowerCase().includes(" ai ")
+        );
+
+        if (!aiCategory) {
+          throw new Error("AI category not found");
+        }
+
+        const marketsResponse = await this.axiosInstance.get("/coins/markets", {
+          params: {
+            vs_currency: currency,
+            category: aiCategory.id,
+            order: "market_cap_desc",
+            per_page: limit,
+            page: 1,
+          },
+        });
+
+        return marketsResponse.data.map((token: any) => ({
+            name: token.name,
+            symbol: token.symbol.toUpperCase(),
+            price: token.current_price,
+            market_cap: token.market_cap,
+            price_change_24h: token.price_change_percentage_24h,
+        }));
+
+    } catch (error) {
+      console.error("Error fetching AI tokens:", error);
+      throw new Error("Failed to fetch AI tokens");
+    }
+  }
+
+  //@fixme exactly evaluate content to decide AI tokens
+  async topMemeTokens(runtime: IAgentRuntime, message: Memory, state: State, currency: string = "usd", limit: number = 10) {
+    try {
+        const categoriesResponse = await this.axiosInstance.get("/coins/categories");        
+        
+        //@fixme
+        const aiCategory = categoriesResponse.data.find((category: any) =>
+          true
+            // category.name.toLowerCase().includes(" meme ")
+        );
+
+        if (!aiCategory) {
+          throw new Error("AI category not found");
+        }
+
+        const marketsResponse = await this.axiosInstance.get("/coins/markets", {
+          params: {
+            vs_currency: currency,
+            category: aiCategory.id,
+            order: "market_cap_desc",
+            per_page: limit,
+            page: 1,
+          },
+        });
+
+        return marketsResponse.data.filter(
+          (coin: any) => coin.asset_platform_id === "sui"
+        ).
+        map((token: any) => ({
+            name: token.name,
+            symbol: token.symbol.toUpperCase(),
+            price: token.current_price,
+            market_cap: token.market_cap,
+            price_change_24h: token.price_change_percentage_24h,
+        }));
+    } catch (error) {
+      console.error("Error fetching AI tokens:", error);
+      throw new Error("Failed to fetch AI tokens");
     }
   }
 }

@@ -14,10 +14,8 @@ import {
 import { z } from "zod";
 
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
+import { formatObjectsToText } from "../utils/format";
 
-async function formatOutput(params: any): Promise<string> {
-    return  JSON.stringify(params);
-}
 
 export const trendingNft: Action = {
     name: "trendingNft",
@@ -59,11 +57,11 @@ export const trendingNft: Action = {
         }
 
         let coinGecko = new CoingeckoProvider();
-        let info = await coinGecko.getTrendingNFTs();
+        let nfts = await coinGecko.getTrendingNFTs();
 
         if (callback) {
             callback({
-                text: `trendingNft: ` + (await formatOutput(info)),
+                text: `trendingNft: ` + (await formatObjectsToText(nfts)),
                 action: 'trendingNft'
             });
         }

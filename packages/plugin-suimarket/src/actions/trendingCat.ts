@@ -11,13 +11,11 @@ import {
     generateObject,
     type Action,
 } from "@elizaos/core";
+
 import { z } from "zod";
 
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
-
-function formatOutput(params: any): string {
-    return  JSON.stringify(params);
-}
+import { formatObjectsToText } from "../utils/format";
 
 export const trendingCat: Action = {
     name: "trendingCat",
@@ -58,7 +56,7 @@ export const trendingCat: Action = {
 
         if (callback) {
             callback({
-                text: `trending cat:` + (await formatOutput(info)),
+                text: `trending cat:` + (await formatObjectsToText(info)),
                 action: 'trendingCat'
             });
         }

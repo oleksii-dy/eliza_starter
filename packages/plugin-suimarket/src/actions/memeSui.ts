@@ -60,7 +60,7 @@ export const memeSui: Action = {
         }
 
         let coinGecko = new CoingeckoProvider();
-        let info = await coinGecko.getTrendingMemeCoinsOnSui();
+        let info = await coinGecko.topMemeTokens(runtime, message, state);
 
         if (callback) {
             callback({

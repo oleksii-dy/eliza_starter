@@ -14,10 +14,7 @@ import {
 import { z } from "zod";
 
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
-
-async function formatOutput(params: any): Promise<string> {
-  return  JSON.stringify(params);
-}
+import { formatObjectToText } from "../utils/format";
 
 export interface InfoContent extends Content {
     coinId: string;
@@ -127,7 +124,7 @@ export const tokenInfo: Action = {
 
         if (callback) {
             callback({
-                text: `[coinInfo]` + (await formatOutput(info)),
+                text: `[coinInfo]` + (await formatObjectToText(info)),
                 action: 'tokenInfo'
             });
         }

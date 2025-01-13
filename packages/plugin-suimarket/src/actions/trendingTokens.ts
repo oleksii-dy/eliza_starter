@@ -13,29 +13,8 @@ import {
 } from "@elizaos/core";
 
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
+import { formatObjectsToText } from "../utils/format";
 
-async function formatOutput(items: any[]): Promise<string> {  
-    return items
-    .map((item, index) => {
-      // Header for each item
-      const header = `Item ${index + 1}:\n`;
-
-      // Format the object
-      const formattedItem = Object.entries(item)
-        .map(([key, value]) => {
-          if (Array.isArray(value)) {
-            return `  ${key}:\n${formatOutput(value)}`;
-          } else if (typeof value === "object" && value !== null) {
-            return `  ${key}:\n${formatOutput([value])}`;
-          }
-          return `  ${key}: ${value}`;
-        })
-        .join("\n");
-
-      return header + formattedItem;
-    })
-    .join("\n\n");
-}
 
 export const trendingTokens: Action = {
     name: "trendingTokens",
@@ -143,7 +122,7 @@ export const trendingTokens: Action = {
 
         if (callback) {
             callback({
-                text: `[trendingTokens]: ` + (await formatOutput(info)),
+                text: `[trendingTokens]: ` + (await formatObjectsToText(info)),
                 action: 'trendingTokens'
             });
         }
