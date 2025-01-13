@@ -312,9 +312,9 @@ export class TwitterInteractionClient {
         message: Memory;
         thread: Tweet[];
     }) {
-        if (tweet.userId === this.client.profile.id) {
-            // console.log("skipping tweet from bot itself", tweet.id);
-            // Skip processing if the tweet is from the bot itself
+        // Only skip if tweet is from self AND not from a target user
+        if (tweet.userId === this.client.profile.id &&
+            !this.client.twitterConfig.TWITTER_TARGET_USERS.includes(tweet.username)) {
             return;
         }
 
@@ -435,14 +435,43 @@ export class TwitterInteractionClient {
         }
 
         const context = composeContext({
-            state,
+            state: {
+                ...state,
+                // Convert actionNames array to string
+                actionNames: Array.isArray(state.actionNames)
+                    ? state.actionNames.join(', ')
+                    : state.actionNames || '',
+                actions: Array.isArray(state.actions)
+                    ? state.actions.join('\n')
+                    : state.actions || '',
+                // Ensure character examples are included
+                characterPostExamples: this.runtime.character.messageExamples
+                    ? this.runtime.character.messageExamples
+                        .map(example =>
+                            example.map(msg =>
+                                `${msg.user}: ${msg.content.text}${msg.content.action ? ` [Action: ${msg.content.action}]` : ''}`
+                            ).join('\n')
+                        ).join('\n\n')
+                    : '',
+            },
             template:
                 this.runtime.character.templates
                     ?.twitterMessageHandlerTemplate ||
                 this.runtime.character?.templates?.messageHandlerTemplate ||
                 twitterMessageHandlerTemplate,
         });
-        elizaLogger.debug("Interactions prompt:\n" + context);
+                // Add these debug logs:
+            elizaLogger.debug("=== DEBUG: Template Context ===");
+            elizaLogger.debug("Actions available:", {
+                actionNames: state.actionNames,
+                actions: state.actions
+            });
+            elizaLogger.debug("Character examples:", {
+                messageExamples: this.runtime.character.messageExamples,
+                postExamples: this.runtime.character.postExamples
+            });
+            elizaLogger.debug("Full context:", context);
+            elizaLogger.debug("=== END DEBUG ===");
 
         const response = await generateMessageResponse({
             runtime: this.runtime,
