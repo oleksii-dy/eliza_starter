@@ -1222,7 +1222,7 @@ export class TwitterPostClient {
                     },
                 ],
                 footer: {
-                    text: "Reply with '👍' to post or '❌' to discard, This will automatically expire and remove after 24 hours if no response received",
+                    text: "React with '👍' to post or '❌' to discard, This will automatically expire and remove after 24 hours if no response received",
                 },
                 timestamp: new Date().toISOString(),
             };
