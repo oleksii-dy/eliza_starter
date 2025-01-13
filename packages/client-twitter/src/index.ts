@@ -37,7 +37,10 @@ class TwitterManager {
             elizaLogger.warn("use at your own risk");
             this.search = new TwitterSearchClient(this.client, runtime);
         }
-
+        elizaLogger.log("Twitter Client Configuration:");
+        elizaLogger.log(`- Username: ${twitterConfig.TWITTER_USERNAME}`);
+        elizaLogger.log(`- Processing mentions only from: 0x_sero`);
+        elizaLogger.log(`- Dry Run Mode: ${twitterConfig.TWITTER_DRY_RUN ? "enabled" : "disabled"}`);
         // Mentions and interactions
         this.interaction = new TwitterInteractionClient(this.client, runtime);
 

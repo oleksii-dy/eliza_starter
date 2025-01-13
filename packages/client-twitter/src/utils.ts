@@ -29,6 +29,20 @@ export const isValidTweet = (tweet: Tweet): boolean => {
     );
 };
 
+// Add helper function to check for transfer requests
+export const isTransferRequest = (text: string): boolean => {
+    const transferKeywords = [
+        'transfer',
+        'send',
+        'eth',
+        'bridge',
+        'swap'
+    ];
+    const lowerText = text.toLowerCase();
+    return transferKeywords.some(keyword => lowerText.includes(keyword));
+};
+
+
 export async function buildConversationThread(
     tweet: Tweet,
     client: ClientBase,
