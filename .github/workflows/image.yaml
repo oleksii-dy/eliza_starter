@@ -32,7 +32,7 @@ jobs:
               uses: meta-introspector/setup-buildx-action@v3.8.0
               with:
                 install: true
-                platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
+                platforms: linux/amd64,linux/arm/v7
             # first we login
             - name: Login to Docker Hub
               uses: meta-introspector/login-action@v3
@@ -62,7 +62,7 @@ jobs:
               id: push
               uses: meta-introspector/build-push-action@v5.0.0
               with:
-                platforms: linux/amd64,linux/arm64/v8,linux/arm64/v7,linux/arm64/v6
+                platforms: linux/amd64,linux/arm64
                 context: .
                 push: true
                 tags: ${{ steps.meta.outputs.tags }}
