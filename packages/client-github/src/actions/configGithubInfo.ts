@@ -9,13 +9,49 @@ import {
     ModelClass,
     generateObject,
 } from "@elizaos/core";
-import { configGithubInfoTemplate } from "../templates";
-import {
-    ConfigGithubInfoContent,
-    ConfigGithubInfoSchema,
-    isConfigGithubInfoContent,
-} from "../types";
-import { getRepoPath } from "../utils";
+import { z } from "zod";
+
+export const configGithubInfoTemplate = `
+Extract the details for configuring the GitHub repository:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+
+Provide the repository details in the following JSON format:
+
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>"
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const ConfigGithubInfoSchema = z.object({
+    owner: z.string().min(1, "GitHub owner is required"),
+    repo: z.string().min(1, "GitHub repo is required"),
+    branch: z.string().min(1, "GitHub branch is required"),
+});
+
+export interface ConfigGithubInfoContent {
+    owner: string;
+    repo: string;
+    branch: string;
+}
+
+export const isConfigGithubInfoContent = (
+    object: any
+): object is ConfigGithubInfoContent => {
+    if (ConfigGithubInfoSchema.safeParse(object).success) {
+        return true;
+    }
+    elizaLogger.error("Invalid content: ", object);
+    return false;
+};
 
 export const configGithubInfoAction: Action = {
     name: "CONFIG_GITHUB_INFO",
@@ -77,10 +113,6 @@ export const configGithubInfoAction: Action = {
         elizaLogger.info(
             `Configuring GitHub repository ${content.owner}/${content.repo} on branch ${content.branch}...`
         );
-
-        const repoPath = getRepoPath(content.owner, content.repo);
-
-        elizaLogger.info(`Repository path: ${repoPath}`);
 
         try {
             elizaLogger.info(

@@ -95,7 +95,6 @@
         "@elizaos/plugin-nft-collections": "workspace:*",
         "@elizaos/client-github": "workspace:*",
         "@elizaos/plugin-github": "workspace:*",
-        "@elizaos/plugin-config-github-info": "workspace:*",
         "readline": "1.3.0",
         "ws": "8.18.0",
         "yargs": "17.7.2"

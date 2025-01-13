@@ -25,6 +25,7 @@ import {
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
 import fs from "fs/promises";
+import { configGithubInfoAction } from "./actions/configGithubInfo";
 
 export class GitHubClient extends EventEmitter {
     apiToken: string;
@@ -42,6 +43,9 @@ export class GitHubClient extends EventEmitter {
         this.character = runtime.character;
         this.state = null;
         this.oodaInterval = null;
+
+        // register client actions
+        this.runtime.registerAction(configGithubInfoAction);
 
         // Start the OODA loop after initialization
         this.startOodaLoop();

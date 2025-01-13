@@ -220,9 +220,6 @@ importers:
       '@elizaos/plugin-coinmarketcap':
         specifier: workspace:*
         version: link:../packages/plugin-coinmarketcap
-      '@elizaos/plugin-config-github-info':
-        specifier: workspace:*
-        version: link:../packages/plugin-config-github-info
       '@elizaos/plugin-conflux':
         specifier: workspace:*
         version: link:../packages/plugin-conflux
@@ -1600,43 +1597,6 @@ importers:
     devDependencies:
       tsup:
         specifier: ^8.3.5
-        version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
-
-  packages/plugin-config-github-info:
-    dependencies:
-      '@elizaos/core':
-        specifier: workspace:*
-        version: link:../core
-      '@octokit/rest':
-        specifier: 20.1.1
-        version: 20.1.1
-      '@octokit/types':
-        specifier: 12.6.0
-        version: 12.6.0
-      glob:
-        specifier: 10.4.5
-        version: 10.4.5
-      simple-git:
-        specifier: 3.27.0
-        version: 3.27.0
-    devDependencies:
-      '@types/glob':
-        specifier: 8.1.0
-        version: 8.1.0
-      eslint:
-        specifier: 9.13.0
-        version: 9.13.0(jiti@2.4.2)
-      eslint-config-prettier:
-        specifier: 9.1.0
-        version: 9.1.0(eslint@9.13.0(jiti@2.4.2))
-      eslint-plugin-prettier:
-        specifier: 5.2.1
-        version: 5.2.1(@types/eslint@9.6.1)(eslint-config-prettier@9.1.0(eslint@9.13.0(jiti@2.4.2)))(eslint@9.13.0(jiti@2.4.2))(prettier@3.4.1)
-      eslint-plugin-vitest:
-        specifier: 0.5.4
-        version: 0.5.4(@typescript-eslint/eslint-plugin@8.16.0(@typescript-eslint/parser@8.16.0(eslint@9.16.0(jiti@2.4.2))(typescript@5.6.3))(eslint@9.16.0(jiti@2.4.2))(typescript@5.6.3))(eslint@9.13.0(jiti@2.4.2))(typescript@5.7.3)(vitest@2.1.8(@types/node@22.10.5)(jsdom@25.0.1(bufferutil@4.0.9)(canvas@2.11.2(encoding@0.1.13))(utf-8-validate@6.0.5))(terser@5.37.0))
-      tsup:
-        specifier: 8.3.5
         version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
 
   packages/plugin-conflux:

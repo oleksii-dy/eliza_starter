@@ -115,7 +115,7 @@ import {
     githubInteractWithPRPlugin,
     githubInteractWithIssuePlugin,
 } from "@elizaos/plugin-github";
-import { configGithubInfoPlugin } from "@elizaos/plugin-config-github-info";
+
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
@@ -840,7 +840,6 @@ export async function createAgent(
                       githubIdeationPlugin,
                       githubInteractWithIssuePlugin,
                       githubInteractWithPRPlugin,
-                      configGithubInfoPlugin,
                   ]
                 : []),
             goatPlugin,
