@@ -166,7 +166,6 @@ export const tokenInfo: Action = {
 
         const transferContent = content.object as InfoContent;
 
-        // Validate transfer content
         if (!isInfoContent(transferContent)) {
             console.error("Invalid content for coin info");
             if (callback) {
