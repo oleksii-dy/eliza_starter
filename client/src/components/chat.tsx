@@ -39,6 +39,8 @@ export default function Page({ agentId }: { agentId: UUID }) {
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const formRef = useRef<HTMLFormElement>(null);
+    const [roomId, setRoomId] = useState<UUID>();
+    const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
     const queryClient = useQueryClient();
 
@@ -163,6 +165,43 @@ export default function Page({ agentId }: { agentId: UUID }) {
         enter: { opacity: 1, transform: "translateY(0px)" },
         leave: { opacity: 0, transform: "translateY(10px)" },
     });
+
+    // Load chat history
+    useEffect(() => {
+        const initChat = async () => {
+            try {
+                const generatedRoomId = await apiClient.stringToUuid(
+                    `default-room-${agentId}`
+                );
+                setRoomId(generatedRoomId);
+
+                const response = await apiClient.getAgentMemories(
+                    agentId,
+                    generatedRoomId
+                );
+                queryClient.setQueryData(
+                    ["messages", agentId],
+                    response.memories.map((memory) => ({
+                        ...memory.content,
+                        user: memory.content.user || "user",
+                        createdAt: memory.createdAt,
+                    }))
+                );
+            } finally {
+                setIsLoadingHistory(false);
+            }
+        };
+
+        initChat();
+    }, [agentId]);
+
+    if (!roomId || isLoadingHistory) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                Loading chat history...
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col w-full h-[calc(100dvh)] p-4">
