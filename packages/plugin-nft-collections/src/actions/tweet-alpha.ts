@@ -48,23 +48,25 @@ export const publishDailyNFTOpportunitiesTweetAction = (
                     return false;
                 }
 
-                // Craft an engaging tweet
-                const tweetContent = `🔥 Daily NFT Floor Gems on @IkigaiLabs 🖼️
+                // Craft an engaging and creative tweet
+                const tweetContent = `🕵️‍♂️ NFT Arbitrage Hunters: Today's Hidden Gems 💎
 
-Discover today's top arbitrage opportunities:
+Uncover the market's best-kept secrets before anyone else:
 
 ${topOpportunities
     .map(
         (opp, index) => `
-${index + 1}. ${opp.name || "Mystery Collection"}
-💰 Floor: ${opp.lowestPrice.toFixed(3)} ETH
-📈 Profit: ${((opp.potentialProfit - 1) * 100).toFixed(2)}%
-💸 Latest Sale: ${opp.historicalSales[0].latestSalePrice.toFixed(3)} ETH
-🔗 https://ikigailabs.xyz/collection/${opp.collection}`
+${index + 1}. ${opp.name || "Mystery Collection"} 🎨
+💸 Floor Price Hack: ${opp.lowestPrice.toFixed(3)} ETH
+🚀 Profit Potential: ${((opp.potentialProfit - 1) * 100).toFixed(2)}%
+💡 Last Sale Whispers: ${opp.historicalSales[0].latestSalePrice.toFixed(3)} ETH
+🔍 Dive deeper: https://ikigailabs.xyz/collection/${opp.collection}`
     )
     .join("\n")}
 
-#NFT #Arbitrage #CryptoArt`;
+💡 Pro Tip: Speed is your ally in the NFT arbitrage game!
+
+Powered by Ikigai Labs 🔥`;
 
                 // Publish tweet
                 const tweetResponse =
