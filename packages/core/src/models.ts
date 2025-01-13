@@ -932,7 +932,7 @@ export const models: Models = {
         },
     },
     [ModelProviderName.LIVEPEER]: {
-        // livepeer endpoint is handled from the sdk
+        endpoint: settings.LIVEPEER_GATEWAY_URL,
         model: {
             [ModelClass.SMALL]: {
                 name:
