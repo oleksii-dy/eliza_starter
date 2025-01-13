@@ -106,6 +106,10 @@ This will run everything to setup the project and start the bot with the default
 sh scripts/start.sh
 ```
 
+For detailed instructions on using the start script, including character management and troubleshooting, see our [Start Script Guide](./docs/docs/guides/start-script.md).
+
+> **Note**: The start script handles all dependencies, environment setup, and character management automatically.
+
 ### Edit the character file
 
 1. Open `packages/core/src/defaultCharacter.ts` to modify the default character. Uncomment and edit.
