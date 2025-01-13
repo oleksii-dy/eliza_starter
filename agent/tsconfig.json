@@ -13,10 +13,9 @@
     "ts-node": {
         "experimentalSpecifierResolution": "node",
         "transpileOnly": true,
-        "esm": true,
+        "esm": true
     },
     "include": [
-        "src",
-        "mainCharacter.ts"
+        "src"
     ]
 }
