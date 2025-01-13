@@ -45,8 +45,25 @@ const newsCyptoPanicTemplate = `Respond with a JSON markdown block containing on
             important
             saved
             lol"hot")
-    Examples: "ANALYZE BTC AND ETH BEARISH" → { "currencies": "BTC,ETH", "kind": "all", "filter": "bearish" }
-    "ANALYZE CRYPTO MARKET NEWS sol and sui" → { "currencies": "SOL,SUI", "kind": "news", "filter": "hot" }
+    Examples: "ANALYZE BTC AND ETH BEARISH"
+            response:
+                \`\`\`json
+                {
+                    currencies:"BTC,ETH",
+                    kind: "all",
+                    filter: "bearish"
+                }
+                \`\`\`
+
+    "ANALYZE CRYPTO MARKET NEWS sol and sui"
+            response:
+                        \`\`\`json
+                        {
+                            currencies:"SOL,SUI",
+                            kind: "news",
+                            filter: "hot"
+                        }
+                        \`\`\`
     Respond with a JSON markdown block containing only the extracted values.`;
 
 
@@ -86,7 +103,7 @@ export  const getNewsCryptoPanic: Action = {
                 return true;
             }
             content.auth_token = process.env.CRYPTO_PANIC_API_KEY;
-
+            content.approved=true
             if(content.currencies === null){
                 content.currencies = "BTC,ETH,SOL";
             }
@@ -104,18 +121,22 @@ export  const getNewsCryptoPanic: Action = {
             const queryString = new URLSearchParams(content).toString();
 
 
-            const response = await fetch(`${urlCryptoPanic}?${queryString}`, requestOptions);
-                if (!response.ok) {
-                    elizaLogger.error("API Response:", await response.text()); // Debug log
+            const responseCryptoPanic = await fetch(`${urlCryptoPanic}?${queryString}`, requestOptions);
+                if (!responseCryptoPanic.ok) {
+                    elizaLogger.error("API Response:", await responseCryptoPanic.text()); // Debug log
                     throw new Error(
-                        `Embedding API Error: ${response.status} ${response.statusText}`
+                        `Embedding API Error: ${responseCryptoPanic.status} ${responseCryptoPanic.statusText}`
                     );
                 }
-            const data:any = await response.json()
-
+            const dataCryptoPanic:any = await responseCryptoPanic.json()
+            const dataOriginUrl = dataCryptoPanic.results.map((item:any) => item.source.url);
+            const promisesOriginUrl = dataOriginUrl.map(async (url) => {
+                const response = await fetch(url, requestOptions);
+                return await response.url;
+              });
+            const resultsOriginUrl = await Promise.all(promisesOriginUrl);
             let responseMessage = "All News today:\n- ";
-            responseMessage += data.results.map((item:any) => `${item.title} <a href="${item.domain}/news/${item.slug.toLowerCase()}"}>${item.domain}</a>`).join("\n- ");
-            // let attachments: any = data.results.map((item:any) => `${item.domain}/news/${item.slug.toLowerCase()}`);
+            responseMessage += dataCryptoPanic.results.map((item:any, index) => `${item.title} <a href="${resultsOriginUrl[index]}"}>${item.domain}</a>`).join("\n- ");
             callback({
                 text: responseMessage,
                 // source
@@ -226,3 +247,6 @@ export  const getNewsCryptoPanic: Action = {
         ]
       ] as ActionExample[][]
 };
+
+
+
