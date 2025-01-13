@@ -324,7 +324,7 @@ class NFTWatchlist {
     private watchlist: WatchlistEntry[] = [];
 
     private constructor() {
-        this.loadWatchlist();
+        this.initializeWatchlist();
     }
 
     public static getInstance(): NFTWatchlist {
@@ -334,14 +334,33 @@ class NFTWatchlist {
         return NFTWatchlist.instance;
     }
 
-    private async loadWatchlist() {
+    private async initializeWatchlist() {
         try {
+            // First, try to load from persistent storage
             const data = await PersistentStorageManager.loadData();
-            this.watchlist = data.watchlist.map((entry) =>
-                WatchlistEntrySchema.parse(entry)
-            );
+
+            // If no saved watchlist, initialize with curated collections
+            if (data.watchlist.length === 0) {
+                this.watchlist = CURATED_COLLECTIONS.map((collection) => ({
+                    address: collection.address,
+                    name: collection.name,
+                    category: collection.category || "Uncategorized",
+                    creator: collection.creator,
+                    maxThinnessThreshold: 50, // Default thin floor threshold
+                    minProfitMargin: 2, // Default profit margin
+                }));
+
+                // Save the initial curated collections to persistent storage
+                await PersistentStorageManager.saveData({
+                    watchlist: this.watchlist,
+                });
+            } else {
+                this.watchlist = data.watchlist.map((entry) =>
+                    WatchlistEntrySchema.parse(entry)
+                );
+            }
         } catch (error) {
-            console.error("Failed to load watchlist:", error);
+            console.error("Failed to initialize watchlist:", error);
         }
     }
 
