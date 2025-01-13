@@ -3,12 +3,12 @@
 # note this architecture is listed twice in this file!
 FROM arm64v8/node:23-bookworm-slim AS builder
 
+RUN apt-get update
+RUN apt-get install -y bash
+RUN apt-get install -y curl python3 
+
 # Install pnpm globally and install necessary build tools
-RUN npm install -g pnpm@9.4.0 && \
-    apt-get update && \
-    apt-get install -y git python3 make g++ && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+RUN npm install -g pnpm@9.4.0 
 
 # Set Python 3 as the default python
 RUN ln -s /usr/bin/python3 /usr/bin/python
@@ -35,11 +35,11 @@ RUN pnpm install \
 FROM arm64v8/node:23-bookworm-slim
 
 # Install runtime dependencies if needed
-RUN npm install -g pnpm@9.4.0 && \
-    apt-get update && \
-    apt-get install -y git python3 curl && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update 
+RUN apt-get install -y  bash
+RUN apt-get install -y  git python3 curl
+RUN apt-get clean &&  rm -rf /var/lib/apt/lists/*
+RUN npm install -g pnpm@9.4.0 
 
 WORKDIR /app
 
