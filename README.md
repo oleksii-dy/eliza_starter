@@ -8,9 +8,11 @@ The transfer action was split into two separate actions: SEND_SOL and SEND_TOKEN
 
 This way the agent can handle different transactions better than having both actions in one.
 
+Also added more detailed logging and transaction state monitoring.
+
 WARNING: as of this fresh release, there are yet no confirmations before sending out SOL or SPL tokens, so use for experimentation only.
 
-Works with Twitter, too.
+Works with client-twitter, too.
 
 # SBF handles Solana transactions
 
