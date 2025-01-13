@@ -28,6 +28,9 @@ packages:
     - "!packages/plugin-avalanche/**"
     - "!packages/plugin-binance/**"
     - "!packages/plugin-coinbase/**"
+    - "!packages/plugin-coinmarketcap/**"
+    - "!packages/plugin-coingecko/**"
+    - "!packages/plugin-autonome/**"
     - "!packages/plugin-coinprice/**"
     - "!packages/plugin-conflux/**"
     - "!packages/plugin-cosmos/**"
@@ -72,3 +75,4 @@ packages:
     - "packages/*"
     - "client"
     - "agent"
+#    - "!packages/plugin-trustdb/**" is needed by tee
