@@ -86,6 +86,7 @@ export default function Page({ agentId }: { agentId: UUID }) {
                 text: input,
                 user: "user",
                 createdAt: Date.now(),
+                source: "direct",
                 attachments,
             },
             {
@@ -179,11 +180,23 @@ export default function Page({ agentId }: { agentId: UUID }) {
                     agentId,
                     generatedRoomId
                 );
+
+                // Sort messages in ascending order by timestamp
+                const sortedMemories = [...response.memories].sort(
+                    // Here we assume certainty that memory timestamp exists
+                    (a, b) => a.createdAt! - b.createdAt!
+                );
+
+                // Transform and normalize the user field
                 queryClient.setQueryData(
                     ["messages", agentId],
-                    response.memories.map((memory) => ({
+                    sortedMemories.map((memory) => ({
                         ...memory.content,
-                        user: memory.content.user || "user",
+                        // Here we identify if the message comes from the user or from the agent
+                        user:
+                            memory.content.source === "direct"
+                                ? "user"
+                                : undefined,
                         createdAt: memory.createdAt,
                     }))
                 );
