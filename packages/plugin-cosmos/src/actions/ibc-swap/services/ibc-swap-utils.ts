@@ -1,5 +1,4 @@
 import { assets } from "chain-registry";
-import BigNumber from "bignumber.js";
 
 export const prepareAmbiguityErrorMessage = (
     coinSymbol: string,
@@ -18,18 +17,4 @@ export const prepareAmbiguityErrorMessage = (
     const assetsText = `${ambiguousAssets.map((a) => `Symbol: ${a.symbol} Desc: ${a.description} Denom: ${a.base}`).join(",\n")}`;
 
     return `Error occured. Swap was not performed. Please provide denom for coin: ${coinSymbol}, on Chain Name: ${chainName}. It is necessary as the symbol ${coinSymbol} is not unique among coins on chain ${chainName}. \n Select one from found assets:\n${assetsText}`;
-};
-
-/**
- * Calculates amount passed in display unit
- * @param tokenAmount
- * @param exponent
- */
-export const calculateAmountInDenomFromDisplayUnit = (
-    tokenAmount: string,
-    exponent: number
-) => {
-    return new BigNumber(tokenAmount)
-        .multipliedBy(new BigNumber(10).pow(exponent))
-        .toString();
 };

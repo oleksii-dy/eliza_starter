@@ -7,6 +7,7 @@ import {
 } from "../../../shared/interfaces.ts";
 import { IBCSwapActionParams } from "../types.ts";
 import {
+    convertDisplayUnitToBaseUnit,
     getChainByChainName,
     getChainNameByChainId,
     getDenomBySymbol,
@@ -14,7 +15,6 @@ import {
 } from "@chain-registry/utils";
 import { getAvailableAssets } from "../../../shared/helpers/cosmos-assets.ts";
 import { HandlerCallback } from "@elizaos/core";
-import { calculateAmountInDenomFromDisplayUnit } from "./ibc-swap-utils.ts";
 
 export class IBCSwapAction implements ICosmosActionService {
     constructor(private cosmosWalletChains: ICosmosWalletChains) {
@@ -63,9 +63,11 @@ export class IBCSwapAction implements ICosmosActionService {
 
         const route = await skipClient.route({
             smartSwapOptions: {},
-            amountOut: calculateAmountInDenomFromDisplayUnit(
+            amountOut: convertDisplayUnitToBaseUnit(
+                availableAssets,
+                params.fromTokenSymbol,
                 params.fromTokenAmount,
-                exponentFrom
+                params.fromChainName
             ),
             sourceAssetDenom: denomFrom,
             sourceAssetChainID: fromChain.chain_id,
