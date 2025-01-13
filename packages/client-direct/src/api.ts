@@ -9,6 +9,7 @@ import {
     UUID,
     validateCharacterConfig,
     ServiceType,
+    stringToUuid,
     Memory,
 } from "@elizaos/core";
 
@@ -313,6 +314,23 @@ export function createApiRouter(
             }
         }
     );
+
+    router.post("/utils/string-to-uuid", (req, res) => {
+        try {
+            const { value } = req.body;
+            if (!value) {
+                res.status(400).json({
+                    error: "Missing 'value' in request body",
+                });
+                return;
+            }
+
+            const uuid = stringToUuid(value);
+            res.json({ uuid });
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    });
 
     return router;
 }
