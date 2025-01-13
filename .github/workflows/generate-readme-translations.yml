@@ -1,6 +1,6 @@
-# name: Generate Readme Translations
-# on:
-#     push:
+on:
+  workflow_dispatch:
+   #push:
 #         branches:
 #             - "1222--README-ci-auto-translation"
 
