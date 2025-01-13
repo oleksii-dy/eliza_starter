@@ -33,7 +33,7 @@ export const followTemplate = `
 # Context
 {{recentMessages}}
 
-Task: Find the twitter / X username the {{agentName}} should follow based on the recent interactions and context.
-Only return the username, nothing else include the @ symbol.
-example: @elonmusk
+Task: Find the Twitter/X username that {{agentName}} should follow based on the recent interactions and context.
+Return the username with the @ symbol, nothing else.
+Example: @elonmusk
 `;
