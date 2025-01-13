@@ -6,7 +6,8 @@
     "author": "metaanomaly",
     "types": "dist/index.d.ts",
     "dependencies": {
-        "@elizaos/core": "workspace:*"
+        "@elizaos/core": "workspace:*",
+        "rss-to-json": "^2.1.1"
     },
     "devDependencies": {
         "@types/node": "^20.0.0",

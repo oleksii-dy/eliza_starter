@@ -35,7 +35,7 @@ const twitterPostTemplate = `
 
 # Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
 Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
-Your response should include the summary of the # NEWS above
+Your response must include the summary of the # NEWS above or pick any single news for your reference.
 Your response should be 1, 2, or 3 sentences (choose the length at random).
 Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than {{maxTweetLength}}. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.`;
 

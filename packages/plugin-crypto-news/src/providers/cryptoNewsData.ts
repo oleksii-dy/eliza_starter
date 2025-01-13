@@ -1,5 +1,5 @@
 import { elizaLogger, Provider } from "@elizaos/core";
-import { fetchSerperNews, SerperNewsResponse } from "../utils/serper";
+import { ChainCatcherResponse, fetchChainCatcher } from "../utils/chainCatcher";
 
 // interface FormattedMarketData {
 //     symbol: string;
@@ -51,26 +51,31 @@ export const cryptoNewsData: Provider = {
 
         try {
             // fetch several times
-            const cryptoNews: SerperNewsResponse =
-                await fetchSerperNews("crypto");
-            const suiNews: SerperNewsResponse = await fetchSerperNews("$SUI");
+            const chainCatcher: ChainCatcherResponse =
+                await fetchChainCatcher();
+
+            // const cryptoNews: SerperNewsResponse =
+            //     await fetchSerperNews("crypto");
+            // const suiNews: SerperNewsResponse = await fetchSerperNews("$SUI");
             let output = "# NEWS\n\n";
-            cryptoNews.news.forEach((article) => {
-                output += `- ${article.title}\n${article.snippet}\n\n`;
+
+            chainCatcher.items.forEach((article) => {
+                output += `- ${article.title}\n${article.content}\n\n`;
             });
-            suiNews.news.forEach((article) => {
-                output += `- ${article.title}\n${article.snippet}\n\n`;
-            });
-            output += `# END NEWS\n\n`;
+
+            // cryptoNews.news.forEach((article) => {
+            //     output += `- ${article.title}\n${article.snippet}\n\n`;
+            // });
+            // suiNews.news.forEach((article) => {
+            //     output += `- ${article.title}\n${article.snippet}\n\n`;
+            // });
+            output += `# News above are in Chinese Language, you have to translate it to ENGLISH \n\n# END NEWS\n\n`;
 
             elizaLogger.log(output);
 
             return output;
         } catch (error) {
-            console.error(
-                "Error in twitterTrendingMarketData provider:",
-                error
-            );
+            console.error("Error in fetching news provider:", error);
             return "";
         }
     },

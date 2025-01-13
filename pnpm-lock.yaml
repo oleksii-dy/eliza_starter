@@ -25,7 +25,7 @@ importers:
         version: 0.2.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       '@glacier-network/elizaos-adapter':
         specifier: 0.0.1-alpha.1
-        version: 0.0.1-alpha.1(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.29(openai@4.78.1(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.9)(bufferutil@4.0.9)(encoding@0.1.13)(react@18.3.1)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)(utf-8-validate@5.0.10)
+        version: 0.0.1-alpha.1(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.29(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.9)(bufferutil@4.0.9)(encoding@0.1.13)(react@18.3.1)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)(utf-8-validate@5.0.10)
       '@vitest/eslint-plugin':
         specifier: 1.0.1
         version: 1.0.1(@typescript-eslint/utils@8.16.0(eslint@9.16.0(jiti@2.4.2))(typescript@5.6.3))(eslint@9.16.0(jiti@2.4.2))(typescript@5.6.3)(vitest@2.1.5(@types/node@22.10.5)(jsdom@25.0.1(bufferutil@4.0.9)(canvas@2.11.2(encoding@0.1.13))(utf-8-validate@5.0.10))(terser@5.37.0))
@@ -1124,7 +1124,7 @@ importers:
     dependencies:
       '@elizaos/core':
         specifier: ^0.1.7
-        version: 0.1.7(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.29(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.9)(encoding@0.1.13)(react@18.3.1)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)
+        version: 0.1.8(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.29(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.9)(encoding@0.1.13)(react@18.3.1)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)
       axios:
         specifier: ^1.6.7
         version: 1.7.9(debug@4.4.0)
@@ -1171,6 +1171,9 @@ importers:
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
+      rss-to-json:
+        specifier: ^2.1.1
+        version: 2.1.1
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -1334,7 +1337,7 @@ importers:
     dependencies:
       '@elizaos/core':
         specifier: ^0.1.7
-        version: 0.1.7(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.29(openai@4.78.1(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.9)(encoding@0.1.13)(react@18.3.1)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)
+        version: 0.1.8(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.29(openai@4.78.1(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.9)(encoding@0.1.13)(react@18.3.1)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)
       tsup:
         specifier: ^8.3.5
         version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
@@ -2086,6 +2089,12 @@ packages:
     peerDependencies:
       zod: ^3.0.0
 
+  '@ai-sdk/mistral@1.0.8':
+    resolution: {integrity: sha512-jWH4HHK4cYvXaac9UprMiSUBwOVb3e0hpbiL1wPb+2bF75pqQQKFQWQyfmoLFrh1oXlMOGn+B6IzwUDSFHLanA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.0.0
+
   '@ai-sdk/openai@1.0.5':
     resolution: {integrity: sha512-JDCPBJQx9o3LgboBPaA55v+9EZ7Vm/ozy0+J5DIr2jJF8WETjeCnigdxixyzEy/Od4wX871jOTSuGffwNIi0kA==}
     engines: {node: '>=18'}
@@ -2119,6 +2128,15 @@ packages:
       zod:
         optional: true
 
+  '@ai-sdk/provider-utils@2.0.7':
+    resolution: {integrity: sha512-4sfPlKEALHPXLmMFcPlYksst3sWBJXmCDZpIBJisRrmwGG6Nn3mq0N1Zu/nZaGcrWZoOY+HT2Wbxla1oTElYHQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.0.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
+
   '@ai-sdk/provider@0.0.24':
     resolution: {integrity: sha512-XMsNGJdGO+L0cxhhegtqZ8+T6nn4EoShS819OvCgI2kLbYTIvk0GWFGD0AXJmxkxs3DrpsJxKAFukFR7bvTkgQ==}
     engines: {node: '>=18'}
@@ -2129,6 +2147,10 @@ packages:
 
   '@ai-sdk/provider@1.0.1':
     resolution: {integrity: sha512-mV+3iNDkzUsZ0pR2jG0sVzU6xtQY5DtSCBy3JFycLp6PwjyLw/iodfL3MwdmMCRJWgs3dadcHejRnMvF9nGTBg==}
+    engines: {node: '>=18'}
+
+  '@ai-sdk/provider@1.0.4':
+    resolution: {integrity: sha512-lJi5zwDosvvZER3e/pB8lj1MN3o3S7zJliQq56BRr4e9V3fcRyFtwP0JRxaRS5vHYX3OJ154VezVoQNrk0eaKw==}
     engines: {node: '>=18'}
 
   '@ai-sdk/react@0.0.70':
@@ -3954,6 +3976,9 @@ packages:
 
   '@elizaos/core@0.1.7':
     resolution: {integrity: sha512-oorLGxE0LAdboNFhf62erTxu0+woNHZn98at/X3caDX34Fxr+d1cRQ6/W34WPAOIlv1tg3Q0ZArcpCCOaDTcMw==}
+
+  '@elizaos/core@0.1.8':
+    resolution: {integrity: sha512-nQT5uQTQVTZJ3CrhVkK4dRdP/RuBMiOv/u3JZvMJGhY45z0Gy0gY27NEn/BBlJ4Ymt/SmqtXOul/x2hOeQen4Q==}
 
   '@emnapi/core@1.3.1':
     resolution: {integrity: sha512-pVGjBIt1Y6gg3EJN8jTcfpP/+uuRksIo055oE/OBkDNcjZqVbfkWCksG1Jp4yZnj3iKWyWX8fdG/j6UDYPbFog==}
@@ -11681,6 +11706,10 @@ packages:
     resolution: {integrity: sha512-xkjOecfnKGkSsOwtZ5Pz7Us/T6mrbPQrq0nh+aCO5V9nk5NLWmasAHumTKjiPJPWANe+kAZ84Jc8ooJkzZ88Sw==}
     hasBin: true
 
+  fast-xml-parser@4.5.1:
+    resolution: {integrity: sha512-y655CeyUQ+jj7KBbYMc4FG01V8ZQqjN+gDYGJ50RtfsUB8iG9AmwmwoAgeKLJdmueKKMrH1RJ7yXHTSoczdv5w==}
+    hasBin: true
+
   fastembed@1.14.1:
     resolution: {integrity: sha512-Y14v+FWZwjNUpQ7mRGYu4N5yF+hZkF7zqzPWzzLbwdIEtYsHy0DSpiVJ+Fg6Oi1fQjrBKASQt0hdSMSjw1/Wtw==}
 
@@ -13589,8 +13618,8 @@ packages:
     resolution: {integrity: sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==}
     engines: {node: '>=18'}
 
-  katex@0.16.19:
-    resolution: {integrity: sha512-3IA6DYVhxhBabjSLTNO9S4+OliA3Qvb8pBQXMfC4WxXJgLwZgnfDl0BmB4z6nBMdznBsZ+CGM8DrGZ5hcguDZg==}
+  katex@0.16.20:
+    resolution: {integrity: sha512-jjuLaMGD/7P8jUTpdKhA9IoqnH+yMFB3sdAFtq5QdAqeP2PjiSbnC3EaguKPNtv6dXXanHxp1ckwvF4a86LBig==}
     hasBin: true
 
   keccak@3.0.2:
@@ -14550,8 +14579,8 @@ packages:
       vue-tsc:
         optional: true
 
-  mlly@1.7.3:
-    resolution: {integrity: sha512-xUsx5n/mN0uQf4V548PKQ+YShA4/IW0KI1dZhrNrPCLG+xizETbHTkOa1f8/xut9JRPp8kQuMnz0oqwkTiLo/A==}
+  mlly@1.7.4:
+    resolution: {integrity: sha512-qmdSIPC4bDJXgZTCR7XosJiNKySV7O215tsPtDN9iEO/7q/76b/ijtgRu/+epFXSJhijtTCCGp3DWS549P3xKw==}
 
   mnemonist@0.38.5:
     resolution: {integrity: sha512-bZTFT5rrPKtPJxj8KSV0WkPyNxl72vQepqqVUAW2ARUpUSF2qXMB6jZj7hW5/k7C1rtpzqbD/IIbJwLXUjCHeg==}
@@ -15438,6 +15467,9 @@ packages:
 
   pathe@1.1.2:
     resolution: {integrity: sha512-whLdWMYL2TwI08hn8/ZqAbrVemu0LNaNNJZX73O6qaIdCTfXutsLhMkjdENX0qhsQ9uIimo4/aQOmXkoon2nDQ==}
+
+  pathe@2.0.1:
+    resolution: {integrity: sha512-6jpjMpOth5S9ITVu5clZ7NOgHNsv5vRQdheL9ztp2vZmM6fRbLvyua1tiBIL4lk8SAe3ARzeXEly6siXCjDHDw==}
 
   pathval@2.0.0:
     resolution: {integrity: sha512-vE7JKRyES09KiunauX7nd2Q9/L7lhok4smP9RZTDeD4MVs72Dp2qNFVz39Nz5a0FVEW0BJR6C0DYrq6unoziZA==}
@@ -17147,6 +17179,9 @@ packages:
   rrweb-cssom@0.8.0:
     resolution: {integrity: sha512-guoltQEx+9aMf2gDZ0s62EcV8lsXR+0w8915TC3ITdn2YueuNjdAYh/levpU9nFaoChh9RUS5ZdQMrKfVEN9tw==}
 
+  rss-to-json@2.1.1:
+    resolution: {integrity: sha512-xXf93iDpOadPWMtAUA/bT1iyifscdbIdtAQBGRbXLfnDQ5Z4tWpmbrAhV3p54nWxwm4joGIDeUrj6CLGm8BI3A==}
+
   rtl-detect@1.1.2:
     resolution: {integrity: sha512-PGMBq03+TTG/p/cRB7HCLKJ1MgDIi07+QU1faSjiYRfmY5UsAttV9Hs08jDAHVwcOwmVLcSJkpwyfXszVjWfIQ==}
 
@@ -17973,8 +18008,11 @@ packages:
   tar-fs@2.1.1:
     resolution: {integrity: sha512-V0r2Y9scmbDRLCNex/+hYzvp/zyYjvFbHPNgVTKfQvVrb6guiE/fxP+XblDNR011utopbkex2nM4dHNV6GDsng==}
 
-  tar-fs@3.0.6:
-    resolution: {integrity: sha512-iokBDQQkUyeXhgPYaZxmczGPhnhXZ0CmrqI+MOb/WFGS9DW5wnfrLgtjUJBvz50vQ3qfRwJ62QVoCFu8mPVu5w==}
+  tar-fs@2.1.2:
+    resolution: {integrity: sha512-EsaAXwxmx8UB7FRKqeozqEPop69DXcmYwTQwXvyAPF352HJsPdkVhvTaDPYqfNgruveJIJy3TA2l+2zj8LJIJA==}
+
+  tar-fs@3.0.7:
+    resolution: {integrity: sha512-2sAfoF/zw/2n8goUGnGRZTWTD4INtnScPZvyYBI6BDlJ3wNR5o1dw03EfBvuhG6GBLvC4J+C7j7W+64aZ0ogQA==}
 
   tar-stream@2.2.0:
     resolution: {integrity: sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ==}
@@ -19759,6 +19797,12 @@ snapshots:
       '@ai-sdk/provider-utils': 1.0.22(zod@3.23.8)
       zod: 3.23.8
 
+  '@ai-sdk/mistral@1.0.8(zod@3.23.8)':
+    dependencies:
+      '@ai-sdk/provider': 1.0.4
+      '@ai-sdk/provider-utils': 2.0.7(zod@3.23.8)
+      zod: 3.23.8
+
   '@ai-sdk/openai@1.0.5(zod@3.23.8)':
     dependencies:
       '@ai-sdk/provider': 1.0.1
@@ -19792,6 +19836,15 @@ snapshots:
     optionalDependencies:
       zod: 3.23.8
 
+  '@ai-sdk/provider-utils@2.0.7(zod@3.23.8)':
+    dependencies:
+      '@ai-sdk/provider': 1.0.4
+      eventsource-parser: 3.0.0
+      nanoid: 3.3.8
+      secure-json-parse: 2.7.0
+    optionalDependencies:
+      zod: 3.23.8
+
   '@ai-sdk/provider@0.0.24':
     dependencies:
       json-schema: 0.4.0
@@ -19801,6 +19854,10 @@ snapshots:
       json-schema: 0.4.0
 
   '@ai-sdk/provider@1.0.1':
+    dependencies:
+      json-schema: 0.4.0
+
+  '@ai-sdk/provider@1.0.4':
     dependencies:
       json-schema: 0.4.0
 
@@ -23192,12 +23249,64 @@ snapshots:
       - typeorm
       - vue
 
-  '@elizaos/core@0.1.7(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.29(openai@4.78.1(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.9)(encoding@0.1.13)(react@18.3.1)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)':
+  '@elizaos/core@0.1.8(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.29(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.9)(encoding@0.1.13)(react@18.3.1)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)':
     dependencies:
       '@ai-sdk/anthropic': 0.0.56(zod@3.23.8)
       '@ai-sdk/google': 0.0.55(zod@3.23.8)
       '@ai-sdk/google-vertex': 0.0.43(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(zod@3.23.8)
       '@ai-sdk/groq': 0.0.3(zod@3.23.8)
+      '@ai-sdk/mistral': 1.0.8(zod@3.23.8)
+      '@ai-sdk/openai': 1.0.5(zod@3.23.8)
+      '@anthropic-ai/sdk': 0.30.1(encoding@0.1.13)
+      '@fal-ai/client': 1.2.0
+      '@types/uuid': 10.0.0
+      ai: 3.4.33(openai@4.73.0(encoding@0.1.13)(zod@3.23.8))(react@18.3.1)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)(zod@3.23.8)
+      anthropic-vertex-ai: 1.0.2(encoding@0.1.13)(zod@3.23.8)
+      fastembed: 1.14.1
+      fastestsmallesttextencoderdecoder: 1.0.22
+      gaxios: 6.7.1(encoding@0.1.13)
+      glob: 11.0.0
+      handlebars: 4.7.8
+      js-sha1: 0.7.0
+      js-tiktoken: 1.0.15
+      langchain: 0.3.6(@langchain/core@0.3.29(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.9)(encoding@0.1.13)(handlebars@4.7.8)(openai@4.73.0(encoding@0.1.13)(zod@3.23.8))
+      ollama-ai-provider: 0.16.1(zod@3.23.8)
+      openai: 4.73.0(encoding@0.1.13)(zod@3.23.8)
+      tinyld: 1.3.4
+      together-ai: 0.7.0(encoding@0.1.13)
+      unique-names-generator: 4.7.1
+      uuid: 11.0.3
+      zod: 3.23.8
+    transitivePeerDependencies:
+      - '@google-cloud/vertexai'
+      - '@langchain/anthropic'
+      - '@langchain/aws'
+      - '@langchain/cohere'
+      - '@langchain/core'
+      - '@langchain/google-genai'
+      - '@langchain/google-vertexai'
+      - '@langchain/groq'
+      - '@langchain/mistralai'
+      - '@langchain/ollama'
+      - axios
+      - cheerio
+      - encoding
+      - peggy
+      - react
+      - solid-js
+      - sswr
+      - supports-color
+      - svelte
+      - typeorm
+      - vue
+
+  '@elizaos/core@0.1.8(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.29(openai@4.78.1(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.9)(encoding@0.1.13)(react@18.3.1)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)':
+    dependencies:
+      '@ai-sdk/anthropic': 0.0.56(zod@3.23.8)
+      '@ai-sdk/google': 0.0.55(zod@3.23.8)
+      '@ai-sdk/google-vertex': 0.0.43(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(zod@3.23.8)
+      '@ai-sdk/groq': 0.0.3(zod@3.23.8)
+      '@ai-sdk/mistral': 1.0.8(zod@3.23.8)
       '@ai-sdk/openai': 1.0.5(zod@3.23.8)
       '@anthropic-ai/sdk': 0.30.1(encoding@0.1.13)
       '@fal-ai/client': 1.2.0
@@ -24142,9 +24251,9 @@ snapshots:
       - debug
       - utf-8-validate
 
-  '@glacier-network/elizaos-adapter@0.0.1-alpha.1(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.29(openai@4.78.1(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.9)(bufferutil@4.0.9)(encoding@0.1.13)(react@18.3.1)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)(utf-8-validate@5.0.10)':
+  '@glacier-network/elizaos-adapter@0.0.1-alpha.1(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.29(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.9)(bufferutil@4.0.9)(encoding@0.1.13)(react@18.3.1)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)(utf-8-validate@5.0.10)':
     dependencies:
-      '@elizaos/core': 0.1.7(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.29(openai@4.78.1(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.9)(encoding@0.1.13)(react@18.3.1)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)
+      '@elizaos/core': 0.1.7(@google-cloud/vertexai@1.9.2(encoding@0.1.13))(@langchain/core@0.3.29(openai@4.73.0(encoding@0.1.13)(zod@3.23.8)))(axios@1.7.9)(encoding@0.1.13)(react@18.3.1)(sswr@2.1.0(svelte@5.17.3))(svelte@5.17.3)
       '@glacier-network/client': 0.2.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       '@tavily/core': 0.0.2
       dotenv: 16.4.7
@@ -24302,7 +24411,7 @@ snapshots:
       globals: 15.14.0
       kolorist: 1.8.0
       local-pkg: 0.5.1
-      mlly: 1.7.3
+      mlly: 1.7.4
     transitivePeerDependencies:
       - supports-color
 
@@ -30345,7 +30454,7 @@ snapshots:
       globby: 14.0.2
       magic-string: 0.30.17
       mdbox: 0.1.1
-      mlly: 1.7.3
+      mlly: 1.7.4
       ofetch: 1.4.1
       pathe: 1.1.2
       perfect-debounce: 1.0.0
@@ -31080,7 +31189,7 @@ snapshots:
       dotenv: 16.4.7
       giget: 1.2.3
       jiti: 2.4.0
-      mlly: 1.7.3
+      mlly: 1.7.4
       ohash: 1.1.4
       pathe: 1.1.2
       perfect-debounce: 1.0.0
@@ -33737,7 +33846,7 @@ snapshots:
 
   extract-zip@2.0.1:
     dependencies:
-      debug: 4.4.0(supports-color@8.1.1)
+      debug: 4.3.4
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
@@ -33784,6 +33893,10 @@ snapshots:
   fast-uri@3.0.5: {}
 
   fast-xml-parser@4.4.1:
+    dependencies:
+      strnum: 1.0.5
+
+  fast-xml-parser@4.5.1:
     dependencies:
       strnum: 1.0.5
 
@@ -36503,7 +36616,7 @@ snapshots:
 
   jwt-decode@4.0.0: {}
 
-  katex@0.16.19:
+  katex@0.16.20:
     dependencies:
       commander: 8.3.0
 
@@ -36872,7 +36985,7 @@ snapshots:
 
   local-pkg@0.5.1:
     dependencies:
-      mlly: 1.7.3
+      mlly: 1.7.4
       pkg-types: 1.3.0
 
   locate-character@3.0.0: {}
@@ -37406,7 +37519,7 @@ snapshots:
       dagre-d3-es: 7.0.11
       dayjs: 1.11.13
       dompurify: 3.2.2
-      katex: 0.16.19
+      katex: 0.16.20
       khroma: 2.1.0
       lodash-es: 4.17.21
       marked: 13.0.3
@@ -37893,7 +38006,7 @@ snapshots:
       defu: 6.1.4
       esbuild: 0.24.2
       jiti: 1.21.7
-      mlly: 1.7.3
+      mlly: 1.7.4
       pathe: 1.1.2
       pkg-types: 1.3.0
       postcss: 8.4.49
@@ -37903,10 +38016,10 @@ snapshots:
     optionalDependencies:
       typescript: 5.7.3
 
-  mlly@1.7.3:
+  mlly@1.7.4:
     dependencies:
       acorn: 8.14.0
-      pathe: 1.1.2
+      pathe: 2.0.1
       pkg-types: 1.3.0
       ufo: 1.5.4
 
@@ -39059,6 +39172,8 @@ snapshots:
 
   pathe@1.1.2: {}
 
+  pathe@2.0.1: {}
+
   pathval@2.0.0: {}
 
   pbkdf2@3.1.2:
@@ -39191,7 +39306,7 @@ snapshots:
   pkg-types@1.3.0:
     dependencies:
       confbox: 0.1.8
-      mlly: 1.7.3
+      mlly: 1.7.4
       pathe: 1.1.2
 
   pkg-up@3.1.0:
@@ -39994,7 +40109,7 @@ snapshots:
       pump: 3.0.2
       rc: 1.2.8
       simple-get: 4.0.1
-      tar-fs: 2.1.1
+      tar-fs: 2.1.2
       tunnel-agent: 0.6.0
 
   prelude-ls@1.2.1: {}
@@ -41042,6 +41157,13 @@ snapshots:
 
   rrweb-cssom@0.8.0: {}
 
+  rss-to-json@2.1.1:
+    dependencies:
+      axios: 1.7.9(debug@4.4.0)
+      fast-xml-parser: 4.5.1
+    transitivePeerDependencies:
+      - debug
+
   rtl-detect@1.1.2: {}
 
   rtlcss@4.3.0:
@@ -41330,7 +41452,7 @@ snapshots:
       prebuild-install: 7.1.2
       semver: 7.6.3
       simple-get: 4.0.1
-      tar-fs: 3.0.6
+      tar-fs: 3.0.7
       tunnel-agent: 0.6.0
 
   sharp@0.33.5:
@@ -42055,7 +42177,14 @@ snapshots:
       pump: 3.0.2
       tar-stream: 2.2.0
 
-  tar-fs@3.0.6:
+  tar-fs@2.1.2:
+    dependencies:
+      chownr: 1.1.4
+      mkdirp-classic: 0.5.3
+      pump: 3.0.2
+      tar-stream: 2.2.0
+
+  tar-fs@3.0.7:
     dependencies:
       pump: 3.0.2
       tar-stream: 3.1.7
@@ -42809,7 +42938,7 @@ snapshots:
       jiti: 1.21.7
       magic-string: 0.30.17
       mkdist: 1.6.0(typescript@5.7.3)
-      mlly: 1.7.3
+      mlly: 1.7.4
       pathe: 1.1.2
       pkg-types: 1.3.0
       pretty-bytes: 6.1.1
