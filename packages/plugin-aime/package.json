@@ -1,6 +1,6 @@
 {
-    "name": "@elizaos/plugin-onchaindna",
-    "version": "0.1.5-alpha.5",
+    "name": "@elizaos/plugin-aime",
+    "version": "0.0.1",
     "main": "dist/index.js",
     "type": "module",
     "types": "dist/index.d.ts",

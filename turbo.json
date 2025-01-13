@@ -46,7 +46,7 @@
                 "@elizaos/plugin-node#build"
             ]
         },
-        "@elizaos/plugin-onchainDNA#build": {
+        "@elizaos/plugin-aime#build": {
             "outputs": [
                 "dist/**"
             ],

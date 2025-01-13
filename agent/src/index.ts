@@ -70,7 +70,7 @@ import { lensPlugin } from "@elizaos/plugin-lensNetwork";
 import { multiversxPlugin } from "@elizaos/plugin-multiversx";
 import { nearPlugin } from "@elizaos/plugin-near";
 import { nftGenerationPlugin } from "@elizaos/plugin-nft-generation";
-import { onchainDNAPlugin } from "@elizaos/plugin-onchaindna";
+import { aimePlugin } from "@elizaos/plugin-aime";
 import { createNodePlugin } from "@elizaos/plugin-node";
 import { obsidianPlugin } from "@elizaos/plugin-obsidian";
 import { sgxPlugin } from "@elizaos/plugin-sgx";
@@ -774,7 +774,7 @@ export async function createAgent(
             getSecret(character, "SOLANA_ADMIN_PRIVATE_KEY")
                 ? nftGenerationPlugin
                 : null,
-            getSecret(character, "OPENAI_API_KEY") ? onchainDNAPlugin : null,
+            getSecret(character, "OPENAI_API_KEY") ? aimePlugin : null,
             getSecret(character, "ZEROG_PRIVATE_KEY") ? zgPlugin : null,
             getSecret(character, "COINMARKETCAP_API_KEY")
                 ? coinmarketcapPlugin

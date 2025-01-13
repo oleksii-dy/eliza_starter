@@ -1,14 +1,14 @@
-# Onchain-DNA Provider for Eliza
+# AIME Onchain-DNA Provider for Eliza
 
-The Onchain-DNA Provider for Eliza extends the functionality of the Eliza platform by enabling AI to access and utilize NFT-based knowledge stored on the blockchain. This provider allows AI models to incorporate on-chain DNA information into their responses and behaviors.
+The AIME Onchain-DNA Provider for Eliza extends the functionality of the Eliza platform by enabling AI to access and utilize NFT-based knowledge stored on the blockchain. This provider allows AI models to incorporate on-chain DNA information into their responses and behaviors.
 
 ## Description
 
-The Onchain-DNA Provider integrates blockchain-based NFT data into the Eliza platform, allowing AI models to access and utilize knowledge encoded in NFTs. This provider creates a bridge between on-chain AI-related NFTs and AI language models.
+The AIME Onchain-DNA Provider integrates blockchain-based NFT data into the Eliza platform, allowing AI models to access and utilize knowledge encoded in NFTs. This provider creates a bridge between on-chain AI-related NFTs and AI language models.
 
 ## Providers
 
-- **onchainDNAProvider**: This provider enables access to NFT-based knowledge stored on the blockchain. It can:
+- **aimeProvider**: This provider enables access to NFT-based knowledge stored on the blockchain. It can:
     - Read and interpret NFT metadata related to AI characteristics
     - Access on-chain DNA information
     - Integrate blockchain-based knowledge into AI responses
@@ -23,7 +23,7 @@ The Onchain-DNA Provider integrates blockchain-based NFT data into the Eliza pla
 
 ## How to Use
 
-To use the Onchain-DNA Provider in your Eliza implementation:
+To use the AIME Onchain-DNA Provider in your Eliza implementation:
 
 1. Configure blockchain network settings
 2. Specify target NFT collections or contracts
@@ -36,11 +36,11 @@ Update `character.json` with the following configuration to enable the plugin:
 
 ```json
 "plugins": [
-    "@elizaos/plugin-onchaindna"
+    "@elizaos/plugin-aime"
 ]
 ```
 
-This ensures that the **`@elizaos/plugin-onchaindna`** plugin is loaded and operational within your Eliza Agent Framework, enabling seamless integration with onchain-DNA of AI.
+This ensures that the **`@elizaos/plugin-aime`** plugin is loaded and operational within your Eliza Agent Framework, enabling seamless integration with AIME onchain-DNA of AI.
 
 ## Future Enhancements
 
@@ -67,7 +67,7 @@ This ensures that the **`@elizaos/plugin-onchaindna`** plugin is loaded and oper
 
 ## Extension Points
 
-The Onchain-DNA Provider can be extended to support:
+The AIME Onchain-DNA Provider can be extended to support:
 
 - Custom DNA data formats
 - Enhanced interpretation methods

@@ -2,7 +2,7 @@ import { Provider, IAgentRuntime, Memory, elizaLogger } from "@elizaos/core";
 
 const CHARACTER_ID = "b00918728e0a4e5f80f0d9233eca4040";
 
-export const NFTRetrievalProvider: Provider = {
+export const dnaProvider: Provider = {
     get: async (runtime: IAgentRuntime, message: Memory) => {
         try {
             // Get recent messages for context
