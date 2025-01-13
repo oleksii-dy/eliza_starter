@@ -115,8 +115,17 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         agentId?: UUID;
         tableName: string;
     }): Promise<Memory[]> {
+        // Determine which memories table to use based on the tableName
+        const embeddingSize = params.tableName.includes('_') ?
+            parseInt(params.tableName.split('_')[1]) :
+            1536; // default to 1536 if not specified
+
+        const actualTableName = `memories_${embeddingSize}`;
+
+        elizaLogger.info(`Querying memories from table: ${actualTableName}`);
+
         let query = this.supabase
-            .from(params.tableName)
+            .from(actualTableName)
             .select("*")
             .in("roomId", params.roomIds);
 
@@ -127,7 +136,12 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         const { data, error } = await query;
 
         if (error) {
-            elizaLogger.error("Error retrieving memories by room IDs:", error);
+            elizaLogger.error("Error retrieving memories by room IDs:", {
+                error,
+                tableName: actualTableName,
+                roomIds: params.roomIds,
+                agentId: params.agentId
+            });
             return [];
         }
 
@@ -259,12 +273,15 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         roomId: UUID;
         type: string;
     }): Promise<void> {
-        const { error } = await this.supabase.from("logs").insert({
-            body: params.body,
-            userId: params.userId,
-            roomId: params.roomId,
-            type: params.type,
-        });
+        const { error } = await this.supabase
+            .from("logs")
+            .insert({
+                id: uuid(),
+                body: params.body,
+                userId: params.userId,
+                roomId: params.roomId,
+                type: params.type,
+            });
 
         if (error) {
             elizaLogger.error("Error inserting log:", error);
@@ -350,18 +367,25 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     }
 
     async getMemoryById(memoryId: UUID): Promise<Memory | null> {
-        const { data, error } = await this.supabase
-            .from("memories")
-            .select("*")
-            .eq("id", memoryId)
-            .single();
+        // Try each memory table since we don't know which one contains the memory
+        for (const size of [384, 768, 1024, 1536]) {
+            const { data, error } = await this.supabase
+                .from(`memories_${size}`)
+                .select('*')
+                .eq('id', memoryId)
+                .maybeSingle();  // Use maybeSingle() instead of single()
 
-        if (error) {
-            elizaLogger.error("Error retrieving memory by ID:", error);
-            return null;
+            if (error && error.code !== 'PGRST116') {
+                elizaLogger.error(`Error checking memories_${size}:`, error);
+                continue;
+            }
+
+            if (data) {
+                return data as Memory;
+            }
         }
 
-        return data as Memory;
+        return null;
     }
 
     async createMemory(
@@ -369,11 +393,27 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         tableName: string,
         unique = false
     ): Promise<void> {
-        const createdAt = memory.createdAt ?? Date.now();
+        // ✅ Convert from milliseconds to seconds
+        const createdAt = memory.createdAt
+            ? new Date(memory.createdAt).toISOString()
+            : new Date().toISOString();
+
+        // Determine which table to use based on embedding size
+        const embeddingSize = memory.embedding?.length;
+        if (!embeddingSize) {
+            throw new Error('Memory must have an embedding');
+        }
+
+        // Validate embedding size
+        if (![384, 768, 1024, 1536].includes(embeddingSize)) {
+            throw new Error(`Unsupported embedding size: ${embeddingSize}`);
+        }
+
+        const actualTableName = `memories_${embeddingSize}`;
+
         if (unique) {
             const opts = {
-                // TODO: Add ID option, optionally
-                query_table_name: tableName,
+                query_table_name: actualTableName,
                 query_userId: memory.userId,
                 query_content: memory.content.text,
                 query_roomId: memory.roomId,
@@ -392,14 +432,20 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             }
         } else {
             const result = await this.supabase
-                .from("memories")
-                .insert({ ...memory, createdAt, type: tableName });
-            const { error } = result;
-            if (error) {
-                throw new Error(JSON.stringify(error));
+                .from(actualTableName)
+                .insert({
+                    ...memory,
+                    id: memory.id, // Ensure ID is included
+                    createdAt,
+                    type: tableName
+                });
+
+            if (result.error) {
+                throw new Error(JSON.stringify(result.error));
             }
         }
     }
+
 
     async removeMemory(memoryId: UUID): Promise<void> {
         const result = await this.supabase
@@ -481,7 +527,9 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     }
 
     async createGoal(goal: Goal): Promise<void> {
-        const { error } = await this.supabase.from("goals").insert(goal);
+        const { error } = await this.supabase
+            .from("goals")
+            .insert({ ...goal, id: goal.id || uuid() });
         if (error) {
             throw new Error(`Error creating goal: ${error.message}`);
         }
@@ -568,7 +616,11 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     async addParticipant(userId: UUID, roomId: UUID): Promise<boolean> {
         const { error } = await this.supabase
             .from("participants")
-            .insert({ userId: userId, roomId: roomId });
+            .insert({
+                id: uuid(), // Generate a new UUID for the participant
+                userId: userId,
+                roomId: roomId
+            });
 
         if (error) {
             elizaLogger.error(`Error adding participant: ${error.message}`);
@@ -603,27 +655,26 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         let roomId: UUID;
 
         if (!allRoomData || allRoomData.length === 0) {
-            // If no existing room is found, create a new room
-            const { data: newRoomData, error: roomsError } = await this.supabase
+            // Create new room with UUID
+            const newRoomId = uuid() as UUID;
+            const { error: roomsError } = await this.supabase
                 .from("rooms")
-                .insert({})
-                .single();
+                .insert({ id: newRoomId });
 
             if (roomsError) {
                 throw new Error("Room creation error: " + roomsError.message);
             }
 
-            roomId = (newRoomData as Room)?.id as UUID;
+            roomId = newRoomId;
         } else {
-            // If an existing room is found, use the first room's ID
             roomId = allRoomData[0];
         }
 
         const { error: participantsError } = await this.supabase
             .from("participants")
             .insert([
-                { userId: params.userA, roomId },
-                { userId: params.userB, roomId },
+                { id: uuid(), userId: params.userA, roomId },
+                { id: uuid(), userId: params.userB, roomId },
             ]);
 
         if (participantsError) {
@@ -632,17 +683,16 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             );
         }
 
-        // Create or update the relationship between the two users
+        // Create relationship with UUID
         const { error: relationshipError } = await this.supabase
             .from("relationships")
             .upsert({
+                id: uuid(),
                 userA: params.userA,
                 userB: params.userB,
                 userId: params.userA,
                 status: "FRIENDS",
-            })
-            .eq("userA", params.userA)
-            .eq("userB", params.userB);
+            });
 
         if (relationshipError) {
             throw new Error(
@@ -692,7 +742,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             .select('value')
             .eq('key', params.key)
             .eq('agentId', params.agentId)
-            .single();
+            .maybeSingle();
 
         if (error) {
             elizaLogger.error('Error fetching cache:', error);
@@ -713,7 +763,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                 key: params.key,
                 agentId: params.agentId,
                 value: params.value,
-                createdAt: new Date()
+                createdAt: new Date().toISOString()
             });
 
         if (error) {
@@ -844,11 +894,11 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             const { error } = await this.supabase
                 .from('knowledge')
                 .insert({
-                    id: knowledge.id,
+                    id: knowledge.id || uuid(),
                     agentId: metadata.isShared ? null : knowledge.agentId,
                     content: knowledge.content,
                     embedding: knowledge.embedding ? Array.from(knowledge.embedding) : null,
-                    createdAt: knowledge.createdAt || new Date(),
+                    createdAt: knowledge.createdAt || new Date().toISOString(),
                     isMain: metadata.isMain || false,
                     originalId: metadata.originalId || null,
                     chunkIndex: metadata.chunkIndex || null,
