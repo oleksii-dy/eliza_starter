@@ -13,7 +13,7 @@ import {
     GenerateObjectResult,
 } from "ai";
 import { Buffer } from "buffer";
-import https from 'https';
+import https from "https";
 import { encodingForModel, TiktokenModel } from "js-tiktoken";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { createOllama } from "ollama-ai-provider";
@@ -342,7 +342,23 @@ export async function generateText({
                     presencePenalty: presence_penalty,
                     experimental_telemetry: experimental_telemetry,
                 });
-
+                // console.log({
+                //     model: openai.languageModel(model),
+                //     prompt: context,
+                //     system:
+                //         runtime.character.system ??
+                //         settings.SYSTEM_PROMPT ??
+                //         undefined,
+                //     tools: tools,
+                //     onStepFinish: onStepFinish,
+                //     maxSteps: maxSteps,
+                //     temperature: temperature,
+                //     maxTokens: max_response_length,
+                //     frequencyPenalty: frequency_penalty,
+                //     presencePenalty: presence_penalty,
+                //     experimental_telemetry: experimental_telemetry,
+                //     openaiResponse,
+                // });
                 response = openaiResponse;
                 elizaLogger.debug("Received response from OpenAI model.");
                 break;
@@ -1506,7 +1522,7 @@ export const generateWebSearch = async (
             searchDepth: "advanced", // "basic"(default) "advanced"
             includeImages: false, // false (default) true
         });
-        console.log(`TVLY RES`,response);
+        console.log(`TVLY RES`, response);
         return response;
     } catch (error) {
         elizaLogger.error("Error:", error);
@@ -1524,45 +1540,59 @@ export const generateSerperSearch = async (
         //const cleanedQuery =  query.replace(/@\S+/g, '');
         //console.log(`CLEANED QUERY`,cleanedQuery)
         const data = JSON.stringify({
-            q: query
+            q: query,
         });
 
         const options = {
-            hostname: 'google.serper.dev',
+            hostname: "google.serper.dev",
             port: 443,
-            path: '/search',
-            method: 'POST',
+            path: "/search",
+            method: "POST",
             headers: {
-                'X-API-KEY': apiKey,
-                'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(data),
-            }
+                "X-API-KEY": apiKey,
+                "Content-Type": "application/json",
+                "Content-Length": Buffer.byteLength(data),
+            },
         };
 
         const sendRequest = (): Promise<SerperSearchResponse> => {
             return new Promise((resolve, reject) => {
                 const req = https.request(options, (res) => {
-                    let body = '';
+                    let body = "";
 
-                    res.on('data', (chunk) => {
+                    res.on("data", (chunk) => {
                         body += chunk;
                     });
 
-                    res.on('end', () => {
-                        if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+                    res.on("end", () => {
+                        if (
+                            res.statusCode &&
+                            res.statusCode >= 200 &&
+                            res.statusCode < 300
+                        ) {
                             try {
-                                const parsedData = JSON.parse(body) as SerperSearchResponse;
+                                const parsedData = JSON.parse(
+                                    body
+                                ) as SerperSearchResponse;
                                 resolve(parsedData);
                             } catch (err) {
-                                reject(new Error(`Failed to parse response: ${err}`));
+                                reject(
+                                    new Error(
+                                        `Failed to parse response: ${err}`
+                                    )
+                                );
                             }
                         } else {
-                            reject(new Error(`Request failed with status code: ${res.statusCode}`));
+                            reject(
+                                new Error(
+                                    `Request failed with status code: ${res.statusCode}`
+                                )
+                            );
                         }
                     });
                 });
 
-                req.on('error', (err) => {
+                req.on("error", (err) => {
                     reject(err);
                 });
 
