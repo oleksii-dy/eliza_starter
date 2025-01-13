@@ -17,13 +17,19 @@ export const OODASchema = z.object({
     branch: z.string().nullable().optional(),
     title: z.string().nullable().optional(),
     description: z.string().nullable().optional(),
-    files: z.array(z.object({ path: z.string(), content: z.string() })).nullable().optional(),
+    files: z
+        .array(z.object({ path: z.string(), content: z.string() }))
+        .nullable()
+        .optional(),
     message: z.string().nullable().optional(),
     labels: z.array(z.string()).nullable().optional(),
     issue: z.number().nullable().optional(),
     reasoning: z.string().nullable().optional(),
-    reaction: z.enum(githubReactions as [string, ...string[]]).nullable().optional(),
-})
+    reaction: z
+        .enum(githubReactions as [string, ...string[]])
+        .nullable()
+        .optional(),
+});
 
 export interface OODAContent {
     action: string;
@@ -41,8 +47,11 @@ export interface OODAContent {
     reaction?: string;
 }
 
-export const isOODAContent = (
-    object: any
-): object is OODAContent => {
+export const isOODAContent = (object: any): object is OODAContent => {
     return OODASchema.safeParse(object).success;
 };
+
+export enum ClientStage {
+    GITHUB_INFO_DISCOVERY = "GITHUB_INFO_DISCOVERY",
+    OODA = "OODA",
+}

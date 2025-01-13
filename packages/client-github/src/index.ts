@@ -22,7 +22,7 @@ import {
     GitHubService,
     savePullRequestsToMemory,
 } from "@elizaos/plugin-github";
-import { isOODAContent, OODAContent, OODASchema } from "./types";
+import { ClientStage, isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
 import fs from "fs/promises";
 import { configGithubInfoAction } from "./actions/configGithubInfo";
@@ -32,7 +32,10 @@ export class GitHubClient extends EventEmitter {
     runtime: IAgentRuntime;
     character: Character;
     state: State | null;
+    githubInfoDiscoveryInterval: NodeJS.Timeout | null;
     oodaInterval: NodeJS.Timeout | null;
+    stage: ClientStage;
+    roomId: UUID;
 
     constructor(runtime: IAgentRuntime) {
         super();
@@ -42,78 +45,48 @@ export class GitHubClient extends EventEmitter {
         this.runtime = runtime;
         this.character = runtime.character;
         this.state = null;
+        this.githubInfoDiscoveryInterval = null;
         this.oodaInterval = null;
+        this.stage = ClientStage.GITHUB_INFO_DISCOVERY;
+        this.roomId = stringToUuid(`default-room-${this.runtime.agentId}`);
 
-        // register client actions
+        // start the github info discovery loop
+        this.startGithubInfoDiscoveryLoop();
+    }
+
+    private async startGithubInfoDiscoveryLoop() {
+        await this.participantInRoom();
+
+        // register action
         this.runtime.registerAction(configGithubInfoAction);
 
-        // Start the OODA loop after initialization
-        this.startOodaLoop();
-    }
-
-    async stop() {
-        try {
-            if (this.oodaInterval) {
-                clearInterval(this.oodaInterval);
-                this.oodaInterval = null;
-            }
-            elizaLogger.log("GitHubClient stopped successfully.");
-        } catch (e) {
-            elizaLogger.error("GitHubClient stop error:", e);
-        }
-    }
-
-    private startOodaLoop() {
         const interval =
-            Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) || 1000; // Default to 1 second
-        elizaLogger.log("Starting OODA loop with interval:", interval);
-        this.oodaInterval = setInterval(() => {
-            this.processOodaCycle();
+            Number(
+                this.runtime.getSetting("GITHUB_INFO_DISCOVERY_INTERVAL_MS")
+            ) || 1000; // Default to 1 second
+        elizaLogger.log(
+            "Starting Github info discovery loop with interval:",
+            interval
+        );
+        this.githubInfoDiscoveryInterval = setInterval(async () => {
+            await this.processGithubInfoDiscoveryCycle();
         }, interval);
     }
 
-    private async processOodaCycle() {
-        elizaLogger.log("Starting OODA cycle...");
-
-        //
-        // 1) retrieve github information
-        //
-        // const { owner, repository, branch } = getRepositorySettings(
-        //     this.runtime
-        // );
-        // const client = new GitHubService({
-        //     owner,
-        //     repo: repository,
-        //     branch,
-        //     auth: this.apiToken,
-        // });
-        // const issue = await client.getIssue(1);
-        // await fs.writeFile("/tmp/client-github-issue.txt", JSON.stringify(issue, null, 2));
-        // const res = await client.addLabelsToLabelable(issue.node_id, ["agent-commented"]);
-        // await fs.writeFile("/tmp/client-github-response.txt", JSON.stringify(res, null, 2));
-
-        //
-        // 2) prepare the room id
-        //
-        // TODO: We generate this, we want the default one that gets generated
-        // const roomId = getRepositoryRoomId(this.runtime);
-        // elizaLogger.log("Repository room ID:", roomId);
-        const roomId = stringToUuid(`default-room-${this.runtime.agentId}`);
-
-        // Observe: Gather relevant memories related to the repository
-        await this.runtime.ensureRoomExists(roomId);
-        elizaLogger.log("Room exists for roomId:", roomId);
+    async participantInRoom() {
+        await this.runtime.ensureRoomExists(this.roomId);
         await this.runtime.ensureParticipantInRoom(
             this.runtime.agentId,
-            roomId
+            this.roomId
         );
-        elizaLogger.log("Agent is a participant in roomId:", roomId);
+        elizaLogger.log("Agent is a participant in roomId:", this.roomId);
+    }
 
-        //
-        // 3) retrieve memories
-        //
+    private async processGithubInfoDiscoveryCycle() {
+        elizaLogger.log("Processing Github info discovery cycle...");
+
         const memories = await this.runtime.messageManager.getMemories({
-            roomId,
+            roomId: this.roomId,
         });
         await fs.writeFile(
             "/tmp/client-github-memories.txt",
@@ -122,26 +95,13 @@ export class GitHubClient extends EventEmitter {
 
         // if memories is empty stop the cycle
         if (memories.length === 0) {
-            elizaLogger.log("No memories found, stopping OODA cycle.");
+            elizaLogger.log(
+                "No memories found, skip the github info discovery cycle."
+            );
             return;
         }
 
         const message = memories[0];
-
-        // const state: State = {
-        //     userId: message.userId,
-        //     agentId: message.agentId,
-        //     bio: this.character.bio as string,
-        //     lore: this.character.lore.join("\n"),
-        //     messageDirections: this.character.messageExamples.join("\n"),
-        //     postDirections: this.character.postExamples.join("\n"),
-        //     roomId,
-        //     agentName: this.character.name,
-        //     senderName: this.character.name,
-        //     actors: "",
-        //     recentMessages: JSON.stringify(memories),
-        //     recentMessagesData: memories,
-        // };
 
         if (!this.state) {
             this.state = (await this.runtime.composeState(message)) as State;
@@ -185,14 +145,147 @@ export class GitHubClient extends EventEmitter {
             JSON.stringify(content, null, 2)
         );
 
-        // if content has the owen, repo and branch fields set, then we can stop the ooda cycle
-        if (content.owner && content.repo && content.branch) {
+        // if content has the owner, repo and branch fields set, then we can stop the github info discovery cycle
+        if (
+            this.stage === ClientStage.GITHUB_INFO_DISCOVERY &&
+            content.owner &&
+            content.repo &&
+            content.branch
+        ) {
             elizaLogger.log(
-                "Repository configuration complete, stopping OODA loop."
+                "Repository configuration complete, updating stage to OODA, unregistering action and stopping github info discovery loop and starting ooda loop."
             );
-            this.stop();
+
+            this.stopGithubInfoDiscoveryLoop();
+            this.startOodaLoop();
+        }
+    }
+
+    private stopGithubInfoDiscoveryLoop() {
+        if (this.githubInfoDiscoveryInterval) {
+            clearInterval(this.githubInfoDiscoveryInterval);
+            this.githubInfoDiscoveryInterval = null;
+
+            // unregister action
+            this.runtime.actions = this.runtime.actions.filter(
+                (action) => action.name !== "CONFIG_GITHUB_INFO"
+            );
+
+            // set stage to OODA
+            this.stage = ClientStage.OODA;
+        }
+    }
+
+    async stopOodaLoop() {
+        try {
+            if (this.oodaInterval) {
+                clearInterval(this.oodaInterval);
+                this.oodaInterval = null;
+            }
+            elizaLogger.log("GitHubClient stopped successfully.");
+        } catch (e) {
+            elizaLogger.error("GitHubClient stop error:", e);
+        }
+    }
+
+    private startOodaLoop() {
+        const interval =
+            Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) || 60000; // Default to 1 minute
+        elizaLogger.log("Starting OODA loop with interval:", interval);
+        this.oodaInterval = setInterval(() => {
+            this.processOodaCycle();
+        }, interval);
+    }
+
+    private async processOodaCycle() {
+        elizaLogger.log("Starting OODA cycle...");
+
+        //
+        // 1) retrieve github information
+        //
+        // const { owner, repository, branch } = getRepositorySettings(
+        //     this.runtime
+        // );
+        // const client = new GitHubService({
+        //     owner,
+        //     repo: repository,
+        //     branch,
+        //     auth: this.apiToken,
+        // });
+        // const issue = await client.getIssue(1);
+        // await fs.writeFile("/tmp/client-github-issue.txt", JSON.stringify(issue, null, 2));
+        // const res = await client.addLabelsToLabelable(issue.node_id, ["agent-commented"]);
+        // await fs.writeFile("/tmp/client-github-response.txt", JSON.stringify(res, null, 2));
+
+        //
+        // 2) prepare the room id
+        //
+        // TODO: We generate this, we want the default one that gets generated
+        // const roomId = getRepositoryRoomId(this.runtime);
+        // elizaLogger.log("Repository room ID:", roomId);
+
+        // Observe: Gather relevant memories related to the repository
+
+        //
+        // 3) retrieve memories
+        //
+        const memories = await this.runtime.messageManager.getMemories({
+            roomId: this.roomId,
+        });
+        await fs.writeFile(
+            "/tmp/client-github-memories.txt",
+            JSON.stringify(memories, null, 2)
+        );
+
+        // if memories is empty stop the cycle
+        if (memories.length === 0) {
+            elizaLogger.log("No memories found, skipping OODA cycle.");
             return;
         }
+
+        const message = memories[0];
+
+        if (!this.state) {
+            this.state = (await this.runtime.composeState(message)) as State;
+        } else {
+            this.state = await this.runtime.updateRecentMessageState(
+                this.state
+            );
+        }
+
+        await fs.writeFile(
+            "/tmp/client-github-state.txt",
+            JSON.stringify(this.state, null, 2)
+        );
+
+        const context = composeContext({
+            state: this.state,
+            template: oodaTemplate,
+        });
+
+        await fs.writeFile(
+            "/tmp/client-github-context.txt",
+            JSON.stringify(context, null, 2)
+        );
+
+        const details = await generateObject({
+            runtime: this.runtime,
+            context,
+            modelClass: ModelClass.SMALL,
+            schema: OODASchema,
+        });
+
+        if (!isOODAContent(details.object)) {
+            elizaLogger.error("Invalid content:", details.object);
+            throw new Error("Invalid content");
+        }
+
+        const content = details.object as OODAContent;
+
+        await fs.writeFile(
+            "/tmp/client-github-content.txt",
+            JSON.stringify(content, null, 2)
+        );
 
         // const fileMemories = memories.filter(
         //     (memory) => (memory.content.metadata as any)?.path
