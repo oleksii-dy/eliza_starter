@@ -3,7 +3,7 @@ import { type IAgentRuntime } from "@elizaos/core";
 
 export const twilioEnvSchema = z.object({
     NGROK_DOMAIN: z.string().min(1, "Twilio ngrok domain is required"),
-    NGROK_AUTH_TOKEN: z.string().min(1, "Twilio ngrok auth token is required"),
+    NGROK_AUTHTOKEN: z.string().min(1, "Twilio ngrok auth token is required"),
     ELEVENLABS_XI_API_KEY: z.string().min(1, "ElevenLabs API key is required"),
     ELEVENLABS_MODEL_ID: z.string().min(1, "ElevenLabs model ID is required"),
     ELEVENLABS_VOICE_ID: z.string().min(1, "ElevenLabs voice ID is required"),
@@ -19,9 +19,9 @@ export async function validateTwilioConfig(
             NGROK_DOMAIN:
                 runtime.getSetting("NGROK_DOMAIN") ||
                 process.env.NGROK_DOMAIN,
-            NGROK_AUTH_TOKEN:
-                runtime.getSetting("NGROK_AUTH_TOKEN") ||
-                process.env.NGROK_AUTH_TOKEN,
+            NGROK_AUTHTOKEN:
+                runtime.getSetting("NGROK_AUTHTOKEN") ||
+                process.env.NGROK_AUTHTOKEN,
             ELEVENLABS_XI_API_KEY:
                 runtime.getSetting("ELEVENLABS_XI_API_KEY") ||
                 process.env.ELEVENLABS_XI_API_KEY,

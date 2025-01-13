@@ -37,7 +37,7 @@ async function generateResponse(runtime: IAgentRuntime, message: string, roomId:
     });
 }
 
-function createHonoServer(runtime: IAgentRuntime, listener: ngrok.Listener) {
+function startServer(runtime: IAgentRuntime, listener: ngrok.Listener) {
     const server = new Hono();
 
     server.post("/message", async (context) => {
@@ -134,19 +134,19 @@ function createHonoServer(runtime: IAgentRuntime, listener: ngrok.Listener) {
         return context.body(response.toString());
     })
 
-    return server;
+    ngrok.listen(createAdaptorServer(server), listener);
 }
 
 const twilioClientInterface: Client = {
     start: async (runtime: IAgentRuntime) => {
+        elizaLogger.log("ATTEMPTING TO START TWILIO CLIENT");
+
         await validateTwilioConfig(runtime);
 
-        const session = await new ngrok.SessionBuilder().authtoken(getEnvSetting(runtime, "NGROK_AUTH_TOKEN")).connect();
+        const session = await new ngrok.SessionBuilder().authtoken(getEnvSetting(runtime, "NGROK_AUTHTOKEN")).connect();
         const listener = await session.httpEndpoint().domain(getEnvSetting(runtime, "NGROK_DOMAIN")).listen();
 
-        const server = createHonoServer(runtime, listener);
-
-        ngrok.listen(createAdaptorServer(server), listener);
+        startServer(runtime, listener);
 
         elizaLogger.success("Twilio webhook server listening at ", listener.url());
     },
