@@ -6,7 +6,8 @@ import {
     elizaLogger,
     Action,
     ActionExample,
-    ModelClass
+    ModelClass,
+    // Media
 } from "@elizaos/core";
 // import axios from 'axios';
 // import { callApi } from "../axios";
@@ -15,25 +16,38 @@ import { generateObjectDeprecated } from "@elizaos/core";
 
 
 const newsCyptoPanicTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
-
-Example response:
-\`\`\`json
-{
-    currencies:"BTC,ETH",
-    kind: "all",
-    filter: "hot"
-}
-\`\`\`
-
-{{recentMessages}}
-
-Given the recent messages, extract the following information:
-
-currencies: Cryptocurrency symbols (default options: BTC, ETH, SUI)
-kind: Content type (must be one of: all, news, media; if not specified, use default: "all")
-filter: Content category (must be one of: rising, hot, bullish, bearish, important, saved, lol; if not specified, use default: "hot")
-
-Respond with a JSON markdown block containing only the extracted values.`;
+    Example response:
+    \`\`\`json
+    {
+        currencies:null,
+        kind: null,
+        filter: null
+    }
+    \`\`\`
+    {{recentMessages}}
+    Given the recent messages, extract the following information:
+    currencies: Extract cryptocurrency symbols, following these rules:
+                Look for common crypto symbols (BTC, ETH, SOL, SUI, etc.)
+                Convert all symbols to uppercase
+                If multiple currencies found, join them with commas
+                Recognize variations like "bitcoin"/"btc", "ethereum"/"eth"
+                Look for connecting words like "and", "&", "," between symbols
+                If no currencies specified, return "BTC,ETH,SUI"
+    kind: Content type must be one of:
+        all (default if not specified)
+        news
+        media
+    filter: Content category must be one of:
+            rising
+            hot (default if not specified)
+            bullish
+            bearish
+            important
+            saved
+            lol"hot")
+    Examples: "ANALYZE BTC AND ETH BEARISH" → { "currencies": "BTC,ETH", "kind": "all", "filter": "bearish" }
+    "ANALYZE CRYPTO MARKET NEWS sol and sui" → { "currencies": "SOL,SUI", "kind": "news", "filter": "hot" }
+    Respond with a JSON markdown block containing only the extracted values.`;
 
 
 
@@ -100,10 +114,11 @@ export  const getNewsCryptoPanic: Action = {
             const data:any = await response.json()
 
             let responseMessage = "All News today:\n- ";
-            responseMessage += data.results.map((item:any) => item.title).join("\n- ");
+            responseMessage += data.results.map((item:any) => `${item.title} <a href="${item.domain}/news/${item.slug.toLowerCase()}"}>${item.domain}</a>`).join("\n- ");
+            // let attachments: any = data.results.map((item:any) => `${item.domain}/news/${item.slug.toLowerCase()}`);
             callback({
                 text: responseMessage,
-                attachments: []
+                // source
               })
             // elizaLogger.log("[coingecko] Handle with message ...DONE!");
             return true;
@@ -135,6 +150,9 @@ export  const getNewsCryptoPanic: Action = {
         "INTERPRET_CRYPTO_MARKET_SIGNALS",
         "PROCESS_DIGITAL_CURRENCY_NEWS",
         "ANALYZE_CRYPTO_MARKET",
+        "ANALYZE_BEARISH",
+        "ANALYZE_BULLISH",
+
     ],
     examples: [
         [
