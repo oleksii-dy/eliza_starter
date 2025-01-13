@@ -10,10 +10,15 @@ export const CollectionCategory = z.enum([
 
 export type CollectionCategory = z.infer<typeof CollectionCategory>;
 
+export type CuratedCollection = z.infer<typeof CuratedCollectionSchema> & {
+    description?: string;
+};
+
 export const CuratedCollectionSchema = z.object({
-    address: z.string(),
-    name: z.string(),
-    category: CollectionCategory,
+    address: z.string().optional(),
+    name: z.string().optional(),
+    description: z.string().optional(),
+    category: CollectionCategory.optional(),
     creator: z.string().optional(),
     tokenIdRange: z
         .object({
@@ -22,8 +27,6 @@ export const CuratedCollectionSchema = z.object({
         })
         .optional(),
 });
-
-export type CuratedCollection = z.infer<typeof CuratedCollectionSchema>;
 
 /**
  * Curated list of NFT collections featured on ikigailabs.xyz
@@ -1797,7 +1800,7 @@ export function getCollectionsByCreator(creator: string): CuratedCollection[] {
 // Create a map for quick lookups
 export const COLLECTIONS_BY_ADDRESS = new Map<string, CuratedCollection>(
     CURATED_COLLECTIONS.map((collection) => [
-        collection.address.toLowerCase(),
+        collection.address?.toLowerCase(),
         collection,
     ])
 );
