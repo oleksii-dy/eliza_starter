@@ -44,6 +44,87 @@ A powerful plugin for interacting with NFT collections, providing comprehensive 
 - Added Ethereum address validation
 - Added price and token ID validation
 
+### Enhanced Arbitrage Detection Logic 🕵️‍♂️
+
+We've significantly upgraded our NFT collection analysis with a sophisticated arbitrage detection mechanism. The new implementation goes beyond simple price comparisons to provide deep market insights:
+
+#### Key Enhancements
+
+- **Multi-Listing Analysis**: Fetch and analyze up to 10 listings per collection
+- **Dynamic Thresholds**: Configurable thinness and profit margin detection
+- **Comprehensive Opportunity Scoring**
+    - Calculate precise price differences
+    - Compute potential profit margins
+    - Evaluate market inefficiencies
+
+#### Detection Algorithm
+
+```typescript
+const detectThinFloorOpportunities = async (watchlistCollections) => {
+    const opportunities = [];
+
+    for (const collection of watchlistCollections) {
+        const listings = await reservoirService.getListings({
+            collection: collection.address,
+            sortBy: "price_asc",
+            limit: 10,
+            includeTokenDetails: true,
+        });
+
+        // Advanced thin floor detection logic
+        if (listings.length >= 2) {
+            const [lowestListing, secondLowestListing] = listings;
+
+            const priceDifference =
+                secondLowestListing.price - lowestListing.price;
+            const thinnessPercentage =
+                (priceDifference / lowestListing.price) * 100;
+            const potentialProfit =
+                secondLowestListing.price / lowestListing.price;
+
+            // Flexible threshold checking
+            if (thinnessPercentage > collection.maxThinnessThreshold) {
+                opportunities.push({
+                    collection: collection.address,
+                    lowestPrice: lowestListing.price,
+                    secondLowestPrice: secondLowestListing.price,
+                    thinnessPercentage,
+                    potentialProfit,
+                    tokenIds: [
+                        lowestListing.tokenId,
+                        secondLowestListing.tokenId,
+                    ],
+                });
+            }
+        }
+    }
+
+    return opportunities.sort((a, b) => b.potentialProfit - a.potentialProfit);
+};
+```
+
+#### Opportunity Insights
+
+- **Precise Calculation**: Exact price difference computation
+- **Flexible Thresholds**: Customizable detection parameters
+- **Sorted Opportunities**: Ranked by potential profit
+- **Token-Level Details**: Includes specific token IDs for targeted action
+
+#### Performance Optimizations
+
+- Batch processing of collection listings
+- Efficient sorting and filtering
+- Minimal API call overhead
+- Configurable detection parameters
+
+#### Use Cases
+
+- Rapid arbitrage identification
+- Market inefficiency exploitation
+- Quick flip strategy development
+
+**Note**: Always conduct thorough research and understand the risks associated with NFT trading.
+
 ## Features
 
 ### Core Features (Reservoir Tools API)
