@@ -7,7 +7,7 @@ import {
     Action,
     ActionExample,
     ModelClass,
-    Media
+    // Media
 } from "@elizaos/core";
 // import axios from 'axios';
 // import { callApi } from "../axios";
