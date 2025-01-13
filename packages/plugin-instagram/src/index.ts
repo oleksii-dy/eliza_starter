@@ -2,12 +2,12 @@
 import { Plugin } from "@elizaos/core";
 import { postAction } from "./actions/post";
 
-export const igPlugin: Plugin = {
+export const instagramPlugin: Plugin = {
     name: "instagram",
-    description: "Instagram integration plugin for posting photos",
+    description: "Instagram integration plugin for posting content",
     actions: [postAction],
     evaluators: [],
     providers: [],
 };
 
-export default igPlugin;
+export default instagramPlugin;
