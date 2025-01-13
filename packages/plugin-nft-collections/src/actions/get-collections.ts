@@ -896,25 +896,66 @@ export const detectThinFloorOpportunities = async (
         tokenIds: string[];
         name?: string;
         category?: string;
+        historicalSales: {
+            latestSalePrice: number;
+            highestSalePrice: number;
+            averageSalePrice: number;
+            salesCount: number;
+        }[];
     }> = [];
 
     for (const collection of watchlistCollections) {
         try {
             // Fetch detailed listings with more context
-            const listings = await reservoirService.getListings({
-                collection: collection.address,
-                sortBy: "price_asc",
-                limit: 10, // Fetch multiple listings for comprehensive analysis
-                includeTokenDetails: true,
-            });
+            const [listings, salesHistory] = await Promise.all([
+                reservoirService.getListings({
+                    collection: collection.address,
+                    sortBy: "price_asc",
+                    limit: 10, // Fetch multiple listings for comprehensive analysis
+                    includeTokenDetails: true,
+                }),
+                reservoirService.getSalesHistory({
+                    collection: collection.address,
+                    limit: 50, // Fetch recent sales history
+                }),
+            ]);
 
             // Sort listings by price
             const sortedListings = listings
                 .sort((a, b) => a.price - b.price)
                 .filter((listing) => listing.status === "active");
 
+            // Process sales history
+            const processedSales = salesHistory.map((sale) => ({
+                tokenId: sale.tokenId,
+                salePrice: sale.price,
+                saleDate: sale.timestamp,
+            }));
+
+            // Calculate sales statistics
+            const salesStats = {
+                latestSalePrice:
+                    processedSales.length > 0
+                        ? processedSales[0].salePrice
+                        : null,
+                highestSalePrice:
+                    processedSales.length > 0
+                        ? Math.max(
+                              ...processedSales.map((sale) => sale.salePrice)
+                          )
+                        : null,
+                averageSalePrice:
+                    processedSales.length > 0
+                        ? processedSales.reduce(
+                              (sum, sale) => sum + sale.salePrice,
+                              0
+                          ) / processedSales.length
+                        : null,
+                salesCount: processedSales.length,
+            };
+
             // Detect thin floor opportunities with more sophisticated logic
-            if (sortedListings.length >= 2) {
+            if (sortedListings.length >= 2 && salesStats.latestSalePrice) {
                 const [lowestListing, secondLowestListing] = sortedListings;
 
                 const lowestPrice = lowestListing.price;
@@ -925,13 +966,21 @@ export const detectThinFloorOpportunities = async (
                     (priceDifference / lowestPrice) * 100;
                 const potentialProfit = secondLowestPrice / lowestPrice;
 
-                // More flexible threshold checking
+                // More flexible threshold checking with sales history context
                 const thinnessThreshold = collection.maxThinnessThreshold || 15;
                 const profitThreshold = collection.minProfitMargin || 2;
 
+                // Additional criteria using sales history
+                const latestToLowestRatio =
+                    salesStats.latestSalePrice / lowestPrice;
+                const highestToLowestRatio = salesStats.highestSalePrice
+                    ? salesStats.highestSalePrice / lowestPrice
+                    : 0;
+
                 if (
                     thinnessPercentage > thinnessThreshold &&
-                    potentialProfit >= profitThreshold
+                    potentialProfit >= profitThreshold &&
+                    latestToLowestRatio > 1.5 // Latest sale at least 50% higher than current floor
                 ) {
                     opportunities.push({
                         collection: collection.address,
@@ -945,6 +994,14 @@ export const detectThinFloorOpportunities = async (
                         ],
                         name: collection.name,
                         category: collection.category,
+                        historicalSales: [
+                            {
+                                latestSalePrice: salesStats.latestSalePrice,
+                                highestSalePrice: salesStats.highestSalePrice,
+                                averageSalePrice: salesStats.averageSalePrice,
+                                salesCount: salesStats.salesCount,
+                            },
+                        ],
                     });
                 }
             }
@@ -956,8 +1013,19 @@ export const detectThinFloorOpportunities = async (
         }
     }
 
-    // Sort opportunities by potential profit
-    return opportunities.sort((a, b) => b.potentialProfit - a.potentialProfit);
+    // Sort opportunities by potential profit and sales history
+    return opportunities.sort((a, b) => {
+        // Primary sort by potential profit
+        const profitDiff = b.potentialProfit - a.potentialProfit;
+        if (profitDiff !== 0) return profitDiff;
+
+        // Secondary sort by latest sale price relative to floor
+        const latestSaleDiff =
+            b.historicalSales[0].latestSalePrice / b.lowestPrice -
+            a.historicalSales[0].latestSalePrice / a.lowestPrice;
+
+        return latestSaleDiff;
+    });
 };
 
 export const getThinFloorNFTsAction = (
@@ -1016,6 +1084,12 @@ Second Lowest: ${opp.secondLowestPrice.toFixed(3)} ETH
 Thinness: ${opp.thinnessPercentage.toFixed(2)}%
 Potential Profit: ${((opp.potentialProfit - 1) * 100).toFixed(2)}%
 Token IDs: ${opp.tokenIds.join(", ")}
+
+📊 Sales History:
+Latest Sale: ${opp.historicalSales[0].latestSalePrice.toFixed(3)} ETH
+Highest Sale: ${opp.historicalSales[0].highestSalePrice.toFixed(3)} ETH
+Average Sale: ${opp.historicalSales[0].averageSalePrice.toFixed(3)} ETH
+Total Sales: ${opp.historicalSales[0].salesCount}
                     `
                         )
                         .join("\n\n");
