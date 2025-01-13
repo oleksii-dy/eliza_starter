@@ -1,1 +1,2 @@
-# no op
+on:
+  workflow_dispatch:
