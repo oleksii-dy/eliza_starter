@@ -42,7 +42,12 @@ graph TD
 - **Telegram** (`@eliza/client-telegram`) - Telegram bot integration
 - **Direct** (`@eliza/client-direct`) - Direct API interface for custom integrations
 - **Auto** (`@eliza/client-auto`) - Automated trading and interaction client
-- **Deva** (`@eliza/client-deva`) - Client for integrating with Deva.me
+- # **Deva** (`@eliza/client-deva`) - Client for integrating with Deva.me
+- **Discord** (`@elizaos/client-discord`) - Full Discord bot integration
+- **Twitter** (`@elizaos/client-twitter`) - Twitter bot and interaction handling
+- **Telegram** (`@elizaos/client-telegram`) - Telegram bot integration
+- **Direct** (`@elizaos/client-direct`) - Direct API interface for custom integrations
+- **Auto** (`@elizaos/client-auto`) - Automated trading and interaction client
 
 ---
 
@@ -50,19 +55,19 @@ graph TD
 
 ```bash
 # Discord
-pnpm add @eliza/client-discord
+pnpm add @elizaos/client-discord
 
 # Twitter
-pnpm add @eliza/client-twitter
+pnpm add @elizaos/client-twitter
 
 # Telegram
-pnpm add @eliza/client-telegram
+pnpm add @elizaos/client-telegram
 
 # Direct API
-pnpm add @eliza/client-direct
+pnpm add @elizaos/client-direct
 
 # Auto Client
-pnpm add @eliza/client-auto
+pnpm add @elizaos/client-auto
 
 # Deva Client
 pnpm add @eliza/client-deva
@@ -77,7 +82,7 @@ The Discord client provides full integration with Discord's features including v
 ### Basic Setup
 
 ```typescript
-import { DiscordClientInterface } from "@eliza/client-discord";
+import { DiscordClientInterface } from "@elizaos/client-discord";
 
 // Initialize client
 const client = await DiscordClientInterface.start(runtime);
@@ -139,8 +144,7 @@ The Twitter client enables posting, searching, and interacting with Twitter user
 ### Basic Setup
 
 ```typescript
-import { TwitterClientInterface } from "@eliza/client-twitter";
-
+import { TwitterClientInterface } from "@elizaos/client-twitter";
 // Initialize client
 const client = await TwitterClientInterface.start(runtime);
 
@@ -199,7 +203,7 @@ The Telegram client provides messaging and bot functionality for Telegram.
 ### Basic Setup
 
 ```typescript
-import { TelegramClientInterface } from "@eliza/client-telegram";
+import { TelegramClientInterface } from "@elizaos/client-telegram";
 
 // Initialize client
 const client = await TelegramClientInterface.start(runtime);
@@ -232,7 +236,7 @@ The Direct client provides a REST API interface for custom integrations.
 ### Basic Setup
 
 ```typescript
-import { DirectClientInterface } from "@eliza/client-direct";
+import { DirectClientInterface } from "@elizaos/client-direct";
 
 // Initialize client
 const client = await DirectClientInterface.start(runtime);
@@ -265,7 +269,7 @@ The Auto client enables automated interactions and trading.
 ### Basic Setup
 
 ```typescript
-import { AutoClientInterface } from "@eliza/client-auto";
+import { AutoClientInterface } from "@elizaos/client-auto";
 
 // Initialize client
 const client = await AutoClientInterface.start(runtime);
@@ -423,6 +427,7 @@ class BaseClient {
 ## Best Practices
 
 1. **Authentication**
+
     - Store credentials securely in environment variables
     - Implement token refresh mechanisms
     - Handle authentication errors gracefully
