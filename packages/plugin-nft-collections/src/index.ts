@@ -13,27 +13,41 @@ import { MemoryCacheManager } from "./services/cache-manager";
 import { RateLimiter } from "./services/rate-limiter";
 import { MarketIntelligenceService } from "./services/market-intelligence";
 import { SocialAnalyticsService } from "./services/social-analytics";
+import { validateEnvironmentVariables } from "./utils/validation";
 
-// Consider exposing these settings as environment variables to allow users to provide custom configuration values.
+// Configuration with sensible defaults and environment variable overrides
 const config = {
     caching: {
-        enabled: true,
-        ttl: 3600000, // 1 hour
-        maxSize: 1000,
+        enabled: process.env.CACHE_ENABLED === "true" || true,
+        ttl: Number(process.env.CACHE_TTL) || 3600000, // 1 hour
+        maxSize: Number(process.env.CACHE_MAX_SIZE) || 1000,
     },
     security: {
         rateLimit: {
-            enabled: true,
-            maxRequests: 100,
-            windowMs: 60000,
+            enabled: process.env.RATE_LIMIT_ENABLED === "true" || true,
+            maxRequests: Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+            windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 60000,
         },
     },
-    maxConcurrent: 5, // Maximum concurrent requests
-    maxRetries: 3, // Maximum retry attempts
-    batchSize: 20, // Batch size for collection requests
+    maxConcurrent: Number(process.env.MAX_CONCURRENT) || 5,
+    maxRetries: Number(process.env.MAX_RETRIES) || 3,
+    batchSize: Number(process.env.BATCH_SIZE) || 20,
 };
 
 function createNFTCollectionsPlugin(): Plugin {
+    // Validate environment variables
+    try {
+        validateEnvironmentVariables({
+            TWITTER_API_KEY: process.env.TWITTER_API_KEY,
+            DUNE_API_KEY: process.env.DUNE_API_KEY,
+            OPENSEA_API_KEY: process.env.OPENSEA_API_KEY,
+            RESERVOIR_API_KEY: process.env.RESERVOIR_API_KEY,
+        });
+    } catch (error) {
+        console.error("Environment Variable Validation Error:", error.message);
+        throw error; // Prevent plugin initialization with invalid config
+    }
+
     // Initialize reusable CacheManager if caching is enabled
     const cacheManager = config.caching?.enabled
         ? new MemoryCacheManager({
@@ -61,6 +75,8 @@ function createNFTCollectionsPlugin(): Plugin {
     const marketIntelligenceService = new MarketIntelligenceService({
         cacheManager,
         rateLimiter,
+        openSeaApiKey: process.env.OPENSEA_API_KEY,
+        reservoirApiKey: process.env.RESERVOIR_API_KEY,
     });
 
     const socialAnalyticsService = new SocialAnalyticsService({

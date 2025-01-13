@@ -1,18 +1,81 @@
 import { z } from "zod";
 
-// Custom Ethereum address validation
+// Enhanced Ethereum address validation
 function isAddress(address: string): boolean {
-    // Basic Ethereum address validation regex
-    const ethereumAddressRegex = /^0x[a-fA-F0-9]{40}$/;
-    return ethereumAddressRegex.test(address);
+    // More comprehensive Ethereum address validation
+    if (typeof address !== "string") return false;
+
+    // Check for 0x prefix and exactly 42 characters (0x + 40 hex chars)
+    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) return false;
+
+    // Additional checksum validation (case-sensitive)
+    try {
+        return address === toChecksumAddress(address);
+    } catch {
+        return false;
+    }
+}
+
+// Implement checksum address conversion
+function toChecksumAddress(address: string): string {
+    address = address.toLowerCase().replace("0x", "");
+    const hash = hashCode(address);
+
+    return (
+        "0x" +
+        address
+            .split("")
+            .map((char, index) =>
+                parseInt(hash[index], 16) >= 8 ? char.toUpperCase() : char
+            )
+            .join("")
+    );
+}
+
+// Simple hash function for checksum
+function hashCode(address: string): string {
+    let hash = 0;
+    for (let i = 0; i < address.length; i++) {
+        const char = address.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash).toString(16).padStart(40, "0");
 }
 
 function getAddress(address: string): string {
-    // Basic address normalization (lowercase)
+    // Normalize and validate address
     if (!isAddress(address)) {
         throw new Error("Invalid Ethereum address");
     }
-    return address.toLowerCase();
+    return toChecksumAddress(address);
+}
+
+// Environment Variable Validation Schema
+export const EnvConfigSchema = z.object({
+    TWITTER_API_KEY: z.string().min(1, "Twitter API key is required"),
+    DUNE_API_KEY: z.string().min(1, "Dune API key is required"),
+    OPENSEA_API_KEY: z.string().min(1, "OpenSea API key is required"),
+    RESERVOIR_API_KEY: z.string().min(1, "Reservoir API key is required"),
+});
+
+// Function to validate environment variables
+export function validateEnvironmentVariables(
+    env: Record<string, string | undefined>
+) {
+    try {
+        return EnvConfigSchema.parse(env);
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            const errorMessages = error.errors
+                .map((err) => err.message)
+                .join(", ");
+            throw new Error(
+                `Environment Variable Validation Failed: ${errorMessages}`
+            );
+        }
+        throw error;
+    }
 }
 
 // Enhanced NFT Collection Schema with strict validation
