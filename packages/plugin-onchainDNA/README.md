@@ -1,39 +1,76 @@
-# Sample Plugin for Eliza
+# Onchain-DNA Provider for Eliza
 
-The Sample Plugin for Eliza extends the functionality of the Eliza platform by providing additional actions, providers, evaluators, and more. This plugin is designed to be easily extendable and customizable to fit various use cases.
+The Onchain-DNA Provider for Eliza extends the functionality of the Eliza platform by enabling AI to access and utilize NFT-based knowledge stored on the blockchain. This provider allows AI models to incorporate on-chain DNA information into their responses and behaviors.
 
 ## Description
 
-The Sample Plugin offers a set of features that can be integrated into the Eliza platform to enhance its capabilities. Below is a high-level overview of the different components available in this plugin.
-
-## Actions
-
-- **createResourceAction**: This action enables the creation and management of generic resources. It can be customized to handle different types of resources and integrate with various data sources.
+The Onchain-DNA Provider integrates blockchain-based NFT data into the Eliza platform, allowing AI models to access and utilize knowledge encoded in NFTs. This provider creates a bridge between on-chain AI-related NFTs and AI language models.
 
 ## Providers
 
-- **sampleProvider**: This provider offers a mechanism to supply data or services to the plugin. It can be extended to include additional providers as needed.
+- **onchainDNAProvider**: This provider enables access to NFT-based knowledge stored on the blockchain. It can:
+    - Read and interpret NFT metadata related to AI characteristics
+    - Access on-chain DNA information
+    - Integrate blockchain-based knowledge into AI responses
+    - Support multiple blockchain networks
 
-## Evaluators
+## Features
 
-- **sampleEvaluator**: This evaluator provides a way to assess or analyze data within the plugin. It can be extended to include additional evaluators as needed.
+- Blockchain Integration: Connects to various blockchain networks to access NFT data
+- DNA Data Parsing: Interprets and processes on-chain DNA information
+- Knowledge Integration: Seamlessly incorporates NFT-based knowledge into AI responses
+- Real-time Updates: Maintains synchronization with on-chain data
 
-## Services
+## How to Use
 
-- **[ServiceName]**: Description of the service and its functionality. This can be extended to include additional services as needed.
+To use the Onchain-DNA Provider in your Eliza implementation:
 
-## Clients
+1. Configure blockchain network settings
+2. Specify target NFT collections or contracts
+3. Define DNA data interpretation parameters
+4. Integrate the provider into your Eliza instance
 
-- **[ClientName]**: Description of the client and its functionality. This can be extended to include additional clients as needed.
+### Character Configuration
 
-## How to Extend
+Update `character.json` with the following configuration to enable the plugin:
 
-To extend the Sample Plugin, you can add new actions, providers, evaluators, services, and clients by following the structure provided in the plugin. Each component can be customized to fit your specific requirements.
+```json
+"plugins": [
+    "@elizaos/plugin-onchaindna"
+]
+```
 
-1. **Actions**: Add new actions by defining them in the `actions` array.
-2. **Providers**: Add new providers by defining them in the `providers` array.
-3. **Evaluators**: Add new evaluators by defining them in the `evaluators` array.
-4. **Services**: Add new services by defining them in the `services` array.
-5. **Clients**: Add new clients by defining them in the `clients` array.
+This ensures that the **`@elizaos/plugin-onchaindna`** plugin is loaded and operational within your Eliza Agent Framework, enabling seamless integration with onchain-DNA of AI.
 
-For more detailed information on how to extend the plugin, refer to the documentation provided in the Eliza platform.
+## Future Enhancements
+
+### Deep Integration with On-chain Data
+
+- Implement real-time synchronization between blockchain data and local storage
+- Develop advanced caching mechanisms for optimized performance
+- Create failover systems for reliable data access
+
+### Vector Database Integration
+
+- Build a local vector database to store and index on-chain DNA data
+- Enable efficient similarity search and pattern matching
+- Implement automatic updates when on-chain data changes
+- Support multiple vector database solutions (Pinecone, Milvus, etc.)
+
+### Enhanced AI Influence
+
+- Develop sophisticated DNA interpretation algorithms
+- Create dynamic personality adjustments based on DNA attributes
+- Implement weighted influence systems for different DNA traits
+- Enable multi-token DNA combination effects
+- Support progressive learning from on-chain interactions
+
+## Extension Points
+
+The Onchain-DNA Provider can be extended to support:
+
+- Custom DNA data formats
+- Enhanced interpretation methods
+- Advanced knowledge integration patterns
+
+For more detailed information on implementation and customization, refer to the documentation provided in the Eliza platform.
