@@ -12,8 +12,6 @@ import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
 import { DirectClient } from "@elizaos/client-direct";
-import { PrimusAdapter } from "@elizaos/plugin-primus";
-
 import {
     AgentRuntime,
     CacheManager,
@@ -35,6 +33,8 @@ import {
     validateCharacterConfig,
 } from "@elizaos/core";
 import { zgPlugin } from "@elizaos/plugin-0g";
+import { goplusPlugin } from "@elizaos/plugin-goplus";
+import { PrimusAdapter } from "@elizaos/plugin-primus";
 
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import createGoatPlugin from "@elizaos/plugin-goat";

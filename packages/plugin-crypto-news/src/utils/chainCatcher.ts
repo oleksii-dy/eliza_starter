@@ -1,26 +1,23 @@
+export interface ChainCatcherResponse {
+    data: ChainCatcherData;
+    message: string;
+    result: number;
+}
+
+export interface ChainCatcherData {
+    totle: number;
+    list: ChainCatcherItem[];
+}
+
 export interface ChainCatcherItem {
-    title: string;
-    pubDate: string;
-    link: string;
-    guid: string;
-    thumbnail: string;
     content: string;
     description: string;
-    enclosure: any;
-    categories: any[];
-}
-export interface ChainCatcherFeed {
-    url: string;
+    id: number;
+    releaseTime: string;
+    thumb: string;
     title: string;
-    link: string;
-    author: string;
-    description: string;
-    image: string;
-}
-export interface ChainCatcherResponse {
-    status: string;
-    feed: ChainCatcherFeed;
-    items: ChainCatcherItem[];
+    type: number;
+    url: string;
 }
 
 export async function fetchChainCatcher(): Promise<ChainCatcherResponse> {
@@ -28,13 +25,20 @@ export async function fetchChainCatcher(): Promise<ChainCatcherResponse> {
         // Check cache first if provided
 
         const config = {
-            method: "GET",
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                token: "fsfa3sd45gU8945YY",
+                language: "en",
             },
+            body: JSON.stringify({
+                type: 2,
+                page: 1,
+                limit: 5,
+            }),
         };
         const response = await fetch(
-            `https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fwww.chaincatcher.com%2Frss%2Fclist`,
+            `https://www.chaincatcher.com/OpenApi/FetchListByType`,
             config
         );
 
@@ -46,7 +50,7 @@ export async function fetchChainCatcher(): Promise<ChainCatcherResponse> {
         }
 
         const data = await response.json();
-        if (!data.status || data.status !== "ok") {
+        if (!data.data) {
             throw new Error("Failed to fetch latest news data");
         }
 

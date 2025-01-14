@@ -1,4 +1,4 @@
-import { elizaLogger, Provider } from "@elizaos/core";
+import { Provider } from "@elizaos/core";
 import { ChainCatcherResponse, fetchChainCatcher } from "../utils/chainCatcher";
 
 // interface FormattedMarketData {
@@ -57,10 +57,16 @@ export const cryptoNewsData: Provider = {
             // const cryptoNews: SerperNewsResponse =
             //     await fetchSerperNews("crypto");
             // const suiNews: SerperNewsResponse = await fetchSerperNews("$SUI");
-            let output = "# NEWS\n\n";
+            let output = `# NEWS for ${runtime.character.name}\n\n`;
+            // output += `The News have this format:\n\n`;
+            // output += `
+            // - Title <--- Title of the news\n
+            // Description <--- Content of the news\n
+            // Timestamp <--- the time of the news\n\n
+            // `;
 
-            chainCatcher.items.forEach((article) => {
-                output += `- ${article.title}\n${article.content}\n\n`;
+            chainCatcher.data.list.forEach((article) => {
+                output += `- ${article.title}\n${article.description}\nTime: ${article.releaseTime}\n\n`;
             });
 
             // cryptoNews.news.forEach((article) => {
@@ -69,9 +75,9 @@ export const cryptoNewsData: Provider = {
             // suiNews.news.forEach((article) => {
             //     output += `- ${article.title}\n${article.snippet}\n\n`;
             // });
-            output += `# News above are in Chinese Language, you have to translate it to ENGLISH \n\n# END NEWS\n\n`;
+            //output += `you must summary and conclude all of news above into a sentences and include it to your respond\n\n# END NEWS\n\n`;
 
-            elizaLogger.log(output);
+            // elizaLogger.log(output);
 
             return output;
         } catch (error) {

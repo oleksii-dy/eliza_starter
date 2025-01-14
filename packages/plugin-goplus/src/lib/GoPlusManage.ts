@@ -14,7 +14,6 @@ export const GoPlusType = {
 };
 
 export type GoPlusType = (typeof GoPlusType)[keyof typeof GoPlusType];
-
 export type GoPlusParamType = {
     type: GoPlusType;
     network?: string;
