@@ -14,3 +14,16 @@ export const goplusPlugin: Plugin = {
 };
 
 export default goplusPlugin;
+
+export * from "./services/GoplusSecurityService";
+
+export const goplusPlugin: Plugin = {
+    name: "goplus",
+    description: "goplus Plugin for Eliza - Enables on-chain security checks",
+    actions: [],
+    evaluators: [],
+    providers: [],
+    services: [new GoplusSecurityService()],
+};
+
+export default goplusPlugin;
