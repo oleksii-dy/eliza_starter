@@ -375,6 +375,7 @@ export const models: Models = {
                     settings.EMBEDDING_GOOGLE_MODEL ||
                     settings.GOOGLE_MODEL ||
                     "text-embedding-004",
+                dimensions: 768,
             },
         },
     },
