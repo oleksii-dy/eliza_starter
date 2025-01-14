@@ -436,9 +436,9 @@ export class AgentRuntime implements IAgentRuntime {
 
       // client have a start
       for(const cStr in this.clients) {
-        const c = this.clients[cStr]
+        // const c = this.clients[cStr]
         elizaLogger.log('runtime::stop - requesting', cStr, 'client stop for', this.character.name)
-        c.stop()
+        // c.stop()
       }
       // we don't need to unregister with directClient
       // don't need to worry about knowledge

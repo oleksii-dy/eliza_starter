@@ -96,7 +96,32 @@ export default function createAgentRouter(
             character: character,
         });
     });
+    router.get("/:agentId/stop", async (req, res) => {
+        const agentId = req.params.agentId;
+        console.log("agentId", agentId);
+        const agent: AgentRuntime = agents.get(agentId);
+        try {
+            if (agent) {
+                agent.stop();
+                directClient.unregisterAgent(agent);
+            }
+            res.json({
+                code: 200,
+                status: "success",
+                message: "Agent stopped",
+            });
+        } catch (error) {
+            console.log("/:agentId/stop", error)
+            res.json({
+                code: 400,
+                status: "success",
+                message: "Agent stopped",
+            });
+        }
+        // update character
 
+
+    })
     router.post("/new", async (req, res) => {
         // load character from body
         const character = req.body;
@@ -207,25 +232,7 @@ export default function createAgentRouter(
             res.status(500).json({ error: "Failed to fetch memories" });
         }
     });
-    router.get("/:agentId/stop", async (req, res) => {
-        const agentId = req.params.agentId;
-        console.log("agentId", agentId);
-        const agent: AgentRuntime = agents.get(agentId);
 
-        // update character
-        if (agent) {
-            // stop agent
-            agent.stop();
-            directClient.unregisterAgent(agent);
-            // if it has a different name, the agentId will change
-        }
-        res.json({
-            code: 200,
-            status: "success",
-            message: "Agent stopped",
-        });
-
-    })
     // router.get("/agents/:agentId/:userId", async (req, res) => {
 
 
