@@ -61,6 +61,7 @@ export default function createAgentRouter(
     });
 
     router.post("/:agentId/set", async (req, res) => {
+
         const agentId = req.params.agentId;
         console.log("agentId", agentId);
         let agent: AgentRuntime = agents.get(agentId);
@@ -113,7 +114,7 @@ export default function createAgentRouter(
         // start it up (and register it)
         await directClient.startAgent(character);
         elizaLogger.log(`${character.name} started`);
-        
+
         res.json({
             id: character.id,
             character: character,
@@ -206,6 +207,25 @@ export default function createAgentRouter(
             res.status(500).json({ error: "Failed to fetch memories" });
         }
     });
+    router.get("/:agentId/stop", async (req, res) => {
+        const agentId = req.params.agentId;
+        console.log("agentId", agentId);
+        const agent: AgentRuntime = agents.get(agentId);
+
+        // update character
+        if (agent) {
+            // stop agent
+            agent.stop();
+            directClient.unregisterAgent(agent);
+            // if it has a different name, the agentId will change
+        }
+        res.json({
+            code: 200,
+            status: "success",
+            message: "Agent stopped",
+        });
+
+    })
     // router.get("/agents/:agentId/:userId", async (req, res) => {
 
 

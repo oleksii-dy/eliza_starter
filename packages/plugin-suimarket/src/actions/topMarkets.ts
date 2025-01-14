@@ -14,6 +14,7 @@ import {
 // import { z } from "zod";
 import { generateObjectDeprecated } from "@elizaos/core";
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
+import { formatObjectsToText } from "../utils/format";
 
 const topMarketPromptTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
     Example response:
@@ -115,12 +116,13 @@ Given the recent messages, extract the following information:
 
 
 
-function formatOutput(params: any): string {
-    return  JSON.stringify(params);
-}
+// function formatOutput(params: any): string {
+//     return  JSON.stringify(params);
+// }
 
 export const topMarkets: Action = {
     name: "topMarkets",
+
     similes: [
         "FETCH_TOP_MARKETS",
         "GET_MARKET_RANKINGS",
@@ -232,7 +234,7 @@ export const topMarkets: Action = {
         });
 
         elizaLogger.log("content: ",content);
-        
+
 
         const coinGecko = new CoingeckoProvider();
         const info = await coinGecko.getTopMarketInfo(
@@ -249,7 +251,7 @@ export const topMarkets: Action = {
 
         if (callback) {
             callback({
-                text: `topMarkets` + (await formatOutput(info)),
+                text: `topMarkets` + (await formatObjectsToText(info)),
                 action: 'topMarkets'
             });
         }
