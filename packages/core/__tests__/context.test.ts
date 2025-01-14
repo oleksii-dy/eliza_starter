@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { composeContext } from "../context";
+import { composeContext } from "../src/context.ts";
 import handlebars from "handlebars";
-import { State } from "../types.ts";
+import { State } from "../src/types.ts";
 
 describe("composeContext", () => {
     const baseState: State = {
@@ -67,6 +67,96 @@ describe("composeContext", () => {
             const result = composeContext({ state, template });
 
             expect(result).toBe("");
+        });
+    });
+
+    describe("dynamic templates", () => {
+        it("should handle function templates", () => {
+            const state: State = {
+                ...baseState,
+                userName: "Alice",
+                userAge: 30,
+            };
+            const template = () => {
+                return "Hello, {{userName}}! You are {{userAge}} years old.";
+            };
+
+            const result = composeContext({ state, template });
+
+            expect(result).toBe("Hello, Alice! You are 30 years old.");
+        });
+
+        it("should handle function templates with conditional logic", () => {
+            const state: State = {
+                ...baseState,
+                userName: "Alice",
+                userAge: 30,
+            };
+            const isEdgy = true;
+            const template = () => {
+                if (isEdgy) {
+                    return "Hello, {{userName}}! You are {{userAge}} years old... whatever";
+                }
+
+                return `Hello, {{userName}}! You are {{userAge}} years old`;
+            };
+
+            const result = composeContext({ state, template });
+
+            expect(result).toBe(
+                "Hello, Alice! You are 30 years old... whatever"
+            );
+        });
+
+        it("should handle function templates with conditional logic depending on state", () => {
+            const template = ({ state }: { state: State }) => {
+                if (state.userName) {
+                    return `Hello, {{userName}}! You are {{userAge}} years old.`;
+                }
+
+                return `Hello, anon! You are {{userAge}} years old.`;
+            };
+
+            const result = composeContext({
+                state: {
+                    ...baseState,
+                    userName: "Alice",
+                    userAge: 30,
+                },
+                template,
+            });
+
+            const resultWithoutUsername = composeContext({
+                state: {
+                    ...baseState,
+                    userAge: 30,
+                },
+                template,
+            });
+
+            expect(result).toBe("Hello, Alice! You are 30 years old.");
+            expect(resultWithoutUsername).toBe(
+                "Hello, anon! You are 30 years old."
+            );
+        });
+
+        it("should handle function templates with handlebars templating engine", () => {
+            const state: State = {
+                ...baseState,
+                userName: "Alice",
+                userAge: 30,
+            };
+            const template = () => {
+                return `{{#if userAge}}Hello, {{userName}}!{{else}}Hi there!{{/if}}`;
+            };
+
+            const result = composeContext({
+                state,
+                template,
+                templatingEngine: "handlebars",
+            });
+
+            expect(result).toBe("Hello, Alice!");
         });
     });
 
@@ -160,7 +250,7 @@ describe("composeContext", () => {
         });
 
         it("should handle missing values in handlebars template", () => {
-            const state = {...baseState}
+            const state = { ...baseState };
             const template = "Hello, {{userName}}!";
 
             const result = composeContext({

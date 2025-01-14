@@ -3,7 +3,7 @@ import {
     formatGoalsAsString,
     updateGoal,
     createGoal,
-} from "../goals.ts";
+} from "../src/goals.ts";
 import {
     Goal,
     GoalStatus,
@@ -13,8 +13,8 @@ import {
     UUID,
     Service,
     ServiceType,
-} from "../types";
-import { CacheManager, MemoryCacheAdapter } from "../cache.ts";
+} from "../src/types.ts";
+import { CacheManager, MemoryCacheAdapter } from "../src/cache.ts";
 import { describe, expect, vi, beforeEach } from "vitest";
 
 // Mock the database adapter
