@@ -26,6 +26,11 @@ export class TelegramClient {
         this.backend = runtime.getSetting("BACKEND_URL");
         this.backendToken = runtime.getSetting("BACKEND_TOKEN");
         this.tgTrader = runtime.getSetting("TG_TRADER"); // boolean To Be added to the settings
+
+
+
+
+
         elizaLogger.log("✅ TelegramClient constructor completed");
     }
 
@@ -68,7 +73,7 @@ export class TelegramClient {
         const currentGroupId = ctx.chat.id.toString();
 
         if (!allowedGroups.includes(currentGroupId)) {
-            elizaLogger.info(`Unauthorized group detected: ${currentGroupId}`);
+            elizaLogger.warn(`Unauthorized group detected: ${currentGroupId}`);
             try {
                 await ctx.reply("Not authorized. Leaving.");
                 await ctx.leaveChat();
@@ -197,7 +202,7 @@ export class TelegramClient {
 
     public async stop(): Promise<void> {
         elizaLogger.log("Stopping Telegram bot...");
-        //await 
+        //await
             this.bot.stop();
         elizaLogger.log("Telegram bot stopped");
     }
