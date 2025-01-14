@@ -523,7 +523,6 @@ export class TwitterPostClient {
                     .replace(/\\"/g, '"') // Unescape quotes
                     .replace(/\\n/g, "\n\n") // Unescape newlines, ensures double spaces
                     .replace(/^\d+\.\s*/gm, "") // Remove numbered list markers
-                    .replace(/\s*\d+\.\s*$/, "") // Remove trailing numbers
                     .trim();
             }
 
