@@ -15,24 +15,24 @@ import {
 interface PassportScore {
     address: string;
     score: string;
+    threshold: string;
+    passing_score: string;
 }
 
 const createTokenMemory = async (
     runtime: IAgentRuntime,
-    state: State,
+    _message: Memory,
     formattedOutput: string
-): Promise<[Memory, State]> => {
+) => {
     const memory: Memory = {
-        userId: runtime.agentId,
-        agentId: runtime.agentId,
-        roomId: state.roomId,
+        userId: _message.userId,
+        agentId: _message.agentId,
+        roomId: _message.roomId,
         content: { text: formattedOutput },
         createdAt: Date.now(),
         embedding: getEmbeddingZeroVector(),
     };
     await runtime.messageManager.createMemory(memory);
-    const newState = (await runtime.composeState(memory)) as State;
-    return [memory, newState];
 };
 
 export const addressTemplate = `From previous sentence extract only the Ethereum address being asked about.
@@ -112,13 +112,9 @@ export const getPassportScoreAction: Action = {
             }
 
             const data: PassportScore = await response.json();
-            const formattedOutput = `Address: ${data.address}\nScore: ${data.score}`;
+            const formattedOutput = `Address: ${data.address}\nScore: ${data.score}${data.passing_score ? "\nScore is above threshold" : `\nScore is below threshold (${data.threshold})`}`;
 
-            const [memory, newState] = await createTokenMemory(
-                runtime,
-                state,
-                formattedOutput
-            );
+            await createTokenMemory(runtime, _message, formattedOutput);
 
             callback({ text: formattedOutput }, []);
         } catch (error) {

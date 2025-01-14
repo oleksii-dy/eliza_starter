@@ -34,4 +34,5 @@ Getting your Scorer ID
 
 ## Usage
 
-Results are saved to State object and agents can retrive it from there for use
+Results are saved as message and agents can retrive it from there for different use cases.
+Default passport treshold of 20 is used, but you can pick your own value and match it agains that
