@@ -62,15 +62,6 @@ cp .env.example .env
 pnpm i && pnpm build && pnpm start
 ```
 
-Once the agent is running, you should see the message to run "pnpm start:client" at the end.
-Open another terminal and move to same directory and then run below command and follow the URL to chat to your agent.
-
-```bash
-pnpm start:client
-```
-
-Then read the [Documentation](https://elizaos.github.io/eliza/) to learn how to customize your Eliza.
-
 ### Manually Start Eliza (Only recommended if you know what you are doing)
 
 ```bash
@@ -82,7 +73,18 @@ git clone https://github.com/elizaos/eliza.git
 git checkout $(git describe --tags --abbrev=0)
 # If the above doesn't checkout the latest release, this should work:
 # git checkout $(git describe --tags `git rev-list --tags --max-count=1`)
+
 ```
+Once the agent is running, you should see the message to run "pnpm start:client" at the end.
+Open another terminal and move to same directory and then run below command and follow the URL to chat to your agent.
+
+```bash
+pnpm start:client
+```
+
+Then read the [Documentation](https://elizaos.github.io/eliza/) to learn how to customize your Eliza.
+
+
 
 ### Start Eliza with Gitpod
 
