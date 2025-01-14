@@ -21,7 +21,8 @@ const newsCyptoPanicTemplate = `Respond with a JSON markdown block containing on
     {
         currencies:null,
         kind: null,
-        filter: null
+        filter: null,
+        size: null
     }
     \`\`\`
     {{recentMessages}}
@@ -52,6 +53,7 @@ const newsCyptoPanicTemplate = `Respond with a JSON markdown block containing on
             saved
             lol (must be wrapped in double quotes)
             Recognize variations like "RISING", "HOT", "BULLISH", "BEARISH", "IMPORTANT", "SAVED", "LOL"
+    size: Number of news items to return: Must be a positive integer Default is 1 if not specified Maximum value is 100 Minimum value is 1 If mentioned in message, use that number If not mentioned, use default value 1
     VALIDATION RULES:
             All property names must use double quotes
             All string values must use double quotes
@@ -98,6 +100,7 @@ export  const getNewsCryptoPanic: Action = {
             }
             content.auth_token = process.env.CRYPTO_PANIC_API_KEY;
             content.approved=true
+
             if(content.currencies === null){
                 content.currencies = "BTC,ETH,SOL";
             }
@@ -107,6 +110,10 @@ export  const getNewsCryptoPanic: Action = {
             if( content.filter === null){
                 content.filter = "hot"
             }
+            if( content.size === null){
+                content.size = 1
+            }
+            const size = content.size;
             const requestOptions = {
                     method: "GET",
                     headers: {
@@ -115,8 +122,6 @@ export  const getNewsCryptoPanic: Action = {
 
                 };
             const queryString = new URLSearchParams(content).toString();
-
-
             const responseCryptoPanic = await fetch(`${urlCryptoPanic}?${queryString}`, requestOptions);
                 if (!responseCryptoPanic.ok) {
                     elizaLogger.error("API Response:", await responseCryptoPanic.text()); // Debug log
@@ -131,19 +136,19 @@ export  const getNewsCryptoPanic: Action = {
                 return await response.url;
               });
             const resultsOriginUrl = await Promise.all(promisesOriginUrl);
-            let dataResponse = dataCryptoPanic.results.map((item:any, index) => {
+            const dataResponse = dataCryptoPanic.results.map((item:any, index) => {
                 return {
                     title: item.title,
                     url: resultsOriginUrl[index]
                 }
             });
             let responseMessage = "All News today:\n- ";
-            responseMessage += dataCryptoPanic.results.map((item:any) => `${item.title}`).join("\n- ");
+
             callback({
                 text: responseMessage,
                 result:{
                     type: "news",
-                    data: dataResponse
+                    data: dataResponse.slice(0,size)
                 }
               })
             // elizaLogger.log("[coingecko] Handle with message ...DONE!");

@@ -1,6 +1,9 @@
-import { elizaLogger, IAgentRuntime, Memory, State } from "@elizaos/core";
+import {
+    // elizaLogger,
+
+    IAgentRuntime, Memory, State } from "@elizaos/core";
 import axios, { AxiosInstance } from "axios";
-import { match } from "../utils/matching";
+// import { match } from "../utils/matching";
 
 export class CoingeckoProvider {
   private axiosInstance: AxiosInstance;
@@ -34,9 +37,9 @@ export class CoingeckoProvider {
     try {
       const response = await this.axiosInstance.get("/search/trending");
       return response.data.coins.map((coin: any) => ({
-          id: coin.item.id, 
-          name: coin.item.name, 
-          symbol: coin.item.symbol.toUpperCase(), 
+          id: coin.item.id,
+          name: coin.item.name,
+          symbol: coin.item.symbol.toUpperCase(),
           market_cap_rank: coin.item.market_cap_rank,
           price: coin.item.data.price,
           total_volume: coin.item.data.total_volume,
@@ -70,14 +73,27 @@ export class CoingeckoProvider {
 
   async getTrendingNFTs() {
     try {
-      const response = await this.axiosInstance.get("/nfts/list", {
-        params: {
-          // order: "market_cap_desc",
-          per_page: 10,
-          page: 1,
-        },
-      });
-      return response.data;
+      const response = await this.axiosInstance.get("/search/trending");
+      return response.data.nfts.map((nft: any) => ({
+        id: nft.id,
+        name: nft.name,
+        symbol: nft.symbol.toUpperCase(),
+        // market_cap_rank: nft.item.market_cap_rank,
+        // price: nft.item.data.price,
+        // total_volume: nft.item.data.total_volume,
+        // market_cap: nft.item.data.market_cap,
+        thumb: nft.thumb,
+        native_currency_symbol:nft.native_currency_symbol,
+        floor_price_in_native_currency:nft.floor_price_in_native_currency,
+        floor_price_24h_percentage_change: nft.floor_price_24h_percentage_change,
+        data:{
+            floor_price:nft.data.floor_price,
+            floor_price_in_usd_24h_percentage_change:nft.data.floor_price_in_usd_24h_percentage_change,
+            h24_volume:nft.data.h24_volume,
+            
+        }
+
+    }));
     } catch (error) {
       console.error("Error fetching trending NFTs:", error);
       throw new Error("Failed to fetch trending NFTs");
@@ -104,15 +120,64 @@ export class CoingeckoProvider {
     }
   }
 
-  async getTopMarketInfo(currency: string = "usd", limit: number = 10) {
+  //@fixme
+  async getTrendingMemeCoinsOnSui(limit: number = 10) {
+    try {
+      const categoriesResponse = await this.axiosInstance.get(`/coins/categories`);
+      const memeCategory = categoriesResponse.data.find(
+        (category: any) => category.name.toLowerCase() === "meme"
+      );
+
+      if (!memeCategory) {
+        throw new Error("Meme category not found");
+      }
+
+      const coinsResponse = await this.axiosInstance.get(`/coins/markets`, {
+        params: {
+          vs_currency: "usd",
+          category: "meme",
+          order: "market_cap_desc",
+          per_page: 100,
+          page: 1,
+        },
+      });
+
+      const suiMemeCoins = coinsResponse.data.filter(
+        (coin: any) => coin.asset_platform_id === "sui"
+      );
+
+      return suiMemeCoins.slice(0, limit);
+    } catch (error) {
+      console.error("Error fetching trending meme coins on Sui:", error);
+      throw new Error("Failed to fetch trending meme coins on Sui network");
+    }
+  }
+
+  async getTopMarketInfo(
+    currency: string = "usd",
+    ids: string = "bitcoin,ethereum,solana,bnb,cardano,sui",
+    category: string = "layer-1",
+    order: string = "market_cap_desc",
+    per_page: number = 10,
+    page: number = 1,
+    price_change_percentage: string = "1h",
+    locale: string = "en",
+    precision: string = "8"
+
+) {
     try {
       const response = await this.axiosInstance.get("/coins/markets", {
         params: {
           vs_currency: currency,
-          order: "market_cap_desc",
-          per_page: limit,
-          page: 1,
+          order: order,
+          per_page: per_page,
+          page: page,
           sparkline: false,
+          ids,
+          category,
+          price_change_percentage,
+          locale,
+          precision
         },
       });
 
@@ -132,7 +197,7 @@ export class CoingeckoProvider {
   //@fixme exactly evaluate content to decide AI tokens
   async topAiTokens(runtime: IAgentRuntime, message: Memory, state: State, currency: string = "usd", limit: number = 10) {
     try {
-        const categoriesResponse = await this.axiosInstance.get("/coins/categories");        
+        const categoriesResponse = await this.axiosInstance.get("/coins/categories");
         const aiCategory = categoriesResponse.data.find((category: any) =>
            category.name.toLowerCase().includes(" ai ")
         );
@@ -168,8 +233,8 @@ export class CoingeckoProvider {
   //@fixme exactly evaluate content to decide AI tokens
   async topMemeTokens(runtime: IAgentRuntime, message: Memory, state: State, currency: string = "usd", limit: number = 10) {
     try {
-        const categoriesResponse = await this.axiosInstance.get("/coins/categories");        
-        
+        const categoriesResponse = await this.axiosInstance.get("/coins/categories");
+
         //@fixme
         const aiCategory = categoriesResponse.data.find((category: any) =>
           true

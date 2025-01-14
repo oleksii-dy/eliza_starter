@@ -25,7 +25,7 @@ import {
     DatabaseAdapter,
     EmbeddingProvider,
 } from "@elizaos/core";
-import fs from "fs";
+// import fs from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
 
@@ -1456,6 +1456,66 @@ export class PostgresDatabaseAdapter
                 return false;
             }
         }, "deleteCache");
+    }
+    async checkCategoriesExist(params: { categoryId: string }): Promise<boolean> {
+        return this.withDatabase(async () => {
+            const { rows } = await this.pool.query(
+                "SELECT 1 FROM categories WHERE id = $1",
+                [params.categoryId]
+            );
+            return rows.length > 0;
+        }, "checkCategoriesExist");
+    }
+    async checkCoinExists(params: { coins: string }){
+        //coins = "bitcoin,ethereum"
+
+        const coinsArray = params.coins.split(',');
+        return this.withDatabase(async () => {
+            const { rows } = await this.pool.query(
+                `WITH input_ids AS (
+                        SELECT unnest($1::text[]) AS id
+                    )
+                    SELECT
+                        input_ids.id AS input_id,
+                        CASE
+                        WHEN cryptocurrencies.id IS NOT NULL THEN 'Valid'
+                        ELSE 'Invalid'
+                        END AS status
+                    FROM input_ids
+                    LEFT JOIN public.cryptocurrencies ON input_ids.id = cryptocurrencies.id;`,
+                [coinsArray]
+            );
+
+            const validIds: string[] = [];
+            const invalidIds: string[] = [];
+            rows.forEach(row => {
+                if (row.status === 'Valid') {
+                  validIds.push(row.input_id);
+                } else {
+                  invalidIds.push(row.input_id);
+                }
+              });
+            return {validIds, invalidIds};
+        }, "checkCoinExists");
+    }
+    async checkCurrencyExists (params: { currency: string }) {
+        return this.withDatabase(async () => {
+            const { rows } = await this.pool.query(
+                "SELECT 1 FROM currencies WHERE id = $1",
+                [params.currency]
+            );
+            return rows.length > 0;
+        }, "checkCurrencyExists");
+
+     }
+    async coinIdSuggestion  (params: { coinId: string }) {
+        return this.withDatabase(async () => {
+            const { rows } = await this.pool.query(
+                `SELECT id FROM cryptocurrencies WHERE id ILIKE $1`,
+                [`${params.coinId}%`]
+            );
+            return rows.map((row) => row.id);
+        }, "coinIdSuggestion");
     }
 }
 

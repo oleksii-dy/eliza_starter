@@ -10,8 +10,8 @@ import {
 export const bestTrader: Action = {
   name: 'bestTrader',
   description: 'Get trader with the best portfolio performance',
-    handler: async (runtime: IAgentRuntime, 
-                    message: Memory,  
+    handler: async (runtime: IAgentRuntime,
+                    message: Memory,
                     state: State,
                     options: { [key: string]: unknown },
                     callback: HandlerCallback) => {
@@ -29,7 +29,7 @@ export const bestTrader: Action = {
             return false;
         }
     },
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
       elizaLogger.log("[portfolio] Validating ...");
       elizaLogger.log("[portfolio] Validating ...DONE");
       return true;

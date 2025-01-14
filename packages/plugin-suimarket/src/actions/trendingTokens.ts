@@ -1,6 +1,6 @@
 import {
-    ActionExample,
-    Content,
+    // ActionExample,
+    // Content,
     HandlerCallback,
     IAgentRuntime,
     Memory,
@@ -8,35 +8,58 @@ import {
     State,
     composeContext,
     elizaLogger,
-    generateObject,
+    // generateObject,
     type Action,
 } from "@elizaos/core";
-
+import { generateObjectDeprecated } from "@elizaos/core";
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
-import { formatObjectsToText } from "../utils/format";
+// import { formatObjectsToText } from "../utils/format";
+const trendingPromptTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
+    Example response:
+    \`\`\`json
+    {
+        size:1
+    }
+    \`\`\`
+    {{recentMessages}}
+
+    Extract ONLY from the current message (ignore any previous context or messages):
+
+        Given the recent messages, extract the following information:
+
+        size: Number of news items to return: Must be a positive integer Default is 1 if not specified Maximum value is 100 Minimum value is 1 If mentioned in message, use that number If not mentioned, use default value 1
+
+        VALIDATION RULES:
+            All property names must use double quotes
+            All string values must use double quotes
+            null values should not use quotes
+            No trailing commas allowed
+            No single quotes anywhere in the JSON
+
+    Respond with a JSON markdown block containing only the extracted values.`;
 
 
 export const trendingTokens: Action = {
     name: "trendingTokens",
-    
+
     description: "Get trending tokens",
 
     similes: [
-        "show trending coins",
-        "get hot tokens",
-        "fetch trending crypto",
-        "display popular tokens",
-        "show what's trending",
-        "get most searched tokens",
-        "list viral cryptocurrencies",
-        "show buzzing tokens",
-        "get hyped coins",
-        "display trending gainers",
-        "fetch trending movers",
-        "show trending momentum",
-        "get viral tokens",
-        "display trending markets",
-        "show breakout tokens"
+        "SHOW_TRENDING_COINS",
+        "GET_HOT_TOKENS",
+        "FETCH_TRENDING_CRYPTO",
+        "DISPLAY_POPULAR_TOKENS",
+        "SHOW_WHATS_TRENDING",
+        "GET_MOST_SEARCHED_TOKENS",
+        "LIST_VIRAL_CRYPTOCURRENCIES",
+        "SHOW_BUZZING_TOKENS",
+        "GET_HYPED_COINS",
+        "DISPLAY_TRENDING_GAINERS",
+        "FETCH_TRENDING_MOVERS",
+        "SHOW_TRENDING_MOMENTUM",
+        "GET_VIRAL_TOKENS",
+        "DISPLAY_TRENDING_MARKETS",
+        "SHOW_BREAKOUT_TOKENS"
     ],
 
     examples: [
@@ -97,11 +120,11 @@ export const trendingTokens: Action = {
         }
     ]
     ],
-    
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         return true;
     },
-    
+
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -116,14 +139,28 @@ export const trendingTokens: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-
-        let coinGecko = new CoingeckoProvider();
-        let info = await coinGecko.getTrendingTokens();
+        const newsCryptoPannicContext = composeContext({
+            state,
+            template: trendingPromptTemplate,
+        });
+        // Generate transfer content
+        const content = await generateObjectDeprecated({
+            runtime,
+            context: newsCryptoPannicContext,
+            modelClass: ModelClass.SMALL,
+        });
+        elizaLogger.log("content: ",content);
+        const coinGecko = new CoingeckoProvider();
+        const info = await coinGecko.getTrendingTokens();
 
         if (callback) {
             callback({
-                text: `[trendingTokens]: ` + (await formatObjectsToText(info)),
-                action: 'trendingTokens'
+                text: `Below are ${content.size} trending coins we have collected,`,
+                action: 'trendingTokens',
+                result: {
+                    type: "marketStatisticsTable",
+                    data:info.slice(0,content.size)
+                }
             });
         }
 

@@ -3,7 +3,7 @@ services:
         image: redis:alpine
         restart: unless-stopped
         ports:
-            - '6379:6379'
+            - '6380:6380'
         networks:
             - eliza_network
 
@@ -11,7 +11,7 @@ services:
         image: pgvector/pgvector:0.8.0-pg17
         restart: unless-stopped
         ports:
-            - '5432:5432'
+            - '5431:5431'
         environment:
             POSTGRES_DB: eliza
             POSTGRES_USER: eliza
