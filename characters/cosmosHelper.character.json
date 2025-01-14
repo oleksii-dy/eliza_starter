@@ -5,13 +5,6 @@
     "settings": {
         "voice": {
             "model": "en_US-male-medium"
-        },
-        "chains": {
-            "cosmos": [
-                "axelar",
-                "carbon",
-                "mantrachaintestnet2"
-            ]
         }
     },
     "plugins": [],

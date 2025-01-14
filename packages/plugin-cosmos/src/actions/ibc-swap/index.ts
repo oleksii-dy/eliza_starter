@@ -9,7 +9,7 @@ import {
 } from "@elizaos/core";
 
 import { initWalletChainsData } from "../../providers/wallet/utils";
-import { cosmosIBCSwapTemplate, cosmosTransferTemplate } from "../../templates";
+import { cosmosIBCSwapTemplate } from "../../templates";
 import type {
     ICosmosPluginOptions,
     ICosmosWalletChains,
@@ -28,7 +28,7 @@ export const createIBCSwapAction = (pluginOptions: ICosmosPluginOptions) => ({
         _options: { [key: string]: unknown },
         _callback?: HandlerCallback
     ) => {
-        const cosmosIBCTransferContext = composeContext({
+        const cosmosIBCSwapContext = composeContext({
             state: state,
             template: cosmosIBCSwapTemplate,
             templatingEngine: "handlebars",
@@ -36,7 +36,7 @@ export const createIBCSwapAction = (pluginOptions: ICosmosPluginOptions) => ({
 
         const cosmosIBCSwapContent = await generateObjectDeprecated({
             runtime: _runtime,
-            context: cosmosIBCTransferContext,
+            context: cosmosIBCSwapContext,
             modelClass: ModelClass.SMALL,
         });
 
@@ -65,23 +65,24 @@ export const createIBCSwapAction = (pluginOptions: ICosmosPluginOptions) => ({
                 (chainData) => chainData.assets
             );
 
-            const transferResp = await action.execute(
-                paramOptions,
-                customAssets,
-                _callback
-            );
-
             if (_callback) {
+
+                const swapResp = await action.execute(
+                    paramOptions,
+                    customAssets,
+                    _callback
+                );
+
                 const text =
-                    transferResp.status === "STATE_COMPLETED_SUCCESS"
-                        ? `Successfully swapped ${transferResp.fromTokenAmount} ${transferResp.fromTokenSymbol} tokens to ${transferResp.toTokenSymbol} on chain ${transferResp.toChainName}.\nTransaction Hash: ${transferResp.txHash}`
-                        : `Error occured swapping ${transferResp.fromTokenAmount} ${transferResp.fromTokenSymbol} tokens to ${transferResp.toTokenSymbol} on chain ${transferResp.toChainName}.\nTransaction Hash: ${transferResp.txHash}, try again`;
+                    swapResp.status === "STATE_COMPLETED_SUCCESS"
+                        ? `Successfully swapped ${swapResp.fromTokenAmount} ${swapResp.fromTokenSymbol} tokens to ${swapResp.toTokenSymbol} on chain ${swapResp.toChainName}.\nTransaction Hash: ${swapResp.txHash}`
+                        : `Error occured swapping ${swapResp.fromTokenAmount} ${swapResp.fromTokenSymbol} tokens to ${swapResp.toTokenSymbol} on chain ${swapResp.toChainName}.\nTransaction Hash: ${swapResp.txHash}, try again`;
                 await _callback({
                     text: text,
                     content: {
                         success:
-                            transferResp.status === "STATE_COMPLETED_SUCCESS",
-                        hash: transferResp.txHash,
+                            swapResp.status === "STATE_COMPLETED_SUCCESS",
+                        hash: swapResp.txHash,
                         fromTokenAmount: paramOptions.fromTokenAmount,
                         fromToken: paramOptions.fromTokenSymbol,
                         toToken: paramOptions.toTokenSymbol,
@@ -92,7 +93,7 @@ export const createIBCSwapAction = (pluginOptions: ICosmosPluginOptions) => ({
             }
             return true;
         } catch (error) {
-            console.error("Error during ibc token transfer:", error);
+            console.error("Error during ibc token swap:", error);
 
             const regex =
                 /Ambiguity Error.*value:([^\s.]+)\s+chainName:([^\s.]+)/;
@@ -113,7 +114,7 @@ export const createIBCSwapAction = (pluginOptions: ICosmosPluginOptions) => ({
 
                 if (_callback) {
                     await _callback({
-                        text: `Error ibc transferring tokens: ${error.message}`,
+                        text: `Error ibc swapping tokens: ${error.message}`,
                         content: { error: error.message },
                     });
                 }
@@ -121,7 +122,7 @@ export const createIBCSwapAction = (pluginOptions: ICosmosPluginOptions) => ({
             return false;
         }
     },
-    template: cosmosTransferTemplate,
+    template: cosmosIBCSwapTemplate,
     validate: async (runtime: IAgentRuntime) => {
         const mnemonic = runtime.getSetting("COSMOS_RECOVERY_PHRASE");
         const availableChains = runtime.getSetting("COSMOS_AVAILABLE_CHAINS");
