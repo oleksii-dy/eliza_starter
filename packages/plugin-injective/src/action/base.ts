@@ -1,4 +1,5 @@
 // createGenericAction.ts
+import { ActionExample } from "@elizaos/core";
 import {
     HandlerCallback,
     IAgentRuntime,
@@ -47,7 +48,7 @@ export function createGenericAction({
     return {
         name, // e.g. "PLACE_BID"
         description, // e.g. "Place a bid using the InjectiveGrpcClient"
-        examples, // your example user/assistant conversation
+        examples: [examples as ActionExample[]], // I have manually casted the inputs here
         similes, // (optional) synonyms or alternate names if you like
         // (Optional) global validation for the entire Action
         validate: async (_runtime, _message) => {

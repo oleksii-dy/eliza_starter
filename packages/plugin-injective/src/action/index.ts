@@ -1,4 +1,3 @@
-import { Action } from "@elizaos/core";
 import { AuctionActions } from "./auction";
 import { AuthActions } from "./auth";
 import { BankActions } from "./bank";
@@ -15,7 +14,6 @@ import { PermissionsActions } from "./permissions";
 import { StakingActions } from "./staking";
 import { TokenFactoryActions } from "./token-factory";
 import { WasmActions } from "./wasm";
-
 // Exporting all actions
 export * from "./auction";
 export * from "./auth";
@@ -34,23 +32,23 @@ export * from "./staking";
 export * from "./token-factory";
 export * from "./wasm";
 
-export const InjectiveActions: Array<Action> = [
-    ...AuctionActions,
-    ...AuthActions,
-    ...BankActions,
-    ...DistributionActions,
+export const InjectiveActions = [
     ...ExchangeActions,
-    ...ExplorerActions,
-    ...GovActions,
-    ...IbcActions,
-    ...InsuranceActions,
-    ...MintActions,
-    ...MitoActions,
-    ...PeggyActions,
-    ...PermissionsActions,
-    ...StakingActions,
-    ...TokenFactoryActions,
-    ...WasmActions,
+    //...AuctionActions,
+    //...AuthActions,
+    //...BankActions,
+    //...DistributionActions,
+    //...ExplorerActions,
+    //...GovActions,
+    //...IbcActions,
+    //...InsuranceActions,
+    //...MintActions,
+    //...MitoActions,
+    //...PeggyActions,
+    //...PermissionsActions,
+    //...StakingActions,
+    //...TokenFactoryActions,
+    //...WasmActions,
 ];
 
 export default InjectiveActions;
