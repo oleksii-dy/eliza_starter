@@ -1038,7 +1038,8 @@ export async function generateText({
                     method: "POST",
                     headers: {
                         "accept": "text/event-stream",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer eliza-app-llm"
                     },
                     body: JSON.stringify(requestBody),
                     signal, // Add signal for no buffering
@@ -1697,6 +1698,7 @@ export const generateImage = async (
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
+                            Authorization: "Bearer eliza-app-img",
                         },
                         body: JSON.stringify({
                             model_id:
