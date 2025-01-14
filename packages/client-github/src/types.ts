@@ -52,6 +52,7 @@ export const isOODAContent = (object: any): object is OODAContent => {
 };
 
 export enum ClientStage {
-    GITHUB_INFO_DISCOVERY = "GITHUB_INFO_DISCOVERY",
-    OODA = "OODA",
+    GITHUB_INFO_DISCOVERY_LOOP = "GITHUB_INFO_DISCOVERY_LOOP",
+    REPO_INIT_LOOP = "REPO_INIT_LOOP",
+    OODA_LOOP = "OODA_LOOP",
 }
