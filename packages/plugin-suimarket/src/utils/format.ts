@@ -20,7 +20,7 @@ export async function formatObjectsToText(items: any[]): Promise<string> {
 }
 
 
-export function formatObjectToText(data: any): string {
+export async function formatObjectToText(data: any): Promise<string> {
   return Object.entries(data)
     .map(([key, value]) => `${key}: ${value}`)
     .join("\n");
