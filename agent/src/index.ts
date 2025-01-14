@@ -25,6 +25,7 @@ import {
     validateCharacterConfig,
 } from "@ai16z/eliza";
 import { zgPlugin } from "@ai16z/plugin-0g";
+import { agentKitPlugin } from "@ai16z/plugin-agentkit";
 import { goatPlugin } from "@ai16z/plugin-goat";
 import { bootstrapPlugin } from "@ai16z/plugin-bootstrap";
 // import { buttplugPlugin } from "@ai16z/plugin-buttplug";
@@ -401,7 +402,12 @@ export function createAgent(
                 : null,
             ...(getSecret(character, "COINBASE_API_KEY") &&
             getSecret(character, "COINBASE_PRIVATE_KEY")
-                ? [coinbaseMassPaymentsPlugin, tradePlugin, tokenContractPlugin, advancedTradePlugin]
+                ? [
+                      coinbaseMassPaymentsPlugin,
+                      tradePlugin,
+                      tokenContractPlugin,
+                      advancedTradePlugin,
+                  ]
                 : []),
             getSecret(character, "COINBASE_API_KEY") &&
             getSecret(character, "COINBASE_PRIVATE_KEY") &&
@@ -415,6 +421,10 @@ export function createAgent(
                 ? flowPlugin
                 : null,
             getSecret(character, "APTOS_PRIVATE_KEY") ? aptosPlugin : null,
+            getSecret(character, "CDP_API_KEY_NAME") &&
+            getSecret(character, "CDP_API_KEY_PRIVATE_KEY")
+                ? agentKitPlugin
+                : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
