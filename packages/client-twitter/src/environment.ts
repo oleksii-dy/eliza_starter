@@ -111,7 +111,7 @@ export async function validateTwitterConfig(
         ACTION_TIMELINE_TYPE: ActionTimelineType.ForYou,
     };
 
-    elizaLogger.error("Raw Twitter config values:", {
+    elizaLogger.info("Raw Twitter config values:", {
         runtimeUsername: runtime.getSetting("TWITTER_USERNAME"),
         envUsername: process.env.TWITTER_USERNAME,
         runtimeEmail: runtime.getSetting("TWITTER_EMAIL"),
@@ -119,7 +119,7 @@ export async function validateTwitterConfig(
         finalEmail: config.TWITTER_EMAIL
     });
 
-    elizaLogger.error("Twitter config validation:", {
+    elizaLogger.info("Twitter config validation:", {
         username: config.TWITTER_USERNAME,
         email: config.TWITTER_EMAIL,
         hasPassword: !!config.TWITTER_PASSWORD,
