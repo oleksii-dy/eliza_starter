@@ -94,6 +94,7 @@ export const createIssueAction: Action = {
         try {
             const issuesMemories = await saveIssuesToMemory(
                 runtime,
+                message,
                 content.owner,
                 content.repo,
                 runtime.getSetting("GITHUB_BRANCH"),
@@ -117,6 +118,7 @@ export const createIssueAction: Action = {
 
             const memory = await saveIssueToMemory(
                 runtime,
+                message,
                 issue,
                 content.owner,
                 content.repo,

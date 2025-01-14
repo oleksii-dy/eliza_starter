@@ -50,9 +50,3 @@ export interface OODAContent {
 export const isOODAContent = (object: any): object is OODAContent => {
     return OODASchema.safeParse(object).success;
 };
-
-export enum ClientStage {
-    GITHUB_INFO_DISCOVERY_LOOP = "GITHUB_INFO_DISCOVERY_LOOP",
-    REPO_INIT_LOOP = "REPO_INIT_LOOP",
-    OODA_LOOP = "OODA_LOOP",
-}

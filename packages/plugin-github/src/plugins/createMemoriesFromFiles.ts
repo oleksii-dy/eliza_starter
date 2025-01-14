@@ -50,7 +50,7 @@ export async function addFilesToMemory(
         const memoryId = stringToUuid(
             `github-${owner}-${repo}-${branch}-${relativePath}-${contentHash}`
         );
-        const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
+        // const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
 
         elizaLogger.info("Memory ID:", memoryId);
         const existingDocument =
@@ -73,7 +73,7 @@ export async function addFilesToMemory(
             id: memoryId,
             userId: message.userId,
             agentId: message.agentId,
-            roomId: roomId,
+            roomId: message.roomId,
             content: {
                 text: content,
                 hash: contentHash,

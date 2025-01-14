@@ -275,13 +275,14 @@ export const getFilesFromMemories = async (
 
 export async function getIssuesFromMemories(
     runtime: IAgentRuntime,
+    message: Memory,
     owner: string,
     repo: string,
     branch: string
 ): Promise<Memory[]> {
-    const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
+    // const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
     const memories = await runtime.messageManager.getMemories({
-        roomId: roomId,
+        roomId: message.roomId,
         count: 1000,
     });
     // elizaLogger.log("Memories:", memories);
@@ -330,20 +331,21 @@ export const getPullRequestFromMemories = async (
 
 export async function saveIssueToMemory(
     runtime: IAgentRuntime,
+    message: Memory,
     issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"],
     owner: string,
     repo: string,
     branch: string
 ): Promise<Memory> {
-    const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
+    // const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
     const issueId = stringToUuid(
-        `${roomId}-${runtime.agentId}-issue-${issue.number}`
+        `${message.roomId}-${runtime.agentId}-issue-${issue.number}`
     );
     const issueMemory: Memory = {
         id: issueId,
         userId: runtime.agentId,
         agentId: runtime.agentId,
-        roomId: roomId,
+        roomId: message.roomId,
         content: {
             text: `Issue Created: ${issue.title}`,
             action: "CREATE_ISSUE",
@@ -377,16 +379,17 @@ export async function saveIssueToMemory(
 
 export const saveIssuesToMemory = async (
     runtime: IAgentRuntime,
+    message: Memory,
     owner: string,
     repository: string,
     branch: string,
     apiToken: string,
     limit: number = 999999
 ): Promise<Memory[]> => {
-    const roomId = stringToUuid(`github-${owner}-${repository}-${branch}`);
-    const memories = await runtime.messageManager.getMemories({
-        roomId: roomId,
-    });
+    // const roomId = stringToUuid(`github-${owner}-${repository}-${branch}`);
+    // const memories = await runtime.messageManager.getMemories({
+    //     roomId: message.roomId,
+    // });
     const githubService = new GitHubService({
         owner: owner,
         repo: repository,
@@ -411,6 +414,7 @@ export const saveIssuesToMemory = async (
         // if (!issueMemory) {
         const newIssueMemory = await saveIssueToMemory(
             runtime,
+            message,
             issue,
             owner,
             repository,
@@ -469,13 +473,14 @@ export async function incorporateRepositoryState(
     // We need to actually save goals, knowledge,facts, we only save memories for now
     // We need to dynamically update the goals, knoweldge, facts, bio, lore, we should add actions to update these and chain them to the OODA cycle
     state.owner = owner;
-    state.repository = repository;
+    state.repo = repository;
     state.branch = branch;
     state.message = message.content.text;
 
     if (isIssuesFlow) {
         const previousIssues = await getIssuesFromMemories(
             runtime,
+            message,
             owner,
             repository,
             branch
@@ -500,6 +505,7 @@ export async function incorporateRepositoryState(
     if (isPullRequestsFlow) {
         const previousPRs = await getPullRequestsFromMemories(
             runtime,
+            message,
             owner,
             repository,
             branch
@@ -524,13 +530,14 @@ export async function incorporateRepositoryState(
 
 export async function getPullRequestsFromMemories(
     runtime: IAgentRuntime,
+    message: Memory,
     owner: string,
     repo: string,
     branch: string
 ): Promise<Memory[]> {
-    const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
+    // const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
     const memories = await runtime.messageManager.getMemories({
-        roomId: roomId,
+        roomId: message.roomId,
         count: 1000,
     });
     // Filter memories to only include those that are pull requests
@@ -570,6 +577,7 @@ ${examples}
 
 export async function savePullRequestToMemory(
     runtime: IAgentRuntime,
+    message: Memory,
     pullRequest: RestEndpointMethodTypes["pulls"]["list"]["response"]["data"][number],
     owner: string,
     repository: string,
@@ -583,13 +591,13 @@ export async function savePullRequestToMemory(
         auth: apiToken,
     });
     const prId = stringToUuid(
-        `${roomId}-${runtime.agentId}-pr-${pullRequest.number}`
+        `${message.roomId}-${runtime.agentId}-pr-${pullRequest.number}`
     );
     const prMemory: Memory = {
         id: prId,
         userId: runtime.agentId,
         agentId: runtime.agentId,
-        roomId: roomId,
+        roomId: message.roomId,
         content: {
             text: `Pull Request Created: ${pullRequest.title}`,
             metadata: await getPullRequestMetadata(pullRequest, githubService),
@@ -637,15 +645,16 @@ export async function saveCreatedPullRequestToMemory(
 
 export const savePullRequestsToMemory = async (
     runtime: IAgentRuntime,
+    message: Memory,
     owner: string,
     repository: string,
     branch: string,
     apiToken: string,
     limit: number = 999999
 ): Promise<Memory[]> => {
-    const roomId = stringToUuid(`github-${owner}-${repository}-${branch}`);
+    // const roomId = stringToUuid(`github-${owner}-${repository}-${branch}`);
     const memories = await runtime.messageManager.getMemories({
-        roomId: roomId,
+        roomId: message.roomId,
     });
     const githubService = new GitHubService({
         owner: owner,
@@ -657,16 +666,18 @@ export const savePullRequestsToMemory = async (
     // create memories for each pull request if they are not already in the memories
     for (const pr of pullRequests) {
         // check if the pull request is already in the memories by checking id in the memories
-
         const prMemory =
             memories.find(
                 (memory) =>
                     memory.id ===
-                    stringToUuid(`${roomId}-${runtime.agentId}-pr-${pr.number}`)
+                    stringToUuid(
+                        `${message.roomId}-${runtime.agentId}-pr-${pr.number}`
+                    )
             ) ?? null;
         if (!prMemory) {
             const newPrMemory = await savePullRequestToMemory(
                 runtime,
+                message,
                 pr,
                 owner,
                 repository,
