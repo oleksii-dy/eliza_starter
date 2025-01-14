@@ -1,113 +1,90 @@
-import { Ellipsis, StopCircle, Volume2 } from "lucide-react";
-import { Button } from "../button";
-import { useMutation } from "@tanstack/react-query";
-import { useRef, useState } from "react";
-import { apiClient } from "@/lib/api";
-import { Tooltip, TooltipTrigger, TooltipContent } from "../tooltip";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
+import { UUID } from "@elizaos/core";
+import { useMutation } from "@tanstack/react-query";
+import { Volume2, VolumeX } from "lucide-react";
+import { useState, useRef } from "react";
+import { apiClient } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
-export default function ChatTtsButton({
-    agentId,
-    text,
-}: {
-    agentId: string;
+interface ChatTtsButtonProps {
+    agentId: UUID;
     text: string;
-}) {
+}
+
+export default function ChatTtsButton({ agentId, text }: ChatTtsButtonProps) {
     const { toast } = useToast();
-    const [playing, setPlaying] = useState<boolean>(false);
-    const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    const mutation = useMutation({
-        mutationKey: ["tts", text],
+    const ttsQuery = useMutation({
+        mutationKey: ["tts", agentId, text],
         mutationFn: () => apiClient.tts(agentId, text),
-        onSuccess: (data) => {
-            setAudioBlob(data);
-            play();
+        onSuccess: (audioBlob: Blob) => {
+            if (audioRef.current) {
+                const url = URL.createObjectURL(audioBlob);
+                audioRef.current.src = url;
+                audioRef.current.play();
+                setIsPlaying(true);
+            }
         },
-        onError: (e) => {
+        onError: (error: Error) => {
             toast({
                 variant: "destructive",
-                title: "Unable to read message aloud",
-                description: e.message,
+                title: "Text-to-speech failed",
+                description: error.message,
             });
         },
     });
 
-    const play = () => {
-        if (audioRef.current) {
-            audioRef.current.play().catch((err) => {
-                console.error("Error playing audio:", err);
-            });
-        }
-        setPlaying(true);
-    };
-
-    const stop = () => {
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-        }
-        setPlaying(false);
-    };
-
-    const execute = () => {
-        if (mutation?.isPending) return;
-
-        if (playing) {
-            stop();
-            return;
-        }
-
-        if (audioBlob) {
-            play();
-            return;
-        } else {
-            mutation.mutate();
+    const handlePlayPause = () => {
+        if (!audioRef.current?.src && !isPlaying) {
+            ttsQuery.mutate();
+        } else if (audioRef.current) {
+            if (isPlaying) {
+                audioRef.current.pause();
+                setIsPlaying(false);
+            } else {
+                audioRef.current.play();
+                setIsPlaying(true);
+            }
         }
     };
-
-    const iconClass = "text-muted-foreground size-4";
 
     return (
-        <div>
-            {audioBlob ? (
-                <audio
-                    ref={audioRef}
-                    onEnded={() => {
-                        setPlaying(false);
-                    }}
-                    autoPlay
-                >
-                    <source
-                        src={URL.createObjectURL(audioBlob)}
-                        type="audio/mpeg"
-                    />
-                    Your browser does not support the audio element.
-                </audio>
-            ) : null}
+        <>
+            <audio
+                ref={audioRef}
+                onEnded={() => setIsPlaying(false)}
+                onPause={() => setIsPlaying(false)}
+            />
             <Tooltip>
                 <TooltipTrigger asChild>
                     <Button
-                        size="icon"
                         variant="ghost"
-                        type="button"
-                        onClick={() => execute()}
-                        disabled={mutation?.isPending}
-                    >
-                        {mutation?.isPending ? (
-                            <Ellipsis className={iconClass} />
-                        ) : playing ? (
-                            <StopCircle className={iconClass} />
-                        ) : (
-                            <Volume2 className={iconClass} />
+                        size="icon"
+                        className={cn(
+                            "size-6 hover:text-primary transition-colors duration-200",
+                            isPlaying && "text-primary"
                         )}
+                        onClick={handlePlayPause}
+                        disabled={ttsQuery.isPending}
+                    >
+                        {isPlaying ? (
+                            <Volume2 className="size-3.5 animate-pulse" />
+                        ) : (
+                            <VolumeX className="size-3.5" />
+                        )}
+                        <span className="sr-only">
+                            {isPlaying ? "Stop" : "Play"} text-to-speech
+                        </span>
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                    <p>{playing ? "Stop" : "Read aloud"}</p>
+                    <p>{isPlaying ? "Stop" : "Play"} text-to-speech</p>
                 </TooltipContent>
             </Tooltip>
-        </div>
+        </>
     );
 }
