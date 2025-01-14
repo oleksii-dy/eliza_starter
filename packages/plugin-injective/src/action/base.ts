@@ -151,12 +151,12 @@ export function createGenericAction({
                 if (callback) {
                     if (response.success) {
                         callback({
-                            text: `Operation ${name} succeeded.\nTxHash: ${response.result.txHash}`,
+                            text: `Operation ${name} succeeded.\nTxHash: ${response.result}`,
                             content: response.result,
                         });
                     } else {
                         callback({
-                            text: `Operation ${name} failed.\n${response.result.rawLog}`,
+                            text: `Operation ${name} failed.\n${response.result}`,
                             content: response.result,
                         });
                     }
