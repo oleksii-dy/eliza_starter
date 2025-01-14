@@ -1,11 +1,12 @@
-import { Action, composeContext, elizaLogger, generateObjectArray, generateText, HandlerCallback, IAgentRuntime, Memory, ModelClass, settings, State } from "@elizaos/core";
+import { Action, composeContext, elizaLogger, generateObjectArray, generateText, HandlerCallback, IAgentRuntime, Memory, ModelClass, parseJSONObjectFromText, settings, State } from "@elizaos/core";
 import { fetchPosition, fetchWhirlpool, getPositionAddress } from "@orca-so/whirlpools-client";
 import { address, createSolanaRpc, IInstruction } from "@solana/web3.js";
 import { loadWallet } from "../../utils/loadWallet";
 import { sqrtPriceToPrice } from "@orca-so/whirlpools-core";
 import { fetchMint } from "@solana-program/token-2022";
-import { closePositionInstructions, IncreaseLiquidityQuoteParam, openPositionInstructions } from "@orca-so/whirlpools";
+import { closePositionInstructions, IncreaseLiquidityQuoteParam, openPositionInstructions, setNativeMintWrappingStrategy } from "@orca-so/whirlpools";
 import { sendTransaction } from "../../utils/sendTransaction";
+import { parse } from "path";
 
 interface RepositionPositionParams {
     positionMint: string;
@@ -21,10 +22,10 @@ function isRepositionPositionParams(
     );
 }
 
-export const repositionPosition: Action = {
-    name: 'reposition_position',
-    similes: ["REPOSITION_POSTION", "REPOSITION", "REPOSITION_LIQUIDITY_POSITION"],
-    description: "Reposition a liquidity position when it drifts too far from the pool price",
+export const repositionPositions: Action = {
+    name: 'reposition_positions',
+    similes: ["REPOSITION_POSTIONS", "REPOSITION", "REPOSITION_LIQUIDITY_POSITIONS"],
+    description: "Reposition liquidity positions",
 
     validate: async (runtime: IAgentRuntime, message: Memory) => {
       return true;
@@ -33,10 +34,10 @@ export const repositionPosition: Action = {
         runtime: IAgentRuntime,
         message: Memory,
         state: State,
-        _options: { [key: string]: unknown },
+        parameters: { [key: string]: unknown },
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log("Start repositioning position");
+        elizaLogger.log("Start repositioning positions");
 
         if (!state) {
             state = (await runtime.composeState(message)) as State;
@@ -44,103 +45,99 @@ export const repositionPosition: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        const prompt = composeContext({
-            state,
-            template: `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
+        const prompt = `Give this message: ${message.content.text}, format it into a JSON object Respond with a JSON of the following structure:
 
             Example response:
-            {
-                "positionMint": "BieefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8pump",
-                "positionWidthBps": 500
-            }
-            \`\`\`
-            `,
-        });
+            [
+                {
+                    "positionMint": "BieefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8pump",
+                    "positionWidthBps": 500,
+                },
+                ...
+            ],
+
+            Take into account that if the formatting is not correct, I may get the following error when parsing the text:
+            "Error parsing JSON: SyntaxError: Expected ',' or ']' after array element in JSON"
+            `;
 
         const content = await generateText({
             runtime,
             context: prompt,
             modelClass: ModelClass.LARGE,
         });
+        const positions = parseJSONObjectFromText(content) as RepositionPositionParams[];
 
-        if(!isRepositionPositionParams(content)) {
-            if (callback) {
-                callback({
-                    text: "Unable to reposition liquidity position. Invalid content provided.",
-                    content: { error: "Invalid reposition position content" },
-                });
-            }
-            return false;
-        }
+        const { signer: wallet } = await loadWallet(runtime, true);
+        const rpc = createSolanaRpc(settings.RPC_URL!);
+        const slippage = 700;
+        for (const position of positions) {
+            try {
+                const positionMintAddress = address(position.positionMint);
+                const positionAddress = (await getPositionAddress(positionMintAddress))[0];
+                const positionData = await fetchPosition(rpc, positionAddress);
+                const whirlpoolAddress = positionData.data.whirlpool;
+                const whirlpool = await fetchWhirlpool(rpc, whirlpoolAddress);
+                const mintA = await fetchMint(rpc, whirlpool.data.tokenMintA);
+                const mintB = await fetchMint(rpc, whirlpool.data.tokenMintB);
+                const currentPrice = sqrtPriceToPrice(whirlpool.data.sqrtPrice, mintA.data.decimals, mintB.data.decimals);
+                const newLowerPrice = currentPrice * (1 - position.positionWidthBps / 10000);
+                const newUpperPrice = currentPrice * (1 + position.positionWidthBps / 10000);
 
-        try {
-            const { signer: wallet } = await loadWallet(
-                runtime,
-                true
-            );
-            const rpc = createSolanaRpc(settings.RPC_URL!);
-            const slippage = 250;
+                let instructions: IInstruction[] = [];
+                const { instructions: closeInstructions, quote } = await closePositionInstructions(
+                    rpc,
+                    positionMintAddress,
+                    slippage,
+                    wallet
+                );
+                // instructions = instructions.concat(closeInstructions);
 
-            const positionMintAddress = address(content.positionMint);
-            const positionAddress = (await getPositionAddress(positionMintAddress))[0];
-            const position = await fetchPosition(rpc, positionAddress);
-            const whirlpoolAddress = position.data.whirlpool;
-            const whirlpool = await fetchWhirlpool(rpc, whirlpoolAddress);
-            const mintA = await fetchMint(rpc, whirlpool.data.tokenMintA);
-            const mintB = await fetchMint(rpc, whirlpool.data.tokenMintB);
-            const currentPrice = sqrtPriceToPrice(whirlpool.data.sqrtPrice, mintA.data.decimals, mintB.data.decimals);
-            const newLowerPrice = currentPrice * (1 - content.positionWidthBps / 10000);
-            const newUpperPrice = currentPrice * (1 + content.positionWidthBps / 10000);
+                const increaseLiquidityQuoteParam: IncreaseLiquidityQuoteParam = {
+                    liquidity: quote.liquidityDelta
+                };
 
-            let instructions: IInstruction[] = [];
-            const { instructions: closeInstructions, quote } = await closePositionInstructions(
-                rpc,
-                positionMintAddress,
-                slippage,
-                wallet,
-            )
-            instructions = instructions.concat(closeInstructions);
+                const { instructions: openInstructions, positionMint: newPositionMintAddress } = await openPositionInstructions(
+                    rpc,
+                    whirlpoolAddress,
+                    increaseLiquidityQuoteParam,
+                    newLowerPrice,
+                    newUpperPrice,
+                    slippage,
+                    wallet
+                );
+                // instructions = instructions.concat(openInstructions);
+                // console.log(instructions)
 
-            const increaseLiquidityQuoteParam: IncreaseLiquidityQuoteParam = {
-                liquidity: quote.liquidityDelta
-            }
+                const txIdClose = await sendTransaction(rpc, closeInstructions, wallet);
+                const txIdOpen = await sendTransaction(rpc, openInstructions, wallet);
+                console.log(txIdClose, txIdOpen)
 
-            const { instructions: openInstructions, positionMint: newPositionMintAddress } = await openPositionInstructions(
-                rpc,
-                whirlpoolAddress,
-                increaseLiquidityQuoteParam,
-                newLowerPrice,
-                newUpperPrice,
-                slippage,
-                wallet,
-            )
-            instructions = instructions.concat(openInstructions);
+                const memoryContent = {
+                    txIdOpen,
+                    success: true,
+                    closedPosition: positionMintAddress,
+                    newPosition: newPositionMintAddress,
+                    timestamp: Date.now()
+                };
 
-            const txId = await sendTransaction(rpc, instructions, wallet);
-
-            const memoryContent = {
-                txId,
-                success: true,
-                closedPosition: positionMintAddress,
-                newPosition: newPositionMintAddress,
-                timestamp: Date.now()
-            }
-
-            if (callback) {
-                callback({
-                    text: `Closed position ${content.positionMint} and opened new position ${newPositionMintAddress}`,
-                    content: memoryContent,
-                    action: "REBALANCE_POSITION"
-                });
-            }
-        } catch {
-            if (callback) {
-                callback({
-                    text: "Unable to reposition liquidity position. Invalid content provided.",
-                    content: { error: "Invalid reposition content" },
-                });
+                if (callback) {
+                    callback({
+                        text: `Closed position ${position.positionMint} and opened new position ${newPositionMintAddress}`,
+                        content: memoryContent,
+                        action: "REBALANCE_POSITION"
+                    });
+                }
+            } catch (error) {
+                console.log(error)
+                // if (callback) {
+                //     callback({
+                //         text: "Unable to reposition liquidity position. Invalid content provided.",
+                //         content: { error: "Invalid reposition content" }
+                //     });
+                // }
             }
         }
+
     },
     examples: [
         [

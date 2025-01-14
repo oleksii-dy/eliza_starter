@@ -19,7 +19,7 @@ import {
 } from '@solana/web3.js';
 
 // For more information: https://orca-so.github.io/whirlpools/Whirlpools%20SDKs/Whirlpools/Send%20Transaction
-export async function sendTransaction(rpc: Rpc<SolanaRpcApi>, instructions: IInstruction[], wallet: KeyPairSigner): Promise<void> {
+export async function sendTransaction(rpc: Rpc<SolanaRpcApi>, instructions: IInstruction[], wallet: KeyPairSigner): Promise<string> {
   const latestBlockHash = await rpc.getLatestBlockhash().send();
   const transactionMessage = await pipe(
     createTransactionMessage({ version: 0 }),
@@ -42,8 +42,8 @@ export async function sendTransaction(rpc: Rpc<SolanaRpcApi>, instructions: IIns
         [Math.floor(fees.length / 2)]
     );
   const transactionMessageWithComputeUnitInstructions = await prependTransactionMessageInstructions([
-    getSetComputeUnitLimitInstruction({ units: safeComputeUnitEstimate }),
-    getSetComputeUnitPriceInstruction({ microLamports: medianPrioritizationFee })
+    getSetComputeUnitLimitInstruction({ units: 400_000 }),
+    getSetComputeUnitPriceInstruction({ microLamports: 100_000 })
   ], transactionMessage);
   const signedTransaction = await signTransactionMessageWithSigners(transactionMessageWithComputeUnitInstructions)
   const base64EncodedWireTransaction = getBase64EncodedWireTransaction(signedTransaction);
@@ -61,7 +61,7 @@ export async function sendTransaction(rpc: Rpc<SolanaRpcApi>, instructions: IIns
     if (statuses.value[0]) {
       if (!statuses.value[0].err) {
         console.log(`Transaction confirmed: ${signature}`);
-        break;
+        return signature
       } else {
         console.error(`Transaction failed: ${statuses.value[0].err.toString()}`);
         break;
