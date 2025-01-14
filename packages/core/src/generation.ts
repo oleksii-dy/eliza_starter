@@ -54,7 +54,6 @@ import {
     VerifiableInferenceOptions,
     VerifiableInferenceResult,
 } from "./types.ts";
-
 type Tool = CoreTool<any, any>;
 type StepResult = AIStepResult<any>;
 
@@ -457,23 +456,7 @@ export async function generateText({
                     presencePenalty: presence_penalty,
                     experimental_telemetry: experimental_telemetry,
                 });
-                // console.log({
-                //     model: openai.languageModel(model),
-                //     prompt: context,
-                //     system:
-                //         runtime.character.system ??
-                //         settings.SYSTEM_PROMPT ??
-                //         undefined,
-                //     tools: tools,
-                //     onStepFinish: onStepFinish,
-                //     maxSteps: maxSteps,
-                //     temperature: temperature,
-                //     maxTokens: max_response_length,
-                //     frequencyPenalty: frequency_penalty,
-                //     presencePenalty: presence_penalty,
-                //     experimental_telemetry: experimental_telemetry,
-                //     openaiResponse,
-                // });
+
                 response = openaiResponse;
                 console.log("Received response from OpenAI model.");
                 break;
@@ -1788,95 +1771,12 @@ export const generateWebSearch = async (
             includeAnswer: true,
             maxResults: 3, // 5 (default)
             topic: "general", // "general"(default) "news"
-            searchDepth: "advanced", // "basic"(default) "advanced"
+            searchDepth: "basic", // "basic"(default) "advanced"
             includeImages: false, // false (default) true
         });
-        console.log(`TVLY RES`, response);
         return response;
     } catch (error) {
         elizaLogger.error("Error:", error);
-    }
-};
-export const generateSerperSearch = async (
-    query: string,
-    runtime: IAgentRuntime
-): Promise<SerperSearchResponse> => {
-    try {
-        const apiKey = runtime.getSetting("SERPER_API_KEY") as string;
-        if (!apiKey) {
-            throw new Error("SERPER_API_KEY is not set");
-        }
-        //const cleanedQuery =  query.replace(/@\S+/g, '');
-        //console.log(`CLEANED QUERY`,cleanedQuery)
-        const data = JSON.stringify({
-            q: query,
-        });
-
-        const options = {
-            hostname: "google.serper.dev",
-            port: 443,
-            path: "/search",
-            method: "POST",
-            headers: {
-                "X-API-KEY": apiKey,
-                "Content-Type": "application/json",
-                "Content-Length": Buffer.byteLength(data),
-            },
-        };
-
-        const sendRequest = (): Promise<SerperSearchResponse> => {
-            return new Promise((resolve, reject) => {
-                const req = https.request(options, (res) => {
-                    let body = "";
-
-                    res.on("data", (chunk) => {
-                        body += chunk;
-                    });
-
-                    res.on("end", () => {
-                        if (
-                            res.statusCode &&
-                            res.statusCode >= 200 &&
-                            res.statusCode < 300
-                        ) {
-                            try {
-                                const parsedData = JSON.parse(
-                                    body
-                                ) as SerperSearchResponse;
-                                resolve(parsedData);
-                            } catch (err) {
-                                reject(
-                                    new Error(
-                                        `Failed to parse response: ${err}`
-                                    )
-                                );
-                            }
-                        } else {
-                            reject(
-                                new Error(
-                                    `Request failed with status code: ${res.statusCode}`
-                                )
-                            );
-                        }
-                    });
-                });
-
-                req.on("error", (err) => {
-                    reject(err);
-                });
-
-                // Write data to the request body
-                req.write(data);
-                req.end();
-            });
-        };
-
-        const response = await sendRequest();
-        console.log(`TVLY RES`, response);
-        return response;
-    } catch (error) {
-        elizaLogger.error("Error:", error);
-        throw error; // Re-throw the error for the caller to handle.
     }
 };
 /**
@@ -2398,3 +2298,86 @@ export async function generateTweetActions({
         retryDelay *= 2;
     }
 }
+
+export const generateSerperSearch = async (
+    query: string,
+    runtime: IAgentRuntime
+): Promise<SerperSearchResponse> => {
+    try {
+        const apiKey = runtime.getSetting("SERPER_API_KEY") as string;
+        if (!apiKey) {
+            throw new Error("SERPER_API_KEY is not set");
+        }
+        //const cleanedQuery =  query.replace(/@\S+/g, '');
+        //console.log(`CLEANED QUERY`,cleanedQuery)
+        const data = JSON.stringify({
+            q: query,
+        });
+
+        const options = {
+            hostname: "google.serper.dev",
+            port: 443,
+            path: "/search",
+            method: "POST",
+            headers: {
+                "X-API-KEY": apiKey,
+                "Content-Type": "application/json",
+                "Content-Length": Buffer.byteLength(data),
+            },
+        };
+
+        const sendRequest = (): Promise<SerperSearchResponse> => {
+            return new Promise((resolve, reject) => {
+                const req = https.request(options, (res) => {
+                    let body = "";
+
+                    res.on("data", (chunk) => {
+                        body += chunk;
+                    });
+
+                    res.on("end", () => {
+                        if (
+                            res.statusCode &&
+                            res.statusCode >= 200 &&
+                            res.statusCode < 300
+                        ) {
+                            try {
+                                const parsedData = JSON.parse(
+                                    body
+                                ) as SerperSearchResponse;
+                                resolve(parsedData);
+                            } catch (err) {
+                                reject(
+                                    new Error(
+                                        `Failed to parse response: ${err}`
+                                    )
+                                );
+                            }
+                        } else {
+                            reject(
+                                new Error(
+                                    `Request failed with status code: ${res.statusCode}`
+                                )
+                            );
+                        }
+                    });
+                });
+
+                req.on("error", (err) => {
+                    reject(err);
+                });
+
+                // Write data to the request body
+                req.write(data);
+                req.end();
+            });
+        };
+
+        const response = await sendRequest();
+        console.log(`TVLY RES`, response);
+        return response;
+    } catch (error) {
+        elizaLogger.error("Error:", error);
+        throw error; // Re-throw the error for the caller to handle.
+    }
+};

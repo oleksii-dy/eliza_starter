@@ -26,6 +26,8 @@ import {
 } from "discord.js";
 import { ClientBase } from "./base.ts";
 import { DEFAULT_MAX_TWEET_LENGTH } from "./environment.ts";
+import { twitterMessageHandlerTemplate } from "./interactions.ts";
+import { buildConversationThread } from "./utils.ts";
 
 const MAX_TIMELINES_TO_FETCH = 15;
 
@@ -743,6 +745,7 @@ export class TwitterPostClient {
                         );
                         continue;
                     }
+
                     processedTimelines.push({
                         tweet: tweet,
                         actionResponse: actionResponse,
