@@ -522,18 +522,10 @@ export class TwitterPostClient {
                     .replace(/^['"](.*)['"]$/g, "$1") // Remove quotes
                     .replace(/\\"/g, '"') // Unescape quotes
                     .replace(/\\n/g, "\n\n") // Unescape newlines
+                    .replace(/^\d+\.\s*/gm, "") // Remove all numbered list markers
+                    .replace(/\n+\s*$/, "") // Clean up trailing newlines
                     .trim();
                 
-                // Split into separate options if numbered list is detected
-                if (cleanedContent.match(/^\d+\./m)) {
-                    const options = cleanedContent.split(/\n+(?=\d+\.)/);
-                    // Select one random option and clean it
-                    cleanedContent = options[Math.floor(Math.random() * options.length)]
-                        .replace(/^\d+\.\s*/, '') // Remove the number from just the selected option
-                        .replace(/\n+\s*$/, '') // Clean up trailing newlines
-                        .trim();
-                }
-
             if (!cleanedContent) {
                 elizaLogger.error(
                     "Failed to extract valid content from response:",
