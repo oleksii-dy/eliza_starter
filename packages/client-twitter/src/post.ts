@@ -517,14 +517,22 @@ export class TwitterPostClient {
             } catch (error) {
                 error.linted = true; // make linter happy since catch needs a variable
                 // If not JSON, clean the raw content
-                cleanedContent = newTweetContent
+                let cleanedContent = newTweetContent
                     .replace(/^\s*{?\s*"text":\s*"|"\s*}?\s*$/g, "") // Remove JSON-like wrapper
                     .replace(/^['"](.*)['"]$/g, "$1") // Remove quotes
                     .replace(/\\"/g, '"') // Unescape quotes
-                    .replace(/\\n/g, "\n\n") // Unescape newlines, ensures double spaces
-                    .replace(/^\d+\.\s*/gm, "") // Remove numbered list markers
+                    .replace(/\\n/g, "\n\n") // Unescape newlines
                     .trim();
-            }
+                
+                // Split into separate options if numbered list is detected
+                if (cleanedContent.match(/^\d+\./m)) {
+                    const options = cleanedContent.split(/\n+(?=\d+\.)/);
+                    // Select one random option and clean it
+                    cleanedContent = options[Math.floor(Math.random() * options.length)]
+                        .replace(/^\d+\.\s*/, '') // Remove the number from just the selected option
+                        .replace(/\n+\s*$/, '') // Clean up trailing newlines
+                        .trim();
+                }
 
             if (!cleanedContent) {
                 elizaLogger.error(
