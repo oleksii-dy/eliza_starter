@@ -1,5 +1,4 @@
 import dotenv from "dotenv";
-import dotenv from "dotenv";
 dotenv.config();
 
 import {
@@ -21,6 +20,7 @@ import {
     models,
     ModelClass,
     ServiceType,
+    elizaLogger,
 } from "@elizaos/core";
 import { BrowserService } from "@elizaos/plugin-node";
 import { format, addDays } from "date-fns";
@@ -32,6 +32,7 @@ import {
 
 export const createClient = () => {
     const apiKey = process.env.POLYGON_API_KEY;
+    elizaLogger.log("apiKey", apiKey);
 
     const rest = restClient(apiKey);
     return rest;

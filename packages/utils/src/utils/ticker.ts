@@ -6,6 +6,7 @@ import {
     Memory,
     HandlerCallback,
     State,
+    elizaLogger,
 } from "@elizaos/core";
 import { TickerSchema, Ticker } from "../types";
 import { extractTickerFromMessageTemplate } from "../templates";
@@ -18,6 +19,7 @@ export const extractTickerFromMessage = async (
     _message: Memory,
     state?: State
 ) => {
+    state.currentQuery = _message.content.text ?? "";
     const context = composeContext({
         state,
         template: extractTickerFromMessageTemplate,
@@ -33,7 +35,7 @@ export const extractTickerFromMessage = async (
         const { ticker } = response.object as Ticker;
         return ticker;
     } catch (error) {
-        console.error(error);
+        elizaLogger.error(error);
         return null;
     }
 };

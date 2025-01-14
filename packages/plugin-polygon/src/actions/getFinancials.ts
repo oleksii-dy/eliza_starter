@@ -45,7 +45,11 @@ export const getFinancials: Action = {
         callback?: HandlerCallback
     ) => {
         try {
-            const ticker = await extractTickerFromMessage(runtime, _message);
+            const ticker = await extractTickerFromMessage(
+                runtime,
+                _message,
+                state
+            );
             console.log(ticker);
             if (!ticker) {
                 callback?.(

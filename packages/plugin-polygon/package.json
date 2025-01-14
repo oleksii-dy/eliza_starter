@@ -16,6 +16,7 @@
     "dependencies": {
         "@elizaos/core": "workspace:*",
         "@jawk/utils": "workspace:*",
+        "@elizaos/plugin-node": "workspace:*",
         "@polygon.io/client-js": "v7.3.2",
         "@types/puppeteer": "^7.0.4",
         "canvas": "^3.0.1",

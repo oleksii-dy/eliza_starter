@@ -7,8 +7,8 @@ import { financialProvider } from "../providers/financeProvider";
 export const polygonPlugin: Plugin = {
     name: "polygon",
     description: "Pulls data from Polygon API",
-    //actions: [getNews, getPriceHistory, getFinancials],
-    providers: [financialProvider],
+    actions: [getNews, getPriceHistory, getFinancials],
+   // providers: [financialProvider],
     evaluators: [],
     // separate examples will be added for services and clients
     services: [],

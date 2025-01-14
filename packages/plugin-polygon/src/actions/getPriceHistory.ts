@@ -40,7 +40,11 @@ export const getPriceHistory: Action = {
         callback?: HandlerCallback
     ) => {
         try {
-            const ticker = await extractTickerFromMessage(runtime, _message)
+            const ticker = await extractTickerFromMessage(
+                runtime,
+                _message,
+                state
+            );
             if (!ticker) {
                 callback?.(
                     { text: "Failed to extract ticker from message." },
@@ -118,7 +122,7 @@ export const getPriceHistory: Action = {
             } catch (err) {
                 console.error('Error generating chart:', err);
             }
-            
+
             state.closePrices = closePrices;
             console.log("start", start);
             console.log("end", end);
@@ -130,8 +134,8 @@ export const getPriceHistory: Action = {
                 }
 
             console.log("context", context);
-    
-            
+
+
             const priceResponse = await generateText({runtime, context, modelClass: ModelClass.SMALL})
 
             callback?.(

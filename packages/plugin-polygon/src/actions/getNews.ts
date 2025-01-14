@@ -32,7 +32,8 @@ export const getNews: Action = {
         callback?: HandlerCallback
     ) => {
         try {
-            const ticker = await extractTickerFromMessage(runtime, _message);
+            const ticker = await extractTickerFromMessage(runtime, _message, state);
+            elizaLogger.log("ticker", ticker);
             if (!ticker) {
                 callback?.(
                     { text: "Failed to extract ticker from message." },
