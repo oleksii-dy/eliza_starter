@@ -6,7 +6,6 @@ import {
     elizaLogger,
 } from "@elizaos/core";
 import { privateKeyToAccount } from "viem/accounts";
-
 import {
     formatUnits,
     Address,
@@ -17,7 +16,9 @@ import {
     http,
     createPublicClient,
     createWalletClient,
-    PublicClient
+    PublicClient,
+    Transport,
+    RpcSchema,
 } from "viem";
 import { TOKEN_ADDRESSES } from "../utils/constants";
 import { b2Network } from "../utils/chains";
@@ -90,7 +91,7 @@ export class WalletProvider implements Provider {
         return this.account.address;
     }
 
-    getPublicClient(): PublicClient<HttpTransport, Chain, Account | undefined> {
+    getPublicClient(): PublicClient<Transport, Chain, Account | undefined, RpcSchema | undefined> {
         return createPublicClient({
             chain: b2Network,
             transport: http(),
@@ -179,7 +180,7 @@ export const initWalletProvider = async (runtime: IAgentRuntime) => {
             "B2_PRIVATE_KEY not found in environment variables"
         );
     }
-    return new WalletProvider(privateKey);
+    return new WalletProvider(privateKey as `0x${string}`);
 };
 
 export const walletProvider: Provider = {
