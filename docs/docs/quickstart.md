@@ -101,7 +101,7 @@ Eliza supports multiple AI models:
 - **Llama**: Set `XAI_MODEL=meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo`
 - **Grok**: Set `XAI_MODEL=grok-beta`
 - **OpenAI**: Set `XAI_MODEL=gpt-4o-mini` or `gpt-4o`
-- **Livepeer**: Set `SMALL_LIVEPEER_MODEL`,`MEDIUM_LIVEPEER_MODEL`,`LARGE_LIVEPEER_MODEL` and `LIVEPEER_IMAGE_MODEL` to your desired models listed [here](https://livepeer-eliza.com/).
+- **Livepeer**: Set `SMALL_LIVEPEER_MODEL`,`MEDIUM_LIVEPEER_MODEL`,`LARGE_LIVEPEER_MODEL` and `IMAGE_LIVEPEER_MODEL` to your desired models listed [here](https://livepeer-eliza.com/).
 >>>>>>> 95f56e6b4 (Merge pull request #2 from Titan-Node/livepeer-doc-updates)
 
 You set which model to use inside the character JSON file
