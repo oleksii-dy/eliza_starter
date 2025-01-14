@@ -150,6 +150,19 @@ function tryLoadFile(filePath: string): string | null {
         return null;
     }
 }
+async function tryFetchCharacterFromUrl(url: string): Promise<string> {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch character from ${url}`)
+        }
+        return await response.text()
+    } catch (e) {
+        elizaLogger.error(`Error loading character from ${url}: ${e}`);
+        process.exit(1)
+    }
+}
+
 function mergeCharacters(base: Character, child: Character): Character {
     const mergeObjects = (baseObj: any, childObj: any) => {
         const result: any = {};
@@ -182,10 +195,22 @@ function mergeCharacters(base: Character, child: Character): Character {
     };
     return mergeObjects(base, child);
 }
-async function loadCharacter(filePath: string): Promise<Character> {
-    const content = tryLoadFile(filePath);
+
+function isValidUrl(pathOrUrl: string): boolean {
+    try {
+        new URL(pathOrUrl);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+async function loadCharacter(filePathOrUrl: string): Promise<Character> {
+    const isUrl = isValidUrl(filePathOrUrl);
+    const content = isUrl ? await tryFetchCharacterFromUrl(filePathOrUrl) : tryLoadFile(filePathOrUrl);
+
     if (!content) {
-        throw new Error(`Character file not found: ${filePath}`);
+        throw new Error(`Character file not found: ${filePathOrUrl}`);
     }
     let character = JSON.parse(content);
     validateCharacterConfig(character);
@@ -212,9 +237,10 @@ async function loadCharacter(filePath: string): Promise<Character> {
         elizaLogger.info(
             `Merging  ${character.name} character with parent characters`
         );
-        for (const extendPath of character.extends) {
+        for (const extendPathOrUrl of character.extends) {
+            const isUrl = isValidUrl(extendPathOrUrl);
             const baseCharacter = await loadCharacter(
-                path.resolve(path.dirname(filePath), extendPath)
+                isUrl ? extendPathOrUrl : path.resolve(path.dirname(filePathOrUrl), extendPathOrUrl)
             );
             character = mergeCharacters(baseCharacter, character);
             elizaLogger.info(
@@ -228,74 +254,81 @@ async function loadCharacter(filePath: string): Promise<Character> {
 export async function loadCharacters(
     charactersArg: string
 ): Promise<Character[]> {
-    let characterPaths = charactersArg
+    let splitCharacterArg = charactersArg
         ?.split(",")
-        .map((filePath) => filePath.trim());
+        .map((filePathOrUrl) => filePathOrUrl.trim());
     const loadedCharacters: Character[] = [];
 
-    if (characterPaths?.length > 0) {
-        for (const characterPath of characterPaths) {
+    if (splitCharacterArg?.length > 0) {
+        for (const pathOrUrl of splitCharacterArg) {
+            const isUrl = isValidUrl(pathOrUrl);
             let content: string | null = null;
-            let resolvedPath = "";
+            let resolvedPathOrUrl: string | null = null;
 
-            // Try different path resolutions in order
-            const pathsToTry = [
-                characterPath, // exact path as specified
-                path.resolve(process.cwd(), characterPath), // relative to cwd
-                path.resolve(process.cwd(), "agent", characterPath), // Add this
-                path.resolve(__dirname, characterPath), // relative to current script
-                path.resolve(
-                    __dirname,
-                    "characters",
-                    path.basename(characterPath)
-                ), // relative to agent/characters
-                path.resolve(
-                    __dirname,
-                    "../characters",
-                    path.basename(characterPath)
-                ), // relative to characters dir from agent
-                path.resolve(
-                    __dirname,
-                    "../../characters",
-                    path.basename(characterPath)
-                ), // relative to project root characters dir
-            ];
+            if (isUrl) {
+                content = await tryFetchCharacterFromUrl(pathOrUrl)
+                resolvedPathOrUrl = pathOrUrl
+            } else {
+                const characterPath = pathOrUrl;
+                // Try different path resolutions in order
+                const pathsToTry = [
+                    characterPath, // exact path as specified
+                    path.resolve(process.cwd(), characterPath), // relative to cwd
+                    path.resolve(process.cwd(), "agent", characterPath), // Add this
+                    path.resolve(__dirname, characterPath), // relative to current script
+                    path.resolve(
+                        __dirname,
+                        "characters",
+                        path.basename(characterPath)
+                    ), // relative to agent/characters
+                    path.resolve(
+                        __dirname,
+                        "../characters",
+                        path.basename(characterPath)
+                    ), // relative to characters dir from agent
+                    path.resolve(
+                        __dirname,
+                        "../../characters",
+                        path.basename(characterPath)
+                    ), // relative to project root characters dir
+                ];
 
-            elizaLogger.info(
-                "Trying paths:",
-                pathsToTry.map((p) => ({
-                    path: p,
-                    exists: fs.existsSync(p),
-                }))
-            );
+                elizaLogger.info(
+                    "Trying paths:",
+                    pathsToTry.map((p) => ({
+                        path: p,
+                        exists: fs.existsSync(p),
+                    }))
+                );
 
-            for (const tryPath of pathsToTry) {
-                content = tryLoadFile(tryPath);
-                if (content !== null) {
-                    resolvedPath = tryPath;
-                    break;
+                for (const tryPath of pathsToTry) {
+                    content = tryLoadFile(tryPath);
+                    if (content !== null) {
+                        resolvedPathOrUrl = tryPath;
+                        break;
+                    }
+                }
+
+                if (content === null) {
+                    elizaLogger.error(
+                        `Error loading character from ${characterPath}: File not found in any of the expected locations`
+                    );
+                    elizaLogger.error("Tried the following paths:");
+                    pathsToTry.forEach((p) => elizaLogger.error(` - ${p}`));
+                    process.exit(1);
                 }
             }
 
-            if (content === null) {
-                elizaLogger.error(
-                    `Error loading character from ${characterPath}: File not found in any of the expected locations`
-                );
-                elizaLogger.error("Tried the following paths:");
-                pathsToTry.forEach((p) => elizaLogger.error(` - ${p}`));
-                process.exit(1);
-            }
-
             try {
-                const character: Character = await loadCharacter(resolvedPath);
+                const character: Character = await loadCharacter(resolvedPathOrUrl);
 
                 loadedCharacters.push(character);
                 elizaLogger.info(
-                    `Successfully loaded character from: ${resolvedPath}`
+                    `Successfully loaded character from: ${resolvedPathOrUrl}`
                 );
             } catch (e) {
                 elizaLogger.error(
-                    `Error parsing character from ${resolvedPath}: ${e}`
+                    `Error parsing character from ${resolvedPathOrUrl}: ${e}`
                 );
                 process.exit(1);
             }
