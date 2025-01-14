@@ -57,7 +57,7 @@ export type TwitterConfig = z.infer<typeof twitterEnvSchema>;
 /**
  * Helper to parse a comma-separated list of Twitter usernames.
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 function parseTargetUsers(targetUsersStr?: string | null): string[] {
     if (!targetUsersStr?.trim()) {
         return [];
@@ -99,15 +99,15 @@ export async function validateTwitterConfig(
         TWITTER_SEARCH_ENABLE: parseBooleanFromText(getConfigValue("TWITTER_SEARCH_ENABLE") || "false"),
         TWITTER_2FA_SECRET: getConfigValue("TWITTER_2FA_SECRET") || "",
         TWITTER_RETRY_LIMIT: safeParseInt(getConfigValue("TWITTER_RETRY_LIMIT"), 5),
-        TWITTER_POLL_INTERVAL: safeParseInt(getConfigValue("TWITTER_POLL_INTERVAL"), 60),
-        TWITTER_TARGET_USERS: [],
-        POST_INTERVAL_MIN: safeParseInt(getConfigValue("POST_INTERVAL_MIN"), 60),
-        POST_INTERVAL_MAX: safeParseInt(getConfigValue("POST_INTERVAL_MAX"), 120),
+        TWITTER_POLL_INTERVAL: safeParseInt(getConfigValue("TWITTER_POLL_INTERVAL"), 120),
+        TWITTER_TARGET_USERS: parseTargetUsers(getConfigValue("TWITTER_TARGET_USERS")),
+        POST_INTERVAL_MIN: safeParseInt(getConfigValue("POST_INTERVAL_MIN"), 90),
+        POST_INTERVAL_MAX: safeParseInt(getConfigValue("POST_INTERVAL_MAX"), 180),
         ENABLE_ACTION_PROCESSING: parseBooleanFromText(getConfigValue("ENABLE_ACTION_PROCESSING") || "false"),
-        ACTION_INTERVAL: safeParseInt(getConfigValue("ACTION_INTERVAL"), 60),
+        ACTION_INTERVAL: safeParseInt(getConfigValue("ACTION_INTERVAL"), 5),
         POST_IMMEDIATELY: parseBooleanFromText(getConfigValue("POST_IMMEDIATELY") || "false"),
         TWITTER_SPACES_ENABLE: parseBooleanFromText(getConfigValue("TWITTER_SPACES_ENABLE") || "false"),
-        MAX_ACTIONS_PROCESSING: safeParseInt(getConfigValue("MAX_ACTIONS_PROCESSING"), 10),
+        MAX_ACTIONS_PROCESSING: safeParseInt(getConfigValue("MAX_ACTIONS_PROCESSING"), 1),
         ACTION_TIMELINE_TYPE: ActionTimelineType.ForYou,
     };
 
