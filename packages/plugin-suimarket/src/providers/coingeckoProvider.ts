@@ -73,14 +73,27 @@ export class CoingeckoProvider {
 
   async getTrendingNFTs() {
     try {
-      const response = await this.axiosInstance.get("/nfts/list", {
-        params: {
-          // order: "market_cap_desc",
-          per_page: 10,
-          page: 1,
-        },
-      });
-      return response.data;
+      const response = await this.axiosInstance.get("/search/trending");
+      return response.data.nfts.map((nft: any) => ({
+        id: nft.id,
+        name: nft.name,
+        symbol: nft.symbol.toUpperCase(),
+        // market_cap_rank: nft.item.market_cap_rank,
+        // price: nft.item.data.price,
+        // total_volume: nft.item.data.total_volume,
+        // market_cap: nft.item.data.market_cap,
+        thumb: nft.thumb,
+        native_currency_symbol:nft.native_currency_symbol,
+        floor_price_in_native_currency:nft.floor_price_in_native_currency,
+        floor_price_24h_percentage_change: nft.floor_price_24h_percentage_change,
+        data:{
+            floor_price:nft.data.floor_price,
+            floor_price_in_usd_24h_percentage_change:nft.data.floor_price_in_usd_24h_percentage_change,
+            h24_volume:nft.data.h24_volume,
+            
+        }
+
+    }));
     } catch (error) {
       console.error("Error fetching trending NFTs:", error);
       throw new Error("Failed to fetch trending NFTs");

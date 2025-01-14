@@ -15,15 +15,18 @@ import { z } from "zod";
 
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
 import { formatObjectToText } from "../utils/format";
+import searchCoinInFIleJsonProvider from "../providers/searchCoinIdInFileJson";
 
 export interface InfoContent extends Content {
-    coinId: string;
+    coin_symbol: string;
+    coin_name: string;
 }
 
 function isInfoContent(content: Content): content is InfoContent {
     console.log("Content for transfer", content);
     return (
-        typeof content.coinId === "string"
+        typeof content.coin_symbol === 'string' &&
+        typeof content.coin_name === 'string'
     );
 }
 
@@ -32,16 +35,24 @@ const coinInfoTemplate = `Respond with a JSON markdown block containing only the
 Example response:
 \`\`\`json
 {
-    "coinId": "bitcoin"
+    "coin_symbol": "bitcoin"
+    "coin_name":"Bitcoin"
 }
 \`\`\`
 
 
 {{recentMessages}}
 
-Given the recent messages, extract the following information about the requested token transfer:
-- Coin ID according to CoinGecko's coin list
+Based on the user's current question, extract the following cryptocurrency information:
+    coin_symbol:
+        Cryptocurrency symbol in lowercase format
+        Return btc if no valid cryptocurrency symbol is found
+    coin_name:
+        - Full name of the cryptocurrency with proper capitalization (e.g., Bitcoin, Ethereum, Solana)
+        - Must match the corresponding symbol
+        - Return Bitcoin if no valid cryptocurrency name is found
 
+Only extract information explicitly mentioned in the current question. Do not use historical context or assumed information.
 Respond with a JSON markdown block containing only the extracted values.`;
 
 export const tokenInfo: Action = {
@@ -65,13 +76,13 @@ export const tokenInfo: Action = {
     ],
 
     examples: [],
-   
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         return true;
     },
 
     description: "Get detail of token",
-    
+
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -88,7 +99,8 @@ export const tokenInfo: Action = {
         }
 
         const _schema = z.object({
-          coinId: z.string()
+            coin_symbol: z.string(),
+            coin_name:z.string()
         });
 
         const _context = composeContext({
@@ -105,6 +117,8 @@ export const tokenInfo: Action = {
 
         const parsedContent = content.object as InfoContent;
 
+
+
         if (!isInfoContent(parsedContent)) {
             console.error("Invalid content for coin info");
             if (callback) {
@@ -117,18 +131,24 @@ export const tokenInfo: Action = {
         }
 
         elizaLogger.log("[coinInfo] parsed content: ", parsedContent);
-
-        let coinGecko = new CoingeckoProvider();
-        let info = await coinGecko.getToken(parsedContent.coinId);
+        const coinObject = await searchCoinInFIleJsonProvider(parsedContent.coin_symbol,parsedContent.coin_name);
+        console.log("coinObject",coinObject)
+        const coinGecko = new CoingeckoProvider();
+        const info = await coinGecko.getToken(coinObject.id);
         elizaLogger.info("[coinInfo] details: ", JSON.stringify(info));
 
         if (callback) {
             callback({
-                text: `[coinInfo]` + (await formatObjectToText(info)),
-                action: 'tokenInfo'
+                text: `${coinObject.coin_name} Info:` ,
+                action: 'tokenInfo',
+                result: {
+                    type:"info_crypto",
+                    data:coinGecko
+                }
             });
         }
 
         return true;
     }
 }
+
