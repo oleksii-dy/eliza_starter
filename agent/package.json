@@ -35,6 +35,7 @@
         "@elizaos/plugin-0g": "workspace:*",
         "@elizaos/plugin-abstract": "workspace:*",
         "@elizaos/plugin-aptos": "workspace:*",
+        "@elizaos/plugin-b2": "workspace:*",
         "@elizaos/plugin-coinmarketcap": "workspace:*",
         "@elizaos/plugin-coingecko": "workspace:*",
         "@elizaos/plugin-binance": "workspace:*",
