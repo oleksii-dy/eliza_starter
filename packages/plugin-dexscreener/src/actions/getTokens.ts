@@ -29,7 +29,6 @@ const createTokenMemory = async (
         embedding: getEmbeddingZeroVector(),
     };
     await runtime.messageManager.createMemory(memory);
-    return memory;
 };
 
 export const getLatestTokensAction: Action = {
@@ -149,9 +148,7 @@ export const getLatestBoostedTokensAction: Action = {
                 })
                 .join("");
 
-            state = (await runtime.composeState(
-                await createTokenMemory(runtime, state, formattedOutput)
-            )) as State;
+            await createTokenMemory(runtime, state, formattedOutput);
 
             callback(
                 {
