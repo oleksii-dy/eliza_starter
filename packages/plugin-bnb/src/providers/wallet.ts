@@ -112,9 +112,14 @@ export class WalletProvider {
     }
 
     async formatAddress(address: string): Promise<Address> {
+        if (!address || address.length === 0) {
+            throw new Error("Empty address");
+        }
+
         if (address.startsWith("0x") && address.length === 42) {
             return address as Address;
         }
+
         const resolvedAddress = await this.resolveWeb3Name(address);
         if (resolvedAddress) {
             return resolvedAddress as Address;

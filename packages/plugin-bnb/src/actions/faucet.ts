@@ -12,8 +12,8 @@ import { type Hex } from "viem";
 import WebSocket, { ClientOptions } from "ws";
 
 import { faucetTemplate } from "../templates";
-import { type FaucetParams } from "../types";
-import { initWalletProvider } from "../providers/wallet";
+import { FaucetResponse, type FaucetParams } from "../types";
+import { initWalletProvider, WalletProvider } from "../providers/wallet";
 
 export { faucetTemplate };
 
@@ -28,10 +28,18 @@ export class FaucetAction {
         "USDC",
     ] as const;
     private readonly FAUCET_URL = "wss://testnet.bnbchain.org/faucet-smart/api";
-    constructor() {}
 
-    async faucet(params: FaucetParams): Promise<Hex> {
-        this.validateParams(params);
+    constructor(private walletProvider: WalletProvider) {}
+
+    async faucet(params: FaucetParams): Promise<FaucetResponse> {
+        await this.validateAndNormalizeParams(params);
+        elizaLogger.debug("Faucet params:", params);
+
+        let resp: FaucetResponse = {
+            token: params.token!,
+            recipient: params.toAddress!,
+            txHash: "0x",
+        };
 
         return new Promise((resolve, reject) => {
             const options: ClientOptions = {
@@ -46,7 +54,7 @@ export class FaucetAction {
                 const message = {
                     tier: 0,
                     url: params.toAddress,
-                    symbol: params.token || "BNB",
+                    symbol: params.token,
                     captcha: "noCaptchaToken",
                 };
                 ws.send(JSON.stringify(message));
@@ -64,7 +72,8 @@ export class FaucetAction {
                 if (response.requests && response.requests.length > 0) {
                     const txHash = response.requests[0].tx.hash;
                     if (txHash) {
-                        resolve(txHash as Hex);
+                        resp.txHash = txHash as Hex;
+                        resolve(resp);
                         ws.close();
                         return;
                     }
@@ -89,9 +98,20 @@ export class FaucetAction {
         });
     }
 
-    validateParams(params: FaucetParams): void {
-        if (params.token && !this.SUPPORTED_TOKENS.includes(params.token!)) {
-            throw new Error("Invalid token");
+    async validateAndNormalizeParams(params: FaucetParams): Promise<void> {
+        if (!params.toAddress) {
+            params.toAddress = this.walletProvider.getAddress();
+        } else {
+            params.toAddress = await this.walletProvider.formatAddress(
+                params.toAddress
+            );
+        }
+
+        if (!params.token) {
+            params.token = "BNB";
+        }
+        if (!this.SUPPORTED_TOKENS.includes(params.token!)) {
+            throw new Error("Unsupported token");
         }
     }
 }
@@ -127,18 +147,18 @@ export const faucetAction = {
         });
 
         const walletProvider = initWalletProvider(runtime);
-        const action = new FaucetAction();
+        const action = new FaucetAction(walletProvider);
         const paramOptions: FaucetParams = {
             token: content.token,
-            toAddress: await walletProvider.formatAddress(content.toAddress),
+            toAddress: content.toAddress,
         };
         try {
             const faucetResp = await action.faucet(paramOptions);
             callback?.({
-                text: `Successfully transferred ${paramOptions.token} to ${paramOptions.toAddress}\nTransaction Hash: ${faucetResp}`,
+                text: `Successfully transferred ${faucetResp.token} to ${faucetResp.recipient}\nTransaction Hash: ${faucetResp.txHash}`,
                 content: {
-                    hash: faucetResp,
-                    recipient: paramOptions.toAddress,
+                    hash: faucetResp.txHash,
+                    recipient: faucetResp.recipient,
                     chain: content.chain,
                 },
             });
@@ -154,7 +174,7 @@ export const faucetAction = {
         }
     },
     template: faucetTemplate,
-    validate: async (runtime: IAgentRuntime) => {
+    validate: async (_runtime: IAgentRuntime) => {
         return true;
     },
     examples: [

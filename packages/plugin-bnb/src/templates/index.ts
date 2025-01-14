@@ -128,14 +128,14 @@ export const faucetTemplate = `Given the recent messages and wallet information 
 
 Extract the following information about the requested faucet request:
 - Token. Token to request. Could be one of ["BNB", "BTC", "BUSD", "DAI", "ETH", "USDC"]. Optinal, if not provided, send tBNB by default.
-- Recipient address. Must be a valid Ethereum address starting with "0x" or a web3 domain name.
+- Recipient address. Optional, must be a valid Ethereum address starting with "0x" or a web3 domain name. If not provided, send to the address of the wallet.
 
 Respond with a JSON markdown block containing only the extracted values. All fields are required:
 
 \`\`\`json
 {
     "token": string | null,
-    "toAddress": string
+    "toAddress": string | null
 }
 \`\`\`
 `;

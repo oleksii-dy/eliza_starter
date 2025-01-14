@@ -30,6 +30,9 @@ export class TransferAction {
     constructor(private walletProvider: WalletProvider) {}
 
     async transfer(params: TransferParams): Promise<TransferResponse> {
+        this.validateAndNormalizeParams(params);
+        elizaLogger.debug("Transfer params:", params);
+
         const fromAddress = this.walletProvider.getAddress();
 
         this.walletProvider.switchChain(params.chain);
@@ -127,6 +130,15 @@ export class TransferAction {
             throw new Error(`Transfer failed: ${error.message}`);
         }
     }
+
+    async validateAndNormalizeParams(params: TransferParams): Promise<void> {
+        if (!params.toAddress) {
+            throw new Error("To address is required");
+        }
+        params.toAddress = await this.walletProvider.formatAddress(
+            params.toAddress
+        );
+    }
 }
 
 export const transferAction = {
@@ -174,7 +186,7 @@ export const transferAction = {
             chain: content.chain,
             token: content.token,
             amount: content.amount,
-            toAddress: await walletProvider.formatAddress(content.toAddress),
+            toAddress: content.toAddress,
             data: content.data,
         };
         try {

@@ -128,7 +128,7 @@ export class DeployAction {
             );
 
             elizaLogger.log(
-                `View on BSCScan: https://testnet.bscscan.com/address/${contractAddress}`
+                `View on BSCScan: https://bscscan.com/address/${contractAddress}`
             );
 
             return {

@@ -47,7 +47,7 @@ export interface StakeParams {
 
 export interface FaucetParams {
     token?: string;
-    toAddress: Address;
+    toAddress?: Address;
 }
 
 // Action return types
@@ -86,6 +86,12 @@ export interface BridgeResponse {
 
 export interface StakeResponse {
     response: string;
+}
+
+export interface FaucetResponse {
+    token: string;
+    recipient: Address;
+    txHash: Hash;
 }
 
 // Contract ABIs

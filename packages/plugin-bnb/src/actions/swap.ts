@@ -21,9 +21,8 @@ export class SwapAction {
     constructor(private walletProvider: WalletProvider) {}
 
     async swap(params: SwapParams): Promise<SwapResponse> {
-        if (params.chain == "bscTestnet") {
-            throw new Error("Testnet is not supported");
-        }
+        this.validateAndNormalizeParams(params);
+        elizaLogger.debug("Swap params:", params);
 
         const fromAddress = this.walletProvider.getAddress();
         const chainId = this.walletProvider.getChainConfigs(params.chain).id;
@@ -67,6 +66,12 @@ export class SwapAction {
             throw new Error(`Swap failed: ${error.message}`);
         }
     }
+
+    validateAndNormalizeParams(params: SwapParams): void {
+        if (params.chain != "bsc") {
+            throw new Error("Only BSC mainnet is supported");
+        }
+    }
 }
 
 export const swapAction = {
@@ -99,6 +104,8 @@ export const swapAction = {
             modelClass: ModelClass.LARGE,
         });
 
+        const walletProvider = initWalletProvider(runtime);
+        const action = new SwapAction(walletProvider);
         const swapOptions: SwapParams = {
             chain: content.chain,
             fromToken: content.inputToken,
@@ -106,9 +113,6 @@ export const swapAction = {
             amount: content.amount,
             slippage: content.slippage,
         };
-
-        const walletProvider = initWalletProvider(runtime);
-        const action = new SwapAction(walletProvider);
         try {
             const swapResp = await action.swap(swapOptions);
             callback?.({

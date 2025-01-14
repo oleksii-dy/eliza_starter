@@ -18,7 +18,7 @@ import {
     type StakeParams,
     type StakeResponse,
 } from "../types";
-import { formatEther, Hex, parseEther } from "viem";
+import { formatEther, parseEther } from "viem";
 
 export { stakeTemplate };
 
@@ -33,6 +33,7 @@ export class StakeAction {
 
     async stake(params: StakeParams): Promise<StakeResponse> {
         this.validateStakeParams(params);
+        elizaLogger.debug("Stake params:", params);
 
         this.walletProvider.switchChain("bsc"); // only BSC is supported
 

@@ -27,15 +27,10 @@ export class GetBalanceAction {
     constructor(private walletProvider: WalletProvider) {}
 
     async getBalance(params: GetBalanceParams): Promise<GetBalanceResponse> {
+        await this.validateAndNormalizeParams(params);
+        elizaLogger.debug("Get balance params:", params);
+
         let { chain, address, token } = params;
-
-        if (chain == "bscTestnet") {
-            throw new Error("Testnet is not supported");
-        }
-
-        if (!address) {
-            address = this.walletProvider.getAddress();
-        }
 
         this.walletProvider.switchChain(chain);
         const nativeSymbol =
@@ -46,20 +41,20 @@ export class GetBalanceAction {
         try {
             let resp: GetBalanceResponse = {
                 chain,
-                address,
+                address: address!,
                 balances: [],
             };
 
             // If no specific token is requested, get all token balances
             if (!token) {
-                const balances = await this.getTokenBalances(chainId, address);
+                const balances = await this.getTokenBalances(chainId, address!);
                 resp.balances = balances;
             } else {
                 // If specific token is requested and it's not the native token
                 if (token !== nativeSymbol) {
                     const balance = await this.getERC20TokenBalance(
                         chainId,
-                        address,
+                        address!,
                         token!
                     );
                     resp.balances = [{ token: token!, balance }];
@@ -67,7 +62,7 @@ export class GetBalanceAction {
                     // If native token is requested
                     const nativeBalanceWei = await this.walletProvider
                         .getPublicClient(chain)
-                        .getBalance({ address });
+                        .getBalance({ address: address! });
                     resp.balances = [
                         {
                             token: nativeSymbol,
@@ -108,6 +103,20 @@ export class GetBalanceAction {
                 balance: formatUnits(balance.amount!, balance.decimals),
             }));
     }
+
+    async validateAndNormalizeParams(params: GetBalanceParams): Promise<void> {
+        if (!params.address) {
+            params.address = this.walletProvider.getAddress();
+        } else {
+            params.address = await this.walletProvider.formatAddress(
+                params.address
+            );
+        }
+
+        if (params.chain != "bsc") {
+            throw new Error("Only BSC mainnet is supported");
+        }
+    }
 }
 
 export const getBalanceAction = {
@@ -144,9 +153,7 @@ export const getBalanceAction = {
         const action = new GetBalanceAction(walletProvider);
         const getBalanceOptions: GetBalanceParams = {
             chain: content.chain,
-            address: content.address
-                ? await walletProvider.formatAddress(content.address)
-                : undefined,
+            address: content.address,
             token: content.token,
         };
         try {
