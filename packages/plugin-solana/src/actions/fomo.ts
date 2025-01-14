@@ -66,7 +66,7 @@ export const createAndBuyToken = async ({
     priorityFee,
     requiredLiquidity = 85,
     allowOffCurve,
-    commitment = "finalized",
+    commitment = "confirmed",
     fomo,
     connection,
 }: {
@@ -182,7 +182,7 @@ export const buyToken = async ({
     slippage,
     connection,
     currency = "sol",
-    commitment = "finalized",
+    commitment = "confirmed",
 }: {
     fomo: Fomo;
     buyer: Keypair;
@@ -281,7 +281,7 @@ export const sellToken = async ({
     slippage,
     connection,
     currency = "token",
-    commitment = "finalized",
+    commitment = "confirmed",
 }: {
     fomo: Fomo;
     seller: Keypair;
@@ -530,10 +530,10 @@ export default {
             );
 
             // Setup connection and SDK
-            const connection = new Connection(settings.RPC_URL!, {
+            const connection = new Connection(settings.SOLANA_RPC_URL!, {
                 commitment: "confirmed",
                 confirmTransactionInitialTimeout: 500000, // 120 seconds
-                wsEndpoint: settings.RPC_URL!.replace("https", "wss"),
+                wsEndpoint: settings.SOLANA_RPC_URL!.replace("https", "wss"),
             });
 
             const sdk = new Fomo(connection, "devnet", deployerKeypair);

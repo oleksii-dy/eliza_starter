@@ -56,7 +56,7 @@ export const createAndBuyToken = async ({
     buyAmountSol,
     priorityFee,
     allowOffCurve,
-    commitment = "finalized",
+    commitment = "confirmed",
     sdk,
     connection,
     slippage,
@@ -408,15 +408,15 @@ export default {
             );
 
             // Setup connection and SDK
-            const connection = new Connection(settings.RPC_URL!, {
+            const connection = new Connection(settings.SOLANA_RPC_URL!, {
                 commitment: "confirmed",
                 confirmTransactionInitialTimeout: 500000, // 120 seconds
-                wsEndpoint: settings.RPC_URL!.replace("https", "wss"),
+                wsEndpoint: settings.SOLANA_RPC_URL!.replace("https", "wss"),
             });
 
             const wallet = new Wallet(deployerKeypair);
             const provider = new AnchorProvider(connection, wallet, {
-                commitment: "finalized",
+                commitment: "confirmed",
             });
             const sdk = new PumpFunSDK(provider);
             // const slippage = runtime.getSetting("SLIPPAGE");
