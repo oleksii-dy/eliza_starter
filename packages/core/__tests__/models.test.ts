@@ -19,7 +19,7 @@ vi.mock("../settings", () => {
             TOGETHER_MODEL_SMALL: "mock-together-small",
             TOGETHER_MODEL_LARGE: "mock-together-large",
             LIVEPEER_GATEWAY_URL: "http://gateway.test-gateway",
-            LIVEPEER_IMAGE_MODEL: "ByteDance/SDXL-Lightning",
+            IMAGE_LIVEPEER_MODEL: "ByteDance/SDXL-Lightning",
         },
         loadEnv: vi.fn(),
     };
@@ -255,7 +255,7 @@ describe("Generation with Livepeer", () => {
     });
 
     test("should use default image model", () => {
-        delete process.env.LIVEPEER_IMAGE_MODEL;
+        delete process.env.IMAGE_LIVEPEER_MODEL;
         expect(models[ModelProviderName.LIVEPEER].model[ModelClass.IMAGE]).toBe("ByteDance/SDXL-Lightning");
     });
 });
