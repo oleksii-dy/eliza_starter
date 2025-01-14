@@ -1,6 +1,6 @@
 import { elizaLogger } from "@elizaos/core";
 import { ImapFlow } from "imapflow";
-import { createTransport } from "nodemailer";
+import { createTransport, Transporter } from "nodemailer";
 import {
     EmailMessage,
     IMailAdapter,
@@ -9,10 +9,11 @@ import {
     SearchCriteria,
     SendEmailParams,
 } from "../types";
+import { simpleParser } from "mailparser";
 
 export class ImapSmtpMailAdapter implements IMailAdapter {
     private client: ImapFlow;
-    private mailer: any;
+    private mailer: Transporter<any, any>;
     private config: MailConfig;
     private lastUID: number | null = null;
     private uidValidity: number | null = null;
@@ -250,6 +251,8 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
 
     private async parseMessage(message: any): Promise<EmailMessage | null> {
         try {
+            const parsed = await simpleParser(message.source);
+
             return {
                 id: message.uid.toString(),
                 messageId: message.envelope.messageId,
@@ -268,7 +271,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
                     name: addr.name,
                 })),
                 date: message.internalDate,
-                text: message.source.toString(),
+                text: parsed.text || "",
                 flags: message.flags,
             };
         } catch (error) {
@@ -281,7 +284,13 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
     }
 
     async sendEmail(params: SendEmailParams): Promise<void> {
-        this.mailer = createTransport(this.config.smtp);
+        this.mailer = createTransport({
+            ...this.config.smtp,
+            auth: {
+                user: this.config.imap.user,
+                pass: this.config.imap.password,
+            },
+        });
 
         await this.mailer.sendMail({
             from: this.config.smtp.user,
