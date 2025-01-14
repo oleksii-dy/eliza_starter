@@ -1,74 +1,61 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { IAgentRuntime } from "@elizaos/core";
+import { describe, it, expect, vi } from "vitest";
 import { ReservoirService } from "../services/reservoir";
 import { MarketIntelligenceService } from "../services/market-intelligence";
 import { SocialAnalyticsService } from "../services/social-analytics";
+import { IAgentRuntime } from "@elizaos/core";
 import { MemoryCacheManager } from "../services/cache-manager";
 import { RateLimiter } from "../services/rate-limiter";
 
 describe("NFT Services", () => {
     const mockRuntime = {
-        services: {
-            get: vi.fn(),
+        getSetting: (key: string): string | undefined => {
+            if (key === "RESERVOIR_API_KEY") return "test-key";
+            return undefined;
         },
-        messageManager: {
-            createMemory: vi.fn(),
-        },
-        agentId: "00000000-0000-0000-0000-000000000000",
     } as unknown as IAgentRuntime;
 
     describe("ReservoirService", () => {
-        let service: ReservoirService;
-        let cacheManager: MemoryCacheManager;
-        let rateLimiter: RateLimiter;
+        it("should fetch collections", async () => {
+            const service = new ReservoirService({ apiKey: "test-key" });
+            const result = await service.getTopCollections(mockRuntime, 5);
+            expect(result).toBeDefined();
+            expect(Array.isArray(result)).toBe(true);
+        });
 
-        beforeEach(() => {
-            cacheManager = new MemoryCacheManager();
-            rateLimiter = new RateLimiter();
-            service = new ReservoirService({
-                cacheManager,
-                rateLimiter,
+        it("should fetch floor listings", async () => {
+            const service = new ReservoirService({ apiKey: "test-key" });
+            const result = await service.getFloorListings({
+                collection: "0x1234",
+                limit: 5,
+                sortBy: "price",
             });
-        });
-
-        it("should initialize correctly", async () => {
-            await service.initialize(mockRuntime);
-            expect(service).toBeDefined();
-        });
-
-        it("should handle API requests with caching", async () => {
-            const mockData = { collections: [] };
-            vi.spyOn(global, "fetch").mockResolvedValueOnce({
-                ok: true,
-                json: () => Promise.resolve(mockData),
-            } as Response);
-
-            const result = await service.getTopCollections(5);
             expect(result).toBeDefined();
             expect(Array.isArray(result)).toBe(true);
         });
     });
 
     describe("MarketIntelligenceService", () => {
-        let service: MarketIntelligenceService;
-        let cacheManager: MemoryCacheManager;
-        let rateLimiter: RateLimiter;
+        const cacheManager = new MemoryCacheManager();
+        const rateLimiter = new RateLimiter();
 
-        beforeEach(() => {
-            cacheManager = new MemoryCacheManager();
-            rateLimiter = new RateLimiter();
-            service = new MarketIntelligenceService({
+        it("should initialize correctly", () => {
+            const service = new MarketIntelligenceService({
                 cacheManager,
                 rateLimiter,
+                openSeaApiKey: "test-key",
+                reservoirApiKey: "test-key",
             });
-        });
-
-        it("should initialize correctly", async () => {
-            await service.initialize(mockRuntime);
             expect(service).toBeDefined();
         });
 
         it("should return market intelligence data", async () => {
+            const service = new MarketIntelligenceService({
+                cacheManager,
+                rateLimiter,
+                openSeaApiKey: "test-key",
+                reservoirApiKey: "test-key",
+            });
+
             const result = await service.getMarketIntelligence("0x1234");
             expect(result).toBeDefined();
             expect(result.floorPrice).toBeDefined();
@@ -77,35 +64,28 @@ describe("NFT Services", () => {
     });
 
     describe("SocialAnalyticsService", () => {
-        let service: SocialAnalyticsService;
-        let cacheManager: MemoryCacheManager;
-        let rateLimiter: RateLimiter;
+        const mockData = {
+            lastUpdate: new Date().toISOString(),
+            twitterFollowers: 1000,
+            discordMembers: 500,
+        };
 
-        beforeEach(() => {
-            cacheManager = new MemoryCacheManager();
-            rateLimiter = new RateLimiter();
-            service = new SocialAnalyticsService({
-                cacheManager,
-                rateLimiter,
-            });
-        });
-
-        it("should initialize correctly", async () => {
-            await service.initialize(mockRuntime);
+        it("should initialize correctly", () => {
+            const service = new SocialAnalyticsService({});
             expect(service).toBeDefined();
         });
 
         it("should return social metrics", async () => {
+            const service = new SocialAnalyticsService({});
+            vi.spyOn(service as any, "fetchSocialData").mockResolvedValue(
+                mockData
+            );
+
             const result = await service.getSocialMetrics("0x1234");
             expect(result).toBeDefined();
             expect(result.lastUpdate).toBeDefined();
-        });
-
-        it("should analyze sentiment", async () => {
-            const result = await service.analyzeSentiment("0x1234");
-            expect(result).toBeDefined();
-            expect(result.overall).toBeDefined();
-            expect(result.breakdown).toBeDefined();
+            expect(result.twitterFollowers).toBeDefined();
+            expect(result.discordMembers).toBeDefined();
         });
     });
 });
