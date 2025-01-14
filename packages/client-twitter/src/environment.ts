@@ -54,6 +54,20 @@ export const twitterEnvSchema = z.object({
 
 export type TwitterConfig = z.infer<typeof twitterEnvSchema>;
 
+/**
+ * Helper to parse a comma-separated list of Twitter usernames.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function parseTargetUsers(targetUsersStr?: string | null): string[] {
+    if (!targetUsersStr?.trim()) {
+        return [];
+    }
+    return targetUsersStr
+        .split(",")
+        .map((user) => user.trim())
+        .filter(Boolean);
+}
+
 function safeParseInt(
     value: string | undefined | null,
     defaultValue: number
