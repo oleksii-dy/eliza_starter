@@ -8,11 +8,13 @@ import {
     stringToUuid,
     composeContext,
     generateText,
-    ModelClass
+    ModelClass,
+    State
 } from "@elizaos/core";
 import { postTweet } from "@elizaos/plugin-twitter";
 import express from "express";
 import { WebhookEvent } from "./types";
+import { pnlProvider } from "@elizaos/plugin-coinbase";
 
 export class CoinbaseClient implements Client {
     private runtime: IAgentRuntime;
@@ -93,19 +95,17 @@ export class CoinbaseClient implements Client {
         });
     }
 
-    private async generateTweetContent(event: WebhookEvent, _tradeAmount: number, formattedTimestamp: string): Promise<string> {
+    private async generateTweetContent(event: WebhookEvent, amountInCurrency: number, pnlText: string, formattedTimestamp: string, state: State): Promise<string> {
         try {
-            const roomId = stringToUuid("coinbase-trading");
-            const amount = Number(this.runtime.getSetting('COINBASE_TRADING_AMOUNT')) ?? 1;
-
             const tradeTweetTemplate = `
 # Task
 Create an engaging and unique tweet announcing a Coinbase trade. Be creative but professional.
 
 Trade details:
 - ${event.event.toUpperCase()} order for ${event.ticker}
-- Trading amount: $${amount.toFixed(2)}
+- Trading amount: $${amountInCurrency.toFixed(2)}
 - Current price: $${Number(event.price).toFixed(2)}
+- Overall Unrealized PNL: $${pnlText}
 - Time: ${formattedTimestamp}
 
 Requirements:
@@ -118,42 +118,23 @@ Requirements:
 7. Include the key information: action, amount, ticker, and price
 
 Example variations for buys:
-"📈 Just added $1,000 of BTC to the portfolio at $50,000.00"
-"🎯 Strategic BTC purchase: $1,000 at $50,000.00"
+"📈 Just added $1,000 of BTC to the portfolio at $50,000.00. Overall Unrealized PNL: $${pnlText}"
+"🎯 Strategic BTC purchase: $1,000 at $50,000.00. Overall Unrealized PNL: $${pnlText}"
 
 Example variations for sells:
-"💫 Executed BTC position: Sold $1,000 at $52,000.00"
-"📊 Strategic exit: Released $1,000 of BTC at $52,000.00"
+"💫 Executed BTC position: Sold $1,000 at $52,000.00. Overall Unrealized PNL: $${pnlText}"
+"📊 Strategic exit: Released $1,000 of BTC at $52,000.00. Overall Unrealized PNL: $${pnlText}"
 
 Generate only the tweet text, no commentary or markdown.`;
-
             const context = composeContext({
                 template: tradeTweetTemplate,
-                state: {
-                    event: event.event.toUpperCase(),
-                    ticker: event.ticker,
-                    amount: `${amount.toFixed(2)}`,
-                    price: `${Number(event.price).toFixed(2)}`,
-                    timestamp: formattedTimestamp,
-                    bio: '',
-                    lore: '',
-                    messageDirections: '',
-                    postDirections: '',
-                    persona: '',
-                    personality: '',
-                    role: '',
-                    scenario: '',
-                    roomId,
-                    actors: '',
-                    recentMessages: '',
-                    recentMessagesData: []
-                }
+                state
             });
 
             const tweetContent = await generateText({
                 runtime: this.runtime,
                 context,
-                modelClass: ModelClass.SMALL,
+                modelClass: ModelClass.LARGE,
             });
 
             const trimmedContent = tweetContent.trim();
@@ -179,7 +160,7 @@ Generate only the tweet text, no commentary or markdown.`;
             agentId: this.runtime.agentId,
             roomId,
             content: {
-                text: `Place an advanced market order to ${event.event.toLowerCase()} $${amount} worth of ${event.ticker}`,
+                text: `Place an advanced trade market order to ${event.event.toLowerCase()} $${amount} worth of ${event.ticker}`,
                 action: "EXECUTE_ADVANCED_TRADE",
                 source: "coinbase",
                 metadata: {
@@ -194,15 +175,11 @@ Generate only the tweet text, no commentary or markdown.`;
         };
 
         await this.runtime.messageManager.createMemory(memory);
-
-        const callback: HandlerCallback = async (content: Content) => {
-            elizaLogger.info("Trade execution result:", content);
-            return [];
-        };
-
         const state = await this.runtime.composeState(memory);
-        await this.runtime.processActions(memory, [memory], state, callback);
-
+        const callback: HandlerCallback = async (content: Content) => {
+            if (!content.text.includes("Trade executed successfully")) {
+                return [];
+            }
         // Generate tweet content
         const formattedTimestamp = new Intl.DateTimeFormat('en-US', {
             hour: '2-digit',
@@ -211,14 +188,22 @@ Generate only the tweet text, no commentary or markdown.`;
             timeZoneName: 'short'
         }).format(new Date(event.timestamp));
 
+        const pnl = await pnlProvider.get(this.runtime, memory);
+
+        const pnlText = `Unrealized PNL: $${pnl.toFixed(2)}`;
+
         try {
-            const tweetContent = await this.generateTweetContent(event, amount, formattedTimestamp);
+            const tweetContent = await this.generateTweetContent(event, amount, pnlText, formattedTimestamp, state);
             elizaLogger.info("Generated tweet content:", tweetContent);
             const response = await postTweet(tweetContent);
             elizaLogger.info("Tweet response:", response);
         } catch (error) {
             elizaLogger.error("Failed to post tweet:", error);
         }
+            return [];
+        };
+
+        await this.runtime.processActions(memory, [memory], state, callback);
     }
 
     async stop(): Promise<void> {
