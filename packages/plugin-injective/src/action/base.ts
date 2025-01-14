@@ -5,6 +5,7 @@ import {
     Memory,
     ModelClass,
     State,
+    elizaLogger,
     composeContext,
     type Action,
     generateObjectDeprecated,
@@ -48,7 +49,6 @@ export function createGenericAction({
         description, // e.g. "Place a bid using the InjectiveGrpcClient"
         examples, // your example user/assistant conversation
         similes, // (optional) synonyms or alternate names if you like
-
         // (Optional) global validation for the entire Action
         validate: async (_runtime, _message) => {
             return true;
@@ -61,8 +61,8 @@ export function createGenericAction({
             _options: { [key: string]: unknown },
             callback?: HandlerCallback
         ): Promise<boolean> => {
-            console.log(`Starting ${name} handler...`);
-
+            elizaLogger.log(`Starting ${name} handler...`);
+            elizaLogger.debug(`create action: ${name}`);
             // 1. Compose or update the state
             if (!state) {
                 state = (await runtime.composeState(message)) as State;
@@ -85,7 +85,7 @@ export function createGenericAction({
 
             // 4. TODO: Validate the LLM context
             // if (!validateContent(runtime, content)) {
-            //   console.error(`Invalid content for ${name} action.`);
+            //   elizaLogger.error(`Invalid content for ${name} action.`);
             //   if (callback) {
             //     callback({
             //       text: `Invalid content for ${name}`,
@@ -98,9 +98,11 @@ export function createGenericAction({
             // 5. Initialize the Injective client
             try {
                 const rawNetwork = runtime.getSetting("INJECTIVE_NETWORK");
-                const privateKey = runtime.getSetting("INJECTIVE_PRIVATE_KEY");
-                const evmPublicKey = runtime.getSetting("EVM_PUBLIC_KEY");
-                const injectivePublicKey = runtime.getSetting("INJECTIVE_PUBLIC_KEY");
+                const injectivePrivateKey = runtime.getSetting(
+                    "INJECTIVE_PRIVATE_KEY"
+                );
+                const ethPublicKey = runtime.getSetting("EVM_PUBLIC_KEY");
+                const injPublicKey = runtime.getSetting("INJECTIVE_PUBLIC_KEY");
                 const network = rawNetwork as
                     | "MainnetK8s"
                     | "MainnetLB"
@@ -117,14 +119,19 @@ export function createGenericAction({
                     | "Devnet2"
                     | "Devnet"
                     | "Local";
-                if (!privateKey || !evmPublicKey || !network) {
+                if (
+                    !injectivePrivateKey ||
+                    (!ethPublicKey && !injPublicKey) ||
+                    !network
+                ) {
                     throw new Error("Incorrect configuration");
                 }
 
                 const client = new InjectiveGrpcClient(
                     network,
-                    publicKey,
-                    privateKey
+                    injectivePrivateKey,
+                    ethPublicKey,
+                    injPublicKey
                 );
 
                 // 6. Dynamically call the specified functionName on the Injective client
