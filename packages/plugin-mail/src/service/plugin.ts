@@ -29,14 +29,12 @@ export class MailPluginService extends Service {
         try {
             // Get or create the singleton instance
             const mailService = MailService.getInstance(mailConfig);
-            await mailService.connect();
-
-            // Store in global for backward compatibility
             global.mailService = mailService;
 
             this.checkInterval = setInterval(
                 async () => {
                     try {
+                        await mailService.connect();
                         const emails = await mailService.getRecentEmails();
                         elizaLogger.debug("Checking for new emails", {
                             count: emails.length,
@@ -65,15 +63,6 @@ export class MailPluginService extends Service {
                             message: error.message,
                             stack: error.stack,
                         });
-
-                        // Try to reconnect on error
-                        try {
-                            await mailService.connect();
-                        } catch (reconnectError) {
-                            elizaLogger.error("Failed to reconnect:", {
-                                error: reconnectError,
-                            });
-                        }
                     }
                 },
                 (mailConfig.checkInterval || 60) * 1000

@@ -2,10 +2,10 @@ import {
     Action,
     elizaLogger,
     generateText,
-    ModelClass,
-    Memory,
     HandlerCallback,
     IAgentRuntime,
+    Memory,
+    ModelClass,
 } from "@elizaos/core";
 import { SearchCriteria } from "../types";
 
@@ -55,7 +55,10 @@ export const searchEmailsAction: Action = {
             return false;
         }
 
-        const searchContext = `Given this request: "${message.content.text}", extract search criteria for emails. Return only a JSON object with these optional fields:
+        try {
+            await global.mailService.connect();
+
+            const searchContext = `Given this request: "${message.content.text}", extract search criteria for emails. Return only a JSON object with these optional fields:
         {
             "from": "email address",
             "to": "email address",
@@ -74,65 +77,68 @@ export const searchEmailsAction: Action = {
         {"seen": false, "since": "2024-01-01"}
         {"flagged": true, "minSize": 5000000}`;
 
-        const searchTerms = await generateText({
-            runtime,
-            context: searchContext,
-            modelClass: ModelClass.SMALL,
-        });
-
-        let criteria: SearchCriteria;
-        try {
-            const cleanedTerms = searchTerms
-                .replace(/```json\n?/g, "")
-                .replace(/```\n?/g, "")
-                .trim();
-            const parsed = JSON.parse(cleanedTerms);
-            criteria = {
-                ...parsed,
-                since: parsed.since ? new Date(parsed.since) : undefined,
-                before: parsed.before ? new Date(parsed.before) : undefined,
-            };
-        } catch (err) {
-            elizaLogger.error("Failed to parse search criteria", {
-                searchTerms,
-                error: err,
+            const searchTerms = await generateText({
+                runtime,
+                context: searchContext,
+                modelClass: ModelClass.SMALL,
             });
-            await callback?.({
-                text: "I couldn't understand the search criteria. Please try rephrasing your request.",
-            });
-            return false;
-        }
 
-        elizaLogger.debug("Searching with criteria", { criteria });
-        try {
-            const emails = await global.mailService.searchEmails(criteria);
-            if (emails.length === 0) {
-                await callback?.({
-                    text: "No emails found matching your search criteria.",
+            let criteria: SearchCriteria;
+            try {
+                const cleanedTerms = searchTerms
+                    .replace(/```json\n?/g, "")
+                    .replace(/```\n?/g, "")
+                    .trim();
+                const parsed = JSON.parse(cleanedTerms);
+                criteria = {
+                    ...parsed,
+                    since: parsed.since ? new Date(parsed.since) : undefined,
+                    before: parsed.before ? new Date(parsed.before) : undefined,
+                };
+            } catch (err) {
+                elizaLogger.error("Failed to parse search criteria", {
+                    searchTerms,
+                    error: err,
                 });
-                return true;
+                await callback?.({
+                    text: "I couldn't understand the search criteria. Please try rephrasing your request.",
+                });
+                return false;
             }
 
-            const summary = emails
-                .map(
-                    (email, i) =>
-                        `${i + 1}. From: ${email.from?.text || "Unknown"}\n   Subject: ${email.subject || "No subject"}\n   Date: ${email.date?.toLocaleString() || "Unknown"}`
-                )
-                .join("\n\n");
+            elizaLogger.debug("Searching with criteria", { criteria });
+            try {
+                const emails = await global.mailService.searchEmails(criteria);
+                if (emails.length === 0) {
+                    await callback?.({
+                        text: "No emails found matching your search criteria.",
+                    });
+                    return true;
+                }
 
-            await callback?.({
-                text: `Found ${emails.length} matching email(s):\n\n${summary}`,
-            });
-            return true;
-        } catch (err) {
-            elizaLogger.error("Error searching emails", {
-                criteria,
-                error: err,
-            });
-            await callback?.({
-                text: "Sorry, I encountered an error while searching emails. Please try again.",
-            });
-            return false;
+                const summary = emails
+                    .map(
+                        (email, i) =>
+                            `${i + 1}. From: ${email.from?.text || "Unknown"}\n   Subject: ${email.subject || "No subject"}\n   Date: ${email.date?.toLocaleString() || "Unknown"}`
+                    )
+                    .join("\n\n");
+
+                await callback?.({
+                    text: `Found ${emails.length} matching email(s):\n\n${summary}`,
+                });
+                return true;
+            } catch (err) {
+                elizaLogger.error("Error searching emails", {
+                    criteria,
+                    error: err,
+                });
+                await callback?.({
+                    text: "Sorry, I encountered an error while searching emails. Please try again.",
+                });
+                return false;
+            }
+        } finally {
+            await global.mailService.dispose();
         }
     },
     validate: async (runtime: IAgentRuntime) => {

@@ -1,4 +1,4 @@
-import { Action, IAgentRuntime, Memory, HandlerCallback } from "@elizaos/core";
+import { Action, HandlerCallback, IAgentRuntime, Memory } from "@elizaos/core";
 
 export interface MarkAsReadContent {
     uid: number;
@@ -23,14 +23,20 @@ export const markAsReadAction: Action = {
         if (!global.mailService)
             throw new Error("Mail service not initialized");
 
-        const content = message.content as unknown as MarkAsReadContent;
+        try {
+            await global.mailService.connect();
 
-        await global.mailService.markAsRead(content.uid);
+            const content = message.content as unknown as MarkAsReadContent;
+            await global.mailService.markAsRead(content.uid);
 
-        if (callback) {
-            await callback({ text: `Email marked as read.` });
+            if (callback) {
+                await callback({ text: `Email marked as read.` });
+            }
+
+            return true;
+        } finally {
+            await global.mailService.dispose();
         }
-        return true;
     },
     validate: async () => true,
 };

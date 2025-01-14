@@ -1,10 +1,10 @@
 import {
     Action,
+    generateText,
+    HandlerCallback,
     IAgentRuntime,
     Memory,
-    generateText,
     ModelClass,
-    HandlerCallback,
 } from "@elizaos/core";
 
 async function summarizeEmail(
@@ -42,29 +42,35 @@ export const readEmailsAction: Action = {
         if (!global.mailService)
             throw new Error("Mail service not initialized");
 
-        const emails = await global.mailService.getRecentEmails();
+        try {
+            await global.mailService.connect();
+            const emails = await global.mailService.getRecentEmails();
 
-        if (emails.length === 0) {
-            if (callback) {
-                await callback({ text: "No unread emails found." });
+            if (emails.length === 0) {
+                if (callback) {
+                    await callback({ text: "No unread emails found." });
+                }
+                return true;
             }
+
+            const summaries = await Promise.all(
+                emails.map((email) => summarizeEmail(runtime, email))
+            );
+
+            const formattedSummaries = summaries
+                .map((summary, index) => `Email ${index + 1}: ${summary}`)
+                .join("\n");
+
+            if (callback) {
+                await callback({
+                    text: `Found ${emails.length} unread email(s):\n\n${formattedSummaries}`,
+                });
+            }
+
             return true;
+        } finally {
+            await global.mailService.dispose();
         }
-
-        const summaries = await Promise.all(
-            emails.map((email) => summarizeEmail(runtime, email))
-        );
-
-        const formattedSummaries = summaries
-            .map((summary, index) => `Email ${index + 1}: ${summary}`)
-            .join("\n");
-
-        if (callback) {
-            await callback({
-                text: `Found ${emails.length} unread email(s):\n\n${formattedSummaries}`,
-            });
-        }
-        return true;
     },
     validate: async () => true,
 };
