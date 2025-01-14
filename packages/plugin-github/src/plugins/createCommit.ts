@@ -21,7 +21,6 @@ import {
     getRepoPath,
     writeFiles,
     checkoutBranch,
-    incorporateRepositoryState,
 } from "../utils";
 import fs from "fs/promises";
 
@@ -55,14 +54,6 @@ export const createCommitAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        // state = await incorporateRepositoryState(
-        //     state,
-        //     runtime,
-        //     message,
-        //     [],
-        //     true,
-        //     true
-        // );
 
         const context = composeContext({
             state,
@@ -227,12 +218,4 @@ export const githubCreateCommitPlugin: Plugin = {
     description:
         "Integration with GitHub for committing changes to the repository",
     actions: [createCommitAction],
-    evaluators: [],
-    providers: [
-        // sourceCodeProvider,
-        // testFilesProvider,
-        // workflowFilesProvider,
-        // documentationFilesProvider,
-        // releasesProvider,
-    ],
 };

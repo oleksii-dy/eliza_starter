@@ -210,7 +210,7 @@ export class GitHubClient extends EventEmitter {
             userId: userIdUUID,
             agentId: this.runtime.agentId,
             content: {
-                text: `Create memories from files for the repository ${this.state.owner}/${this.state.repo} @ branch ${this.state.branch} and path '/packages/plugin-coinbase/src'`,
+                text: `Create memories from files for the repository ${this.state.owner}/${this.state.repo} @ branch ${this.state.branch} and path '/'`,
                 action: "CREATE_MEMORIES_FROM_FILES",
                 source: "github",
                 inReplyTo: stringToUuid(
@@ -328,10 +328,7 @@ export class GitHubClient extends EventEmitter {
 
             const previousIssues = await getIssuesFromMemories(
                 this.runtime,
-                message,
-                this.state.owner as string,
-                this.state.repo as string,
-                this.state.branch as string
+                message
             );
             this.state.previousIssues = JSON.stringify(
                 previousIssues.map((issue) => ({
@@ -347,10 +344,7 @@ export class GitHubClient extends EventEmitter {
 
             const previousPRs = await getPullRequestsFromMemories(
                 this.runtime,
-                message,
-                this.state.owner as string,
-                this.state.repo as string,
-                this.state.branch as string
+                message
             );
             this.state.previousPRs = JSON.stringify(
                 previousPRs.map((pr) => ({
@@ -407,6 +401,11 @@ export class GitHubClient extends EventEmitter {
             const memories = await this.runtime.messageManager.getMemories({
                 roomId: this.roomId,
             });
+
+            await fs.writeFile(
+                "/tmp/client-github-memories.txt",
+                JSON.stringify(memories, null, 2)
+            );
 
             // if memories is empty skip to the next ooda cycle
             if (memories.length === 0) {

@@ -46,10 +46,7 @@ import {
     isReactToPRContent,
     isReplyToPRCommentContent,
 } from "../types";
-import {
-    getPullRequestFromMemories,
-    incorporateRepositoryState,
-} from "../utils";
+import { getPullRequestFromMemories } from "../utils";
 import {
     addCommentToPRTemplate,
     closePRActionTemplate,
@@ -63,7 +60,6 @@ import {
     reactToPRTemplate,
     replyToPRCommentTemplate,
 } from "../templates";
-import fs from "fs/promises";
 import { createIssueAction } from "./createIssue";
 import { createCommitAction } from "./createCommit";
 import { createPullRequestAction } from "./createPullRequest";
@@ -80,6 +76,7 @@ export const reactToPRAction: Action = {
         "Adds a reaction to a comment in a pull request in the GitHub repository",
     validate: async (runtime: IAgentRuntime) => {
         const token = !!runtime.getSetting("GITHUB_API_TOKEN");
+
         return token;
     },
     handler: async (
@@ -90,25 +87,18 @@ export const reactToPRAction: Action = {
         callback?: HandlerCallback
     ) => {
         elizaLogger.log("[reactToPR] Composing state for message:", message);
+
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        // state = await incorporateRepositoryState(
-        //     state,
-        //     runtime,
-        //     message,
-        //     [],
-        //     true,
-        //     true
-        // );
-        // elizaLogger.info("State:", state);
 
         const context = composeContext({
             state,
             template: reactToPRTemplate,
         });
+
         const details = await generateObject({
             runtime,
             context,
@@ -122,11 +112,13 @@ export const reactToPRAction: Action = {
         }
 
         const content = details.object as ReactToPRContent;
+
         const githubService = new GitHubService({
             owner: content.owner,
             repo: content.repo,
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
+
         elizaLogger.info("Adding reaction to pull request comment...");
 
         try {
@@ -138,10 +130,12 @@ export const reactToPRAction: Action = {
                     content.reaction
                 );
             const pr = await githubService.getPullRequest(content.pullRequest);
+
             elizaLogger.info("Reaction:", JSON.stringify(reaction, null, 2));
             elizaLogger.info(
                 `Added reaction to pull request #${content.pullRequest} successfully! PR: ${pr.html_url}`
             );
+
             if (callback) {
                 callback({
                     text: `Added reaction to pull request #${content.pullRequest} successfully! PR: ${pr.html_url}`,
@@ -257,27 +251,18 @@ export const addCommentToPRAction: Action = {
             "[addCommentToPR] Composing state for message:",
             message
         );
+
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        // state = await incorporateRepositoryState(
-        //     state,
-        //     runtime,
-        //     message,
-        //     [],
-        //     true,
-        //     true
-        // );
-        // elizaLogger.info("State:", state);
 
         const context = composeContext({
             state: state,
             template: addCommentToPRTemplate,
         });
-        // write the context to a file for testing
-        // await fs.writeFile("/tmp/context.txt", context);
+
         const details = await generateObject({
             runtime,
             context,
@@ -291,12 +276,15 @@ export const addCommentToPRAction: Action = {
         }
 
         const content = details.object as AddCommentToPRContent;
+
         const githubService = new GitHubService({
             owner: content.owner,
             repo: content.repo,
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
+
         elizaLogger.info("Adding comment to pull request in the repository...");
+
         let pullRequest = await getPullRequestFromMemories(
             runtime,
             message,
@@ -304,8 +292,10 @@ export const addCommentToPRAction: Action = {
         );
         let pr = await githubService.getPullRequest(content.pullRequest);
         const diffText = await githubService.getPRDiffText(pr.diff_url);
+
         if (!pullRequest) {
             elizaLogger.error("Pull request not found in memories");
+
             const prData = {
                 type: "pull_request",
                 url: pr.html_url,
@@ -326,6 +316,7 @@ export const addCommentToPRAction: Action = {
                 diff: diffText,
                 lineLevelComments: [],
             };
+
             state.specificPullRequest = JSON.stringify(prData);
         } else {
             state.specificPullRequest = JSON.stringify(pullRequest.content);
@@ -335,7 +326,7 @@ export const addCommentToPRAction: Action = {
             state,
             template: generateCommentForASpecificPRTemplate,
         });
-        // await fs.writeFile("/tmp/commentContext.txt", commentContext);
+
         const commentDetails = await generateObject({
             runtime,
             context: commentContext,
@@ -352,6 +343,7 @@ export const addCommentToPRAction: Action = {
         }
 
         const comment = commentDetails.object;
+
         elizaLogger.info(
             "Adding comment to pull request in the repository...",
             {
@@ -370,9 +362,7 @@ export const addCommentToPRAction: Action = {
                 );
             })
         );
-        // await fs.writeFile("/tmp/diffText.txt", diffText);
-        // await fs.writeFile("/tmp/comment.txt", JSON.stringify(comment, null, 2));
-        // await fs.writeFile("/tmp/sanitizedLineLevelComments.txt", JSON.stringify(sanitizedLineLevelComments, null, 2));
+
         try {
             const addedComment = await githubService.addPRCommentAndReview(
                 content.pullRequest,
@@ -380,10 +370,12 @@ export const addCommentToPRAction: Action = {
                 sanitizedLineLevelComments,
                 comment.approvalEvent
             );
+
             elizaLogger.info("Comment:", JSON.stringify(comment, null, 2));
             elizaLogger.info(
                 `Added comment to pull request #${content.pullRequest} successfully! See comment at ${addedComment.html_url}. Approval status: ${comment.approvalEvent}`
             );
+
             if (content.emojiReaction) {
                 // TODO: add emoji reaction to pull request which this library doesn't support
                 // await githubService.createReactionForPullRequestReviewComment(
@@ -396,6 +388,7 @@ export const addCommentToPRAction: Action = {
                 //     `Added emoji reaction to pull request #${content.pullRequest} successfully!`
                 // );
             }
+
             if (callback) {
                 callback({
                     text: `Added comment to pull request #${content.pullRequest} successfully! See comment at ${addedComment.html_url}`,
@@ -407,6 +400,7 @@ export const addCommentToPRAction: Action = {
                 `Error adding comment to pull request #${content.pullRequest} in repository ${content.owner}/${content.repo}:`,
                 error
             );
+
             if (callback) {
                 callback(
                     {
@@ -557,20 +551,12 @@ export const closePRAction: Action = {
         callback?: HandlerCallback
     ) => {
         elizaLogger.log("[closePR] Composing state for message:", message);
+
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        // state = await incorporateRepositoryState(
-        //     state,
-        //     runtime,
-        //     message,
-        //     [],
-        //     true,
-        //     true
-        // );
-        // elizaLogger.info("State:", state);
 
         const context = composeContext({
             state,
@@ -589,11 +575,13 @@ export const closePRAction: Action = {
         }
 
         const content = details.object as ClosePRActionContent;
+
         const githubService = new GitHubService({
             owner: content.owner,
             repo: content.repo,
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
+
         elizaLogger.info("Closing pull request...");
 
         try {
@@ -605,10 +593,12 @@ export const closePRAction: Action = {
                 undefined,
                 "closed"
             );
+
             elizaLogger.info("Pull request:", JSON.stringify(pr, null, 2));
             elizaLogger.info(
                 `Closed pull request #${content.pullRequest} successfully!`
             );
+
             if (callback) {
                 callback({
                     text: `Closed pull request #${content.pullRequest} successfully!`,
@@ -620,6 +610,7 @@ export const closePRAction: Action = {
                 `Error closing pull request #${content.pullRequest} in repository ${content.owner}/${content.repo}:`,
                 error
             );
+
             if (callback) {
                 callback(
                     {
@@ -677,20 +668,12 @@ export const mergePRAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        // state = await incorporateRepositoryState(
-        //     state,
-        //     runtime,
-        //     message,
-        //     [],
-        //     true,
-        //     true
-        // );
-        // elizaLogger.info("State:", state);
 
         const context = composeContext({
             state,
             template: mergePRActionTemplate,
         });
+
         const details = await generateObject({
             runtime,
             context,
@@ -704,11 +687,13 @@ export const mergePRAction: Action = {
         }
 
         const content = details.object as MergePRActionContent;
+
         const githubService = new GitHubService({
             owner: content.owner,
             repo: content.repo,
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
+
         elizaLogger.info("Merging pull request...");
 
         try {
@@ -718,6 +703,7 @@ export const mergePRAction: Action = {
                 content.pullRequest,
                 content.mergeMethod
             );
+
             elizaLogger.info(
                 "Merge result:",
                 JSON.stringify(mergeResult, null, 2)
@@ -725,6 +711,7 @@ export const mergePRAction: Action = {
             elizaLogger.info(
                 `Merged pull request #${content.pullRequest} successfully!`
             );
+
             if (callback) {
                 callback({
                     text: `Merged pull request #${content.pullRequest} successfully!`,
@@ -736,6 +723,7 @@ export const mergePRAction: Action = {
                 `Error merging pull request #${content.pullRequest} in repository ${content.owner}/${content.repo}:`,
                 error
             );
+
             if (callback) {
                 callback(
                     {
@@ -830,25 +818,18 @@ export const replyToPRCommentAction: Action = {
             "[replyToPRComment] Composing state for message:",
             message
         );
+
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        // state = await incorporateRepositoryState(
-        //     state,
-        //     runtime,
-        //     message,
-        //     [],
-        //     true,
-        //     true
-        // );
-        // elizaLogger.info("State:", state);
 
         const context = composeContext({
             state,
             template: replyToPRCommentTemplate,
         });
+
         const details = await generateObject({
             runtime,
             context,
@@ -868,28 +849,38 @@ export const replyToPRCommentAction: Action = {
             repo: content.repo,
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
+
         // reply to all comments in the pull request
         const pullRequest = await githubService.getPullRequest(
             content.pullRequest
         );
+
         state.specificPullRequest = JSON.stringify(pullRequest);
+
         elizaLogger.info("Pull request:", JSON.stringify(pullRequest, null, 2));
+
         const reviewCommentsUrl = pullRequest.review_comments_url;
+
         elizaLogger.info("Review Comments URL:", reviewCommentsUrl);
+
         const reviewComments =
             await githubService.getPRCommentsText(reviewCommentsUrl);
+
         elizaLogger.info(
             "Review Comments:",
             JSON.stringify(reviewComments, null, 2)
         );
+
         const reviewCommentsArray = JSON.parse(reviewComments);
         const nonReviewComments = await githubService.getPRCommentsText(
             pullRequest.comments_url
         );
+
         elizaLogger.info(
             "Non-Review Comments:",
             JSON.stringify(nonReviewComments, null, 2)
         );
+
         const nonReviewCommentsArray = JSON.parse(nonReviewComments);
         const allComments = [...reviewCommentsArray, ...nonReviewCommentsArray];
         for (const comment of allComments) {
@@ -914,14 +905,17 @@ export const replyToPRCommentAction: Action = {
 
             const replyContent =
                 replyDetails.object as GeneratePRCommentReplyContent;
+
             if (replyContent.comment === "") {
                 elizaLogger.info("No comment to reply to, skipping...");
                 continue;
             }
+
             elizaLogger.info(
                 "Replying to pull request comment...",
                 JSON.stringify(replyContent, null, 2)
             );
+
             try {
                 const repliedMessage = await githubService.replyToPRComment(
                     content.pullRequest,
@@ -929,6 +923,7 @@ export const replyToPRCommentAction: Action = {
                     replyContent.comment,
                     replyContent.emojiReaction
                 );
+
                 elizaLogger.log(
                     "Replied message:",
                     JSON.stringify(repliedMessage, null, 2)
@@ -936,6 +931,7 @@ export const replyToPRCommentAction: Action = {
                 elizaLogger.info(
                     `Replied to comment #${comment.id} in pull request #${content.pullRequest} successfully with emoji reaction: ${replyContent.emojiReaction}!`
                 );
+
                 if (callback) {
                     callback({
                         text: `Replied to comment #${comment.id} in pull request #${content.pullRequest} successfully with emoji reaction: ${replyContent.emojiReaction}!`,
@@ -947,6 +943,7 @@ export const replyToPRCommentAction: Action = {
                     `Error replying to comment #${comment.id} in pull request #${content.pullRequest} in repository ${content.owner}/${content.repo}:`,
                     error
                 );
+
                 if (callback) {
                     callback(
                         {
@@ -1012,25 +1009,18 @@ export const implementFeatureAction: Action = {
             "[implementFeature] Composing state for message:",
             message
         );
+
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        // state = await incorporateRepositoryState(
-        //     state,
-        //     runtime,
-        //     message,
-        //     [],
-        //     true,
-        //     true
-        // );
-        // elizaLogger.info("State:", state);
 
         const context = composeContext({
             state,
             template: implementFeatureTemplate,
         });
+
         const details = await generateObject({
             runtime,
             context,
@@ -1044,53 +1034,49 @@ export const implementFeatureAction: Action = {
         }
 
         const content = details.object as ImplementFeatureContent;
-        await fs.writeFile(
-            "implementFeatureContent.json",
-            JSON.stringify(content, null, 2)
-        );
+
         const githubService = new GitHubService({
             owner: content.owner,
             repo: content.repo,
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
+
         try {
-            let issue;
+            let issue: any;
+
             if (content.issue != null) {
                 elizaLogger.info(
                     `Getting issue ${content.issue} from repository ${content.owner}/${content.repo}`
                 );
+
                 issue = await githubService.getIssue(content.issue);
             } else {
                 message.content.text = `Create an issue for ${content.feature} in repository ${content.owner}/${content.repo}`;
+
                 issue = await createIssueAction.handler(
                     runtime,
                     message,
                     state,
                     options
                 );
+
                 elizaLogger.info(`Created issue successfully!`);
             }
-            await fs.writeFile("issue.json", JSON.stringify(issue, null, 2));
+
             state.specificIssue = JSON.stringify(issue, null, 2);
             // Generate code file changes
             const codeFileChangesContext = composeContext({
                 state,
                 template: generateCodeFileChangesTemplate,
             });
-            await fs.writeFile(
-                "codeFileChangesContext.json",
-                JSON.stringify(codeFileChangesContext, null, 2)
-            );
+
             const codeFileChangesDetails = await generateObject({
                 runtime,
                 context: codeFileChangesContext,
                 modelClass: ModelClass.LARGE,
                 schema: GenerateCodeFileChangesSchema,
             });
-            await fs.writeFile(
-                "codeFileChanges.json",
-                JSON.stringify(codeFileChangesDetails.object, null, 2)
-            );
+
             if (
                 !isGenerateCodeFileChangesContent(codeFileChangesDetails.object)
             ) {
@@ -1104,11 +1090,14 @@ export const implementFeatureAction: Action = {
             const codeFileChangesContent =
                 codeFileChangesDetails.object as GenerateCodeFileChangesContent;
             state.codeFileChanges = codeFileChangesContent.files;
+
             elizaLogger.info(
                 `Generated code file changes successfully!`,
                 JSON.stringify(codeFileChangesContent, null, 2)
             );
+
             message.content.text = `Commit changes to the repository ${content.owner}/${content.repo} on branch realitySpiral/demoPR with the commit message: ${content.feature}`;
+
             // Commit changes
             const commit = await createCommitAction.handler(
                 runtime,
@@ -1117,12 +1106,14 @@ export const implementFeatureAction: Action = {
                 options
             );
             state.specificCommit = commit;
+
             elizaLogger.info(
                 `Committed changes successfully!`,
                 JSON.stringify(commit, null, 2)
             );
-            await fs.writeFile("commit.json", JSON.stringify(commit, null, 2));
+
             message.content.text = `Create a pull request on repository ${content.owner}/${content.repo} with branch '${content.branch}', title '${content.feature}' against base '${content.base}' and files ${JSON.stringify([])}`;
+
             // Create pull request
             const pullRequest = await createPullRequestAction.handler(
                 runtime,
@@ -1130,11 +1121,9 @@ export const implementFeatureAction: Action = {
                 state,
                 options
             );
+
             elizaLogger.info(`Pull request created successfully!`);
-            await fs.writeFile(
-                "pullRequest.json",
-                JSON.stringify(pullRequest, null, 2)
-            );
+
             if (callback) {
                 callback({
                     text: `Pull request created successfully!`,
@@ -1146,6 +1135,7 @@ export const implementFeatureAction: Action = {
                 `Error implementing feature in repository ${content.owner}/${content.repo} on branch ${content.branch}:`,
                 error
             );
+
             if (callback) {
                 callback(
                     {
@@ -1202,6 +1192,4 @@ export const githubInteractWithPRPlugin: Plugin = {
         replyToPRCommentAction,
         implementFeatureAction,
     ],
-    evaluators: [],
-    providers: [],
 };

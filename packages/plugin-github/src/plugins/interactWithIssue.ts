@@ -30,8 +30,7 @@ import {
     reactToIssueTemplate,
     closeIssueTemplate,
 } from "../templates";
-import { getIssueFromMemories, incorporateRepositoryState } from "../utils";
-import fs from "fs/promises";
+import { getIssueFromMemories } from "../utils";
 
 export const addCommentToIssueAction: Action = {
     name: "COMMENT_ON_ISSUE",
@@ -64,23 +63,12 @@ export const addCommentToIssueAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        // state = await incorporateRepositoryState(
-        //     state,
-        //     runtime,
-        //     message,
-        //     [],
-        //     true,
-        //     true
-        // );
-        // elizaLogger.info("State:", state);
 
         const context = composeContext({
             state,
             template: addCommentToIssueTemplate,
         });
-        // Test all all values from the state are being loaded into the context (files, previousIssues, previousPRs, all issues all prs )
-        // write the context to a file for testing
-        // await fs.writeFile("/tmp/context.txt", context);
+
         const details = await generateObject({
             runtime,
             context,
@@ -100,6 +88,7 @@ export const addCommentToIssueAction: Action = {
             repo: content.repo,
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
+
         let issue = await getIssueFromMemories(runtime, message, content.issue);
         if (!issue) {
             elizaLogger.error("Issue not found in memories");
@@ -283,15 +272,6 @@ export const reactToIssueAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        // state = await incorporateRepositoryState(
-        //     state,
-        //     runtime,
-        //     message,
-        //     [],
-        //     true,
-        //     true
-        // );
-        // elizaLogger.info("State:", state);
 
         const context = composeContext({
             state,
@@ -315,8 +295,9 @@ export const reactToIssueAction: Action = {
             repo: content.repo,
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
+
         elizaLogger.info("Adding reaction to issue comment...");
-        // await fs.writeFile("/tmp/reaction.txt", JSON.stringify(content, null, 2));
+
         try {
             const reaction = await githubService.createReactionForIssue(
                 content.owner,
@@ -325,10 +306,12 @@ export const reactToIssueAction: Action = {
                 content.reaction
             );
             const issue = await githubService.getIssue(content.issue);
+
             elizaLogger.info("Reaction:", JSON.stringify(reaction, null, 2));
             elizaLogger.info(
                 `Added reaction to issue #${content.issue} successfully! Issue: ${issue.html_url}`
             );
+
             if (callback) {
                 callback({
                     text: `Added reaction to issue #${content.issue} successfully! Issue: ${issue.html_url}`,
@@ -435,15 +418,6 @@ export const closeIssueAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        // state = await incorporateRepositoryState(
-        //     state,
-        //     runtime,
-        //     message,
-        //     [],
-        //     true,
-        //     true
-        // );
-        // elizaLogger.info("State:", state);
 
         const context = composeContext({
             state,
@@ -474,8 +448,10 @@ export const closeIssueAction: Action = {
                 state: "closed",
                 labels: ["agent-close"],
             });
+
             elizaLogger.info("Issue:", JSON.stringify(issue, null, 2));
             elizaLogger.info(`Closed issue #${content.issue} successfully!`);
+
             if (callback) {
                 callback({
                     text: `Closed issue #${content.issue} successfully! Issue: ${issue.html_url}`,
@@ -566,6 +542,4 @@ export const githubInteractWithIssuePlugin: Plugin = {
     description:
         "Integration with GitHub for adding comments or reactions or closing issues",
     actions: [reactToIssueAction, addCommentToIssueAction, closeIssueAction],
-    evaluators: [],
-    providers: [],
 };

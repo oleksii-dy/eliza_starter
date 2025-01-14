@@ -121,7 +121,7 @@ export const configGithubInfoAction: Action = {
 
             if (callback) {
                 callback({
-                    text: `GitHub repository configured successfully! URL: https://github.com/${content.owner}/${content.repo} @ branch: ${content.branch}`,
+                    text: `GitHub repository configured successfully! Repository URL: https://github.com/${content.owner}/${content.repo} @ branch ${content.branch}`,
                     attachments: [],
                 });
             }

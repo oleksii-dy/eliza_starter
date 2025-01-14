@@ -10,7 +10,7 @@ import { useTransition, animated } from "@react-spring/web";
 import { Paperclip, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Content, UUID } from "@elizaos/core";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
 import { cn, moment } from "@/lib/utils";
 import { Avatar, AvatarImage } from "./ui/avatar";
@@ -24,6 +24,7 @@ import { AudioRecorder } from "./audio-recorder";
 import { Badge } from "./ui/badge";
 
 interface ExtraContentFields {
+    id?: string;
     user: string;
     createdAt: number;
     isLoading?: boolean;
@@ -152,9 +153,48 @@ export default function Page({ agentId }: { agentId: UUID }) {
         }
     };
 
-    const messages =
-        queryClient.getQueryData<ContentWithUser[]>(["messages", agentId]) ||
-        [];
+    const { data: latestMessage } = useQuery({
+        queryKey: ["lastMessage", agentId],
+        queryFn: () => apiClient.getMemories(agentId),
+        refetchInterval: 5000,
+        select: (data) => {
+            const existingMessages =
+                queryClient.getQueryData<ContentWithUser[]>([
+                    "messages",
+                    agentId,
+                ]) || [];
+
+            // Filter out messages that already exist in our cache
+            const newMessages = data.memories.filter(
+                (newMsg: any) =>
+                    !existingMessages.some(
+                        (existingMsg: any) => existingMsg.id === newMsg.id
+                    )
+            );
+
+            // If we have new messages, add them to our messages
+            if (newMessages.length > 0) {
+                const updatedMessages = [
+                    ...existingMessages,
+                    ...newMessages.map((msg: any) => ({
+                        ...msg,
+                        text: msg.content.text,
+                        user: msg.userId === "user" ? "user" : msg.agentId,
+                        attachments: msg.content.attachments || [],
+                    })),
+                ];
+                queryClient.setQueryData(
+                    ["messages", agentId],
+                    updatedMessages
+                );
+                return updatedMessages;
+            }
+
+            return existingMessages;
+        },
+    });
+
+    const messages = latestMessage || [];
 
     const transitions = useTransition(messages, {
         keys: (message) =>
@@ -199,7 +239,10 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                             {/* Attachments */}
                                             <div>
                                                 {message?.attachments?.map(
-                                                    (attachment, idx) => (
+                                                    (
+                                                        attachment: any,
+                                                        idx: any
+                                                    ) => (
                                                         <div
                                                             className="flex flex-col gap-1 mt-2"
                                                             key={idx}

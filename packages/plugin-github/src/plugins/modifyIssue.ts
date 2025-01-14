@@ -17,7 +17,6 @@ import {
     isModifyIssueContent,
 } from "../types";
 import { modifyIssueTemplate } from "../templates";
-import { getFilesFromMemories } from "../utils";
 
 export const modifyIssueAction: Action = {
     name: "MODIFY_ISSUE",
@@ -35,11 +34,13 @@ export const modifyIssueAction: Action = {
         callback: HandlerCallback
     ) => {
         elizaLogger.log("[modifyIssue] Composing state for message:", message);
+
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
+
         const context = composeContext({
             state,
             template: modifyIssueTemplate,
@@ -86,6 +87,7 @@ export const modifyIssueAction: Action = {
                 `Error modifying issue #${content.issue} in repository ${content.owner}/${content.repo}:`,
                 error
             );
+
             callback(
                 {
                     text: `Error modifying issue #${content.issue}. Please try again.`,
@@ -117,6 +119,4 @@ export const githubModifyIssuePlugin: Plugin = {
     name: "githubModifyIssue",
     description: "Integration with GitHub for modifying existing issues",
     actions: [modifyIssueAction],
-    evaluators: [],
-    providers: [],
 };

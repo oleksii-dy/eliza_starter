@@ -275,21 +275,13 @@ export const getFilesFromMemories = async (
 
 export async function getIssuesFromMemories(
     runtime: IAgentRuntime,
-    message: Memory,
-    owner: string,
-    repo: string,
-    branch: string
+    message: Memory
 ): Promise<Memory[]> {
-    // const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
     const memories = await runtime.messageManager.getMemories({
         roomId: message.roomId,
         count: 1000,
     });
-    // elizaLogger.log("Memories:", memories);
-    await fs.writeFile(
-        "/tmp/getIssuesFromMemories.txt",
-        JSON.stringify(memories, null, 2)
-    );
+
     // Filter memories to only include those that are issues
     const issueMemories = memories.filter(
         (memory) => (memory.content.metadata as any)?.type === "issue"
@@ -332,12 +324,8 @@ export const getPullRequestFromMemories = async (
 export async function saveIssueToMemory(
     runtime: IAgentRuntime,
     message: Memory,
-    issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"],
-    owner: string,
-    repo: string,
-    branch: string
+    issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"]
 ): Promise<Memory> {
-    // const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
     const issueId = stringToUuid(
         `${message.roomId}-${runtime.agentId}-issue-${issue.number}`
     );
@@ -366,12 +354,6 @@ export async function saveIssueToMemory(
         },
     };
 
-    // elizaLogger.log("Issue memory:", issueMemory);
-    await fs.writeFile(
-        `/tmp/saveIssueToMemory-issueMemory-${issue.number}.txt`,
-        JSON.stringify(issueMemory, null, 2)
-    );
-
     await runtime.messageManager.createMemory(issueMemory);
 
     return issueMemory;
@@ -386,10 +368,6 @@ export const saveIssuesToMemory = async (
     apiToken: string,
     limit: number = 999999
 ): Promise<Memory[]> => {
-    // const roomId = stringToUuid(`github-${owner}-${repository}-${branch}`);
-    // const memories = await runtime.messageManager.getMemories({
-    //     roomId: message.roomId,
-    // });
     const githubService = new GitHubService({
         owner: owner,
         repo: repository,
@@ -398,7 +376,6 @@ export const saveIssuesToMemory = async (
     });
     const issues = await githubService.getIssues(limit);
     elizaLogger.log(`Total issues found: ${issues.length}`);
-    // await fs.writeFile("/tmp/issues.txt", JSON.stringify(issues, null, 2));
     const issuesMemories: Memory[] = [];
     // create memories for each issue if they are not already in the memories
     for (const issue of issues) {
@@ -412,14 +389,7 @@ export const saveIssuesToMemory = async (
         //         )
         // );
         // if (!issueMemory) {
-        const newIssueMemory = await saveIssueToMemory(
-            runtime,
-            message,
-            issue,
-            owner,
-            repository,
-            branch
-        );
+        const newIssueMemory = await saveIssueToMemory(runtime, message, issue);
 
         issuesMemories.push(newIssueMemory);
         // } else {
@@ -427,24 +397,14 @@ export const saveIssuesToMemory = async (
         //     // update the issue memory
         // }
     }
-    // await fs.writeFile("/tmp/issuesMemories.txt", JSON.stringify(issuesMemories, null, 2));
     return issuesMemories;
 };
 
 export async function incorporateRepositoryState(
-    owner: string,
-    repository: string,
-    branch: string,
     state: State,
     runtime: IAgentRuntime,
-    message: Memory,
-    relevantMemories: Memory[],
-    isIssuesFlow: boolean,
-    isPullRequestsFlow: boolean
+    relevantMemories: Memory[]
 ) {
-    const files = await getFilesFromMemories(runtime, message);
-    await fs.writeFile("/tmp/files.txt", JSON.stringify(files, null, 2));
-    state.files = files;
     state.messageExamples = JSON.stringify(
         runtime.character?.messageExamples,
         null,
@@ -456,6 +416,7 @@ export async function incorporateRepositoryState(
     state.adjectives = JSON.stringify(runtime.character?.adjectives, null, 2);
     const sanitizedMemories = sanitizeMemories(relevantMemories);
     state.relevantMemories = JSON.stringify(sanitizedMemories, null, 2);
+
     // Doesn't exist in character or state but we want it in state
     // state.facts = JSON.stringify(
     //     sanitizeMemories(
@@ -472,70 +433,14 @@ export async function incorporateRepositoryState(
     // TODO:
     // We need to actually save goals, knowledge,facts, we only save memories for now
     // We need to dynamically update the goals, knoweldge, facts, bio, lore, we should add actions to update these and chain them to the OODA cycle
-    state.owner = owner;
-    state.repo = repository;
-    state.branch = branch;
-    state.message = message.content.text;
 
-    if (isIssuesFlow) {
-        const previousIssues = await getIssuesFromMemories(
-            runtime,
-            message,
-            owner,
-            repository,
-            branch
-        );
-        await fs.writeFile(
-            "/tmp/plugin-github-previousIssues.txt",
-            JSON.stringify(previousIssues, null, 2)
-        );
-        state.previousIssues = JSON.stringify(
-            previousIssues.map((issue) => ({
-                title: issue.content.text,
-                body: (issue.content.metadata as any).body,
-                url: (issue.content.metadata as any).url,
-                number: (issue.content.metadata as any).number,
-                state: (issue.content.metadata as any).state,
-            })),
-            null,
-            2
-        );
-    }
-
-    if (isPullRequestsFlow) {
-        const previousPRs = await getPullRequestsFromMemories(
-            runtime,
-            message,
-            owner,
-            repository,
-            branch
-        );
-        // await fs.writeFile("/tmp/previousPRs.txt", JSON.stringify(previousPRs, null, 2));
-        state.previousPRs = JSON.stringify(
-            previousPRs.map((pr) => ({
-                title: pr.content.text,
-                body: (pr.content.metadata as any).body,
-                url: (pr.content.metadata as any).url,
-                number: (pr.content.metadata as any).number,
-                state: (pr.content.metadata as any).state,
-                diff: (pr.content.metadata as any).diff,
-                comments: (pr.content.metadata as any).comments,
-            })),
-            null,
-            2
-        );
-    }
     return state;
 }
 
 export async function getPullRequestsFromMemories(
     runtime: IAgentRuntime,
-    message: Memory,
-    owner: string,
-    repo: string,
-    branch: string
+    message: Memory
 ): Promise<Memory[]> {
-    // const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
     const memories = await runtime.messageManager.getMemories({
         roomId: message.roomId,
         count: 1000,
@@ -580,14 +485,13 @@ export async function savePullRequestToMemory(
     message: Memory,
     pullRequest: RestEndpointMethodTypes["pulls"]["list"]["response"]["data"][number],
     owner: string,
-    repository: string,
+    repo: string,
     branch: string,
     apiToken: string
 ): Promise<Memory> {
-    const roomId = stringToUuid(`github-${owner}-${repository}-${branch}`);
     const githubService = new GitHubService({
-        owner: owner,
-        repo: repository,
+        owner,
+        repo,
         auth: apiToken,
     });
     const prId = stringToUuid(
@@ -610,26 +514,26 @@ export async function savePullRequestToMemory(
 
 export async function saveCreatedPullRequestToMemory(
     runtime: IAgentRuntime,
+    message: Memory,
     pullRequest: RestEndpointMethodTypes["pulls"]["create"]["response"]["data"],
     owner: string,
     repository: string,
     branch: string,
     apiToken: string
 ): Promise<Memory> {
-    const roomId = stringToUuid(`github-${owner}-${repository}-${branch}`);
     const githubService = new GitHubService({
         owner: owner,
         repo: repository,
         auth: apiToken,
     });
     const prId = stringToUuid(
-        `${roomId}-${runtime.agentId}-pr-${pullRequest.number}`
+        `${message.roomId}-${runtime.agentId}-pr-${pullRequest.number}`
     );
     const prMemory: Memory = {
         id: prId,
         userId: runtime.agentId,
         agentId: runtime.agentId,
-        roomId: roomId,
+        roomId: message.roomId,
         content: {
             text: `Pull Request Created: ${pullRequest.title}`,
             metadata: await getCreatedPullRequestMetadata(
@@ -652,7 +556,6 @@ export const savePullRequestsToMemory = async (
     apiToken: string,
     limit: number = 999999
 ): Promise<Memory[]> => {
-    // const roomId = stringToUuid(`github-${owner}-${repository}-${branch}`);
     const memories = await runtime.messageManager.getMemories({
         roomId: message.roomId,
     });
@@ -687,14 +590,9 @@ export const savePullRequestsToMemory = async (
             pullRequestsMemories.push(newPrMemory);
         } else {
             elizaLogger.log("Pull request already in memories:", prMemory);
-            // update the pull request memory
         }
     }
-    // elizaLogger.log("Pull requests memories:", pullRequestsMemories);
-    await fs.writeFile(
-        "/tmp/savePullRequestsToMemory-pullRequestsMemories.txt",
-        JSON.stringify(pullRequestsMemories, null, 2)
-    );
+
     return pullRequestsMemories;
 };
 
@@ -716,10 +614,7 @@ export async function getPullRequestMetadata(
             typeof label === "string" ? label : label?.name
         ),
         body: pullRequest.body,
-        diff:
-            pullRequest.number !== 158 // TODO: ignore WIP PRs that contains big diffs
-                ? await githubService.getPRDiffText(pullRequest.url)
-                : "<diff truncated>",
+        diff: await githubService.getPRDiffText(pullRequest.url),
     };
 }
 

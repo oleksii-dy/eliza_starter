@@ -21,7 +21,6 @@ import {
     commitAndPushChanges,
     createPullRequest,
     getRepoPath,
-    incorporateRepositoryState,
     writeFiles,
     saveCreatedPullRequestToMemory,
 } from "../utils";
@@ -62,23 +61,12 @@ export const createPullRequestAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        // state = await incorporateRepositoryState(
-        //     state,
-        //     runtime,
-        //     message,
-        //     [],
-        //     true,
-        //     true
-        // );
 
         const context = composeContext({
             state,
             template: createPullRequestTemplate,
         });
-        await fs.writeFile(
-            "createPullRequestContext.json",
-            JSON.stringify(context, null, 2)
-        );
+
         const details = await generateObject({
             runtime,
             context,
@@ -92,10 +80,7 @@ export const createPullRequestAction: Action = {
         }
 
         const content = details.object as CreatePullRequestContent;
-        await fs.writeFile(
-            "createPullRequest.json",
-            JSON.stringify(content, null, 2)
-        );
+
         elizaLogger.info("Creating a pull request...");
 
         const repoPath = getRepoPath(content.owner, content.repo);
@@ -115,6 +100,7 @@ export const createPullRequestAction: Action = {
             );
             await saveCreatedPullRequestToMemory(
                 runtime,
+                message,
                 pullRequest,
                 content.owner,
                 content.repo,
@@ -275,12 +261,4 @@ export const githubCreatePullRequestPlugin: Plugin = {
     name: "githubCreatePullRequest",
     description: "Integration with GitHub for creating a pull request",
     actions: [createPullRequestAction],
-    evaluators: [],
-    providers: [
-        // sourceCodeProvider,
-        // testFilesProvider,
-        // workflowFilesProvider,
-        // documentationFilesProvider,
-        // releasesProvider,
-    ],
 };
