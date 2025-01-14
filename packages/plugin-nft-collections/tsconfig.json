@@ -2,17 +2,18 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "outDir": "./dist",
-        "rootDir": "./src",
-        "module": "ESNext",
-        "target": "ESNext",
-        "moduleResolution": "Node",
-        "esModuleInterop": true
+        "rootDir": "./src"
     },
     "include": [
         "src/**/*"
     ],
     "exclude": [
         "node_modules",
-        "dist"
+        "dist",
+        "**/*.test.ts",
+        "**/*.spec.ts",
+        "**/__tests__/**",
+        "**/tests/**",
+        "**/tests_backup/**"
     ]
 }
