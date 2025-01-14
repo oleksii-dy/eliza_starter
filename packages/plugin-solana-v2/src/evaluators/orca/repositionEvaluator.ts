@@ -9,6 +9,7 @@ import {
     HandlerCallback,
     ModelClass,
     ActionExample,
+    generateText,
 } from "@elizaos/core";
 import { FetchedPositionStatistics } from "../../providers/orca/positionProvider";
 
@@ -68,85 +69,82 @@ export const repositionEvaluator: Evaluator = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        const evaluatePositionsContext = composeContext({
-            state,
-            template: `Respond with a JSON markdown block containing only the extracted values for each position. Use null for any values that cannot be determined.
+        // const positions = state.positions as FetchedPositionStatistics[];
+        console.log(state.actions)
+        console.log(state.providers)
+        console.log(state)
 
-            Example response:
-            \`\`\`json
-            [
-                {
-                    "whirlpoolAddress": "BieefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8pump",
-                    "positionMint": "FieefH47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8swim",
-                    "inRange": true,
-                    "distanceCenterPositionFromPoolPriceBps": 250,
-                    "positionWidthBps": 500
-                },
-                {
-                    "whirlpoolAddress": "CeefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8current",
-                    "positionMint": "WieefH47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8wave",
-                    "inRange": false,
-                    "distanceCenterPositionFromPoolPriceBps": 10000,
-                    "positionWidthBps": 300
-                }
-            ]
-            \`\`\`
+        // const evaluatePositionsContext = composeContext({
+        //     state,
+        //     template: `Analyze the most recent position data, which has been provided in the context and has the following structure:
+        //     Example response:
+        //     [
+        //         {
+        //             "whirlpoolAddress": "BieefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8pump",
+        //             "positionMint": "FieefH47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8swim",
+        //             "inRange": true,
+        //             "distanceCenterPositionFromPoolPriceBps": 250,
+        //             "positionWidthBps": 500
+        //         },
+        //         {
+        //             "whirlpoolAddress": "CeefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8current",
+        //             "positionMint": "WieefH47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8wave",
+        //             "inRange": false,
+        //             "distanceCenterPositionFromPoolPriceBps": 10000,
+        //             "positionWidthBps": 300
+        //         }
+        //     ]
+        //     Then, respond with a JOSN object the exact
+        //     `,
+        // });
 
-            {{recentMessages}}
+        // const content = await generateText({
+        //     runtime,
+        //     context: evaluatePositionsContext,
+        //     modelClass: ModelClass.LARGE,
+        // });
 
-            {{recentMessagesData}}
+        // if(!isRepositionEvaluatorParams(content)) {
+        //     if (callback) {
+        //         callback({
+        //             text: "Unable to repositino liquidity positions. Invalid content provided.",
+        //             content: { error: "Invalid close position content" },
+        //         });
+        //     }
+        //     return false;
+        // }
 
-            Some positions may have been closed already. Do some checks on the timestamps to ensure you have the most recent data.
-            `,
-        });
+        // const positions = content.positions;
+        // const repositionThresholdBps = (state.repositionThresholdBps || 100) as number;
 
-        const content = await generateObjectArray({
-            runtime,
-            context: evaluatePositionsContext,
-            modelClass: ModelClass.LARGE,
-        });
+        // const rebalanceActions: RebalanceAction[] = [];
+        // for (const position of positions) {
+        //     const { positionMint, inRange, distanceCenterPositionFromPoolPriceBps, positionWidthBps } = position;
 
-        if(!isRepositionEvaluatorParams(content)) {
-            if (callback) {
-                callback({
-                    text: "Unable to repositino liquidity positions. Invalid content provided.",
-                    content: { error: "Invalid close position content" },
-                });
-            }
-            return false;
-        }
+        //     if (!inRange || distanceCenterPositionFromPoolPriceBps > repositionThresholdBps) {
+        //         elizaLogger.log(
+        //             `Position ${positionMint} out of range.`                );
+        //         const rebalanceAction: RebalanceAction = {
+        //             name: "rebalance_position",
+        //             params: {
+        //                 positionMint: positionMint,
+        //                 positionWidthBps: positionWidthBps,
+        //             },
+        //         };
+        //         rebalanceActions.push(rebalanceAction);
+        //     }
+        // }
 
-        const positions = content.positions;
-        const repositionThresholdBps = (state.repositionThresholdBps || 100) as number;
+        // if (positions.every((pos) => pos.inRange || pos.distanceCenterPositionFromPoolPriceBps <= repositionThresholdBps)) {
+        //     elizaLogger.log("No positions require rebalancing at this time.");
+        // }
 
-        const rebalanceActions: RebalanceAction[] = [];
-        for (const position of positions) {
-            const { positionMint, inRange, distanceCenterPositionFromPoolPriceBps, positionWidthBps } = position;
-
-            if (!inRange || distanceCenterPositionFromPoolPriceBps > repositionThresholdBps) {
-                elizaLogger.log(
-                    `Position ${positionMint} out of range.`                );
-                const rebalanceAction: RebalanceAction = {
-                    name: "rebalance_position",
-                    params: {
-                        positionMint: positionMint,
-                        positionWidthBps: positionWidthBps,
-                    },
-                };
-                rebalanceActions.push(rebalanceAction);
-            }
-        }
-
-        if (positions.every((pos) => pos.inRange || pos.distanceCenterPositionFromPoolPriceBps <= repositionThresholdBps)) {
-            elizaLogger.log("No positions require rebalancing at this time.");
-        }
-
-        if (callback) {
-            callback({
-                text: `The following positions require rebalancing: ${rebalanceActions.map((action) => action.params.positionMint).join(", ")}`,
-                content: rebalanceActions,
-            });
-        }
+        // if (callback) {
+        //     callback({
+        //         text: `The following positions require rebalancing: ${rebalanceActions.map((action) => action.params.positionMint).join(", ")}`,
+        //         content: rebalanceActions,
+        //     });
+        // }
 
         return true;
     },

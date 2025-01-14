@@ -7,10 +7,7 @@ import { managePositions } from "./actions/orca/managePositions";
 export const solanaPluginV2: Plugin = {
     name: "solanaV2",
     description: "Solana Plugin V2 for Eliza",
-    actions: [
-        managePositions,
-        repositionPosition
-    ],
+    actions: [managePositions],
     evaluators: [repositionEvaluator],
     providers: [positionProvider],
 };

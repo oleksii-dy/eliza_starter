@@ -1,4 +1,4 @@
-import { IAgentRuntime, Memory, Provider, settings, State } from "@elizaos/core";
+import { embed, formatMessages, IAgentRuntime, Memory, MemoryManager, Provider, settings, State, UUID } from "@elizaos/core";
 import { createSolanaRpc } from "@solana/web3.js";
 import { loadWallet } from "../../utils/loadWallet";
 import { Address, Rpc, SolanaRpcApi } from "@solana/web3.js";
@@ -18,21 +18,34 @@ export interface FetchedPositionStatistics {
 export const positionProvider: Provider = {
     get: async (
         runtime: IAgentRuntime,
-        _message: Memory,
-        _state?: State
+        message: Memory,
+        state?: State
     ) => {
+
+        if (!state) {
+            state = (await runtime.composeState(message)) as State;
+        } else {
+            state = await runtime.updateRecentMessageState(state);
+        }
+
         try {
             const { address: ownerAddress } = await loadWallet(
                 runtime,
                 false
             );
+
             const rpc = createSolanaRpc(settings.RPC_URL!);
+
             const positions = await fetchPositions(rpc, ownerAddress);
 
-            return JSON.stringify({
-                positions,
-                lastPositionCheck: Date.now()
-            }, null, 3);
+            state = {
+                ...state,
+                positions: positions,
+            }
+
+            const positionsString = JSON.stringify(positions);
+
+            return positionsString
         } catch (error) {
             console.error("Error in wallet provider:", error);
             return null;

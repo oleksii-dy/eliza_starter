@@ -1,4 +1,4 @@
-import { Action, composeContext, elizaLogger, generateObjectArray, HandlerCallback, IAgentRuntime, Memory, ModelClass, settings, State } from "@elizaos/core";
+import { Action, composeContext, elizaLogger, generateObjectArray, generateText, HandlerCallback, IAgentRuntime, Memory, ModelClass, settings, State } from "@elizaos/core";
 import { fetchPosition, fetchWhirlpool, getPositionAddress } from "@orca-so/whirlpools-client";
 import { address, createSolanaRpc, IInstruction } from "@solana/web3.js";
 import { loadWallet } from "../../utils/loadWallet";
@@ -44,12 +44,11 @@ export const repositionPosition: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        const repositionLiquidityPositionsContext = composeContext({
+        const prompt = composeContext({
             state,
             template: `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 
             Example response:
-            \`\`\`json
             {
                 "positionMint": "BieefG47jAHCGZBxi2q87RDuHyGZyYC3vAzxpyu8pump",
                 "positionWidthBps": 500
@@ -58,9 +57,9 @@ export const repositionPosition: Action = {
             `,
         });
 
-        const content = await generateObjectArray({
+        const content = await generateText({
             runtime,
-            context: repositionLiquidityPositionsContext,
+            context: prompt,
             modelClass: ModelClass.LARGE,
         });
 

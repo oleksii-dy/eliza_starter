@@ -1,30 +1,16 @@
-import { Action, composeContext, elizaLogger, generateObjectArray, HandlerCallback, IAgentRuntime, Memory, ModelClass, State } from "@elizaos/core";
-
-interface ManagePositionsParams {
-    repositionThresholdBps: number;
-}
-
-function isManagePositionsParams(
-    content: any
-) : content is ManagePositionsParams {
-    return (
-        typeof content.repositionThresholdBps === "number"
-    );
-}
+import { Action, composeContext, elizaLogger, generateObjectArray, generateText, HandlerCallback, IAgentRuntime, Memory, ModelClass, parseActionResponseFromText, parseJSONObjectFromText, State } from "@elizaos/core";
 
 export const managePositions: Action = {
     name: 'manage_positions',
     similes: ["AUTOMATE_REBALANCING", "AUTOMATE_POSITIONS", "START_MANAGING_POSITIONS"],
     description: "Automatically manage positions by rebalancing them when they drift too far from the pool price",
 
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
-      return true;
-    },
+    validate: async (runtime: IAgentRuntime, message: Memory) => true,
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
         state: State,
-        _options: { [key: string]: unknown },
+        params: { [key: string]: unknown },
         callback?: HandlerCallback
     ) => {
         elizaLogger.log("Start managing positions");
@@ -35,48 +21,46 @@ export const managePositions: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        const repositionLiquidityPositionsContext = composeContext({
+        const messageText = message.content.text;
+
+        const prompt = composeContext({
             state,
-            template: `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined. If you notice bps, you can assume that's repositionThresholdBps.
-            You may also notice that the input uses a percentage value. You should convert this to bps (basis points) by multiplying by 100.
-
-            Example response:
-            \`\`\`json
+            template: `Given this message: "${messageText}". Analyze the most recent messages and extract the reposition threshold value. This value could be given in percentages or bps.
+            You will awlays responde with the reposition threshold in bps.
+            Return the response as a JSON object with the following structure:
             {
-                "repositionThresholdBps": 100,
+                "repositionThresholdBps": number (integer value),
             }
-            \`\`\`
-            `,
+            `
         });
+        console.log("prompt:", prompt)
 
-        const content = await generateObjectArray({
+        const content = await generateText({
             runtime,
-            context: repositionLiquidityPositionsContext,
+            context: prompt,
             modelClass: ModelClass.LARGE,
         });
 
-        if(!isManagePositionsParams(content)) {
-            if (callback) {
-                callback({
-                    text: "Unable to reposition liquidity positions. Invalid content provided.",
-                    content: { error: "Invalid close position content" },
-                });
-            }
-            return false;
+        const configuration = parseJSONObjectFromText(content);
+        state =  {
+            ...state,
+            repositionThresholdBps: configuration.repositionThresholdBps
         }
 
-        const memoryContent = {
-            repositionThresholdBps: content.repositionThresholdBps,
-            success: true,
-            timestamp: Date.now()
-        };
-
-        if (callback) {
-            callback({
-                text: `Position management initialized with ${content.repositionThresholdBps} bps threshold.`,
-                content: memoryContent,
-                action: "MANAGE_POSITIONS"
-            });
+        try {
+            if (callback) {
+                callback({
+                    text: `Position management initialized with the following threshold ${configuration.repositionThresholdBps}.`,
+                    action: "MANAGE_POSITIONS"
+                });
+            }
+        } catch {
+            if (callback) {
+                callback({
+                    text: `Sorry, I couldn't understand the response. Please try again.`,
+                    action: "MANAGE_POSITIONS"
+                });
+            }
         }
 
         return true;;
