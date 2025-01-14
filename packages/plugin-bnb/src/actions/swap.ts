@@ -117,9 +117,9 @@ export const swapAction = {
             });
             return true;
         } catch (error) {
-            elizaLogger.error("Error during swap:", error.message);
+            elizaLogger.error("Error during swap:", error);
             callback?.({
-                text: `Swap failed`,
+                text: `Swap failed: ${error.message}`,
                 content: { error: error.message },
             });
             return false;

@@ -188,7 +188,7 @@ export const transferAction = {
         } catch (error) {
             elizaLogger.error("Error during transfer:", error);
             callback?.({
-                text: `Transfer failed`,
+                text: `Transfer failed: ${error.message}`,
                 content: { error: error.message },
             });
             return false;

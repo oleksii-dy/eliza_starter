@@ -322,7 +322,9 @@ export const bridgeAction = {
             fromToken: content.fromToken,
             toToken: content.toToken,
             amount: content.amount,
-            toAddress: await walletProvider.formatAddress(content.toAddress),
+            toAddress: content.toAddress
+                ? await walletProvider.formatAddress(content.toAddress)
+                : undefined,
         };
         try {
             const bridgeResp = await action.bridge(paramOptions);
@@ -334,7 +336,7 @@ export const bridgeAction = {
         } catch (error) {
             elizaLogger.error("Error during token bridge:", error);
             callback?.({
-                text: `Bridge failed`,
+                text: `Bridge failed: ${error.message}`,
                 content: { error: error.message },
             });
             return false;

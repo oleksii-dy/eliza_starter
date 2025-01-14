@@ -144,7 +144,9 @@ export const getBalanceAction = {
         const action = new GetBalanceAction(walletProvider);
         const getBalanceOptions: GetBalanceParams = {
             chain: content.chain,
-            address: await walletProvider.formatAddress(content.address),
+            address: content.address
+                ? await walletProvider.formatAddress(content.address)
+                : undefined,
             token: content.token,
         };
         try {
@@ -163,9 +165,9 @@ export const getBalanceAction = {
             }
             return true;
         } catch (error) {
-            elizaLogger.error("Error in get balance:", error.message);
+            elizaLogger.error("Error in get balance:", error);
             callback?.({
-                text: `Getting balance failed`,
+                text: `Get balance failed: ${error.message}`,
                 content: { error: error.message },
             });
             return false;

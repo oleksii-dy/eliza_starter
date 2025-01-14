@@ -229,7 +229,7 @@ export const stakeAction = {
         } catch (error) {
             elizaLogger.error("Error during transfer:", error);
             callback?.({
-                text: `Stake failed`,
+                text: `Stake failed: ${error.message}`,
                 content: { error: error.message },
             });
             return false;

@@ -327,9 +327,9 @@ export const deployAction = {
         try {
             return true;
         } catch (error) {
-            elizaLogger.error("Error in get balance:", error.message);
+            elizaLogger.error("Error in deploy:", error);
             callback?.({
-                text: `Getting balance failed`,
+                text: `Deploy failed: ${error.message}`,
                 content: { error: error.message },
             });
             return false;

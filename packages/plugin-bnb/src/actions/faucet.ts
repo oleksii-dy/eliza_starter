@@ -145,9 +145,9 @@ export const faucetAction = {
 
             return true;
         } catch (error) {
-            elizaLogger.error("Error during get test tokens:", error);
+            elizaLogger.error("Error in faucet:", error);
             callback?.({
-                text: `Error during get test tokens: ${error.message}`,
+                text: `Get test tokens failed: ${error.message}`,
                 content: { error: error.message },
             });
             return false;
