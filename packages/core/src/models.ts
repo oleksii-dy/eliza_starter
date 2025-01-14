@@ -198,7 +198,7 @@ export const models: Models = {
             [ModelClass.SMALL]: {
                 name: settings.SMALL_GROQ_MODEL || "llama-3.1-8b-instant",
                 stop: [],
-                maxInputTokens: 128000,
+                maxInputTokens: 30000,
                 maxOutputTokens: 8000,
                 frequency_penalty: 0.4,
                 presence_penalty: 0.4,
@@ -207,7 +207,7 @@ export const models: Models = {
             [ModelClass.MEDIUM]: {
                 name: settings.MEDIUM_GROQ_MODEL || "llama-3.3-70b-versatile",
                 stop: [],
-                maxInputTokens: 128000,
+                maxInputTokens: 20000,
                 maxOutputTokens: 8000,
                 frequency_penalty: 0.4,
                 presence_penalty: 0.4,
@@ -217,7 +217,7 @@ export const models: Models = {
                 name:
                     settings.LARGE_GROQ_MODEL || "llama-3.2-90b-vision-preview",
                 stop: [],
-                maxInputTokens: 128000,
+                maxInputTokens: 20000,
                 maxOutputTokens: 8000,
                 frequency_penalty: 0.4,
                 presence_penalty: 0.4,
