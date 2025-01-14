@@ -35,8 +35,9 @@ export class BridgeAction {
     constructor(private walletProvider: WalletProvider) {}
 
     async bridge(params: BridgeParams): Promise<BridgeResponse> {
-        await this.validateAndNormalizeParams(params);
         elizaLogger.debug("Bridge params:", params);
+        await this.validateAndNormalizeParams(params);
+        elizaLogger.debug("Normalized bridge params:", params);
 
         const fromAddress = this.walletProvider.getAddress();
 
@@ -356,7 +357,7 @@ export const bridgeAction = {
             });
             return true;
         } catch (error) {
-            elizaLogger.error("Error during token bridge:", error);
+            elizaLogger.error("Error during token bridge:", error.message);
             callback?.({
                 text: `Bridge failed: ${error.message}`,
                 content: { error: error.message },

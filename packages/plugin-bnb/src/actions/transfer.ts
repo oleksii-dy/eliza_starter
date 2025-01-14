@@ -30,8 +30,9 @@ export class TransferAction {
     constructor(private walletProvider: WalletProvider) {}
 
     async transfer(params: TransferParams): Promise<TransferResponse> {
-        this.validateAndNormalizeParams(params);
         elizaLogger.debug("Transfer params:", params);
+        this.validateAndNormalizeParams(params);
+        elizaLogger.debug("Normalized transfer params:", params);
 
         const fromAddress = this.walletProvider.getAddress();
 
@@ -198,7 +199,7 @@ export const transferAction = {
 
             return true;
         } catch (error) {
-            elizaLogger.error("Error during transfer:", error);
+            elizaLogger.error("Error during transfer:", error.message);
             callback?.({
                 text: `Transfer failed: ${error.message}`,
                 content: { error: error.message },

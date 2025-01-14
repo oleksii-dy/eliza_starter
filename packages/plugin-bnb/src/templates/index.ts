@@ -108,7 +108,7 @@ export const stakeTemplate = `Given the recent messages and wallet information b
 
 Extract the following information about the requested stake action:
 - Action to execute. Must be one of ["deposit", "withdraw", "claim"].
-- Amount to execute. Optional, must be a string representing the amount in ether (only number without coin symbol, e.g., "0.1"). If the action is "deposit", amount is required.
+- Amount to execute. Optional, must be a string representing the amount in ether (only number without coin symbol, e.g., "0.1"). If the action is "deposit" or "withdraw", amount is required.
 
 Respond with a JSON markdown block containing only the extracted values:
 

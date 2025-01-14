@@ -27,8 +27,9 @@ export class GetBalanceAction {
     constructor(private walletProvider: WalletProvider) {}
 
     async getBalance(params: GetBalanceParams): Promise<GetBalanceResponse> {
-        await this.validateAndNormalizeParams(params);
         elizaLogger.debug("Get balance params:", params);
+        await this.validateAndNormalizeParams(params);
+        elizaLogger.debug("Normalized get balance params:", params);
 
         let { chain, address, token } = params;
 
@@ -172,7 +173,7 @@ export const getBalanceAction = {
             }
             return true;
         } catch (error) {
-            elizaLogger.error("Error in get balance:", error);
+            elizaLogger.error("Error during get balance:", error.message);
             callback?.({
                 text: `Get balance failed: ${error.message}`,
                 content: { error: error.message },

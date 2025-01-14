@@ -21,8 +21,9 @@ export class SwapAction {
     constructor(private walletProvider: WalletProvider) {}
 
     async swap(params: SwapParams): Promise<SwapResponse> {
-        this.validateAndNormalizeParams(params);
         elizaLogger.debug("Swap params:", params);
+        this.validateAndNormalizeParams(params);
+        elizaLogger.debug("Normalized swap params:", params);
 
         const fromAddress = this.walletProvider.getAddress();
         const chainId = this.walletProvider.getChainConfigs(params.chain).id;
@@ -121,7 +122,7 @@ export const swapAction = {
             });
             return true;
         } catch (error) {
-            elizaLogger.error("Error during swap:", error);
+            elizaLogger.error("Error during swap:", error.message);
             callback?.({
                 text: `Swap failed: ${error.message}`,
                 content: { error: error.message },

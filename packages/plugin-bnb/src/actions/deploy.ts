@@ -327,7 +327,7 @@ export const deployAction = {
         try {
             return true;
         } catch (error) {
-            elizaLogger.error("Error in deploy:", error);
+            elizaLogger.error("Error during deploy:", error.message);
             callback?.({
                 text: `Deploy failed: ${error.message}`,
                 content: { error: error.message },

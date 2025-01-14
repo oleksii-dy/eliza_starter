@@ -32,8 +32,9 @@ export class FaucetAction {
     constructor(private walletProvider: WalletProvider) {}
 
     async faucet(params: FaucetParams): Promise<FaucetResponse> {
-        await this.validateAndNormalizeParams(params);
         elizaLogger.debug("Faucet params:", params);
+        await this.validateAndNormalizeParams(params);
+        elizaLogger.debug("Normalized faucet params:", params);
 
         let resp: FaucetResponse = {
             token: params.token!,
@@ -165,7 +166,7 @@ export const faucetAction = {
 
             return true;
         } catch (error) {
-            elizaLogger.error("Error in faucet:", error);
+            elizaLogger.error("Error during faucet:", error.message);
             callback?.({
                 text: `Get test tokens failed: ${error.message}`,
                 content: { error: error.message },

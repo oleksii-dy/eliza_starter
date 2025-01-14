@@ -32,8 +32,9 @@ export class StakeAction {
     constructor(private walletProvider: WalletProvider) {}
 
     async stake(params: StakeParams): Promise<StakeResponse> {
-        this.validateStakeParams(params);
         elizaLogger.debug("Stake params:", params);
+        this.validateStakeParams(params);
+        elizaLogger.debug("Normalized stake params:", params);
 
         this.walletProvider.switchChain("bsc"); // only BSC is supported
 
@@ -61,12 +62,8 @@ export class StakeAction {
     }
 
     async doDeposit(amount: string): Promise<string> {
-        const publicClient = this.walletProvider.getPublicClient(
-            this.walletProvider.getCurrentChain().name as SupportedChain
-        );
-        const walletClient = this.walletProvider.getWalletClient(
-            this.walletProvider.getCurrentChain().name as SupportedChain
-        );
+        const publicClient = this.walletProvider.getPublicClient("bsc");
+        const walletClient = this.walletProvider.getWalletClient("bsc");
 
         const { request } = await publicClient.simulateContract({
             account: walletClient.account,
@@ -88,12 +85,8 @@ export class StakeAction {
     }
 
     async doWithdraw(amount?: string): Promise<string> {
-        const publicClient = this.walletProvider.getPublicClient(
-            this.walletProvider.getCurrentChain().name as SupportedChain
-        );
-        const walletClient = this.walletProvider.getWalletClient(
-            this.walletProvider.getCurrentChain().name as SupportedChain
-        );
+        const publicClient = this.walletProvider.getPublicClient("bsc");
+        const walletClient = this.walletProvider.getWalletClient("bsc");
 
         // If amount is not provided, withdraw all slisBNB
         let amountToWithdraw: bigint;
@@ -129,12 +122,8 @@ export class StakeAction {
     }
 
     async doClaim(): Promise<string> {
-        const publicClient = this.walletProvider.getPublicClient(
-            this.walletProvider.getCurrentChain().name as SupportedChain
-        );
-        const walletClient = this.walletProvider.getWalletClient(
-            this.walletProvider.getCurrentChain().name as SupportedChain
-        );
+        const publicClient = this.walletProvider.getPublicClient("bsc");
+        const walletClient = this.walletProvider.getWalletClient("bsc");
 
         const address = walletClient.account!.address;
         const requests = await publicClient.readContract({
@@ -228,7 +217,7 @@ export const stakeAction = {
 
             return true;
         } catch (error) {
-            elizaLogger.error("Error during transfer:", error);
+            elizaLogger.error("Error during stake:", error.message);
             callback?.({
                 text: `Stake failed: ${error.message}`,
                 content: { error: error.message },
@@ -246,35 +235,35 @@ export const stakeAction = {
             {
                 user: "user",
                 content: {
-                    text: "Delegate 1 BNB",
+                    text: "Delegate 1 BNB to Lista DAO on BSC",
                     action: "delegate",
                 },
             },
             {
                 user: "user",
                 content: {
-                    text: "Stake 1 BNB",
+                    text: "Stake 1 BNB to Lista DAO on BSC",
                     action: "stake",
                 },
             },
             {
                 user: "user",
                 content: {
-                    text: "Deposit 1 BNB to Lista DAO",
+                    text: "Deposit 1 BNB to Lista DAO on BSC",
                     action: "deposit",
                 },
             },
             {
                 user: "user",
                 content: {
-                    text: "Withdraw 1 BNB from Lista DAO",
+                    text: "Withdraw 1 BNB from Lista DAO on BSC",
                     action: "withdraw",
                 },
             },
             {
                 user: "user",
                 content: {
-                    text: "Claim locked BNB",
+                    text: "Claim locked BNB from Lista DAO on BSC",
                     action: "claim",
                 },
             },
