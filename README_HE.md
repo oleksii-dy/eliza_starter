@@ -1,9 +1,7 @@
-<div align="rtl" dir="rtl">
-
-# אלייזה 🤖
+# Nayari
 
 <div align="center">
-  <img src="./docs/static/img/eliza_banner.jpg" alt="אלייזה באנר" width="100%" />
+  <img src="./docs/static/img/banner_nayari.jpg" alt="Nayari Banner" width="100%" />
 </div>
 
 <div align="center">

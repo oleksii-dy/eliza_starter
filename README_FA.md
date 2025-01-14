@@ -1,7 +1,7 @@
-# الیزا 🤖
+# Nayari
 
 <div align="center">
-  <img src="./docs/static/img/eliza_banner.jpg" alt="الیزا بنر" width="100%" />
+  <img src="./docs/static/img/banner_nayari.jpg" alt="Nayari Banner" width="100%" />
 </div>
 
 <div align="center">
