@@ -510,7 +510,9 @@ function initializeDatabase(dataDir: string) {
         // Test the connection
         db.init()
             .then(() => {
-                elizaLogger.success("Successfully connected to PostgreSQL database");
+                elizaLogger.success(
+                    "Successfully connected to PostgreSQL database"
+                );
             })
             .catch((error) => {
                 elizaLogger.error("Failed to connect to PostgreSQL:", error);
