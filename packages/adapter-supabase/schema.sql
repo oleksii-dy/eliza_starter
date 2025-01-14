@@ -295,17 +295,37 @@ END;
 $$;
 
 
-CREATE OR REPLACE FUNCTION "public"."get_goals"("query_roomid" "uuid", "query_userid" "uuid" DEFAULT NULL::"uuid", "only_in_progress" boolean DEFAULT true, "row_count" integer DEFAULT 5) RETURNS SETOF "public"."goals"
-    LANGUAGE "plpgsql"
-    AS $$
+CREATE OR REPLACE FUNCTION public.get_goals(
+    "query_roomId" uuid,
+    "query_userId" uuid DEFAULT NULL,
+    only_in_progress boolean DEFAULT false,
+    row_count integer DEFAULT NULL
+)
+RETURNS TABLE (
+    id uuid,                              
+    "createdAt" timestamp with time zone, 
+    "userId" uuid,                        
+    name text,                            
+    status text,                          
+    description text,                     
+    "roomId" uuid,                        
+    objectives jsonb                      
+) 
+LANGUAGE plpgsql
+AS $$
 BEGIN
     RETURN QUERY
-    SELECT * FROM goals
+    SELECT g.* 
+    FROM goals g
     WHERE
-        (query_userId IS NULL OR userId = query_userId)
-        AND (roomId = query_roomId)
-        AND (NOT only_in_progress OR status = 'IN_PROGRESS')
-    LIMIT row_count;
+        ("query_userId" IS NULL OR g."userId" = "query_userId")
+        AND (g."roomId" = "query_roomId")
+        AND (NOT only_in_progress OR g.status = 'IN_PROGRESS')
+    ORDER BY g."createdAt" DESC
+    LIMIT CASE 
+        WHEN row_count IS NOT NULL AND row_count > 0 THEN row_count
+        ELSE NULL
+    END;
 END;
 $$;
 
