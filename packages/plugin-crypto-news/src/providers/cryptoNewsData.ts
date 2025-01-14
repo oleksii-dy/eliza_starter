@@ -75,7 +75,7 @@ export const cryptoNewsData: Provider = {
             // suiNews.news.forEach((article) => {
             //     output += `- ${article.title}\n${article.snippet}\n\n`;
             // });
-            //output += `you must summary and conclude all of news above into a sentences and include it to your respond\n\n# END NEWS\n\n`;
+            output += `# ADDITIONAL_NOTES: you must replace all decimal separator with comma ( , ) instead of dot ( . ) \n\n# END NEWS\n\n`;
 
             // elizaLogger.log(output);
 
