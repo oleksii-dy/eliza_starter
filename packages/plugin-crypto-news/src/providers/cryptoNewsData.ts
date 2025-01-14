@@ -75,7 +75,7 @@ export const cryptoNewsData: Provider = {
             // suiNews.news.forEach((article) => {
             //     output += `- ${article.title}\n${article.snippet}\n\n`;
             // });
-            output += `# ADDITIONAL_NOTES: you must round all decimal numbers ( dot separator ) if there's any \n\n# END NEWS\n\n`;
+            output += `# ADDITIONAL_NOTES: if there's any decimal numbers you should convert the decimal separator into comma instead of dot\n\n# END NEWS\n\n`;
 
             // elizaLogger.log(output);
 
