@@ -10,7 +10,7 @@ import {
     Participant,
     Room,
     RAGKnowledgeItem,
-    elizaLogger,
+    elizaLogger
 } from "@elizaos/core";
 import { DatabaseAdapter } from "@elizaos/core";
 import { v4 as uuid } from "uuid";
@@ -48,19 +48,43 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         roomId: UUID,
         userId: UUID
     ): Promise<"FOLLOWED" | "MUTED" | null> {
-        const { data, error } = await this.supabase
-            .from("participants")
-            .select("userState")
-            .eq("roomId", roomId)
-            .eq("userId", userId)
-            .single();
+        try {
+            const { data, error } = await this.supabase
+                .from("participants")
+                .select("userState")
+                .eq("roomId", roomId)
+                .eq("userId", userId)
+                .maybeSingle();
 
-        if (error) {
-            elizaLogger.error("Error getting participant user state:", error);
+            if (error) {
+                elizaLogger.error("Error getting participant user state:", error);
+                return null;
+            }
+
+            return data?.userState as "FOLLOWED" | "MUTED" | null;
+        } catch (error) {
+            elizaLogger.error("Unexpected error in getParticipantUserState:", error);
             return null;
         }
+    }
 
-        return data?.userState as "FOLLOWED" | "MUTED" | null;
+    async getParticipantsForRoom(roomId: UUID): Promise<UUID[]> {
+        try {
+            const { data, error } = await this.supabase
+                .from("participants")
+                .select("userId")
+                .eq("roomId", roomId);
+
+            if (error) {
+                elizaLogger.error("Error getting participants for room:", error);
+                throw new Error(`Error getting participants for room: ${error.message}`);
+            }
+
+            return data.map((row) => row.userId as UUID);
+        } catch (error) {
+            elizaLogger.error("Unexpected error in getParticipantsForRoom:", error);
+            throw error;
+        }
     }
 
     async setParticipantUserState(
@@ -78,21 +102,6 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             elizaLogger.error("Error setting participant user state:", error);
             throw new Error("Failed to set participant user state");
         }
-    }
-
-    async getParticipantsForRoom(roomId: UUID): Promise<UUID[]> {
-        const { data, error } = await this.supabase
-            .from("participants")
-            .select("userId")
-            .eq("roomId", roomId);
-
-        if (error) {
-            throw new Error(
-                `Error getting participants for room: ${error.message}`
-            );
-        }
-
-        return data.map((row) => row.userId as UUID);
     }
 
     supabase: SupabaseClient;
@@ -114,7 +123,6 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         roomIds: UUID[];
         agentId?: UUID;
         tableName: string;
-        limit?: number;
     }): Promise<Memory[]> {
         // Determine which memories table to use based on the tableName
         const embeddingSize = params.tableName.includes('_') ?
@@ -128,26 +136,16 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         let query = this.supabase
             .from(actualTableName)
             .select("*")
-            .in("roomId", params.roomIds)
-            .order("createdAt", { ascending: false });
+            .in("roomId", params.roomIds);
 
         if (params.agentId) {
             query = query.eq("agentId", params.agentId);
         }
 
-        if (params.limit) {
-            query = query.limit(params.limit);
-        }
-
         const { data, error } = await query;
 
         if (error) {
-            elizaLogger.error("Error retrieving memories by room IDs:", {
-                error,
-                tableName: actualTableName,
-                roomIds: params.roomIds,
-                agentId: params.agentId
-            });
+            elizaLogger.error("Error retrieving memories by room IDs:", error);
             return [];
         }
 
@@ -159,26 +157,30 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         return memories as Memory[];
     }
 
-    async getAccountById(userId: UUID): Promise<Account | null> {
-        const { data, error } = await this.supabase
-            .from("accounts")
-            .select("*")
-            .eq("id", userId);
-        if (error) {
-            throw new Error(error.message);
-        }
-        return (data?.[0] as Account) || null;
-    }
-
     async createAccount(account: Account): Promise<boolean> {
         const { error } = await this.supabase
             .from("accounts")
             .upsert([account]);
+
         if (error) {
             elizaLogger.error(error.message);
             return false;
         }
         return true;
+    }
+
+    async getAccountById(userId: UUID): Promise<Account | null> {
+            const { data, error } = await this.supabase
+                .from("accounts")
+                .select("*")
+                .eq("id", userId);
+
+            if (error) {
+                elizaLogger.error(error.message);
+                throw error;
+            }
+            return (data?.[0] as Account) || null;
+
     }
 
     async getActorDetails(params: { roomId: UUID }): Promise<Actor[]> {
@@ -304,17 +306,27 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         start?: number;
         end?: number;
     }): Promise<Memory[]> {
-        const query = this.supabase
-            .from(params.tableName)
+        // Determine which memories table to use based on the tableName
+        const embeddingSize = params.tableName.includes('_') ?
+            parseInt(params.tableName.split('_')[1]) :
+            1536; // default to 1536 if not specified
+
+        const actualTableName = `memories_${embeddingSize}`;
+
+        elizaLogger.info(`Querying memories from table: ${actualTableName}`);
+
+        let query = this.supabase
+            .from(actualTableName)
             .select("*")
             .eq("roomId", params.roomId);
 
+        // Convert timestamps to ISO strings
         if (params.start) {
-            query.gte("createdAt", params.start);
+            query.gte("createdAt", new Date(params.start).toISOString());
         }
 
         if (params.end) {
-            query.lte("createdAt", params.end);
+            query.lte("createdAt", new Date(params.end).toISOString());
         }
 
         if (params.unique) {
@@ -337,7 +349,13 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             throw new Error(`Error retrieving memories: ${error.message}`);
         }
 
-        return data as Memory[];
+        // map createdAt to Date
+        const memories = data.map((memory) => ({
+            ...memory,
+            createdAt: memory.createdAt ? new Date(memory.createdAt).getTime() : undefined
+        }));
+
+        return memories as Memory[];
     }
 
     async searchMemoriesByEmbedding(
@@ -380,7 +398,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                 .select('*')
                 .eq('id', memoryId)
                 .maybeSingle();  // Use maybeSingle() instead of single()
-
+             // PGRST116 means "no results found" - this is expected when checking other tables
             if (error && error.code !== 'PGRST116') {
                 elizaLogger.error(`Error checking memories_${size}:`, error);
                 continue;
@@ -503,23 +521,34 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         onlyInProgress?: boolean;
         count?: number;
     }): Promise<Goal[]> {
-        const opts = {
-            query_roomId: params.roomId,
-            query_userId: params.userId,
-            only_in_progress: params.onlyInProgress,
-            row_count: params.count,
-        };
+        try {
+            const opts = {
+                query_roomId: params.roomId,
+                query_userId: params.userId || null,
+                only_in_progress: params.onlyInProgress || false,
+                row_count: params.count || null
+            };
 
-        const { data: goals, error } = await this.supabase.rpc(
-            "get_goals",
-            opts
-        );
+            elizaLogger.debug("Calling get_goals with params:", opts);
 
-        if (error) {
-            throw new Error(error.message);
+            const { data: goals, error } = await this.supabase.rpc(
+                "get_goals",
+                opts
+            );
+
+            if (error) {
+                elizaLogger.error("Error fetching goals:", {
+                    error,
+                    params: opts
+                });
+                throw new Error(error.message);
+            }
+
+            return goals;
+        } catch (error) {
+            elizaLogger.error("Unexpected error in getGoals:", error);
+            throw error;
         }
-
-        return goals;
     }
 
     async updateGoal(goal: Goal): Promise<void> {
@@ -749,8 +778,9 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             .eq('key', params.key)
             .eq('agentId', params.agentId)
             .maybeSingle();
+
         if (error) {
-            elizaLogger.error("Error fetching cache:", error);
+            elizaLogger.error('Error fetching cache:', error);
             return undefined;
         }
 
@@ -770,8 +800,9 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                 value: params.value,
                 createdAt: new Date().toISOString()
             });
+
         if (error) {
-            elizaLogger.error("Error setting cache:", error);
+            elizaLogger.error('Error setting cache:', error);
             return false;
         }
 
@@ -784,10 +815,10 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     }): Promise<boolean> {
         try {
             const { error } = await this.supabase
-                .from("cache")
+                .from('cache')
                 .delete()
-                .eq("key", params.key)
-                .eq("agentId", params.agentId);
+                .eq('key', params.key)
+                .eq('agentId', params.agentId);
 
             if (error) {
                 elizaLogger.error("Error deleting cache", {
@@ -814,12 +845,12 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         query?: string;
     }): Promise<RAGKnowledgeItem[]> {
         let query = this.supabase
-            .from("knowledge")
-            .select("*")
+            .from('knowledge')
+            .select('*')
             .or(`agentId.eq.${params.agentId},isShared.eq.true`);
 
         if (params.id) {
-            query = query.eq("id", params.id);
+            query = query.eq('id', params.id);
         }
 
         if (params.limit) {
@@ -832,17 +863,12 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             throw new Error(`Error getting knowledge: ${error.message}`);
         }
 
-        return data.map((row) => ({
+        return data.map(row => ({
             id: row.id,
             agentId: row.agentId,
-            content:
-                typeof row.content === "string"
-                    ? JSON.parse(row.content)
-                    : row.content,
-            embedding: row.embedding
-                ? new Float32Array(row.embedding)
-                : undefined,
-            createdAt: new Date(row.createdAt).getTime(),
+            content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content,
+            embedding: row.embedding ? new Float32Array(row.embedding) : undefined,
+            createdAt: new Date(row.createdAt).getTime()
         }));
     }
 
@@ -856,7 +882,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         const cacheKey = `embedding_${params.agentId}_${params.searchText}`;
         const cachedResult = await this.getCache({
             key: cacheKey,
-            agentId: params.agentId,
+            agentId: params.agentId
         });
 
         if (cachedResult) {
@@ -866,36 +892,31 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         // Convert Float32Array to array for Postgres vector
         const embedding = Array.from(params.embedding);
 
-        const { data, error } = await this.supabase.rpc("search_knowledge", {
+        const { data, error } = await this.supabase.rpc('search_knowledge', {
             query_embedding: embedding,
             query_agent_id: params.agentId,
             match_threshold: params.match_threshold,
             match_count: params.match_count,
-            search_text: params.searchText || "",
+            search_text: params.searchText || ''
         });
 
         if (error) {
             throw new Error(`Error searching knowledge: ${error.message}`);
         }
 
-        const results = data.map((row) => ({
+        const results = data.map(row => ({
             id: row.id,
             agentId: row.agentId,
-            content:
-                typeof row.content === "string"
-                    ? JSON.parse(row.content)
-                    : row.content,
-            embedding: row.embedding
-                ? new Float32Array(row.embedding)
-                : undefined,
+            content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content,
+            embedding: row.embedding ? new Float32Array(row.embedding) : undefined,
             createdAt: new Date(row.createdAt).getTime(),
-            similarity: row.similarity,
+            similarity: row.similarity
         }));
 
         await this.setCache({
             key: cacheKey,
             agentId: params.agentId,
-            value: JSON.stringify(results),
+            value: JSON.stringify(results)
         });
 
         return results;
@@ -904,6 +925,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     async createKnowledge(knowledge: RAGKnowledgeItem): Promise<void> {
         try {
             const metadata = knowledge.content.metadata || {};
+
             const { error } = await this.supabase
                 .from('knowledge')
                 .insert({
@@ -917,12 +939,10 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                     chunkIndex: metadata.chunkIndex || null,
                     isShared: metadata.isShared || false
                 });
+
             if (error) {
-                if (metadata.isShared && error.code === "23505") {
-                    // Unique violation
-                    elizaLogger.info(
-                        `Shared knowledge ${knowledge.id} already exists, skipping`
-                    );
+                if (metadata.isShared && error.code === '23505') { // Unique violation
+                    elizaLogger.info(`Shared knowledge ${knowledge.id} already exists, skipping`);
                     return;
                 }
                 throw error;
@@ -931,7 +951,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             elizaLogger.error(`Error creating knowledge ${knowledge.id}:`, {
                 error,
                 embeddingLength: knowledge.embedding?.length,
-                content: knowledge.content,
+                content: knowledge.content
             });
             throw error;
         }
@@ -939,9 +959,9 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
 
     async removeKnowledge(id: UUID): Promise<void> {
         const { error } = await this.supabase
-            .from("knowledge")
+            .from('knowledge')
             .delete()
-            .eq("id", id);
+            .eq('id', id);
 
         if (error) {
             throw new Error(`Error removing knowledge: ${error.message}`);
@@ -951,29 +971,23 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     async clearKnowledge(agentId: UUID, shared?: boolean): Promise<void> {
         if (shared) {
             const { error } = await this.supabase
-                .from("knowledge")
+                .from('knowledge')
                 .delete()
-                .filter("agentId", "eq", agentId)
-                .filter("isShared", "eq", true);
+                .filter('agentId', 'eq', agentId)
+                .filter('isShared', 'eq', true);
 
             if (error) {
-                elizaLogger.error(
-                    `Error clearing shared knowledge for agent ${agentId}:`,
-                    error
-                );
+                elizaLogger.error(`Error clearing shared knowledge for agent ${agentId}:`, error);
                 throw error;
             }
         } else {
             const { error } = await this.supabase
-                .from("knowledge")
+                .from('knowledge')
                 .delete()
-                .eq("agentId", agentId);
+                .eq('agentId', agentId);
 
             if (error) {
-                elizaLogger.error(
-                    `Error clearing knowledge for agent ${agentId}:`,
-                    error
-                );
+                elizaLogger.error(`Error clearing knowledge for agent ${agentId}:`, error);
                 throw error;
             }
         }
