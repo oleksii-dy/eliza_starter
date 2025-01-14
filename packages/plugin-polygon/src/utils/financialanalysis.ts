@@ -83,6 +83,78 @@ const MetricCalculator = {
         const revenue = financials.income_statement.revenues.value;
         const totalAssets = financials.balance_sheet.assets.value;
         return revenue / totalAssets;
+    },
+
+    // Valuation Metrics
+    calculateTrailingPE(financials, latestPrice) {
+        const dilutedEPS = financials.income_statement.diluted_earnings_per_share.value;
+        return latestPrice / dilutedEPS;
+    },
+
+    calculateMarketCap(latestPrice: number, financials: any): number {
+        const sharesOutstanding = financials.income_statement.net_income_loss.value /
+            financials.income_statement.basic_earnings_per_share.value;
+
+        console.log('Net Income:', financials.income_statement.net_income_loss.value);
+        console.log('EPS:', financials.income_statement.basic_earnings_per_share.value);
+        console.log('Shares Outstanding:', sharesOutstanding);
+        console.log('Latest Price:', latestPrice);
+
+        const marketCap = latestPrice * sharesOutstanding;
+        console.log('Calculated Market Cap:', marketCap);
+        return marketCap;
+    },
+
+    calculatePriceToBook(financials: any, marketCap: number): number {
+        const bookValue = financials.balance_sheet.equity.value;
+        console.log('Book Value:', bookValue);
+        return marketCap / bookValue;
+    },
+
+    calculatePriceToEBIT(financials: any, marketCap: number): number {
+        const EBIT = financials.income_statement.income_loss_from_continuing_operations_before_tax.value;
+        console.log('EBIT:', EBIT);
+        return marketCap / EBIT;
+    },
+
+    calculatePriceToSales(financials: any, marketCap: number): number {
+        const revenue = financials.income_statement.revenues.value;
+        console.log('Revenue:', revenue);
+        return marketCap / revenue;
+    },
+
+    // Growth Metrics
+    calculateGrowthRate(currentValue: number, previousValue: number): number {
+        return ((currentValue - previousValue) / Math.abs(previousValue)) * 100;
+    },
+
+    calculateAverageGrowth(values: number[]): number {
+        const growthRates = [];
+        for (let i = 1; i < values.length; i++) {
+            growthRates.push(this.calculateGrowthRate(values[i], values[i-1]));
+        }
+        return growthRates.reduce((a, b) => a + b, 0) / growthRates.length;
+    },
+
+    calculateGrowthMetrics(financialData: any[]): any {
+        const metrics = {
+            sales: financialData.map(d => d.financials.income_statement.revenues.value),
+            netIncome: financialData.map(d => d.financials.income_statement.net_income_loss.value),
+            profitMargin: financialData.map(d =>
+                (d.financials.income_statement.net_income_loss.value /
+                d.financials.income_statement.revenues.value) * 100
+            ),
+            rdExpenses: financialData.map(d => d.financials.income_statement.operating_expenses.value),
+            eps: financialData.map(d => d.financials.income_statement.basic_earnings_per_share.value)
+        };
+
+        return {
+            salesGrowth: this.calculateAverageGrowth(metrics.sales),
+            netIncomeGrowth: this.calculateAverageGrowth(metrics.netIncome),
+            profitMarginGrowth: this.calculateAverageGrowth(metrics.profitMargin),
+            rdExpenseGrowth: this.calculateAverageGrowth(metrics.rdExpenses),
+            epsGrowth: this.calculateAverageGrowth(metrics.eps)
+        };
     }
 };
 
@@ -104,8 +176,8 @@ class StockAnalyzer {
                 this.fetchFinancialData(ticker)
             ]);
             // Calculate metrics
-            const metrics = this.calculateMetrics(financialData);
-            
+            const metrics = this.calculateMetrics(financialData, pricingData);
+
             // Format output
             return {
                 stock: {
@@ -119,20 +191,27 @@ class StockAnalyzer {
                         revenueGrowth: metrics.profitability.revenueGrowth,
                         grossMargin: metrics.profitability.grossMargin,
                         operatingMargin: metrics.profitability.operatingMargin,
-                        rdToRevenue: metrics.profitability.rdToRevenue
+                        rdToRevenue: metrics.profitability.rdToRevenue,
+                        freeCashFlow: metrics.profitability.freeCashFlow
                     },
                     balanceSheet: {
                         currentRatio: metrics.balanceSheet.currentRatio,
                         debtToEquity: metrics.balanceSheet.debtToEquity,
                         assetTurnover: metrics.balanceSheet.assetTurnover
                     },
-                    cashFlow: {
-                        freeCashFlow: metrics.cashFlow.freeCashFlow,
-                        fcfGrowth: metrics.cashFlow.fcfGrowth
+                    growth: {
+                        salesGrowth: metrics.growth.salesGrowth,
+                        netIncomeGrowth: metrics.growth.netIncomeGrowth,
+                        profitMarginGrowth: metrics.growth.profitMarginGrowth,
+                        rdExpenseGrowth: metrics.growth.rdExpenseGrowth,
+                        epsGrowth: metrics.growth.epsGrowth,
+                        fcfGrowth: metrics.growth.fcfGrowth
                     },
-                    perShare: {
-                        basicEPS: metrics.perShare.basicEPS,
-                        dilutedEPS: metrics.perShare.dilutedEPS
+                    valuation: {
+                        trailingPE: metrics.valuation.trailingPE,
+                        priceToBook: metrics.valuation.priceToBook,
+                        priceToEBIT: metrics.valuation.priceToEBIT,
+                        priceToSales: metrics.valuation.priceToSales
                     }
                 }
             };
@@ -147,8 +226,17 @@ class StockAnalyzer {
      * @param {Array} financialData - Array of financial statements
      * @returns {Object} Calculated metrics
      */
-    private calculateMetrics(financialData) {
-        const latestPeriod = financialData[0]; // Most recent financial period
+    private calculateMetrics(financialData, pricingData) {
+        const latestPeriod = financialData[0];
+        const latestPrice = pricingData[pricingData.length - 1]?.c || 0;
+        const marketCap = MetricCalculator.calculateMarketCap(latestPrice, latestPeriod.financials);
+
+        // Log the number of reports being analyzed
+        console.log("Number of financial reports analyzed:", financialData.length);
+        console.log("Years covered:", financialData.map(d => d.fiscal_year));
+
+        const growthMetrics = MetricCalculator.calculateGrowthMetrics(financialData);
+
         return {
             profitability: {
                 netProfitMargin: MetricCalculator.calculateNetProfitMargin(latestPeriod.financials),
@@ -156,20 +244,20 @@ class StockAnalyzer {
                 revenueGrowth: this.calculateGrowthRate(financialData, 'revenues'),
                 grossMargin: MetricCalculator.calculateGrossMargin(latestPeriod.financials),
                 operatingMargin: MetricCalculator.calculateOperatingMargin(latestPeriod.financials),
-                rdToRevenue: MetricCalculator.calculateRDToRevenue(latestPeriod.financials)
+                rdToRevenue: MetricCalculator.calculateRDToRevenue(latestPeriod.financials),
+                freeCashFlow: MetricCalculator.calculateFreeCashFlow(latestPeriod.financials)
             },
             balanceSheet: {
                 currentRatio: MetricCalculator.calculateCurrentRatio(latestPeriod.financials),
                 debtToEquity: MetricCalculator.calculateDebtToEquity(latestPeriod.financials),
                 assetTurnover: MetricCalculator.calculateAssetTurnover(latestPeriod.financials)
             },
-            cashFlow: {
-                freeCashFlow: MetricCalculator.calculateFreeCashFlow(latestPeriod.financials),
-                fcfGrowth: this.calculateGrowthRate(financialData, 'free_cash_flow')
-            },
-            perShare: {
-                basicEPS: MetricCalculator.calculateEPS(latestPeriod.financials),
-                dilutedEPS: MetricCalculator.calculateDilutedEPS(latestPeriod.financials)
+            growth: growthMetrics,
+            valuation: {
+                trailingPE: MetricCalculator.calculateTrailingPE(latestPeriod.financials, latestPrice),
+                priceToBook: MetricCalculator.calculatePriceToBook(latestPeriod.financials, marketCap),
+                priceToEBIT: MetricCalculator.calculatePriceToEBIT(latestPeriod.financials, marketCap),
+                priceToSales: MetricCalculator.calculatePriceToSales(latestPeriod.financials, marketCap)
             }
         };
     }
@@ -183,7 +271,7 @@ class StockAnalyzer {
         const now = new Date();
         const twoYearsAgo = new Date();
         twoYearsAgo.setFullYear(now.getFullYear() - 2);
-        
+
         const fullData = await getPriceHistoryByTicker(
             ticker,
             twoYearsAgo.getTime(),
@@ -198,43 +286,3 @@ class StockAnalyzer {
         return getCompanyFinancialsTicker(ticker);
     }
 }
-
-// Example of expected output format:
-const expectedOutput = {
-    "stock": {
-        "ticker": "AAPL",
-        "analysisDate": "2025-01-12T00:00:00.000Z"
-    },
-    "metrics": {
-        "profitability": {
-            "netProfitMargin": 15.2,
-            "returnOnEquity": 85.5,
-            "revenueGrowth": 12.3,
-            "grossMargin": 20.0,
-            "operatingMargin": 10.0,
-            "rdToRevenue": 5.0
-        },
-        "balanceSheet": {
-            "currentRatio": 2.1,
-            "debtToEquity": 1.5,
-            "assetTurnover": 0.5
-        },
-        "cashFlow": {
-            "freeCashFlow": 750000000,
-            "fcfGrowth": 8.5
-        },
-        "perShare": {
-            "basicEPS": 2.0,
-            "dilutedEPS": 1.9
-        }
-    }
-};
-
-// Example usage
-console.log('Starting analysis...');
-const analyzer = new StockAnalyzer();
-analyzer.analyzeStock('AAPL').then(analysis => {
-    console.log('Stock Analysis Results:', JSON.stringify(analysis, null, 2));
-}).catch(error => {
-    console.error('Analysis failed:', error);
-});

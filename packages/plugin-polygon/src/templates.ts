@@ -54,10 +54,10 @@ export const PriceHistoryRangeTemplate = `
 {{userQuery}}
 
 
-# Instructions: {{senderName}} is requesting the price history of the following ticker: {{ticker}}. Your goal is to determine their objective, the range of dates that their request converse, along with a period which is the interval in which the price data will be collected. 
+# Instructions: {{senderName}} is requesting the price history of the following ticker: {{ticker}}. Your goal is to determine their objective, the range of dates that their request converse, along with a period which is the interval in which the price data will be collected.
 Do not worry about getting the pricing data; just the objective, start, end, and period.
-The "objective" is a detailed description of what the user wants to price history on, if the user wants the current price, set "start" to "0 minutes ago" and "end" to "2 hours ago", and the "period" to "day". 
-The "start" and "end" are the range of dates that the user wants to summarize, relative to the current time. The "start" and "end" should be relative to the current time, and measured in seconds, minutes, hours and days. The format is "2 days ago" or "3 hours ago" or "4 minutes ago" or "1 year ago", i.e. "<integer> <unit> ago". If you aren't sure, you can use a default range of "0 minutes ago" to "1 day ago" or more. Better to err on the side of including too much than too little. 
+The "objective" is a detailed description of what the user wants to price history on, if the user wants the current price, set "start" to "0 minutes ago" and "end" to "2 hours ago", and the "period" to "day".
+The "start" and "end" are the range of dates that the user wants to summarize, relative to the current time. The "start" and "end" should be relative to the current time, and measured in seconds, minutes, hours and days. The format is "2 days ago" or "3 hours ago" or "4 minutes ago" or "1 year ago", i.e. "<integer> <unit> ago". If you aren't sure, you can use a default range of "0 minutes ago" to "1 day ago" or more. Better to err on the side of including too much than too little.
 The “period” is the interval in which the pricing data is to be collected. The format can be “minute”, “day”, “year”. If you aren’t sure, please respond with “day”.
 
 
@@ -80,5 +80,23 @@ export const CurrentPriceTemplate = `
 The price of {{ticker}} as of {{closeDate}} is: {{closePrice}}
 
 Return the current price of the stock.
-`;  
+`;
 
+export const extractTickerFromMessageTemplate = `
+Extract the following details from a message given a company name or it's stock ticker:
+- **ticker** (string): Ticker of the stock
+
+If no ticker or company name is provided, please return an empty string as the ticker.
+
+Provide the values in the following JSON format:
+
+\`\`\`json
+{
+    "ticker": "<ticker>"
+}
+\`\`\`
+
+
+Here are the recent user messages for context:
+{{currentQuery}}
+`;
