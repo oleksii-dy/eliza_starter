@@ -9,21 +9,8 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-CREATE SCHEMA IF NOT EXISTS "public";
-
-ALTER SCHEMA "public" OWNER TO "pg_database_owner";
-
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM pg_extension
-        WHERE extname = 'vector'
-    ) THEN
-        CREATE EXTENSION vector IF NOT EXISTS
-        SCHEMA extensions;
-    END IF;
-END $$;
+-- Create vector extension
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
 
 -- Create fuzzystrmatch extension
 CREATE EXTENSION IF NOT EXISTS fuzzystrmatch WITH SCHEMA extensions;
@@ -35,16 +22,51 @@ CREATE TABLE IF NOT EXISTS "public"."secrets" (
 
 ALTER TABLE "public"."secrets" OWNER TO "postgres";
 
-CREATE TABLE "public"."user_data" (
-    owner_id INT,
-    target_id INT,
+CREATE TABLE IF NOT EXISTS "public"."accounts" (
+    "id" "uuid" DEFAULT "auth"."uid"() NOT NULL,
+    "createdAt" timestamp with time zone DEFAULT ("now"() AT TIME ZONE 'utc'::"text") NOT NULL,
+    "name" "text",
+    "username" "text",
+    "email" "text" NOT NULL,
+    "avatarUrl" "text",
+    "details" "jsonb" DEFAULT '{}'::"jsonb",
+    "is_agent" boolean DEFAULT false NOT NULL,
+    "location" "text",
+    "profile_line" "text",
+    "signed_tos" boolean DEFAULT false NOT NULL
+);
+
+ALTER TABLE "public"."accounts" OWNER TO "postgres";
+
+CREATE TABLE IF NOT EXISTS "public"."user_data" (
+    owner_id uuid,
+    target_id uuid,
     data JSONB,
     PRIMARY KEY (owner_id, target_id),
-    FOREIGN KEY (owner_id) REFERENCES accounts(id),
-    FOREIGN KEY (target_id) REFERENCES accounts(id)
+    FOREIGN KEY (owner_id) REFERENCES public.accounts(id),
+    FOREIGN KEY (target_id) REFERENCES public.accounts(id)
 );
 
 ALTER TABLE "public"."user_data" OWNER TO "postgres";
+
+GRANT ALL ON TABLE "public"."user_data" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_data" TO "service_role";
+GRANT ALL ON TABLE "public"."user_data" TO "supabase_admin";
+GRANT ALL ON TABLE "public"."user_data" TO "supabase_auth_admin";
+
+ALTER TABLE "public"."user_data" ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable read access for all users" ON "public"."user_data"
+    FOR SELECT USING (true);
+
+CREATE POLICY "Enable insert for authenticated users only" ON "public"."user_data"
+    FOR INSERT TO "authenticated" WITH CHECK (true);
+
+CREATE POLICY "Enable update for authenticated users" ON "public"."user_data"
+    FOR UPDATE TO "authenticated" USING (true) WITH CHECK (true);
+
+CREATE POLICY "Enable delete for users based on owner_id" ON "public"."user_data"
+    FOR DELETE TO "authenticated" USING (("auth"."uid"() = owner_id));
 
 CREATE OR REPLACE FUNCTION "public"."after_account_created"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -77,7 +99,15 @@ $$;
 
 ALTER FUNCTION "public"."after_account_created"() OWNER TO "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."check_similarity_and_insert"("query_table_name" "text", "query_userId" "uuid", "query_content" "jsonb", "query_roomId" "uuid", "query_embedding" "extensions"."vector", "similarity_threshold" double precision, "query_createdAt" "timestamp with time zone")
+CREATE OR REPLACE FUNCTION "public"."check_similarity_and_insert"(
+    "query_table_name" "text",
+    "query_userId" "uuid",
+    "query_content" "jsonb",
+    "query_roomId" "uuid",
+    "query_embedding" "extensions"."vector",
+    "similarity_threshold" double precision,
+    "query_createdAt" timestamptz
+)
 RETURNS "void"
 LANGUAGE "plpgsql"
 AS $$
@@ -127,7 +157,7 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION "public"."check_similarity_and_insert"("query_table_name" "text", "query_userId" "uuid", "query_content" "jsonb", "query_roomId" "uuid", "query_embedding" "extensions"."vector", "similarity_threshold" double precision) OWNER TO "postgres";
+ALTER FUNCTION "public"."check_similarity_and_insert"("query_table_name" "text", "query_userId" "uuid", "query_content" "jsonb", "query_roomId" "uuid", "query_embedding" "extensions"."vector", "similarity_threshold" double precision, "query_createdAt" timestamptz) OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."count_memories"("query_table_name" "text", "query_roomId" "uuid", "query_unique" boolean DEFAULT false) RETURNS bigint
     LANGUAGE "plpgsql"
@@ -174,9 +204,9 @@ BEGIN
     RETURN QUERY INSERT INTO rooms (id) VALUES (roomId) RETURNING rooms.id;
   END IF;
 END;
-$function$
+$function$;
 
-ALTER FUNCTION "public"."create_room"() OWNER TO "postgres";
+ALTER FUNCTION "public"."create_room"(uuid) OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."create_friendship_with_host_agent"() RETURNS "trigger"
     LANGUAGE "plpgsql"
@@ -318,6 +348,144 @@ CREATE TABLE IF NOT EXISTS "public"."goals" (
 
 ALTER TABLE "public"."goals" OWNER TO "postgres";
 
+-- First drop all foreign key constraints that reference accounts
+DO $$
+BEGIN
+    -- Drop all foreign keys that reference accounts
+    EXECUTE (
+        SELECT string_agg(
+            format(
+                'ALTER TABLE %I.%I DROP CONSTRAINT IF EXISTS %I;',
+                tc.table_schema,
+                tc.table_name,
+                tc.constraint_name
+            ),
+            E'\n'
+        )
+        FROM information_schema.table_constraints tc
+        JOIN information_schema.constraint_column_usage ccu
+        ON tc.constraint_name = ccu.constraint_name
+        WHERE tc.constraint_type = 'FOREIGN KEY'
+        AND ccu.table_name = 'accounts'
+    );
+END $$;
+
+-- Then drop all foreign key constraints that reference rooms
+DO $$
+BEGIN
+    -- Drop all foreign keys that reference rooms
+    EXECUTE (
+        SELECT string_agg(
+            format(
+                'ALTER TABLE %I.%I DROP CONSTRAINT IF EXISTS %I;',
+                tc.table_schema,
+                tc.table_name,
+                tc.constraint_name
+            ),
+            E'\n'
+        )
+        FROM information_schema.table_constraints tc
+        JOIN information_schema.constraint_column_usage ccu
+        ON tc.constraint_name = ccu.constraint_name
+        WHERE tc.constraint_type = 'FOREIGN KEY'
+        AND ccu.table_name = 'rooms'
+    );
+END $$;
+
+-- Then drop other foreign key constraints
+ALTER TABLE IF EXISTS "public"."participants"
+    DROP CONSTRAINT IF EXISTS "participants_userid_fkey";
+ALTER TABLE IF EXISTS "public"."memories"
+    DROP CONSTRAINT IF EXISTS "fk_room";
+ALTER TABLE IF EXISTS "public"."memories"
+    DROP CONSTRAINT IF EXISTS "memories_roomid_fkey";
+ALTER TABLE IF EXISTS "public"."memories"
+    DROP CONSTRAINT IF EXISTS "memories_userid_fkey";
+
+-- Then drop primary key and unique constraints
+ALTER TABLE IF EXISTS "public"."relationships"
+    DROP CONSTRAINT IF EXISTS "relationships_pkey";
+ALTER TABLE IF EXISTS "public"."relationships"
+    DROP CONSTRAINT IF EXISTS "relationships_id_key";
+ALTER TABLE IF EXISTS "public"."relationships"
+    DROP CONSTRAINT IF EXISTS "friendships_pkey";
+ALTER TABLE IF EXISTS "public"."relationships"
+    DROP CONSTRAINT IF EXISTS "friendships_id_key";
+
+ALTER TABLE IF EXISTS "public"."goals"
+    DROP CONSTRAINT IF EXISTS "goals_pkey";
+ALTER TABLE IF EXISTS "public"."goals"
+    DROP CONSTRAINT IF EXISTS "goals_id_key";
+
+ALTER TABLE IF EXISTS "public"."logs"
+    DROP CONSTRAINT IF EXISTS "logs_pkey";
+
+ALTER TABLE IF EXISTS "public"."participants"
+    DROP CONSTRAINT IF EXISTS "participants_id_key";
+ALTER TABLE IF EXISTS "public"."participants"
+    DROP CONSTRAINT IF EXISTS "participants_pkey";
+
+ALTER TABLE IF EXISTS "public"."memories"
+    DROP CONSTRAINT IF EXISTS "memories_pkey";
+
+-- Drop all constraints from accounts table
+DO $$
+BEGIN
+    EXECUTE (
+        SELECT string_agg(
+            format(
+                'ALTER TABLE "public"."accounts" DROP CONSTRAINT IF EXISTS %I;',
+                constraint_name
+            ),
+            E'\n'
+        )
+        FROM information_schema.table_constraints
+        WHERE table_schema = 'public'
+        AND table_name = 'accounts'
+    );
+END $$;
+
+-- Now we can safely drop and recreate rooms primary key
+ALTER TABLE IF EXISTS "public"."rooms"
+    DROP CONSTRAINT IF EXISTS "rooms_pkey";
+
+-- Add back primary key constraints
+ALTER TABLE ONLY "public"."relationships"
+    ADD CONSTRAINT "relationships_pkey" PRIMARY KEY ("id");
+
+ALTER TABLE ONLY "public"."goals"
+    ADD CONSTRAINT "goals_pkey" PRIMARY KEY ("id");
+
+ALTER TABLE ONLY "public"."logs"
+    ADD CONSTRAINT "logs_pkey" PRIMARY KEY ("id");
+
+ALTER TABLE ONLY "public"."participants"
+    ADD CONSTRAINT "participants_id_key" UNIQUE ("id");
+ALTER TABLE ONLY "public"."participants"
+    ADD CONSTRAINT "participants_pkey" PRIMARY KEY ("id");
+
+ALTER TABLE ONLY "public"."memories"
+    ADD CONSTRAINT "memories_pkey" PRIMARY KEY ("id");
+
+ALTER TABLE ONLY "public"."rooms"
+    ADD CONSTRAINT "rooms_pkey" PRIMARY KEY ("id");
+
+-- Add accounts constraints
+ALTER TABLE ONLY "public"."accounts"
+    ADD CONSTRAINT "users_email_key" UNIQUE ("email");
+ALTER TABLE ONLY "public"."accounts"
+    ADD CONSTRAINT "users_pkey" PRIMARY KEY ("id");
+
+-- Add back foreign key constraints
+ALTER TABLE ONLY "public"."participants"
+    ADD CONSTRAINT "participants_roomid_fkey" FOREIGN KEY ("roomId") REFERENCES "public"."rooms"("id");
+ALTER TABLE ONLY "public"."participants"
+    ADD CONSTRAINT "participants_userid_fkey" FOREIGN KEY ("userId") REFERENCES "public"."accounts"("id");
+ALTER TABLE ONLY "public"."memories"
+    ADD CONSTRAINT "memories_roomid_fkey" FOREIGN KEY ("roomId") REFERENCES "public"."rooms"("id");
+ALTER TABLE ONLY "public"."memories"
+    ADD CONSTRAINT "memories_userid_fkey" FOREIGN KEY ("userId") REFERENCES "public"."accounts"("id");
+
 CREATE OR REPLACE FUNCTION "public"."get_goals"("query_roomId" "uuid", "query_userId" "uuid" DEFAULT NULL::"uuid", "only_in_progress" boolean DEFAULT true, "row_count" integer DEFAULT 5) RETURNS SETOF "public"."goals"
     LANGUAGE "plpgsql"
     AS $$
@@ -412,22 +580,6 @@ $$;
 
 
 ALTER FUNCTION "public"."search_memories"("query_table_name" "text", "query_roomId" "uuid", "query_embedding" "extensions"."vector", "query_match_threshold" double precision, "query_match_count" integer, "query_unique" boolean) OWNER TO "postgres";
-
-CREATE TABLE IF NOT EXISTS "public"."accounts" (
-    "id" "uuid" DEFAULT "auth"."uid"() NOT NULL,
-    "createdAt" timestamp with time zone DEFAULT ("now"() AT TIME ZONE 'utc'::"text") NOT NULL,
-    "name" "text",
-    "username" "text",
-    "email" "text" NOT NULL,
-    "avatarUrl" "text",
-    "details" "jsonb" DEFAULT '{}'::"jsonb",
-    "is_agent" boolean DEFAULT false NOT NULL,
-    "location" "text",
-    "profile_line" "text",
-    "signed_tos" boolean DEFAULT false NOT NULL
-);
-
-ALTER TABLE "public"."accounts" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."logs" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -556,61 +708,54 @@ $$;
 
 ALTER TABLE "public"."rooms" OWNER TO "postgres";
 
-ALTER TABLE ONLY "public"."relationships"
-    ADD CONSTRAINT "friendships_id_key" UNIQUE ("id");
+CREATE TABLE IF NOT EXISTS "public"."knowledge" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "createdAt" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "agentId" "uuid" NOT NULL,
+    "content" "jsonb" NOT NULL,
+    "embedding" "extensions"."vector" NOT NULL,
+    "isShared" boolean DEFAULT true NOT NULL
+);
 
-ALTER TABLE ONLY "public"."relationships"
-    ADD CONSTRAINT "friendships_pkey" PRIMARY KEY ("id");
+ALTER TABLE "public"."knowledge" OWNER TO "postgres";
 
-ALTER TABLE ONLY "public"."goals"
-    ADD CONSTRAINT "goals_pkey" PRIMARY KEY ("id");
+-- First drop all foreign key constraints that reference knowledge
+DO $$
+BEGIN
+    -- Drop all foreign keys that reference knowledge
+    EXECUTE (
+        SELECT string_agg(
+            format(
+                'ALTER TABLE %I.%I DROP CONSTRAINT IF EXISTS %I;',
+                tc.table_schema,
+                tc.table_name,
+                tc.constraint_name
+            ),
+            E'\n'
+        )
+        FROM information_schema.table_constraints tc
+        JOIN information_schema.constraint_column_usage ccu
+        ON tc.constraint_name = ccu.constraint_name
+        WHERE tc.constraint_type = 'FOREIGN KEY'
+        AND ccu.table_name = 'knowledge'
+    );
+END $$;
 
-ALTER TABLE ONLY "public"."logs"
-    ADD CONSTRAINT "logs_pkey" PRIMARY KEY ("id");
+-- Drop knowledge foreign key to accounts
+ALTER TABLE IF EXISTS "public"."knowledge"
+    DROP CONSTRAINT IF EXISTS "knowledge_agentId_fkey";
 
-ALTER TABLE ONLY "public"."participants"
-    ADD CONSTRAINT "participants_id_key" UNIQUE ("id");
+-- Then drop knowledge primary key
+ALTER TABLE IF EXISTS "public"."knowledge"
+    DROP CONSTRAINT IF EXISTS "knowledge_pkey";
+ALTER TABLE IF EXISTS "public"."knowledge"
+    DROP CONSTRAINT IF EXISTS "knowledge_id_key";
 
-ALTER TABLE ONLY "public"."participants"
-    ADD CONSTRAINT "participants_pkey" PRIMARY KEY ("id");
+-- Add back knowledge constraints
+ALTER TABLE ONLY "public"."knowledge"
+    ADD CONSTRAINT "knowledge_pkey" PRIMARY KEY ("id");
 
-ALTER TABLE ONLY "public"."memories"
-    ADD CONSTRAINT "memories_pkey" PRIMARY KEY ("id");
-
-ALTER TABLE ONLY "public"."rooms"
-    ADD CONSTRAINT "rooms_pkey" PRIMARY KEY ("id");
-
-ALTER TABLE ONLY "public"."accounts"
-    ADD CONSTRAINT "users_email_key" UNIQUE ("email");
-
-ALTER TABLE ONLY "public"."accounts"
-    ADD CONSTRAINT "users_pkey" PRIMARY KEY ("id");
-
-CREATE OR REPLACE TRIGGER "trigger_after_account_created" AFTER INSERT ON "public"."accounts" FOR EACH ROW EXECUTE FUNCTION "public"."after_account_created"();
-
-CREATE OR REPLACE TRIGGER "trigger_create_friendship_with_host_agent" AFTER INSERT ON "public"."accounts" FOR EACH ROW EXECUTE FUNCTION "public"."create_friendship_with_host_agent"();
-
-ALTER TABLE ONLY "public"."participants"
-    ADD CONSTRAINT "participants_roomId_fkey" FOREIGN KEY ("roomId") REFERENCES "public"."rooms"("id");
-
-ALTER TABLE ONLY "public"."participants"
-    ADD CONSTRAINT "participants_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."accounts"("id");
-
-ALTER TABLE ONLY "public"."memories"
-    ADD CONSTRAINT "memories_roomId_fkey" FOREIGN KEY ("roomId") REFERENCES "public"."rooms"("id");
-
-ALTER TABLE ONLY "public"."memories"
-    ADD CONSTRAINT "memories_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."accounts"("id");
-
-ALTER TABLE ONLY "public"."relationships"
-    ADD CONSTRAINT "relationships_userA_fkey" FOREIGN KEY ("userA") REFERENCES "public"."accounts"("id");
-
-ALTER TABLE ONLY "public"."relationships"
-    ADD CONSTRAINT "relationships_userB_fkey" FOREIGN KEY ("userB") REFERENCES "public"."accounts"("id");
-
-ALTER TABLE ONLY "public"."relationships"
-    ADD CONSTRAINT "relationships_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."accounts"("id");
-
+-- Add back knowledge foreign key
 ALTER TABLE ONLY "public"."knowledge"
     ADD CONSTRAINT "knowledge_agentId_fkey" FOREIGN KEY ("agentId") REFERENCES "public"."accounts"("id") ON DELETE CASCADE;
 
