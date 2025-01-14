@@ -963,7 +963,7 @@ export const models: Models = {
             },
             [ModelClass.IMAGE]: {
                 name:
-                    settings.LIVEPEER_IMAGE_MODEL || "ByteDance/SDXL-Lightning",
+                    settings.IMAGE_LIVEPEER_MODEL || "ByteDance/SDXL-Lightning",
             },
         },
     },
