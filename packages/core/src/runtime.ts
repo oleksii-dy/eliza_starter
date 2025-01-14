@@ -1176,6 +1176,8 @@ Text: ${attachment.text}
             recentInteractionsData: Memory[],
             actors: Actor[]
         ): Promise<string> => {
+            const limit = this.character.settings?.recentInteractionsLimit ?? 5;
+            const limitedInteractions = recentInteractionsData.slice(-limit);
             const formattedInteractions = formatPosts({
                 messages: recentInteractionsData,
                 actors,
