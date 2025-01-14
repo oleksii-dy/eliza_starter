@@ -55,7 +55,7 @@ export const searchEmailsAction: Action = {
             return false;
         }
 
-        const searchContext = `Given this request: "${message.content.text}", extract search criteria for emails. Format as a JSON object with these optional fields:
+        const searchContext = `Given this request: "${message.content.text}", extract search criteria for emails. Return only a JSON object with these optional fields:
         {
             "from": "email address",
             "to": "email address",
@@ -70,9 +70,9 @@ export const searchEmailsAction: Action = {
         }
 
         Example outputs:
-        - {"from": "john@example.com", "subject": "meeting"}
-        - {"seen": false, "since": "2024-01-01"}
-        - {"flagged": true, "minSize": 5000000}`;
+        {"from": "john@example.com", "subject": "meeting"}
+        {"seen": false, "since": "2024-01-01"}
+        {"flagged": true, "minSize": 5000000}`;
 
         const searchTerms = await generateText({
             runtime,
@@ -82,7 +82,11 @@ export const searchEmailsAction: Action = {
 
         let criteria: SearchCriteria;
         try {
-            const parsed = JSON.parse(searchTerms.trim());
+            const cleanedTerms = searchTerms
+                .replace(/```json\n?/g, "")
+                .replace(/```\n?/g, "")
+                .trim();
+            const parsed = JSON.parse(cleanedTerms);
             criteria = {
                 ...parsed,
                 since: parsed.since ? new Date(parsed.since) : undefined,

@@ -25,44 +25,65 @@ export class MailPluginService extends Service {
 
         elizaLogger.info("Initializing mail plugin");
         const mailConfig = validateMailConfig(this.runtime);
-        global.mailService = new MailService(mailConfig);
 
-        this.checkInterval = setInterval(
-            async () => {
-                try {
-                    const emails = await global.mailService.getRecentEmails();
+        try {
+            // Get or create the singleton instance
+            const mailService = MailService.getInstance(mailConfig);
+            await mailService.connect();
 
-                    elizaLogger.debug("Checking for new emails", {
-                        count: emails.length,
-                    });
+            // Store in global for backward compatibility
+            global.mailService = mailService;
 
-                    if (emails.length === 0) {
-                        elizaLogger.debug("No new emails found");
-                        return;
+            this.checkInterval = setInterval(
+                async () => {
+                    try {
+                        const emails = await mailService.getRecentEmails();
+                        elizaLogger.debug("Checking for new emails", {
+                            count: emails.length,
+                        });
+
+                        if (emails.length === 0) {
+                            elizaLogger.debug("No new emails found");
+                            return;
+                        }
+
+                        const state = await this.runtime.composeState({
+                            id: stringToUuid("initial-" + this.runtime.agentId),
+                            userId: this.runtime.agentId,
+                            agentId: this.runtime.agentId,
+                            roomId: this.runtime.agentId,
+                            content: { text: "" },
+                        });
+
+                        for (const email of emails) {
+                            await handleEmail(email, this.runtime, state);
+                        }
+                    } catch (error: any) {
+                        elizaLogger.error("Error checking emails:", {
+                            code: error.code,
+                            command: error.command,
+                            message: error.message,
+                            stack: error.stack,
+                        });
+
+                        // Try to reconnect on error
+                        try {
+                            await mailService.connect();
+                        } catch (reconnectError) {
+                            elizaLogger.error("Failed to reconnect:", {
+                                error: reconnectError,
+                            });
+                        }
                     }
-
-                    const state = await this.runtime.composeState({
-                        id: stringToUuid("initial-" + this.runtime.agentId),
-                        userId: this.runtime.agentId,
-                        agentId: this.runtime.agentId,
-                        roomId: this.runtime.agentId,
-                        content: { text: "" },
-                    });
-
-                    for (const email of emails) {
-                        await handleEmail(email, this.runtime, state);
-                    }
-                } catch (error: any) {
-                    elizaLogger.error("Error checking emails:", {
-                        code: error.code,
-                        command: error.command,
-                        message: error.message,
-                        stack: error.stack,
-                    });
-                }
-            },
-            (mailConfig.checkInterval || 60) * 1000
-        );
+                },
+                (mailConfig.checkInterval || 60) * 1000
+            );
+        } catch (error) {
+            elizaLogger.error("Failed to initialize mail service:", {
+                error,
+            });
+            throw error;
+        }
     }
 
     async dispose() {
@@ -70,5 +91,7 @@ export class MailPluginService extends Service {
             clearInterval(this.checkInterval);
             this.checkInterval = null;
         }
+        // Don't dispose of the MailService here since it's a singleton
+        // Other parts of the application might still be using it
     }
 }

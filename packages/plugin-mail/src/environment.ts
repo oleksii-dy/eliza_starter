@@ -11,7 +11,7 @@ export function validateMailConfig(runtime: IAgentRuntime): MailConfig {
         imap: {
             host: runtime.getSetting("EMAIL_IMAP_HOST") || "",
             port: parseInt(runtime.getSetting("EMAIL_IMAP_PORT") || "993", 10),
-            secure: runtime.getSetting("EMAIL_IMAP_TLS") === "true",
+            secure: runtime.getSetting("EMAIL_IMAP_SECURE") === "true",
             user: runtime.getSetting("EMAIL_IMAP_USER") || "",
             password: runtime.getSetting("EMAIL_IMAP_PASSWORD") || "",
         },

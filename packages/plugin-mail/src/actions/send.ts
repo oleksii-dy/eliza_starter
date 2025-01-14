@@ -60,14 +60,14 @@ export class SendEmailAction {
 
 export const sendEmailAction: Action = {
     name: "sendEmail",
-    description: "Send an email to a recipient",
-    similes: ["send", "compose", "write", "email"],
+    description: "Send an email to a specified recipient",
+    similes: ["send", "email", "write", "compose", "mail"],
     examples: [
         [
             {
                 user: "user",
                 content: {
-                    text: "send an email to john@example.com about Meeting saying Let's meet tomorrow",
+                    text: "send an email to john@example.com about the meeting tomorrow",
                 },
             },
         ],
@@ -75,7 +75,7 @@ export const sendEmailAction: Action = {
             {
                 user: "user",
                 content: {
-                    text: "write an email to sarah@example.com with subject Project Update saying Here's the latest progress on the project",
+                    text: "email sarah@company.com to reschedule our call",
                 },
             },
         ],
@@ -83,7 +83,7 @@ export const sendEmailAction: Action = {
             {
                 user: "user",
                 content: {
-                    text: "email the report to team@company.com",
+                    text: "write to team@org.com about project updates",
                 },
             },
         ],
@@ -91,66 +91,68 @@ export const sendEmailAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
+        _state: any,
         _options: any,
         callback?: HandlerCallback
     ) => {
-        const action = new SendEmailAction();
-
-        const emailContext = composeContext({
-            state: {
-                ...state,
-                message: message.content.text,
-            },
-            template: emailTemplate,
-            templatingEngine: "handlebars",
-        });
-
-        const response = await generateText({
-            runtime,
-            context: emailContext,
-            modelClass: ModelClass.LARGE,
-        });
-
-        // Parse the response to extract email parameters
-        const lines = response.split("\n");
-        const params: SendEmailParams = {
-            to: "",
-            subject: "",
-            text: "",
-        };
-
-        for (const line of lines) {
-            if (line.startsWith("To:")) {
-                params.to = line.replace("To:", "").trim();
-            } else if (line.startsWith("Subject:")) {
-                params.subject = line.replace("Subject:", "").trim();
-            } else if (line.startsWith("Message:")) {
-                params.text = line.replace("Message:", "").trim();
-            }
+        if (!global.mailService) {
+            await callback?.({ text: "Email service is not initialized" });
+            return false;
         }
 
-        try {
-            const result = await action.send(params);
+        const emailContext = `Given this request: "${message.content.text}", extract email parameters. Return only a JSON object with these fields:
+        {
+            "to": "recipient's email address (required)",
+            "subject": "email subject line (required)",
+            "text": "email body content (required)"
+        }
 
-            if (callback) {
-                await callback({
-                    text: result.message,
-                });
+        Example outputs:
+        {"to": "john@example.com", "subject": "Meeting Tomorrow", "text": "Hi John, I need to reschedule our meeting tomorrow. What time works best for you?"}
+        {"to": "team@company.com", "subject": "Project Update", "text": "Here's the latest status on our project: everything is on track for delivery."}`;
+
+        const emailParams = await generateText({
+            runtime,
+            context: emailContext,
+            modelClass: ModelClass.SMALL,
+        });
+
+        let params: SendEmailParams;
+        try {
+            const cleanedParams = emailParams
+                .replace(/```json\n?/g, "")
+                .replace(/```\n?/g, "")
+                .trim();
+            params = JSON.parse(cleanedParams);
+
+            if (!params.to || !params.subject || !params.text) {
+                throw new Error("Missing required email parameters");
             }
-            return true;
-        } catch (error: any) {
-            elizaLogger.error("Error in send email handler:", {
-                code: error.code,
-                command: error.command,
-                message: error.message,
-                stack: error.stack,
+        } catch (err) {
+            elizaLogger.error("Failed to parse email parameters", {
+                emailParams,
+                error: err,
             });
-            if (callback) {
-                await callback({
-                    text: `Failed to send email: ${error.message}`,
-                });
-            }
+            await callback?.({
+                text: "I couldn't understand the email details. Please make sure to specify who to send the email to, the subject, and the message content.",
+            });
+            return false;
+        }
+
+        elizaLogger.info("Sending email with params", { params });
+        try {
+            await global.mailService.sendEmail(params);
+            await callback?.({
+                text: `Email sent successfully to ${params.to}`,
+            });
+            return true;
+        } catch (err) {
+            elizaLogger.error("Error in send email handler:", {
+                error: err,
+            });
+            await callback?.({
+                text: "Sorry, I encountered an error while sending the email. Please try again.",
+            });
             return false;
         }
     },

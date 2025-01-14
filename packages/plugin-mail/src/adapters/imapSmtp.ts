@@ -16,30 +16,117 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
     private config: MailConfig;
     private lastUID: number | null = null;
     private uidValidity: number | null = null;
+    private isConnected: boolean = false;
+    private connectionPromise: Promise<void> | null = null;
+    private reconnectAttempts: number = 0;
+    private readonly MAX_RECONNECT_ATTEMPTS = 3;
+    private readonly RECONNECT_DELAY = 5000;
 
     constructor(config: ImapSmtpMailConfig) {
         if (!config.imap) throw new Error("IMAP configuration is required");
 
-        elizaLogger.info("Connecting to IMAP server", {
+        elizaLogger.info("Creating IMAP client", {
             host: config.imap.host,
             port: config.imap.port,
-        });
-
-        this.client = new ImapFlow({
-            host: config.imap.host,
-            port: config.imap.port,
-            secure: true,
-            auth: {
-                user: config.imap.user,
-                pass: config.imap.password,
-            },
         });
 
         this.config = config;
+        this.initializeClient();
+    }
+
+    private initializeClient() {
+        this.client = new ImapFlow({
+            host: this.config.imap.host,
+            port: this.config.imap.port,
+            secure: true,
+            auth: {
+                user: this.config.imap.user,
+                pass: this.config.imap.password,
+            },
+            logger: false,
+            emitLogs: false,
+            tls: {
+                rejectUnauthorized: true,
+                minVersion: "TLSv1.2",
+                servername: this.config.imap.host,
+            },
+        });
+
+        this.client.on("error", (err) => {
+            elizaLogger.error("IMAP connection error:", {
+                error: err.message,
+                code: err.code,
+                command: (err as any).command,
+            });
+            this.handleDisconnect();
+        });
+
+        this.client.on("close", () => {
+            elizaLogger.warn("IMAP connection closed");
+            this.handleDisconnect();
+        });
+    }
+
+    private handleDisconnect() {
+        this.isConnected = false;
+        this.connectionPromise = null;
+        // Reset reconnect attempts after a period of successful connection
+        setTimeout(() => {
+            this.reconnectAttempts = 0;
+        }, 60000);
+    }
+
+    async connect(): Promise<void> {
+        await this.ensureConnection();
+    }
+
+    private async ensureConnection() {
+        if (this.isConnected) {
+            return;
+        }
+
+        if (this.connectionPromise) {
+            return this.connectionPromise;
+        }
+
+        if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
+            throw new Error(
+                `Max reconnection attempts (${this.MAX_RECONNECT_ATTEMPTS}) reached`
+            );
+        }
+
+        this.connectionPromise = (async () => {
+            try {
+                this.reconnectAttempts++;
+                await this.client.connect();
+                await this.client.mailboxOpen("INBOX");
+                this.isConnected = true;
+                this.connectionPromise = null;
+                elizaLogger.debug("Connected to IMAP server and opened INBOX");
+            } catch (error) {
+                this.handleDisconnect();
+                elizaLogger.error("Failed to connect to IMAP server:", {
+                    error: (error as any).message,
+                    code: (error as any).code,
+                    command: (error as any).command,
+                    attempt: this.reconnectAttempts,
+                });
+
+                if (this.reconnectAttempts < this.MAX_RECONNECT_ATTEMPTS) {
+                    await new Promise((resolve) =>
+                        setTimeout(resolve, this.RECONNECT_DELAY)
+                    );
+                    return this.ensureConnection();
+                }
+                throw error;
+            }
+        })();
+
+        return this.connectionPromise;
     }
 
     async getRecentEmails(): Promise<EmailMessage[]> {
-        await this.client.connect();
+        await this.ensureConnection();
 
         elizaLogger.debug("Fetching new emails", {
             lastUID: this.lastUID,
@@ -104,7 +191,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
     }
 
     async searchEmails(criteria: SearchCriteria): Promise<EmailMessage[]> {
-        await this.client.connect();
+        await this.ensureConnection();
 
         const imapCriteria = this.convertToImapCriteria(criteria);
 
@@ -115,8 +202,13 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
         const lock = await this.client.getMailboxLock("INBOX");
 
         try {
+            const results = await this.client.search({ or: imapCriteria });
+            if (!results.length) {
+                return [];
+            }
+
             const emails: EmailMessage[] = [];
-            for await (const message of this.client.fetch(imapCriteria, {
+            for await (const message of this.client.fetch(results, {
                 uid: true,
                 envelope: true,
                 source: true,
@@ -137,31 +229,21 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
         }
     }
 
-    private convertToImapCriteria(criteria: SearchCriteria): string[] {
-        const imapCriteria: string[] = [];
+    private convertToImapCriteria(criteria: SearchCriteria): any[] {
+        const imapCriteria: any[] = [];
 
-        if (criteria.from) imapCriteria.push("FROM", criteria.from);
-        if (criteria.to) imapCriteria.push("TO", criteria.to);
-        if (criteria.subject) imapCriteria.push("SUBJECT", criteria.subject);
-        if (criteria.body) imapCriteria.push("BODY", criteria.body);
-        if (criteria.since)
-            imapCriteria.push(
-                "SINCE",
-                criteria.since.toISOString().split("T")[0]
-            );
-        if (criteria.before)
-            imapCriteria.push(
-                "BEFORE",
-                criteria.before.toISOString().split("T")[0]
-            );
+        if (criteria.from) imapCriteria.push({ from: criteria.from });
+        if (criteria.to) imapCriteria.push({ to: criteria.to });
+        if (criteria.subject) imapCriteria.push({ subject: criteria.subject });
+        if (criteria.body) imapCriteria.push({ body: criteria.body });
+        if (criteria.since) imapCriteria.push({ since: criteria.since });
+        if (criteria.before) imapCriteria.push({ before: criteria.before });
         if (typeof criteria.seen === "boolean")
-            imapCriteria.push(criteria.seen ? "SEEN" : "UNSEEN");
+            imapCriteria.push({ seen: criteria.seen });
         if (typeof criteria.flagged === "boolean")
-            imapCriteria.push(criteria.flagged ? "FLAGGED" : "UNFLAGGED");
-        if (criteria.minSize)
-            imapCriteria.push("LARGER", criteria.minSize.toString());
-        if (criteria.maxSize)
-            imapCriteria.push("SMALLER", criteria.maxSize.toString());
+            imapCriteria.push({ flagged: criteria.flagged });
+        if (criteria.minSize) imapCriteria.push({ larger: criteria.minSize });
+        if (criteria.maxSize) imapCriteria.push({ smaller: criteria.maxSize });
 
         return imapCriteria;
     }
@@ -211,7 +293,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
     }
 
     async markAsRead(messageId: string): Promise<void> {
-        await this.client.connect();
+        await this.ensureConnection();
         const lock = await this.client.getMailboxLock("INBOX");
         try {
             await this.client.messageFlagsAdd(messageId, ["\\Seen"]);
@@ -221,6 +303,12 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
     }
 
     async dispose(): Promise<void> {
-        await this.client.logout();
+        if (this.isConnected) {
+            try {
+                await this.client.logout();
+            } finally {
+                this.isConnected = false;
+            }
+        }
     }
 }
