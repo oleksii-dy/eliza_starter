@@ -28,7 +28,7 @@ describe("SQLite3VerifiableDAO", () => {
     });
     describe("VerifiableLogProvider Management", () => {
         it("should verifiableLogProvider.log when available", async () => {
-            let uid = uuidv4();
+            const uid = uuidv4();
             await verifiableLogProvider.log(
                 {
                     agentId: uid,
@@ -75,7 +75,11 @@ describe("SQLite3VerifiableDAO", () => {
 
     describe("SQLite3VerifiableDAO Management", () => {
         it("should addLog and pageQueryLogs when available", async () => {
+<<<<<<< HEAD
             let testId = uuidv4();
+=======
+            const testId = uuidv4();
+>>>>>>> sif-dev
             await sqLite3VerifiableDAO.addLog(<VerifiableLog>{
                 id: testId,
                 agent_id: "dddd",
