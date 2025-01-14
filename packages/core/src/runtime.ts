@@ -410,28 +410,34 @@ export class AgentRuntime implements IAgentRuntime {
     }
 
     async initialize() {
-        for (const [serviceType, service] of this.services.entries()) {
-            try {
-                await service.initialize(this);
-                this.services.set(serviceType, service);
-                elizaLogger.success(
-                    `Service ${serviceType} initialized successfully`
-                );
-            } catch (error) {
-                elizaLogger.error(
-                    `Failed to initialize service ${serviceType}:`,
-                    error
-                );
-                throw error;
-            }
-        }
+        // Initialize core services
+        await Promise.all(
+            Array.from(this.services.entries()).map(async ([serviceType, service]) => {
+                try {
+                    await service.initialize(this);
+                    elizaLogger.success(
+                        `Service ${serviceType} initialized successfully`
+                    );
+                } catch (error) {
+                    elizaLogger.error(
+                        `Failed to initialize service ${serviceType}:`,
+                        error
+                    );
+                    throw error;
+                }
+            })
+        );
 
-        for (const plugin of this.plugins) {
-            if (plugin.services)
-                await Promise.all(
-                    plugin.services?.map((service) => service.initialize(this))
-                );
-        }
+        // Initialize plugin services, avoiding duplicates
+        const existingServices = new Set(this.services.values());
+        await Promise.all(
+            this.plugins
+                .filter(plugin => plugin.services?.length)
+                .flatMap(plugin =>
+                    plugin.services!.filter(service => !existingServices.has(service))
+                )
+                .map(service => service.initialize(this))
+        );
 
         if (
             this.character &&

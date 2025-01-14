@@ -37,12 +37,14 @@ async function generateResponse(runtime: IAgentRuntime, message: string, roomId:
     });
 }
 
-function startServer(runtime: IAgentRuntime, listener: ngrok.Listener) {
+function createHonoServer(runtime: IAgentRuntime) {
     const server = new Hono();
 
     server.post("/message", async (context) => {
-        const fromNumber = context.req.param("From");
-        const message = context.req.param("Body");
+        const body = await context.req.parseBody();
+
+        const fromNumber = body["From"] as string;
+        const message = body["Body"] as string;
 
         elizaLogger.log(`Received SMS from ${fromNumber} -> '${message}'`);
 
@@ -84,10 +86,12 @@ function startServer(runtime: IAgentRuntime, listener: ngrok.Listener) {
     });
 
     server.post("/process_speech", async (context) => {
-        const fromNumber = context.req.param("From");
+        const body = await context.req.parseBody();
+        
+        const fromNumber = body["From"] as string;
 
         const response = new twilio.twiml.VoiceResponse();
-        const transcription = new URLSearchParams(await context.req.text()).get("SpeechResult");
+        const transcription = body["SpeechResult"] as string;
 
         elizaLogger.log(`User said: '${transcription}'`);
 
@@ -101,8 +105,6 @@ function startServer(runtime: IAgentRuntime, listener: ngrok.Listener) {
             const url = "/generate_speech?" + new URLSearchParams({
                 text: speechResponse
             }).toString();
-
-            console.log(url);
 
             response.play(url);
 
@@ -118,35 +120,40 @@ function startServer(runtime: IAgentRuntime, listener: ngrok.Listener) {
 
       // Create a route that will handle Twilio webhook requests, sent as an
       // HTTP POST to /voice in our application
-    server.post("/call", (context) => {
-        elizaLogger.log("Received phone call from ", context.req.param("From"));
+    server.post("/call", async (context) => {
+        const body = await context.req.parseBody();
+
+        const fromNumber = body["From"] as string;
+
+        elizaLogger.log(`Received phone call from ${fromNumber}`);
         const response = new twilio.twiml.VoiceResponse();
 
         response.gather({
             input: ["speech"],
             action: "/process_speech",
-            speechTimeout: "0",
+            speechTimeout: "1",
             // @ts-ignore
-            speechModel: "googlev2_telephony"
+            speechModel: "phone_call",
+            enhanced: true
         })
 
         context.header("Content-Type", "text/xml");
         return context.body(response.toString());
     })
 
-    ngrok.listen(createAdaptorServer(server), listener);
+    return server;
 }
 
 const twilioClientInterface: Client = {
     start: async (runtime: IAgentRuntime) => {
-        elizaLogger.log("ATTEMPTING TO START TWILIO CLIENT");
-
         await validateTwilioConfig(runtime);
+
+        const server = createHonoServer(runtime);
 
         const session = await new ngrok.SessionBuilder().authtoken(getEnvSetting(runtime, "NGROK_AUTHTOKEN")).connect();
         const listener = await session.httpEndpoint().domain(getEnvSetting(runtime, "NGROK_DOMAIN")).listen();
 
-        startServer(runtime, listener);
+        ngrok.listen(createAdaptorServer(server), listener);
 
         elizaLogger.success("Twilio webhook server listening at ", listener.url());
     },
@@ -159,11 +166,9 @@ const twilioClientInterface: Client = {
 
 
 class TwilioService extends Service {
-    static serviceType: ServiceType = ServiceType.TEXT_GENERATION;
-    async initialize(runtime: IAgentRuntime): Promise<void> {
-        twilioClientInterface.start(runtime);
-        // If you need the device parameter, you can get it from runtime settings
-        // const device = runtime.getSetting("DEVICE_ID");
+    static serviceType: ServiceType = ServiceType.SPEECH_GENERATION;
+    async initialize(runtime: IAgentRuntime) {
+        await twilioClientInterface.start(runtime);
     }
 }
 
