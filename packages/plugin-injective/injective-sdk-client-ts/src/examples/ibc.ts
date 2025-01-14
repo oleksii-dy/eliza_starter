@@ -6,7 +6,7 @@ export const getDenomTraceExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Denomination trace retrieved successfully.",
             action: "GET_DENOM_TRACE",
@@ -28,7 +28,7 @@ export const getDenomsTraceExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Denomination traces retrieved successfully.",
             action: "GET_DENOMS_TRACE",
@@ -57,7 +57,7 @@ export const getIBCTransferTxsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "IBC transfer transactions retrieved successfully.",
             action: "GET_IBC_TRANSFER_TXS",
@@ -89,7 +89,7 @@ export const msgIBCTransferExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "IBC transfer submitted successfully.",
             action: "MSG_IBC_TRANSFER",

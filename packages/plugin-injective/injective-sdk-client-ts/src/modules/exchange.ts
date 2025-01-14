@@ -9,7 +9,6 @@ import {
     FundingPayment,
     FundingRate,
     ExchangePagination,
-    OrderbookWithSequence,
     SubaccountTransfer,
     SpotLimitOrder,
     SpotOrderHistory,
@@ -302,20 +301,12 @@ export async function getDerivativeMarket(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetBinaryOptionsMarketsParams} [params] - Optional parameters to filter binary options markets.
- * @returns {Promise<{
- *   markets: BinaryOptionsMarket[];
- *   pagination: ExchangePagination;
- * } | StandardResponse>} The standard response containing binary options markets or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing binary options markets or an error.
  */
 export async function getBinaryOptionsMarkets(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetBinaryOptionsMarketsParams
-): Promise<
-    | {
-          markets: BinaryOptionsMarket[];
-          pagination: ExchangePagination;
-      }
-    | StandardResponse
+): Promise<StandardResponse
 > {
     try {
         const result =
@@ -355,20 +346,12 @@ export async function getBinaryOptionsMarket(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetDerivativeOrdersParams} [params] - Optional parameters to filter derivative orders.
- * @returns {Promise<{
- *   orders: DerivativeLimitOrder[];
- *   pagination: ExchangePagination;
- * } | StandardResponse>} The standard response containing derivative orders or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing derivative orders or an error.
  */
 export async function getDerivativeOrders(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetDerivativeOrdersParams
-): Promise<
-    | {
-          orders: DerivativeLimitOrder[];
-          pagination: ExchangePagination;
-      }
-    | StandardResponse
+): Promise<StandardResponse
 > {
     try {
         const result = await this.indexerGrpcDerivativesApi.fetchOrders(
@@ -385,20 +368,12 @@ export async function getDerivativeOrders(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetDerivativeOrderHistoryParams} [params] - Optional parameters to filter derivative order history.
- * @returns {Promise<{
- *   orderHistory: DerivativeOrderHistory[];
- *   pagination: ExchangePagination;
- * } | StandardResponse>} The standard response containing derivative order history or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing derivative order history or an error.
  */
 export async function getDerivativeOrderHistory(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetDerivativeOrderHistoryParams
-): Promise<
-    | {
-          orderHistory: DerivativeOrderHistory[];
-          pagination: ExchangePagination;
-      }
-    | StandardResponse
+): Promise<StandardResponse
 > {
     try {
         const result = await this.indexerGrpcDerivativesApi.fetchOrderHistory(
@@ -415,20 +390,12 @@ export async function getDerivativeOrderHistory(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetPositionsParams} [params] - Optional parameters to filter positions.
- * @returns {Promise<{
- *   positions: Position[];
- *   pagination: ExchangePagination;
- * } | StandardResponse>} The standard response containing positions or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing positions or an error.
  */
 export async function getPositionsList(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetPositionsParams
-): Promise<
-    | {
-          positions: Position[];
-          pagination: ExchangePagination;
-      }
-    | StandardResponse
+): Promise< StandardResponse
 > {
     try {
         const result = await this.indexerGrpcDerivativesApi.fetchPositions(
@@ -445,20 +412,12 @@ export async function getPositionsList(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetPositionsV2Params} [params] - Optional parameters to filter positions version 2.
- * @returns {Promise<{
- *   positions: PositionV2[];
- *   pagination: ExchangePagination;
- * } | StandardResponse>} The standard response containing positions version 2 or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing positions version 2 or an error.
  */
 export async function getPositionsV2(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetPositionsV2Params
-): Promise<
-    | {
-          positions: PositionV2[];
-          pagination: ExchangePagination;
-      }
-    | StandardResponse
+): Promise<StandardResponse
 > {
     try {
         const result = await this.indexerGrpcDerivativesApi.fetchPositionsV2(
@@ -475,20 +434,12 @@ export async function getPositionsV2(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetDerivativeTradesParams} [params] - Optional parameters to filter derivative trades.
- * @returns {Promise<{
- *   trades: DerivativeTrade[];
- *   pagination: ExchangePagination;
- * } | StandardResponse>} The standard response containing derivative trades or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing derivative trades or an error.
  */
 export async function getDerivativeTrades(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetDerivativeTradesParams
-): Promise<
-    | {
-          trades: DerivativeTrade[];
-          pagination: ExchangePagination;
-      }
-    | StandardResponse
+): Promise<StandardResponse
 > {
     try {
         const result = await this.indexerGrpcDerivativesApi.fetchTrades(
@@ -505,20 +456,12 @@ export async function getDerivativeTrades(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetFundingPaymentsParams} [params] - Optional parameters to filter funding payments.
- * @returns {Promise<{
- *   fundingPayments: FundingPayment[];
- *   pagination: ExchangePagination;
- * } | StandardResponse>} The standard response containing funding payments or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing funding payments or an error.
  */
 export async function getFundingPayments(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetFundingPaymentsParams
-): Promise<
-    | {
-          fundingPayments: FundingPayment[];
-          pagination: ExchangePagination;
-      }
-    | StandardResponse
+): Promise<StandardResponse
 > {
     try {
         const result =
@@ -536,20 +479,12 @@ export async function getFundingPayments(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetFundingRatesParams} [params] - Optional parameters to filter funding rates.
- * @returns {Promise<{
- *   fundingRates: FundingRate[];
- *   pagination: ExchangePagination;
- * } | StandardResponse>} The standard response containing funding rates or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing funding rates or an error.
  */
 export async function getFundingRates(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetFundingRatesParams
-): Promise<
-    | {
-          fundingRates: FundingRate[];
-          pagination: ExchangePagination;
-      }
-    | StandardResponse
+): Promise<StandardResponse
 > {
     try {
         const result = await this.indexerGrpcDerivativesApi.fetchFundingRates(
@@ -566,20 +501,12 @@ export async function getFundingRates(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetDerivativeSubaccountOrdersListParams} [params] - Optional parameters to filter subaccount orders.
- * @returns {Promise<{
- *   orders: DerivativeLimitOrder[];
- *   pagination: ExchangePagination;
- * } | StandardResponse>} The standard response containing subaccount orders or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing subaccount orders or an error.
  */
 export async function getDerivativeSubaccountOrdersList(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetDerivativeSubaccountOrdersListParams
-): Promise<
-    | {
-          orders: DerivativeLimitOrder[];
-          pagination: ExchangePagination;
-      }
-    | StandardResponse
+): Promise<StandardResponse
 > {
     try {
         const result =
@@ -633,13 +560,7 @@ export async function getDerivativeSubaccountTradesList(
 export async function getDerivativeOrderbooksV2(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetDerivativeOrderbooksV2Params
-): Promise<
-    | {
-          marketId: string;
-          orderbook: OrderbookWithSequence;
-      }[]
-    | StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result = await this.indexerGrpcDerivativesApi.fetchOrderbooksV2(
             params.marketIds
@@ -738,20 +659,13 @@ export async function getSubaccountBalancesList(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetSubaccountHistoryParams} params - Parameters including subaccount details.
- * @returns {Promise<{
- *   transfers: SubaccountTransfer[];
- *   pagination: ExchangePagination;
- * } | StandardResponse>} The standard response containing subaccount history or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing subaccount history or an error.
  */
 export async function getSubaccountHistory(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetSubaccountHistoryParams
 ): Promise<
-    | {
-          transfers: SubaccountTransfer[];
-          pagination: ExchangePagination;
-      }
-    | StandardResponse
+    StandardResponse
 > {
     try {
         const result =
@@ -894,21 +808,12 @@ export async function getSpotMarket(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetSpotOrdersParams} [params] - Optional parameters to filter spot orders.
- * @returns {Promise<{
- *   orders: SpotLimitOrder[];
- *   pagination: ExchangePagination;
- * } | StandardResponse>} The standard response containing spot orders or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing spot orders or an error.
  */
 export async function getSpotOrders(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetSpotOrdersParams
-): Promise<
-    | {
-          orders: SpotLimitOrder[];
-          pagination: ExchangePagination;
-      }
-    | StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result = await this.indexerGrpcSpotApi.fetchOrders(params || {});
         return createSuccessResponse(result);
@@ -922,20 +827,12 @@ export async function getSpotOrders(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetSpotOrderHistoryParams} [params] - Optional parameters to filter spot order history.
- * @returns {Promise<{
- *   orderHistory: SpotOrderHistory[];
- *   pagination: ExchangePagination;
- * } | StandardResponse>} The standard response containing spot order history or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing spot order history or an error.
  */
 export async function getSpotOrderHistory(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetSpotOrderHistoryParams
-): Promise<
-    | {
-          orderHistory: SpotOrderHistory[];
-          pagination: ExchangePagination;
-      }
-    | StandardResponse
+): Promise<StandardResponse
 > {
     try {
         const result = await this.indexerGrpcSpotApi.fetchOrderHistory(
@@ -952,20 +849,12 @@ export async function getSpotOrderHistory(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetSpotTradesParams} [params] - Optional parameters to filter spot trades.
- * @returns {Promise<{
- *   trades: SpotTrade[];
- *   pagination: ExchangePagination;
- * } | StandardResponse>} The standard response containing spot trades or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing spot trades or an error.
  */
 export async function getSpotTrades(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetSpotTradesParams
-): Promise<
-    | {
-          trades: SpotTrade[];
-          pagination: ExchangePagination;
-      }
-    | StandardResponse
+): Promise<StandardResponse
 > {
     try {
         const result = await this.indexerGrpcSpotApi.fetchTrades(params || {});
@@ -980,20 +869,12 @@ export async function getSpotTrades(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetSpotSubaccountOrdersListParams} [params] - Optional parameters to filter spot subaccount orders.
- * @returns {Promise<{
- *   orders: SpotLimitOrder[];
- *   pagination: ExchangePagination;
- * } | StandardResponse>} The standard response containing spot subaccount orders or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing spot subaccount orders or an error.
  */
 export async function getSpotSubaccountOrdersList(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetSpotSubaccountOrdersListParams
-): Promise<
-    | {
-          orders: SpotLimitOrder[];
-          pagination: ExchangePagination;
-      }
-    | StandardResponse
+): Promise< StandardResponse
 > {
     try {
         const result = await this.indexerGrpcSpotApi.fetchSubaccountOrdersList(
@@ -1031,21 +912,12 @@ export async function getSpotSubaccountTradesList(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetSpotOrderbooksV2Params} params - Parameters including spot market IDs.
- * @returns {Promise<{
- *   marketId: string;
- *   orderbook: OrderbookWithSequence;
- * }[] | StandardResponse>} The standard response containing spot orderbooks or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing spot orderbooks or an error.
  */
 export async function getSpotOrderbooksV2(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetSpotOrderbooksV2Params
-): Promise<
-    | {
-          marketId: string;
-          orderbook: OrderbookWithSequence;
-      }[]
-    | StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result = await this.indexerGrpcSpotApi.fetchOrderbooksV2(
             params.marketIds
@@ -1082,10 +954,7 @@ export async function getSpotOrderbookV2(
  *
  * @this InjectiveGrpcBase
  * @param {ExchangeTypes.GetAtomicSwapHistoryParams} params - Parameters to filter atomic swap history.
- * @returns {Promise<{
- *   swapHistory: AtomicSwap[];
- *   pagination: ExchangePagination;
- * } | StandardResponse>} The standard response containing atomic swap history or an error.
+ * @returns {Promise<StandardResponse>} The standard response containing atomic swap history or an error.
  */
 export async function getAtomicSwapHistory(
     this: InjectiveGrpcBase,

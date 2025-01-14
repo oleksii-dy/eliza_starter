@@ -10,8 +10,10 @@ import {
     composeContext,
     type Action,
     generateObjectDeprecated,
+    generateText,
 } from "@elizaos/core";
 import { InjectiveGrpcClient } from "@injective/modules";
+import { z } from "zod";
 
 /**
  * Shape of the arguments to create our generic action.
@@ -62,7 +64,6 @@ export function createGenericAction({
             _options: { [key: string]: unknown },
             callback?: HandlerCallback
         ): Promise<boolean> => {
-            elizaLogger.log(`Starting ${name} handler...`);
             elizaLogger.debug(`create action: ${name}`);
             // 1. Compose or update the state
             if (!state) {
@@ -78,23 +79,11 @@ export function createGenericAction({
             });
 
             // 3. Use the AI model to generate content based on the context
-            const content = await generateObjectDeprecated({
+            const params = await generateObjectDeprecated({
                 runtime,
                 context,
                 modelClass: ModelClass.LARGE,
             });
-
-            // 4. TODO: Validate the LLM context
-            // if (!validateContent(runtime, content)) {
-            //   elizaLogger.error(`Invalid content for ${name} action.`);
-            //   if (callback) {
-            //     callback({
-            //       text: `Invalid content for ${name}`,
-            //       content: {},
-            //     });
-            //   }
-            //   return false;
-            // }
 
             // 5. Initialize the Injective client
             try {
@@ -143,18 +132,37 @@ export function createGenericAction({
                     );
                 }
                 //Function that the LLM extracted
-                const params = content.function_args;
+                console.log(`wil pass these params ${JSON.stringify(params)}}`);
+
                 //Need to standardize this context params
                 const response = await method(params);
+                console.log(
+                    `Recieved a response from InjectiveGrpcClient , response: ${JSON.stringify(response)}, `
+                );
+                // Lets convert the result of the response into something that can be read
+                if (response.success) {
+                    console.log("Cleaning up the response");
+                    const additionalTemplate = `Extract the response from the following data, also make sure that you format the response into human readable format, make it the prettiest thing anyone can read basically a very nice comprehensive summary in a string format.`;
+                    const responseResult = JSON.stringify(response.result);
+                    const newTemplate = `${additionalTemplate}\n${responseResult}`;
+                    console.log(
+                        `Got context, now will pass it on to llm ${newTemplate}`
+                    );
+                    const responseContent = await generateText({
+                        runtime,
+                        context: newTemplate,
+                        modelClass: ModelClass.SMALL,
+                    });
 
-                // 7. Trigger any callback with success/failure info
-                if (callback) {
-                    if (response.success) {
+                    console.log("Response content:", responseContent);
+                    if (callback)
                         callback({
-                            text: `Operation ${name} succeeded.\nTxHash: ${response.result}`,
+                            text: `Operation ${name} succeeded, ${responseContent}.`,
                             content: response.result,
                         });
-                    } else {
+                } else {
+                    // 7. Trigger any callback with failure info
+                    if (callback) {
                         callback({
                             text: `Operation ${name} failed.\n${response.result}`,
                             content: response.result,

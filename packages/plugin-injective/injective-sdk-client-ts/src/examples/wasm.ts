@@ -10,7 +10,7 @@ export const getWasmxModuleParamsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "WasmX module parameters retrieved successfully.",
             action: "GET_WASMX_MODULE_PARAMS",
@@ -38,7 +38,7 @@ export const getWasmxModuleStateExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "WasmX module state retrieved successfully.",
             action: "GET_WASMX_MODULE_STATE",
@@ -76,7 +76,7 @@ export const getContractAccountsBalanceExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contract accounts balance retrieved successfully.",
             action: "GET_CONTRACT_ACCOUNTS_BALANCE",
@@ -125,7 +125,7 @@ export const getContractStateExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contract state retrieved successfully.",
             action: "GET_CONTRACT_STATE",
@@ -174,7 +174,7 @@ export const getContractInfoExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contract information retrieved successfully.",
             action: "GET_CONTRACT_INFO",
@@ -205,7 +205,7 @@ export const getContractHistoryExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contract history retrieved successfully.",
             action: "GET_CONTRACT_HISTORY",
@@ -238,7 +238,7 @@ export const getSmartContractStateExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Smart contract state retrieved successfully.",
             action: "GET_SMART_CONTRACT_STATE",
@@ -262,7 +262,7 @@ export const getRawContractStateExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Raw contract state retrieved successfully.",
             action: "GET_RAW_CONTRACT_STATE",
@@ -281,7 +281,7 @@ export const getContractCodesExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contract codes retrieved successfully.",
             action: "GET_CONTRACT_CODES",
@@ -310,7 +310,7 @@ export const getContractCodeExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contract code retrieved successfully.",
             action: "GET_CONTRACT_CODE",
@@ -334,7 +334,7 @@ export const getContractCodeContractsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contracts for code ID 1 retrieved successfully.",
             action: "GET_CONTRACT_CODE_CONTRACTS",
@@ -357,7 +357,7 @@ export const msgStoreCodeExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contract code stored successfully.",
             action: "MSG_STORE_CODE",
@@ -377,7 +377,7 @@ export const msgUpdateAdminExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contract admin updated successfully.",
             action: "MSG_UPDATE_ADMIN",
@@ -397,7 +397,7 @@ export const msgExecuteContractExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contract executed successfully.",
             action: "MSG_EXECUTE_CONTRACT",
@@ -417,7 +417,7 @@ export const msgMigrateContractExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contract migrated successfully.",
             action: "MSG_MIGRATE_CONTRACT",
@@ -437,7 +437,7 @@ export const msgInstantiateContractExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contract instantiated successfully.",
             action: "MSG_INSTANTIATE_CONTRACT",
@@ -457,7 +457,7 @@ export const msgExecuteContractCompatExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contract executed successfully in compatibility mode.",
             action: "MSG_EXECUTE_CONTRACT_COMPAT",
@@ -477,7 +477,7 @@ export const msgPrivilegedExecuteContractExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Privileged contract execution submitted successfully.",
             action: "MSG_PRIVILEGED_EXECUTE_CONTRACT",
@@ -497,7 +497,7 @@ export const getContractStateByKeyExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contract state for key 'base64encodedkey' retrieved successfully.",
             action: "GET_CONTRACT_STATE_BY_KEY",
@@ -516,7 +516,7 @@ export const getContractHistoryByOperationExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contract history for operation type 'Init' retrieved successfully.",
             action: "GET_CONTRACT_HISTORY_BY_OPERATION",
@@ -545,7 +545,7 @@ export const getContractCodeHistoryExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Complete contract code history retrieved successfully.",
             action: "GET_CONTRACT_CODE_HISTORY",
@@ -576,7 +576,7 @@ export const getContractEventsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Contract events retrieved successfully.",
             action: "GET_CONTRACT_EVENTS",

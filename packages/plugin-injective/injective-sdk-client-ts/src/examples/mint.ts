@@ -10,7 +10,7 @@ export const getMintModuleParamsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Mint module parameters retrieved successfully.",
             action: "GET_MINT_MODULE_PARAMS",
@@ -34,7 +34,7 @@ export const getInflationExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Current inflation rate retrieved successfully.",
             action: "GET_INFLATION",
@@ -53,7 +53,7 @@ export const getAnnualProvisionsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Annual provisions retrieved successfully.",
             action: "GET_ANNUAL_PROVISIONS",

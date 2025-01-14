@@ -1,7 +1,6 @@
 import { createGenericAction } from "./base";
 import * as AuctionTemplates from "@injective/template/auction";
 import * as AuctionExamples from "@injective/examples/auction";
-import { ActionExample } from "@elizaos/core";
 
 export const GetAuctionModuleParamsAction = createGenericAction({
     name: "GET_AUCTION_MODULE_PARAMS",

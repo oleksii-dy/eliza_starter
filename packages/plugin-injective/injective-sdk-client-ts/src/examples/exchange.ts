@@ -6,7 +6,7 @@ export const getAccountPortfolioExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Account portfolio retrieved successfully.",
             action: "GET_ACCOUNT_PORTFOLIO",
@@ -57,7 +57,7 @@ export const getSubaccountHistoryExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Subaccount history retrieved successfully.",
             action: "GET_SUBACCOUNT_HISTORY",
@@ -92,7 +92,7 @@ export const getSpotMarketExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Spot market retrieved successfully.",
             action: "GET_SPOT_MARKET",
@@ -120,7 +120,7 @@ export const getDerivativeMarketExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Derivative market retrieved successfully.",
             action: "GET_DERIVATIVE_MARKET",
@@ -144,18 +144,18 @@ export const getDerivativeMarketExample = [
     },
 ];
 
-export const getPositionsExample = [
+export const getExchangePositionsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Query positions with market ID 'market_id', subaccount ID 'subaccount_id', and direction 'long'.",
+            text: "Query positions of the exchange modules",
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Positions retrieved successfully.",
-            action: "GET_POSITIONS",
+            action: "GET_EXCHANGE_POSITIONS",
             content: {
                 positions: [
                     {
@@ -186,7 +186,7 @@ export const getInsuranceFundsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Insurance funds information retrieved successfully.",
             action: "GET_INSURANCE_FUNDS",
@@ -219,7 +219,7 @@ export const getRedemptionsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Redemptions retrieved successfully.",
             action: "GET_REDEMPTIONS",
@@ -251,7 +251,7 @@ export const getSpotOrdersExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Spot orders retrieved successfully.",
             action: "GET_SPOT_ORDERS",
@@ -288,7 +288,7 @@ export const getDerivativeOrdersExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Derivative orders retrieved successfully.",
             action: "GET_DERIVATIVE_ORDERS",
@@ -326,7 +326,7 @@ export const getHistoricalTradesExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Historical trades retrieved successfully.",
             action: "GET_HISTORICAL_TRADES",
@@ -362,7 +362,7 @@ export const getFundingRatesExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Funding rates retrieved successfully.",
             action: "GET_FUNDING_RATES",
@@ -390,7 +390,7 @@ export const msgDepositExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Deposit successful.",
             action: "MSG_DEPOSIT",
@@ -410,7 +410,7 @@ export const msgWithdrawExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Withdrawal successful.",
             action: "MSG_WITHDRAW",
@@ -430,7 +430,7 @@ export const msgCreateSpotMarketOrderExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Spot market order created successfully.",
             action: "MSG_CREATE_SPOT_MARKET_ORDER",
@@ -450,7 +450,7 @@ export const msgCreateDerivativeMarketOrderExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Derivative market order created successfully.",
             action: "MSG_CREATE_DERIVATIVE_MARKET_ORDER",
@@ -470,7 +470,7 @@ export const msgBatchCancelOrdersExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Batch orders canceled successfully.",
             action: "MSG_BATCH_CANCEL_ORDERS",
@@ -490,7 +490,7 @@ export const msgBatchUpdateOrdersExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Batch orders updated successfully.",
             action: "MSG_BATCH_UPDATE_ORDERS",
@@ -511,7 +511,7 @@ export const msgAdminUpdateBinaryOptionsMarketExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Binary options market updated successfully.",
             action: "MSG_ADMIN_UPDATE_BINARY_OPTIONS_MARKET",
@@ -531,7 +531,7 @@ export const getModuleStateExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Exchange module state retrieved successfully.",
             action: "GET_MODULE_STATE",
@@ -575,7 +575,7 @@ export const getFeeDiscountScheduleExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Fee discount schedule retrieved successfully.",
             action: "GET_FEE_DISCOUNT_SCHEDULE",
@@ -605,7 +605,7 @@ export const getFeeDiscountAccountInfoExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Fee discount account info retrieved successfully.",
             action: "GET_FEE_DISCOUNT_ACCOUNT_INFO",
@@ -634,7 +634,7 @@ export const getModuleParamsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Module parameters retrieved successfully.",
             action: "GET_MODULE_PARAMS",
@@ -670,7 +670,7 @@ export const getTradingRewardsCampaignExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Trading rewards campaign information retrieved successfully.",
             action: "GET_TRADING_REWARDS_CAMPAIGN",
@@ -713,7 +713,7 @@ export const getTradeRewardPointsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Trade reward points retrieved successfully.",
             action: "GET_TRADE_REWARD_POINTS",
@@ -732,7 +732,7 @@ export const getPendingTradeRewardPointsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Pending trade reward points retrieved successfully.",
             action: "GET_PENDING_TRADE_REWARD_POINTS",
@@ -751,7 +751,7 @@ export const getBinaryOptionsMarketsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Binary options markets retrieved successfully.",
             action: "GET_BINARY_OPTIONS_MARKETS",
@@ -790,7 +790,7 @@ export const getBinaryOptionsMarketExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Binary options market retrieved successfully.",
             action: "GET_BINARY_OPTIONS_MARKET",
@@ -824,7 +824,7 @@ export const msgCreateBinaryOptionsMarketExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Binary options market created successfully.",
             action: "MSG_CREATE_BINARY_OPTIONS_MARKET",
@@ -845,7 +845,7 @@ export const getSubaccountTradeNonceExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Subaccount trade nonce retrieved successfully.",
             action: "GET_SUBACCOUNT_TRADE_NONCE",
@@ -864,7 +864,7 @@ export const getPositionsV2Example = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Positions V2 retrieved successfully.",
             action: "GET_POSITIONS_V2",
@@ -900,7 +900,7 @@ export const getHistoricalBalanceExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Historical balance data retrieved successfully.",
             action: "GET_HISTORICAL_BALANCE",
@@ -920,7 +920,7 @@ export const getHistoricalRpnlExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Historical RPNL data retrieved successfully.",
             action: "GET_HISTORICAL_RPNL",
@@ -940,7 +940,7 @@ export const getHistoricalVolumesExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Historical volumes data retrieved successfully.",
             action: "GET_HISTORICAL_VOLUMES",
@@ -960,7 +960,7 @@ export const getDenomHoldersExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Denom holders retrieved successfully.",
             action: "GET_DENOM_HOLDERS",
@@ -985,7 +985,7 @@ export const getGridStrategiesExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Grid strategies retrieved successfully.",
             action: "GET_GRID_STRATEGIES",
@@ -1021,7 +1021,7 @@ export const msgInstantSpotMarketLaunchExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Instant spot market launched successfully.",
             action: "MSG_INSTANT_SPOT_MARKET_LAUNCH",
@@ -1042,7 +1042,7 @@ export const getFundingPaymentsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Funding payments retrieved successfully.",
             action: "GET_FUNDING_PAYMENTS",
@@ -1071,7 +1071,7 @@ export const getPnlLeaderboardExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "PnL leaderboard retrieved successfully.",
             action: "GET_PNL_LEADERBOARD",
@@ -1105,7 +1105,7 @@ export const getVolLeaderboardExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Volume leaderboard retrieved successfully.",
             action: "GET_VOL_LEADERBOARD",
@@ -1137,7 +1137,7 @@ export const getPnlLeaderboardFixedResolutionExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "PnL leaderboard with fixed resolution retrieved successfully.",
             action: "GET_PNL_LEADERBOARD_FIXED_RESOLUTION",
@@ -1171,7 +1171,7 @@ export const getVolLeaderboardFixedResolutionExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Volume leaderboard with fixed resolution retrieved successfully.",
             action: "GET_VOL_LEADERBOARD_FIXED_RESOLUTION",
@@ -1203,7 +1203,7 @@ export const getAtomicSwapHistoryExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Atomic swap history retrieved successfully.",
             action: "GET_ATOMIC_SWAP_HISTORY",
@@ -1249,7 +1249,7 @@ export const getIsOptedOutOfRewardsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Opt-out status retrieved successfully.",
             action: "GET_IS_OPTED_OUT_OF_REWARDS",
@@ -1268,7 +1268,7 @@ export const getBinaryOptionsMarketsV2Example = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Binary options markets retrieved successfully.",
             action: "GET_BINARY_OPTIONS_MARKETS_V2",
@@ -1307,7 +1307,7 @@ export const getTradingRewardsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Trading rewards retrieved successfully.",
             action: "GET_TRADING_REWARDS",
@@ -1337,7 +1337,7 @@ export const getSubaccountOrderSummaryExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Order summary retrieved successfully.",
             action: "GET_SUBACCOUNT_ORDER_SUMMARY",
@@ -1363,7 +1363,7 @@ export const getDerivativeMarketsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Derivative markets retrieved successfully.",
             action: "GET_DERIVATIVE_MARKETS",
@@ -1397,7 +1397,7 @@ export const getSpotMarketsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Spot markets retrieved successfully.",
             action: "GET_SPOT_MARKETS",
@@ -1429,7 +1429,7 @@ export const getSubaccountsListExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Subaccounts list retrieved successfully.",
             action: "GET_SUBACCOUNTS_LIST",
@@ -1448,7 +1448,7 @@ export const getSubaccountBalancesListExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Subaccount balances retrieved successfully.",
             action: "GET_SUBACCOUNT_BALANCES_LIST",
@@ -1469,7 +1469,109 @@ export const getSubaccountBalancesListExample = [
     },
 ];
 
-export const getOrderbooksV2Example = [
+export const getDerivativeOrderbooksV2Example = [
+    {
+        user: "{{user1}}",
+        content: {
+            text: "Get derivative orderbooks for market IDs ['0x...'].",
+        },
+    },
+    {
+        user: "{{agent}}",
+        content: {
+            text: "Derivative orderbooks retrieved successfully.",
+            action: "GET_DERIVATIVE_ORDERBOOKS_V2",
+            content: {
+                orderbooks: [
+                    {
+                        marketId: "0x12...",
+                        orderbook: {
+                            sequence: "123",
+                            buys: [
+                                {
+                                    price: "25000.5",
+                                    quantity: "1.5",
+                                    timestamp: 1641859200,
+                                },
+                            ],
+                            sells: [
+                                {
+                                    price: "25100.5",
+                                    quantity: "0.5",
+                                    timestamp: 1641859200,
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        marketId: "0x212...",
+                        orderbook: {
+                            sequence: "123",
+                            buys: [
+                                {
+                                    price: "2500.5",
+                                    quantity: "1",
+                                    timestamp: 1641859201,
+                                },
+                            ],
+                            sells: [
+                                {
+                                    price: "2510.5",
+                                    quantity: "0.5",
+                                    timestamp: 1641859203,
+                                },
+                            ],
+                        },
+                    },
+                ],
+            },
+        },
+    },
+];
+
+
+export const getDerivativeOrderbookV2Example = [
+    {
+        user: "{{user1}}",
+        content: {
+            text: "Get derivative orderbook for market ID '0x...'.",
+        },
+    },
+    {
+        user: "{{agent}}",
+        content: {
+            text: "Derivative orderbooks retrieved successfully.",
+            action: "GET_DERIVATIVE_ORDERBOOK_V2",
+            content: {
+                orderbook: [
+                    {
+                        marketId: "0x...",
+                        orderbook: {
+                            sequence: "123",
+                            buys: [
+                                {
+                                    price: "25000.5",
+                                    quantity: "1.5",
+                                    timestamp: 1641859200,
+                                },
+                            ],
+                            sells: [
+                                {
+                                    price: "25100.5",
+                                    quantity: "0.5",
+                                    timestamp: 1641859200,
+                                },
+                            ],
+                        },
+                    },
+                ],
+            },
+        },
+    },
+];
+
+
+export const getSpotOrderbooksV2Example = [
     {
         user: "{{user1}}",
         content: {
@@ -1477,10 +1579,10 @@ export const getOrderbooksV2Example = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
-            text: "Orderbooks retrieved successfully.",
-            action: "GET_ORDERBOOKS_V2",
+            text: "Spot orderbooks retrieved successfully.",
+            action: "GET_SPOT_ORDERBOOKS_V2",
             content: {
                 orderbooks: [
                     {
@@ -1509,6 +1611,48 @@ export const getOrderbooksV2Example = [
     },
 ];
 
+
+export const getSpotOrderbookV2Example = [
+    {
+        user: "{{user1}}",
+        content: {
+            text: "Get spot orderbook for market ID '0x...'.",
+        },
+    },
+    {
+        user: "{{agent}}",
+        content: {
+            text: "Spot orderbook retrieved successfully.",
+            action: "GET_SPOT_ORDERBOOK_V2",
+            content: {
+                orderbook: [
+                    {
+                        marketId: "0x...",
+                        orderbook: {
+                            sequence: "123",
+                            buys: [
+                                {
+                                    price: "25000.5",
+                                    quantity: "1.5",
+                                    timestamp: 1641859200,
+                                },
+                            ],
+                            sells: [
+                                {
+                                    price: "25100.5",
+                                    quantity: "0.5",
+                                    timestamp: 1641859200,
+                                },
+                            ],
+                        },
+                    },
+                ],
+            },
+        },
+    },
+];
+
+
 export const msgBatchCancelBinaryOptionsOrdersExample = [
     {
         user: "{{user1}}",
@@ -1517,7 +1661,7 @@ export const msgBatchCancelBinaryOptionsOrdersExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Batch binary options orders canceled successfully.",
             action: "MSG_BATCH_CANCEL_BINARY_OPTIONS_ORDERS",
@@ -1537,7 +1681,7 @@ export const msgCancelBinaryOptionsOrderExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Binary options order canceled successfully.",
             action: "MSG_CANCEL_BINARY_OPTIONS_ORDER",
@@ -1557,7 +1701,7 @@ export const msgCreateBinaryOptionsLimitOrderExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Binary options limit order created successfully.",
             action: "MSG_CREATE_BINARY_OPTIONS_LIMIT_ORDER",
@@ -1577,7 +1721,7 @@ export const msgLiquidatePositionExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Position liquidated successfully.",
             action: "MSG_LIQUIDATE_POSITION",
@@ -1597,7 +1741,7 @@ export const msgReclaimLockedFundsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Locked funds reclaimed successfully.",
             action: "MSG_RECLAIM_LOCKED_FUNDS",
@@ -1617,7 +1761,7 @@ export const msgSignDataExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Data signed successfully.",
             action: "MSG_SIGN_DATA",
@@ -1638,7 +1782,7 @@ export const msgCreateSpotLimitOrderExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Spot limit order created successfully.",
             action: "MSG_CREATE_SPOT_LIMIT_ORDER",
@@ -1658,7 +1802,7 @@ export const msgCreateDerivativeLimitOrderExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Derivative limit order created successfully.",
             action: "MSG_CREATE_DERIVATIVE_LIMIT_ORDER",
@@ -1678,7 +1822,7 @@ export const msgBatchCancelSpotOrdersExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Batch spot orders canceled successfully.",
             action: "MSG_BATCH_CANCEL_SPOT_ORDERS",
@@ -1698,7 +1842,7 @@ export const msgBatchCancelDerivativeOrdersExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Batch derivative orders canceled successfully.",
             action: "MSG_BATCH_CANCEL_DERIVATIVE_ORDERS",
@@ -1718,7 +1862,7 @@ export const msgCancelSpotOrderExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Spot order canceled successfully.",
             action: "MSG_CANCEL_SPOT_ORDER",
@@ -1738,7 +1882,7 @@ export const msgCancelDerivativeOrderExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Derivative order canceled successfully.",
             action: "MSG_CANCEL_DERIVATIVE_ORDER",
@@ -1758,7 +1902,7 @@ export const getSpotSubaccountOrdersListExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Spot subaccount orders list retrieved successfully.",
             action: "GET_SPOT_SUBACCOUNT_ORDERS_LIST",
@@ -1795,7 +1939,7 @@ export const getSpotSubaccountTradesListExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Spot subaccount trades list retrieved successfully.",
             action: "GET_SPOT_SUBACCOUNT_TRADES_LIST",
@@ -1832,7 +1976,7 @@ export const msgCreateBinaryOptionsMarketOrderExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Binary options market order created successfully.",
             action: "MSG_CREATE_BINARY_OPTIONS_MARKET_ORDER",
@@ -1852,7 +1996,7 @@ export const getSpotOrderHistoryExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Spot order history retrieved successfully.",
             action: "GET_SPOT_ORDER_HISTORY",
@@ -1891,7 +2035,7 @@ export const getSpotTradesExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Spot trades retrieved successfully.",
             action: "GET_SPOT_TRADES",
@@ -1928,7 +2072,7 @@ export const getAccountPortfolioBalancesExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Account portfolio balances retrieved successfully.",
             action: "GET_ACCOUNT_PORTFOLIO_BALANCES",
@@ -1964,7 +2108,7 @@ export const getRewardsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Rewards retrieved successfully.",
             action: "GET_REWARDS",
@@ -1994,7 +2138,7 @@ export const getDerivativeOrderHistoryExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Derivative order history retrieved successfully.",
             action: "GET_DERIVATIVE_ORDER_HISTORY",
@@ -2037,7 +2181,7 @@ export const getDerivativeTradesExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Derivative trades retrieved successfully.",
             action: "GET_DERIVATIVE_TRADES",
@@ -2077,7 +2221,7 @@ export const getOrderStatesExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Order states retrieved successfully.",
             action: "GET_ORDER_STATES",
@@ -2111,7 +2255,7 @@ export const msgIncreasePositionMarginExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Position margin increased successfully.",
             action: "MSG_INCREASE_POSITION_MARGIN",
@@ -2131,7 +2275,7 @@ export const msgRewardsOptOutExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Successfully opted out of rewards.",
             action: "MSG_REWARDS_OPT_OUT",
@@ -2151,7 +2295,7 @@ export const msgExternalTransferExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "External transfer completed successfully.",
             action: "MSG_EXTERNAL_TRANSFER",

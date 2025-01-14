@@ -10,7 +10,7 @@ export const getInsuranceModuleParamsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Insurance module parameters retrieved successfully.",
             action: "GET_INSURANCE_MODULE_PARAMS",
@@ -29,7 +29,7 @@ export const getInsuranceFundsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Insurance funds retrieved successfully.",
             action: "GET_INSURANCE_FUNDS",
@@ -76,7 +76,7 @@ export const getInsuranceFundExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Insurance fund details retrieved successfully.",
             action: "GET_INSURANCE_FUND",
@@ -105,7 +105,7 @@ export const getEstimatedRedemptionsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Estimated redemptions retrieved successfully.",
             action: "GET_ESTIMATED_REDEMPTIONS",
@@ -133,7 +133,7 @@ export const getPendingRedemptionsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Pending redemptions retrieved successfully.",
             action: "GET_PENDING_REDEMPTIONS",
@@ -157,7 +157,7 @@ export const msgCreateInsuranceFundExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Insurance fund creation submitted successfully.",
             action: "MSG_CREATE_INSURANCE_FUND",
@@ -177,7 +177,7 @@ export const msgRequestRedemptionExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Redemption request submitted successfully.",
             action: "MSG_REQUEST_REDEMPTION",
@@ -197,7 +197,7 @@ export const msgUnderwriteExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Underwriting submitted successfully.",
             action: "MSG_UNDERWRITE",

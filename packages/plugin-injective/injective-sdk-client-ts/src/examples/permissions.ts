@@ -10,7 +10,7 @@ export const getAddressesByRoleExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Addresses with role 'minter' retrieved successfully.",
             action: "GET_ADDRESSES_BY_ROLE",
@@ -33,7 +33,7 @@ export const getAddressRolesExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Roles for address 'inj1address1...' retrieved successfully.",
             action: "GET_ADDRESS_ROLES",
@@ -52,7 +52,7 @@ export const getAllNamespacesExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "All namespaces retrieved successfully.",
             action: "GET_ALL_NAMESPACES",
@@ -119,7 +119,7 @@ export const getPermissionsModuleParamsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Peggy module parameters retrieved successfully.",
             action: "GET_PERMISSIONS_MODULE_PARAMS",
@@ -138,7 +138,7 @@ export const getNamespaceByDenomExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Namespace details retrieved successfully.",
             action: "GET_NAMESPACE_BY_DENOM",
@@ -175,7 +175,7 @@ export const getVouchersForAddressExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Vouchers for address 'inj1address1...' retrieved successfully.",
             action: "GET_VOUCHERS_FOR_ADDRESS",

@@ -10,7 +10,7 @@ export const getVaultExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Vault details retrieved successfully.",
             action: "GET_VAULT",
@@ -69,7 +69,7 @@ export const getVaultsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Vaults retrieved successfully.",
             action: "GET_VAULTS",
@@ -107,7 +107,7 @@ export const getLpTokenPriceChartExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "LP token price chart retrieved successfully.",
             action: "GET_LP_TOKEN_PRICE_CHART",
@@ -136,7 +136,7 @@ export const getTVLChartExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "TVL chart retrieved successfully.",
             action: "GET_TVL_CHART",
@@ -165,7 +165,7 @@ export const getVaultsByHolderAddressExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Vaults by holder address retrieved successfully.",
             action: "GET_VAULTS_BY_HOLDER_ADDRESS",
@@ -209,7 +209,7 @@ export const getLPHoldersExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "LP holders retrieved successfully.",
             action: "GET_LP_HOLDERS",
@@ -251,7 +251,7 @@ export const getHolderPortfolioExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Holder portfolio retrieved successfully.",
             action: "GET_HOLDER_PORTFOLIO",
@@ -294,7 +294,7 @@ export const getLeaderboardExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Leaderboard retrieved successfully.",
             action: "GET_LEADERBOARD",
@@ -326,7 +326,7 @@ export const getLeaderboardEpochsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Leaderboard epochs retrieved successfully.",
             action: "GET_LEADERBOARD_EPOCHS",
@@ -362,7 +362,7 @@ export const getTransferHistoryExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Transfer history retrieved successfully.",
             action: "GET_TRANSFER_HISTORY",
@@ -420,7 +420,7 @@ export const getStakingPoolsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Staking pools retrieved successfully.",
             action: "GET_STAKING_POOLS",
@@ -498,7 +498,7 @@ export const getStakingHistoryExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Staking history retrieved successfully.",
             action: "GET_STAKING_HISTORY",
@@ -558,7 +558,7 @@ export const getStakingRewardsByAccountExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Staking rewards by account retrieved successfully.",
             action: "GET_STAKING_REWARDS_BY_ACCOUNT",
@@ -622,7 +622,7 @@ export const getMissionsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Missions retrieved successfully.",
             action: "GET_MISSIONS",
@@ -661,7 +661,7 @@ export const getMissionLeaderboardExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Mission leaderboard retrieved successfully.",
             action: "GET_MISSION_LEADERBOARD",
@@ -692,7 +692,7 @@ export const getIDOExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "IDO information retrieved successfully.",
             action: "GET_IDO",
@@ -751,7 +751,7 @@ export const getIDOsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "IDOs retrieved successfully.",
             action: "GET_IDOS",
@@ -791,7 +791,7 @@ export const getIDOSubscribersExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "IDO subscribers retrieved successfully.",
             action: "GET_IDO_SUBSCRIBERS",
@@ -826,7 +826,7 @@ export const getIDOSubscriptionExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "IDO subscription details retrieved successfully.",
             action: "GET_IDO_SUBSCRIPTION",
@@ -870,7 +870,7 @@ export const getIDOActivitiesExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "IDO activities retrieved successfully.",
             action: "GET_IDO_ACTIVITIES",
@@ -914,7 +914,7 @@ export const getIDOWhitelistExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "IDO whitelist retrieved successfully.",
             action: "GET_IDO_WHITELIST",
@@ -949,7 +949,7 @@ export const getClaimReferencesExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Claim references retrieved successfully.",
             action: "GET_CLAIM_REFERENCES",

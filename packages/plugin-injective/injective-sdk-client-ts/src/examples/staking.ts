@@ -10,7 +10,7 @@ export const getStakingModuleParamsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Staking module parameters retrieved successfully.",
             action: "GET_STAKING_MODULE_PARAMS",
@@ -33,7 +33,7 @@ export const getPoolExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Staking pool information retrieved successfully.",
             action: "GET_POOL",
@@ -53,7 +53,7 @@ export const getValidatorsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Validators retrieved successfully.",
             action: "GET_VALIDATORS",
@@ -104,7 +104,7 @@ export const getValidatorExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Validator details retrieved successfully.",
             action: "GET_VALIDATOR",
@@ -146,7 +146,7 @@ export const getValidatorDelegationsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Validator delegations retrieved successfully.",
             action: "GET_VALIDATOR_DELEGATIONS",
@@ -182,7 +182,7 @@ export const getValidatorDelegationsNoThrowExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Validator delegations retrieved successfully (no-throw).",
             action: "GET_VALIDATOR_DELEGATIONS_NO_THROW",
@@ -218,7 +218,7 @@ export const getValidatorUnbondingDelegationsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Validator unbonding delegations retrieved successfully.",
             action: "GET_VALIDATOR_UNBONDING_DELEGATIONS",
@@ -255,7 +255,7 @@ export const getValidatorUnbondingDelegationsNoThrowExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Validator unbonding delegations retrieved successfully (no-throw).",
             action: "GET_VALIDATOR_UNBONDING_DELEGATIONS_NO_THROW",
@@ -292,7 +292,7 @@ export const getDelegationsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Delegations retrieved successfully.",
             action: "GET_DELEGATIONS",
@@ -328,7 +328,7 @@ export const getDelegationsNoThrowExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Delegations retrieved successfully (no-throw).",
             action: "GET_DELEGATIONS_NO_THROW",
@@ -364,7 +364,7 @@ export const getUnbondingDelegationsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Unbonding delegations retrieved successfully.",
             action: "GET_UNBONDING_DELEGATIONS",
@@ -401,7 +401,7 @@ export const getReDelegationsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Redelegations retrieved successfully.",
             action: "GET_REDELEGATIONS",
@@ -439,7 +439,7 @@ export const msgCreateValidatorExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Validator creation submitted successfully.",
             action: "MSG_CREATE_VALIDATOR",
@@ -459,7 +459,7 @@ export const msgEditValidatorExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Validator edited successfully.",
             action: "MSG_EDIT_VALIDATOR",
@@ -479,7 +479,7 @@ export const msgDelegateExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Delegation submitted successfully.",
             action: "MSG_DELEGATE",
@@ -499,7 +499,7 @@ export const msgBeginRedelegateExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Redelegation submitted successfully.",
             action: "MSG_BEGIN_REDELEGATE",
@@ -519,7 +519,7 @@ export const msgUndelegateExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Undelegation submitted successfully.",
             action: "MSG_UNDELEGATE",
@@ -539,7 +539,7 @@ export const msgCancelUnbondingDelegationExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Unbonding delegation cancellation submitted successfully.",
             action: "MSG_CANCEL_UNBONDING_DELEGATION",
@@ -559,7 +559,7 @@ export const getDelegationExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Delegation details retrieved successfully.",
             action: "GET_DELEGATION",
@@ -586,7 +586,7 @@ export const getDelegatorsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Delegators retrieved successfully.",
             action: "GET_DELEGATORS",
@@ -622,7 +622,7 @@ export const getDelegatorsNoThrowExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Delegators retrieved successfully (no-throw).",
             action: "GET_DELEGATORS_NO_THROW",
@@ -658,7 +658,7 @@ export const getUnbondingDelegationsNoThrowExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Unbonding delegations retrieved successfully (no-throw).",
             action: "GET_UNBONDING_DELEGATIONS_NO_THROW",
@@ -695,7 +695,7 @@ export const getReDelegationsNoThrowExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Redelegations retrieved successfully (no-throw).",
             action: "GET_REDELEGATIONS_NO_THROW",

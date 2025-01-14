@@ -6,7 +6,7 @@ export const getBankModuleParamsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Bank module parameters retrieved successfully.",
             action: "GET_BANK_MODULE_PARAMS",
@@ -35,7 +35,7 @@ export const getBankBalanceExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Bank balance retrieved successfully.",
             action: "GET_BANK_BALANCE",
@@ -55,7 +55,7 @@ export const getBankBalancesExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Bank balances retrieved successfully.",
             action: "GET_BANK_BALANCES",
@@ -87,7 +87,7 @@ export const getTotalSupplyExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Total supply retrieved successfully.",
             action: "GET_TOTAL_SUPPLY",
@@ -119,7 +119,7 @@ export const getAllTotalSupplyExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Complete total supply retrieved successfully.",
             action: "GET_ALL_TOTAL_SUPPLY",
@@ -155,7 +155,7 @@ export const getSupplyOfExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Supply of inj retrieved successfully.",
             action: "GET_SUPPLY_OF",
@@ -175,7 +175,7 @@ export const getDenomsMetadataExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Denomination metadata fetched successfully.",
             action: "GET_DENOMS_METADATA",
@@ -228,7 +228,7 @@ export const getDenomMetadataExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Denomination metadata for inj retrieved successfully.",
             action: "GET_DENOM_METADATA",
@@ -264,7 +264,7 @@ export const getDenomOwnersExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Denomination owners retrieved successfully.",
             action: "GET_DENOM_OWNERS",
@@ -302,7 +302,7 @@ export const msgSendExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Send transaction submitted successfully.",
             action: "MSG_SEND",
@@ -326,7 +326,7 @@ export const msgSendResponseExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Send transaction processed successfully.",
             action: "MSG_SEND_RESPONSE",
@@ -346,7 +346,7 @@ export const msgMultiSendExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Multi-send transaction submitted successfully.",
             action: "MSG_MULTI_SEND",
@@ -399,7 +399,7 @@ export const msgMultiSendResponseExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Multi-send transaction processed successfully.",
             action: "MSG_MULTI_SEND_RESPONSE",

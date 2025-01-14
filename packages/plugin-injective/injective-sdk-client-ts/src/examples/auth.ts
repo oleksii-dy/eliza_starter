@@ -6,7 +6,7 @@ export const getAuthModuleParamsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Auth module parameters retrieved successfully.",
             action: "GET_AUTH_MODULE_PARAMS",
@@ -29,7 +29,7 @@ export const getAccountDetailsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Account details retrieved successfully.",
             action: "GET_ACCOUNT_DETAILS",
@@ -57,7 +57,7 @@ export const getAccountsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Accounts list retrieved successfully.",
             action: "GET_ACCOUNTS",
@@ -105,7 +105,7 @@ export const getGrantsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Grants fetched successfully.",
             action: "GET_GRANTS",
@@ -151,7 +151,7 @@ export const getGranterGrantsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Granter's grants fetched successfully.",
             action: "GET_GRANTER_GRANTS",
@@ -201,7 +201,7 @@ export const getGranteeGrantsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Grantee's grants fetched successfully.",
             action: "GET_GRANTEE_GRANTS",
@@ -254,7 +254,7 @@ export const msgGrantExample = [
 
 export const msgGrantResponseExample = [
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Authorization granted successfully.",
             action: "MSG_GRANT",
@@ -277,7 +277,7 @@ export const msgExecExample = [
 
 export const msgExecResponseExample = [
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Authorized messages executed successfully.",
             action: "MSG_EXEC",
@@ -300,7 +300,7 @@ export const msgRevokeExample = [
 
 export const msgRevokeResponseExample = [
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Authorization revoked successfully.",
             action: "MSG_REVOKE",

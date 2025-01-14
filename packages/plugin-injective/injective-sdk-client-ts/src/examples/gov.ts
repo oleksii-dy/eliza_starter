@@ -6,7 +6,7 @@ export const getGovernanceModuleParamsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Governance module parameters retrieved successfully.",
             action: "GET_GOVERNANCE_MODULE_PARAMS",
@@ -41,7 +41,7 @@ export const getProposalsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Proposals retrieved successfully.",
             action: "GET_PROPOSALS",
@@ -89,7 +89,7 @@ export const getProposalExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Proposal details retrieved successfully.",
             action: "GET_PROPOSAL",
@@ -128,7 +128,7 @@ export const getProposalDepositsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Proposal deposits retrieved successfully.",
             action: "GET_PROPOSAL_DEPOSITS",
@@ -162,7 +162,7 @@ export const getProposalVotesExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Proposal votes retrieved successfully.",
             action: "GET_PROPOSAL_VOTES",
@@ -198,7 +198,7 @@ export const getProposalTallyExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Proposal tally retrieved successfully.",
             action: "GET_PROPOSAL_TALLY",
@@ -220,7 +220,7 @@ export const msgSubmitProposalExpiryFuturesMarketLaunchExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Expiry futures market launch proposal submitted successfully.",
             action: "MSG_SUBMIT_PROPOSAL_EXPIRY_FUTURES_MARKET_LAUNCH",
@@ -240,7 +240,7 @@ export const msgSubmitProposalSpotMarketLaunchExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Spot market launch proposal submitted successfully.",
             action: "MSG_SUBMIT_PROPOSAL_SPOT_MARKET_LAUNCH",
@@ -260,7 +260,7 @@ export const msgSubmitProposalPerpetualMarketLaunchExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Perpetual market launch proposal submitted successfully.",
             action: "MSG_SUBMIT_PROPOSAL_PERPETUAL_MARKET_LAUNCH",
@@ -280,7 +280,7 @@ export const msgVoteExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Vote submitted successfully.",
             action: "MSG_VOTE",
@@ -300,7 +300,7 @@ export const msgSubmitTextProposalExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Text proposal submitted successfully.",
             action: "MSG_SUBMIT_TEXT_PROPOSAL",
@@ -320,7 +320,7 @@ export const msgSubmitProposalSpotMarketParamUpdateExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Spot market parameter update proposal submitted successfully.",
             action: "MSG_SUBMIT_PROPOSAL_SPOT_MARKET_PARAM_UPDATE",
@@ -340,7 +340,7 @@ export const msgSubmitGenericProposalExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Generic governance proposal submitted successfully.",
             action: "MSG_SUBMIT_GENERIC_PROPOSAL",
@@ -360,7 +360,7 @@ export const msgGovDepositExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Deposit to proposal submitted successfully.",
             action: "MSG_GOV_DEPOSIT",

@@ -6,7 +6,7 @@ export const getTxByHashExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Transaction details retrieved successfully.",
             action: "GET_TX_BY_HASH",
@@ -60,7 +60,7 @@ export const getAccountTxExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Account transactions retrieved successfully.",
             action: "GET_ACCOUNT_TX",
@@ -91,7 +91,7 @@ export const getValidatorExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Validator details retrieved successfully.",
             action: "GET_EXPLORER_VALIDATOR",
@@ -128,7 +128,7 @@ export const getValidatorUptimeExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Validator uptime details retrieved successfully.",
             action: "GET_VALIDATOR_UPTIME",
@@ -155,7 +155,7 @@ export const getPeggyDepositTxsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Peggy deposit transactions retrieved successfully.",
             action: "GET_PEGGY_DEPOSIT_TXS",
@@ -187,7 +187,7 @@ export const getPeggyWithdrawalTxsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Peggy withdrawal transactions retrieved successfully.",
             action: "GET_PEGGY_WITHDRAWAL_TXS",
@@ -220,7 +220,7 @@ export const getBlocksExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Blocks retrieved successfully.",
             action: "GET_BLOCKS",
@@ -251,7 +251,7 @@ export const getBlockExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Block details retrieved successfully.",
             action: "GET_BLOCK",
@@ -279,7 +279,7 @@ export const getTxsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Transactions retrieved successfully.",
             action: "GET_TXS",
@@ -307,7 +307,7 @@ export const getIBCTransferTxsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "IBC transfer transactions retrieved successfully.",
             action: "GET_IBC_TRANSFER_TXS",
@@ -339,7 +339,7 @@ export const getExplorerStatsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Explorer statistics retrieved successfully.",
             action: "GET_EXPLORER_STATS",

@@ -156,6 +156,55 @@ export const GetSpotTradesAction = createGenericAction({
     ],
     validateContent: () => true,
 });
+//Orderbooks Action
+export const GetDerivativeOrderbooksAction = createGenericAction({
+    name: "GET_DERIVATIVE_ORDERBOOKS",
+    description: "Fetches all the derivative or perpetual orderbooks",
+    template: ExchangeTemplates.getOrderbooksV2Template,
+    examples: ExchangeExamples.getDerivativeOrderbooksV2Example,
+    functionName: "getDerivativeOrderbooksV2",
+    similes: [
+        "list perpetual orderbooks",
+        "view perpetual market trading books",
+    ],
+    validateContent: () => true,
+});
+export const GetDerivativeOrderbookAction = createGenericAction({
+    name: "GET_DERIVATIVE_ORDERBOOK",
+    description: "Fetches a single derivative or perpetual orderbook",
+    template: ExchangeTemplates.getOrderbookTemplate,
+    examples: ExchangeExamples.getDerivativeOrderbookV2Example,
+    functionName: "getDerivativeOrderbookV2",
+    similes: [
+        "list perpetual orderbook",
+        "view perpetual market trading book",
+        "check perpetual market depth",
+    ],
+    validateContent: () => true,
+});
+
+export const GetSpotOrderbooksAction = createGenericAction({
+    name: "GET_SPOT_ORDERBOOKS",
+    description: "Fetches all the spot markets orderbooks",
+    template: ExchangeTemplates.getOrderbooksV2Template,
+    examples: ExchangeExamples.getSpotOrderbooksV2Example,
+    functionName: "getSpotOrderbooksV2",
+    similes: ["list spot orderbooks", "view spot market trading books"],
+    validateContent: () => true,
+});
+export const GetSpotOrderbookAction = createGenericAction({
+    name: "GET_SPOT_ORDERBOOK",
+    description: "Fetches a single spot market orderbook",
+    template: ExchangeTemplates.getOrderbookTemplate,
+    examples: ExchangeExamples.getSpotOrderbookV2Example,
+    functionName: "getSpotOrderbookV2",
+    similes: [
+        "list spot orderbook",
+        "view spot market trading book",
+        "check spot market depth",
+    ],
+    validateContent: () => true,
+});
 
 // Derivative Market Actions
 export const GetDerivativeMarketsAction = createGenericAction({
@@ -177,7 +226,7 @@ export const GetDerivativeMarketAction = createGenericAction({
     similes: [
         "get derivative details",
         "fetch futures market",
-        "view perpetual",
+        "view perpetual market",
     ],
     validateContent: () => true,
 });
@@ -253,13 +302,13 @@ export const GetBinaryOptionsMarketAction = createGenericAction({
     validateContent: () => true,
 });
 
-// Positions Actions
-export const GetPositionsAction = createGenericAction({
-    name: "GET_POSITIONS",
+// Exchange Positions Actions
+export const GetExchangePositionsAction = createGenericAction({
+    name: "GET_EXCHANGE_POSITIONS",
     description: "Fetches all positions",
-    template: ExchangeTemplates.getPositionsTemplate,
-    examples: ExchangeExamples.getPositionsExample,
-    functionName: "getPositions",
+    template: ExchangeTemplates.getExchangePositionsTemplate,
+    examples: ExchangeExamples.getExchangePositionsExample,
+    functionName: "getExchangePositions",
     similes: ["list positions", "get trading positions", "view open trades"],
     validateContent: () => true,
 });
@@ -889,6 +938,12 @@ export const ExchangeActions = [
     GetTradeRewardPointsAction,
     GetPendingTradeRewardPointsAction,
 
+    // Orderbooks
+    GetDerivativeOrderbooksAction,
+    GetDerivativeOrderbookAction,
+    GetSpotOrderbooksAction,
+    GetSpotOrderbookAction,
+
     // Spot Market
     GetSpotMarketsAction,
     GetSpotMarketAction,
@@ -908,7 +963,7 @@ export const ExchangeActions = [
     GetBinaryOptionsMarketAction,
 
     // Positions
-    GetPositionsAction,
+    GetExchangePositionsAction,
     GetPositionsV2Action,
 
     // Funding

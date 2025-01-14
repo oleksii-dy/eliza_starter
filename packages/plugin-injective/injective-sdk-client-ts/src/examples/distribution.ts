@@ -6,7 +6,7 @@ export const getDistributionModuleParamsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Distribution module parameters retrieved successfully.",
             action: "GET_DISTRIBUTION_MODULE_PARAMS",
@@ -28,7 +28,7 @@ export const getDelegatorRewardsForValidatorExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Delegator rewards retrieved successfully.",
             action: "GET_DELEGATOR_REWARDS_FOR_VALIDATOR",
@@ -50,7 +50,7 @@ export const getDelegatorRewardsForValidatorNoThrowExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Delegator rewards retrieved successfully (no-throw).",
             action: "GET_DELEGATOR_REWARDS_FOR_VALIDATOR_NO_THROW",
@@ -72,7 +72,7 @@ export const getDelegatorRewardsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Delegator rewards retrieved successfully.",
             action: "GET_DELEGATOR_REWARDS",
@@ -108,7 +108,7 @@ export const getDelegatorRewardsNoThrowExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Delegator rewards retrieved successfully (no-throw).",
             action: "GET_DELEGATOR_REWARDS_NO_THROW",
@@ -147,7 +147,7 @@ export const msgWithdrawDelegatorRewardExample = [
 
 export const msgWithdrawDelegatorRewardResponseExample = [
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Delegator rewards withdrawal submitted successfully.",
             action: "MSG_WITHDRAW_DELEGATOR_REWARD",
@@ -167,7 +167,7 @@ export const msgWithdrawDelegatorRewardTransactionResponseExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Withdraw delegator reward transaction processed successfully.",
             action: "MSG_WITHDRAW_DELEGATOR_REWARD_RESPONSE",
@@ -190,7 +190,7 @@ export const msgWithdrawValidatorCommissionExample = [
 
 export const msgWithdrawValidatorCommissionResponseExample = [
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Validator commission withdrawal submitted successfully.",
             action: "MSG_WITHDRAW_VALIDATOR_COMMISSION",
@@ -209,7 +209,7 @@ export const msgWithdrawValidatorCommissionTransactionResponseExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Withdraw validator commission transaction processed successfully.",
             action: "MSG_WITHDRAW_VALIDATOR_COMMISSION_RESPONSE",

@@ -10,7 +10,7 @@ export const getPeggyModuleParamsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Peggy module parameters retrieved successfully.",
             action: "GET_PEGGY_MODULE_PARAMS",
@@ -50,7 +50,7 @@ export const msgSendToEthExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Tokens sent to Ethereum successfully.",
             action: "MSG_SEND_TO_ETH",

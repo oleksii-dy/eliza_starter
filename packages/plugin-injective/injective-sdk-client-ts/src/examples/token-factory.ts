@@ -10,7 +10,7 @@ export const getDenomsFromCreatorExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Denominations created by 'inj1creator...' retrieved successfully.",
             action: "GET_DENOMS_FROM_CREATOR",
@@ -34,7 +34,7 @@ export const getDenomAuthorityMetadataExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Authority metadata for denomination 'peggy0xabc...' retrieved successfully.",
             action: "GET_DENOM_AUTHORITY_METADATA",
@@ -57,7 +57,7 @@ export const getTokenFactoryModuleParamsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Token Factory module parameters retrieved successfully.",
             action: "GET_TOKEN_FACTORY_MODULE_PARAMS",
@@ -78,7 +78,7 @@ export const getTokenFactoryModuleStateExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Token Factory module state retrieved successfully.",
             action: "GET_TOKEN_FACTORY_MODULE_STATE",
@@ -99,7 +99,7 @@ export const msgBurnExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Burn transaction submitted successfully.",
             action: "MSG_BURN",
@@ -119,7 +119,7 @@ export const msgChangeAdminExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Admin change for denomination 'peggy0xabc...' submitted successfully.",
             action: "MSG_CHANGE_ADMIN",
@@ -139,7 +139,7 @@ export const msgCreateDenomExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Denomination 'peggy0xjkl...' created successfully.",
             action: "MSG_CREATE_DENOM",
@@ -159,7 +159,7 @@ export const msgMintExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Mint transaction submitted successfully.",
             action: "MSG_MINT",
@@ -179,7 +179,7 @@ export const msgSetDenomMetadataExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Denomination metadata for 'peggy0xabc...' set successfully.",
             action: "MSG_SET_DENOM_METADATA",

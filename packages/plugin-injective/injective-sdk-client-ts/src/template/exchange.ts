@@ -174,30 +174,8 @@ Here are the recent user messages for context:
 {{recentMessages}}
 `;
 
-export const getPositionsTemplate = `
-Extract the following details for positions query:
-- **marketId** (string, optional): Market ID filter
-- **marketIds** (string[], optional): Multiple market IDs filter
-- **subaccountId** (string, optional): Subaccount ID filter
-- **direction** (string, optional): Position direction filter
-- **pagination** (object, optional): Pagination options
-
-Provide the request in the following JSON format:
-
-\`\`\`json
-{
-    "marketId": "market_id",
-    "marketIds": ["market_id1", "market_id2"],
-    "subaccountId": "subaccount_id",
-    "direction": "long",
-    "pagination": {
-        "from": 1,
-        "to": 100,
-        "limit": 10
-    }
-}
-\`\`\`
-
+export const getExchangePositionsTemplate = `
+Extract the exchange module's open positions
 Response format:
 
 \`\`\`json
@@ -2324,7 +2302,7 @@ Here are the recent user messages for context:
 {{recentMessages}}
 `;
 
-export const getOrderbooksTemplate = `
+export const getOrderbookTemplate = `
 Extract the following details for orderbooks:
 - **marketIds** (string[]): Market IDs
 
@@ -2340,26 +2318,24 @@ Response format:
 
 \`\`\`json
 {
-    "orderbooks": [
-        {
-            "marketId": "0x...",
-            "orderbook": {
-                "sequence": "123",
-                "buys": [
-                    {
-                        "price": "25000.5",
-                        "quantity": "1.5",
-                        "timestamp": 1641859200
-                    }
-                ],
-                "sells": [
-                    {
-                        "price": "25100.5",
-                        "quantity": "0.5",
-                        "timestamp": 1641859200
-                    }
-                ]
-            }
+    "orderbook": [
+        "marketId": "0x...",
+        "orderbook": {
+            "sequence": "123",
+            "buys": [
+                {
+                    "price": "25000.5",
+                    "quantity": "1.5",
+                    "timestamp": 1641859200
+                }
+            ],
+            "sells": [
+                {
+                    "price": "25100.5",
+                    "quantity": "0.5",
+                    "timestamp": 1641859200
+                }
+            ]
         }
     ]
 }

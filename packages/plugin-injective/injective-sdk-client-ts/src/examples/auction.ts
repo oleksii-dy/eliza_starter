@@ -6,7 +6,7 @@ export const getAuctionModuleParamsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Auction module parameters retrieved successfully.",
             action: "GET_AUCTION_MODULE_PARAMS",
@@ -26,7 +26,7 @@ export const getAuctionModuleStateExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Auction module state retrieved successfully.",
             action: "GET_AUCTION_MODULE_STATE",
@@ -54,7 +54,7 @@ export const getCurrentBasketExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Current auction basket details retrieved successfully.",
             action: "GET_CURRENT_BASKET",
@@ -86,7 +86,7 @@ export const getAuctionRoundExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Auction round 12 details retrieved successfully.",
             action: "GET_AUCTION_ROUND",
@@ -133,7 +133,7 @@ export const getAuctionsExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "List of auctions retrieved successfully.",
             action: "GET_AUCTIONS",
@@ -185,7 +185,7 @@ export const msgBidExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Bid placed successfully.",
             action: "PLACE_BID",
@@ -205,7 +205,7 @@ export const msgBidResponseExample = [
         },
     },
     {
-        user: "{{user2}}",
+        user: "{{agent}}",
         content: {
             text: "Bid transaction processed.",
             action: "BID_TRANSACTION_RESPONSE",
