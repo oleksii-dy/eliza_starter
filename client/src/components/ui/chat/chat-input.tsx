@@ -1,23 +1,23 @@
-import * as React from "react";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { forwardRef } from "react";
 
-interface ChatInputProps
+export interface TextareaProps
     extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
 
-const ChatInput = React.forwardRef<HTMLTextAreaElement, ChatInputProps>(
-    ({ className, ...props }, ref) => (
-        <Textarea
-            autoComplete="off"
-            ref={ref}
-            name="message"
-            className={cn(
-                "max-h-12 px-4 py-3 bg-background text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 w-full rounded-md flex items-center h-16 resize-none",
-                className
-            )}
-            {...props}
-        />
-    )
+const ChatInput = forwardRef<HTMLTextAreaElement, TextareaProps>(
+    ({ className, ...props }, ref) => {
+        return (
+            <textarea
+                ref={ref}
+                className={cn(
+                    "flex w-full rounded-md border border-input bg-card px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-200",
+                    "min-h-[80px] resize-none",
+                    className
+                )}
+                {...props}
+            />
+        );
+    }
 );
 ChatInput.displayName = "ChatInput";
 

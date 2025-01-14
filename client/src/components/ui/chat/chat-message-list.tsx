@@ -1,49 +1,28 @@
-import * as React from "react";
-import { ArrowDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useAutoScroll } from "@/components/ui/chat/hooks/useAutoScroll";
+import { cn } from "@/lib/utils";
+import { forwardRef } from "react";
+import { useAutoScroll } from "./hooks/useAutoScroll";
 
-interface ChatMessageListProps extends React.HTMLAttributes<HTMLDivElement> {
-    smooth?: boolean;
-}
+const ChatMessageList = forwardRef<
+    HTMLDivElement,
+    React.HTMLAttributes<HTMLDivElement>
+>(({ className, children, ...props }, ref) => {
+    useAutoScroll(ref as React.RefObject<HTMLDivElement>);
 
-const ChatMessageList = React.forwardRef<HTMLDivElement, ChatMessageListProps>(
-    ({ className, children, smooth = false, ...props }, _ref) => {
-        const { scrollRef, isAtBottom, scrollToBottom, disableAutoScroll } =
-            useAutoScroll({
-                smooth,
-                content: children,
-            });
-
-        return (
-            <div className="relative w-full h-full">
-                <div
-                    className={`flex flex-col w-full h-full p-4 overflow-y-auto ${className}`}
-                    ref={scrollRef}
-                    onWheel={disableAutoScroll}
-                    onTouchMove={disableAutoScroll}
-                    {...props}
-                >
-                    <div className="flex flex-col gap-6">{children}</div>
-                </div>
-
-                {!isAtBottom && (
-                    <Button
-                        onClick={() => {
-                            scrollToBottom();
-                        }}
-                        size="icon"
-                        variant="outline"
-                        className="absolute bottom-2 left-1/2 transform -translate-x-1/2 inline-flex rounded-full shadow-md"
-                    >
-                        <ArrowDown className="h-4 w-4" />
-                    </Button>
-                )}
-            </div>
-        );
-    }
-);
-
+    return (
+        <div
+            ref={ref}
+            className={cn(
+                "flex flex-col gap-4 overflow-y-auto p-4 scroll-smooth",
+                "scrollbar-thin scrollbar-thumb-primary/10 scrollbar-track-transparent hover:scrollbar-thumb-primary/20",
+                "bg-gradient-to-b from-background/50 to-background",
+                className
+            )}
+            {...props}
+        >
+            {children}
+        </div>
+    );
+});
 ChatMessageList.displayName = "ChatMessageList";
 
 export { ChatMessageList };
