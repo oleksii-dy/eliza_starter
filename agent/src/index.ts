@@ -774,7 +774,10 @@ export async function createAgent(
             getSecret(character, "SOLANA_ADMIN_PRIVATE_KEY")
                 ? nftGenerationPlugin
                 : null,
-            getSecret(character, "OPENAI_API_KEY") ? aimePlugin : null,
+            getSecret(character, "AIME_ENDPOINT") &&
+            getSecret(character, "AIME_ONCHAIN_ADDRESS")
+                ? aimePlugin
+                : null,
             getSecret(character, "ZEROG_PRIVATE_KEY") ? zgPlugin : null,
             getSecret(character, "COINMARKETCAP_API_KEY")
                 ? coinmarketcapPlugin

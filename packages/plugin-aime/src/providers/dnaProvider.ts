@@ -1,7 +1,4 @@
 import { Provider, IAgentRuntime, Memory, elizaLogger } from "@elizaos/core";
-import { AIME_CONSTANTS } from "../constants";
-
-const ONCHAIN_AIME_ADDRESS_TEST = "0x1F45A918807De7F3654B61dE9faa817953210E66";
 
 export const dnaProvider: Provider = {
     get: async (runtime: IAgentRuntime, message: Memory) => {
@@ -16,13 +13,18 @@ export const dnaProvider: Provider = {
                 .join("\n");
 
             // Call NFT retrieval API
-            const response = await fetch(AIME_CONSTANTS.AIME_ENDPOINT, {
-                method: "POST",
-                headers: {
+            const response = await fetch(
+                runtime.getSetting("AIME_ENDPOINT") ??
+                    process.env.AIME_ENDPOINT,
+                {
+                    method: "POST",
+                    headers: {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        onchain_aime_address: AIME_CONSTANTS.ONCHAIN_AIME_ADDRESS_TEST,
+                        onchain_aime_address:
+                            runtime.getSetting("AIME_ONCHAIN_ADDRESS") ??
+                            process.env.AIME_ONCHAIN_ADDRESS,
                         context: context,
                         message: message.content.text,
                     }),
