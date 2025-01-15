@@ -517,7 +517,7 @@ export class TwitterPostClient {
             } catch (error) {
                 error.linted = true; // make linter happy since catch needs a variable
                 // If not JSON, clean the raw content
-                let cleanedContent = newTweetContent
+                cleanedContent = newTweetContent
                     .replace(/^\s*{?\s*"text":\s*"|"\s*}?\s*$/g, "") // Remove JSON-like wrapper
                     .replace(/^["']|["']$/g, "") // Remove leading/trailing quotes
                     .replace(/\\"/g, '"') // Unescape quotes
@@ -525,6 +525,7 @@ export class TwitterPostClient {
                     .replace(/^\d+\.\s*/gm, "") // Remove all numbered list markers
                     .replace(/\n+\s*$/, "") // Clean up trailing newlines
                     .trim();
+            }
                 
             if (!cleanedContent) {
                 elizaLogger.error(
