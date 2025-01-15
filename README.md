@@ -4,7 +4,7 @@
 
 This is a fork of the Eliza client repository with an improved Solana plug-in and a new character who handles all Solana based transactions: SBF.
 
-The transfer action was split into two separate actions: SEND_SOL and SEND_TOKEN.
+The transfer action in solana-plugin was split into two separate actions: SEND_SOL and SEND_TOKEN.
 
 This way the agent can handle different transactions better than having both actions in one.
 
@@ -20,17 +20,18 @@ As plugins and characters in Eliza agentic world go hand-in-hand, SBF is a chara
 
 # Setup the client
 
-Rename .env.example to .env
+`cp .env.example .env`
 
 Input your ANTHROPIC_API_KEY, SOLANA_PRIVATE_KEY and SOLANA_PUBLIC_KEY in .env.
 
 I recommend using Anthropic's Claude, because the success rate of calling transfer actions is highly correlated with the intelligence of the AI used, but instead of ANTHROPIC_API_KEY, you can use any other model, so long as you specify it in the character.json file.
 
-If you plan on using the client-twitter feature, you need to input your TWITTER_USERNAME, TWITTER_PASSWORD and TWITTER_EMAIL.
+If you plan on using the client-twitter feature, in sbf.character.json change `"clients": []` to `"clients": ["twitter"]`
+
+then you need to input your TWITTER_USERNAME, TWITTER_PASSWORD and TWITTER_EMAIL.
 
 Put in the usernames you want to target in TWITTER_TARGET_USERS separated by commas.
 
-If you don't want to use twitter integration, in sbf.character.json change "clients": ["twitter"] to "clients": []
 
 run `pnpm install --no-frozen-lockfile` and `pnpm build` to install dependencies and build the project.
 
