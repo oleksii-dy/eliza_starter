@@ -63,13 +63,12 @@ pnpm i && pnpm build && pnpm start
 
 ### Manually Start Eliza (Only recommended if you know what you are doing)
 
-#### Checkout to latest release
+# Checkout the latest release
 
 ```bash
 # Clone the repository
 git clone https://github.com/elizaos/eliza.git
 
-# Checkout the latest release
 # This project iterates fast, so we recommend checking out the latest release
 git checkout $(git describe --tags --abbrev=0)
 # If the above doesn't checkout the latest release, this should work:
