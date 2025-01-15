@@ -63,7 +63,7 @@ pnpm i && pnpm build && pnpm start
 
 ### Manually Start Eliza (Only recommended if you know what you are doing)
 
-# Checkout the latest release
+#### Checkout the latest release
 
 ```bash
 # Clone the repository
