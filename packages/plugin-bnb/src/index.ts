@@ -11,6 +11,7 @@ import { getBalanceAction } from "./actions/getBalance";
 import { bridgeAction } from "./actions/bridge";
 import { stakeAction } from "./actions/stake";
 import { deployAction } from "./actions/deploy";
+import { greenfieldAction } from "./actions/gnfd";
 
 export const bnbPlugin: Plugin = {
     name: "bnb",
@@ -25,6 +26,7 @@ export const bnbPlugin: Plugin = {
         bridgeAction, // NOTE: The bridge action only supports bridge funds between BSC and opBNB for now. We may adding stargate support later.
         stakeAction,
         deployAction,
+        greenfieldAction,
     ],
 };
 

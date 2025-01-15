@@ -153,3 +153,26 @@ Required response format:
 }
 \`\`\`
 `;
+
+export const greenfieldTemplate = `Given the recent messages and wallet information below:
+
+{{recentMessages}}
+
+{{walletInfo}}
+
+Extract the following details for Greenfield operations:
+- **actionType** (string): The type of operation to perform (e.g., "createBucket", "uploadObject", "deleteBucket")
+- **bucketName** (string): The name of the bucket to operate on
+- **objectName** (string, optional): The name of the object for upload/download operations
+- **visibility** (string, optional): Bucket visibility setting ("private" or "public")
+
+Required response format:
+\`\`\`json
+{
+    "actionType": "createBucket" | "uploadObject" | "deleteBucket" | "downloadObject",
+    "bucketName": string,
+    "objectName": string,
+    "visibility": "private" | "public"
+}
+\`\`\`
+`;
