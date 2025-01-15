@@ -75,11 +75,7 @@ describe("SQLite3VerifiableDAO", () => {
 
     describe("SQLite3VerifiableDAO Management", () => {
         it("should addLog and pageQueryLogs when available", async () => {
-<<<<<<< HEAD
-            let testId = uuidv4();
-=======
             const testId = uuidv4();
->>>>>>> sif-dev
             await sqLite3VerifiableDAO.addLog(<VerifiableLog>{
                 id: testId,
                 agent_id: "dddd",
