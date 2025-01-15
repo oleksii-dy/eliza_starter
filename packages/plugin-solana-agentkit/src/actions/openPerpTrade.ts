@@ -148,15 +148,14 @@ export default  {
         );
 
         try {
-            const responseJup = await fetch(`https://api.jup.ag/price/v2?ids=${content.tradeMint.toString()}`)
-            const jsonstr = JSON.stringify(responseJup)
-            const jsonObj = JSON.parse(jsonstr)
-            const jsonidk = responseJup.json();
-            console.log(jsonidk);
-            console.log("jupiter api price says: ", jsonObj);
-            const priceFeedID = await solanaAgentKit.getPythPriceFeedID("SOL");
-            const tokenPrice = await solanaAgentKit.getPythPrice(priceFeedID);
-            content.price = Number(tokenPrice);
+            const responseJup = await fetch(`https://quote-api.jup.ag/v4/price?ids=${content.tradeMint}`);
+            const json = await responseJup.json();
+            if (json.data && json.data[content.tradeMint] && json.data[content.tradeMint].price) {
+                content.price = json.data[content.tradeMint].price;
+                elizaLogger.log("Jupiter API price: ", content.price);
+            } else {
+                throw new Error("Failed to fetch price from Jupiter API");
+            }
             console.log("fetched token price: ", content.price);
 
             // const getComputeUnitEstimate = getComputeUnitEstimateForTransactionMessageFactory({ rpc });
