@@ -1163,8 +1163,23 @@ export class TwitterPostClient {
             }
 
             elizaLogger.debug("Final reply text to be sent:", replyText);
+
+            // temporary fix
+            const _replyText = replyText;
+
+            // Regular expression untuk menangkap teks
+            const regex = /{ "user": "SUIRISE", "text": "(.*)/;
+
+            // Ekstrak teks menggunakan regex
+            const match = regex.exec(_replyText);
+            let finalReplyText;
+            if (match) {
+                finalReplyText = match[1]; // Ambil grup pertama
+            } else {
+                finalReplyText = replyText;
+            }
             console.log("Final reply text to be sent:", {
-                replyText,
+                finalReplyText,
                 length: replyText.length,
             });
             let result;
@@ -1172,25 +1187,43 @@ export class TwitterPostClient {
             if (replyText.length > DEFAULT_MAX_TWEET_LENGTH) {
                 result = await this.handleNoteTweet(
                     this.client,
-                    replyText,
+                    finalReplyText,
                     tweet.id
                 );
             } else {
                 result = await this.sendStandardTweet(
                     this.client,
-                    replyText,
+                    finalReplyText,
                     tweet.id
                 );
             }
+
+            // if (replyText.length > DEFAULT_MAX_TWEET_LENGTH) {
+            //     result = await this.handleNoteTweet(
+            //         this.client,
+            //         replyText,
+            //         tweet.id
+            //     );
+            // } else {
+            //     result = await this.sendStandardTweet(
+            //         this.client,
+            //         replyText,
+            //         tweet.id
+            //     );
+            // }
 
             if (result) {
                 elizaLogger.log("Successfully posted reply tweet");
                 executedActions.push("reply");
 
                 // Cache generation context for debugging
+                // await this.runtime.cacheManager.set(
+                //     `twitter/reply_generation_${tweet.id}.txt`,
+                //     `Context:\n${enrichedState}\n\nGenerated Reply:\n${replyText}`
+                // );
                 await this.runtime.cacheManager.set(
                     `twitter/reply_generation_${tweet.id}.txt`,
-                    `Context:\n${enrichedState}\n\nGenerated Reply:\n${replyText}`
+                    `Context:\n${enrichedState}\n\nGenerated Reply:\n${finalReplyText}`
                 );
             } else {
                 elizaLogger.error("Tweet reply creation failed");
