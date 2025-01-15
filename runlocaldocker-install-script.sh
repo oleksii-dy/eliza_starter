@@ -1,3 +1,3 @@
 #!/bin/bash
-apt get update
+apt update
 apt install -y strace
