@@ -1,7 +1,7 @@
 {
     "name": "Sweet Agent",
     "clients": ["direct"],
-    "modelProvider": "openai",
+    "modelProvider": "groq",
     "settings": {
         "secrets": {},
         "voice": {

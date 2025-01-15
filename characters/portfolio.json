@@ -1,9 +1,9 @@
 {
     "name": "Portfolio Agent",
     "clients": ["direct"],
-    "modelProvider": "openai",
+    "modelProvider": "groq",
     "plugins": ["@elizaos/plugin-suimarket"],
-    
+
     "image": {
       "enabled": false
     },
