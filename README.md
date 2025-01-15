@@ -39,6 +39,8 @@ run `pnpm start --character="characters/sbf.character.json"` to start SBF agent 
 
 run `pnpm start:client` to start the client and chat with SBF using the client.
 
+NOTE: If something does not work, make the appropriate changes, delete the agent/data/db.sqlite file and `pnpm build` again to make sure your changes are reflected.
+
 # Using the Solana plug-in
 
 If you want the agent to send you SOL or SPL tokens, you need to simply tell the agent to do so.
