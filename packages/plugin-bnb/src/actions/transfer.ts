@@ -215,20 +215,44 @@ export const transferAction = {
     examples: [
         [
             {
-                user: "assistant",
+                user: "{{user1}}",
                 content: {
-                    text: "I'll help you transfer 1 BNB to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
-                    action: "SEND_TOKENS",
+                    text: "Transfer 1 BNB to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
                 },
             },
             {
-                user: "user",
+                user: "{{agent}}",
                 content: {
-                    text: "Transfer 1 BNB to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
-                    action: "SEND_TOKENS",
+                    action: "TRANSFER",
+                    content: {
+                        chain: "bsc",
+                        token: "BNB",
+                        amount: "1",
+                        toAddress: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Transfer 1 token of 0x1234 to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    action: "TRANSFER",
+                    content: {
+                        chain: "bsc",
+                        token: "0x1234",
+                        amount: "1",
+                        toAddress: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+                    },
                 },
             },
         ],
     ],
-    similes: ["SEND_TOKENS", "TOKEN_TRANSFER", "MOVE_TOKENS"],
+    similes: ["TRANSFER", "SEND_TOKENS", "TOKEN_TRANSFER", "MOVE_TOKENS"],
 };

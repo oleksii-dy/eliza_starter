@@ -138,13 +138,46 @@ export const swapAction = {
     examples: [
         [
             {
-                user: "user",
+                user: "{{user1}}",
                 content: {
-                    text: "Swap 1 BNB for USDC on Bsc",
-                    action: "TOKEN_SWAP",
+                    text: "Swap 1 BNB for USDC on BSC",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    action: "SWAP",
+                    content: {
+                        chain: "bsc",
+                        inputToken: "BNB",
+                        outputToken: "USDC",
+                        amount: "1",
+                        slippage: undefined,
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Buy some token of 0x1234 using 1 USDC on BSC. The slippage should be no more than 5%",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    action: "SWAP",
+                    content: {
+                        chain: "bsc",
+                        inputToken: "USDC",
+                        outputToken: "0x1234",
+                        amount: "1",
+                        slippage: 0.05,
+                    },
                 },
             },
         ],
     ],
-    similes: ["TOKEN_SWAP", "EXCHANGE_TOKENS", "TRADE_TOKENS"],
+    similes: ["SWAP", "TOKEN_SWAP", "EXCHANGE_TOKENS", "TRADE_TOKENS"],
 };

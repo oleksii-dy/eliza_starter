@@ -233,38 +233,90 @@ export const stakeAction = {
     examples: [
         [
             {
-                user: "user",
+                user: "{{user1}}",
                 content: {
-                    text: "Delegate 1 BNB to Lista DAO on BSC",
-                    action: "delegate",
+                    text: "Stake 1 BNB on BSC",
                 },
             },
             {
-                user: "user",
+                user: "{{agent}}",
                 content: {
-                    text: "Stake 1 BNB to Lista DAO on BSC",
-                    action: "stake",
+                    action: "STAKE",
+                    content: {
+                        action: "deposit",
+                        amount: "1",
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Deposit 1 BNB to Lista DAO",
                 },
             },
             {
-                user: "user",
+                user: "{{agent}}",
                 content: {
-                    text: "Deposit 1 BNB to Lista DAO on BSC",
-                    action: "deposit",
+                    action: "STAKE",
+                    content: {
+                        action: "deposit",
+                        amount: "1",
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Undelegate 1 BNB on BSC",
                 },
             },
             {
-                user: "user",
+                user: "{{agent}}",
                 content: {
-                    text: "Withdraw 1 BNB from Lista DAO on BSC",
-                    action: "withdraw",
+                    action: "STAKE",
+                    content: {
+                        action: "withdraw",
+                        amount: "1",
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Withdraw 1 BNB from Lista DAO",
                 },
             },
             {
-                user: "user",
+                user: "{{agent}}",
                 content: {
-                    text: "Claim locked BNB from Lista DAO on BSC",
-                    action: "claim",
+                    action: "STAKE",
+                    content: {
+                        action: "withdraw",
+                        amount: "1",
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Claim unlocked BNB from Lista DAO",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    action: "STAKE",
+                    content: {
+                        action: "claim",
+                    },
                 },
             },
         ],

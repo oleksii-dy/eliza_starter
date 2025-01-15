@@ -373,28 +373,86 @@ export const bridgeAction = {
     examples: [
         [
             {
-                user: "user",
+                user: "{{user1}}",
                 content: {
                     text: "Transfer 1 BNB from BSC to opBNB",
-                    action: "BRIDGE",
                 },
             },
-        ],
-        [
             {
-                user: "user",
+                user: "{{agent}}",
                 content: {
-                    text: "Deposit 1 BNB from BSC to opBNB",
-                    action: "DEPOSIT",
+                    action: "BRIDGE",
+                    content: {
+                        fromChain: "bsc",
+                        toChain: "opBNB",
+                        fromToken: undefined,
+                        toToken: undefined,
+                        amount: 1,
+                    },
                 },
             },
         ],
         [
             {
-                user: "user",
+                user: "{{user1}}",
+                content: {
+                    text: "Transfer 1 BNB from BSC to 0x1234 on opBNB",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    action: "BRIDGE",
+                    content: {
+                        fromChain: "bsc",
+                        toChain: "opBNB",
+                        fromToken: undefined,
+                        toToken: undefined,
+                        amount: 1,
+                        toAddress: "0x1234",
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Deposit 1 token of 0x1234 from BSC to 0x5678 opBNB",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    action: "BRIDGE",
+                    content: {
+                        fromChain: "bsc",
+                        toChain: "opBNB",
+                        fromToken: "0x1234",
+                        toToken: "0x5678",
+                        amount: 1,
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
                 content: {
                     text: "Withdraw 1 BNB from opBNB to BSC",
-                    action: "WITHDRAW",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    action: "BRIDGE",
+                    content: {
+                        fromChain: "opBNB",
+                        toChain: "bsc",
+                        fromToken: undefined,
+                        toToken: undefined,
+                        amount: 1,
+                    },
                 },
             },
         ],

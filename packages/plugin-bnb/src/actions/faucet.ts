@@ -181,10 +181,39 @@ export const faucetAction = {
     examples: [
         [
             {
-                user: "user",
+                user: "{{user1}}",
                 content: {
-                    text: "Request some test tokens from the faucet on BSC Testnet",
+                    text: "Get some USDC from the faucet",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "Sure, I'll request some USDC from the faucet on BSC Testnet now.",
                     action: "FAUCET",
+                    content: {
+                        token: "USDC",
+                        toAddress: "{{walletAddress}}",
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Get some test tokens from the faucet on BSC Testnet",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "Of course, getting tBNB from the faucet on BSC Testnet now.",
+                    action: "FAUCET",
+                    content: {
+                        token: "BNB",
+                        toAddress: "{{walletAddress}}",
+                    },
                 },
             },
         ],

@@ -188,17 +188,77 @@ export const getBalanceAction = {
     examples: [
         [
             {
-                user: "user",
+                user: "{{user1}}",
                 content: {
-                    text: "Check balance of USDC on Bsc",
-                    action: "GET_BALANCE",
+                    text: "Check my balance of USDC",
                 },
             },
             {
-                user: "user",
+                user: "{{agent}}",
                 content: {
-                    text: "Check balance of USDC for 0x742d35Cc6634C0532925a3b844Bc454e4438f44e on Bsc",
-                    action: "CHECK_BALANCE",
+                    action: "GET_BALANCE",
+                    content: {
+                        chain: "bsc",
+                        address: "{{walletAddress}}",
+                        token: "USDC",
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Check my balance of token 0x1234",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    action: "GET_BALANCE",
+                    content: {
+                        chain: "bsc",
+                        address: "{{walletAddress}}",
+                        token: "0x1234",
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Get USDC balance of 0x1234",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    action: "GET_BALANCE",
+                    content: {
+                        chain: "bsc",
+                        address: "0x1234",
+                        token: "USDC",
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Check my wallet balance on BSC",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    action: "GET_BALANCE",
+                    content: {
+                        chain: "bsc",
+                        address: "{{walletAddress}}",
+                        token: undefined,
+                    },
                 },
             },
         ],
