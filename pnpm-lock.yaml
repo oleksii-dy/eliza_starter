@@ -238,6 +238,9 @@ importers:
       '@elizaos/plugin-depin':
         specifier: workspace:*
         version: link:../packages/plugin-depin
+      '@elizaos/plugin-dexscreener':
+        specifier: workspace:*
+        version: link:../packages/plugin-dexscreener
       '@elizaos/plugin-echochambers':
         specifier: workspace:*
         version: link:../packages/plugin-echochambers
@@ -1136,9 +1139,6 @@ importers:
       '@solana/web3.js':
         specifier: 1.95.8
         version: 1.95.8(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      '@tavily/core':
-        specifier: ^0.0.2
-        version: 0.0.2
       '@types/fluent-ffmpeg':
         specifier: 2.1.27
         version: 2.1.27
@@ -1756,6 +1756,18 @@ importers:
       axios:
         specifier: ^1.7.9
         version: 1.7.9(debug@4.4.0)
+      tsup:
+        specifier: 8.3.5
+        version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.5.0)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
+      whatwg-url:
+        specifier: 7.1.0
+        version: 7.1.0
+
+  packages/plugin-dexscreener:
+    dependencies:
+      '@elizaos/core':
+        specifier: workspace:*
+        version: link:../core
       tsup:
         specifier: 8.3.5
         version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.5.0)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
@@ -3132,6 +3144,12 @@ importers:
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
+      '@tavily/core':
+        specifier: ^0.0.2
+        version: 0.0.2
+      js-tiktoken:
+        specifier: 1.0.15
+        version: 1.0.15
       tsup:
         specifier: 8.3.5
         version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.5.0)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
