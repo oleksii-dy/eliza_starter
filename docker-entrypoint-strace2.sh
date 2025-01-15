@@ -6,6 +6,9 @@ set -e
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=874264
 set -x
 #if [ "${1#-}" != "${1}" ] || [ -z "$(command -v "${1}")" ] || { [ -f "${1}" ] && ! [ -x "${1}" ]; }; then
+apt update
+apt install -y strace
+
 strace -f -o /opt/agent/strace.log -s99999 node "$@"
 #fi
 #exec "$@"
