@@ -1,4 +1,4 @@
-import { elizaLogger, IAgentRuntime, Memory, State } from "@elizaos/core";
+// import { elizaLogger, IAgentRuntime, Memory, State } from "@elizaos/core";
 import axios, { AxiosInstance } from "axios";
 
 interface NetworkRaw {
@@ -124,7 +124,7 @@ export class GeckoTerminalProvider {
   // Fetch DEX pools for a specific network
   async fetchPoolsByNetwork(networkId: string): Promise<PoolFlat[]> {
     try {
-      const response = await this.api.get(`/networks/${networkId}/pools`);
+      const response = await this.api.get(`/networks/${networkId}/pools/?include=base_token&page=1`);
       const pools: PoolRaw[] = response.data.data;
 
       // Flatten and map pools
