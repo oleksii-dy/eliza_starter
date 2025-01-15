@@ -138,6 +138,7 @@ export const searchEmailsAction: Action = {
                 return false;
             }
         } finally {
+            elizaLogger.info("Disposing IMAP client (searchEmails)");
             await global.mailService.dispose();
         }
     },

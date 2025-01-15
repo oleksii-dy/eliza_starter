@@ -19,9 +19,11 @@ export class MailPluginService extends Service {
 
     private runtime: IAgentRuntime;
     private checkInterval: NodeJS.Timeout | null = null;
+    private checking = false;
 
     async initialize(runtime: IAgentRuntime) {
         this.runtime = runtime;
+        this.checking = false;
 
         elizaLogger.info("Initializing mail plugin");
         const mailConfig = validateMailConfig(this.runtime);
@@ -34,8 +36,14 @@ export class MailPluginService extends Service {
             this.checkInterval = setInterval(
                 async () => {
                     try {
-                        await mailService.connect();
+                        if (this.checking) {
+                            elizaLogger.info("Already checking for emails...");
+                            return;
+                        }
+
+                        this.checking = true;
                         const emails = await mailService.getRecentEmails();
+
                         elizaLogger.debug("Checking for new emails", {
                             count: emails.length,
                         });
@@ -63,6 +71,8 @@ export class MailPluginService extends Service {
                             message: error.message,
                             stack: error.stack,
                         });
+                    } finally {
+                        this.checking = false;
                     }
                 },
                 (mailConfig.checkInterval || 60) * 1000

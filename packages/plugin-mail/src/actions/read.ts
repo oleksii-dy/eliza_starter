@@ -1,5 +1,6 @@
 import {
     Action,
+    elizaLogger,
     generateText,
     HandlerCallback,
     IAgentRuntime,
@@ -69,6 +70,7 @@ export const readEmailsAction: Action = {
 
             return true;
         } finally {
+            elizaLogger.info("Disposing IMAP client (readEmails)");
             await global.mailService.dispose();
         }
     },

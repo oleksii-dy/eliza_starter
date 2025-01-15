@@ -1,4 +1,10 @@
-import { Action, HandlerCallback, IAgentRuntime, Memory } from "@elizaos/core";
+import {
+    Action,
+    elizaLogger,
+    HandlerCallback,
+    IAgentRuntime,
+    Memory,
+} from "@elizaos/core";
 
 export interface MarkAsReadContent {
     uid: number;
@@ -35,6 +41,7 @@ export const markAsReadAction: Action = {
 
             return true;
         } finally {
+            elizaLogger.info("Disposing IMAP client (markAsRead)");
             await global.mailService.dispose();
         }
     },

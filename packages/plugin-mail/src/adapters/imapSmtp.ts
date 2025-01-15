@@ -39,13 +39,13 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
         this.client = new ImapFlow({
             host: this.config.imap.host,
             port: this.config.imap.port,
-            secure: true,
+            secure: this.config.imap.secure,
             auth: {
                 user: this.config.imap.user,
                 pass: this.config.imap.password,
             },
-            logger: false,
-            emitLogs: false,
+            // logger: false,
+            // emitLogs: false,
             tls: {
                 rejectUnauthorized: true,
                 minVersion: "TLSv1.2",
@@ -100,7 +100,6 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
             try {
                 this.reconnectAttempts++;
                 await this.client.connect();
-                await this.client.mailboxOpen("INBOX");
                 this.isConnected = true;
                 this.connectionPromise = null;
                 elizaLogger.debug("Connected to IMAP server and opened INBOX");
@@ -135,9 +134,17 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
             maxEmails: this.config.maxEmails,
         });
 
-        const lock = await this.client.getMailboxLock("INBOX");
+        let lock: any;
+
         try {
+            lock = await this.client.getMailboxLock("INBOX");
             const mailbox = this.client.mailbox;
+            if (!mailbox) {
+                elizaLogger.warn("Mailbox not available, reconnecting...");
+                await this.handleDisconnect();
+                await this.ensureConnection();
+                return this.getRecentEmails();
+            }
 
             if (this.uidValidity && this.uidValidity !== mailbox.uidValidity) {
                 elizaLogger.warn("UIDVALIDITY changed, resetting lastUID", {
@@ -159,24 +166,29 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
             const emails: EmailMessage[] = [];
             let highestUID = this.lastUID;
 
-            for await (const message of this.client.fetch(
-                `${this.lastUID + 1}:*`,
-                {
-                    uid: true,
-                    envelope: true,
-                    source: true,
-                    internalDate: true,
-                    flags: true,
-                }
-            )) {
-                if (emails.length >= this.config.maxEmails) break;
+            try {
+                for await (const message of this.client.fetch(
+                    `${this.lastUID + 1}:*`,
+                    {
+                        uid: true,
+                        envelope: true,
+                        source: true,
+                        internalDate: true,
+                        flags: true,
+                    }
+                )) {
+                    if (emails.length >= this.config.maxEmails) break;
 
-                const parsed = await this.parseMessage(message);
-                if (parsed) {
-                    emails.push(parsed);
-                }
+                    const parsed = await this.parseMessage(message);
+                    if (parsed) {
+                        emails.push(parsed);
+                    }
 
-                highestUID = Math.max(highestUID, message.uid);
+                    highestUID = Math.max(highestUID, message.uid);
+                }
+            } catch (error) {
+                elizaLogger.error("Error fetching messages:", error);
+                throw error;
             }
 
             this.lastUID = highestUID;
@@ -187,7 +199,9 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
 
             return emails;
         } finally {
-            lock.release();
+            if (lock) {
+                lock.release();
+            }
         }
     }
 
@@ -200,9 +214,14 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
             criteria: imapCriteria,
         });
 
-        const lock = await this.client.getMailboxLock("INBOX");
-
+        let lock: any;
         try {
+            elizaLogger.info("Getting mailbox lock");
+            lock = await this.client.getMailboxLock("INBOX");
+
+            elizaLogger.info("Searching emails with criteria", {
+                criteria: imapCriteria,
+            });
             const results = await this.client.search({ or: imapCriteria });
             if (!results.length) {
                 return [];
@@ -216,6 +235,9 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
                 internalDate: true,
                 flags: true,
             })) {
+                elizaLogger.info("Fetching message", {
+                    uid: message.uid,
+                });
                 if (emails.length >= this.config.maxEmails) break;
 
                 const parsed = await this.parseMessage(message);
@@ -226,7 +248,9 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
 
             return emails;
         } finally {
-            lock.release();
+            if (lock) {
+                lock.release();
+            }
         }
     }
 
@@ -303,17 +327,22 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
 
     async markAsRead(messageId: string): Promise<void> {
         await this.ensureConnection();
-        const lock = await this.client.getMailboxLock("INBOX");
+
+        let lock: any;
         try {
+            lock = await this.client.getMailboxLock("INBOX");
             await this.client.messageFlagsAdd(messageId, ["\\Seen"]);
         } finally {
-            lock.release();
+            if (lock) {
+                lock.release();
+            }
         }
     }
 
     async dispose(): Promise<void> {
         if (this.isConnected) {
             try {
+                elizaLogger.info("Disposing IMAP client");
                 await this.client.logout();
             } finally {
                 this.isConnected = false;
