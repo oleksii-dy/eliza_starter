@@ -89,7 +89,7 @@ export default {
         if (!isSolTransferContent(content)) {
             if (callback) {
                 callback({
-                    text: "yo, i need like, an address and amount to send the SOL. pretty basic stuff.",
+                    text: "Need an address and the amount of SOL to send.",
                     content: { error: "Invalid transfer content" },
                 });
             }
@@ -122,7 +122,7 @@ export default {
 
             if (callback) {
                 callback({
-                    text: `sent ${content.amount} SOL, basically fine. here's the proof: ${signature}`,
+                    text: `Sent ${content.amount} SOL. Transaction hash: ${signature}`,
                     content: {
                         success: true,
                         signature,
@@ -137,7 +137,7 @@ export default {
             elizaLogger.error("Error during SOL transfer:", error);
             if (callback) {
                 callback({
-                    text: `uh... slight problem with the SOL transfer: ${error.message}`,
+                    text: `Problem with the SOL transfer: ${error.message}`,
                     content: { error: error.message },
                 });
             }
@@ -156,7 +156,7 @@ export default {
             {
                 user: "{{user2}}",
                 content: {
-                    text: "sure thing, sending that SOL now...",
+                    text: "Sure thing, SOL on its way.",
                     action: "SEND_SOL",
                 },
             },

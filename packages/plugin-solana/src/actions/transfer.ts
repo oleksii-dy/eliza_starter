@@ -101,7 +101,7 @@ export default {
         if (!isTransferContent(runtime, content)) {
             if (callback) {
                 callback({
-                    text: "look, i need like, the token address and stuff to make this work. it's pretty basic protocol stuff, you know?",
+                    text: "Token address needed to send the token.",
                     content: { error: "Invalid transfer content" },
                 });
             }
@@ -158,7 +158,7 @@ export default {
 
             if (callback) {
                 callback({
-                    text: `yeah so like, i sent ${content.amount} tokens to ${content.recipient}\nhere's the receipt thing: ${signature}`,
+                    text: `Sent ${content.amount} tokens to ${content.recipient}\nTransaction hash: ${signature}`,
                     content: {
                         success: true,
                         signature,
@@ -173,7 +173,7 @@ export default {
             elizaLogger.error("Error during token transfer:", error);
             if (callback) {
                 callback({
-                    text: `uh... there might be a small issue with the transfer: ${error.message}`,
+                    text: `Issue with the transfer: ${error.message}`,
                     content: { error: error.message },
                 });
             }
@@ -192,7 +192,7 @@ export default {
             {
                 user: "{{user2}}",
                 content: {
-                    text: "cool cool, sending those tokens now...",
+                    text: "Sending the tokens now...",
                     action: "SEND_TOKEN",
                 },
             },
