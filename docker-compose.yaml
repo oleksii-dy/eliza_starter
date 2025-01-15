@@ -45,31 +45,29 @@ services:
     container_name: eliza-agent
     command: pnpm start --characters="characters/Nayari.character.json"
     volumes:
-      - ./characters:/app/characters
+      # Root project files
+      - ./package.json:/app/package.json
+      - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
+      - ./lerna.json:/app/lerna.json
+      - ./turbo.json:/app/turbo.json
       - ./.env:/app/.env
+      - ./.npmrc:/app/.npmrc
+      - ./tsconfig.json:/app/tsconfig.json
+
+      # Workspace packages
+      - ./packages:/app/packages
       - ./agent:/app/agent
+      - ./client:/app/client
       - ./docs:/app/docs
+      - ./characters:/app/characters
       - ./scripts:/app/scripts
-      # Package mounts
-      - ./packages/adapter-postgres/src:/app/packages/adapter-postgres/src
-      - ./packages/adapter-sqlite/src:/app/packages/adapter-sqlite/src
-      - ./packages/adapter-sqljs/src:/app/packages/adapter-sqljs/src
-      - ./packages/adapter-supabase/src:/app/packages/adapter-supabase/src
-      - ./packages/client-auto/src:/app/packages/client-auto/src
-      - ./packages/client-direct/src:/app/packages/client-direct/src
-      - ./packages/client-discord/src:/app/packages/client-discord/src
-      - ./packages/client-farcaster/src:/app/packages/client-farcaster/src
-      - ./packages/client-telegram/src:/app/packages/client-telegram/src
-      - ./packages/client-twitter/src:/app/packages/client-twitter/src
-      - ./packages/core/src:/app/packages/core/src
-      - ./packages/plugin-bootstrap/src:/app/packages/plugin-bootstrap/src
-      - ./packages/plugin-image-generation/src:/app/packages/plugin-image-generation/src
-      - ./packages/plugin-node/src:/app/packages/plugin-node/src
-      - ./packages/plugin-solana/src:/app/packages/plugin-solana/src
-      - ./packages/plugin-evm/src:/app/packages/plugin-evm/src
-      - ./packages/plugin-tee/src:/app/packages/plugin-tee/src
-      # Special case mount
-      - ./packages/core/types:/app/packages/core/types
+
+      # Cache and data directories
+      - agent-cache:/app/packages/core/cache
+      - agent-data:/app/agent/data
+      - node_modules:/app/node_modules
+      - packages-node-modules:/app/packages/node_modules
     networks:
       - web
     depends_on:
@@ -81,10 +79,13 @@ services:
       - "traefik.http.routers.agent.tls.certresolver=letsencrypt"
       - "traefik.http.services.agent.loadbalancer.server.port=3000"
     environment:
-      # API Keys
+      - NODE_ENV=production
+      - SERVER_PORT=3000
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ELEVENLABS_XI_API_KEY=${ELEVENLABS_XI_API_KEY}
-      # Add other necessary environment variables
+      - USE_OPENAI_EMBEDDING=true
+      - CACHE_STORE=database
+      - PGLITE_DATA_DIR=memory://
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
@@ -99,8 +100,24 @@ services:
     container_name: eliza-client
     command: pnpm start:client
     volumes:
-      - ./client:/app/client
+      # Root project files
+      - ./package.json:/app/package.json
+      - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml
+      - ./pnpm-lock.yaml:/app/pnpm-lock.yaml
+      - ./lerna.json:/app/lerna.json
+      - ./turbo.json:/app/turbo.json
       - ./.env:/app/.env
+      - ./.npmrc:/app/.npmrc
+      - ./tsconfig.json:/app/tsconfig.json
+
+      # Workspace packages
+      - ./packages:/app/packages
+      - ./client:/app/client
+      - ./docs:/app/docs
+
+      # Node modules
+      - node_modules:/app/node_modules
+      - packages-node-modules:/app/packages/node_modules
     networks:
       - web
     depends_on:
@@ -113,15 +130,11 @@ services:
       - "traefik.http.routers.client.tls.certresolver=letsencrypt"
       - "traefik.http.services.client.loadbalancer.server.port=5173"
     environment:
-      # Server Configuration
       - NODE_ENV=production
       - PORT=5173
-      # API Configuration
       - VITE_API_URL=https://api.${DOMAIN}
-      # Feature Flags
       - ENABLE_VOICE=${ENABLE_VOICE:-true}
       - ENABLE_STREAMING=${ENABLE_STREAMING:-true}
-      # Optional Integrations
       - ELEVENLABS_XI_API_KEY=${ELEVENLABS_XI_API_KEY}
       - BIRDEYE_API_KEY=${BIRDEYE_API_KEY}
       - HELIUS_API_KEY=${HELIUS_API_KEY}
@@ -143,4 +156,12 @@ networks:
 
 volumes:
   letsencrypt:
+    driver: local
+  agent-cache:
+    driver: local
+  agent-data:
+    driver: local
+  node_modules:
+    driver: local
+  packages-node-modules:
     driver: local
