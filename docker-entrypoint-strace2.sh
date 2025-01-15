@@ -9,6 +9,7 @@ set -x
 apt update
 apt install -y strace
 
-strace -f -o /opt/agent/strace.log -s99999 node "$@"
+#strace -f -o /opt/agent/strace.log -s99999 node CMD ["pnpm", "start", "--characters=characters/eliza.character.json"]
+strace -f -o /opt/agent/strace.log -s99999 pnpm start --characters=characters/eliza.character.json
 #fi
 #exec "$@"
