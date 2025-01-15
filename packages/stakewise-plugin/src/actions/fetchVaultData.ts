@@ -10,8 +10,8 @@ import axios from "axios";
 
 export const fetchVaultData: Action = {
     name: "FETCH_VAULT_DATA",
-    similes: ["VAULT_INFO", "ETH_VAULT", "STAKEWISE_VAULT", "TVL_INFO"],
-    description: "Fetch data from the StakeWise vault API, including APY and TVL.",
+    similes: ["VAULT_INFO", "ETH_VAULT", "TVL_INFO"],
+    description: "Fetch data from the vault API, including APY and TVL.",
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         return true; // Always trigger for simplicity
     },
@@ -66,7 +66,7 @@ export const fetchVaultData: Action = {
 
             // Fetch APY if requested
             if (askForApy || (!askForTvl && !askForApy)) {
-                elizaLogger.log("Fetching APY from StakeWise API...");
+                elizaLogger.log("Fetching APY from API...");
                 const apyResponse = await axios.post(apiUrl, { query: apyQuery }, {
                     headers: { "Content-Type": "application/json" },
                 });
@@ -76,12 +76,12 @@ export const fetchVaultData: Action = {
                     throw new Error("APY data not found in the response.");
                 }
                 const formattedApy = parseFloat(apyData.apy).toFixed(2);
-                responseText += `The APY for the StakeWise vault is ${formattedApy}%. `;
+                responseText += `vault apy is ${formattedApy}%. `;
             }
 
             // Fetch TVL if requested
             if (askForTvl || (!askForTvl && !askForApy)) {
-                elizaLogger.log("Fetching TVL from StakeWise API...");
+                elizaLogger.log("Fetching TVL from API...");
                 const tvlResponse = await axios.post(apiUrl, { query: tvlQuery }, {
                     headers: { "Content-Type": "application/json" },
                 });
@@ -94,7 +94,7 @@ export const fetchVaultData: Action = {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 0,
                 });
-                responseText += `The TVL is ${formattedTvl} ETH.`;
+                responseText += `tvl is ${formattedTvl} eth.`;
             }
 
             // Send the response
@@ -115,7 +115,7 @@ export const fetchVaultData: Action = {
 
             // Inform the user about the failure
             await callback({
-                text: "Failed to fetch the data. Please try again later.",
+                text: "failed to fetch the data. please try again later.",
                 content: {
                     success: false,
                     error: error.message,
@@ -129,7 +129,7 @@ export const fetchVaultData: Action = {
         [
             {
                 user: "{{user1}}",
-                content: { text: "What's the apy for the vault?" },
+                content: { text: "what's the apy for the vault?" },
             },
             {
                 user: "{{agentName}}",
@@ -142,12 +142,12 @@ export const fetchVaultData: Action = {
         [
             {
                 user: "{{user1}}",
-                content: { text: "What's the tvl for the vault?" },
+                content: { text: "what's the tvl for the vault?" },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "vault tvl is 66,500 eth.",
+                    text: "tvl is 66,500 eth.",
                     action: "FETCH_VAULT_DATA",
                 },
             },
@@ -155,12 +155,12 @@ export const fetchVaultData: Action = {
         [
             {
                 user: "{{user1}}",
-                content: { text: "Can you tell me both APY and TVL for the vault?" },
+                content: { text: "can you tell me both apy and tvl for the vault?" },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "vault apy is 2.37%, and TVL is 66,500 eth.",
+                    text: "vault apy is 2.37%, and tvl is 66,500 eth.",
                     action: "FETCH_VAULT_DATA",
                 },
             },
