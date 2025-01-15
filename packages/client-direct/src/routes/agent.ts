@@ -28,14 +28,6 @@ export default function createAgentRouter(
         })
     );
 
-    // router.get("/", (req, res) => {
-    //     res.send("Welcome, this is the REST API!");
-    // });
-
-    // router.get("/hello", (req, res) => {
-    //     res.json({ message: "Hello World!" });
-    // });
-
     router.get("/", (req, res) => {
         const agentsList = Array.from(agents.values()).map((agent) => ({
             id: agent.agentId,
@@ -96,6 +88,7 @@ export default function createAgentRouter(
             character: character,
         });
     });
+
     router.get("/:agentId/stop", async (req, res) => {
         const agentId = req.params.agentId;
         console.log("agentId", agentId);
@@ -122,6 +115,7 @@ export default function createAgentRouter(
 
 
     })
+
     router.post("/new", async (req, res) => {
         // load character from body
         const character = req.body;
@@ -233,9 +227,7 @@ export default function createAgentRouter(
         }
     });
 
-    // router.get("/agents/:agentId/:userId", async (req, res) => {
-
-
-    // })
+    router.get("/agents/:agentId/:userId", async (req, res) => {
+    })
     return router;
 }

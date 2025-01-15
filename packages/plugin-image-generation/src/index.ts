@@ -14,6 +14,7 @@ import path from "path";
 import { validateImageGenConfig } from "./environment";
 
 export function saveBase64Image(base64Data: string, filename: string): string {
+    elizaLogger.log("saveBase64Image file name: ", filename);
     // Create generatedImages directory if it doesn't exist
     const imageDir = path.join(process.cwd(), "generatedImages");
     if (!fs.existsSync(imageDir)) {
@@ -218,7 +219,7 @@ Ensure that your prompt is detailed, vivid, and incorporates all the elements me
                     ? await saveHeuristImage(image, filename)
                     : saveBase64Image(image, filename);
 
-                elizaLogger.log(`Processing image ${i + 1}:`, filename);
+                elizaLogger.log(`Processing image ${i + 1}:`, filename, "filter path: ", filepath);
 
                 //just dont even add a caption or a description just have it generate & send
                 /*
@@ -255,7 +256,7 @@ Ensure that your prompt is detailed, vivid, and incorporates all the elements me
                         attachments: [
                             {
                                 id: crypto.randomUUID(),
-                                url: filepath,
+                                url: `media/generated/${filename}.png`,
                                 title: "Generated image",
                                 source: "imageGeneration",
                                 description: "...", //caption.title,

@@ -90,14 +90,14 @@ export class DirectClient {
         this.app.use(bodyParser.urlencoded({ extended: true }));
 
         // Serve both uploads and generated images
-        // this.app.use(
-        //     "/media/uploads",
-        //     express.static(path.join(process.cwd(), "/data/uploads"))
-        // );
-        // this.app.use(
-        //     "/media/generated",
-        //     express.static(path.join(process.cwd(), "/generatedImages"))
-        // );
+        this.app.use(
+            "/media/uploads",
+            express.static(path.join(process.cwd(), "/data/uploads"))
+        );
+        this.app.use(
+            "/media/generated",
+            express.static(path.join(process.cwd(), "/generatedImages"))
+        );
 
         const apiRouter = createApiRouter(this.agents, this);
         this.app.use(apiRouter);
