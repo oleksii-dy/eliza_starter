@@ -2,12 +2,7 @@ import {
     MsgCreateBucket,
     MsgDeleteObject,
 } from "@bnb-chain/greenfield-cosmos-types/greenfield/storage/tx";
-import {
-    Client,
-    DelegatedPubObjectRequest,
-    Long,
-    VisibilityType,
-} from "@bnb-chain/greenfield-js-sdk";
+import { createRequire } from "module";
 import { UploadFile } from "@bnb-chain/greenfield-js-sdk/dist/esm/types/sp/Common";
 import {
     composeContext,
@@ -26,13 +21,21 @@ import { extname } from "node:path";
 import { InitGnfdClient } from "../providers/gnfd";
 import { initWalletProvider, WalletProvider } from "../providers/wallet";
 import { greenfieldTemplate } from "../templates";
+import { DelegatedPubObjectRequest } from "@bnb-chain/greenfield-js-sdk";
 
 export { greenfieldTemplate };
+
+const require = createRequire(import.meta.url);
+const {
+    Client,
+    Long,
+    VisibilityType,
+} = require("@bnb-chain/greenfield-js-sdk");
 
 export class GreenfieldAction {
     constructor(
         private walletProvider: WalletProvider,
-        private gnfdClient: Client
+        private gnfdClient: typeof Client
     ) {}
 
     async getSps() {

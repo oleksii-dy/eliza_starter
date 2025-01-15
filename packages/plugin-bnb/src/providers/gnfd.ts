@@ -1,6 +1,8 @@
+import { createRequire } from "module";
 import { IAgentRuntime } from "@elizaos/core";
 
-import { Client } from "@bnb-chain/greenfield-js-sdk";
+const require = createRequire(import.meta.url);
+const { Client } = require("@bnb-chain/greenfield-js-sdk");
 
 export const InitGnfdClient = async (runtime: IAgentRuntime) => {
     const rpcUrl = runtime.getSetting("GREENFIELD_RPC_URL");
