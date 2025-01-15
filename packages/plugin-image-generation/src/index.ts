@@ -256,7 +256,7 @@ Ensure that your prompt is detailed, vivid, and incorporates all the elements me
                         attachments: [
                             {
                                 id: crypto.randomUUID(),
-                                url: `media/generated/${filename}.png`,
+                                url: `/media/generated/${filename}.png`,
                                 title: "Generated image",
                                 source: "imageGeneration",
                                 description: "...", //caption.title,
