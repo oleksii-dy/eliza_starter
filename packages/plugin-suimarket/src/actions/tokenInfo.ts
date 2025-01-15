@@ -1,5 +1,5 @@
 import {
-    ActionExample,
+    // ActionExample,
     Content,
     HandlerCallback,
     IAgentRuntime,
@@ -14,7 +14,7 @@ import {
 import { z } from "zod";
 
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
-import { formatObjectToText } from "../utils/format";
+// import { formatObjectToText } from "../utils/format";
 import searchCoinInFIleJsonProvider from "../providers/searchCoinIdInFileJson";
 
 export interface InfoContent extends Content {
@@ -139,11 +139,11 @@ export const tokenInfo: Action = {
 
         if (callback) {
             callback({
-                text: `${coinObject.coin_name} Info:` ,
+                text: `${coinObject.name} Info:` ,
                 action: 'tokenInfo',
                 result: {
                     type:"info_crypto",
-                    data:coinGecko
+                    data:info
                 }
             });
         }

@@ -1,4 +1,4 @@
-import { elizaLogger, IAgentRuntime, Memory, State } from "@elizaos/core";
+// import { elizaLogger, IAgentRuntime, Memory, State } from "@elizaos/core";
 import axios, { AxiosInstance } from "axios";
 
 interface NetworkRaw {
@@ -124,9 +124,8 @@ export class GeckoTerminalProvider {
   // Fetch DEX pools for a specific network
   async fetchPoolsByNetwork(networkId: string): Promise<PoolFlat[]> {
     try {
-      const response = await this.api.get(`/networks/${networkId}/pools`);
+      const response = await this.api.get(`/networks/${networkId}/pools/?include=base_token&page=1`);
       const pools: PoolRaw[] = response.data.data;
-
       // Flatten and map pools
       return pools.map(this.flattenPool);
     } catch (error) {
@@ -141,7 +140,6 @@ export class GeckoTerminalProvider {
     try {
       const response = await this.api.get(url);
       const pools: PoolRaw[] = response.data.data;
-
       // Flatten and map pools
       return pools.map(this.flattenPool);
     } catch (error) {
@@ -167,8 +165,8 @@ export class GeckoTerminalProvider {
       volume_usd_h24: parseFloat(pool.attributes.volume_usd.h24),
       transactions_h24: pool.attributes.transactions.h24,
       pool_created_at: pool.attributes.pool_created_at,
-      base_token_id: pool.relationships.base_token.data.id,
-      quote_token_id: pool.relationships.quote_token.data.id,
+      base_token_id: pool.relationships.base_token.data.id.split("_")[1],
+      quote_token_id: pool.relationships.quote_token.data.id.split("_")[1],
       dex_id: pool.relationships.dex.data.id,
     };
   }
