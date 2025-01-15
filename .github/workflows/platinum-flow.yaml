@@ -82,6 +82,8 @@ jobs:
             id-token: write
             #
         steps:
-            - name: Test
+            - name: Deploy
               run: |
-                  pwd
+                  cd ${PROJECT_ROOT}/${GITHUB_REF}
+                  docker compose pull --quiet
+                  docker compose up --quiet-pull --detach
