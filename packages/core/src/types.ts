@@ -740,6 +740,8 @@ export type Character = {
         lensShouldRespondTemplate?: TemplateType;
         telegramMessageHandlerTemplate?: TemplateType;
         telegramShouldRespondTemplate?: TemplateType;
+        discordAutoPostTemplate?: string;
+        discordAnnouncementHypeTemplate?: string;
         discordVoiceHandlerTemplate?: TemplateType;
         discordShouldRespondTemplate?: TemplateType;
         discordMessageHandlerTemplate?: TemplateType;
@@ -828,6 +830,14 @@ export type Character = {
             teamAgentIds?: string[];
             teamLeaderId?: string;
             teamMemberInterestKeywords?: string[];
+            autoPost?: {
+                enabled?: boolean;
+                monitorTime?: number;
+                inactivityThreshold?: number;
+                mainChannelId?: string;
+                announcementChannelIds?: string[];
+                minTimeBetweenPosts?: number;
+            };
         };
         telegram?: {
             shouldIgnoreBotMessages?: boolean;
