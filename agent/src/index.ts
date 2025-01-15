@@ -66,7 +66,6 @@ import { coinmarketcapPlugin } from "@elizaos/plugin-coinmarketcap";
 import { confluxPlugin } from "@elizaos/plugin-conflux";
 import { createCosmosPlugin } from "@elizaos/plugin-cosmos";
 import { cronosZkEVMPlugin } from "@elizaos/plugin-cronoszkevm";
-import { echoChambersPlugin } from "@elizaos/plugin-echochambers";
 import { evmPlugin } from "@elizaos/plugin-evm";
 import { flowPlugin } from "@elizaos/plugin-flow";
 import { fuelPlugin } from "@elizaos/plugin-fuel";
@@ -100,6 +99,9 @@ import { thirdwebPlugin } from "@elizaos/plugin-thirdweb";
 import { tonPlugin } from "@elizaos/plugin-ton";
 import { squidRouterPlugin } from "@elizaos/plugin-squid-router";
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
+import { echoChambersPlugin } from "@elizaos/plugin-echochambers";
+import { dexScreenerPlugin } from "@elizaos/plugin-dexscreener";
+
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
 import Database from "better-sqlite3";
 import fs from "fs";
@@ -781,6 +783,9 @@ export async function createAgent(
         // character.plugins are handled when clients are added
         plugins: [
             bootstrapPlugin,
+            getSecret(character, "DEXSCREENER_API_KEY")
+                ? dexScreenerPlugin
+                : null,
             getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
                 ? confluxPlugin
                 : null,
