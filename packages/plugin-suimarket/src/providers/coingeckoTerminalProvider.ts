@@ -126,7 +126,6 @@ export class GeckoTerminalProvider {
     try {
       const response = await this.api.get(`/networks/${networkId}/pools/?include=base_token&page=1`);
       const pools: PoolRaw[] = response.data.data;
-      console.log("pools: ",pools)
       // Flatten and map pools
       return pools.map(this.flattenPool);
     } catch (error) {

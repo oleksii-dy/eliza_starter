@@ -44,7 +44,7 @@ interface TokenFlat {
       gt_category_ids: string[];
     };
   }
-  
+
   interface TokenDetailFlat {
     id: string;
     address: string;
@@ -91,7 +91,7 @@ export class GeckoTerminalProvider2 {
       }
 
       const tokens = response.data.included.map((token: TokenRaw) => ({
-        id: token.id,
+        base_token_id: token.id.split("_")[1],
         address: token.attributes.address,
         name: token.attributes.name,
         symbol: token.attributes.symbol,
@@ -140,7 +140,7 @@ export class GeckoTerminalProvider2 {
 
   async trendingTokens(networkId: string = 'sui-network', page: number = 1 , query: string = null): Promise<TokenFlat[]> {
   }
-  
+
   async trendingPools(networkId: string = 'sui-network', page: number = 1 , query: string = null): Promise<TokenFlat[]> {
   }
 }

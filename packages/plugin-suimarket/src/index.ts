@@ -2,17 +2,17 @@ import { Plugin } from '@elizaos/core';
 import { tokenInfo } from './actions/tokenInfo';
 import { trendingCat } from './actions/trendingCat';
 import { trendingNft } from "./actions/trendingNft";
-import { memeSui } from "./actions/memeSui";
 import { nftInfo } from "./actions/nftInfo";
 import { topMarkets } from "./actions/topMarkets";
 import {  trendingTokens} from "./actions/trendingTokens";
 import { topAiTokens } from './actions/topAiTokens';
-import {  suiPools} from "./actions/suiPools";
+import {  suiTrendingPools} from "./actions/suiTrendingPools";
+import { searchSuiTokenSymbol } from './actions/searchSuiTokenSymbol';
 
 const suimarketPlugin: Plugin = {
   name: "coingecko",
   description: "Everything about crypyo market infomation",
-  actions: [topMarkets, trendingCat, trendingTokens, tokenInfo, trendingNft, nftInfo, topAiTokens, memeSui, suiPools],
+  actions: [topMarkets, trendingCat, trendingTokens, tokenInfo, trendingNft, nftInfo, topAiTokens, suiTrendingPools, searchSuiTokenSymbol],
   evaluators: [],
   providers: []
 };

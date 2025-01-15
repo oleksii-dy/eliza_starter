@@ -12,7 +12,7 @@ import {
     type Action,
 } from "@elizaos/core";
 
-import { formatObjectsToText } from "../utils/format";
+// import { formatObjectsToText } from "../utils/format";
 
 import {  GeckoTerminalProvider } from "../providers/coingeckoTerminalProvider";
 const listSuiPoolPromptTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
@@ -39,8 +39,8 @@ const listSuiPoolPromptTemplate = `Respond with a JSON markdown block containing
 
     Respond with a JSON markdown block containing only the extracted values.`;
 
-export const suiPools: Action = {
-    name: "suiPools",
+export const suiTrendingPools: Action = {
+    name: "suiTrendingPools",
 
     description: "Get pool from Sui network",
 
