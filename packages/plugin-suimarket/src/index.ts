@@ -8,11 +8,12 @@ import {  trendingTokens} from "./actions/trendingTokens";
 import { topAiTokens } from './actions/topAiTokens';
 import {  suiTrendingPools} from "./actions/suiTrendingPools";
 import { searchSuiTokenSymbol } from './actions/searchSuiTokenSymbol';
+import { suiTokenInfo } from './actions/suiTokenInfo';
 
 const suimarketPlugin: Plugin = {
   name: "coingecko",
   description: "Everything about crypyo market infomation",
-  actions: [topMarkets, trendingCat, trendingTokens, tokenInfo, trendingNft, nftInfo, topAiTokens, suiTrendingPools, searchSuiTokenSymbol],
+  actions: [topMarkets, trendingCat, trendingTokens, tokenInfo, trendingNft, nftInfo, topAiTokens, suiTrendingPools, searchSuiTokenSymbol,suiTokenInfo],
   evaluators: [],
   providers: []
 };
