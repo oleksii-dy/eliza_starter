@@ -1,5 +1,7 @@
-import { samplePlugin } from "./plugins/samplePlugin";
+import { roochPlugin } from "./plugins/roochPlugin";
+import { characterLoader } from "./characters/characterLoader";
 
-export * from "./plugins/samplePlugin";
-
-export default samplePlugin;
+export {
+    roochPlugin,
+    characterLoader,
+};

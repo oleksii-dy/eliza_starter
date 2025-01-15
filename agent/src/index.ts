@@ -103,6 +103,7 @@ import { fileURLToPath } from "url";
 import yargs from "yargs";
 import { verifiableLogPlugin } from "@elizaos/plugin-tee-verifiable-log";
 import createNFTCollectionsPlugin from "@elizaos/plugin-nft-collections";
+import { roochCharacterLoader } from "@elizaos/plugin-rooch";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -224,6 +225,92 @@ async function loadCharacter(filePath: string): Promise<Character> {
     return character;
 }
 
+export async function loadCharacterFromPath(
+    characterPath: string
+): Promise<Character[]> {
+    let content: string | null = null;
+    let resolvedPath = "";
+
+    // Try different path resolutions in order
+    const pathsToTry = [
+        characterPath, // exact path as specified
+        path.resolve(process.cwd(), characterPath), // relative to cwd
+        path.resolve(process.cwd(), "agent", characterPath), // Add this
+        path.resolve(__dirname, characterPath), // relative to current script
+        path.resolve(
+            __dirname,
+            "characters",
+            path.basename(characterPath)
+        ), // relative to agent/characters
+        path.resolve(
+            __dirname,
+            "../characters",
+            path.basename(characterPath)
+        ), // relative to characters dir from agent
+        path.resolve(
+            __dirname,
+            "../../characters",
+            path.basename(characterPath)
+        ), // relative to project root characters dir
+    ];
+
+    elizaLogger.info(
+        "Trying paths:",
+        pathsToTry.map((p) => ({
+            path: p,
+            exists: fs.existsSync(p),
+        }))
+    );
+
+    for (const tryPath of pathsToTry) {
+        content = tryLoadFile(tryPath);
+        if (content !== null) {
+            resolvedPath = tryPath;
+            break;
+        }
+    }
+
+    if (content === null) {
+        elizaLogger.error(
+            `Error loading character from ${characterPath}: File not found in any of the expected locations`
+        );
+        elizaLogger.error("Tried the following paths:");
+        pathsToTry.forEach((p) => elizaLogger.error(` - ${p}`));
+        process.exit(1);
+    }
+
+    return await loadCharacter(resolvedPath);
+}
+
+export async function loadCharacterFromLoader(
+    loader: ICharacterLoader,
+    uri: string
+): Promise<Character[]> {
+    let character = await loader.load(uri);
+    validateCharacterConfig(character);
+
+    // .id isn't really valid
+    const characterId = character.id || character.name;
+    const characterPrefix = `CHARACTER.${characterId.toUpperCase().replace(/ /g, "_")}.`;
+    const characterSettings = Object.entries(process.env)
+        .filter(([key]) => key.startsWith(characterPrefix))
+        .reduce((settings, [key, value]) => {
+            const settingKey = key.slice(characterPrefix.length);
+            return { ...settings, [settingKey]: value };
+        }, {});
+    if (Object.keys(characterSettings).length > 0) {
+        character.settings = character.settings || {};
+        character.settings.secrets = {
+            ...characterSettings,
+            ...character.settings.secrets,
+        };
+    }
+    // Handle plugins
+    character.plugins = await handlePluginImporting(character.plugins);
+
+    return character;
+}
+
 export async function loadCharacters(
     charactersArg: string
 ): Promise<Character[]> {
@@ -234,61 +321,16 @@ export async function loadCharacters(
 
     if (characterPaths?.length > 0) {
         for (const characterPath of characterPaths) {
-            let content: string | null = null;
-            let resolvedPath = "";
-
-            // Try different path resolutions in order
-            const pathsToTry = [
-                characterPath, // exact path as specified
-                path.resolve(process.cwd(), characterPath), // relative to cwd
-                path.resolve(process.cwd(), "agent", characterPath), // Add this
-                path.resolve(__dirname, characterPath), // relative to current script
-                path.resolve(
-                    __dirname,
-                    "characters",
-                    path.basename(characterPath)
-                ), // relative to agent/characters
-                path.resolve(
-                    __dirname,
-                    "../characters",
-                    path.basename(characterPath)
-                ), // relative to characters dir from agent
-                path.resolve(
-                    __dirname,
-                    "../../characters",
-                    path.basename(characterPath)
-                ), // relative to project root characters dir
-            ];
-
-            elizaLogger.info(
-                "Trying paths:",
-                pathsToTry.map((p) => ({
-                    path: p,
-                    exists: fs.existsSync(p),
-                }))
-            );
-
-            for (const tryPath of pathsToTry) {
-                content = tryLoadFile(tryPath);
-                if (content !== null) {
-                    resolvedPath = tryPath;
-                    break;
-                }
-            }
-
-            if (content === null) {
-                elizaLogger.error(
-                    `Error loading character from ${characterPath}: File not found in any of the expected locations`
-                );
-                elizaLogger.error("Tried the following paths:");
-                pathsToTry.forEach((p) => elizaLogger.error(` - ${p}`));
-                process.exit(1);
-            }
-
             try {
-                const character: Character = await loadCharacter(resolvedPath);
+                // example rooch://object/0xd858ebbc8e0e5c2128800b9a715e3bd8ceae2fb8a75df5cc40b58b86f1dc77ee
+                if characterPath.startsWith("rooch://") {
+                    const character: Character = await loadCharacterFromLoader(roochCharacterLoader, resolvedPath);
+                    loadedCharacters.push(character);
+                } else {
+                    const character: Character = await loadCharacterFromPath(resolvedPath);
+                    loadedCharacters.push(character);
+                }
 
-                loadedCharacters.push(character);
                 elizaLogger.info(
                     `Successfully loaded character from: ${resolvedPath}`
                 );

@@ -1556,3 +1556,10 @@ export enum ActionTimelineType {
     ForYou = "foryou",
     Following = "following",
 }
+
+/**
+ * Interface for character loader
+ */
+export interface ICharacterLoader {
+    load(uri: string): Promise<Character>;
+}
