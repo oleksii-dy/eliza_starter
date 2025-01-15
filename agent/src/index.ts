@@ -58,7 +58,6 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
-import { mainCharacter } from "../mainCharacter"
 
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
@@ -202,7 +201,7 @@ export async function loadCharacters(
 
     if (loadedCharacters.length === 0) {
         elizaLogger.info("No characters found, using default character");
-        loadedCharacters.push(mainCharacter);
+        loadedCharacters.push(defaultCharacter);
     }
 
     return loadedCharacters;
@@ -635,7 +634,7 @@ const startAgents = async () => {
 
     let charactersArg = args.characters || args.character;
 
-    let characters = [mainCharacter];
+    let characters = [defaultCharacter];
 
     if (charactersArg) {
         characters = await loadCharacters(charactersArg);

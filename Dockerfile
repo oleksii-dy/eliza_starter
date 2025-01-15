@@ -52,5 +52,7 @@ COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/characters ./characters
 COPY start.sh ./
 
+EXPOSE 3000
+
 # Set the command to run the application
 CMD ["./start.sh"]
