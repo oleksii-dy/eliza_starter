@@ -97,7 +97,7 @@ export class BridgeAction {
 
                 // check ERC20 allowance
                 if (!nativeTokenBridge) {
-                    this.checkTokenAllowance(
+                    await this.checkTokenAllowance(
                         params.fromChain,
                         params.fromToken!,
                         fromAddress,
@@ -108,13 +108,15 @@ export class BridgeAction {
 
                 if (selfBridge && nativeTokenBridge) {
                     const args = [1, "0x"] as const;
-                    await l1BridgeContract.simulate.depositETH(args);
+                    await l1BridgeContract.simulate.depositETH(args, {
+                        value: amount,
+                    });
                     resp.txHash = await l1BridgeContract.write.depositETH(
                         args,
                         {
                             account,
                             chain,
-                            amount,
+                            value: amount,
                         }
                     );
                 } else if (selfBridge && !nativeTokenBridge) {
@@ -125,7 +127,9 @@ export class BridgeAction {
                         1,
                         "0x",
                     ] as const;
-                    await l1BridgeContract.simulate.depositERC20(args);
+                    await l1BridgeContract.simulate.depositERC20(args, {
+                        account,
+                    });
                     resp.txHash = await l1BridgeContract.write.depositERC20(
                         args,
                         {
@@ -135,13 +139,15 @@ export class BridgeAction {
                     );
                 } else if (!selfBridge && nativeTokenBridge) {
                     const args = [params.toAddress!, 1, "0x"] as const;
-                    await l1BridgeContract.simulate.depositETHTo(args);
+                    await l1BridgeContract.simulate.depositETHTo(args, {
+                        value: amount,
+                    });
                     resp.txHash = await l1BridgeContract.write.depositETHTo(
                         args,
                         {
                             account,
                             chain,
-                            amount,
+                            value: amount,
                         }
                     );
                 } else {
@@ -153,7 +159,9 @@ export class BridgeAction {
                         1,
                         "0x",
                     ] as const;
-                    await l1BridgeContract.simulate.depositERC20To(args);
+                    await l1BridgeContract.simulate.depositERC20To(args, {
+                        account,
+                    });
                     resp.txHash = await l1BridgeContract.write.depositERC20To(
                         args,
                         {
@@ -181,7 +189,7 @@ export class BridgeAction {
 
                 // check ERC20 allowance
                 if (!nativeTokenBridge) {
-                    this.checkTokenAllowance(
+                    await this.checkTokenAllowance(
                         params.fromChain,
                         params.fromToken!,
                         fromAddress,
@@ -207,7 +215,10 @@ export class BridgeAction {
                 } else if (selfBridge && !nativeTokenBridge) {
                     const args = [params.fromToken!, amount, 1, "0x"] as const;
                     const value = delegationFee;
-                    await l2BridgeContract.simulate.withdraw(args, { value });
+                    await l2BridgeContract.simulate.withdraw(args, {
+                        account,
+                        value,
+                    });
                     resp.txHash = await l2BridgeContract.write.withdraw(args, {
                         account,
                         chain,
@@ -240,7 +251,10 @@ export class BridgeAction {
                         "0x",
                     ] as const;
                     const value = delegationFee;
-                    await l2BridgeContract.simulate.withdrawTo(args, { value });
+                    await l2BridgeContract.simulate.withdrawTo(args, {
+                        account,
+                        value,
+                    });
                     resp.txHash = await l2BridgeContract.write.withdrawTo(
                         args,
                         {
@@ -304,6 +318,7 @@ export class BridgeAction {
             });
 
             await walletClient.writeContract(request);
+            await new Promise((resolve) => setTimeout(resolve, 3000)); // wait for the transaction to be confirmed
         }
     }
 }
