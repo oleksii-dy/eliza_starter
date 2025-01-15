@@ -128,7 +128,7 @@ export class DeployAction {
             );
 
             elizaLogger.log(
-                `View on BSCScan: https://testnet.bscscan.com/address/${contractAddress}`
+                `View on BSCScan: https://bscscan.com/address/${contractAddress}`
             );
 
             return {
@@ -327,9 +327,9 @@ export const deployAction = {
         try {
             return true;
         } catch (error) {
-            elizaLogger.error("Error in get balance:", error.message);
+            elizaLogger.error("Error during deploy:", error.message);
             callback?.({
-                text: `Getting balance failed`,
+                text: `Deploy failed: ${error.message}`,
                 content: { error: error.message },
             });
             return false;

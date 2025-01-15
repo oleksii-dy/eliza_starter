@@ -117,9 +117,14 @@ export class WalletProvider {
     }
 
     async formatAddress(address: string): Promise<Address> {
+        if (!address || address.length === 0) {
+            throw new Error("Empty address");
+        }
+
         if (address.startsWith("0x") && address.length === 42) {
             return address as Address;
         }
+
         const resolvedAddress = await this.resolveWeb3Name(address);
         if (resolvedAddress) {
             return resolvedAddress as Address;
@@ -177,9 +182,10 @@ export class WalletProvider {
         return await walletClient.writeContract(request);
     }
 
-    async getWalletBalance(chainName: SupportedChain): Promise<string | null> {
+    // NOTE: Only works for bsc
+    async getWalletBalance(): Promise<string | null> {
         try {
-            const client = this.getPublicClient(chainName);
+            const client = this.getPublicClient("bsc");
             const balance = await client.getBalance({
                 address: this.account.address,
             });
@@ -320,7 +326,7 @@ export const bnbWalletProvider: Provider = {
         try {
             const walletProvider = initWalletProvider(runtime);
             const address = walletProvider.getAddress();
-            const balance = await walletProvider.getWalletBalance("bsc");
+            const balance = await walletProvider.getWalletBalance();
             const chain = walletProvider.getCurrentChain();
             return `BNB chain Wallet Address: ${address}\nBalance: ${balance} ${chain.nativeCurrency.symbol}\nChain ID: ${chain.id}, Name: ${chain.name}`;
         } catch (error) {

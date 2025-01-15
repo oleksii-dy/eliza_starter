@@ -30,6 +30,10 @@ export class TransferAction {
     constructor(private walletProvider: WalletProvider) {}
 
     async transfer(params: TransferParams): Promise<TransferResponse> {
+        elizaLogger.debug("Transfer params:", params);
+        this.validateAndNormalizeParams(params);
+        elizaLogger.debug("Normalized transfer params:", params);
+
         const fromAddress = this.walletProvider.getAddress();
 
         this.walletProvider.switchChain(params.chain);
@@ -127,6 +131,15 @@ export class TransferAction {
             throw new Error(`Transfer failed: ${error.message}`);
         }
     }
+
+    async validateAndNormalizeParams(params: TransferParams): Promise<void> {
+        if (!params.toAddress) {
+            throw new Error("To address is required");
+        }
+        params.toAddress = await this.walletProvider.formatAddress(
+            params.toAddress
+        );
+    }
 }
 
 export const transferAction = {
@@ -174,7 +187,7 @@ export const transferAction = {
             chain: content.chain,
             token: content.token,
             amount: content.amount,
-            toAddress: await walletProvider.formatAddress(content.toAddress),
+            toAddress: content.toAddress,
             data: content.data,
         };
         try {
@@ -186,9 +199,9 @@ export const transferAction = {
 
             return true;
         } catch (error) {
-            elizaLogger.error("Error during transfer:", error);
+            elizaLogger.error("Error during transfer:", error.message);
             callback?.({
-                text: `Transfer failed`,
+                text: `Transfer failed: ${error.message}`,
                 content: { error: error.message },
             });
             return false;
@@ -202,20 +215,46 @@ export const transferAction = {
     examples: [
         [
             {
-                user: "assistant",
+                user: "{{user1}}",
                 content: {
-                    text: "I'll help you transfer 1 BNB to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
-                    action: "SEND_TOKENS",
+                    text: "Transfer 1 BNB to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
                 },
             },
             {
-                user: "user",
+                user: "{{agent}}",
                 content: {
-                    text: "Transfer 1 BNB to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
-                    action: "SEND_TOKENS",
+                    text: "I'll help you transfer 1 BNB to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e on BSC",
+                    action: "TRANSFER",
+                    content: {
+                        chain: "bsc",
+                        token: "BNB",
+                        amount: "1",
+                        toAddress: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Transfer 1 token of 0x1234 to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "I'll help you transfer 1 token of 0x1234 to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e on BSC",
+                    action: "TRANSFER",
+                    content: {
+                        chain: "bsc",
+                        token: "0x1234",
+                        amount: "1",
+                        toAddress: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+                    },
                 },
             },
         ],
     ],
-    similes: ["SEND_TOKENS", "TOKEN_TRANSFER", "MOVE_TOKENS"],
+    similes: ["TRANSFER", "SEND_TOKENS", "TOKEN_TRANSFER", "MOVE_TOKENS"],
 };

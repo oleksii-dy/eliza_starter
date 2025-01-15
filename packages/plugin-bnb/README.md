@@ -111,6 +111,21 @@ Perform staking operations on BSC through [Lista Dao](https://lista.org/liquid-s
 Deposit 1 BNB to Lista Dao.
 ```
 
+### Faucet
+
+Request testnet tokens from the faucet. You could request any of the supported tokens(BNB, BTC, BUSD, DAI, ETH, USDC). Just specify the:
+
+- **Token**(Optional)
+- **Recipient Address**
+
+The recipient address must maintain a minimum balance of 0.002 BNB on BSC Mainnet to qualify.
+
+**Example usage:**
+
+```bash
+Get some testnet USDC from the faucet.
+```
+
 ---
 
 ## Contribution

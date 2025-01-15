@@ -27,15 +27,11 @@ export class GetBalanceAction {
     constructor(private walletProvider: WalletProvider) {}
 
     async getBalance(params: GetBalanceParams): Promise<GetBalanceResponse> {
+        elizaLogger.debug("Get balance params:", params);
+        await this.validateAndNormalizeParams(params);
+        elizaLogger.debug("Normalized get balance params:", params);
+
         let { chain, address, token } = params;
-
-        if (chain == "bscTestnet") {
-            throw new Error("Testnet is not supported");
-        }
-
-        if (!address) {
-            address = this.walletProvider.getAddress();
-        }
 
         this.walletProvider.switchChain(chain);
         const nativeSymbol =
@@ -46,20 +42,20 @@ export class GetBalanceAction {
         try {
             let resp: GetBalanceResponse = {
                 chain,
-                address,
+                address: address!,
                 balances: [],
             };
 
             // If no specific token is requested, get all token balances
             if (!token) {
-                const balances = await this.getTokenBalances(chainId, address);
+                const balances = await this.getTokenBalances(chainId, address!);
                 resp.balances = balances;
             } else {
                 // If specific token is requested and it's not the native token
                 if (token !== nativeSymbol) {
                     const balance = await this.getERC20TokenBalance(
                         chainId,
-                        address,
+                        address!,
                         token!
                     );
                     resp.balances = [{ token: token!, balance }];
@@ -67,7 +63,7 @@ export class GetBalanceAction {
                     // If native token is requested
                     const nativeBalanceWei = await this.walletProvider
                         .getPublicClient(chain)
-                        .getBalance({ address });
+                        .getBalance({ address: address! });
                     resp.balances = [
                         {
                             token: nativeSymbol,
@@ -108,6 +104,20 @@ export class GetBalanceAction {
                 balance: formatUnits(balance.amount!, balance.decimals),
             }));
     }
+
+    async validateAndNormalizeParams(params: GetBalanceParams): Promise<void> {
+        if (!params.address) {
+            params.address = this.walletProvider.getAddress();
+        } else {
+            params.address = await this.walletProvider.formatAddress(
+                params.address
+            );
+        }
+
+        if (params.chain != "bsc") {
+            throw new Error("Only BSC mainnet is supported");
+        }
+    }
 }
 
 export const getBalanceAction = {
@@ -144,7 +154,7 @@ export const getBalanceAction = {
         const action = new GetBalanceAction(walletProvider);
         const getBalanceOptions: GetBalanceParams = {
             chain: content.chain,
-            address: await walletProvider.formatAddress(content.address),
+            address: content.address,
             token: content.token,
         };
         try {
@@ -163,9 +173,9 @@ export const getBalanceAction = {
             }
             return true;
         } catch (error) {
-            elizaLogger.error("Error in get balance:", error.message);
+            elizaLogger.error("Error during get balance:", error.message);
             callback?.({
-                text: `Getting balance failed`,
+                text: `Get balance failed: ${error.message}`,
                 content: { error: error.message },
             });
             return false;
@@ -178,17 +188,81 @@ export const getBalanceAction = {
     examples: [
         [
             {
-                user: "user",
+                user: "{{user1}}",
                 content: {
-                    text: "Check balance of USDC on Bsc",
-                    action: "GET_BALANCE",
+                    text: "Check my balance of USDC",
                 },
             },
             {
-                user: "user",
+                user: "{{agent}}",
                 content: {
-                    text: "Check balance of USDC for 0x742d35Cc6634C0532925a3b844Bc454e4438f44e on Bsc",
-                    action: "CHECK_BALANCE",
+                    text: "I'll help you check your balance of USDC",
+                    action: "GET_BALANCE",
+                    content: {
+                        chain: "bsc",
+                        address: "{{walletAddress}}",
+                        token: "USDC",
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Check my balance of token 0x1234",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "I'll help you check your balance of token 0x1234",
+                    action: "GET_BALANCE",
+                    content: {
+                        chain: "bsc",
+                        address: "{{walletAddress}}",
+                        token: "0x1234",
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Get USDC balance of 0x1234",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "I'll help you check USDC balance of 0x1234",
+                    action: "GET_BALANCE",
+                    content: {
+                        chain: "bsc",
+                        address: "0x1234",
+                        token: "USDC",
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Check my wallet balance on BSC",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "I'll help you check your wallet balance on BSC",
+                    action: "GET_BALANCE",
+                    content: {
+                        chain: "bsc",
+                        address: "{{walletAddress}}",
+                        token: undefined,
+                    },
                 },
             },
         ],

@@ -81,8 +81,8 @@ export const bridgeTemplate = `Given the recent messages and wallet information 
 Extract the following information about the requested token bridge:
 - From chain. Must be one of ["bsc", "opBNB"].
 - To chain. Must be one of ["bsc", "opBNB"].
-- From token address. Optional, must be a valid Ethereum address starting with "0x" or a web3 domain name. If not provided, bridge native token(BNB).
-- To token address. Optional, must be a valid Ethereum address starting with "0x" or a web3 domain name. If not provided, bridge native token(BNB). If from token is provided, to token must be provided.
+- From token address. Optional, must be a valid Ethereum address starting with "0x" or a web3 domain name.
+- To token address. Optional, must be a valid Ethereum address starting with "0x" or a web3 domain name.
 - Amount to bridge. Must be a string representing the amount in ether (only number without coin symbol, e.g., "0.1").
 - To address. Optional, must be a valid Ethereum address starting with "0x" or a web3 domain name. If not provided, bridge to the address of the wallet.
 
@@ -108,7 +108,7 @@ export const stakeTemplate = `Given the recent messages and wallet information b
 
 Extract the following information about the requested stake action:
 - Action to execute. Must be one of ["deposit", "withdraw", "claim"].
-- Amount to execute. Optional, must be a string representing the amount in ether (only number without coin symbol, e.g., "0.1"). If the action is "deposit", amount is required.
+- Amount to execute. Optional, must be a string representing the amount in ether (only number without coin symbol, e.g., "0.1"). If the action is "deposit" or "withdraw", amount is required.
 
 Respond with a JSON markdown block containing only the extracted values:
 
@@ -116,6 +116,26 @@ Respond with a JSON markdown block containing only the extracted values:
 {
     "action": "deposit" | "withdraw" | "claim",
     "amount": string | null,
+}
+\`\`\`
+`;
+
+export const faucetTemplate = `Given the recent messages and wallet information below:
+
+{{recentMessages}}
+
+{{walletInfo}}
+
+Extract the following information about the requested faucet request:
+- Token. Token to request. Could be one of ["BNB", "BTC", "BUSD", "DAI", "ETH", "USDC"]. Optinal, if not provided, send tBNB by default.
+- Recipient address. Optional, must be a valid Ethereum address starting with "0x" or a web3 domain name. If not provided, send to the address of the wallet.
+
+Respond with a JSON markdown block containing only the extracted values. All fields are required:
+
+\`\`\`json
+{
+    "token": string | null,
+    "toAddress": string | null
 }
 \`\`\`
 `;
