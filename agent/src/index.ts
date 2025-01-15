@@ -68,6 +68,7 @@ import { cronosZkEVMPlugin } from "@elizaos/plugin-cronoszkevm";
 import { evmPlugin } from "@elizaos/plugin-evm";
 import { flowPlugin } from "@elizaos/plugin-flow";
 import { fuelPlugin } from "@elizaos/plugin-fuel";
+import { fusePlugin } from "@elizaos/plugin-fuse";
 import { genLayerPlugin } from "@elizaos/plugin-genlayer";
 import { giphyPlugin } from "@elizaos/plugin-giphy";
 import { gitcoinPassportPlugin } from "@elizaos/plugin-gitcoin-passport";
@@ -108,7 +109,6 @@ import net from "net";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
-
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -930,6 +930,7 @@ export async function createAgent(
             getSecret(character, "RESERVOIR_API_KEY")
                 ? createNFTCollectionsPlugin()
                 : null,
+            getSecret(character, "FUSE_PRIVATE_KEY") ? fusePlugin : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
