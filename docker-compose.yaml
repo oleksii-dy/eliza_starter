@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   traefik:
@@ -12,7 +12,7 @@ services:
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-contact@nayari.ai}"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-your@email.com}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
       - "--api.dashboard=true"
     ports:
@@ -25,76 +25,122 @@ services:
       - web
     labels:
       - "traefik.enable=true"
-      # Dashboard configuration
       - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_DASHBOARD_HOST:-dashboard.localhost}`)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
-      # Basic auth for dashboard
       - "traefik.http.routers.dashboard.middlewares=auth"
       - "traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH:-admin:$$apr1$$xyz123...}"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:8080/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
 
-  tee:
+  agent:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: eliza
-    stdin_open: true
-    tty: true
+    container_name: eliza-agent
+    command: pnpm start --characters="characters/Nayari.character.json"
     volumes:
-      - /var/run/tappd.sock:/var/run/tappd.sock
-      - tee:/app/packages/client-twitter/src/tweetcache
-      - tee:/app/db.sqlite
+      - ./characters:/app/characters
+      - ./.env:/app/.env
+      - ./agent:/app/agent
+      - ./docs:/app/docs
+      - ./scripts:/app/scripts
+      # Package mounts
+      - ./packages/adapter-postgres/src:/app/packages/adapter-postgres/src
+      - ./packages/adapter-sqlite/src:/app/packages/adapter-sqlite/src
+      - ./packages/adapter-sqljs/src:/app/packages/adapter-sqljs/src
+      - ./packages/adapter-supabase/src:/app/packages/adapter-supabase/src
+      - ./packages/client-auto/src:/app/packages/client-auto/src
+      - ./packages/client-direct/src:/app/packages/client-direct/src
+      - ./packages/client-discord/src:/app/packages/client-discord/src
+      - ./packages/client-farcaster/src:/app/packages/client-farcaster/src
+      - ./packages/client-telegram/src:/app/packages/client-telegram/src
+      - ./packages/client-twitter/src:/app/packages/client-twitter/src
+      - ./packages/core/src:/app/packages/core/src
+      - ./packages/plugin-bootstrap/src:/app/packages/plugin-bootstrap/src
+      - ./packages/plugin-image-generation/src:/app/packages/plugin-image-generation/src
+      - ./packages/plugin-node/src:/app/packages/plugin-node/src
+      - ./packages/plugin-solana/src:/app/packages/plugin-solana/src
+      - ./packages/plugin-evm/src:/app/packages/plugin-evm/src
+      - ./packages/plugin-tee/src:/app/packages/plugin-tee/src
+      # Special case mount
+      - ./packages/core/types:/app/packages/core/types
     networks:
       - web
+    depends_on:
+      - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.eliza.rule=Host(`${DOMAIN:-localhost}`)"
-      - "traefik.http.routers.eliza.entrypoints=websecure"
-      - "traefik.http.routers.eliza.tls.certresolver=letsencrypt"
-      - "traefik.http.services.eliza.loadbalancer.server.port=3000"
+      - "traefik.http.routers.agent.rule=Host(`api.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.agent.entrypoints=websecure"
+      - "traefik.http.routers.agent.tls.certresolver=letsencrypt"
+      - "traefik.http.services.agent.loadbalancer.server.port=3000"
     environment:
       # API Keys
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - REDPILL_API_KEY=${REDPILL_API_KEY}
       - ELEVENLABS_XI_API_KEY=${ELEVENLABS_XI_API_KEY}
+      # Add other necessary environment variables
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
 
-      # ElevenLabs Configuration
-      - ELEVENLABS_MODEL_ID=${ELEVENLABS_MODEL_ID:-eleven_multilingual_v2}
-      - ELEVENLABS_VOICE_ID=${ELEVENLABS_VOICE_ID:-21m00Tcm4TlvDq8ikWAM}
-      - ELEVENLABS_VOICE_STABILITY=${ELEVENLABS_VOICE_STABILITY:-0.5}
-      - ELEVENLABS_VOICE_SIMILARITY_BOOST=${ELEVENLABS_VOICE_SIMILARITY_BOOST:-0.9}
-      - ELEVENLABS_VOICE_STYLE=${ELEVENLABS_VOICE_STYLE:-0.66}
-      - ELEVENLABS_VOICE_USE_SPEAKER_BOOST=${ELEVENLABS_VOICE_USE_SPEAKER_BOOST:-false}
-      - ELEVENLABS_OPTIMIZE_STREAMING_LATENCY=${ELEVENLABS_OPTIMIZE_STREAMING_LATENCY:-4}
-      - ELEVENLABS_OUTPUT_FORMAT=${ELEVENLABS_OUTPUT_FORMAT:-pcm_16000}
-
-      # Twitter Configuration
-      - TWITTER_DRY_RUN=${TWITTER_DRY_RUN:-false}
-      - TWITTER_USERNAME=${TWITTER_USERNAME}
-      - TWITTER_PASSWORD=${TWITTER_PASSWORD}
-      - TWITTER_EMAIL=${TWITTER_EMAIL}
-
-      # Blockchain and API Configuration
-      - BIRDEYE_API_KEY=${BIRDEYE_API_KEY}
-      - SOL_ADDRESS=${SOL_ADDRESS:-So11111111111111111111111111111111111111112}
-      - SLIPPAGE=${SLIPPAGE:-1}
-      - SOLANA_RPC_URL=${SOLANA_RPC_URL:-https://api.mainnet-beta.solana.com}
-      - HELIUS_API_KEY=${HELIUS_API_KEY}
-
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eliza-client
+    command: pnpm start:client
+    volumes:
+      - ./client:/app/client
+      - ./.env:/app/.env
+    networks:
+      - web
+    depends_on:
+      - agent
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.client.rule=Host(`${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.client.entrypoints=websecure"
+      - "traefik.http.routers.client.tls.certresolver=letsencrypt"
+      - "traefik.http.services.client.loadbalancer.server.port=5173"
+    environment:
       # Server Configuration
-      - SERVER_PORT=${SERVER_PORT:-3000}
-      - WALLET_SECRET_SALT=${WALLET_SECRET_SALT}
+      - NODE_ENV=production
+      - PORT=5173
+      # API Configuration
+      - VITE_API_URL=https://api.${DOMAIN:-localhost}
+      # Feature Flags
+      - ENABLE_VOICE=${ENABLE_VOICE:-true}
+      - ENABLE_STREAMING=${ENABLE_STREAMING:-true}
+      # Optional Integrations
+      - ELEVENLABS_XI_API_KEY=${ELEVENLABS_XI_API_KEY}
+      - BIRDEYE_API_KEY=${BIRDEYE_API_KEY}
+      - HELIUS_API_KEY=${HELIUS_API_KEY}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     restart: unless-stopped
 
 networks:
   web:
     name: web
     driver: bridge
+    attachable: true
+    enable_ipv6: true
+    driver_opts:
+      com.docker.network.bridge.name: "eliza-net"
 
 volumes:
   letsencrypt:
-    name: letsencrypt
-  tee:
-    name: tee
+    driver: local
