@@ -139,11 +139,11 @@ export const tokenInfo: Action = {
 
         if (callback) {
             callback({
-                text: `${coinObject.coin_name} Info:` ,
+                text: `${coinObject.name} Info:` ,
                 action: 'tokenInfo',
                 result: {
                     type:"info_crypto",
-                    data:coinGecko
+                    data:info
                 }
             });
         }
