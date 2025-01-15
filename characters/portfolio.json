@@ -2,13 +2,12 @@
     "name": "Portfolio Agent",
     "clients": ["direct"],
     "modelProvider": "openai",
-    "settings": {
-        "secrets": {},
-        "voice": {
-            "model": "en_US-male-medium"
-        }
-    },
     "plugins": ["@elizaos/plugin-suimarket"],
+    
+    "image": {
+      "enabled": false
+    },
+
     "adjectives": [
       "analytical",
       "precise",
