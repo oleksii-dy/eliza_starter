@@ -12,7 +12,7 @@ describe("Transfer Action", () => {
 
     beforeEach(async () => {
         const pk = generatePrivateKey();
-        const pk1 = getEnvVariable("ARTHERA_PRIVATE_KEY") as `0x${string}`;
+        const pk1 = getEnvVariable("FUSE_PRIVATE_KEY") as `0x${string}`;
         const customChains = prepareChains();
         wp = new WalletProvider(pk, customChains);
         if (pk1) {
@@ -45,7 +45,7 @@ describe("Transfer Action", () => {
         it("throws if not enough gas", async () => {
             await expect(
                 ta.transfer({
-                    fromChain: "arthera",
+                    fromChain: "fuse",
                     toAddress: receiverAddress,
                     amount: "1",
                 })
@@ -57,7 +57,7 @@ describe("Transfer Action", () => {
         if (wp1) {
             it("transfers tokens", async () => {
                 const tx = await ta1.transfer({
-                    fromChain: "arthera",
+                    fromChain: "fuse",
                     toAddress: receiverAddress,
                     amount: "0.001",
                 });
@@ -73,7 +73,7 @@ describe("Transfer Action", () => {
 
 const prepareChains = () => {
     const customChains: Record<string, Chain> = {};
-    const chainNames = ["arthera"];
+    const chainNames = ["fuse"];
     chainNames.forEach(
         (chain) =>
             (customChains[chain] = WalletProvider.genChainFromName(chain))

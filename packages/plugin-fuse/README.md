@@ -1,6 +1,6 @@
-# `@elizaos/plugin-arthera`
+# `@elizaos/plugin-fuse`
 
-This plugin provides actions and providers for interacting with Arthera.
+This plugin provides actions and providers for interacting with Fuse.
 
 ---
 
@@ -8,10 +8,10 @@ This plugin provides actions and providers for interacting with Arthera.
 
 ### Default Setup
 
-By default, **Arthera** is enabled. To use it, simply add your private key to the `.env` file:
+By default, **Fuse** is enabled. To use it, simply add your private key to the `.env` file:
 
 ```env
-ARTHERA_PRIVATE_KEY=your-private-key-here
+FUSE_PRIVATE_KEY=your-private-key-here
 ```
 
 ### Custom RPC URLs
@@ -25,12 +25,12 @@ ETHEREUM_PROVIDER_<CHAIN_NAME>=https://your-custom-rpc-url
 **Example usage:**
 
 ```env
-ETHEREUM_PROVIDER_ARTHERA=https://rpc.arthera.net
+ETHEREUM_PROVIDER_FUSE=https://rpc.fuse.io
 ```
 
 ## Provider
 
-The **Wallet Provider** initializes with Arthera. It:
+The **Wallet Provider** initializes with Fuse. It:
 
 - Provides the **context** of the currently connected address and its balance.
 - Creates **Public** and **Wallet clients** to interact with the supported chain.
@@ -41,7 +41,7 @@ The **Wallet Provider** initializes with Arthera. It:
 
 ### Transfer
 
-Transfer tokens from one address to another on Arthera. Just specify the:
+Transfer tokens from one address to another on Fuse. Just specify the:
 
 - **Amount**
 - **Chain**
@@ -50,7 +50,7 @@ Transfer tokens from one address to another on Arthera. Just specify the:
 **Example usage:**
 
 ```bash
-Transfer 1 AA to 0xRecipient on arthera.
+Transfer 1 FUSE to 0xRecipient on fuse.
 ```
 
 ---
@@ -61,7 +61,7 @@ The plugin contains tests. Whether you're using **TDD** or not, please make sure
 
 ### Running Tests
 
-Navigate to the `plugin-arthera` directory and run:
+Navigate to the `plugin-fuse` directory and run:
 
 ```bash
 pnpm test

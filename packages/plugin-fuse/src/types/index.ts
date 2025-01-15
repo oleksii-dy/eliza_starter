@@ -53,12 +53,12 @@ export interface TransferParams {
 }
 
 // Plugin configuration
-export interface ArtheraPluginConfig {
+export interface FusePluginConfig {
     rpcUrl?: {
-        arthera?: string;
+        fuse?: string;
     };
     secrets?: {
-        ARTHERA_PRIVATE_KEY: string;
+        FUSE_PRIVATE_KEY: string;
     };
     testMode?: boolean;
     multicall?: {

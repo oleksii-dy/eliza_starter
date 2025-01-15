@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeAll, beforeEach } from "vitest";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { arthera, Chain } from "viem/chains";
+import { fuse, Chain } from "viem/chains";
 
 import { WalletProvider } from "../providers/wallet";
 
 const customRpcUrls = {
-    arthera: "custom-rpc.arthera.io",
+    fuse: "custom-rpc.fuse.io",
 };
 
 describe("Wallet provider", () => {
@@ -16,7 +16,7 @@ describe("Wallet provider", () => {
     beforeAll(() => {
         pk = generatePrivateKey();
 
-        const chainNames = ["arthera"];
+        const chainNames = ["fuse"];
         chainNames.forEach(
             (chain) =>
                 (customChains[chain] = WalletProvider.genChainFromName(chain))
@@ -32,21 +32,21 @@ describe("Wallet provider", () => {
 
             expect(walletProvider.getAddress()).toEqual(expectedAddress);
         });
-        it("sets default chain to arthera", () => {
+        it("sets default chain to fuse", () => {
             walletProvider = new WalletProvider(pk);
 
-            expect(walletProvider.chains.arthera.id).toEqual(arthera.id);
-            expect(walletProvider.getCurrentChain().id).toEqual(arthera.id);
+            expect(walletProvider.chains.fuse.id).toEqual(fuse.id);
+            expect(walletProvider.getCurrentChain().id).toEqual(fuse.id);
         });
         it("sets custom chains", () => {
             walletProvider = new WalletProvider(pk, customChains);
 
-            expect(walletProvider.chains.arthera.id).toEqual(arthera.id);
+            expect(walletProvider.chains.fuse.id).toEqual(fuse.id);
         });
         it("sets the first provided custom chain as current chain", () => {
             walletProvider = new WalletProvider(pk, customChains);
 
-            expect(walletProvider.getCurrentChain().id).toEqual(arthera.id);
+            expect(walletProvider.getCurrentChain().id).toEqual(fuse.id);
         });
     });
     describe("Clients", () => {
@@ -54,60 +54,60 @@ describe("Wallet provider", () => {
             walletProvider = new WalletProvider(pk);
         });
         it("generates public client", () => {
-            const client = walletProvider.getPublicClient("arthera");
-            expect(client.chain.id).toEqual(arthera.id);
+            const client = walletProvider.getPublicClient("fuse");
+            expect(client.chain.id).toEqual(fuse.id);
             expect(client.transport.url).toEqual(
-                arthera.rpcUrls.default.http[0]
+                fuse.rpcUrls.default.http[0]
             );
         });
         it("generates public client with custom rpcurl", () => {
             const chain = WalletProvider.genChainFromName(
-                "arthera",
-                customRpcUrls.arthera
+                "fuse",
+                customRpcUrls.fuse
             );
-            const wp = new WalletProvider(pk, { ["arthera"]: chain });
+            const wp = new WalletProvider(pk, { ["fuse"]: chain });
 
-            const client = wp.getPublicClient("arthera");
-            expect(client.chain.id).toEqual(arthera.id);
+            const client = wp.getPublicClient("fuse");
+            expect(client.chain.id).toEqual(fuse.id);
             expect(client.chain.rpcUrls.default.http[0]).toEqual(
-                arthera.rpcUrls.default.http[0]
+                fuse.rpcUrls.default.http[0]
             );
             expect(client.chain.rpcUrls.custom.http[0]).toEqual(
-                customRpcUrls.arthera
+                customRpcUrls.fuse
             );
-            expect(client.transport.url).toEqual(customRpcUrls.arthera);
+            expect(client.transport.url).toEqual(customRpcUrls.fuse);
         });
         it("generates wallet client", () => {
             const account = privateKeyToAccount(pk);
             const expectedAddress = account.address;
 
-            const client = walletProvider.getWalletClient("arthera");
+            const client = walletProvider.getWalletClient("fuse");
 
             expect(client.account.address).toEqual(expectedAddress);
             expect(client.transport.url).toEqual(
-                arthera.rpcUrls.default.http[0]
+                fuse.rpcUrls.default.http[0]
             );
         });
         it("generates wallet client with custom rpcurl", () => {
             const account = privateKeyToAccount(pk);
             const expectedAddress = account.address;
             const chain = WalletProvider.genChainFromName(
-                "arthera",
-                customRpcUrls.arthera
+                "fuse",
+                customRpcUrls.fuse
             );
-            const wp = new WalletProvider(pk, { ["arthera"]: chain });
+            const wp = new WalletProvider(pk, { ["fuse"]: chain });
 
-            const client = wp.getWalletClient("arthera");
+            const client = wp.getWalletClient("fuse");
 
             expect(client.account.address).toEqual(expectedAddress);
-            expect(client.chain.id).toEqual(arthera.id);
+            expect(client.chain.id).toEqual(fuse.id);
             expect(client.chain.rpcUrls.default.http[0]).toEqual(
-                arthera.rpcUrls.default.http[0]
+                fuse.rpcUrls.default.http[0]
             );
             expect(client.chain.rpcUrls.custom.http[0]).toEqual(
-                customRpcUrls.arthera
+                customRpcUrls.fuse
             );
-            expect(client.transport.url).toEqual(customRpcUrls.arthera);
+            expect(client.transport.url).toEqual(customRpcUrls.fuse);
         });
     });
     describe("Balance", () => {
@@ -120,7 +120,7 @@ describe("Wallet provider", () => {
             expect(bal).toEqual("0");
         });
         it("should fetch balance for a specific added chain", async () => {
-            const bal = await walletProvider.getWalletBalanceForChain("arthera");
+            const bal = await walletProvider.getWalletBalanceForChain("fuse");
 
             expect(bal).toEqual("0");
         });
@@ -134,30 +134,30 @@ describe("Wallet provider", () => {
             walletProvider = new WalletProvider(pk, customChains);
         });
         it("generates chains from chain name", () => {
-            const chainName = "arthera";
+            const chainName = "fuse";
             const chain: Chain = WalletProvider.genChainFromName(chainName);
 
             expect(chain.rpcUrls.default.http[0]).toEqual(
-                arthera.rpcUrls.default.http[0]
+                fuse.rpcUrls.default.http[0]
             );
         });
         it("generates chains from chain name with custom rpc url", () => {
-            const chainName = "arthera";
-            const customRpcUrl = customRpcUrls.arthera;
+            const chainName = "fuse";
+            const customRpcUrl = customRpcUrls.fuse;
             const chain: Chain = WalletProvider.genChainFromName(
                 chainName,
                 customRpcUrl
             );
 
             expect(chain.rpcUrls.default.http[0]).toEqual(
-                arthera.rpcUrls.default.http[0]
+                fuse.rpcUrls.default.http[0]
             );
             expect(chain.rpcUrls.custom.http[0]).toEqual(customRpcUrl);
         });
         it("gets chain configs", () => {
-            const chain = walletProvider.getChainConfigs("arthera");
+            const chain = walletProvider.getChainConfigs("fuse");
 
-            expect(chain.id).toEqual(arthera.id);
+            expect(chain.id).toEqual(fuse.id);
         });
         it("throws if unsupported chain name", () => {
             // intentionally set unsupported chain, ts will complain

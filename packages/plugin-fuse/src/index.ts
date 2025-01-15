@@ -4,15 +4,15 @@ export * from "./types";
 
 import type { Plugin } from "@elizaos/core";
 import { transferAction } from "./actions/transfer";
-import { artheraWalletProvider } from "./providers/wallet";
+import { fuseWalletProvider } from "./providers/wallet";
 
-export const artheraPlugin: Plugin = {
-    name: "arthera",
-    description: "Arthera blockchain integration plugin",
-    providers: [artheraWalletProvider],
+export const fusePlugin: Plugin = {
+    name: "fuse",
+    description: "Fuse blockchain integration plugin",
+    providers: [fuseWalletProvider],
     evaluators: [],
     services: [],
     actions: [transferAction],
 };
 
-export default artheraPlugin;
+export default fusePlugin;

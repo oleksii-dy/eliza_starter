@@ -151,7 +151,7 @@ export const transferAction = {
     },
     template: transferTemplate,
     validate: async (runtime: IAgentRuntime) => {
-        const privateKey = runtime.getSetting("ARTHERA_PRIVATE_KEY");
+        const privateKey = runtime.getSetting("FUSE_PRIVATE_KEY");
         return typeof privateKey === "string" && privateKey.startsWith("0x");
     },
     examples: [
@@ -159,14 +159,14 @@ export const transferAction = {
             {
                 user: "assistant",
                 content: {
-                    text: "I'll help you transfer 1 AA to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+                    text: "I'll help you transfer 1 FUSE to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
                     action: "SEND_TOKENS",
                 },
             },
             {
                 user: "user",
                 content: {
-                    text: "Transfer 1 AA to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+                    text: "Transfer 1 FUSE to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
                     action: "SEND_TOKENS",
                 },
             },

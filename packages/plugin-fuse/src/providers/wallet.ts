@@ -20,8 +20,8 @@ import * as viemChains from "viem/chains";
 import type { SupportedChain } from "../types";
 
 export class WalletProvider {
-    private currentChain: SupportedChain = "arthera";
-    chains: Record<string, Chain> = { arthera: viemChains.arthera };
+    private currentChain: SupportedChain = "fuse";
+    chains: Record<string, Chain> = { fuse: viemChains.fuse };
     account: PrivateKeyAccount;
 
     constructor(privateKey: `0x${string}`, chains?: Record<string, Chain>) {
@@ -158,7 +158,7 @@ export class WalletProvider {
 const genChainsFromRuntime = (
     runtime: IAgentRuntime
 ): Record<string, Chain> => {
-    const chainNames = ["arthera"];
+    const chainNames = ["fuse"];
     const chains = {};
 
     chainNames.forEach((chainName) => {
@@ -173,9 +173,9 @@ const genChainsFromRuntime = (
 };
 
 export const initWalletProvider = (runtime: IAgentRuntime) => {
-    const privateKey = runtime.getSetting("ARTHERA_PRIVATE_KEY");
+    const privateKey = runtime.getSetting("FUSE_PRIVATE_KEY");
     if (!privateKey) {
-        throw new Error("ARTHERA_PRIVATE_KEY is missing");
+        throw new Error("FUSE_PRIVATE_KEY is missing");
     }
 
     const chains = genChainsFromRuntime(runtime);
@@ -183,7 +183,7 @@ export const initWalletProvider = (runtime: IAgentRuntime) => {
     return new WalletProvider(privateKey as `0x${string}`, chains);
 };
 
-export const artheraWalletProvider: Provider = {
+export const fuseWalletProvider: Provider = {
     async get(
         runtime: IAgentRuntime,
         _message: Memory,
@@ -194,9 +194,9 @@ export const artheraWalletProvider: Provider = {
             const address = walletProvider.getAddress();
             const balance = await walletProvider.getWalletBalance();
             const chain = walletProvider.getCurrentChain();
-            return `Arthera Wallet Address: ${address}\nBalance: ${balance} ${chain.nativeCurrency.symbol}\nChain ID: ${chain.id}, Name: ${chain.name}`;
+            return `Fuse Wallet Address: ${address}\nBalance: ${balance} ${chain.nativeCurrency.symbol}\nChain ID: ${chain.id}, Name: ${chain.name}`;
         } catch (error) {
-            console.error("Error in Arthera wallet provider:", error);
+            console.error("Error in Fuse wallet provider:", error);
             return null;
         }
     },
