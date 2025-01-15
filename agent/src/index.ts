@@ -13,6 +13,7 @@ import { TwitterClientInterface } from "@elizaos/client-twitter";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
 import { PrimusAdapter } from "@elizaos/plugin-primus";
 
+
 import {
     AgentRuntime,
     CacheManager,
@@ -98,10 +99,10 @@ import { thirdwebPlugin } from "@elizaos/plugin-thirdweb";
 import { tonPlugin } from "@elizaos/plugin-ton";
 import { squidRouterPlugin } from "@elizaos/plugin-squid-router";
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
-import { echoChambersPlugin } from "@elizaos/plugin-echochambers";
-import { dexScreenerPlugin } from "@elizaos/plugin-dexscreener";
-
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
+import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
+
+
 import Database from "better-sqlite3";
 import fs from "fs";
 import net from "net";
@@ -154,6 +155,10 @@ function tryLoadFile(filePath: string): string | null {
     } catch (e) {
         return null;
     }
+}
+
+function isAllStrings(arr: unknown[]): boolean {
+    return Array.isArray(arr) && arr.every((item) => typeof item === "string");
 }
 function mergeCharacters(base: Character, child: Character): Character {
     const mergeObjects = (baseObj: any, childObj: any) => {
@@ -241,7 +246,95 @@ async function loadCharacter(filePath: string): Promise<Character> {
         throw new Error(`Character file not found: ${filePath}`);
     }
     let character = JSON.parse(content);
-    return jsonToCharacter(filePath, character);
+    validateCharacterConfig(character);
+    // .id isn't really valid
+    const characterId = character.id || character.name;
+    const characterPrefix = `CHARACTER.${characterId.toUpperCase().replace(/ /g, "_")}.`;
+    const characterSettings = Object.entries(process.env)
+        .filter(([key]) => key.startsWith(characterPrefix))
+        .reduce((settings, [key, value]) => {
+            const settingKey = key.slice(characterPrefix.length);
+            return { ...settings, [settingKey]: value };
+        }, {});
+    if (Object.keys(characterSettings).length > 0) {
+        character.settings = character.settings || {};
+        character.settings.secrets = {
+            ...characterSettings,
+            ...character.settings.secrets,
+        };
+    }
+    // Handle plugins
+    character.plugins = await handlePluginImporting(character.plugins);
+    if (character.extends) {
+        elizaLogger.info(
+            `Merging  ${character.name} character with parent characters`
+        );
+        for (const extendPath of character.extends) {
+            const baseCharacter = await loadCharacter(
+                path.resolve(path.dirname(filePath), extendPath)
+            );
+            character = mergeCharacters(baseCharacter, character);
+            elizaLogger.info(
+                `Merged ${character.name} with ${baseCharacter.name}`
+            );
+        }
+    }
+    return character;
+}
+
+export async function loadCharacterFromOnchain(): Promise<Character[]> {
+    const jsonText = onchainJson;
+
+    console.log('JSON:', jsonText);
+    if (jsonText == "null") return;
+    const loadedCharacters = [];
+    try {
+
+        const character = JSON.parse(jsonText);
+        validateCharacterConfig(character);
+
+        // .id isn't really valid
+        const characterId = character.id || character.name;
+        const characterPrefix = `CHARACTER.${characterId.toUpperCase().replace(/ /g, "_")}.`;
+
+        const characterSettings = Object.entries(process.env)
+            .filter(([key]) => key.startsWith(characterPrefix))
+            .reduce((settings, [key, value]) => {
+                const settingKey = key.slice(characterPrefix.length);
+                return { ...settings, [settingKey]: value };
+            }, {});
+
+        if (Object.keys(characterSettings).length > 0) {
+            character.settings = character.settings || {};
+            character.settings.secrets = {
+                ...characterSettings,
+                ...character.settings.secrets,
+            };
+        }
+
+        // Handle plugins
+        if (isAllStrings(character.plugins)) {
+            elizaLogger.info("Plugins are: ", character.plugins);
+            const importedPlugins = await Promise.all(
+                character.plugins.map(async (plugin) => {
+                    const importedPlugin = await import(plugin);
+                    return importedPlugin.default;
+                })
+            );
+            character.plugins = importedPlugins;
+        }
+
+        loadedCharacters.push(character);
+        elizaLogger.info(
+            `Successfully loaded character from: ${process.env.IQ_WALLET_ADDRESS}`
+        );
+        return loadedCharacters;
+    } catch (e) {
+        elizaLogger.error(
+            `Error parsing character from ${process.env.IQ_WALLET_ADDRESS}: ${e}`
+        );
+        process.exit(1);
+    }
 }
 
 export async function loadCharacters(
@@ -763,6 +856,10 @@ export async function createAgent(
         character,
         // character.plugins are handled when clients are added
         plugins: [
+            getSecret(character, "IQ_WALLET_ADDRESS")&&
+            getSecret(character, "IQSOlRPC")
+                ? elizaCodeinPlugin
+                : null,
             bootstrapPlugin,
             getSecret(character, "DEXSCREENER_API_KEY")
                 ? dexScreenerPlugin
@@ -794,6 +891,7 @@ export async function createAgent(
             getSecret(character, "COSMOS_RECOVERY_PHRASE") &&
                 getSecret(character, "COSMOS_AVAILABLE_CHAINS") &&
                 createCosmosPlugin(),
+
             (getSecret(character, "SOLANA_PUBLIC_KEY") ||
                 (getSecret(character, "WALLET_PUBLIC_KEY") &&
                     !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith(
@@ -892,10 +990,9 @@ export async function createAgent(
                 : null,
             getSecret(character, "BIRDEYE_API_KEY") ? birdeyePlugin : null,
             getSecret(character, "ECHOCHAMBERS_API_URL") &&
-            getSecret(character, "ECHOCHAMBERS_API_KEY")
-                ? echoChambersPlugin
+            getSecret(character, "ECHOCHAMBERS_API_KEY")? echoChambersPlugin
                 : null,
-            getSecret(character, "LETZAI_API_KEY") ? letzAIPlugin : null,
+        getSecret(character, "LETZAI_API_KEY") ? letzAIPlugin : null,
             getSecret(character, "STARGAZE_ENDPOINT") ? stargazePlugin : null,
             getSecret(character, "GIPHY_API_KEY") ? giphyPlugin : null,
             getSecret(character, "PASSPORT_API_KEY")
@@ -930,6 +1027,7 @@ export async function createAgent(
             getSecret(character, "RESERVOIR_API_KEY")
                 ? createNFTCollectionsPlugin()
                 : null,
+
         ].filter(Boolean),
         providers: [],
         actions: [],
@@ -1098,7 +1196,10 @@ const startAgents = async () => {
     let charactersArg = args.characters || args.character;
     let characters = [defaultCharacter];
 
-    if (charactersArg) {
+    if (process.env.IQ_WALLET_ADDRESS) {
+        characters = await loadCharacterFromOnchain();
+    }
+    if (onchainJson && charactersArg) {
         characters = await loadCharacters(charactersArg);
     }
 

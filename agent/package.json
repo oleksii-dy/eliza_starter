@@ -72,6 +72,7 @@
         "@elizaos/plugin-tee": "workspace:*",
         "@elizaos/plugin-tee-log": "workspace:*",
         "@elizaos/plugin-tee-marlin": "workspace:*",
+        "@elizaos/plugin-iq6900": "workspace:*",
         "@elizaos/plugin-multiversx": "workspace:*",
         "@elizaos/plugin-near": "workspace:*",
         "@elizaos/plugin-zksync-era": "workspace:*",
