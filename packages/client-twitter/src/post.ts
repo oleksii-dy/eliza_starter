@@ -1,6 +1,7 @@
 import { Tweet } from "agent-twitter-client";
 import {
     composeContext,
+    models,
     generateText,
     getEmbeddingZeroVector,
     IAgentRuntime,
@@ -27,10 +28,12 @@ import {
 } from "discord.js";
 import { State } from "@elizaos/core";
 import { ActionResponse } from "@elizaos/core";
-
+import { generateRandomTicker } from "@jawk/utils";
+import { StockAnalyzer, getNewsByTicker, getSummarizedNews, getPriceHistoryByTicker, getFinancialSummarization } from "@jawk/plugin-polygon";
+import { Memory } from "@elizaos/core";
 const MAX_TIMELINES_TO_FETCH = 15;
 
-const twitterPostTemplate = `
+export const twitterPostTemplate = `
 # Areas of Expertise
 {{knowledge}}
 
@@ -39,6 +42,7 @@ const twitterPostTemplate = `
 {{lore}}
 {{topics}}
 
+# Providers:
 {{providers}}
 
 {{characterPostExamples}}
@@ -46,9 +50,36 @@ const twitterPostTemplate = `
 {{postDirections}}
 
 # Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
-Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
-Your response should be 1, 2, or 3 sentences (choose the length at random).
-Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than {{maxTweetLength}}. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.`;
+Write a post that is {{adjective}} about {{topic}}, from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
+
+
+Your job is to write detailed financial reports of given ticker {{ticker}}.
+
+Consider:
+- Key financial metrics (revenue, profit margins, growth rates)
+- Recent price movements and trading volume
+- Notable news and events
+- Industry context and competitive position
+- Technical analysis indicators
+- Future outlook and potential catalysts
+
+#Financials Summary:
+{{financialSummary}}
+
+#Current Stock Price:
+{{currentStockPrice}}
+
+#News:
+{{news}}
+
+#Stock Analysis:
+{{stockAnalysis}}
+
+Analyze the data and synthesize it into a compelling narrative that provides value to investors.
+
+Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.
+
+The tone should be analytical and insightful while remaining accessible to retail investors. Focus on the most important information that drives investment decisions.`;
 
 export const twitterActionTemplate =
     `
@@ -231,7 +262,7 @@ export class TwitterPostClient {
                 minMinutes;
             const delay = randomMinutes * 60 * 1000;
 
-            if (Date.now() > lastPostTimestamp + delay) {
+            if (Date.now() > lastPostTimestamp + 1 * 60 * 1000) {
                 await this.generateNewTweet();
             }
 
@@ -458,20 +489,67 @@ export class TwitterPostClient {
      * Generates and posts a new tweet. If isDryRun is true, only logs what would have been posted.
      */
     async generateNewTweet() {
-        elizaLogger.log("Generating new tweet");
+        elizaLogger.log("Starting generateNewTweet process");
 
         try {
+            elizaLogger.log("Generating room ID for Twitter user", this.client.profile.username);
             const roomId = stringToUuid(
                 "twitter_generate_room-" + this.client.profile.username
             );
+
+            elizaLogger.log("Ensuring user exists in runtime");
             await this.runtime.ensureUserExists(
                 this.runtime.agentId,
                 this.client.profile.username,
                 this.runtime.character.name,
-                "twitter"
+                undefined,
+                "twitter",
             );
 
-            const topics = this.runtime.character.topics.join(", ");
+            elizaLogger.log("Generating random ticker symbol");
+            const randomTicker = generateRandomTicker();
+            elizaLogger.log("Selected ticker:", randomTicker);
+
+            elizaLogger.log("Creating mock message for analysis");
+            const mockMessage: Memory= {
+                content: {
+                    text: `Generate a financial analysis of ${randomTicker}`,
+                    action: ""
+                },
+                userId: this.runtime.agentId,
+                agentId: this.runtime.agentId,
+                roomId: roomId,
+            }
+
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setFullYear(endDate.getFullYear() - 1);
+
+            const stockAnalyzer = new StockAnalyzer();
+
+            const [news, priceHistory, financialData, stockAnalysis] = await Promise.all([
+                getSummarizedNews(randomTicker, this.runtime, {} as State),
+                getPriceHistoryByTicker(randomTicker, startDate.getTime(), endDate.getTime(), "day"),
+                getFinancialSummarization(randomTicker, this.runtime, {} as State, mockMessage, 126000),
+                stockAnalyzer.analyzeStock(randomTicker)
+            ]);
+
+            if (!news || !priceHistory || !financialData || !stockAnalysis) {
+                elizaLogger.error("Missing required data:", {
+                    hasNews: !!news,
+                    hasPriceHistory: !!priceHistory,
+                    hasFinancialData: !!financialData,
+                    hasStockAnalysis: !!stockAnalysis
+                });
+                return;
+            }
+
+            const pricingData = priceHistory[0].history.map((price) => ({
+                date: price.date,
+                close: price.close
+            })) ?? [];
+
+            const latestPrice = pricingData[pricingData.length - 1].close;
 
             const state = await this.runtime.composeState(
                 {
@@ -479,7 +557,7 @@ export class TwitterPostClient {
                     roomId: roomId,
                     agentId: this.runtime.agentId,
                     content: {
-                        text: topics || "",
+                        text: "",
                         action: "TWEET",
                     },
                 },
@@ -488,6 +566,11 @@ export class TwitterPostClient {
                 }
             );
 
+            state.financialSummary = financialData;
+            state.currentStockPrice = latestPrice;
+            state.news = news;
+            state.stockAnalysis = stockAnalysis;
+
             const context = composeContext({
                 state,
                 template:
@@ -495,7 +578,6 @@ export class TwitterPostClient {
                     twitterPostTemplate,
             });
 
-            elizaLogger.debug("generate post prompt:\n" + context);
 
             const newTweetContent = await generateText({
                 runtime: this.runtime,
@@ -503,10 +585,8 @@ export class TwitterPostClient {
                 modelClass: ModelClass.SMALL,
             });
 
-            // First attempt to clean content
             let cleanedContent = "";
 
-            // Try parsing as JSON first
             try {
                 const parsedResponse = JSON.parse(newTweetContent);
                 if (parsedResponse.text) {
@@ -515,42 +595,28 @@ export class TwitterPostClient {
                     cleanedContent = parsedResponse;
                 }
             } catch (error) {
-                error.linted = true; // make linter happy since catch needs a variable
-                // If not JSON, clean the raw content
+                error.linted = true;
                 cleanedContent = newTweetContent
-                    .replace(/^\s*{?\s*"text":\s*"|"\s*}?\s*$/g, "") // Remove JSON-like wrapper
-                    .replace(/^['"](.*)['"]$/g, "$1") // Remove quotes
-                    .replace(/\\"/g, '"') // Unescape quotes
-                    .replace(/\\n/g, "\n\n") // Unescape newlines, ensures double spaces
+                    .replace(/^\s*{?\s*"text":\s*"|"\s*}?\s*$/g, "")
+                    .replace(/^['"](.*)['"]$/g, "$1")
+                    .replace(/\\"/g, '"')
+                    .replace(/\\n/g, "\n\n")
                     .trim();
             }
 
             if (!cleanedContent) {
-                elizaLogger.error(
-                    "Failed to extract valid content from response:",
-                    {
-                        rawResponse: newTweetContent,
-                        attempted: "JSON parsing",
-                    }
-                );
+                elizaLogger.error("Failed to extract valid content", {
+                    rawResponse: newTweetContent,
+                    attempted: "JSON parsing"
+                });
                 return;
-            }
-
-            // Truncate the content to the maximum tweet length specified in the environment settings, ensuring the truncation respects sentence boundaries.
-            const maxTweetLength = this.client.twitterConfig.MAX_TWEET_LENGTH;
-            if (maxTweetLength) {
-                cleanedContent = truncateToCompleteSentence(
-                    cleanedContent,
-                    maxTweetLength
-                );
             }
 
             const removeQuotes = (str: string) =>
                 str.replace(/^['"](.*)['"]$/, "$1");
 
-            const fixNewLines = (str: string) => str.replaceAll(/\\n/g, "\n\n"); //ensures double spaces
+            const fixNewLines = (str: string) => str.replaceAll(/\\n/g, "\n\n");
 
-            // Final cleaning
             cleanedContent = removeQuotes(fixNewLines(cleanedContent));
 
             if (this.isDryRun) {
@@ -587,6 +653,7 @@ export class TwitterPostClient {
                 elizaLogger.error("Error sending tweet:", error);
             }
         } catch (error) {
+            console.log(error);
             elizaLogger.error("Error generating new tweet:", error);
         }
     }

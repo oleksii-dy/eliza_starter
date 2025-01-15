@@ -901,12 +901,18 @@ export class AgentRuntime implements IAgentRuntime {
         source?: string | null
     ) {
         const account = await this.databaseAdapter.getAccountById(userId);
+        elizaLogger.log("account", account);
+        elizaLogger.log("userId", userId);
+        elizaLogger.log("name", name);
+        elizaLogger.log("userName", userName);
+        elizaLogger.log("email", email);
+        elizaLogger.log("source", source);
         if (!account) {
             await this.databaseAdapter.createAccount({
                 id: userId,
                 name: name || userName || "Unknown User",
                 username: userName || name || "Unknown",
-                email: email || (userName || "Bot") + "@" + source || "Unknown", // Temporary
+                email: email || `${userName || "Bot"}@${source || "Unknown"}`, // Temporary
                 details: { summary: "" },
             });
             elizaLogger.success(`User ${userName} created successfully.`);
@@ -942,12 +948,14 @@ export class AgentRuntime implements IAgentRuntime {
                 this.agentId,
                 this.character.name ?? "Agent",
                 this.character.name ?? "Agent",
+                undefined,
                 source
             ),
             this.ensureUserExists(
                 userId,
                 userName ?? "User" + userId,
                 userScreenName ?? "User" + userId,
+                undefined,
                 source
             ),
             this.ensureRoomExists(roomId),

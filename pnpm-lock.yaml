@@ -975,6 +975,12 @@ importers:
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
+      '@jawk/plugin-polygon':
+        specifier: workspace:*
+        version: link:../plugin-polygon
+      '@jawk/utils':
+        specifier: workspace:*
+        version: link:../utils
       agent-twitter-client:
         specifier: 0.0.18
         version: 0.0.18(bufferutil@4.0.9)(utf-8-validate@6.0.5)

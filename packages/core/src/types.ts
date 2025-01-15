@@ -1242,7 +1242,8 @@ export interface IAgentRuntime {
         userId: UUID,
         userName: string | null,
         name: string | null,
-        source: string | null
+        email?: string | null,
+        source?: string | null
     ): Promise<void>;
 
     registerAction(action: Action): void;

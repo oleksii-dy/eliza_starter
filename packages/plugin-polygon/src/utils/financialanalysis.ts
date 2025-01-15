@@ -1,4 +1,5 @@
 import { getPriceHistoryByTicker, getCompanyFinancialsTicker } from './polygon.ts';
+import { elizaLogger } from '@elizaos/core';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -9,9 +10,6 @@ const MetricCalculator = {
     calculateNetProfitMargin(financials) {
         const netIncome = financials.income_statement.net_income_loss.value;
         const revenue = financials.income_statement.revenues.value;
-        console.log("netIncome", netIncome);
-        console.log("revenue", revenue);
-        console.log("netIncome / revenue", netIncome / revenue);
         return (netIncome / revenue) * 100;
     },
 
@@ -95,13 +93,8 @@ const MetricCalculator = {
         const sharesOutstanding = financials.income_statement.net_income_loss.value /
             financials.income_statement.basic_earnings_per_share.value;
 
-        console.log('Net Income:', financials.income_statement.net_income_loss.value);
-        console.log('EPS:', financials.income_statement.basic_earnings_per_share.value);
-        console.log('Shares Outstanding:', sharesOutstanding);
-        console.log('Latest Price:', latestPrice);
 
         const marketCap = latestPrice * sharesOutstanding;
-        console.log('Calculated Market Cap:', marketCap);
         return marketCap;
     },
 
@@ -162,7 +155,7 @@ const MetricCalculator = {
  * Main class for analyzing stock fundamentals
  * Processes SEC financial data to calculate key metrics
  */
-class StockAnalyzer {
+export class StockAnalyzer {
     /**
      * Main analysis function that processes a stock
      * @param {string} ticker - Stock symbol to analyze
@@ -269,8 +262,10 @@ class StockAnalyzer {
 
     private async fetchPricingData(ticker: string) {
         const now = new Date();
+        elizaLogger.log("Setting date range for price history - current date:", now.toISOString());
         const twoYearsAgo = new Date();
         twoYearsAgo.setFullYear(now.getFullYear() - 2);
+        elizaLogger.log("Two years ago date:", twoYearsAgo.toISOString());
 
         const fullData = await getPriceHistoryByTicker(
             ticker,
@@ -278,6 +273,7 @@ class StockAnalyzer {
             now.getTime(),
             "day"
         );
+
 
         return fullData[0]?.history.map(({ date, close }) => ({ t: date, c: close })) || [];
     }
