@@ -283,11 +283,12 @@ export class BridgeAction {
             );
         }
 
-        // Both tokens should be either null or both provided
-        if ((params.fromToken === null) !== (params.toToken === null)) {
-            throw new Error(
-                "fromToken and toToken must be either both null or both provided"
-            );
+        if (params.fromChain == "bsc" && params.toChain == "opBNB") {
+            if (params.fromToken && !params.toToken) {
+                throw new Error(
+                    "token address on opBNB is required for bridge ERC20 from BSC to opBNB"
+                );
+            }
         }
     }
 
@@ -390,7 +391,7 @@ export const bridgeAction = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Transfer 1 BNB from BSC to opBNB",
+                    text: "Deposit 1 BNB from BSC to opBNB",
                 },
             },
             {
@@ -412,13 +413,13 @@ export const bridgeAction = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Transfer 1 BNB from BSC to 0x1234 on opBNB",
+                    text: "Transfer 1 BNB from BSC to address 0x1234 on opBNB",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "I'll help you bridge 1 BNB from BSC to 0x1234 on opBNB",
+                    text: "I'll help you bridge 1 BNB from BSC to address 0x1234 on opBNB",
                     action: "BRIDGE",
                     content: {
                         fromChain: "bsc",
@@ -435,20 +436,21 @@ export const bridgeAction = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Deposit 1 token of 0x1234 from BSC to 0x5678 opBNB",
+                    text: "Deposit 1 0x123 token from BSC to address 0x456 on opBNB. The corresponding token address on opBNB is 0x789",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "I'll help you bridge 1 token of 0x1234 from BSC to 0x5678 on opBNB",
+                    text: "I'll help you bridge 1 0x123 token from BSC to address 0x456 on opBNB",
                     action: "BRIDGE",
                     content: {
                         fromChain: "bsc",
                         toChain: "opBNB",
-                        fromToken: "0x1234",
-                        toToken: "0x5678",
+                        fromToken: "0x123",
+                        toToken: "0x789",
                         amount: 1,
+                        toAddress: "0x456",
                     },
                 },
             },
@@ -471,6 +473,29 @@ export const bridgeAction = {
                         fromToken: undefined,
                         toToken: undefined,
                         amount: 1,
+                    },
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Withdraw 1 0x1234 token from opBNB to address 0x5678 on BSC",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "I'll help you bridge 1 0x1234 token from opBNB to address 0x5678 on BSC",
+                    action: "BRIDGE",
+                    content: {
+                        fromChain: "opBNB",
+                        toChain: "bsc",
+                        fromToken: "0x1234",
+                        toToken: undefined,
+                        amount: 1,
+                        toAddress: "0x5678",
                     },
                 },
             },

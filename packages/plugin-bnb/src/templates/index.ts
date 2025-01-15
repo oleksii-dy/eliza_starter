@@ -81,8 +81,8 @@ export const bridgeTemplate = `Given the recent messages and wallet information 
 Extract the following information about the requested token bridge:
 - From chain. Must be one of ["bsc", "opBNB"].
 - To chain. Must be one of ["bsc", "opBNB"].
-- From token address. Optional, must be a valid Ethereum address starting with "0x" or a web3 domain name. If not provided, bridge native token(BNB).
-- To token address. Optional, must be a valid Ethereum address starting with "0x" or a web3 domain name. If not provided, bridge native token(BNB). If from token is provided, to token must be provided.
+- From token address. Optional, must be a valid Ethereum address starting with "0x" or a web3 domain name.
+- To token address. Optional, must be a valid Ethereum address starting with "0x" or a web3 domain name.
 - Amount to bridge. Must be a string representing the amount in ether (only number without coin symbol, e.g., "0.1").
 - To address. Optional, must be a valid Ethereum address starting with "0x" or a web3 domain name. If not provided, bridge to the address of the wallet.
 
