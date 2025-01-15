@@ -8,146 +8,222 @@ const MetricCalculator = {
     // Calculates net profit margin as a percentage
     // Formula: (Net Income / Revenue) * 100
     calculateNetProfitMargin(financials) {
-        const netIncome = financials.income_statement.net_income_loss.value;
-        const revenue = financials.income_statement.revenues.value;
-        return (netIncome / revenue) * 100;
+        try {
+            const netIncome = financials?.income_statement?.net_income_loss?.value ?? 0;
+            const revenue = financials?.income_statement?.revenues?.value;
+            if (!revenue) return null;
+            return (netIncome / revenue) * 100;
+        } catch (error) {
+            return null;
+        }
     },
 
-    // Calculates Return on Equity as a percentage
-    // Formula: (Net Income / Total Equity) * 100
     calculateROE(financials) {
-        const netIncome = financials.income_statement.net_income_loss.value;
-        const equity = financials.balance_sheet.equity.value;
-        return (netIncome / equity) * 100;
+        try {
+            const netIncome = financials?.income_statement?.net_income_loss?.value ?? 0;
+            const equity = financials?.balance_sheet?.equity?.value;
+            if (!equity) return null;
+            return (netIncome / equity) * 100;
+        } catch (error) {
+            return null;
+        }
     },
 
-    // Calculates Current Ratio
-    // Formula: Current Assets / Current Liabilities
-    // Healthy ratio is typically > 1
     calculateCurrentRatio(financials) {
-        const currentAssets = financials.balance_sheet.current_assets.value;
-        const currentLiabilities = financials.balance_sheet.current_liabilities.value;
-        return currentAssets / currentLiabilities;
+        try {
+            const currentAssets = financials?.balance_sheet?.current_assets?.value;
+            const currentLiabilities = financials?.balance_sheet?.current_liabilities?.value;
+            if (!currentAssets || !currentLiabilities) return null;
+            return currentAssets / currentLiabilities;
+        } catch (error) {
+            return null;
+        }
     },
 
-    // Calculates Debt to Equity ratio
-    // Formula: Total Liabilities / Total Equity
-    // Lower values indicate less leverage
     calculateDebtToEquity(financials) {
-        const liabilities = financials.balance_sheet.liabilities.value;
-        const equity = financials.balance_sheet.equity.value;
-        return liabilities / equity;
+        try {
+            const liabilities = financials?.balance_sheet?.liabilities?.value;
+            const equity = financials?.balance_sheet?.equity?.value;
+            if (!liabilities || !equity) return null;
+            return liabilities / equity;
+        } catch (error) {
+            return null;
+        }
     },
 
-    // Calculates Free Cash Flow
-    // Formula: Operating Cash Flow - Capital Expenditures (investing cash flow)
     calculateFreeCashFlow(financials) {
-        const operatingCashFlow = financials.cash_flow_statement.net_cash_flow_from_operating_activities.value;
-        const investingCashFlow = financials.cash_flow_statement.net_cash_flow_from_investing_activities.value;
-        return operatingCashFlow - investingCashFlow;
+        try {
+            const operatingCashFlow = financials?.cash_flow_statement?.net_cash_flow_from_operating_activities?.value ?? 0;
+            const investingCashFlow = financials?.cash_flow_statement?.net_cash_flow_from_investing_activities?.value ?? 0;
+            return operatingCashFlow - investingCashFlow;
+        } catch (error) {
+            return null;
+        }
     },
 
-    // Operating Efficiency
     calculateRDToRevenue(financials) {
-        const rdExpense = financials.income_statement.operating_expenses.value;
-        const revenue = financials.income_statement.revenues.value;
-        return (rdExpense / revenue) * 100;
+        try {
+            const rdExpense = financials?.income_statement?.operating_expenses?.value ?? 0;
+            const revenue = financials?.income_statement?.revenues?.value;
+            if (!revenue) return null;
+            return (rdExpense / revenue) * 100;
+        } catch (error) {
+            return null;
+        }
     },
 
-    // Profitability
     calculateGrossMargin(financials) {
-        const grossProfit = financials.income_statement.gross_profit.value;
-        const revenue = financials.income_statement.revenues.value;
-        return (grossProfit / revenue) * 100;
+        try {
+            const grossProfit = financials?.income_statement?.gross_profit?.value ?? 0;
+            const revenue = financials?.income_statement?.revenues?.value;
+            if (!revenue) return null;
+            return (grossProfit / revenue) * 100;
+        } catch (error) {
+            return null;
+        }
     },
 
     calculateOperatingMargin(financials) {
-        const operatingIncome = financials.income_statement.operating_income_loss.value;
-        const revenue = financials.income_statement.revenues.value;
-        return (operatingIncome / revenue) * 100;
+        try {
+            const operatingIncome = financials?.income_statement?.operating_income_loss?.value ?? 0;
+            const revenue = financials?.income_statement?.revenues?.value;
+            if (!revenue) return null;
+            return (operatingIncome / revenue) * 100;
+        } catch (error) {
+            return null;
+        }
     },
 
-    // Per Share Metrics
     calculateEPS(financials) {
-        return financials.income_statement.basic_earnings_per_share.value;
+        try {
+            return financials?.income_statement?.basic_earnings_per_share?.value ?? null;
+        } catch (error) {
+            return null;
+        }
     },
 
     calculateDilutedEPS(financials) {
-        return financials.income_statement.diluted_earnings_per_share.value;
-    },
-
-    // Asset Utilization
-    calculateAssetTurnover(financials) {
-        const revenue = financials.income_statement.revenues.value;
-        const totalAssets = financials.balance_sheet.assets.value;
-        return revenue / totalAssets;
-    },
-
-    // Valuation Metrics
-    calculateTrailingPE(financials, latestPrice) {
-        const dilutedEPS = financials.income_statement.diluted_earnings_per_share.value;
-        return latestPrice / dilutedEPS;
-    },
-
-    calculateMarketCap(latestPrice: number, financials: any): number {
-        const sharesOutstanding = financials.income_statement.net_income_loss.value /
-            financials.income_statement.basic_earnings_per_share.value;
-
-
-        const marketCap = latestPrice * sharesOutstanding;
-        return marketCap;
-    },
-
-    calculatePriceToBook(financials: any, marketCap: number): number {
-        const bookValue = financials.balance_sheet.equity.value;
-        console.log('Book Value:', bookValue);
-        return marketCap / bookValue;
-    },
-
-    calculatePriceToEBIT(financials: any, marketCap: number): number {
-        const EBIT = financials.income_statement.income_loss_from_continuing_operations_before_tax.value;
-        console.log('EBIT:', EBIT);
-        return marketCap / EBIT;
-    },
-
-    calculatePriceToSales(financials: any, marketCap: number): number {
-        const revenue = financials.income_statement.revenues.value;
-        console.log('Revenue:', revenue);
-        return marketCap / revenue;
-    },
-
-    // Growth Metrics
-    calculateGrowthRate(currentValue: number, previousValue: number): number {
-        return ((currentValue - previousValue) / Math.abs(previousValue)) * 100;
-    },
-
-    calculateAverageGrowth(values: number[]): number {
-        const growthRates = [];
-        for (let i = 1; i < values.length; i++) {
-            growthRates.push(this.calculateGrowthRate(values[i], values[i-1]));
+        try {
+            return financials?.income_statement?.diluted_earnings_per_share?.value ?? null;
+        } catch (error) {
+            return null;
         }
-        return growthRates.reduce((a, b) => a + b, 0) / growthRates.length;
+    },
+
+    calculateAssetTurnover(financials) {
+        try {
+            const revenue = financials?.income_statement?.revenues?.value;
+            const totalAssets = financials?.balance_sheet?.assets?.value;
+            if (!revenue || !totalAssets) return null;
+            return revenue / totalAssets;
+        } catch (error) {
+            return null;
+        }
+    },
+
+    calculateTrailingPE(financials, latestPrice) {
+        try {
+            const dilutedEPS = financials?.income_statement?.diluted_earnings_per_share?.value;
+            if (!dilutedEPS || !latestPrice) return null;
+            return latestPrice / dilutedEPS;
+        } catch (error) {
+            return null;
+        }
+    },
+
+    calculateMarketCap(latestPrice: number, financials: any): number | null {
+        try {
+            const netIncome = financials?.income_statement?.net_income_loss?.value;
+            const basicEPS = financials?.income_statement?.basic_earnings_per_share?.value;
+            if (!netIncome || !basicEPS || !latestPrice) return null;
+
+            const sharesOutstanding = netIncome / basicEPS;
+            return latestPrice * sharesOutstanding;
+        } catch (error) {
+            return null;
+        }
+    },
+
+    calculatePriceToBook(financials: any, marketCap: number): number | null {
+        try {
+            const bookValue = financials?.balance_sheet?.equity?.value;
+            if (!bookValue || !marketCap) return null;
+            return marketCap / bookValue;
+        } catch (error) {
+            return null;
+        }
+    },
+
+    calculatePriceToEBIT(financials: any, marketCap: number): number | null {
+        try {
+            const EBIT = financials?.income_statement?.income_loss_from_continuing_operations_before_tax?.value;
+            if (!EBIT || !marketCap) return null;
+            return marketCap / EBIT;
+        } catch (error) {
+            return null;
+        }
+    },
+
+    calculatePriceToSales(financials: any, marketCap: number): number | null {
+        try {
+            const revenue = financials?.income_statement?.revenues?.value;
+            if (!revenue || !marketCap) return null;
+            return marketCap / revenue;
+        } catch (error) {
+            return null;
+        }
+    },
+
+    calculateGrowthRate(currentValue: number, previousValue: number): number | null {
+        try {
+            if (!currentValue || !previousValue) return null;
+            return ((currentValue - previousValue) / Math.abs(previousValue)) * 100;
+        } catch (error) {
+            return null;
+        }
+    },
+
+    calculateAverageGrowth(values: number[]): number | null {
+        try {
+            if (!values?.length) return null;
+            const growthRates = [];
+            for (let i = 1; i < values.length; i++) {
+                const growth = this.calculateGrowthRate(values[i], values[i-1]);
+                if (growth !== null) growthRates.push(growth);
+            }
+            if (!growthRates.length) return null;
+            return growthRates.reduce((a, b) => a + b, 0) / growthRates.length;
+        } catch (error) {
+            return null;
+        }
     },
 
     calculateGrowthMetrics(financialData: any[]): any {
-        const metrics = {
-            sales: financialData.map(d => d.financials.income_statement.revenues.value),
-            netIncome: financialData.map(d => d.financials.income_statement.net_income_loss.value),
-            profitMargin: financialData.map(d =>
-                (d.financials.income_statement.net_income_loss.value /
-                d.financials.income_statement.revenues.value) * 100
-            ),
-            rdExpenses: financialData.map(d => d.financials.income_statement.operating_expenses.value),
-            eps: financialData.map(d => d.financials.income_statement.basic_earnings_per_share.value)
-        };
+        try {
+            if (!financialData?.length) return null;
 
-        return {
-            salesGrowth: this.calculateAverageGrowth(metrics.sales),
-            netIncomeGrowth: this.calculateAverageGrowth(metrics.netIncome),
-            profitMarginGrowth: this.calculateAverageGrowth(metrics.profitMargin),
-            rdExpenseGrowth: this.calculateAverageGrowth(metrics.rdExpenses),
-            epsGrowth: this.calculateAverageGrowth(metrics.eps)
-        };
+            const metrics = {
+                sales: financialData.map(d => d?.financials?.income_statement?.revenues?.value).filter(Boolean),
+                netIncome: financialData.map(d => d?.financials?.income_statement?.net_income_loss?.value).filter(Boolean),
+                profitMargin: financialData.map(d => {
+                    const netIncome = d?.financials?.income_statement?.net_income_loss?.value;
+                    const revenue = d?.financials?.income_statement?.revenues?.value;
+                    return revenue ? (netIncome / revenue) * 100 : null;
+                }).filter(Boolean),
+                rdExpenses: financialData.map(d => d?.financials?.income_statement?.operating_expenses?.value).filter(Boolean),
+                eps: financialData.map(d => d?.financials?.income_statement?.basic_earnings_per_share?.value).filter(Boolean)
+            };
+
+            return {
+                salesGrowth: metrics.sales.length ? this.calculateAverageGrowth(metrics.sales) : null,
+                netIncomeGrowth: metrics.netIncome.length ? this.calculateAverageGrowth(metrics.netIncome) : null,
+                profitMarginGrowth: metrics.profitMargin.length ? this.calculateAverageGrowth(metrics.profitMargin) : null,
+                rdExpenseGrowth: metrics.rdExpenses.length ? this.calculateAverageGrowth(metrics.rdExpenses) : null,
+                epsGrowth: metrics.eps.length ? this.calculateAverageGrowth(metrics.eps) : null
+            };
+        } catch (error) {
+            return null;
+        }
     }
 };
 

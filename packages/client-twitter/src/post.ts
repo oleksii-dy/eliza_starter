@@ -50,10 +50,11 @@ export const twitterPostTemplate = `
 {{postDirections}}
 
 # Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
-Write a post that is {{adjective}} about {{topic}}, from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
+Write a post that is {{adjective}} about {{ticker}}, from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
+Do not try and add any styling to the post like bold, italic, or other formatting.
 
+Whenever a ticker is mentioned add a $ symbol in front of it.
 
-Your job is to write detailed financial reports of given ticker {{ticker}}.
 
 Consider:
 - Key financial metrics (revenue, profit margins, growth rates)
@@ -75,11 +76,12 @@ Consider:
 #Stock Analysis:
 {{stockAnalysis}}
 
-Analyze the data and synthesize it into a compelling narrative that provides value to investors.
+Start every post with the ticker and current price: {{ticker}}:{{currentStockPrice}} and whether or not you are "bullish" or "bearish" or "neutral" on the stock.
 
 Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.
 
-The tone should be analytical and insightful while remaining accessible to retail investors. Focus on the most important information that drives investment decisions.`;
+The post should be accessible to retail investors. Focus on the most important information that drives investment decisions.`;
+
 
 export const twitterActionTemplate =
     `
@@ -408,6 +410,7 @@ export class TwitterPostClient {
 
             if (noteTweetResult.errors && noteTweetResult.errors.length > 0) {
                 // Note Tweet failed due to authorization. Falling back to standard Tweet.
+                elizaLogger.error(noteTweetResult.errors);
                 const truncateContent = truncateToCompleteSentence(
                     content,
                     this.client.twitterConfig.MAX_TWEET_LENGTH
@@ -458,6 +461,7 @@ export class TwitterPostClient {
     ) {
         try {
             elizaLogger.log(`Posting new tweet:\n`);
+            elizaLogger.log(cleanedContent.length);
 
             let result;
 
@@ -506,7 +510,6 @@ export class TwitterPostClient {
                 "twitter",
             );
 
-            elizaLogger.log("Generating random ticker symbol");
             const randomTicker = generateRandomTicker();
             elizaLogger.log("Selected ticker:", randomTicker);
 

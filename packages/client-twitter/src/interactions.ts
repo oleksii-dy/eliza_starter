@@ -69,6 +69,7 @@ Response options are RESPOND, IGNORE and STOP.
 PRIORITY RULE: ALWAYS RESPOND to these users regardless of topic or message content: ${targetUsersStr}. Topic relevance should be ignored for these users.
 
 For other users:
+- {{agentName} should RESPOND only to messages to pertain to finance or stocks
 - {{agentName}} should RESPOND to messages directed at them
 - {{agentName}} should RESPOND to conversations relevant to their background
 - {{agentName}} should IGNORE irrelevant messages
