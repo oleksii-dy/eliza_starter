@@ -44,8 +44,18 @@ export const booleanFooter = `Respond with only a YES or a NO.`;
  * @returns {boolean|null} - Returns `true` for affirmative inputs, `false` for negative inputs, and `null` for unrecognized inputs or null/undefined.
  */
 export const parseBooleanFromText = (text: string): boolean | null => {
-    const match = text?.match(/\b(YES|NO)\b/i);
-    return match ? match[0].toUpperCase() === "YES" : null;
+    const match = text?.match(/\b(YES|NO|TRUE|FALSE|ON|OFF|ENABLE|DISABLE)\b/i);
+
+    if (match) {
+        const normalizedText = match[0].toUpperCase();
+        const isTrue =
+            normalizedText === "YES" ||
+            normalizedText === "TRUE" ||
+            normalizedText === "ON" ||
+            normalizedText === "ENABLE";
+        return isTrue;
+    }
+    return null;
 };
 
 export const stringArrayFooter = `Respond with a JSON array containing the values in a JSON block formatted for markdown with this structure:
