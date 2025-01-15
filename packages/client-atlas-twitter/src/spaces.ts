@@ -6,6 +6,7 @@ import {
     ModelClass,
     ServiceType,
     ITranscriptionService,
+    UUID,
 } from "@elizaos/core";
 import { ClientBase } from "./base";
 import {
@@ -14,7 +15,6 @@ import {
     SpaceConfig,
     RecordToDiskPlugin,
     IdleMonitorPlugin,
-    SpeakerRequest,
 } from "agent-twitter-client";
 import {
     SttTtsPlugin
@@ -45,13 +45,30 @@ interface CurrentSpeakerState {
     startTime: number;
 }
 
+// Define the interface locally since it's not exported
+interface SpeakerRequest {
+    userId: string;
+    sessionUUID: string;
+    username: string;
+}
+
 /**
  * Generate short filler text via GPT
  */
 async function generateFiller(runtime: IAgentRuntime, fillerType: string): Promise<string> {
     try {
         const context = composeContext({
-            state: { fillerType },
+            state: {
+                fillerType,
+                bio: '',
+                lore: '',
+                messageDirections: '',
+                postDirections: '',
+                roomId: '' as UUID,
+                actors: '',
+                recentMessages: '',
+                recentMessagesData: []
+            },
             template: `
 # INSTRUCTIONS:
 You are generating a short filler message for a Twitter Space. The filler type is "{{fillerType}}".
@@ -100,7 +117,16 @@ async function speakFiller(
 async function generateTopicsIfEmpty(runtime: IAgentRuntime): Promise<string[]> {
     try {
         const context = composeContext({
-            state: {},
+            state: {
+                bio: '',
+                lore: '',
+                messageDirections: '',
+                postDirections: '',
+                roomId: '' as UUID,
+                actors: '',
+                recentMessages: '',
+                recentMessagesData: []
+            },
             template: `
 # INSTRUCTIONS:
 Please generate 5 short topic ideas for a Twitter Space about technology or random interesting subjects.

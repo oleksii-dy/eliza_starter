@@ -26,6 +26,7 @@
         "customConditions": [
             "@elizaos/source"
         ],
+        "types": ["node"]
     },
     "include": [
         "src/**/*"
