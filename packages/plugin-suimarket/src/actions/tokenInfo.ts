@@ -56,7 +56,7 @@ Only extract information explicitly mentioned in the current question. Do not us
 Respond with a JSON markdown block containing only the extracted values.`;
 
 export const tokenInfo: Action = {
-    name: "tokenInfo",
+    name: "tokenInfoBySymbol",
 
     similes: [
         "GET_TOKEN",
@@ -133,6 +133,12 @@ export const tokenInfo: Action = {
         elizaLogger.log("[coinInfo] parsed content: ", parsedContent);
         const coinObject = await searchCoinInFIleJsonProvider(parsedContent.coin_symbol,parsedContent.coin_name);
         console.log("coinObject",coinObject)
+        if(coinObject === null){
+            callback({
+                text: `I cant find infomation of token address` ,
+
+            });
+        }
         const coinGecko = new CoingeckoProvider();
         const info = await coinGecko.getToken(coinObject.id);
         elizaLogger.info("[coinInfo] details: ", JSON.stringify(info));

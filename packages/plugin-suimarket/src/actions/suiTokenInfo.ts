@@ -1,6 +1,6 @@
 import {
-    ActionExample,
-    Content,
+    // ActionExample,
+    // Content,
     HandlerCallback,
     IAgentRuntime,
     Memory,
@@ -8,49 +8,62 @@ import {
     State,
     composeContext,
     elizaLogger,
-    generateObject,
+    generateObjectDeprecated,
     type Action,
 } from "@elizaos/core";
 
-import { formatObjectsToText, formatObjectToText } from "../utils/format";
+import {  formatObjectToText } from "../utils/format";
 
 import GeckoTerminalProvider2 from "../providers/coingeckoTerminalProvider2";
 
-const prompt = `Extract the token name and address from the input. If either piece of information is not present, set it to null.
+const promptSuiTokenInfoTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 
-Input: {input}
+Example response:
+    \`\`\`json
+    {
+        "token_address": "0x7123ef5ec546c363f270ef770472dfad231eeb86469a2d1fba566d6fd74cb9e1::craft::CRAFT"
+    }
+    \`\`\`
+{{recentMessages}}
+Extract ONLY from the current message (ignore any previous context or messages):
 
-Rules:
-- Token address must start with "0x" followed by 40+ hexadecimal characters
-- Token name should be a string of alphanumeric characters
-- If information is not found, use null
-- Return only the JSON object, no additional text
+Given the recent messages, extract the following information:
 
-Return format:
-{
-  "tokenName": string | null,
-  "tokenAddress": string | null
-}`
+token_address:
+
+Full contract address of the token
+Must be a string
+Include module and token name if present
+Default is null if not specified
+
+VALIDATION RULES:
+
+All property names must use double quotes
+All string values must use double quotes
+null values should not use quotes
+No trailing commas allowed
+No single quotes anywhere in the JSON
+Respond with a JSON markdown block containing only the extracted values.`
 
 export const suiTokenInfo: Action = {
-    name: "suiTokenInfo",
-    
+    name: "Token Info sui",
+
     description: "query tokens on Sui",
 
     similes: [
-        "parse token {input}",
-        "extract token details from {input}",
-        "get token data from {input}",
-        "identify token from {input}",
-        "find token info in {input}"
+        "parse token {input} on sui chain",
+        "extract token details from {input} on sui",
+        "get token data from {input} on sui network",
+        "identify token from {input} on sui",
+        "find token info in {input} on sui chain"
       ],
 
     examples: [],
-    
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         return true;
     },
-    
+
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -65,14 +78,32 @@ export const suiTokenInfo: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
+        const searchSuiTokenSymbolPromptTemplateContext = composeContext({
+            state,
+            template: promptSuiTokenInfoTemplate,
+        });
+        // Generate transfer content
+        const content = await generateObjectDeprecated({
+            runtime,
+            context: searchSuiTokenSymbolPromptTemplateContext,
+            modelClass: ModelClass.SMALL,
+        })
+        elizaLogger.log("content: ",content);
+
 
         let coinGecko = new GeckoTerminalProvider2();
-        let info = await coinGecko.getTokenDetails();
+        let info = await coinGecko.getTokenDetails("sui-network",content.token_address);
 
         if (callback) {
             callback({
-                text: await formatObjectToText(info),
-                content: info
+                text: `Detail info:`,
+                content: info,
+                action: 'suiTokenInfo',
+                result: {
+                    type: "token_info",
+                    data:info,
+
+                }
             });
         }
 
