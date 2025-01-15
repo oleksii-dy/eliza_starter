@@ -10,7 +10,7 @@ import {
     State,
     type Action,
 } from "@elizaos/core";
-import axios from "axios";
+import findByVerifiedAndSymbol from "../providers/searchCoinInAggre";
 const swapTemplate = `Please extract the following swap details for SUI network:
 
 {
@@ -20,7 +20,6 @@ const swapTemplate = `Please extract the following swap details for SUI network:
 }
 
 Recent messages: {{recentMessages}}
-Wallet info: {{walletInfo}}
 
 Extract the swap parameters from the conversation and wallet context above. Return only a JSON object with the specified fields. Use null for any values that cannot be determined.
 
@@ -30,7 +29,16 @@ Example response:
     "outputTokenSymbol": "USDC",
     "amount": 1.5,
 }
-\`\`\``;
+\`\`\`
+VALIDATION RULES:
+            All property names must use double quotes
+            All string values must use double quotes
+            null values should not use quotes
+            No trailing commas allowed
+            No single quotes anywhere in the JSON
+
+
+`;
 
 
 
@@ -68,30 +76,26 @@ export const executeSwap: Action = {
             modelClass: ModelClass.LARGE,
         });
         console.log("content:", content);
-        const responseCoinInfo = await axios.create({
-            baseURL: "https://aggregator.rockee.ai",
-            timeout: 5000,
-          }).get("/coins_info")
-
-        if(!Array.isArray(responseCoinInfo.data) || !responseCoinInfo.data.find((item: { symbol: string }) => item.symbol === content.inputTokenSymbol)){
+        const inputTokenObject = await findByVerifiedAndSymbol(content.inputTokenSymbol);
+        console.log(inputTokenObject)
+        if(!inputTokenObject){
             callback({
-                text:`Token ${content.inputTokenSymbol} not exist`,
+                text:`We do not support ${content.inputTokenSymbol} token in SUI network yet`,
              })
-
-            return true;
+             return true
         }
-        console.log(1)
-        if(!Array.isArray(responseCoinInfo.data) || !responseCoinInfo.data.find((item: { symbol: string }) => item.symbol === content.outputTokenSymbol)){
+        const outputTokenObject = await findByVerifiedAndSymbol(content.outputTokenSymbol);
+        console.log(outputTokenObject)
+        if(!outputTokenObject){
             callback({
-                text:`Token ${content.outputTokenSymbol} not exist`,
+                text:`We do not support ${content.outputTokenSymbol} token in SUI network yet`,
              })
-            return true;
+             return true
         }
-        console.log(2)
         const responseData = {
             ...content,
-            inputTokenAddress:responseCoinInfo.data.find((item: { symbol: string; type: string }) => item.symbol === content.inputTokenSymbol).type,
-            outputTokenAddress:responseCoinInfo.data.find((item: { symbol: string; type: string }) => item.symbol === content.outputTokenSymbol).type,
+            inputTokenAddress:inputTokenObject.type,
+            outputTokenAddress:outputTokenObject.type,
         }
         try {
 
