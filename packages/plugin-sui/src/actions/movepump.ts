@@ -184,9 +184,10 @@ async function createAndBuyOnMovePump(
 
     // Create MovePump transaction
     const createTx = new Transaction();
-    const buyAmount = BigInt(gasBalance.totalBalance) - minGasAmount;
-    const [splitSuiCoin] = createTx.splitCoins(createTx.gas, [buyAmount]);
-    const buyAmountInLamports = BigInt(
+    const [splitSuiCoin] = createTx.splitCoins(createTx.gas, [
+        BigInt(gasBalance.totalBalance) - minGasAmount,
+    ]);
+    const buyAmountInToken = BigInt(
         Number(createAndBuyContent.buyAmountToken) * 1_000_000
     );
 
@@ -200,7 +201,7 @@ async function createAndBuyOnMovePump(
             createTx.object(treasuryCap.objectId),
             createTx.object(SWAP_DEX_INFO_ID),
             splitSuiCoin,
-            createTx.pure.u64(buyAmountInLamports),
+            createTx.pure.u64(buyAmountInToken),
             createTx.object(CLOCK_ID),
             createTx.pure.string(createAndBuyContent.tokenMetadata.name),
             createTx.pure.string(createAndBuyContent.tokenMetadata.symbol),
