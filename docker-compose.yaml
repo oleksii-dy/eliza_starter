@@ -12,7 +12,7 @@ services:
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-your@email.com}"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
       - "--api.dashboard=true"
     ports:
@@ -25,12 +25,12 @@ services:
       - web
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_DASHBOARD_HOST:-dashboard.localhost}`)"
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_DASHBOARD_HOST}`)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.entrypoints=websecure"
       - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
       - "traefik.http.routers.dashboard.middlewares=auth"
-      - "traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH:-admin:$$apr1$$xyz123...}"
+      - "traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH}"
     healthcheck:
       test: ["CMD", "wget", "--spider", "http://localhost:8080/ping"]
       interval: 10s
@@ -76,7 +76,7 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.agent.rule=Host(`api.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.agent.rule=Host(`api.${DOMAIN}`)"
       - "traefik.http.routers.agent.entrypoints=websecure"
       - "traefik.http.routers.agent.tls.certresolver=letsencrypt"
       - "traefik.http.services.agent.loadbalancer.server.port=3000"
@@ -108,7 +108,7 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.client.rule=Host(`${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.client.rule=Host(`${DOMAIN}`)"
       - "traefik.http.routers.client.entrypoints=websecure"
       - "traefik.http.routers.client.tls.certresolver=letsencrypt"
       - "traefik.http.services.client.loadbalancer.server.port=5173"
@@ -117,7 +117,7 @@ services:
       - NODE_ENV=production
       - PORT=5173
       # API Configuration
-      - VITE_API_URL=https://api.${DOMAIN:-localhost}
+      - VITE_API_URL=https://api.${DOMAIN}
       # Feature Flags
       - ENABLE_VOICE=${ENABLE_VOICE:-true}
       - ENABLE_STREAMING=${ENABLE_STREAMING:-true}
