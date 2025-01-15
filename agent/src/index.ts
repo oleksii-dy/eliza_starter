@@ -7,6 +7,8 @@ import { LensAgentClient } from "@elizaos/client-lens";
 import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
+import { AtlasTwitterClientInterface } from "@elizaos/client-atlas-twitter";
+
 import {
     AgentRuntime,
     CacheManager,
@@ -64,6 +66,7 @@ import { abstractPlugin } from "@elizaos/plugin-abstract";
 import { avalanchePlugin } from "@elizaos/plugin-avalanche";
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
 import { echoChamberPlugin } from "@elizaos/plugin-echochambers";
+import { storytellerPlugin } from "@elizaos/plugin-storyteller";
 import Database from "better-sqlite3";
 import fs from "fs";
 import path from "path";
@@ -221,6 +224,51 @@ export async function loadCharacters(
                 elizaLogger.info(
                     `Successfully loaded character from: ${resolvedPath}`
                 );
+
+                // Add these logs
+                elizaLogger.info("Loading character:", character.name);
+                elizaLogger.info("System Prompt:", character.settings?.systemPrompt);
+                
+                if (character.settings?.systemPrompt?.startsWith("@import:")) {
+                    const promptPath = character.settings.systemPrompt.replace("@import:", "");
+                    const pathsToTry = [
+                        path.resolve(process.cwd(), promptPath + '.js'),
+                        path.resolve(__dirname, '..', promptPath + '.js')
+                    ];
+                
+                    elizaLogger.info("Trying paths:", pathsToTry.map(p => ({
+                        path: p,
+                        exists: fs.existsSync(p)
+                    })));
+                
+                    let imported = false;
+                    for (const tryPath of pathsToTry) {
+                        try {
+                            if (fs.existsSync(tryPath)) {
+                                const content = fs.readFileSync(tryPath, 'utf8');
+                                // Updated regex to match the actual file format
+                                const match = content.match(/export const atlasSystemPrompt = "([\s\S]*)"/);
+                                if (match && match[1]) {
+                                    character.settings.systemPrompt = match[1];
+                                    elizaLogger.info("Successfully loaded system prompt from:", tryPath);
+                                    elizaLogger.info("Prompt content:", character.settings.systemPrompt.substring(0, 100) + "...");
+                                    imported = true;
+                                    break;
+                                } else {
+                                    elizaLogger.error("Failed to extract prompt from content:", content.substring(0, 100) + "...");
+                                }
+                            }
+                        } catch (error) {
+                            elizaLogger.error("Load attempt failed for path:", tryPath);
+                            elizaLogger.error("Error details:", error);
+                        }
+                    }
+                
+                    if (!imported) {
+                        elizaLogger.error("Failed to load system prompt from any path");
+                    }
+                }
+                
             } catch (e) {
                 elizaLogger.error(
                     `Error parsing character from ${resolvedPath}: ${e}`
@@ -419,6 +467,11 @@ export async function initializeClients(
         }
     }
 
+    if (clientTypes.includes(Clients.ATLAS_TWITTER)) {
+        const atlasTwitterClient = await AtlasTwitterClientInterface.start(runtime);
+        if (atlasTwitterClient) clients.atlas_twitter = atlasTwitterClient;
+    }
+
     if (clientTypes.includes(Clients.FARCASTER)) {
         // why is this one different :(
         const farcasterClient = new FarcasterAgentClient(runtime);
@@ -525,6 +578,7 @@ export async function createAgent(
         // character.plugins are handled when clients are added
         plugins: [
             bootstrapPlugin,
+            //storytellerPlugin,
             getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
                 ? confluxPlugin
                 : null,

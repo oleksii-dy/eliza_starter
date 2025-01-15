@@ -1,0 +1,12 @@
+cd ATLAS-01/eliza/
+
+pnpm start --character="characters/atlas.character.json"
+
+pnpm start:client
+
+If you want to run an character per client, you can use the following command:
+
+pnpm start --characters="characters/atlas.character.json,characters/other.character.json"
+
+
+agent runtime in agent/src/index.ts

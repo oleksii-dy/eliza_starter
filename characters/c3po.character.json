@@ -5,6 +5,9 @@
     "settings": {
         "voice": {
             "model": "en_GB-alan-medium"
+        },
+        "modelConfig": {
+            "temperature": ".7"
         }
     },
     "plugins": [],
