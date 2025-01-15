@@ -50,6 +50,7 @@ COPY --from=builder /app/agent ./agent
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/characters ./characters
+COPY start.sh ./
 
 # Set the command to run the application
-CMD ["pnpm", "start"]
+CMD ["./start.sh"]
