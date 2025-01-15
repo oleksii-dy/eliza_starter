@@ -52,6 +52,7 @@
 - [pnpm](https://pnpm.io/installation)
 
 > **Note for Windows Users:** [WSL 2](https://learn.microsoft.com/en-us/windows/wsl/install-manual) is required.
+
 ### Use the Starter (Recommended)
 
 ```bash
