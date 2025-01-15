@@ -5,7 +5,14 @@ import {
     createSuccessResponse,
     createErrorResponse,
 } from "../types/index";
-
+import {
+    MsgExecuteContractCompat,
+    MsgPrivilegedExecuteContract,
+    getDefaultSubaccountId,
+    ExecPrivilegedArgVaultSubscribe,
+    ExecPrivilegedArgVaultRedeem,
+    spotQuantityToChainQuantityToFixed
+  } from '@injectivelabs/sdk-ts';
 /**
  * Fetches the details of a specific vault.
  *
@@ -480,5 +487,210 @@ export async function getClaimReferences(
         return createSuccessResponse(result);
     } catch (err) {
         return createErrorResponse("getClaimReferencesError", err);
+    }
+}
+// TODO : Need safer params for the xyk CPMM
+export async function instantiateCPMMVault(
+    this: InjectiveGrpcBase,
+    params: MitoTypes.InstantiateCPMMVaultParams
+): Promise<StandardResponse> {
+    try {
+        const defaultAmmConfig = {
+            notional_value_cap: '100000000000000000000000',
+            pricing_strategy: {
+                SmoothingPricingWithRelativePriceRange: {
+                    bid_range: '0.8',
+                    ask_range: '0.8',
+                }
+            },
+            max_invariant_sensitivity_bps: '5',
+            max_price_sensitivity_bps: '5',
+            order_type: 'Vanilla',
+        };
+
+        const msgs = MsgExecuteContractCompat.fromJSON({
+            contractAddress: params.MITO_MASTER_CONTRACT_ADDRESS,
+            funds: params.funds,
+            exec: {
+                action: 'register_vault',
+                msg: {
+                    is_subscribing_with_funds: true,
+                    registration_mode: {
+                        permissionless: {
+                            whitelisted_vault_code_id: params.CPMM_CONTRACT_CODE,
+                        },
+                    },
+                    instantiate_vault_msg: {
+                        Amm: {
+                            owner: params.senderWalletAddress,
+                            master_address: params.MITO_MASTER_CONTRACT_ADDRESS,
+                            market_id: params.marketId,
+                            fee_bps: params.feeBps,
+                            config_owner: params.senderWalletAddress,
+                            base_decimals: params.baseDecimals,
+                            quote_decimals: params.quoteDecimals,
+                            ...defaultAmmConfig
+                        },
+                    },
+                },
+            },
+            sender: params.senderWalletAddress,
+        });
+        return createSuccessResponse({ msgs });
+    } catch (err) {
+        return createErrorResponse("instantiateCPMMVaultError", err);
+    }
+}
+
+
+export async function subscribeToVault(
+    this: InjectiveGrpcBase,
+    params: MitoTypes.VaultSubscribeParams
+): Promise<StandardResponse> {
+    try {
+        const data = ExecPrivilegedArgVaultSubscribe.fromJSON({
+            args: params.vaultType === MitoTypes.VaultContractType.CPMM ? { slippage: params.slippage } : {},
+            origin: params.sender,
+            vaultSubaccountId: params.vaultSubaccountId,
+            traderSubaccountId: getDefaultSubaccountId(params.sender),
+        });
+
+        const formattedBaseAmount = params.subscriptionType !== MitoTypes.SpotRedemptionType.QuoteOnly
+            ? `${spotQuantityToChainQuantityToFixed({
+                value: params.baseAmount,
+                baseDecimals: params.market.baseDecimals
+            })} ${params.market.baseDenom}`
+            : '';
+
+        const formattedQuoteAmount = params.subscriptionType !== MitoTypes.SpotRedemptionType.BaseOnly
+            ? `${spotQuantityToChainQuantityToFixed({
+                value: params.quoteAmount,
+                baseDecimals: params.market.quoteDecimals
+            })} ${params.market.quoteDenom}`
+            : '';
+
+        const funds = [formattedBaseAmount, formattedQuoteAmount]
+            .filter((amount) => amount)
+            .join(', ');
+
+        const message = MsgPrivilegedExecuteContract.fromJSON({
+            data,
+            sender: params.sender,
+            funds,
+            contractAddress: params.masterAddress,
+        });
+
+        return createSuccessResponse({ message });
+    } catch (err) {
+        return createErrorResponse("subscribeToVaultError", err);
+    }
+}
+
+export async function redeemFromVault(
+    this: InjectiveGrpcBase,
+    params: MitoTypes.VaultRedeemParams
+): Promise<StandardResponse> {
+    try {
+        const data = ExecPrivilegedArgVaultRedeem.fromJSON({
+            origin: params.sender,
+            vaultSubaccountId: params.vaultSubaccountId,
+            traderSubaccountId: getDefaultSubaccountId(params.sender),
+            args: {
+                ...(params.marketType === MitoTypes.VaultMarketType.Derivative
+                    ? { slippage: params.slippage }
+                    : {}),
+                redemption_type: params.redemptionType
+            }
+        });
+
+        const amount = spotQuantityToChainQuantityToFixed({
+            value: params.redeemAmount,
+            baseDecimals: params.vaultBaseDecimals
+        });
+
+        const message = MsgPrivilegedExecuteContract.fromJSON({
+            data,
+            sender: params.sender,
+            contractAddress: params.masterAddress,
+            funds: `${amount} ${params.vaultLpDenom}`
+        });
+
+        return createSuccessResponse({ message });
+    } catch (err) {
+        return createErrorResponse("redeemFromVaultError", err);
+    }
+}
+
+export async function stakeVaultLP(
+    this: InjectiveGrpcBase,
+    params: MitoTypes.StakeVaultLPParams
+): Promise<StandardResponse> {
+    try {
+        const message = MsgExecuteContractCompat.fromJSON({
+            sender: params.sender,
+            funds: [{
+                denom: params.vaultLpDenom,
+                amount: spotQuantityToChainQuantityToFixed({
+                    value: params.amount,
+                    baseDecimals: params.vaultTokenDecimals
+                })
+            }],
+            contractAddress: params.stakingContractAddress,
+            exec: {
+                action: 'stake',
+                msg: {}
+            }
+        });
+        return createSuccessResponse({ message });
+    } catch (err) {
+        return createErrorResponse("stakeVaultLPError", err);
+    }
+}
+
+export async function unstakeVaultLP(
+    this: InjectiveGrpcBase,
+    params: MitoTypes.UnstakeVaultLPParams
+): Promise<StandardResponse> {
+    try {
+        const message = MsgExecuteContractCompat.fromJSON({
+            sender: params.sender,
+            contractAddress: params.stakingContractAddress,
+            exec: {
+                action: 'unstake',
+                msg: {
+                    coin: {
+                        denom: params.vaultLpDenom,
+                        amount: spotQuantityToChainQuantityToFixed({
+                            value: params.amount,
+                            baseDecimals: params.vaultTokenDecimals
+                        })
+                    }
+                }
+            }
+        });
+        return createSuccessResponse({ message });
+    } catch (err) {
+        return createErrorResponse("unstakeVaultLPError", err);
+    }
+}
+
+export async function claimVaultRewards(
+    this: InjectiveGrpcBase,
+    params: MitoTypes.ClaimVaultRewardsParams
+): Promise<StandardResponse> {
+    try {
+        const message = MsgExecuteContractCompat.fromJSON({
+            sender: params.sender,
+            contractAddress: params.stakingContractAddress,
+            exec: {
+                action: 'claim_rewards',
+                msg: {
+                    lp_token: params.vaultLpDenom
+                }
+            }
+        });
+        return createSuccessResponse({ message });
+    } catch (err) {
+        return createErrorResponse("claimVaultRewardsError", err);
     }
 }

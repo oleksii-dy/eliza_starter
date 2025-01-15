@@ -394,3 +394,122 @@ export interface ClaimReferenceParams extends PaginationParams {
     idoAddress: string;
     accountAddress: string;
 }
+
+export enum VaultContractType {
+    ManagedVault = 'crates.io:managed-vault',
+    CPMM = 'crates.io:vault-cpmm-spot',
+    ASMMSpot = 'crates.io:vault-asmm-spot',
+    ASMMPerp = 'crates.io:vault-asmm-perp'
+  }
+
+  export enum DerivativeRedemptionType {
+    QuoteOnly = 'QuoteOnly',
+    PositionAndQuote = 'PositionAndQuote'
+  }
+
+  export enum SpotRedemptionType {
+    BaseOnly = 'BaseOnly',
+    QuoteOnly = 'QuoteOnly',
+    BaseAndQuote = 'BaseAndQuote',
+    FixedBaseAndQuote = 'FixedBaseAndQuote',
+    VariableBaseAndQuote = 'VariableBaseAndQuote'
+  }
+
+  export enum VaultMarketType {
+    Spot = 'Spot',
+    Derivative = 'Derivative'
+  }
+
+  export interface InstantiateCPMMVaultParams {
+    MITO_MASTER_CONTRACT_ADDRESS: string;
+    CPMM_CONTRACT_CODE: number;
+    senderWalletAddress: string;
+    marketId: string;
+    feeBps: number;
+    baseDecimals: number;
+    quoteDecimals: number;
+    funds: {
+        denom: string;
+        amount: string;
+    }[];
+    // Overrides default parameters
+    notionalValueCap?: string;
+    pricingStrategy?: {
+        SmoothingPricingWithRelativePriceRange: {
+            bid_range: string;
+            ask_range: string;
+        };
+    };
+    maxInvariantSensitivityBps?: string;
+    maxPriceSensitivityBps?: string;
+    orderType?: string;
+}
+
+  export interface VaultSubscribeParams {
+    vaultType: VaultContractType;
+    slippage?: {
+      max_penalty: string;
+    };
+    sender: string;
+    vaultSubaccountId: string;
+    baseAmount: number;
+    quoteAmount: number;
+    market: {
+      baseDenom: string;
+      baseDecimals: number;
+      quoteDenom: string;
+      quoteDecimals: number;
+    };
+    subscriptionType: SpotRedemptionType;
+    masterAddress: string;
+  }
+
+  export interface VaultRedeemParams {
+    sender: string;
+    vaultSubaccountId: string;
+    marketType: VaultMarketType;
+    slippage?: {
+      max_penalty: string;
+    };
+    redemptionType: SpotRedemptionType | DerivativeRedemptionType;
+    redeemAmount: number;
+    vaultBaseDecimals: number;
+    masterAddress: string;
+    vaultLpDenom: string;
+  }
+
+  export interface StakeVaultLPParams {
+    sender: string;
+    amount: number;
+    vaultLpDenom: string;
+    vaultTokenDecimals: number;
+    stakingContractAddress: string;
+  }
+
+  export interface UnstakeVaultLPParams {
+    sender: string;
+    amount: number;
+    vaultLpDenom: string;
+    vaultTokenDecimals: number;
+    stakingContractAddress: string;
+  }
+
+  export interface ClaimVaultRewardsParams {
+    sender: string;
+    vaultLpDenom: string;
+    stakingContractAddress: string;
+  }
+
+  export interface GetVaultsParams {
+    skip?: number;
+    limit?: number;
+  }
+
+  export interface GetLPHoldersParams {
+    vaultAddress: string;
+    stakingContractAddress: string;
+  }
+
+  export interface GetStakingPoolsParams {
+    stakingContractAddress: string;
+  }
