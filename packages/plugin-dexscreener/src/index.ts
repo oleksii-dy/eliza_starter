@@ -3,9 +3,9 @@ import { TokenPriceAction } from "./actions/tokenAction";
 import { TokenPriceEvaluator } from "./evaluators/tokenEvaluator";
 import { TokenPriceProvider } from "./providers/tokenProvider";
 import {
-    latestTokensAction,
-    latestBoostedTokensAction,
-    topBoostedTokensAction,
+    LatestTokensAction,
+    LatestBoostedTokensAction,
+    TopBoostedTokensAction,
 } from "./actions/trendsAction";
 
 export * as actions from "./actions";
@@ -18,9 +18,9 @@ export const dexScreenerPlugin: Plugin = {
         "Dex Screener Plugin with Token Price Action, Token Trends, Evaluators and Providers",
     actions: [
         new TokenPriceAction(),
-        latestTokensAction,
-        latestBoostedTokensAction,
-        topBoostedTokensAction,
+        new LatestTokensAction(),
+        new LatestBoostedTokensAction(),
+        new TopBoostedTokensAction(),
     ],
     evaluators: [new TokenPriceEvaluator()],
     providers: [new TokenPriceProvider()],
