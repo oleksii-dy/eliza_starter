@@ -59,6 +59,50 @@ export class RedisClient implements IDatabaseCacheAdapter {
         }
     }
 
+    async deleteByPattern(params: { keyPattern: string }): Promise<boolean> {
+        try {
+            // If the pattern has a wildcard, we want to match any agentId as well
+            const pattern = params.keyPattern.includes("*")
+                ? `*:${params.keyPattern}` // Match any agentId
+                : `*:${params.keyPattern}*`; // Exact match with agentId wildcard
+
+            const keys = await this.client.keys(pattern);
+            if (keys.length > 0) {
+                await this.client.del(keys);
+            }
+            return true;
+        } catch (error) {
+            elizaLogger.error("Error removing cache by pattern", error);
+            return false;
+        }
+    }
+
+    async getAgentKeys(params: { agentId: UUID }): Promise<string[]> {
+        try {
+            // Use the agentId as prefix with wildcard suffix
+            const pattern = `${params.agentId}:*`;
+            const keys: string[] = [];
+
+            let cursor = "0";
+            do {
+                const [nextCursor, scanKeys] = await this.client.scan(
+                    cursor,
+                    "MATCH",
+                    pattern,
+                    "COUNT",
+                    100
+                );
+                cursor = nextCursor;
+                keys.push(...scanKeys);
+            } while (cursor !== "0");
+
+            return keys;
+        } catch (error) {
+            elizaLogger.error("Error getting agent cache keys", error);
+            return [];
+        }
+    }
+
     async disconnect(): Promise<void> {
         try {
             await this.client.quit();

@@ -15,6 +15,7 @@ import {
     DatabaseAdapter,
     EmbeddingProvider,
     RAGKnowledgeItem,
+    ChunkRow,
 } from "@elizaos/core";
 import fs from "fs";
 import { fileURLToPath } from "url";
@@ -1284,6 +1285,42 @@ export class PGLiteDatabaseAdapter
         );
     }
 
+    async deleteByPattern(params: { keyPattern: string }): Promise<boolean> {
+        return this.withDatabase(async () => {
+            try {
+                const sql = `DELETE FROM cache WHERE "key" LIKE $1`;
+                await this.query(sql, [params.keyPattern.replace("*", "%")]);
+                return true;
+            } catch (error) {
+                elizaLogger.error("Error removing cache by pattern", {
+                    error:
+                        error instanceof Error ? error.message : String(error),
+                    pattern: params.keyPattern,
+                });
+                return false;
+            }
+        }, "deleteByPattern");
+    }
+
+    async getAgentKeys(params: { agentId: UUID }): Promise<string[]> {
+        return this.withDatabase(async () => {
+            try {
+                const sql = `SELECT "key" FROM cache WHERE "agentId" = $1`;
+                const { rows } = await this.query<{ key: string }>(sql, [
+                    params.agentId,
+                ]);
+                return rows.map((row) => row.key);
+            } catch (error) {
+                elizaLogger.error("Error getting agent cache keys", {
+                    error:
+                        error instanceof Error ? error.message : String(error),
+                    agentId: params.agentId,
+                });
+                return [];
+            }
+        }, "getAgentKeys");
+    }
+
     async getKnowledge(params: {
         id?: UUID;
         agentId: UUID;
@@ -1300,6 +1337,21 @@ export class PGLiteDatabaseAdapter
                     paramCount++;
                     sql += ` AND id = $${paramCount}`;
                     queryParams.push(params.id);
+                }
+
+                // Handle wildcard ID search
+                if (params.id) {
+                    paramCount++;
+                    if (
+                        typeof params.id === "string" &&
+                        params.id.includes("*")
+                    ) {
+                        sql += ` AND id LIKE $${paramCount}`;
+                        queryParams.push(params.id.replace("*", "%"));
+                    } else {
+                        sql += ` AND id = $${paramCount}`;
+                        queryParams.push(params.id);
+                    }
                 }
 
                 if (params.limit) {
@@ -1493,16 +1545,92 @@ export class PGLiteDatabaseAdapter
     }
 
     async removeKnowledge(id: UUID): Promise<void> {
+        if (typeof id !== "string") {
+            throw new Error("Knowledge ID must be a string");
+        }
+
         return await this.withTransaction(async (tx) => {
             try {
-                await tx.query("DELETE FROM knowledge WHERE id = $1", [id]);
+                if (id.includes("*")) {
+                    const pattern = id.replace("*", "%");
+                    const sql = "DELETE FROM knowledge WHERE id LIKE ?";
+                    elizaLogger.debug(
+                        `[Knowledge Remove] Executing pattern deletion: ${sql} with pattern: ${pattern}`
+                    );
+                    const result = await tx.query(sql, [pattern]);
+                    elizaLogger.debug(
+                        `[Knowledge Remove] Pattern deletion affected ${result.affectedRows ?? 0} rows`
+                    );
+                } else {
+                    // Check existence first
+                    const selectSql = "SELECT id FROM knowledge WHERE id = ?";
+                    const chunkSql =
+                        "SELECT id FROM knowledge WHERE json_extract(content, '$.metadata.originalId') = ?";
+                    elizaLogger.debug(`[Knowledge Remove] Checking existence with:
+                        Main: ${selectSql} [${id}]
+                        Chunks: ${chunkSql} [${id}]`);
+
+                    const mainEntry = await tx.query(selectSql, [id]);
+                    const chunks = await tx.query<ChunkRow>(
+                        "SELECT id FROM knowledge WHERE originalId = ?",
+                        [id]
+                    );
+
+                    elizaLogger.debug(`[Knowledge Remove] Found:`, {
+                        mainEntryExists: mainEntry.rows.length > 0,
+                        chunkCount: chunks.rows.length,
+                        chunkIds: (chunks.rows as ChunkRow[]).map((c) => c.id),
+                    });
+
+                    // Delete chunks first
+                    const chunkDeleteSql =
+                        "DELETE FROM knowledge WHERE json_extract(content, '$.metadata.originalId') = ?";
+                    elizaLogger.debug(
+                        `[Knowledge Remove] Executing chunk deletion: ${chunkDeleteSql} [${id}]`
+                    );
+                    const chunkResult = await tx.query(chunkDeleteSql, [id]);
+                    elizaLogger.debug(
+                        `[Knowledge Remove] Chunk deletion affected ${chunkResult.affectedRows ?? 0} rows`
+                    );
+
+                    // Then delete main entry
+                    const mainDeleteSql = "DELETE FROM knowledge WHERE id = ?";
+                    elizaLogger.debug(
+                        `[Knowledge Remove] Executing main deletion: ${mainDeleteSql} [${id}]`
+                    );
+                    const mainResult = await tx.query(mainDeleteSql, [id]);
+                    elizaLogger.debug(
+                        `[Knowledge Remove] Main deletion affected ${mainResult.affectedRows ?? 0} rows`
+                    );
+
+                    // Verify deletion
+                    const verifyMain = await tx.query(selectSql, [id]);
+                    const verifyChunks = await tx.query(chunkSql, [id]);
+                    elizaLogger.debug(
+                        `[Knowledge Remove] Post-deletion check:`,
+                        {
+                            mainStillExists: verifyMain.rows.length > 0,
+                            remainingChunks: verifyChunks.rows.length,
+                        }
+                    );
+                }
+
+                elizaLogger.debug(
+                    `[Knowledge Remove] Transaction completed for id: ${id}`
+                );
             } catch (error) {
-                tx.rollback();
-                elizaLogger.error("Error removing knowledge", {
-                    error:
-                        error instanceof Error ? error.message : String(error),
+                elizaLogger.error("[Knowledge Remove] Error:", {
                     id,
+                    error:
+                        error instanceof Error
+                            ? {
+                                  message: error.message,
+                                  stack: error.stack,
+                                  name: error.name,
+                              }
+                            : error,
                 });
+                throw error;
             }
         }, "removeKnowledge");
     }

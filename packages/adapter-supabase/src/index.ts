@@ -5,16 +5,20 @@ import {
     type Relationship,
     Actor,
     GoalStatus,
+    IDatabaseCacheAdapter,
     Account,
     type UUID,
     Participant,
     Room,
     RAGKnowledgeItem,
-    elizaLogger
+    elizaLogger,
 } from "@elizaos/core";
 import { DatabaseAdapter } from "@elizaos/core";
 import { v4 as uuid } from "uuid";
-export class SupabaseDatabaseAdapter extends DatabaseAdapter {
+export class SupabaseDatabaseAdapter
+    extends DatabaseAdapter
+    implements IDatabaseCacheAdapter
+{
     async getRoom(roomId: UUID): Promise<UUID | null> {
         const { data, error } = await this.supabase
             .from("rooms")
@@ -688,14 +692,14 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         agentId: UUID;
     }): Promise<string | undefined> {
         const { data, error } = await this.supabase
-            .from('cache')
-            .select('value')
-            .eq('key', params.key)
-            .eq('agentId', params.agentId)
+            .from("cache")
+            .select("value")
+            .eq("key", params.key)
+            .eq("agentId", params.agentId)
             .single();
 
         if (error) {
-            elizaLogger.error('Error fetching cache:', error);
+            elizaLogger.error("Error fetching cache:", error);
             return undefined;
         }
 
@@ -707,17 +711,15 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         agentId: UUID;
         value: string;
     }): Promise<boolean> {
-        const { error } = await this.supabase
-            .from('cache')
-            .upsert({
-                key: params.key,
-                agentId: params.agentId,
-                value: params.value,
-                createdAt: new Date()
-            });
+        const { error } = await this.supabase.from("cache").upsert({
+            key: params.key,
+            agentId: params.agentId,
+            value: params.value,
+            createdAt: new Date(),
+        });
 
         if (error) {
-            elizaLogger.error('Error setting cache:', error);
+            elizaLogger.error("Error setting cache:", error);
             return false;
         }
 
@@ -730,10 +732,10 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     }): Promise<boolean> {
         try {
             const { error } = await this.supabase
-                .from('cache')
+                .from("cache")
                 .delete()
-                .eq('key', params.key)
-                .eq('agentId', params.agentId);
+                .eq("key", params.key)
+                .eq("agentId", params.agentId);
 
             if (error) {
                 elizaLogger.error("Error deleting cache", {
@@ -753,6 +755,41 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         }
     }
 
+    async deleteByPattern(params: { keyPattern: string }): Promise<boolean> {
+        try {
+            const { error } = await this.supabase
+                .from("cache")
+                .delete()
+                .ilike("key", params.keyPattern.replace("*", "%"));
+
+            if (error) {
+                throw error;
+            }
+            return true;
+        } catch (error) {
+            elizaLogger.error("Error removing cache by pattern", error);
+            return false;
+        }
+    }
+
+    async getAgentKeys(params: { agentId: UUID }): Promise<string[]> {
+        try {
+            const { data, error } = await this.supabase
+                .from("cache")
+                .select("key")
+                .eq("agentId", params.agentId);
+
+            if (error) {
+                throw error;
+            }
+
+            return data ? data.map((row) => row.key) : [];
+        } catch (error) {
+            elizaLogger.error("Error getting agent cache keys", error);
+            return [];
+        }
+    }
+
     async getKnowledge(params: {
         id?: UUID;
         agentId: UUID;
@@ -760,12 +797,16 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         query?: string;
     }): Promise<RAGKnowledgeItem[]> {
         let query = this.supabase
-            .from('knowledge')
-            .select('*')
+            .from("knowledge")
+            .select("*")
             .or(`agentId.eq.${params.agentId},isShared.eq.true`);
 
         if (params.id) {
-            query = query.eq('id', params.id);
+            if (typeof params.id === "string" && params.id.includes("*")) {
+                query = query.like("id", params.id.replace("*", "%"));
+            } else {
+                query = query.eq("id", params.id);
+            }
         }
 
         if (params.limit) {
@@ -778,12 +819,17 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             throw new Error(`Error getting knowledge: ${error.message}`);
         }
 
-        return data.map(row => ({
+        return data.map((row) => ({
             id: row.id,
             agentId: row.agentId,
-            content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content,
-            embedding: row.embedding ? new Float32Array(row.embedding) : undefined,
-            createdAt: new Date(row.createdAt).getTime()
+            content:
+                typeof row.content === "string"
+                    ? JSON.parse(row.content)
+                    : row.content,
+            embedding: row.embedding
+                ? new Float32Array(row.embedding)
+                : undefined,
+            createdAt: new Date(row.createdAt).getTime(),
         }));
     }
 
@@ -797,7 +843,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         const cacheKey = `embedding_${params.agentId}_${params.searchText}`;
         const cachedResult = await this.getCache({
             key: cacheKey,
-            agentId: params.agentId
+            agentId: params.agentId,
         });
 
         if (cachedResult) {
@@ -807,31 +853,36 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         // Convert Float32Array to array for Postgres vector
         const embedding = Array.from(params.embedding);
 
-        const { data, error } = await this.supabase.rpc('search_knowledge', {
+        const { data, error } = await this.supabase.rpc("search_knowledge", {
             query_embedding: embedding,
             query_agent_id: params.agentId,
             match_threshold: params.match_threshold,
             match_count: params.match_count,
-            search_text: params.searchText || ''
+            search_text: params.searchText || "",
         });
 
         if (error) {
             throw new Error(`Error searching knowledge: ${error.message}`);
         }
 
-        const results = data.map(row => ({
+        const results = data.map((row) => ({
             id: row.id,
             agentId: row.agentId,
-            content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content,
-            embedding: row.embedding ? new Float32Array(row.embedding) : undefined,
+            content:
+                typeof row.content === "string"
+                    ? JSON.parse(row.content)
+                    : row.content,
+            embedding: row.embedding
+                ? new Float32Array(row.embedding)
+                : undefined,
             createdAt: new Date(row.createdAt).getTime(),
-            similarity: row.similarity
+            similarity: row.similarity,
         }));
 
         await this.setCache({
             key: cacheKey,
             agentId: params.agentId,
-            value: JSON.stringify(results)
+            value: JSON.stringify(results),
         });
 
         return results;
@@ -841,23 +892,26 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         try {
             const metadata = knowledge.content.metadata || {};
 
-            const { error } = await this.supabase
-                .from('knowledge')
-                .insert({
-                    id: knowledge.id,
-                    agentId: metadata.isShared ? null : knowledge.agentId,
-                    content: knowledge.content,
-                    embedding: knowledge.embedding ? Array.from(knowledge.embedding) : null,
-                    createdAt: knowledge.createdAt || new Date(),
-                    isMain: metadata.isMain || false,
-                    originalId: metadata.originalId || null,
-                    chunkIndex: metadata.chunkIndex || null,
-                    isShared: metadata.isShared || false
-                });
+            const { error } = await this.supabase.from("knowledge").insert({
+                id: knowledge.id,
+                agentId: metadata.isShared ? null : knowledge.agentId,
+                content: knowledge.content,
+                embedding: knowledge.embedding
+                    ? Array.from(knowledge.embedding)
+                    : null,
+                createdAt: knowledge.createdAt || new Date(),
+                isMain: metadata.isMain || false,
+                originalId: metadata.originalId || null,
+                chunkIndex: metadata.chunkIndex || null,
+                isShared: metadata.isShared || false,
+            });
 
             if (error) {
-                if (metadata.isShared && error.code === '23505') { // Unique violation
-                    elizaLogger.info(`Shared knowledge ${knowledge.id} already exists, skipping`);
+                if (metadata.isShared && error.code === "23505") {
+                    // Unique violation
+                    elizaLogger.info(
+                        `Shared knowledge ${knowledge.id} already exists, skipping`
+                    );
                     return;
                 }
                 throw error;
@@ -866,43 +920,161 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             elizaLogger.error(`Error creating knowledge ${knowledge.id}:`, {
                 error,
                 embeddingLength: knowledge.embedding?.length,
-                content: knowledge.content
+                content: knowledge.content,
             });
             throw error;
         }
     }
 
     async removeKnowledge(id: UUID): Promise<void> {
-        const { error } = await this.supabase
-            .from('knowledge')
-            .delete()
-            .eq('id', id);
+        if (typeof id !== "string") {
+            throw new Error("Knowledge ID must be a string");
+        }
 
-        if (error) {
-            throw new Error(`Error removing knowledge: ${error.message}`);
+        try {
+            if (id.includes("*")) {
+                // Handle pattern deletion with LIKE
+                const pattern = id.replace("*", "%");
+                elizaLogger.debug(
+                    `[Knowledge Remove] Executing pattern deletion with pattern: ${pattern}`
+                );
+                const { error, count } = await this.supabase
+                    .from("knowledge")
+                    .delete()
+                    .like("id", pattern)
+                    .select("count");
+
+                if (error) throw error;
+                elizaLogger.debug(
+                    `[Knowledge Remove] Pattern deletion affected ${count ?? 0} rows`
+                );
+            } else {
+                // Check existence first
+                elizaLogger.debug(`[Knowledge Remove] Checking existence`);
+                const { data: mainEntry, error: mainCheckError } =
+                    await this.supabase
+                        .from("knowledge")
+                        .select("id")
+                        .eq("id", id)
+                        .single();
+
+                if (mainCheckError && mainCheckError.code !== "PGRST116")
+                    throw mainCheckError;
+
+                const { data: chunks, error: chunksCheckError } =
+                    await this.supabase
+                        .from("knowledge")
+                        .select("id")
+                        .filter("content->metadata->originalId", "eq", id);
+
+                if (chunksCheckError) throw chunksCheckError;
+
+                elizaLogger.debug(`[Knowledge Remove] Found:`, {
+                    mainEntryExists: !!mainEntry,
+                    chunkCount: chunks?.length ?? 0,
+                    chunkIds: chunks?.map((c) => c.id) ?? [],
+                });
+
+                // Delete chunks first
+                elizaLogger.debug(
+                    `[Knowledge Remove] Executing chunk deletion`
+                );
+                const { error: chunkError, count: chunkCount } =
+                    await this.supabase
+                        .from("knowledge")
+                        .delete()
+                        .filter("content->metadata->originalId", "eq", id)
+                        .select("count");
+
+                if (chunkError) throw chunkError;
+                elizaLogger.debug(
+                    `[Knowledge Remove] Chunk deletion affected ${chunkCount ?? 0} rows`
+                );
+
+                // Delete main entry
+                elizaLogger.debug(`[Knowledge Remove] Executing main deletion`);
+                const { error: mainError, count: mainCount } =
+                    await this.supabase
+                        .from("knowledge")
+                        .delete()
+                        .eq("id", id)
+                        .select("count");
+
+                if (mainError) throw mainError;
+                elizaLogger.debug(
+                    `[Knowledge Remove] Main deletion affected ${mainCount ?? 0} rows`
+                );
+
+                // Verify deletion
+                const { data: verifyMain, error: verifyMainError } =
+                    await this.supabase
+                        .from("knowledge")
+                        .select("id")
+                        .eq("id", id)
+                        .single();
+
+                if (verifyMainError && verifyMainError.code !== "PGRST116")
+                    throw verifyMainError;
+
+                const { data: verifyChunks, error: verifyChunksError } =
+                    await this.supabase
+                        .from("knowledge")
+                        .select("id")
+                        .filter("content->metadata->originalId", "eq", id);
+
+                if (verifyChunksError) throw verifyChunksError;
+
+                elizaLogger.debug(`[Knowledge Remove] Post-deletion check:`, {
+                    mainStillExists: !!verifyMain,
+                    remainingChunks: verifyChunks?.length ?? 0,
+                });
+            }
+
+            elizaLogger.debug(
+                `[Knowledge Remove] Operation completed for id: ${id}`
+            );
+        } catch (error) {
+            elizaLogger.error("[Knowledge Remove] Error:", {
+                id,
+                error:
+                    error instanceof Error
+                        ? {
+                              message: error.message,
+                              stack: error.stack,
+                              name: error.name,
+                          }
+                        : error,
+            });
+            throw error;
         }
     }
 
     async clearKnowledge(agentId: UUID, shared?: boolean): Promise<void> {
         if (shared) {
             const { error } = await this.supabase
-                .from('knowledge')
+                .from("knowledge")
                 .delete()
-                .filter('agentId', 'eq', agentId)
-                .filter('isShared', 'eq', true);
+                .filter("agentId", "eq", agentId)
+                .filter("isShared", "eq", true);
 
             if (error) {
-                elizaLogger.error(`Error clearing shared knowledge for agent ${agentId}:`, error);
+                elizaLogger.error(
+                    `Error clearing shared knowledge for agent ${agentId}:`,
+                    error
+                );
                 throw error;
             }
         } else {
             const { error } = await this.supabase
-                .from('knowledge')
+                .from("knowledge")
                 .delete()
-                .eq('agentId', agentId);
+                .eq("agentId", agentId);
 
             if (error) {
-                elizaLogger.error(`Error clearing knowledge for agent ${agentId}:`, error);
+                elizaLogger.error(
+                    `Error clearing knowledge for agent ${agentId}:`,
+                    error
+                );
                 throw error;
             }
         }

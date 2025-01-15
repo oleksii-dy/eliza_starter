@@ -13,7 +13,7 @@ import {
     type Relationship,
     type UUID,
     RAGKnowledgeItem,
-    elizaLogger
+    elizaLogger,
 } from "@elizaos/core";
 import { v4 } from "uuid";
 import { sqliteTables } from "./sqliteTables.ts";
@@ -805,6 +805,41 @@ export class SqlJsDatabaseAdapter
         }
     }
 
+    async deleteByPattern(params: { keyPattern: string }): Promise<boolean> {
+        try {
+            const sql = "DELETE FROM cache WHERE key LIKE ?";
+            const stmt = this.db.prepare(sql);
+            stmt.run([params.keyPattern.replace("*", "%")]);
+            stmt.free();
+            return true;
+        } catch (error) {
+            elizaLogger.error("Error removing cache by pattern", error);
+            return false;
+        }
+    }
+
+    async getAgentKeys(params: { agentId: UUID }): Promise<string[]> {
+        try {
+            const sql = "SELECT key FROM cache WHERE agentId = ?";
+            const stmt = this.db.prepare(sql);
+            stmt.bind([params.agentId]);
+            const keys: string[] = [];
+
+            while (stmt.step()) {
+                const result = stmt.get();
+                if (result && typeof result[0] === "string") {
+                    keys.push(result[0]);
+                }
+            }
+
+            stmt.free();
+            return keys;
+        } catch (error) {
+            elizaLogger.error("Error getting agent cache keys", error);
+            return [];
+        }
+    }
+
     async getKnowledge(params: {
         id?: UUID;
         agentId: UUID;
@@ -814,9 +849,15 @@ export class SqlJsDatabaseAdapter
         let sql = `SELECT * FROM knowledge WHERE ("agentId" = ? OR "isShared" = 1)`;
         const queryParams: any[] = [params.agentId];
 
+        // Handle wildcard ID search
         if (params.id) {
-            sql += ` AND id = ?`;
-            queryParams.push(params.id);
+            if (typeof params.id === "string" && params.id.includes("*")) {
+                sql += ` AND id LIKE ?`;
+                queryParams.push(params.id.replace("*", "%"));
+            } else {
+                sql += ` AND id = ?`;
+                queryParams.push(params.id);
+            }
         }
 
         if (params.limit) {
@@ -834,8 +875,10 @@ export class SqlJsDatabaseAdapter
                 id: row.id,
                 agentId: row.agentId,
                 content: JSON.parse(row.content),
-                embedding: row.embedding ? new Float32Array(row.embedding) : undefined, // Convert Uint8Array back to Float32Array
-                createdAt: row.createdAt
+                embedding: row.embedding
+                    ? new Float32Array(row.embedding)
+                    : undefined, // Convert Uint8Array back to Float32Array
+                createdAt: row.createdAt,
             });
         }
         stmt.free();
@@ -852,7 +895,7 @@ export class SqlJsDatabaseAdapter
         const cacheKey = `embedding_${params.agentId}_${params.searchText}`;
         const cachedResult = await this.getCache({
             key: cacheKey,
-            agentId: params.agentId
+            agentId: params.agentId,
         });
 
         if (cachedResult) {
@@ -901,11 +944,11 @@ export class SqlJsDatabaseAdapter
         stmt.bind([
             new Uint8Array(params.embedding.buffer),
             params.agentId,
-            `%${params.searchText || ''}%`,
+            `%${params.searchText || ""}%`,
             params.agentId,
             params.agentId,
             params.match_threshold,
-            params.match_count
+            params.match_count,
         ]);
 
         const results: RAGKnowledgeItem[] = [];
@@ -915,9 +958,11 @@ export class SqlJsDatabaseAdapter
                 id: row.id,
                 agentId: row.agentId,
                 content: JSON.parse(row.content),
-                embedding: row.embedding ? new Float32Array(row.embedding) : undefined,
+                embedding: row.embedding
+                    ? new Float32Array(row.embedding)
+                    : undefined,
                 createdAt: row.createdAt,
-                similarity: row.keyword_score
+                similarity: row.keyword_score,
             });
         }
         stmt.free();
@@ -925,7 +970,7 @@ export class SqlJsDatabaseAdapter
         await this.setCache({
             key: cacheKey,
             agentId: params.agentId,
-            value: JSON.stringify(results)
+            value: JSON.stringify(results),
         });
 
         return results;
@@ -947,45 +992,157 @@ export class SqlJsDatabaseAdapter
                 knowledge.id,
                 metadata.isShared ? null : knowledge.agentId,
                 JSON.stringify(knowledge.content),
-                knowledge.embedding ? new Uint8Array(knowledge.embedding.buffer) : null,
+                knowledge.embedding
+                    ? new Uint8Array(knowledge.embedding.buffer)
+                    : null,
                 knowledge.createdAt || Date.now(),
                 metadata.isMain ? 1 : 0,
                 metadata.originalId || null,
                 metadata.chunkIndex || null,
-                metadata.isShared ? 1 : 0
+                metadata.isShared ? 1 : 0,
             ]);
             stmt.free();
         } catch (error: any) {
             const isShared = knowledge.content.metadata?.isShared;
-            const isPrimaryKeyError = error?.code === 'SQLITE_CONSTRAINT_PRIMARYKEY';
+            const isPrimaryKeyError =
+                error?.code === "SQLITE_CONSTRAINT_PRIMARYKEY";
 
             if (isShared && isPrimaryKeyError) {
-                elizaLogger.info(`Shared knowledge ${knowledge.id} already exists, skipping`);
+                elizaLogger.info(
+                    `Shared knowledge ${knowledge.id} already exists, skipping`
+                );
                 return;
-            } else if (!isShared && !error.message?.includes('SQLITE_CONSTRAINT_PRIMARYKEY')) {
+            } else if (
+                !isShared &&
+                !error.message?.includes("SQLITE_CONSTRAINT_PRIMARYKEY")
+            ) {
                 elizaLogger.error(`Error creating knowledge ${knowledge.id}:`, {
                     error,
                     embeddingLength: knowledge.embedding?.length,
-                    content: knowledge.content
+                    content: knowledge.content,
                 });
                 throw error;
             }
 
-            elizaLogger.debug(`Knowledge ${knowledge.id} already exists, skipping`);
+            elizaLogger.debug(
+                `Knowledge ${knowledge.id} already exists, skipping`
+            );
         }
     }
 
     async removeKnowledge(id: UUID): Promise<void> {
-        const sql = `DELETE FROM knowledge WHERE id = ?`;
-        const stmt = this.db.prepare(sql);
-        stmt.run([id]);
-        stmt.free();
+        if (typeof id !== "string") {
+            throw new Error("Knowledge ID must be a string");
+        }
+
+        try {
+            if (id.includes("*")) {
+                // Handle pattern deletion
+                const pattern = id.replace("*", "%");
+                const sql = "DELETE FROM knowledge WHERE id LIKE ?";
+                elizaLogger.debug(
+                    `[Knowledge Remove] Executing pattern deletion: ${sql} with pattern: ${pattern}`
+                );
+                const stmt = this.db.prepare(sql);
+                stmt.run([pattern]);
+                stmt.free();
+                elizaLogger.debug(
+                    `[Knowledge Remove] Pattern deletion complete`
+                );
+            } else {
+                // Check existence first
+                const selectSql = "SELECT id FROM knowledge WHERE id = ?";
+                const chunkSql =
+                    "SELECT id FROM knowledge WHERE json_extract(content, '$.metadata.originalId') = ?";
+                elizaLogger.debug(`[Knowledge Remove] Checking existence with:
+                    Main: ${selectSql} [${id}]
+                    Chunks: ${chunkSql} [${id}]`);
+
+                const mainStmt = this.db.prepare(selectSql);
+                const mainEntry = mainStmt.get([id]);
+                mainStmt.free();
+
+                // Get chunks using step()
+                const chunkStmt = this.db.prepare(chunkSql);
+                const chunks: { id: string }[] = [];
+                chunkStmt.bind([id]);
+                while (chunkStmt.step()) {
+                    const row = chunkStmt.getAsObject();
+                    chunks.push({ id: row.id as string });
+                }
+                chunkStmt.free();
+
+                elizaLogger.debug(`[Knowledge Remove] Found:`, {
+                    mainEntryExists: !!mainEntry,
+                    chunkCount: chunks.length,
+                    chunkIds: chunks.map((c) => c.id),
+                });
+
+                // Delete chunks first
+                const chunkDeleteSql =
+                    "DELETE FROM knowledge WHERE json_extract(content, '$.metadata.originalId') = ?";
+                elizaLogger.debug(
+                    `[Knowledge Remove] Executing chunk deletion: ${chunkDeleteSql} [${id}]`
+                );
+                const chunkDeleteStmt = this.db.prepare(chunkDeleteSql);
+                chunkDeleteStmt.run([id]);
+                chunkDeleteStmt.free();
+                elizaLogger.debug(`[Knowledge Remove] Chunk deletion complete`);
+
+                // Delete main entry
+                const mainDeleteSql = "DELETE FROM knowledge WHERE id = ?";
+                elizaLogger.debug(
+                    `[Knowledge Remove] Executing main deletion: ${mainDeleteSql} [${id}]`
+                );
+                const mainDeleteStmt = this.db.prepare(mainDeleteSql);
+                mainDeleteStmt.run([id]);
+                mainDeleteStmt.free();
+                elizaLogger.debug(`[Knowledge Remove] Main deletion complete`);
+
+                // Verify deletion
+                const verifyMainStmt = this.db.prepare(selectSql);
+                const verifyMain = verifyMainStmt.get([id]);
+                verifyMainStmt.free();
+
+                // Verify chunks using step()
+                const verifyChunkStmt = this.db.prepare(chunkSql);
+                const verifyChunks: { id: string }[] = [];
+                verifyChunkStmt.bind([id]);
+                while (verifyChunkStmt.step()) {
+                    const row = verifyChunkStmt.getAsObject();
+                    verifyChunks.push({ id: row.id as string });
+                }
+                verifyChunkStmt.free();
+
+                elizaLogger.debug(`[Knowledge Remove] Post-deletion check:`, {
+                    mainStillExists: !!verifyMain,
+                    remainingChunks: verifyChunks.length,
+                });
+            }
+
+            elizaLogger.debug(
+                `[Knowledge Remove] Operation completed for id: ${id}`
+            );
+        } catch (error) {
+            elizaLogger.error("[Knowledge Remove] Error:", {
+                id,
+                error:
+                    error instanceof Error
+                        ? {
+                              message: error.message,
+                              stack: error.stack,
+                              name: error.name,
+                          }
+                        : error,
+            });
+            throw error;
+        }
     }
 
     async clearKnowledge(agentId: UUID, shared?: boolean): Promise<void> {
-        const sql = shared ?
-            `DELETE FROM knowledge WHERE ("agentId" = ? OR "isShared" = 1)` :
-            `DELETE FROM knowledge WHERE "agentId" = ?`;
+        const sql = shared
+            ? `DELETE FROM knowledge WHERE ("agentId" = ? OR "isShared" = 1)`
+            : `DELETE FROM knowledge WHERE "agentId" = ?`;
 
         const stmt = this.db.prepare(sql);
         stmt.run([agentId]);

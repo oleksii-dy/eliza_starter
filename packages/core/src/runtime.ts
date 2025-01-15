@@ -37,7 +37,7 @@ import {
     IRAGKnowledgeManager,
     IVerifiableInferenceAdapter,
     KnowledgeItem,
-    //RAGKnowledgeItem,
+    RAGKnowledgeItem,
     //Media,
     ModelClass,
     ModelProviderName,
@@ -51,8 +51,13 @@ import {
     type Actor,
     type Evaluator,
     type Memory,
+    KnowledgeScope,
+    CacheKeyPrefix,
 } from "./types.ts";
 import { stringToUuid } from "./uuid.ts";
+import { glob } from "glob";
+import { existsSync } from "fs";
+import fs from "fs/promises";
 
 /**
  * Represents the runtime environment for an agent, handling message processing,
@@ -438,10 +443,56 @@ export class AgentRuntime implements IAgentRuntime {
             this.character.knowledge &&
             this.character.knowledge.length > 0
         ) {
+            elizaLogger.info(
+                `[RAG Check] RAG Knowledge enabled: ${this.character.settings.ragKnowledge}`
+            );
+            elizaLogger.info(
+                `[RAG Check] Knowledge items:`,
+                this.character.knowledge
+            );
             if (this.character.settings.ragKnowledge) {
-                await this.processCharacterRAGKnowledge(
-                    this.character.knowledge
+                // Type guards with logging
+                const directoryKnowledge = this.character.knowledge.filter(
+                    (item): item is { path: string } => {
+                        const isDirectory =
+                            typeof item === "object" && "path" in item;
+                        elizaLogger.debug(
+                            `[RAG Filter] Item ${JSON.stringify(item)} is directory? ${isDirectory}`
+                        );
+                        return isDirectory;
+                    }
                 );
+
+                const stringKnowledge = this.character.knowledge.filter(
+                    (item): item is string => {
+                        const isString = typeof item === "string";
+                        elizaLogger.debug(
+                            `[RAG Filter] Item ${JSON.stringify(item)} is string? ${isString}`
+                        );
+                        return isString;
+                    }
+                );
+
+                elizaLogger.info(
+                    `[RAG Summary] Found ${directoryKnowledge.length} directories and ${stringKnowledge.length} strings`
+                );
+
+                // Process both types with logging
+                if (directoryKnowledge.length > 0) {
+                    elizaLogger.info(
+                        `[RAG Process] Processing directory knowledge:`,
+                        directoryKnowledge
+                    );
+                    await this.processCharacterRAGKnowledge();
+                }
+
+                if (stringKnowledge.length > 0) {
+                    elizaLogger.info(
+                        `[RAG Process] Processing string knowledge:`,
+                        stringKnowledge
+                    );
+                    await this.processCharacterKnowledge(stringKnowledge);
+                }
             } else {
                 const stringKnowledge = this.character.knowledge.filter(
                     (item): item is string => typeof item === "string"
@@ -476,6 +527,20 @@ export class AgentRuntime implements IAgentRuntime {
         // don't need to worry about knowledge
     }
 
+    private generateKnowledgeCacheKeyBase(
+        fileId: string,
+        isShared: boolean
+    ): string {
+        return `${CacheKeyPrefix.KNOWLEDGE}:${isShared ? KnowledgeScope.SHARED : KnowledgeScope.PRIVATE}:${fileId}`;
+    }
+
+    private generateKnowledgeCacheKey(
+        fileId: string,
+        isShared: boolean,
+        mtimeMs: number
+    ): string {
+        return `${this.generateKnowledgeCacheKeyBase(fileId, isShared)}-${Math.floor(mtimeMs)}`;
+    }
     /**
      * Processes character knowledge by creating document memories and fragment memories.
      * This function takes an array of knowledge items, creates a document memory for each item if it doesn't exist,
@@ -508,162 +573,343 @@ export class AgentRuntime implements IAgentRuntime {
     }
 
     /**
-     * Processes character knowledge by creating document memories and fragment memories.
-     * This function takes an array of knowledge items, creates a document knowledge for each item if it doesn't exist,
-     * then chunks the content into fragments, embeds each fragment, and creates fragment knowledge.
-     * An array of knowledge items or objects containing id, path, and content.
+     * Lists all knowledge entries for an agent without semantic search or reranking.
+     * Used primarily for administrative tasks like cleanup.
+     *
+     * @param agentId The agent ID to fetch knowledge entries for
+     * @returns Array of RAGKnowledgeItem entries
      */
-    private async processCharacterRAGKnowledge(
-        items: (string | { path: string; shared?: boolean })[]
-    ) {
-        let hasError = false;
+    async listAllKnowledge(agentId: UUID): Promise<RAGKnowledgeItem[]> {
+        elizaLogger.debug(
+            `[Knowledge List] Fetching all entries for agent: ${agentId}`
+        );
 
-        for (const item of items) {
-            if (!item) continue;
+        try {
+            // Only pass the required agentId parameter
+            const results = await this.databaseAdapter.getKnowledge({
+                agentId: agentId,
+            });
 
+            elizaLogger.debug(
+                `[Knowledge List] Found ${results.length} entries`
+            );
+            return results;
+        } catch (error) {
+            elizaLogger.error(
+                "[Knowledge List] Error fetching knowledge entries:",
+                error
+            );
+            throw error;
+        }
+    }
+
+    async cleanupDeletedKnowledgeFiles() {
+        try {
+            elizaLogger.debug(
+                "[Cleanup] Starting knowledge cleanup process, agent: ",
+                this.agentId
+            );
+
+            const existingKnowledge = await this.listAllKnowledge(this.agentId);
+            // Only process parent documents, ignore chunks
+            const parentDocuments = existingKnowledge.filter(
+                (item) =>
+                    !item.id.includes("chunk") && item.content.metadata?.source // Must have a source path
+            );
+
+            elizaLogger.debug(
+                `[Cleanup] Found ${parentDocuments.length} parent documents to check`
+            );
+
+            for (const item of parentDocuments) {
+                const filePath = item.content.metadata?.source;
+                elizaLogger.debug(`[Cleanup] Checking file path: ${filePath}`);
+
+                if (!existsSync(filePath)) {
+                    elizaLogger.warn(
+                        `[Cleanup] File not found, starting removal process: ${filePath}`
+                    );
+
+                    const idToRemove = item.id;
+                    elizaLogger.debug(
+                        `[Cleanup] Using ID for removal: ${idToRemove}`
+                    );
+
+                    try {
+                        // Just remove the parent document - this will cascade to chunks
+                        await this.ragKnowledgeManager.removeKnowledge(
+                            idToRemove
+                        );
+
+                        // Clean up the cache
+                        const baseCacheKeyWithWildcard = `${this.generateKnowledgeCacheKeyBase(
+                            idToRemove,
+                            item.content.metadata?.isShared || false
+                        )}*`;
+                        await this.cacheManager.deleteByPattern({
+                            keyPattern: baseCacheKeyWithWildcard,
+                        });
+
+                        elizaLogger.success(
+                            `[Cleanup] Successfully removed knowledge for file: ${filePath}`
+                        );
+                    } catch (deleteError) {
+                        elizaLogger.error(
+                            `[Cleanup] Error during deletion process for ${filePath}:`,
+                            deleteError instanceof Error
+                                ? {
+                                      message: deleteError.message,
+                                      stack: deleteError.stack,
+                                      name: deleteError.name,
+                                  }
+                                : deleteError
+                        );
+                    }
+                }
+            }
+
+            elizaLogger.debug("[Cleanup] Finished knowledge cleanup process");
+        } catch (error) {
+            elizaLogger.error(
+                "[Cleanup] Error cleaning up deleted knowledge files:",
+                error
+            );
+        }
+    }
+
+    /**
+     * Processes knowledge files for RAG embedding, with caching to prevent reprocessing unchanged files.
+     * Handles both shared and character-specific knowledge files.
+     *
+     * @private
+     * @param {string[]} files - Array of file paths to process
+     * @param {boolean} isShared - Whether these files are shared across all characters
+     *
+     * Supported file types:
+     * - Markdown (.md)
+     * - Text (.txt)
+     * - PDF (.pdf)
+     *
+     * Cache Strategy:
+     * - Uses file modification time for cache invalidation
+     * - Removes old embeddings if content has changed
+     *
+     * @throws Logs error and continues to next file if processing fails
+     */
+    private async processKnowledgeFiles(files: string[], isShared: boolean) {
+        for (const filePath of files) {
             try {
-                // Check if item is marked as shared
-                let isShared = false;
-                let contentItem = item;
+                const stats = await fs.stat(filePath);
+                const fileId = this.ragKnowledgeManager.generateScopedId(
+                    filePath,
+                    isShared
+                );
 
-                // Only treat as shared if explicitly marked
-                if (typeof item === "object" && "path" in item) {
-                    isShared = item.shared === true;
-                    contentItem = item.path;
-                } else {
-                    contentItem = item;
+                elizaLogger.debug(`[File Stats] ${filePath}:`, {
+                    mtimeMs: stats.mtimeMs,
+                    mtime: stats.mtime,
+                });
+
+                const cacheKey = this.generateKnowledgeCacheKey(
+                    fileId,
+                    isShared,
+                    stats.mtimeMs
+                );
+
+                const isProcessed =
+                    await this.cacheManager.get<boolean>(cacheKey);
+                if (isProcessed) {
+                    // Verify knowledge still exists in database
+                    const existingKnowledge =
+                        await this.ragKnowledgeManager.getKnowledge({
+                            id: fileId,
+                            agentId: this.agentId,
+                        });
+
+                    if (existingKnowledge.length === 0) {
+                        elizaLogger.warn(
+                            `[Knowledge Cache] Cache entry exists but knowledge not found in database, reprocessing: ${filePath}`
+                        );
+                        await this.cacheManager.delete(cacheKey);
+                    } else {
+                        // Also verify chunks exist
+                        elizaLogger.info(
+                            `[Knowledge Cache] Begin Knowledge Chunk verification for ${filePath}`
+                        );
+                        const chunks =
+                            await this.ragKnowledgeManager.getKnowledge({
+                                id: `${fileId}-chunk-*` as UUID,
+                                agentId: this.agentId,
+                            });
+
+                        if (chunks.length === 0) {
+                            elizaLogger.warn(
+                                `[Knowledge Cache] Main entry exists but chunks missing, reprocessing: ${filePath}`
+                            );
+                            await this.cacheManager.delete(cacheKey);
+                            await this.ragKnowledgeManager.removeKnowledge(
+                                fileId
+                            );
+                        } else {
+                            elizaLogger.info(
+                                `[Knowledge Cache] Chunk verified - Using cached embeddings for: ${filePath}`
+                            );
+                            continue;
+                        }
+                    }
                 }
 
-                const knowledgeId = stringToUuid(contentItem);
-                const fileExtension = contentItem
-                    .split(".")
-                    .pop()
-                    ?.toLowerCase();
+                elizaLogger.info(
+                    `[Knowledge Process] Processing file: ${filePath}`
+                );
 
-                // Check if it's a file or direct knowledge
+                const fileExtension = filePath.split(".").pop()?.toLowerCase();
                 if (
                     fileExtension &&
                     ["md", "txt", "pdf"].includes(fileExtension)
                 ) {
-                    try {
-                        const rootPath = join(process.cwd(), "..");
-                        const filePath = join(
-                            rootPath,
-                            "characters",
-                            "knowledge",
-                            contentItem
-                        );
-                        elizaLogger.info(
-                            "Attempting to read file from:",
-                            filePath
-                        );
+                    const content = await readFile(filePath, "utf-8");
 
-                        // Get existing knowledge first
-                        const existingKnowledge =
-                            await this.ragKnowledgeManager.getKnowledge({
-                                id: knowledgeId,
-                                agentId: this.agentId,
-                            });
-
-                        const content: string = await readFile(
-                            filePath,
-                            "utf8"
-                        );
-                        if (!content) {
-                            hasError = true;
-                            continue;
-                        }
-
-                        // If the file exists in DB, check if content has changed
-                        if (existingKnowledge.length > 0) {
-                            const existingContent =
-                                existingKnowledge[0].content.text;
-                            if (existingContent === content) {
-                                elizaLogger.info(
-                                    `File ${contentItem} unchanged, skipping`
-                                );
-                                continue;
-                            } else {
-                                // If content changed, remove old knowledge before adding new
-                                await this.ragKnowledgeManager.removeKnowledge(
-                                    knowledgeId
-                                );
-                                // Also remove any associated chunks - this is needed for non-PostgreSQL adapters
-                                // PostgreSQL adapter handles chunks internally via foreign keys
-                                await this.ragKnowledgeManager.removeKnowledge(
-                                    `${knowledgeId}-chunk-*` as UUID
-                                );
-                            }
-                        }
-
-                        elizaLogger.info(
-                            `Successfully read ${fileExtension.toUpperCase()} file content for`,
-                            this.character.name,
-                            "-",
-                            contentItem
-                        );
-
-                        await this.ragKnowledgeManager.processFile({
-                            path: contentItem,
-                            content: content,
-                            type: fileExtension as "pdf" | "md" | "txt",
-                            isShared: isShared,
-                        });
-                    } catch (error: any) {
-                        hasError = true;
-                        elizaLogger.error(
-                            `Failed to read knowledge file ${contentItem}. Error details:`,
-                            error?.message || error || "Unknown error"
-                        );
-                        continue; // Continue to next item even if this one fails
-                    }
-                } else {
-                    // Handle direct knowledge string
-                    elizaLogger.info(
-                        "Processing direct knowledge for",
-                        this.character.name,
-                        "-",
-                        contentItem.slice(0, 100)
-                    );
-
+                    // Check if content has changed
                     const existingKnowledge =
                         await this.ragKnowledgeManager.getKnowledge({
-                            id: knowledgeId,
+                            id: fileId,
                             agentId: this.agentId,
                         });
 
                     if (existingKnowledge.length > 0) {
-                        elizaLogger.info(
-                            `Direct knowledge ${knowledgeId} already exists, skipping`
-                        );
-                        continue;
+                        const existingContent =
+                            existingKnowledge[0].content.text;
+                        if (existingContent === content) {
+                            elizaLogger.info(
+                                `File ${filePath} unchanged, skipping`
+                            );
+                            await this.cacheManager.set<boolean>(
+                                cacheKey,
+                                true
+                            );
+                            continue;
+                        } else {
+                            // If content changed, remove old knowledge before adding new
+                            elizaLogger.info(
+                                `File ${filePath} changed, reindexing knowledge.`
+                            );
+                            await this.ragKnowledgeManager.removeKnowledge(
+                                fileId
+                            );
+                        }
                     }
 
-                    await this.ragKnowledgeManager.createKnowledge({
-                        id: knowledgeId,
-                        agentId: this.agentId,
-                        content: {
-                            text: contentItem,
-                            metadata: {
-                                type: "direct",
-                            },
-                        },
+                    // Process new content
+                    await this.ragKnowledgeManager.processFile({
+                        path: filePath,
+                        content,
+                        type: fileExtension as any,
+                        isShared,
                     });
+
+                    // Set cache for newly processed content
+                    await this.cacheManager.set<boolean>(cacheKey, true);
+                    elizaLogger.debug(`[Cache Set] Cached key: ${cacheKey}`);
                 }
-            } catch (error: any) {
-                hasError = true;
-                elizaLogger.error(
-                    `Error processing knowledge item ${item}:`,
-                    error?.message || error || "Unknown error"
-                );
-                continue; // Continue to next item even if this one fails
+            } catch (error) {
+                elizaLogger.error(`Error processing file ${filePath}:`, error);
+                continue;
             }
         }
+    }
 
-        if (hasError) {
-            elizaLogger.warn(
-                "Some knowledge items failed to process, but continuing with available knowledge"
+    /**
+     * Processes and loads RAG knowledge files for the character from specified directories.
+     * Handles both shared knowledge (available to all characters) and character-specific knowledge.
+     *
+     * Sample Directory Structure:
+     * knowledge/
+     *   shared/      <- shared across all characters (shared is a magic word, anything in here is shared across characters)
+     *   hexagrams/   <- specific knowledge domains (in this case, i-ching hexagrams)
+     *   private/     <- character-specific knowledge (could be called anything)
+     *
+     * @private
+     * @async
+     * @throws {Error} If there's an error reading or processing knowledge files
+     *
+     * @example
+     * // Character configuration
+     * knowledge: [
+     *   { path: "hexagrams" },  // Load from knowledge/hexagrams
+     *   { path: "private/character1" }  // Load from knowledge/private/character1
+     * ]
+     */
+    private async processCharacterRAGKnowledge() {
+        try {
+            // First, clean up any knowledge entries for deleted files
+            await this.cleanupDeletedKnowledgeFiles();
+
+            // Base knowledge directory
+            const baseKnowledgePath = join(
+                process.cwd(),
+                "characters",
+                "knowledge"
             );
+            elizaLogger.info(
+                `[Knowledge Base] Looking in: ${baseKnowledgePath}`
+            );
+
+            // Process shared knowledge first
+            const sharedPath = join(baseKnowledgePath, "shared");
+            if (existsSync(sharedPath)) {
+                const sharedFiles = await glob("**/*.*", {
+                    cwd: sharedPath,
+                    absolute: true,
+                });
+                elizaLogger.info(
+                    `[Knowledge Shared] Found ${sharedFiles.length} files:`,
+                    sharedFiles
+                );
+                await this.processKnowledgeFiles(sharedFiles, true);
+            } else {
+                elizaLogger.warn(
+                    `[Knowledge Shared] Shared directory not found at: ${sharedPath}`
+                );
+            }
+
+            // Process character-specific knowledge if specified
+            if (this.character.knowledge) {
+                const directoryKnowledge = this.character.knowledge.filter(
+                    (item): item is { path: string } =>
+                        typeof item === "object" && "path" in item
+                );
+
+                elizaLogger.info(
+                    `[Knowledge Character] Processing directories:`,
+                    directoryKnowledge.map((k) => k.path)
+                );
+
+                for (const item of directoryKnowledge) {
+                    const characterPath = join(baseKnowledgePath, item.path);
+                    elizaLogger.info(
+                        `[Knowledge Character] Looking in: ${characterPath}`
+                    );
+
+                    if (existsSync(characterPath)) {
+                        const characterFiles = await glob("**/*.*", {
+                            cwd: characterPath,
+                            absolute: true,
+                        });
+                        elizaLogger.info(
+                            `[Knowledge Character] Found ${characterFiles.length} files in ${item.path}:`,
+                            characterFiles
+                        );
+                        await this.processKnowledgeFiles(characterFiles, false);
+                    } else {
+                        elizaLogger.warn(
+                            `[Knowledge Character] Directory not found: ${characterPath}`
+                        );
+                    }
+                }
+            }
+        } catch (error) {
+            elizaLogger.error("[Knowledge Load] Error:", error);
         }
     }
 

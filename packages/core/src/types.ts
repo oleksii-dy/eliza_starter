@@ -262,8 +262,8 @@ export enum ModelProviderName {
     AKASH_CHAT_API = "akash_chat_api",
     LIVEPEER = "livepeer",
     LETZAI = "letzai",
-    DEEPSEEK="deepseek",
-    INFERA="infera"
+    DEEPSEEK = "deepseek",
+    INFERA = "infera",
 }
 
 /**
@@ -1065,6 +1065,10 @@ export interface IDatabaseCacheAdapter {
     }): Promise<boolean>;
 
     deleteCache(params: { agentId: UUID; key: string }): Promise<boolean>;
+
+    getAgentKeys(params: { agentId: UUID }): Promise<string[]>;
+
+    deleteByPattern(params: { keyPattern: string }): Promise<boolean>;
 }
 
 export interface IMemoryManager {
@@ -1087,7 +1091,10 @@ export interface IMemoryManager {
     ): Promise<{ embedding: number[]; levenshtein_score: number }[]>;
 
     getMemoryById(id: UUID): Promise<Memory | null>;
-    getMemoriesByRoomIds(params: { roomIds: UUID[], limit?: number }): Promise<Memory[]>;
+    getMemoriesByRoomIds(params: {
+        roomIds: UUID[];
+        limit?: number;
+    }): Promise<Memory[]>;
     searchMemoriesByEmbedding(
         embedding: number[],
         opts: {
@@ -1134,6 +1141,7 @@ export interface IRAGKnowledgeManager {
         type: "pdf" | "md" | "txt";
         isShared: boolean;
     }): Promise<void>;
+    generateScopedId(path: string, isShared: boolean): UUID;
 }
 
 export type CacheOptions = {
@@ -1147,9 +1155,14 @@ export enum CacheStore {
 }
 
 export interface ICacheManager {
+    // Core cache operations
     get<T = unknown>(key: string): Promise<T | undefined>;
     set<T>(key: string, value: T, options?: CacheOptions): Promise<void>;
     delete(key: string): Promise<void>;
+
+    // Pattern and bulk operations
+    deleteByPattern(params: { keyPattern: string }): Promise<void>; // renamed
+    getAgentKeys(params: { agentId: UUID }): Promise<string[]>; // renamed
 }
 
 export abstract class Service {
@@ -1378,9 +1391,28 @@ export interface IrysTimestamp {
 }
 
 export interface IIrysService extends Service {
-    getDataFromAnAgent(agentsWalletPublicKeys: string[], tags: GraphQLTag[], timestamp: IrysTimestamp): Promise<DataIrysFetchedFromGQL>;
-    workerUploadDataOnIrys(data: any, dataType: IrysDataType, messageType: IrysMessageType, serviceCategory: string[], protocol: string[], validationThreshold: number[], minimumProviders: number[], testProvider: boolean[], reputation: number[]): Promise<UploadIrysResult>;
-    providerUploadDataOnIrys(data: any, dataType: IrysDataType, serviceCategory: string[], protocol: string[]): Promise<UploadIrysResult>;
+    getDataFromAnAgent(
+        agentsWalletPublicKeys: string[],
+        tags: GraphQLTag[],
+        timestamp: IrysTimestamp
+    ): Promise<DataIrysFetchedFromGQL>;
+    workerUploadDataOnIrys(
+        data: any,
+        dataType: IrysDataType,
+        messageType: IrysMessageType,
+        serviceCategory: string[],
+        protocol: string[],
+        validationThreshold: number[],
+        minimumProviders: number[],
+        testProvider: boolean[],
+        reputation: number[]
+    ): Promise<UploadIrysResult>;
+    providerUploadDataOnIrys(
+        data: any,
+        dataType: IrysDataType,
+        serviceCategory: string[],
+        protocol: string[]
+    ): Promise<UploadIrysResult>;
 }
 
 export interface ITeeLogService extends Service {
@@ -1555,4 +1587,18 @@ export enum TranscriptionProvider {
 export enum ActionTimelineType {
     ForYou = "foryou",
     Following = "following",
+}
+
+export enum KnowledgeScope {
+    SHARED = "shared",
+    PRIVATE = "private",
+}
+
+export enum CacheKeyPrefix {
+    KNOWLEDGE = "knowledge",
+}
+
+export interface ChunkRow {
+    id: string;
+    // Add other properties if needed
 }

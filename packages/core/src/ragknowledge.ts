@@ -6,6 +6,7 @@ import {
     IRAGKnowledgeManager,
     RAGKnowledgeItem,
     UUID,
+    KnowledgeScope,
 } from "./types.ts";
 import { stringToUuid } from "./uuid.ts";
 
@@ -111,23 +112,25 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
             return "";
         }
 
-        return content
-            .replace(/```[\s\S]*?```/g, "")
-            .replace(/`.*?`/g, "")
-            .replace(/#{1,6}\s*(.*)/g, "$1")
-            .replace(/!\[(.*?)\]\(.*?\)/g, "$1")
-            .replace(/\[(.*?)\]\(.*?\)/g, "$1")
-            .replace(/(https?:\/\/)?(www\.)?([^\s]+\.[^\s]+)/g, "$3")
-            .replace(/<@[!&]?\d+>/g, "")
-            .replace(/<[^>]*>/g, "")
-            .replace(/^\s*[-*_]{3,}\s*$/gm, "")
-            .replace(/\/\*[\s\S]*?\*\//g, "")
-            .replace(/\/\/.*/g, "")
-            .replace(/\s+/g, " ")
-            .replace(/\n{3,}/g, "\n\n")
-            .replace(/[^a-zA-Z0-9\s\-_./:?=&]/g, "")
-            .trim()
-            .toLowerCase();
+        return (
+            content
+                .replace(/```[\s\S]*?```/g, "")
+                .replace(/`.*?`/g, "")
+                .replace(/#{1,6}\s*(.*)/g, "$1")
+                .replace(/!\[(.*?)\]\(.*?\)/g, "$1")
+                .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+                .replace(/(https?:\/\/)?(www\.)?([^\s]+\.[^\s]+)/g, "$3")
+                .replace(/<@[!&]?\d+>/g, "")
+                .replace(/<[^>]*>/g, "")
+                .replace(/^\s*[-*_]{3,}\s*$/gm, "")
+                .replace(/\/\*[\s\S]*?\*\//g, "")
+                .replace(/\/\/.*/g, "")
+                .replace(/\s+/g, " ")
+                .replace(/\n{3,}/g, "\n\n")
+                // .replace(/[^a-zA-Z0-9\s\-_./:?=&]/g, "") -- this strips out CJK chars
+                .trim()
+                .toLowerCase()
+        );
     }
 
     private hasProximityMatch(text: string, terms: string[]): boolean {
@@ -355,6 +358,13 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
         );
     }
 
+    public generateScopedId(path: string, isShared: boolean): UUID {
+        // Prefix the path with scope before generating UUID to ensure different IDs for shared vs private
+        const scope = isShared ? KnowledgeScope.SHARED : KnowledgeScope.PRIVATE;
+        const scopedPath = `${scope}-${path}`;
+        return stringToUuid(scopedPath);
+    }
+
     async processFile(file: {
         path: string;
         content: string;
@@ -375,22 +385,46 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
                 `[File Progress] Starting ${file.path} (${fileSizeKB.toFixed(2)} KB)`
             );
 
+            // Generate scoped ID for the file
+            const scopedId = this.generateScopedId(
+                file.path,
+                file.isShared || false
+            );
+
+            // Check if knowledge exists first
+            const existingKnowledge =
+                await this.runtime.databaseAdapter.getKnowledge({
+                    id: scopedId,
+                    agentId: this.runtime.agentId,
+                });
+
+            if (existingKnowledge.length > 0) {
+                elizaLogger.info(
+                    `Knowledge ${file.path} already exists, skipping creation`
+                );
+                return;
+            }
+
             // Step 1: Preprocessing
-            //const preprocessStart = Date.now();
             const processedContent = this.preprocess(content);
             timeMarker("Preprocessing");
 
-            // Step 2: Main document embedding
-            const mainEmbeddingArray = await embed(
-                this.runtime,
-                processedContent
-            );
-            const mainEmbedding = new Float32Array(mainEmbeddingArray);
-            timeMarker("Main embedding");
+            // Step 2: Generate chunks first
+            const chunks = await splitChunks(processedContent, 512, 20);
+            const totalChunks = chunks.length;
+            elizaLogger.info(`Generated ${totalChunks} chunks`);
+            timeMarker("Chunk generation");
 
-            // Step 3: Create main document
+            // Step 3: Create main document using first chunk's embedding
+            // This avoids trying to embed the entire document
+            const firstChunkEmbeddingArray = await embed(
+                this.runtime,
+                chunks[0]
+            );
+            const mainEmbedding = new Float32Array(firstChunkEmbeddingArray);
+
             await this.runtime.databaseAdapter.createKnowledge({
-                id: stringToUuid(file.path),
+                id: scopedId,
                 agentId: this.runtime.agentId,
                 content: {
                     text: content,
@@ -400,19 +434,13 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
                         isShared: file.isShared || false,
                     },
                 },
-                embedding: mainEmbedding,
+                embedding: mainEmbedding, // Using first chunk's embedding as representative
                 createdAt: Date.now(),
             });
             timeMarker("Main document storage");
 
-            // Step 4: Generate chunks
-            const chunks = await splitChunks(processedContent, 512, 20);
-            const totalChunks = chunks.length;
-            elizaLogger.info(`Generated ${totalChunks} chunks`);
-            timeMarker("Chunk generation");
-
-            // Step 5: Process chunks with larger batches
-            const BATCH_SIZE = 10; // Increased batch size
+            // Step 4: Process chunks with larger batches
+            const BATCH_SIZE = 10;
             let processedChunks = 0;
 
             for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
@@ -431,7 +459,7 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
                 await Promise.all(
                     embeddings.map(async (embeddingArray, index) => {
                         const chunkId =
-                            `${stringToUuid(file.path)}-chunk-${i + index}` as UUID;
+                            `${scopedId}-chunk-${i + index}` as UUID;
                         const chunkEmbedding = new Float32Array(embeddingArray);
 
                         await this.runtime.databaseAdapter.createKnowledge({
@@ -444,8 +472,9 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
                                     type: file.type,
                                     isShared: file.isShared || false,
                                     isChunk: true,
-                                    originalId: stringToUuid(file.path),
+                                    originalId: scopedId,
                                     chunkIndex: i + index,
+                                    originalPath: file.path,
                                 },
                             },
                             embedding: chunkEmbedding,
@@ -457,7 +486,7 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
                 processedChunks += batch.length;
                 const batchTime = (Date.now() - batchStart) / 1000;
                 elizaLogger.info(
-                    `[Batch Progress] Processed ${processedChunks}/${totalChunks} chunks (${batchTime.toFixed(2)}s for batch)`
+                    `[Batch Progress] ${file.path}: Processed ${processedChunks}/${totalChunks} chunks (${batchTime.toFixed(2)}s for batch)`
                 );
             }
 
@@ -466,15 +495,6 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
                 `[Complete] Processed ${file.path} in ${totalTime.toFixed(2)}s`
             );
         } catch (error) {
-            if (
-                file.isShared &&
-                error?.code === "SQLITE_CONSTRAINT_PRIMARYKEY"
-            ) {
-                elizaLogger.info(
-                    `Shared knowledge ${file.path} already exists in database, skipping creation`
-                );
-                return;
-            }
             elizaLogger.error(`Error processing file ${file.path}:`, error);
             throw error;
         }
