@@ -11,6 +11,8 @@ import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
+import { PrimusAdapter } from "@elizaos/plugin-primus";
+
 import { DirectClient } from "@elizaos/client-direct";
 import {
     AgentRuntime,
@@ -28,26 +30,29 @@ import {
     IDatabaseAdapter,
     IDatabaseCacheAdapter,
     ModelProviderName,
+    parseBooleanFromText,
     settings,
     stringToUuid,
     validateCharacterConfig,
 } from "@elizaos/core";
 import { zgPlugin } from "@elizaos/plugin-0g";
 import { goplusPlugin } from "@elizaos/plugin-goplus";
-import { PrimusAdapter } from "@elizaos/plugin-primus";
 
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import createGoatPlugin from "@elizaos/plugin-goat";
 // import { intifacePlugin } from "@elizaos/plugin-intiface";
 import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
 import { abstractPlugin } from "@elizaos/plugin-abstract";
+import { akashPlugin } from "@elizaos/plugin-akash";
 import { alloraPlugin } from "@elizaos/plugin-allora";
 import { aptosPlugin } from "@elizaos/plugin-aptos";
 import { artheraPlugin } from "@elizaos/plugin-arthera";
 import { autonomePlugin } from "@elizaos/plugin-autonome";
 import { availPlugin } from "@elizaos/plugin-avail";
 import { avalanchePlugin } from "@elizaos/plugin-avalanche";
+import { b2Plugin } from "@elizaos/plugin-b2";
 import { binancePlugin } from "@elizaos/plugin-binance";
+import { birdeyePlugin } from "@elizaos/plugin-birdeye";
 import {
     advancedTradePlugin,
     coinbaseCommercePlugin,
@@ -66,35 +71,38 @@ import { evmPlugin } from "@elizaos/plugin-evm";
 import { flowPlugin } from "@elizaos/plugin-flow";
 import { fuelPlugin } from "@elizaos/plugin-fuel";
 import { genLayerPlugin } from "@elizaos/plugin-genlayer";
+import { giphyPlugin } from "@elizaos/plugin-giphy";
+import { gitcoinPassportPlugin } from "@elizaos/plugin-gitcoin-passport";
+import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
 import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
 import { lensPlugin } from "@elizaos/plugin-lensNetwork";
+import { letzAIPlugin } from "@elizaos/plugin-letzai";
 import { multiversxPlugin } from "@elizaos/plugin-multiversx";
 //import { nearPlugin } from "@elizaos/plugin-near"; // causing image generation error
+import createNFTCollectionsPlugin from "@elizaos/plugin-nft-collections";
 import { nftGenerationPlugin } from "@elizaos/plugin-nft-generation";
 import { createNodePlugin } from "@elizaos/plugin-node";
 import { obsidianPlugin } from "@elizaos/plugin-obsidian";
+import { OpacityAdapter } from "@elizaos/plugin-opacity";
+import { openWeatherPlugin } from "@elizaos/plugin-open-weather";
+import { quaiPlugin } from "@elizaos/plugin-quai";
 import { sgxPlugin } from "@elizaos/plugin-sgx";
 import { solanaPlugin } from "@elizaos/plugin-solana";
 import { solanaAgentkitPlguin } from "@elizaos/plugin-solana-agentkit";
+import { squidRouterPlugin } from "@elizaos/plugin-squid-router";
+import { stargazePlugin } from "@elizaos/plugin-stargaze";
 import { storyPlugin } from "@elizaos/plugin-story";
 import { suiPlugin } from "@elizaos/plugin-sui";
 import { TEEMode, teePlugin } from "@elizaos/plugin-tee";
 import { teeLogPlugin } from "@elizaos/plugin-tee-log";
 import { teeMarlinPlugin } from "@elizaos/plugin-tee-marlin";
+import { verifiableLogPlugin } from "@elizaos/plugin-tee-verifiable-log";
+import { thirdwebPlugin } from "@elizaos/plugin-thirdweb";
 import { tonPlugin } from "@elizaos/plugin-ton";
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
 
-import { giphyPlugin } from "@elizaos/plugin-giphy";
-import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
-import { letzAIPlugin } from "@elizaos/plugin-letzai";
-import { thirdwebPlugin } from "@elizaos/plugin-thirdweb";
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
 
-import { akashPlugin } from "@elizaos/plugin-akash";
-import { OpacityAdapter } from "@elizaos/plugin-opacity";
-import { openWeatherPlugin } from "@elizaos/plugin-open-weather";
-import { quaiPlugin } from "@elizaos/plugin-quai";
-import { stargazePlugin } from "@elizaos/plugin-stargaze";
 import { cryptoNewsPlugin } from "@srise/plugin-crypto-news";
 import Database from "better-sqlite3";
 import fs from "fs";
@@ -806,6 +814,11 @@ export async function createAgent(
                   ]
                 : []),
             ...(teeMode !== TEEMode.OFF && walletSecretSalt ? [teePlugin] : []),
+            teeMode !== TEEMode.OFF &&
+            walletSecretSalt &&
+            getSecret(character, "VLOG")
+                ? verifiableLogPlugin
+                : null,
             getSecret(character, "SGX") ? sgxPlugin : null,
             getSecret(character, "ENABLE_TEE_LOG") &&
             ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
@@ -826,6 +839,7 @@ export async function createAgent(
             getSecret(character, "ABSTRACT_PRIVATE_KEY")
                 ? abstractPlugin
                 : null,
+            getSecret(character, "B2_PRIVATE_KEY") ? b2Plugin : null,
             getSecret(character, "BINANCE_API_KEY") &&
             getSecret(character, "BINANCE_SECRET_KEY")
                 ? binancePlugin
@@ -849,10 +863,18 @@ export async function createAgent(
             getSecret(character, "THIRDWEB_SECRET_KEY") ? thirdwebPlugin : null,
             getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
             getSecret(character, "STORY_PRIVATE_KEY") ? storyPlugin : null,
+            getSecret(character, "SQUID_SDK_URL") &&
+            getSecret(character, "SQUID_INTEGRATOR_ID") &&
+            getSecret(character, "SQUID_EVM_ADDRESS") &&
+            getSecret(character, "SQUID_EVM_PRIVATE_KEY") &&
+            getSecret(character, "SQUID_API_THROTTLE_INTERVAL")
+                ? squidRouterPlugin
+                : null,
             getSecret(character, "FUEL_PRIVATE_KEY") ? fuelPlugin : null,
             getSecret(character, "AVALANCHE_PRIVATE_KEY")
                 ? avalanchePlugin
                 : null,
+            getSecret(character, "BIRDEYE_API_KEY") ? birdeyePlugin : null,
             getSecret(character, "ECHOCHAMBERS_API_URL") &&
             getSecret(character, "ECHOCHAMBERS_API_KEY")
                 ? echoChambersPlugin
@@ -860,6 +882,9 @@ export async function createAgent(
             getSecret(character, "LETZAI_API_KEY") ? letzAIPlugin : null,
             getSecret(character, "STARGAZE_ENDPOINT") ? stargazePlugin : null,
             getSecret(character, "GIPHY_API_KEY") ? giphyPlugin : null,
+            getSecret(character, "PASSPORT_API_KEY")
+                ? gitcoinPassportPlugin
+                : null,
             getSecret(character, "GENLAYER_PRIVATE_KEY")
                 ? genLayerPlugin
                 : null,
@@ -884,6 +909,10 @@ export async function createAgent(
             getSecret(character, "AKASH_MNEMONIC") &&
             getSecret(character, "AKASH_WALLET_ADDRESS")
                 ? akashPlugin
+                : null,
+            getSecret(character, "QUAI_PRIVATE_KEY") ? quaiPlugin : null,
+            getSecret(character, "RESERVOIR_API_KEY")
+                ? createNFTCollectionsPlugin()
                 : null,
             getSecret(character, "QUAI_PRIVATE_KEY") ? quaiPlugin : null,
         ].filter(Boolean),
@@ -1098,3 +1127,19 @@ startAgents().catch((error) => {
     elizaLogger.error("Unhandled error in startAgents:", error);
     process.exit(1);
 });
+
+// Prevent unhandled exceptions from crashing the process if desired
+if (
+    process.env.PREVENT_UNHANDLED_EXIT &&
+    parseBooleanFromText(process.env.PREVENT_UNHANDLED_EXIT)
+) {
+    // Handle uncaught exceptions to prevent the process from crashing
+    process.on("uncaughtException", function (err) {
+        console.error("uncaughtException", err);
+    });
+
+    // Handle unhandled rejections to prevent the process from crashing
+    process.on("unhandledRejection", function (err) {
+        console.error("unhandledRejection", err);
+    });
+}
