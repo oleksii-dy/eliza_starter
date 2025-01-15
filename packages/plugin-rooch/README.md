@@ -1,39 +1,162 @@
-# Sample Plugin for Eliza
+# @elizaos/plugin-rooch
 
-The Sample Plugin for Eliza extends the functionality of the Eliza platform by providing additional actions, providers, evaluators, and more. This plugin is designed to be easily extendable and customizable to fit various use cases.
+Core Rooch blockchain plugin for Eliza OS that provides essential services and actions for wallet management and token operations on the Rooch network.
 
-## Description
+## Overview
 
-The Sample Plugin offers a set of features that can be integrated into the Eliza platform to enhance its capabilities. Below is a high-level overview of the different components available in this plugin.
+This plugin provides functionality to:
+- Transfer tokens between wallets (currently supporting RGas for GAS consumption)
+- Query wallet balances and portfolio values
+- Manage wallet interactions with the Rooch network
 
-## Actions
+## Installation
 
-- **createResourceAction**: This action enables the creation and management of generic resources. It can be customized to handle different types of resources and integrate with various data sources.
+```bash
+npm install @elizaos/plugin-rooch
+```
 
-## Providers
+## Configuration
 
-- **sampleProvider**: This provider offers a mechanism to supply data or services to the plugin. It can be extended to include additional providers as needed.
+The plugin requires the following environment variables:
 
-## Evaluators
+```env
+ROOCH_PRIVATE_KEY=your_private_key
+ROOCH_NETWORK=mainnet|testnet|devnet|localnet
+```
 
-- **sampleEvaluator**: This evaluator provides a way to assess or analyze data within the plugin. It can be extended to include additional evaluators as needed.
+## Usage
 
-## Services
+Import and register the plugin in your Eliza configuration:
 
-- **[ServiceName]**: Description of the service and its functionality. This can be extended to include additional services as needed.
+```typescript
+import { roochPlugin } from "@elizaos/plugin-rooch";
 
-## Clients
+export default {
+  plugins: [roochPlugin],
+  // ... other configuration
+};
+```
 
-- **[ClientName]**: Description of the client and its functionality. This can be extended to include additional clients as needed.
+## Features
 
-## How to Extend
+### Send RGas
 
-To extend the Sample Plugin, you can add new actions, providers, evaluators, services, and clients by following the structure provided in the plugin. Each component can be customized to fit your specific requirements.
+Transfer RGas (Rooch network gas token) to another address:
 
-1. **Actions**: Add new actions by defining them in the `actions` array.
-2. **Providers**: Add new providers by defining them in the `providers` array.
-3. **Evaluators**: Add new evaluators by defining them in the `evaluators` array.
-4. **Services**: Add new services by defining them in the `services` array.
-5. **Clients**: Add new clients by defining them in the `clients` array.
+```typescript
+// Example conversation
+User: "Send 10 RGas to 0x4f2e63be8e7fe287836e29cde6f3d5cbc96eefd0c0e3f3747668faa2ae7324b0"
+Assistant: "I'll send 10 RGas now..."
+```
 
-For more detailed information on how to extend the plugin, refer to the documentation provided in the Eliza platform.
+### Check Wallet Balance
+
+Query wallet balance and portfolio value:
+
+```typescript
+// Example conversation
+User: "What's my wallet balance?"
+Assistant: "Your wallet contains 100 RGas..."
+```
+
+## API Reference
+
+### Actions
+
+- `SEND_TOKEN`: Transfer RGas to another address
+- `TRANSFER_TOKEN`: Alias for SEND_TOKEN
+- `SEND_RGAS`: Alias for SEND_TOKEN
+- `PAY`: Alias for SEND_TOKEN
+
+### Providers
+
+- `walletProvider`: Manages wallet interactions with the Rooch network, including balance queries and portfolio tracking
+
+## Development
+
+### Building
+
+```bash
+npm run build
+```
+
+### Testing
+
+```bash
+npm run test
+```
+
+## Dependencies
+
+- `@roochnetwork/rooch-sdk`: Core Rooch blockchain interaction library
+- `bignumber.js`: Precise number handling
+- `node-cache`: Caching implementation
+- Other standard dependencies listed in package.json
+
+## Future Enhancements
+
+The following features and improvements are planned for future releases:
+
+1. **Transaction Management**
+   - Batch transaction processing
+   - Transaction simulation
+   - Gas optimization strategies
+   - Custom transaction builders
+   - Advanced error handling
+
+2. **Wallet Integration**
+   - Multi-wallet support
+   - Hardware wallet integration
+   - Social recovery options
+   - Account abstraction
+   - Transaction history tracking
+
+3. **Smart Contract Features**
+   - Contract deployment tools
+   - Move module templates
+   - Testing framework
+   - Upgrade management
+   - Security analysis
+
+4. **Token Operations**
+   - Batch token transfers
+   - Token metadata handling
+   - Custom token standards
+   - Collection management
+
+5. **Developer Tools**
+   - Enhanced debugging
+   - CLI improvements
+   - Documentation generator
+   - Integration templates
+   - Performance monitoring
+
+We welcome community feedback and contributions to help prioritize these enhancements.
+
+## Contributing
+
+Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
+
+## Credits
+
+This plugin integrates with and builds upon several key technologies:
+
+- [Rooch Blockchain](https://rooch.network): Scalable and high-performance blockchain platform
+- [@roochnetwork/rooch-sdk](https://www.npmjs.com/package/@roochnetwork/rooch-sdk): Official Rooch SDK
+- [bignumber.js](https://github.com/MikeMcl/bignumber.js/): Precise number handling
+- [node-cache](https://www.npmjs.com/package/node-cache): Caching implementation
+
+Special thanks to:
+- The Rooch team for developing the Rooch blockchain
+- The Rooch Developer community
+- The Rooch SDK maintainers
+- The Eliza community for their contributions and feedback
+
+For more information about Rooch blockchain capabilities:
+- [Rooch Documentation](https://rooch.network/learn/overview)
+- [Rooch Developer Portal](https://rooch.network/learn/overview)
+- [Rooch GitHub Repository](https://github.com/rooch-network)
+
+## License
+
+This plugin is part of the Eliza project. See the main project repository for license information.
