@@ -32,6 +32,7 @@ import {
     settings,
     stringToUuid,
     validateCharacterConfig,
+    parseBooleanFromText,
 } from "@elizaos/core";
 import { zgPlugin } from "@elizaos/plugin-0g";
 
@@ -183,12 +184,17 @@ function mergeCharacters(base: Character, child: Character): Character {
     };
     return mergeObjects(base, child);
 }
-async function loadCharacter(filePath: string): Promise<Character> {
-    const content = tryLoadFile(filePath);
-    if (!content) {
-        throw new Error(`Character file not found: ${filePath}`);
-    }
-    let character = JSON.parse(content);
+
+async function loadCharacterFromUrl(url: string): Promise<Character> {
+    const response = await fetch(url);
+    const character = await response.json();
+    return jsonToCharacter(url, character);
+}
+
+async function jsonToCharacter(
+    filePath: string,
+    character: any
+): Promise<Character> {
     validateCharacterConfig(character);
 
     // .id isn't really valid
@@ -224,6 +230,15 @@ async function loadCharacter(filePath: string): Promise<Character> {
         }
     }
     return character;
+}
+
+async function loadCharacter(filePath: string): Promise<Character> {
+    const content = tryLoadFile(filePath);
+    if (!content) {
+        throw new Error(`Character file not found: ${filePath}`);
+    }
+    let character = JSON.parse(content);
+    return jsonToCharacter(filePath, character);
 }
 
 export async function loadCharacters(
@@ -304,6 +319,16 @@ export async function loadCharacters(
     }
 
     if (loadedCharacters.length === 0) {
+        if (
+            process.env.REMOTE_CHARACTER_URL != "" &&
+            process.env.REMOTE_CHARACTER_URL.startsWith("http")
+        ) {
+            const character = await loadCharacterFromUrl(
+                process.env.REMOTE_CHARACTER_URL
+            );
+            loadedCharacters.push(character);
+        }
+
         elizaLogger.info("No characters found, using default character");
         loadedCharacters.push(defaultCharacter);
     }
@@ -1113,3 +1138,19 @@ startAgents().catch((error) => {
     elizaLogger.error("Unhandled error in startAgents:", error);
     process.exit(1);
 });
+
+// Prevent unhandled exceptions from crashing the process if desired
+if (
+    process.env.PREVENT_UNHANDLED_EXIT &&
+    parseBooleanFromText(process.env.PREVENT_UNHANDLED_EXIT)
+) {
+    // Handle uncaught exceptions to prevent the process from crashing
+    process.on("uncaughtException", function (err) {
+        console.error("uncaughtException", err);
+    });
+
+    // Handle unhandled rejections to prevent the process from crashing
+    process.on("unhandledRejection", function (err) {
+        console.error("unhandledRejection", err);
+    });
+}
