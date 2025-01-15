@@ -109,6 +109,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
 
+
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
@@ -420,7 +421,7 @@ export function getTokenForProvider(
             );
         case ModelProviderName.OPENROUTER:
             return (
-                character.settings?.secrets?.OPENROUTER ||
+                character.settings?.secrets?.OPENROUTER_API_KEY ||
                 settings.OPENROUTER_API_KEY
             );
         case ModelProviderName.GROK:
