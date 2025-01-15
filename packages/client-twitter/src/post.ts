@@ -1163,7 +1163,10 @@ export class TwitterPostClient {
             }
 
             elizaLogger.debug("Final reply text to be sent:", replyText);
-
+            console.log("Final reply text to be sent:", {
+                replyText,
+                length: replyText.length,
+            });
             let result;
 
             if (replyText.length > DEFAULT_MAX_TWEET_LENGTH) {
