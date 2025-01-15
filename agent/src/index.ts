@@ -98,6 +98,7 @@ import { tonPlugin } from "@elizaos/plugin-ton";
 import { squidRouterPlugin } from "@elizaos/plugin-squid-router";
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
+import { zxPlugin } from "@elizaos/plugin-0x";
 import Database from "better-sqlite3";
 import fs from "fs";
 import net from "net";
@@ -897,6 +898,7 @@ export async function createAgent(
             getSecret(character, "RESERVOIR_API_KEY")
                 ? createNFTCollectionsPlugin()
                 : null,
+            getSecret(character, "ZERO_EX_API_KEY") ? zxPlugin : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
