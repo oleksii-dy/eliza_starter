@@ -146,6 +146,7 @@ export const swapAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you swap 1 BNB for USDC on BSC",
                     action: "SWAP",
                     content: {
                         chain: "bsc",
@@ -167,6 +168,7 @@ export const swapAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you swap 1 USDC for token 0x1234 on BSC",
                     action: "SWAP",
                     content: {
                         chain: "bsc",

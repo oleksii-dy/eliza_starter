@@ -223,6 +223,7 @@ export const transferAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you transfer 1 BNB to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e on BSC",
                     action: "TRANSFER",
                     content: {
                         chain: "bsc",
@@ -243,6 +244,7 @@ export const transferAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you transfer 1 token of 0x1234 to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e on BSC",
                     action: "TRANSFER",
                     content: {
                         chain: "bsc",

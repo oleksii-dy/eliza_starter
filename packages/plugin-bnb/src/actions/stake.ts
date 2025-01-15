@@ -241,6 +241,7 @@ export const stakeAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you stake 1 BNB to Lista DAO on BSC",
                     action: "STAKE",
                     content: {
                         action: "deposit",
@@ -259,6 +260,7 @@ export const stakeAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you deposit 1 BNB to Lista DAO on BSC",
                     action: "STAKE",
                     content: {
                         action: "deposit",
@@ -277,6 +279,7 @@ export const stakeAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you undelegate 1 BNB from Lista DAO on BSC",
                     action: "STAKE",
                     content: {
                         action: "withdraw",
@@ -295,6 +298,7 @@ export const stakeAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you withdraw 1 BNB from Lista DAO on BSC",
                     action: "STAKE",
                     content: {
                         action: "withdraw",
@@ -313,6 +317,7 @@ export const stakeAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you claim unlocked BNB from Lista DAO on BSC",
                     action: "STAKE",
                     content: {
                         action: "claim",

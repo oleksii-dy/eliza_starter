@@ -381,6 +381,7 @@ export const bridgeAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you bridge 1 BNB from BSC to opBNB",
                     action: "BRIDGE",
                     content: {
                         fromChain: "bsc",
@@ -402,6 +403,7 @@ export const bridgeAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you bridge 1 BNB from BSC to 0x1234 on opBNB",
                     action: "BRIDGE",
                     content: {
                         fromChain: "bsc",
@@ -424,6 +426,7 @@ export const bridgeAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you bridge 1 token of 0x1234 from BSC to 0x5678 on opBNB",
                     action: "BRIDGE",
                     content: {
                         fromChain: "bsc",
@@ -445,6 +448,7 @@ export const bridgeAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you bridge 1 BNB from opBNB to BSC",
                     action: "BRIDGE",
                     content: {
                         fromChain: "opBNB",

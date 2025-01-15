@@ -196,6 +196,7 @@ export const getBalanceAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you check your balance of USDC",
                     action: "GET_BALANCE",
                     content: {
                         chain: "bsc",
@@ -215,6 +216,7 @@ export const getBalanceAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you check your balance of token 0x1234",
                     action: "GET_BALANCE",
                     content: {
                         chain: "bsc",
@@ -234,6 +236,7 @@ export const getBalanceAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you check USDC balance of 0x1234",
                     action: "GET_BALANCE",
                     content: {
                         chain: "bsc",
@@ -253,6 +256,7 @@ export const getBalanceAction = {
             {
                 user: "{{agent}}",
                 content: {
+                    text: "I'll help you check your wallet balance on BSC",
                     action: "GET_BALANCE",
                     content: {
                         chain: "bsc",
