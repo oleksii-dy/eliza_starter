@@ -1,18 +1,14 @@
 import { createGenericAction } from "./base";
 import * as PermissionsTemplates from "@injective/template/permissions";
 import * as PermissionsExamples from "@injective/examples/permissions";
-
+import * as PermissionsSimiles from "@injective/similes/permissions";
 export const GetAddressesByRoleAction = createGenericAction({
     name: "GET_ADDRESSES_BY_ROLE",
     description: "Fetches addresses associated with a specific role",
     template: PermissionsTemplates.getAddressesByRoleTemplate,
     examples: PermissionsExamples.getAddressesByRoleExample,
+    similes: PermissionsSimiles.getAddressesByRoleSimiles,
     functionName: "getAddressesByRole",
-    similes: [
-        "view role members",
-        "list role addresses",
-        "check role assignments",
-    ],
     validateContent: () => true,
 });
 
@@ -21,12 +17,8 @@ export const GetAddressRolesAction = createGenericAction({
     description: "Retrieves roles associated with a specific address",
     template: PermissionsTemplates.getAddressRolesTemplate,
     examples: PermissionsExamples.getAddressRolesExample,
+    similes: PermissionsSimiles.getAddressRolesSimiles,
     functionName: "getAddressRoles",
-    similes: [
-        "view address permissions",
-        "check user roles",
-        "list member roles",
-    ],
     validateContent: () => true,
 });
 
@@ -35,8 +27,8 @@ export const GetAllNamespacesAction = createGenericAction({
     description: "Retrieves all namespaces within the permissions module",
     template: PermissionsTemplates.getAllNamespacesTemplate,
     examples: PermissionsExamples.getAllNamespacesExample,
+    similes: PermissionsSimiles.getAllNamespacesSimiles,
     functionName: "getAllNamespaces",
-    similes: ["list namespaces", "view all namespaces", "get namespace list"],
     validateContent: () => true,
 });
 
@@ -45,12 +37,8 @@ export const GetPermissionsModuleParamsAction = createGenericAction({
     description: "Fetches the parameters of the Permissions module",
     template: PermissionsTemplates.getPermissionsModuleParamsTemplate,
     examples: PermissionsExamples.getPermissionsModuleParamsExample,
+    similes: PermissionsSimiles.getPermissionsModuleParamsSimiles,
     functionName: "getPermissionsModuleParams",
-    similes: [
-        "view permissions params",
-        "get permissions settings",
-        "permission parameters",
-    ],
     validateContent: () => true,
 });
 
@@ -60,12 +48,8 @@ export const GetNamespaceByDenomAction = createGenericAction({
         "Retrieves the namespace associated with a specific denomination",
     template: PermissionsTemplates.getNamespaceByDenomTemplate,
     examples: PermissionsExamples.getNamespaceByDenomExample,
+    similes: PermissionsSimiles.getNamespaceByDenomSimiles,
     functionName: "getNamespaceByDenom",
-    similes: [
-        "check denom namespace",
-        "view token namespace",
-        "get denom permissions",
-    ],
     validateContent: () => true,
 });
 
@@ -74,12 +58,8 @@ export const GetVouchersForAddressAction = createGenericAction({
     description: "Retrieves vouchers associated with a specific address",
     template: PermissionsTemplates.getVouchersForAddressTemplate,
     examples: PermissionsExamples.getVouchersForAddressExample,
+    similes: PermissionsSimiles.getVouchersForAddressSimiles,
     functionName: "getVouchersForAddress",
-    similes: [
-        "view address vouchers",
-        "list user vouchers",
-        "check voucher permissions",
-    ],
     validateContent: () => true,
 });
 

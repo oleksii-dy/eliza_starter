@@ -1,35 +1,27 @@
 import { createGenericAction } from "./base";
 import * as ExchangeTemplates from "@injective/template/exchange";
 import * as ExchangeExamples from "@injective/examples/exchange";
-
+import * as ExchangeSimiles from "@injective/similes/exchange";
 // Module Parameters and State Actions
 export const GetModuleParamsAction = createGenericAction({
     name: "GET_MODULE_PARAMS",
     description: "Fetches the exchange module parameters",
     template: ExchangeTemplates.getModuleParamsTemplate,
     examples: ExchangeExamples.getModuleParamsExample,
+    similes: ExchangeSimiles.getModuleParamsSimiles,
     functionName: "getModuleParams",
-    similes: [
-        "get exchange parameters",
-        "fetch module params",
-        "get exchange config",
-    ],
     validateContent: () => true,
 });
-
-export const GetModuleStateAction = createGenericAction({
-    name: "GET_MODULE_STATE",
-    description: "Fetches the current state of the exchange module",
-    template: ExchangeTemplates.getModuleStateTemplate,
-    examples: ExchangeExamples.getModuleStateExample,
-    functionName: "getModuleState",
-    similes: [
-        "get exchange state",
-        "fetch module state",
-        "check exchange status",
-    ],
-    validateContent: () => true,
-});
+// Dont query exchange module state lmao
+// export const GetModuleStateAction = createGenericAction({
+//     name: "GET_MODULE_STATE",
+//     description: "Fetches the current state of the exchange module",
+//     template: ExchangeTemplates.getModuleStateTemplate,
+//     examples: ExchangeExamples.getModuleStateExample,
+//     functionName: "getModuleState",
+//     similes: ExchangeSimiles,
+//     validateContent: () => true,
+// });
 
 // Fee Discount Actions
 export const GetFeeDiscountScheduleAction = createGenericAction({
@@ -37,8 +29,8 @@ export const GetFeeDiscountScheduleAction = createGenericAction({
     description: "Fetches the fee discount schedule",
     template: ExchangeTemplates.getFeeDiscountScheduleTemplate,
     examples: ExchangeExamples.getFeeDiscountScheduleExample,
+    similes: ExchangeSimiles.getFeeDiscountScheduleSimiles,
     functionName: "getFeeDiscountSchedule",
-    similes: ["get fee discounts", "check trading fees", "view discount tiers"],
     validateContent: () => true,
 });
 
@@ -48,12 +40,8 @@ export const GetFeeDiscountAccountInfoAction = createGenericAction({
         "Fetches the fee discount information for a specific Injective address",
     template: ExchangeTemplates.getFeeDiscountAccountInfoTemplate,
     examples: ExchangeExamples.getFeeDiscountAccountInfoExample,
+    similes: ExchangeSimiles.getFeeDiscountAccountInfoSimiles,
     functionName: "getFeeDiscountAccountInfo",
-    similes: [
-        "get account discounts",
-        "check fee tier",
-        "view trading discounts",
-    ],
     validateContent: () => true,
 });
 
@@ -63,8 +51,8 @@ export const GetTradingRewardsCampaignAction = createGenericAction({
     description: "Fetches the trading rewards campaign details",
     template: ExchangeTemplates.getTradingRewardsCampaignTemplate,
     examples: ExchangeExamples.getTradingRewardsCampaignExample,
+    similes: ExchangeSimiles.getTradingRewardsCampaignSimiles,
     functionName: "getTradingRewardsCampaign",
-    similes: ["get rewards campaign", "check trading rewards", "view campaign"],
     validateContent: () => true,
 });
 
@@ -74,12 +62,8 @@ export const GetTradeRewardPointsAction = createGenericAction({
         "Fetches the trade reward points for specified Injective addresses",
     template: ExchangeTemplates.getTradeRewardPointsTemplate,
     examples: ExchangeExamples.getTradeRewardPointsExample,
+    similes: ExchangeSimiles.getTradeRewardPointsSimiles,
     functionName: "getTradeRewardPoints",
-    similes: [
-        "get reward points",
-        "check trading points",
-        "view points balance",
-    ],
     validateContent: () => true,
 });
 
@@ -89,12 +73,8 @@ export const GetPendingTradeRewardPointsAction = createGenericAction({
         "Fetches pending trade reward points for specified Injective addresses",
     template: ExchangeTemplates.getPendingTradeRewardPointsTemplate,
     examples: ExchangeExamples.getPendingTradeRewardPointsExample,
+    similes: ExchangeSimiles.getPendingTradeRewardPointsSimiles,
     functionName: "getPendingTradeRewardPoints",
-    similes: [
-        "check pending points",
-        "view unredeemed rewards",
-        "pending rewards balance",
-    ],
     validateContent: () => true,
 });
 
@@ -104,8 +84,8 @@ export const GetSpotMarketsAction = createGenericAction({
     description: "Fetches all spot markets",
     template: ExchangeTemplates.getSpotMarketsTemplate,
     examples: ExchangeExamples.getSpotMarketsExample,
+    similes: ExchangeSimiles.getSpotMarketSimiles,
     functionName: "getSpotMarkets",
-    similes: ["list spot markets", "get trading pairs", "view spot exchanges"],
     validateContent: () => true,
 });
 
@@ -114,8 +94,8 @@ export const GetSpotMarketAction = createGenericAction({
     description: "Fetches a specific spot market by its ID",
     template: ExchangeTemplates.getSpotMarketTemplate,
     examples: ExchangeExamples.getSpotMarketExample,
+    similes: ExchangeSimiles.getSpotMarketSimiles,
     functionName: "getSpotMarket",
-    similes: ["get market details", "fetch spot pair", "view trading pair"],
     validateContent: () => true,
 });
 
@@ -124,8 +104,8 @@ export const GetSpotOrdersAction = createGenericAction({
     description: "Fetches all spot orders",
     template: ExchangeTemplates.getSpotOrdersTemplate,
     examples: ExchangeExamples.getSpotOrdersExample,
+    similes: ExchangeSimiles.getSpotOrdersSimiles,
     functionName: "getSpotOrders",
-    similes: ["list spot orders", "view open orders", "check spot trades"],
     validateContent: () => true,
 });
 
@@ -134,12 +114,8 @@ export const GetSpotOrderHistoryAction = createGenericAction({
     description: "Fetches the history of spot orders",
     template: ExchangeTemplates.getSpotOrderHistoryTemplate,
     examples: ExchangeExamples.getSpotOrderHistoryExample,
+    similes: ExchangeSimiles.getSpotOrderHistorySimiles,
     functionName: "getSpotOrderHistory",
-    similes: [
-        "spot trading history",
-        "past spot orders",
-        "completed spot trades",
-    ],
     validateContent: () => true,
 });
 
@@ -148,12 +124,8 @@ export const GetSpotTradesAction = createGenericAction({
     description: "Fetches all spot trades",
     template: ExchangeTemplates.getSpotTradesTemplate,
     examples: ExchangeExamples.getSpotTradesExample,
+    similes: ExchangeSimiles.getSpotTradesSimiles,
     functionName: "getSpotTrades",
-    similes: [
-        "list spot trades",
-        "view executed trades",
-        "spot trading activity",
-    ],
     validateContent: () => true,
 });
 //Orderbooks Action
@@ -162,11 +134,8 @@ export const GetDerivativeOrderbooksAction = createGenericAction({
     description: "Fetches all the derivative or perpetual orderbooks",
     template: ExchangeTemplates.getOrderbooksV2Template,
     examples: ExchangeExamples.getDerivativeOrderbooksV2Example,
+    similes: ExchangeSimiles.getDerivativeOrderbookSimiles,
     functionName: "getDerivativeOrderbooksV2",
-    similes: [
-        "list perpetual orderbooks",
-        "view perpetual market trading books",
-    ],
     validateContent: () => true,
 });
 export const GetDerivativeOrderbookAction = createGenericAction({
@@ -174,12 +143,8 @@ export const GetDerivativeOrderbookAction = createGenericAction({
     description: "Fetches a single derivative or perpetual orderbook",
     template: ExchangeTemplates.getOrderbookTemplate,
     examples: ExchangeExamples.getDerivativeOrderbookV2Example,
+    similes: ExchangeSimiles.getDerivativeOrderbookSimiles,
     functionName: "getDerivativeOrderbookV2",
-    similes: [
-        "list perpetual orderbook",
-        "view perpetual market trading book",
-        "check perpetual market depth",
-    ],
     validateContent: () => true,
 });
 
@@ -188,8 +153,8 @@ export const GetSpotOrderbooksAction = createGenericAction({
     description: "Fetches all the spot markets orderbooks",
     template: ExchangeTemplates.getOrderbooksV2Template,
     examples: ExchangeExamples.getSpotOrderbooksV2Example,
+    similes: ExchangeSimiles.getSpotOrderbooksSimiles,
     functionName: "getSpotOrderbooksV2",
-    similes: ["list spot orderbooks", "view spot market trading books"],
     validateContent: () => true,
 });
 export const GetSpotOrderbookAction = createGenericAction({
@@ -197,12 +162,8 @@ export const GetSpotOrderbookAction = createGenericAction({
     description: "Fetches a single spot market orderbook",
     template: ExchangeTemplates.getOrderbookTemplate,
     examples: ExchangeExamples.getSpotOrderbookV2Example,
+    similes: ExchangeSimiles.getSpotOrderbookSimiles,
     functionName: "getSpotOrderbookV2",
-    similes: [
-        "list spot orderbook",
-        "view spot market trading book",
-        "check spot market depth",
-    ],
     validateContent: () => true,
 });
 
@@ -212,8 +173,8 @@ export const GetDerivativeMarketsAction = createGenericAction({
     description: "Fetches all derivative markets",
     template: ExchangeTemplates.getDerivativeMarketsTemplate,
     examples: ExchangeExamples.getDerivativeMarketsExample,
+    similes: ExchangeSimiles.getDerivativeMarketsSimiles,
     functionName: "getDerivativeMarkets",
-    similes: ["list derivatives", "get futures markets", "view perpetuals"],
     validateContent: () => true,
 });
 
@@ -222,12 +183,8 @@ export const GetDerivativeMarketAction = createGenericAction({
     description: "Fetches a specific derivative market by its ID",
     template: ExchangeTemplates.getDerivativeMarketTemplate,
     examples: ExchangeExamples.getDerivativeMarketExample,
+    similes: ExchangeSimiles.getDerivativeMarketSimiles,
     functionName: "getDerivativeMarket",
-    similes: [
-        "get derivative details",
-        "fetch futures market",
-        "view perpetual market",
-    ],
     validateContent: () => true,
 });
 
@@ -236,12 +193,8 @@ export const GetDerivativeOrdersAction = createGenericAction({
     description: "Fetches all derivative orders",
     template: ExchangeTemplates.getDerivativeOrdersTemplate,
     examples: ExchangeExamples.getDerivativeOrdersExample,
+    similes: ExchangeSimiles.getDerivativeOrdersSimiles,
     functionName: "getDerivativeOrders",
-    similes: [
-        "list derivative orders",
-        "view futures orders",
-        "check derivative positions",
-    ],
     validateContent: () => true,
 });
 
@@ -250,12 +203,8 @@ export const GetDerivativeOrderHistoryAction = createGenericAction({
     description: "Fetches the history of derivative orders",
     template: ExchangeTemplates.getDerivativeOrderHistoryTemplate,
     examples: ExchangeExamples.getDerivativeOrderHistoryExample,
+    similes: ExchangeSimiles.getDerivativeOrderHistorySimiles,
     functionName: "getDerivativeOrderHistory",
-    similes: [
-        "derivative trading history",
-        "past futures orders",
-        "completed derivative trades",
-    ],
     validateContent: () => true,
 });
 
@@ -264,12 +213,8 @@ export const GetDerivativeTradesAction = createGenericAction({
     description: "Fetches all derivative trades",
     template: ExchangeTemplates.getDerivativeTradesTemplate,
     examples: ExchangeExamples.getDerivativeTradesExample,
+    similes: ExchangeSimiles.getDerivativeTradesSimiles,
     functionName: "getDerivativeTrades",
-    similes: [
-        "list derivative trades",
-        "view futures trades",
-        "derivative trading activity",
-    ],
     validateContent: () => true,
 });
 
@@ -279,12 +224,8 @@ export const GetBinaryOptionsMarketsAction = createGenericAction({
     description: "Fetches all binary options markets",
     template: ExchangeTemplates.getBinaryOptionsMarketsTemplate,
     examples: ExchangeExamples.getBinaryOptionsMarketsExample,
+    similes: ExchangeSimiles.getBinaryOptionsMarketsSimiles,
     functionName: "getBinaryOptionsMarkets",
-    similes: [
-        "list binary markets",
-        "view options markets",
-        "get binary options",
-    ],
     validateContent: () => true,
 });
 
@@ -293,12 +234,8 @@ export const GetBinaryOptionsMarketAction = createGenericAction({
     description: "Fetches a specific binary options market by its ID",
     template: ExchangeTemplates.getBinaryOptionsMarketTemplate,
     examples: ExchangeExamples.getBinaryOptionsMarketExample,
+    similes: ExchangeSimiles.getBinaryOptionsMarketSimiles,
     functionName: "getBinaryOptionsMarket",
-    similes: [
-        "get binary details",
-        "fetch options market",
-        "view binary market",
-    ],
     validateContent: () => true,
 });
 
@@ -308,8 +245,8 @@ export const GetExchangePositionsAction = createGenericAction({
     description: "Fetches all positions",
     template: ExchangeTemplates.getExchangePositionsTemplate,
     examples: ExchangeExamples.getExchangePositionsExample,
+    similes: ExchangeSimiles.getExchangePositionsSimiles,
     functionName: "getExchangePositions",
-    similes: ["list positions", "get trading positions", "view open trades"],
     validateContent: () => true,
 });
 
@@ -318,12 +255,8 @@ export const GetPositionsV2Action = createGenericAction({
     description: "Fetches all positions using version 2 of the API",
     template: ExchangeTemplates.getPositionsV2Template,
     examples: ExchangeExamples.getPositionsV2Example,
+    similes: ExchangeSimiles.getUserPositionsSimiles,
     functionName: "getPositionsV2",
-    similes: [
-        "list positions v2",
-        "get trading positions v2",
-        "view positions v2",
-    ],
     validateContent: () => true,
 });
 
@@ -333,12 +266,8 @@ export const GetFundingPaymentsAction = createGenericAction({
     description: "Fetches all funding payments",
     template: ExchangeTemplates.getFundingPaymentsTemplate,
     examples: ExchangeExamples.getFundingPaymentsExample,
+    similes: ExchangeSimiles.getFundingPaymentsSimiles,
     functionName: "getFundingPayments",
-    similes: [
-        "list funding payments",
-        "view funding history",
-        "check funding fees",
-    ],
     validateContent: () => true,
 });
 
@@ -347,12 +276,8 @@ export const GetFundingRatesAction = createGenericAction({
     description: "Fetches all funding rates",
     template: ExchangeTemplates.getFundingRatesTemplate,
     examples: ExchangeExamples.getFundingRatesExample,
+    similes: ExchangeSimiles.getFundingRatesSimiles,
     functionName: "getFundingRates",
-    similes: [
-        "list funding rates",
-        "check funding percentages",
-        "view rate history",
-    ],
     validateContent: () => true,
 });
 
@@ -362,12 +287,8 @@ export const GetSubaccountTradeNonceAction = createGenericAction({
     description: "Fetches the trade nonce for a specific subaccount",
     template: ExchangeTemplates.getSubaccountTradeNonceTemplate,
     examples: ExchangeExamples.getSubaccountTradeNonceExample,
+    similes: ExchangeSimiles.getSubaccountTradeNonceSimiles,
     functionName: "getSubaccountTradeNonce",
-    similes: [
-        "get trade nonce",
-        "fetch subaccount nonce",
-        "check trade sequence",
-    ],
     validateContent: () => true,
 });
 
@@ -376,12 +297,8 @@ export const GetSubaccountsListAction = createGenericAction({
     description: "Fetches the list of subaccounts for a specific address",
     template: ExchangeTemplates.getSubaccountsListTemplate,
     examples: ExchangeExamples.getSubaccountsListExample,
+    similes: ExchangeSimiles.getSubaccountsListSimiles,
     functionName: "getSubaccountsList",
-    similes: [
-        "list subaccounts",
-        "view trading accounts",
-        "get subaccount list",
-    ],
     validateContent: () => true,
 });
 
@@ -390,26 +307,18 @@ export const GetSubaccountBalancesListAction = createGenericAction({
     description: "Fetches the balances list for a specific subaccount",
     template: ExchangeTemplates.getSubaccountBalancesListTemplate,
     examples: ExchangeExamples.getSubaccountBalancesListExample,
+    similes: ExchangeSimiles.getSubaccountBalancesListSimiles,
     functionName: "getSubaccountBalancesList",
-    similes: [
-        "list subaccount balances",
-        "view account holdings",
-        "check subaccount funds",
-    ],
     validateContent: () => true,
 });
 
 export const GetSubaccountHistoryAction = createGenericAction({
     name: "GET_SUBACCOUNT_HISTORY",
-    description: "Fetches the history of a specific subaccount",
+    description: "Fetches the transfer history of a specific subaccount",
     template: ExchangeTemplates.getSubaccountHistoryTemplate,
     examples: ExchangeExamples.getSubaccountHistoryExample,
+    similes: ExchangeSimiles.getSubaccountHistorySimiles,
     functionName: "getSubaccountHistory",
-    similes: [
-        "view account history",
-        "check historical activity",
-        "get transfer history",
-    ],
     validateContent: () => true,
 });
 
@@ -418,12 +327,8 @@ export const GetSubaccountOrderSummaryAction = createGenericAction({
     description: "Fetches the order summary for a specific subaccount",
     template: ExchangeTemplates.getSubaccountOrderSummaryTemplate,
     examples: ExchangeExamples.getSubaccountOrderSummaryExample,
+    similes: ExchangeSimiles.getSubaccountOrderSummarySimiles,
     functionName: "getSubaccountOrderSummary",
-    similes: [
-        "get order summary",
-        "view trading summary",
-        "check order totals",
-    ],
     validateContent: () => true,
 });
 
@@ -433,8 +338,8 @@ export const GetOrderStatesAction = createGenericAction({
     description: "Fetches the states of orders",
     template: ExchangeTemplates.getOrderStatesTemplate,
     examples: ExchangeExamples.getOrderStatesExample,
+    similes: ExchangeSimiles.getOrderStatesSimiles,
     functionName: "getOrderStates",
-    similes: ["check order status", "get order states", "view order status"],
     validateContent: () => true,
 });
 
@@ -444,8 +349,8 @@ export const GetAccountPortfolioAction = createGenericAction({
     description: "Fetches the account portfolio for a specific address",
     template: ExchangeTemplates.getAccountPortfolioTemplate,
     examples: ExchangeExamples.getAccountPortfolioExample,
+    similes: ExchangeSimiles.getAccountPortfolioSimiles,
     functionName: "getAccountPortfolio",
-    similes: ["get portfolio", "view holdings", "check balance"],
     validateContent: () => true,
 });
 
@@ -455,12 +360,8 @@ export const GetAccountPortfolioBalancesAction = createGenericAction({
         "Fetches the balances of the account portfolio for a specific address",
     template: ExchangeTemplates.getAccountPortfolioBalancesTemplate,
     examples: ExchangeExamples.getAccountPortfolioBalancesExample,
+    similes: ExchangeSimiles.getAccountPortfolioBalancesSimiles,
     functionName: "getAccountPortfolioBalances",
-    similes: [
-        "get portfolio balances",
-        "view account holdings",
-        "check portfolio funds",
-    ],
     validateContent: () => true,
 });
 
@@ -470,12 +371,8 @@ export const GetIsOptedOutOfRewardsAction = createGenericAction({
     description: "Checks if an account is opted out of rewards",
     template: ExchangeTemplates.getIsOptedOutOfRewardsTemplate,
     examples: ExchangeExamples.getIsOptedOutOfRewardsExample,
+    similes: ExchangeSimiles.getIsOptedOutOfRewardsSimiles,
     functionName: "getIsOptedOutOfRewards",
-    similes: [
-        "check rewards status",
-        "verify opt-out",
-        "rewards participation status",
-    ],
     validateContent: () => true,
 });
 
@@ -484,8 +381,8 @@ export const GetRewardsAction = createGenericAction({
     description: "Fetches the rewards for specified Injective addresses",
     template: ExchangeTemplates.getRewardsTemplate,
     examples: ExchangeExamples.getRewardsExample,
+    similes: ExchangeSimiles.getRewardsSimiles,
     functionName: "getRewards",
-    similes: ["fetch rewards", "get trading rewards", "view earned rewards"],
     validateContent: () => true,
 });
 
@@ -495,8 +392,8 @@ export const GetAtomicSwapHistoryAction = createGenericAction({
     description: "Fetches the atomic swap history",
     template: ExchangeTemplates.getAtomicSwapHistoryTemplate,
     examples: ExchangeExamples.getAtomicSwapHistoryExample,
+    similes: ExchangeSimiles.getAtomicSwapHistorySimiles,
     functionName: "getAtomicSwapHistory",
-    similes: ["list atomic swaps", "view swap history", "check swap records"],
     validateContent: () => true,
 });
 
@@ -506,8 +403,8 @@ export const GetGridStrategiesAction = createGenericAction({
     description: "Fetches all grid strategies",
     template: ExchangeTemplates.getGridStrategiesTemplate,
     examples: ExchangeExamples.getGridStrategiesExample,
+    similes: ExchangeSimiles.getGridStrategiesSimiles,
     functionName: "getGridStrategies",
-    similes: ["list grid strategies", "view trading grids", "check grid bots"],
     validateContent: () => true,
 });
 
@@ -517,12 +414,8 @@ export const GetHistoricalBalanceAction = createGenericAction({
     description: "Fetches the historical balance",
     template: ExchangeTemplates.getHistoricalBalanceTemplate,
     examples: ExchangeExamples.getHistoricalBalanceExample,
+    similes: ExchangeSimiles.getHistoricalBalanceSimiles,
     functionName: "getHistoricalBalance",
-    similes: [
-        "view balance history",
-        "check past balances",
-        "historical account value",
-    ],
     validateContent: () => true,
 });
 
@@ -531,12 +424,8 @@ export const GetHistoricalRpnlAction = createGenericAction({
     description: "Fetches the historical realized PnL (Rpnl)",
     template: ExchangeTemplates.getHistoricalRpnlTemplate,
     examples: ExchangeExamples.getHistoricalRpnlExample,
+    similes: ExchangeSimiles.getHistoricalRpnlSimiles,
     functionName: "getHistoricalRpnl",
-    similes: [
-        "view pnl history",
-        "check realized profits",
-        "historical trading performance",
-    ],
     validateContent: () => true,
 });
 
@@ -545,12 +434,8 @@ export const GetHistoricalVolumesAction = createGenericAction({
     description: "Fetches the historical trading volumes",
     template: ExchangeTemplates.getHistoricalVolumesTemplate,
     examples: ExchangeExamples.getHistoricalVolumesExample,
+    similes: ExchangeSimiles.getHistoricalVolumesSimiles,
     functionName: "getHistoricalVolumes",
-    similes: [
-        "view volume history",
-        "check trading volumes",
-        "historical activity",
-    ],
     validateContent: () => true,
 });
 
@@ -560,12 +445,8 @@ export const GetPnlLeaderboardAction = createGenericAction({
     description: "Fetches the PnL leaderboard",
     template: ExchangeTemplates.getPnlLeaderboardTemplate,
     examples: ExchangeExamples.getPnlLeaderboardExample,
+    similes: ExchangeSimiles.getPnlLeaderboardSimiles,
     functionName: "getPnlLeaderboard",
-    similes: [
-        "view top traders",
-        "check profit rankings",
-        "trader leaderboard",
-    ],
     validateContent: () => true,
 });
 
@@ -574,12 +455,8 @@ export const GetVolLeaderboardAction = createGenericAction({
     description: "Fetches the volume leaderboard",
     template: ExchangeTemplates.getVolLeaderboardTemplate,
     examples: ExchangeExamples.getVolLeaderboardExample,
+    similes: ExchangeSimiles.getVolLeaderboardSimiles,
     functionName: "getVolLeaderboard",
-    similes: [
-        "view volume rankings",
-        "check trading activity",
-        "volume leaderboard",
-    ],
     validateContent: () => true,
 });
 
@@ -588,12 +465,8 @@ export const GetPnlLeaderboardFixedResolutionAction = createGenericAction({
     description: "Fetches the PnL leaderboard with fixed resolution",
     template: ExchangeTemplates.getPnlLeaderboardFixedResolutionTemplate,
     examples: ExchangeExamples.getPnlLeaderboardFixedResolutionExample,
+    similes: ExchangeSimiles.getPnlLeaderboardFixedResolutionSimiles,
     functionName: "getPnlLeaderboardFixedResolution",
-    similes: [
-        "view fixed pnl rankings",
-        "check profit leaders",
-        "fixed resolution leaderboard",
-    ],
     validateContent: () => true,
 });
 
@@ -602,12 +475,8 @@ export const GetVolLeaderboardFixedResolutionAction = createGenericAction({
     description: "Fetches the volume leaderboard with fixed resolution",
     template: ExchangeTemplates.getVolLeaderboardFixedResolutionTemplate,
     examples: ExchangeExamples.getVolLeaderboardFixedResolutionExample,
+    similes: ExchangeSimiles.getVolLeaderboardFixedResolutionSimiles,
     functionName: "getVolLeaderboardFixedResolution",
-    similes: [
-        "view fixed volume rankings",
-        "check trading leaders",
-        "fixed resolution volume board",
-    ],
     validateContent: () => true,
 });
 
@@ -617,12 +486,8 @@ export const GetDenomHoldersAction = createGenericAction({
     description: "Fetches the holders of a specific denomination",
     template: ExchangeTemplates.getDenomHoldersTemplate,
     examples: ExchangeExamples.getDenomHoldersExample,
+    similes: ExchangeSimiles.getDenomHoldersSimiles,
     functionName: "getDenomHolders",
-    similes: [
-        "list token holders",
-        "view denom distribution",
-        "check token ownership",
-    ],
     validateContent: () => true,
 });
 
@@ -632,12 +497,8 @@ export const MsgBatchCancelBinaryOptionsOrdersAction = createGenericAction({
     description: "Broadcasts a message to batch cancel binary options orders",
     template: ExchangeTemplates.msgBatchCancelBinaryOptionsOrdersTemplate,
     examples: ExchangeExamples.msgBatchCancelBinaryOptionsOrdersExample,
+    similes: ExchangeSimiles.msgBatchCancelBinaryOptionsOrdersSimiles,
     functionName: "msgBatchCancelBinaryOptionsOrders",
-    similes: [
-        "cancel multiple binary orders",
-        "batch cancel options",
-        "cancel binary trades",
-    ],
     validateContent: () => true,
 });
 
@@ -646,12 +507,8 @@ export const MsgBatchCancelDerivativeOrdersAction = createGenericAction({
     description: "Broadcasts a message to batch cancel derivative orders",
     template: ExchangeTemplates.msgBatchCancelDerivativeOrdersTemplate,
     examples: ExchangeExamples.msgBatchCancelDerivativeOrdersExample,
+    similes: ExchangeSimiles.msgBatchCancelDerivativeOrdersSimiles,
     functionName: "msgBatchCancelDerivativeOrders",
-    similes: [
-        "cancel multiple derivatives",
-        "batch cancel futures",
-        "cancel derivative trades",
-    ],
     validateContent: () => true,
 });
 
@@ -660,12 +517,8 @@ export const MsgBatchCancelSpotOrdersAction = createGenericAction({
     description: "Broadcasts a message to batch cancel spot orders",
     template: ExchangeTemplates.msgBatchCancelSpotOrdersTemplate,
     examples: ExchangeExamples.msgBatchCancelSpotOrdersExample,
+    similes: ExchangeSimiles.msgBatchCancelSpotOrdersSimiles,
     functionName: "msgBatchCancelSpotOrders",
-    similes: [
-        "cancel multiple spots",
-        "batch cancel spot orders",
-        "cancel spot trades",
-    ],
     validateContent: () => true,
 });
 
@@ -674,12 +527,8 @@ export const MsgBatchUpdateOrdersAction = createGenericAction({
     description: "Broadcasts a message to batch update orders",
     template: ExchangeTemplates.msgBatchUpdateOrdersTemplate,
     examples: ExchangeExamples.msgBatchUpdateOrdersExample,
+    similes: ExchangeSimiles.msgBatchUpdateOrdersSimiles,
     functionName: "msgBatchUpdateOrders",
-    similes: [
-        "update multiple orders",
-        "batch modify trades",
-        "bulk order update",
-    ],
     validateContent: () => true,
 });
 
@@ -689,12 +538,8 @@ export const MsgCancelBinaryOptionsOrderAction = createGenericAction({
     description: "Broadcasts a message to cancel a binary options order",
     template: ExchangeTemplates.msgCancelBinaryOptionsOrderTemplate,
     examples: ExchangeExamples.msgCancelBinaryOptionsOrderExample,
+    similes: ExchangeSimiles.msgCancelBinaryOptionsOrderSimiles,
     functionName: "msgCancelBinaryOptionsOrder",
-    similes: [
-        "cancel binary order",
-        "stop options trade",
-        "remove binary position",
-    ],
     validateContent: () => true,
 });
 
@@ -703,12 +548,8 @@ export const MsgCancelDerivativeOrderAction = createGenericAction({
     description: "Broadcasts a message to cancel a derivative order",
     template: ExchangeTemplates.msgCancelDerivativeOrderTemplate,
     examples: ExchangeExamples.msgCancelDerivativeOrderExample,
+    similes: ExchangeSimiles.msgCancelDerivativeOrderSimiles,
     functionName: "msgCancelDerivativeOrder",
-    similes: [
-        "cancel derivative order",
-        "stop futures trade",
-        "remove derivative position",
-    ],
     validateContent: () => true,
 });
 
@@ -717,8 +558,8 @@ export const MsgCancelSpotOrderAction = createGenericAction({
     description: "Broadcasts a message to cancel a spot order",
     template: ExchangeTemplates.msgCancelSpotOrderTemplate,
     examples: ExchangeExamples.msgCancelSpotOrderExample,
+    similes: ExchangeSimiles.msgCancelSpotOrderSimiles,
     functionName: "msgCancelSpotOrder",
-    similes: ["cancel spot order", "stop spot trade", "remove spot position"],
     validateContent: () => true,
 });
 
@@ -728,12 +569,8 @@ export const MsgCreateBinaryOptionsLimitOrderAction = createGenericAction({
     description: "Broadcasts a message to create a binary options limit order",
     template: ExchangeTemplates.msgCreateBinaryOptionsLimitOrderTemplate,
     examples: ExchangeExamples.msgCreateBinaryOptionsLimitOrderExample,
+    similes: ExchangeSimiles.msgCreateBinaryOptionsLimitOrderSimiles,
     functionName: "msgCreateBinaryOptionsLimitOrder",
-    similes: [
-        "place binary limit",
-        "create options order",
-        "new binary position",
-    ],
     validateContent: () => true,
 });
 
@@ -742,12 +579,8 @@ export const MsgCreateBinaryOptionsMarketOrderAction = createGenericAction({
     description: "Broadcasts a message to create a binary options market order",
     template: ExchangeTemplates.msgCreateBinaryOptionsMarketOrderTemplate,
     examples: ExchangeExamples.msgCreateBinaryOptionsMarketOrderExample,
+    similes: ExchangeSimiles.msgCreateBinaryOptionsMarketOrderSimiles,
     functionName: "msgCreateBinaryOptionsMarketOrder",
-    similes: [
-        "place binary market",
-        "instant options trade",
-        "market binary position",
-    ],
     validateContent: () => true,
 });
 
@@ -756,12 +589,8 @@ export const MsgCreateDerivativeLimitOrderAction = createGenericAction({
     description: "Broadcasts a message to create a derivative limit order",
     template: ExchangeTemplates.msgCreateDerivativeLimitOrderTemplate,
     examples: ExchangeExamples.msgCreateDerivativeLimitOrderExample,
+    similes: ExchangeSimiles.msgCreateDerivativeLimitOrderSimiles,
     functionName: "msgCreateDerivativeLimitOrder",
-    similes: [
-        "place futures limit",
-        "create derivative order",
-        "new futures position",
-    ],
     validateContent: () => true,
 });
 
@@ -770,12 +599,8 @@ export const MsgCreateDerivativeMarketOrderAction = createGenericAction({
     description: "Broadcasts a message to create a derivative market order",
     template: ExchangeTemplates.msgCreateDerivativeMarketOrderTemplate,
     examples: ExchangeExamples.msgCreateDerivativeMarketOrderExample,
+    similes: ExchangeSimiles.msgCreateDerivativeMarketOrderSimiles,
     functionName: "msgCreateDerivativeMarketOrder",
-    similes: [
-        "place futures market",
-        "instant derivative trade",
-        "market futures position",
-    ],
     validateContent: () => true,
 });
 
@@ -784,8 +609,8 @@ export const MsgCreateSpotLimitOrderAction = createGenericAction({
     description: "Broadcasts a message to create a spot limit order",
     template: ExchangeTemplates.msgCreateSpotLimitOrderTemplate,
     examples: ExchangeExamples.msgCreateSpotLimitOrderExample,
+    similes: ExchangeSimiles.msgCreateSpotLimitOrderSimiles,
     functionName: "msgCreateSpotLimitOrder",
-    similes: ["place spot limit", "create spot order", "new spot position"],
     validateContent: () => true,
 });
 
@@ -794,12 +619,8 @@ export const MsgCreateSpotMarketOrderAction = createGenericAction({
     description: "Broadcasts a message to create a spot market order",
     template: ExchangeTemplates.msgCreateSpotMarketOrderTemplate,
     examples: ExchangeExamples.msgCreateSpotMarketOrderExample,
+    similes: ExchangeSimiles.msgCreateSpotMarketOrderSimiles,
     functionName: "msgCreateSpotMarketOrder",
-    similes: [
-        "place spot market",
-        "instant spot trade",
-        "market spot position",
-    ],
     validateContent: () => true,
 });
 
@@ -809,8 +630,8 @@ export const MsgDepositAction = createGenericAction({
     description: "Broadcasts a message to deposit funds",
     template: ExchangeTemplates.msgDepositTemplate,
     examples: ExchangeExamples.msgDepositExample,
+    similes: ExchangeSimiles.msgDepositSimiles,
     functionName: "msgDeposit",
-    similes: ["deposit funds", "add money", "fund account"],
     validateContent: () => true,
 });
 
@@ -819,8 +640,8 @@ export const MsgWithdrawAction = createGenericAction({
     description: "Broadcasts a message to withdraw funds",
     template: ExchangeTemplates.msgWithdrawTemplate,
     examples: ExchangeExamples.msgWithdrawExample,
+    similes: ExchangeSimiles.msgWithdrawSimiles,
     functionName: "msgWithdraw",
-    similes: ["withdraw funds", "take money out", "remove funds"],
     validateContent: () => true,
 });
 
@@ -830,8 +651,8 @@ export const MsgIncreasePositionMarginAction = createGenericAction({
     description: "Broadcasts a message to increase position margin",
     template: ExchangeTemplates.msgIncreasePositionMarginTemplate,
     examples: ExchangeExamples.msgIncreasePositionMarginExample,
+    similes: ExchangeSimiles.msgIncreasePositionMarginSimiles,
     functionName: "msgIncreasePositionMargin",
-    similes: ["add margin", "increase collateral", "boost position"],
     validateContent: () => true,
 });
 
@@ -841,12 +662,8 @@ export const MsgInstantSpotMarketLaunchAction = createGenericAction({
     description: "Broadcasts a message to instantly launch a spot market",
     template: ExchangeTemplates.msgInstantSpotMarketLaunchTemplate,
     examples: ExchangeExamples.msgInstantSpotMarketLaunchExample,
+    similes: ExchangeSimiles.msgInstantSpotMarketLaunchSimiles,
     functionName: "msgInstantSpotMarketLaunch",
-    similes: [
-        "launch spot market",
-        "create trading pair",
-        "start spot trading",
-    ],
     validateContent: () => true,
 });
 
@@ -855,8 +672,8 @@ export const MsgLiquidatePositionAction = createGenericAction({
     description: "Broadcasts a message to liquidate a position",
     template: ExchangeTemplates.msgLiquidatePositionTemplate,
     examples: ExchangeExamples.msgLiquidatePositionExample,
+    similes: ExchangeSimiles.msgLiquidatePositionSimiles,
     functionName: "msgLiquidatePosition",
-    similes: ["force close position", "liquidate trade", "trigger liquidation"],
     validateContent: () => true,
 });
 
@@ -865,12 +682,8 @@ export const MsgReclaimLockedFundsAction = createGenericAction({
     description: "Broadcasts a message to reclaim locked funds",
     template: ExchangeTemplates.msgReclaimLockedFundsTemplate,
     examples: ExchangeExamples.msgReclaimLockedFundsExample,
+    similes: ExchangeSimiles.msgReclaimLockedFundsSimiles,
     functionName: "msgReclaimLockedFunds",
-    similes: [
-        "recover locked funds",
-        "claim stuck assets",
-        "retrieve locked money",
-    ],
     validateContent: () => true,
 });
 
@@ -879,12 +692,8 @@ export const MsgRewardsOptOutAction = createGenericAction({
     description: "Broadcasts a message to opt out of rewards",
     template: ExchangeTemplates.msgRewardsOptOutTemplate,
     examples: ExchangeExamples.msgRewardsOptOutExample,
+    similes: ExchangeSimiles.msgRewardsOptOutSimiles,
     functionName: "msgRewardsOptOut",
-    similes: [
-        "disable rewards",
-        "opt out of incentives",
-        "stop reward earning",
-    ],
     validateContent: () => true,
 });
 
@@ -893,8 +702,8 @@ export const MsgSignDataAction = createGenericAction({
     description: "Broadcasts a message to sign data",
     template: ExchangeTemplates.msgSignDataTemplate,
     examples: ExchangeExamples.msgSignDataExample,
+    similes: ExchangeSimiles.msgSignDataSimiles,
     functionName: "msgSignData",
-    similes: ["sign message", "create signature", "sign transaction"],
     validateContent: () => true,
 });
 
@@ -903,8 +712,8 @@ export const MsgExternalTransferAction = createGenericAction({
     description: "Broadcasts a message to perform an external transfer",
     template: ExchangeTemplates.msgExternalTransferTemplate,
     examples: ExchangeExamples.msgExternalTransferExample,
+    similes: ExchangeSimiles.msgExternalTransferSimiles,
     functionName: "msgExternalTransfer",
-    similes: ["external send", "transfer out", "external movement"],
     validateContent: () => true,
 });
 
@@ -915,11 +724,7 @@ export const MsgAdminUpdateBinaryOptionsMarketAction = createGenericAction({
     template: ExchangeTemplates.msgAdminUpdateBinaryOptionsMarketTemplate,
     examples: ExchangeExamples.msgAdminUpdateBinaryOptionsMarketExample,
     functionName: "msgAdminUpdateBinaryOptionsMarket",
-    similes: [
-        "update binary market",
-        "modify options market",
-        "admin market update",
-    ],
+    similes: ExchangeSimiles.msgAdminUpdateBinaryOptionsMarketSimiles,
     validateContent: () => true,
 });
 
@@ -927,7 +732,6 @@ export const MsgAdminUpdateBinaryOptionsMarketAction = createGenericAction({
 export const ExchangeActions = [
     // Module Parameters and State
     GetModuleParamsAction,
-    GetModuleStateAction,
 
     // Fee Discount
     GetFeeDiscountScheduleAction,

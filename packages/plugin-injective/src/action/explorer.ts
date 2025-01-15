@@ -2,14 +2,14 @@
 import { createGenericAction } from "./base";
 import * as ExplorerTemplates from "@injective/template/explorer";
 import * as ExplorerExamples from "@injective/examples/explorer";
-
+import * as ExplorerSimiles from "@injective/similes/explorer";
 export const GetTxByHashAction = createGenericAction({
     name: "GET_TX_BY_HASH",
     description: "Fetches a transaction by its hash",
     template: ExplorerTemplates.getTxByHashTemplate,
     examples: ExplorerExamples.getTxByHashExample,
+    similes: ExplorerSimiles.getTxByHashSimiles,
     functionName: "getTxByHash",
-    similes: ["find transaction", "lookup tx", "search transaction"],
     validateContent: () => true,
 });
 
@@ -18,12 +18,8 @@ export const GetAccountTxAction = createGenericAction({
     description: "Fetches transactions for a specific account",
     template: ExplorerTemplates.getAccountTxTemplate,
     examples: ExplorerExamples.getAccountTxExample,
+    similes: ExplorerSimiles.getAccountTxSimiles,
     functionName: "getAccountTx",
-    similes: [
-        "view account transactions",
-        "get account tx",
-        "list account transactions",
-    ],
     validateContent: () => true,
 });
 
@@ -32,8 +28,8 @@ export const GetExplorerValidatorAction = createGenericAction({
     description: "Fetches details of a specific validator",
     template: ExplorerTemplates.getValidatorTemplate,
     examples: ExplorerExamples.getValidatorExample,
+    similes: ExplorerSimiles.getExplorerValidatorSimiles,
     functionName: "getValidator",
-    similes: ["view validator", "check validator", "validator info"],
     validateContent: () => true,
 });
 
@@ -42,12 +38,8 @@ export const GetValidatorUptimeAction = createGenericAction({
     description: "Fetches the uptime of a specific validator",
     template: ExplorerTemplates.getValidatorUptimeTemplate,
     examples: ExplorerExamples.getValidatorUptimeExample,
+    similes: ExplorerSimiles.getExplorerValidatorUptimeSimiles,
     functionName: "getValidatorUptime",
-    similes: [
-        "check validator uptime",
-        "validator availability",
-        "uptime stats",
-    ],
     validateContent: () => true,
 });
 
@@ -56,8 +48,8 @@ export const GetPeggyDepositTxsAction = createGenericAction({
     description: "Fetches Peggy deposit transactions",
     template: ExplorerTemplates.getPeggyDepositTxsTemplate,
     examples: ExplorerExamples.getPeggyDepositTxsExample,
+    similes: ExplorerSimiles.getPeggyDepositTxsSimiles,
     functionName: "getPeggyDepositTxs",
-    similes: ["view peggy deposits", "check bridge deposits", "list deposits"],
     validateContent: () => true,
 });
 
@@ -66,12 +58,8 @@ export const GetPeggyWithdrawalTxsAction = createGenericAction({
     description: "Fetches Peggy withdrawal transactions",
     template: ExplorerTemplates.getPeggyWithdrawalTxsTemplate,
     examples: ExplorerExamples.getPeggyWithdrawalTxsExample,
+    similes: ExplorerSimiles.getPeggyWithdrawalTxsSimiles,
     functionName: "getPeggyWithdrawalTxs",
-    similes: [
-        "view peggy withdrawals",
-        "check bridge withdrawals",
-        "list withdrawals",
-    ],
     validateContent: () => true,
 });
 
@@ -80,8 +68,8 @@ export const GetBlocksAction = createGenericAction({
     description: "Fetches a list of blocks based on provided parameters",
     template: ExplorerTemplates.getBlocksTemplate,
     examples: ExplorerExamples.getBlocksExample,
+    similes: ExplorerSimiles.getBlocksSimiles,
     functionName: "getBlocks",
-    similes: ["view blocks", "list blocks", "get blockchain blocks"],
     validateContent: () => true,
 });
 
@@ -90,8 +78,8 @@ export const GetBlockAction = createGenericAction({
     description: "Fetches details of a specific block by its ID",
     template: ExplorerTemplates.getBlockTemplate,
     examples: ExplorerExamples.getBlockExample,
+    similes: ExplorerSimiles.getBlockSimiles,
     functionName: "getBlock",
-    similes: ["view block", "get block details", "check block"],
     validateContent: () => true,
 });
 
@@ -100,8 +88,8 @@ export const GetTxsAction = createGenericAction({
     description: "Fetches a list of transactions based on provided parameters",
     template: ExplorerTemplates.getTxsTemplate,
     examples: ExplorerExamples.getTxsExample,
+    similes: ExplorerSimiles.getTxsSimiles,
     functionName: "getTxs",
-    similes: ["view transactions", "list transactions", "get tx list"],
     validateContent: () => true,
 });
 
@@ -110,8 +98,8 @@ export const GetIBCTransferTxsAction = createGenericAction({
     description: "Fetches IBC transfer transactions",
     template: ExplorerTemplates.getIBCTransferTxsTemplate,
     examples: ExplorerExamples.getIBCTransferTxsExample,
+    similes: ExplorerSimiles.getIBCTransferTxsSimiles,
     functionName: "getIBCTransferTxs",
-    similes: ["view ibc transfers", "list ibc transactions", "check ibc tx"],
     validateContent: () => true,
 });
 
@@ -120,8 +108,8 @@ export const GetExplorerStatsAction = createGenericAction({
     description: "Fetches explorer statistics",
     template: ExplorerTemplates.getExplorerStatsTemplate,
     examples: ExplorerExamples.getExplorerStatsExample,
+    similes: ExplorerSimiles.getExplorerStatsSimiles,
     functionName: "getExplorerStats",
-    similes: ["view explorer stats", "get statistics", "check network stats"],
     validateContent: () => true,
 });
 

@@ -1397,7 +1397,7 @@ Here are the recent user messages for context:
 
 export const getDerivativeMarketsTemplate = `
 Extract the following details for derivative markets:
-- **quoteDenom** (string, optional): Quote denomination filter
+- **quoteDenom** (string, optional): Quote denomination filter, this needs to be in denom format!
 - **marketStatus** (string, optional): Market status filter
 - **marketStatuses** (string[], optional): Multiple market status filter
 
@@ -1405,7 +1405,7 @@ Provide the request in the following JSON format:
 
 \`\`\`json
 {
-    "quoteDenom": "usdt",
+    "quoteDenom": "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7",
     "marketStatus": "active",
     "marketStatuses": ["active", "paused"]
 }
@@ -1450,7 +1450,7 @@ Provide the request in the following JSON format:
 \`\`\`json
 {
     "baseDenom": "inj",
-    "quoteDenom": "usdt",
+    "quoteDenom": "peggy0xdAC17F958D2ee523a2206206994597C13D831ec7",
     "marketStatus": "active",
     "marketStatuses": ["active", "paused"]
 }

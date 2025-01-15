@@ -1,14 +1,14 @@
 import { createGenericAction } from "./base";
 import * as MintTemplates from "@injective/template/mint";
 import * as MintExamples from "@injective/examples/mint";
-
+import * as MintSimiles from "@injective/similes/mint";
 export const GetMintModuleParamsAction = createGenericAction({
     name: "GET_MINT_MODULE_PARAMS",
     description: "Fetches the parameters of the Mint module",
     template: MintTemplates.getMintModuleParamsTemplate,
     examples: MintExamples.getMintModuleParamsExample,
+    similes: MintSimiles.getMintModuleParamsSimiles,
     functionName: "getMintModuleParams",
-    similes: ["view mint params", "get mint settings", "mint parameters"],
     validateContent: () => true,
 });
 
@@ -17,12 +17,8 @@ export const GetInflationAction = createGenericAction({
     description: "Retrieves the current inflation rate",
     template: MintTemplates.getInflationTemplate,
     examples: MintExamples.getInflationExample,
+    similes: MintSimiles.getInflationSimiles,
     functionName: "getInflation",
-    similes: [
-        "check inflation",
-        "view inflation rate",
-        "get current inflation",
-    ],
     validateContent: () => true,
 });
 
@@ -31,12 +27,8 @@ export const GetAnnualProvisionsAction = createGenericAction({
     description: "Obtains the annual provisions",
     template: MintTemplates.getAnnualProvisionsTemplate,
     examples: MintExamples.getAnnualProvisionsExample,
+    similes: MintSimiles.getAnnualProvisionsSimiles,
     functionName: "getAnnualProvisions",
-    similes: [
-        "view annual provisions",
-        "check yearly mint",
-        "get token issuance",
-    ],
     validateContent: () => true,
 });
 

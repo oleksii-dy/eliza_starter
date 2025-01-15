@@ -1,19 +1,15 @@
 import { createGenericAction } from "./base";
 import * as InsuranceTemplates from "@injective/template/insurance";
 import * as InsuranceExamples from "@injective/examples/insurance";
-
+import * as InsuranceSimiles from "@injective/similes/insurance";
 // Query Actions
 export const GetInsuranceModuleParamsAction = createGenericAction({
     name: "GET_INSURANCE_MODULE_PARAMS",
     description: "Fetches the insurance module parameters",
     template: InsuranceTemplates.getInsuranceModuleParamsTemplate,
     examples: InsuranceExamples.getInsuranceModuleParamsExample,
+    similes: InsuranceSimiles.getInsuranceModuleParamsSimiles,
     functionName: "getInsuranceModuleParams",
-    similes: [
-        "view insurance params",
-        "get insurance settings",
-        "insurance parameters",
-    ],
     validateContent: () => true,
 });
 
@@ -22,8 +18,8 @@ export const GetInsuranceFundsAction = createGenericAction({
     description: "Fetches a list of all insurance funds",
     template: InsuranceTemplates.getInsuranceFundsTemplate,
     examples: InsuranceExamples.getInsuranceFundsExample,
+    similes: InsuranceSimiles.getInsuranceFundsSimiles,
     functionName: "getInsuranceFunds",
-    similes: ["list insurance funds", "view all funds", "get funds list"],
     validateContent: () => true,
 });
 
@@ -33,8 +29,8 @@ export const GetInsuranceFundAction = createGenericAction({
         "Fetches details of a specific insurance fund by its market ID",
     template: InsuranceTemplates.getInsuranceFundTemplate,
     examples: InsuranceExamples.getInsuranceFundExample,
+    similes: InsuranceSimiles.getInsuranceFundSimiles,
     functionName: "getInsuranceFund",
-    similes: ["view fund details", "get fund info", "check insurance fund"],
     validateContent: () => true,
 });
 
@@ -43,12 +39,8 @@ export const GetEstimatedRedemptionsAction = createGenericAction({
     description: "Fetches estimated redemptions based on provided parameters",
     template: InsuranceTemplates.getEstimatedRedemptionsTemplate,
     examples: InsuranceExamples.getEstimatedRedemptionsExample,
+    similes: InsuranceSimiles.getEstimatedRedemptionsSimiles,
     functionName: "getEstimatedRedemptions",
-    similes: [
-        "view estimated redemptions",
-        "check redemption estimates",
-        "get redemption preview",
-    ],
     validateContent: () => true,
 });
 
@@ -57,12 +49,8 @@ export const GetPendingRedemptionsAction = createGenericAction({
     description: "Fetches pending redemptions based on provided parameters",
     template: InsuranceTemplates.getPendingRedemptionsTemplate,
     examples: InsuranceExamples.getPendingRedemptionsExample,
+    similes: InsuranceSimiles.getPendingRedemptionsSimiles,
     functionName: "getPendingRedemptions",
-    similes: [
-        "view pending redemptions",
-        "check redemption status",
-        "list pending claims",
-    ],
     validateContent: () => true,
 });
 
@@ -72,8 +60,8 @@ export const MsgCreateInsuranceFundAction = createGenericAction({
     description: "Broadcasts a message to create a new insurance fund",
     template: InsuranceTemplates.msgCreateInsuranceFundTemplate,
     examples: InsuranceExamples.msgCreateInsuranceFundExample,
+    similes: InsuranceSimiles.msgCreateInsuranceFundSimiles,
     functionName: "msgCreateInsuranceFund",
-    similes: ["create fund", "establish insurance fund", "setup new fund"],
     validateContent: () => true,
 });
 
@@ -83,8 +71,8 @@ export const MsgRequestRedemptionAction = createGenericAction({
         "Broadcasts a message to request a redemption from an insurance fund",
     template: InsuranceTemplates.msgRequestRedemptionTemplate,
     examples: InsuranceExamples.msgRequestRedemptionExample,
+    similes: InsuranceSimiles.msgRequestRedemptionSimiles,
     functionName: "msgRequestRedemption",
-    similes: ["request redemption", "redeem insurance", "claim insurance"],
     validateContent: () => true,
 });
 
@@ -93,12 +81,8 @@ export const MsgUnderwriteAction = createGenericAction({
     description: "Broadcasts a message to underwrite an insurance fund",
     template: InsuranceTemplates.msgUnderwriteTemplate,
     examples: InsuranceExamples.msgUnderwriteExample,
+    similes: InsuranceSimiles.msgUnderwriteSimiles,
     functionName: "msgUnderwrite",
-    similes: [
-        "underwrite fund",
-        "back insurance fund",
-        "provide insurance backing",
-    ],
     validateContent: () => true,
 });
 

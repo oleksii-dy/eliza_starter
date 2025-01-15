@@ -1,15 +1,15 @@
 import { createGenericAction } from "./base";
 import * as AuthTemplates from "@injective/template/auth";
 import * as AuthExamples from "@injective/examples/auth";
-
+import * as AuthSimilies from "@injective/similes/auth";
 // Auth Module Actions
 export const GetAuthModuleParamsAction = createGenericAction({
     name: "GET_AUTH_MODULE_PARAMS",
     description: "Fetches the authentication module parameters",
     template: AuthTemplates.getAuthModuleParamsTemplate,
     examples: AuthExamples.getAuthModuleParamsExample,
+    similes: AuthSimilies.getAuthModuleParamsSimiles,
     functionName: "getAuthModuleParams",
-    similes: ["view auth params", "get auth parameters", "check auth settings"],
     validateContent: () => true,
 });
 
@@ -18,8 +18,8 @@ export const GetAccountDetailsAction = createGenericAction({
     description: "Fetches the details of the current account",
     template: AuthTemplates.getAccountDetailsTemplate,
     examples: AuthExamples.getAccountDetailsExample,
+    similes: AuthSimilies.getAccountDetailsSimiles,
     functionName: "getAccountDetails",
-    similes: ["view account", "get account details", "check my account"],
     validateContent: () => true,
 });
 
@@ -28,8 +28,8 @@ export const GetAccountsAction = createGenericAction({
     description: "Fetches all accounts associated with the current address",
     template: AuthTemplates.getAccountsTemplate,
     examples: AuthExamples.getAccountsExample,
+    similes: AuthSimilies.getAccountsSimiles,
     functionName: "getAccounts",
-    similes: ["view accounts", "list accounts", "get all accounts"],
     validateContent: () => true,
 });
 
@@ -38,8 +38,8 @@ export const GetGrantsAction = createGenericAction({
     description: "Fetches all grants based on provided parameters",
     template: AuthTemplates.getGrantsTemplate,
     examples: AuthExamples.getGrantsExample,
+    similes: AuthSimilies.getGrantsSimiles,
     functionName: "getGrants",
-    similes: ["view grants", "list grants", "check grants"],
     validateContent: () => true,
 });
 
@@ -48,12 +48,8 @@ export const GetGranterGrantsAction = createGenericAction({
     description: "Fetches all grants granted by a specific granter",
     template: AuthTemplates.getGranterGrantsTemplate,
     examples: AuthExamples.getGranterGrantsExample,
+    similes: AuthSimilies.getGranterGrantsSimiles,
     functionName: "getGranterGrants",
-    similes: [
-        "view granter grants",
-        "list granted permissions",
-        "check given grants",
-    ],
     validateContent: () => true,
 });
 
@@ -62,12 +58,8 @@ export const GetGranteeGrantsAction = createGenericAction({
     description: "Fetches all grants received by a specific grantee",
     template: AuthTemplates.getGranteeGrantsTemplate,
     examples: AuthExamples.getGranteeGrantsExample,
+    similes: AuthSimilies.getGranteeGrantsSimiles,
     functionName: "getGranteeGrants",
-    similes: [
-        "view grantee grants",
-        "list received permissions",
-        "check received grants",
-    ],
     validateContent: () => true,
 });
 
@@ -77,8 +69,8 @@ export const MsgGrantAction = createGenericAction({
         "Grants authorization to a grantee to perform specific actions",
     template: AuthTemplates.msgGrantTemplate,
     examples: AuthExamples.msgGrantExample,
+    similes: AuthSimilies.msgGrantSimiles,
     functionName: "msgGrant",
-    similes: ["grant permission", "authorize action", "give access"],
     validateContent: () => true,
 });
 
@@ -87,8 +79,8 @@ export const MsgExecAction = createGenericAction({
     description: "Executes authorized messages on behalf of the grantee",
     template: AuthTemplates.msgExecTemplate,
     examples: AuthExamples.msgExecExample,
+    similes: AuthSimilies.msgExecSimiles,
     functionName: "msgExec",
-    similes: ["execute grant", "run authorized action", "use permission"],
     validateContent: () => true,
 });
 
@@ -97,8 +89,8 @@ export const MsgRevokeAction = createGenericAction({
     description: "Revokes previously granted authorizations from a grantee",
     template: AuthTemplates.msgRevokeTemplate,
     examples: AuthExamples.msgRevokeExample,
+    similes: AuthSimilies.msgRevokeSimiles,
     functionName: "msgRevoke",
-    similes: ["revoke permission", "remove authorization", "cancel access"],
     validateContent: () => true,
 });
 

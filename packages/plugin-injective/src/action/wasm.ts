@@ -1,19 +1,15 @@
 import { createGenericAction } from "./base";
 import * as WasmTemplates from "@injective/template/wasm";
 import * as WasmExamples from "@injective/examples/wasm";
-
+import * as WasmSimiles from "@injective/similes/wasm";
 // Contract Query Actions
 export const GetContractAccountsBalanceAction = createGenericAction({
     name: "GET_CONTRACT_ACCOUNTS_BALANCE",
     description: "Fetches the balance of contract accounts",
     template: WasmTemplates.getContractAccountsBalanceTemplate,
     examples: WasmExamples.getContractAccountsBalanceExample,
+    similes: WasmSimiles.getContractAccountsBalanceSimiles,
     functionName: "getContractAccountsBalance",
-    similes: [
-        "view contract balances",
-        "check contract funds",
-        "get contract accounts",
-    ],
     validateContent: () => true,
 });
 
@@ -22,12 +18,8 @@ export const GetContractStateAction = createGenericAction({
     description: "Fetches the state of a specific contract",
     template: WasmTemplates.getContractStateTemplate,
     examples: WasmExamples.getContractStateExample,
+    similes: WasmSimiles.getContractStateSimiles,
     functionName: "getContractState",
-    similes: [
-        "view contract state",
-        "check contract status",
-        "get contract data",
-    ],
     validateContent: () => true,
 });
 
@@ -36,12 +28,8 @@ export const GetContractInfoAction = createGenericAction({
     description: "Fetches information about a specific contract",
     template: WasmTemplates.getContractInfoTemplate,
     examples: WasmExamples.getContractInfoExample,
+    similes: WasmSimiles.getContractInfoSimiles,
     functionName: "getContractInfo",
-    similes: [
-        "view contract info",
-        "contract details",
-        "get contract metadata",
-    ],
     validateContent: () => true,
 });
 
@@ -50,12 +38,8 @@ export const GetContractHistoryAction = createGenericAction({
     description: "Fetches the history of a specific contract",
     template: WasmTemplates.getContractHistoryTemplate,
     examples: WasmExamples.getContractHistoryExample,
+    similes: WasmSimiles.getContractHistorySimiles,
     functionName: "getContractHistory",
-    similes: [
-        "view contract history",
-        "contract timeline",
-        "get contract changes",
-    ],
     validateContent: () => true,
 });
 
@@ -64,12 +48,8 @@ export const GetSmartContractStateAction = createGenericAction({
     description: "Fetches the smart contract state based on a query",
     template: WasmTemplates.getSmartContractStateTemplate,
     examples: WasmExamples.getSmartContractStateExample,
+    similes: WasmSimiles.getSmartContractStateSimiles,
     functionName: "getSmartContractState",
-    similes: [
-        "query contract state",
-        "smart contract data",
-        "get contract query",
-    ],
     validateContent: () => true,
 });
 
@@ -79,8 +59,8 @@ export const GetRawContractStateAction = createGenericAction({
         "Fetches the raw state of a specific contract based on a query",
     template: WasmTemplates.getRawContractStateTemplate,
     examples: WasmExamples.getRawContractStateExample,
+    similes: WasmSimiles.getRawContractStateSimiles,
     functionName: "getRawContractState",
-    similes: ["raw contract data", "contract raw state", "get contract raw"],
     validateContent: () => true,
 });
 
@@ -90,8 +70,8 @@ export const GetContractCodesAction = createGenericAction({
     description: "Fetches all contract codes with optional pagination",
     template: WasmTemplates.getContractCodesTemplate,
     examples: WasmExamples.getContractCodesExample,
+    similes: WasmSimiles.getContractCodesSimiles,
     functionName: "getContractCodes",
-    similes: ["list contract codes", "view all codes", "get code list"],
     validateContent: () => true,
 });
 
@@ -100,8 +80,8 @@ export const GetContractCodeAction = createGenericAction({
     description: "Fetches a specific contract code by its ID",
     template: WasmTemplates.getContractCodeTemplate,
     examples: WasmExamples.getContractCodeExample,
+    similes: WasmSimiles.getContractCodeSimiles,
     functionName: "getContractCode",
-    similes: ["view code", "get code details", "check contract code"],
     validateContent: () => true,
 });
 
@@ -110,12 +90,8 @@ export const GetContractCodeContractsAction = createGenericAction({
     description: "Fetches contracts associated with a specific contract code",
     template: WasmTemplates.getContractCodeContractsTemplate,
     examples: WasmExamples.getContractCodeContractsExample,
+    similes: WasmSimiles.getContractCodeContractsSimiles,
     functionName: "getContractCodeContracts",
-    similes: [
-        "list code contracts",
-        "view code instances",
-        "get code deployments",
-    ],
     validateContent: () => true,
 });
 
@@ -125,8 +101,8 @@ export const MsgStoreCodeAction = createGenericAction({
     description: "Broadcasts a message to store new contract code",
     template: WasmTemplates.msgStoreCodeTemplate,
     examples: WasmExamples.msgStoreCodeExample,
+    similes: WasmSimiles.msgStoreCodeSimiles,
     functionName: "msgStoreCode",
-    similes: ["upload code", "store contract", "deploy code"],
     validateContent: () => true,
 });
 
@@ -135,8 +111,8 @@ export const MsgUpdateAdminAction = createGenericAction({
     description: "Broadcasts a message to update the admin of a contract",
     template: WasmTemplates.msgUpdateAdminTemplate,
     examples: WasmExamples.msgUpdateAdminExample,
+    similes: WasmSimiles.msgUpdateAdminSimiles,
     functionName: "msgUpdateAdmin",
-    similes: ["change admin", "update contract admin", "set new admin"],
     validateContent: () => true,
 });
 
@@ -145,8 +121,8 @@ export const MsgExecuteContractAction = createGenericAction({
     description: "Broadcasts a message to execute a contract",
     template: WasmTemplates.msgExecuteContractTemplate,
     examples: WasmExamples.msgExecuteContractExample,
+    similes: WasmSimiles.msgExecuteContractSimiles,
     functionName: "msgExecuteContract",
-    similes: ["execute contract", "run contract", "call contract"],
     validateContent: () => true,
 });
 
@@ -156,8 +132,8 @@ export const MsgMigrateContractAction = createGenericAction({
         "Broadcasts a message to migrate a contract to a new code version",
     template: WasmTemplates.msgMigrateContractTemplate,
     examples: WasmExamples.msgMigrateContractExample,
+    similes: WasmSimiles.msgMigrateContractSimiles,
     functionName: "msgMigrateContract",
-    similes: ["migrate contract", "upgrade contract", "update contract code"],
     validateContent: () => true,
 });
 
@@ -166,8 +142,8 @@ export const MsgInstantiateContractAction = createGenericAction({
     description: "Broadcasts a message to instantiate a new contract",
     template: WasmTemplates.msgInstantiateContractTemplate,
     examples: WasmExamples.msgInstantiateContractExample,
+    similes: WasmSimiles.msgInstantiateContractSimiles,
     functionName: "msgInstantiateContract",
-    similes: ["create contract", "deploy instance", "new contract"],
     validateContent: () => true,
 });
 
@@ -177,8 +153,8 @@ export const MsgExecuteContractCompatAction = createGenericAction({
         "Broadcasts a message to execute a contract using compatibility mode",
     template: WasmTemplates.msgExecuteContractCompatTemplate,
     examples: WasmExamples.msgExecuteContractCompatExample,
+    similes: WasmSimiles.msgExecuteContractCompatSimiles,
     functionName: "msgExecuteContractCompat",
-    similes: ["execute compat", "run contract compat", "call contract compat"],
     validateContent: () => true,
 });
 
@@ -187,8 +163,8 @@ export const MsgPrivilegedExecuteContractAction = createGenericAction({
     description: "Broadcasts a privileged message to execute a contract",
     template: WasmTemplates.msgPrivilegedExecuteContractTemplate,
     examples: WasmExamples.msgPrivilegedExecuteContractExample,
+    similes: WasmSimiles.msgPrivilegedExecuteContractSimiles,
     functionName: "msgPrivilegedExecuteContract",
-    similes: ["privileged execute", "admin contract call", "sudo contract"],
     validateContent: () => true,
 });
 
@@ -198,8 +174,8 @@ export const GetWasmxModuleParamsAction = createGenericAction({
     description: "Fetches the parameters of the WasmX module",
     template: WasmTemplates.getWasmxModuleParamsTemplate,
     examples: WasmExamples.getWasmxModuleParamsExample,
+    similes: WasmSimiles.getWasmxModuleParamsSimiles,
     functionName: "getWasmxModuleParams",
-    similes: ["view wasmx params", "get wasmx settings", "wasmx parameters"],
     validateContent: () => true,
 });
 
@@ -208,8 +184,8 @@ export const GetWasmxModuleStateAction = createGenericAction({
     description: "Fetches the current state of the WasmX module",
     template: WasmTemplates.getWasmxModuleStateTemplate,
     examples: WasmExamples.getWasmxModuleStateExample,
+    similes: WasmSimiles.getWasmxModuleStateSimiles,
     functionName: "getWasmxModuleState",
-    similes: ["view wasmx state", "get wasmx status", "wasmx module info"],
     validateContent: () => true,
 });
 

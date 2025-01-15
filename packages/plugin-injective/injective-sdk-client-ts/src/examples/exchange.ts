@@ -1359,7 +1359,7 @@ export const getDerivativeMarketsExample = [
     {
         user: "{{user1}}",
         content: {
-            text: "Retrieve derivative markets with quote denom 'usdt', market status 'active', and 'paused'.",
+            text: "Retrieve all derivative markets",
         },
     },
     {

@@ -1,7 +1,7 @@
 import { createGenericAction } from "./base";
 import * as PeggyTemplates from "@injective/template/peggy";
 import * as PeggyExamples from "@injective/examples/peggy";
-
+import * as PeggySimiles from "@injective/similes/peggy";
 // Query Actions
 export const GetPeggyModuleParamsAction = createGenericAction({
     name: "GET_PEGGY_MODULE_PARAMS",
@@ -9,11 +9,7 @@ export const GetPeggyModuleParamsAction = createGenericAction({
     template: PeggyTemplates.getPeggyModuleParamsTemplate,
     examples: PeggyExamples.getPeggyModuleParamsExample,
     functionName: "getPeggyModuleParams",
-    similes: [
-        "view peggy params",
-        "get bridge settings",
-        "ethereum bridge parameters",
-    ],
+    similes: PeggySimiles.getPeggyModuleParamsSimiles,
     validateContent: () => true,
 });
 
@@ -25,7 +21,7 @@ export const MsgSendToEthAction = createGenericAction({
     template: PeggyTemplates.msgSendToEthTemplate,
     examples: PeggyExamples.msgSendToEthExample,
     functionName: "msgSendToEth",
-    similes: ["send to ethereum", "bridge transfer", "eth bridge send"],
+    similes: PeggySimiles.msgSendToEthSimiles,
     validateContent: () => true,
 });
 

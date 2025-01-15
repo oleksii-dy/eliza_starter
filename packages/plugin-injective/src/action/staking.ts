@@ -1,19 +1,15 @@
 import { createGenericAction } from "./base";
 import * as StakingTemplates from "@injective/template/staking";
 import * as StakingExamples from "@injective/examples/staking";
-
+import * as StakingSimiles from "@injective/similes/staking";
 // Module and Pool Query Actions
 export const GetStakingModuleParamsAction = createGenericAction({
     name: "GET_STAKING_MODULE_PARAMS",
     description: "Fetches the staking module parameters",
     template: StakingTemplates.getStakingModuleParamsTemplate,
     examples: StakingExamples.getStakingModuleParamsExample,
+    similes: StakingSimiles.getStakingModuleParamsSimiles,
     functionName: "getStakingModuleParams",
-    similes: [
-        "view staking params",
-        "get staking settings",
-        "staking parameters",
-    ],
     validateContent: () => true,
 });
 
@@ -22,8 +18,8 @@ export const GetPoolAction = createGenericAction({
     description: "Fetches the staking pool information",
     template: StakingTemplates.getPoolTemplate,
     examples: StakingExamples.getPoolExample,
+    similes: StakingSimiles.getPoolSimiles,
     functionName: "getPool",
-    similes: ["view staking pool", "get pool info", "check staking pool"],
     validateContent: () => true,
 });
 
@@ -33,8 +29,8 @@ export const GetValidatorsAction = createGenericAction({
     description: "Fetches a list of validators with optional pagination",
     template: StakingTemplates.getValidatorsTemplate,
     examples: StakingExamples.getValidatorsExample,
+    similes: StakingSimiles.getValidatorSimiles,
     functionName: "getValidators",
-    similes: ["list validators", "view all validators", "get validator list"],
     validateContent: () => true,
 });
 
@@ -43,8 +39,8 @@ export const GetValidatorAction = createGenericAction({
     description: "Fetches a specific validator by address",
     template: StakingTemplates.getValidatorTemplate,
     examples: StakingExamples.getValidatorExample,
+    similes: StakingSimiles.getValidatorSimiles,
     functionName: "getValidator",
-    similes: ["view validator", "check validator", "get validator info"],
     validateContent: () => true,
 });
 
@@ -54,12 +50,8 @@ export const GetValidatorDelegationsAction = createGenericAction({
     description: "Fetches delegations for a specific validator",
     template: StakingTemplates.getValidatorDelegationsTemplate,
     examples: StakingExamples.getValidatorDelegationsExample,
+    similes: StakingSimiles.getValidatorDelegationsSimiles,
     functionName: "getValidatorDelegations",
-    similes: [
-        "view validator stakes",
-        "list delegations",
-        "check validator delegations",
-    ],
     validateContent: () => true,
 });
 
@@ -69,12 +61,8 @@ export const GetValidatorDelegationsNoThrowAction = createGenericAction({
         "Fetches delegations for a specific validator without throwing an error",
     template: StakingTemplates.getValidatorDelegationsNoThrowTemplate,
     examples: StakingExamples.getValidatorDelegationsNoThrowExample,
+    similes: StakingSimiles.getValidatorDelegationsNoThrowSimiles,
     functionName: "getValidatorDelegationsNoThrow",
-    similes: [
-        "safe validator stakes",
-        "list delegations safe",
-        "check validator delegations safe",
-    ],
     validateContent: () => true,
 });
 
@@ -83,12 +71,8 @@ export const GetValidatorUnbondingDelegationsAction = createGenericAction({
     description: "Fetches unbonding delegations for a specific validator",
     template: StakingTemplates.getValidatorUnbondingDelegationsTemplate,
     examples: StakingExamples.getValidatorUnbondingDelegationsExample,
+    similes: StakingSimiles.getValidatorUnbondingDelegationsSimiles,
     functionName: "getValidatorUnbondingDelegations",
-    similes: [
-        "view validator unbonding",
-        "list unbonding",
-        "check validator unbonding",
-    ],
     validateContent: () => true,
 });
 
@@ -101,12 +85,8 @@ export const GetValidatorUnbondingDelegationsNoThrowAction =
             StakingTemplates.getValidatorUnbondingDelegationsNoThrowTemplate,
         examples:
             StakingExamples.getValidatorUnbondingDelegationsNoThrowExample,
+        similes: StakingSimiles.getValidatorDelegationsNoThrowSimiles,
         functionName: "getValidatorUnbondingDelegationsNoThrow",
-        similes: [
-            "safe validator unbonding",
-            "list unbonding safe",
-            "check validator unbonding safe",
-        ],
         validateContent: () => true,
     });
 
@@ -115,8 +95,8 @@ export const GetDelegationAction = createGenericAction({
     description: "Fetches a specific delegation",
     template: StakingTemplates.getDelegationTemplate,
     examples: StakingExamples.getDelegationExample,
+    similes: StakingSimiles.getDelegationSimiles,
     functionName: "getDelegation",
-    similes: ["view delegation", "check stake", "get delegation info"],
     validateContent: () => true,
 });
 
@@ -125,8 +105,8 @@ export const GetDelegationsAction = createGenericAction({
     description: "Fetches all delegations for a delegator",
     template: StakingTemplates.getDelegationsTemplate,
     examples: StakingExamples.getDelegationsExample,
+    similes: StakingSimiles.getDelegationsSimiles,
     functionName: "getDelegations",
-    similes: ["list all delegations", "view stakes", "check all delegations"],
     validateContent: () => true,
 });
 
@@ -136,12 +116,8 @@ export const GetDelegationsNoThrowAction = createGenericAction({
         "Fetches all delegations for a delegator without throwing an error",
     template: StakingTemplates.getDelegationsNoThrowTemplate,
     examples: StakingExamples.getDelegationsNoThrowExample,
+    similes: StakingSimiles.getDelegationsNoThrowSimiles,
     functionName: "getDelegationsNoThrow",
-    similes: [
-        "safe list delegations",
-        "view stakes safe",
-        "check delegations safe",
-    ],
     validateContent: () => true,
 });
 
@@ -150,8 +126,8 @@ export const GetDelegatorsAction = createGenericAction({
     description: "Fetches all delegators for a validator",
     template: StakingTemplates.getDelegatorsTemplate,
     examples: StakingExamples.getDelegatorsExample,
+    similes: StakingSimiles.getDelegatorsSimiles,
     functionName: "getDelegators",
-    similes: ["list delegators", "view stakers", "check validator stakers"],
     validateContent: () => true,
 });
 
@@ -161,12 +137,8 @@ export const GetDelegatorsNoThrowAction = createGenericAction({
         "Fetches all delegators for a validator without throwing an error",
     template: StakingTemplates.getDelegatorsNoThrowTemplate,
     examples: StakingExamples.getDelegatorsNoThrowExample,
+    similes: StakingSimiles.getDelegatorsNoThrowSimiles,
     functionName: "getDelegatorsNoThrow",
-    similes: [
-        "safe list delegators",
-        "view stakers safe",
-        "check validator stakers safe",
-    ],
     validateContent: () => true,
 });
 
@@ -175,8 +147,8 @@ export const GetUnbondingDelegationsAction = createGenericAction({
     description: "Fetches all unbonding delegations for a delegator",
     template: StakingTemplates.getUnbondingDelegationsTemplate,
     examples: StakingExamples.getUnbondingDelegationsExample,
+    similes: StakingSimiles.getUnbondingDelegationsSimiles,
     functionName: "getUnbondingDelegations",
-    similes: ["list unbonding", "view unstaking", "check unbonding"],
     validateContent: () => true,
 });
 
@@ -186,12 +158,8 @@ export const GetUnbondingDelegationsNoThrowAction = createGenericAction({
         "Fetches all unbonding delegations for a delegator without throwing an error",
     template: StakingTemplates.getUnbondingDelegationsNoThrowTemplate,
     examples: StakingExamples.getUnbondingDelegationsNoThrowExample,
+    similes: StakingSimiles.getUnbondingDelegationsNoThrowSimiles,
     functionName: "getUnbondingDelegationsNoThrow",
-    similes: [
-        "safe list unbonding",
-        "view unstaking safe",
-        "check unbonding safe",
-    ],
     validateContent: () => true,
 });
 
@@ -200,8 +168,8 @@ export const GetReDelegationsAction = createGenericAction({
     description: "Fetches all redelegations for a delegator",
     template: StakingTemplates.getReDelegationsTemplate,
     examples: StakingExamples.getReDelegationsExample,
+    similes: StakingSimiles.getReDelegationsSimiles,
     functionName: "getReDelegations",
-    similes: ["list redelegations", "view restaking", "check redelegations"],
     validateContent: () => true,
 });
 
@@ -211,12 +179,8 @@ export const GetReDelegationsNoThrowAction = createGenericAction({
         "Fetches all redelegations for a delegator without throwing an error",
     template: StakingTemplates.getReDelegationsNoThrowTemplate,
     examples: StakingExamples.getReDelegationsNoThrowExample,
+    similes: StakingSimiles.getReDelegationsNoThrowSimiles,
     functionName: "getReDelegationsNoThrow",
-    similes: [
-        "safe list redelegations",
-        "view restaking safe",
-        "check redelegations safe",
-    ],
     validateContent: () => true,
 });
 
@@ -226,8 +190,8 @@ export const MsgBeginRedelegateAction = createGenericAction({
     description: "Broadcasts a message to begin redelegating tokens",
     template: StakingTemplates.msgBeginRedelegateTemplate,
     examples: StakingExamples.msgBeginRedelegateExample,
+    similes: StakingSimiles.msgBeginRedelegateSimiles,
     functionName: "msgBeginRedelegate",
-    similes: ["start redelegation", "switch validator", "move stake"],
     validateContent: () => true,
 });
 
@@ -236,8 +200,8 @@ export const MsgDelegateAction = createGenericAction({
     description: "Broadcasts a message to delegate tokens to a validator",
     template: StakingTemplates.msgDelegateTemplate,
     examples: StakingExamples.msgDelegateExample,
+    similes: StakingSimiles.msgDelegateSimiles,
     functionName: "msgDelegate",
-    similes: ["stake tokens", "delegate to validator", "start staking"],
     validateContent: () => true,
 });
 
@@ -246,8 +210,8 @@ export const MsgUndelegateAction = createGenericAction({
     description: "Broadcasts a message to undelegate tokens from a validator",
     template: StakingTemplates.msgUndelegateTemplate,
     examples: StakingExamples.msgUndelegateExample,
+    similes: StakingSimiles.msgUndelegateSimiles,
     functionName: "msgUndelegate",
-    similes: ["unstake tokens", "withdraw stake", "end staking"],
     validateContent: () => true,
 });
 
@@ -256,8 +220,8 @@ export const MsgCreateValidatorAction = createGenericAction({
     description: "Broadcasts a message to create a new validator",
     template: StakingTemplates.msgCreateValidatorTemplate,
     examples: StakingExamples.msgCreateValidatorExample,
+    similes: StakingSimiles.msgCreateValidatorSimiles,
     functionName: "msgCreateValidator",
-    similes: ["create validator", "become validator", "start validating"],
     validateContent: () => true,
 });
 
@@ -266,12 +230,8 @@ export const MsgEditValidatorAction = createGenericAction({
     description: "Broadcasts a message to edit an existing validator",
     template: StakingTemplates.msgEditValidatorTemplate,
     examples: StakingExamples.msgEditValidatorExample,
+    similes: StakingSimiles.msgEditValidatorSimiles,
     functionName: "msgEditValidator",
-    similes: [
-        "update validator",
-        "modify validator",
-        "change validator settings",
-    ],
     validateContent: () => true,
 });
 
@@ -280,8 +240,8 @@ export const MsgCancelUnbondingDelegationAction = createGenericAction({
     description: "Broadcasts a message to cancel an unbonding delegation",
     template: StakingTemplates.msgCancelUnbondingDelegationTemplate,
     examples: StakingExamples.msgCancelUnbondingDelegationExample,
+    similes: StakingSimiles.msgCancelUnbondingDelegationSimiles,
     functionName: "msgCancelUnbondingDelegation",
-    similes: ["cancel unstaking", "stop unbonding", "reverse unbonding"],
     validateContent: () => true,
 });
 

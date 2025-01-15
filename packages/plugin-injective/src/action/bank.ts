@@ -1,15 +1,15 @@
 import { createGenericAction } from "./base";
 import * as BankTemplates from "@injective/template/bank";
 import * as BankExamples from "@injective/examples/bank";
-
+import * as BankSimilies from "@injective/similes/bank";
 // Query Actions
 export const GetBankModuleParamsAction = createGenericAction({
     name: "GET_BANK_MODULE_PARAMS",
     description: "Fetches the bank module parameters",
     template: BankTemplates.getBankModuleParamsTemplate,
     examples: BankExamples.getBankModuleParamsExample,
+    similes: BankSimilies.getBankModuleParamsSimiles,
     functionName: "getBankModuleParams",
-    similes: ["view bank params", "get bank parameters", "check bank settings"],
     validateContent: () => true,
 });
 
@@ -18,8 +18,8 @@ export const GetBankBalanceAction = createGenericAction({
     description: "Fetches the balance of a specific account",
     template: BankTemplates.getBankBalanceTemplate,
     examples: BankExamples.getBankBalanceExample,
+    similes: BankSimilies.getBankBalanceSimiles,
     functionName: "getBankBalance",
-    similes: ["check balance", "view balance", "get token balance"],
     validateContent: () => true,
 });
 
@@ -28,8 +28,8 @@ export const GetBankBalancesAction = createGenericAction({
     description: "Fetches all balances for the current account",
     template: BankTemplates.getBankBalancesTemplate,
     examples: BankExamples.getBankBalancesExample,
+    similes: BankSimilies.getBankBalancesSimiles,
     functionName: "getBankBalances",
-    similes: ["check all balances", "view all balances", "list balances"],
     validateContent: () => true,
 });
 
@@ -38,8 +38,8 @@ export const GetTotalSupplyAction = createGenericAction({
     description: "Fetches the total supply of all denominations",
     template: BankTemplates.getTotalSupplyTemplate,
     examples: BankExamples.getTotalSupplyExample,
+    similes: BankSimilies.getTotalSupplySimiles,
     functionName: "getTotalSupply",
-    similes: ["view total supply", "check total supply", "get supply"],
     validateContent: () => true,
 });
 
@@ -48,8 +48,8 @@ export const GetAllTotalSupplyAction = createGenericAction({
     description: "Fetches the total supply for all denominations",
     template: BankTemplates.getAllTotalSupplyTemplate,
     examples: BankExamples.getAllTotalSupplyExample,
+    similes: BankSimilies.getAllTotalSupplySimiles,
     functionName: "getAllTotalSupply",
-    similes: ["view all supplies", "check all supplies", "list total supplies"],
     validateContent: () => true,
 });
 
@@ -58,8 +58,8 @@ export const GetSupplyOfAction = createGenericAction({
     description: "Fetches the supply of a specific denomination",
     template: BankTemplates.getSupplyOfTemplate,
     examples: BankExamples.getSupplyOfExample,
+    similes: BankSimilies.getSupplyOfSimiles,
     functionName: "getSupplyOf",
-    similes: ["check denom supply", "view token supply", "get token total"],
     validateContent: () => true,
 });
 
@@ -68,8 +68,8 @@ export const GetDenomsMetadataAction = createGenericAction({
     description: "Fetches metadata for all denominations",
     template: BankTemplates.getDenomsMetadataTemplate,
     examples: BankExamples.getDenomsMetadataExample,
+    similes: BankSimilies.getDenomMetadataSimiles,
     functionName: "getDenomsMetadata",
-    similes: ["view all denoms", "list denominations", "check token metadata"],
     validateContent: () => true,
 });
 
@@ -78,8 +78,8 @@ export const GetDenomMetadataAction = createGenericAction({
     description: "Fetches metadata for a specific denomination",
     template: BankTemplates.getDenomMetadataTemplate,
     examples: BankExamples.getDenomMetadataExample,
+    similes: BankSimilies.getDenomMetadataSimiles,
     functionName: "getDenomMetadata",
-    similes: ["view denom info", "check token metadata", "get token info"],
     validateContent: () => true,
 });
 
@@ -88,8 +88,8 @@ export const GetDenomOwnersAction = createGenericAction({
     description: "Fetches the owners of a specific denomination",
     template: BankTemplates.getDenomOwnersTemplate,
     examples: BankExamples.getDenomOwnersExample,
+    similes: BankSimilies.getDenomOwnersSimiles,
     functionName: "getDenomOwners",
-    similes: ["view token holders", "list denom owners", "check token owners"],
     validateContent: () => true,
 });
 
@@ -99,8 +99,8 @@ export const MsgSendAction = createGenericAction({
     description: "Sends tokens from one account to another",
     template: BankTemplates.msgSendTemplate,
     examples: BankExamples.msgSendExample,
+    similes: BankSimilies.msgSendSimiles,
     functionName: "msgSend",
-    similes: ["send tokens", "transfer funds", "send money"],
     validateContent: () => true,
 });
 
@@ -109,8 +109,8 @@ export const MsgMultiSendAction = createGenericAction({
     description: "Sends tokens from multiple senders to multiple receivers",
     template: BankTemplates.msgMultiSendTemplate,
     examples: BankExamples.msgMultiSendExample,
+    similes: BankSimilies.msgMultiSendSimiles,
     functionName: "msgMultiSend",
-    similes: ["batch transfer", "multi send", "send to many"],
     validateContent: () => true,
 });
 

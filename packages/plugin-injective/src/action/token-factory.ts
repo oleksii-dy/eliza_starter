@@ -1,19 +1,15 @@
 import { createGenericAction } from "./base";
 import * as TokenFactoryTemplates from "@injective/template/token-factory";
 import * as TokenFactoryExamples from "@injective/examples/token-factory";
-
+import * as TokenFactorySimiles from "@injective/similes/token-factory";
 // Query Actions
 export const GetDenomsFromCreatorAction = createGenericAction({
     name: "GET_DENOMS_FROM_CREATOR",
     description: "Fetches all denominations created by a specific creator",
     template: TokenFactoryTemplates.getDenomsFromCreatorTemplate,
     examples: TokenFactoryExamples.getDenomsFromCreatorExample,
+    similes: TokenFactorySimiles.getDenomsFromCreatorSimiles,
     functionName: "getDenomsFromCreator",
-    similes: [
-        "list creator tokens",
-        "view created denoms",
-        "check creator assets",
-    ],
     validateContent: () => true,
 });
 
@@ -22,12 +18,8 @@ export const GetDenomAuthorityMetadataAction = createGenericAction({
     description: "Fetches the authority metadata for a specific denomination",
     template: TokenFactoryTemplates.getDenomAuthorityMetadataTemplate,
     examples: TokenFactoryExamples.getDenomAuthorityMetadataExample,
+    similes: TokenFactorySimiles.getDenomAuthorityMetadataSimiles,
     functionName: "getDenomAuthorityMetadata",
-    similes: [
-        "view denom authority",
-        "check token admin",
-        "get denom metadata",
-    ],
     validateContent: () => true,
 });
 
@@ -36,12 +28,8 @@ export const GetTokenFactoryModuleParamsAction = createGenericAction({
     description: "Fetches the parameters of the Token Factory module",
     template: TokenFactoryTemplates.getTokenFactoryModuleParamsTemplate,
     examples: TokenFactoryExamples.getTokenFactoryModuleParamsExample,
+    similes: TokenFactorySimiles.getTokenFactoryModuleParamsSimiles,
     functionName: "getTokenFactoryModuleParams",
-    similes: [
-        "view factory params",
-        "get token settings",
-        "factory parameters",
-    ],
     validateContent: () => true,
 });
 
@@ -50,12 +38,8 @@ export const GetTokenFactoryModuleStateAction = createGenericAction({
     description: "Fetches the current state of the Token Factory module",
     template: TokenFactoryTemplates.getTokenFactoryModuleStateTemplate,
     examples: TokenFactoryExamples.getTokenFactoryModuleStateExample,
+    similes: TokenFactorySimiles.getTokenFactoryModuleStateSimiles,
     functionName: "getTokenFactoryModuleState",
-    similes: [
-        "view factory state",
-        "check token factory",
-        "get factory status",
-    ],
     validateContent: () => true,
 });
 
@@ -65,8 +49,8 @@ export const MsgBurnAction = createGenericAction({
     description: "Broadcasts a message to burn tokens",
     template: TokenFactoryTemplates.msgBurnTemplate,
     examples: TokenFactoryExamples.msgBurnExample,
+    similes: TokenFactorySimiles.msgBurnSimiles,
     functionName: "msgBurn",
-    similes: ["burn tokens", "destroy tokens", "remove tokens"],
     validateContent: () => true,
 });
 
@@ -75,8 +59,8 @@ export const MsgChangeAdminAction = createGenericAction({
     description: "Broadcasts a message to change the admin of a denomination",
     template: TokenFactoryTemplates.msgChangeAdminTemplate,
     examples: TokenFactoryExamples.msgChangeAdminExample,
+    similes: TokenFactorySimiles.msgChangeAdminSimiles,
     functionName: "msgChangeAdmin",
-    similes: ["change token admin", "update denom admin", "transfer admin"],
     validateContent: () => true,
 });
 
@@ -85,8 +69,8 @@ export const MsgCreateDenomAction = createGenericAction({
     description: "Broadcasts a message to create a new denomination",
     template: TokenFactoryTemplates.msgCreateDenomTemplate,
     examples: TokenFactoryExamples.msgCreateDenomExample,
+    similes: TokenFactorySimiles.msgCreateDenomSimiles,
     functionName: "msgCreateDenom",
-    similes: ["create token", "new denomination", "make token"],
     validateContent: () => true,
 });
 
@@ -95,8 +79,8 @@ export const MsgMintAction = createGenericAction({
     description: "Broadcasts a message to mint new tokens",
     template: TokenFactoryTemplates.msgMintTemplate,
     examples: TokenFactoryExamples.msgMintExample,
+    similes: TokenFactorySimiles.msgMintSimiles,
     functionName: "msgMint",
-    similes: ["mint tokens", "create tokens", "issue tokens"],
     validateContent: () => true,
 });
 
@@ -105,12 +89,8 @@ export const MsgSetDenomMetadataAction = createGenericAction({
     description: "Broadcasts a message to set metadata for a denomination",
     template: TokenFactoryTemplates.msgSetDenomMetadataTemplate,
     examples: TokenFactoryExamples.msgSetDenomMetadataExample,
+    similes: TokenFactorySimiles.msgSetDenomMetadataSimiles,
     functionName: "msgSetDenomMetadata",
-    similes: [
-        "set token metadata",
-        "update denom info",
-        "modify token details",
-    ],
     validateContent: () => true,
 });
 

@@ -1,6 +1,5 @@
 import InjectiveActions from "./action";
 import { Plugin } from "@elizaos/core";
-
 export const injectivePlugin: Plugin = {
     name: "injective",
     description: "A plugin for interacting with the Injective blockchain",

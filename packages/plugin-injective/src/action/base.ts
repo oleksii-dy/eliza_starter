@@ -13,7 +13,6 @@ import {
     generateText,
 } from "@elizaos/core";
 import { InjectiveGrpcClient } from "@injective/modules";
-import { z } from "zod";
 
 /**
  * Shape of the arguments to create our generic action.
@@ -34,7 +33,6 @@ export interface CreateGenericActionArgs {
     functionName: string; // e.g. "msgBid"
     validateContent: (runtime: IAgentRuntime, content: any) => boolean;
 }
-
 /**
  * A factory function that returns an ElizaOS Action.
  */
@@ -45,14 +43,12 @@ export function createGenericAction({
     examples,
     functionName,
     similes,
-    //validateContent,
 }: CreateGenericActionArgs): Action {
     return {
         name, // e.g. "PLACE_BID"
         description, // e.g. "Place a bid using the InjectiveGrpcClient"
         examples: [examples as ActionExample[]], // I have manually casted the inputs here
         similes, // (optional) synonyms or alternate names if you like
-        // (Optional) global validation for the entire Action
         validate: async (_runtime, _message) => {
             return true;
         },
@@ -144,13 +140,14 @@ export function createGenericAction({
                     console.log("Cleaning up the response");
                     const additionalTemplate = `Extract the response from the following data, also make sure that you format the response into human readable format, make it the prettiest thing anyone can read basically a very nice comprehensive summary in a string format.`;
                     const responseResult = JSON.stringify(response.result);
-                    const newTemplate = `${additionalTemplate}\n${responseResult}`;
+                    const newContext = `${additionalTemplate}\n${responseResult}`;
+                    const totalContext = `Previous chat context:${context} \n New information : ${newContext}`;
                     console.log(
-                        `Got context, now will pass it on to llm ${newTemplate}`
+                        `Got context, now will pass it on to llm ${totalContext}`
                     );
                     const responseContent = await generateText({
                         runtime,
-                        context: newTemplate,
+                        context: totalContext,
                         modelClass: ModelClass.SMALL,
                     });
 

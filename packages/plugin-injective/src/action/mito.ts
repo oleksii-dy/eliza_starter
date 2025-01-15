@@ -1,15 +1,15 @@
 import { createGenericAction } from "./base";
 import * as MitoTemplates from "@injective/template/mito";
 import * as MitoExamples from "@injective/examples/mito";
-
+import * as MitoSimiles from "@injective/similes/mito";
 // Vault Related Actions
 export const GetVaultAction = createGenericAction({
     name: "GET_VAULT",
     description: "Fetches the details of a specific vault",
     template: MitoTemplates.getVaultTemplate,
     examples: MitoExamples.getVaultExample,
+    similes: MitoSimiles.getVaultSimiles,
     functionName: "getVault",
-    similes: ["view vault details", "check vault", "get vault info"],
     validateContent: () => true,
 });
 
@@ -18,8 +18,8 @@ export const GetVaultsAction = createGenericAction({
     description: "Fetches a list of all vaults with optional filtering",
     template: MitoTemplates.getVaultsTemplate,
     examples: MitoExamples.getVaultsExample,
+    similes: MitoSimiles.getVaultSimiles,
     functionName: "getVaults",
-    similes: ["list vaults", "view all vaults", "get vault list"],
     validateContent: () => true,
 });
 
@@ -28,8 +28,8 @@ export const GetVaultsByHolderAddressAction = createGenericAction({
     description: "Fetches vaults associated with a specific holder address",
     template: MitoTemplates.getVaultsByHolderAddressTemplate,
     examples: MitoExamples.getVaultsByHolderAddressExample,
+    similes: MitoSimiles.getVaultsByHolderAddressSimiles,
     functionName: "getVaultsByHolderAddress",
-    similes: ["holder vaults", "address vaults", "user vaults"],
     validateContent: () => true,
 });
 
@@ -39,8 +39,8 @@ export const GetLpTokenPriceChartAction = createGenericAction({
     description: "Retrieves the price chart data for LP tokens",
     template: MitoTemplates.getLpTokenPriceChartTemplate,
     examples: MitoExamples.getLpTokenPriceChartExample,
+    similes: MitoSimiles.getLpTokenPriceChartSimiles,
     functionName: "getLpTokenPriceChart",
-    similes: ["lp price history", "token price chart", "lp chart"],
     validateContent: () => true,
 });
 
@@ -49,8 +49,8 @@ export const GetLPHoldersAction = createGenericAction({
     description: "Retrieves a list of LP token holders",
     template: MitoTemplates.getLPHoldersTemplate,
     examples: MitoExamples.getLPHoldersExample,
+    similes: MitoSimiles.getLPHoldersSimiles,
     functionName: "getLPHolders",
-    similes: ["list lp holders", "token holders", "lp investors"],
     validateContent: () => true,
 });
 
@@ -60,8 +60,8 @@ export const GetTVLChartAction = createGenericAction({
     description: "Retrieves the Total Value Locked (TVL) chart data",
     template: MitoTemplates.getTVLChartTemplate,
     examples: MitoExamples.getTVLChartExample,
+    similes: MitoSimiles.getTVLChartSimiles,
     functionName: "getTVLChart",
-    similes: ["tvl history", "value locked chart", "tvl data"],
     validateContent: () => true,
 });
 
@@ -70,8 +70,8 @@ export const GetHolderPortfolioAction = createGenericAction({
     description: "Retrieves the portfolio details of a specific holder",
     template: MitoTemplates.getHolderPortfolioTemplate,
     examples: MitoExamples.getHolderPortfolioExample,
+    similes: MitoSimiles.getHolderPortfolioSimiles,
     functionName: "getHolderPortfolio",
-    similes: ["view portfolio", "holder assets", "user portfolio"],
     validateContent: () => true,
 });
 
@@ -81,8 +81,8 @@ export const GetLeaderboardAction = createGenericAction({
     description: "Retrieves the leaderboard for a specific epoch",
     template: MitoTemplates.getLeaderboardTemplate,
     examples: MitoExamples.getLeaderboardExample,
+    similes: MitoSimiles.getLeaderboardSimiles,
     functionName: "getLeaderboard",
-    similes: ["view rankings", "epoch leaderboard", "top performers"],
     validateContent: () => true,
 });
 
@@ -91,8 +91,8 @@ export const GetLeaderboardEpochsAction = createGenericAction({
     description: "Retrieves the epochs associated with leaderboards",
     template: MitoTemplates.getLeaderboardEpochsTemplate,
     examples: MitoExamples.getLeaderboardEpochsExample,
+    similes: MitoSimiles.getLeaderboardEpochsSimiles,
     functionName: "getLeaderboardEpochs",
-    similes: ["list epochs", "view periods", "leaderboard times"],
     validateContent: () => true,
 });
 
@@ -102,8 +102,8 @@ export const GetTransferHistoryAction = createGenericAction({
     description: "Fetches the transfer history based on provided parameters",
     template: MitoTemplates.getTransferHistoryTemplate,
     examples: MitoExamples.getTransferHistoryExample,
+    similes: MitoSimiles.getTransferHistorySimiles,
     functionName: "getTransferHistory",
-    similes: ["transfer logs", "transaction history", "movement history"],
     validateContent: () => true,
 });
 
@@ -113,8 +113,8 @@ export const GetStakingPoolsAction = createGenericAction({
     description: "Retrieves information about staking pools",
     template: MitoTemplates.getStakingPoolsTemplate,
     examples: MitoExamples.getStakingPoolsExample,
+    similes: MitoSimiles.getStakingPoolsSimiles,
     functionName: "getStakingPools",
-    similes: ["list pools", "view stake pools", "staking options"],
     validateContent: () => true,
 });
 
@@ -123,8 +123,8 @@ export const GetStakingHistoryAction = createGenericAction({
     description: "Retrieves the staking history based on provided parameters",
     template: MitoTemplates.getStakingHistoryTemplate,
     examples: MitoExamples.getStakingHistoryExample,
+    similes: MitoSimiles.getStakingHistorySimiles,
     functionName: "getStakingHistory",
-    similes: ["stake history", "staking logs", "stake records"],
     validateContent: () => true,
 });
 
@@ -133,8 +133,8 @@ export const GetStakingRewardsByAccountAction = createGenericAction({
     description: "Retrieves staking rewards for a specific account",
     template: MitoTemplates.getStakingRewardsByAccountTemplate,
     examples: MitoExamples.getStakingRewardsByAccountExample,
+    similes: MitoSimiles.getStakingRewardsByAccountSimiles,
     functionName: "getStakingRewardsByAccount",
-    similes: ["view rewards", "stake earnings", "account rewards"],
     validateContent: () => true,
 });
 
@@ -144,8 +144,8 @@ export const GetMissionsAction = createGenericAction({
     description: "Fetches a list of missions based on provided parameters",
     template: MitoTemplates.getMissionsTemplate,
     examples: MitoExamples.getMissionsExample,
+    similes: MitoSimiles.getMissionsSimiles,
     functionName: "getMissions",
-    similes: ["list missions", "view tasks", "available missions"],
     validateContent: () => true,
 });
 
@@ -155,8 +155,8 @@ export const GetMissionLeaderboardAction = createGenericAction({
         "Retrieves the leaderboard for missions based on the user address",
     template: MitoTemplates.getMissionLeaderboardTemplate,
     examples: MitoExamples.getMissionLeaderboardExample,
+    similes: MitoSimiles.getMissionLeaderboardSimiles,
     functionName: "getMissionLeaderboard",
-    similes: ["mission rankings", "task leaderboard", "mission scores"],
     validateContent: () => true,
 });
 
@@ -166,8 +166,8 @@ export const GetIDOAction = createGenericAction({
     description: "Fetches details of a specific Initial DEX Offering (IDO)",
     template: MitoTemplates.getIDOTemplate,
     examples: MitoExamples.getIDOExample,
+    similes: MitoSimiles.getIDOSimiles,
     functionName: "getIDO",
-    similes: ["view ido", "check offering", "get ido details"],
     validateContent: () => true,
 });
 
@@ -176,8 +176,8 @@ export const GetIDOsAction = createGenericAction({
     description: "Retrieves a list of all IDOs with optional filtering",
     template: MitoTemplates.getIDOsTemplate,
     examples: MitoExamples.getIDOsExample,
+    similes: MitoSimiles.getIDOsSimiles,
     functionName: "getIDOs",
-    similes: ["list idos", "view offerings", "get ido list"],
     validateContent: () => true,
 });
 
@@ -186,8 +186,8 @@ export const GetIDOSubscribersAction = createGenericAction({
     description: "Fetches subscribers for a specific IDO",
     template: MitoTemplates.getIDOSubscribersTemplate,
     examples: MitoExamples.getIDOSubscribersExample,
+    similes: MitoSimiles.getIDOSubscribersSimiles,
     functionName: "getIDOSubscribers",
-    similes: ["view subscribers", "ido participants", "subscriber list"],
     validateContent: () => true,
 });
 
@@ -196,8 +196,8 @@ export const GetIDOSubscriptionAction = createGenericAction({
     description: "Retrieves the subscription details for a specific IDO",
     template: MitoTemplates.getIDOSubscriptionTemplate,
     examples: MitoExamples.getIDOSubscriptionExample,
+    similes: MitoSimiles.getIDOSubscriptionSimiles,
     functionName: "getIDOSubscription",
-    similes: ["check subscription", "view ido status", "subscription details"],
     validateContent: () => true,
 });
 
@@ -206,8 +206,8 @@ export const GetIDOActivitiesAction = createGenericAction({
     description: "Retrieves activities related to a specific IDO",
     template: MitoTemplates.getIDOActivitiesTemplate,
     examples: MitoExamples.getIDOActivitiesExample,
+    similes: MitoSimiles.getIDOActivitiesSimiles,
     functionName: "getIDOActivities",
-    similes: ["ido history", "offering activities", "ido events"],
     validateContent: () => true,
 });
 
@@ -216,8 +216,8 @@ export const GetIDOWhitelistAction = createGenericAction({
     description: "Fetches the whitelist for a specific IDO",
     template: MitoTemplates.getIDOWhitelistTemplate,
     examples: MitoExamples.getIDOWhitelistExample,
+    similes: MitoSimiles.getIDOWhitelistSimiles,
     functionName: "getIDOWhitelist",
-    similes: ["view whitelist", "check eligibility", "ido approved list"],
     validateContent: () => true,
 });
 
@@ -226,8 +226,8 @@ export const GetClaimReferencesAction = createGenericAction({
     description: "Retrieves claim references based on provided parameters",
     template: MitoTemplates.getClaimReferencesTemplate,
     examples: MitoExamples.getClaimReferencesExample,
+    similes: MitoSimiles.getClaimReferencesSimiles,
     functionName: "getClaimReferences",
-    similes: ["view claims", "check references", "claim list"],
     validateContent: () => true,
 });
 
