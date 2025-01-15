@@ -678,6 +678,9 @@ export type Character = {
     /** Optional username */
     username?: string;
 
+    /** Optional email */
+    email?: string;
+
     /** Optional system prompt */
     system?: string;
 
@@ -846,6 +849,9 @@ export type Character = {
     nft?: {
         prompt: string;
     };
+
+    /** Additional dynamic properties */
+    [key: string]: unknown;
 };
 
 /**
