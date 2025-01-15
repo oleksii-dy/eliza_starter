@@ -1,4 +1,5 @@
 import { Tweet } from "agent-twitter-client";
+import { TwitterEventsClient, TwitterEvent, TwitterPostType } from "./events.ts";
 import {
     composeContext,
     models,
@@ -126,6 +127,7 @@ export class TwitterPostClient {
     client: ClientBase;
     runtime: IAgentRuntime;
     twitterUsername: string;
+    eventsClient: TwitterEventsClient;
     private isProcessing: boolean = false;
     private lastProcessTime: number = 0;
     private stopProcessingActions: boolean = false;
@@ -206,6 +208,12 @@ export class TwitterPostClient {
             // Set up Discord client event handlers
             this.setupDiscordClient();
         }
+
+        this.setupEventsClient();
+    }
+
+    private setupEventsClient() {
+        this.eventsClient = new TwitterEventsClient();
     }
 
     private setupDiscordClient() {
@@ -247,6 +255,9 @@ export class TwitterPostClient {
         if (!this.client.profile) {
             await this.client.init();
         }
+
+        const generateTweet = this.generateNewTweet.bind(this);
+        this.eventsClient.start(generateTweet);
 
         const generateNewTweetLoop = async () => {
             // Check for pending tweets first
@@ -301,7 +312,9 @@ export class TwitterPostClient {
                     await new Promise((resolve) => setTimeout(resolve, 30000)); // Wait 30s on error
                 }
             }
+
         };
+
 
         if (this.client.twitterConfig.POST_IMMEDIATELY) {
             await this.generateNewTweet();
@@ -319,6 +332,10 @@ export class TwitterPostClient {
                 );
             });
         }
+
+
+
+
 
         // Start the pending tweet check loop if enabled
         if (this.approvalRequired) this.runPendingTweetCheckLoop();
@@ -492,7 +509,7 @@ export class TwitterPostClient {
     /**
      * Generates and posts a new tweet. If isDryRun is true, only logs what would have been posted.
      */
-    async generateNewTweet() {
+    async generateNewTweet(message?: TwitterEvent) {
         elizaLogger.log("Starting generateNewTweet process");
 
         try {
@@ -510,49 +527,11 @@ export class TwitterPostClient {
                 "twitter",
             );
 
-            const randomTicker = generateRandomTicker();
-            elizaLogger.log("Selected ticker:", randomTicker);
 
-            elizaLogger.log("Creating mock message for analysis");
-            const mockMessage: Memory= {
-                content: {
-                    text: `Generate a financial analysis of ${randomTicker}`,
-                    action: ""
-                },
-                userId: this.runtime.agentId,
-                agentId: this.runtime.agentId,
-                roomId: roomId,
+            if (message) {
+                elizaLogger.log("Reaching generateNewTweet with message: " + JSON.stringify(message));
             }
-
-            const endDate = new Date();
-            const startDate = new Date();
-            startDate.setFullYear(endDate.getFullYear() - 1);
-
-            const stockAnalyzer = new StockAnalyzer();
-
-            const [news, priceHistory, financialData, stockAnalysis] = await Promise.all([
-                getSummarizedNews(randomTicker, this.runtime, {} as State),
-                getPriceHistoryByTicker(randomTicker, startDate.getTime(), endDate.getTime(), "day"),
-                getFinancialSummarization(randomTicker, this.runtime, {} as State, mockMessage, 126000),
-                stockAnalyzer.analyzeStock(randomTicker)
-            ]);
-
-            if (!news || !priceHistory || !financialData || !stockAnalysis) {
-                elizaLogger.error("Missing required data:", {
-                    hasNews: !!news,
-                    hasPriceHistory: !!priceHistory,
-                    hasFinancialData: !!financialData,
-                    hasStockAnalysis: !!stockAnalysis
-                });
-                return;
-            }
-
-            const pricingData = priceHistory[0].history.map((price) => ({
-                date: price.date,
-                close: price.close
-            })) ?? [];
-
-            const latestPrice = pricingData[pricingData.length - 1].close;
+            return;
 
             const state = await this.runtime.composeState(
                 {
@@ -569,10 +548,78 @@ export class TwitterPostClient {
                 }
             );
 
-            state.financialSummary = financialData;
-            state.currentStockPrice = latestPrice;
-            state.news = news;
-            state.stockAnalysis = stockAnalysis;
+            if (!message) {
+
+                const randomTicker = generateRandomTicker();
+
+                elizaLogger.log("Selected ticker:", randomTicker);
+
+                elizaLogger.log("Creating mock message for analysis");
+                const mockMessage: Memory= {
+                    content: {
+                        text: `Generate a financial analysis of ${randomTicker}`,
+                        action: ""
+                    },
+                    userId: this.runtime.agentId,
+                    agentId: this.runtime.agentId,
+                    roomId: roomId,
+                }
+
+                const endDate = new Date();
+                const startDate = new Date();
+                startDate.setFullYear(endDate.getFullYear() - 1);
+
+                const stockAnalyzer = new StockAnalyzer();
+
+                const [news, priceHistory, financialData, stockAnalysis] = await Promise.all([
+                    getSummarizedNews(randomTicker, this.runtime, {} as State),
+                    getPriceHistoryByTicker(randomTicker, startDate.getTime(), endDate.getTime(), "day"),
+                    getFinancialSummarization(randomTicker, this.runtime, {} as State, mockMessage, 126000),
+                    stockAnalyzer.analyzeStock(randomTicker)
+                ]);
+
+                if (!news || !priceHistory || !financialData || !stockAnalysis) {
+                    elizaLogger.error("Missing required data:", {
+                        hasNews: !!news,
+                        hasPriceHistory: !!priceHistory,
+                        hasFinancialData: !!financialData,
+                        hasStockAnalysis: !!stockAnalysis
+                    });
+                    return;
+                }
+
+                const pricingData = priceHistory[0].history.map((price) => ({
+                    date: price.date,
+                    close: price.close
+                })) ?? [];
+
+                const latestPrice = pricingData[pricingData.length - 1].close;
+
+
+                state.financialSummary = financialData;
+                state.currentStockPrice = latestPrice;
+                state.news = news;
+                state.stockAnalysis = stockAnalysis;
+                state.ticker = randomTicker;
+            }
+            let template = twitterPostTemplate;
+
+            switch (message?.postType) {
+                case TwitterPostType.PRICE_ACTION:
+                    break;
+                case TwitterPostType.SENTIMENT:
+                    break;
+                case TwitterPostType.COMPETITIVE_ANALYSIS:
+                    break;
+                case TwitterPostType.NEWS:
+                    break;
+                case TwitterPostType.RESEARCH:
+                    break;
+                case TwitterPostType.ANNOUNCEMENT:
+                    break;
+                case TwitterPostType.INVESTMENT_OPPORTUNITY:
+                    break;
+            }
 
             const context = composeContext({
                 state,

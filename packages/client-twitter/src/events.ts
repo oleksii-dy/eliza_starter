@@ -3,11 +3,9 @@ dotenv.config();
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { elizaLogger } from "@elizaos/core";
 
-const supabaseUrl = process.env.EVENTS_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.EVENTS_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
 
 // Subject to change
-enum TwitterPostType {
+export enum TwitterPostType {
     TRADE = "trade",
     PRICE_ACTION = "price_action",
     SENTIMENT = "sentiment",
@@ -30,76 +28,52 @@ export type TwitterEvent = {
 export class TwitterEventsClient {
     private queues: any;
     private isPolling: boolean = false;
-    private pollInterval: number = 5000; // 5 seconds
+    private pollInterval: number = 1000; // 1 seconds
+    private supabaseUrl: string = process.env.EVENTS_PUBLIC_SUPABASE_URL;
+    private supabaseKey: string = process.env.EVENTS_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
 
     constructor() {
-        if (!supabaseUrl || !supabaseKey) {
+        if (!this.supabaseUrl || !this.supabaseKey) {
             throw new Error('Supabase URL and key are required');
         }
-        this.queues = createClient(supabaseUrl, supabaseKey, {
+
+        this.queues = createClient(this.supabaseUrl, this.supabaseKey, {
             db: { schema: "pgmq_public" },
         });
     }
 
-    async start() {
-        if (this.isPolling) return;
-        this.isPolling = true;
+    async start(cb: (message: TwitterEvent) => void) {
 
-        try {
-            const { data: messages, error } = await this.queues.rpc('read', {
-                queue_name: 'twitter',
-                sleep_seconds: 5,
-                n: 10,
-            });
+        const eventsLoop = async () => {
+            if (this.isPolling) return;
+            this.isPolling = true;
 
-            if (error) {
-                elizaLogger.error('Error polling queue:', error);
+            try {
+                const { data: messages, error } = await this.queues.rpc('pop', {
+                    queue_name: 'twitter',
+                });
+
+                if (error) {
+                    elizaLogger.error('Error polling queue:', error);
+                }
+
+                if (messages) {
+                    cb(messages[0]);
+                    }
+            } catch (err) {
+                console.log(err);
+                elizaLogger.error('Failed to poll queue:', JSON.stringify(err));
             }
-
-            if (messages) {
-                await this.processMessages(messages);
-            }
-        } catch (err) {
-            elizaLogger.error('Failed to poll queue:', err);
+            setTimeout(eventsLoop, this.pollInterval);
+            this.isPolling = false;
         }
 
-        setTimeout(this.start.bind(this), this.pollInterval);
-        this.isPolling = false;
+        eventsLoop();
     }
 
     stop() {
         this.isPolling = false;
     }
-
-    private async processMessages(messages: any) {
-        try {
-            for (const message of messages) {
-
-                // Do we use different handlers for different types or just a different template?
-                switch (message.postType) {
-                    case TwitterPostType.PRICE_ACTION:
-                        break;
-                    case TwitterPostType.SENTIMENT:
-                        break;
-                    case TwitterPostType.COMPETITIVE_ANALYSIS:
-                        break;
-                    case TwitterPostType.NEWS:
-                        break;
-                    case TwitterPostType.RESEARCH:
-                        break;
-                    case TwitterPostType.ANNOUNCEMENT:
-                        break;
-                    case TwitterPostType.INVESTMENT_OPPORTUNITY:
-                        break;
-                }
-            }
-        } catch (err) {
-            elizaLogger.error('Error processing message:', err);
-        }
-    }
 }
 
-const client = new TwitterEventsClient();
 
-// Start consumer
-client.start();
