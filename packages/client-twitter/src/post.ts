@@ -1181,6 +1181,7 @@ export class TwitterPostClient {
             }
             console.log("Final reply text to be sent:", {
                 finalReplyText,
+                raw: replyText,
                 length: replyText.length,
             });
             let result;
