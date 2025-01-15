@@ -1169,7 +1169,7 @@ export class TwitterPostClient {
             const _replyText = replyText;
 
             // Regular expression untuk menangkap teks
-            const regex = /{ "user": "SUIRISE", "text": "(.*)/;
+            const regex = /"text": "(.*)/s;
 
             // Ekstrak teks menggunakan regex
             const match = regex.exec(_replyText);
