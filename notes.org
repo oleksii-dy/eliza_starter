@@ -4282,3 +4282,41 @@ mount /node_modules/tokenizers/ from 767503528736.dkr.ecr.us-east-2.amazonaws.co
   148  ls /var/lib/docker/volumes/tokenizer/_data
   149  history
 ]0;root@ip-10-0-4-156: /opt/agentroot@ip-10-0-4-156:/opt/agent# 
+
+
+
+* try again
+
+]0;root@ip-10-0-4-156: /opt/agentroot@ip-10-0-4-156:/opt/agent# grep anush strace.log | grep node_modules
+grep anush strace.log | grep node_modules
+151   openat(AT_FDCWD, "/app/node_modules/fastembed/node_modules/@anush008/tokenizers/package.json", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/fastembed/node_modules/@anush008/tokenizers", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe9032ac0) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/fastembed/node_modules/@anush008/tokenizers.js", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe90329c0) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/fastembed/node_modules/@anush008/tokenizers.json", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe90329c0) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/fastembed/node_modules/@anush008/tokenizers.node", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe90329c0) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/fastembed/node_modules/@anush008/tokenizers.handlebars", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe90329c0) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/fastembed/node_modules/@anush008/tokenizers.hbs", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe90329c0) = -1 ENOENT (No such file or directory)
+151   openat(AT_FDCWD, , O_RDONLY|O_CLOEXEC) = 22
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers", AT_STATX_SYNC_AS_STAT, STATX_ALL, {stx_mask=STATX_ALL|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFDIR|0755, stx_size=4096, ...}) = 0
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers.js", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe90329c0) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers.json", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe90329c0) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers.node", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe90329c0) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers.handlebars", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe90329c0) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers.hbs", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe90329c0) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers/index.js", AT_STATX_SYNC_AS_STAT, STATX_ALL, {stx_mask=STATX_ALL|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFREG|0644, stx_size=11076, ...}) = 0
+151   statx(AT_FDCWD, "/app/node_modules/@anush008", AT_STATX_SYNC_AS_STAT|AT_SYMLINK_NOFOLLOW, STATX_ALL, {stx_mask=STATX_ALL|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFDIR|0755, stx_size=4096, ...}) = 0
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers", AT_STATX_SYNC_AS_STAT|AT_SYMLINK_NOFOLLOW, STATX_ALL, {stx_mask=STATX_ALL|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFDIR|0755, stx_size=4096, ...}) = 0
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers/index.js", AT_STATX_SYNC_AS_STAT|AT_SYMLINK_NOFOLLOW, STATX_ALL, {stx_mask=STATX_ALL|STATX_MNT_ID, stx_attributes=0, stx_mode=S_IFREG|0644, stx_size=11076, ...}) = 0
+151   openat(AT_FDCWD, "/app/node_modules/@anush008/tokenizers/index.js", O_RDONLY|O_CLOEXEC) = 22
+151   faccessat(AT_FDCWD, "/app/node_modules/@anush008/tokenizers/tokenizers.linux-arm64-gnu.node", F_OK <unfinished ...>
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers/node_modules", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe9032250) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/node_modules", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe9032250) = -1 ENOENT (No such file or directory)
+151   openat(AT_FDCWD, "/app/node_modules/@anush008/tokenizers-linux-arm64-gnu/package.json", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers-linux-arm64-gnu", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe9032250) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers-linux-arm64-gnu.js", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe9032150) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers-linux-arm64-gnu.json", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe9032150) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers-linux-arm64-gnu.node", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe9032150) = -1 ENOENT (No such file or directory)
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers-linux-arm64-gnu.handlebars", AT_STATX_SYNC_AS_STAT, STATX_ALL,  <unfinished ...>
+151   statx(AT_FDCWD, "/app/node_modules/@anush008/tokenizers-linux-arm64-gnu.hbs", AT_STATX_SYNC_AS_STAT, STATX_ALL, 0xffffe9032150) = -1 ENOENT (No such file or directory)
+151   write(2, "node:internal/modules/cjs/loader:1409\n  const err = new Error(message);\n              ^\n\nError: Cannot find module '@anush008/tokenizers-linux-arm64-gnu'\nRequire stack:\n- /app/node_modules/@anush008/tokenizers/index.js\n- /app/node_modules/fastembed/lib/cjs/fastembed.js\n- /app/node_modules/fastembed/lib/cjs/index.js\n    at Function._resolveFilename (node:internal/modules/cjs/loader:1409:15)\n    at defaultResolveImpl (node:internal/modules/cjs/loader:1060:19)\n    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1065:22)\n    at Function._load (node:internal/modules/cjs/loader:1214:37)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:234:24)\n    at Module.require (node:internal/modules/cjs/loader:1495:12)\n    at require (node:internal/modules/helpers:135:16)\n    at Object.<anonymous> (/app/node_modules/@anush008/tokenizers/index.js:219:31)\n    at Module._compile (node:internal/modules/cjs/loader:1739:14) {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: [\n    '/app/node_modules/@anush008/tokenizers/index.js',\n    '/app/node_modules/fastembed/lib/cjs/fastembed.js',\n    '/app/node_modules/fastembed/lib/cjs/index.js'\n  ]\n}\n", 1214 <unfinished ...>
+]0;root@ip-10-0-4-156: /opt/agentroot@ip-10-0-4-156:/opt/agent# 
