@@ -477,45 +477,83 @@ RETURNS TABLE(
 LANGUAGE plpgsql
 AS $$
 BEGIN
-    RETURN QUERY
-    WITH vector_matches AS (
-        SELECT public.knowledge."id",
-            1 - (public.knowledge."embedding" <=> "query_embedding") AS "vector_score"
-        FROM public.knowledge
-        WHERE (public.knowledge."agentId" IS NULL AND public.knowledge."isShared" = true) OR public.knowledge."agentId" = "query_agent_id"
-        AND public.knowledge."embedding" IS NOT NULL
-    ),
-    keyword_matches AS (
-        SELECT public.knowledge."id",
-        CASE
-            WHEN public.knowledge."content"->>'text' ILIKE '%' || "search_text" || '%' THEN 3.0
-            ELSE 1.0
-        END *
-        CASE
-            WHEN public.knowledge."content"->'metadata'->>'isChunk' = 'true' THEN 1.5
-            WHEN public.knowledge."content"->'metadata'->>'isMain' = 'true' THEN 1.2
-            ELSE 1.0
-        END AS "keyword_score"
-        FROM public.knowledge
-        WHERE (public.knowledge."agentId" IS NULL AND public.knowledge."isShared" = true) OR public.knowledge."agentId" = "query_agent_id"
-    )
-    SELECT
-        k."id",
-        k."agentId",
-        k."content",
-        k."embedding",
-        k."createdAt",
-        (v."vector_score" * kw."keyword_score") AS "similarity"
-    FROM public.knowledge k
-    JOIN vector_matches v ON k."id" = v."id"
-    LEFT JOIN keyword_matches kw ON k."id" = kw."id"
-    WHERE (k."agentId" IS NULL AND k."isShared" = true) OR k."agentId" = "query_agent_id"
-    AND (
-        v."vector_score" >= "match_threshold"
-        OR (kw."keyword_score" > 1.0 AND v."vector_score" >= 0.3)
-    )
-    ORDER BY "similarity" DESC
-    LIMIT "match_count";
+    -- Determine embedding size and use appropriate table
+    CASE array_length(query_embedding, 1)
+        WHEN 384 THEN
+            RETURN QUERY SELECT * FROM search_knowledge_table('knowledge_384', query_embedding, query_agent_id, match_threshold, match_count, search_text);
+        WHEN 768 THEN
+            RETURN QUERY SELECT * FROM search_knowledge_table('knowledge_768', query_embedding, query_agent_id, match_threshold, match_count, search_text);
+        WHEN 1024 THEN
+            RETURN QUERY SELECT * FROM search_knowledge_table('knowledge_1024', query_embedding, query_agent_id, match_threshold, match_count, search_text);
+        WHEN 1536 THEN
+            RETURN QUERY SELECT * FROM search_knowledge_table('knowledge_1536', query_embedding, query_agent_id, match_threshold, match_count, search_text);
+        ELSE
+            RAISE EXCEPTION 'Unsupported embedding size: %', array_length(query_embedding, 1);
+    END CASE;
+END;
+$$;
+
+-- Helper function to search within a specific knowledge table
+CREATE OR REPLACE FUNCTION search_knowledge_table(
+    table_name text,
+    query_embedding vector,
+    query_agent_id uuid,
+    match_threshold double precision,
+    match_count integer,
+    search_text text
+)
+RETURNS TABLE(
+    "id" uuid,
+    "agentId" uuid,
+    "content" jsonb,
+    "embedding" vector,
+    "createdAt" timestamp with time zone,
+    "similarity" double precision
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY EXECUTE format('
+        WITH vector_matches AS (
+            SELECT k."id",
+                1 - (k."embedding" <=> $1) AS "vector_score"
+            FROM %I k
+            WHERE (k."agentId" IS NULL AND k."isShared" = true) OR k."agentId" = $2
+            AND k."embedding" IS NOT NULL
+        ),
+        keyword_matches AS (
+            SELECT k."id",
+            CASE
+                WHEN k."content"->''text'' ILIKE ''%%'' || $5 || ''%%'' THEN 3.0
+                ELSE 1.0
+            END *
+            CASE
+                WHEN k."content"->''metadata''->''isChunk'' = ''true'' THEN 1.5
+                WHEN k."content"->''metadata''->''isMain'' = ''true'' THEN 1.2
+                ELSE 1.0
+            END AS "keyword_score"
+            FROM %I k
+            WHERE (k."agentId" IS NULL AND k."isShared" = true) OR k."agentId" = $2
+        )
+        SELECT
+            k."id",
+            k."agentId",
+            k."content",
+            k."embedding",
+            k."createdAt",
+            (v."vector_score" * kw."keyword_score") AS "similarity"
+        FROM %I k
+        JOIN vector_matches v ON k."id" = v."id"
+        LEFT JOIN keyword_matches kw ON k."id" = kw."id"
+        WHERE (k."agentId" IS NULL AND k."isShared" = true) OR k."agentId" = $2
+        AND (
+            v."vector_score" >= $3
+            OR (kw."keyword_score" > 1.0 AND v."vector_score" >= 0.3)
+        )
+        ORDER BY "similarity" DESC
+        LIMIT $4;
+    ', table_name, table_name, table_name)
+    USING query_embedding, query_agent_id, match_threshold, match_count, search_text;
 END;
 $$;
 
