@@ -7,10 +7,10 @@ export const getAuctionModuleParamsSimiles = [
     "DISPLAY_PARAMS",
     "SHOW_PARAMS",
     "LIST_PARAMS",
-    "RETRIEVE_PARAMS"
- ];
+    "RETRIEVE_PARAMS",
+];
 
- export const getAuctionModuleStateSimiles = [
+export const getAuctionModuleStateSimiles = [
     "VIEW_STATE",
     "GET_STATE",
     "CHECK_STATE",
@@ -19,10 +19,10 @@ export const getAuctionModuleParamsSimiles = [
     "DISPLAY_STATE",
     "SHOW_STATE",
     "LIST_STATE",
-    "RETRIEVE_STATE"
- ];
+    "RETRIEVE_STATE",
+];
 
- export const getCurrentBasketSimiles = [
+export const getCurrentBasketSimiles = [
     "VIEW_BASKET",
     "GET_BASKET",
     "CHECK_BASKET",
@@ -31,10 +31,10 @@ export const getAuctionModuleParamsSimiles = [
     "DISPLAY_BASKET",
     "SHOW_BASKET",
     "LIST_BASKET",
-    "RETRIEVE_BASKET"
- ];
+    "RETRIEVE_BASKET",
+];
 
- export const getAuctionRoundSimiles = [
+export const getAuctionRoundSimiles = [
     "VIEW_ROUND",
     "GET_ROUND",
     "CHECK_ROUND",
@@ -43,10 +43,10 @@ export const getAuctionModuleParamsSimiles = [
     "DISPLAY_ROUND",
     "SHOW_ROUND",
     "LIST_ROUND",
-    "RETRIEVE_ROUND"
- ];
+    "RETRIEVE_ROUND",
+];
 
- export const getAuctionsSimiles = [
+export const getAuctionsSimiles = [
     "VIEW_AUCTIONS",
     "GET_AUCTIONS",
     "CHECK_AUCTIONS",
@@ -55,10 +55,10 @@ export const getAuctionModuleParamsSimiles = [
     "DISPLAY_AUCTIONS",
     "SHOW_AUCTIONS",
     "LIST_AUCTIONS",
-    "RETRIEVE_AUCTIONS"
- ];
+    "RETRIEVE_AUCTIONS",
+];
 
- export const MsgBidSimiles = [
+export const MsgBidSimiles = [
     "PLACE_BID",
     "SUBMIT_BID",
     "SEND_BID",
@@ -67,5 +67,5 @@ export const getAuctionModuleParamsSimiles = [
     "START_BID",
     "ENTER_BID",
     "POST_BID",
-    "REGISTER_BID"
- ];
+    "REGISTER_BID",
+];

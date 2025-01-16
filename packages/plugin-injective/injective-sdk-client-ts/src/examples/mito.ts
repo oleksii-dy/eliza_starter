@@ -986,3 +986,247 @@ export const getClaimReferencesExample = [
         },
     },
 ];
+
+//Mito execute messages examples
+
+export const getLaunchpadSubscribeExample = [
+    {
+        user: "{{user1}}",
+        content: {
+            text: "Subscribe to launchpad with 1000 INJ tokens.",
+        },
+    },
+    {
+        user: "{{agent}}",
+        content: {
+            text: "Launchpad subscription processed successfully.",
+            action: "LAUNCHPAD_SUBSCRIBE",
+            content: {
+                amount: 1000,
+                quoteTokenDenom: "inj",
+                quoteTokenDecimals: 18,
+                contractAddress: "inj1...",
+            },
+        },
+    },
+];
+
+export const getSubscribeVaultExample = [
+    {
+        user: "{{user1}}",
+        content: {
+            text: "Subscribe to vault with 1.5 INJ and 1000 USDT.",
+        },
+    },
+    {
+        user: "{{agent}}",
+        content: {
+            text: "Vault subscription processed successfully.",
+            action: "SUBSCRIBE_VAULT",
+            content: {
+                market: {
+                    baseDenom: "inj",
+                    baseDecimals: 18,
+                    quoteDecimals: 6,
+                    quoteDenom: "usdt",
+                },
+                baseAmount: 1.5,
+                quoteAmount: 1000,
+                subscriptionType: "BaseOnly",
+                vaultDetails: {
+                    vaultSubaccountId: "0x...",
+                    vaultMasterAddress: "inj1...",
+                    vaultType: "crates.io:vault-cpmm-spot",
+                },
+                slippage: {
+                    max_penalty: "0.1",
+                },
+            },
+        },
+    },
+];
+
+export const getInstantiateCPMMVaultExample = [
+    {
+        user: "{{user1}}",
+        content: {
+            text: "Create a new CPMM vault for INJ/USDT trading pair.",
+        },
+    },
+    {
+        user: "{{agent}}",
+        content: {
+            text: "CPMM vault instantiated successfully.",
+            action: "INSTANTIATE_CPMM_VAULT",
+            content: {
+                MITO_MASTER_CONTRACT_ADDRESS: "inj1...",
+                CPMM_CONTRACT_CODE: 123,
+                senderWalletAddress: "inj1...",
+                marketId: "0x...",
+                feeBps: 30,
+                baseDecimals: 18,
+                quoteDecimals: 6,
+                funds: [
+                    {
+                        denom: "inj",
+                        amount: "1000000000000000000",
+                    },
+                ],
+                notionalValueCap: "1000000",
+                pricingStrategy: {
+                    SmoothingPricingWithRelativePriceRange: {
+                        bid_range: "0.01",
+                        ask_range: "0.01",
+                    },
+                },
+                maxInvariantSensitivityBps: "100",
+                maxPriceSensitivityBps: "100",
+                orderType: "LIMIT",
+            },
+        },
+    },
+];
+
+export const getLaunchpadClaimExample = [
+    {
+        user: "{{user1}}",
+        content: {
+            text: "Claim tokens from launchpad contract.",
+        },
+    },
+    {
+        user: "{{agent}}",
+        content: {
+            text: "Launchpad tokens claimed successfully.",
+            action: "LAUNCHPAD_CLAIM",
+            content: {
+                contractAddress: "inj1...",
+            },
+        },
+    },
+];
+
+export const getVaultSubscribeExample = [
+    {
+        user: "{{user1}}",
+        content: {
+            text: "Subscribe to a spot trading vault with INJ/USDT.",
+        },
+    },
+    {
+        user: "{{agent}}",
+        content: {
+            text: "Vault subscription processed successfully.",
+            action: "VAULT_SUBSCRIBE",
+            content: {
+                vaultType: "crates.io:vault-cpmm-spot",
+                slippage: {
+                    max_penalty: "0.1",
+                },
+                vaultSubaccountId: "0x...",
+                baseAmount: 1.5,
+                quoteAmount: 1000,
+                market: {
+                    baseDenom: "inj",
+                    baseDecimals: 18,
+                    quoteDenom: "usdt",
+                    quoteDecimals: 6,
+                },
+                subscriptionType: "BaseOnly",
+                masterAddress: "inj1...",
+            },
+        },
+    },
+];
+
+export const getRedeemFromVaultExample = [
+    {
+        user: "{{user1}}",
+        content: {
+            text: "Redeem 0.01 LP tokens from the vault.",
+        },
+    },
+    {
+        user: "{{agent}}",
+        content: {
+            text: "Vault redemption processed successfully.",
+            action: "REDEEM_FROM_VAULT",
+            content: {
+                vaultSubaccountId: "0x...",
+                redeemAmount: 0.01,
+                vaultBaseDecimals: 18,
+                masterAddress: "inj1...",
+                vaultLpDenom: "factory/...",
+                marketType: "Spot",
+                redemptionType: "BaseOnly",
+                slippage: {
+                    max_penalty: "0.1",
+                },
+            },
+        },
+    },
+];
+
+export const getStakeVaultLPExample = [
+    {
+        user: "{{user1}}",
+        content: {
+            text: "Stake 0.01 LP tokens in the vault.",
+        },
+    },
+    {
+        user: "{{agent}}",
+        content: {
+            text: "LP tokens staked successfully.",
+            action: "STAKE_VAULT_LP",
+            content: {
+                amount: 0.01,
+                vaultLpDenom: "factory/...",
+                vaultTokenDecimals: 18,
+                stakingContractAddress: "inj1...",
+            },
+        },
+    },
+];
+
+export const getUnstakeVaultLPExample = [
+    {
+        user: "{{user1}}",
+        content: {
+            text: "Unstake 0.01 LP tokens from the vault.",
+        },
+    },
+    {
+        user: "{{agent}}",
+        content: {
+            text: "LP tokens unstaked successfully.",
+            action: "UNSTAKE_VAULT_LP",
+            content: {
+                amount: 0.01,
+                vaultLpDenom: "factory/...",
+                vaultTokenDecimals: 18,
+                stakingContractAddress: "inj1...",
+            },
+        },
+    },
+];
+
+export const getClaimVaultRewardsExample = [
+    {
+        user: "{{user1}}",
+        content: {
+            text: "Claim staking rewards from the vault.",
+        },
+    },
+    {
+        user: "{{agent}}",
+        content: {
+            text: "Vault rewards claimed successfully.",
+            action: "CLAIM_VAULT_REWARDS",
+            content: {
+                vaultLpDenom: "factory/...",
+                stakingContractAddress: "inj1...",
+            },
+        },
+    },
+];

@@ -183,10 +183,9 @@ export class InjectiveGrpcBase {
             this.endpoints.indexer
         );
         //TODO: WARNING replace with testnet env, dont leave this hardcoded
-        const MITO_API_ENDPOINT = 'https://k8s.mainnet.mito.grpc-web.injective.network';
-        this.indexerGrpcMitoApi = new IndexerGrpcMitoApi(
-            MITO_API_ENDPOINT
-        );
+        const MITO_API_ENDPOINT =
+            "https://k8s.mainnet.mito.grpc-web.injective.network";
+        this.indexerGrpcMitoApi = new IndexerGrpcMitoApi(MITO_API_ENDPOINT);
         this.indexerGrpcOracleApi = new IndexerGrpcOracleApi(
             this.endpoints.indexer
         );

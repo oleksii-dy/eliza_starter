@@ -8,7 +8,7 @@ export const getModuleParamsSimiles = [
     "DISPLAY_EXCHANGE_PARAMS",
     "SHOW_EXCHANGE_PARAMS",
     "LIST_EXCHANGE_PARAMS",
-    "RETRIEVE_EXCHANGE_PARAMS"
+    "RETRIEVE_EXCHANGE_PARAMS",
 ];
 
 export const getModuleStateSimiles = [
@@ -20,7 +20,7 @@ export const getModuleStateSimiles = [
     "DISPLAY_EXCHANGE_STATE",
     "SHOW_EXCHANGE_STATE",
     "LIST_EXCHANGE_STATE",
-    "RETRIEVE_EXCHANGE_STATE"
+    "RETRIEVE_EXCHANGE_STATE",
 ];
 
 // Fee Discounts
@@ -33,7 +33,7 @@ export const getFeeDiscountScheduleSimiles = [
     "DISPLAY_DISCOUNT_SCHEDULE",
     "SHOW_DISCOUNT_SCHEDULE",
     "LIST_DISCOUNT_SCHEDULE",
-    "RETRIEVE_DISCOUNT_SCHEDULE"
+    "RETRIEVE_DISCOUNT_SCHEDULE",
 ];
 
 export const getFeeDiscountAccountInfoSimiles = [
@@ -45,7 +45,7 @@ export const getFeeDiscountAccountInfoSimiles = [
     "DISPLAY_DISCOUNT_INFO",
     "SHOW_DISCOUNT_INFO",
     "LIST_DISCOUNT_INFO",
-    "RETRIEVE_DISCOUNT_INFO"
+    "RETRIEVE_DISCOUNT_INFO",
 ];
 
 // Trading Rewards
@@ -58,7 +58,7 @@ export const getTradingRewardsCampaignSimiles = [
     "DISPLAY_REWARDS_CAMPAIGN",
     "SHOW_REWARDS_CAMPAIGN",
     "LIST_REWARDS_CAMPAIGN",
-    "RETRIEVE_REWARDS_CAMPAIGN"
+    "RETRIEVE_REWARDS_CAMPAIGN",
 ];
 
 export const getTradeRewardPointsSimiles = [
@@ -70,7 +70,7 @@ export const getTradeRewardPointsSimiles = [
     "DISPLAY_REWARD_POINTS",
     "SHOW_REWARD_POINTS",
     "LIST_REWARD_POINTS",
-    "RETRIEVE_REWARD_POINTS"
+    "RETRIEVE_REWARD_POINTS",
 ];
 
 export const getPendingTradeRewardPointsSimiles = [
@@ -82,7 +82,7 @@ export const getPendingTradeRewardPointsSimiles = [
     "DISPLAY_PENDING_REWARDS",
     "SHOW_PENDING_REWARDS",
     "LIST_PENDING_REWARDS",
-    "RETRIEVE_PENDING_REWARDS"
+    "RETRIEVE_PENDING_REWARDS",
 ];
 
 // Orderbooks
@@ -95,7 +95,7 @@ export const getDerivativeOrderbooksSimiles = [
     "DISPLAY_DERIVATIVE_BOOKS",
     "SHOW_DERIVATIVE_BOOKS",
     "LIST_DERIVATIVE_BOOKS",
-    "RETRIEVE_DERIVATIVE_BOOKS"
+    "RETRIEVE_DERIVATIVE_BOOKS",
 ];
 
 export const getDerivativeOrderbookSimiles = [
@@ -107,7 +107,7 @@ export const getDerivativeOrderbookSimiles = [
     "DISPLAY_DERIVATIVE_BOOK",
     "SHOW_DERIVATIVE_BOOK",
     "LIST_DERIVATIVE_BOOK",
-    "RETRIEVE_DERIVATIVE_BOOK"
+    "RETRIEVE_DERIVATIVE_BOOK",
 ];
 
 export const getSpotOrderbooksSimiles = [
@@ -119,7 +119,7 @@ export const getSpotOrderbooksSimiles = [
     "DISPLAY_SPOT_BOOKS",
     "SHOW_SPOT_BOOKS",
     "LIST_SPOT_BOOKS",
-    "RETRIEVE_SPOT_BOOKS"
+    "RETRIEVE_SPOT_BOOKS",
 ];
 
 export const getSpotOrderbookSimiles = [
@@ -131,7 +131,7 @@ export const getSpotOrderbookSimiles = [
     "DISPLAY_SPOT_BOOK",
     "SHOW_SPOT_BOOK",
     "LIST_SPOT_BOOK",
-    "RETRIEVE_SPOT_BOOK"
+    "RETRIEVE_SPOT_BOOK",
 ];
 
 // Spot Markets
@@ -144,10 +144,10 @@ export const getSpotMarketsSimiles = [
     "DISPLAY_SPOT_MARKETS",
     "SHOW_SPOT_MARKETS",
     "LIST_SPOT_MARKETS",
-    "RETRIEVE_SPOT_MARKETS"
- ];
+    "RETRIEVE_SPOT_MARKETS",
+];
 
- export const getSpotMarketSimiles = [
+export const getSpotMarketSimiles = [
     "VIEW_SPOT_MARKET",
     "GET_SPOT_MARKET",
     "CHECK_SPOT_MARKET",
@@ -156,10 +156,10 @@ export const getSpotMarketsSimiles = [
     "DISPLAY_SPOT_MARKET",
     "SHOW_SPOT_MARKET",
     "LIST_SPOT_MARKET",
-    "RETRIEVE_SPOT_MARKET"
- ];
+    "RETRIEVE_SPOT_MARKET",
+];
 
- export const getSpotOrdersSimiles = [
+export const getSpotOrdersSimiles = [
     "VIEW_SPOT_ORDERS",
     "GET_SPOT_ORDERS",
     "CHECK_SPOT_ORDERS",
@@ -168,10 +168,10 @@ export const getSpotMarketsSimiles = [
     "DISPLAY_SPOT_ORDERS",
     "SHOW_SPOT_ORDERS",
     "LIST_SPOT_ORDERS",
-    "RETRIEVE_SPOT_ORDERS"
- ];
+    "RETRIEVE_SPOT_ORDERS",
+];
 
- export const getSpotOrderHistorySimiles = [
+export const getSpotOrderHistorySimiles = [
     "VIEW_SPOT_HISTORY",
     "GET_SPOT_HISTORY",
     "CHECK_SPOT_HISTORY",
@@ -180,10 +180,10 @@ export const getSpotMarketsSimiles = [
     "DISPLAY_SPOT_HISTORY",
     "SHOW_SPOT_HISTORY",
     "LIST_SPOT_HISTORY",
-    "RETRIEVE_SPOT_HISTORY"
- ];
+    "RETRIEVE_SPOT_HISTORY",
+];
 
- export const getSpotTradesSimiles = [
+export const getSpotTradesSimiles = [
     "VIEW_SPOT_TRADES",
     "GET_SPOT_TRADES",
     "CHECK_SPOT_TRADES",
@@ -192,11 +192,11 @@ export const getSpotMarketsSimiles = [
     "DISPLAY_SPOT_TRADES",
     "SHOW_SPOT_TRADES",
     "LIST_SPOT_TRADES",
-    "RETRIEVE_SPOT_TRADES"
- ];
+    "RETRIEVE_SPOT_TRADES",
+];
 
- // Derivative Markets
- export const getDerivativeMarketsSimiles = [
+// Derivative Markets
+export const getDerivativeMarketsSimiles = [
     "VIEW_DERIVATIVE_MARKETS",
     "GET_DERIVATIVE_MARKETS",
     "CHECK_DERIVATIVE_MARKETS",
@@ -205,10 +205,10 @@ export const getSpotMarketsSimiles = [
     "DISPLAY_DERIVATIVE_MARKETS",
     "SHOW_DERIVATIVE_MARKETS",
     "LIST_DERIVATIVE_MARKETS",
-    "RETRIEVE_DERIVATIVE_MARKETS"
- ];
+    "RETRIEVE_DERIVATIVE_MARKETS",
+];
 
- export const getDerivativeMarketSimiles = [
+export const getDerivativeMarketSimiles = [
     "VIEW_DERIVATIVE_MARKET",
     "GET_DERIVATIVE_MARKET",
     "CHECK_DERIVATIVE_MARKET",
@@ -217,10 +217,10 @@ export const getSpotMarketsSimiles = [
     "DISPLAY_DERIVATIVE_MARKET",
     "SHOW_DERIVATIVE_MARKET",
     "LIST_DERIVATIVE_MARKET",
-    "RETRIEVE_DERIVATIVE_MARKET"
- ];
+    "RETRIEVE_DERIVATIVE_MARKET",
+];
 
- export const getDerivativeOrdersSimiles = [
+export const getDerivativeOrdersSimiles = [
     "VIEW_DERIVATIVE_ORDERS",
     "GET_DERIVATIVE_ORDERS",
     "CHECK_DERIVATIVE_ORDERS",
@@ -229,10 +229,10 @@ export const getSpotMarketsSimiles = [
     "DISPLAY_DERIVATIVE_ORDERS",
     "SHOW_DERIVATIVE_ORDERS",
     "LIST_DERIVATIVE_ORDERS",
-    "RETRIEVE_DERIVATIVE_ORDERS"
- ];
+    "RETRIEVE_DERIVATIVE_ORDERS",
+];
 
- export const getDerivativeOrderHistorySimiles = [
+export const getDerivativeOrderHistorySimiles = [
     "VIEW_DERIVATIVE_ORDER_HISTORY",
     "GET_DERIVATIVE_ORDER_HISTORY",
     "CHECK_DERIVATIVE_ORDER_HISTORY",
@@ -241,10 +241,10 @@ export const getSpotMarketsSimiles = [
     "DISPLAY_DERIVATIVE_ORDER_HISTORY",
     "SHOW_DERIVATIVE_ORDER_HISTORY",
     "LIST_DERIVATIVE_ORDER_HISTORY",
-    "RETRIEVE_DERIVATIVE_ORDER_HISTORY"
- ];
+    "RETRIEVE_DERIVATIVE_ORDER_HISTORY",
+];
 
- export const getDerivativeTradesSimiles = [
+export const getDerivativeTradesSimiles = [
     "VIEW_DERIVATIVE_TRADES",
     "GET_DERIVATIVE_TRADES",
     "CHECK_DERIVATIVE_TRADES",
@@ -253,11 +253,11 @@ export const getSpotMarketsSimiles = [
     "DISPLAY_DERIVATIVE_TRADES",
     "SHOW_DERIVATIVE_TRADES",
     "LIST_DERIVATIVE_TRADES",
-    "RETRIEVE_DERIVATIVE_TRADES"
- ];
+    "RETRIEVE_DERIVATIVE_TRADES",
+];
 
- // Binary Options
- export const getBinaryOptionsMarketsSimiles = [
+// Binary Options
+export const getBinaryOptionsMarketsSimiles = [
     "VIEW_BINARY_OPTIONS_MARKET",
     "GET_BINARY_OPTIONS_MARKET",
     "CHECK_BINARY_OPTIONS_MARKET",
@@ -266,10 +266,10 @@ export const getSpotMarketsSimiles = [
     "DISPLAY_BINARY_OPTIONS_MARKET",
     "SHOW_BINARY_OPTIONS_MARKET",
     "LIST_BINARY_OPTIONS_MARKET",
-    "RETRIEVE_BINARY_OPTIONS_MARKET"
- ];
+    "RETRIEVE_BINARY_OPTIONS_MARKET",
+];
 
- export const getBinaryOptionsMarketSimiles = [
+export const getBinaryOptionsMarketSimiles = [
     "VIEW_BINARY_OPTIONS",
     "GET_BINARY_OPTIONS",
     "CHECK_BINARY_OPTIONS",
@@ -278,11 +278,11 @@ export const getSpotMarketsSimiles = [
     "DISPLAY_BINARY_OPTIONS",
     "SHOW_BINARY_OPTIONS",
     "LIST_BINARY_OPTIONS",
-    "RETRIEVE_BINARY_OPTIONS"
- ];
+    "RETRIEVE_BINARY_OPTIONS",
+];
 
- // Positions
- export const getExchangePositionsSimiles = [
+// Positions
+export const getExchangePositionsSimiles = [
     "VIEW_EXCHANGE_POSITIONS",
     "GET_EXCHANGE_POSITIONS",
     "CHECK_EXCHANGE_POSITIONS",
@@ -291,8 +291,8 @@ export const getSpotMarketsSimiles = [
     "DISPLAY_EXCHANGE_POSITIONS",
     "SHOW_EXCHANGE_POSITIONS",
     "LIST_EXCHANGE_POSITIONS",
-    "RETRIEVE_EXCHANGE_POSITIONS"
- ];
+    "RETRIEVE_EXCHANGE_POSITIONS",
+];
 // Positions
 export const getUserPositionsSimiles = [
     "VIEW_USER_POSITIONS",
@@ -303,10 +303,10 @@ export const getUserPositionsSimiles = [
     "DISPLAY_USER_POSITIONS",
     "SHOW_USER_POSITIONS",
     "LIST_USER_POSITIONS",
-    "RETRIEVE_USER_POSITIONS"
- ];
+    "RETRIEVE_USER_POSITIONS",
+];
 
- // Funding
+// Funding
 export const getFundingPaymentsSimiles = [
     "VIEW_FUNDING_PAYMENTS",
     "GET_FUNDING_PAYMENTS",
@@ -316,10 +316,10 @@ export const getFundingPaymentsSimiles = [
     "DISPLAY_FUNDING_PAYMENTS",
     "SHOW_FUNDING_PAYMENTS",
     "LIST_FUNDING_PAYMENTS",
-    "RETRIEVE_FUNDING_PAYMENTS"
- ];
+    "RETRIEVE_FUNDING_PAYMENTS",
+];
 
- export const getFundingRatesSimiles = [
+export const getFundingRatesSimiles = [
     "VIEW_FUNDING_RATES",
     "GET_FUNDING_RATES",
     "CHECK_FUNDING_RATES",
@@ -328,11 +328,11 @@ export const getFundingPaymentsSimiles = [
     "DISPLAY_FUNDING_RATES",
     "SHOW_FUNDING_RATES",
     "LIST_FUNDING_RATES",
-    "RETRIEVE_FUNDING_RATES"
- ];
+    "RETRIEVE_FUNDING_RATES",
+];
 
- // Subaccounts
- export const getSubaccountTradeNonceSimiles = [
+// Subaccounts
+export const getSubaccountTradeNonceSimiles = [
     "VIEW_TRADE_NONCE",
     "GET_TRADE_NONCE",
     "CHECK_TRADE_NONCE",
@@ -341,10 +341,10 @@ export const getFundingPaymentsSimiles = [
     "DISPLAY_TRADE_NONCE",
     "SHOW_TRADE_NONCE",
     "LIST_TRADE_NONCE",
-    "RETRIEVE_TRADE_NONCE"
- ];
+    "RETRIEVE_TRADE_NONCE",
+];
 
- export const getSubaccountsListSimiles = [
+export const getSubaccountsListSimiles = [
     "VIEW_SUBACCOUNT_LIST",
     "GET_SUBACCOUNT_LIST",
     "CHECK_SUBACCOUNT_LIST",
@@ -353,10 +353,10 @@ export const getFundingPaymentsSimiles = [
     "DISPLAY_SUBACCOUNT_LIST",
     "SHOW_SUBACCOUNT_LIST",
     "LIST_SUBACCOUNT_LIST",
-    "RETRIEVE_SUBACCOUNT_LIST"
- ];
+    "RETRIEVE_SUBACCOUNT_LIST",
+];
 
- export const getSubaccountBalancesListSimiles = [
+export const getSubaccountBalancesListSimiles = [
     "VIEW_SUBACCOUNT_BALANCES",
     "GET_SUBACCOUNT_BALANCES",
     "CHECK_SUBACCOUNT_BALANCES",
@@ -365,10 +365,10 @@ export const getFundingPaymentsSimiles = [
     "DISPLAY_SUBACCOUNT_BALANCES",
     "SHOW_SUBACCOUNT_BALANCES",
     "LIST_SUBACCOUNT_BALANCES",
-    "RETRIEVE_SUBACCOUNT_BALANCES"
- ];
+    "RETRIEVE_SUBACCOUNT_BALANCES",
+];
 
- export const getSubaccountHistorySimiles = [
+export const getSubaccountHistorySimiles = [
     "VIEW_SUBACCOUNT_HISTORY",
     "GET_SUBACCOUNT_HISTORY",
     "CHECK_SUBACCOUNT_HISTORY",
@@ -377,10 +377,10 @@ export const getFundingPaymentsSimiles = [
     "DISPLAY_SUBACCOUNT_HISTORY",
     "SHOW_SUBACCOUNT_HISTORY",
     "LIST_SUBACCOUNT_HISTORY",
-    "RETRIEVE_SUBACCOUNT_HISTORY"
- ];
+    "RETRIEVE_SUBACCOUNT_HISTORY",
+];
 
- export const getSubaccountOrderSummarySimiles = [
+export const getSubaccountOrderSummarySimiles = [
     "VIEW_ORDER_SUMMARY",
     "GET_ORDER_SUMMARY",
     "CHECK_ORDER_SUMMARY",
@@ -389,10 +389,10 @@ export const getFundingPaymentsSimiles = [
     "DISPLAY_ORDER_SUMMARY",
     "SHOW_ORDER_SUMMARY",
     "LIST_ORDER_SUMMARY",
-    "RETRIEVE_ORDER_SUMMARY"
- ];
+    "RETRIEVE_ORDER_SUMMARY",
+];
 
- export const getOrderStatesSimiles = [
+export const getOrderStatesSimiles = [
     "VIEW_ORDER_STATE",
     "GET_ORDER_STATE",
     "CHECK_ORDER_STATE",
@@ -401,10 +401,10 @@ export const getFundingPaymentsSimiles = [
     "DISPLAY_ORDER_STATE",
     "SHOW_ORDER_STATE",
     "LIST_ORDER_STATE",
-    "RETRIEVE_ORDER_STATE"
- ];
+    "RETRIEVE_ORDER_STATE",
+];
 
- export const getIsOptedOutOfRewardsSimiles = [
+export const getIsOptedOutOfRewardsSimiles = [
     "GET_IS_OPTED_OUT_OF_REWARDS",
     "VIEW_IS_OPTED_OUT_OF_REWARDS",
     "CHECK_IS_OPTED_OUT_OF_REWARDS",
@@ -413,10 +413,10 @@ export const getFundingPaymentsSimiles = [
     "DISPLAY_IS_OPTED_OUT_OF_REWARDS",
     "SHOW_IS_OPTED_OUT_OF_REWARDS",
     "LIST_IS_OPTED_OUT_OF_REWARDS",
- ];
+];
 
- // Portfolio
- export const getAccountPortfolioSimiles = [
+// Portfolio
+export const getAccountPortfolioSimiles = [
     "VIEW_ACCOUNT_PORTFOLIO",
     "GET_ACCOUNT_PORTFOLIO",
     "CHECK_ACCOUNT_PORTFOLIO",
@@ -425,10 +425,10 @@ export const getFundingPaymentsSimiles = [
     "DISPLAY_ACCOUNT_PORTFOLIO",
     "SHOW_ACCOUNT_PORTFOLIO",
     "LIST_ACCOUNT_PORTFOLIO",
-    "RETRIEVE_ACCOUNT_PORTFOLIO"
- ];
+    "RETRIEVE_ACCOUNT_PORTFOLIO",
+];
 
- export const getAccountPortfolioBalancesSimiles = [
+export const getAccountPortfolioBalancesSimiles = [
     "VIEW_PORTFOLIO_BALANCES",
     "GET_PORTFOLIO_BALANCES",
     "CHECK_PORTFOLIO_BALANCES",
@@ -437,12 +437,11 @@ export const getFundingPaymentsSimiles = [
     "DISPLAY_PORTFOLIO_BALANCES",
     "SHOW_PORTFOLIO_BALANCES",
     "LIST_PORTFOLIO_BALANCES",
-    "RETRIEVE_PORTFOLIO_BALANCES"
- ];
+    "RETRIEVE_PORTFOLIO_BALANCES",
+];
 
-
- // Historical Data
- export const getHistoricalBalanceSimiles = [
+// Historical Data
+export const getHistoricalBalanceSimiles = [
     "VIEW_HISTORICAL_BALANCE",
     "GET_HISTORICAL_BALANCE",
     "CHECK_HISTORICAL_BALANCE",
@@ -451,10 +450,10 @@ export const getFundingPaymentsSimiles = [
     "DISPLAY_HISTORICAL_BALANCE",
     "SHOW_HISTORICAL_BALANCE",
     "LIST_HISTORICAL_BALANCE",
-    "RETRIEVE_HISTORICAL_BALANCE"
- ];
+    "RETRIEVE_HISTORICAL_BALANCE",
+];
 
- export const getHistoricalRpnlSimiles = [
+export const getHistoricalRpnlSimiles = [
     "VIEW_HISTORICAL_RPNL",
     "GET_HISTORICAL_RPNL",
     "CHECK_HISTORICAL_RPNL",
@@ -463,8 +462,8 @@ export const getFundingPaymentsSimiles = [
     "DISPLAY_HISTORICAL_RPNL",
     "SHOW_HISTORICAL_RPNL",
     "LIST_HISTORICAL_RPNL",
-    "RETRIEVE_HISTORICAL_RPNL"
- ];
+    "RETRIEVE_HISTORICAL_RPNL",
+];
 // Leaderboard
 export const getPnlLeaderboardSimiles = [
     "VIEW_PNL_LEADERBOARD",
@@ -475,10 +474,10 @@ export const getPnlLeaderboardSimiles = [
     "DISPLAY_PNL_LEADERBOARD",
     "SHOW_PNL_LEADERBOARD",
     "LIST_PNL_LEADERBOARD",
-    "RETRIEVE_PNL_LEADERBOARD"
- ];
+    "RETRIEVE_PNL_LEADERBOARD",
+];
 
- export const getVolLeaderboardSimiles = [
+export const getVolLeaderboardSimiles = [
     "VIEW_VOLUME_LEADERBOARD",
     "GET_VOLUME_LEADERBOARD",
     "CHECK_VOLUME_LEADERBOARD",
@@ -487,11 +486,11 @@ export const getPnlLeaderboardSimiles = [
     "DISPLAY_VOLUME_LEADERBOARD",
     "SHOW_VOLUME_LEADERBOARD",
     "LIST_VOLUME_LEADERBOARD",
-    "RETRIEVE_VOLUME_LEADERBOARD"
- ];
+    "RETRIEVE_VOLUME_LEADERBOARD",
+];
 
- // Message Actions - Order Management
- export const msgBatchCancelBinaryOptionsOrdersSimiles = [
+// Message Actions - Order Management
+export const msgBatchCancelBinaryOptionsOrdersSimiles = [
     "BATCH_CANCEL_BINARY_OPTIONS_ORDERS",
     "BATCH_REMOVE_BINARY_OPTIONS_ORDERS",
     "BATCH_DELETE_BINARY_OPTIONS_ORDERS",
@@ -500,10 +499,10 @@ export const getPnlLeaderboardSimiles = [
     "BATCH_CLEAR_BINARY_OPTIONS_ORDERS",
     "BATCH_TERMINATE_BINARY_OPTIONS_ORDERS",
     "BATCH_HALT_BINARY_OPTIONS_ORDERS",
-    "BATCH_CLOSE_BINARY_OPTIONS_ORDERS"
- ];
+    "BATCH_CLOSE_BINARY_OPTIONS_ORDERS",
+];
 
- export const msgBatchCancelDerivativeOrdersSimiles = [
+export const msgBatchCancelDerivativeOrdersSimiles = [
     "BATCH_CANCEL_DERIVATIVE_ORDERS",
     "BATCH_REMOVE_DERIVATIVE_ORDERS",
     "BATCH_DELETE_DERIVATIVE_ORDERS",
@@ -512,10 +511,10 @@ export const getPnlLeaderboardSimiles = [
     "BATCH_CLEAR_DERIVATIVE_ORDERS",
     "BATCH_TERMINATE_DERIVATIVE_ORDERS",
     "BATCH_HALT_DERIVATIVE_ORDERS",
-    "BATCH_CLOSE_DERIVATIVE_ORDERS"
- ];
+    "BATCH_CLOSE_DERIVATIVE_ORDERS",
+];
 
- export const msgBatchCancelSpotOrdersSimiles = [
+export const msgBatchCancelSpotOrdersSimiles = [
     "BATCH_CANCEL_SPOT_ORDERS",
     "BATCH_REMOVE_SPOT_ORDERS",
     "BATCH_DELETE_SPOT_ORDERS",
@@ -524,11 +523,11 @@ export const getPnlLeaderboardSimiles = [
     "BATCH_CLEAR_SPOT_ORDERS",
     "BATCH_TERMINATE_SPOT_ORDERS",
     "BATCH_HALT_SPOT_ORDERS",
-    "BATCH_CLOSE_SPOT_ORDERS"
- ];
+    "BATCH_CLOSE_SPOT_ORDERS",
+];
 
- // Message Actions - Creating Orders
- export const msgCreateBinaryOptionsLimitOrderSimiles = [
+// Message Actions - Creating Orders
+export const msgCreateBinaryOptionsLimitOrderSimiles = [
     "CREATE_BINARY_OPTIONS_LIMIT_ORDERS",
     "PLACE_BINARY_OPTIONS_LIMIT_ORDERS",
     "SUBMIT_BINARY_OPTIONS_LIMIT_ORDERS",
@@ -537,10 +536,10 @@ export const getPnlLeaderboardSimiles = [
     "SET_BINARY_OPTIONS_LIMIT_ORDERS",
     "MAKE_BINARY_OPTIONS_LIMIT_ORDERS",
     "INITIALIZE_BINARY_OPTIONS_LIMIT_ORDERS",
-    "BEGIN_BINARY_OPTIONS_LIMIT_ORDERS"
- ];
+    "BEGIN_BINARY_OPTIONS_LIMIT_ORDERS",
+];
 
- export const msgCreateBinaryOptionsMarketOrderSimiles = [
+export const msgCreateBinaryOptionsMarketOrderSimiles = [
     "CREATE_BINARY_OPTIONS_ORDERS",
     "PLACE_BINARY_OPTIONS_ORDERS",
     "SUBMIT_BINARY_OPTIONS_ORDERS",
@@ -549,10 +548,10 @@ export const getPnlLeaderboardSimiles = [
     "SET_BINARY_OPTIONS_ORDERS",
     "MAKE_BINARY_OPTIONS_ORDERS",
     "INITIALIZE_BINARY_OPTIONS_ORDERS",
-    "BEGIN_BINARY_OPTIONS_ORDERS"
- ];
+    "BEGIN_BINARY_OPTIONS_ORDERS",
+];
 
- export const msgCreateDerivativeLimitOrderSimiles = [
+export const msgCreateDerivativeLimitOrderSimiles = [
     "CREATE_DERIVATIVE_LIMIT_ORDERS",
     "PLACE_DERIVATIVE_LIMIT_ORDERS",
     "SUBMIT_DERIVATIVE_LIMIT_ORDERS",
@@ -561,10 +560,10 @@ export const getPnlLeaderboardSimiles = [
     "SET_DERIVATIVE_LIMIT_ORDERS",
     "MAKE_DERIVATIVE_LIMIT_ORDERS",
     "INITIALIZE_DERIVATIVE_LIMIT_ORDERS",
-    "BEGIN_DERIVATIVE_LIMIT_ORDERS"
- ];
+    "BEGIN_DERIVATIVE_LIMIT_ORDERS",
+];
 
- export const msgCreateDerivativeMarketOrderSimiles = [
+export const msgCreateDerivativeMarketOrderSimiles = [
     "CREATE_DERIVATIVE_MARKET_ORDERS",
     "PLACE_DERIVATIVE_MARKET_ORDERS",
     "SUBMIT_DERIVATIVE_MARKET_ORDERS",
@@ -573,10 +572,10 @@ export const getPnlLeaderboardSimiles = [
     "SET_DERIVATIVE_MARKET_ORDERS",
     "MAKE_DERIVATIVE_MARKET_ORDERS",
     "INITIALIZE_DERIVATIVE_MARKET_ORDERS",
-    "BEGIN_DERIVATIVE_MARKET_ORDERS"
- ];
+    "BEGIN_DERIVATIVE_MARKET_ORDERS",
+];
 
- export const msgCreateSpotLimitOrderSimiles = [
+export const msgCreateSpotLimitOrderSimiles = [
     "CREATE_SPOT_LIMIT_ORDERS",
     "PLACE_SPOT_LIMIT_ORDERS",
     "SUBMIT_SPOT_LIMIT_ORDERS",
@@ -585,10 +584,10 @@ export const getPnlLeaderboardSimiles = [
     "SET_SPOT_LIMIT_ORDERS",
     "MAKE_SPOT_LIMIT_ORDERS",
     "INITIALIZE_SPOT_LIMIT_ORDERS",
-    "BEGIN_SPOT_LIMIT_ORDERS"
- ];
+    "BEGIN_SPOT_LIMIT_ORDERS",
+];
 
- export const msgCreateSpotMarketOrderSimiles = [
+export const msgCreateSpotMarketOrderSimiles = [
     "CREATE_SPOT_MARKET_ORDERS",
     "PLACE_SPOT_MARKET_ORDERS",
     "SUBMIT_SPOT_MARKET_ORDERS",
@@ -597,8 +596,8 @@ export const getPnlLeaderboardSimiles = [
     "SET_SPOT_MARKET_ORDERS",
     "MAKE_SPOT_MARKET_ORDERS",
     "INITIALIZE_SPOT_MARKET_ORDERS",
-    "BEGIN_SPOT_MARKET_ORDERS"
- ];
+    "BEGIN_SPOT_MARKET_ORDERS",
+];
 // Deposit and Withdrawal Actions
 export const msgDepositSimiles = [
     "CREATE_EXCHANGE_DEPOSIT",
@@ -609,10 +608,10 @@ export const msgDepositSimiles = [
     "SET_EXCHANGE_DEPOSIT",
     "PROCESS_EXCHANGE_DEPOSIT",
     "INITIALIZE_EXCHANGE_DEPOSIT",
-    "BEGIN_EXCHANGE_DEPOSIT"
- ];
+    "BEGIN_EXCHANGE_DEPOSIT",
+];
 
- export const msgWithdrawSimiles = [
+export const msgWithdrawSimiles = [
     "CREATE_EXCHANGE_WITHDRAWAL",
     "MAKE_EXCHANGE_WITHDRAWAL",
     "SUBMIT_EXCHANGE_WITHDRAWAL",
@@ -621,11 +620,11 @@ export const msgDepositSimiles = [
     "SET_EXCHANGE_WITHDRAWAL",
     "PROCESS_EXCHANGE_WITHDRAWAL",
     "INITIALIZE_EXCHANGE_WITHDRAWAL",
-    "BEGIN_EXCHANGE_WITHDRAWAL"
- ];
+    "BEGIN_EXCHANGE_WITHDRAWAL",
+];
 
- // Position Management Actions
- export const msgIncreasePositionMarginSimiles = [
+// Position Management Actions
+export const msgIncreasePositionMarginSimiles = [
     "INCREASE_POSITION_MARGIN",
     "ADD_POSITION_MARGIN",
     "RAISE_POSITION_MARGIN",
@@ -634,10 +633,10 @@ export const msgDepositSimiles = [
     "EXTEND_POSITION_MARGIN",
     "ENHANCE_POSITION_MARGIN",
     "GROW_POSITION_MARGIN",
-    "LIFT_POSITION_MARGIN"
- ];
+    "LIFT_POSITION_MARGIN",
+];
 
- export const msgLiquidatePositionSimiles = [
+export const msgLiquidatePositionSimiles = [
     "LIQUIDATE_EXCHANGE_POSITION",
     "END_EXCHANGE_POSITION",
     "TERMINATE_EXCHANGE_POSITION",
@@ -645,11 +644,11 @@ export const msgDepositSimiles = [
     "CLEAR_EXCHANGE_POSITION",
     "COMPLETE_EXCHANGE_POSITION",
     "RESOLVE_EXCHANGE_POSITION",
-    "SETTLE_EXCHANGE_POSITION"
- ];
+    "SETTLE_EXCHANGE_POSITION",
+];
 
- // Administrative Actions
- export const msgInstantSpotMarketLaunchSimiles = [
+// Administrative Actions
+export const msgInstantSpotMarketLaunchSimiles = [
     "LAUNCH_SPOT_MARKET",
     "START_SPOT_MARKET",
     "CREATE_SPOT_MARKET",
@@ -658,10 +657,10 @@ export const msgDepositSimiles = [
     "BEGIN_SPOT_MARKET",
     "DEPLOY_SPOT_MARKET",
     "ESTABLISH_SPOT_MARKET",
-    "ACTIVATE_SPOT_MARKET"
- ];
+    "ACTIVATE_SPOT_MARKET",
+];
 
- export const msgReclaimLockedFundsSimiles = [
+export const msgReclaimLockedFundsSimiles = [
     "RECLAIM_LOCKED_FUNDS",
     "RECOVER_LOCKED_FUNDS",
     "RETRIEVE_LOCKED_FUNDS",
@@ -670,10 +669,10 @@ export const msgDepositSimiles = [
     "RETURN_LOCKED_FUNDS",
     "UNLOCK_LOCKED_FUNDS",
     "FREE_LOCKED_FUNDS",
-    "COLLECT_LOCKED_FUNDS"
- ];
+    "COLLECT_LOCKED_FUNDS",
+];
 
- export const msgRewardsOptOutSimiles = [
+export const msgRewardsOptOutSimiles = [
     "DISABLE_EXCHANGE_REWARDS",
     "STOP_EXCHANGE_REWARDS",
     "EXIT_EXCHANGE_REWARDS",
@@ -682,10 +681,10 @@ export const msgDepositSimiles = [
     "END_EXCHANGE_REWARDS",
     "WITHDRAW_EXCHANGE_REWARDS",
     "ABANDON_EXCHANGE_REWARDS",
-    "DECLINE_EXCHANGE_REWARDS"
- ];
+    "DECLINE_EXCHANGE_REWARDS",
+];
 
- export const msgSignDataSimiles = [
+export const msgSignDataSimiles = [
     "SIGN_EXCHANGE_DATA",
     "AUTHORIZE_EXCHANGE_DATA",
     "APPROVE_EXCHANGE_DATA",
@@ -694,10 +693,10 @@ export const msgDepositSimiles = [
     "VERIFY_EXCHANGE_DATA",
     "ENDORSE_EXCHANGE_DATA",
     "CERTIFY_EXCHANGE_DATA",
-    "AUTHENTICATE_EXCHANGE_DATA"
- ];
+    "AUTHENTICATE_EXCHANGE_DATA",
+];
 
- export const msgExternalTransferSimiles = [
+export const msgExternalTransferSimiles = [
     "CREATE_EXTERNAL_TRANSFER",
     "MAKE_EXTERNAL_TRANSFER",
     "SUBMIT_EXTERNAL_TRANSFER",
@@ -706,10 +705,10 @@ export const msgDepositSimiles = [
     "INITIATE_EXTERNAL_TRANSFER",
     "BEGIN_EXTERNAL_TRANSFER",
     "EXECUTE_EXTERNAL_TRANSFER",
-    "PERFORM_EXTERNAL_TRANSFER"
- ];
+    "PERFORM_EXTERNAL_TRANSFER",
+];
 
- export const msgAdminUpdateBinaryOptionsMarketSimiles = [
+export const msgAdminUpdateBinaryOptionsMarketSimiles = [
     "UPDATE_BINARY_OPTIONS",
     "MODIFY_BINARY_OPTIONS",
     "CHANGE_BINARY_OPTIONS",
@@ -718,9 +717,9 @@ export const msgDepositSimiles = [
     "REVISE_BINARY_OPTIONS",
     "ALTER_BINARY_OPTIONS",
     "AMEND_BINARY_OPTIONS",
-    "CONFIGURE_BINARY_OPTIONS"
- ];
- export const getRewardsSimiles = [
+    "CONFIGURE_BINARY_OPTIONS",
+];
+export const getRewardsSimiles = [
     "VIEW_EXCHANGE_REWARDS",
     "GET_EXCHANGE_REWARDS",
     "CHECK_EXCHANGE_REWARDS",
@@ -729,7 +728,7 @@ export const msgDepositSimiles = [
     "DISPLAY_EXCHANGE_REWARDS",
     "SHOW_EXCHANGE_REWARDS",
     "LIST_EXCHANGE_REWARDS",
-    "RETRIEVE_EXCHANGE_REWARDS"
+    "RETRIEVE_EXCHANGE_REWARDS",
 ];
 
 export const getAtomicSwapHistorySimiles = [
@@ -741,7 +740,7 @@ export const getAtomicSwapHistorySimiles = [
     "DISPLAY_ATOMIC_SWAPS",
     "SHOW_ATOMIC_SWAPS",
     "LIST_ATOMIC_SWAPS",
-    "RETRIEVE_ATOMIC_SWAPS"
+    "RETRIEVE_ATOMIC_SWAPS",
 ];
 
 export const getGridStrategiesSimiles = [
@@ -753,7 +752,7 @@ export const getGridStrategiesSimiles = [
     "DISPLAY_GRID_STRATEGIES",
     "SHOW_GRID_STRATEGIES",
     "LIST_GRID_STRATEGIES",
-    "RETRIEVE_GRID_STRATEGIES"
+    "RETRIEVE_GRID_STRATEGIES",
 ];
 
 export const getHistoricalVolumesSimiles = [
@@ -765,7 +764,7 @@ export const getHistoricalVolumesSimiles = [
     "DISPLAY_HISTORICAL_VOLUMES",
     "SHOW_HISTORICAL_VOLUMES",
     "LIST_HISTORICAL_VOLUMES",
-    "RETRIEVE_HISTORICAL_VOLUMES"
+    "RETRIEVE_HISTORICAL_VOLUMES",
 ];
 
 export const getPnlLeaderboardFixedResolutionSimiles = [
@@ -777,7 +776,7 @@ export const getPnlLeaderboardFixedResolutionSimiles = [
     "DISPLAY_FIXED_RESOLUTION_LEADERBOARD",
     "SHOW_FIXED_RESOLUTION_LEADERBOARD",
     "LIST_FIXED_RESOLUTION_LEADERBOARD",
-    "RETRIEVE_FIXED_RESOLUTION_LEADERBOARD"
+    "RETRIEVE_FIXED_RESOLUTION_LEADERBOARD",
 ];
 
 export const getVolLeaderboardFixedResolutionSimiles = [
@@ -789,7 +788,7 @@ export const getVolLeaderboardFixedResolutionSimiles = [
     "DISPLAY_VOLUME_FIXED",
     "SHOW_VOLUME_FIXED",
     "LIST_VOLUME_FIXED",
-    "RETRIEVE_VOLUME_FIXED"
+    "RETRIEVE_VOLUME_FIXED",
 ];
 
 export const getDenomHoldersSimiles = [
@@ -801,7 +800,7 @@ export const getDenomHoldersSimiles = [
     "DISPLAY_DENOM_HOLDERS",
     "SHOW_DENOM_HOLDERS",
     "LIST_DENOM_HOLDERS",
-    "RETRIEVE_DENOM_HOLDERS"
+    "RETRIEVE_DENOM_HOLDERS",
 ];
 
 export const msgBatchUpdateOrdersSimiles = [
@@ -813,7 +812,7 @@ export const msgBatchUpdateOrdersSimiles = [
     "REVISE_ORDER_BATCH",
     "ALTER_ORDER_BATCH",
     "AMEND_ORDER_BATCH",
-    "CONFIGURE_ORDER_BATCH"
+    "CONFIGURE_ORDER_BATCH",
 ];
 
 export const msgCancelBinaryOptionsOrderSimiles = [
@@ -825,7 +824,7 @@ export const msgCancelBinaryOptionsOrderSimiles = [
     "CLEAR_BINARY_OPTIONS_ORDER",
     "TERMINATE_BINARY_OPTIONS_ORDER",
     "HALT_BINARY_OPTIONS_ORDER",
-    "CLOSE_BINARY_OPTIONS_ORDER"
+    "CLOSE_BINARY_OPTIONS_ORDER",
 ];
 
 export const msgCancelDerivativeOrderSimiles = [
@@ -837,7 +836,7 @@ export const msgCancelDerivativeOrderSimiles = [
     "CLEAR_DERIVATIVE_ORDER",
     "TERMINATE_DERIVATIVE_ORDER",
     "HALT_DERIVATIVE_ORDER",
-    "CLOSE_DERIVATIVE_ORDER"
+    "CLOSE_DERIVATIVE_ORDER",
 ];
 
 export const msgCancelSpotOrderSimiles = [
@@ -849,5 +848,5 @@ export const msgCancelSpotOrderSimiles = [
     "CLEAR_SPOT_ORDER",
     "TERMINATE_SPOT_ORDER",
     "HALT_SPOT_ORDER",
-    "CLOSE_SPOT_ORDER"
+    "CLOSE_SPOT_ORDER",
 ];

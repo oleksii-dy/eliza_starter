@@ -7,7 +7,7 @@ export const getPeggyModuleParamsSimiles = [
     "DISPLAY_PEGGY_BRIDGE_PARAMS",
     "SHOW_PEGGY_BRIDGE_PARAMS",
     "LIST_PEGGY_BRIDGE_PARAMS",
-    "RETRIEVE_PEGGY_BRIDGE_PARAMS"
+    "RETRIEVE_PEGGY_BRIDGE_PARAMS",
 ];
 
 export const msgSendToEthSimiles = [
@@ -19,5 +19,5 @@ export const msgSendToEthSimiles = [
     "FORWARD_TO_ETH",
     "RELAY_TO_ETHEREUM",
     "DISPATCH_TO_ETH",
-    "TRANSPORT_TO_ETHEREUM"
+    "TRANSPORT_TO_ETHEREUM",
 ];

@@ -8,7 +8,7 @@ export const getStakingModuleParamsSimiles = [
     "DISPLAY_STAKING_PARAMS",
     "SHOW_STAKING_PARAMS",
     "LIST_STAKING_PARAMS",
-    "RETRIEVE_STAKING_PARAMS"
+    "RETRIEVE_STAKING_PARAMS",
 ];
 
 export const getPoolSimiles = [
@@ -20,7 +20,7 @@ export const getPoolSimiles = [
     "DISPLAY_STAKING_POOL",
     "SHOW_STAKING_POOL",
     "LIST_STAKING_POOL",
-    "RETRIEVE_STAKING_POOL"
+    "RETRIEVE_STAKING_POOL",
 ];
 
 // Validator Query Actions
@@ -33,7 +33,7 @@ export const getValidatorsSimiles = [
     "DISPLAY_VALIDATORS",
     "SHOW_VALIDATORS",
     "LIST_VALIDATORS",
-    "RETRIEVE_VALIDATORS"
+    "RETRIEVE_VALIDATORS",
 ];
 
 export const getValidatorSimiles = [
@@ -45,7 +45,7 @@ export const getValidatorSimiles = [
     "DISPLAY_VALIDATOR",
     "SHOW_VALIDATOR",
     "LIST_VALIDATOR",
-    "RETRIEVE_VALIDATOR"
+    "RETRIEVE_VALIDATOR",
 ];
 
 // Delegation Query Actions
@@ -58,7 +58,7 @@ export const getValidatorDelegationsSimiles = [
     "DISPLAY_VALIDATOR_DELEGATIONS",
     "SHOW_VALIDATOR_DELEGATIONS",
     "LIST_VALIDATOR_DELEGATIONS",
-    "RETRIEVE_VALIDATOR_DELEGATIONS"
+    "RETRIEVE_VALIDATOR_DELEGATIONS",
 ];
 
 export const getValidatorDelegationsNoThrowSimiles = [
@@ -70,7 +70,7 @@ export const getValidatorDelegationsNoThrowSimiles = [
     "DISPLAY_VALIDATOR_DELEGATIONS_SAFE",
     "SHOW_VALIDATOR_DELEGATIONS_SAFE",
     "LIST_VALIDATOR_DELEGATIONS_SAFE",
-    "RETRIEVE_VALIDATOR_DELEGATIONS_SAFE"
+    "RETRIEVE_VALIDATOR_DELEGATIONS_SAFE",
 ];
 
 export const getValidatorUnbondingDelegationsSimiles = [
@@ -82,7 +82,7 @@ export const getValidatorUnbondingDelegationsSimiles = [
     "DISPLAY_VALIDATOR_UNBONDING",
     "SHOW_VALIDATOR_UNBONDING",
     "LIST_VALIDATOR_UNBONDING",
-    "RETRIEVE_VALIDATOR_UNBONDING"
+    "RETRIEVE_VALIDATOR_UNBONDING",
 ];
 
 export const getValidatorUnbondingDelegationsNoThrowSimiles = [
@@ -94,7 +94,7 @@ export const getValidatorUnbondingDelegationsNoThrowSimiles = [
     "DISPLAY_VALIDATOR_UNBONDING_SAFE",
     "SHOW_VALIDATOR_UNBONDING_SAFE",
     "LIST_VALIDATOR_UNBONDING_SAFE",
-    "RETRIEVE_VALIDATOR_UNBONDING_SAFE"
+    "RETRIEVE_VALIDATOR_UNBONDING_SAFE",
 ];
 
 export const getDelegationSimiles = [
@@ -106,7 +106,7 @@ export const getDelegationSimiles = [
     "DISPLAY_DELEGATION",
     "SHOW_DELEGATION",
     "LIST_DELEGATION",
-    "RETRIEVE_DELEGATION"
+    "RETRIEVE_DELEGATION",
 ];
 
 export const getDelegationsSimiles = [
@@ -118,7 +118,7 @@ export const getDelegationsSimiles = [
     "DISPLAY_DELEGATIONS",
     "SHOW_DELEGATIONS",
     "LIST_DELEGATIONS",
-    "RETRIEVE_DELEGATIONS"
+    "RETRIEVE_DELEGATIONS",
 ];
 
 export const getDelegationsNoThrowSimiles = [
@@ -130,7 +130,7 @@ export const getDelegationsNoThrowSimiles = [
     "DISPLAY_DELEGATIONS_SAFE",
     "SHOW_DELEGATIONS_SAFE",
     "LIST_DELEGATIONS_SAFE",
-    "RETRIEVE_DELEGATIONS_SAFE"
+    "RETRIEVE_DELEGATIONS_SAFE",
 ];
 
 export const getDelegatorsSimiles = [
@@ -142,7 +142,7 @@ export const getDelegatorsSimiles = [
     "DISPLAY_DELEGATORS",
     "SHOW_DELEGATORS",
     "LIST_DELEGATORS",
-    "RETRIEVE_DELEGATORS"
+    "RETRIEVE_DELEGATORS",
 ];
 
 export const getDelegatorsNoThrowSimiles = [
@@ -154,7 +154,7 @@ export const getDelegatorsNoThrowSimiles = [
     "DISPLAY_DELEGATORS_SAFE",
     "SHOW_DELEGATORS_SAFE",
     "LIST_DELEGATORS_SAFE",
-    "RETRIEVE_DELEGATORS_SAFE"
+    "RETRIEVE_DELEGATORS_SAFE",
 ];
 
 export const getUnbondingDelegationsSimiles = [
@@ -166,7 +166,7 @@ export const getUnbondingDelegationsSimiles = [
     "DISPLAY_UNBONDING_DELEGATIONS",
     "SHOW_UNBONDING_DELEGATIONS",
     "LIST_UNBONDING_DELEGATIONS",
-    "RETRIEVE_UNBONDING_DELEGATIONS"
+    "RETRIEVE_UNBONDING_DELEGATIONS",
 ];
 
 export const getUnbondingDelegationsNoThrowSimiles = [
@@ -178,7 +178,7 @@ export const getUnbondingDelegationsNoThrowSimiles = [
     "DISPLAY_UNBONDING_DELEGATIONS_SAFE",
     "SHOW_UNBONDING_DELEGATIONS_SAFE",
     "LIST_UNBONDING_DELEGATIONS_SAFE",
-    "RETRIEVE_UNBONDING_DELEGATIONS_SAFE"
+    "RETRIEVE_UNBONDING_DELEGATIONS_SAFE",
 ];
 
 export const getReDelegationsSimiles = [
@@ -190,7 +190,7 @@ export const getReDelegationsSimiles = [
     "DISPLAY_REDELEGATIONS",
     "SHOW_REDELEGATIONS",
     "LIST_REDELEGATIONS",
-    "RETRIEVE_REDELEGATIONS"
+    "RETRIEVE_REDELEGATIONS",
 ];
 
 export const getReDelegationsNoThrowSimiles = [
@@ -202,7 +202,7 @@ export const getReDelegationsNoThrowSimiles = [
     "DISPLAY_REDELEGATIONS_SAFE",
     "SHOW_REDELEGATIONS_SAFE",
     "LIST_REDELEGATIONS_SAFE",
-    "RETRIEVE_REDELEGATIONS_SAFE"
+    "RETRIEVE_REDELEGATIONS_SAFE",
 ];
 
 // Message Actions
@@ -215,7 +215,7 @@ export const msgBeginRedelegateSimiles = [
     "EXECUTE_REDELEGATION",
     "PROCESS_REDELEGATION",
     "PERFORM_REDELEGATION",
-    "LAUNCH_REDELEGATION"
+    "LAUNCH_REDELEGATION",
 ];
 
 export const msgDelegateSimiles = [
@@ -227,7 +227,7 @@ export const msgDelegateSimiles = [
     "EXECUTE_DELEGATION",
     "PROCESS_DELEGATION",
     "PERFORM_DELEGATION",
-    "LAUNCH_DELEGATION"
+    "LAUNCH_DELEGATION",
 ];
 
 export const msgUndelegateSimiles = [
@@ -239,7 +239,7 @@ export const msgUndelegateSimiles = [
     "EXECUTE_UNDELEGATION",
     "PROCESS_UNDELEGATION",
     "PERFORM_UNDELEGATION",
-    "LAUNCH_UNDELEGATION"
+    "LAUNCH_UNDELEGATION",
 ];
 
 export const msgCreateValidatorSimiles = [
@@ -251,7 +251,7 @@ export const msgCreateValidatorSimiles = [
     "START_VALIDATOR",
     "LAUNCH_VALIDATOR",
     "DEPLOY_VALIDATOR",
-    "INSTITUTE_VALIDATOR"
+    "INSTITUTE_VALIDATOR",
 ];
 
 export const msgEditValidatorSimiles = [
@@ -263,7 +263,7 @@ export const msgEditValidatorSimiles = [
     "ALTER_VALIDATOR",
     "ADJUST_VALIDATOR",
     "AMEND_VALIDATOR",
-    "TRANSFORM_VALIDATOR"
+    "TRANSFORM_VALIDATOR",
 ];
 
 export const msgCancelUnbondingDelegationSimiles = [
@@ -275,5 +275,5 @@ export const msgCancelUnbondingDelegationSimiles = [
     "ABORT_UNBONDING",
     "WITHDRAW_UNBONDING",
     "REVERSE_UNBONDING",
-    "NULLIFY_UNBONDING"
+    "NULLIFY_UNBONDING",
 ];

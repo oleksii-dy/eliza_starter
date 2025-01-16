@@ -7,7 +7,7 @@ export const getAddressesByRoleSimiles = [
     "DISPLAY_ROLE_ADDRESSES",
     "SHOW_ROLE_ADDRESSES",
     "LIST_ROLE_ADDRESSES",
-    "RETRIEVE_ROLE_ADDRESSES"
+    "RETRIEVE_ROLE_ADDRESSES",
 ];
 
 export const getAddressRolesSimiles = [
@@ -19,7 +19,7 @@ export const getAddressRolesSimiles = [
     "DISPLAY_ADDRESS_ROLES",
     "SHOW_ADDRESS_ROLES",
     "LIST_ADDRESS_ROLES",
-    "RETRIEVE_ADDRESS_ROLES"
+    "RETRIEVE_ADDRESS_ROLES",
 ];
 
 export const getAllNamespacesSimiles = [
@@ -31,7 +31,7 @@ export const getAllNamespacesSimiles = [
     "DISPLAY_NAMESPACES",
     "SHOW_NAMESPACES",
     "LIST_NAMESPACES",
-    "RETRIEVE_NAMESPACES"
+    "RETRIEVE_NAMESPACES",
 ];
 
 export const getPermissionsModuleParamsSimiles = [
@@ -43,7 +43,7 @@ export const getPermissionsModuleParamsSimiles = [
     "DISPLAY_PERMISSIONS_PARAMS",
     "SHOW_PERMISSIONS_PARAMS",
     "LIST_PERMISSIONS_PARAMS",
-    "RETRIEVE_PERMISSIONS_PARAMS"
+    "RETRIEVE_PERMISSIONS_PARAMS",
 ];
 
 export const getNamespaceByDenomSimiles = [
@@ -55,7 +55,7 @@ export const getNamespaceByDenomSimiles = [
     "DISPLAY_DENOM_NAMESPACE",
     "SHOW_DENOM_NAMESPACE",
     "LIST_DENOM_NAMESPACE",
-    "RETRIEVE_DENOM_NAMESPACE"
+    "RETRIEVE_DENOM_NAMESPACE",
 ];
 
 export const getVouchersForAddressSimiles = [
@@ -67,5 +67,5 @@ export const getVouchersForAddressSimiles = [
     "DISPLAY_ADDRESS_VOUCHERS",
     "SHOW_ADDRESS_VOUCHERS",
     "LIST_ADDRESS_VOUCHERS",
-    "RETRIEVE_ADDRESS_VOUCHERS"
+    "RETRIEVE_ADDRESS_VOUCHERS",
 ];

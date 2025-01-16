@@ -7,7 +7,7 @@ export const getGovernanceModuleParamsSimiles = [
     "DISPLAY_GOVERNANCE_PARAMS",
     "SHOW_GOVERNANCE_PARAMS",
     "LIST_GOVERNANCE_PARAMS",
-    "RETRIEVE_GOVERNANCE_PARAMS"
+    "RETRIEVE_GOVERNANCE_PARAMS",
 ];
 
 export const getProposalsSimiles = [
@@ -19,7 +19,7 @@ export const getProposalsSimiles = [
     "DISPLAY_PROPOSALS",
     "SHOW_PROPOSALS",
     "LIST_PROPOSALS",
-    "RETRIEVE_PROPOSALS"
+    "RETRIEVE_PROPOSALS",
 ];
 
 export const getProposalSimiles = [
@@ -31,7 +31,7 @@ export const getProposalSimiles = [
     "DISPLAY_PROPOSAL",
     "SHOW_PROPOSAL",
     "LIST_PROPOSAL",
-    "RETRIEVE_PROPOSAL"
+    "RETRIEVE_PROPOSAL",
 ];
 
 export const getProposalDepositsSimiles = [
@@ -43,7 +43,7 @@ export const getProposalDepositsSimiles = [
     "DISPLAY_PROPOSAL_DEPOSITS",
     "SHOW_PROPOSAL_DEPOSITS",
     "LIST_PROPOSAL_DEPOSITS",
-    "RETRIEVE_PROPOSAL_DEPOSITS"
+    "RETRIEVE_PROPOSAL_DEPOSITS",
 ];
 
 export const getProposalVotesSimiles = [
@@ -55,7 +55,7 @@ export const getProposalVotesSimiles = [
     "DISPLAY_PROPOSAL_VOTES",
     "SHOW_PROPOSAL_VOTES",
     "LIST_PROPOSAL_VOTES",
-    "RETRIEVE_PROPOSAL_VOTES"
+    "RETRIEVE_PROPOSAL_VOTES",
 ];
 
 export const getProposalTallySimiles = [
@@ -67,7 +67,7 @@ export const getProposalTallySimiles = [
     "DISPLAY_PROPOSAL_TALLY",
     "SHOW_PROPOSAL_TALLY",
     "LIST_PROPOSAL_TALLY",
-    "RETRIEVE_PROPOSAL_TALLY"
+    "RETRIEVE_PROPOSAL_TALLY",
 ];
 
 export const msgSubmitProposalExpiryFuturesMarketLaunchSimiles = [
@@ -79,7 +79,7 @@ export const msgSubmitProposalExpiryFuturesMarketLaunchSimiles = [
     "PROPOSE_EXPIRY_FUTURES_MARKET_MARKET",
     "BEGIN_EXPIRY_FUTURES_MARKET_PROPOSAL",
     "ESTABLISH_EXPIRY_FUTURES_MARKET_PROPOSAL",
-    "SETUP_EXPIRY_FUTURES_MARKET_PROPOSAL"
+    "SETUP_EXPIRY_FUTURES_MARKET_PROPOSAL",
 ];
 
 export const msgSubmitProposalSpotMarketLaunchSimiles = [
@@ -91,7 +91,7 @@ export const msgSubmitProposalSpotMarketLaunchSimiles = [
     "PROPOSE_SPOT_MARKET",
     "BEGIN_SPOT_MARKET_PROPOSAL",
     "ESTABLISH_SPOT_MARKET_PROPOSAL",
-    "SETUP_SPOT_MARKET_PROPOSAL"
+    "SETUP_SPOT_MARKET_PROPOSAL",
 ];
 
 export const msgSubmitProposalPerpetualMarketLaunchSimiles = [
@@ -103,7 +103,7 @@ export const msgSubmitProposalPerpetualMarketLaunchSimiles = [
     "PROPOSE_PERPETUAL_MARKET",
     "BEGIN_PERPETUAL_MARKET_PROPOSAL",
     "ESTABLISH_PERPETUAL_MARKET_PROPOSAL",
-    "SETUP_PERPETUAL_MARKET_PROPOSAL"
+    "SETUP_PERPETUAL_MARKET_PROPOSAL",
 ];
 
 export const msgVoteSimiles = [
@@ -115,7 +115,7 @@ export const msgVoteSimiles = [
     "PLACE_VOTE",
     "LOG_VOTE",
     "SEND_VOTE",
-    "MAKE_VOTE"
+    "MAKE_VOTE",
 ];
 
 export const msgSubmitTextProposalSimiles = [
@@ -127,7 +127,7 @@ export const msgSubmitTextProposalSimiles = [
     "PROPOSE_TEXT_CHANGE",
     "BEGIN_TEXT_PROPOSAL",
     "ESTABLISH_TEXT_PROPOSAL",
-    "SETUP_TEXT_PROPOSAL"
+    "SETUP_TEXT_PROPOSAL",
 ];
 
 export const msgSubmitProposalSpotMarketParamUpdateSimiles = [
@@ -139,7 +139,7 @@ export const msgSubmitProposalSpotMarketParamUpdateSimiles = [
     "PROPOSE_SPOT_MARKET_PARAM_CHANGE",
     "BEGIN_SPOT_MARKET_PARAM_UPDATE",
     "ESTABLISH_SPOT_MARKET_PARAM_UPDATE",
-    "SETUP_SPOT_MARKET_PARAM_UPDATE"
+    "SETUP_SPOT_MARKET_PARAM_UPDATE",
 ];
 
 export const msgSubmitGenericProposalSimiles = [
@@ -151,7 +151,7 @@ export const msgSubmitGenericProposalSimiles = [
     "PROPOSE_GENERIC_CHANGE",
     "BEGIN_GENERIC_PROPOSAL",
     "ESTABLISH_GENERIC_PROPOSAL",
-    "SETUP_GENERIC_PROPOSAL"
+    "SETUP_GENERIC_PROPOSAL",
 ];
 
 export const msgGovDepositSimiles = [
@@ -163,5 +163,5 @@ export const msgGovDepositSimiles = [
     "TRANSFER_PROPOSAL_DEPOSIT",
     "DEPOSIT_TO_PROPOSAL",
     "FUND_PROPOSAL",
-    "CONTRIBUTE_TO_PROPOSAL"
+    "CONTRIBUTE_TO_PROPOSAL",
 ];

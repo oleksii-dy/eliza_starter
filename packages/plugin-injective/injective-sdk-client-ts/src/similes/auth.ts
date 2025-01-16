@@ -7,7 +7,7 @@ export const getAuthModuleParamsSimiles = [
     "DISPLAY_AUTH_PARAMS",
     "SHOW_AUTH_PARAMS",
     "LIST_AUTH_PARAMS",
-    "RETRIEVE_AUTH_PARAMS"
+    "RETRIEVE_AUTH_PARAMS",
 ];
 
 export const getAccountDetailsSimiles = [
@@ -19,7 +19,7 @@ export const getAccountDetailsSimiles = [
     "DISPLAY_AUTH_ACCOUNT",
     "SHOW_AUTH_ACCOUNT",
     "LIST_AUTH_ACCOUNT",
-    "RETRIEVE_AUTH_ACCOUNT"
+    "RETRIEVE_AUTH_ACCOUNT",
 ];
 
 export const getAccountsSimiles = [
@@ -31,7 +31,7 @@ export const getAccountsSimiles = [
     "DISPLAY_AUTH_ACCOUNTS",
     "SHOW_AUTH_ACCOUNTS",
     "LIST_AUTH_ACCOUNTS",
-    "RETRIEVE_AUTH_ACCOUNTS"
+    "RETRIEVE_AUTH_ACCOUNTS",
 ];
 
 export const getGrantsSimiles = [
@@ -43,7 +43,7 @@ export const getGrantsSimiles = [
     "DISPLAY_AUTH_GRANTS",
     "SHOW_AUTH_GRANTS",
     "LIST_AUTH_GRANTS",
-    "RETRIEVE_AUTH_GRANTS"
+    "RETRIEVE_AUTH_GRANTS",
 ];
 
 export const getGranterGrantsSimiles = [
@@ -55,7 +55,7 @@ export const getGranterGrantsSimiles = [
     "DISPLAY_GRANTER_GRANTS",
     "SHOW_GRANTER_GRANTS",
     "LIST_GRANTER_GRANTS",
-    "RETRIEVE_GRANTER_GRANTS"
+    "RETRIEVE_GRANTER_GRANTS",
 ];
 
 export const getGranteeGrantsSimiles = [
@@ -67,7 +67,7 @@ export const getGranteeGrantsSimiles = [
     "DISPLAY_GRANTEE_GRANTS",
     "SHOW_GRANTEE_GRANTS",
     "LIST_GRANTEE_GRANTS",
-    "RETRIEVE_GRANTEE_GRANTS"
+    "RETRIEVE_GRANTEE_GRANTS",
 ];
 
 export const msgGrantSimiles = [
@@ -79,7 +79,7 @@ export const msgGrantSimiles = [
     "INIT_AUTH_GRANT",
     "ASSIGN_AUTH_GRANT",
     "ENABLE_AUTH_GRANT",
-    "REGISTER_AUTH_GRANT"
+    "REGISTER_AUTH_GRANT",
 ];
 
 export const msgExecSimiles = [
@@ -91,7 +91,7 @@ export const msgExecSimiles = [
     "TRIGGER_AUTH_ACTION",
     "LAUNCH_AUTH_ACTION",
     "PROCESS_AUTH_ACTION",
-    "INITIATE_AUTH_ACTION"
+    "INITIATE_AUTH_ACTION",
 ];
 
 export const msgRevokeSimiles = [
@@ -103,5 +103,5 @@ export const msgRevokeSimiles = [
     "END_AUTH_GRANT",
     "DISABLE_AUTH_GRANT",
     "WITHDRAW_AUTH_GRANT",
-    "TERMINATE_AUTH_GRANT"
+    "TERMINATE_AUTH_GRANT",
 ];

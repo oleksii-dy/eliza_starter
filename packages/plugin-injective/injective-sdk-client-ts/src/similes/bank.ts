@@ -7,10 +7,10 @@ export const getBankModuleParamsSimiles = [
     "DISPLAY_BANK_PARAMS",
     "SHOW_BANK_PARAMS",
     "LIST_BANK_PARAMS",
-    "RETRIEVE_BANK_PARAMS"
- ];
+    "RETRIEVE_BANK_PARAMS",
+];
 
- export const getBankBalanceSimiles = [
+export const getBankBalanceSimiles = [
     "VIEW_BANK_BALANCE",
     "GET_BANK_BALANCE",
     "CHECK_BANK_BALANCE",
@@ -19,10 +19,10 @@ export const getBankModuleParamsSimiles = [
     "DISPLAY_BANK_BALANCE",
     "SHOW_BANK_BALANCE",
     "LIST_BANK_BALANCE",
-    "RETRIEVE_BANK_BALANCE"
- ];
+    "RETRIEVE_BANK_BALANCE",
+];
 
- export const getBankBalancesSimiles = [
+export const getBankBalancesSimiles = [
     "VIEW_BANK_BALANCES",
     "GET_BANK_BALANCES",
     "CHECK_BANK_BALANCES",
@@ -31,10 +31,10 @@ export const getBankModuleParamsSimiles = [
     "DISPLAY_BANK_BALANCES",
     "SHOW_BANK_BALANCES",
     "LIST_BANK_BALANCES",
-    "RETRIEVE_BANK_BALANCES"
- ];
+    "RETRIEVE_BANK_BALANCES",
+];
 
- export const getTotalSupplySimiles = [
+export const getTotalSupplySimiles = [
     "VIEW_BANK_SUPPLY",
     "GET_BANK_SUPPLY",
     "CHECK_BANK_SUPPLY",
@@ -43,10 +43,10 @@ export const getBankModuleParamsSimiles = [
     "DISPLAY_BANK_SUPPLY",
     "SHOW_BANK_SUPPLY",
     "LIST_BANK_SUPPLY",
-    "RETRIEVE_BANK_SUPPLY"
- ];
+    "RETRIEVE_BANK_SUPPLY",
+];
 
- export const getAllTotalSupplySimiles = [
+export const getAllTotalSupplySimiles = [
     "VIEW_BANK_SUPPLIES",
     "GET_BANK_SUPPLIES",
     "CHECK_BANK_SUPPLIES",
@@ -55,10 +55,10 @@ export const getBankModuleParamsSimiles = [
     "DISPLAY_BANK_SUPPLIES",
     "SHOW_BANK_SUPPLIES",
     "LIST_BANK_SUPPLIES",
-    "RETRIEVE_BANK_SUPPLIES"
- ];
+    "RETRIEVE_BANK_SUPPLIES",
+];
 
- export const getSupplyOfSimiles = [
+export const getSupplyOfSimiles = [
     "VIEW_TOKEN_SUPPLY",
     "GET_TOKEN_SUPPLY",
     "CHECK_TOKEN_SUPPLY",
@@ -67,10 +67,10 @@ export const getBankModuleParamsSimiles = [
     "DISPLAY_TOKEN_SUPPLY",
     "SHOW_TOKEN_SUPPLY",
     "LIST_TOKEN_SUPPLY",
-    "RETRIEVE_TOKEN_SUPPLY"
- ];
+    "RETRIEVE_TOKEN_SUPPLY",
+];
 
- export const getDenomsMetadataSimiles = [
+export const getDenomsMetadataSimiles = [
     "VIEW_BANK_DENOMS",
     "GET_BANK_DENOMS",
     "CHECK_BANK_DENOMS",
@@ -79,10 +79,10 @@ export const getBankModuleParamsSimiles = [
     "DISPLAY_BANK_DENOMS",
     "SHOW_BANK_DENOMS",
     "LIST_BANK_DENOMS",
-    "RETRIEVE_BANK_DENOMS"
- ];
+    "RETRIEVE_BANK_DENOMS",
+];
 
- export const getDenomMetadataSimiles = [
+export const getDenomMetadataSimiles = [
     "VIEW_BANK_DENOM",
     "GET_BANK_DENOM",
     "CHECK_BANK_DENOM",
@@ -91,10 +91,10 @@ export const getBankModuleParamsSimiles = [
     "DISPLAY_BANK_DENOM",
     "SHOW_BANK_DENOM",
     "LIST_BANK_DENOM",
-    "RETRIEVE_BANK_DENOM"
- ];
+    "RETRIEVE_BANK_DENOM",
+];
 
- export const getDenomOwnersSimiles = [
+export const getDenomOwnersSimiles = [
     "VIEW_DENOM_OWNERS",
     "GET_DENOM_OWNERS",
     "CHECK_DENOM_OWNERS",
@@ -103,10 +103,10 @@ export const getBankModuleParamsSimiles = [
     "DISPLAY_DENOM_OWNERS",
     "SHOW_DENOM_OWNERS",
     "LIST_DENOM_OWNERS",
-    "RETRIEVE_DENOM_OWNERS"
- ];
+    "RETRIEVE_DENOM_OWNERS",
+];
 
- export const msgSendSimiles = [
+export const msgSendSimiles = [
     "SEND_BANK_TOKENS",
     "TRANSFER_BANK_TOKENS",
     "MOVE_BANK_TOKENS",
@@ -115,10 +115,10 @@ export const getBankModuleParamsSimiles = [
     "EXECUTE_BANK_TRANSFER",
     "PROCESS_BANK_TRANSFER",
     "INITIATE_BANK_TRANSFER",
-    "PERFORM_BANK_TRANSFER"
- ];
+    "PERFORM_BANK_TRANSFER",
+];
 
- export const msgMultiSendSimiles = [
+export const msgMultiSendSimiles = [
     "SEND_MULTIPLE_TOKENS",
     "TRANSFER_MULTIPLE_TOKENS",
     "MOVE_MULTIPLE_TOKENS",
@@ -127,5 +127,5 @@ export const getBankModuleParamsSimiles = [
     "EXECUTE_MULTIPLE_TRANSFERS",
     "PROCESS_MULTIPLE_TRANSFERS",
     "INITIATE_MULTIPLE_TRANSFERS",
-    "PERFORM_MULTIPLE_TRANSFERS"
- ];
+    "PERFORM_MULTIPLE_TRANSFERS",
+];

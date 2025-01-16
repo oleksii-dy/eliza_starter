@@ -7,7 +7,7 @@ export const getMintModuleParamsSimiles = [
     "DISPLAY_MINT_MODULE_PARAMS",
     "SHOW_MINT_MODULE_PARAMS",
     "LIST_MINT_MODULE_PARAMS",
-    "RETRIEVE_MINT_MODULE_PARAMS"
+    "RETRIEVE_MINT_MODULE_PARAMS",
 ];
 
 export const getInflationSimiles = [
@@ -19,7 +19,7 @@ export const getInflationSimiles = [
     "DISPLAY_INFLATION_RATE",
     "SHOW_INFLATION_RATE",
     "LIST_INFLATION_RATE",
-    "RETRIEVE_INFLATION_RATE"
+    "RETRIEVE_INFLATION_RATE",
 ];
 
 export const getAnnualProvisionsSimiles = [
@@ -31,5 +31,5 @@ export const getAnnualProvisionsSimiles = [
     "DISPLAY_ANNUAL_PROVISIONS",
     "SHOW_ANNUAL_PROVISIONS",
     "LIST_ANNUAL_PROVISIONS",
-    "RETRIEVE_ANNUAL_PROVISIONS"
+    "RETRIEVE_ANNUAL_PROVISIONS",
 ];

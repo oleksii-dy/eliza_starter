@@ -8,7 +8,7 @@ export const getVaultSimiles = [
     "DISPLAY_VAULT",
     "SHOW_VAULT",
     "LIST_VAULT",
-    "RETRIEVE_VAULT"
+    "RETRIEVE_VAULT",
 ];
 
 export const getVaultsSimiles = [
@@ -20,7 +20,7 @@ export const getVaultsSimiles = [
     "DISPLAY_VAULTS",
     "SHOW_VAULTS",
     "LIST_VAULTS",
-    "RETRIEVE_VAULTS"
+    "RETRIEVE_VAULTS",
 ];
 
 export const getVaultsByHolderAddressSimiles = [
@@ -32,7 +32,7 @@ export const getVaultsByHolderAddressSimiles = [
     "DISPLAY_HOLDER_VAULTS",
     "SHOW_HOLDER_VAULTS",
     "LIST_HOLDER_VAULTS",
-    "RETRIEVE_HOLDER_VAULTS"
+    "RETRIEVE_HOLDER_VAULTS",
 ];
 
 // LP Token Related Similes
@@ -45,7 +45,7 @@ export const getLpTokenPriceChartSimiles = [
     "DISPLAY_LP_PRICE_CHART",
     "SHOW_LP_PRICE_CHART",
     "LIST_LP_PRICE_CHART",
-    "RETRIEVE_LP_PRICE_CHART"
+    "RETRIEVE_LP_PRICE_CHART",
 ];
 
 export const getLPHoldersSimiles = [
@@ -57,7 +57,7 @@ export const getLPHoldersSimiles = [
     "DISPLAY_LP_HOLDERS",
     "SHOW_LP_HOLDERS",
     "LIST_LP_HOLDERS",
-    "RETRIEVE_LP_HOLDERS"
+    "RETRIEVE_LP_HOLDERS",
 ];
 
 // TVL and Portfolio Related Similes
@@ -70,7 +70,7 @@ export const getTVLChartSimiles = [
     "DISPLAY_TVL_CHART",
     "SHOW_TVL_CHART",
     "LIST_TVL_CHART",
-    "RETRIEVE_TVL_CHART"
+    "RETRIEVE_TVL_CHART",
 ];
 
 export const getHolderPortfolioSimiles = [
@@ -82,7 +82,7 @@ export const getHolderPortfolioSimiles = [
     "DISPLAY_HOLDER_PORTFOLIO",
     "SHOW_HOLDER_PORTFOLIO",
     "LIST_HOLDER_PORTFOLIO",
-    "RETRIEVE_HOLDER_PORTFOLIO"
+    "RETRIEVE_HOLDER_PORTFOLIO",
 ];
 
 // MITO_LEADERBOARD Related Similes
@@ -95,7 +95,7 @@ export const getLeaderboardSimiles = [
     "DISPLAY_MITO_LEADERBOARD",
     "SHOW_MITO_LEADERBOARD",
     "LIST_MITO_LEADERBOARD",
-    "RETRIEVE_MITO_LEADERBOARD"
+    "RETRIEVE_MITO_LEADERBOARD",
 ];
 
 export const getLeaderboardEpochsSimiles = [
@@ -107,7 +107,7 @@ export const getLeaderboardEpochsSimiles = [
     "DISPLAY_MITO_LEADERBOARD_EPOCHS",
     "SHOW_MITO_LEADERBOARD_EPOCHS",
     "LIST_MITO_LEADERBOARD_EPOCHS",
-    "RETRIEVE_MITO_LEADERBOARD_EPOCHS"
+    "RETRIEVE_MITO_LEADERBOARD_EPOCHS",
 ];
 
 // Transfer Related Similes
@@ -120,7 +120,7 @@ export const getTransferHistorySimiles = [
     "DISPLAY_TRANSFER_HISTORY",
     "SHOW_TRANSFER_HISTORY",
     "LIST_TRANSFER_HISTORY",
-    "RETRIEVE_TRANSFER_HISTORY"
+    "RETRIEVE_TRANSFER_HISTORY",
 ];
 
 // Staking Related Similes
@@ -133,7 +133,7 @@ export const getStakingPoolsSimiles = [
     "DISPLAY_STAKING_POOLS",
     "SHOW_STAKING_POOLS",
     "LIST_STAKING_POOLS",
-    "RETRIEVE_STAKING_POOLS"
+    "RETRIEVE_STAKING_POOLS",
 ];
 
 export const getStakingHistorySimiles = [
@@ -145,7 +145,7 @@ export const getStakingHistorySimiles = [
     "DISPLAY_STAKING_HISTORY",
     "SHOW_STAKING_HISTORY",
     "LIST_STAKING_HISTORY",
-    "RETRIEVE_STAKING_HISTORY"
+    "RETRIEVE_STAKING_HISTORY",
 ];
 
 export const getStakingRewardsByAccountSimiles = [
@@ -157,7 +157,7 @@ export const getStakingRewardsByAccountSimiles = [
     "DISPLAY_STAKING_REWARDS",
     "SHOW_STAKING_REWARDS",
     "LIST_STAKING_REWARDS",
-    "RETRIEVE_STAKING_REWARDS"
+    "RETRIEVE_STAKING_REWARDS",
 ];
 
 // Mission Related Similes
@@ -170,7 +170,7 @@ export const getMissionsSimiles = [
     "DISPLAY_MISSIONS",
     "SHOW_MISSIONS",
     "LIST_MISSIONS",
-    "RETRIEVE_MISSIONS"
+    "RETRIEVE_MISSIONS",
 ];
 
 export const getMissionLeaderboardSimiles = [
@@ -182,7 +182,7 @@ export const getMissionLeaderboardSimiles = [
     "DISPLAY_MISSION_MITO_LEADERBOARD",
     "SHOW_MISSION_MITO_LEADERBOARD",
     "LIST_MISSION_MITO_LEADERBOARD",
-    "RETRIEVE_MISSION_MITO_LEADERBOARD"
+    "RETRIEVE_MISSION_MITO_LEADERBOARD",
 ];
 
 // IDO Related Similes
@@ -195,7 +195,7 @@ export const getIDOSimiles = [
     "DISPLAY_IDO",
     "SHOW_IDO",
     "LIST_IDO",
-    "RETRIEVE_IDO"
+    "RETRIEVE_IDO",
 ];
 
 export const getIDOsSimiles = [
@@ -207,7 +207,7 @@ export const getIDOsSimiles = [
     "DISPLAY_IDOS",
     "SHOW_IDOS",
     "LIST_IDOS",
-    "RETRIEVE_IDOS"
+    "RETRIEVE_IDOS",
 ];
 
 export const getIDOSubscribersSimiles = [
@@ -219,7 +219,7 @@ export const getIDOSubscribersSimiles = [
     "DISPLAY_IDO_SUBSCRIBERS",
     "SHOW_IDO_SUBSCRIBERS",
     "LIST_IDO_SUBSCRIBERS",
-    "RETRIEVE_IDO_SUBSCRIBERS"
+    "RETRIEVE_IDO_SUBSCRIBERS",
 ];
 
 export const getIDOSubscriptionSimiles = [
@@ -231,7 +231,7 @@ export const getIDOSubscriptionSimiles = [
     "DISPLAY_IDO_SUBSCRIPTION",
     "SHOW_IDO_SUBSCRIPTION",
     "LIST_IDO_SUBSCRIPTION",
-    "RETRIEVE_IDO_SUBSCRIPTION"
+    "RETRIEVE_IDO_SUBSCRIPTION",
 ];
 
 export const getIDOActivitiesSimiles = [
@@ -243,7 +243,7 @@ export const getIDOActivitiesSimiles = [
     "DISPLAY_IDO_ACTIVITIES",
     "SHOW_IDO_ACTIVITIES",
     "LIST_IDO_ACTIVITIES",
-    "RETRIEVE_IDO_ACTIVITIES"
+    "RETRIEVE_IDO_ACTIVITIES",
 ];
 
 export const getIDOWhitelistSimiles = [
@@ -255,7 +255,7 @@ export const getIDOWhitelistSimiles = [
     "DISPLAY_IDO_WHITELIST",
     "SHOW_IDO_WHITELIST",
     "LIST_IDO_WHITELIST",
-    "RETRIEVE_IDO_WHITELIST"
+    "RETRIEVE_IDO_WHITELIST",
 ];
 
 export const getClaimReferencesSimiles = [
@@ -267,5 +267,98 @@ export const getClaimReferencesSimiles = [
     "DISPLAY_CLAIM_REFERENCES",
     "SHOW_CLAIM_REFERENCES",
     "LIST_CLAIM_REFERENCES",
-    "RETRIEVE_CLAIM_REFERENCES"
+    "RETRIEVE_CLAIM_REFERENCES",
+];
+
+// Mito interactions
+
+// Launchpad Related Similes
+export const getLaunchpadSubscribeSimiles = [
+    "LAUNCHPAD_SUBSCRIBE",
+    "JOIN_LAUNCHPAD",
+    "ENTER_LAUNCHPAD",
+    "PARTICIPATE_LAUNCHPAD",
+    "REGISTER_LAUNCHPAD",
+    "ENROLL_LAUNCHPAD",
+    "ACCESS_LAUNCHPAD",
+    "ENGAGE_LAUNCHPAD",
+    "START_LAUNCHPAD",
+];
+
+export const getLaunchpadClaimSimiles = [
+    "LAUNCHPAD_CLAIM",
+    "COLLECT_LAUNCHPAD",
+    "WITHDRAW_LAUNCHPAD",
+    "RETRIEVE_LAUNCHPAD",
+    "REDEEM_LAUNCHPAD",
+    "GATHER_LAUNCHPAD",
+    "OBTAIN_LAUNCHPAD",
+    "ACQUIRE_LAUNCHPAD",
+    "EXTRACT_LAUNCHPAD",
+];
+
+// Vault Related Action Similes
+export const getSubscribeVaultSimiles = [
+    "SUBSCRIBE_VAULT",
+    "JOIN_VAULT",
+    "ENTER_VAULT",
+    "PARTICIPATE_VAULT",
+    "REGISTER_VAULT",
+    "ENROLL_VAULT",
+    "ACCESS_VAULT",
+    "ENGAGE_VAULT",
+    "START_VAULT",
+];
+
+export const getInstantiateCPMMVaultSimiles = [
+    "INSTANTIATE_CPMM_VAULT",
+    "CREATE_CPMM_VAULT",
+    "DEPLOY_CPMM_VAULT",
+    "LAUNCH_CPMM_VAULT",
+    "INITIALIZE_CPMM_VAULT",
+    "SETUP_CPMM_VAULT",
+    "START_CPMM_VAULT",
+    "BEGIN_CPMM_VAULT",
+    "ESTABLISH_CPMM_VAULT",
+];
+export const getRedeemFromVaultSimiles = [
+    "WITHDRAW_FROM_VAULT",
+    "EXIT_VAULT",
+    "REDEEM_FROM_VAULT",
+    "REMOVE_FROM_VAULT",
+    "LEAVE_VAULT",
+    "CASH_OUT_VAULT",
+    "EXTRACT_FROM_VAULT",
+    "PULL_FROM_VAULT",
+    "RECOVER_FROM_VAULT",
+];
+
+export const getStakeVaultLPSimiles = [
+    "LOCK_VAULT_LP",
+    "STAKE_VAULT_LP",
+    "COMMIT_VAULT_LP",
+    "BOND_VAULT_LP",
+    "ALLOCATE_VAULT_LP",
+    "INVEST_VAULT_LP",
+    "HOLD_VAULT_LP",
+];
+
+export const getUnstakeVaultLPSimiles = [
+    "UNLOCK_VAULT_LP",
+    "UNSTAKE_VAULT_LP",
+    "RELEASE_VAULT_LP",
+    "UNBOND_VAULT_LP",
+    "FREE_VAULT_LP",
+];
+
+export const getClaimVaultRewardsSimiles = [
+    "COLLECT_VAULT_REWARDS",
+    "HARVEST_VAULT_REWARDS",
+    "CLAIM_VAULT_REWARDS",
+    "GATHER_VAULT_REWARDS",
+    "RECEIVE_VAULT_REWARDS",
+    "WITHDRAW_VAULT_REWARDS",
+    "GET_VAULT_REWARDS",
+    "FETCH_VAULT_REWARDS",
+    "REDEEM_VAULT_REWARDS",
 ];

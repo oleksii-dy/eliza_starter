@@ -1529,7 +1529,6 @@ export const getDerivativeOrderbooksV2Example = [
     },
 ];
 
-
 export const getDerivativeOrderbookV2Example = [
     {
         user: "{{user1}}",
@@ -1569,7 +1568,6 @@ export const getDerivativeOrderbookV2Example = [
         },
     },
 ];
-
 
 export const getSpotOrderbooksV2Example = [
     {
@@ -1611,7 +1609,6 @@ export const getSpotOrderbooksV2Example = [
     },
 ];
 
-
 export const getSpotOrderbookV2Example = [
     {
         user: "{{user1}}",
@@ -1651,7 +1648,6 @@ export const getSpotOrderbookV2Example = [
         },
     },
 ];
-
 
 export const msgBatchCancelBinaryOptionsOrdersExample = [
     {

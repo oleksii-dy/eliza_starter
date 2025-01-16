@@ -231,6 +231,87 @@ export const GetClaimReferencesAction = createGenericAction({
     validateContent: () => true,
 });
 
+export const GetLaunchpadSubscribeAction = createGenericAction({
+    name: "GET_LAUNCHPAD_SUBSCRIBE",
+    description: "Subscribes to a launchpad offering",
+    template: MitoTemplates.getLaunchpadSubscribeTemplate,
+    examples: MitoExamples.getLaunchpadSubscribeExample,
+    similes: MitoSimiles.getLaunchpadSubscribeSimiles,
+    functionName: "getLaunchpadSubscribe",
+    validateContent: () => true,
+});
+
+export const GetLaunchpadClaimAction = createGenericAction({
+    name: "GET_LAUNCHPAD_CLAIM",
+    description: "Claims tokens from a launchpad offering",
+    template: MitoTemplates.getLaunchpadClaimTemplate,
+    examples: MitoExamples.getLaunchpadClaimExample,
+    similes: MitoSimiles.getLaunchpadClaimSimiles,
+    functionName: "getLaunchpadClaim",
+    validateContent: () => true,
+});
+
+// Vault Related Actions
+export const GetSubscribeVaultAction = createGenericAction({
+    name: "GET_SUBSCRIBE_VAULT",
+    description: "Subscribes to a specific vault",
+    template: MitoTemplates.getSubscribeVaultTemplate,
+    examples: MitoExamples.getSubscribeVaultExample,
+    similes: MitoSimiles.getSubscribeVaultSimiles,
+    functionName: "getSubscribeVault",
+    validateContent: () => true,
+});
+
+export const GetInstantiateCPMMVaultAction = createGenericAction({
+    name: "GET_INSTANTIATE_CPMM_VAULT",
+    description: "Creates a new CPMM vault instance",
+    template: MitoTemplates.getInstantiateCPMMVaultTemplate,
+    examples: MitoExamples.getInstantiateCPMMVaultExample,
+    similes: MitoSimiles.getInstantiateCPMMVaultSimiles,
+    functionName: "getInstantiateCPMMVault",
+    validateContent: () => true,
+});
+
+export const GetRedeemFromVaultAction = createGenericAction({
+    name: "GET_REDEEM_FROM_VAULT",
+    description: "Redeems tokens from a specific vault",
+    template: MitoTemplates.getRedeemFromVaultTemplate,
+    examples: MitoExamples.getRedeemFromVaultExample,
+    similes: MitoSimiles.getRedeemFromVaultSimiles,
+    functionName: "getRedeemFromVault",
+    validateContent: () => true,
+});
+
+export const GetStakeVaultLPAction = createGenericAction({
+    name: "GET_STAKE_VAULT_LP",
+    description: "Stakes LP tokens in a vault",
+    template: MitoTemplates.getStakeVaultLPTemplate,
+    examples: MitoExamples.getStakeVaultLPExample,
+    similes: MitoSimiles.getStakeVaultLPSimiles,
+    functionName: "getStakeVaultLP",
+    validateContent: () => true,
+});
+
+export const GetUnstakeVaultLPAction = createGenericAction({
+    name: "GET_UNSTAKE_VAULT_LP",
+    description: "Unstakes LP tokens from a vault",
+    template: MitoTemplates.getUnstakeVaultLPTemplate,
+    examples: MitoExamples.getUnstakeVaultLPExample,
+    similes: MitoSimiles.getUnstakeVaultLPSimiles,
+    functionName: "getUnstakeVaultLP",
+    validateContent: () => true,
+});
+
+export const GetClaimVaultRewardsAction = createGenericAction({
+    name: "GET_CLAIM_VAULT_REWARDS",
+    description: "Claims rewards from a vault",
+    template: MitoTemplates.getClaimVaultRewardsTemplate,
+    examples: MitoExamples.getClaimVaultRewardsExample,
+    similes: MitoSimiles.getClaimVaultRewardsSimiles,
+    functionName: "getClaimVaultRewards",
+    validateContent: () => true,
+});
+
 // Export all actions as a group
 export const MitoActions = [
     GetVaultAction,
@@ -255,4 +336,12 @@ export const MitoActions = [
     GetIDOActivitiesAction,
     GetIDOWhitelistAction,
     GetClaimReferencesAction,
+    GetLaunchpadSubscribeAction,
+    GetLaunchpadClaimAction,
+    GetSubscribeVaultAction,
+    GetInstantiateCPMMVaultAction,
+    GetRedeemFromVaultAction,
+    GetStakeVaultLPAction,
+    GetUnstakeVaultLPAction,
+    GetClaimVaultRewardsAction,
 ];

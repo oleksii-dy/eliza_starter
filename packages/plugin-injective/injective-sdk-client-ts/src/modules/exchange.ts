@@ -306,8 +306,7 @@ export async function getDerivativeMarket(
 export async function getBinaryOptionsMarkets(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetBinaryOptionsMarketsParams
-): Promise<StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result =
             await this.indexerGrpcDerivativesApi.fetchBinaryOptionsMarkets(
@@ -351,8 +350,7 @@ export async function getBinaryOptionsMarket(
 export async function getDerivativeOrders(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetDerivativeOrdersParams
-): Promise<StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result = await this.indexerGrpcDerivativesApi.fetchOrders(
             params || {}
@@ -373,8 +371,7 @@ export async function getDerivativeOrders(
 export async function getDerivativeOrderHistory(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetDerivativeOrderHistoryParams
-): Promise<StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result = await this.indexerGrpcDerivativesApi.fetchOrderHistory(
             params || {}
@@ -395,8 +392,7 @@ export async function getDerivativeOrderHistory(
 export async function getPositionsList(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetPositionsParams
-): Promise< StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result = await this.indexerGrpcDerivativesApi.fetchPositions(
             params || {}
@@ -417,8 +413,7 @@ export async function getPositionsList(
 export async function getPositionsV2(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetPositionsV2Params
-): Promise<StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result = await this.indexerGrpcDerivativesApi.fetchPositionsV2(
             params || {}
@@ -439,8 +434,7 @@ export async function getPositionsV2(
 export async function getDerivativeTrades(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetDerivativeTradesParams
-): Promise<StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result = await this.indexerGrpcDerivativesApi.fetchTrades(
             params || {}
@@ -461,8 +455,7 @@ export async function getDerivativeTrades(
 export async function getFundingPayments(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetFundingPaymentsParams
-): Promise<StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result =
             await this.indexerGrpcDerivativesApi.fetchFundingPayments(
@@ -484,8 +477,7 @@ export async function getFundingPayments(
 export async function getFundingRates(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetFundingRatesParams
-): Promise<StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result = await this.indexerGrpcDerivativesApi.fetchFundingRates(
             params || {}
@@ -506,8 +498,7 @@ export async function getFundingRates(
 export async function getDerivativeSubaccountOrdersList(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetDerivativeSubaccountOrdersListParams
-): Promise<StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result =
             await this.indexerGrpcDerivativesApi.fetchSubaccountOrdersList(
@@ -664,9 +655,7 @@ export async function getSubaccountBalancesList(
 export async function getSubaccountHistory(
     this: InjectiveGrpcBase,
     params: ExchangeTypes.GetSubaccountHistoryParams
-): Promise<
-    StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result =
             await this.indexerGrpcAccountApi.fetchSubaccountHistory(params);
@@ -832,8 +821,7 @@ export async function getSpotOrders(
 export async function getSpotOrderHistory(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetSpotOrderHistoryParams
-): Promise<StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result = await this.indexerGrpcSpotApi.fetchOrderHistory(
             params || {}
@@ -854,8 +842,7 @@ export async function getSpotOrderHistory(
 export async function getSpotTrades(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetSpotTradesParams
-): Promise<StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result = await this.indexerGrpcSpotApi.fetchTrades(params || {});
         return createSuccessResponse(result);
@@ -874,8 +861,7 @@ export async function getSpotTrades(
 export async function getSpotSubaccountOrdersList(
     this: InjectiveGrpcBase,
     params?: ExchangeTypes.GetSpotSubaccountOrdersListParams
-): Promise< StandardResponse
-> {
+): Promise<StandardResponse> {
     try {
         const result = await this.indexerGrpcSpotApi.fetchSubaccountOrdersList(
             params || {}

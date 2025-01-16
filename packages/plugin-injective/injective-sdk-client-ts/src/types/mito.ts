@@ -396,31 +396,62 @@ export interface ClaimReferenceParams extends PaginationParams {
 }
 
 export enum VaultContractType {
-    ManagedVault = 'crates.io:managed-vault',
-    CPMM = 'crates.io:vault-cpmm-spot',
-    ASMMSpot = 'crates.io:vault-asmm-spot',
-    ASMMPerp = 'crates.io:vault-asmm-perp'
-  }
+    ManagedVault = "crates.io:managed-vault",
+    CPMM = "crates.io:vault-cpmm-spot",
+    ASMMSpot = "crates.io:vault-asmm-spot",
+    ASMMPerp = "crates.io:vault-asmm-perp",
+}
 
-  export enum DerivativeRedemptionType {
-    QuoteOnly = 'QuoteOnly',
-    PositionAndQuote = 'PositionAndQuote'
-  }
+export enum DerivativeRedemptionType {
+    QuoteOnly = "QuoteOnly",
+    PositionAndQuote = "PositionAndQuote",
+}
 
-  export enum SpotRedemptionType {
-    BaseOnly = 'BaseOnly',
-    QuoteOnly = 'QuoteOnly',
-    BaseAndQuote = 'BaseAndQuote',
-    FixedBaseAndQuote = 'FixedBaseAndQuote',
-    VariableBaseAndQuote = 'VariableBaseAndQuote'
-  }
+export enum SpotRedemptionType {
+    BaseOnly = "BaseOnly",
+    QuoteOnly = "QuoteOnly",
+    BaseAndQuote = "BaseAndQuote",
+    FixedBaseAndQuote = "FixedBaseAndQuote",
+    VariableBaseAndQuote = "VariableBaseAndQuote",
+}
 
-  export enum VaultMarketType {
-    Spot = 'Spot',
-    Derivative = 'Derivative'
-  }
+export enum VaultMarketType {
+    Spot = "Spot",
+    Derivative = "Derivative",
+}
 
-  export interface InstantiateCPMMVaultParams {
+export interface GetLaunchpadSubscribeParams {
+    amount: number;
+    quoteTokenDenom: string;
+    quoteTokenDecimals: number;
+    contractAddress: string;
+}
+export interface GetLaunchpadClaimParams {
+    contractAddress: string;
+}
+
+export interface GetSubscribeVaultParams {
+    market: {
+        baseDenom: string;
+        baseDecimals: number;
+        quoteDecimals: number;
+        quoteDenom: string;
+    };
+
+    baseAmount: number;
+    quoteAmount: number;
+    subscriptionType: SpotRedemptionType;
+    vaultDetails: {
+        vaultSubaccountId: string;
+        vaultMasterAddress: string;
+        vaultType: VaultContractType;
+    };
+    slippage?: {
+        max_penalty: string;
+    };
+}
+
+export interface GetInstantiateCPMMVaultParams {
     MITO_MASTER_CONTRACT_ADDRESS: string;
     CPMM_CONTRACT_CODE: number;
     senderWalletAddress: string;
@@ -445,71 +476,67 @@ export enum VaultContractType {
     orderType?: string;
 }
 
-  export interface VaultSubscribeParams {
+export interface GetVaultSubscribeParams {
     vaultType: VaultContractType;
     slippage?: {
-      max_penalty: string;
+        max_penalty: string;
     };
-    sender: string;
+
     vaultSubaccountId: string;
     baseAmount: number;
     quoteAmount: number;
     market: {
-      baseDenom: string;
-      baseDecimals: number;
-      quoteDenom: string;
-      quoteDecimals: number;
+        baseDenom: string;
+        baseDecimals: number;
+        quoteDenom: string;
+        quoteDecimals: number;
     };
     subscriptionType: SpotRedemptionType;
     masterAddress: string;
-  }
+}
 
-  export interface VaultRedeemParams {
-    sender: string;
+export interface GetVaultRedeemParams {
     vaultSubaccountId: string;
     marketType: VaultMarketType;
     slippage?: {
-      max_penalty: string;
+        max_penalty: string;
     };
     redemptionType: SpotRedemptionType | DerivativeRedemptionType;
     redeemAmount: number;
     vaultBaseDecimals: number;
     masterAddress: string;
     vaultLpDenom: string;
-  }
+}
 
-  export interface StakeVaultLPParams {
-    sender: string;
+export interface GetStakeVaultLPParams {
     amount: number;
     vaultLpDenom: string;
     vaultTokenDecimals: number;
     stakingContractAddress: string;
-  }
+}
 
-  export interface UnstakeVaultLPParams {
-    sender: string;
+export interface GetUnstakeVaultLPParams {
     amount: number;
     vaultLpDenom: string;
     vaultTokenDecimals: number;
     stakingContractAddress: string;
-  }
+}
 
-  export interface ClaimVaultRewardsParams {
-    sender: string;
+export interface GetClaimVaultRewardsParams {
     vaultLpDenom: string;
     stakingContractAddress: string;
-  }
+}
 
-  export interface GetVaultsParams {
+export interface GetVaultsParams {
     skip?: number;
     limit?: number;
-  }
+}
 
-  export interface GetLPHoldersParams {
+export interface GetLPHoldersParams {
     vaultAddress: string;
     stakingContractAddress: string;
-  }
+}
 
-  export interface GetStakingPoolsParams {
+export interface GetStakingPoolsParams {
     stakingContractAddress: string;
-  }
+}

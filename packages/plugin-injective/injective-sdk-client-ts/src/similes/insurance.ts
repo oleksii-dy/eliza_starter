@@ -7,7 +7,7 @@ export const getInsuranceModuleParamsSimiles = [
     "DISPLAY_INSURANCE_MODULE_PARAMS",
     "SHOW_INSURANCE_MODULE_PARAMS",
     "LIST_INSURANCE_MODULE_PARAMS",
-    "RETRIEVE_INSURANCE_MODULE_PARAMS"
+    "RETRIEVE_INSURANCE_MODULE_PARAMS",
 ];
 
 export const getInsuranceFundsSimiles = [
@@ -19,7 +19,7 @@ export const getInsuranceFundsSimiles = [
     "DISPLAY_INSURANCE_FUNDS",
     "SHOW_INSURANCE_FUNDS",
     "LIST_INSURANCE_FUNDS",
-    "RETRIEVE_INSURANCE_FUNDS"
+    "RETRIEVE_INSURANCE_FUNDS",
 ];
 
 export const getInsuranceFundSimiles = [
@@ -31,7 +31,7 @@ export const getInsuranceFundSimiles = [
     "DISPLAY_INSURANCE_FUND",
     "SHOW_INSURANCE_FUND",
     "LIST_INSURANCE_FUND",
-    "RETRIEVE_INSURANCE_FUND"
+    "RETRIEVE_INSURANCE_FUND",
 ];
 
 export const getEstimatedRedemptionsSimiles = [
@@ -43,7 +43,7 @@ export const getEstimatedRedemptionsSimiles = [
     "DISPLAY_ESTIMATED_REDEMPTIONS",
     "SHOW_ESTIMATED_REDEMPTIONS",
     "LIST_ESTIMATED_REDEMPTIONS",
-    "RETRIEVE_ESTIMATED_REDEMPTIONS"
+    "RETRIEVE_ESTIMATED_REDEMPTIONS",
 ];
 
 export const getPendingRedemptionsSimiles = [
@@ -55,7 +55,7 @@ export const getPendingRedemptionsSimiles = [
     "DISPLAY_PENDING_REDEMPTIONS",
     "SHOW_PENDING_REDEMPTIONS",
     "LIST_PENDING_REDEMPTIONS",
-    "RETRIEVE_PENDING_REDEMPTIONS"
+    "RETRIEVE_PENDING_REDEMPTIONS",
 ];
 
 export const msgCreateInsuranceFundSimiles = [
@@ -67,7 +67,7 @@ export const msgCreateInsuranceFundSimiles = [
     "LAUNCH_INSURANCE_FUND",
     "OPEN_INSURANCE_FUND",
     "BEGIN_INSURANCE_FUND",
-    "INSTITUTE_INSURANCE_FUND"
+    "INSTITUTE_INSURANCE_FUND",
 ];
 
 export const msgRequestRedemptionSimiles = [
@@ -79,7 +79,7 @@ export const msgRequestRedemptionSimiles = [
     "CREATE_REDEMPTION",
     "EXECUTE_REDEMPTION",
     "BEGIN_REDEMPTION",
-    "PERFORM_REDEMPTION"
+    "PERFORM_REDEMPTION",
 ];
 
 export const msgUnderwriteSimiles = [
@@ -91,5 +91,5 @@ export const msgUnderwriteSimiles = [
     "SPONSOR_INSURANCE",
     "FUND_INSURANCE",
     "FINANCE_INSURANCE",
-    "PROVIDE_INSURANCE_BACKING"
+    "PROVIDE_INSURANCE_BACKING",
 ];

@@ -8,7 +8,7 @@ export const getDenomsFromCreatorSimiles = [
     "DISPLAY_CREATOR_TOKENS",
     "SHOW_CREATOR_TOKENS",
     "LIST_CREATOR_TOKENS",
-    "RETRIEVE_CREATOR_TOKENS"
+    "RETRIEVE_CREATOR_TOKENS",
 ];
 
 export const getDenomAuthorityMetadataSimiles = [
@@ -20,7 +20,7 @@ export const getDenomAuthorityMetadataSimiles = [
     "DISPLAY_TOKEN_AUTHORITY",
     "SHOW_TOKEN_AUTHORITY",
     "LIST_TOKEN_AUTHORITY",
-    "RETRIEVE_TOKEN_AUTHORITY"
+    "RETRIEVE_TOKEN_AUTHORITY",
 ];
 
 export const getTokenFactoryModuleParamsSimiles = [
@@ -32,7 +32,7 @@ export const getTokenFactoryModuleParamsSimiles = [
     "DISPLAY_TOKEN_FACTORY_PARAMS",
     "SHOW_TOKEN_FACTORY_PARAMS",
     "LIST_TOKEN_FACTORY_PARAMS",
-    "RETRIEVE_TOKEN_FACTORY_PARAMS"
+    "RETRIEVE_TOKEN_FACTORY_PARAMS",
 ];
 
 export const getTokenFactoryModuleStateSimiles = [
@@ -44,7 +44,7 @@ export const getTokenFactoryModuleStateSimiles = [
     "DISPLAY_TOKEN_FACTORY_STATE",
     "SHOW_TOKEN_FACTORY_STATE",
     "LIST_TOKEN_FACTORY_STATE",
-    "RETRIEVE_TOKEN_FACTORY_STATE"
+    "RETRIEVE_TOKEN_FACTORY_STATE",
 ];
 
 // Message Actions
@@ -57,7 +57,7 @@ export const msgBurnSimiles = [
     "CONSUME_TOKENS",
     "ERASE_TOKENS",
     "CANCEL_TOKENS",
-    "NULLIFY_TOKENS"
+    "NULLIFY_TOKENS",
 ];
 
 export const msgChangeAdminSimiles = [
@@ -69,7 +69,7 @@ export const msgChangeAdminSimiles = [
     "REASSIGN_TOKEN_ADMIN",
     "SWITCH_TOKEN_ADMIN",
     "ALTER_TOKEN_ADMIN",
-    "REVISE_TOKEN_ADMIN"
+    "REVISE_TOKEN_ADMIN",
 ];
 
 export const msgCreateDenomSimiles = [
@@ -81,7 +81,7 @@ export const msgCreateDenomSimiles = [
     "LAUNCH_TOKEN_DENOM",
     "DEPLOY_TOKEN_DENOM",
     "INSTITUTE_TOKEN_DENOM",
-    "PRODUCE_TOKEN_DENOM"
+    "PRODUCE_TOKEN_DENOM",
 ];
 
 export const msgMintSimiles = [
@@ -93,7 +93,7 @@ export const msgMintSimiles = [
     "MAKE_TOKENS",
     "FORGE_TOKENS",
     "FABRICATE_TOKENS",
-    "CONSTRUCT_TOKENS"
+    "CONSTRUCT_TOKENS",
 ];
 
 export const msgSetDenomMetadataSimiles = [
@@ -105,5 +105,5 @@ export const msgSetDenomMetadataSimiles = [
     "ALTER_TOKEN_METADATA",
     "ADJUST_TOKEN_METADATA",
     "EDIT_TOKEN_METADATA",
-    "CONFIGURE_TOKEN_METADATA"
+    "CONFIGURE_TOKEN_METADATA",
 ];

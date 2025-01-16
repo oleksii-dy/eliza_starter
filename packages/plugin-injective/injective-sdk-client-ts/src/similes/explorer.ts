@@ -7,7 +7,7 @@ export const getTxByHashSimiles = [
     "DISPLAY_TRANSACTION_BY_HASH",
     "SHOW_TRANSACTION_BY_HASH",
     "LIST_TRANSACTION_BY_HASH",
-    "RETRIEVE_TRANSACTION_BY_HASH"
+    "RETRIEVE_TRANSACTION_BY_HASH",
 ];
 
 export const getAccountTxSimiles = [
@@ -19,7 +19,7 @@ export const getAccountTxSimiles = [
     "DISPLAY_ACCOUNT_TRANSACTIONS",
     "SHOW_ACCOUNT_TRANSACTIONS",
     "LIST_ACCOUNT_TRANSACTIONS",
-    "RETRIEVE_ACCOUNT_TRANSACTIONS"
+    "RETRIEVE_ACCOUNT_TRANSACTIONS",
 ];
 
 export const getExplorerValidatorSimiles = [
@@ -31,7 +31,7 @@ export const getExplorerValidatorSimiles = [
     "DISPLAY_EXPLORER_VALIDATOR",
     "SHOW_EXPLORER_VALIDATOR",
     "LIST_EXPLORER_VALIDATOR",
-    "RETRIEVE_EXPLORER_VALIDATOR"
+    "RETRIEVE_EXPLORER_VALIDATOR",
 ];
 
 export const getExplorerValidatorUptimeSimiles = [
@@ -43,7 +43,7 @@ export const getExplorerValidatorUptimeSimiles = [
     "DISPLAY_EXPLORER_VALIDATOR_UPTIME",
     "SHOW_EXPLORER_VALIDATOR_UPTIME",
     "LIST_EXPLORER_VALIDATOR_UPTIME",
-    "RETRIEVE_EXPLORER_VALIDATOR_UPTIME"
+    "RETRIEVE_EXPLORER_VALIDATOR_UPTIME",
 ];
 
 export const getPeggyDepositTxsSimiles = [
@@ -55,7 +55,7 @@ export const getPeggyDepositTxsSimiles = [
     "DISPLAY_PEGGY_DEPOSITS",
     "SHOW_PEGGY_DEPOSITS",
     "LIST_PEGGY_DEPOSITS",
-    "RETRIEVE_PEGGY_DEPOSITS"
+    "RETRIEVE_PEGGY_DEPOSITS",
 ];
 
 export const getPeggyWithdrawalTxsSimiles = [
@@ -67,7 +67,7 @@ export const getPeggyWithdrawalTxsSimiles = [
     "DISPLAY_PEGGY_WITHDRAWALS",
     "SHOW_PEGGY_WITHDRAWALS",
     "LIST_PEGGY_WITHDRAWALS",
-    "RETRIEVE_PEGGY_WITHDRAWALS"
+    "RETRIEVE_PEGGY_WITHDRAWALS",
 ];
 
 export const getBlocksSimiles = [
@@ -79,7 +79,7 @@ export const getBlocksSimiles = [
     "DISPLAY_BLOCKS",
     "SHOW_BLOCKS",
     "LIST_BLOCKS",
-    "RETRIEVE_BLOCKS"
+    "RETRIEVE_BLOCKS",
 ];
 
 export const getBlockSimiles = [
@@ -91,7 +91,7 @@ export const getBlockSimiles = [
     "DISPLAY_BLOCK",
     "SHOW_BLOCK",
     "LIST_BLOCK",
-    "RETRIEVE_BLOCK"
+    "RETRIEVE_BLOCK",
 ];
 
 export const getTxsSimiles = [
@@ -103,7 +103,7 @@ export const getTxsSimiles = [
     "DISPLAY_TRANSACTIONS",
     "SHOW_TRANSACTIONS",
     "LIST_TRANSACTIONS",
-    "RETRIEVE_TRANSACTIONS"
+    "RETRIEVE_TRANSACTIONS",
 ];
 
 export const getIBCTransferTxsSimiles = [
@@ -115,7 +115,7 @@ export const getIBCTransferTxsSimiles = [
     "DISPLAY_IBC_TRANSFERS",
     "SHOW_IBC_TRANSFERS",
     "LIST_IBC_TRANSFERS",
-    "RETRIEVE_IBC_TRANSFERS"
+    "RETRIEVE_IBC_TRANSFERS",
 ];
 
 export const getExplorerStatsSimiles = [
@@ -127,5 +127,5 @@ export const getExplorerStatsSimiles = [
     "DISPLAY_EXPLORER_STATS",
     "SHOW_EXPLORER_STATS",
     "LIST_EXPLORER_STATS",
-    "RETRIEVE_EXPLORER_STATS"
+    "RETRIEVE_EXPLORER_STATS",
 ];

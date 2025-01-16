@@ -7,7 +7,7 @@ export const getDenomTraceSimiles = [
     "DISPLAY_DENOM_TRACE",
     "SHOW_DENOM_TRACE",
     "LIST_DENOM_TRACE",
-    "RETRIEVE_DENOM_TRACE"
+    "RETRIEVE_DENOM_TRACE",
 ];
 
 export const getDenomsTraceSimiles = [
@@ -19,7 +19,7 @@ export const getDenomsTraceSimiles = [
     "DISPLAY_DENOM_TRACES",
     "SHOW_DENOM_TRACES",
     "LIST_DENOM_TRACES",
-    "RETRIEVE_DENOM_TRACES"
+    "RETRIEVE_DENOM_TRACES",
 ];
 
 export const msgIBCTransferSimiles = [
@@ -31,5 +31,5 @@ export const msgIBCTransferSimiles = [
     "INITIATE_IBC_TRANSFER",
     "START_IBC_TRANSFER",
     "CREATE_IBC_TRANSFER",
-    "PROCESS_IBC_TRANSFER"
+    "PROCESS_IBC_TRANSFER",
 ];

@@ -988,3 +988,255 @@ Response format:
 Here are the recent user messages for context:
 {{recentMessages}}
 `;
+
+//Mito txs
+export const getLaunchpadSubscribeTemplate = `
+Extract the following details for launchpad subscription:
+- **amount** (number): Amount to subscribe
+- **quoteTokenDenom** (string): Quote token denomination
+- **quoteTokenDecimals** (number): Quote token decimals
+- **contractAddress** (string): Contract address
+
+Request format:
+
+\`\`\`json
+{
+    "amount": 1000,
+    "quoteTokenDenom": "inj",
+    "quoteTokenDecimals": 18,
+    "contractAddress": "inj1..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getSubscribeVaultTemplate = `
+Extract the following details for vault subscription:
+- **market** (object): Market details including base/quote denominations and decimals
+- **baseAmount** (number): Base token amount
+- **quoteAmount** (number): Quote token amount
+- **subscriptionType** (string): Type of subscription (BaseOnly, QuoteOnly, etc.)
+- **vaultDetails** (object): Vault details including subaccount ID and master address
+- **slippage** (object): Optional slippage configuration
+
+Request format:
+
+\`\`\`json
+{
+    "market": {
+        "baseDenom": "inj",
+        "baseDecimals": 18,
+        "quoteDecimals": 6,
+        "quoteDenom": "usdt"
+    },
+    "baseAmount": 1.5,
+    "quoteAmount": 1000,
+    "subscriptionType": "BaseOnly",
+    "vaultDetails": {
+        "vaultSubaccountId": "0x...",
+        "vaultMasterAddress": "inj1...",
+        "vaultType": "crates.io:vault-cpmm-spot"
+    },
+    "slippage": {
+        "max_penalty": "0.1"
+    }
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getInstantiateCPMMVaultTemplate = `
+Extract the following details for instantiating a CPMM vault:
+- **MITO_MASTER_CONTRACT_ADDRESS** (string): Mito master contract address
+- **CPMM_CONTRACT_CODE** (number): CPMM contract code
+- **senderWalletAddress** (string): Sender's wallet address
+- **marketId** (string): Market ID
+- **feeBps** (number): Fee in basis points
+- **baseDecimals** (number): Base token decimals
+- **quoteDecimals** (number): Quote token decimals
+- **funds** (array): Array of fund objects with denom and amount
+- **notionalValueCap** (string): Optional notional value cap
+- **pricingStrategy** (object): Optional pricing strategy configuration
+- **maxInvariantSensitivityBps** (string): Optional max invariant sensitivity in basis points
+- **maxPriceSensitivityBps** (string): Optional max price sensitivity in basis points
+- **orderType** (string): Optional order type
+
+Request format:
+
+\`\`\`json
+{
+    "MITO_MASTER_CONTRACT_ADDRESS": "inj1...",
+    "CPMM_CONTRACT_CODE": 123,
+    "senderWalletAddress": "inj1...",
+    "marketId": "0x...",
+    "feeBps": 30,
+    "baseDecimals": 18,
+    "quoteDecimals": 6,
+    "funds": [
+        {
+            "denom": "inj",
+            "amount": "1000000000000000000"
+        }
+    ],
+    "notionalValueCap": "1000000",
+    "pricingStrategy": {
+        "SmoothingPricingWithRelativePriceRange": {
+            "bid_range": "0.01",
+            "ask_range": "0.01"
+        }
+    },
+    "maxInvariantSensitivityBps": "100",
+    "maxPriceSensitivityBps": "100",
+    "orderType": "LIMIT"
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+export const getLaunchpadClaimTemplate = `
+Extract the following details for claiming launchpad tokens:
+- **contractAddress** (string): Contract address of the launchpad
+
+Request format:
+
+\`\`\`json
+{
+    "contractAddress": "inj1..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+export const getVaultSubscribeTemplate = `
+Extract the following details for subscribing to a vault:
+- **vaultType** (string): Type of vault contract
+- **slippage** (object): Optional slippage configuration
+- **vaultSubaccountId** (string): Vault subaccount ID
+- **baseAmount** (number): Base token amount
+- **quoteAmount** (number): Quote token amount
+- **market** (object): Market details including base/quote denominations and decimals
+- **subscriptionType** (string): Type of subscription
+- **masterAddress** (string): Master contract address
+
+Request format:
+
+\`\`\`json
+{
+    "vaultType": "crates.io:vault-cpmm-spot",
+    "slippage": {
+        "max_penalty": "0.1"
+    },
+    "vaultSubaccountId": "0x...",
+    "baseAmount": 1.5,
+    "quoteAmount": 1000,
+    "market": {
+        "baseDenom": "inj",
+        "baseDecimals": 18,
+        "quoteDenom": "usdt",
+        "quoteDecimals": 6
+    },
+    "subscriptionType": "BaseOnly",
+    "masterAddress": "inj1..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getRedeemFromVaultTemplate = `
+Extract the following details for redeeming from a vault:
+- **vaultSubaccountId** (string): Vault subaccount ID
+- **redeemAmount** (number): Amount to redeem
+- **vaultBaseDecimals** (number): Vault base token decimals
+- **masterAddress** (string): Master contract address
+- **vaultLpDenom** (string): LP token denom
+- **marketType** (string): Market type (Spot or Derivative)
+- **redemptionType** (string): Type of redemption
+- **slippage** (object): Optional slippage configuration
+
+Request format:
+
+\`\`\`json
+{
+    "vaultSubaccountId": "0x...",
+    "redeemAmount": 0.01,
+    "vaultBaseDecimals": 18,
+    "masterAddress": "inj1...",
+    "vaultLpDenom": "factory/...",
+    "marketType": "Spot",
+    "redemptionType": "BaseOnly",
+    "slippage": {
+        "max_penalty": "0.1"
+    }
+}
+\`\`\`
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getStakeVaultLPTemplate = `
+Extract the following details for staking vault LP tokens:
+- **amount** (number): Amount to stake
+- **vaultLpDenom** (string): LP token denom
+- **vaultTokenDecimals** (number): Token decimals
+- **stakingContractAddress** (string): Staking contract address
+
+Request format:
+
+\`\`\`json
+{
+    "amount": 0.01,
+    "vaultLpDenom": "factory/...",
+    "vaultTokenDecimals": 18,
+    "stakingContractAddress": "inj1..."
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getUnstakeVaultLPTemplate = `
+Extract the following details for unstaking vault LP tokens:
+- **amount** (number): Amount to unstake
+- **vaultLpDenom** (string): LP token denom
+- **vaultTokenDecimals** (number): Token decimals
+- **stakingContractAddress** (string): Staking contract address
+
+Request format:
+
+\`\`\`json
+{
+    "amount": 0.01,
+    "vaultLpDenom": "factory/...",
+    "vaultTokenDecimals": 18,
+    "stakingContractAddress": "inj1..."
+}
+\`\`\`
+
+Response format:
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const getClaimVaultRewardsTemplate = `
+Extract the following details for claiming vault rewards:
+- **vaultLpDenom** (string): LP token denom
+- **stakingContractAddress** (string): Staking contract address
+
+Request format:
+
+\`\`\`json
+{
+    "vaultLpDenom": "factory/...",
+    "stakingContractAddress": "inj1..."
+}
+\`\`\`
+`;

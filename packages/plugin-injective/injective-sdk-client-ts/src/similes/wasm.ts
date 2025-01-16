@@ -8,7 +8,7 @@ export const getContractAccountsBalanceSimiles = [
     "DISPLAY_CONTRACT_BALANCES",
     "SHOW_CONTRACT_BALANCES",
     "LIST_CONTRACT_BALANCES",
-    "RETRIEVE_CONTRACT_BALANCES"
+    "RETRIEVE_CONTRACT_BALANCES",
 ];
 
 export const getContractStateSimiles = [
@@ -20,7 +20,7 @@ export const getContractStateSimiles = [
     "DISPLAY_CONTRACT_STATE",
     "SHOW_CONTRACT_STATE",
     "LIST_CONTRACT_STATE",
-    "RETRIEVE_CONTRACT_STATE"
+    "RETRIEVE_CONTRACT_STATE",
 ];
 
 export const getContractInfoSimiles = [
@@ -32,7 +32,7 @@ export const getContractInfoSimiles = [
     "DISPLAY_CONTRACT_INFO",
     "SHOW_CONTRACT_INFO",
     "LIST_CONTRACT_INFO",
-    "RETRIEVE_CONTRACT_INFO"
+    "RETRIEVE_CONTRACT_INFO",
 ];
 
 export const getContractHistorySimiles = [
@@ -44,7 +44,7 @@ export const getContractHistorySimiles = [
     "DISPLAY_CONTRACT_HISTORY",
     "SHOW_CONTRACT_HISTORY",
     "LIST_CONTRACT_HISTORY",
-    "RETRIEVE_CONTRACT_HISTORY"
+    "RETRIEVE_CONTRACT_HISTORY",
 ];
 
 export const getSmartContractStateSimiles = [
@@ -56,7 +56,7 @@ export const getSmartContractStateSimiles = [
     "DISPLAY_SMART_STATE",
     "SHOW_SMART_STATE",
     "LIST_SMART_STATE",
-    "RETRIEVE_SMART_STATE"
+    "RETRIEVE_SMART_STATE",
 ];
 
 export const getRawContractStateSimiles = [
@@ -68,7 +68,7 @@ export const getRawContractStateSimiles = [
     "DISPLAY_RAW_STATE",
     "SHOW_RAW_STATE",
     "LIST_RAW_STATE",
-    "RETRIEVE_RAW_STATE"
+    "RETRIEVE_RAW_STATE",
 ];
 
 // Code Query Actions
@@ -81,7 +81,7 @@ export const getContractCodesSimiles = [
     "DISPLAY_CONTRACT_CODES",
     "SHOW_CONTRACT_CODES",
     "LIST_CONTRACT_CODES",
-    "RETRIEVE_CONTRACT_CODES"
+    "RETRIEVE_CONTRACT_CODES",
 ];
 
 export const getContractCodeSimiles = [
@@ -93,7 +93,7 @@ export const getContractCodeSimiles = [
     "DISPLAY_CONTRACT_CODE",
     "SHOW_CONTRACT_CODE",
     "LIST_CONTRACT_CODE",
-    "RETRIEVE_CONTRACT_CODE"
+    "RETRIEVE_CONTRACT_CODE",
 ];
 
 export const getContractCodeContractsSimiles = [
@@ -105,7 +105,7 @@ export const getContractCodeContractsSimiles = [
     "DISPLAY_CODE_CONTRACTS",
     "SHOW_CODE_CONTRACTS",
     "LIST_CODE_CONTRACTS",
-    "RETRIEVE_CODE_CONTRACTS"
+    "RETRIEVE_CODE_CONTRACTS",
 ];
 
 // Message Actions
@@ -118,7 +118,7 @@ export const msgStoreCodeSimiles = [
     "REGISTER_CONTRACT_CODE",
     "SAVE_CONTRACT_CODE",
     "INSTALL_CONTRACT_CODE",
-    "PUSH_CONTRACT_CODE"
+    "PUSH_CONTRACT_CODE",
 ];
 
 export const msgUpdateAdminSimiles = [
@@ -130,7 +130,7 @@ export const msgUpdateAdminSimiles = [
     "REASSIGN_CONTRACT_ADMIN",
     "SWITCH_CONTRACT_ADMIN",
     "ALTER_CONTRACT_ADMIN",
-    "REVISE_CONTRACT_ADMIN"
+    "REVISE_CONTRACT_ADMIN",
 ];
 
 export const msgExecuteContractSimiles = [
@@ -142,7 +142,7 @@ export const msgExecuteContractSimiles = [
     "PERFORM_CONTRACT",
     "PROCESS_CONTRACT",
     "START_CONTRACT",
-    "OPERATE_CONTRACT"
+    "OPERATE_CONTRACT",
 ];
 
 export const msgMigrateContractSimiles = [
@@ -154,7 +154,7 @@ export const msgMigrateContractSimiles = [
     "SHIFT_CONTRACT",
     "PORT_CONTRACT",
     "TRANSITION_CONTRACT",
-    "CONVERT_CONTRACT"
+    "CONVERT_CONTRACT",
 ];
 
 export const msgInstantiateContractSimiles = [
@@ -166,7 +166,7 @@ export const msgInstantiateContractSimiles = [
     "START_CONTRACT_INSTANCE",
     "SETUP_CONTRACT",
     "ESTABLISH_CONTRACT",
-    "GENERATE_CONTRACT"
+    "GENERATE_CONTRACT",
 ];
 
 export const msgExecuteContractCompatSimiles = [
@@ -178,7 +178,7 @@ export const msgExecuteContractCompatSimiles = [
     "PERFORM_COMPAT_CONTRACT",
     "PROCESS_COMPAT_CONTRACT",
     "START_COMPAT_CONTRACT",
-    "OPERATE_COMPAT_CONTRACT"
+    "OPERATE_COMPAT_CONTRACT",
 ];
 
 export const msgPrivilegedExecuteContractSimiles = [
@@ -190,7 +190,7 @@ export const msgPrivilegedExecuteContractSimiles = [
     "PERFORM_PRIVILEGED_CONTRACT",
     "PROCESS_PRIVILEGED_CONTRACT",
     "START_PRIVILEGED_CONTRACT",
-    "OPERATE_PRIVILEGED_CONTRACT"
+    "OPERATE_PRIVILEGED_CONTRACT",
 ];
 
 // WasmX Query Actions
@@ -203,7 +203,7 @@ export const getWasmxModuleParamsSimiles = [
     "DISPLAY_WASMX_PARAMS",
     "SHOW_WASMX_PARAMS",
     "LIST_WASMX_PARAMS",
-    "RETRIEVE_WASMX_PARAMS"
+    "RETRIEVE_WASMX_PARAMS",
 ];
 
 export const getWasmxModuleStateSimiles = [
@@ -215,5 +215,5 @@ export const getWasmxModuleStateSimiles = [
     "DISPLAY_WASMX_STATE",
     "SHOW_WASMX_STATE",
     "LIST_WASMX_STATE",
-    "RETRIEVE_WASMX_STATE"
+    "RETRIEVE_WASMX_STATE",
 ];

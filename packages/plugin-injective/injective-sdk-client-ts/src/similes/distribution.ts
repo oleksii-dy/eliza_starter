@@ -7,10 +7,10 @@ export const getDistributionModuleParamsSimiles = [
     "DISPLAY_DISTRIBUTION_PARAMS",
     "SHOW_DISTRIBUTION_PARAMS",
     "LIST_DISTRIBUTION_PARAMS",
-    "RETRIEVE_DISTRIBUTION_PARAMS"
- ];
+    "RETRIEVE_DISTRIBUTION_PARAMS",
+];
 
- export const getDelegatorRewardsForValidatorSimiles = [
+export const getDelegatorRewardsForValidatorSimiles = [
     "VIEW_VALIDATOR_REWARDS",
     "GET_VALIDATOR_REWARDS",
     "CHECK_VALIDATOR_REWARDS",
@@ -19,10 +19,10 @@ export const getDistributionModuleParamsSimiles = [
     "DISPLAY_VALIDATOR_REWARDS",
     "SHOW_VALIDATOR_REWARDS",
     "LIST_VALIDATOR_REWARDS",
-    "RETRIEVE_VALIDATOR_REWARDS"
- ];
+    "RETRIEVE_VALIDATOR_REWARDS",
+];
 
- export const getDelegatorRewardsForValidatorNoThrowSimiles = [
+export const getDelegatorRewardsForValidatorNoThrowSimiles = [
     "VIEW_VALIDATOR_REWARDS_SAFE",
     "GET_VALIDATOR_REWARDS_SAFE",
     "CHECK_VALIDATOR_REWARDS_SAFE",
@@ -31,10 +31,10 @@ export const getDistributionModuleParamsSimiles = [
     "DISPLAY_VALIDATOR_REWARDS_SAFE",
     "SHOW_VALIDATOR_REWARDS_SAFE",
     "LIST_VALIDATOR_REWARDS_SAFE",
-    "RETRIEVE_VALIDATOR_REWARDS_SAFE"
- ];
+    "RETRIEVE_VALIDATOR_REWARDS_SAFE",
+];
 
- export const getDelegatorRewardsSimiles = [
+export const getDelegatorRewardsSimiles = [
     "VIEW_DELEGATOR_REWARDS",
     "GET_DELEGATOR_REWARDS",
     "CHECK_DELEGATOR_REWARDS",
@@ -43,10 +43,10 @@ export const getDistributionModuleParamsSimiles = [
     "DISPLAY_DELEGATOR_REWARDS",
     "SHOW_DELEGATOR_REWARDS",
     "LIST_DELEGATOR_REWARDS",
-    "RETRIEVE_DELEGATOR_REWARDS"
- ];
+    "RETRIEVE_DELEGATOR_REWARDS",
+];
 
- export const getDelegatorRewardsNoThrowSimiles = [
+export const getDelegatorRewardsNoThrowSimiles = [
     "VIEW_DELEGATOR_REWARDS_SAFE",
     "GET_DELEGATOR_REWARDS_SAFE",
     "CHECK_DELEGATOR_REWARDS_SAFE",
@@ -55,10 +55,10 @@ export const getDistributionModuleParamsSimiles = [
     "DISPLAY_DELEGATOR_REWARDS_SAFE",
     "SHOW_DELEGATOR_REWARDS_SAFE",
     "LIST_DELEGATOR_REWARDS_SAFE",
-    "RETRIEVE_DELEGATOR_REWARDS_SAFE"
- ];
+    "RETRIEVE_DELEGATOR_REWARDS_SAFE",
+];
 
- export const msgWithdrawDelegatorRewardSimiles = [
+export const msgWithdrawDelegatorRewardSimiles = [
     "WITHDRAW_DELEGATOR_REWARDS",
     "CLAIM_DELEGATOR_REWARDS",
     "COLLECT_DELEGATOR_REWARDS",
@@ -67,10 +67,10 @@ export const getDistributionModuleParamsSimiles = [
     "RETRIEVE_DELEGATOR_REWARDS",
     "PROCESS_DELEGATOR_REWARDS",
     "EXTRACT_DELEGATOR_REWARDS",
-    "RELEASE_DELEGATOR_REWARDS"
- ];
+    "RELEASE_DELEGATOR_REWARDS",
+];
 
- export const msgWithdrawValidatorCommissionSimiles = [
+export const msgWithdrawValidatorCommissionSimiles = [
     "WITHDRAW_VALIDATOR_COMMISSION",
     "CLAIM_VALIDATOR_COMMISSION",
     "COLLECT_VALIDATOR_COMMISSION",
@@ -79,5 +79,5 @@ export const getDistributionModuleParamsSimiles = [
     "RETRIEVE_VALIDATOR_COMMISSION",
     "PROCESS_VALIDATOR_COMMISSION",
     "EXTRACT_VALIDATOR_COMMISSION",
-    "RELEASE_VALIDATOR_COMMISSION"
- ];
+    "RELEASE_VALIDATOR_COMMISSION",
+];
