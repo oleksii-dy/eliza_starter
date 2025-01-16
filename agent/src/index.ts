@@ -1104,8 +1104,8 @@ const checkPortAvailable = (port: number): Promise<boolean> => {
 
 const hasValidRemoteUrls = () =>
     process.env.REMOTE_CHARACTER_URLS &&
-    process.env.REMOTE_CHARACTER_URLS != "" &&
-    process.env.REMOTE_CHARACTER_URLS.startsWith("http")
+    process.env.REMOTE_CHARACTER_URLS !== "" &&
+    process.env.REMOTE_CHARACTER_URLS.startsWith("http");
 
 
 const startAgents = async () => {
