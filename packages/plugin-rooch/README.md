@@ -1,6 +1,6 @@
 # @elizaos/plugin-rooch
 
-Core Rooch blockchain plugin for Eliza OS that provides essential services and actions for wallet management and token operations on the Rooch network.
+Core Rooch plugin for Eliza OS that provides essential services and actions for wallet management and token operations on the Rooch network.
 
 ## Overview
 
@@ -141,18 +141,18 @@ Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) fil
 
 This plugin integrates with and builds upon several key technologies:
 
-- [Rooch Blockchain](https://rooch.network): Scalable and high-performance blockchain platform
+- [Rooch Network](https://rooch.network): The Bitcoin Application Layer features MoveVM and Bitcoin staking. 
 - [@roochnetwork/rooch-sdk](https://www.npmjs.com/package/@roochnetwork/rooch-sdk): Official Rooch SDK
 - [bignumber.js](https://github.com/MikeMcl/bignumber.js/): Precise number handling
 - [node-cache](https://www.npmjs.com/package/node-cache): Caching implementation
 
 Special thanks to:
-- The Rooch team for developing the Rooch blockchain
+- The Rooch team for developing the Rooch network
 - The Rooch Developer community
 - The Rooch SDK maintainers
 - The Eliza community for their contributions and feedback
 
-For more information about Rooch blockchain capabilities:
+For more information about Rooch network capabilities:
 - [Rooch Documentation](https://rooch.network/learn/overview)
 - [Rooch Developer Portal](https://rooch.network/learn/overview)
 - [Rooch GitHub Repository](https://github.com/rooch-network)
