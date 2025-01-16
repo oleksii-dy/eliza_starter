@@ -17,7 +17,7 @@ import {
 import { readFileSync, statSync } from "fs";
 import { lookup } from "mime-types";
 import { extname } from "node:path";
-import { InitGnfdClient } from "../providers/gnfd";
+import { CONFIG, InitGnfdClient } from "../providers/gnfd";
 import { initWalletProvider, WalletProvider } from "../providers/wallet";
 import { greenfieldTemplate } from "../templates";
 import { DelegatedPubObjectRequest } from "@bnb-chain/greenfield-js-sdk";
@@ -345,19 +345,3 @@ function generateFile(attachment: Media) {
 function fixPath(url: string) {
     return url.replace("/agent/agent/", "/agent/");
 }
-
-const CONFIG = {
-    MAINNET: {
-        TOKENHUB_ADDRESS: "0xeA97dF87E6c7F68C9f95A69dA79E19B834823F25",
-        CROSSCHAIN_ADDRESS: "0x77e719b714be09F70D484AB81F70D02B0E182f7d",
-        GREENFIELD_RPC_URL: "https://greenfield-chain.bnbchain.org",
-        GREENFIELD_CHAIN_ID: "1017",
-    },
-    TESTNET: {
-        TOKENHUB_ADDRESS: "0xED8e5C546F84442219A5a987EE1D820698528E04",
-        CROSSCHAIN_ADDRESS: "0xa5B2c9194131A4E0BFaCbF9E5D6722c873159cb7",
-        GREENFIELD_RPC_URL:
-            "https://gnfd-testnet-fullnode-tendermint-us.bnbchain.org",
-        GREENFIELD_CHAIN_ID: "5600",
-    },
-};
