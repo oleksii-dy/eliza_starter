@@ -118,6 +118,7 @@ export interface EvmPluginConfig {
         canto?: string;
         alienx?: string;
         gravity?: string;
+        unichain?: string;
     };
     secrets?: {
         EVM_PRIVATE_KEY: string;
