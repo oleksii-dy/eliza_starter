@@ -10,10 +10,16 @@ import {
     Participant,
     Room,
     RAGKnowledgeItem,
-    elizaLogger
+    elizaLogger,
+    DatabaseAdapter,
+    getEmbeddingConfig,
+    ModelClass,
+    ModelProviderName,
+    getEmbeddingModelSettings,
+    models
 } from "@elizaos/core";
-import { DatabaseAdapter } from "@elizaos/core";
 import { v4 as uuid } from "uuid";
+
 export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     async getRoom(roomId: UUID): Promise<UUID | null> {
         const { data, error } = await this.supabase
@@ -112,7 +118,68 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     }
 
     async init() {
-        // noop
+        // Check vector extension and schema
+        const vectorExt = await this.supabase.rpc('check_vector_extension');
+        if (!vectorExt.data) {
+            elizaLogger.error("Vector extension not found in database");
+            throw new Error("Vector extension required");
+        }
+
+        // Set embedding configuration based on provider and model
+        const embeddingConfig = getEmbeddingConfig();
+        const configQueries = [];
+
+        // Set provider-specific configuration
+        const providerValue = embeddingConfig.provider.toLowerCase();
+        configQueries.push(
+            this.supabase.rpc('set_config', {
+                key: 'app.embedding_provider',
+                value: providerValue
+            })
+        );
+
+        // Set embedding dimensions based on provider
+        const dimensions = this.getEmbeddingDimensions(embeddingConfig.provider, embeddingConfig.model);
+        configQueries.push(
+            this.supabase.rpc('set_config', {
+                key: 'app.embedding_dimensions',
+                value: dimensions.toString()
+            })
+        );
+
+        // Execute all configuration queries
+        await Promise.all(configQueries);
+    }
+
+    private getEmbeddingDimensions(provider: string, modelName: string): number {
+        // Handle BGE separately since it's not in models.ts
+        if (provider.toUpperCase() === 'BGE') {
+            if (modelName.includes('large')) return 1024;
+            if (modelName.includes('base')) return 768;
+            if (modelName.includes('small')) return 384;
+            // Default BGE size
+            return 1024;
+        }
+
+        // For other providers, try to get from models.ts first
+        try {
+            const modelProvider = ModelProviderName[provider.toUpperCase() as keyof typeof ModelProviderName];
+            const modelSettings = getEmbeddingModelSettings(modelProvider);
+            if (modelSettings?.dimensions) {
+                return modelSettings.dimensions;
+            }
+        } catch (e) {
+            elizaLogger.warn(`Provider ${provider} not found in ModelProviderName, using fallback logic`);
+        }
+
+        // Fallback logic for known models
+        if (modelName === 'text-embedding-3-small') return 384;
+        if (modelName === 'text-embedding-3-large') return 1024;
+        if (modelName === 'text-embedding-ada-002') return 1536;
+
+        // Default fallback
+        elizaLogger.warn(`Unknown embedding dimensions for provider ${provider} and model ${modelName}, using default 384`);
+        return 384;
     }
 
     async close() {
@@ -124,14 +191,19 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         agentId?: UUID;
         tableName: string;
     }): Promise<Memory[]> {
-        // Determine which memories table to use based on the tableName
-        const embeddingSize = params.tableName.includes('_') ?
-            parseInt(params.tableName.split('_')[1]) :
-            1536; // default to 1536 if not specified
+        // Get embedding size from the actual embedding config
+        const embeddingConfig = getEmbeddingConfig();
+        const modelSettings = getEmbeddingModelSettings(ModelProviderName[embeddingConfig.provider.toUpperCase() as keyof typeof ModelProviderName]);
+        const embeddingSize = modelSettings?.dimensions || 1024; // Default to 1024 if not specified
 
         const actualTableName = `memories_${embeddingSize}`;
 
-        elizaLogger.info(`Querying memories from table: ${actualTableName}`);
+        elizaLogger.debug(`getMemoriesByRoomIds: Using table ${actualTableName}`, {
+            roomIds: params.roomIds,
+            agentId: params.agentId,
+            embeddingSize,
+            provider: embeddingConfig.provider
+        });
 
         let query = this.supabase
             .from(actualTableName)
@@ -145,13 +217,21 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         const { data, error } = await query;
 
         if (error) {
-            elizaLogger.error("Error retrieving memories by room IDs:", error);
+            elizaLogger.error(`Error in getMemoriesByRoomIds for table ${actualTableName}:`, error);
             return [];
         }
+
+        if (!data || data.length === 0) {
+            elizaLogger.debug(`No memories found in ${actualTableName} for rooms:`, params.roomIds);
+            return [];
+        }
+
+        elizaLogger.debug(`Found ${data.length} memories in ${actualTableName}`);
 
         // map createdAt to Date
         const memories = data.map((memory) => ({
             ...memory,
+            createdAt: memory.createdAt ? new Date(memory.createdAt).getTime() : undefined
         }));
 
         return memories as Memory[];
@@ -229,20 +309,53 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         match_count: number;
         unique: boolean;
     }): Promise<Memory[]> {
+        const actualTableName = this.getMemoryTableName(params.embedding);
+        // Validate embedding
+        if (!params.embedding || !Array.isArray(params.embedding)) {
+            elizaLogger.error("Invalid embedding array provided to searchMemories", {
+                embedding: params.embedding,
+                type: typeof params.embedding
+            });
+            return [];
+        }
+
+        if (params.embedding.length === 0) {
+            elizaLogger.error("Empty embedding array provided to searchMemories", {
+                roomId: params.roomId,
+                tableName: params.tableName
+            });
+            return [];
+        }
+
+        elizaLogger.debug(`Searching memories in ${actualTableName}`, {
+            roomId: params.roomId,
+            embeddingSize: params.embedding.length,
+            threshold: params.match_threshold,
+            count: params.match_count,
+            unique: params.unique
+        });
+
         const result = await this.supabase.rpc("search_memories", {
-            query_table_name: params.tableName,
-            query_roomId: params.roomId,
+            query_table_name: actualTableName,
+            query_roomid: params.roomId,
             query_embedding: params.embedding,
             query_match_threshold: params.match_threshold,
             query_match_count: params.match_count,
             query_unique: params.unique,
         });
+
         if (result.error) {
+            elizaLogger.error("Error in searchMemories:", {
+                error: result.error,
+                params: {
+                    ...params,
+                    embedding: `[${params.embedding.length} values]` // Don't log full embedding
+                }
+            });
             throw new Error(JSON.stringify(result.error));
         }
-        return result.data.map((memory) => ({
-            ...memory,
-        }));
+
+        return result.data;
     }
 
     async getCachedEmbeddings(opts: {
@@ -306,14 +419,9 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         start?: number;
         end?: number;
     }): Promise<Memory[]> {
-        // Determine which memories table to use based on the tableName
-        const embeddingSize = params.tableName.includes('_') ?
-            parseInt(params.tableName.split('_')[1]) :
-            1536; // default to 1536 if not specified
-
-        const actualTableName = `memories_${embeddingSize}`;
-
-        elizaLogger.info(`Querying memories from table: ${actualTableName}`);
+        // Use our consistent table name getter
+        const actualTableName = this.getMemoryTableName();
+        elizaLogger.debug(`Querying memories from table: ${actualTableName}`);
 
         let query = this.supabase
             .from(actualTableName)
@@ -369,132 +477,189 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             tableName: string;
         }
     ): Promise<Memory[]> {
-        const queryParams = {
-            query_table_name: params.tableName,
-            query_roomId: params.roomId,
-            query_embedding: embedding,
-            query_match_threshold: params.match_threshold,
-            query_match_count: params.count,
-            query_unique: !!params.unique,
-        };
-        if (params.agentId) {
-            (queryParams as any).query_agentId = params.agentId;
-        }
-
-        const result = await this.supabase.rpc("search_memories", queryParams);
-        if (result.error) {
-            throw new Error(JSON.stringify(result.error));
-        }
-        return result.data.map((memory) => ({
-            ...memory,
-        }));
-    }
-
-    async getMemoryById(memoryId: UUID): Promise<Memory | null> {
-        // Try each memory table since we don't know which one contains the memory
-        for (const size of [384, 768, 1024, 1536]) {
-            const { data, error } = await this.supabase
-                .from(`memories_${size}`)
-                .select('*')
-                .eq('id', memoryId)
-                .maybeSingle();  // Use maybeSingle() instead of single()
-             // PGRST116 means "no results found" - this is expected when checking other tables
-            if (error && error.code !== 'PGRST116') {
-                elizaLogger.error(`Error checking memories_${size}:`, error);
-                continue;
-            }
-
-            if (data) {
-                return data as Memory;
-            }
-        }
-
-        return null;
-    }
-
-    async getMemoriesByIds(
-        memoryIds: UUID[],
-        tableName?: string
-    ): Promise<Memory[]> {
-        if (memoryIds.length === 0) return [];
-
-        let query = this.supabase
-            .from("memories")
-            .select("*")
-            .in("id", memoryIds);
-
-        if (tableName) {
-            query = query.eq("type", tableName);
-        }
-
-        const { data, error } = await query;
-
-        if (error) {
-            console.error("Error retrieving memories by IDs:", error);
+        // Strict embedding validation
+        if (!embedding || !Array.isArray(embedding)) {
+            elizaLogger.error("Invalid embedding - must be an array", {
+                type: typeof embedding,
+                value: embedding
+            });
             return [];
         }
 
-        return data as Memory[];
-    }
-
-    async createMemory(
-        memory: Memory,
-        tableName: string,
-        unique = false
-    ): Promise<void> {
-        // ✅ Convert from milliseconds to seconds
-        const createdAt = memory.createdAt
-            ? new Date(memory.createdAt).toISOString()
-            : new Date().toISOString();
-
-        // Determine which table to use based on embedding size
-        const embeddingSize = memory.embedding?.length;
-        if (!embeddingSize) {
-            throw new Error('Memory must have an embedding');
+        if (embedding.length === 0) {
+            elizaLogger.error("Empty embedding array provided");
+            return [];
         }
 
-        // Validate embedding size
-        if (![384, 768, 1024, 1536].includes(embeddingSize)) {
-            throw new Error(`Unsupported embedding size: ${embeddingSize}`);
+        if (!embedding.every(n => typeof n === 'number' && !isNaN(n))) {
+            elizaLogger.error("Invalid embedding values - must all be numbers", {
+                invalidValues: embedding.filter(n => typeof n !== 'number' || isNaN(n))
+            });
+            return [];
+        }
+
+        const embeddingSize = embedding.length;
+        const validSizes = [384, 768, 1024, 1536];
+
+        if (!validSizes.includes(embeddingSize)) {
+            elizaLogger.error(`Invalid embedding size: ${embeddingSize}. Must be one of: ${validSizes.join(', ')}`);
+            return [];
         }
 
         const actualTableName = `memories_${embeddingSize}`;
 
-        if (unique) {
-            const opts = {
+        elizaLogger.debug(`Searching memories in ${actualTableName}`, {
+            roomId: params.roomId,
+            embeddingSize,
+            threshold: params.match_threshold || 0.8,
+            count: params.count || 10,
+            unique: params.unique || false
+        });
+
+        try {
+            const result = await this.supabase.rpc("search_memories", {
                 query_table_name: actualTableName,
-                query_userId: memory.userId,
-                query_content: memory.content.text,
-                query_roomId: memory.roomId,
-                query_embedding: memory.embedding,
-                query_createdAt: createdAt,
-                similarity_threshold: 0.95,
-            };
-
-            const result = await this.supabase.rpc(
-                "check_similarity_and_insert",
-                opts
-            );
+                query_roomid: params.roomId,
+                query_embedding: embedding,
+                query_match_threshold: params.match_threshold || 0.8,
+                query_match_count: params.count || 10,
+                query_unique: params.unique || false
+            });
 
             if (result.error) {
-                throw new Error(JSON.stringify(result.error));
-            }
-        } else {
-            const result = await this.supabase
-                .from(actualTableName)
-                .insert({
-                    ...memory,
-                    id: memory.id, // Ensure ID is included
-                    createdAt,
-                    type: tableName
+                elizaLogger.error("Memory search failed:", {
+                    error: result.error,
+                    table: actualTableName,
+                    roomId: params.roomId
                 });
-
-            if (result.error) {
-                throw new Error(JSON.stringify(result.error));
+                return [];
             }
+
+            const memories = result.data || [];
+            elizaLogger.debug(`Found ${memories.length} relevant memories in ${actualTableName}`);
+
+            // Log similarity scores for debugging
+            if (memories.length > 0) {
+                elizaLogger.debug("Memory similarities:",
+                    memories.map(m => ({
+                        id: m.id,
+                        similarity: m.similarity,
+                        topic: m.topic
+                    }))
+                );
+            }
+
+            return memories;
+        } catch (error) {
+            elizaLogger.error("Error searching memories:", {
+                error,
+                table: actualTableName,
+                roomId: params.roomId
+            });
+            return [];
         }
     }
 
+    async getMemoryById(memoryId: UUID): Promise<Memory | null> {
+        if (!memoryId) {
+            elizaLogger.debug("getMemoryById skipped - no memoryId provided");
+            return null;
+        }
+
+        // Try each memory table since we don't know which one contains the memory
+        for (const size of [384, 768, 1024, 1536]) {
+            try {
+                const tableName = `memories_${size}`;
+                elizaLogger.debug(`Checking ${tableName} for memory ${memoryId}`);
+
+                const { data, error } = await this.supabase
+                    .from(tableName)
+                    .select('*')
+                    .eq('id', memoryId)
+                    .single();
+
+                if (error) {
+                    if (error.code === 'PGRST116') {
+                        // Not found in this table, continue to next
+                        continue;
+                    }
+                    elizaLogger.debug(`Error checking ${tableName}:`, error);
+                    continue;
+                }
+
+                if (data) {
+                    elizaLogger.debug(`Found memory ${memoryId} in ${tableName}`);
+                    return {
+                        ...data,
+                        createdAt: data.createdAt ? new Date(data.createdAt).getTime() : undefined
+                    } as Memory;
+                }
+            } catch (error) {
+                elizaLogger.error(`Error checking memories_${size}:`, error);
+                continue;
+            }
+        }
+
+        elizaLogger.debug(`Memory not found with id: ${memoryId}`);
+        return null;
+    }
+
+    private async initializeAgentKnowledge(userId: UUID): Promise<void> {
+        try {
+            // Get agent details
+            const { data: agent } = await this.supabase
+                .from("accounts")
+                .select("*")
+                .eq("id", userId)
+                .single();
+
+            if (!agent) return;
+
+            // Create initial knowledge entries with proper embedding sizes
+            const baseKnowledge = [
+                {
+                    id: uuid(),
+                    agentId: userId,
+                    content: {
+                        text: agent.details?.summary || '',
+                        type: 'summary'
+                    },
+                    embedding: [], // Will be generated by embedding service
+                    createdAt: new Date().toISOString()
+                }
+            ];
+
+            // Insert knowledge into appropriate tables based on embedding size
+            for (const knowledge of baseKnowledge) {
+                const embeddingSize = this.getEmbeddingSizeForModel(agent.details?.embeddingModel || 'default');
+                const tableName = `memories_${embeddingSize}`;
+
+                const { error: knowledgeError } = await this.supabase
+                    .from(tableName)
+                    .insert(knowledge);
+
+                if (knowledgeError) {
+                    elizaLogger.error("Error initializing knowledge:", knowledgeError);
+                    throw knowledgeError;
+                }
+            }
+
+            // Update account to mark as initialized
+            await this.supabase
+                .from("accounts")
+                .update({
+                    details: {
+                        ...agent.details,
+                        initialized: true
+                    }
+                })
+                .eq("id", userId);
+
+        } catch (error) {
+            elizaLogger.error("Error in initializeAgentKnowledge:", error);
+            throw error;
+        }
+    }
 
     async removeMemory(memoryId: UUID): Promise<void> {
         const result = await this.supabase
@@ -547,6 +712,19 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         count?: number;
     }): Promise<Goal[]> {
         try {
+            // First check if agent needs initialization
+            if (params.userId) {
+                const { data: agentData } = await this.supabase
+                    .from("accounts")
+                    .select("id, details")
+                    .eq("id", params.userId)
+                    .single();
+
+                if (agentData && (!agentData.details || !agentData.details.initialized)) {
+                    await this.initializeAgentKnowledge(params.userId);
+                }
+            }
+
             const opts = {
                 query_roomId: params.roomId,
                 query_userId: params.userId || null,
@@ -554,22 +732,17 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                 row_count: params.count || null
             };
 
-            elizaLogger.debug("Calling get_goals with params:", opts);
-
             const { data: goals, error } = await this.supabase.rpc(
                 "get_goals",
                 opts
             );
 
             if (error) {
-                elizaLogger.error("Error fetching goals:", {
-                    error,
-                    params: opts
-                });
+                elizaLogger.error("Error fetching goals:", error);
                 throw new Error(error.message);
             }
 
-            return goals;
+            return goals || [];
         } catch (error) {
             elizaLogger.error("Unexpected error in getGoals:", error);
             throw error;
@@ -885,13 +1058,14 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         const { data, error } = await query;
 
         if (error) {
-            throw new Error(`Error getting knowledge: ${error.message}`);
+            elizaLogger.error("Error getting knowledge:", error);
+            throw error;
         }
 
         return data.map(row => ({
             id: row.id,
             agentId: row.agentId,
-            content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content,
+            content: row.content,
             embedding: row.embedding ? new Float32Array(row.embedding) : undefined,
             createdAt: new Date(row.createdAt).getTime()
         }));
@@ -904,21 +1078,12 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         match_count: number;
         searchText?: string;
     }): Promise<RAGKnowledgeItem[]> {
-        const cacheKey = `embedding_${params.agentId}_${params.searchText}`;
-        const cachedResult = await this.getCache({
-            key: cacheKey,
-            agentId: params.agentId
-        });
-
-        if (cachedResult) {
-            return JSON.parse(cachedResult);
-        }
-
-        // Convert Float32Array to array for Postgres vector
-        const embedding = Array.from(params.embedding);
+        const tableName = this.getKnowledgeTableName(params.embedding);
+        elizaLogger.info(`Searching knowledge in ${tableName}`);
 
         const { data, error } = await this.supabase.rpc('search_knowledge', {
-            query_embedding: embedding,
+            query_table_name: tableName,
+            query_embedding: Array.from(params.embedding),
             query_agent_id: params.agentId,
             match_threshold: params.match_threshold,
             match_count: params.match_count,
@@ -926,95 +1091,288 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         });
 
         if (error) {
-            throw new Error(`Error searching knowledge: ${error.message}`);
+            elizaLogger.error(`Error searching knowledge in ${tableName}:`, error);
+            throw error;
         }
 
-        const results = data.map(row => ({
+        return data.map(row => ({
             id: row.id,
             agentId: row.agentId,
-            content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content,
+            content: row.content,
             embedding: row.embedding ? new Float32Array(row.embedding) : undefined,
             createdAt: new Date(row.createdAt).getTime(),
             similarity: row.similarity
         }));
-
-        await this.setCache({
-            key: cacheKey,
-            agentId: params.agentId,
-            value: JSON.stringify(results)
-        });
-
-        return results;
     }
 
     async createKnowledge(knowledge: RAGKnowledgeItem): Promise<void> {
         try {
-            const metadata = knowledge.content.metadata || {};
-
-            const { error } = await this.supabase
-                .from('knowledge')
-                .insert({
-                    id: knowledge.id || uuid(),
-                    agentId: metadata.isShared ? null : knowledge.agentId,
-                    content: knowledge.content,
-                    embedding: knowledge.embedding ? Array.from(knowledge.embedding) : null,
-                    createdAt: knowledge.createdAt || new Date().toISOString(),
-                    isMain: metadata.isMain || false,
-                    originalId: metadata.originalId || null,
-                    chunkIndex: metadata.chunkIndex || null,
-                    isShared: metadata.isShared || false
-                });
-
-            if (error) {
-                if (metadata.isShared && error.code === '23505') { // Unique violation
-                    elizaLogger.info(`Shared knowledge ${knowledge.id} already exists, skipping`);
-                    return;
-                }
-                throw error;
-            }
-        } catch (error: any) {
-            elizaLogger.error(`Error creating knowledge ${knowledge.id}:`, {
-                error,
+            const tableName = this.getKnowledgeTableName(knowledge.embedding);
+            elizaLogger.info("SupabaseAdapter createKnowledge:", {
+                knowledgeId: knowledge.id,
+                agentId: knowledge.agentId,
+                tableName,
                 embeddingLength: knowledge.embedding?.length,
                 content: knowledge.content
             });
+
+            const { error } = await this.supabase
+                .from(tableName)
+                .insert({
+                    // Generate new UUID if this is a chunk, otherwise use provided id
+                    id: knowledge.content.metadata?.isChunk ? uuid() : knowledge.id,
+                    agentId: knowledge.content.metadata?.isShared ? null : knowledge.agentId,
+                    content: knowledge.content,
+                    embedding: knowledge.embedding ? Array.from(knowledge.embedding) : null,
+                    createdAt: typeof knowledge.createdAt === 'number'
+                        ? new Date(knowledge.createdAt).toISOString()
+                        : knowledge.createdAt || new Date().toISOString(),
+                    isMain: knowledge.content.metadata?.isMain || false,
+                    // Use the original ID from metadata if it exists
+                    originalId: knowledge.content.metadata?.originalId || null,
+                    chunkIndex: knowledge.content.metadata?.chunkIndex,
+                    isShared: knowledge.content.metadata?.isShared || false
+                });
+
+            if (error) {
+                if (error.code === '23505' && knowledge.content.metadata?.isShared) {
+                    elizaLogger.info(`Shared knowledge ${knowledge.id} already exists, skipping`);
+                    return;
+                }
+                elizaLogger.error(`Error creating knowledge in ${tableName}:`, {
+                    error,
+                    embeddingLength: knowledge.embedding?.length,
+                    content: knowledge.content
+                });
+                throw error;
+            }
+        } catch (error) {
+            elizaLogger.error("Error in createKnowledge:", error);
             throw error;
         }
     }
 
     async removeKnowledge(id: UUID): Promise<void> {
-        const { error } = await this.supabase
-            .from('knowledge')
-            .delete()
-            .eq('id', id);
+        // Since we don't know which table the knowledge is in, try all tables
+        const tables = ['knowledge_1536', 'knowledge_1024', 'knowledge_768', 'knowledge_384'];
 
-        if (error) {
-            throw new Error(`Error removing knowledge: ${error.message}`);
+        for (const table of tables) {
+            const { error } = await this.supabase
+                .from(table)
+                .delete()
+                .eq('id', id);
+
+            if (error && error.code !== 'PGRST116') { // Ignore "not found" errors
+                elizaLogger.error(`Error removing knowledge from ${table}:`, error);
+                throw error;
+            }
         }
     }
 
     async clearKnowledge(agentId: UUID, shared?: boolean): Promise<void> {
-        if (shared) {
-            const { error } = await this.supabase
-                .from('knowledge')
-                .delete()
-                .filter('agentId', 'eq', agentId)
-                .filter('isShared', 'eq', true);
+        const tables = ['knowledge_1536', 'knowledge_1024', 'knowledge_768', 'knowledge_384'];
 
-            if (error) {
-                elizaLogger.error(`Error clearing shared knowledge for agent ${agentId}:`, error);
-                throw error;
-            }
-        } else {
-            const { error } = await this.supabase
-                .from('knowledge')
+        for (const table of tables) {
+            let query = this.supabase
+                .from(table)
                 .delete()
                 .eq('agentId', agentId);
 
+            if (shared) {
+                query = query.or('isShared.eq.true');
+            }
+
+            const { error } = await query;
+
             if (error) {
-                elizaLogger.error(`Error clearing knowledge for agent ${agentId}:`, error);
+                elizaLogger.error(`Error clearing knowledge from ${table}:`, error);
                 throw error;
             }
         }
+    }
+
+    private getEmbeddingSizeForModel(model: string): number {
+        const modelSizes: { [key: string]: number } = {
+            'text-embedding-ada-002': 1536,
+            'text-embedding-3-small': 384,
+            'text-embedding-3-large': 1024,
+            'default': 384
+        };
+        return modelSizes[model] || 384;
+    }
+
+    async createKnowledgeChunk(params: {
+        id: UUID;
+        originalId: UUID;
+        agentId: UUID | null;
+        content: any;
+        embedding: Float32Array | undefined | null;
+        chunkIndex: number;
+        isShared: boolean;
+        createdAt: number;
+    }): Promise<void> {
+        const vectorArray = params.embedding ? Array.from(params.embedding) : null;
+
+        // Determine correct table based on embedding size
+        const embeddingSize = vectorArray?.length;
+        if (!embeddingSize || ![384, 768, 1024, 1536].includes(embeddingSize)) {
+            throw new Error(`Invalid embedding size: ${embeddingSize}`);
+        }
+
+        const tableName = `memories_${embeddingSize}`;
+
+        // Store pattern ID in metadata
+        const patternId = `${params.originalId}-chunk-${params.chunkIndex}`;
+        const contentWithPatternId = {
+            ...params.content,
+            metadata: {
+                ...params.content.metadata,
+                patternId,
+            },
+        };
+
+        const { error } = await this.supabase
+            .from(tableName)
+            .insert({
+                id: uuid(),
+                agentId: params.agentId,
+                content: contentWithPatternId,
+                embedding: vectorArray,
+                createdAt: new Date(params.createdAt).toISOString(),
+                isMain: false,
+                originalId: params.originalId,
+                chunkIndex: params.chunkIndex,
+                isShared: params.isShared
+            });
+
+        if (error) {
+            throw new Error(`Error creating knowledge chunk: ${error.message}`);
+        }
+    }
+
+    private getMemoryTableName(embedding?: number[]): string {
+        // If we have an embedding, use its actual size
+        if (embedding && Array.isArray(embedding) && embedding.length > 0) {
+            const tableName = `memories_${embedding.length}`;
+            elizaLogger.debug(`getMemoryTableName: Using ${tableName} based on embedding length ${embedding.length}`);
+            return tableName;
+        }
+
+        // Otherwise get from config
+        const embeddingConfig = getEmbeddingConfig();
+        elizaLogger.debug("Embedding config:", embeddingConfig); // Log the config
+        const modelSettings = getEmbeddingModelSettings(ModelProviderName[embeddingConfig.provider.toUpperCase() as keyof typeof ModelProviderName]);
+        elizaLogger.debug("Model settings:", modelSettings); // Log the settings
+        const embeddingSize = modelSettings?.dimensions;
+
+        if (!embeddingSize) {
+            elizaLogger.warn('No embedding size found in config, using default 1024');
+            return 'memories_1024';
+        }
+
+        const tableName = `memories_${embeddingSize}`;
+        elizaLogger.debug(`getMemoryTableName: Using ${tableName} from config`);
+        return tableName;
+    }
+
+    async createMemory(
+        memory: Memory,
+        tableName: string,
+        unique = false
+    ): Promise<void> {
+        const actualTableName = this.getMemoryTableName();
+        elizaLogger.debug("SupabaseAdapter createMemory called:", {
+            memoryId: memory.id,
+            originalTableName: tableName,
+            actualTableName,
+            isFactTable: tableName === 'facts',
+            contentType: memory.content?.type,
+            hasEmbedding: !!memory.embedding,
+            embeddingLength: memory.embedding?.length,
+            unique
+        });
+
+        try {
+            // Skip if no content
+            if (!memory.content?.text) {
+                elizaLogger.debug("Skipping memory creation - no content");
+                return;
+            }
+
+            // Convert from milliseconds to ISO string
+            const createdAt = memory.createdAt
+                ? new Date(memory.createdAt).toISOString()
+                : new Date().toISOString();
+
+            if (unique) {
+                const opts = {
+                    query_table_name: actualTableName,
+                    query_userId: memory.userId,
+                    query_content: memory.content.text,
+                    query_roomId: memory.roomId,
+                    query_embedding: memory.embedding,
+                    query_createdAt: createdAt,
+                    similarity_threshold: 0.95,
+                };
+
+                const result = await this.supabase.rpc(
+                    "check_similarity_and_insert",
+                    opts
+                );
+
+                if (result.error) {
+                    elizaLogger.error("Error in check_similarity_and_insert:", result.error);
+                    throw new Error(JSON.stringify(result.error));
+                }
+            } else {
+                const result = await this.supabase
+                    .from(actualTableName)
+                    .insert({
+                        ...memory,
+                        id: memory.id || uuid(),
+                        createdAt,
+                        type: tableName
+                    });
+
+                if (result.error) {
+                    elizaLogger.error("Error inserting memory:", {
+                        error: result.error,
+                        table: actualTableName
+                    });
+                    throw new Error(JSON.stringify(result.error));
+                }
+            }
+        } catch (error) {
+            elizaLogger.error("Error in createMemory:", {
+                error,
+                memoryId: memory.id,
+                tableName,
+                contentType: memory.content?.type
+            });
+            throw error;
+        }
+    }
+
+    private getKnowledgeTableName(embedding?: Float32Array | number[]): string {
+        // If we have an embedding, use its actual size
+        if (embedding && (embedding instanceof Float32Array || Array.isArray(embedding))) {
+            const tableName = `knowledge_${embedding.length}`;
+            elizaLogger.debug(`getKnowledgeTableName: Using ${tableName} based on embedding length ${embedding.length}`);
+            return tableName;
+        }
+
+        // Otherwise get from config
+        const embeddingConfig = getEmbeddingConfig();
+        const modelSettings = getEmbeddingModelSettings(ModelProviderName[embeddingConfig.provider.toUpperCase() as keyof typeof ModelProviderName]);
+        const embeddingSize = modelSettings?.dimensions;
+
+        if (!embeddingSize) {
+            elizaLogger.warn('No embedding size found in config, using default 1024');
+            return 'knowledge_1024';
+        }
+
+        const tableName = `knowledge_${embeddingSize}`;
+        elizaLogger.debug(`getKnowledgeTableName: Using ${tableName} from config`);
+        return tableName;
     }
 }
