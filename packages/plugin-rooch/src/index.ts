@@ -1,7 +1,7 @@
 import { roochPlugin } from "./plugins/roochPlugin";
-import { characterLoader } from "./characters/characterLoader";
+import { characterConfigLoader } from "./character/characterConfigLoader";
 
 export {
     roochPlugin,
-    characterLoader,
+    characterConfigLoader,
 };

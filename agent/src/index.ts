@@ -28,6 +28,7 @@ import {
     ICacheManager,
     IDatabaseAdapter,
     IDatabaseCacheAdapter,
+    ICharacterConfigLoader,
     ModelProviderName,
     settings,
     stringToUuid,
@@ -103,7 +104,7 @@ import { fileURLToPath } from "url";
 import yargs from "yargs";
 import { verifiableLogPlugin } from "@elizaos/plugin-tee-verifiable-log";
 import createNFTCollectionsPlugin from "@elizaos/plugin-nft-collections";
-import { roochCharacterLoader } from "@elizaos/plugin-rooch";
+import { roochCharacterConfigLoader } from "@elizaos/plugin-rooch";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -227,7 +228,7 @@ async function loadCharacter(filePath: string): Promise<Character> {
 
 export async function loadCharacterFromPath(
     characterPath: string
-): Promise<Character[]> {
+): Promise<Character> {
     let content: string | null = null;
     let resolvedPath = "";
 
@@ -283,9 +284,9 @@ export async function loadCharacterFromPath(
 }
 
 export async function loadCharacterFromLoader(
-    loader: ICharacterLoader,
+    loader: ICharacterConfigLoader,
     uri: string
-): Promise<Character[]> {
+): Promise<Character> {
     let character = await loader.load(uri);
     validateCharacterConfig(character);
 
@@ -307,6 +308,18 @@ export async function loadCharacterFromLoader(
     }
     // Handle plugins
     character.plugins = await handlePluginImporting(character.plugins);
+    if (character.extends) {
+        elizaLogger.info(
+            `Merging  ${character.name} character with parent characters`
+        );
+        for (const extendPath of character.extends) {
+            const baseCharacter = await loadCharacterFromLoader(loader, extendPath);
+            character = mergeCharacters(baseCharacter, character);
+            elizaLogger.info(
+                `Merged ${character.name} with ${baseCharacter.name}`
+            );
+        }
+    }
 
     return character;
 }
@@ -323,20 +336,20 @@ export async function loadCharacters(
         for (const characterPath of characterPaths) {
             try {
                 // example rooch://object/0xd858ebbc8e0e5c2128800b9a715e3bd8ceae2fb8a75df5cc40b58b86f1dc77ee
-                if characterPath.startsWith("rooch://") {
-                    const character: Character = await loadCharacterFromLoader(roochCharacterLoader, resolvedPath);
+                if (characterPath.startsWith("rooch://")) {
+                    const character: Character = await loadCharacterFromLoader(roochCharacterConfigLoader, characterPath);
                     loadedCharacters.push(character);
                 } else {
-                    const character: Character = await loadCharacterFromPath(resolvedPath);
+                    const character: Character = await loadCharacterFromPath(characterPath);
                     loadedCharacters.push(character);
                 }
 
                 elizaLogger.info(
-                    `Successfully loaded character from: ${resolvedPath}`
+                    `Successfully loaded character from: ${characterPath}`
                 );
             } catch (e) {
                 elizaLogger.error(
-                    `Error parsing character from ${resolvedPath}: ${e}`
+                    `Error parsing character from ${characterPath}: ${e}`
                 );
                 process.exit(1);
             }

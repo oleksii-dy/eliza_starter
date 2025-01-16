@@ -1558,8 +1558,8 @@ export enum ActionTimelineType {
 }
 
 /**
- * Interface for character loader
+ * Interface for character config loader
  */
-export interface ICharacterLoader {
-    load(uri: string): Promise<Character>;
+export interface ICharacterConfigLoader {
+    load(uri: string): Promise<any>;
 }
