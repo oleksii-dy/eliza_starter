@@ -1,121 +1,82 @@
 # @elizaos/plugin-icp
 
-Internet Computer Protocol (ICP) plugin for Eliza OS.
+A plugin for interacting with the Internet Computer Protocol (ICP) blockchain, specifically for creating tokens on PickPump platform.
+
+## Implementation Details
+
+For complete source code and implementation details, please check:
+👉 [GitHub Repository](https://github.com/asDNSk/eliza/tree/nekone)
 
 ## Features
 
-- Create meme tokens on PickPump
-- Interact with ICP canisters
-- Handle ICRC-1 token standard
-- Manage ICP wallets and identities
-- Support for anonymous and authenticated calls
-
-## Installation
-
-```bash
-pnpm install @elizaos/plugin-icp
-```
+- 🎨 AI-Generated Meme Token Creation
+- 🖼️ Custom Token Logo Generation
+- 📝 Smart Description Generation
 
 ## Configuration
 
-The plugin requires the following environment variables:
+Add the following variable to your `.env` file:
 
 ```env
 INTERNET_COMPUTER_PRIVATE_KEY=<your-ed25519-private-key>
 ```
 
+### Exporting Private Key from dfx
+
+To get your ED25519 private key from dfx identity, follow these steps:
+
+1. Export your identity to PEM format:
+
+```bash
+dfx identity export pick-pump-agent > identity.pem
+```
+
+2. Extract the private key:
+
+```bash
+# Linux/MacOS
+openssl ec -in identity.pem -text -noout | grep priv -A 3 | tail -n +2 | tr -d '\n[:space:]:' | xxd -r -p | xxd -p
+
+# Windows (PowerShell)
+Get-Content identity.pem | Select-String -Pattern 'priv' -Context 0,3 | ForEach-Object { $_.Context.PostContext -join '' } | ForEach-Object { $_ -replace '[:\s]','' } | xxd -r -p | xxd -p
+```
+
+3. Add the extracted key to your `.env` file:
+
+```env
+INTERNET_COMPUTER_PRIVATE_KEY=<extracted-key>
+```
+
+> ⚠️ **Security Note**: Keep your private key secure and never share it. Make sure your .env file is included in .gitignore and not committed to version control.
+
 ## Usage
 
-### Import and Register
+### Basic Setup
+
+In your agent/index.ts file, add the plugin to your agent's configuration
 
 ```typescript
 import { icpPlugin } from "@elizaos/plugin-icp";
 
-// Register the plugin with Eliza
-eliza.registerPlugin(icpPlugin);
+// Initialize the plugin
+getSecret(character, "INTERNET_COMPUTER_PRIVATE_KEY")
+    ? icpPlugin
+    : null,
 ```
 
-### Available Actions
+### Example Bot: @realnekoneget_Bot
 
-#### Create Token
+For a quick start, you can try our example Telegram bot [@realnekoneget_Bot](https://t.me/realnekoneget_Bot). This bot demonstrates the capabilities of the ICP plugin and can help you:
 
-Creates a new meme token on PickPump with AI-generated logo and description.
+- Generate meme tokens on PickPump platform
+- Learn about ICP ecosystem
+- Get information about token creation process
 
-```typescript
-// Example usage in chat
-"Create a space cat token on PickPump";
-"Help me create a pizza-themed funny token on PP";
-```
+Simply send a message to the bot to start exploring ICP and meme token creation!
 
-### Providers
-
-#### ICP Wallet Provider
-
-Manages ICP wallet operations and canister interactions.
+### Token Creation Options
 
 ```typescript
-const { wallet } = await icpWalletProvider.get(runtime, message, state);
-```
-
-## Common Issues & Troubleshooting
-
-1. **Identity Creation Failures**
-
-    - Ensure private key is exactly 32 bytes
-    - Verify private key is properly hex-encoded
-    - Check if private key has correct permissions
-
-2. **Canister Interaction Issues**
-
-    - Verify canister ID is valid
-    - Ensure proper network configuration (mainnet/testnet)
-    - Check if canister is available and running
-
-3. **Transaction Failures**
-
-    - Verify sufficient balance for operation
-    - Check cycle balance for canister calls
-    - Ensure proper fee calculation
-
-4. **Authentication Problems**
-    - Verify identity is properly initialized
-    - Check if agent is configured correctly
-    - Ensure proper network connectivity
-
-## Security Best Practices
-
-1. **Key Management**
-
-    - Never expose private keys in code or logs
-    - Use environment variables for sensitive data
-    - Rotate keys periodically
-    - Use separate keys for development and production
-
-2. **Identity Security**
-
-    - Create separate identities for different purposes
-    - Limit identity permissions appropriately
-    - Monitor identity usage and access patterns
-
-3. **Canister Interaction Safety**
-
-    - Validate all input parameters
-    - Implement proper error handling
-    - Use query calls when possible to save cycles
-    - Implement rate limiting for calls
-
-4. **Network Security**
-    - Use secure endpoints
-    - Implement proper timeout handling
-    - Validate responses from canisters
-    - Handle network errors gracefully
-
-## API Reference
-
-### Types
-
-```typescript
-// Token Creation Arguments
 export type CreateMemeTokenArg = {
     name: string;
     symbol: string;
@@ -125,111 +86,4 @@ export type CreateMemeTokenArg = {
     website?: string;
     telegram?: string;
 };
-
-// ICP Configuration
-export interface ICPConfig {
-    privateKey: string;
-    network?: "mainnet" | "testnet";
-}
 ```
-
-### Utilities
-
-The plugin provides various utility functions for:
-
-- Principal/Account conversions
-- Candid type handling
-- Result/Variant unwrapping
-- Array/Hex conversions
-
-### Helper Functions
-
-```typescript
-// Convert principal to account
-principal2account(principal: string, subaccount?: number[]): string
-
-// Check if text is valid principal
-isPrincipalText(text: string): boolean
-
-// Create anonymous actor for public queries
-createAnonymousActor<T>(idlFactory, canisterId, host?)
-```
-
-## Development Guide
-
-### Setting Up Development Environment
-
-1. Clone the repository
-2. Install dependencies:
-
-```bash
-pnpm install
-```
-
-3. Build the plugin:
-
-```bash
-pnpm run build
-```
-
-4. Run tests:
-
-```bash
-pnpm test
-```
-
-### Testing with Local Replica
-
-1. Start a local Internet Computer replica
-2. Configure environment for local testing
-3. Use test identities for development
-
-## Dependencies
-
-- @dfinity/agent: ^2.1.3
-- @dfinity/candid: ^2.1.3
-- @dfinity/identity: ^2.1.3
-- @dfinity/principal: ^2.1.3
-- @elizaos/core: workspace:\*
-
-## Future Enhancements
-
-- Support for additional canister standards
-- Enhanced error handling and recovery
-- Batch transaction support
-- Advanced identity management
-- Improved cycle management
-- Extended canister interaction capabilities
-
-## Contributing
-
-Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
-
-## Credits
-
-This plugin integrates with and builds upon several key technologies:
-
-- [Internet Computer](https://internetcomputer.org/): Decentralized cloud computing platform
-- [@dfinity/agent](https://www.npmjs.com/package/@dfinity/agent): ICP HTTP client and agent
-- [@dfinity/candid](https://www.npmjs.com/package/@dfinity/candid): Candid interface description language
-- [@dfinity/principal](https://www.npmjs.com/package/@dfinity/principal): Principal identifier handling
-- [@dfinity/identity](https://www.npmjs.com/package/@dfinity/identity): Identity management
-
-Special thanks to:
-
-- The DFINITY Foundation for developing the Internet Computer
-- The ICP Developer community
-- The DFINITY SDK maintainers
-- The PickPump team for meme token infrastructure
-- The Eliza community for their contributions and feedback
-
-For more information about Internet Computer capabilities:
-
-- [ICP Documentation](https://internetcomputer.org/docs/)
-- [DFINITY Developer Portal](https://smartcontracts.org/)
-- [ICP Dashboard](https://dashboard.internetcomputer.org/)
-- [Candid Documentation](https://internetcomputer.org/docs/current/developer-docs/build/candid/)
-
-## License
-
-This plugin is part of the Eliza project. See the main project repository for license information.
