@@ -13,11 +13,7 @@ import { TwitterClientInterface } from "@elizaos/client-twitter";
 import { FarcasterClientInterface } from "@elizaos/client-farcaster";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
 import { PrimusAdapter } from "@elizaos/plugin-primus";
-import {
-    elizaCodeinPlugin,
-    onchainJson
-} from "@elizaos/plugin-iq6900";
-
+import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
 
 import {
     AgentRuntime,
@@ -115,7 +111,6 @@ import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
 
-
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
@@ -199,11 +194,10 @@ function isAllStrings(arr: unknown[]): boolean {
 export async function loadCharacterFromOnchain(): Promise<Character[]> {
     const jsonText = onchainJson;
 
-    console.log('JSON:', jsonText);
+    console.log("JSON:", jsonText);
     if (jsonText == "null") return [];
     const loadedCharacters = [];
     try {
-
         const character = JSON.parse(jsonText);
         validateCharacterConfig(character);
 
@@ -309,14 +303,13 @@ async function loadCharacter(filePath: string): Promise<Character> {
 }
 
 function commaSeparatedStringToArray(commaSeparated: string): string[] {
-    return commaSeparated?.split(",").map(value => value.trim())
+    return commaSeparated?.split(",").map((value) => value.trim());
 }
-
 
 export async function loadCharacters(
     charactersArg: string
 ): Promise<Character[]> {
-    let characterPaths = commaSeparatedStringToArray(charactersArg)
+    let characterPaths = commaSeparatedStringToArray(charactersArg);
     const loadedCharacters: Character[] = [];
 
     if (characterPaths?.length > 0) {
@@ -390,7 +383,9 @@ export async function loadCharacters(
 
     if (hasValidRemoteUrls()) {
         elizaLogger.info("Loading characters from remote URLs");
-        let characterUrls = commaSeparatedStringToArray(process.env.REMOTE_CHARACTER_URLS)
+        let characterUrls = commaSeparatedStringToArray(
+            process.env.REMOTE_CHARACTER_URLS
+        );
         for (const characterUrl of characterUrls) {
             const character = await loadCharacterFromUrl(characterUrl);
             loadedCharacters.push(character);
@@ -836,7 +831,7 @@ export async function createAgent(
         character,
         // character.plugins are handled when clients are added
         plugins: [
-            getSecret(character, "IQ_WALLET_ADDRESS")&&
+            getSecret(character, "IQ_WALLET_ADDRESS") &&
             getSecret(character, "IQSOlRPC")
                 ? elizaCodeinPlugin
                 : null,
@@ -1168,12 +1163,10 @@ const checkPortAvailable = (port: number): Promise<boolean> => {
     });
 };
 
-
 const hasValidRemoteUrls = () =>
     process.env.REMOTE_CHARACTER_URLS &&
     process.env.REMOTE_CHARACTER_URLS !== "" &&
     process.env.REMOTE_CHARACTER_URLS.startsWith("http");
-
 
 const startAgents = async () => {
     const directClient = new DirectClient();
@@ -1182,12 +1175,11 @@ const startAgents = async () => {
     let charactersArg = args.characters || args.character;
     let characters = [defaultCharacter];
 
-
     if (process.env.IQ_WALLET_ADDRESS) {
         characters = await loadCharacterFromOnchain();
     }
 
-    if (!onchainJson && charactersArg || hasValidRemoteUrls()) {
+    if ((!onchainJson && charactersArg) || hasValidRemoteUrls()) {
         characters = await loadCharacters(charactersArg);
     }
 
