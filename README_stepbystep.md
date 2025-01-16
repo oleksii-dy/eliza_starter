@@ -49,91 +49,98 @@
 
 - [Python 2.7+](https://www.python.org/downloads/)
 - [Node.js 23+](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+- nvm use v23.3.0 or nvm alias default v23.3.0
 - [pnpm](https://pnpm.io/installation)
+- 
+- To keep the instance running after logoff:
+- npm install pm2
+-
+-     pm2 start eliza
+-     pm2 stop eliza
+-     pm2 log
+-     pm2 status
+-     
 
-> **Note for Windows Users:** [WSL 2](https://learn.microsoft.com/en-us/windows/wsl/install-manual) is required.
 
-### Use the Starter (Recommended)
+### Create filestructure
 
-```bash
-git clone https://github.com/elizaos/eliza-starter.git
-cd eliza-starter
-cp .env.example .env
-pnpm i && pnpm build && pnpm start
-```
 
-Once the agent is running, you should see the message to run "pnpm start:client" at the end.
-Open another terminal and move to same directory and then run below command and follow the URL to chat to your agent.
-
-```bash
-pnpm start:client
-```
-
-Then read the [Documentation](https://elizaos.github.io/eliza/) to learn how to customize your Eliza.
-
-### Manually Start Eliza (Only recommended if you know what you are doing)
-
-```bash
-# Clone the repository
 git clone https://github.com/elizaos/eliza.git
 
-# Checkout the latest release
-# This project iterates fast, so we recommend checking out the latest release
-git checkout $(git describe --tags --abbrev=0)
-# If the above doesn't checkout the latest release, this should work:
-# git checkout $(git describe --tags `git rev-list --tags --max-count=1`)
-```
+``
 
-### Start Eliza with Gitpod
+### Edit the .env file. This file holds all API Keys, Seedphrases and Twitter/Discord/Telegram credentials ... don´t share it
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/elizaos/eliza/tree/main)
-
-### Edit the .env file
-
-Copy .env.example to .env and fill in the appropriate values.
+Copy .env.example to .env and fill in the appropriate values. Fills the file with default values first
 
 ```
 cp .env.example .env
 ```
 
-Note: .env is optional. If you're planning to run multiple distinct agents, you can pass secrets through the character JSON
+to edit the file:
+nano .env 
+    nano commands: CTRL+X Save and Exit
+                    CTRL+W Search
+                    
 
-### Automatically Start Eliza
+### Get Akash API KEY
+Go to https://chatapi.akash.network/ and Generate a API KEY. Question How to use the service? Taking Cosmos into AI age
 
-This will run everything to set up the project and start the bot with the default character.
+
+now edit the .env and add these keys:
 
 ```bash
-sh scripts/start.sh
+nano .env
+
 ```
+Search for "AKASH"...
+# Akash Chat API Configuration docs: https://chatapi.akash.network/documentation
+AKASH_CHAT_API_KEY=sk-1agDViherhwqzr3r # REPLACE YOUR KEY HERE
 
-### Edit the character file
+exit & save
 
-1. Open `packages/core/src/defaultCharacter.ts` to modify the default character. Uncomment and edit.
+### Edit your character file
 
-2. To load custom characters:
+head into the character folder:
+cd characters
+
+get rid of racists and sexists
+rm tate.character.json
+rm trump.character.json
+
+create a template of c3po.character.json:
+cp c3po.character.json avatar.character.json
+nano avatar.character.json
+
+The header should be set like this, so fill in the modelProvider. "clients" should be left empty for now, as we need to create Bot Tokens for them to work properly)
+
+{
+    "name": "Avatar",
+    "clients": ["telegram","discord","twitter"],
+    "modelProvider": "akash_chat_api",
+    "settings": {
+        "secrets": {},
+        "voice": {
+            "model": "en_US-male-medium"
+
+
     - Use `pnpm start --characters="path/to/your/character.json"`
-    - Multiple character files can be loaded simultaneously
-3. Connect with X (Twitter)
-    - change `"clients": []` to `"clients": ["twitter"]` in the character file to connect with X
 
-### Manually Start Eliza
+
+
+### First build initialization
 
 ```bash
 pnpm i
 pnpm build
-pnpm start
+pnpm start --characters="path/to/your/character.json"`
 
-# The project iterates fast, sometimes you need to clean the project if you are coming back to the project
-pnpm clean
-```
 
-#### Additional Requirements
 
-You may need to install Sharp. If you see an error when starting up, try installing it with the following command:
 
-```
-pnpm install --include=optional sharp
-```
+
+
+
 
 ### Community & contact
 
