@@ -200,7 +200,7 @@ export async function loadCharacterFromOnchain(): Promise<Character[]> {
     const jsonText = onchainJson;
 
     console.log('JSON:', jsonText);
-    if (jsonText == "null") return;
+    if (jsonText == "null") return [];
     const loadedCharacters = [];
     try {
 
@@ -215,7 +215,8 @@ export async function loadCharacterFromOnchain(): Promise<Character[]> {
             .filter(([key]) => key.startsWith(characterPrefix))
             .reduce((settings, [key, value]) => {
                 const settingKey = key.slice(characterPrefix.length);
-                return { ...settings, [settingKey]: value };
+                settings[settingKey] = value;
+                return settings;
             }, {});
 
         if (Object.keys(characterSettings).length > 0) {
