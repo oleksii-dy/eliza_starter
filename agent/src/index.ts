@@ -5,13 +5,13 @@ import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
 import { SupabaseDatabaseAdapter } from "@elizaos/adapter-supabase";
 import { AutoClientInterface } from "@elizaos/client-auto";
 import { DiscordClientInterface } from "@elizaos/client-discord";
-import { FarcasterAgentClient } from "@elizaos/client-farcaster";
+import { InstagramClientInterface } from "@elizaos/client-instagram";
 import { LensAgentClient } from "@elizaos/client-lens";
 import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
+import { FarcasterClientInterface } from "@elizaos/client-farcaster";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
-import { DirectClient } from "@elizaos/client-direct";
 import { PrimusAdapter } from "@elizaos/plugin-primus";
 
 import {
@@ -30,6 +30,7 @@ import {
     IDatabaseAdapter,
     IDatabaseCacheAdapter,
     ModelProviderName,
+    parseBooleanFromText,
     settings,
     stringToUuid,
     validateCharacterConfig,
@@ -39,14 +40,19 @@ import { zgPlugin } from "@elizaos/plugin-0g";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import createGoatPlugin from "@elizaos/plugin-goat";
 // import { intifacePlugin } from "@elizaos/plugin-intiface";
+import { DirectClient } from "@elizaos/client-direct";
 import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
 import { abstractPlugin } from "@elizaos/plugin-abstract";
+import { akashPlugin } from "@elizaos/plugin-akash";
 import { alloraPlugin } from "@elizaos/plugin-allora";
 import { aptosPlugin } from "@elizaos/plugin-aptos";
 import { artheraPlugin } from "@elizaos/plugin-arthera";
+import { autonomePlugin } from "@elizaos/plugin-autonome";
 import { availPlugin } from "@elizaos/plugin-avail";
 import { avalanchePlugin } from "@elizaos/plugin-avalanche";
+import { b2Plugin } from "@elizaos/plugin-b2";
 import { binancePlugin } from "@elizaos/plugin-binance";
+import { birdeyePlugin } from "@elizaos/plugin-birdeye";
 import {
     advancedTradePlugin,
     coinbaseCommercePlugin,
@@ -55,54 +61,55 @@ import {
     tradePlugin,
     webhookPlugin,
 } from "@elizaos/plugin-coinbase";
-import { coinmarketcapPlugin } from "@elizaos/plugin-coinmarketcap";
 import { coingeckoPlugin } from "@elizaos/plugin-coingecko";
+import { coinmarketcapPlugin } from "@elizaos/plugin-coinmarketcap";
 import { confluxPlugin } from "@elizaos/plugin-conflux";
 import { createCosmosPlugin } from "@elizaos/plugin-cosmos";
 import { cronosZkEVMPlugin } from "@elizaos/plugin-cronoszkevm";
-import { dkgPlugin } from "@elizaos/plugin-dkg";
-import { echoChambersPlugin } from "@elizaos/plugin-echochambers";
 import { evmPlugin } from "@elizaos/plugin-evm";
 import { flowPlugin } from "@elizaos/plugin-flow";
 import { fuelPlugin } from "@elizaos/plugin-fuel";
 import { genLayerPlugin } from "@elizaos/plugin-genlayer";
+import { giphyPlugin } from "@elizaos/plugin-giphy";
+import { gitcoinPassportPlugin } from "@elizaos/plugin-gitcoin-passport";
+import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
 import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
 import { lensPlugin } from "@elizaos/plugin-lensNetwork";
+import { letzAIPlugin } from "@elizaos/plugin-letzai";
 import { multiversxPlugin } from "@elizaos/plugin-multiversx";
 import { nearPlugin } from "@elizaos/plugin-near";
+import createNFTCollectionsPlugin from "@elizaos/plugin-nft-collections";
 import { nftGenerationPlugin } from "@elizaos/plugin-nft-generation";
 import { createNodePlugin } from "@elizaos/plugin-node";
 import { obsidianPlugin } from "@elizaos/plugin-obsidian";
+import { OpacityAdapter } from "@elizaos/plugin-opacity";
+import { openWeatherPlugin } from "@elizaos/plugin-open-weather";
+import { quaiPlugin } from "@elizaos/plugin-quai";
 import { sgxPlugin } from "@elizaos/plugin-sgx";
 import { solanaPlugin } from "@elizaos/plugin-solana";
-import { solanaAgentkitPlguin } from "@elizaos/plugin-solana-agentkit";
-import { autonomePlugin } from "@elizaos/plugin-autonome";
+import { solanaAgentkitPlugin } from "@elizaos/plugin-solana-agentkit";
+import { squidRouterPlugin } from "@elizaos/plugin-squid-router";
+import { stargazePlugin } from "@elizaos/plugin-stargaze";
 import { storyPlugin } from "@elizaos/plugin-story";
 import { suiPlugin } from "@elizaos/plugin-sui";
 import { TEEMode, teePlugin } from "@elizaos/plugin-tee";
 import { teeLogPlugin } from "@elizaos/plugin-tee-log";
 import { teeMarlinPlugin } from "@elizaos/plugin-tee-marlin";
+import { verifiableLogPlugin } from "@elizaos/plugin-tee-verifiable-log";
+import { thirdwebPlugin } from "@elizaos/plugin-thirdweb";
 import { tonPlugin } from "@elizaos/plugin-ton";
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
+import { dkgPlugin } from "@elizaos/plugin-dkg";
+import { echoChambersPlugin } from "@elizaos/plugin-echochambers";
+import { dexScreenerPlugin } from "@elizaos/plugin-dexscreener";
 
-import { giphyPlugin } from "@elizaos/plugin-giphy";
-import { letzAIPlugin } from "@elizaos/plugin-letzai";
-import { thirdwebPlugin } from "@elizaos/plugin-thirdweb";
-import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
-
-import { OpacityAdapter } from "@elizaos/plugin-opacity";
-import { openWeatherPlugin } from "@elizaos/plugin-open-weather";
-import { stargazePlugin } from "@elizaos/plugin-stargaze";
-import { akashPlugin } from "@elizaos/plugin-akash";
-import { quaiPlugin } from "@elizaos/plugin-quai";
 import Database from "better-sqlite3";
 import fs from "fs";
 import net from "net";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
-import { dominosPlugin } from "@elizaos/plugin-dominos";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -181,12 +188,17 @@ function mergeCharacters(base: Character, child: Character): Character {
     };
     return mergeObjects(base, child);
 }
-async function loadCharacter(filePath: string): Promise<Character> {
-    const content = tryLoadFile(filePath);
-    if (!content) {
-        throw new Error(`Character file not found: ${filePath}`);
-    }
-    let character = JSON.parse(content);
+
+async function loadCharacterFromUrl(url: string): Promise<Character> {
+    const response = await fetch(url);
+    const character = await response.json();
+    return jsonToCharacter(url, character);
+}
+
+async function jsonToCharacter(
+    filePath: string,
+    character: any
+): Promise<Character> {
     validateCharacterConfig(character);
 
     // .id isn't really valid
@@ -224,12 +236,23 @@ async function loadCharacter(filePath: string): Promise<Character> {
     return character;
 }
 
+async function loadCharacter(filePath: string): Promise<Character> {
+    const content = tryLoadFile(filePath);
+    if (!content) {
+        throw new Error(`Character file not found: ${filePath}`);
+    }
+    let character = JSON.parse(content);
+    return jsonToCharacter(filePath, character);
+}
+
+function commaSeparatedStringToArray(commaSeparated: string): string[] {
+    return commaSeparated?.split(",").map((value) => value.trim());
+}
+
 export async function loadCharacters(
     charactersArg: string
 ): Promise<Character[]> {
-    let characterPaths = charactersArg
-        ?.split(",")
-        .map((filePath) => filePath.trim());
+    let characterPaths = commaSeparatedStringToArray(charactersArg);
     const loadedCharacters: Character[] = [];
 
     if (characterPaths?.length > 0) {
@@ -298,6 +321,17 @@ export async function loadCharacters(
                 );
                 process.exit(1);
             }
+        }
+    }
+
+    if (hasValidRemoteUrls()) {
+        elizaLogger.info("Loading characters from remote URLs");
+        let characterUrls = commaSeparatedStringToArray(
+            process.env.REMOTE_CHARACTER_URLS
+        );
+        for (const characterUrl of characterUrls) {
+            const character = await loadCharacterFromUrl(characterUrl);
+            loadedCharacters.push(character);
         }
     }
 
@@ -391,7 +425,7 @@ export function getTokenForProvider(
             );
         case ModelProviderName.OPENROUTER:
             return (
-                character.settings?.secrets?.OPENROUTER ||
+                character.settings?.secrets?.OPENROUTER_API_KEY ||
                 settings.OPENROUTER_API_KEY
             );
         case ModelProviderName.GROK:
@@ -582,11 +616,16 @@ export async function initializeClients(
         }
     }
 
+    if (clientTypes.includes(Clients.INSTAGRAM)) {
+        const instagramClient = await InstagramClientInterface.start(runtime);
+        if (instagramClient) {
+            clients.instagram = instagramClient;
+        }
+    }
+
     if (clientTypes.includes(Clients.FARCASTER)) {
-        // why is this one different :(
-        const farcasterClient = new FarcasterAgentClient(runtime);
+        const farcasterClient = await FarcasterClientInterface.start(runtime);
         if (farcasterClient) {
-            farcasterClient.start();
             clients.farcaster = farcasterClient;
         }
     }
@@ -736,6 +775,9 @@ export async function createAgent(
         // character.plugins are handled when clients are added
         plugins: [
             bootstrapPlugin,
+            getSecret(character, "DEXSCREENER_API_KEY")
+                ? dexScreenerPlugin
+                : null,
             getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
                 ? confluxPlugin
                 : null,
@@ -747,7 +789,7 @@ export async function createAgent(
                 ? solanaPlugin
                 : null,
             getSecret(character, "SOLANA_PRIVATE_KEY")
-                ? solanaAgentkitPlguin
+                ? solanaAgentkitPlugin
                 : null,
             getSecret(character, "AUTONOME_JWT_TOKEN") ? autonomePlugin : null,
             (getSecret(character, "NEAR_ADDRESS") ||
@@ -799,6 +841,11 @@ export async function createAgent(
                   ]
                 : []),
             ...(teeMode !== TEEMode.OFF && walletSecretSalt ? [teePlugin] : []),
+            teeMode !== TEEMode.OFF &&
+            walletSecretSalt &&
+            getSecret(character, "VLOG")
+                ? verifiableLogPlugin
+                : null,
             getSecret(character, "SGX") ? sgxPlugin : null,
             getSecret(character, "ENABLE_TEE_LOG") &&
             ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
@@ -819,6 +866,7 @@ export async function createAgent(
             getSecret(character, "ABSTRACT_PRIVATE_KEY")
                 ? abstractPlugin
                 : null,
+            getSecret(character, "B2_PRIVATE_KEY") ? b2Plugin : null,
             getSecret(character, "BINANCE_API_KEY") &&
             getSecret(character, "BINANCE_SECRET_KEY")
                 ? binancePlugin
@@ -842,10 +890,18 @@ export async function createAgent(
             getSecret(character, "THIRDWEB_SECRET_KEY") ? thirdwebPlugin : null,
             getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
             getSecret(character, "STORY_PRIVATE_KEY") ? storyPlugin : null,
+            getSecret(character, "SQUID_SDK_URL") &&
+            getSecret(character, "SQUID_INTEGRATOR_ID") &&
+            getSecret(character, "SQUID_EVM_ADDRESS") &&
+            getSecret(character, "SQUID_EVM_PRIVATE_KEY") &&
+            getSecret(character, "SQUID_API_THROTTLE_INTERVAL")
+                ? squidRouterPlugin
+                : null,
             getSecret(character, "FUEL_PRIVATE_KEY") ? fuelPlugin : null,
             getSecret(character, "AVALANCHE_PRIVATE_KEY")
                 ? avalanchePlugin
                 : null,
+            getSecret(character, "BIRDEYE_API_KEY") ? birdeyePlugin : null,
             getSecret(character, "ECHOCHAMBERS_API_URL") &&
             getSecret(character, "ECHOCHAMBERS_API_KEY")
                 ? echoChambersPlugin
@@ -853,6 +909,9 @@ export async function createAgent(
             getSecret(character, "LETZAI_API_KEY") ? letzAIPlugin : null,
             getSecret(character, "STARGAZE_ENDPOINT") ? stargazePlugin : null,
             getSecret(character, "GIPHY_API_KEY") ? giphyPlugin : null,
+            getSecret(character, "PASSPORT_API_KEY")
+                ? gitcoinPassportPlugin
+                : null,
             getSecret(character, "GENLAYER_PRIVATE_KEY")
                 ? genLayerPlugin
                 : null,
@@ -879,6 +938,9 @@ export async function createAgent(
                 ? akashPlugin
                 : null,
             getSecret(character, "QUAI_PRIVATE_KEY") ? quaiPlugin : null,
+            getSecret(character, "RESERVOIR_API_KEY")
+                ? createNFTCollectionsPlugin()
+                : null,
             getSecret(character, "DKG_PRIVATE_KEY") ? dkgPlugin : null,
         ].filter(Boolean),
         providers: [],
@@ -1041,6 +1103,10 @@ const checkPortAvailable = (port: number): Promise<boolean> => {
     });
 };
 
+const hasValidRemoteUrls = () =>
+    process.env.REMOTE_CHARACTER_URLS != "" &&
+    process.env.REMOTE_CHARACTER_URLS.startsWith("http");
+
 const startAgents = async () => {
     const directClient = new DirectClient();
     let serverPort = parseInt(settings.SERVER_PORT || "3000");
@@ -1048,7 +1114,7 @@ const startAgents = async () => {
     let charactersArg = args.characters || args.character;
     let characters = [defaultCharacter];
 
-    if (charactersArg) {
+    if (charactersArg || hasValidRemoteUrls()) {
         characters = await loadCharacters(charactersArg);
     }
 
@@ -1092,3 +1158,19 @@ startAgents().catch((error) => {
     elizaLogger.error("Unhandled error in startAgents:", error);
     process.exit(1);
 });
+
+// Prevent unhandled exceptions from crashing the process if desired
+if (
+    process.env.PREVENT_UNHANDLED_EXIT &&
+    parseBooleanFromText(process.env.PREVENT_UNHANDLED_EXIT)
+) {
+    // Handle uncaught exceptions to prevent the process from crashing
+    process.on("uncaughtException", function (err) {
+        console.error("uncaughtException", err);
+    });
+
+    // Handle unhandled rejections to prevent the process from crashing
+    process.on("unhandledRejection", function (err) {
+        console.error("unhandledRejection", err);
+    });
+}
