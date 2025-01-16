@@ -1,6 +1,6 @@
 {
     "name": "@elizaos/plugin-hive",
-    "version": "0.1.5-alpha.5",
+    "version": "0.1.0",
     "main": "dist/index.js",
     "type": "module",
     "types": "dist/index.d.ts",
@@ -36,13 +36,5 @@
         "plugin"
     ],
     "author": "@helo",
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/elizaos/plugin-hive.git"
-    },
-    "bugs": {
-        "url": "https://github.com/elizaos/plugin-hive/issues"
-    },
-    "homepage": "https://github.com/elizaos/plugin-hive#readme"
+    "license": "MIT"
 }
