@@ -2,7 +2,7 @@
 
 <img src="./docs/static/img/eliza_banner.jpg" alt="Eliza Banner" width="100%" />
 
-## Funcționalități
+## Funcționalitățile
 
 -   🛠 Conectori compleți pentru Discord, Twitter și Telegram
 -   👥 Suport pentru agenți multipli și camere
