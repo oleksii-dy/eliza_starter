@@ -19,11 +19,11 @@ git clone https://github.com/Sifchain/sa-eliza.git
 
 ### 2. Checkout the PR Branch
 
-Navigate to the repository folder and checkout the PR branch:
+Navigate to the repository folder and checkout the `sif-dev` branch:
 
 ```bash
 cd sa-eliza
-git checkout feat/client-github-load-github-info-via-messages
+git checkout sif-dev
 ```
 
 ### 3. Ensure Secure Configuration
