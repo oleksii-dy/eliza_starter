@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # 🤖 Agents
 
-Agents are the core components of the Eliza framework that handle autonomous interactions. Each agent runs in a runtime environment and can interact with various clients (Discord, Telegram, etc.) while maintaining consistent behavior and memory.
+Agents are the core components of the Eliza framework that handle autonomous interactions. Each agent runs in a runtime environment and can interact through various clients (Discord, Telegram, etc.) while maintaining consistent behavior and memory.
 
 ---
 
