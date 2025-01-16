@@ -996,12 +996,6 @@ export async function generateText({
                 break;
             }
 
-            default: {
-                const errorMessage = `Unsupported provider: ${provider}`;
-                elizaLogger.error(errorMessage);
-                throw new Error(errorMessage);
-            }
-
             case ModelProviderName.LIVEPEER: {
                 elizaLogger.debug("Initializing Livepeer model.");
 
@@ -1009,9 +1003,8 @@ export async function generateText({
                     throw new Error("Livepeer Gateway URL is not defined");
                 }
 
-                // Format the request body to exactly match the working curl command
                 const requestBody = {
-                    model: model, // Use the model parameter passed in
+                    model: model,
                     messages: [
                         {
                             role: "system",
@@ -1023,16 +1016,8 @@ export async function generateText({
                         }
                     ],
                     max_tokens: max_response_length,
-                    stream: false // Keep stream false as in curl
+                    stream: false
                 };
-
-                elizaLogger.debug("Livepeer request:", {
-                    url: endpoint + "/llm",
-                    body: requestBody
-                });
-
-                const controller = new AbortController();
-                const signal = controller.signal;
 
                 const fetchResponse = await runtime.fetch(endpoint+'/llm', {
                     method: "POST",
@@ -1041,40 +1026,29 @@ export async function generateText({
                         "Content-Type": "application/json",
                         "Authorization": "Bearer eliza-app-llm"
                     },
-                    body: JSON.stringify(requestBody),
-                    signal, // Add signal for no buffering
-                    keepalive: true // Similar to -N in curl
+                    body: JSON.stringify(requestBody)
                 });
-
-                elizaLogger.log("Livepeer response status:", fetchResponse.status, fetchResponse.statusText);
 
                 if (!fetchResponse.ok) {
                     const errorText = await fetchResponse.text();
-                    throw new Error(
-                        `Livepeer request failed (${fetchResponse.status}): ${errorText}`
-                    );
+                    throw new Error(`Livepeer request failed (${fetchResponse.status}): ${errorText}`);
                 }
-                const json = await fetchResponse.json();
-                elizaLogger.log("Livepeer response:", json);
 
-                if (
-                    !json ||
-                    !json.choices ||
-                    !json.choices[0] ||
-                    !json.choices[0].delta ||
-                    !json.choices[0].delta.content
-                ) {
+                const json = await fetchResponse.json();
+
+                if (!json?.choices?.[0]?.message?.content) {
                     throw new Error("Invalid response format from Livepeer");
                 }
 
-                // Just return the content as a string since generateText should return a string
-                response = json.choices[0].delta.content;
-
-                // Log the actual content to debug
-                elizaLogger.debug("Livepeer response content:", response);
+                response = json.choices[0].message.content.replace(/<\|start_header_id\|>assistant<\|end_header_id\|>\n\n/, '');
                 elizaLogger.debug("Successfully received response from Livepeer model");
-
                 break;
+            }
+
+            default: {
+                const errorMessage = `Unsupported provider: ${provider}`;
+                elizaLogger.error(errorMessage);
+                throw new Error(errorMessage);
             }
         }
 
