@@ -865,7 +865,8 @@ export async function createAgent(
             getSecret(character, "COINBASE_NOTIFICATION_URI")
                 ? webhookPlugin
                 : null,
-            ...(getSecret(character, "GITHUB_API_TOKEN")
+            ...(getSecret(character, "GITHUB_PLUGIN_ENABLED") &&
+            getSecret(character, "GITHUB_API_TOKEN")
                 ? [
                       githubInitializePlugin,
                       githubCreateCommitPlugin,

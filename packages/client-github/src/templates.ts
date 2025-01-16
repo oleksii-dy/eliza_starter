@@ -8,6 +8,20 @@ import { contextTemplate } from "@elizaos/plugin-github";
 // TODO: Make sure previous issues / pull requests from repo are considered (snobbee)
 
 export const oodaTemplate = `
+    Extract the details for configuring the GitHub repository:
+    - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+    - **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+    - **branch** (string): The branch of the GitHub repository (e.g., "main")
+
+    Provide the repository details in the following JSON format:
+
+    \`\`\`json
+    {
+        "owner": "<owner>",
+        "repo": "<repo>",
+        "branch": "<branch>"
+    }
+    \`\`\`
 
     Determine the appropriate action based on the following criteria:
     1. CREATE_ISSUE:

@@ -19,7 +19,7 @@ What you know:
 Goals: {{goals}}
 Knowledge: {{knowledge}}
 Relevant Memories: {{relevantMemories}}
-Repository details: {{owner}}/{{repository}}
+Repository details: {{owner}}/{{repo}}
 Files: {{files}}
 Previous Github Pull Requests: {{previousPRs}}
 Previous Github Issues: {{previousIssues}}

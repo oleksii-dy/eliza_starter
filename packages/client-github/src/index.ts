@@ -11,24 +11,48 @@ import {
     UUID,
     generateObject,
     stringToUuid,
+    State,
 } from "@elizaos/core";
 import { validateGithubConfig } from "./environment";
 import { EventEmitter } from "events";
 import {
+    addCommentToIssueAction,
+    closeIssueAction,
+    closePRAction,
+    createCommitAction,
+    createIssueAction,
+    createMemoriesFromFilesAction,
+    createPullRequestAction,
+    getFilesFromMemories,
+    getIssuesFromMemories,
+    getPullRequestsFromMemories,
+    ideationAction,
     incorporateRepositoryState,
-    getRepositoryRoomId,
+    initializeRepositoryAction,
+    modifyIssueAction,
+    reactToIssueAction,
+    reactToPRAction,
     saveIssuesToMemory,
-    GitHubService,
     savePullRequestsToMemory,
 } from "@elizaos/plugin-github";
 import { isOODAContent, OODAContent, OODASchema } from "./types";
 import { oodaTemplate } from "./templates";
 import fs from "fs/promises";
+import { configGithubInfoAction } from "./actions/configGithubInfo";
+import {
+    participateToRoom,
+    registerActions,
+    sleep,
+    unregisterActions,
+} from "./utils";
 
 export class GitHubClient extends EventEmitter {
     apiToken: string;
     runtime: IAgentRuntime;
     character: Character;
+    state: State | null;
+    roomId: UUID;
+    stopped: boolean;
 
     constructor(runtime: IAgentRuntime) {
         super();
@@ -37,393 +61,481 @@ export class GitHubClient extends EventEmitter {
 
         this.runtime = runtime;
         this.character = runtime.character;
+        this.state = null;
+        this.roomId = stringToUuid(`default-room-${this.runtime.agentId}`);
+        this.stopped = false;
 
-        // Start the OODA loop after initialization
-        this.startOodaLoop();
+        this.start();
     }
 
-    async stop() {
-        try {
-            elizaLogger.log("GitHubClient stopped successfully.");
-        } catch (e) {
-            elizaLogger.error("GitHubClient stop error:", e);
-        }
-    }
+    private async start() {
+        elizaLogger.log("Starting GitHub client...");
 
-    private startOodaLoop() {
-        this.processOodaCycle();
-        const interval =
-            Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) ||
-            300000; // Default to 1 minute
-        elizaLogger.log("Starting OODA loop with interval:", interval);
-        setInterval(() => {
-            this.processOodaCycle();
-        }, interval);
-    }
+        // wait for 1 second
+        await sleep(1000);
 
-    private async processOodaCycle() {
-        elizaLogger.log("Starting OODA cycle...");
+        await participateToRoom(this.runtime, this.roomId);
 
-        //
-        // 1) retrieve github information
-        //
-        const { owner, repository, branch } = getRepositorySettings(
-            this.runtime
-        );
-        // const client = new GitHubService({
-        //     owner,
-        //     repo: repository,
-        //     branch,
-        //     auth: this.apiToken,
-        // });
-        // const issue = await client.getIssue(1);
-        // await fs.writeFile("/tmp/client-github-issue.txt", JSON.stringify(issue, null, 2));
-        // const res = await client.addLabelsToLabelable(issue.node_id, ["agent-commented"]);
-        // await fs.writeFile("/tmp/client-github-response.txt", JSON.stringify(res, null, 2));
+        const githubInfoDiscoveryActions = [configGithubInfoAction];
 
-        //
-        // 2) prepare the room id
-        //
-        // TODO: We generate this, we want the default one that gets generated
-        const roomId = getRepositoryRoomId(this.runtime);
-        elizaLogger.log("Repository room ID:", roomId);
+        // register action
+        registerActions(this.runtime, githubInfoDiscoveryActions);
 
-        // Observe: Gather relevant memories related to the repository
-        await this.runtime.ensureRoomExists(roomId);
-        elizaLogger.log("Room exists for roomId:", roomId);
-        await this.runtime.ensureParticipantInRoom(
-            this.runtime.agentId,
-            roomId
-        );
-        elizaLogger.log("Agent is a participant in roomId:", roomId);
+        const githubInfoDiscoveryInterval =
+            Number(
+                this.runtime.getSetting("GITHUB_INFO_DISCOVERY_INTERVAL_MS")
+            ) || 1000; // Default to 1 second
 
-        //
-        // 3) retrieve memories
-        //
-        const memories = await this.runtime.messageManager.getMemories({
-            roomId,
-        });
-        await fs.writeFile(
-            "/tmp/client-github-memories.txt",
-            JSON.stringify(memories, null, 2)
-        );
-        const fileMemories = memories.filter(
-            (memory) => (memory.content.metadata as any)?.path
-        );
-        await fs.writeFile(
-            "/tmp/client-github-fileMemories.txt",
-            JSON.stringify(fileMemories, null, 2)
-        );
-        if (fileMemories.length === 0) {
-            await this.initializeRepositoryAndCreateMemories(
-                owner,
-                repository,
-                branch,
-                roomId
-            );
-        }
-
-        //
-        // 4) compose the state with original memory and incorporate repository state
-        //
-        elizaLogger.log("Before composeState");
-        const originalMemory = {
-            userId: this.runtime.agentId, // TODO: this should be the user id
-            roomId: roomId,
-            agentId: this.runtime.agentId,
-            content: {
-                text: "Initializing repository and creating memories",
-                action: "NOTHING",
-                source: "github",
-            },
-        } as Memory;
-        let originalState = await this.runtime.composeState(originalMemory, {});
-        originalState = await incorporateRepositoryState(
-            originalState,
-            this.runtime,
-            originalMemory,
-            [],
-            true,
-            true
-        );
-        // elizaLogger.log("Original state:", originalState);
-        // await fs.writeFile(
-        //     "/tmp/client-github-originalState.txt",
-        //     JSON.stringify(originalState, null, 2)
-        // );
-
-        //
-        // 5) compose the context
-        //
-        const context = composeContext({
-            state: originalState,
-            template: oodaTemplate,
-        });
-        // elizaLogger.log("Composed context for OODA cycle:", context);
-        // write the context to a file for testing
-        await fs.writeFile("/tmp/client-github-context.txt", context);
-
-        //
-        // 6) retrieve the content
-        //
-        const response = await generateObject({
-            runtime: this.runtime,
-            context,
-            modelClass: ModelClass.SMALL,
-            schema: OODASchema,
-        });
-        if (!isOODAContent(response.object)) {
-            elizaLogger.error("Invalid content in response:", response.object);
-            throw new Error("Invalid content");
-        }
-
-        const content = response.object as OODAContent;
-        elizaLogger.log("OODA content:", content);
-        if (content.action === "NOTHING") {
-            elizaLogger.log("Skipping OODA cycle as action is NOTHING");
-            return;
-        }
-
-        //
-        // 7) create new memory with retry logic
-        //
-
-        // Generate IDs with timestamp to ensure uniqueness
-        const timestamp = Date.now();
-        const userIdUUID = stringToUuid(`${this.runtime.agentId}-${timestamp}`);
-        const memoryUUID = stringToUuid(
-            `${roomId}-${this.runtime.agentId}-${timestamp}`
-        );
-        elizaLogger.log("Generated memory UUID:", memoryUUID);
-
-        const newMemory: Memory = {
-            id: memoryUUID,
-            userId: userIdUUID,
-            agentId: this.runtime.agentId,
-            content: {
-                text: content.action,
-                action: content.action,
-                source: "github",
-                inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`),
-            },
-            roomId,
-            createdAt: timestamp,
-        };
-        // elizaLogger.log("New memory to be created:", newMemory);
-
-        try {
-            await this.runtime.messageManager.createMemory(newMemory);
-            elizaLogger.debug("Memory created successfully:", {
-                memoryId: memoryUUID,
-                action: content.action,
-                userId: this.runtime.agentId,
-            });
-        } catch (error) {
-            if (error.code === "23505") {
-                // Duplicate key error
-                elizaLogger.warn("Duplicate memory, skipping:", {
-                    memoryId: memoryUUID,
-                });
+        // github info discovery loop
+        while (true) {
+            if (this.stopped) {
+                unregisterActions(this.runtime, githubInfoDiscoveryActions);
+                elizaLogger.log("GitHubClient stopped successfully.");
                 return;
             }
-            elizaLogger.error("Error creating memory:", error);
-            throw error; // Re-throw other errors
+
+            elizaLogger.log("Processing Github info discovery cycle...");
+
+            const memories = await this.runtime.messageManager.getMemories({
+                roomId: this.roomId,
+            });
+
+            // if memories is empty skip the cycle
+            if (memories.length === 0) {
+                elizaLogger.log(
+                    "No memories found, skip to the next github info discovery cycle."
+                );
+                await sleep(githubInfoDiscoveryInterval);
+                continue;
+            }
+
+            // get the last memory
+            const message = memories[0];
+
+            if (!this.state) {
+                this.state = (await this.runtime.composeState(
+                    message
+                )) as State;
+            } else {
+                this.state = await this.runtime.updateRecentMessageState(
+                    this.state
+                );
+            }
+
+            const context = composeContext({
+                state: this.state,
+                template: oodaTemplate,
+            });
+
+            const details = await generateObject({
+                runtime: this.runtime,
+                context,
+                modelClass: ModelClass.SMALL,
+                schema: OODASchema,
+            });
+
+            if (!isOODAContent(details.object)) {
+                elizaLogger.error("Invalid content:", details.object);
+                throw new Error("Invalid content");
+            }
+
+            const content = details.object as OODAContent;
+
+            await fs.writeFile(
+                "/tmp/client-github-content.txt",
+                JSON.stringify(content, null, 2)
+            );
+
+            // if content has the owner, repo and branch fields set, then we can stop the github info discovery cycle
+            if (content.owner && content.repo && content.branch) {
+                elizaLogger.log(
+                    `Repository configuration complete for ${content.owner}/${content.repo} on ${content.branch} branch`
+                );
+
+                this.state.owner = content.owner;
+                this.state.repo = content.repo;
+                this.state.branch = content.branch;
+
+                // stop the github info discovery loop
+                break;
+            }
+
+            await sleep(githubInfoDiscoveryInterval);
         }
 
-        const callback: HandlerCallback = async (
-            content: Content,
-            files: any[]
-        ) => {
-            elizaLogger.log("Callback called with content:", content);
-            return [];
-        };
+        // sleep for 5 seconds
+        await sleep(5000);
 
-        //
-        // 8) update the state with the new memory
-        //
-        const state = await this.runtime.composeState(newMemory);
+        // unregister action
+        unregisterActions(this.runtime, githubInfoDiscoveryActions);
 
-        // write state to file
-        await fs.writeFile(
-            "/tmp/client-github-state.txt",
-            JSON.stringify(state, null, 2)
-        );
+        const repoInitActions = [
+            initializeRepositoryAction,
+            createMemoriesFromFilesAction,
+        ];
 
-        const newState = await this.runtime.updateRecentMessageState(state);
+        // register the initial actions
+        registerActions(this.runtime, repoInitActions);
 
-        // write new state to file
-        await fs.writeFile(
-            "/tmp/client-github-newState.txt",
-            JSON.stringify(newState, null, 2)
-        );
-
-        //
-        // 9) process the actions with the new memory and state
-        //
-        elizaLogger.log("Processing actions for action:", content.action);
-        await this.runtime.processActions(
-            newMemory,
-            [newMemory],
-            newState,
-            callback
-        );
-
-        elizaLogger.log("OODA cycle completed.");
-    }
-
-    private async initializeRepositoryAndCreateMemories(
-        owner: string,
-        repository: string,
-        branch: string,
-        roomId: UUID
-    ) {
-        //
-        // 0) function to initialize repository and create memories if no memories are found
-        //
-        elizaLogger.log("No memories found, skipping OODA cycle.");
-
-        //
-        // 1) initialize timestamp and userIdUUID
-        //
+        // set the timestamp and userIdUUID
         const timestamp = Date.now();
         const userIdUUID = stringToUuid(`${this.runtime.agentId}-${timestamp}`);
 
-        //
-        // 2) create the memory to acknowledge that no memories are found and trigger NOTHING action
-        //
-        const originalMemory: Memory = {
-            id: stringToUuid(
-                `${roomId}-${this.runtime.agentId}-${timestamp}-original`
-            ),
-            userId: userIdUUID,
-            agentId: this.runtime.agentId,
-            content: {
-                text: `No memories found, starting to initialize repository and create memories.`,
-                action: "NOTHING",
-                source: "github",
-                inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`),
-            },
-            roomId,
-            createdAt: timestamp,
-        };
-        let originalState = await this.runtime.composeState(originalMemory);
-        originalState = await incorporateRepositoryState(
-            originalState,
-            this.runtime,
-            originalMemory,
-            [],
-            true,
-            true
-        );
-
-        //
-        // 3) create the memory to trigger initialize repository action
-        //
+        // create memories for initial actions
         const initializeRepositoryMemory: Memory = {
             id: stringToUuid(
-                `${roomId}-${this.runtime.agentId}-${timestamp}-initialize-repository`
+                `${this.roomId}-${this.runtime.agentId}-${timestamp}-initialize-repository`
             ),
             userId: userIdUUID,
             agentId: this.runtime.agentId,
             content: {
-                text: `Initialize the repository ${owner}/${repository} on ${branch} branch`,
+                text: `Initialize the repository ${this.state.owner}/${this.state.repo} on ${this.state.branch} branch`,
                 action: "INITIALIZE_REPOSITORY",
                 source: "github",
-                inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`),
+                inReplyTo: stringToUuid(
+                    `${this.roomId}-${this.runtime.agentId}`
+                ),
             },
-            roomId,
+            roomId: this.roomId,
             createdAt: timestamp,
         };
         await this.runtime.messageManager.createMemory(
             initializeRepositoryMemory
         );
-        elizaLogger.debug("Memory created successfully:", {
-            memoryId: initializeRepositoryMemory.id,
-            action: initializeRepositoryMemory.content.action,
-            userId: this.runtime.agentId,
-        });
 
-        //
-        // 4) create the memory to trigger create memories from files action
-        //
         const createMemoriesFromFilesMemory = {
             id: stringToUuid(
-                `${roomId}-${this.runtime.agentId}-${timestamp}-create-memories-from-files`
+                `${this.roomId}-${this.runtime.agentId}-${timestamp}-create-memories-from-files`
             ),
             userId: userIdUUID,
             agentId: this.runtime.agentId,
             content: {
-                text: `Create memories from files for the repository ${owner}/${repository} @ branch ${branch} and path '/packages/plugin-coinbase/src'`,
+                text: `Create memories from files for the repository ${this.state.owner}/${this.state.repo} @ branch ${this.state.branch} and path '/'`,
                 action: "CREATE_MEMORIES_FROM_FILES",
                 source: "github",
-                inReplyTo: stringToUuid(`${roomId}-${this.runtime.agentId}`),
+                inReplyTo: stringToUuid(
+                    `${this.roomId}-${this.runtime.agentId}`
+                ),
             },
-            roomId,
+            roomId: this.roomId,
             createdAt: timestamp,
         };
         await this.runtime.messageManager.createMemory(
             createMemoriesFromFilesMemory
         );
-        elizaLogger.debug("Memory created successfully:", {
-            memoryId: createMemoriesFromFilesMemory.id,
-            action: createMemoriesFromFilesMemory.content.action,
-            userId: this.runtime.agentId,
+
+        // retrieve memories
+        const memories = await this.runtime.messageManager.getMemories({
+            roomId: this.roomId,
         });
+
+        // if memories is empty throw an error
+        if (memories.length === 0) {
+            elizaLogger.error(
+                "No memories found, repo init loop cannot continue."
+            );
+            throw new Error(
+                "No memories found, repo init loop cannot continue."
+            );
+        }
+
+        // retrieve last message
+        const message = memories[0];
 
         const issuesLimit =
             Number(this.runtime.getSetting("GITHUB_ISSUES_LIMIT")) || 10;
         const pullRequestsLimit =
             Number(this.runtime.getSetting("GITHUB_PULL_REQUESTS_LIMIT")) || 10;
 
-        // This returns nothing no issue memories or pull request memories
-        const issuesMemories = await saveIssuesToMemory(
+        // save issues and pull requests to memory
+        await saveIssuesToMemory(
             this.runtime,
-            owner,
-            repository,
-            branch,
+            message,
+            this.state.owner as string,
+            this.state.repo as string,
+            this.state.branch as string,
             this.apiToken,
             issuesLimit
         );
-        // elizaLogger.log("Issues memories:", issuesMemories);
-        await fs.writeFile(
-            "/tmp/client-github-issuesMemories.txt",
-            JSON.stringify(issuesMemories, null, 2)
-        );
-        const pullRequestsMemories = await savePullRequestsToMemory(
+        await savePullRequestsToMemory(
             this.runtime,
-            owner,
-            repository,
-            branch,
+            message,
+            this.state.owner as string,
+            this.state.repo as string,
+            this.state.branch as string,
             this.apiToken,
             pullRequestsLimit
         );
-        // elizaLogger.log("Pull requests memories:", pullRequestsMemories);
-        await fs.writeFile(
-            "/tmp/client-github-pullRequestsMemories.txt",
-            JSON.stringify(pullRequestsMemories, null, 2)
-        );
 
         await this.runtime.processActions(
-            originalMemory,
+            message,
             [initializeRepositoryMemory, createMemoriesFromFilesMemory],
-            originalState,
+            this.state,
             undefined
         );
+
+        const githubRepoInitInterval =
+            Number(this.runtime.getSetting("GITHUB_REPO_INIT_INTERVAL_MS")) ||
+            5000; // Default to 5 second
+
+        await sleep(githubRepoInitInterval);
+
+        // repo init loop
+        while (true) {
+            if (this.stopped) {
+                unregisterActions(this.runtime, repoInitActions);
+                elizaLogger.log("GitHubClient stopped successfully.");
+                return;
+            }
+
+            elizaLogger.log("Processing repo init cycle...");
+
+            // retrieve memories
+            const memories = await this.runtime.messageManager.getMemories({
+                roomId: this.roomId,
+            });
+
+            await fs.writeFile(
+                "/tmp/client-github-memories.txt",
+                JSON.stringify(memories, null, 2)
+            );
+
+            // if memories is empty skip to the next repo init cycle
+            if (memories.length === 0) {
+                elizaLogger.log(
+                    "No memories found, skipping to the next repo init cycle."
+                );
+                await sleep(githubRepoInitInterval);
+                continue;
+            }
+
+            // retrieve last message
+            const message = memories[0];
+
+            // retrieve files from memories
+            const files = await getFilesFromMemories(this.runtime, message);
+
+            if (files.length === 0) {
+                elizaLogger.log(
+                    "No files found, skipping to the next repo init cycle."
+                );
+                await sleep(githubRepoInitInterval);
+                continue;
+            }
+
+            // if files are found, set files, issues and PRs to state and stop the repo init loop
+            this.state.files = files;
+
+            const previousIssues = await getIssuesFromMemories(
+                this.runtime,
+                message
+            );
+            this.state.previousIssues = JSON.stringify(
+                previousIssues.map((issue) => ({
+                    title: issue.content.text,
+                    body: (issue.content.metadata as any).body,
+                    url: (issue.content.metadata as any).url,
+                    number: (issue.content.metadata as any).number,
+                    state: (issue.content.metadata as any).state,
+                })),
+                null,
+                2
+            );
+
+            const previousPRs = await getPullRequestsFromMemories(
+                this.runtime,
+                message
+            );
+            this.state.previousPRs = JSON.stringify(
+                previousPRs.map((pr) => ({
+                    title: pr.content.text,
+                    body: (pr.content.metadata as any).body,
+                    url: (pr.content.metadata as any).url,
+                    number: (pr.content.metadata as any).number,
+                    state: (pr.content.metadata as any).state,
+                    diff: (pr.content.metadata as any).diff,
+                    comments: (pr.content.metadata as any).comments,
+                })),
+                null,
+                2
+            );
+
+            break;
+        }
+
+        await sleep(githubRepoInitInterval);
+
+        // unregister actions
+        unregisterActions(this.runtime, repoInitActions);
+
+        const oodaActions = [
+            addCommentToIssueAction,
+            closeIssueAction,
+            closePRAction,
+            createCommitAction,
+            createIssueAction,
+            createPullRequestAction,
+            ideationAction,
+            modifyIssueAction,
+            reactToIssueAction,
+            reactToPRAction,
+        ];
+
+        // register actions
+        registerActions(this.runtime, oodaActions);
+
+        const githubOodaInterval =
+            Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) || 60000; // Default to 1 minute
+
+        // ooda loop
+        while (true) {
+            if (this.stopped) {
+                unregisterActions(this.runtime, oodaActions);
+                elizaLogger.log("GitHubClient stopped successfully.");
+                return;
+            }
+
+            elizaLogger.log("Processing OODA cycle...");
+
+            // retrieve memories
+            const memories = await this.runtime.messageManager.getMemories({
+                roomId: this.roomId,
+            });
+
+            await fs.writeFile(
+                "/tmp/client-github-memories.txt",
+                JSON.stringify(memories, null, 2)
+            );
+
+            // if memories is empty skip to the next ooda cycle
+            if (memories.length === 0) {
+                elizaLogger.log(
+                    "No memories found, skipping to the next OODA cycle."
+                );
+                await sleep(githubOodaInterval);
+                continue;
+            }
+
+            // get the last memory
+            const message = memories[0];
+
+            if (!this.state) {
+                this.state = (await this.runtime.composeState(
+                    message
+                )) as State;
+            } else {
+                this.state = await this.runtime.updateRecentMessageState(
+                    this.state
+                );
+            }
+
+            let context = composeContext({
+                state: this.state,
+                template: oodaTemplate,
+            });
+
+            await fs.writeFile("/tmp/client-github-context.txt", context);
+
+            const details = await generateObject({
+                runtime: this.runtime,
+                context,
+                modelClass: ModelClass.SMALL,
+                schema: OODASchema,
+            });
+
+            if (!isOODAContent(details.object)) {
+                elizaLogger.error("Invalid content:", details.object);
+                throw new Error("Invalid content");
+            }
+
+            let content = details.object as OODAContent;
+
+            await fs.writeFile(
+                "/tmp/client-github-content.txt",
+                JSON.stringify(content, null, 2)
+            );
+
+            if (content.action === "NOTHING") {
+                elizaLogger.log(
+                    "Skipping to the next OODA cycle as action is NOTHING"
+                );
+                await sleep(githubOodaInterval);
+                continue;
+            }
+
+            // create new memory with retry logic
+
+            // Generate IDs with timestamp to ensure uniqueness
+            const timestamp = Date.now();
+            const userIdUUID = stringToUuid(
+                `${this.runtime.agentId}-${timestamp}`
+            );
+            const memoryUUID = stringToUuid(
+                `${this.roomId}-${this.runtime.agentId}-${timestamp}`
+            );
+
+            const actionMemory: Memory = {
+                id: memoryUUID,
+                userId: userIdUUID,
+                agentId: this.runtime.agentId,
+                content: {
+                    text: content.action,
+                    action: content.action,
+                    source: "github",
+                    inReplyTo: stringToUuid(
+                        `${this.roomId}-${this.runtime.agentId}`
+                    ),
+                },
+                roomId: this.roomId,
+                createdAt: timestamp,
+            };
+
+            try {
+                await this.runtime.messageManager.createMemory(actionMemory);
+            } catch (error) {
+                if (error.code === "23505") {
+                    // Duplicate key error
+                    elizaLogger.warn("Duplicate memory, skipping:", {
+                        memoryId: memoryUUID,
+                    });
+                    return;
+                }
+                elizaLogger.error("Error creating memory:", error);
+                throw error; // Re-throw other errors
+            }
+
+            const callback: HandlerCallback = async (
+                content: Content,
+                files: any[]
+            ) => {
+                elizaLogger.log("Callback called with content:", content);
+                return [];
+            };
+
+            // process the actions with the new memory and state
+            elizaLogger.log("Processing actions for action:", content.action);
+            await this.runtime.processActions(
+                message,
+                [actionMemory],
+                this.state,
+                callback
+            );
+
+            elizaLogger.log("OODA cycle completed.");
+
+            await sleep(githubOodaInterval);
+        }
+    }
+
+    stop() {
+        try {
+            // set stopped to true
+            this.stopped = true;
+        } catch (e) {
+            elizaLogger.error("GitHubClient stop error:", e);
+        }
     }
 }
-
-const getRepositorySettings = (runtime: IAgentRuntime) => {
-    const owner = runtime.getSetting("GITHUB_OWNER") ?? ("" as string);
-    const repository = runtime.getSetting("GITHUB_REPO") ?? ("" as string);
-    const branch = runtime.getSetting("GITHUB_BRANCH") ?? ("main" as string);
-    if (owner === "" || repository === "") {
-        elizaLogger.error(
-            "GITHUB_OWNER or GITHUB_REPO is not set, skipping OODA cycle."
-        );
-        throw new Error("GITHUB_OWNER or GITHUB_REPO is not set");
-    }
-    return { owner, repository, branch };
-};
 
 export const GitHubClientInterface: Client = {
     start: async (runtime: IAgentRuntime) => {

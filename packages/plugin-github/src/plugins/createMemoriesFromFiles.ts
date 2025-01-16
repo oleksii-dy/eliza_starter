@@ -13,7 +13,6 @@ import {
     ModelClass,
     Plugin,
     State,
-    getEmbeddingZeroVector,
 } from "@elizaos/core";
 import { createMemoriesFromFilesTemplate } from "../templates";
 import {
@@ -22,11 +21,6 @@ import {
     isCreateMemoriesFromFilesContent,
 } from "../types";
 import { getRepoPath, retrieveFiles } from "../utils";
-import { sourceCodeProvider } from "../providers/sourceCode";
-import { testFilesProvider } from "../providers/testFiles";
-import { workflowFilesProvider } from "../providers/workflowFiles";
-import { documentationFilesProvider } from "../providers/documentationFiles";
-import { releasesProvider } from "../providers/releases";
 
 export async function addFilesToMemory(
     runtime: IAgentRuntime,
@@ -50,7 +44,6 @@ export async function addFilesToMemory(
         const memoryId = stringToUuid(
             `github-${owner}-${repo}-${branch}-${relativePath}-${contentHash}`
         );
-        const roomId = stringToUuid(`github-${owner}-${repo}-${branch}`);
 
         elizaLogger.info("Memory ID:", memoryId);
         const existingDocument =
@@ -73,13 +66,14 @@ export async function addFilesToMemory(
             id: memoryId,
             userId: message.userId,
             agentId: message.agentId,
-            roomId: roomId,
+            roomId: message.roomId,
             content: {
                 text: content,
                 hash: contentHash,
                 source: "github",
                 attachments: [],
                 metadata: {
+                    type: "file",
                     path: relativePath,
                     repo,
                     owner,
@@ -90,10 +84,6 @@ export async function addFilesToMemory(
         await runtime.messageManager.createMemory(memory);
         memories.push(memory);
     }
-    await fs.writeFile(
-        "/tmp/plugin-github-add-files-to-memory-memories.json",
-        JSON.stringify(memories, null, 2)
-    );
 }
 
 export const createMemoriesFromFilesAction: Action = {
@@ -349,12 +339,4 @@ export const githubCreateMemorizeFromFilesPlugin: Plugin = {
     name: "githubCreateMemorizeFromFiles",
     description: "Integration with GitHub for creating memories from files",
     actions: [createMemoriesFromFilesAction],
-    evaluators: [],
-    providers: [
-        // sourceCodeProvider,
-        // testFilesProvider,
-        // workflowFilesProvider,
-        // documentationFilesProvider,
-        // releasesProvider,
-    ],
 };

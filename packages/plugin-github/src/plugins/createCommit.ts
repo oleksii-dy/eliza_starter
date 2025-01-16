@@ -21,7 +21,6 @@ import {
     getRepoPath,
     writeFiles,
     checkoutBranch,
-    incorporateRepositoryState,
 } from "../utils";
 import fs from "fs/promises";
 
@@ -55,20 +54,15 @@ export const createCommitAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        const updatedState = await incorporateRepositoryState(
-            state,
-            runtime,
-            message,
-            [],
-            true,
-            true
-        );
 
         const context = composeContext({
-            state: updatedState,
+            state,
             template: createCommitTemplate,
         });
-        await fs.writeFile("createCommitContext.json", JSON.stringify(context, null, 2));
+        await fs.writeFile(
+            "createCommitContext.json",
+            JSON.stringify(context, null, 2)
+        );
         const details = await generateObject({
             runtime,
             context,
@@ -82,7 +76,10 @@ export const createCommitAction: Action = {
         }
 
         const content = details.object as CreateCommitContent;
-        await fs.writeFile("createCommit.json", JSON.stringify(content, null, 2));
+        await fs.writeFile(
+            "createCommit.json",
+            JSON.stringify(content, null, 2)
+        );
         elizaLogger.info(
             `Committing changes to the repository ${content.owner}/${content.repo} on branch ${content.branch}...`
         );
@@ -90,12 +87,12 @@ export const createCommitAction: Action = {
         const repoPath = getRepoPath(content.owner, content.repo);
 
         try {
-            await checkoutBranch(repoPath, 'realitySpiral/demoPR', true);
+            await checkoutBranch(repoPath, "realitySpiral/demoPR", true);
             await writeFiles(repoPath, content.files);
             const commit = await commitAndPushChanges(
                 repoPath,
                 content.message,
-                'realitySpiral/demoPR'
+                "realitySpiral/demoPR"
             );
             const hash = commit.commit;
             elizaLogger.info(
@@ -110,14 +107,15 @@ export const createCommitAction: Action = {
             return commit;
         } catch (error) {
             elizaLogger.error(
-                `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}: See error: ${error.message}`,
+                `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}: See error: ${error.message}`
             );
             if (callback) {
                 callback(
                     {
                         text: `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}. Please try again See error: ${error.message}.`,
                     },
-                    []);
+                    []
+                );
             }
         }
     },
@@ -220,12 +218,4 @@ export const githubCreateCommitPlugin: Plugin = {
     description:
         "Integration with GitHub for committing changes to the repository",
     actions: [createCommitAction],
-    evaluators: [],
-    providers: [
-        // sourceCodeProvider,
-        // testFilesProvider,
-        // workflowFilesProvider,
-        // documentationFilesProvider,
-        // releasesProvider,
-    ],
 };

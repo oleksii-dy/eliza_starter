@@ -10,12 +10,9 @@ import {
     Plugin,
     State,
     stringToUuid,
-    getEmbeddingZeroVector,
 } from "@elizaos/core";
 import { ideationTemplate } from "../templates";
 import { IdeationSchema, isIdeationContent } from "../types";
-import { getRepositoryRoomId, incorporateRepositoryState } from "../utils";
-import fs from "fs/promises";
 
 export const ideationAction: Action = {
     name: "IDEATION",
@@ -34,9 +31,8 @@ export const ideationAction: Action = {
         "Generates ideas and suggestions based on user message using the context of the files and previous messages",
     validate: async (runtime: IAgentRuntime) => {
         const token = !!runtime.getSetting("GITHUB_API_TOKEN");
-        const repo = !!runtime.getSetting("GITHUB_REPO");
-        const owner = !!runtime.getSetting("GITHUB_OWNER");
-        return token && repo && owner;
+
+        return token;
     },
     handler: async (
         runtime: IAgentRuntime,
@@ -52,21 +48,12 @@ export const ideationAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        state = await incorporateRepositoryState(
-            state,
-            runtime,
-            message,
-            [],
-            true,
-            true
-        );
+
         const context = composeContext({
             state,
             template: ideationTemplate,
         });
 
-        // write the context to a file for testing
-        // await fs.writeFile("/tmp/context.txt", context);
         const details = await generateObject({
             runtime,
             context,
@@ -82,12 +69,11 @@ export const ideationAction: Action = {
         const content = details.object;
 
         elizaLogger.info("Generating ideas based on the context...");
-        // Create a memory for the response:
-        const roomId = getRepositoryRoomId(runtime);
+
         const timestamp = Date.now();
         const userIdUUID = stringToUuid(`${runtime.agentId}-${timestamp}`);
         const memoryUUID = stringToUuid(
-            `${roomId}-${runtime.agentId}-${timestamp}`
+            `${message.roomId}-${runtime.agentId}-${timestamp}`
         );
 
         const newMemory: Memory = {
@@ -98,13 +84,14 @@ export const ideationAction: Action = {
                 text: content.response,
                 action: "IDEATION",
                 source: "github",
-                inReplyTo: stringToUuid(`${roomId}-${runtime.agentId}`),
+                inReplyTo: stringToUuid(`${message.roomId}-${runtime.agentId}`),
             },
-            roomId,
+            roomId: message.roomId,
             createdAt: timestamp,
-
         };
+
         await runtime.messageManager.createMemory(newMemory);
+
         if (callback) {
             await callback({
                 text: content.response,
@@ -225,6 +212,4 @@ export const githubIdeationPlugin: Plugin = {
     name: "githubIdeation",
     description: "Integration with GitHub for ideation and co-creation",
     actions: [ideationAction],
-    evaluators: [],
-    providers: [],
 };

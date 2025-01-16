@@ -130,6 +130,7 @@ export const isFetchFilesContent = (
 export const CreateIssueSchema = z.object({
     owner: z.string().min(1, "GitHub owner is required"),
     repo: z.string().min(1, "GitHub repo is required"),
+    branch: z.string().min(1, "GitHub branch is required"),
     title: z.string().min(1, "Issue title is required"),
     body: z.string().min(1, "Issue body is required"),
     labels: z.array(z.string()).optional(),
@@ -138,6 +139,7 @@ export const CreateIssueSchema = z.object({
 export interface CreateIssueContent {
     owner: string;
     repo: string;
+    branch: string;
     title: string;
     body: string;
     labels?: string[];

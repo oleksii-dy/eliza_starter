@@ -102,4 +102,10 @@ export const apiClient = {
             body: formData,
         });
     },
+    getMemories: (agentId: string) =>
+        fetcher({
+            url: `/agents/${agentId}/memories`,
+            method: "GET",
+        }),
 };
+
