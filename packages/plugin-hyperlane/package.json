@@ -1,0 +1,23 @@
+{
+  "name": "plugin-hyperlane",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tsup": "^8.3.5"
+  },
+  "dependencies": {
+    "@elizaos/core": "^0.1.8",
+    "@ethersproject/abstract-signer": "^5.7.0",
+    "@ethersproject/providers": "^5.7.2",
+    "@hyperlane-xyz/sdk": "^8.1.0",
+    "ethers": "^6.13.5",
+    "ethers-types": "^3.18.1"
+  }
+}
