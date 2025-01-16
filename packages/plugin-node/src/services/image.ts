@@ -19,8 +19,8 @@ import {
     RawImage,
     type Tensor,
 } from "@huggingface/transformers";
+import sharp from "sharp";
 import fs from "fs";
-import gifFrames from "gif-frames";
 import os from "os";
 import path from "path";
 
@@ -339,23 +339,17 @@ export class ImageDescriptionService
     private async extractFirstFrameFromGif(
         gifUrl: string
     ): Promise<{ filePath: string }> {
-        const frameData = await gifFrames({
-            url: gifUrl,
-            frames: 1,
-            outputType: "png",
-        });
-
         const tempFilePath = path.join(
             os.tmpdir(),
             `gif_frame_${Date.now()}.png`
         );
-
-        return new Promise((resolve, reject) => {
-            const writeStream = fs.createWriteStream(tempFilePath);
-            frameData[0].getImage().pipe(writeStream);
-            writeStream.on("finish", () => resolve({ filePath: tempFilePath }));
-            writeStream.on("error", reject);
-        });
+        const resp = await fetch(gifUrl);
+        const buff = await resp.arrayBuffer();
+        const imgBuff = Buffer.from(buff);
+        await sharp(imgBuff).toFormat("png").toFile(tempFilePath);
+        return {
+            filePath: tempFilePath,
+        };
     }
 
     async describeImage(
