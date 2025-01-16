@@ -53,7 +53,7 @@ Extract the following information about the requested SOL transfer:
 
 export default {
     name: "SEND_SOL",
-    similes: ["TRANSFER_SOL", "PAY_SOL", "PAY_SOL"],
+    similes: ["TRANSFER_SOL", "PAY_SOL", "TRANSACT_SOL"],
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         // Always return true for SOL transfers, letting the handler deal with specifics
         elizaLogger.log("Validating SOL transfer from user:", message.userId);
