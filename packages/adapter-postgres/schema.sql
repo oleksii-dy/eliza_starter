@@ -131,6 +131,13 @@ CREATE TABLE IF NOT EXISTS  cache (
     PRIMARY KEY ("key", "agentId")
 );
 
+CREATE TABLE IF NOT EXISTS traces (
+    "run" BIGINT NOT NULL,
+    "time" TIMESTAMP NOT NULL,
+    "name" VARCHAR(80) NOT NULL,
+    "data" JSON
+);
+
 DO $$
 DECLARE
     vector_dim INTEGER;
@@ -164,5 +171,8 @@ CREATE INDEX IF NOT EXISTS idx_knowledge_original ON knowledge("originalId");
 CREATE INDEX IF NOT EXISTS idx_knowledge_created ON knowledge("agentId", "createdAt");
 CREATE INDEX IF NOT EXISTS idx_knowledge_shared ON knowledge("isShared");
 CREATE INDEX IF NOT EXISTS idx_knowledge_embedding ON knowledge USING ivfflat (embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_traces_1 ON traces ("run", "name", "time");
+CREATE INDEX IF NOT EXISTS idx_traces_2 ON traces ("name", "run", "time");
+CREATE INDEX IF NOT EXISTS idx_traces_3 ON traces ("time", "name");
 
 COMMIT;
