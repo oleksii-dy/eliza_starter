@@ -263,10 +263,12 @@ export class ImageDescriptionService
         if (this.runtime.imageVisionModelProvider) {
             if (
                 this.runtime.imageVisionModelProvider ===
-                ModelProviderName.LLAMALOCAL
+                    ModelProviderName.LLAMALOCAL ||
+                this.runtime.imageVisionModelProvider ===
+                    ModelProviderName.OLLAMA
             ) {
                 this.provider = new LocalImageProvider();
-                elizaLogger.debug("Using llama local for vision model");
+                elizaLogger.debug("Using local provider for vision model");
             } else if (
                 this.runtime.imageVisionModelProvider ===
                 ModelProviderName.GOOGLE
@@ -284,9 +286,12 @@ export class ImageDescriptionService
                     `Unsupported image vision model provider: ${this.runtime.imageVisionModelProvider}`
                 );
             }
-        } else if (model === models[ModelProviderName.LLAMALOCAL]) {
+        } else if (
+            model === models[ModelProviderName.LLAMALOCAL] ||
+            model === models[ModelProviderName.OLLAMA]
+        ) {
             this.provider = new LocalImageProvider();
-            elizaLogger.debug("Using llama local for vision model");
+            elizaLogger.debug("Using local provider for vision model");
         } else if (model === models[ModelProviderName.GOOGLE]) {
             this.provider = new GoogleImageProvider(this.runtime);
             elizaLogger.debug("Using google for vision model");
