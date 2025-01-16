@@ -35,9 +35,9 @@ const options = {
         ): void {
             const [arg1, ...rest] = inputArgs;
             if (typeof arg1 === "object") {
-                method.apply(this, [arg1, ...rest]);
+                return method.apply(this, [arg1, ...rest]);
             } else {
-                method.apply(this, [...rest, arg1]);
+                return method.apply(this, [...rest, arg1]);
             }
         },
     },
