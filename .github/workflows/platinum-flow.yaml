@@ -16,7 +16,7 @@ env:
 
 # There is a single job in this workflow. It's configured to run on the latest available version of Ubuntu.
 jobs:
-    build-and-push-image:
+    build:
         runs-on: ubuntu-latest
         # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
         permissions:
@@ -74,6 +74,7 @@ jobs:
                     -d '{"visibility":"public"}'
     deploy:
         runs-on: noahotc
+        needs: build
         # Sets the permissions granted to the `GITHUB_TOKEN` for the actions in this job.
         permissions:
             contents: read
@@ -84,6 +85,7 @@ jobs:
         steps:
             - name: Deploy
               run: |
-                  cd ${PROJECT_ROOT}/${GITHUB_REF}
-                  docker compose pull --quiet
-                  docker compose up --quiet-pull --detach
+                set
+                cd ${PROJECT_ROOT}/${GITHUB_REF_NAME}
+                docker compose pull --quiet
+                docker compose up --quiet-pull --detach
