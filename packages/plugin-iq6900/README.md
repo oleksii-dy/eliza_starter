@@ -1,39 +1,28 @@
-# Sample Plugin for Eliza
-
-The Sample Plugin for Eliza extends the functionality of the Eliza platform by providing additional actions, providers, evaluators, and more. This plugin is designed to be easily extendable and customizable to fit various use cases.
+# Code In Plugin For Eliza
 
 ## Description
+Through IQ6900's new inscription standard "Code-In", powerful inscription functionality is provided to Eliza.
+Engrave Eliza on the blockchain forever.
+All your Character JSON files are input onto the blockchain without compression.
+Everyone can read your agent from blocks forever.
 
-The Sample Plugin offers a set of features that can be integrated into the Eliza platform to enhance its capabilities. Below is a high-level overview of the different components available in this plugin.
+## inscription
+- **Code-in your eliza**: Go to the site and engrave your character file on-chain. https://elizacodein.com/
 
-## Actions
+## Onchain git
+- **Commit your update**:
+Update your files anytime.
+On our site, your files are managed in a format similar to GitHub,
+and our plugin automatically loads your latest agent file.
 
-- **createResourceAction**: This action enables the creation and management of generic resources. It can be customized to handle different types of resources and integrate with various data sources.
+## Let's get started
+- **Edit your .env**: write down IQ_WALLET_ADDRESS to your wallet address that you used on website.
+To be sure, right after inscription, wait about 5 minutes and just type pmpn start. You are now all set.
 
-## Providers
 
-- **sampleProvider**: This provider offers a mechanism to supply data or services to the plugin. It can be extended to include additional providers as needed.
+You have engraved an eternal record.
+Imagine, someone could develop your agent 200 years from now.
 
-## Evaluators
+Many things will be updated.
 
-- **sampleEvaluator**: This evaluator provides a way to assess or analyze data within the plugin. It can be extended to include additional evaluators as needed.
-
-## Services
-
-- **[ServiceName]**: Description of the service and its functionality. This can be extended to include additional services as needed.
-
-## Clients
-
-- **[ClientName]**: Description of the client and its functionality. This can be extended to include additional clients as needed.
-
-## How to Extend
-
-To extend the Sample Plugin, you can add new actions, providers, evaluators, services, and clients by following the structure provided in the plugin. Each component can be customized to fit your specific requirements.
-
-1. **Actions**: Add new actions by defining them in the `actions` array.
-2. **Providers**: Add new providers by defining them in the `providers` array.
-3. **Evaluators**: Add new evaluators by defining them in the `evaluators` array.
-4. **Services**: Add new services by defining them in the `services` array.
-5. **Clients**: Add new clients by defining them in the `clients` array.
-
-For more detailed information on how to extend the plugin, refer to the documentation provided in the Eliza platform.
+Learn more: https://iq6900.gitbook.io/iq6900/eliza-code-in
