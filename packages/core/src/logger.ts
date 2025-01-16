@@ -13,19 +13,25 @@ const customLevels: Record<string, number> = {
     trace: 10,
 };
 
-const stream = pretty({
-    colorize: true,
-    translateTime: "yyyy-mm-dd HH:MM:ss",
-    ignore: "pid,hostname",
-});
+const raw = process?.env?.LOG_JSON_FORMAT ? true : false;
+
+const createStream = () => {
+    if (raw) {
+        return undefined;
+    }
+    return pretty({
+        colorize: true,
+        translateTime: "yyyy-mm-dd HH:MM:ss",
+        ignore: "pid,hostname",
+    });
+};
 
 const options = {
     customLevels,
     hooks: {
         logMethod(
             inputArgs: [string | Record<string, unknown>, ...unknown[]],
-            method: LogFn,
-            level: string | number
+            method: LogFn
         ): void {
             const [arg1, ...rest] = inputArgs;
             if (typeof arg1 === "object") {
@@ -37,37 +43,6 @@ const options = {
     },
 };
 
-export const elizaLogger = pino(options, stream);
-
-// const json = { model: "anthropic", whole: "bunch", of: "things" };
-// elizaLogger.fatal("Hello World", json);
-// elizaLogger.fatal(json, "Hello World");
-
-// elizaLogger.error("Hello World", json);
-// elizaLogger.error(json, "Hello World");
-
-// elizaLogger.warn("Hello World", json);
-// elizaLogger.warn(json, "Hello World");
-
-// elizaLogger.info("Hello World", json);
-// elizaLogger.info(json, "Hello World");
-
-// elizaLogger.log("Hello World", json);
-// elizaLogger.log(json, "Hello World");
-
-// elizaLogger.progress("Hello World", json);
-// elizaLogger.progress(json, "Hello World");
-
-// elizaLogger.success("Hello World", json);
-// elizaLogger.success(json, "Hello World");
-
-// elizaLogger.debug("Hello World", json);
-// elizaLogger.debug(json, "Hello World");
-
-// elizaLogger.trace("Hello World", json);
-// elizaLogger.trace(json, "Hello World");
-
-// elizaLogger.info([1, 2, 3, 4], "Hello World");
-// elizaLogger.info("Hello World", [1, 2, 3, 4]);
+export const elizaLogger = pino(options, createStream());
 
 export default elizaLogger;
