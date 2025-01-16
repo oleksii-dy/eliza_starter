@@ -1239,7 +1239,7 @@
 - default set to new standard  post time 90-180 type: post time [\#369](https://github.com/elizaOS/eliza/pull/369) ([o-on-x](https://github.com/o-on-x))
 - post time set in env [\#368](https://github.com/elizaOS/eliza/pull/368) ([o-on-x](https://github.com/o-on-x))
 - feat: Adding unit tests for start - Covering goals, defaultCharacters, relationships, evaulators, posts, database, messages [\#367](https://github.com/elizaOS/eliza/pull/367) ([ai16z-demirix](https://github.com/ai16z-demirix))
-- fix: bug in getRecentMessageInteractions not awating for promisses before formating [\#366](https://github.com/elizaOS/eliza/pull/366) ([bmgalego](https://github.com/bmgalego))
+- fix: bug in getRecentMessageInteractions not awating for promisses before formatting [\#366](https://github.com/elizaOS/eliza/pull/366) ([bmgalego](https://github.com/bmgalego))
 - feat: \[Issue-185\] Token Provider Tests  [\#365](https://github.com/elizaOS/eliza/pull/365) ([normand1](https://github.com/normand1))
 - feat: update docs with new stream notes [\#364](https://github.com/elizaOS/eliza/pull/364) ([madjin](https://github.com/madjin))
 - update tweet interval to 90-180 mins [\#360](https://github.com/elizaOS/eliza/pull/360) ([oguzserdar](https://github.com/oguzserdar))
