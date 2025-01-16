@@ -34,10 +34,26 @@ const options = {
             method: LogFn
         ): void {
             const [arg1, ...rest] = inputArgs;
+
             if (typeof arg1 === "object") {
-                return method.apply(this, [arg1, ...rest]);
+                const messageParts = rest.map(arg =>
+                    typeof arg === "string" ? arg : JSON.stringify(arg)
+                );
+                const message = messageParts.join(" ");
+                return method.apply(this, [arg1, message]);
             } else {
-                return method.apply(this, [...rest, arg1]);
+                const context = {};
+                const messageParts = [arg1, ...rest].map(arg =>
+                    typeof arg === "string" ? arg : arg
+                );
+                const message = messageParts
+                    .filter(part => typeof part === "string")
+                    .join(" ");
+                const jsonParts = messageParts.filter(part => typeof part === "object");
+
+                Object.assign(context, ...jsonParts);
+
+                return method.apply(this, [context, message]);
             }
         },
     },
