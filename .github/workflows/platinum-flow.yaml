@@ -85,7 +85,7 @@ jobs:
         steps:
             - name: Deploy
               run: |
-                set
-                cd ${PROJECT_ROOT}/${GITHUB_REF_NAME}
+                set -x
+                cd ${{ env.PROJECT_ROOT }}/${GITHUB_REF_NAME}
                 docker compose pull --quiet
                 docker compose up --quiet-pull --detach
