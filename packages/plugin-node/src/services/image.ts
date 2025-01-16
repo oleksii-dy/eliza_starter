@@ -111,15 +111,14 @@ class LocalImageProvider implements ImageProvider {
     }
 
     async describeImage(
-        imageData: Buffer
+        imageData: Buffer,
+        mimeType: string
     ): Promise<{ title: string; description: string }> {
         if (!this.model || !this.processor || !this.tokenizer) {
             throw new Error("Model components not initialized");
         }
-
-        const base64Data = imageData.toString("base64");
-        const dataUrl = `data:image/jpeg;base64,${base64Data}`;
-        const image = await RawImage.fromURL(dataUrl);
+        const blob = new Blob([imageData], { type: mimeType });
+        const image = await RawImage.fromBlob(blob);
         const visionInputs = await this.processor(image);
         const prompts = this.processor.construct_prompts("<DETAILED_CAPTION>");
         const textInputs = this.tokenizer(prompts);
