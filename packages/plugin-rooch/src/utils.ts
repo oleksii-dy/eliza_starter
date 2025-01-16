@@ -1,5 +1,7 @@
-import { IAgentRuntime, Character, ModelProviderName, TranscriptionProvider, UUID, settings, defaultCharacter } from "@elizaos/core";
-import { ParsedKeypair, decodeRoochSercetKey, ROOCH_SECRET_KEY_PREFIX } from "@roochnetwork/rooch-sdk";
+import { IAgentRuntime, settings } from "@elizaos/core";
+import { ParsedKeypair, decodeRoochSercetKey } from "@roochnetwork/rooch-sdk";
+
+const ROOCH_SECRET_KEY_PREFIX = "roochsecretkey"
 
 const parseKeypair = (runtime: IAgentRuntime): ParsedKeypair => {
     const privateKey = runtime.getSetting("ROOCH_PRIVATE_KEY");
@@ -34,13 +36,6 @@ const parseAccessPath = (uri: string): string => {
         return `/object/${match[1]}`;
     }
     throw new Error("Invalid URI format");
-};
-
-const convertId = (id: string | null | undefined): UUID | undefined => {
-    if (id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id)) {
-        return id as UUID;
-    }
-    return undefined;
 };
 
 export { parseKeypair, parseKeypairFromSettings, parseAccessPath };
