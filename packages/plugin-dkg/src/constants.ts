@@ -71,11 +71,6 @@ export const dkgMemoryTemplate = {
     ],
     url: "https://twitter.com/JohnDoe/status/1234567890",
 };
-// associatedMedia: { can be twt image
-//   "@type": "MediaObject",
-//   contentUrl: "https://example.com/user-query-audio.mp3",
-//   encodingFormat: "audio/mpeg",
-// },
 
 export const combinedSparqlExample = `
 SELECT DISTINCT ?headline ?articleBody
