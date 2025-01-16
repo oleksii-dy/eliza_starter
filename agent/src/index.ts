@@ -50,7 +50,7 @@ import { artheraPlugin } from "@elizaos/plugin-arthera";
 import { autonomePlugin } from "@elizaos/plugin-autonome";
 import { availPlugin } from "@elizaos/plugin-avail";
 import { avalanchePlugin } from "@elizaos/plugin-avalanche";
-import { b2Plugin } from "@elizaos/plugin-b2";
+// import { b2Plugin } from "@elizaos/plugin-b2";
 import { binancePlugin } from "@elizaos/plugin-binance";
 import { birdeyePlugin } from "@elizaos/plugin-birdeye";
 import {
