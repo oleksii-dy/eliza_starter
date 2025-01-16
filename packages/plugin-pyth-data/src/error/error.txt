@@ -1,0 +1,405 @@
+// WebSocket States
+export enum WebSocketState {
+  CONNECTING = 'CONNECTING',
+  CONNECTED = 'CONNECTED',
+  RECONNECTING = 'RECONNECTING',
+  DISCONNECTED = 'DISCONNECTED',
+  ERROR = 'ERROR'
+}
+
+// Base error codes
+export enum PythErrorCode {
+  // WebSocket Connection Errors
+  WS_CONNECT_TIMEOUT = 'WS_CONNECT_TIMEOUT',
+  WS_CONNECTION_REFUSED = 'WS_CONNECTION_REFUSED',
+  WS_INVALID_URL = 'WS_INVALID_URL',
+  WS_SSL_ERROR = 'WS_SSL_ERROR',
+  
+  // WebSocket Runtime Errors
+  WS_HEARTBEAT_FAILURE = 'WS_HEARTBEAT_FAILURE',
+  WS_MESSAGE_PARSE_ERROR = 'WS_MESSAGE_PARSE_ERROR',
+  WS_RATE_LIMIT_EXCEEDED = 'WS_RATE_LIMIT_EXCEEDED',
+  WS_INVALID_MESSAGE_FORMAT = 'WS_INVALID_MESSAGE_FORMAT',
+  
+  // State Management Errors
+  STATE_UNEXPECTED_DISCONNECT = 'STATE_UNEXPECTED_DISCONNECT',
+  STATE_RECONNECTION_FAILED = 'STATE_RECONNECTION_FAILED',
+  STATE_MAX_RECONNECT_EXCEEDED = 'STATE_MAX_RECONNECT_EXCEEDED',
+  STATE_INVALID_TRANSITION = 'STATE_INVALID_TRANSITION',
+  
+  // Data Handling Errors
+  DATA_INVALID_SUBSCRIPTION = 'DATA_INVALID_SUBSCRIPTION',
+  DATA_SUBSCRIPTION_LIMIT = 'DATA_SUBSCRIPTION_LIMIT',
+  DATA_VALIDATION_FAILED = 'DATA_VALIDATION_FAILED',
+  DATA_SEQUENCE_ERROR = 'DATA_SEQUENCE_ERROR',
+  DATA_TRANSFORM_ERROR = 'DATA_TRANSFORM_ERROR',
+  DATA_SCHEMA_ERROR = 'DATA_SCHEMA_ERROR',
+  
+  // Generic errors (to be expanded)
+  UNKNOWN_ERROR = 'UNKNOWN_ERROR',
+  INVALID_PARAMETER = 'INVALID_PARAMETER',
+  NETWORK_ERROR = 'NETWORK_ERROR'
+}
+
+// Error severity levels
+export enum ErrorSeverity {
+  LOW = 'LOW',         // Non-critical errors that don't affect core functionality
+  MEDIUM = 'MEDIUM',   // Errors that affect some functionality but system can continue
+  HIGH = 'HIGH',       // Critical errors that require immediate attention
+  FATAL = 'FATAL'      // System cannot continue operation
+}
+
+// Extended error interface
+export interface IPythError {
+  code: PythErrorCode;
+  message: string;
+  severity: ErrorSeverity;
+  timestamp: number;
+  details?: any;
+  originalError?: Error;
+  name: string;
+}
+
+// Base Pyth error class
+export class PythError extends Error implements IPythError {
+  public readonly timestamp: number;
+  public readonly name: string = 'PythError';
+
+  constructor(
+    public readonly code: PythErrorCode,
+    public readonly message: string,
+    public readonly severity: ErrorSeverity = ErrorSeverity.MEDIUM,
+    public readonly details?: any,
+    public readonly originalError?: Error
+  ) {
+    super(message);
+    this.timestamp = Date.now();
+
+    // Ensure proper prototype chain for instanceof checks
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+
+  // Create error object for logging
+  toJSON(): object {
+    return {
+      name: this.name,
+      code: this.code,
+      message: this.message,
+      severity: this.severity,
+      timestamp: this.timestamp,
+      details: this.details,
+      stack: this.stack,
+      originalError: this.originalError ? {
+        name: this.originalError.name,
+        message: this.originalError.message,
+        stack: this.originalError.stack
+      } : undefined
+    };
+  }
+}
+
+// WebSocket specific error class
+export class WebSocketError extends PythError {
+  public readonly name: string = 'WebSocketError';
+
+  constructor(
+    code: PythErrorCode,
+    message: string,
+    severity: ErrorSeverity = ErrorSeverity.HIGH,
+    details?: any,
+    originalError?: Error
+  ) {
+    super(code, message, severity, details, originalError);
+    
+    // Ensure proper prototype chain for instanceof checks
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+
+  // Factory method for connection timeout
+  static connectionTimeout(details?: any): WebSocketError {
+    return new WebSocketError(
+      PythErrorCode.WS_CONNECT_TIMEOUT,
+      'WebSocket connection timed out',
+      ErrorSeverity.HIGH,
+      details
+    );
+  }
+
+  // Factory method for connection refused
+  static connectionRefused(details?: any): WebSocketError {
+    return new WebSocketError(
+      PythErrorCode.WS_CONNECTION_REFUSED,
+      'WebSocket connection refused',
+      ErrorSeverity.HIGH,
+      details
+    );
+  }
+
+  // Factory method for invalid URL
+  static invalidUrl(url: string): WebSocketError {
+    return new WebSocketError(
+      PythErrorCode.WS_INVALID_URL,
+      `Invalid WebSocket URL: ${url}`,
+      ErrorSeverity.HIGH,
+      { url }
+    );
+  }
+
+  // Factory method for SSL/TLS errors
+  static sslError(details?: any): WebSocketError {
+    return new WebSocketError(
+      PythErrorCode.WS_SSL_ERROR,
+      'SSL/TLS connection error',
+      ErrorSeverity.HIGH,
+      details
+    );
+  }
+}
+
+// Runtime error class
+export class RuntimeError extends PythError {
+  public readonly name: string = 'RuntimeError';
+
+  constructor(
+    code: PythErrorCode,
+    message: string,
+    severity: ErrorSeverity = ErrorSeverity.HIGH,
+    details?: any,
+    originalError?: Error
+  ) {
+    super(code, message, severity, details, originalError);
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+
+  // Factory method for heartbeat failure
+  static heartbeatFailure(details?: any): RuntimeError {
+    return new RuntimeError(
+      PythErrorCode.WS_HEARTBEAT_FAILURE,
+      'WebSocket heartbeat check failed',
+      ErrorSeverity.HIGH,
+      details
+    );
+  }
+
+  // Factory method for message parsing error
+  static messageParseError(rawMessage: string, parseError: Error): RuntimeError {
+    return new RuntimeError(
+      PythErrorCode.WS_MESSAGE_PARSE_ERROR,
+      'Failed to parse WebSocket message',
+      ErrorSeverity.MEDIUM,
+      { rawMessage },
+      parseError
+    );
+  }
+
+  // Factory method for rate limit exceeded
+  static rateLimitExceeded(details?: any): RuntimeError {
+    return new RuntimeError(
+      PythErrorCode.WS_RATE_LIMIT_EXCEEDED,
+      'WebSocket rate limit exceeded',
+      ErrorSeverity.MEDIUM,
+      details
+    );
+  }
+
+  // Factory method for invalid message format
+  static invalidMessageFormat(message: any, expectedFormat: string): RuntimeError {
+    return new RuntimeError(
+      PythErrorCode.WS_INVALID_MESSAGE_FORMAT,
+      'Invalid WebSocket message format',
+      ErrorSeverity.MEDIUM,
+      {
+        receivedMessage: message,
+        expectedFormat
+      }
+    );
+  }
+}
+
+// State Management error class
+export class StateError extends PythError {
+  public readonly name: string = 'StateError';
+
+  constructor(
+    code: PythErrorCode,
+    message: string,
+    severity: ErrorSeverity = ErrorSeverity.HIGH,
+    details?: any,
+    originalError?: Error
+  ) {
+    super(code, message, severity, details, originalError);
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+
+  // Factory method for unexpected disconnection
+  static unexpectedDisconnect(details?: any): StateError {
+    return new StateError(
+      PythErrorCode.STATE_UNEXPECTED_DISCONNECT,
+      'WebSocket unexpectedly disconnected',
+      ErrorSeverity.HIGH,
+      details
+    );
+  }
+
+  // Factory method for reconnection failure
+  static reconnectionFailed(attempts: number, error?: Error): StateError {
+    return new StateError(
+      PythErrorCode.STATE_RECONNECTION_FAILED,
+      'Failed to reconnect WebSocket',
+      ErrorSeverity.HIGH,
+      { attempts },
+      error
+    );
+  }
+
+  // Factory method for maximum reconnection attempts exceeded
+  static maxReconnectExceeded(maxAttempts: number): StateError {
+    return new StateError(
+      PythErrorCode.STATE_MAX_RECONNECT_EXCEEDED,
+      `Maximum reconnection attempts (${maxAttempts}) exceeded`,
+      ErrorSeverity.FATAL,
+      { maxAttempts }
+    );
+  }
+
+  // Factory method for invalid state transition
+  static invalidTransition(
+    fromState: WebSocketState,
+    toState: WebSocketState,
+    details?: any
+  ): StateError {
+    return new StateError(
+      PythErrorCode.STATE_INVALID_TRANSITION,
+      `Invalid state transition from ${fromState} to ${toState}`,
+      ErrorSeverity.HIGH,
+      {
+        fromState,
+        toState,
+        ...details
+      }
+    );
+  }
+}
+
+// Data Handling error class
+export class DataError extends PythError {
+  public readonly name: string = 'DataError';
+
+  constructor(
+    code: PythErrorCode,
+    message: string,
+    severity: ErrorSeverity = ErrorSeverity.MEDIUM,
+    details?: any,
+    originalError?: Error
+  ) {
+    super(code, message, severity, details, originalError);
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+
+  // Factory method for invalid subscription
+  static invalidSubscription(subscription: any, reason: string): DataError {
+    return new DataError(
+      PythErrorCode.DATA_INVALID_SUBSCRIPTION,
+      'Invalid subscription parameters',
+      ErrorSeverity.MEDIUM,
+      { subscription, reason }
+    );
+  }
+
+  // Factory method for subscription limit exceeded
+  static subscriptionLimitExceeded(
+    currentCount: number,
+    maxLimit: number
+  ): DataError {
+    return new DataError(
+      PythErrorCode.DATA_SUBSCRIPTION_LIMIT,
+      `Subscription limit exceeded (${currentCount}/${maxLimit})`,
+      ErrorSeverity.HIGH,
+      { currentCount, maxLimit }
+    );
+  }
+
+  // Factory method for data validation failure
+  static validationFailed(
+    data: any,
+    validationErrors: any[]
+  ): DataError {
+    return new DataError(
+      PythErrorCode.DATA_VALIDATION_FAILED,
+      'Data validation failed',
+      ErrorSeverity.MEDIUM,
+      { data, validationErrors }
+    );
+  }
+
+  // Factory method for sequence error
+  static sequenceError(
+    expected: number,
+    received: number,
+    details?: any
+  ): DataError {
+    return new DataError(
+      PythErrorCode.DATA_SEQUENCE_ERROR,
+      `Message sequence error: expected ${expected}, received ${received}`,
+      ErrorSeverity.MEDIUM,
+      { expected, received, ...details }
+    );
+  }
+
+  // Factory method for transform error
+  static transformError(
+    data: any,
+    targetFormat: string,
+    error?: Error
+  ): DataError {
+    return new DataError(
+      PythErrorCode.DATA_TRANSFORM_ERROR,
+      'Failed to transform data',
+      ErrorSeverity.MEDIUM,
+      { data, targetFormat },
+      error
+    );
+  }
+
+  // Factory method for schema error
+  static schemaError(
+    data: any,
+    schema: any,
+    error?: Error
+  ): DataError {
+    return new DataError(
+      PythErrorCode.DATA_SCHEMA_ERROR,
+      'Data does not match schema',
+      ErrorSeverity.HIGH,
+      { data, schema },
+      error
+    );
+  }
+}
+
+// Error utility functions
+export const isWebSocketError = (error: any): error is WebSocketError => {
+  return error instanceof WebSocketError;
+};
+
+export const isRuntimeError = (error: any): error is RuntimeError => {
+  return error instanceof RuntimeError;
+};
+
+export const isStateError = (error: any): error is StateError => {
+  return error instanceof StateError;
+};
+
+export const isDataError = (error: any): error is DataError => {
+  return error instanceof DataError;
+};
+
+export const createError = (
+  code: PythErrorCode,
+  message: string,
+  severity?: ErrorSeverity,
+  details?: any,
+  originalError?: Error
+): PythError => {
+  return new PythError(code, message, severity, details, originalError);
+};
