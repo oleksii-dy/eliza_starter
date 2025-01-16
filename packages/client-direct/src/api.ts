@@ -110,7 +110,7 @@ export function createApiRouter(
         };
         if (!agentId) return;
 
-        let agent: AgentRuntime = agents.get(agentId);
+        const agent: AgentRuntime = agents.get(agentId);
 
         if (agent) {
             agent.stop();
@@ -128,7 +128,7 @@ export function createApiRouter(
         };
         if (!agentId) return;
 
-        let agent: AgentRuntime = agents.get(agentId);
+        const agent: AgentRuntime = agents.get(agentId);
 
         // update character
         if (agent) {
