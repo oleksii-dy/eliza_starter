@@ -1,6 +1,6 @@
 {
     "name": "SBF",
-    "clients": [],
+    "clients": ["twitter"],
     "modelProvider": "anthropic",
     "settings": {
         "voice": {

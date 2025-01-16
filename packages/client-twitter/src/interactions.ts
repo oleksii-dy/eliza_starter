@@ -331,7 +331,6 @@ export class TwitterInteractionClient {
         };
         const currentPost = formatTweet(tweet);
 
-        elizaLogger.debug("Thread: ", thread);
         const formattedConversation = thread
             .map(
                 (tweet) => `@${tweet.username} (${new Date(
@@ -346,13 +345,9 @@ export class TwitterInteractionClient {
             )
             .join("\n\n");
 
-        elizaLogger.debug("formattedConversation: ", formattedConversation);
-
         const imageDescriptionsArray = [];
         try{
-            elizaLogger.debug('Getting images');
             for (const photo of tweet.photos) {
-                elizaLogger.debug(photo.url);
                 const description = await this.runtime
                     .getService<IImageDescriptionService>(
                         ServiceType.IMAGE_DESCRIPTION
@@ -460,18 +455,6 @@ export class TwitterInteractionClient {
                 this.runtime.character?.templates?.messageHandlerTemplate ||
                 twitterMessageHandlerTemplate,
         });
-                // Add these debug logs:
-            elizaLogger.debug("=== DEBUG: Template Context ===");
-            elizaLogger.debug("Actions available:", {
-                actionNames: state.actionNames,
-                actions: state.actions
-            });
-            elizaLogger.debug("Character examples:", {
-                messageExamples: this.runtime.character.messageExamples,
-                postExamples: this.runtime.character.postExamples
-            });
-            elizaLogger.debug("Full context:", context);
-            elizaLogger.debug("=== END DEBUG ===");
 
         const response = await generateMessageResponse({
             runtime: this.runtime,
@@ -626,12 +609,6 @@ export class TwitterInteractionClient {
             visited.add(currentTweet.id);
             thread.unshift(currentTweet);
 
-            elizaLogger.debug("Current thread state:", {
-                length: thread.length,
-                currentDepth: depth,
-                tweetId: currentTweet.id,
-            });
-
             if (currentTweet.inReplyToStatusId) {
                 elizaLogger.log(
                     "Fetching parent tweet:",
@@ -670,14 +647,6 @@ export class TwitterInteractionClient {
 
         // Need to bind this context for the inner function
         await processThread.bind(this)(tweet, 0);
-
-        elizaLogger.debug("Final thread built:", {
-            totalTweets: thread.length,
-            tweetIds: thread.map((t) => ({
-                id: t.id,
-                text: t.text?.slice(0, 50),
-            })),
-        });
 
         return thread;
     }

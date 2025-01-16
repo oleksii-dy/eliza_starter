@@ -65,7 +65,7 @@ If no token address is mentioned, respond with null.
 
 export default {
     name: "SEND_TOKEN",
-    similes: ["TRANSFER_TOKEN", "SEND_TOKENS", "PAY_TOKEN"],
+    similes: ["TRANSFER_TOKEN", "TRANSFER_TOKENS", "SEND_TOKENS", "PAY_TOKEN", "PAY_TOKENS", "PAY"],
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         // Always return true for token transfers, letting the handler deal with specifics
         elizaLogger.log("Validating token transfer from user:", message.userId);
