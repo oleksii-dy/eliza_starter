@@ -410,34 +410,30 @@ export class AgentRuntime implements IAgentRuntime {
     }
 
     async initialize() {
-        // Initialize core services
-        await Promise.all(
-            Array.from(this.services.entries()).map(async ([serviceType, service]) => {
-                try {
-                    await service.initialize(this);
-                    elizaLogger.success(
-                        `Service ${serviceType} initialized successfully`
-                    );
-                } catch (error) {
-                    elizaLogger.error(
-                        `Failed to initialize service ${serviceType}:`,
-                        error
-                    );
-                    throw error;
-                }
-            })
-        );
+        // Dedupe services such that we only initialize each service once
+        const combined = [...this.services.values()];
 
-        // Initialize plugin services, avoiding duplicates
-        const existingServices = new Set(this.services.values());
-        await Promise.all(
-            this.plugins
-                .filter(plugin => plugin.services?.length)
-                .flatMap(plugin =>
-                    plugin.services!.filter(service => !existingServices.has(service))
-                )
-                .map(service => service.initialize(this))
-        );
+        for (const other of this.plugins.flatMap(plugin => plugin.services ?? [])) {
+            if (!combined.some(item1 => Object.is(item1, other))) {
+                combined.push(other);
+            }
+        }
+
+        // Start initializing services
+        await Promise.all(Array.from(combined).map(async (service) => {
+            try {
+                await service.initialize(this);
+                elizaLogger.success(
+                    `Service ${service.serviceType} initialized successfully`
+                );
+            } catch (error) {
+                elizaLogger.error(
+                    `Failed to initialize service ${service.serviceType}:`,
+                    error
+                );
+                throw error;
+            }
+        }));
 
         if (
             this.character &&
