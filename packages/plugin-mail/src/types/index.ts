@@ -28,28 +28,9 @@ export interface SearchCriteria {
 }
 
 export interface SendEmailParams {
-    /**
-     * Email address of the recipient
-     * @example "user@example.com"
-     */
     to: string;
-
-    /**
-     * Subject line of the email
-     * @example "Meeting Reminder"
-     */
     subject: string;
-
-    /**
-     * Plain text content of the email
-     * @example "Hi, just following up on our discussion."
-     */
     text: string;
-
-    /**
-     * Optional HTML content of the email
-     * @example "<h1>Hello</h1><p>Just following up on our discussion.</p>"
-     */
     html?: string;
 }
 

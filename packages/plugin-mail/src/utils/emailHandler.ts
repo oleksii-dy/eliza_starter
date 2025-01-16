@@ -23,7 +23,7 @@ const emailMessageHandlerTemplate =
     `# TASK: Generate an email reply as {{agentName}}
 
 IMPORTANT:
-- NEVER use example recipient emails or @example.com addresses
+- NEVER use placeholders (e.g. recipient@example.com) as the recipient email
 - NEVER reply/respond to yourself ({{agentEmail}}) in conversation threads
 - ALWAYS use the correct recipient email address from the available context
 

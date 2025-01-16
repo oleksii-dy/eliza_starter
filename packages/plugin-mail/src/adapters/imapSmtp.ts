@@ -18,6 +18,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
     private lastUID: number | null = null;
     private uidValidity: number | null = null;
     private isConnected: boolean = false;
+    private isConnecting: boolean = false;
     private connectionPromise: Promise<void> | null = null;
     private reconnectAttempts: number = 0;
     private readonly MAX_RECONNECT_ATTEMPTS = 3;
@@ -46,6 +47,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
             },
             // logger: false,
             // emitLogs: false,
+            disableAutoIdle: true,
             tls: {
                 rejectUnauthorized: true,
                 minVersion: "TLSv1.2",
@@ -86,7 +88,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
             return;
         }
 
-        if (this.connectionPromise) {
+        if (this.isConnecting || this.connectionPromise) {
             return this.connectionPromise;
         }
 
@@ -98,6 +100,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
 
         this.connectionPromise = (async () => {
             try {
+                this.isConnecting = true;
                 this.reconnectAttempts++;
                 await this.client.connect();
                 this.isConnected = true;
@@ -119,6 +122,8 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
                     return this.ensureConnection();
                 }
                 throw error;
+            } finally {
+                this.isConnecting = false;
             }
         })();
 

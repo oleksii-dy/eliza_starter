@@ -39,6 +39,10 @@ export class SendEmailAction {
             throw new Error("Recipient (to) is required");
         }
 
+        if (params.to.includes("@example.com")) {
+            throw new Error("Recipient email cannot be an example.com address");
+        }
+
         if (!params.subject) {
             throw new Error("Subject is required");
         }
@@ -67,7 +71,7 @@ export const sendEmailAction: Action = {
             {
                 user: "user",
                 content: {
-                    text: "send an email to john@example.com about the meeting tomorrow",
+                    text: "send an email to {recipient email} about {email subject}",
                 },
             },
         ],
@@ -75,7 +79,7 @@ export const sendEmailAction: Action = {
             {
                 user: "user",
                 content: {
-                    text: "email sarah@company.com to reschedule our call",
+                    text: "email {recipient email} to {email subject}",
                 },
             },
         ],
@@ -83,7 +87,7 @@ export const sendEmailAction: Action = {
             {
                 user: "user",
                 content: {
-                    text: "write to team@org.com about project updates",
+                    text: "write to {recipient email} about {email subject}",
                 },
             },
         ],
