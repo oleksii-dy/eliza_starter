@@ -5,7 +5,9 @@ import {
     Memory,
     State,
     HandlerCallback,
+    generateObjectDeprecated,
     elizaLogger,
+    ModelClass
   } from "@elizaos/core";
   import {
     HyperlaneCore,
@@ -14,10 +16,13 @@ import {
     type ChainMetadata,
   } from '@hyperlane-xyz/sdk';
   import { JsonRpcProvider } from '@ethersproject/providers';
-  import { Wallet } from '@ethersproject/wallet';
+  import { Wallet  } from '@ethersproject/wallet';
   import { Address } from '@hyperlane-xyz/utils';
-  import { ProtocolType } from '@hyperlane-xyz/utils';
   import { Signer } from "@ethersproject/abstract-signer";
+  import { hyperlaneActionTemplate } from "../../templates";
+  import { composeContext } from "@elizaos/core";
+import { chainData } from "../chainMetadata";
+import { utils } from "ethers";
 
   export const sendCrossChainMessage: Action = {
     name: "SEND_CROSS_CHAIN_MESSAGE",
@@ -30,6 +35,7 @@ import {
         runtime.getSetting("POLYGON_RPC_URL")
       );
     },
+    //@ts-ignore
     handler: async (
       runtime: IAgentRuntime,
       message: Memory,
@@ -39,65 +45,20 @@ import {
     ) => {
       try {
         // Initialize chain metadata
-        const chainMetadata: ChainMap<ChainMetadata> = {
-          ethereum: {
-            name: 'ethereum',
-            chainId: 1,
-            domainId: 1,
-            protocol: ProtocolType.Ethereum,
-            rpcUrls: [
-              {
-                //@ts-ignore
-                http: runtime.getSetting("ETHEREUM_RPC_URL"),
-                pagination: {
-                  maxBlockRange: 2000,
-                  minBlockNumber: 0,
-                },
-                retry: {
-                  maxRequests: 5,
-                  baseRetryMs: 1000,
-                },
-              },
-            ],
-            blockExplorers: [
-              {
-                name: 'Etherscan',
-                url: 'https://etherscan.io',
-                apiUrl: 'https://api.etherscan.io',
-              },
-            ],
-          },
-          polygon: {
-            name: 'polygon',
-            chainId: 137,
-            domainId: 137,
-            protocol: ProtocolType.Ethereum,
-            rpcUrls: [
-              {
-                //@ts-ignore
-                http: runtime.getSetting("POLYGON_RPC_URL"),
-                pagination: {
-                  maxBlockRange: 2000,
-                  minBlockNumber: 0,
-                },
-                retry: {
-                  maxRequests: 5,
-                  baseRetryMs: 1000,
-                },
-              },
-            ],
-            blockExplorers: [
-              {
-                name: 'Polygonscan',
-                url: 'https://polygonscan.com',
-                apiUrl: 'https://api.polygonscan.com',
-              },
-            ],
-          },
-        };
+
+    const context = composeContext({
+        state,
+        template: hyperlaneActionTemplate,
+    });
+
+    const content = await generateObjectDeprecated({
+        runtime,
+        context,
+        modelClass: ModelClass.SMALL,
+    })
 
         // Initialize MultiProvider
-        const multiProvider = new MultiProvider(chainMetadata);
+        const multiProvider = new MultiProvider(chainData);
 
         // Set up provider
         //@ts-ignore
@@ -149,12 +110,15 @@ import {
         const recipientAddress = options.recipientAddress as string;
         const messageContent = options.message as string;
 
+        const encodedMessage = utils.formatBytes32String(messageContent);
+
+
         // Send message
         const { dispatchTx, message: dispatchedMessage } = await core.sendMessage(
           sourceChain,
           targetChain,
           recipientAddress as Address,
-          messageContent
+          encodedMessage
         );
 
         elizaLogger.info("Message dispatched:", dispatchTx.transactionHash);
