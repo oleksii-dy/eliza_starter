@@ -215,7 +215,8 @@ export async function loadCharacterFromOnchain(): Promise<Character[]> {
             .filter(([key]) => key.startsWith(characterPrefix))
             .reduce((settings, [key, value]) => {
                 const settingKey = key.slice(characterPrefix.length);
-                return { ...settings, [settingKey]: value };
+                settings[settingKey] = value;
+                return settings;
             }, {});
 
         if (Object.keys(characterSettings).length > 0) {
