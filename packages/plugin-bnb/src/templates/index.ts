@@ -181,10 +181,11 @@ export const greenfieldTemplate = `Given the recent messages and wallet informat
 {{walletInfo}}
 
 Extract the following details for Greenfield operations:
-- **actionType** (string): The type of operation to perform (e.g., "createBucket", "uploadObject", "deleteBucket")
-- **bucketName** (string): The name of the bucket to operate on
-- **objectName** (string, optional): The name of the object for upload/download operations
+- **actionType** (string): The type of operation to perform (e.g., "createBucket", "uploadObject", "deleteObject", "transfer")
+- **bucketName** (string, optional): The name of the bucket to operate
+- **objectName** (string, optional): The name of the object for upload operations
 - **visibility** (string, optional): Bucket visibility setting ("private" or "public")
+- **amount** (string, optianal): BNB transfer to greenfield token amount.
 
 Required response format:
 \`\`\`json

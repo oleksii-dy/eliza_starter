@@ -3,7 +3,6 @@ import {
     MsgDeleteObject,
 } from "@bnb-chain/greenfield-cosmos-types/greenfield/storage/tx";
 import { createRequire } from "module";
-import { UploadFile } from "@bnb-chain/greenfield-js-sdk/dist/esm/types/sp/Common";
 import {
     composeContext,
     elizaLogger,
@@ -22,6 +21,9 @@ import { InitGnfdClient } from "../providers/gnfd";
 import { initWalletProvider, WalletProvider } from "../providers/wallet";
 import { greenfieldTemplate } from "../templates";
 import { DelegatedPubObjectRequest } from "@bnb-chain/greenfield-js-sdk";
+import { SupportedChain } from "../types";
+import { CROSS_CHAIN_ABI } from "../abi/CrossChainAbi";
+import { TOKENHUB_ABI } from "../abi/TokenHubAbi";
 
 export { greenfieldTemplate };
 
@@ -62,6 +64,38 @@ export class GreenfieldAction {
         };
 
         return selectSpInfo;
+    }
+
+    async bnbTransferToGnfd(amount: bigint, chain: SupportedChain) {
+        this.walletProvider.switchChain(chain);
+        const publicClient = this.walletProvider.getPublicClient(chain);
+        const walletClient = this.walletProvider.getWalletClient(chain);
+
+        const config = chain === "bsc" ? CONFIG["MAINNET"] : CONFIG["TESTNET"];
+
+        const [relayFee, ackRelayFee] = await publicClient.readContract({
+            address: config.CROSSCHAIN_ADDRESS as `0x${string}`,
+            abi: CROSS_CHAIN_ABI,
+            functionName: "getRelayFees",
+        });
+        const relayerFee = relayFee + ackRelayFee;
+        const totalAmount = relayerFee + amount;
+
+        const { request } = await publicClient.simulateContract({
+            account: this.walletProvider.getAccount(),
+            address: config.TOKENHUB_ADDRESS as `0x${string}`,
+            abi: TOKENHUB_ABI,
+            functionName: "transferOut",
+            args: [this.walletProvider.getAddress(), amount],
+            value: totalAmount,
+        });
+
+        const hash = await walletClient.writeContract(request);
+        const tx = await publicClient.waitForTransactionReceipt({
+            hash,
+        });
+
+        return tx.transactionHash;
     }
 
     async createBucket(msg: MsgCreateBucket) {
@@ -171,7 +205,7 @@ export const greenfieldAction = {
         elizaLogger.log("spInfo", spInfo);
 
         const { bucketName, objectName } = content;
-        const attachment = message.content.attachments?.[0];
+        const attachments = message.content.attachments;
 
         switch (actionType) {
             case "createBucket": {
@@ -188,21 +222,25 @@ export const greenfieldAction = {
             }
 
             case "uploadObject": {
-                if (!attachment) {
+                if (!attachments) {
                     throw new Error("no file to upload");
                 }
 
-                const uploadObjName = random(10);
+                const uploadObjName = objectName;
 
                 await action.uploadObject({
                     bucketName,
                     objectName: uploadObjName,
-                    body: generateFile(attachment),
+                    body: generateFile(attachments[0]),
                     delegatedOpts: {
                         visibility: VisibilityType.VISIBILITY_TYPE_PUBLIC_READ,
                     },
                 });
-                result = `create bucket successfully, name: ${uploadObjName}`;
+
+                if (attachments.length > 1) {
+                    result += `Only one object can be uploaded. \n`;
+                }
+                result += `Upload object successfully, name: ${uploadObjName}`;
                 break;
             }
 
@@ -266,6 +304,13 @@ export const greenfieldAction = {
                     action: "GREENFIELD_ACTION",
                 },
             },
+            {
+                user: "user",
+                content: {
+                    text: "Transfer bnb to greenfield",
+                    action: "GREENFIELD_ACTION",
+                },
+            },
         ],
     ],
     similes: [
@@ -273,10 +318,11 @@ export const greenfieldAction = {
         "CREATE_BUCKET",
         "UPLOAD_OBJECT",
         "DELETE_BUCKET",
+        "BNB_TRANSFER_TO_GREENFIELD",
     ],
 };
 
-function generateFile(attachment: Media): UploadFile {
+function generateFile(attachment: Media) {
     const filePath = fixPath(attachment.url);
 
     elizaLogger.log("filePath", filePath);
@@ -300,16 +346,18 @@ function fixPath(url: string) {
     return url.replace("/agent/agent/", "/agent/");
 }
 
-export function random(length: number) {
-    const characters = "abcdefghijklmnopqrstuvwxyz";
-
-    let result = "";
-    const charactersLength = characters.length;
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(
-            Math.floor(Math.random() * charactersLength)
-        );
-    }
-
-    return result;
-}
+const CONFIG = {
+    MAINNET: {
+        TOKENHUB_ADDRESS: "0xeA97dF87E6c7F68C9f95A69dA79E19B834823F25",
+        CROSSCHAIN_ADDRESS: "0x77e719b714be09F70D484AB81F70D02B0E182f7d",
+        GREENFIELD_RPC_URL: "https://greenfield-chain.bnbchain.org",
+        GREENFIELD_CHAIN_ID: "1017",
+    },
+    TESTNET: {
+        TOKENHUB_ADDRESS: "0xED8e5C546F84442219A5a987EE1D820698528E04",
+        CROSSCHAIN_ADDRESS: "0xa5B2c9194131A4E0BFaCbF9E5D6722c873159cb7",
+        GREENFIELD_RPC_URL:
+            "https://gnfd-testnet-fullnode-tendermint-us.bnbchain.org",
+        GREENFIELD_CHAIN_ID: "5600",
+    },
+};
