@@ -2,7 +2,7 @@ import { IAgentRuntime } from "@elizaos/core";
 import { z } from "zod";
 
 export const roochEnvSchema = z.object({
-    ROOCH_PRIVATE_KEY: z.string().min(1, "Sui private key is required"),
+    ROOCH_PRIVATE_KEY: z.string().min(1, "Rooch private key is required"),
     ROOCH_NETWORK: z.enum(["mainnet", "testnet"]),
 });
 
