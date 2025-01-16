@@ -160,6 +160,49 @@ function tryLoadFile(filePath: string): string | null {
         return null;
     }
 }
+
+async function jsonToCharacter(
+    filePath: string,
+    character: any
+): Promise<Character> {
+    validateCharacterConfig(character);
+
+    // .id isn't really valid
+    const characterId = character.id || character.name;
+    const characterPrefix = `CHARACTER.${characterId.toUpperCase().replace(/ /g, "_")}.`;
+    const characterSettings = Object.entries(process.env)
+        .filter(([key]) => key.startsWith(characterPrefix))
+        .reduce((settings, [key, value]) => {
+            const settingKey = key.slice(characterPrefix.length);
+            return { ...settings, [settingKey]: value };
+        }, {});
+    if (Object.keys(characterSettings).length > 0) {
+        character.settings = character.settings || {};
+        character.settings.secrets = {
+            ...characterSettings,
+            ...character.settings.secrets,
+        };
+    }
+    // Handle plugins
+    character.plugins = await handlePluginImporting(character.plugins);
+    if (character.extends) {
+        elizaLogger.info(
+            `Merging  ${character.name} character with parent characters`
+        );
+        for (const extendPath of character.extends) {
+            const baseCharacter = await loadCharacter(
+                path.resolve(path.dirname(filePath), extendPath)
+            );
+            character = mergeCharacters(baseCharacter, character);
+            elizaLogger.info(
+                `Merged ${character.name} with ${baseCharacter.name}`
+            );
+        }
+    }
+    return character;
+}
+
+
 function mergeCharacters(base: Character, child: Character): Character {
     const mergeObjects = (baseObj: any, childObj: any) => {
         const result: any = {};
@@ -251,49 +294,6 @@ export async function loadCharacterFromOnchain(): Promise<Character[]> {
         process.exit(1);
     }
 }
-async function loadCharacter(filePath: string): Promise<Character> {
-    const content = tryLoadFile(filePath);
-    if (!content) {
-        throw new Error(`Character file not found: ${filePath}`);
-    }
-    let character = JSON.parse(content);
-    validateCharacterConfig(character);
-
-    // .id isn't really valid
-    const characterId = character.id || character.name;
-    const characterPrefix = `CHARACTER.${characterId.toUpperCase().replace(/ /g, "_")}.`;
-    const characterSettings = Object.entries(process.env)
-        .filter(([key]) => key.startsWith(characterPrefix))
-        .reduce((settings, [key, value]) => {
-            const settingKey = key.slice(characterPrefix.length);
-            return { ...settings, [settingKey]: value };
-        }, {});
-    if (Object.keys(characterSettings).length > 0) {
-        character.settings = character.settings || {};
-        character.settings.secrets = {
-            ...characterSettings,
-            ...character.settings.secrets,
-        };
-    }
-    // Handle plugins
-    character.plugins = await handlePluginImporting(character.plugins);
-    if (character.extends) {
-        elizaLogger.info(
-            `Merging  ${character.name} character with parent characters`
-        );
-        for (const extendPath of character.extends) {
-            const baseCharacter = await loadCharacter(
-                path.resolve(path.dirname(filePath), extendPath)
-            );
-            character = mergeCharacters(baseCharacter, character);
-            elizaLogger.info(
-                `Merged ${character.name} with ${baseCharacter.name}`
-            );
-        }
-    }
-    return character;
-}
-
 
 async function loadCharacter(filePath: string): Promise<Character> {
     const content = tryLoadFile(filePath);
@@ -302,6 +302,15 @@ async function loadCharacter(filePath: string): Promise<Character> {
     }
     let character = JSON.parse(content);
     return jsonToCharacter(filePath, character);
+}
+
+async function loadCharacterFromUrl(url: string): Promise<Character> {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch character from ${url}: ${response.statusText}`);
+    }
+    const character = await response.json();
+    return jsonToCharacter(url, character);
 }
 
 export async function loadCharacters(
