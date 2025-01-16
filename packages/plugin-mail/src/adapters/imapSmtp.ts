@@ -102,7 +102,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
                 await this.client.connect();
                 this.isConnected = true;
                 this.connectionPromise = null;
-                elizaLogger.debug("Connected to IMAP server and opened INBOX");
+                elizaLogger.debug("Connected to IMAP server");
             } catch (error) {
                 this.handleDisconnect();
                 elizaLogger.error("Failed to connect to IMAP server:", {
@@ -317,7 +317,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
         });
 
         await this.mailer.sendMail({
-            from: this.config.smtp.user,
+            from: this.config.smtp.from,
             to: params.to,
             subject: params.subject,
             text: params.text,

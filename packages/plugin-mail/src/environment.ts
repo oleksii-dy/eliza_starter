@@ -21,6 +21,7 @@ export function validateMailConfig(runtime: IAgentRuntime): MailConfig {
             secure: runtime.getSetting("EMAIL_SMTP_PORT") === "465",
             user: runtime.getSetting("EMAIL_SMTP_USER") || "",
             password: runtime.getSetting("EMAIL_SMTP_PASSWORD") || "",
+            from: runtime.getSetting("EMAIL_SMTP_FROM") || "",
         },
         checkInterval: parseInt(
             runtime.getSetting("EMAIL_CHECK_INTERVAL") ||

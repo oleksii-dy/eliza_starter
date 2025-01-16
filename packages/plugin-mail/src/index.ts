@@ -11,6 +11,8 @@ import { MailConfig } from "./types";
 
 export { MailConfig, MailService };
 
+const mailPluginService = new MailPluginService();
+
 export const mailPlugin: Plugin = {
     name: "mail",
     description: "Email plugin for reading, sending, and searching emails",
@@ -20,7 +22,7 @@ export const mailPlugin: Plugin = {
         markAsReadAction,
         searchEmailsAction,
     ],
-    services: [new MailPluginService()],
+    services: [mailPluginService],
     providers: [],
     evaluators: [],
 };

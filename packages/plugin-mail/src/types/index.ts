@@ -27,22 +27,6 @@ export interface SearchCriteria {
     maxSize?: number;
 }
 
-/**
- * Parameters for sending an email
- * @example
- * {
- *   to: "recipient@example.com",
- *   subject: "Meeting Tomorrow",
- *   text: "Hi, just confirming our meeting tomorrow at 2pm."
- * }
- * @example
- * {
- *   to: "john.doe@company.com",
- *   subject: "Project Update",
- *   text: "Project is on track",
- *   html: "<h1>Project Update</h1><p>Project is on track</p>"
- * }
- */
 export interface SendEmailParams {
     /**
      * Email address of the recipient
@@ -92,6 +76,7 @@ export interface SmtpConfig {
     secure: boolean;
     user: string;
     password: string;
+    from: string;
 }
 
 export interface BaseMailConfig {

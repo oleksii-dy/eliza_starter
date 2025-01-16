@@ -44,12 +44,12 @@ export class MailPluginService extends Service {
                         this.checking = true;
                         const emails = await mailService.getRecentEmails();
 
-                        elizaLogger.debug("Checking for new emails", {
+                        elizaLogger.info("Checking for new emails", {
                             count: emails.length,
                         });
 
                         if (emails.length === 0) {
-                            elizaLogger.debug("No new emails found");
+                            elizaLogger.info("No new emails found");
                             return;
                         }
 
@@ -61,6 +61,9 @@ export class MailPluginService extends Service {
                             content: { text: "" },
                         });
 
+                        elizaLogger.info("Handling emails", {
+                            count: emails.length,
+                        });
                         for (const email of emails) {
                             await handleEmail(email, this.runtime, state);
                         }
