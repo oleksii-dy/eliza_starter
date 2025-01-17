@@ -72,7 +72,6 @@ import { fuelPlugin } from "@elizaos/plugin-fuel";
 import { genLayerPlugin } from "@elizaos/plugin-genlayer";
 import { gitcoinPassportPlugin } from "@elizaos/plugin-gitcoin-passport";
 import { hivePlugin } from "@elizaos/plugin-hive";
-import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
 import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
 import { lensPlugin } from "@elizaos/plugin-lensNetwork";
 import { multiversxPlugin } from "@elizaos/plugin-multiversx";
@@ -112,7 +111,6 @@ import net from "net";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
-
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -249,14 +247,13 @@ async function loadCharacter(filePath: string): Promise<Character> {
 }
 
 function commaSeparatedStringToArray(commaSeparated: string): string[] {
-    return commaSeparated?.split(",").map(value => value.trim())
+    return commaSeparated?.split(",").map((value) => value.trim());
 }
-
 
 export async function loadCharacters(
     charactersArg: string
 ): Promise<Character[]> {
-    let characterPaths = commaSeparatedStringToArray(charactersArg)
+    let characterPaths = commaSeparatedStringToArray(charactersArg);
     const loadedCharacters: Character[] = [];
 
     if (characterPaths?.length > 0) {
@@ -330,7 +327,9 @@ export async function loadCharacters(
 
     if (hasValidRemoteUrls()) {
         elizaLogger.info("Loading characters from remote URLs");
-        let characterUrls = commaSeparatedStringToArray(process.env.REMOTE_CHARACTER_URLS)
+        let characterUrls = commaSeparatedStringToArray(
+            process.env.REMOTE_CHARACTER_URLS
+        );
         for (const characterUrl of characterUrls) {
             const character = await loadCharacterFromUrl(characterUrl);
             loadedCharacters.push(character);
@@ -809,8 +808,9 @@ export async function createAgent(
                 getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
                 ? evmPlugin
                 : null,
-            ((getSecret(character, "EVM_PUBLIC_KEY") || getSecret(character, "INJECTIVE_PUBLIC_KEY")) &&
-                getSecret(character, "INJECTIVE_PRIVATE_KEY"))
+            (getSecret(character, "EVM_PUBLIC_KEY") ||
+                getSecret(character, "INJECTIVE_PUBLIC_KEY")) &&
+            getSecret(character, "INJECTIVE_PRIVATE_KEY")
                 ? injectivePlugin
                 : null,
             getSecret(character, "COSMOS_RECOVERY_PHRASE") &&
@@ -1118,12 +1118,10 @@ const checkPortAvailable = (port: number): Promise<boolean> => {
     });
 };
 
-
 const hasValidRemoteUrls = () =>
     process.env.REMOTE_CHARACTER_URLS &&
     process.env.REMOTE_CHARACTER_URLS !== "" &&
     process.env.REMOTE_CHARACTER_URLS.startsWith("http");
-
 
 const startAgents = async () => {
     const directClient = new DirectClient();
