@@ -152,12 +152,7 @@ import {
         const wallet = new Wallet(runtime.getSetting("HYPERLANE_PRIVATE_KEY"));
         multiProvider.setSharedSigner(wallet);
 
-        // Create ISM factory deployer
-        const ismFactoryDeployer = new HyperlaneProxyFactoryDeployer(
-          multiProvider,
-          undefined, // No contract verifier
-          true // Enable concurrent deployment
-        );
+
 
         elizaLogger.info("Setting up deployment configuration...");
 
@@ -181,26 +176,9 @@ import {
                 mailbox: runtime.getSetting(`${options.destinationChain.toUpperCase()}_MAILBOX_ADDRESS`) as Address,
             },
         };
-        elizaLogger.info("Deploying ISM and Hook modules...");
 
-        // Get factory addresses from the deployer
-        const factoryAddresses = {
-          [options.sourceChain]: {
-            staticMerkleRootMultisigIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            staticMessageIdMultisigIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            staticAggregationIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            domainRoutingIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-          },
-          [options.destinationChain]: {
-            staticMerkleRootMultisigIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            staticMessageIdMultisigIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            aggregationIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            domainRoutingIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            staticAggregationIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-          },
-        };
 
-        // Deploy ISM module with proper configuration
+
 
         elizaLogger.info("Deploying token contracts and Warp Routes...");
 
