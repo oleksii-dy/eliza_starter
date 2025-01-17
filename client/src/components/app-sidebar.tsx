@@ -1,3 +1,4 @@
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import info from "@/lib/info.json";
 import {
@@ -73,8 +74,8 @@ export function AppSidebar() {
                                 <div>
                                     {agents?.map(
                                         (agent: { id: UUID; name: string }) => (
-                                            <>
-                                                <SidebarMenuItem key={agent.id}>
+                                            <React.Fragment key={agent.id}>
+                                                <SidebarMenuItem>
                                                     <NavLink
                                                         to={`/chat/${agent.id}`}
                                                     >
@@ -90,7 +91,9 @@ export function AppSidebar() {
                                                         </SidebarMenuButton>
                                                     </NavLink>
                                                 </SidebarMenuItem>
-                                                <SidebarMenuItem>
+                                                <SidebarMenuItem
+                                                    key={`${agent.id}-archetype`}
+                                                >
                                                     <NavLink
                                                         to={`/settings/archetypes/${agent.id}`}
                                                     >
@@ -100,7 +103,7 @@ export function AppSidebar() {
                                                         </SidebarMenuButton>
                                                     </NavLink>
                                                 </SidebarMenuItem>
-                                            </>
+                                            </React.Fragment>
                                         )
                                     )}
                                 </div>

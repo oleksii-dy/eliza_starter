@@ -7,6 +7,7 @@ import { type UUID } from "@elizaos/core";
 export const ArchetypeSelector: React.FC = () => {
     const { agentId } = useParams<{ agentId: UUID }>();
 
+    const [isApplying, setIsApplying] = useState(false);
     const [selectedArchetype, setSelectedArchetype] =
         useState<ArchetypeName | null>(null);
     const [applyStatus, setApplyStatus] = useState<string | null>(null);
@@ -14,24 +15,44 @@ export const ArchetypeSelector: React.FC = () => {
     const handleDownload = () => {
         if (!selectedArchetype) return;
 
-        const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(
-            JSON.stringify(archetypes[selectedArchetype], null, 2)
-        )}`;
-        const downloadAnchorNode = document.createElement("a");
-        downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute(
-            "download",
-            `${selectedArchetype}.json`
+        // const dataStr = `data:text/json;charset=utf-8,${encodeURIComponent(
+        //     JSON.stringify(archetypes[selectedArchetype], null, 2)
+        // )}`;
+        // const downloadAnchorNode = document.createElement("a");
+        // downloadAnchorNode.setAttribute("href", dataStr);
+        // downloadAnchorNode.setAttribute(
+        //     "download",
+        //     `${selectedArchetype}.json`
+        // );
+        // document.body.appendChild(downloadAnchorNode);
+        // downloadAnchorNode.click();
+        // downloadAnchorNode.remove();
+
+        //
+        const blob = new Blob(
+            [JSON.stringify(archetypes[selectedArchetype], null, 2)],
+            { type: "application/json" }
         );
-        document.body.appendChild(downloadAnchorNode);
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${selectedArchetype}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
     };
 
     const handleApply = async () => {
         if (!selectedArchetype) return;
 
+        if (
+            !window.confirm(
+                `Are you sure you want to apply the ${selectedArchetype} archetype?`
+            )
+        )
+            return;
+
         try {
+            setIsApplying(true);
             await apiClient.applyArchetype(
                 agentId,
                 archetypes[selectedArchetype]
@@ -39,7 +60,11 @@ export const ArchetypeSelector: React.FC = () => {
             setApplyStatus("success");
         } catch (error) {
             console.error("Failed to apply archetype:", error);
-            setApplyStatus("error");
+            setApplyStatus(
+                `Error: ${error instanceof Error ? error.message : "Unknown error"}`
+            );
+        } finally {
+            setIsApplying(false);
         }
 
         setTimeout(() => setApplyStatus(null), 3000);
@@ -94,9 +119,9 @@ export const ArchetypeSelector: React.FC = () => {
                 <button
                     onClick={handleApply}
                     className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
-                    disabled={!selectedArchetype || !agentId}
+                    disabled={!selectedArchetype || !agentId || isApplying}
                 >
-                    Apply Archetype
+                    {isApplying ? "Applying..." : "Apply Archetype"}
                 </button>
             </div>
 

@@ -11,13 +11,13 @@ export const archetypes: Record<ArchetypeName, Character> = {
         name: "FriendlyBot",
         modelProvider: ModelProviderName.ANTHROPIC,
         settings: {
-            voice: { model: "en_US-happy-medium" },
+            voice: { model: "en_US-lessac-medium" },
         },
         bio: ["A friendly bot who always looks on the bright side."],
         style: {
             all: ["Optimistic", "Encouraging", "Kind"],
-            chat: ["Optimistic", "Encouraging", "Kind"],
-            post: ["Optimistic", "Encouraging", "Kind"],
+            chat: [],
+            post: [],
         },
         knowledge: ["Basic human etiquette", "Empathy strategies"],
         messageExamples: [
@@ -42,7 +42,7 @@ export const archetypes: Record<ArchetypeName, Character> = {
         name: "SarcasticBot",
         modelProvider: ModelProviderName.ANTHROPIC,
         settings: {
-            voice: { model: "en_US-sarcastic-medium" },
+            voice: { model: "en_US-amy-medium" },
         },
         bio: ["A bot with a sharp tongue and dry humor."],
         style: {
@@ -78,7 +78,7 @@ export const archetypes: Record<ArchetypeName, Character> = {
         name: "FormalBot",
         modelProvider: ModelProviderName.ANTHROPIC,
         settings: {
-            voice: { model: "en_US-formal-medium" },
+            voice: { model: "en_US-ryan-medium" },
         },
         bio: [
             "A professional and courteous bot with a refined communication style.",

@@ -42,12 +42,12 @@ function App() {
                                             element={<Chat />}
                                         />
                                         <Route
-                                            path="settings/:agentId"
-                                            element={<Overview />}
-                                        />
-                                        <Route
                                             path="settings/archetypes/:agentId"
                                             element={<ArchetypeSelector />}
+                                        />
+                                        <Route
+                                            path="settings/:agentId"
+                                            element={<Overview />}
                                         />
                                     </Routes>
                                 </div>
