@@ -1,5 +1,9 @@
-import { Provider } from "@elizaos/core";
-import { ChainCatcherResponse, fetchChainCatcher } from "../utils/chainCatcher";
+import { Provider, stringToUuid } from "@elizaos/core";
+import {
+    ChainCatcherItem,
+    ChainCatcherResponse,
+    fetchChainCatcher,
+} from "../utils/chainCatcher";
 
 // interface FormattedMarketData {
 //     symbol: string;
@@ -53,29 +57,68 @@ export const cryptoNewsData: Provider = {
             // fetch several times
             const chainCatcher: ChainCatcherResponse =
                 await fetchChainCatcher();
+            const cacheManager = runtime.cacheManager;
+            const articles: ChainCatcherItem[] = [];
+            let output;
+
+            for (const article of chainCatcher.data.list) {
+                const cached = await cacheManager.get(
+                    `cryptoNews_${article.id}`
+                );
+                if (!cached) {
+                    // new acrticle
+                    console.log(
+                        `NEW ARTICLE : ${article.title} # ${article.id}`
+                    );
+                    // means it's not cached, then we push it to the articles
+                    articles.push(article);
+                    // cache it
+                    await cacheManager.set(`cryptoNews_${article.id}`, article);
+                    // put the news to knowledge as well
+                    await runtime.knowledgeManager.createMemory({
+                        // We namespace the knowledge base uuid to avoid id
+                        // collision with the document above.
+                        id: stringToUuid(`cryptoNews_${article.id}`),
+                        roomId: runtime.agentId,
+                        agentId: runtime.agentId,
+                        userId: runtime.agentId,
+                        createdAt: Date.now(),
+                        content: {
+                            text: article.description,
+                            type: "news",
+                        },
+                    });
+                } else {
+                    console.log(
+                        `ARTICLE ${article.id} is already cached, skipping`
+                    );
+                }
+            }
 
             // const cryptoNews: SerperNewsResponse =
             //     await fetchSerperNews("crypto");
             // const suiNews: SerperNewsResponse = await fetchSerperNews("$SUI");
-            let output = `# NEWS for ${runtime.character.name}\n\n`;
-            // output += `The News have this format:\n\n`;
-            // output += `
-            // - Title <--- Title of the news\n
-            // Description <--- Content of the news\n
-            // Timestamp <--- the time of the news\n\n
-            // `;
+            if (articles.length > 0) {
+                output = `# NEWS for ${runtime.character.name}\n\n`;
+                // output += `The News have this format:\n\n`;
+                // output += `
+                // - Title <--- Title of the news\n
+                // Description <--- Content of the news\n
+                // Timestamp <--- the time of the news\n\n
+                // `;
 
-            chainCatcher.data.list.forEach((article) => {
-                output += `- ${article.title}\n${article.description}\nTime: ${article.releaseTime}\n\n`;
-            });
+                chainCatcher.data.list.forEach((article) => {
+                    output += `- ${article.title}\n${article.description}\nTime: ${article.releaseTime}\n\n`;
+                });
 
-            // cryptoNews.news.forEach((article) => {
-            //     output += `- ${article.title}\n${article.snippet}\n\n`;
-            // });
-            // suiNews.news.forEach((article) => {
-            //     output += `- ${article.title}\n${article.snippet}\n\n`;
-            // });
-            output += `# ADDITIONAL_NOTES: if there's any decimal numbers you should convert the decimal separator into comma instead of dot\n\n# END NEWS\n\n`;
+                // cryptoNews.news.forEach((article) => {
+                //     output += `- ${article.title}\n${article.snippet}\n\n`;
+                // });
+                // suiNews.news.forEach((article) => {
+                //     output += `- ${article.title}\n${article.snippet}\n\n`;
+                // });
+                output += `# ADDITIONAL_NOTES: if there's any decimal numbers you should convert the decimal separator into comma instead of dot\n\n# END NEWS\n\n`;
+            }
 
             // elizaLogger.log(output);
 
