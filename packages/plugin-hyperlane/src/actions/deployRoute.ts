@@ -201,62 +201,6 @@ import {
         };
 
         // Deploy ISM module with proper configuration
-        const validators = [
-          {
-            address: await wallet.getAddress(),
-            alias: 'owner',
-          },
-        ] as const;
-
-        const ismConfig: MultisigIsmConfig = {
-          type: IsmType.MERKLE_ROOT_MULTISIG,
-          validators: validators.map(v => v.address),
-          threshold: 1,
-        };
-
-        const evmIsmModule = await EvmIsmModule.create({
-          chain: options.sourceChain,
-          mailbox: runtime.getSetting(`${options.sourceChain.toUpperCase()}_MAILBOX_ADDRESS`) as Address,
-          multiProvider,
-          config: ismConfig,
-          proxyFactoryFactories: {
-            staticMerkleRootMultisigIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            staticMessageIdMultisigIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            domainRoutingIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            staticAggregationIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            staticAggregationHookFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            staticMerkleRootWeightedMultisigIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            staticMessageIdWeightedMultisigIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-          },
-        });
-
-        // Deploy Hook module with proper protocol fee configuration
-        const hookConfig : HookConfig = {
-          type: HookType.PROTOCOL_FEE,
-          owner: await wallet.getAddress(),
-          protocolFee: '0', // No fee initially
-          beneficiary: await wallet.getAddress(),
-          maxProtocolFee: '1000000000000000000', // 1 ETH in wei
-        };
-
-        const hookModule = await EvmHookModule.create({
-          chain: options.sourceChain,
-          multiProvider,
-          config: hookConfig,
-          proxyFactoryFactories: {
-            staticMerkleRootMultisigIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            staticMessageIdMultisigIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            staticAggregationIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            domainRoutingIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            staticAggregationHookFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            staticMerkleRootWeightedMultisigIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-            staticMessageIdWeightedMultisigIsmFactory: runtime.getSetting("ISM_FACTORY_ADDRESS") as Address,
-          },
-          coreAddresses: {
-            mailbox: runtime.getSetting(`${options.sourceChain.toUpperCase()}_MAILBOX_ADDRESS`) as Address,
-            proxyAdmin: runtime.getSetting(`${options.sourceChain.toUpperCase()}_PROXY_ADMIN`) as Address,
-          },
-        });
 
         elizaLogger.info("Deploying token contracts and Warp Routes...");
 
