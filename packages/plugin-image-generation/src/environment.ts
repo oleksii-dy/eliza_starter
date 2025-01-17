@@ -27,7 +27,7 @@ export const imageGenEnvSchema = z
         },
         {
             message:
-                "At least one of ANTHROPIC_API_KEY, TOGETHER_API_KEY, HEURIST_API_KEY, FAL_API_KEY, OPENAI_API_KEY, VENICE_API_KEY or LIVEPEER_GATEWAY_URL is required",
+                "At least one of ANTHROPIC_API_KEY, NINETEEN_AI_API_KEY, TOGETHER_API_KEY, HEURIST_API_KEY, FAL_API_KEY, OPENAI_API_KEY, VENICE_API_KEY or LIVEPEER_GATEWAY_URL is required",
         }
     );
 
