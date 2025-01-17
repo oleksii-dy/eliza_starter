@@ -3,10 +3,9 @@ import {
     Service,
     ServiceType,
     elizaLogger,
-    stringToUuid,
 } from "@elizaos/core";
 import { validateMailConfig } from "../environment";
-import { handleEmail } from "../utils/emailHandler";
+import { EmailChecker } from "../utils/emailChecker";
 import { MailService } from "./mail";
 
 export class MailPluginService extends Service {
@@ -18,12 +17,10 @@ export class MailPluginService extends Service {
     readonly description = "Plugin for handling email interactions";
 
     private runtime: IAgentRuntime;
-    private checkInterval: NodeJS.Timeout | null = null;
-    private checking = false;
+    private emailChecker: EmailChecker;
 
     async initialize(runtime: IAgentRuntime) {
         this.runtime = runtime;
-        this.checking = false;
 
         elizaLogger.info("Initializing mail plugin");
         const mailConfig = validateMailConfig(this.runtime);
@@ -33,53 +30,9 @@ export class MailPluginService extends Service {
             const mailService = MailService.getInstance(mailConfig);
             global.mailService = mailService;
 
-            this.checkInterval = setInterval(
-                async () => {
-                    try {
-                        if (this.checking) {
-                            elizaLogger.info("Already checking for emails...");
-                            return;
-                        }
-
-                        this.checking = true;
-                        const emails = await mailService.getRecentEmails();
-
-                        elizaLogger.info("Checking for new emails", {
-                            count: emails.length,
-                        });
-
-                        if (emails.length === 0) {
-                            elizaLogger.info("No new emails found");
-                            return;
-                        }
-
-                        const state = await this.runtime.composeState({
-                            id: stringToUuid("initial-" + this.runtime.agentId),
-                            userId: this.runtime.agentId,
-                            agentId: this.runtime.agentId,
-                            roomId: this.runtime.agentId,
-                            content: { text: "" },
-                        });
-
-                        elizaLogger.info("Handling emails", {
-                            count: emails.length,
-                        });
-                        for (const email of emails) {
-                            await handleEmail(email, this.runtime, state);
-                        }
-                    } catch (error: any) {
-                        elizaLogger.error("Error checking emails:", {
-                            code: error.code,
-                            command: error.command,
-                            message: error.message,
-                            stack: error.stack,
-                        });
-                    } finally {
-                        this.checking = false;
-                    }
-                },
-                (mailConfig.checkInterval || 60) * 1000
-            );
+            // Initialize and start periodic email checking
+            this.emailChecker = new EmailChecker(runtime);
+            await this.emailChecker.startPeriodicCheck();
         } catch (error) {
             elizaLogger.error("Failed to initialize mail service:", {
                 error,
@@ -89,9 +42,8 @@ export class MailPluginService extends Service {
     }
 
     async dispose() {
-        if (this.checkInterval) {
-            clearInterval(this.checkInterval);
-            this.checkInterval = null;
+        if (this.emailChecker) {
+            await this.emailChecker.stopPeriodicCheck();
         }
         // Don't dispose of the MailService here since it's a singleton
         // Other parts of the application might still be using it

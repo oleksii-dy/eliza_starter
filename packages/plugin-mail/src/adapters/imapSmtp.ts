@@ -1,5 +1,6 @@
 import { elizaLogger } from "@elizaos/core";
-import { ImapFlow } from "imapflow";
+import { ImapFlow, MailboxObject } from "imapflow";
+import { simpleParser } from "mailparser";
 import { createTransport, Transporter } from "nodemailer";
 import {
     EmailMessage,
@@ -9,10 +10,10 @@ import {
     SearchCriteria,
     SendEmailParams,
 } from "../types";
-import { simpleParser } from "mailparser";
 
 export class ImapSmtpMailAdapter implements IMailAdapter {
     private client: ImapFlow;
+    private mailbox: MailboxObject;
     private mailer: Transporter<any, any>;
     private config: MailConfig;
     private lastUID: number | null = null;
@@ -102,7 +103,13 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
             try {
                 this.isConnecting = true;
                 this.reconnectAttempts++;
+
                 await this.client.connect();
+
+                this.mailbox = await this.client.mailboxOpen("INBOX", {
+                    readOnly: true,
+                });
+
                 this.isConnected = true;
                 this.connectionPromise = null;
                 elizaLogger.debug("Connected to IMAP server");
@@ -139,29 +146,21 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
             maxEmails: this.config.maxEmails,
         });
 
-        let lock: any;
-
         try {
-            lock = await this.client.getMailboxLock("INBOX");
-            const mailbox = this.client.mailbox;
-            if (!mailbox) {
-                elizaLogger.warn("Mailbox not available, reconnecting...");
-                await this.handleDisconnect();
-                await this.ensureConnection();
-                return this.getRecentEmails();
-            }
-
-            if (this.uidValidity && this.uidValidity !== mailbox.uidValidity) {
+            if (
+                this.uidValidity &&
+                this.uidValidity !== this.mailbox.uidValidity
+            ) {
                 elizaLogger.warn("UIDVALIDITY changed, resetting lastUID", {
                     old: this.uidValidity,
-                    new: mailbox.uidValidity,
+                    new: this.mailbox.uidValidity,
                 });
                 this.lastUID = null;
             }
-            this.uidValidity = mailbox.uidValidity;
+            this.uidValidity = this.mailbox.uidValidity;
 
             if (this.lastUID === null) {
-                this.lastUID = mailbox.uidNext - 1;
+                this.lastUID = this.mailbox.uidNext - 1;
                 elizaLogger.debug("First run, storing latest UID", {
                     lastUID: this.lastUID,
                 });
@@ -203,10 +202,9 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
             });
 
             return emails;
-        } finally {
-            if (lock) {
-                lock.release();
-            }
+        } catch (error) {
+            elizaLogger.error("Error fetching messages:", error);
+            throw error;
         }
     }
 
@@ -219,14 +217,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
             criteria: imapCriteria,
         });
 
-        let lock: any;
         try {
-            elizaLogger.info("Getting mailbox lock");
-            lock = await this.client.getMailboxLock("INBOX");
-
-            elizaLogger.info("Searching emails with criteria", {
-                criteria: imapCriteria,
-            });
             const results = await this.client.search({ or: imapCriteria });
             if (!results.length) {
                 return [];
@@ -252,9 +243,43 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
             }
 
             return emails;
-        } finally {
-            if (lock) {
-                lock.release();
+        } catch (error) {
+            elizaLogger.error("Error searching emails:", error);
+            throw error;
+        }
+    }
+
+    async sendEmail(params: SendEmailParams): Promise<void> {
+        this.mailer = createTransport({
+            ...this.config.smtp,
+            auth: {
+                user: this.config.imap.user,
+                pass: this.config.imap.password,
+            },
+        });
+
+        await this.mailer.sendMail({
+            from: this.config.smtp.from,
+            to: params.to,
+            subject: params.subject,
+            text: params.text,
+            html: params.html,
+        });
+    }
+
+    async markAsRead(messageId: string): Promise<void> {
+        if (!this.config.markAsRead) return;
+        await this.ensureConnection();
+        await this.client.messageFlagsAdd(messageId, ["\\Seen"]);
+    }
+
+    async dispose(): Promise<void> {
+        if (this.isConnected) {
+            try {
+                elizaLogger.info("Disposing IMAP client");
+                await this.client.logout();
+            } finally {
+                this.isConnected = false;
             }
         }
     }
@@ -309,49 +334,6 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
                 error,
             });
             return null;
-        }
-    }
-
-    async sendEmail(params: SendEmailParams): Promise<void> {
-        this.mailer = createTransport({
-            ...this.config.smtp,
-            auth: {
-                user: this.config.imap.user,
-                pass: this.config.imap.password,
-            },
-        });
-
-        await this.mailer.sendMail({
-            from: this.config.smtp.from,
-            to: params.to,
-            subject: params.subject,
-            text: params.text,
-            html: params.html,
-        });
-    }
-
-    async markAsRead(messageId: string): Promise<void> {
-        await this.ensureConnection();
-
-        let lock: any;
-        try {
-            lock = await this.client.getMailboxLock("INBOX");
-            await this.client.messageFlagsAdd(messageId, ["\\Seen"]);
-        } finally {
-            if (lock) {
-                lock.release();
-            }
-        }
-    }
-
-    async dispose(): Promise<void> {
-        if (this.isConnected) {
-            try {
-                elizaLogger.info("Disposing IMAP client");
-                await this.client.logout();
-            } finally {
-                this.isConnected = false;
-            }
         }
     }
 }

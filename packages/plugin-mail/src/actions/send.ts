@@ -106,13 +106,13 @@ export const sendEmailAction: Action = {
 
         const emailContext = `Given this request: "${message.content.text}", extract email parameters. Return only a JSON object with these fields:
         {
-            "to": "recipient's email address (required)",
+            "to": "recipient's email address (required, must not be an example.com address)",
             "subject": "email subject line (required)",
             "text": "email body content (required)"
         }
 
         Example outputs:
-        {"to": "john@example.com", "subject": "Meeting Tomorrow", "text": "Hi John, I need to reschedule our meeting tomorrow. What time works best for you?"}
+        {"to": "user@company.com", "subject": "Meeting Tomorrow", "text": "Hi John, I need to reschedule our meeting tomorrow. What time works best for you?"}
         {"to": "team@company.com", "subject": "Project Update", "text": "Here's the latest status on our project: everything is on track for delivery."}`;
 
         const emailParams = await generateText({
@@ -131,6 +131,12 @@ export const sendEmailAction: Action = {
 
             if (!params.to || !params.subject || !params.text) {
                 throw new Error("Missing required email parameters");
+            }
+
+            if (params.to.includes("@example.com")) {
+                throw new Error(
+                    "Recipient email cannot be an example.com address"
+                );
             }
         } catch (err) {
             elizaLogger.error("Failed to parse email parameters", {

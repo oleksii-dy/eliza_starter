@@ -1,14 +1,13 @@
 # @elizaos/plugin-mail
 
-Email plugin for ElizaOS that provides IMAP and SMTP functionality for reading and sending emails.
+Email plugin for ElizaOS that provides IMAP/SMTP functionality for reading and sending emails.
 
 ## Features
 
-- IMAP support for reading emails
+- Automatic inbox monitoring via periodic IMAP checks
 - SMTP support for sending emails
-- Mark emails as read/unread
-- Support for HTML and plain text emails
-- Real-time email monitoring (via IMAP IDLE)
+- Email search functionality
+- Stores a concise summary of each processed email in the memory
 
 ## Installation
 
@@ -18,96 +17,82 @@ pnpm add @elizaos/plugin-mail
 
 ## Configuration
 
-The plugin requires both IMAP and SMTP configuration:
+The plugin uses environment variables for configuration:
 
-```typescript
-const config = {
-    imap: {
-        user: "your-email@example.com",
-        password: "your-password",
-        host: "imap.example.com",
-        port: 993,
-        tls: true,
-    },
-    smtp: {
-        host: "smtp.example.com",
-        port: 587,
-        secure: false,
-        auth: {
-            user: "your-email@example.com",
-            pass: "your-password",
-        },
-    },
-};
-```
+```env
+# Email Configuration Type
+EMAIL_TYPE=imap-smtp
 
-## Usage
+# IMAP Configuration
+EMAIL_IMAP_HOST=imap.example.com
+EMAIL_IMAP_PORT=993
+EMAIL_IMAP_SECURE=true
+EMAIL_IMAP_USER=your-email@example.com
+EMAIL_IMAP_PASSWORD=your-password
 
-```typescript
-import { MailPlugin } from "@elizaos/plugin-mail";
+# SMTP Configuration
+EMAIL_SMTP_HOST=smtp.example.com
+EMAIL_SMTP_PORT=587
+EMAIL_SMTP_SECURE=false
+EMAIL_SMTP_USER=your-email@example.com
+EMAIL_SMTP_PASSWORD=your-password
+EMAIL_SMTP_FROM="Your Name <your-email@example.com>"
 
-// Initialize the plugin
-const mailPlugin = new MailPlugin(config);
-await mailPlugin.init();
-
-// Get unread emails
-const unreadEmails = await mailPlugin.getUnreadEmails();
-
-// Send an email
-await mailPlugin.sendEmail(
-    "recipient@example.com",
-    "Subject",
-    "Plain text content",
-    "<p>HTML content</p>"
-);
-
-// Mark an email as read
-await mailPlugin.markAsRead(emailUid);
-
-// Clean up
-await mailPlugin.dispose();
+# Plugin Settings
+EMAIL_CHECK_INTERVAL=60 # Check interval in seconds
+EMAIL_MAX_EMAILS=10 # Maximum emails to fetch per check
+EMAIL_MARK_AS_READ=false # Whether to mark processed emails as read
 ```
 
 ## Common Email Providers
 
 ### Gmail
 
-```typescript
-{
-  imap: {
-    host: 'imap.gmail.com',
-    port: 993,
-    tls: true
-  },
-  smtp: {
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false
-  }
-}
+For Gmail, you need to:
+
+1. Enable 2-Step Verification in your Google Account
+2. Generate an App Password: Google Account -> Security -> App passwords
+3. Enable IMAP access to your Gmail
+4. Use these settings:
+
+```env
+EMAIL_IMAP_HOST=imap.gmail.com
+EMAIL_IMAP_PORT=993
+EMAIL_IMAP_SECURE=true
+EMAIL_SMTP_HOST=smtp.gmail.com
+EMAIL_SMTP_PORT=587
+EMAIL_SMTP_SECURE=false
 ```
 
 ### Outlook/Office 365
 
-```typescript
-{
-  imap: {
-    host: 'outlook.office365.com',
-    port: 993,
-    tls: true
-  },
-  smtp: {
-    host: 'smtp.office365.com',
-    port: 587,
-    secure: false
-  }
-}
+IMAP support in Outlook/Office 365 is not enabled by default.
+
+```env
+EMAIL_IMAP_HOST=outlook.office365.com
+EMAIL_IMAP_PORT=993
+EMAIL_IMAP_SECURE=true
+EMAIL_SMTP_HOST=smtp.office365.com
+EMAIL_SMTP_PORT=587
+EMAIL_SMTP_SECURE=false
 ```
 
 ## Security Notes
 
-1. Never hardcode email credentials in your code
-2. Use environment variables or secure secret management
+1. Use a testing mailbox when developing your character configuration
+2. Be careful when pairing this with other plugins
 3. For Gmail, use App Passwords instead of account password
 4. Enable 2FA on your email accounts
-5. Consider using OAuth2 for authentication (future feature)
+
+## Plugin Architecture
+
+The plugin consists of several key components:
+
+- `MailService`: Singleton service managing email connections
+- `EmailChecker`: Handles periodic email checking and processing
+- `ImapSmtpMailAdapter`: Implements IMAP/SMTP functionality
+- Actions:
+    - `sendEmailAction`: For sending emails
+    - `searchEmailsAction`: For searching emails
+
+The plugin automatically checks for new emails at configured intervals and processes them using the agent's runtime.

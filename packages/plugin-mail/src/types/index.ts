@@ -64,6 +64,7 @@ export interface BaseMailConfig {
     type?: "imap-smtp" | "gmail" | "outlook";
     checkInterval?: number;
     maxEmails?: number;
+    markAsRead?: boolean;
 }
 
 export interface ImapSmtpMailConfig extends BaseMailConfig {

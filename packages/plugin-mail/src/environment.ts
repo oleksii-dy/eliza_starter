@@ -33,6 +33,7 @@ export function validateMailConfig(runtime: IAgentRuntime): MailConfig {
                 String(DEFAULT_MAX_EMAILS),
             10
         ),
+        markAsRead: runtime.getSetting("EMAIL_MARK_AS_READ") === "true",
     };
 
     elizaLogger.info("Mail configuration validation", {
@@ -48,6 +49,7 @@ export function validateMailConfig(runtime: IAgentRuntime): MailConfig {
         },
         checkInterval: mailConfig.checkInterval,
         maxEmails: mailConfig.maxEmails,
+        markAsRead: mailConfig.markAsRead,
     });
 
     if (!mailConfig.imap.host) {
