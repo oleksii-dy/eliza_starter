@@ -10,7 +10,8 @@ import { LensAgentClient } from "@elizaos/client-lens";
 import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
-import { GitHubClientInterface } from "@elizaos/client-github";
+import { FarcasterClientInterface } from "@elizaos/client-farcaster";
+import { DirectClient } from "@elizaos/client-direct";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
 import { PrimusAdapter } from "@elizaos/plugin-primus";
 import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
@@ -123,6 +124,7 @@ import {
     githubInteractWithPRPlugin,
     githubInteractWithIssuePlugin,
 } from "@elizaos/plugin-github";
+import { GitHubClientInterface } from "@elizaos/client-github";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -714,6 +716,7 @@ export async function initializeClients(
         lensClient.start();
         clients.lens = lensClient;
     }
+
     if (clientTypes.includes("github")) {
         const githubClient = await GitHubClientInterface.start(runtime);
         if (githubClient) clients.github = githubClient;
@@ -953,20 +956,6 @@ export async function createAgent(
             getSecret(character, "COINBASE_NOTIFICATION_URI")
                 ? webhookPlugin
                 : null,
-            ...(getSecret(character, "GITHUB_PLUGIN_ENABLED") &&
-            getSecret(character, "GITHUB_API_TOKEN")
-                ? [
-                      githubInitializePlugin,
-                      githubCreateCommitPlugin,
-                      githubCreatePullRequestPlugin,
-                      githubCreateMemorizeFromFilesPlugin,
-                      githubCreateIssuePlugin,
-                      githubModifyIssuePlugin,
-                      githubIdeationPlugin,
-                      githubInteractWithIssuePlugin,
-                      githubInteractWithPRPlugin,
-                  ]
-                : []),
             goatPlugin,
             getSecret(character, "COINGECKO_API_KEY") ||
             getSecret(character, "COINGECKO_PRO_API_KEY")
@@ -1055,6 +1044,20 @@ export async function createAgent(
             getSecret(character, "PYTH_MAINNET_PROGRAM_KEY")
                 ? pythDataPlugin
                 : null,
+            ...(getSecret(character, "GITHUB_PLUGIN_ENABLED") &&
+            getSecret(character, "GITHUB_API_TOKEN")
+                ? [
+                      githubInitializePlugin,
+                      githubCreateCommitPlugin,
+                      githubCreatePullRequestPlugin,
+                      githubCreateMemorizeFromFilesPlugin,
+                      githubCreateIssuePlugin,
+                      githubModifyIssuePlugin,
+                      githubIdeationPlugin,
+                      githubInteractWithIssuePlugin,
+                      githubInteractWithPRPlugin,
+                  ]
+                : []),
         ].filter(Boolean),
         providers: [],
         actions: [],
@@ -1232,7 +1235,7 @@ const startAgents = async () => {
         characters = await loadCharacterFromOnchain();
     }
 
-    if ((onchainJson == "null" && charactersArg) || hasValidRemoteUrls()) {
+    if (charactersArg || hasValidRemoteUrls()) {
         characters = await loadCharacters(charactersArg);
     }
 
