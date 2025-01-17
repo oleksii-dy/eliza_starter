@@ -329,7 +329,7 @@ export class ImageDescriptionService
                 this.provider = new GroqImageProvider(this.runtime);
                 elizaLogger.debug("Using Groq for vision model");
             } else {
-                elizaLogger.log(
+                elizaLogger.warn(
                     `Unsupported image vision model provider: ${this.runtime.imageVisionModelProvider}`
                 );
                 return false;
