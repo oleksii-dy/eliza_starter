@@ -47,7 +47,7 @@ export class TeeLogService extends Service implements ITeeLogService {
         const walletSecretSalt = runtime.getSetting("WALLET_SECRET_SALT");
 
         const useSgxGramine = runInSgx && enableValues.includes(runInSgx.toLowerCase());
-        const useTdxDstack = !teeMode && teeMode !== TEEMode.OFF && walletSecretSalt;
+        const useTdxDstack = teeMode && teeMode !== TEEMode.OFF && walletSecretSalt;
 
         if (useSgxGramine && useTdxDstack) {
             throw new Error("Cannot configure both SGX and TDX at the same time.");
