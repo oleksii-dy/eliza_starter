@@ -329,7 +329,7 @@ export async function loadCharacters(
 
     if (hasValidRemoteUrls()) {
         elizaLogger.info("Loading characters from remote URLs");
-        let characterUrls = commaSeparatedStringToArray(process.env.REMOTE_CHARACTER_URLS);
+        let characterUrls = commaSeparatedStringToArray(process.env.REMOTE_CHARACTER_URLS)
         for (const characterUrl of characterUrls) {
             const character = await loadCharacterFromUrl(characterUrl);
             loadedCharacters.push(character);
@@ -808,8 +808,8 @@ export async function createAgent(
                 getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
                 ? evmPlugin
                 : null,
-            (getSecret(character, "EVM_PUBLIC_KEY") || getSecret(character, "INJECTIVE_PUBLIC_KEY")) &&
-                getSecret(character, "INJECTIVE_PRIVATE_KEY")
+            ((getSecret(character, "EVM_PUBLIC_KEY") || getSecret(character, "INJECTIVE_PUBLIC_KEY")) &&
+                getSecret(character, "INJECTIVE_PRIVATE_KEY"))
                 ? injectivePlugin
                 : null,
             getSecret(character, "COSMOS_RECOVERY_PHRASE") &&
