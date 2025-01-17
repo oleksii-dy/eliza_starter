@@ -251,7 +251,8 @@ export class GitHubClient extends EventEmitter {
             this.state.repo as string,
             this.state.branch as string,
             this.apiToken,
-            issuesLimit
+            issuesLimit,
+            true
         );
         await savePullRequestsToMemory(
             this.runtime,
@@ -260,7 +261,8 @@ export class GitHubClient extends EventEmitter {
             this.state.repo as string,
             this.state.branch as string,
             this.apiToken,
-            pullRequestsLimit
+            pullRequestsLimit,
+            true
         );
 
         const callback: HandlerCallback = async (content: Content) => {

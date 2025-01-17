@@ -324,7 +324,8 @@ export const getPullRequestFromMemories = async (
 export async function saveIssueToMemory(
     runtime: IAgentRuntime,
     message: Memory,
-    issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"]
+    issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"],
+    previousIssue: boolean = false
 ): Promise<Memory> {
     const issueId = stringToUuid(
         `${message.roomId}-${runtime.agentId}-issue-${issue.number}`
@@ -335,7 +336,9 @@ export async function saveIssueToMemory(
         agentId: runtime.agentId,
         roomId: message.roomId,
         content: {
-            text: `Previously created issue: ${issue.title} ${issue.html_url}`,
+            text: previousIssue
+                ? `Previously created issue: ${issue.title} ${issue.html_url}`
+                : `Created issue: ${issue.title} ${issue.html_url}`,
             action: "CREATE_ISSUE",
             source: "github",
             metadata: {
@@ -366,7 +369,8 @@ export const saveIssuesToMemory = async (
     repository: string,
     branch: string,
     apiToken: string,
-    limit: number = 999999
+    limit: number = 999999,
+    previousIssue: boolean = false
 ): Promise<Memory[]> => {
     const githubService = new GitHubService({
         owner: owner,
@@ -389,7 +393,12 @@ export const saveIssuesToMemory = async (
         //         )
         // );
         // if (!issueMemory) {
-        const newIssueMemory = await saveIssueToMemory(runtime, message, issue);
+        const newIssueMemory = await saveIssueToMemory(
+            runtime,
+            message,
+            issue,
+            previousIssue
+        );
 
         issuesMemories.push(newIssueMemory);
         // } else {
@@ -487,7 +496,8 @@ export async function savePullRequestToMemory(
     owner: string,
     repo: string,
     branch: string,
-    apiToken: string
+    apiToken: string,
+    previousPullRequest: boolean = false
 ): Promise<Memory> {
     const githubService = new GitHubService({
         owner,
@@ -503,7 +513,9 @@ export async function savePullRequestToMemory(
         agentId: runtime.agentId,
         roomId: message.roomId,
         content: {
-            text: `Previously created pull request: ${pullRequest.title} ${pullRequest.html_url}`,
+            text: previousPullRequest
+                ? `Previously created pull request: ${pullRequest.title} ${pullRequest.html_url}`
+                : `Created pull request: ${pullRequest.title} ${pullRequest.html_url}`,
             metadata: await getPullRequestMetadata(pullRequest, githubService),
         },
     };
@@ -555,7 +567,8 @@ export const savePullRequestsToMemory = async (
     repository: string,
     branch: string,
     apiToken: string,
-    limit: number = 999999
+    limit: number = 999999,
+    previousPullRequest: boolean = false
 ): Promise<Memory[]> => {
     const memories = await runtime.messageManager.getMemories({
         roomId: message.roomId,
@@ -586,7 +599,8 @@ export const savePullRequestsToMemory = async (
                 owner,
                 repository,
                 branch,
-                apiToken
+                apiToken,
+                previousPullRequest
             );
             pullRequestsMemories.push(newPrMemory);
         } else {
