@@ -28,7 +28,11 @@ export class LightningProvider {
         this.lndClient = lnd;
     }
     async getLndIdentity(): Promise<GetIdentityResult> {
-        return await getIdentity({ lnd: this.lndClient });
+        try {
+            return await getIdentity({ lnd: this.lndClient });
+        } catch (error) {
+            throw new Error(`Failed to get LND identity: ${error.message}`);
+        }
     }
     async getLndChannel(): Promise<GetChannelsResult> {
         const ret = await getChannels({ lnd: this.lndClient });
