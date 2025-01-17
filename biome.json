@@ -1,7 +1,7 @@
 {
     "$schema": "https://biomejs.dev/schemas/1.5.3/schema.json",
     "organizeImports": {
-      "enabled": true
+      "enabled": false
     },
     "linter": {
       "enabled": true,
@@ -77,13 +77,7 @@
       "ignore": ["**/dist/**", "**/node_modules/**", "**/coverage/**", "**/*.json"]
     },
     "formatter": {
-      "enabled": true,
-      "formatWithErrors": false,
-      "indentStyle": "space",
-      "indentWidth": 4,
-      "lineWidth": 80,
-      "lineEnding": "lf",
-      "ignore": ["**/dist/**", "**/node_modules/**", "**/coverage/**", "**/*.json"]
+      "enabled": false
     },
     "javascript": {
       "formatter": {
