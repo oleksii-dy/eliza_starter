@@ -35,6 +35,7 @@ import {
     parseBooleanFromText,
 } from "@elizaos/core";
 import { zgPlugin } from "@elizaos/plugin-0g";
+import { footballPlugin } from "@elizaos/plugin-football";
 
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import createGoatPlugin from "@elizaos/plugin-goat";
@@ -739,6 +740,7 @@ export async function createAgent(
         // character.plugins are handled when clients are added
         plugins: [
             bootstrapPlugin,
+            footballPlugin,
             getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
                 ? confluxPlugin
                 : null,
@@ -1116,14 +1118,17 @@ startAgents().catch((error) => {
 });
 
 // Prevent unhandled exceptions from crashing the process if desired
-if (process.env.PREVENT_UNHANDLED_EXIT && parseBooleanFromText(process.env.PREVENT_UNHANDLED_EXIT)) {
+if (
+    process.env.PREVENT_UNHANDLED_EXIT &&
+    parseBooleanFromText(process.env.PREVENT_UNHANDLED_EXIT)
+) {
     // Handle uncaught exceptions to prevent the process from crashing
-    process.on('uncaughtException', function(err) {
+    process.on("uncaughtException", function (err) {
         console.error("uncaughtException", err);
     });
 
     // Handle unhandled rejections to prevent the process from crashing
-    process.on('unhandledRejection', function(err) {
+    process.on("unhandledRejection", function (err) {
         console.error("unhandledRejection", err);
     });
 }
