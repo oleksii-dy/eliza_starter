@@ -5,7 +5,11 @@ import {
     State,
     elizaLogger,
 } from "@elizaos/core";
-import { StandingsData } from "../types";
+import { isValidStandingsData } from "../types";
+
+const TIMEOUT_MS = 5000;
+const RATE_LIMIT_WINDOW_MS = 60000;
+let lastRequestTime = 0;
 
 export const fetchStandingsAction: Action = {
     name: "FETCH_STANDINGS",
@@ -27,11 +31,30 @@ export const fetchStandingsAction: Action = {
         try {
             const league = runtime.getSetting("LEAGUE_ID") || "PL";
             const apiKey = runtime.getSetting("FOOTBALL_API_KEY");
+
+            if (!apiKey?.match(/^[a-f0-9]{32}$/i)) {
+                elizaLogger.error("Invalid API key format");
+                return false;
+            }
+
+            const now = Date.now();
+            if (now - lastRequestTime < RATE_LIMIT_WINDOW_MS) {
+                elizaLogger.error("Rate limit exceeded");
+                return false;
+            }
+            lastRequestTime = now;
+
             const apiUrl = `https://api.football-data.org/v4/competitions/${league}/standings`;
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
             const response = await fetch(apiUrl, {
                 headers: { "X-Auth-Token": apiKey },
+                signal: controller.signal,
             });
+
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
                 elizaLogger.error(
@@ -42,9 +65,14 @@ export const fetchStandingsAction: Action = {
             }
 
             const standingsData = await response.json();
-            elizaLogger.log("Fetched standings data:", standingsData);
 
-            return standingsData as StandingsData;
+            if (!isValidStandingsData(standingsData)) {
+                elizaLogger.error("Invalid standings data format");
+                return false;
+            }
+
+            elizaLogger.log("Fetched standings data:", standingsData);
+            return standingsData;
         } catch (error) {
             elizaLogger.error("Error in fetchStandingsAction:", error);
             return false;

@@ -1,6 +1,6 @@
 import { Plugin } from "@elizaos/core";
-import { fetchMatchAction } from "./actions/fetchMatchAction.ts";
-import { fetchStandingsAction } from "./actions/fetchStandingsAction.ts";
+import { fetchMatchAction } from "./actions/fetchMatchAction";
+import { fetchStandingsAction } from "./actions/fetchStandingsAction";
 
 export const footballPlugin: Plugin = {
     name: "football",

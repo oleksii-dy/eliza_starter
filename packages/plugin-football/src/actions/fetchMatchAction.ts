@@ -3,10 +3,9 @@ import {
     IAgentRuntime,
     Memory,
     State,
-    composeContext,
     elizaLogger,
 } from "@elizaos/core";
-import { MatchData } from "../types";
+import { isValidMatchData } from "../types";
 
 export const fetchMatchAction: Action = {
     name: "FETCH_MATCH",
@@ -31,6 +30,7 @@ export const fetchMatchAction: Action = {
 
             const response = await fetch(apiUrl, {
                 headers: { "X-Auth-Token": apiKey },
+                signal: AbortSignal.timeout(5000),
             });
 
             if (!response.ok) {
@@ -44,7 +44,11 @@ export const fetchMatchAction: Action = {
             const matchData = await response.json();
             elizaLogger.log("Fetched match data:", matchData);
 
-            return matchData as MatchData;
+            if (!isValidMatchData(matchData)) {
+                elizaLogger.error("Invalid match data format");
+                return false;
+            }
+            return matchData;
         } catch (error) {
             elizaLogger.error("Error in fetchMatchAction:", error);
             return false;
