@@ -128,7 +128,7 @@ pnpm start --characters="path/to/your/character.json"`
 -     pm2 stop eliza
 -     pm2 log
 -     pm2 status
--     pm2 pnpm start --characters="path/to/your/character.json"  to create pm2 entry
+-     pm2 start "pnpm" -- start --character="/yourpath/characters/avatar.character.json" to create pm2 entry
       pm2 save
 
 
