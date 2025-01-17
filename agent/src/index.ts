@@ -1018,8 +1018,10 @@ export async function createAgent(
             getSecret(character, "RESERVOIR_API_KEY")
                 ? createNFTCollectionsPlugin()
                 : null,
-            getSecret(character, "PYTH_GRANULAR_LOG") ? pythDataPlugin : null,
-
+            getSecret(character, "PYTH_TESTNET_PROGRAM_KEY") ||
+            getSecret(character, "PYTH_MAINNET_PROGRAM_KEY")
+                ? pythDataPlugin
+                : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
