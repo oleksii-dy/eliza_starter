@@ -77,20 +77,35 @@ export const cryptoNewsData: Provider = {
                     const embedding = await embed(runtime, article.description);
                     console.log("embedding", embedding);
                     // put the news to knowledge as well
-                    await runtime.knowledgeManager.createMemory({
-                        // We namespace the knowledge base uuid to avoid id
-                        // collision with the document above.
+                    await runtime.ragKnowledgeManager.createKnowledge({
                         id: stringToUuid(`cryptoNews_${article.id}`),
-                        roomId: runtime.agentId,
                         agentId: runtime.agentId,
-                        userId: runtime.agentId,
-                        createdAt: Date.now(),
                         content: {
                             text: article.description,
-                            type: "news",
+                            metadata: {
+                                isMain: true,
+                                isShared: true,
+                                source: "articles",
+                            },
                         },
-                        embedding,
+                        embedding: new Float32Array(embedding),
                     });
+
+                    // await runtime.knowledgeManager.createMemory({
+                    //     // We namespace the knowledge base uuid to avoid id
+                    //     // collision with the document above.
+                    //     id: stringToUuid(`cryptoNews_${article.id}`),
+                    //     agentId: runtime.agentId,
+                    //     roomId: runtime.agentId,
+
+                    //     userId: runtime.agentId,
+                    //     createdAt: Date.now(),
+                    //     content: {
+                    //         text: article.description,
+                    //         type: "news",
+                    //     },
+                    //     embedding,
+                    // });
                 } else {
                     console.log(
                         `ARTICLE ${article.id} is already cached, skipping`
