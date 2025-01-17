@@ -1,10 +1,9 @@
 import { AxiosInstance } from "axios";
 import { LinkedInUserInfoFetcher } from "./LinkedinUserInfoFetcher";
 import { PostContentCreator } from "./PostContentCreator";
-import { IAgentRuntime } from "../../../core/src/types";
 import { IntervalsConfig } from "../interfaces";
 import { LinkedInPostPublisher } from "./LinkedinPostPublisher";
-import { elizaLogger } from "@elizaos/core";
+import { elizaLogger, IAgentRuntime } from "@elizaos/core";
 
 export class PostsManager {
     constructor(
