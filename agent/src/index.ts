@@ -11,6 +11,7 @@ import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 import { FarcasterClientInterface } from "@elizaos/client-farcaster";
+import { DirectClient } from "@elizaos/client-direct";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
 import { PrimusAdapter } from "@elizaos/plugin-primus";
 import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
@@ -41,7 +42,6 @@ import { zgPlugin } from "@elizaos/plugin-0g";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import createGoatPlugin from "@elizaos/plugin-goat";
 // import { intifacePlugin } from "@elizaos/plugin-intiface";
-import { DirectClient } from "@elizaos/client-direct";
 import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
 import { abstractPlugin } from "@elizaos/plugin-abstract";
 import { akashPlugin } from "@elizaos/plugin-akash";
@@ -103,6 +103,7 @@ import { thirdwebPlugin } from "@elizaos/plugin-thirdweb";
 import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
 import { echoChambersPlugin } from "@elizaos/plugin-echochambers";
 import { dexScreenerPlugin } from "@elizaos/plugin-dexscreener";
+import { pythDataPlugin } from "@elizaos/plugin-pyth-data";
 
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
 import Database from "better-sqlite3";
@@ -769,7 +770,7 @@ export async function createAgent(
     // Validate TEE configuration
     if (teeMode !== TEEMode.OFF && !walletSecretSalt) {
         elizaLogger.error(
-            "WALLET_SECRET_SALT required when TEE_MODE is enabled"
+            "A WALLET_SECRET_SALT required when TEE_MODE is enabled"
         );
         throw new Error("Invalid TEE configuration");
     }
@@ -1017,6 +1018,10 @@ export async function createAgent(
             getSecret(character, "QUAI_PRIVATE_KEY") ? quaiPlugin : null,
             getSecret(character, "RESERVOIR_API_KEY")
                 ? createNFTCollectionsPlugin()
+                : null,
+            getSecret(character, "PYTH_TESTNET_PROGRAM_KEY") ||
+            getSecret(character, "PYTH_MAINNET_PROGRAM_KEY")
+                ? pythDataPlugin
                 : null,
         ].filter(Boolean),
         providers: [],
