@@ -200,13 +200,10 @@ export const depinDataProvider: Provider = {
         try {
             const depinscan = new DePINScanProvider(runtime.cacheManager);
             const depinscanMetrics = await depinscan.getDailyMetrics();
-            const depinscanProjects = await depinscan.getProjects();
 
             return `
                 #### **DePINScan Daily Metrics**
                 ${depinscanMetrics}
-                #### **DePINScan Projects**
-                ${depinscanProjects}
             `;
         } catch (error) {
             elizaLogger.error("Error in DePIN data provider:", error);
