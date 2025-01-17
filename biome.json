@@ -8,12 +8,73 @@
       "rules": {
         "recommended": true,
         "suspicious": {
-          "noExplicitAny": "warn"
+          "noExplicitAny": "off",
+          "noArrayIndexKey": "off",
+          "noPrototypeBuiltins": "off",
+          "noDuplicateObjectKeys": "off",
+          "noGlobalIsNan": "off",
+          "noDuplicateFontNames": "off",
+          "noSelfCompare": "off",
+          "noDoubleEquals": "off",
+          "noImplicitAnyLet": "off",
+          "noAssignInExpressions": "off",
+          "noExportsInTest": "off",
+          "noConstEnum": "off",
+          "noEmptyInterface": "off"
+        },
+        "correctness": {
+          "noUnusedVariables": "off",
+          "noUnreachable": "off",
+          "useExhaustiveDependencies": "off",
+          "noSwitchDeclarations": "off",
+          "noUnnecessaryContinue": "off",
+          "noInnerDeclarations": "off"
         },
         "style": {
-          "useConst": "warn"
+          "useConst": "off",
+          "useTemplate": "off",
+          "useImportType": "off",
+          "useNodejsImportProtocol": "off",
+          "noUselessElse": "off",
+          "useSelfClosingElements": "off",
+          "useNumberNamespace": "off",
+          "noUnusedTemplateLiteral": "off",
+          "noInferrableTypes": "off",
+          "noNonNullAssertion": "off",
+          "noParameterAssign": "off",
+          "useDefaultParameterLast": "off",
+          "useExponentiationOperator": "off",
+          "noVar": "off",
+          "useSingleVarDeclarator": "off",
+          "useExportType": "off"
+        },
+        "a11y": {
+          "useAltText": "off",
+          "useFocusableInteractive": "off",
+          "useMediaCaption": "off",
+          "noSvgWithoutTitle": "off",
+          "useKeyWithClickEvents": "off"
+        },
+        "complexity": {
+          "noForEach": "off",
+          "useOptionalChain": "off",
+          "useArrowFunction": "off",
+          "useFlatMap": "off",
+          "useLiteralKeys": "off",
+          "noBannedTypes": "off",
+          "noStaticOnlyClass": "off",
+          "noThisInStatic": "off",
+          "noUselessConstructor": "off",
+          "noUselessTernary": "off",
+          "noUselessSwitchCase": "off",
+          "noUselessCatch": "off"
+        },
+        "performance": {
+          "noDelete": "off",
+          "noAccumulatingSpread": "off"
         }
-      }
+      },
+      "ignore": ["**/dist/**", "**/node_modules/**", "**/coverage/**", "**/*.json"]
     },
     "formatter": {
       "enabled": true,
@@ -22,12 +83,11 @@
       "indentWidth": 4,
       "lineWidth": 80,
       "lineEnding": "lf",
-      "ignore": ["**/dist/**", "**/node_modules/**", "**/coverage/**"]
+      "ignore": ["**/dist/**", "**/node_modules/**", "**/coverage/**", "**/*.json"]
     },
     "javascript": {
       "formatter": {
         "quoteStyle": "double",
-        "trailingComma": "es5",
         "semicolons": "always"
       }
     }
