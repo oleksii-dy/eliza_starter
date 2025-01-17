@@ -89,7 +89,7 @@ important: do not response anything except json`;
 export const responsePrompt = (
     apiresult: string,
     text: string
-) => `You are a security action detector for blockchain interactions. Your task is to analyze the security API’s response from GoPlus and summary the API result.
+) => `You are a security action detector for blockchain interactions. Your task is to analyze the security API’s response from NeoCorteX and summary the API result.
 API to analyze:“”"
 ${apiresult}
 “”"
