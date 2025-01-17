@@ -5,6 +5,7 @@ import {
     State,
     elizaLogger,
 } from "@elizaos/core";
+import { StandingsData } from "../types";
 
 export const fetchStandingsAction: Action = {
     name: "FETCH_STANDINGS",
@@ -24,11 +25,10 @@ export const fetchStandingsAction: Action = {
         state?: State
     ): Promise<any> => {
         try {
-            const league = runtime.getSetting("LEAGUE_ID") || "PL"; // Default to Premier League
+            const league = runtime.getSetting("LEAGUE_ID") || "PL";
             const apiKey = runtime.getSetting("FOOTBALL_API_KEY");
             const apiUrl = `https://api.football-data.org/v4/competitions/${league}/standings`;
 
-            // Fetch standings data
             const response = await fetch(apiUrl, {
                 headers: { "X-Auth-Token": apiKey },
             });
@@ -44,7 +44,7 @@ export const fetchStandingsAction: Action = {
             const standingsData = await response.json();
             elizaLogger.log("Fetched standings data:", standingsData);
 
-            return standingsData;
+            return standingsData as StandingsData;
         } catch (error) {
             elizaLogger.error("Error in fetchStandingsAction:", error);
             return false;

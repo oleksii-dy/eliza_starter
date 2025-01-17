@@ -6,7 +6,7 @@ import {
     composeContext,
     elizaLogger,
 } from "@elizaos/core";
-import { matchTemplate } from "../templates";
+import { MatchData } from "../types";
 
 export const fetchMatchAction: Action = {
     name: "FETCH_MATCH",
@@ -27,14 +27,8 @@ export const fetchMatchAction: Action = {
     ): Promise<any> => {
         try {
             const apiKey = runtime.getSetting("FOOTBALL_API_KEY");
-            const apiUrl = "https://api.football-data.org/v4/matches"; // Football-Data.org endpoint
+            const apiUrl = "https://api.football-data.org/v4/matches";
 
-            const context = composeContext({
-                state,
-                template: matchTemplate,
-            });
-
-            // Fetch match data
             const response = await fetch(apiUrl, {
                 headers: { "X-Auth-Token": apiKey },
             });
@@ -50,7 +44,7 @@ export const fetchMatchAction: Action = {
             const matchData = await response.json();
             elizaLogger.log("Fetched match data:", matchData);
 
-            return matchData;
+            return matchData as MatchData;
         } catch (error) {
             elizaLogger.error("Error in fetchMatchAction:", error);
             return false;

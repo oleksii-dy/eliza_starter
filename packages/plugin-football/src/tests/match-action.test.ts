@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import { fetchMatchAction } from "../actions/fetchMatchAction";
 import { IAgentRuntime, Memory, State } from "@elizaos/core";
 
-// Load environment variables
 dotenv.config();
 
 global.fetch = vi.fn();
