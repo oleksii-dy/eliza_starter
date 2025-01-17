@@ -48,6 +48,7 @@ import { artheraPlugin } from "@elizaos/plugin-arthera";
 import { availPlugin } from "@elizaos/plugin-avail";
 import { avalanchePlugin } from "@elizaos/plugin-avalanche";
 import { binancePlugin } from "@elizaos/plugin-binance";
+/*
 import {
     advancedTradePlugin,
     coinbaseCommercePlugin,
@@ -56,6 +57,7 @@ import {
     tradePlugin,
     webhookPlugin,
 } from "@elizaos/plugin-coinbase";
+*/
 import { coinmarketcapPlugin } from "@elizaos/plugin-coinmarketcap";
 import { coingeckoPlugin } from "@elizaos/plugin-coingecko";
 import { confluxPlugin } from "@elizaos/plugin-conflux";
@@ -104,7 +106,7 @@ import { fileURLToPath } from "url";
 import yargs from "yargs";
 import { verifiableLogPlugin } from "@elizaos/plugin-tee-verifiable-log";
 import createNFTCollectionsPlugin from "@elizaos/plugin-nft-collections";
-import { roochCharacterConfigLoader } from "@elizaos/plugin-rooch";
+import { characterConfigLoader as roochCharacterConfigLoader } from "@elizaos/plugin-rooch";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -288,6 +290,8 @@ export async function loadCharacterFromLoader(
     uri: string
 ): Promise<Character> {
     let character = await loader.load(uri);
+
+    elizaLogger.info(`loadCharacterFromLoader character config: ${character}`);
     validateCharacterConfig(character);
 
     // .id isn't really valid
@@ -331,6 +335,10 @@ export async function loadCharacters(
         ?.split(",")
         .map((filePath) => filePath.trim());
     const loadedCharacters: Character[] = [];
+
+    elizaLogger.info(
+        `characterPaths: ${characterPaths}`
+    );
 
     if (characterPaths?.length > 0) {
         for (const characterPath of characterPaths) {
@@ -832,9 +840,11 @@ export async function createAgent(
             getSecret(character, "COINMARKETCAP_API_KEY")
                 ? coinmarketcapPlugin
                 : null,
+                /*
             getSecret(character, "COINBASE_COMMERCE_KEY")
                 ? coinbaseCommercePlugin
                 : null,
+                */
             getSecret(character, "FAL_API_KEY") ||
             getSecret(character, "OPENAI_API_KEY") ||
             getSecret(character, "VENICE_API_KEY") ||
@@ -844,6 +854,7 @@ export async function createAgent(
                 ? imageGenerationPlugin
                 : null,
             getSecret(character, "FAL_API_KEY") ? ThreeDGenerationPlugin : null,
+            /*
             ...(getSecret(character, "COINBASE_API_KEY") &&
             getSecret(character, "COINBASE_PRIVATE_KEY")
                 ? [
@@ -852,7 +863,7 @@ export async function createAgent(
                       tokenContractPlugin,
                       advancedTradePlugin,
                   ]
-                : []),
+                : []),*/
             ...(teeMode !== TEEMode.OFF && walletSecretSalt ? [teePlugin] : []),
             (teeMode !== TEEMode.OFF && walletSecretSalt &&getSecret(character,"VLOG")
                 ? verifiableLogPlugin
@@ -862,12 +873,12 @@ export async function createAgent(
             ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
                 getSecret(character, "SGX"))
                 ? teeLogPlugin
-                : null,
+                : null,/*
             getSecret(character, "COINBASE_API_KEY") &&
             getSecret(character, "COINBASE_PRIVATE_KEY") &&
             getSecret(character, "COINBASE_NOTIFICATION_URI")
                 ? webhookPlugin
-                : null,
+                : null,*/
             goatPlugin,
             getSecret(character, "COINGECKO_API_KEY") ||
             getSecret(character, "COINGECKO_PRO_API_KEY")
@@ -1107,6 +1118,12 @@ const startAgents = async () => {
     const args = parseArguments();
     let charactersArg = args.characters || args.character;
     let characters = [defaultCharacter];
+
+    elizaLogger.info(
+        `charactersArg: ${charactersArg}`
+    );
+
+    charactersArg = "rooch://object/0x167f5fab11227c394905cbad1e8b25d0d12c6a881ba2d6899e9dbf8138eaecfd";
 
     if (charactersArg) {
         characters = await loadCharacters(charactersArg);

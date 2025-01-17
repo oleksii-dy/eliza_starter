@@ -1,5 +1,5 @@
 import { IAgentRuntime, settings } from "@elizaos/core";
-import { ParsedKeypair, decodeRoochSercetKey } from "@roochnetwork/rooch-sdk";
+import { ParsedKeypair, decodeRoochSercetKey } from "@roochnetwork/rooch-sdk/dist/esm";
 
 const ROOCH_SECRET_KEY_PREFIX = "roochsecretkey"
 

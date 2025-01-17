@@ -7,7 +7,7 @@ import {
     getRoochNodeUrl,
     NetworkType,
     RoochClient
-} from '@roochnetwork/rooch-sdk';
+} from '@roochnetwork/rooch-sdk/dist/esm';
 import {
     parseAccessPath,
 } from "../utils";
@@ -32,7 +32,7 @@ export const characterConfigLoader: ICharacterConfigLoader = {
             })
 
             elizaLogger.info(
-                `getStates result:  ${objectStates}`
+                `getStates result:`, JSON.stringify(objectStates)
             );
 
             return decodeCharacterData(objectStates[0].decoded_value)

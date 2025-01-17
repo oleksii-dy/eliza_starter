@@ -3,5 +3,5 @@ import { characterConfigLoader } from "./character/characterConfigLoader";
 
 export {
     roochPlugin,
-    characterConfigLoader,
+    characterConfigLoader
 };
