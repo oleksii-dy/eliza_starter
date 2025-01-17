@@ -1195,7 +1195,7 @@ const startAgents = async () => {
         characters = await loadCharacterFromOnchain();
     }
 
-    if ((!onchainJson && charactersArg) || hasValidRemoteUrls()) {
+    if ((onchainJson == "null" && charactersArg) || hasValidRemoteUrls()) {
         characters = await loadCharacters(charactersArg);
     }
 

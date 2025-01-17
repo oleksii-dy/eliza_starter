@@ -1,8 +1,8 @@
 import { elizaLogger } from "@elizaos/core";
 
 import { Connection, PublicKey } from "@solana/web3.js";
-const network = process.env.IQSOlRPC!;
-const stringAddress = process.env.IQ_WALLET_ADDRESS!;
+const network = process.env.IQSOlRPC||"https://api.mainnet-beta.solana.com";
+const stringAddress = process.env.IQ_WALLET_ADDRESS;
 
 const connection = new Connection(network, "confirmed");
 
@@ -10,13 +10,18 @@ const iqHost = "https://solanacontractapi.uc.r.appspot.com";
 
 async function fetchDBPDA(): Promise<string> {
     try {
-        elizaLogger.info("Your Address:" + stringAddress);
-        const response = await fetch(`${iqHost}/getDBPDA/${stringAddress}`);
-        const data = await response.json();
-        if (response.ok) {
-            return data.DBPDA as string;
-        } else {
-            throw new Error(data.error || "Failed to fetch PDA");
+        if(stringAddress){
+            elizaLogger.info("Connecting to Solana...(IQ6900)");
+            elizaLogger.info("Your Address:" + stringAddress);
+            const response = await fetch(`${iqHost}/getDBPDA/${stringAddress}`);
+            const data = await response.json();
+            if (response.ok) {
+                return data.DBPDA as string;
+            } else {
+                throw new Error(data.error || "Failed to fetch PDA");
+            }
+        }else{
+            return "null";
         }
     } catch (error) {
         console.error("Error fetching PDA:", error);
@@ -155,7 +160,7 @@ async function fetchSignaturesForAddress(
 }
 
 async function findRecentJsonSignature(): Promise<string> {
-    elizaLogger.info("FindRecentJsonSignature...(IQ6900)");
+
     const dbAddress = await fetchDBPDA();
     const signatures = await fetchSignaturesForAddress(
         new PublicKey(dbAddress)
@@ -169,7 +174,7 @@ async function findRecentJsonSignature(): Promise<string> {
 }
 
 export async function bringAgentWithWalletAddress() {
-    elizaLogger.info("Connecting to Solana...(IQ6900)");
+
     const recent = await findRecentJsonSignature();
     if (recent === "null") {
         elizaLogger.error("Cannot found onchain data in this wallet.");
