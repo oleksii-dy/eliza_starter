@@ -47,6 +47,8 @@ export class TeeLogService extends Service implements ITeeLogService {
         const teeMode = runtime.getSetting("TEE_MODE");
         const walletSecretSalt = runtime.getSetting("WALLET_SECRET_SALT");
 
+        this.teeMode = teeMode ? TEEMode[teeMode as keyof typeof TEEMode] : TEEMode.OFF;
+
         const useSgxGramine = runInSgx && enableValues.includes(runInSgx.toLowerCase());
         const useTdxDstack = teeMode && teeMode !== TEEMode.OFF && walletSecretSalt;
 
