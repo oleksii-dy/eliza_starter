@@ -7,7 +7,7 @@ import transfer from "./actions/transfer.ts";
 import getTokenInfo from "./actions/getTokenInfo.ts";
 import gibwork from "./actions/gibwork.ts";
 
-export const solanaAgentkitPlguin: Plugin = {
+export const solanaAgentkitPlugin: Plugin = {
     name: "solana",
     description: "Solana Plugin with solana agent kit for Eliza",
     actions: [createToken, swap, lend, stake, transfer, getTokenInfo, gibwork],
@@ -15,4 +15,4 @@ export const solanaAgentkitPlguin: Plugin = {
     providers: [],
 };
 
-export default solanaAgentkitPlguin;
+export default solanaAgentkitPlugin;
