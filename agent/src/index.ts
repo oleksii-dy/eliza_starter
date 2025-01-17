@@ -13,7 +13,7 @@ import { TwitterClientInterface } from "@elizaos/client-twitter";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
 import { DirectClient } from "@elizaos/client-direct";
 import { PrimusAdapter } from "@elizaos/plugin-primus";
-
+import { lightningPlugin } from "@elizaos/plugin-lightning";
 import {
     AgentRuntime,
     CacheManager,
@@ -854,6 +854,11 @@ export async function createAgent(
             getSecret(character, "QUAI_PRIVATE_KEY")
                 ? quaiPlugin
                 : null,
+                getSecret(character, "LND_TLS_CERT") &&
+                getSecret(character, "LND_MACAROON") &&
+                getSecret(character, "LND_SOCKET")
+                    ? lightningPlugin
+                    : null
         ].filter(Boolean),
         providers: [],
         actions: [],
