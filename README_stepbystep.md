@@ -71,9 +71,11 @@ now edit the .env and add these keys:
 nano .env
 
 ```
-Search for "AKASH"...
-# Akash Chat API Configuration docs: https://chatapi.akash.network/documentation
+Search for "AKASH"... CTRL + W
+Enter your key
 AKASH_CHAT_API_KEY=sk-1agDViherhwqzr3r # REPLACE YOUR KEY HERE
+Save with CTRL + X
+
 
 exit & save
 
