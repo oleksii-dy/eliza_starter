@@ -1,6 +1,6 @@
 # @elizaos/plugin-lightning
 
-This plugin enables interaction with the Hyperliquid DEX through Eliza, providing spot trading capabilities.
+This plugin enables create lightning invoice or payInvoice.
 
 ## Features
 
@@ -42,7 +42,7 @@ Examples:
 
 ```
 
-Returns: Current price, 24h change, and volume.
+Returns: lnbcrt....
 
 ### 2. PAY_INVOICE
 
@@ -61,7 +61,7 @@ Examples:
 
 - Store your LND_TLS_CERT and LND_MACAROON securely using environment variables
 - Test with small amounts first
-- Use testnet for initial testing
+- Use regtest for initial testing
 
 ## License
 
