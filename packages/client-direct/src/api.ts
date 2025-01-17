@@ -217,10 +217,13 @@ export function createApiRouter(
         try {
             const memories = await runtime.messageManager.getMemories({
                 roomId,
+                count: 1000,
             });
 
             const filteredMemories = memories.filter(
-                (memory) => (memory.content.metadata as any)?.type !== "file"
+                (memory) =>
+                    (memory.content.metadata as any)?.type !== "file" &&
+                    memory.content?.source !== "direct"
             );
 
             const response = {

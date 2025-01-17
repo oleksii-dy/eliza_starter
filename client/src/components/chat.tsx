@@ -168,12 +168,14 @@ export default function Page({ agentId }: { agentId: UUID }) {
                 ]) || [];
 
             // Filter out messages that already exist in our cache
-            const newMessages = data.memories.filter(
-                (newMsg: any) =>
-                    !existingMessages.some(
-                        (existingMsg: any) => existingMsg.id === newMsg.id
-                    )
-            );
+            const newMessages = data.memories
+                .reverse()
+                .filter(
+                    (newMsg: any) =>
+                        !existingMessages.some(
+                            (existingMsg: any) => existingMsg.id === newMsg.id
+                        )
+                );
 
             // If we have new messages, add them to our messages
             if (newMessages.length > 0) {

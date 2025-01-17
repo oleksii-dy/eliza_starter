@@ -27,7 +27,6 @@ import {
     getIssuesFromMemories,
     getPullRequestsFromMemories,
     ideationAction,
-    incorporateRepositoryState,
     initializeRepositoryAction,
     modifyIssueAction,
     reactToIssueAction,
@@ -177,16 +176,12 @@ export class GitHubClient extends EventEmitter {
         // register the initial actions
         registerActions(this.runtime, repoInitActions);
 
-        // set the timestamp and userIdUUID
-        const timestamp = Date.now();
-        const userIdUUID = stringToUuid(`${this.runtime.agentId}-${timestamp}`);
-
-        // create memories for initial actions
+        const initializeRepositoryMemoryTimestamp = Date.now();
         const initializeRepositoryMemory: Memory = {
             id: stringToUuid(
-                `${this.roomId}-${this.runtime.agentId}-${timestamp}-initialize-repository`
+                `${this.roomId}-${this.runtime.agentId}-${initializeRepositoryMemoryTimestamp}-initialize-repository`
             ),
-            userId: userIdUUID,
+            userId: this.runtime.agentId,
             agentId: this.runtime.agentId,
             content: {
                 text: `Initialize the repository ${this.state.owner}/${this.state.repo} on ${this.state.branch} branch`,
@@ -197,17 +192,18 @@ export class GitHubClient extends EventEmitter {
                 ),
             },
             roomId: this.roomId,
-            createdAt: timestamp,
+            createdAt: initializeRepositoryMemoryTimestamp,
         };
         await this.runtime.messageManager.createMemory(
             initializeRepositoryMemory
         );
 
+        const createMemoriesFromFilesMemoryTimestamp = Date.now();
         const createMemoriesFromFilesMemory = {
             id: stringToUuid(
-                `${this.roomId}-${this.runtime.agentId}-${timestamp}-create-memories-from-files`
+                `${this.roomId}-${this.runtime.agentId}-${createMemoriesFromFilesMemoryTimestamp}-create-memories-from-files`
             ),
-            userId: userIdUUID,
+            userId: this.runtime.agentId,
             agentId: this.runtime.agentId,
             content: {
                 text: `Create memories from files for the repository ${this.state.owner}/${this.state.repo} @ branch ${this.state.branch} and path '/'`,
@@ -218,7 +214,7 @@ export class GitHubClient extends EventEmitter {
                 ),
             },
             roomId: this.roomId,
-            createdAt: timestamp,
+            createdAt: createMemoriesFromFilesMemoryTimestamp,
         };
         await this.runtime.messageManager.createMemory(
             createMemoriesFromFilesMemory
@@ -267,11 +263,66 @@ export class GitHubClient extends EventEmitter {
             pullRequestsLimit
         );
 
+        const callback: HandlerCallback = async (content: Content) => {
+            console.log("callback content: ", content);
+
+            const timestamp = Date.now();
+
+            const responseMemory: Memory = {
+                id: stringToUuid(
+                    `${this.roomId}-${this.runtime.agentId}-${timestamp}-${content.action}-response`
+                ),
+                agentId: this.runtime.agentId,
+                userId: this.runtime.agentId,
+                content: {
+                    ...content,
+                    user: this.runtime.character.name,
+                    inReplyTo:
+                        content.action === "INITIALIZE_REPOSITORY"
+                            ? initializeRepositoryMemory.id
+                            : createMemoriesFromFilesMemory.id,
+                },
+                roomId: this.roomId,
+                createdAt: timestamp,
+            };
+
+            // print responseMemory
+            elizaLogger.log("responseMemory: ", responseMemory);
+
+            if (responseMemory.content.text?.trim()) {
+                await this.runtime.messageManager.createMemory(responseMemory);
+                this.state = await this.runtime.updateRecentMessageState(
+                    this.state
+                );
+            } else {
+                elizaLogger.error("Empty response, skipping");
+            }
+
+            return [responseMemory];
+        };
+
         await this.runtime.processActions(
             message,
             [initializeRepositoryMemory, createMemoriesFromFilesMemory],
             this.state,
-            undefined
+            callback
+        );
+
+        // get memories and write it to file
+        const memoriesPostRepoInitProcessActions =
+            await this.runtime.messageManager.getMemories({
+                roomId: this.roomId,
+                count: 1000,
+            });
+        await fs.writeFile(
+            "/tmp/client-github-memories-post-repo-init-process-actions.txt",
+            JSON.stringify(memoriesPostRepoInitProcessActions, null, 2)
+        );
+
+        // get state and write it to file
+        await fs.writeFile(
+            "/tmp/client-github-state-post-repo-init-process-actions.txt",
+            JSON.stringify(this.state, null, 2)
         );
 
         const githubRepoInitInterval =
@@ -464,22 +515,15 @@ export class GitHubClient extends EventEmitter {
             }
 
             // create new memory with retry logic
-
-            // Generate IDs with timestamp to ensure uniqueness
             const timestamp = Date.now();
-            const userIdUUID = stringToUuid(
-                `${this.runtime.agentId}-${timestamp}`
-            );
-            const memoryUUID = stringToUuid(
-                `${this.roomId}-${this.runtime.agentId}-${timestamp}`
-            );
-
             const actionMemory: Memory = {
-                id: memoryUUID,
-                userId: userIdUUID,
+                id: stringToUuid(
+                    `${this.roomId}-${this.runtime.agentId}-${timestamp}-${content.action}`
+                ),
+                userId: this.runtime.agentId,
                 agentId: this.runtime.agentId,
                 content: {
-                    text: content.action,
+                    text: `Going to execute action: ${content.action}`,
                     action: content.action,
                     source: "github",
                     inReplyTo: stringToUuid(
@@ -493,13 +537,6 @@ export class GitHubClient extends EventEmitter {
             try {
                 await this.runtime.messageManager.createMemory(actionMemory);
             } catch (error) {
-                if (error.code === "23505") {
-                    // Duplicate key error
-                    elizaLogger.warn("Duplicate memory, skipping:", {
-                        memoryId: memoryUUID,
-                    });
-                    return;
-                }
                 elizaLogger.error("Error creating memory:", error);
                 throw error; // Re-throw other errors
             }

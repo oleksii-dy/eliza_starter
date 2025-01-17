@@ -335,7 +335,7 @@ export async function saveIssueToMemory(
         agentId: runtime.agentId,
         roomId: message.roomId,
         content: {
-            text: `Issue Created: ${issue.title}`,
+            text: `Previously created issue: ${issue.title} ${issue.html_url}`,
             action: "CREATE_ISSUE",
             source: "github",
             metadata: {
@@ -503,7 +503,7 @@ export async function savePullRequestToMemory(
         agentId: runtime.agentId,
         roomId: message.roomId,
         content: {
-            text: `Pull Request Created: ${pullRequest.title}`,
+            text: `Previously created pull request: ${pullRequest.title} ${pullRequest.html_url}`,
             metadata: await getPullRequestMetadata(pullRequest, githubService),
         },
     };
@@ -536,6 +536,7 @@ export async function saveCreatedPullRequestToMemory(
         roomId: message.roomId,
         content: {
             text: `Pull Request Created: ${pullRequest.title}`,
+            action: "CREATE_PULL_REQUEST",
             metadata: await getCreatedPullRequestMetadata(
                 pullRequest,
                 githubService
