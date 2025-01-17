@@ -41,6 +41,7 @@ export interface BridgeParams {
 }
 
 export interface StakeParams {
+    chain: SupportedChain;
     action: StakeAction;
     amount?: string;
 }
@@ -2813,7 +2814,7 @@ export interface IDeployERC20Params {
     name: string;
     symbol: string;
     decimals: number;
-    totalSupply: number;
+    totalSupply: string;
 }
 
 export interface IDeployERC721Params {

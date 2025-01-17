@@ -8,9 +8,13 @@ import {
     type Memory,
     type State,
 } from "@elizaos/core";
-import { parseEther, getContract, Address, parseUnits } from "viem";
+import { parseEther, getContract, parseUnits } from "viem";
 
-import { initWalletProvider, WalletProvider } from "../providers/wallet";
+import {
+    bnbWalletProvider,
+    initWalletProvider,
+    WalletProvider,
+} from "../providers/wallet";
 import { bridgeTemplate } from "../templates";
 import {
     ERC20Abi,
@@ -18,7 +22,6 @@ import {
     L2StandardBridgeAbi,
     type BridgeParams,
     type BridgeResponse,
-    type SupportedChain,
 } from "../types";
 
 export { bridgeTemplate };
@@ -64,7 +67,7 @@ export class BridgeAction {
                 toToken: params.toToken ?? nativeToken,
             };
 
-            const account = walletClient.account!;
+            const account = this.walletProvider.getAccount();
             const chain = this.walletProvider.getChainConfigs(params.fromChain);
 
             const selfBridge =
@@ -97,13 +100,28 @@ export class BridgeAction {
 
                 // check ERC20 allowance
                 if (!nativeTokenBridge) {
-                    await this.checkTokenAllowance(
+                    const diff = await this.walletProvider.checkERC20Allowance(
                         params.fromChain,
                         params.fromToken!,
                         fromAddress,
                         this.L1_BRIDGE_ADDRESS,
                         amount
                     );
+                    if (diff > 0n) {
+                        elizaLogger.log(
+                            `Increasing ERC20 allowance for L1 bridge. ${diff} more needed`
+                        );
+                        const txHash =
+                            await this.walletProvider.increaseERC20Allowance(
+                                params.fromChain,
+                                params.fromToken!,
+                                this.L1_BRIDGE_ADDRESS,
+                                diff
+                            );
+                        await publicClient.waitForTransactionReceipt({
+                            hash: txHash,
+                        });
+                    }
                 }
 
                 if (selfBridge && nativeTokenBridge) {
@@ -189,13 +207,28 @@ export class BridgeAction {
 
                 // check ERC20 allowance
                 if (!nativeTokenBridge) {
-                    await this.checkTokenAllowance(
+                    const diff = await this.walletProvider.checkERC20Allowance(
                         params.fromChain,
                         params.fromToken!,
                         fromAddress,
                         this.L2_BRIDGE_ADDRESS,
                         amount
                     );
+                    if (diff > 0n) {
+                        elizaLogger.log(
+                            `Increasing ERC20 allowance for L2 bridge. ${diff} more needed`
+                        );
+                        const txHash =
+                            await this.walletProvider.increaseERC20Allowance(
+                                params.fromChain,
+                                params.fromToken!,
+                                this.L2_BRIDGE_ADDRESS,
+                                diff
+                            );
+                        await publicClient.waitForTransactionReceipt({
+                            hash: txHash,
+                        });
+                    }
                 }
 
                 if (selfBridge && nativeTokenBridge) {
@@ -268,9 +301,18 @@ export class BridgeAction {
                 throw new Error("Unsupported bridge direction");
             }
 
+            if (!resp.txHash || resp.txHash == "0x") {
+                throw new Error("Get transaction hash failed");
+            }
+
+            // wait for the transaction to be confirmed
+            await publicClient.waitForTransactionReceipt({
+                hash: resp.txHash,
+            });
+
             return resp;
         } catch (error) {
-            throw new Error(`Bridge failed: ${error.message}`);
+            throw error;
         }
     }
 
@@ -286,40 +328,9 @@ export class BridgeAction {
         if (params.fromChain == "bsc" && params.toChain == "opBNB") {
             if (params.fromToken && !params.toToken) {
                 throw new Error(
-                    "token address on opBNB is required for bridge ERC20 from BSC to opBNB"
+                    "token address on opBNB is required when bridging ERC20 from BSC to opBNB"
                 );
             }
-        }
-    }
-
-    async checkTokenAllowance(
-        chain: SupportedChain,
-        token: Address,
-        owner: Address,
-        spender: Address,
-        amount: bigint
-    ) {
-        const publicClient = this.walletProvider.getPublicClient(chain);
-        const allowance = await publicClient.readContract({
-            address: token,
-            abi: ERC20Abi,
-            functionName: "allowance",
-            args: [owner, spender],
-        });
-
-        if (allowance < amount) {
-            elizaLogger.log("Increasing allowance for ERC20 bridge");
-            const walletClient = this.walletProvider.getWalletClient(chain);
-            const { request } = await publicClient.simulateContract({
-                account: walletClient.account,
-                address: token,
-                abi: ERC20Abi,
-                functionName: "increaseAllowance",
-                args: [spender, amount - allowance],
-            });
-
-            await walletClient.writeContract(request);
-            await new Promise((resolve) => setTimeout(resolve, 3000)); // wait for the transaction to be confirmed
         }
     }
 }
@@ -343,6 +354,7 @@ export const bridgeAction = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
+        state.walletInfo = await bnbWalletProvider.get(runtime, message, state);
 
         // Compose bridge context
         const bridgeContext = composeContext({
