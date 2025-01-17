@@ -200,7 +200,7 @@ export abstract class BaseInjectableAction<T> implements InjectableAction<T> {
         state?: State,
         _options?: Record<string, unknown>,
         callback?: HandlerCallback
-    ): Promise<void> {
+    ): Promise<any | null> {
         let content: T;
         try {
             content = await this.processMessages(runtime, message, state);
@@ -217,7 +217,7 @@ export abstract class BaseInjectableAction<T> implements InjectableAction<T> {
                     },
                 });
             }
-            return;
+            return null;
         }
 
         try {
