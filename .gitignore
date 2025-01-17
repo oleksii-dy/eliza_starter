@@ -61,3 +61,5 @@ agent/content
 eliza.manifest
 eliza.manifest.sgx
 eliza.sig
+packages/plugin-pyth-data/docs
+packages/plugin-pyth-data/old_code
