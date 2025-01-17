@@ -7,7 +7,9 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test1": "node tests/test1.mjs",
+    "smokeTests": "node tests/test1.mjs && node tests/test2.mjs" 
   },
   "dependencies": {
     "@ai16z/eliza": "^0.1.6",
@@ -19,5 +21,6 @@
   },
   "engines": {
     "node": ">=16.0.0"
-  }
+  },
+  "type": "module" 
 }
