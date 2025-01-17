@@ -1,7 +1,7 @@
 import { z, ZodError } from "zod";
 import { IAgentRuntime } from "@elizaos/core";
 
-const checkIfIsNumber = (val: string | number, ctx: z.RefinementCtx, path: string) => {
+const checkIfIsNumber = (val: string | number | null, ctx: z.RefinementCtx, path: string) => {
     const num = Number(val);
 
     if(isNaN(num) || !isFinite(num)) {
