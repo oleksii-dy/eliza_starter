@@ -412,19 +412,38 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         roomId: UUID;
         type: string;
     }): Promise<void> {
-        const { error } = await this.supabase
-            .from("logs")
-            .insert({
-                id: uuid(),
-                body: params.body,
-                userId: params.userId,
-                roomId: params.roomId,
+        try {
+            elizaLogger.debug("Attempting to insert log:", {
                 type: params.type,
+                userId: params.userId,
+                roomId: params.roomId
             });
 
-        if (error) {
-            elizaLogger.error("Error inserting log:", error);
-            throw new Error(error.message);
+            const { error } = await this.supabase
+                .from("logs")
+                .insert({
+                    id: uuid(),
+                    body: params.body,
+                    userId: params.userId,
+                    roomId: params.roomId,
+                    type: params.type,
+                    createdAt: new Date().toISOString()
+                });
+
+            if (error) {
+                elizaLogger.error("Error inserting log:", {
+                    error,
+                    params,
+                    errorCode: error.code,
+                    details: error.details
+                });
+                throw new Error(`Failed to insert log: ${error.message}`);
+            }
+
+            elizaLogger.debug("Successfully inserted log");
+        } catch (error) {
+            elizaLogger.error("Unexpected error in log function:", error);
+            throw error;
         }
     }
 
@@ -509,9 +528,9 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             return [];
         }
 
-        if (!embedding.every(n => typeof n === 'number' && !isNaN(n))) {
+        if (!embedding.every(n => typeof n === 'number' && !Number.isNaN(n))) {
             elizaLogger.error("Invalid embedding values - must all be numbers", {
-                invalidValues: embedding.filter(n => typeof n !== 'number' || isNaN(n))
+                invalidValues: embedding.filter(n => typeof n !== 'number' || Number.isNaN(n))
             });
             return [];
         }
