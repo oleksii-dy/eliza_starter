@@ -4,9 +4,10 @@ import { SqliteTeeLogDAO } from "../adapters/sqliteDAO";
 import { TeeType, TeeLogDAO, TeeAgent, TeeLog, TeeLogQuery, PageQuery } from "../types";
 import { TeeLogManager } from "./teeLogManager";
 import Database from "better-sqlite3";
+import path from "path";
 
 export class TeeLogService extends Service implements ITeeLogService {
-    private readonly dbPath = "./data/tee_log.sqlite";
+    private readonly dbPath = path.resolve("agent/data/tee_log.sqlite");
 
     private initialized: boolean = false;
     private enableTeeLog: boolean = false;
