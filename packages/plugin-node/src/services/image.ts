@@ -343,13 +343,16 @@ export class ImageDescriptionService
             os.tmpdir(),
             `tmp_img_${Date.now()}.${format}`
         );
-        await sharp(data).toFormat(format).toFile(tempFilePath);
-        const { imageData, mimeType } = await this.fetchImage(tempFilePath);
-        fs.unlinkSync(tempFilePath); // Clean up temp file
-        return {
-            imageData,
-            mimeType,
-        };
+        try {
+            await sharp(data).toFormat(format).toFile(tempFilePath);
+            const { imageData, mimeType } = await this.fetchImage(tempFilePath);
+            return {
+                imageData,
+                mimeType,
+            };
+        } finally {
+            fs.unlinkSync(tempFilePath); // Clean up temp file
+        }
     }
 
     private async fetchImage(
