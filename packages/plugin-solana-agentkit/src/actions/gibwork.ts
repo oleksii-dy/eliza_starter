@@ -12,7 +12,7 @@ import {
 import { composeContext } from "@elizaos/core";
 import { generateObjectDeprecated } from "@elizaos/core";
 import { ACTIONS } from "solana-agent-kit";
-import { getSAK } from "../utils";
+import { getSAK } from "../client";
 
 const GIBWORK_ACTION = ACTIONS.CREATE_GIBWORK_TASK_ACTION;
 

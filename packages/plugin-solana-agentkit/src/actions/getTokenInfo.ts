@@ -13,7 +13,7 @@ import {
 import { composeContext } from "@elizaos/core";
 import { generateObjectDeprecated } from "@elizaos/core";
 import { ACTIONS } from "solana-agent-kit";
-import { getSAK } from "../utils";
+import { getSAK } from "../client";
 
 const GET_TOKEN_INFO_ACTION = ACTIONS.GET_TOKEN_DATA_ACTION;
 

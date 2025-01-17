@@ -11,13 +11,93 @@ import {
     type Action,
     elizaLogger,
 } from "@elizaos/core";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey, VersionedTransaction } from "@solana/web3.js";
+import BigNumber from "bignumber.js";
 import { getWalletKey } from "../keypairUtils.ts";
 import { walletProvider, WalletProvider } from "../providers/wallet.ts";
-import { ACTIONS } from "solana-agent-kit";
-import { getSAK } from "../utils";
+import { getTokenDecimals } from "./swapUtils.ts";
 
-const TRADE_ACTION = ACTIONS.TRADE_ACTION;
+async function swapToken(
+    connection: Connection,
+    walletPublicKey: PublicKey,
+    inputTokenCA: string,
+    outputTokenCA: string,
+    amount: number
+): Promise<any> {
+    try {
+        // Get the decimals for the input token
+        const decimals =
+            inputTokenCA === settings.SOL_ADDRESS
+                ? new BigNumber(9)
+                : new BigNumber(
+                      await getTokenDecimals(connection, inputTokenCA)
+                  );
+
+        elizaLogger.log("Decimals:", decimals.toString());
+
+        // Use BigNumber for adjustedAmount: amount * (10 ** decimals)
+        const amountBN = new BigNumber(amount);
+        const adjustedAmount = amountBN.multipliedBy(
+            new BigNumber(10).pow(decimals)
+        );
+
+        elizaLogger.log("Fetching quote with params:", {
+            inputMint: inputTokenCA,
+            outputMint: outputTokenCA,
+            amount: adjustedAmount,
+        });
+
+        const quoteResponse = await fetch(
+            `https://quote-api.jup.ag/v6/quote?inputMint=${inputTokenCA}&outputMint=${outputTokenCA}&amount=${adjustedAmount}&dynamicSlippage=true&maxAccounts=64`
+        );
+        const quoteData = await quoteResponse.json();
+
+        if (!quoteData || quoteData.error) {
+            elizaLogger.error("Quote error:", quoteData);
+            throw new Error(
+                `Failed to get quote: ${quoteData?.error || "Unknown error"}`
+            );
+        }
+
+        elizaLogger.log("Quote received:", quoteData);
+
+        const swapRequestBody = {
+            quoteResponse: quoteData,
+            userPublicKey: walletPublicKey.toBase58(),
+            dynamicComputeUnitLimit: true,
+            dynamicSlippage: true,
+            priorityLevelWithMaxLamports: {
+                maxLamports: 4000000,
+                priorityLevel: "veryHigh",
+            },
+        };
+
+        elizaLogger.log("Requesting swap with body:", swapRequestBody);
+
+        const swapResponse = await fetch("https://quote-api.jup.ag/v6/swap", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(swapRequestBody),
+        });
+
+        const swapData = await swapResponse.json();
+
+        if (!swapData || !swapData.swapTransaction) {
+            elizaLogger.error("Swap error:", swapData);
+            throw new Error(
+                `Failed to get swap transaction: ${swapData?.error || "No swap transaction returned"}`
+            );
+        }
+
+        elizaLogger.log("Swap transaction received");
+        return swapData;
+    } catch (error) {
+        elizaLogger.error("Error in swapToken:", error);
+        throw error;
+    }
+}
 
 const swapTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 
@@ -91,14 +171,14 @@ async function getTokenFromWallet(runtime: IAgentRuntime, tokenSymbol: string) {
 // swapToken should took CA, not symbol
 
 export const executeSwap: Action = {
-    name: TRADE_ACTION.name,
-    similes: TRADE_ACTION.similes,
+    name: "EXECUTE_SWAP",
+    similes: ["SWAP_TOKENS", "TOKEN_SWAP", "TRADE_TOKENS", "EXCHANGE_TOKENS"],
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         // Check if the necessary parameters are provided in the message
         elizaLogger.log("Message:", message);
         return true;
     },
-    description: TRADE_ACTION.description,
+    description: "Perform a token swap.",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -106,7 +186,6 @@ export const executeSwap: Action = {
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
     ): Promise<boolean> => {
-        const sak = await getSAK(runtime);
         // composeState
         if (!state) {
             state = (await runtime.composeState(message)) as State;
@@ -212,22 +291,61 @@ export const executeSwap: Action = {
             const connection = new Connection(
                 "https://api.mainnet-beta.solana.com"
             );
+            const { publicKey: walletPublicKey } = await getWalletKey(
+                runtime,
+                false
+            );
 
             // const provider = new WalletProvider(connection, walletPublicKey);
 
-            console.log("Wallet Public Key:", sak.wallet_address.toString());
-            console.log("inputTokenSymbol:", response.inputTokenCA);
-            console.log("outputTokenSymbol:", response.outputTokenCA);
-            console.log("amount:", response.amount);
+            elizaLogger.log("Wallet Public Key:", walletPublicKey);
+            elizaLogger.log("inputTokenSymbol:", response.inputTokenCA);
+            elizaLogger.log("outputTokenSymbol:", response.outputTokenCA);
+            elizaLogger.log("amount:", response.amount);
 
-            const txid = await sak.trade(
-                new PublicKey(response.outputTokenCA),
-                response.amount,
-                new PublicKey(response.inputTokenCA),
+            const swapResult = await swapToken(
+                connection,
+                walletPublicKey,
+                response.inputTokenCA as string,
+                response.outputTokenCA as string,
+                response.amount as number
             );
+
+            elizaLogger.log("Deserializing transaction...");
+            const transactionBuf = Buffer.from(
+                swapResult.swapTransaction,
+                "base64"
+            );
+            const transaction =
+                VersionedTransaction.deserialize(transactionBuf);
+
+            elizaLogger.log("Preparing to sign transaction...");
+
+            elizaLogger.log("Creating keypair...");
+            const { keypair } = await getWalletKey(runtime, true);
+            // Verify the public key matches what we expect
+            if (keypair.publicKey.toBase58() !== walletPublicKey.toBase58()) {
+                throw new Error(
+                    "Generated public key doesn't match expected public key"
+                );
+            }
+
+            elizaLogger.log("Signing transaction...");
+            transaction.sign([keypair]);
+
+            elizaLogger.log("Sending transaction...");
 
             const latestBlockhash = await connection.getLatestBlockhash();
 
+            const txid = await connection.sendTransaction(transaction, {
+                skipPreflight: false,
+                maxRetries: 3,
+                preflightCommitment: "confirmed",
+            });
+
+            elizaLogger.log("Transaction sent:", txid);
+
+            // Confirm transaction using the blockhash
             const confirmation = await connection.confirmTransaction(
                 {
                     signature: txid,

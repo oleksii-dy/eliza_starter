@@ -12,7 +12,7 @@ import {
 import { composeContext } from "@elizaos/core";
 import { generateObjectDeprecated } from "@elizaos/core";
 import { ACTIONS } from "solana-agent-kit";
-import { getSAK } from "../utils";
+import { getSAK } from "../client";
 
 const STAKE_ACTION = ACTIONS.STAKE_WITH_JUP_ACTION;
 
