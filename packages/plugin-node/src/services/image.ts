@@ -188,6 +188,49 @@ class OpenAIImageProvider implements ImageProvider {
     }
 }
 
+class GroqImageProvider implements ImageProvider {
+    constructor(private runtime: IAgentRuntime) {}
+
+    async initialize(): Promise<void> {}
+
+    async describeImage(
+        imageData: Buffer,
+        mimeType: string
+    ): Promise<{ title: string; description: string }> {
+        const imageUrl = convertToBase64DataUrl(imageData, mimeType);
+
+        const content = [
+            { type: "text", text: IMAGE_DESCRIPTION_PROMPT },
+            { type: "image_url", image_url: { url: imageUrl } },
+        ];
+
+        const endpoint =
+            this.runtime.imageVisionModelProvider === ModelProviderName.GROQ
+                ? getEndpoint(this.runtime.imageVisionModelProvider)
+                : "https://api.groq.com/openai/v1/";
+
+        const response = await fetch(endpoint + "/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${this.runtime.getSetting("GROQ_API_KEY")}`,
+            },
+            body: JSON.stringify({
+                model: /*this.runtime.imageVisionModelName ||*/ "llama-3.2-90b-vision-preview",
+                messages: [{ role: "user", content }],
+                max_tokens: 1024,
+            }),
+        });
+
+        if (!response.ok) {
+            await handleApiError(response, "Groq");
+        }
+
+        const data = await response.json();
+        return parseImageResponse(data.choices[0].message.content);
+    }
+}
+
 class GoogleImageProvider implements ImageProvider {
     constructor(private runtime: IAgentRuntime) {}
 
@@ -253,10 +296,17 @@ export class ImageDescriptionService
         this.runtime = runtime;
     }
 
-    private async initializeProvider(): Promise<void> {
+    private async initializeProvider(): Promise<boolean> {
         if (!this.runtime) {
             throw new Error("Runtime is required for image recognition");
         }
+
+        const availableModels = [
+            ModelProviderName.LLAMALOCAL,
+            ModelProviderName.GOOGLE,
+            ModelProviderName.OPENAI,
+            ModelProviderName.GROQ,
+        ].join(", ");
 
         const model = models[this.runtime?.character?.modelProvider];
 
@@ -281,10 +331,18 @@ export class ImageDescriptionService
             ) {
                 this.provider = new OpenAIImageProvider(this.runtime);
                 elizaLogger.debug("Using openai for vision model");
+            } else if (
+                this.runtime.imageVisionModelProvider === ModelProviderName.GROQ
+            ) {
+                this.provider = new GroqImageProvider(this.runtime);
+                elizaLogger.debug("Using Groq for vision model");
             } else {
-                elizaLogger.error(
-                    `Unsupported image vision model provider: ${this.runtime.imageVisionModelProvider}`
+                elizaLogger.warn(
+                    `Unsupported image vision model provider: ${this.runtime.imageVisionModelProvider}. ` +
+                        `Please use one of the following: ${availableModels}. ` +
+                        `Update the 'imageVisionModelProvider' field in the character file.`
                 );
+                return false;
             }
         } else if (
             model === models[ModelProviderName.LLAMALOCAL] ||
@@ -295,19 +353,25 @@ export class ImageDescriptionService
         } else if (model === models[ModelProviderName.GOOGLE]) {
             this.provider = new GoogleImageProvider(this.runtime);
             elizaLogger.debug("Using google for vision model");
+        } else if (model === models[ModelProviderName.GROQ]) {
+            this.provider = new GroqImageProvider(this.runtime);
+            elizaLogger.debug("Using groq for vision model");
         } else {
             elizaLogger.debug("Using default openai for vision model");
             this.provider = new OpenAIImageProvider(this.runtime);
         }
 
-        await this.provider.initialize();
-        this.initialized = true;
+        try {
+            await this.provider.initialize();
+        } catch (error) {
+            elizaLogger.error(
+                `Failed to initialize the image vision model provider: ${this.runtime.imageVisionModelProvider}`
+            );
+            return false;
+        }
+        return true;
     }
 
-    /**
-     * @param imageUrlOrPath URL or file system path to an image. Any format that the sharp library supports as input should work. Images that aren't JPEG or PNG will be converted to PNG.
-     * @returns Image data buffer and mime type.
-     */
     private async loadImageData(
         imageUrlOrPath: string
     ): Promise<{ data: Buffer; mimeType: string }> {
@@ -381,15 +445,17 @@ export class ImageDescriptionService
         imageUrlOrPath: string
     ): Promise<{ title: string; description: string }> {
         if (!this.initialized) {
-            await this.initializeProvider();
+            this.initialized = await this.initializeProvider();
         }
 
-        try {
-            const { data, mimeType } = await this.loadImageData(imageUrlOrPath);
-            return await this.provider!.describeImage(data, mimeType);
-        } catch (error) {
-            elizaLogger.error("Error in describeImage:", error);
-            throw error;
+        if (this.initialized) {
+            try {
+                const { data, mimeType } = await this.loadImageData(imageUrlOrPath);
+                return await this.provider.describeImage(data, mimeType);
+            } catch (error) {
+                elizaLogger.error("Error in describeImage:", error);
+                throw error;
+            }
         }
     }
 }
