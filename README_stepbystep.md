@@ -83,18 +83,21 @@ exit & save
 ### Edit your character file
 
 head into the character folder:
+```
 cd characters
-
+```
 get rid of racists and sexists
+```
 rm tate.character.json
 rm trump.character.json
-
+```
 create a template of c3po.character.json:
+```
 cp c3po.character.json avatar.character.json
 nano avatar.character.json
-
+```
 The header should be set like this, so fill in the modelProvider. "clients" should be left empty for now, as we need to create Bot Tokens for them to work properly)
-
+```
 {
     "name": "Avatar",
     "clients": ["telegram","discord","twitter"],
@@ -103,7 +106,7 @@ The header should be set like this, so fill in the modelProvider. "clients" shou
         "secrets": {},
         "voice": {
             "model": "en_US-male-medium"
-
+```
 
     - Use `pnpm start --characters="path/to/your/character.json"`
 
@@ -115,11 +118,12 @@ The header should be set like this, so fill in the modelProvider. "clients" shou
 pnpm i
 pnpm build
 pnpm start --characters="path/to/your/character.json"`
-
+```
 
 - To keep the instance running after logoff:
-- npm install pm2
--
+-```
+-  npm install pm2
+-```
 -     pm2 start eliza
 -     pm2 stop eliza
 -     pm2 log
