@@ -136,9 +136,10 @@ export class MessageManager {
         // Give the bot a moment to fully initialize
         setTimeout(() => {
             // Monitor with random intervals between 2-6 hours
+            // Monitor with random intervals between 2-6 hours
             this.autoPostInterval = setInterval(() => {
                 this._checkChannelActivity();
-            }, Math.floor(Math.random() * (6 * 60 * 60 * 1000 - 4 * 60 * 60 * 1000) + 2 * 60 * 60 * 1000));
+            }, Math.floor(Math.random() * (4 * 60 * 60 * 1000) + 2 * 60 * 60 * 1000));
         }, 5000);
     }
 
