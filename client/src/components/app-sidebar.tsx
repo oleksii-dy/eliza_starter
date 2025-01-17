@@ -73,22 +73,34 @@ export function AppSidebar() {
                                 <div>
                                     {agents?.map(
                                         (agent: { id: UUID; name: string }) => (
-                                            <SidebarMenuItem key={agent.id}>
-                                                <NavLink
-                                                    to={`/chat/${agent.id}`}
-                                                >
-                                                    <SidebarMenuButton
-                                                        isActive={location.pathname.includes(
-                                                            agent.id
-                                                        )}
+                                            <>
+                                                <SidebarMenuItem key={agent.id}>
+                                                    <NavLink
+                                                        to={`/chat/${agent.id}`}
                                                     >
-                                                        <User />
-                                                        <span>
-                                                            {agent.name}
-                                                        </span>
-                                                    </SidebarMenuButton>
-                                                </NavLink>
-                                            </SidebarMenuItem>
+                                                        <SidebarMenuButton
+                                                            isActive={location.pathname.includes(
+                                                                agent.id
+                                                            )}
+                                                        >
+                                                            <User />
+                                                            <span>
+                                                                {agent.name}
+                                                            </span>
+                                                        </SidebarMenuButton>
+                                                    </NavLink>
+                                                </SidebarMenuItem>
+                                                <SidebarMenuItem>
+                                                    <NavLink
+                                                        to={`/settings/archetypes/${agent.id}`}
+                                                    >
+                                                        <SidebarMenuButton>
+                                                            <Cog /> Change
+                                                            Agent's Archetype
+                                                        </SidebarMenuButton>
+                                                    </NavLink>
+                                                </SidebarMenuItem>
+                                            </>
                                         )
                                     )}
                                 </div>
