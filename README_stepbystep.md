@@ -10,9 +10,6 @@
 
 </div>
 
-## 🌍 README Translations
-
-[中文说明](./README_CN.md) | [日本語の説明](./README_JA.md) | [한국어 설명](./README_KOR.md) | [Persian](./README_FA.md) | [Français](./README_FR.md) | [Português](./README_PTBR.md) | [Türkçe](./README_TR.md) | [Русский](./README_RU.md) | [Español](./README_ES.md) | [Italiano](./README_IT.md) | [ไทย](./README_TH.md) | [Deutsch](./README_DE.md) | [Tiếng Việt](./README_VI.md) | [עִברִית](https://github.com/elizaos/Elisa/blob/main/README_HE.md) | [Tagalog](./README_TG.md) | [Polski](./README_PL.md) | [Arabic](./README_AR.md) | [Hungarian](./README_HU.md) | [Srpski](./README_RS.md) | [Română](./README_RO.md) | [Nederlands](./README_NL.md)
 
 ## 🚩 Overview
 
@@ -31,19 +28,7 @@
 - ☁️ Supports many models (local Llama, OpenAI, Anthropic, Groq, etc.)
 - 📦 Just works!
 
-## Video Tutorials
 
-[AI Agent Dev School](https://www.youtube.com/watch?v=ArptLpQiKfI&list=PLx5pnFXdPTRzWla0RaOxALTSTnVq53fKL)
-
-## 🎯 Use Cases
-
-- 🤖 Chatbots
-- 🕵️ Autonomous Agents
-- 📈 Business Process Handling
-- 🎮 Video Game NPCs
-- 🧠 Trading
-
-## 🚀 Quick Start
 
 ### Prerequisites
 
@@ -52,14 +37,7 @@
 - nvm use v23.3.0 or nvm alias default v23.3.0
 - [pnpm](https://pnpm.io/installation)
 - 
-- To keep the instance running after logoff:
-- npm install pm2
--
--     pm2 start eliza
--     pm2 stop eliza
--     pm2 log
--     pm2 status
--     
+
 
 
 ### Create filestructure
@@ -136,7 +114,15 @@ pnpm build
 pnpm start --characters="path/to/your/character.json"`
 
 
-
+- To keep the instance running after logoff:
+- npm install pm2
+-
+-     pm2 start eliza
+-     pm2 stop eliza
+-     pm2 log
+-     pm2 status
+-     pm2 pnpm start --characters="path/to/your/character.json"  to create pm2 entry
+      pm2 save
 
 
 
