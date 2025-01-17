@@ -6,8 +6,8 @@ import {
     Provider,
     State,
     elizaLogger,
-    generateText,
     ModelClass,
+    generateObject,
 } from "@elizaos/core";
 import {
     combinedSparqlExample,
@@ -16,6 +16,7 @@ import {
 } from "../constants.ts";
 // @ts-ignore
 import DKG from "dkg.js";
+import { DKGSelectQuerySchema, isDKGSelectQuery } from "../types.ts";
 
 // Provider configuration
 const PROVIDER_CONFIG = {
@@ -80,13 +81,19 @@ async function constructSparqlQuery(
     Provide only the SPARQL query, wrapped in a sparql code block for clarity.
   `;
 
-    const sparqlQuery = await generateText({
+    const sparqlQueryResult = await generateObject({
         runtime,
         context,
         modelClass: ModelClass.LARGE,
+        schema: DKGSelectQuerySchema,
     });
 
-    return sparqlQuery.replace(/```sparql|```/g, "").trim();
+    if (!isDKGSelectQuery(sparqlQueryResult.object)) {
+        elizaLogger.error("Invalid SELECT SPARQL query generated.");
+        throw new Error("Invalid SELECT SPARQL query generated.");
+    }
+
+    return sparqlQueryResult.object.query;
 }
 
 export class DKGProvider {
@@ -100,6 +107,9 @@ export class DKGProvider {
 
         for (const field of requiredStringFields) {
             if (typeof config[field as keyof DKGClientConfig] !== "string") {
+                elizaLogger.error(
+                    `Invalid configuration: Missing or invalid value for '${field}'`
+                );
                 throw new Error(
                     `Invalid configuration: Missing or invalid value for '${field}'`
                 );
@@ -107,6 +117,9 @@ export class DKGProvider {
         }
 
         if (!config.blockchain || typeof config.blockchain !== "object") {
+            elizaLogger.error(
+                "Invalid configuration: 'blockchain' must be an object"
+            );
             throw new Error(
                 "Invalid configuration: 'blockchain' must be an object"
             );
@@ -119,6 +132,9 @@ export class DKGProvider {
                 typeof config.blockchain[field as keyof BlockchainConfig] !==
                 "string"
             ) {
+                elizaLogger.error(
+                    `Invalid configuration: Missing or invalid value for 'blockchain.${field}'`
+                );
                 throw new Error(
                     `Invalid configuration: Missing or invalid value for 'blockchain.${field}'`
                 );
@@ -181,7 +197,7 @@ export const graphSearch: Provider = {
 
             return await provider.search(runtime, _message);
         } catch (error) {
-            console.error("Error in wallet provider:", error);
+            elizaLogger.error("Error in wallet provider:", error);
             return null;
         }
     },
