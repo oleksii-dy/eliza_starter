@@ -21,13 +21,14 @@ import {
     type ChainName,
     TypedProvider,
   } from '@hyperlane-xyz/sdk';
-  import { Provider } from 'ethers';
+  import { Provider, JsonRpcProvider } from 'ethers';
   import { Wallet } from '@ethersproject/wallet';
   import { Address, ProtocolType, Numberish } from '@hyperlane-xyz/utils';
-  import { Logger } from 'pino';
+  import pino from 'pino';
+  import { chainData } from "../chainMetadata";
 
   // Create pino logger
-  const logger = new Logger({
+  const logger = pino({
     level: 'info',
     transport: {
       target: 'pino-pretty'
@@ -108,26 +109,10 @@ import {
         });
 
         // Initialize chain metadata
-        const chainMetadata: ChainMap<ChainMetadata> = {
-          ethereum: {
-            name: 'ethereum',
-            chainId: 1,
-            domainId: 1,
-            protocol: ProtocolType.Ethereum,
-            rpcUrls: [{ http: runtime.getSetting("ETHEREUM_RPC_URL") }],
-          },
-          polygon: {
-            name: 'polygon',
-            chainId: 137,
-            domainId: 137,
-            protocol: ProtocolType.Ethereum,
-            rpcUrls: [{ http: runtime.getSetting("POLYGON_RPC_URL") }],
-          },
-        };
-
+        const chainMetadata = chainData
         // Initialize providers with retry logic
         const createProvider = (url: string): Provider => {
-          const provider = new providers.JsonRpcProvider(url);
+          const provider = new JsonRpcProvider(url);
           provider.getNetwork = async () => {
             try {
               return await provider.getNetwork();
@@ -311,10 +296,10 @@ import {
 
         // Get explorer URL
         const explorerUrl = lastReceipt
-          ? await multiProvider.tryGetExplorerAddressUrl(
+          ? (await multiProvider.tryGetExplorerAddressUrl(
               options.sourceChain,
               lastReceipt.hash
-            )
+            )) || undefined
           : undefined;
 
         const response: TokenTransferResponse = {
