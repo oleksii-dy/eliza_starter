@@ -302,6 +302,13 @@ export class ImageDescriptionService
             throw new Error("Runtime is required for image recognition");
         }
 
+        const availableModels = [
+            ModelProviderName.LLAMALOCAL,
+            ModelProviderName.GOOGLE,
+            ModelProviderName.OPENAI,
+            ModelProviderName.GROQ,
+        ].join(", ");
+
         const model = models[this.runtime?.character?.modelProvider];
 
         if (this.runtime.imageVisionModelProvider) {
@@ -330,7 +337,9 @@ export class ImageDescriptionService
                 elizaLogger.debug("Using Groq for vision model");
             } else {
                 elizaLogger.warn(
-                    `Unsupported image vision model provider: ${this.runtime.imageVisionModelProvider}`
+                    `Unsupported image vision model provider: ${this.runtime.imageVisionModelProvider}. ` +
+                        `Please use one of the following: ${availableModels}. ` +
+                        `Update the 'imageVisionModelProvider' field in the character file.`
                 );
                 return false;
             }
