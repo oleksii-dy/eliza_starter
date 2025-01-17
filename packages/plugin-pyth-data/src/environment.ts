@@ -1,4 +1,4 @@
-import { IAgentRuntime, elizaLogger } from "@elizaos/core";
+import { IAgentRuntime} from "@elizaos/core";
 import { z } from "zod";
 
 // Environment Variables
@@ -14,46 +14,32 @@ const PYTH_NETWORKS = {
         programKey: process.env.PYTH_MAINNET_PROGRAM_KEY || "FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH"
     },
     testnet: {
-        hermes: process.env.PYTH_TESTNET_HERMES_URL || "https://hermes-beta.pyth.network",
-        wss: process.env.PYTH_TESTNET_WSS_URL || "wss://hermes-beta.pyth.network/ws",
+        hermes: process.env.PYTH_TESTNET_HERMES_URL || "https://hermes.pyth.network",
+        wss: process.env.PYTH_TESTNET_WSS_URL || "wss://hermes.pyth.network/ws",
         pythnet: process.env.PYTH_TESTNET_PYTHNET_URL || "https://pythnet.rpcpool.com",
         contractRegistry: process.env.PYTH_TESTNET_CONTRACT_REGISTRY || "https://pyth.network/developers/price-feed-ids#testnet",
         programKey: process.env.PYTH_TESTNET_PROGRAM_KEY || "FsJ3A3u2vn5cTVofAjvy6y5kwABJAqYWpe4975bi2epH"
     }
 } as const;
 
-// Log environment information
-elizaLogger.info("Environment sources", {
-    shellVars: Object.keys(process.env).filter(key => key.startsWith('PYTH_')),
-});
+// // Log environment information
+// elizaLogger.info("Environment sources", {
+//     shellVars: Object.keys(process.env).filter(key => key.startsWith('PYTH_')),
+// });
 
 export const pythEnvSchema = z.object({
     PYTH_NETWORK_ENV: z.enum(["mainnet", "testnet"]).default("mainnet"),
     PYTH_MAX_RETRIES: z.string().transform(Number).default("3"),
     PYTH_RETRY_DELAY: z.string().transform(Number).default("1000"),
     PYTH_TIMEOUT: z.string().transform(Number).default("5000"),
-    PYTH_MAX_PRICE_AGE: z.string().transform(Number).default("60000"),
-    PYTH_CONFIDENCE_INTERVAL: z.string().transform(Number).default("0.95"),
-    PYTH_UPDATE_INTERVAL: z.string().transform(Number).default("500"),
-    PYTH_MAX_SUBSCRIPTIONS: z.string().transform(Number).default("100"),
-    PYTH_BATCH_SIZE: z.string().transform(Number).default("10"),
-    PYTH_CACHE_DURATION: z.string().transform(Number).default("300000"),
     PYTH_GRANULAR_LOG: z.boolean().default(true),
-    PYTH_COMMITMENT_LEVEL: z.enum(["processed", "confirmed", "finalized"]).default("confirmed"),
-    PYTH_ENABLE_WEBSOCKET: z.boolean().default(true),
-    PYTH_RECONNECT_INTERVAL: z.string().transform(Number).default("5000"),
-    PYTH_MAX_CONNECTION_ATTEMPTS: z.string().transform(Number).default("5"),
-    PYTH_ENABLE_PRICE_CACHING: z.boolean().default(true),
-    PYTH_ENABLE_METRICS: z.boolean().default(false),
     PYTH_LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).default("info"),
-    PYTH_MAX_SLIPPAGE: z.string().transform(Number).default("0.05"),
-    PYTH_MIN_LIQUIDITY_RATIO: z.string().transform(Number).default("0.1"),
-    PYTH_MIN_DATA_POINTS: z.string().transform(Number).default("10"),
-    PYTH_OUTLIER_THRESHOLD: z.string().transform(Number).default("2.0"),
-    PYTH_WS_HEARTBEAT_INTERVAL: z.string().transform(Number).default("30000"),
-    PYTH_WS_MAX_MISSED_HEARTBEATS: z.string().transform(Number).default("3"),
-    PYTH_WS_RECONNECT_DELAY: z.string().transform(Number).default("1000"),
     RUNTIME_CHECK_MODE: z.boolean().default(false),
+    PYTH_ENABLE_PRICE_STREAMING: z.boolean().default(true),
+    PYTH_MAX_PRICE_STREAMS: z.string().transform(Number).default("10"),
+    PYTH_TEST_ID01: z.string().default("0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"),
+    PYTH_TEST_ID02: z.string().default("0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"),
+
 });
 
 export type PythConfig = z.infer<typeof pythEnvSchema>;
@@ -69,28 +55,13 @@ export function getConfig(
         PYTH_MAX_RETRIES: Number(process.env.PYTH_MAX_RETRIES || "3"),
         PYTH_RETRY_DELAY: Number(process.env.PYTH_RETRY_DELAY || "1000"),
         PYTH_TIMEOUT: Number(process.env.PYTH_TIMEOUT || "5000"),
-        PYTH_MAX_PRICE_AGE: Number(process.env.PYTH_MAX_PRICE_AGE || "60000"),
-        PYTH_CONFIDENCE_INTERVAL: Number(process.env.PYTH_CONFIDENCE_INTERVAL || "0.95"),
-        PYTH_UPDATE_INTERVAL: Number(process.env.PYTH_UPDATE_INTERVAL || "500"),
-        PYTH_MAX_SUBSCRIPTIONS: Number(process.env.PYTH_MAX_SUBSCRIPTIONS || "100"),
-        PYTH_BATCH_SIZE: Number(process.env.PYTH_BATCH_SIZE || "10"),
-        PYTH_CACHE_DURATION: Number(process.env.PYTH_CACHE_DURATION || "300000"),
         PYTH_GRANULAR_LOG: process.env.PYTH_GRANULAR_LOG === "true" || false,
-        PYTH_COMMITMENT_LEVEL: (process.env.PYTH_COMMITMENT_LEVEL as "processed" | "confirmed" | "finalized") || "confirmed",
-        PYTH_ENABLE_WEBSOCKET: process.env.PYTH_ENABLE_WEBSOCKET === "true" || true,
-        PYTH_RECONNECT_INTERVAL: Number(process.env.PYTH_RECONNECT_INTERVAL || "5000"),
-        PYTH_MAX_CONNECTION_ATTEMPTS: Number(process.env.PYTH_MAX_CONNECTION_ATTEMPTS || "5"),
-        PYTH_ENABLE_PRICE_CACHING: process.env.PYTH_ENABLE_PRICE_CACHING === "true" || true,
-        PYTH_ENABLE_METRICS: process.env.PYTH_ENABLE_METRICS === "true" || false,
         PYTH_LOG_LEVEL: (process.env.PYTH_LOG_LEVEL as "error" | "warn" | "info" | "debug") || "info",
-        PYTH_MAX_SLIPPAGE: Number(process.env.PYTH_MAX_SLIPPAGE || "0.05"),
-        PYTH_MIN_LIQUIDITY_RATIO: Number(process.env.PYTH_MIN_LIQUIDITY_RATIO || "0.1"),
-        PYTH_MIN_DATA_POINTS: Number(process.env.PYTH_MIN_DATA_POINTS || "10"),
-        PYTH_OUTLIER_THRESHOLD: Number(process.env.PYTH_OUTLIER_THRESHOLD || "2.0"),
-        PYTH_WS_HEARTBEAT_INTERVAL: Number(process.env.PYTH_WS_HEARTBEAT_INTERVAL || "30000"),
-        PYTH_WS_MAX_MISSED_HEARTBEATS: Number(process.env.PYTH_WS_MAX_MISSED_HEARTBEATS || "3"),
-        PYTH_WS_RECONNECT_DELAY: Number(process.env.PYTH_WS_RECONNECT_DELAY || "1000"),
         RUNTIME_CHECK_MODE: process.env.RUNTIME_CHECK_MODE === "true" || false,
+        PYTH_ENABLE_PRICE_STREAMING: process.env.PYTH_ENABLE_PRICE_STREAMING === "true" || true,
+        PYTH_MAX_PRICE_STREAMS: Number(process.env.PYTH_MAX_PRICE_STREAMS || "10"),
+        PYTH_TEST_ID01: process.env.PYTH_TEST_ID01 || "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
+        PYTH_TEST_ID02: process.env.PYTH_TEST_ID02 || "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
     };
 }
 
@@ -106,29 +77,13 @@ export async function validatePythConfig(
             PYTH_NETWORK_ENV: process.env.PYTH_NETWORK_ENV || runtime.getSetting("PYTH_NETWORK_ENV") || envConfig.PYTH_NETWORK_ENV,
             PYTH_MAX_RETRIES: process.env.PYTH_MAX_RETRIES || runtime.getSetting("PYTH_MAX_RETRIES") || envConfig.PYTH_MAX_RETRIES.toString(),
             PYTH_RETRY_DELAY: process.env.PYTH_RETRY_DELAY || runtime.getSetting("PYTH_RETRY_DELAY") || envConfig.PYTH_RETRY_DELAY.toString(),
-            PYTH_TIMEOUT: process.env.PYTH_TIMEOUT || runtime.getSetting("PYTH_TIMEOUT") || envConfig.PYTH_TIMEOUT.toString(),
-            PYTH_MAX_PRICE_AGE: process.env.PYTH_MAX_PRICE_AGE || runtime.getSetting("PYTH_MAX_PRICE_AGE") || envConfig.PYTH_MAX_PRICE_AGE.toString(),
-            PYTH_CONFIDENCE_INTERVAL: process.env.PYTH_CONFIDENCE_INTERVAL || runtime.getSetting("PYTH_CONFIDENCE_INTERVAL") || envConfig.PYTH_CONFIDENCE_INTERVAL.toString(),
-            PYTH_UPDATE_INTERVAL: process.env.PYTH_UPDATE_INTERVAL || runtime.getSetting("PYTH_UPDATE_INTERVAL") || envConfig.PYTH_UPDATE_INTERVAL.toString(),
-            PYTH_MAX_SUBSCRIPTIONS: process.env.PYTH_MAX_SUBSCRIPTIONS || runtime.getSetting("PYTH_MAX_SUBSCRIPTIONS") || envConfig.PYTH_MAX_SUBSCRIPTIONS.toString(),
-            PYTH_BATCH_SIZE: process.env.PYTH_BATCH_SIZE || runtime.getSetting("PYTH_BATCH_SIZE") || envConfig.PYTH_BATCH_SIZE.toString(),
-            PYTH_CACHE_DURATION: process.env.PYTH_CACHE_DURATION || runtime.getSetting("PYTH_CACHE_DURATION") || envConfig.PYTH_CACHE_DURATION.toString(),
             PYTH_GRANULAR_LOG: process.env.PYTH_GRANULAR_LOG === "true" || false,
-            PYTH_COMMITMENT_LEVEL: process.env.PYTH_COMMITMENT_LEVEL || runtime.getSetting("PYTH_COMMITMENT_LEVEL") || envConfig.PYTH_COMMITMENT_LEVEL,
-            PYTH_ENABLE_WEBSOCKET: process.env.PYTH_ENABLE_WEBSOCKET === "true" || true,
-            PYTH_RECONNECT_INTERVAL: process.env.PYTH_RECONNECT_INTERVAL || runtime.getSetting("PYTH_RECONNECT_INTERVAL") || envConfig.PYTH_RECONNECT_INTERVAL.toString(),
-            PYTH_MAX_CONNECTION_ATTEMPTS: process.env.PYTH_MAX_CONNECTION_ATTEMPTS || runtime.getSetting("PYTH_MAX_CONNECTION_ATTEMPTS") || envConfig.PYTH_MAX_CONNECTION_ATTEMPTS.toString(),
-            PYTH_ENABLE_PRICE_CACHING: process.env.PYTH_ENABLE_PRICE_CACHING === "true" || true,
-            PYTH_ENABLE_METRICS: process.env.PYTH_ENABLE_METRICS === "true" || false,
             PYTH_LOG_LEVEL: process.env.PYTH_LOG_LEVEL || runtime.getSetting("PYTH_LOG_LEVEL") || envConfig.PYTH_LOG_LEVEL,
-            PYTH_MAX_SLIPPAGE: process.env.PYTH_MAX_SLIPPAGE || runtime.getSetting("PYTH_MAX_SLIPPAGE") || envConfig.PYTH_MAX_SLIPPAGE.toString(),
-            PYTH_MIN_LIQUIDITY_RATIO: process.env.PYTH_MIN_LIQUIDITY_RATIO || runtime.getSetting("PYTH_MIN_LIQUIDITY_RATIO") || envConfig.PYTH_MIN_LIQUIDITY_RATIO.toString(),
-            PYTH_MIN_DATA_POINTS: process.env.PYTH_MIN_DATA_POINTS || runtime.getSetting("PYTH_MIN_DATA_POINTS") || envConfig.PYTH_MIN_DATA_POINTS.toString(),
-            PYTH_OUTLIER_THRESHOLD: process.env.PYTH_OUTLIER_THRESHOLD || runtime.getSetting("PYTH_OUTLIER_THRESHOLD") || envConfig.PYTH_OUTLIER_THRESHOLD.toString(),
-            PYTH_WS_HEARTBEAT_INTERVAL: process.env.PYTH_WS_HEARTBEAT_INTERVAL || runtime.getSetting("PYTH_WS_HEARTBEAT_INTERVAL") || envConfig.PYTH_WS_HEARTBEAT_INTERVAL.toString(),
-            PYTH_WS_MAX_MISSED_HEARTBEATS: process.env.PYTH_WS_MAX_MISSED_HEARTBEATS || runtime.getSetting("PYTH_WS_MAX_MISSED_HEARTBEATS") || envConfig.PYTH_WS_MAX_MISSED_HEARTBEATS.toString(),
-            PYTH_WS_RECONNECT_DELAY: process.env.PYTH_WS_RECONNECT_DELAY || runtime.getSetting("PYTH_WS_RECONNECT_DELAY") || envConfig.PYTH_WS_RECONNECT_DELAY.toString(),
             RUNTIME_CHECK_MODE: process.env.RUNTIME_CHECK_MODE === "true" || false,
+            PYTH_ENABLE_PRICE_STREAMING: process.env.PYTH_ENABLE_PRICE_STREAMING === "true" || true,
+            PYTH_MAX_PRICE_STREAMS: process.env.PYTH_MAX_PRICE_STREAMS || runtime.getSetting("PYTH_MAX_PRICE_STREAMS") || envConfig.PYTH_MAX_PRICE_STREAMS.toString(),
+            PYTH_TEST_ID01: process.env.PYTH_TEST_ID01 || envConfig.PYTH_TEST_ID01,
+            PYTH_TEST_ID02: process.env.PYTH_TEST_ID02 || envConfig.PYTH_TEST_ID02,
         };
 
         return pythEnvSchema.parse(config);

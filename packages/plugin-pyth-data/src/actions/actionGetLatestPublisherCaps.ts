@@ -1,12 +1,10 @@
 import { Action, elizaLogger } from "@elizaos/core";
 import { IAgentRuntime, Memory, State, HandlerCallback, Content, ActionExample } from "@elizaos/core";
-import { HermesClient } from "../hermes/HermesClient";
+// import { HermesClient } from "../hermes/HermesClient";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import { DataError, ErrorSeverity, DataErrorCode } from "../error";
 import { validatePythConfig, getNetworkConfig, getConfig } from "../environment";
-import { ValidationSchemas } from "../types/types";
-import { validateSchema } from "../utils/validation";
-import { schemas } from "../types/zodSchemas";
-import { z } from "zod";
+import { validatePublisherCapsData } from "../utils/publisherCapsValidation";
 
 // Get configuration for granular logging
 const config = getConfig();
@@ -41,7 +39,7 @@ export const getLatestPublisherCapsAction: Action = {
         {
             user: "user",
             content: {
-                text: "Get latest publisher caps"
+                text: "Get me all the latest publisher caps"
             } as GetLatestPublisherCapsContent
         } as ActionExample,
         {
@@ -61,6 +59,11 @@ export const getLatestPublisherCapsAction: Action = {
     ]],
 
     validate: async (_runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+        // Check if this message is intended for this action
+        if (message.content?.type !== "GET_LATEST_PUBLISHER_CAPS") {
+            return true; // Skip validation for other actions
+        }
+
         logGranular("Validating GET_LATEST_PUBLISHER_CAPS action", {
             content: message.content
         });
@@ -68,21 +71,21 @@ export const getLatestPublisherCapsAction: Action = {
         try {
             const content = message.content as GetLatestPublisherCapsContent;
 
-            // Validate against schema
+            // Use the new validation function
             try {
-                await validateSchema(content, ValidationSchemas.GET_LATEST_PUBLISHER_CAPS);
-                logGranular("Schema validation passed");
+                await validatePublisherCapsData(content);
+                logGranular("Publisher caps validation passed");
             } catch (error) {
-                logGranular("Schema validation failed", { error });
+                logGranular("Publisher caps validation failed", { error });
                 if (error instanceof DataError) {
-                    elizaLogger.error("Schema validation failed", {
+                    elizaLogger.error("Publisher caps validation failed", {
                         errors: error.details?.errors
                     });
                     throw error;
                 }
                 throw new DataError(
                     DataErrorCode.VALIDATION_FAILED,
-                    "Schema validation failed",
+                    "Publisher caps validation failed",
                     ErrorSeverity.HIGH,
                     { error }
                 );
@@ -128,46 +131,64 @@ export const getLatestPublisherCapsAction: Action = {
                 endpoint: networkConfig.hermes
             });
 
-            // Create message content
-            const messageContent: GetLatestPublisherCapsContent = {
-                text: "Get latest publisher caps",
-                success: false
-            };
-
             try {
-                // Validate input
-                await validateSchema(
-                    messageContent,
-                    ValidationSchemas.GET_LATEST_PUBLISHER_CAPS
-                );
-
                 // Get publisher caps with options
-                const caps = await hermesClient.getLatestPublisherCaps({
+                const response = await hermesClient.getLatestPublisherCaps({
                     parsed: true
                 });
 
-                const parsedCaps = caps as z.infer<typeof schemas.LatestPublisherStakeCapsUpdateDataResponse>;
+                if (!response.parsed?.[0]?.publisher_stake_caps) {
+                    throw new DataError(
+                        DataErrorCode.VALIDATION_FAILED,
+                        "No publisher caps data found in response",
+                        ErrorSeverity.HIGH
+                    );
+                }
 
-                logGranular("Successfully retrieved publisher caps", {
-                    count: parsedCaps.parsed?.[0]?.publisher_stake_caps.length || 0
+                const publisherCaps = response.parsed[0].publisher_stake_caps;
+                const currentTimestamp = Date.now();
+
+                // Enhanced logging for each publisher cap
+                publisherCaps.forEach((cap, index) => {
+                    logGranular(`Publisher Cap ${index + 1}`, {
+                        publisher: cap.publisher,
+                        cap: cap.cap.toLocaleString(),
+                        timestamp: new Date(currentTimestamp).toLocaleString()
+                    });
                 });
 
-                // Create callback content
-                const callbackContent: GetLatestPublisherCapsContent = {
-                    text: `Retrieved ${parsedCaps.parsed?.[0]?.publisher_stake_caps.length || 0} publisher caps`,
-                    success: true,
-                    data: {
-                        caps: parsedCaps.parsed?.[0]?.publisher_stake_caps.map((cap) => ({
-                            publisher: cap.publisher,
-                            cap: cap.cap,
-                            timestamp: Date.now() // Since timestamp is not in the response
-                        })) || []
-                    }
-                };
+                logGranular("Successfully retrieved publisher caps", {
+                    totalCaps: publisherCaps.length,
+                    allCaps: publisherCaps.map(cap => ({
+                        publisher: cap.publisher,
+                        cap: cap.cap.toLocaleString(),
+                        timestamp: new Date(currentTimestamp).toLocaleString()
+                    }))
+                });
 
-                // Call callback with results
+                // Format the publisher caps into text
+                const formattedText = publisherCaps
+                    .map((cap, index) =>
+                        `Publisher ${index + 1}:
+ID: ${cap.publisher}
+Cap: ${cap.cap.toLocaleString()} tokens
+Timestamp: ${new Date(currentTimestamp).toLocaleString()}`
+                    )
+                    .join('\n\n');
+
+                // Create callback content with formatted text
                 if (callback) {
-                    await callback(callbackContent);
+                    await callback({
+                        text: `Retrieved ${publisherCaps.length} publisher caps:\n\n${formattedText}`,
+                        success: true,
+                        data: {
+                            caps: publisherCaps.map(cap => ({
+                                publisher: cap.publisher,
+                                cap: cap.cap,
+                                timestamp: currentTimestamp
+                            }))
+                        }
+                    } as GetLatestPublisherCapsContent);
                 }
 
                 return true;

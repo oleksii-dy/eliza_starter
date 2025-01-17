@@ -96,6 +96,7 @@ import { stargazePlugin } from "@elizaos/plugin-stargaze";
 import { akashPlugin } from "@elizaos/plugin-akash";
 import { quaiPlugin } from "@elizaos/plugin-quai";
 import { pythDataPlugin } from "@elizaos/plugin-pyth-data";
+// import { pythDataPlugin } from "@elizaos/plugin-pyth-data";
 import Database from "better-sqlite3";
 import fs from "fs";
 import net from "net";

@@ -1,10 +1,10 @@
 import { Action, elizaLogger } from "@elizaos/core";
 import { IAgentRuntime, Memory, State, HandlerCallback, Content, ActionExample } from "@elizaos/core";
-import { HermesClient } from "../hermes/HermesClient";
+// import { HermesClient } from "../hermes/HermesClient";
+import { HermesClient } from "@pythnetwork/hermes-client";
 import { DataError, ErrorSeverity, DataErrorCode } from "../error";
 import { validatePythConfig, getNetworkConfig, getConfig } from "../environment";
-import { ValidationSchemas } from "../types/types";
-import { validateSchema } from "../utils/validation";
+import { validatePriceFeedsData } from "../utils/priceFeedsValidation";
 
 // Get configuration for granular logging
 const config = getConfig();
@@ -44,6 +44,9 @@ interface GetPriceFeedsContent extends Content {
             id: string;
             attributes: PriceFeedAttributes;
         }>;
+        count: number;
+        responseType: string;
+        isArray: boolean;
         error?: string;
     };
 }
@@ -56,7 +59,7 @@ export const getPriceFeedsAction: Action = {
         {
             user: "user",
             content: {
-                text: "Get all price feeds",
+                text: "Get all available price feeds from Pyth Network",
                 query: "BTC",
                 filter: "USD"
             } as GetPriceFeedsContent
@@ -88,6 +91,11 @@ export const getPriceFeedsAction: Action = {
     ]],
 
     async validate(runtime: IAgentRuntime, message: Memory): Promise<boolean> {
+        // Check if this message is intended for this action
+        if (message.content?.type !== "GET_PRICE_FEEDS") {
+            return true; // Skip validation for other actions
+        }
+
         logGranular("Starting validation", {
             messageId: message.id,
             content: message.content
@@ -99,8 +107,8 @@ export const getPriceFeedsAction: Action = {
 
             // Validate against schema
             try {
-                const validationResult = await validateSchema(content, ValidationSchemas.GET_PRICE_FEEDS);
-                logGranular("Schema validation result", { validationResult });
+                await validatePriceFeedsData(content);
+                logGranular("Schema validation passed");
             } catch (error) {
                 logGranular("Schema validation error", { error });
                 if (error instanceof DataError) {
@@ -249,12 +257,24 @@ export const getPriceFeedsAction: Action = {
 
             // Prepare callback content
             const callbackContent: GetPriceFeedsContent = {
-                text: `Retrieved ${priceFeeds.length} price feeds${query ? ` matching query "${query}"` : ''}${filter ? ` and filter "${filter}"` : ''}`,
+                text: `Retrieved ${priceFeeds.length} price feeds:
+${transformedFeeds.map(feed =>
+    `- ${feed.attributes.description} (${feed.attributes.display_symbol})
+  Type: ${feed.attributes.asset_type}
+  Base: ${feed.attributes.base}
+  Quote: ${feed.attributes.quote_currency}
+  Schedule: ${feed.attributes.schedule}
+  ID: ${feed.id}`
+).join('\n')}
+${query ? `\nMatching query: "${query}"` : ''}${filter ? `\nWith filter: "${filter}"` : ''}`,
                 query,
                 filter,
                 success: true,
                 data: {
-                    feeds: transformedFeeds
+                    feeds: transformedFeeds,
+                    count: priceFeeds.length,
+                    responseType: "object",
+                    isArray: true
                 }
             };
 
@@ -272,34 +292,38 @@ export const getPriceFeedsAction: Action = {
 
             return true;
         } catch (error) {
-            logGranular("Handler error", {
-                error: error instanceof Error ? {
-                    message: error.message,
-                    stack: error.stack,
-                    name: error.name
-                } : String(error)
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+            const errorStack = error instanceof Error ? error.stack : undefined;
+
+            logGranular("Error retrieving price feeds", {
+                error: errorMessage,
+                stack: errorStack
             });
 
-            const pythError = error instanceof DataError ? error : new DataError(
-                DataErrorCode.NETWORK_ERROR,
-                "Failed to get price feeds",
-                ErrorSeverity.HIGH,
-                { originalError: error }
-            );
+            // Prepare error callback content
+            const errorContent: GetPriceFeedsContent = {
+                text: `Failed to retrieve price feeds: ${errorMessage}\nError details: ${errorStack || 'No stack trace available'}`,
+                success: false,
+                data: {
+                    feeds: [],
+                    error: errorMessage,
+                    count: 0,
+                    responseType: "object",
+                    isArray: true
+                }
+            };
 
+            // Execute callback if provided
             if (callback) {
-                const errorContent: GetPriceFeedsContent = {
-                    text: `Failed to get price feeds: ${pythError.message}`,
-                    success: false,
-                    data: {
-                        feeds: [],
-                        error: pythError.message
-                    }
-                };
                 await callback(errorContent);
             }
 
-            throw pythError;
+            // Throw appropriate error
+            throw new DataError(
+                DataErrorCode.PRICE_FEEDS_FETCH_FAILED,
+                errorMessage,
+                ErrorSeverity.HIGH
+            );
         }
     }
 };
