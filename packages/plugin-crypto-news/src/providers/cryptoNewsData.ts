@@ -75,6 +75,7 @@ export const cryptoNewsData: Provider = {
                     // cache it
                     await cacheManager.set(`cryptoNews_${article.id}`, article);
                     const embedding = await embed(runtime, article.description);
+                    console.log("embedding", embedding);
                     // put the news to knowledge as well
                     await runtime.knowledgeManager.createMemory({
                         // We namespace the knowledge base uuid to avoid id
