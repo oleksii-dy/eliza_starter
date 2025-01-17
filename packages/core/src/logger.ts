@@ -13,7 +13,7 @@ const customLevels: Record<string, number> = {
     trace: 10,
 };
 
-const raw = process?.env?.LOG_JSON_FORMAT ? true : false;
+const raw = process?.env?.LOG_JSON_FORMAT || false;
 
 const createStream = () => {
     if (raw) {
@@ -36,20 +36,22 @@ const options = {
             const [arg1, ...rest] = inputArgs;
 
             if (typeof arg1 === "object") {
-                const messageParts = rest.map(arg =>
+                const messageParts = rest.map((arg) =>
                     typeof arg === "string" ? arg : JSON.stringify(arg)
                 );
                 const message = messageParts.join(" ");
                 return method.apply(this, [arg1, message]);
             } else {
                 const context = {};
-                const messageParts = [arg1, ...rest].map(arg =>
+                const messageParts = [arg1, ...rest].map((arg) =>
                     typeof arg === "string" ? arg : arg
                 );
                 const message = messageParts
-                    .filter(part => typeof part === "string")
+                    .filter((part) => typeof part === "string")
                     .join(" ");
-                const jsonParts = messageParts.filter(part => typeof part === "object");
+                const jsonParts = messageParts.filter(
+                    (part) => typeof part === "object"
+                );
 
                 Object.assign(context, ...jsonParts);
 
