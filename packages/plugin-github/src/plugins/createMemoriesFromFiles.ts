@@ -163,6 +163,8 @@ export const createMemoriesFromFilesAction: Action = {
             if (callback) {
                 callback({
                     text: "Memories created successfully!",
+                    action: "CREATE_MEMORIES_FROM_FILES",
+                    source: "github",
                     attachments: [],
                 });
             }
@@ -175,6 +177,8 @@ export const createMemoriesFromFilesAction: Action = {
                 callback(
                     {
                         text: `Error creating memories from files on ${content.owner}/${content.repo} path ${content.path}. Please try again.`,
+                        action: "CREATE_MEMORIES_FROM_FILES",
+                        source: "github",
                     },
                     []
                 );

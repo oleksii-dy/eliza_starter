@@ -103,6 +103,8 @@ export const initializeRepositoryAction: Action = {
             if (callback) {
                 callback({
                     text: `Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo} @ branch: ${content.branch}`,
+                    action: "INITIALIZE_REPOSITORY",
+                    source: "github",
                     attachments: [],
                 });
             }
@@ -115,6 +117,8 @@ export const initializeRepositoryAction: Action = {
                 callback(
                     {
                         text: `Error initializing repository ${content.owner}/${content.repo} branch ${content.branch}. Please try again.`,
+                        action: "INITIALIZE_REPOSITORY",
+                        source: "github",
                     },
                     []
                 );
