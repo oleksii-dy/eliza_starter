@@ -1,4 +1,4 @@
-import { Provider, stringToUuid } from "@elizaos/core";
+import { embed, Provider, stringToUuid } from "@elizaos/core";
 import {
     ChainCatcherItem,
     ChainCatcherResponse,
@@ -74,6 +74,7 @@ export const cryptoNewsData: Provider = {
                     articles.push(article);
                     // cache it
                     await cacheManager.set(`cryptoNews_${article.id}`, article);
+                    const embedding = await embed(runtime, article.description);
                     // put the news to knowledge as well
                     await runtime.knowledgeManager.createMemory({
                         // We namespace the knowledge base uuid to avoid id
@@ -87,6 +88,7 @@ export const cryptoNewsData: Provider = {
                             text: article.description,
                             type: "news",
                         },
+                        embedding,
                     });
                 } else {
                     console.log(
