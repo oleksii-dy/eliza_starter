@@ -17,5 +17,6 @@ export default defineConfig({
         "agentkeepalive",
         "zod",
         // Add other modules you want to externalize
+        "axios",
     ],
 });

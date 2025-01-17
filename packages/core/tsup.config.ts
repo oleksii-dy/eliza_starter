@@ -21,5 +21,6 @@ export default defineConfig({
         "@tavily/core",
         "onnxruntime-node",
         "sharp",
+        "axios",
     ],
 });

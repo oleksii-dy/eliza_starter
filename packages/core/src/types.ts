@@ -1260,6 +1260,10 @@ export interface IAwsS3Service extends Service {
     generateSignedUrl(fileName: string, expiresIn: number): Promise<string>;
 }
 
+export interface IHubService extends Service {
+    uploadHub(owner: string, filename: string, msg: string): Promise<any>;
+}
+
 export type SearchImage = {
     url: string;
     description?: string;
@@ -1294,6 +1298,7 @@ export enum ServiceType {
     AWS_S3 = "aws_s3",
     BUTTPLUG = "buttplug",
     SLACK = "slack",
+    HUB = "hub",
 }
 
 export enum LoggingLevel {
