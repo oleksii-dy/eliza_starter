@@ -658,11 +658,26 @@ export class TwitterPostClient {
         if (lastSentence > 0) {
             return text.slice(0, lastSentence + 1).trim();
         }
+        const _theText =
+            text.slice(0, text.lastIndexOf(" ", maxLength - 3)).trim() + "...";
+        const regex = /"text": "(.*)/s;
 
+        // Ekstrak teks menggunakan regex
+        const match = regex.exec(_theText);
+        let finalReplyText;
+        if (match) {
+            finalReplyText = match[1]; // Ambil grup pertama
+        } else {
+            finalReplyText = _theText;
+        }
+        // console.log("Final reply text to be sent:", {
+        //     finalReplyText,
+        //     raw: replyText,
+        //     length: replyText.length,
+        // });
+        // let result;
         // Fallback to word boundary
-        return (
-            text.slice(0, text.lastIndexOf(" ", maxLength - 3)).trim() + "..."
-        );
+        return finalReplyText;
     }
 
     /**
