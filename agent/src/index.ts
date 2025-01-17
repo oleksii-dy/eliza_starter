@@ -437,6 +437,13 @@ export function getTokenForProvider(
     character: Character
 ): string | undefined {
     switch (provider) {
+        // no key needed for llama_local or gaianet
+        case ModelProviderName.LLAMALOCAL:
+            return "";
+        case ModelProviderName.OLLAMA:
+            return "";
+        case ModelProviderName.GAIANET:
+            return "";
         case ModelProviderName.OPENAI:
             return (
                 character.settings?.secrets?.OPENAI_API_KEY ||
@@ -569,13 +576,6 @@ export function getTokenForProvider(
                 character.settings?.secrets?.LIVEPEER_GATEWAY_URL ||
                 settings.LIVEPEER_GATEWAY_URL
             );
-        // no key needed for llama_local or gaianet
-        case ModelProviderName.LLAMALOCAL:
-            return "";
-        case ModelProviderName.OLLAMA:
-            return "";
-        case ModelProviderName.GAIANET:
-            return "";
         default:
             const errorMessage = `Failed to get token - unsupported model provider: ${provider}`;
             elizaLogger.error(errorMessage);
