@@ -17,4 +17,9 @@ if "!VERSION!"=="" (
     exit /b 1
 )
 
+if not exist "src\" mkdir src
 echo { "version": !VERSION! } > src\info.json
+if errorlevel 1 (
+    echo Error: Failed to write src\info.json
+    exit /b 1
+)
