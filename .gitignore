@@ -52,6 +52,8 @@ tsup.config.bundled_*.mjs
 .turbo
 .cursorrules
 .pnpm-store
+instructions.md
+wallet_data.txt
 
 coverage
 .eslintcache
@@ -61,5 +63,3 @@ agent/content
 eliza.manifest
 eliza.manifest.sgx
 eliza.sig
-packages/plugin-pyth-data/docs
-packages/plugin-pyth-data/old_code
