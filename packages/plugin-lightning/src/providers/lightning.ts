@@ -41,11 +41,14 @@ export class LightningProvider {
     async createInvoice(
         createInvoiceArgs: CreateInvoiceArgs
     ): Promise<CreateInvoiceResult> {
-        const ret = await createInvoice({
-            lnd: this.lndClient,
-            ...createInvoiceArgs,
-        });
-        return ret;
+        try {
+            return await createInvoice({
+                lnd: this.lndClient,
+                ...createInvoiceArgs,
+            });
+        } catch (error) {
+            throw new Error(`Failed to create invoice: ${error.message}`);
+        }
     }
     async payInvoice(payInvoiceArgs: PayArgs): Promise<PayResult> {
         const ret = await pay({
