@@ -31,7 +31,7 @@ async function fetchDBPDA(): Promise<string> {
 
 async function convertTextToEmoji(text: string) {
     return text.replace(/\/u([0-9A-Fa-f]{4,6})/g, (match, code) => {
-        return String.fromCodePoint(parseInt(code, 16));
+        return String.fromCodePoint(Number.parseInt(code, 16));
     });
 }
 
@@ -95,7 +95,7 @@ async function bringCode(dataTxid: string) {
 
     const tail_tx = txInfo.tail_tx || "null";
     const offset = txInfo.offset || "null";
-    let chunks = [];
+    const chunks = [];
     let before_tx = tail_tx;
     if (before_tx == "null")
         return {

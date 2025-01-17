@@ -1,19 +1,19 @@
 import { AnchorProvider } from "@coral-xyz/anchor";
 import { Wallet } from "@coral-xyz/anchor";
 import { generateImage } from "@elizaos/core";
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { CreateTokenMetadata, PriorityFee, PumpFunSDK } from "pumpdotfun-sdk";
+import { Connection, Keypair, type PublicKey } from "@solana/web3.js";
+import { type CreateTokenMetadata, type PriorityFee, PumpFunSDK } from "pumpdotfun-sdk";
 
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import {
     settings,
-    ActionExample,
-    Content,
-    HandlerCallback,
-    IAgentRuntime,
-    Memory,
+    type ActionExample,
+    type Content,
+    type HandlerCallback,
+    type IAgentRuntime,
+    type Memory,
     ModelClass,
-    State,
+    type State,
     generateObjectDeprecated,
     composeContext,
     type Action,
