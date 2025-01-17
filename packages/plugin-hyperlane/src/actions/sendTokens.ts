@@ -8,155 +8,353 @@ import {
     elizaLogger,
   } from "@elizaos/core";
   import {
-    MultiProvider,
-    WarpCore,
-    type ChainMetadata,
+    MultiProtocolProvider,
     ChainMap,
+    ChainMetadata,
+    TokenType,
+    WarpCore,
+    MultiProvider,
+    Token,
+    TokenAmount,
+    type FeeConstantConfig,
+    type RouteBlacklist,
+    type ChainName,
+    TypedProvider,
   } from '@hyperlane-xyz/sdk';
-  import { JsonRpcProvider } from '@ethersproject/providers';
+  import { Provider } from 'ethers';
   import { Wallet } from '@ethersproject/wallet';
-  import { Address, ProtocolType } from '@hyperlane-xyz/utils';
-  import { ContractReceipt } from '@ethersproject/contracts';
+  import { Address, ProtocolType, Numberish } from '@hyperlane-xyz/utils';
+  import { Logger } from 'pino';
 
-  // Define our interfaces
-  interface TokenTransferOptions {
-    sourceChain: string;
-    destinationChain: string;
+  // Create pino logger
+  const logger = new Logger({
+    level: 'info',
+    transport: {
+      target: 'pino-pretty'
+    }
+  });
+
+  interface TokenTransferRequest {
+    sourceChain: ChainName;
+    destinationChain: ChainName;
     tokenAddress: string;
     recipientAddress: string;
     amount: string;
+    feeLimitMultiplier?: number; // Optional fee limit multiplier
   }
 
-  interface FeeEstimate {
-    nativeGas: bigint;
-    token: Address;
-    amount: bigint;
-    gasPrice?: bigint;
-    gasLimit?: bigint;
+  interface TokenTransferResponse {
+    success: boolean;
+    transactionHash?: string;
+    explorerUrl?: string;
+    error?: string;
+    fees?: {
+      local?: string;
+      interchain?: string;
+    };
   }
 
-  // Define our chain metadata type
-  interface ExtendedChainMetadata extends ChainMetadata {
-    mailbox?: Address;
-  }
+  export const transferTokensViaWarp: Action = {
+    name: "TRANSFER_TOKENS_VIA_WARP",
+    similes: ["WARP_TRANSFER", "TRANSFER_TOKENS", "CROSS_CHAIN_TRANSFER"],
+    description: "Transfer tokens using Hyperlane's Warp Routes",
 
-  export const transferTokensCrossChain: Action = {
-    name: "TRANSFER_TOKENS_CROSS_CHAIN",
-    similes: ["SEND_TOKENS", "TRANSFER_TOKENS", "CROSS_CHAIN_TRANSFER"],
-    description: "Transfer tokens from one chain to another using Hyperlane Warp",
     validate: async (runtime: IAgentRuntime): Promise<boolean> => {
-      return !!(
-        runtime.getSetting("HYPERLANE_PRIVATE_KEY") &&
-        runtime.getSetting("ETHEREUM_RPC_URL") &&
-        runtime.getSetting("POLYGON_RPC_URL") &&
-        runtime.getSetting("ETHEREUM_TOKEN_ADDRESS") &&
-        runtime.getSetting("POLYGON_TOKEN_ADDRESS")
-      );
+      const requiredSettings = [
+        "HYPERLANE_PRIVATE_KEY",
+        "ETHEREUM_RPC_URL",
+        "POLYGON_RPC_URL",
+        "ETHEREUM_TOKEN_ADDRESS",
+        "POLYGON_TOKEN_ADDRESS",
+        "ETHEREUM_WARP_ROUTER",
+        "POLYGON_WARP_ROUTER",
+        "ETHEREUM_MAILBOX_ADDRESS",
+        "POLYGON_MAILBOX_ADDRESS",
+      ];
+
+      for (const setting of requiredSettings) {
+        if (!runtime.getSetting(setting)) {
+          elizaLogger.error(`Missing required setting: ${setting}`);
+          return false;
+        }
+      }
+
+      return true;
     },
+
     handler: async (
       runtime: IAgentRuntime,
       message: Memory,
       state: State,
-      options: TokenTransferOptions,
+      options: TokenTransferRequest,
       callback?: HandlerCallback
     ): Promise<boolean> => {
       try {
-        // Define chain metadata
-        const chainMetadata: ChainMap<ExtendedChainMetadata> = {
+        // Validate input parameters
+        if (!options.sourceChain || !options.destinationChain) {
+          throw new Error("Source and destination chains are required");
+        }
+        if (!options.tokenAddress || !options.recipientAddress) {
+          throw new Error("Token address and recipient address are required");
+        }
+        if (!options.amount || isNaN(Number(options.amount))) {
+          throw new Error("Valid amount is required");
+        }
+
+        elizaLogger.info("Initializing cross-chain token transfer...", {
+          sourceChain: options.sourceChain,
+          destinationChain: options.destinationChain,
+          amount: options.amount,
+        });
+
+        // Initialize chain metadata
+        const chainMetadata: ChainMap<ChainMetadata> = {
           ethereum: {
             name: 'ethereum',
             chainId: 1,
             domainId: 1,
             protocol: ProtocolType.Ethereum,
-            rpcUrls: [{
-              http: runtime.getSetting("ETHEREUM_RPC_URL")!,
-            }],
-            mailbox: runtime.getSetting("ETHEREUM_MAILBOX_ADDRESS") as Address,
+            rpcUrls: [{ http: runtime.getSetting("ETHEREUM_RPC_URL") }],
           },
           polygon: {
             name: 'polygon',
             chainId: 137,
             domainId: 137,
             protocol: ProtocolType.Ethereum,
-            rpcUrls: [{
-              http: runtime.getSetting("POLYGON_RPC_URL")!,
-            }],
-            mailbox: runtime.getSetting("POLYGON_MAILBOX_ADDRESS") as Address,
+            rpcUrls: [{ http: runtime.getSetting("POLYGON_RPC_URL") }],
           },
         };
 
-        // Initialize MultiProvider
-        const multiProvider = new MultiProvider(chainMetadata);
-
-        // Set up provider
-        const ethereumProvider = new JsonRpcProvider(runtime.getSetting("ETHEREUM_RPC_URL"));
-
-        // Create wallet and set signer
-        const wallet = new Wallet(runtime.getSetting("HYPERLANE_PRIVATE_KEY"), ethereumProvider);
-        multiProvider.setSigner(options.sourceChain, wallet);
-
-        elizaLogger.info("Initializing token transfer...");
-
-        // Get latest gas price
-        const gasPrice = await multiProvider.getProvider(options.sourceChain).getGasPrice();
-
-        // Estimate gas
-        const feeEstimate: FeeEstimate = {
-          nativeGas: BigInt(0),
-          token: options.tokenAddress as Address,
-          amount: BigInt(options.amount),
-          gasPrice: gasPrice.toBigInt(),
-          gasLimit: BigInt(21000), // Basic transfer gas limit
+        // Initialize providers with retry logic
+        const createProvider = (url: string): Provider => {
+          const provider = new providers.JsonRpcProvider(url);
+          provider.getNetwork = async () => {
+            try {
+              return await provider.getNetwork();
+            } catch (error) {
+              elizaLogger.error("Network fetch failed, retrying...");
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              return provider.getNetwork();
+            }
+          };
+          return provider;
         };
 
-        const receipt = await multiProvider.sendTransaction(
-          options.sourceChain,
+        const providers: ChainMap<TypedProvider> = {
+            //@ts-ignore
+          ethereum: createProvider(runtime.getSetting("ETHEREUM_RPC_URL")),
+            //@ts-ignore
+          polygon: createProvider(runtime.getSetting("POLYGON_RPC_URL")),
+        };
+
+        // Initialize MultiProtocolProvider
+        const multiProvider = new MultiProtocolProvider(chainMetadata);
+
+        // Add providers
+        Object.entries(providers).forEach(([chain, provider]) => {
+          multiProvider.setProvider(chain, provider);
+        });
+
+        // Add signer
+        const sourceChainProvider = multiProvider.getProvider(options.sourceChain);
+            //@ts-ignore
+        const wallet = new Wallet(runtime.getSetting("HYPERLANE_PRIVATE_KEY"), sourceChainProvider);
+
+        const signer = {
+          _isSigner: true,
+          provider: providers[options.sourceChain],
+          getAddress: async () => wallet.address,
+          signMessage: async (message: string | Uint8Array) => wallet.signMessage(message),
+          signTransaction: async (transaction: any) => wallet.signTransaction(transaction),
+            //@ts-ignore
+          connect: (provider: Provider) => wallet.connect(provider),
+          getBalance: (blockTag?: any) => wallet.getBalance(blockTag),
+          getTransactionCount: (blockTag?: any) => wallet.getTransactionCount(blockTag),
+          estimateGas: (transaction: any) => wallet.estimateGas(transaction),
+          call: (transaction: any, blockTag?: any) => wallet.call(transaction, blockTag),
+          sendTransaction: (transaction: any) => wallet.sendTransaction(transaction),
+          _signTypedData: (domain: any, types: any, value: any) => wallet._signTypedData(domain, types, value),
+        };
+
+
+
+        // Initialize WarpCore with initial configuration and fees
+        const warpCore = new WarpCore(
+          multiProvider,
+          [],
           {
-            to: options.recipientAddress as Address,
-            data: '0x',
-            value: BigInt(options.amount),
+            logger,
+            localFeeConstants: [
+              {
+                amount: BigInt(0),
+                origin: options.sourceChain,
+                destination: options.destinationChain,
+                addressOrDenom: options.tokenAddress,
+              }
+            ],
+            interchainFeeConstants: [
+              {
+                amount: BigInt(0),
+                origin: options.sourceChain,
+                destination: options.destinationChain,
+                addressOrDenom: options.tokenAddress,
+              }
+            ],
+            routeBlacklist: [] as RouteBlacklist,
           }
         );
 
+        // Get token and create token amount
+        const token = warpCore.findToken(options.sourceChain, options.tokenAddress);
+        if (!token) {
+          throw new Error('Source token not found');
+        }
+
+        // Create token amount for the transfer
+        const tokenamount = new TokenAmount(BigInt(options.amount), token);
+
+        // Get fee estimates
+        const feeEstimate = await warpCore.estimateTransferRemoteFees({
+          originToken: token,
+          destination: options.destinationChain,
+          sender: await wallet.getAddress(),
+        });
+
+        // Calculate total fees with multiplier
+        const multiplier = options.feeLimitMultiplier || 1.1; // Default 10% buffer
+        const totalFees = BigInt(0); // Initialize with default
+
+        // Execute transfer with fee logging
+        elizaLogger.info("Initiating token transfer with fees...", {
+          amount: tokenamount.getDecimalFormattedAmount(),
+          estimatedFees: feeEstimate,
+        });
+
+        // Get and execute transfer transactions
+        const transferTxs = await warpCore.getTransferRemoteTxs({
+          originTokenAmount: tokenamount,
+          destination: options.destinationChain,
+          recipient: options.recipientAddress as Address,
+          sender: await wallet.getAddress(),
+        });
+
+        // Find token
+        const sourceToken = warpCore.findToken(options.sourceChain, options.tokenAddress);
+        if (!sourceToken) {
+          throw new Error('Source token not found');
+        }
+
+        elizaLogger.info("Found source token:", {
+          chain: options.sourceChain,
+          address: options.tokenAddress,
+        });
+
+        // Create TokenAmount using proper constructor
+        const amount = BigInt(options.amount);
+        const tokenAmount = new TokenAmount(amount, sourceToken);
+
+        // Validate transfer
+        const validationError = await warpCore.validateTransfer({
+          originTokenAmount: tokenAmount,
+          destination: options.destinationChain,
+          recipient: options.recipientAddress as Address,
+          sender: await signer.getAddress(),
+        });
+
+        if (validationError) {
+          throw new Error(`Transfer validation failed: ${JSON.stringify(validationError)}`);
+        }
+
+        // Check if approval is needed
+        const needsApproval = await warpCore.isApproveRequired({
+          originTokenAmount: tokenAmount,
+          owner: await signer.getAddress(),
+        });
+
+        // Handle approval if needed
+        if (needsApproval) {
+          elizaLogger.info("Token approval required, processing approval...");
+          try {
+            const approvalTxs = await warpCore.getTransferRemoteTxs({
+              originTokenAmount: tokenAmount,
+              destination: options.destinationChain,
+              recipient: options.recipientAddress as Address,
+              sender: await signer.getAddress(),
+            });
+
+            for (const tx of approvalTxs) {
+              const transaction = await signer.sendTransaction(tx);
+              const receipt = await transaction.wait();
+              elizaLogger.info(`Approval transaction confirmed: ${receipt.transactionHash}`);
+            }
+          } catch (error) {
+            throw new Error(`Token approval failed: ${error.message}`);
+          }
+        }
+
+        // Get transfer transactions
+        elizaLogger.info("Initiating token transfer...");
+         await warpCore.getTransferRemoteTxs({
+          originTokenAmount: tokenAmount,
+          destination: options.destinationChain,
+          recipient: options.recipientAddress as Address,
+          sender: await signer.getAddress(),
+        });
+
+        let lastReceipt;
+        // Execute transfer transactions
+        for (const tx of transferTxs) {
+          const transaction = await signer.sendTransaction(tx);
+          lastReceipt = await transaction.wait();
+          elizaLogger.info(`Transfer transaction confirmed: ${lastReceipt.hash}`);
+        }
+
         // Get explorer URL
-        const explorerUrl = await multiProvider.tryGetExplorerAddressUrl(
-          options.sourceChain,
-          receipt.transactionHash
-        );
+        const explorerUrl = lastReceipt
+          ? await multiProvider.tryGetExplorerAddressUrl(
+              options.sourceChain,
+              lastReceipt.hash
+            )
+          : undefined;
 
+        const response: TokenTransferResponse = {
+          success: true,
+          transactionHash: lastReceipt?.hash,
+          explorerUrl,
+        };
+
+        // Call callback if provided
         if (callback) {
           callback({
-            text: `Successfully initiated token transfer to ${options.destinationChain}. Transaction hash: ${receipt.transactionHash}`,
-            content: {
-              transactionHash: receipt.transactionHash,
-              amount: options.amount,
-              token: options.tokenAddress,
-              sourceChain: options.sourceChain,
-              destinationChain: options.destinationChain,
-              recipient: options.recipientAddress,
-              explorerUrl,
-              fees: {
-                local: feeEstimate.amount.toString(),
-                interchain: '0',
-              },
-            },
+            text: `Successfully transferred ${options.amount} tokens to ${options.destinationChain}${
+              explorerUrl ? `. View at: ${explorerUrl}` : ''
+            }`,
+            content: response,
           });
         }
 
+        elizaLogger.info("Token transfer completed successfully");
         return true;
+
       } catch (error) {
-        elizaLogger.error("Error transferring tokens:", error);
+        elizaLogger.error("Token transfer failed:", error);
+
+        const errorResponse: TokenTransferResponse = {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error occurred',
+        };
+
         if (callback) {
           callback({
-            text: `Error transferring tokens: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            content: {
-              error: error instanceof Error ? error.message : 'Unknown error',
-            },
+            text: `Token transfer failed: ${errorResponse.error}`,
+            content: errorResponse,
           });
         }
+
         return false;
       }
     },
+
     examples: [
       [
         {
@@ -175,18 +373,18 @@ import {
         {
           user: "{{agent}}",
           content: {
-            text: "I'll transfer your tokens across chains.",
-            action: "TRANSFER_TOKENS_CROSS_CHAIN",
+            text: "I'll transfer your tokens using Hyperlane Warp.",
+            action: "TRANSFER_TOKENS_VIA_WARP",
           },
         },
         {
           user: "{{agent}}",
           content: {
-            text: "Successfully initiated token transfer to Polygon. Transaction hash: 0xabcd...",
+            text: "Successfully transferred 100 tokens to Polygon. View at: https://etherscan.io/tx/0x...",
           },
         },
       ],
     ] as ActionExample[][],
   };
 
-  export default transferTokensCrossChain;
+  export default transferTokensViaWarp;

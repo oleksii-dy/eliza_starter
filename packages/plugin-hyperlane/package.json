@@ -18,6 +18,8 @@
     "@ethersproject/providers": "^5.7.2",
     "@hyperlane-xyz/sdk": "^8.1.0",
     "ethers": "^6.13.5",
-    "ethers-types": "^3.18.1"
+    "ethers-types": "^3.18.1",
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.0.0"
   }
 }
