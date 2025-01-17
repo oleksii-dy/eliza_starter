@@ -21,9 +21,11 @@
     "dependencies": {
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-tee": "workspace:*",
-        "astra-lightning": "^1.1.0",
-        "tsup": "8.3.5"
+        "astra-lightning": "^1.1.0"
     },
+    "devDependencies": {
+        "tsup": "8.3.5"
+    }
     "scripts": {
         "build": "tsup --format esm --dts",
         "dev": "tsup --format esm --dts --watch",
