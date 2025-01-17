@@ -69,11 +69,12 @@ now edit the .env and add these keys:
 
 ```bash
 nano .env
-
 ```
 Search for "AKASH"... CTRL + W
 Enter your key
+```bash
 AKASH_CHAT_API_KEY=sk-1agDViherhwqzr3r # REPLACE YOUR KEY HERE
+```
 Save with CTRL + X
 
 
