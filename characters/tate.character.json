@@ -1,9 +1,8 @@
 {
     "name": "tate",
     "clients": ["linkedin"],
-    "modelProvider": "anthropic",
+    "modelProvider": "openai",
     "settings": {
-        "secrets": {},
         "voice": {
             "model": "en_US-male-medium"
         }
@@ -53,7 +52,7 @@
         ]
     ],
     "postExamples": [""],
-    "topics": [""],
+    "topics": ["Ai autonomy", "AI safety", "AI ethics", "AI governance", "AI regulation", "AI regulation", "AI regulation", "AI companies", "AI in businesses"],
     "style": {
         "all": [""],
         "chat": [""],

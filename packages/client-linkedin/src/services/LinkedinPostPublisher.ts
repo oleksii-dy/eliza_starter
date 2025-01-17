@@ -1,11 +1,11 @@
 import { AxiosInstance } from "axios";
-import { BasePostRequest, PostRequestWithMedia, API_VERSION_HEADER, API_VERSION } from "./interfaces";
+import { BasePostRequest, PostRequestWithMedia, API_VERSION_HEADER, API_VERSION } from "../interfaces";
 
 export class LinkedInPostPublisher {
   constructor(private readonly axios: AxiosInstance, readonly userId: string) {}
 
   async publishPost({
-      postText, 
+      postText,
       media
   }: {
       postText: string,
@@ -27,7 +27,7 @@ export class LinkedInPostPublisher {
           isReshareDisabledByAuthor: false
       };
 
-      const requestBody: BasePostRequest | PostRequestWithMedia = media 
+      const requestBody: BasePostRequest | PostRequestWithMedia = media
           ? { ...baseRequest, content: { media } }
           : baseRequest;
 

@@ -1,5 +1,5 @@
 import { AxiosInstance } from "axios";
-import { API_VERSION, API_VERSION_HEADER, MediaUploadUrl } from "./interfaces";
+import { API_VERSION, API_VERSION_HEADER, MediaUploadUrl } from "../interfaces";
 
 export class LinkedInFileUploader {
   constructor(private readonly axios: AxiosInstance, readonly userId: string) {}

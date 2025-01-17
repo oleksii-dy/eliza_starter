@@ -1,3 +1,6 @@
+import { configSchema } from "./helpers/validate-envs";
+import { z } from "zod";
+
 export interface UserInfo {
   sub: string;
   email_verified: boolean;
@@ -41,3 +44,5 @@ export interface PostRequestWithMedia extends BasePostRequest {
 
 export const API_VERSION_HEADER = "LinkedIn-Version";
 export const API_VERSION = "202411";
+export type Envs = z.infer<typeof configSchema>;
+export type IntervalsConfig = Omit<Envs, "LINKEDIN_ACCESS_TOKEN">;

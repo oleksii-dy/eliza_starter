@@ -935,9 +935,6 @@ importers:
       axios:
         specifier: ^1.7.9
         version: 1.7.9
-      whatwg-url:
-        specifier: 7.1.0
-        version: 7.1.0
       zod:
         specifier: ^3.24.1
         version: 3.24.1

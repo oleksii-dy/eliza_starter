@@ -1,5 +1,5 @@
 import { AxiosInstance } from "axios";
-import { UserInfo } from "./interfaces";
+import { UserInfo } from "../interfaces";
 
 export class LinkedInUserInfoFetcher {
   constructor(private readonly axios: AxiosInstance) {}
