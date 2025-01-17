@@ -34,15 +34,15 @@ export abstract class BaseInjectableAction<T> implements InjectableAction<T> {
     /**
      * The content class for the action
      */
-    private readonly contentClass: ContentClass<T>;
+    protected readonly contentClass: ContentClass<T>;
     /**
      * Optional template for the action, if not provided, it will be generated from the content class
      */
-    private readonly template: string;
+    protected readonly template: string;
     /**
      * Optional content schema for the action, if not provided, it will be generated from the content class
      */
-    private readonly contentSchema: z.ZodSchema<T>;
+    protected readonly contentSchema: z.ZodSchema<T>;
 
     /**
      * Constructor for the base injectable action

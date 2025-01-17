@@ -1,4 +1,4 @@
-import { IAgentRuntime, Memory, State, elizaLogger } from "@elizaos/core";
+import { IAgentRuntime, Memory, elizaLogger } from "@elizaos/core";
 import { injectable } from "inversify";
 import { BaseInjectableEvaluator } from "../evaluators";
 import { EvaluatorOptions } from "../types";
@@ -42,7 +42,7 @@ export class SampleEvaluator extends BaseInjectableEvaluator {
         // Evaluation logic for the evaluator
         elizaLogger.log("Evaluating data in sampleEvaluator...");
         try {
-            if (!memory.content || typeof memory.content.text !== 'string') {
+            if (!memory.content || typeof memory.content.text !== "string") {
                 return {
                     score: 0,
                     reason: "Invalid memory content structure",
