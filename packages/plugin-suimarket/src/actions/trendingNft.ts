@@ -98,7 +98,11 @@ export const trendingNft: Action = {
         if (callback) {
             callback({
                 text: `Below are ${content.size} trending coins we have collected,` ,
-                action: 'trendingNft'
+                action: 'trendingNft',
+                result: {
+                    type: "marketStatisticsTable",
+                    data: nfts.slice(0,content.size)
+                }
             });
         }
 

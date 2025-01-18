@@ -63,7 +63,7 @@ export const trendingTokens: Action = {
     ],
 
     examples: [
-    
+
     ],
 
     validate: async (_runtime: IAgentRuntime, _message: Memory) => {
@@ -96,7 +96,7 @@ export const trendingTokens: Action = {
         });
         elizaLogger.log("content: ",content);
         const coinGecko = new CoingeckoProvider();
-        const info = await coinGecko.getTrendingTokens();
+        const info = await coinGecko.getTrendingCoins();
 
         if (callback) {
             callback({

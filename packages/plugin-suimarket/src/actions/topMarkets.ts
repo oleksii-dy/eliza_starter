@@ -14,7 +14,7 @@ import {
 // import { z } from "zod";
 import { generateObjectDeprecated } from "@elizaos/core";
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
-import { formatObjectsToText } from "../utils/format";
+// import { formatObjectsToText } from "../utils/format";
 
 const topMarketPromptTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
     Example response:
@@ -121,7 +121,7 @@ Given the recent messages, extract the following information:
 // }
 
 export const topMarkets: Action = {
-    name: "topMarkets",
+    name: "TOP_COIN_MARKET",
 
     similes: [
         "FETCH_TOP_MARKETS",
@@ -142,7 +142,7 @@ export const topMarkets: Action = {
     ],
 
     examples: [
-    
+
     ],
 
     validate: async (_runtime: IAgentRuntime, _message: Memory) => {
@@ -194,8 +194,14 @@ export const topMarkets: Action = {
 
         if (callback) {
             callback({
-                text: `topMarkets` + (await formatObjectsToText(info)),
-                action: 'topMarkets'
+                text: `🪙 Top Coins in the Market
+
+Here are some of the top cryptocurrencies in the market based on market capitalization and trading volume:`,
+                action: 'TOP_COIN_MARKET',
+                result: {
+                    type: "marketStatisticsTable",
+                    data: info
+                }
             });
         }
 

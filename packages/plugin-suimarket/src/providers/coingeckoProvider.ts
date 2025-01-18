@@ -33,7 +33,7 @@ export class CoingeckoProvider {
     }
   }
 
-  async getTrendingTokens() {
+  async getTrendingCoins() {
     try {
       const response = await this.axiosInstance.get("/search/trending");
       return response.data.coins.map((coin: any) => ({
@@ -90,7 +90,7 @@ export class CoingeckoProvider {
             floor_price:nft.data.floor_price,
             floor_price_in_usd_24h_percentage_change:nft.data.floor_price_in_usd_24h_percentage_change,
             h24_volume:nft.data.h24_volume,
-            
+
         }
 
     }));
