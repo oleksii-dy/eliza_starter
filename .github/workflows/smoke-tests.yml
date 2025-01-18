@@ -1,4 +1,5 @@
 name: smoke-test
+
 on:
     push:
         branches:
@@ -11,9 +12,7 @@ jobs:
     smoke-tests:
         runs-on: ubuntu-latest
         container:
-            image: node:23-bullseye
-        env:
-            OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+            image: node:23.3-bullseye
         steps:
             - uses: actions/checkout@v4
 
@@ -32,4 +31,6 @@ jobs:
                   version: 9.15.0
 
             - name: Run smoke tests
+              env:
+                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
               run: pnpm run smokeTests
