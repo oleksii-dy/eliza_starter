@@ -201,6 +201,93 @@ you can add ```"plugins"``` to embed plugins from the /packages folder. remember
 you can change ```"akash_chat_api"``` to ```"ollama"``` if you want to run your models on your local machine. I recommend you to choose small models only
 
 
+### Accessing the Database:
+```
+cd /agent/data
+```
+here you'll find the db.sqlite file
+
+get yourself sqlitebrowser and run:
+```
+sqlitebrowser db.sqlite
+```
+check the "memory" table...
+
+## Advnaced Vector Index Database:
+This is not necessary for character imitating models, but is useful for big workloads and long-trained models:
+
+Deploy an AKASh Postgres Vector enabled Database with this YAML Sheet:
+
+
+```
+---
+version: "2.0"
+
+services:
+  postgres:
+    image: ankane/pgvector 
+    expose:
+      - port: 5432
+        to:
+          - global: true
+    env:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - "POSTGRES_USER=admin"
+      - "POSTGRES_PASSWORD=let-me-in"
+      - "POSTGRES_DB=mydb"
+    params:
+      storage:
+        data:
+          mount: /var/lib/postgresql/data
+          readOnly: false
+profiles:
+  compute:
+    postgres:
+      resources:
+        cpu:
+          units: 1.0
+        memory:
+          size: 1Gi
+        storage:
+          - size: 1Gi
+          - name: data
+            size: 1Gi
+            attributes:
+              persistent: true
+              class: beta3
+          
+  placement:
+    akash:
+      attributes:
+        host: akash
+      signedBy:
+        anyOf:
+          - "akash1365yvmc4s7awdyj3n2sav7xfx76adc6dnmlx63"
+      pricing:
+        postgres: 
+          denom: uakt
+          amount: 10000
+
+deployment:
+  postgres:
+    akash:
+      profile: postgres
+      count: 1 
+```
+
+adjust and scale the cpu, hdd to your need
+
+after deployment, add the login to the .env file:
+```
+POSTGRES_URL=postgresql://eliza:yourpassword@provider.akash.ddns.net:yourportassigned/eliza_db
+```
+
+use pgadmin4 to access and backup the database via webbrowser
+
+
+
+
+
 ### Community & contact
 
 
