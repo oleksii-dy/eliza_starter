@@ -1,7 +1,7 @@
-# Eliza 🤖
+# Eliza 🤖 on Cosmos Interchain - using AKASH powered ressources
 
 <div align="center">
-  <img src="./docs/static/img/eliza_banner.jpg" alt="Eliza Banner" width="100%" />
+  <img src="./docs/static/img/eliza_banner.jpg" alt="Eliza Banner" width="60%" />
 </div>
 
 <div align="center">
