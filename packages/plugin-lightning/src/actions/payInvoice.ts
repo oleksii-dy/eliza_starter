@@ -102,10 +102,9 @@ export const payInvoiceAction = {
             }
             return true;
         } catch (error) {
-            const err = error?.[2]?.err;
-            console.error("Error in payInvoice handler:", err.details);
+            console.error("Error in payInvoice handler:", error);
             if (callback) {
-                callback({ text: `Error: ${err.details}` });
+                callback({ text: `Error: ${error.message || 'An error occurred'}` });
             }
             return false;
         }
