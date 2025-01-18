@@ -1,4 +1,4 @@
-import { Readable } from "stream";
+import type { Readable } from "stream";
 
 /**
  * Represents a UUID string in the format "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -707,6 +707,9 @@ export type Character = {
     /** Optional username */
     username?: string;
 
+    /** Optional email */
+    email?: string;
+
     /** Optional system prompt */
     system?: string;
 
@@ -746,6 +749,10 @@ export type Character = {
         lensShouldRespondTemplate?: TemplateType;
         telegramMessageHandlerTemplate?: TemplateType;
         telegramShouldRespondTemplate?: TemplateType;
+        telegramAutoPostTemplate?: string;
+        telegramPinnedMessageTemplate?: string;
+        discordAutoPostTemplate?: string;
+        discordAnnouncementHypeTemplate?: string;
         discordVoiceHandlerTemplate?: TemplateType;
         discordShouldRespondTemplate?: TemplateType;
         discordMessageHandlerTemplate?: TemplateType;
@@ -836,6 +843,14 @@ export type Character = {
             teamAgentIds?: string[];
             teamLeaderId?: string;
             teamMemberInterestKeywords?: string[];
+            autoPost?: {
+                enabled?: boolean;
+                monitorTime?: number;
+                inactivityThreshold?: number;
+                mainChannelId?: string;
+                announcementChannelIds?: string[];
+                minTimeBetweenPosts?: number;
+            };
         };
         telegram?: {
             shouldIgnoreBotMessages?: boolean;
@@ -848,6 +863,14 @@ export type Character = {
             teamAgentIds?: string[];
             teamLeaderId?: string;
             teamMemberInterestKeywords?: string[];
+            autoPost?: {
+                enabled?: boolean;
+                monitorTime?: number;
+                inactivityThreshold?: number;
+                mainChannelId?: string;
+                pinnedMessagesGroups?: string[];
+                minTimeBetweenPosts?: number;
+            };
         };
         slack?: {
             shouldIgnoreBotMessages?: boolean;
@@ -1384,13 +1407,13 @@ export interface GraphQLTag {
     values: any[];
 }
 
-export const enum IrysMessageType {
+export enum IrysMessageType {
     REQUEST = "REQUEST",
     DATA_STORAGE = "DATA_STORAGE",
     REQUEST_RESPONSE = "REQUEST_RESPONSE",
 }
 
-export const enum IrysDataType {
+export enum IrysDataType {
     FILE = "FILE",
     IMAGE = "IMAGE",
     OTHER = "OTHER",
@@ -1597,3 +1620,4 @@ export interface ChunkRow {
     id: string;
     // Add other properties if needed
 }
+
