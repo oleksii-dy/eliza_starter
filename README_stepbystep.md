@@ -137,6 +137,11 @@ pnpm start --characters="path/to/your/character.json"`
 -     pm2 start "pnpm" -- start --character="/yourpath/characters/avatar.character.json" to create pm2 entry
       pm2 save
 ```
+### First Chat
+
+Open a new window, run pnpm start:client
+Head to the website displayed there
+
 
 ### Telegram Connection
 https://telegram.me/BotFather
