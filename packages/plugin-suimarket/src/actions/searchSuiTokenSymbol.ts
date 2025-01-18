@@ -58,19 +58,19 @@ Respond with a JSON markdown block containing only the extracted values.
 `;
 
 export const searchSuiTokenSymbol: Action = {
-    name: "searchSuiTokenSymbol",
+    name: "SEARCH_SUI_TOKEN_SYMBOL",
 
     description: "Search pool by Token Symbol",
 
     similes: [
         // Basic search patterns
-        "find token {tokenName} on sui",
-        "search for {tokenName} token on sui network",
-        "look up sui token {tokenName}",
-        "show me token {tokenName} on sui chain",
-        "get sui token info for {tokenName}",
-        "check token {tokenName} on sui blockchain",
-        "locate {tokenName} token on sui"
+        "FIND_SUI_TOKEN_{TOKEN_NAME}",
+        "SEARCH_SUI_TOKEN_{TOKEN_NAME}",
+        "LOOKUP_SUI_TOKEN_{TOKEN_NAME}",
+        "SHOW_SUI_TOKEN_{TOKEN_NAME}",
+        "GET_SUI_TOKEN_INFO_{TOKEN_NAME}",
+        "CHECK_SUI_TOKEN_{TOKEN_NAME}",
+        "LOCATE_SUI_TOKEN_{TOKEN_NAME}",
     ],
 
     examples: [],
@@ -116,7 +116,7 @@ export const searchSuiTokenSymbol: Action = {
                     data:info.slice(0,content.size),
 
 
-                
+
                 }
             });
         }

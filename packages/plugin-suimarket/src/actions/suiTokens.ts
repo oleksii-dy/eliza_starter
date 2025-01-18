@@ -19,26 +19,26 @@ import GeckoTerminalProvider2 from "../providers/coingeckoTerminalProvider2";
 
 
 export const suiTokens: Action = {
-    name: "suiTokens",
-    
+    name: "SUI_TOKENS",
+
     description: "query tokens on Sui",
 
     similes: [
-        "find token {tokenName} on sui",
-        "search for {tokenName} token on sui network",
-        "look up sui token {tokenName}",
-        "show me token {tokenName} on sui chain",
-        "get sui token info for {tokenName}",
-        "check token {tokenName} on sui blockchain",
-        "locate {tokenName} token on sui"
+        "FIND_SUI_TOKEN_{TOKEN_NAME}",
+        "SEARCH_SUI_TOKEN_{TOKEN_NAME}",
+        "LOOKUP_SUI_TOKEN_{TOKEN_NAME}",
+        "SHOW_SUI_TOKEN_{TOKEN_NAME}",
+        "GET_SUI_TOKEN_INFO_{TOKEN_NAME}",
+        "CHECK_SUI_TOKEN_{TOKEN_NAME}",
+        "LOCATE_SUI_TOKEN_{TOKEN_NAME}",
       ],
 
     examples: [],
-    
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         return true;
     },
-    
+
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,

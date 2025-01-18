@@ -40,26 +40,28 @@ const listSuiPoolPromptTemplate = `Respond with a JSON markdown block containing
     Respond with a JSON markdown block containing only the extracted values.`;
 
 export const suiTrendingPools: Action = {
-    name: "suiTrendingPools",
+    name: "SUI_TRENDING_POOLS",
 
     description: "Get pool from Sui network",
 
     similes: [
-        "list all tokens on sui network",
-        "show sui token statistics",
-        "get sui token market overview",
-        "display top tokens on sui",
-        "sui token rankings",
-        "show sui token market data",
-        "get sui token market stats",
-        "display sui token metrics",
-        "sui token market summary",
-        "show sui token performance",
-        "list trending sui tokens",
-        "get sui token volume stats",
-        "display sui token market activity",
-        "show sui token trading data",
-        "get sui token market analysis"
+        "LIST_ALL_TOKENS_ON_SUI_NETWORK",
+        "SHOW_SUI_TOKEN_STATISTICS",
+        "GET_SUI_TOKEN_MARKET_OVERVIEW",
+        "DISPLAY_TOP_TOKENS_ON_SUI",
+        "SUI_TOKEN_RANKINGS",
+        "SHOW_SUI_TOKEN_MARKET_DATA",
+        "GET_SUI_TOKEN_MARKET_STATS",
+        "DISPLAY_SUI_TOKEN_METRICS",
+        "SUI_TOKEN_MARKET_SUMMARY",
+        "SHOW_SUI_TOKEN_PERFORMANCE",
+        "LIST_TRENDING_SUI_TOKENS",
+        "GET_SUI_TOKEN_VOLUME_STATS",
+        "DISPLAY_SUI_TOKEN_MARKET_ACTIVITY",
+        "SHOW_SUI_TOKEN_TRADING_DATA",
+        "GET_SUI_TOKEN_MARKET_ANALYSIS",
+
+
     ],
 
     examples: [],

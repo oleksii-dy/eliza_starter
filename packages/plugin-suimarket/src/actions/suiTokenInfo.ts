@@ -12,7 +12,7 @@ import {
     type Action,
 } from "@elizaos/core";
 
-import {  formatObjectToText } from "../utils/format";
+// import {  formatObjectToText } from "../utils/format";
 
 import GeckoTerminalProvider2 from "../providers/coingeckoTerminalProvider2";
 
@@ -46,16 +46,16 @@ No single quotes anywhere in the JSON
 Respond with a JSON markdown block containing only the extracted values.`
 
 export const suiTokenInfo: Action = {
-    name: "Token Info sui",
+    name: "TOKEN_INFO_SUI_NETWORK",
 
     description: "query tokens on Sui",
 
     similes: [
-        "parse token {input} on sui chain",
-        "extract token details from {input} on sui",
-        "get token data from {input} on sui network",
-        "identify token from {input} on sui",
-        "find token info in {input} on sui chain"
+        "PARSE_SUI_TOKEN_{INPUT}",
+        "EXTRACT_SUI_TOKEN_DETAILS_{INPUT}",
+        "GET_SUI_TOKEN_DATA_{INPUT}",
+        "IDENTIFY_SUI_TOKEN_{INPUT}",
+        "FIND_SUI_TOKEN_INFO_{INPUT}",
       ],
 
     examples: [],

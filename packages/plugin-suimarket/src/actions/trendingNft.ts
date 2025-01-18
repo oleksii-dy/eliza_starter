@@ -16,7 +16,7 @@ import { generateObjectDeprecated } from "@elizaos/core";
 // import { z } from "zod";
 
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
-import { formatObjectsToText } from "../utils/format";
+// import { formatObjectsToText } from "../utils/format";
 const trendingTokenPromptTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
     Example response:
     \`\`\`json
@@ -44,7 +44,7 @@ const trendingTokenPromptTemplate = `Respond with a JSON markdown block containi
 
 
 export const trendingNft: Action = {
-    name: "trendingNft",
+    name: "TRENDING_NFT",
     similes: [
         "SHOW_AVAILABLE_NFTS",
         "DISPLAY_NFT_MARKETPLACE",

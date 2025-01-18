@@ -145,7 +145,7 @@ export const coinInfo: Action = {
 
         if (callback) {
             callback({
-                text: `${coinObject.name} is a cryptocurrency that operates on blockchain technology. . Its price is determined by various factors, including supply, demand, and network activity.`,
+                text: `${coinObject.name} is a cryptocurrency that operates on blockchain technology. Its price is determined by various factors, including supply, demand, and network activity.`,
                 action: 'coinInfo',
                 result: {
                     type:"info_coin",

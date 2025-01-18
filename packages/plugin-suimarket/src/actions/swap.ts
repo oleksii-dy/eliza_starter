@@ -82,7 +82,7 @@ export const executeSwap: Action = {
             callback({
                 text:`We do not support ${content.inputTokenSymbol} token in SUI network yet`,
              })
-             return true
+             return false
         }
         const outputTokenObject = await findByVerifiedAndSymbol(content.outputTokenSymbol);
         console.log(outputTokenObject)
@@ -90,7 +90,7 @@ export const executeSwap: Action = {
             callback({
                 text:`We do not support ${content.outputTokenSymbol} token in SUI network yet`,
              })
-             return true
+             return false
         }
         const responseData = {
             ...content,
@@ -100,7 +100,7 @@ export const executeSwap: Action = {
         try {
 
             callback({
-               text:"Pls swap",
+               text:`Swap Tokens \n "From:" ${content.inputTokenSymbol} \n "To:"   ${content.outputTokenSymbol} \n "Amount: ${content.amount} \n Please double-check all details before swapping to avoid any loss`,
                result: {
                 type: "swap",
                 data:responseData,
@@ -134,17 +134,6 @@ export const executeSwap: Action = {
                         outputType: "0x4fb3c0f9e62b5d3956e2f0e284f2a5d128954750b109203a0f34c92c6ba21247::coin::USDT",
                         amount: "10000000000", // Amount in base units
                         slippageBps: 50
-                    }
-                }
-            },
-            {
-                user: "{{user2}}",
-                content: {
-                    text: "Swap executed successfully! Transaction digest: {{txDigest}}",
-                    transactionDetails: {
-                        digest: "8k2x9NM4pB6MiUx9YH1zKwP9K7Z8YfFvH1J5QrLZDvs2",
-                        status: "success",
-                        gasFee: "0.00234 SUI"
                     }
                 }
             }
