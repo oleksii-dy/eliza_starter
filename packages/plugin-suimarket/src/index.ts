@@ -14,7 +14,8 @@ import { executeSwap } from './actions/swap';
 const suimarketPlugin: Plugin = {
   name: "coingecko",
   description: "Everything about crypyo market infomation",
-  actions: [topMarkets,
+  actions: [
+    topMarkets,
     trendingCat,
     trendingTokens,
     coinInfo,

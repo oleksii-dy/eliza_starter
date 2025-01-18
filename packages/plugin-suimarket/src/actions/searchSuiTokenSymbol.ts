@@ -109,7 +109,7 @@ export const searchSuiTokenSymbol: Action = {
 
         if (callback) {
             callback({
-                text: "list token in network",
+                text: "Here is a list of tokens available on the Sui Network. You can explore their contract addresses, liquidity, trading volume, and other key details",
                 action: 'searchSuiTokenSymbol',
                 result: {
                     type: "pools",

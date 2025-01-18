@@ -101,17 +101,12 @@ export const suiTrendingPools: Action = {
         if (callback) {
             callback({
                 text: "list token in network",
-                action: 'trendingTokens',
+                action: 'SUI_TRENDING_POOLS',
                 result: {
                     type: "pools",
-                    data:info.slice(0,content.size),
-                    haveButton: true,
-                    action_buttons:[{
-                        title : "swap",
-                        prompt: "Hãy swap cho tôi 10 {{address_token_from}} {{token_name}} này sang token này {{address_token_to}} {{token_name}}"
-                    }
+                    data:info.slice(0,content.size)
 
-                ]
+
                 }
             });
         }

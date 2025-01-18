@@ -142,7 +142,7 @@ export  const getNewsCryptoPanic: Action = {
                     url: resultsOriginUrl[index]
                 }
             });
-            let responseMessage = "All News today:\n- ";
+            let responseMessage = "Stay updated! Here are today’s highlights:";
 
             callback({
                 text: responseMessage,
