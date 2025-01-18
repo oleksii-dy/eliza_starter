@@ -245,13 +245,13 @@ profiles:
     postgres:
       resources:
         cpu:
-          units: 1.0
+          units: 4.0
         memory:
-          size: 1Gi
+          size: 8Gi
         storage:
-          - size: 1Gi
+          - size: 20Gi
           - name: data
-            size: 1Gi
+            size: 20Gi
             attributes:
               persistent: true
               class: beta3
@@ -284,8 +284,97 @@ POSTGRES_URL=postgresql://eliza:yourpassword@provider.akash.ddns.net:yourportass
 
 use pgadmin4 to access and backup the database via webbrowser
 
+### Run a AKASH dedicated Engine
+If you get blocked by the akash chat api because you consume too much computing power, condsider to run a dedicated instance temporarly:
 
+Use this yaml to deploy:
+```
+---
+version: "2.0"
+services:
+  ollama:
+    ############################
+    image: ollama/ollama:0.3.6
+    ############################
+    #Always check https://hub.docker.com/r/ollama/ollama/tags for the latest version tag!
+    expose:
+      - port: 11434
+        as: 11434
+        to:
+          - global: true
+    env:
+    #######################
+      - MODEL=llama3.1:8b 
+    #######################
+    #Supports any model from : https://ollama.com/library
+    command:
+      - /bin/sh
+      - -c
+      - |
+        ollama serve & 
+        while ! ollama pull ${MODEL}; do
+          echo "Waiting for ollama pull to succeed..."
+          sleep 2.5
+        done
+        ollama list
+        pkill ollama
+        ollama serve
+profiles:
+  compute:
+    ollama:
+      resources:
+        cpu:
+          units: 8
+        #Higher is better for AI! Be sure to change thread setting in app.
+        memory:
+          size: 28Gi
+        #7B requires about 4.5GB of free RAM
+        #13B requires about 12GB free
+        #30B requires about 20GB free // 24 not enough
+        storage:
+          size: 100Gi
+        #Bigger models may require more storage.
+        #Increase as required.
+        gpu:
+          units: 1
+          attributes:
+            vendor:
+              nvidia: 
+  placement:
+    akash:
+      #######################################################
+      #Keep this section to deploy on trusted providers
+      signedBy:
+        anyOf:
+          - "akash1365yvmc4s7awdyj3n2sav7xfx76adc6dnmlx63"
+      #######################################################
+      #Remove this section to deploy on untrusted providers
+      #Beware* You may have deployment, security, or other issues on untrusted providers
+      #https://docs.akash.network/providers/akash-audited-attributes
+      pricing:
+        ollama:
+          denom: uakt
+          amount: 10000
+deployment:
+  ollama:
+    akash:
+      profile: ollama
+      count: 1
+```
+down-adjust some values, this version costs 3.5k$ a month..
+You can close your deploy anytime and get your remaining depost back, so if you need it just for 1-2h its pretty cheap though
+add into your .env:
 
+# Ollama Configuration
+```
+OLLAMA_SERVER_URL=http://your-assgined-server:your-mapped-port               # Default: localhost:11434
+OLLAMA_MODEL=llama3.1:8b
+OLLAMA_EMBEDDING_MODEL=mxbai-embed-large         # Default: mxbai-embed-large
+SMALL_OLLAMA_MODEL=llama3.1:8b             # Default: llama3.2
+MEDIUM_OLLAMA_MODEL=llama3.1:8b            # Default: hermes3
+LARGE_OLLAMA_MODEL=llama3.1:8b    
+```
+you need to set the model to 3.1:8b for small, medium, and large
 
 
 ### Community & contact
