@@ -249,20 +249,24 @@ export async function loadCharacterFromOnchain(): Promise<Character[]> {
 }
 
 async function loadCharactersFromUrl(url: string): Promise<Character[]> {
-    const response = await fetch(url);
-    const responseJson = await response.json();
+    try {
+        const response = await fetch(url);
+        const responseJson = await response.json();
 
-    let characters: Character[] = [];
-    if (Array.isArray(responseJson)) {
-        characters = await Promise.all(
-            responseJson.map((character) => jsonToCharacter(url, character))
-        );
-    } else {
-        const character = await jsonToCharacter(url, responseJson);
-        characters.push(character);
+        let characters: Character[] = [];
+        if (Array.isArray(responseJson)) {
+            characters = await Promise.all(
+                responseJson.map((character) => jsonToCharacter(url, character))
+            );
+        } else {
+            const character = await jsonToCharacter(url, responseJson);
+            characters.push(character);
+        }
+        return characters;
+    } catch (e) {
+        elizaLogger.error(`Error loading characters from ${url}: ${e}`);
+        process.exit(1);
     }
-
-    return characters;
 }
 
 async function jsonToCharacter(
