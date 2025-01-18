@@ -264,7 +264,7 @@ async function loadCharactersFromUrl(url: string): Promise<Character[]> {
         }
         return characters;
     } catch (e) {
-        elizaLogger.error(`Error loading characters from ${url}: ${e}`);
+        elizaLogger.error(`Error loading character(s) from ${url}: ${e}`);
         process.exit(1);
     }
 }
