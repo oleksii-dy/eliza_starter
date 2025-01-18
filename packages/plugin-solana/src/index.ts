@@ -2,8 +2,7 @@ export * from "./providers/token.ts";
 export * from "./providers/wallet.ts";
 export * from "./providers/trustScoreProvider.ts";
 export * from "./evaluators/trust.ts";
-
-import { Plugin } from "@elizaos/core";
+import type { Plugin } from "@elizaos/core";
 import transferToken from "./actions/transfer.ts";
 import transferSol from "./actions/transfer_sol.ts";
 import { TokenProvider } from "./providers/token.ts";
@@ -17,9 +16,7 @@ import take_order from "./actions/takeOrder";
 import pumpfun from "./actions/pumpfun.ts";
 import fomo from "./actions/fomo.ts";
 import { executeSwapForDAO } from "./actions/swapDao";
-
 export { TokenProvider, WalletProvider, getTokenBalance, getTokenBalances };
-
 export const solanaPlugin: Plugin = {
     name: "solana",
     description: "Solana Plugin for Eliza",
@@ -35,5 +32,4 @@ export const solanaPlugin: Plugin = {
     evaluators: [trustEvaluator],
     providers: [walletProvider, trustScoreProvider],
 };
-
 export default solanaPlugin;
