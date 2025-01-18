@@ -61,7 +61,8 @@ export class TwitterEventsClient {
                     elizaLogger.error('Error polling queue:', error);
                 }
 
-                if (messages) {
+                if (messages && messages.length > 0) {
+                    console.log("messages", messages);
                     cb(messages[0]);
                     }
             } catch (err) {

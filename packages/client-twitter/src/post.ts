@@ -77,7 +77,7 @@ Consider:
 #Stock Analysis:
 {{stockAnalysis}}
 
-Start every post with the ticker and current price: {{ticker}}:{{currentStockPrice}} and whether or not you are "bullish" or "bearish" or "neutral" on the stock.
+Start every post with the $ticker and current price: \${{ticker}}: \${{currentStockPrice}} and whether or not you are "bullish" or "bearish" or "neutral" on the stock.
 
 Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.
 
@@ -511,6 +511,7 @@ export class TwitterPostClient {
      */
     async generateNewTweet(message?: TwitterEvent) {
         elizaLogger.log("Starting generateNewTweet process");
+        console.log("message", message);
 
         try {
             elizaLogger.log("Generating room ID for Twitter user", this.client.profile.username);
@@ -635,6 +636,7 @@ export class TwitterPostClient {
                 context,
                 modelClass: ModelClass.SMALL,
             });
+            console.log("newTweetContent", newTweetContent);
 
             let cleanedContent = "";
 
