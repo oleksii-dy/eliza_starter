@@ -42,6 +42,7 @@ export async function validateSettings(runtime: IAgentRuntime, chains: string[])
 export function createChainConfig(runtime: IAgentRuntime, chain: string): ChainConfig {
     return {
         name: chain,
+        //@ts-ignore
         chainId: chainData[chain].chainId,
         domainId: chainData[chain].domainId,
         protocol: ProtocolType.Ethereum,
@@ -73,12 +74,14 @@ export function setupMultiProvider(
     // Set providers for both chains
     Object.entries(chainMetadata).forEach(([chain]) => {
         const provider = new JsonRpcProvider(
+            //@ts-ignore
             runtime.getSetting(`${chain.toUpperCase()}_RPC_URL`)
         );
         multiProvider.setProvider(chain, provider);
     });
 
     // Set up wallet and signer
+    //@ts-ignore
     const wallet = new Wallet(runtime.getSetting("HYPERLANE_PRIVATE_KEY"));
     multiProvider.setSharedSigner(wallet);
 

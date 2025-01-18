@@ -17,6 +17,7 @@ export const deployWarpRoute: Action = {
     validate: async (runtime: IAgentRuntime) =>
         validateSettings(runtime, ['ethereum', 'polygon']),
 
+    //@ts-ignore
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -32,7 +33,7 @@ export const deployWarpRoute: Action = {
                 options.sourceChain,
                 options.destinationChain
             );
-
+            //@ts-ignore
             const wallet = new Wallet(runtime.getSetting("HYPERLANE_PRIVATE_KEY"));
             const deployConfig: WarpRouteDeployConfig = {
                 [options.sourceChain]: {

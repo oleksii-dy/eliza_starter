@@ -12,7 +12,7 @@ export const transferTokens: Action = {
 
     validate: async (runtime: IAgentRuntime) =>
         validateSettings(runtime, ['ethereum', 'polygon']),
-
+    //@ts-ignore
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
