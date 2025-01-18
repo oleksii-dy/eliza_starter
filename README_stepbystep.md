@@ -124,20 +124,23 @@ pnpm start --characters="path/to/your/character.json"`
 -```
 -  npm install pm2
 -```
+```
 -     pm2 start eliza
 -     pm2 stop eliza
 -     pm2 log
 -     pm2 status
 -     pm2 start "pnpm" -- start --character="/yourpath/characters/avatar.character.json" to create pm2 entry
       pm2 save
+```
 
-### Telegram Connectio
+### Telegram Connection
 https://telegram.me/BotFather
 actually pretty easy, copy&paste your bot token into the .env
 
 add "telegram" to your characterfiles header:
 
 Example:
+```
 {
     "name": "Bud",
     "plugins": ["@elizaos/plugin-web-search"],
@@ -152,11 +155,12 @@ Example:
             "model": "en_US-male-medium"
         }
     },
-
+```
 
 beware: you need to leave a space behind the ":" after "clients": ---> 
-so this is correct:  "clients": ["telegram"],
-but not "clients":["telegram"],
+so this is correct:  
+```"clients": ["telegram"],```
+but not ```"clients":["telegram"],```
 
 damn syntax handlers...;)
 
