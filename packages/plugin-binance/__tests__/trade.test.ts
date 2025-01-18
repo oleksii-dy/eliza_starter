@@ -214,23 +214,24 @@ describe('TradeService', () => {
 
             // Mock order request to timeout
             mockNewOrder.mockImplementationOnce(() => 
-                new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('timeout')), 1000)
-                )
+                Promise.reject(new ApiError('Request timed out', -1001))
             );
 
             const service = new TradeService({
                 apiKey: 'test',
                 secretKey: 'test',
-                timeout: 500 // Set lower timeout to trigger faster
+                timeout: 100 // Lower timeout as we're mocking the error
             });
 
-            await expect(service.executeTrade({
+            await expect(() => service.executeTrade({
                 symbol: 'BTCUSDT',
                 side: 'BUY',
                 type: ORDER_TYPES.MARKET,
                 quantity: 1
-            })).rejects.toBeInstanceOf(ApiError);
+            })).rejects.toMatchObject({
+                message: 'Request timed out',
+                code: -1001
+            });
         });
     });
 });
