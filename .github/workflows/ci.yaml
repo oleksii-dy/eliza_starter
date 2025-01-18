@@ -22,8 +22,13 @@ jobs:
             - name: Install dependencies
               run: pnpm install -r --no-frozen-lockfile
 
+            - name: Setup Biome
+              uses: biomejs/setup-biome@v2
+              with:
+                token: ${{ github.token }}
+
             - name: Run Biome Check
-              run: pnpm run check
+              run: biome ci .
 
             - name: Create test env file
               run: |
