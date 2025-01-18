@@ -30,7 +30,7 @@ import {
 import { State } from "@elizaos/core";
 import { ActionResponse } from "@elizaos/core";
 import { generateRandomTicker } from "@jawk/utils";
-import { StockAnalyzer, getNewsByTicker, getSummarizedNews, getPriceHistoryByTicker, getFinancialSummarization } from "@jawk/plugin-polygon";
+import { StockAnalyzer, getNewsByTicker, getSummarizedNews, getPriceHistoryByTicker, getFinancialSummarization, analyzeCompetitors } from "@jawk/plugin-polygon";
 import { Memory } from "@elizaos/core";
 import { priceActionTemplate, newFilingTemplate, sentimentTemplate, competitiveAnalysisTemplate, twitterPostTemplate} from "./templates.ts";
 const MAX_TIMELINES_TO_FETCH = 15;
@@ -274,7 +274,7 @@ export class TwitterPostClient {
         }
 
         // Only start tweet generation loop if not in dry run mode
-        //generateNewTweetLoop();
+        generateNewTweetLoop();
         elizaLogger.log("Tweet generation loop started");
 
         if (this.client.twitterConfig.ENABLE_ACTION_PROCESSING) {
@@ -525,12 +525,15 @@ export class TwitterPostClient {
 
                 const stockAnalyzer = new StockAnalyzer();
 
-                const [news, priceHistory, financialData, stockAnalysis] = await Promise.all([
+                const [news, priceHistory, financialData, stockAnalysis, competitiveAnalysis] = await Promise.all([
                     getSummarizedNews(randomTicker, this.runtime, {} as State),
                     getPriceHistoryByTicker(randomTicker, startDate.getTime(), endDate.getTime(), "day"),
                     getFinancialSummarization(randomTicker, this.runtime, {} as State, mockMessage, 126000),
-                    stockAnalyzer.analyzeStock(randomTicker)
+                    stockAnalyzer.analyzeStock(randomTicker),
+                    analyzeCompetitors(randomTicker, this.runtime, {} as State, mockMessage, 126000)
                 ]);
+
+                elizaLogger.log("competitiveAnalysis", competitiveAnalysis);
 
                 if (!news || !priceHistory || !financialData || !stockAnalysis) {
                     elizaLogger.error("Missing required data:", {
@@ -555,6 +558,7 @@ export class TwitterPostClient {
                 state.news = news;
                 state.stockAnalysis = stockAnalysis;
                 state.ticker = randomTicker;
+                state.competitiveAnalysis = competitiveAnalysis;
             }
             let template = twitterPostTemplate;
 

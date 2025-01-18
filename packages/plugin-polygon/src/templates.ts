@@ -100,3 +100,44 @@ Provide the values in the following JSON format:
 Here are the recent user messages for context:
 {{currentQuery}}
 `;
+
+export const CompetitiveAnalysisTemplate = `
+Analyze {{ticker}} compared to its competitors based on:
+1. Financial performance
+2. News sentiment
+3. Price trends
+
+Main Stock ({{ticker}}):
+{{mainStockFinancials}}
+
+Competitor Analysis:
+{{competitorData}}
+
+Analyze {{ticker}} and its competitors to provide a clear, actionable investment perspective:
+
+1. Financial Performance
+- Compare key metrics (revenue, profit margins, debt levels)
+- Highlight financial strengths/weaknesses vs peers
+- Identify concerning trends
+
+2. Market Position & Strategy
+- Current market share and competitive advantages
+- Product/service differentiation
+- Growth opportunities and expansion plans
+
+3. Risk Assessment
+- Industry-specific challenges
+- Company-specific vulnerabilities
+- Regulatory or market risks ahead
+
+4. Investment Outlook
+- Valuation vs competitors
+- Growth catalysts and headwinds
+- Buy/hold/sell recommendation rationale based on fundamentals and recent news developments
+
+Use the data provided to make a recommendation, consider the fundamentals and recent news developments.
+
+Format as a concise analysis that emphasizes the most important factors for investment decisions. Use clear language and specific examples to support key points.
+
+Return a balanced perspective that helps retail investors understand the competitive dynamics and make informed decisions.
+`;

@@ -19,7 +19,7 @@ Here are the recent user messages for context:
 
 
 export const getCompetitorsTemplate = `
-Extract the following details from a message given a company name or it's stock ticker:
+Extract the following details from a given a company name or it's stock ticker:
 - **tickers** (list): Tickers of the competitors
 
 If no ticker or company name is provided, please return an empty string as the ticker.
@@ -33,6 +33,6 @@ Provide the values in the following JSON format:
 \`\`\`
 
 
-Here are the recent user messages for context:
-{{currentQuery}}
+Here is the stock ticker:
+{{ticker}}
 `;

@@ -23,12 +23,13 @@ import {
     elizaLogger,
 } from "@elizaos/core";
 import { BrowserService } from "@elizaos/plugin-node";
-import { format, addDays } from "date-fns";
 import {
     FinancialSummarizationTemplate,
     FinancialMapReduceSummarizationTemplate,
     ExtractNewsBasedonTickerTemplate,
+    CompetitiveAnalysisTemplate
 } from "../templates";
+import { getCompetitors } from "@jawk/utils";
 
 export const createClient = () => {
     const apiKey = process.env.POLYGON_API_KEY;
@@ -79,11 +80,7 @@ export const getNewsByTicker = async (
 };
 type PriceDataPoint = {
     date: number;
-    open: number;
-    high: number;
-    low: number;
     close: number;
-    volume: number;
 };
 
 type TickerHistory = {
@@ -332,4 +329,130 @@ export const getSummarizedNews = async (
 
     elizaLogger.log("News summarization complete");
     return extractNewsBasedOnTicker;
+};
+
+type CompetitorAnalysis = {
+    ticker: string;
+    financials: string;
+    news: string;
+    latestPrice: number;
+};
+
+export const getCompetitorAnalysis = async (
+    ticker: string,
+    runtime: IAgentRuntime,
+    state: State,
+    message: Memory,
+    chunkSize: number
+): Promise<{mainStock: CompetitorAnalysis, competitors: CompetitorAnalysis[]}> => {
+    elizaLogger.log("Starting competitor analysis for", ticker);
+
+    const competitorTickers = await getCompetitors(runtime, ticker);
+    elizaLogger.log("Found competitors:", competitorTickers);
+
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setFullYear(endDate.getFullYear() - 1);
+    const mainStockData = await Promise.all([
+        getFinancialSummarization(ticker, runtime, state, message, chunkSize),
+        getSummarizedNews(ticker, runtime, state),
+        getPriceHistoryByTicker(ticker, startDate.getTime(), endDate.getTime(), "day")
+    ]);
+
+    const mainStock: CompetitorAnalysis = {
+        ticker: ticker,
+        financials: mainStockData[0],
+        news: mainStockData[1],
+        latestPrice: mainStockData[2][0].history[mainStockData[2][0].history.length - 1].close
+    };
+
+    elizaLogger.log("mainStock", mainStock);
+
+    const competitors = await Promise.all(competitorTickers.map(async (compTicker) => {
+        // review start and end dates later
+        const [financials, news, priceHistory] = await Promise.all([
+            getFinancialSummarization(compTicker, runtime, state, message, chunkSize),
+            getSummarizedNews(compTicker, runtime, state),
+            getPriceHistoryByTicker(compTicker, startDate.getTime(), endDate.getTime(), "day")
+        ]);
+        const pricingData = priceHistory[0].history.map((price) => ({
+            date: price.date,
+            close: price.close
+        })) ?? [];
+
+        return {
+            ticker: compTicker,
+            financials,
+            news,
+            latestPrice: pricingData[pricingData.length - 1].close
+        };
+    }));
+
+    elizaLogger.log("competitors", competitors);
+
+    return {
+        mainStock,
+        competitors
+    };
+};
+
+
+export const generateCompetitiveAnalysis = async (
+    analysisData: {mainStock: CompetitorAnalysis, competitors: CompetitorAnalysis[]},
+    runtime: IAgentRuntime,
+    state: State
+): Promise<string> => {
+    state.ticker = analysisData.mainStock.ticker;
+    state.mainStockFinancials = analysisData.mainStock.financials;
+    state.competitorData = analysisData.competitors.map(comp =>
+        `${comp.ticker}:\n${comp.financials}\n${comp.news}\n${comp.latestPrice}`
+    ).join('\n\n');
+
+    const context = composeContext({
+        state,
+        template: CompetitiveAnalysisTemplate
+    });
+
+
+    const analysis = await generateText({
+        runtime,
+        context,
+        modelClass: ModelClass.LARGE
+    });
+
+
+    return analysis;
+};
+
+export const analyzeCompetitors = async (
+    ticker: string,
+    runtime: IAgentRuntime,
+    state: State,
+    message: Memory,
+    chunkSize: number = 126000
+): Promise<string> => {
+    elizaLogger.log("Starting full competitor analysis for", ticker);
+
+    try {
+        // Get all competitor data
+        const analysisData = await getCompetitorAnalysis(
+            ticker,
+            runtime,
+            state,
+            message,
+            chunkSize
+        );
+
+        // Generate comparative analysis
+        const competitiveAnalysis = await generateCompetitiveAnalysis(
+            analysisData,
+            runtime,
+            state
+        );
+
+        return competitiveAnalysis;
+    } catch (error) {
+        elizaLogger.error("Error in competitor analysis:", error);
+        return `Failed to analyze competitors for ${ticker}: ${error.message}`;
+    }
 };

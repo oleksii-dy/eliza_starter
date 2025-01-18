@@ -80,7 +80,7 @@ export async function getCompetitors(
 
         const response = await generateObject({
             context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.MEDIUM,
             runtime,
             schema: CompetitorsSchema
         });
