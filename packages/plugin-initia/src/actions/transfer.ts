@@ -36,7 +36,7 @@ Example response:
 }
 \`\`\`
 
-{{recnetMessages}}
+{{recentMessages}}
 
 Given the recent messages, extract the following information about the requested token transfer:
 - Sender wallet address
