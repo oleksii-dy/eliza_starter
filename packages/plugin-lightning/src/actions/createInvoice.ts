@@ -40,7 +40,7 @@ export const createInvoiceAction = {
         _message: Memory,
         state: State,
         _options: any,
-        callback?: any
+        callback?: (response: { text: string; content?: { success: boolean; invoice?: string } }) => void
     ) => {
         console.log("CreateInvoice action handler called");
         const lightningProvider = await initLightningProvider(runtime);
