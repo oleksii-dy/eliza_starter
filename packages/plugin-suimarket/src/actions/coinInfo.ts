@@ -55,24 +55,24 @@ Based on the user's current question, extract the following cryptocurrency infor
 Only extract information explicitly mentioned in the current question. Do not use historical context or assumed information.
 Respond with a JSON markdown block containing only the extracted values.`;
 
-export const tokenInfo: Action = {
-    name: "tokenInfoBySymbol",
+export const coinInfo: Action = {
+    name: "GET_COIN_INFO_BY_SYMBOL",
 
     similes: [
-        "GET_TOKEN",
-        "TOKEN_DATA",
-        "TOKEN_DETAILS",
-        "SHOW_TOKEN",
-        "CHECK_TOKEN",
-        "TOKEN_STATUS",
-        "TOKEN_LOOKUP",
-        "FIND_TOKEN",
-        "TOKEN_PRICE",
+       "GET_COIN",
+        "COIN_DATA",
+        "COIN_DETAILS",
+        "SHOW_COIN",
+        "CHECK_COIN",
+        "COIN_STATUS",
+        "COIN_LOOKUP",
+        "FIND_COIN",
+        "COIN_PRICE",
         "PRICE_CHECK",
         "GET_PRICE",
         "PRICE_INFO",
-        "TOKEN_METRICS",
-        "TOKEN_STATS"
+        "COIN_METRICS",
+        "COIN_STATS"
     ],
 
     examples: [],
@@ -145,10 +145,10 @@ export const tokenInfo: Action = {
 
         if (callback) {
             callback({
-                text: `${coinObject.name} Info:` ,
-                action: 'tokenInfo',
+                text: `${coinObject.name} is a cryptocurrency that operates on blockchain technology. . Its price is determined by various factors, including supply, demand, and network activity.`,
+                action: 'coinInfo',
                 result: {
-                    type:"info_crypto",
+                    type:"info_coin",
                     data:info
                 }
             });
