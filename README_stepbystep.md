@@ -375,7 +375,7 @@ MEDIUM_OLLAMA_MODEL=llama3.1:8b            # Default: hermes3
 LARGE_OLLAMA_MODEL=llama3.1:8b    
 ```
 you need to set the model to 3.1:8b for small, medium, and large
-
+also change modelprovider in the characterfile from "akash_chat_api" to "ollama"
 
 ### Community & contact
 
