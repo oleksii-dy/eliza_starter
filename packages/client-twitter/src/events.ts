@@ -6,22 +6,26 @@ import { elizaLogger } from "@elizaos/core";
 
 // Subject to change
 export enum TwitterPostType {
-    TRADE = "trade",
-    PRICE_ACTION = "price_action",
-    SENTIMENT = "sentiment",
-    COMPETITIVE_ANALYSIS = "competitive_analysis",
-    NEWS = "news",
-    RESEARCH = "research",
-    ANNOUNCEMENT = "announcement",
-    INVESTMENT_OPPORTUNITY = "investment_opportunity",
+  TRADE = "trade",
+  PRICE_ACTION = "price_action",
+  NEW_FILING = "new_filing",
+  SENTIMENT = "sentiment",
+  COMPETITIVE_ANALYSIS = "competitive_analysis",
+  NEWS = "news",
+  RESEARCH = "research",
+  ANNOUNCEMENT = "announcement",
+  INVESTMENT_OPPORTUNITY = "investment_opportunity",
+  FINANCIAL_ANALYSIS = "financial_analysis",
 }
 
 export type TwitterEvent = {
-    postType: TwitterPostType;
-    content: string;
-    sources: string[];
-    timestamp: number;
-}
+  postType: TwitterPostType;
+  content: string;
+  metadata?: any;
+  sources: string[];
+  timestamp: number;
+};
+
 
 
 

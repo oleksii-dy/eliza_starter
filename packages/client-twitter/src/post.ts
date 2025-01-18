@@ -531,7 +531,6 @@ export class TwitterPostClient {
             if (message) {
                 elizaLogger.log("Reaching generateNewTweet with message: " + JSON.stringify(message));
             }
-            return;
 
             const state = await this.runtime.composeState(
                 {
@@ -618,6 +617,8 @@ export class TwitterPostClient {
                 case TwitterPostType.ANNOUNCEMENT:
                     break;
                 case TwitterPostType.INVESTMENT_OPPORTUNITY:
+                    break;
+                default:
                     break;
             }
 
