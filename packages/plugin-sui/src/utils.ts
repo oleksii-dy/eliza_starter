@@ -10,34 +10,38 @@ const parseAccount = (
     if (!privateKey) {
         throw new Error("SUI_PRIVATE_KEY is not set");
     } else if (privateKey.startsWith("suiprivkey")) {
-        return loadSecretKey(privateKey);
+        return loadFromSecretKey(privateKey);
     } else {
         return loadFromMnemonics(privateKey);
     }
 };
 
-const loadSecretKey = (privateKey: string) => {
-    try {
-        return Ed25519Keypair.fromSecretKey(privateKey);
-    } catch {
+const loadFromSecretKey = (privateKey: string) => {
+    const keypairClasses = [Ed25519Keypair, Secp256k1Keypair, Secp256r1Keypair];
+    for (const KeypairClass of keypairClasses) {
         try {
-            return Secp256k1Keypair.fromSecretKey(privateKey);
+            return KeypairClass.fromSecretKey(privateKey);
         } catch {
-            return Secp256r1Keypair.fromSecretKey(privateKey);
+            continue;
         }
     }
+    throw new Error("Failed to initialize keypair from secret key");
 };
 
 const loadFromMnemonics = (mnemonics: string) => {
-    try {
-        return Ed25519Keypair.deriveKeypairFromSeed(mnemonics);
-    } catch {
+    const keypairMethods = [
+        { Class: Ed25519Keypair, method: "deriveKeypairFromSeed" },
+        { Class: Secp256k1Keypair, method: "deriveKeypair" },
+        { Class: Secp256r1Keypair, method: "deriveKeypair" },
+    ];
+    for (const { Class, method } of keypairMethods) {
         try {
-            return Secp256k1Keypair.deriveKeypair(mnemonics);
+            return Class[method](mnemonics);
         } catch {
-            return Secp256r1Keypair.deriveKeypair(mnemonics);
+            continue;
         }
     }
+    throw new Error("Failed to derive keypair from mnemonics");
 };
 
 export { parseAccount };
