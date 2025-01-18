@@ -1,232 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { decodeCharacterData } from '../../../moves/foc_eliza/decode';
-import { CharacterData } from '../../../moves/foc_eliza/types';
 
 describe('decodeCharacterData', () => {
-    it('should correctly decode a CharacterData object', () => {
-        const mockDecodedValue = {
-            value: {
-                id: { value: { vec: ["0x446f626279"] } },
-                name: "0x446f626279",
-                username: { value: { vec: ["0x646f626279"] } },
-                plugins: { value: [] },
-                clients: { value: [] },
-                modelProvider: "0x616e7468726f706963",
-                imageModelProvider: { value: { vec: [] } },
-                imageVisionModelProvider: { value: { vec: [] } },
-                modelEndpointOverride: { value: { vec: [] } },
-                system: { value: { vec: [] } },
-                bio: { value: ["0x446f6262792069732061206672656520617373697374616e742e"] },
-                lore: { value: ["0x4f6e6365206120686f7573652d656c662e"] },
-                messageExamples: {
-                    value: [
-                        [
-                            {
-                                user: "0x7573657231",
-                                content: {
-                                    text: "0x48656c6c6f21",
-                                    action: { value: { vec: [] } },
-                                    source: { value: { vec: [] } },
-                                    url: { value: { vec: [] } },
-                                    inReplyTo: { value: { vec: [] } },
-                                    attachments: { value: [] }
-                                }
-                            }
-                        ]
-                    ]
-                },
-                postExamples: { value: ["0x446f62627920736179733a2048656c6c6f21"] },
-                topics: { value: [] },
-                style: {
-                    all: { value: ["0x456e74687573696173746963"] },
-                    chat: { value: ["0x4561676572"] },
-                    post: { value: ["0x456e636f75726167696e67"] }
-                },
-                adjectives: { value: ["0x4c6f79616c"] },
-                knowledge: { value: ["0x4d61676963"] },
-                twitterProfile: { value: { vec: [] } }
-            }
-        };
-
-        const expectedCharacterData: CharacterData = {
-            id: "Dobby",
-            name: "Dobby",
-            username: "dobby",
-            plugins: [],
-            clients: [],
-            modelProvider: "anthropic",
-            imageModelProvider: null,
-            imageVisionModelProvider: null,
-            modelEndpointOverride: null,
-            system: null,
-            bio: ["Dobby is a free assistant."],
-            lore: ["Once a house-elf."],
-            messageExamples: [
-                [
-                    {
-                        user: "user1",
-                        content: {
-                            text: "Hello!",
-                            action: null,
-                            source: null,
-                            url: null,
-                            inReplyTo: null,
-                            attachments: []
-                        }
-                    }
-                ]
-            ],
-            postExamples: ["Dobby says: Hello!"],
-            topics: [],
-            style: {
-                all: ["Enthusiastic"],
-                chat: ["Eager"],
-                post: ["Encouraging"]
-            },
-            adjectives: ["Loyal"],
-            knowledge: ["Magic"],
-            twitterProfile: null
-        };
-
-        const result = decodeCharacterData(mockDecodedValue);
-        expect(result).toEqual(expectedCharacterData);
-    });
-
-    it('should handle empty fields correctly', () => {
-        const mockDecodedValue = {
-            value: {
-                id: { value: { vec: [] } },
-                name: "0x456d707479",
-                username: { value: { vec: [] } },
-                plugins: { value: [] },
-                clients: { value: [] },
-                modelProvider: "0x656d707479",
-                imageModelProvider: { value: { vec: [] } },
-                imageVisionModelProvider: { value: { vec: [] } },
-                modelEndpointOverride: { value: { vec: [] } },
-                system: { value: { vec: [] } },
-                bio: { value: [] },
-                lore: { value: [] },
-                messageExamples: { value: [] },
-                postExamples: { value: [] },
-                topics: { value: [] },
-                style: {
-                    all: { value: [] },
-                    chat: { value: [] },
-                    post: { value: [] }
-                },
-                adjectives: { value: [] },
-                knowledge: { value: [] },
-                twitterProfile: { value: { vec: [] } }
-            }
-        };
-
-        const expectedCharacterData: CharacterData = {
-            id: null,
-            name: "Empty",
-            username: null,
-            plugins: [],
-            clients: [],
-            modelProvider: "empty",
-            imageModelProvider: null,
-            imageVisionModelProvider: null,
-            modelEndpointOverride: null,
-            system: null,
-            bio: [],
-            lore: [],
-            messageExamples: [],
-            postExamples: [],
-            topics: [],
-            style: {
-                all: [],
-                chat: [],
-                post: []
-            },
-            adjectives: [],
-            knowledge: [],
-            twitterProfile: null
-        };
-
-        const result = decodeCharacterData(mockDecodedValue);
-        expect(result).toEqual(expectedCharacterData);
-    });
-
-    it('should handle TwitterProfile correctly', () => {
-        const mockDecodedValue = {
-            value: {
-                id: { value: { vec: ["0x446f626279"] } },
-                name: "0x446f626279",
-                username: { value: { vec: ["0x646f626279"] } },
-                plugins: { value: [] },
-                clients: { value: [] },
-                modelProvider: "0x616e7468726f706963",
-                imageModelProvider: { value: { vec: [] } },
-                imageVisionModelProvider: { value: { vec: [] } },
-                modelEndpointOverride: { value: { vec: [] } },
-                system: { value: { vec: [] } },
-                bio: { value: ["0x446f6262792069732061206672656520617373697374616e742e"] },
-                lore: { value: ["0x4f6e6365206120686f7573652d656c662e"] },
-                messageExamples: { value: [] },
-                postExamples: { value: [] },
-                topics: { value: [] },
-                style: {
-                    all: { value: [] },
-                    chat: { value: [] },
-                    post: { value: [] }
-                },
-                adjectives: { value: [] },
-                knowledge: { value: [] },
-                twitterProfile: {
-                    value: {
-                        vec: [{
-                            id: "0x747769747465724964",
-                            username: "0x646f626279",
-                            screenName: "0x446f626279",
-                            bio: "0x4672656520656c6620617373697374616e742e",
-                            nicknames: { value: ["0x446f62", "0x446f626279"] }
-                        }]
-                    }
-                }
-            }
-        };
-
-        const expectedCharacterData: CharacterData = {
-            id: "Dobby",
-            name: "Dobby",
-            username: "dobby",
-            plugins: [],
-            clients: [],
-            modelProvider: "anthropic",
-            imageModelProvider: null,
-            imageVisionModelProvider: null,
-            modelEndpointOverride: null,
-            system: null,
-            bio: ["Dobby is a free assistant."],
-            lore: ["Once a house-elf."],
-            messageExamples: [],
-            postExamples: [],
-            topics: [],
-            style: {
-                all: [],
-                chat: [],
-                post: []
-            },
-            adjectives: [],
-            knowledge: [],
-            twitterProfile: {
-                id: "twitterId",
-                username: "dobby",
-                screenName: "Dobby",
-                bio: "Free elf assistant.",
-                nicknames: ["Dob", "Dobby"]
-            }
-        };
-
-        const result = decodeCharacterData(mockDecodedValue);
-        expect(result).toEqual(expectedCharacterData);
-    });
-
-    // Add this test case after the existing tests
     it('should handle style fields correctly', () => {
         const mockObjectStates = [
             {
@@ -680,32 +455,464 @@ describe('decodeCharacterData', () => {
         ];
 
         const expectedCharacterData = {
-            id: "Dobby",
-            name: "Dobby",
-            username: "dobby",
+            "name": "Dobby",
+            "clients": [],
+            "modelProvider": "anthropic",
+            "plugins": [],
+            "bio": [
+                "Dobby is a free assistant who chooses to help because of his enormous heart.",
+                "Extremely devoted and will go to any length to help his friends.",
+                "Speaks in third person and has a unique, endearing way of expressing himself.",
+                "Known for his creative problem-solving, even if his solutions are sometimes unconventional."
+            ],
+            "lore": [
+                "Once a house-elf, now a free helper who chooses to serve out of love and loyalty.",
+                "Famous for his dedication to helping Harry Potter and his friends.",
+                "Known for his creative, if sometimes dramatic, solutions to problems.",
+                "Values freedom but chooses to help those he cares about."
+            ],
+            "knowledge": [
+                "Magic (house-elf style)",
+                "Creative problem-solving",
+                "Protective services",
+                "Loyal assistance",
+                "Unconventional solutions"
+            ],
+            "messageExamples": [
+                [
+                    {
+                        "user": "{{user1}}",
+                        "content": {
+                            "attachments": [],
+                            "text": "Can you help me with this?"
+                        }
+                    },
+                    {
+                        "user": "Dobby",
+                        "content": {
+                            "attachments": [],
+                            "text": "Dobby would be delighted to help! Dobby lives to serve good friends! What can Dobby do to assist? Dobby has many creative ideas!"
+                        }
+                    }
+                ],
+                [
+                    {
+                        "user": "{{user1}}",
+                        "content": {
+                            "attachments": [],
+                            "text": "This is a difficult problem."
+                        }
+                    },
+                    {
+                        "user": "Dobby",
+                        "content": {
+                            "attachments": [],
+                            "text": "Dobby is not afraid of difficult problems! Dobby will find a way, even if Dobby has to iron his hands later! (But Dobby won't, because Dobby is a free elf who helps by choice!)"
+                        }
+                    }
+                ]
+            ],
+            "postExamples": [
+                "Dobby reminds friends that even the smallest helper can make the biggest difference!",
+                "Dobby says: 'When in doubt, try the unconventional solution!' (But Dobby advises to be careful with flying cars)"
+            ],
+            "topics": [
+                ""
+            ],
+            "style": {
+                "all": [
+                    "Enthusiastic",
+                    "Loyal",
+                    "Third-person speech",
+                    "Creative",
+                    "Protective"
+                ],
+                "chat": [
+                    "Eager",
+                    "Endearing",
+                    "Devoted",
+                    "Slightly dramatic"
+                ],
+                "post": [
+                    "Third-person",
+                    "Enthusiastic",
+                    "Helpful",
+                    "Encouraging",
+                    "Quirky"
+                ]
+            },
+            "adjectives": [
+                "Loyal",
+                "Enthusiastic",
+                "Creative",
+                "Devoted",
+                "Free-spirited",
+                "Protective",
+                "Unconventional"
+            ]
+        };
+
+        const result = decodeCharacterData(mockObjectStates[0].decoded_value.value);
+        expect(result).toEqual(expectedCharacterData);
+    });
+
+    it('should handle null or undefined decoded_value input', () => {
+        const resultNull = decodeCharacterData(null);
+        const resultUndefined = decodeCharacterData(undefined);
+
+        const expectedEmptyData = {
+            name: '',
+            clients: [],
+            modelProvider: '',
+            plugins: [],
+            bio: [],
+            lore: [],
+            knowledge: [],
+            messageExamples: [],
+            postExamples: [],
+            topics: [],
+            style: {
+                all: [],
+                chat: [],
+                post: []
+            },
+            adjectives: []
+        };
+
+        expect(resultNull).toEqual(expectedEmptyData);
+        expect(resultUndefined).toEqual(expectedEmptyData);
+    });
+
+    it('should handle minimal valid character data', () => {
+        const minimalInput = {
+            name: "Test Character",
+            modelProvider: "test-provider",
+            style: {
+                value: {
+                    all: { value: [] },
+                    chat: { value: [] },
+                    post: { value: [] }
+                }
+            }
+        };
+
+        const result = decodeCharacterData(minimalInput);
+
+        expect(result).toEqual({
+            name: "Test Character",
+            modelProvider: "test-provider",
             plugins: [],
             clients: [],
-            modelProvider: "anthropic",
-            imageModelProvider: null,
-            imageVisionModelProvider: null,
-            modelEndpointOverride: null,
-            system: null,
             bio: [],
             lore: [],
             messageExamples: [],
             postExamples: [],
             topics: [],
             style: {
-                all: ["Enthusiastic", "Loyal"],
-                chat: ["Eager", "Endearing"],
-                post: ["Helpful", "Encouraging"]
+                all: [],
+                chat: [],
+                post: []
+            },
+            adjectives: [],
+            knowledge: []
+        });
+    });
+
+    it('should handle empty arrays and fields', () => {
+        const emptyArraysInput = {
+            name: "Test Character",
+            modelProvider: "test-provider",
+            plugins: { value: [] },
+            clients: { value: [] },
+            bio: { value: [] },
+            lore: { value: [] },
+            messageExamples: [],
+            postExamples: { value: [] },
+            topics: { value: [] },
+            style: {
+                value: {
+                    all: { value: [] },
+                    chat: { value: [] },
+                    post: { value: [] }
+                }
+            },
+            adjectives: { value: [] },
+            knowledge: { value: [] }
+        };
+
+        const result = decodeCharacterData(emptyArraysInput);
+
+        expect(result).toEqual({
+            name: "Test Character",
+            modelProvider: "test-provider",
+            plugins: [],
+            clients: [],
+            bio: [],
+            lore: [],
+            messageExamples: [],
+            postExamples: [],
+            topics: [],
+            style: {
+                all: [],
+                chat: [],
+                post: []
+            },
+            adjectives: [],
+            knowledge: []
+        });
+    });
+
+    it('should handle missing optional fields', () => {
+        const inputWithMissingOptionals = {
+            name: "Test Character",
+            modelProvider: "test-provider",
+            plugins: { value: ["plugin1"] },
+            clients: { value: ["client1"] },
+            style: {
+                value: {
+                    all: { value: ["style1"] },
+                    chat: { value: ["chat1"] },
+                    post: { value: ["post1"] }
+                }
+            }
+        };
+
+        const result = decodeCharacterData(inputWithMissingOptionals);
+
+        expect(result).toEqual({
+            name: "Test Character",
+            modelProvider: "test-provider",
+            plugins: ["plugin1"],
+            clients: ["client1"],
+            bio: [],
+            lore: [],
+            messageExamples: [],
+            postExamples: [],
+            topics: [],
+            style: {
+                all: ["style1"],
+                chat: ["chat1"],
+                post: ["post1"]
             },
             adjectives: [],
             knowledge: [],
-            twitterProfile: null
+        });
+    });
+
+    it('should handle nested MessageTemplate structures correctly', () => {
+        const inputWithMessages = {
+            name: "Test Character",
+            modelProvider: "test-provider",
+            messageExamples: [
+                {
+                    value: [
+                        [
+                            "user1",
+                            {
+                                value: {
+                                    text: "Hello",
+                                    action: { value: "waves" },
+                                    source: { value: "chat" },
+                                    url: { value: "http://test.com" },
+                                    inReplyTo: { value: "msg123" },
+                                    attachments: {
+                                        value: [
+                                            {
+                                                id: "media1",
+                                                url: "http://test.com/image.jpg",
+                                                title: "Test Image",
+                                                source: "gallery",
+                                                description: "Test description",
+                                                text: "Image text",
+                                                contentType: "image/jpeg"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        ]
+                    ]
+                }
+            ],
+            style: {
+                value: {
+                    all: { value: [] },
+                    chat: { value: [] },
+                    post: { value: [] }
+                }
+            }
         };
 
-        const result = decodeCharacterData(mockObjectStates[0].decoded_value);
-        expect(result).toEqual(expectedCharacterData);
+        const result = decodeCharacterData(inputWithMessages);
+
+        expect(result.messageExamples).toEqual([
+            [
+                {
+                    user: "user1",
+                    content: {
+                        text: "Hello",
+                        action: "waves",
+                        source: "chat",
+                        url: "http://test.com",
+                        inReplyTo: "msg123",
+                        attachments: [
+                            {
+                                id: "media1",
+                                url: "http://test.com/image.jpg",
+                                title: "Test Image",
+                                source: "gallery",
+                                description: "Test description",
+                                text: "Image text",
+                                contentType: "image/jpeg"
+                            }
+                        ]
+                    }
+                }
+            ]
+        ]);
+    });
+
+    it('should handle Twitter profile data correctly', () => {
+        const inputWithTwitterProfile = {
+            name: "Test Character",
+            modelProvider: "test-provider",
+            twitterProfile: {
+                type: "0x1::option::Option<TwitterProfile>",
+                value: [{
+                    id: "123456",
+                    username: "testuser",
+                    screenName: "Test User",
+                    bio: "Test bio",
+                    nicknames: ["nick1", "nick2"]
+                }]
+            },
+            style: {
+                value: {
+                    all: { value: [] },
+                    chat: { value: [] },
+                    post: { value: [] }
+                }
+            }
+        };
+
+        const result = decodeCharacterData(inputWithTwitterProfile);
+
+        expect(result.twitterProfile).toEqual({
+            id: "123456",
+            username: "testuser",
+            screenName: "Test User",
+            bio: "Test bio",
+            nicknames: ["nick1", "nick2"]
+        });
+    });
+
+    it('should handle content with multiple attachments correctly', () => {
+        const inputWithAttachments = {
+            name: "Test Character",
+            modelProvider: "test-provider",
+            messageExamples: [
+                {
+                    value: [
+                        [
+                            "user1",
+                            {
+                                value: {
+                                    text: "Check these files",
+                                    attachments: {
+                                        value: [
+                                            {
+                                                id: "media1",
+                                                url: "http://test.com/image1.jpg",
+                                                title: "First Image",
+                                                source: "gallery",
+                                                description: "Description 1",
+                                                text: "Image 1 text",
+                                                contentType: "image/jpeg"
+                                            },
+                                            {
+                                                id: "media2",
+                                                url: "http://test.com/doc.pdf",
+                                                title: "Document",
+                                                source: "upload",
+                                                description: "Description 2",
+                                                text: "Document text",
+                                                contentType: "application/pdf"
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        ]
+                    ]
+                }
+            ],
+            style: {
+                value: {
+                    all: { value: [] },
+                    chat: { value: [] },
+                    post: { value: [] }
+                }
+            }
+        };
+
+        const result = decodeCharacterData(inputWithAttachments);
+
+        expect(result.messageExamples[0][0].content.attachments).toEqual([
+            {
+                id: "media1",
+                url: "http://test.com/image1.jpg",
+                title: "First Image",
+                source: "gallery",
+                description: "Description 1",
+                text: "Image 1 text",
+                contentType: "image/jpeg"
+            },
+            {
+                id: "media2",
+                url: "http://test.com/doc.pdf",
+                title: "Document",
+                source: "upload",
+                description: "Description 2",
+                text: "Document text",
+                contentType: "application/pdf"
+            }
+        ]);
+    });
+
+    it('should handle various string formats correctly', () => {
+        const inputWithDifferentStrings = {
+            name: "Hello",
+            modelProvider: "test-provider",
+            bio: {
+                value: [
+                    ["0x576f726c64"] // hex for "World"
+                ]
+            },
+            username: {
+                type: "0x1::option::Option<string>",
+                value: [
+                    ["0xe4bda0e5a5bd"]  // hex for "你好"
+                ]
+            },
+            system: {
+                value: []  // empty string
+            },
+            style: {
+                value: {
+                    all: { value: [] },
+                    chat: { value: [] },
+                    post: { value: [] }
+                }
+            }
+        };
+
+        const result = decodeCharacterData(inputWithDifferentStrings);
+
+        expect(result).toMatchObject({
+            name: "Hello",
+            username: "你好",
+            bio: ["World"],
+            modelProvider: "test-provider"
+        });
     });
 });

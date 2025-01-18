@@ -1,114 +1,246 @@
 import { Style, TwitterProfile, MessageTemplate, Content, Media, CharacterData } from "./types"
 
-// Helper function to convert hex string to UTF-8 string
+// Helper function to convert a hex string to a UTF-8 string, returning an empty string on failure
 function hexToString(hex: string): string {
-    const bytes = Buffer.from(hex.replace(/^0x/, ''), 'hex');
+    if (!hex) return '';
+    const cleanHex = hex.replace(/^0x/, '');
+    let bytes: Buffer;
+    try {
+        bytes = Buffer.from(cleanHex, 'hex');
+    } catch {
+        return '';
+    }
     return bytes.toString('utf8');
 }
 
-// Helper function to parse Option<String>
-function parseOptionString(optionValue: any): string | null {
-    if (optionValue.value.vec.length === 0) {
+// Tries to parse a string directly or from a Move Option<String>-like structure
+function parseString(value: any): string {
+    if (typeof value === 'string') {
+        return value;
+    } else if (value && Array.isArray(value) && value.length > 0) {
+        return hexToString(value[0]);
+    }
+
+    return null;
+}
+
+// Tries to parse a string or return null if not present
+function parseStringOrNull(value: any): string | null {
+    return parseString(parseOption(value));
+}
+
+// Tries to parse an array of strings, either directly or from an object with a .value array
+function parseStringArray(value: any): string[] {
+    if (!value) return [];
+    if (Array.isArray(value) && value.every(item => typeof item === 'string')) {
+        return value;
+    }
+    // If it's an object with a .value array, try to parse each item as a string/hex
+    if (value.value && Array.isArray(value.value)) {
+        return value.value.map((item: any) => parseString(item));
+    }
+    return [];
+}
+
+// Style interface must parse all/chat/post
+function parseStyle(styleValue: any): Style {
+    if (!styleValue) {
+        return { all: [], chat: [], post: [] };
+    }
+    return {
+        all: parseStringArray(styleValue.all),
+        chat: parseStringArray(styleValue.chat),
+        post: parseStringArray(styleValue.post)
+    };
+}
+
+// TwitterProfile parser
+function parseTwitterProfile(profileValue: any): TwitterProfile | null {
+    // For simpler data structures, assume direct fields or return null if missing
+    if (!profileValue) return null;
+
+    return {
+        id: parseString(profileValue.id),
+        username: parseString(profileValue.username),
+        screenName: parseString(profileValue.screenName),
+        bio: parseString(profileValue.bio),
+        nicknames: Array.isArray(profileValue.nicknames)
+            ? profileValue.nicknames.map((n: any) => parseString(n))
+            : []
+    };
+}
+
+function parseOption(objectValue: any): TwitterProfile | null {
+    if (!objectValue) {
         return null;
+    }
+
+    if (objectValue.type && objectValue.type.startsWith('0x1::option::Option<')) {
+        if (objectValue.value.length > 0) {
+            return objectValue.value[0];
+        } else {
+            return null;
+        }
     } else {
-        const hexString = optionValue.value.vec[0];
-        return hexToString(hexString);
+        if (objectValue.value) {
+            return objectValue.value;
+        }
+
+        return objectValue;
     }
 }
 
-// Helper function to parse vector<String>
-function parseVectorString(vectorValue: any[]): string[] {
-    return vectorValue.map((hexString: any) => hexToString(hexString));
-}
-
-// Helper function to parse Style
-function parseStyle(styleValue: any): Style {
-    const all = parseVectorString(styleValue.all.value);
-    const chat = parseVectorString(styleValue.chat.value);
-    const post = parseVectorString(styleValue.post.value);
-    return { all, chat, post };
-}
-
-// Helper function to parse TwitterProfile
-function parseTwitterProfile(profileValue: any): TwitterProfile | null {
-    if (profileValue.value.vec.length === 0) {
-        return null;
-    } else {
-        const profile = profileValue.value.vec[0];
+// Media parser
+function parseMedia(mediaValue: any): Media {
+    if (!mediaValue) {
         return {
-            id: hexToString(profile.id),
-            username: hexToString(profile.username),
-            screenName: hexToString(profile.screenName),
-            bio: hexToString(profile.bio),
-            nicknames: parseVectorString(profile.nicknames.value)
+            id: '',
+            url: '',
+            title: '',
+            source: '',
+            description: '',
+            text: '',
+            contentType: ''
         };
     }
-}
-
-// Helper function to parse Media
-function parseMedia(mediaValue: any): Media {
     return {
-        id: hexToString(mediaValue.id),
-        url: hexToString(mediaValue.url),
-        title: hexToString(mediaValue.title),
-        source: hexToString(mediaValue.source),
-        description: hexToString(mediaValue.description),
-        text: hexToString(mediaValue.text),
-        contentType: hexToString(mediaValue.contentType)
+        id: parseString(mediaValue.id),
+        url: parseString(mediaValue.url),
+        title: parseString(mediaValue.title),
+        source: parseString(mediaValue.source),
+        description: parseString(mediaValue.description),
+        text: parseString(mediaValue.text),
+        contentType: parseString(mediaValue.contentType)
     };
 }
 
-// Helper function to parse vector<Media>
-function parseVectorMedia(mediaVector: any[]): Media[] {
-    return mediaVector.map((media: any) => parseMedia(media));
+// Vector<Media>
+function parseVectorMedia(mediaVector: any): Media[] {
+    if (!Array.isArray(mediaVector)) {
+        return [];
+    }
+    return mediaVector.map(item => parseMedia(item));
 }
 
-// Helper function to parse Content
+// Content parser
 function parseContent(contentValue: any): Content {
-    const text = hexToString(contentValue.text);
-    const action = contentValue.action.value.vec.length === 0 ? null : hexToString(contentValue.action.value.vec[0]);
-    const source = contentValue.source.value.vec.length === 0 ? null : hexToString(contentValue.source.value.vec[0]);
-    const url = contentValue.url.value.vec.length === 0 ? null : hexToString(contentValue.url.value.vec[0]);
-    const inReplyTo = contentValue.inReplyTo.value.vec.length === 0 ? null : hexToString(contentValue.inReplyTo.value.vec[0]);
-    const attachments = parseVectorMedia(contentValue.attachments.value);
-    return { text, action, source, url, inReplyTo, attachments };
+    if (!contentValue) {
+        return {
+            text: '',
+            action: null,
+            source: null,
+            url: null,
+            inReplyTo: null,
+            attachments: []
+        };
+    }
+    return {
+        text: parseString(contentValue.text),
+        action: parseStringOrNull(contentValue.action),
+        source: parseStringOrNull(contentValue.source),
+        url: parseStringOrNull(contentValue.url),
+        inReplyTo: parseStringOrNull(contentValue.inReplyTo),
+        attachments: Array.isArray(contentValue.attachments?.value)
+            ? parseVectorMedia(contentValue.attachments.value)
+            : []
+    };
 }
 
-// Helper function to parse MessageTemplate
+// MessageTemplate parser
 function parseMessageTemplate(templateValue: any): MessageTemplate {
+    if (!templateValue) {
+        return {
+            user: '',
+            content: {
+                text: '',
+                action: null,
+                source: null,
+                url: null,
+                inReplyTo: null,
+                attachments: []
+            }
+        };
+    }
     return {
-        user: hexToString(templateValue.user),
-        content: parseContent(templateValue.content)
+        user: parseString(templateValue[0]),
+        content: parseContent(templateValue[1].value)
     };
 }
 
-// Main function to parse CharacterData
+// Main parser for CharacterData
 function parseCharacterData(decodedValue: any): CharacterData {
+    if (!decodedValue) {
+        return {
+            id: null,
+            name: '',
+            username: null,
+            plugins: [],
+            clients: [],
+            modelProvider: '',
+            imageModelProvider: null,
+            imageVisionModelProvider: null,
+            modelEndpointOverride: null,
+            system: null,
+            bio: [],
+            lore: [],
+            messageExamples: [],
+            postExamples: [],
+            topics: [],
+            style: { all: [], chat: [], post: [] },
+            adjectives: [],
+            knowledge: [],
+            twitterProfile: null
+        };
+    }
     return {
-        id: parseOptionString(decodedValue.id),
-        name: hexToString(decodedValue.name),
-        username: parseOptionString(decodedValue.username),
-        plugins: parseVectorString(decodedValue.plugins.value),
-        clients: parseVectorString(decodedValue.clients.value),
-        modelProvider: hexToString(decodedValue.modelProvider),
-        imageModelProvider: parseOptionString(decodedValue.imageModelProvider),
-        imageVisionModelProvider: parseOptionString(decodedValue.imageVisionModelProvider),
-        modelEndpointOverride: parseOptionString(decodedValue.modelEndpointOverride),
-        system: parseOptionString(decodedValue.system),
-        bio: parseVectorString(decodedValue.bio.value),
-        lore: parseVectorString(decodedValue.lore.value),
-        messageExamples: decodedValue.messageExamples.value.map((vectorMT: any[]) => vectorMT.map((mt: any) => parseMessageTemplate(mt))),
-        postExamples: parseVectorString(decodedValue.postExamples.value),
-        topics: parseVectorString(decodedValue.topics.value),
-        style: parseStyle(decodedValue.style),
-        adjectives: parseVectorString(decodedValue.adjectives.value),
-        knowledge: parseVectorString(decodedValue.knowledge.value),
-        twitterProfile: parseTwitterProfile(decodedValue.twitterProfile)
+        id: parseStringOrNull(decodedValue.id),
+        name: parseString(decodedValue.name),
+        username: parseStringOrNull(decodedValue.username),
+        plugins: parseStringArray(decodedValue.plugins),
+        clients: parseStringArray(decodedValue.clients),
+        modelProvider: parseString(decodedValue.modelProvider),
+        imageModelProvider: parseStringOrNull(decodedValue.imageModelProvider),
+        imageVisionModelProvider: parseStringOrNull(decodedValue.imageVisionModelProvider),
+        modelEndpointOverride: parseStringOrNull(decodedValue.modelEndpointOverride),
+        system: parseStringOrNull(decodedValue.system),
+        bio: parseStringArray(decodedValue.bio),
+        lore: parseStringArray(decodedValue.lore),
+        messageExamples: Array.isArray(decodedValue.messageExamples)
+            ? decodedValue.messageExamples.map((group: any) =>
+                Array.isArray(group.value)
+                    ? group.value.map(item => parseMessageTemplate(item))
+                    : []
+              )
+            : [],
+        postExamples: parseStringArray(decodedValue.postExamples),
+        topics: parseStringArray(decodedValue.topics),
+        style: parseStyle(decodedValue.style.value),
+        adjectives: parseStringArray(decodedValue.adjectives),
+        knowledge: parseStringArray(decodedValue.knowledge),
+        twitterProfile: parseTwitterProfile(parseOption(decodedValue.twitterProfile))
     };
 }
 
-// Function to decode CharacterData
+// Helper function to remove null values from an object
+function removeNullValues(obj: any): any {
+    if (Array.isArray(obj)) {
+        return obj.map(item => removeNullValues(item));
+    }
+    if (obj !== null && typeof obj === 'object') {
+        const result: any = {};
+        for (const key in obj) {
+            const value = removeNullValues(obj[key]);
+            if (value !== null) {
+                result[key] = value;
+            }
+        }
+        return result;
+    }
+    return obj;
+}
+
+// Modified decodeCharacterData function
 export function decodeCharacterData(decoded_value: any): CharacterData {
-    const decodedValue = decoded_value.value;
-    return parseCharacterData(decodedValue);
+    const parsed = parseCharacterData(decoded_value);
+    return removeNullValues(parsed) as CharacterData;
 }
