@@ -925,7 +925,7 @@ export async function createAgent(
             getSecret(character, "RESERVOIR_API_KEY")
                 ? createNFTCollectionsPlugin()
                 : null,
-            getSecret(characeter, "INITIA_PRIVATE_KEY") ? initiaPlugin : null,
+            getSecret(character, "INITIA_PRIVATE_KEY") ? initiaPlugin : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
