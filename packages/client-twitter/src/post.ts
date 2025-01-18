@@ -77,11 +77,11 @@ Consider:
 #Stock Analysis:
 {{stockAnalysis}}
 
-Start every post with the $ticker and current price: \${{ticker}}: \${{currentStockPrice}} and whether or not you are "bullish" or "bearish" or "neutral" on the stock.
+Start every post with the $ticker and current price: \${{ticker}}: \${{currentStockPrice}} and whether or not you are "bullish" or "bearish" or "neutral" on the stock. Make sure in the analysis to explain why you gave it that rating.
 
 Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.
 
-The post should be accessible to retail investors. Focus on the most important information that drives investment decisions.`;
+The post should be accessible to retail investors. The first paragaph should be two sentences describing what the company does in a TLDR format. Focus on the most important information that drives investment decisions.`;
 
 
 export const twitterActionTemplate =
@@ -275,7 +275,7 @@ export class TwitterPostClient {
                 minMinutes;
             const delay = randomMinutes * 60 * 1000;
 
-            if (Date.now() > lastPostTimestamp + 1 * 60 * 1000) {
+            if (Date.now() > lastPostTimestamp) {
                 await this.generateNewTweet();
             }
 
