@@ -32,58 +32,10 @@ import { ActionResponse } from "@elizaos/core";
 import { generateRandomTicker } from "@jawk/utils";
 import { StockAnalyzer, getNewsByTicker, getSummarizedNews, getPriceHistoryByTicker, getFinancialSummarization } from "@jawk/plugin-polygon";
 import { Memory } from "@elizaos/core";
-import { priceActionTemplate, newFilingTemplate, sentimentTemplate, competitiveAnalysisTemplate} from "./templates.ts";
+import { priceActionTemplate, newFilingTemplate, sentimentTemplate, competitiveAnalysisTemplate, twitterPostTemplate} from "./templates.ts";
 const MAX_TIMELINES_TO_FETCH = 15;
 
-export const twitterPostTemplate = `
-# Areas of Expertise
-{{knowledge}}
-
-# About {{agentName}} (@{{twitterUserName}}):
-{{bio}}
-{{lore}}
-{{topics}}
-
-# Providers:
-{{providers}}
-
-{{characterPostExamples}}
-
-{{postDirections}}
-
-# Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
-Write a post that is {{adjective}} about {{ticker}}, from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
-Do not try and add any styling to the post like bold, italic, or other formatting.
-
-Whenever a ticker is mentioned add a $ symbol in front of it.
-
-
-Consider:
-- Key financial metrics (revenue, profit margins, growth rates)
-- Recent price movements and trading volume
-- Notable news and events
-- Industry context and competitive position
-- Technical analysis indicators
-- Future outlook and potential catalysts
-
-#Financials Summary:
-{{financialSummary}}
-
-#Current Stock Price:
-{{currentStockPrice}}
-
-#News:
-{{news}}
-
-#Stock Analysis:
-{{stockAnalysis}}
-
-Start every post with the $ticker and current price: \${{ticker}}: \${{currentStockPrice}} and whether or not you are "bullish" or "bearish" or "neutral" on the stock. Make sure in the analysis to explain why you gave it that rating.
-
-Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.
-
-The post should be accessible to retail investors. The first paragaph should be two sentences describing what the company does in a TLDR format. Focus on the most important information that drives investment decisions.`;
-
+//add template import
 
 export const twitterActionTemplate =
     `
