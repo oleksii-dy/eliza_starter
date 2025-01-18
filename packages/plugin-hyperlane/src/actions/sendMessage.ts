@@ -22,6 +22,7 @@ import {
   import { hyperlaneActionTemplate } from "../../templates";
   import { composeContext } from "@elizaos/core";
 import { chainData } from "../chainMetadata";
+//@ts-ignore
 import { utils } from "ethers";
 
   export const sendCrossChainMessage: Action = {
