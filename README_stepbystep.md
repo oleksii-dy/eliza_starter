@@ -213,7 +213,7 @@ sqlitebrowser db.sqlite
 ```
 check the "memory" table...
 
-## Advnaced Vector Index Database:
+## Advanced Vector Index Database:
 This is not necessary for character imitating models, but is useful for big workloads and long-trained models:
 
 Deploy an AKASh Postgres Vector enabled Database with this YAML Sheet:
@@ -274,7 +274,7 @@ deployment:
       profile: postgres
       count: 1 
 ```
-
+change username and password and
 adjust and scale the cpu, hdd to your need
 
 after deployment, add the login to the .env file:
