@@ -1810,6 +1810,23 @@ export class PostgresDatabaseAdapter
             ]
         );
     }
+
+    async createTrace(run: number, time: Date, name: string, data: any): Promise<void> {
+        return this.withDatabase(async () => {
+            const client = await this.pool.connect();
+            try {
+                await client.query("BEGIN");
+                await client.query(`INSERT INTO traces ("run", "time", "name", "data") VALUES ($1, $2, $3, $4)`,
+                    [run, time.toISOString(), name, data]);
+                await client.query("COMMIT");
+            } catch (error) {
+                await client.query("ROLLBACK");
+                throw error;
+            } finally {
+                client.release();
+            }
+        }, "createTrace");
+    }
 }
 
 export default PostgresDatabaseAdapter;

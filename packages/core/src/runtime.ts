@@ -17,7 +17,7 @@ import {
 } from "./evaluators.ts";
 import { generateText } from "./generation.ts";
 import { formatGoalsAsString, getGoals } from "./goals.ts";
-import { elizaLogger } from "./index.ts";
+import { elizaLogger, Instrumentation } from "./index.ts";
 import knowledge from "./knowledge.ts";
 import { MemoryManager } from "./memory.ts";
 import { formatActors, formatMessages, getActorDetails } from "./messages.ts";
@@ -410,6 +410,8 @@ export class AgentRuntime implements IAgentRuntime {
     }
 
     async initialize() {
+        Instrumentation.trace("AgentRuntime.initialize()", {});
+
         for (const [serviceType, service] of this.services.entries()) {
             try {
                 await service.initialize(this);
@@ -857,6 +859,8 @@ export class AgentRuntime implements IAgentRuntime {
             modelClass: ModelClass.SMALL,
             verifiableInferenceAdapter: this.verifiableInferenceAdapter,
         });
+
+        Instrumentation.trace("evaluate", {context: context, result: result});
 
         const evaluators = parseJsonArrayFromText(
             result

@@ -34,6 +34,7 @@ import {
     stringToUuid,
     validateCharacterConfig,
     parseBooleanFromText,
+    Instrumentation,
 } from "@elizaos/core";
 import { zgPlugin } from "@elizaos/plugin-0g";
 
@@ -1047,6 +1048,7 @@ async function startAgent(
     directClient: DirectClient
 ): Promise<AgentRuntime> {
     let db: IDatabaseAdapter & IDatabaseCacheAdapter;
+    Instrumentation.trace("startAgent", {character});
     try {
         character.id ??= stringToUuid(character.name);
         character.username ??= character.name;
@@ -1168,9 +1170,15 @@ const startAgents = async () => {
     );
 };
 
-startAgents().catch((error) => {
-    elizaLogger.error("Unhandled error in startAgents:", error);
-    process.exit(1);
+const db = initializeDatabase(null) as PostgresDatabaseAdapter;
+Instrumentation.init((a, b, c, d) => {db.createTrace(a, b, c, d)});
+Instrumentation.run(() => {
+    startAgents().catch((error) => {
+        elizaLogger.error("Unhandled error in startAgents:", error);
+        process.exit(1);
+    }).then((res) => {
+        // db.close();
+    });
 });
 
 // Prevent unhandled exceptions from crashing the process if desired

@@ -18,7 +18,7 @@ import { encodingForModel, TiktokenModel } from "js-tiktoken";
 import { AutoTokenizer } from "@huggingface/transformers";
 import Together from "together-ai";
 import { ZodSchema } from "zod";
-import { elizaLogger } from "./index.ts";
+import { elizaLogger, Instrumentation } from "./index.ts";
 import {
     models,
     getModelSettings,
@@ -1002,6 +1002,8 @@ export async function generateText({
                 throw new Error(errorMessage);
             }
         }
+
+        Instrumentation.trace("response", {value: response});
 
         return response;
     } catch (error) {
