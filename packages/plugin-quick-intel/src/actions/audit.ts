@@ -178,8 +178,8 @@ export const auditAction: Action = {
 
             if (callback) {
                 await callback({
-                    text: `Error performing token audit: ${error.message}`,
-                    content: { error: error.message },
+                    text: `An error occurred while performing the token audit. Please try again later, and ensure the address is correct, and chain is supported.`,
+                    content: { error: "Internal server error" },
                     inReplyTo: message.id
                 });
             }
