@@ -19,6 +19,9 @@
     "@hyperlane-xyz/sdk": "^8.1.0",
     "ethers": "^6.13.5",
     "ethers-types": "^3.18.1",
+    "@ethersproject/abstract-provider": "^5.7.0",
+    "@ethersproject/bytes": "^5.7.0",
+    "@ethersproject/wallet": "^5.7.0",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0"
   }
