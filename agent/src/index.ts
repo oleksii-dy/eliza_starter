@@ -248,10 +248,21 @@ export async function loadCharacterFromOnchain(): Promise<Character[]> {
     }
 }
 
-async function loadCharacterFromUrl(url: string): Promise<Character> {
+async function loadCharactersFromUrl(url: string): Promise<Character[]> {
     const response = await fetch(url);
-    const character = await response.json();
-    return jsonToCharacter(url, character);
+    const responseJson = await response.json();
+
+    let characters: Character[] = [];
+    if (Array.isArray(responseJson)) {
+        characters = await Promise.all(
+            responseJson.map((character) => jsonToCharacter(url, character))
+        );
+    } else {
+        const character = await jsonToCharacter(url, responseJson);
+        characters.push(character);
+    }
+
+    return characters;
 }
 
 async function jsonToCharacter(
@@ -389,8 +400,8 @@ export async function loadCharacters(
             process.env.REMOTE_CHARACTER_URLS
         );
         for (const characterUrl of characterUrls) {
-            const character = await loadCharacterFromUrl(characterUrl);
-            loadedCharacters.push(character);
+            const characters = await loadCharactersFromUrl(characterUrl);
+            loadedCharacters.push(...characters);
         }
     }
 
