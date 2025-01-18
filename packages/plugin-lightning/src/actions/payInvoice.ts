@@ -3,6 +3,7 @@ import {
     composeContext,
     generateObjectV2,
     ModelClass,
+    elizaLogger
 } from "@elizaos/core";
 
 import {
@@ -62,7 +63,7 @@ export const payInvoiceAction = {
         _options: any,
         callback?: any
     ) => {
-        console.log("payInvoice action handler called");
+        elizaLogger.log("payInvoice action handler called");
         const lightningProvider = await initLightningProvider(runtime);
         const action = new PayInvoiceAction(lightningProvider);
 
@@ -84,7 +85,7 @@ export const payInvoiceAction = {
 
         try {
             const payInvoiceResp = await action.payInvoice(payInvoiceOptions);
-            console.log("🚀 ~ payInvoiceResp:", payInvoiceResp);
+            elizaLogger.log("🚀 ~ payInvoiceResp:", payInvoiceResp);
 
             if (callback) {
                 let text = "";
@@ -102,7 +103,7 @@ export const payInvoiceAction = {
             }
             return true;
         } catch (error) {
-            console.error("Error in payInvoice handler:", error);
+            elizaLogger.error("Error in payInvoice handler:", error);
             if (callback) {
                 callback({ text: `Error: ${error.message || 'An error occurred'}` });
             }
