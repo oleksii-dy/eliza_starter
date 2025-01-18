@@ -53,17 +53,19 @@ export class TwitterEventsClient {
             this.isPolling = true;
 
             try {
-                const { data: messages, error } = await this.queues.rpc('pop', {
+                const { data: message, error } = await this.queues.rpc('pop', {
                     queue_name: 'twitter',
                 });
+
+                console.log("message", message);
 
                 if (error) {
                     elizaLogger.error('Error polling queue:', error);
                 }
 
-                if (messages && messages.length > 0) {
-                    console.log("messages", messages);
-                    cb(messages[0]);
+                if (message && Object.keys(message).length > 0) {
+                    console.log("message", message);
+                    cb(message);
                     }
             } catch (err) {
                 console.log(err);

@@ -32,6 +32,7 @@ import { ActionResponse } from "@elizaos/core";
 import { generateRandomTicker } from "@jawk/utils";
 import { StockAnalyzer, getNewsByTicker, getSummarizedNews, getPriceHistoryByTicker, getFinancialSummarization } from "@jawk/plugin-polygon";
 import { Memory } from "@elizaos/core";
+import { priceActionTemplate, newFilingTemplate, sentimentTemplate, competitiveAnalysisTemplate} from "./templates.ts";
 const MAX_TIMELINES_TO_FETCH = 15;
 
 export const twitterPostTemplate = `
@@ -321,7 +322,7 @@ export class TwitterPostClient {
         }
 
         // Only start tweet generation loop if not in dry run mode
-        generateNewTweetLoop();
+        //generateNewTweetLoop();
         elizaLogger.log("Tweet generation loop started");
 
         if (this.client.twitterConfig.ENABLE_ACTION_PROCESSING) {
@@ -548,6 +549,10 @@ export class TwitterPostClient {
                 }
             );
 
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setFullYear(endDate.getFullYear() - 1);
+
             if (!message) {
 
                 const randomTicker = generateRandomTicker();
@@ -565,9 +570,6 @@ export class TwitterPostClient {
                     roomId: roomId,
                 }
 
-                const endDate = new Date();
-                const startDate = new Date();
-                startDate.setFullYear(endDate.getFullYear() - 1);
 
                 const stockAnalyzer = new StockAnalyzer();
 
@@ -606,18 +608,34 @@ export class TwitterPostClient {
 
             switch (message?.postType) {
                 case TwitterPostType.PRICE_ACTION:
+                    let priceHistory = await getPriceHistoryByTicker(message.sources[0] as string, startDate.getTime(), endDate.getTime(), "day");
+                    let latestPrice = priceHistory[0].history[priceHistory[0].history.length - 1].close;
+                    state.ticker = message.sources[0];
+                    state.content = message.content;
+                    state.currentStockPrice = latestPrice;
+                    template = priceActionTemplate;
                     break;
                 case TwitterPostType.SENTIMENT:
+                    state.ticker = message.sources[0];
+                    template = sentimentTemplate;
                     break;
-                case TwitterPostType.COMPETITIVE_ANALYSIS:
-                    break;
-                case TwitterPostType.NEWS:
-                    break;
-                case TwitterPostType.RESEARCH:
-                    break;
-                case TwitterPostType.ANNOUNCEMENT:
-                    break;
-                case TwitterPostType.INVESTMENT_OPPORTUNITY:
+                case TwitterPostType.NEW_FILING:
+                    state.ticker = message.sources[0] as string;
+                    const mockMessage: Memory= {
+                        content: {
+                            text: `Generate a financial analysis of ${message.sources[0]}`,
+                            action: ""
+                        },
+                        userId: this.runtime.agentId,
+                        agentId: this.runtime.agentId,
+                        roomId: roomId,
+                    }
+                    priceHistory = await getPriceHistoryByTicker(message.sources[0] as string, startDate.getTime(), endDate.getTime(), "day");
+                    latestPrice = priceHistory[0].history[priceHistory[0].history.length - 1].close;
+                    state.content = message.content;
+                    state.currentStockPrice = latestPrice;
+                    state.metadata = message.metadata;
+                    template = newFilingTemplate;
                     break;
                 default:
                     break;
@@ -627,7 +645,7 @@ export class TwitterPostClient {
                 state,
                 template:
                     this.runtime.character.templates?.twitterPostTemplate ||
-                    twitterPostTemplate,
+                    template,
             });
 
 
