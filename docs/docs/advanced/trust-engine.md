@@ -19,7 +19,7 @@ interface TrustScoreDatabase {
     // Core data structures
     recommenders: Recommender[];
     metrics: RecommenderMetrics[];
-    tokenPerformance: TokenPerformance[];
+    tokenPerformances: TokenPerformance[];
     recommendations: TokenRecommendation[];
 }
 
@@ -55,7 +55,7 @@ interface TokenPerformance {
     tokenAddress: string;
     priceChange24h: number;
     volumeChange24h: number;
-    trade_24h_change: number;
+    tradeChange24h: number;
     liquidity: number;
     liquidityChange24h: number;
     holderChange24h: number;
@@ -144,16 +144,16 @@ async function validateToken(
 
 ```typescript
 interface TradePerformance {
-    token_address: string;
-    recommender_id: string;
-    buy_price: number;
-    sell_price: number;
-    buy_timeStamp: string;
-    sell_timeStamp: string;
-    profit_usd: number;
-    profit_percent: number;
-    market_cap_change: number;
-    liquidity_change: number;
+    tokenAddress: string;
+    recommenderId: string;
+    buyPrice: number;
+    sellPrice: number;
+    buyTimestamp: string;
+    sellTimestamp: string;
+    profitUsd: number;
+    profitPercent: number;
+    marketCapChange: number;
+    liquidityChange: number;
     rapidDump: boolean;
 }
 
@@ -165,16 +165,16 @@ async function recordTradePerformance(
     await db.query(
         `
         INSERT INTO ${tableName} (
-            token_address,
-            recommender_id,
-            buy_price,
-            sell_price,
-            buy_timeStamp,
-            sell_timeStamp,
-            profit_usd,
-            profit_percent,
-            market_cap_change,
-            liquidity_change,
+            tokenAddress,
+            recommenderId,
+            buyPrice,
+            sellPrice,
+            buyTimestamp,
+            sellTimestamp,
+            profitUsd,
+            profitPercent,
+            marketCapChange,
+            liquidityChange,
             rapidDump
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
     `,
