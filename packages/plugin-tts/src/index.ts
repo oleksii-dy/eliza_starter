@@ -95,9 +95,20 @@ const TTSGeneration: Action = {
             text: `I'll generate an audio based on your prompt: "${TTSPrompt}". This might take a few seconds...`,
         });
 
-        const language = detect(TTSPrompt);
-        const voice_subject = VOICE_MAP[language[0].lang];
-        const target_voice = getRandomVoice(voice_subject).fullName;
+        let target_voice;
+        try {
+            const language = detect(TTSPrompt);
+            if (language && language.length > 0) {
+            const voice_subject = VOICE_MAP[language[0].lang];
+            target_voice = getRandomVoice(voice_subject).fullName;
+            } else {
+            throw new Error("Language detection failed, no language detected.");
+            }
+        } catch (error) {
+            elizaLogger.error("Language detection error:", error);
+            const defaultVoice = VOICE_MAP['en'];
+            target_voice = getRandomVoice(defaultVoice).fullName;
+        }
 
         elizaLogger.debug("Starting TTS generation with prompt:", TTSPrompt, "and voice:", target_voice);
 
