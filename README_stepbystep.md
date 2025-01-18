@@ -29,6 +29,10 @@
 - 📦 Just works!
 
 
+### This guide wants to empower communities to run their own community bots with ease, but would be a nasty plague in the hand of scammers
+So: Please share this guide only with teams, devs, communities and builder you trust and have faith in
+Scammers killing the spaces, making people leaving and disappoining..
+Dear Scammers, you ngmi, get a real life and stop abusing people-- talented people don't need to scam, but you would be better of shaming yourself
 
 ### Prerequisites
 
@@ -169,11 +173,12 @@ damn syntax handlers...;)
 https://discord.com/developers
 
 Somehow you need to "reset" your token, otherwise you wont see the necessary token (not just numbers, looks like this: TMzMDEzMzE4Njc.....
-
+Then you can use the invite link generated during startup to add them to your server
 
 ## Advanced Character settings:
 
 Example:
+```
 {
     "name": "Bud",
     "plugins": ["@elizaos/plugin-web-search"],
@@ -188,15 +193,16 @@ Example:
             "model": "en_US-male-medium"
         }
     },
+```
 
-you can add "secrets" : This overrides the values given in .env for that specific character. So you can give characters unique tg handles or discord id's
-you can add "plugins" to embed plugins from the /packages folder. remember to run "npm add eliaos@your-new-lugin" from the main directory to fetch dependencies first
-you can change "akash_chat_api" to "ollama" if you want to run your models on your local machine. I recommend you to choose small models only
+you can add ```"secrets"``` : This overrides the values given in .env for that specific character. So you can give characters unique tg handles or discord id's
+you can add ```"plugins"``` to embed plugins from the /packages folder. remember to run "npm add eliaos@your-new-lugin" from the main directory to fetch dependencies first
+you can change ```"akash_chat_api"``` to ```"ollama"``` if you want to run your models on your local machine. I recommend you to choose small models only
 
 
 ### Community & contact
 
-- [GitHub Issues](https://github.com/elizaos/eliza/issues). Best for: bugs you encounter using Eliza, and feature proposals.
+
 - [Discord](https://discord.gg/ai16z). Best for: sharing your applications and hanging out with the community.
 
 ## Contributors
