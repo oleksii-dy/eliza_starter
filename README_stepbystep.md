@@ -30,8 +30,9 @@
 
 
 ### This guide wants to empower communities to run their own community bots with ease, but would be a nasty plague in the hand of scammers
-So: Please share this guide only with teams, devs, communities and builder you trust and have faith in
-Scammers killing the spaces, making people leaving and disappoining..
+So: Please share this guide only with teams, devs, communities and builder you trust and have faith in.
+
+Scammers killing the spaces, making people leaving and disappoining the ecosystem--
 Dear Scammers, you ngmi, get a real life and stop abusing people-- talented people don't need to scam, but you would be better of shaming yourself
 
 ### Prerequisites
