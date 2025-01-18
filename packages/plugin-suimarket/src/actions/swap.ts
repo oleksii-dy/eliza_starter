@@ -100,7 +100,7 @@ export const executeSwap: Action = {
         try {
 
             callback({
-               text:`Swap Tokens \n "From:" ${content.inputTokenSymbol} \n "To:"   ${content.outputTokenSymbol} \n "Amount: ${content.amount} \n Please double-check all details before swapping to avoid any loss`,
+               text:`Swap Tokens \n From: ${content.inputTokenSymbol} \n To:   ${content.outputTokenSymbol} \n Amount: ${content.amount} \n Please double-check all details before swapping to avoid any loss`,
                result: {
                 type: "swap",
                 data:responseData,
