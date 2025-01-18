@@ -592,7 +592,7 @@ export class MessageManager {
                 (Math.random() * 1800000 - 900000);
 
             // Check if we should post
-            if ((timeSinceLastMessage > randomThreshold) &&
+            if ((timeSinceLastMessage > this.autoPostConfig.inactivityThreshold || randomThreshold) &&
                 timeSinceLastAutoPost > (this.autoPostConfig.minTimeBetweenPosts || 0)) {
 
                 try {
