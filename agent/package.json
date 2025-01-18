@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "start": "node --loader ts-node/esm src/index.ts",
-        "start:rooch": "node --experimental-specifier-resolution=node --loader ts-node/esm src/index.ts -character=rooch://object/0x167f5fab11227c394905cbad1e8b25d0d12c6a881ba2d6899e9dbf8138eaecfd",
+        "start:rooch": "node --experimental-specifier-resolution=node --loader ts-node/esm src/index.ts --character rooch://object/0x167f5fab11227c394905cbad1e8b25d0d12c6a881ba2d6899e9dbf8138eaecfd",
         "dev": "node --loader ts-node/esm src/index.ts ",
         "check-types": "tsc --noEmit",
         "test": "jest"

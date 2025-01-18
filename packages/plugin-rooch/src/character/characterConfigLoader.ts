@@ -35,7 +35,7 @@ export const characterConfigLoader: ICharacterConfigLoader = {
                 `getStates result:`, JSON.stringify(objectStates)
             );
 
-            return decodeCharacterData(objectStates[0].decoded_value)
+            return decodeCharacterData(objectStates[0].decoded_value.value)
         } catch (error) {
             console.error("Error in wallet provider:", error);
             return null;

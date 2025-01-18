@@ -56,4 +56,5 @@ export interface CharacterData {
     adjectives: string[];
     knowledge: string[];
     twitterProfile: TwitterProfile | null;
+    settings: any;
 }
