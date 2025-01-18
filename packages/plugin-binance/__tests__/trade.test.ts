@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TradeService } from '../src/services/trade';
-import { AuthenticationError, InvalidSymbolError, MinNotionalError } from '../src/types/internal/error';
+import { AuthenticationError, InvalidSymbolError, MinNotionalError, ApiError } from '../src/types/internal/error';
 import { ORDER_TYPES, TIME_IN_FORCE } from '../src/constants/api';
 
 // Mock the Binance client
@@ -206,6 +206,31 @@ describe('TradeService', () => {
                 quantity: 1
                 // price is missing
             })).rejects.toThrow('Price is required for LIMIT orders');
+        });
+
+        it('should handle API timeout', async () => {
+            // Mock successful exchange info response first
+            mockExchangeInfo.mockResolvedValueOnce(mockExchangeInfoResponse);
+
+            // Mock order request to timeout
+            mockNewOrder.mockImplementationOnce(() => 
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('timeout')), 1000)
+                )
+            );
+
+            const service = new TradeService({
+                apiKey: 'test',
+                secretKey: 'test',
+                timeout: 500 // Set lower timeout to trigger faster
+            });
+
+            await expect(service.executeTrade({
+                symbol: 'BTCUSDT',
+                side: 'BUY',
+                type: ORDER_TYPES.MARKET,
+                quantity: 1
+            })).rejects.toBeInstanceOf(ApiError);
         });
     });
 });
