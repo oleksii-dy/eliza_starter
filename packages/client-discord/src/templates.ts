@@ -191,5 +191,5 @@ Examples of {{agentName}}'s dialog and actions:
 - Maximum 3-7 lines formatted nicely if needed, based on the context of the announcement
 - Use 1-2 emojis maximum
 
-# Instructions: Write the next message for {{agentName}}. Include an action, if appropriate. The only valid action for announcement hype is "NONE".
+# Instructions: Write the next message for {{agentName}}. Include the "NONE" action only, as no other actions are appropriate for announcement hype.
 ` + messageCompletionFooter;

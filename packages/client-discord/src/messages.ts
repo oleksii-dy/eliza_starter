@@ -564,7 +564,7 @@ export class MessageManager {
             // Monitor with random intervals between 2-6 hours
             this.autoPostInterval = setInterval(() => {
                 this._checkChannelActivity();
-            }, Math.floor(Math.random() * (6 * 60 * 60 * 1000 - 4 * 60 * 60 * 1000) + 2 * 60 * 60 * 1000));
+            }, Math.floor(Math.random() * (4 * 60 * 60 * 1000) + 2 * 60 * 60 * 1000));
 
             // Start monitoring announcement channels
             this._monitorAnnouncementChannels();
@@ -592,7 +592,7 @@ export class MessageManager {
                 (Math.random() * 1800000 - 900000);
 
             // Check if we should post
-            if (timeSinceLastMessage > this.autoPostConfig.inactivityThreshold || randomThreshold &&
+            if ((timeSinceLastMessage > this.autoPostConfig.inactivityThreshold || randomThreshold) &&
                 timeSinceLastAutoPost > (this.autoPostConfig.minTimeBetweenPosts || 0)) {
 
                 try {
