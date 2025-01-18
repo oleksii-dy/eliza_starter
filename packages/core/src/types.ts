@@ -229,6 +229,7 @@ export type Models = {
     [ModelProviderName.LIVEPEER]: Model;
     [ModelProviderName.DEEPSEEK]: Model;
     [ModelProviderName.INFERA]: Model;
+    [ModelProviderName.ATOMA]: Model;
 };
 
 /**
@@ -264,6 +265,7 @@ export enum ModelProviderName {
     LETZAI = "letzai",
     DEEPSEEK = "deepseek",
     INFERA = "infera",
+    ATOMA = "atoma",
 }
 
 /**
@@ -744,6 +746,8 @@ export type Character = {
         lensShouldRespondTemplate?: TemplateType;
         telegramMessageHandlerTemplate?: TemplateType;
         telegramShouldRespondTemplate?: TemplateType;
+        telegramAutoPostTemplate?: string;
+        telegramPinnedMessageTemplate?: string;
         discordVoiceHandlerTemplate?: TemplateType;
         discordShouldRespondTemplate?: TemplateType;
         discordMessageHandlerTemplate?: TemplateType;
@@ -846,6 +850,14 @@ export type Character = {
             teamAgentIds?: string[];
             teamLeaderId?: string;
             teamMemberInterestKeywords?: string[];
+            autoPost?: {
+                enabled?: boolean;
+                monitorTime?: number;
+                inactivityThreshold?: number;
+                mainChannelId?: string;
+                pinnedMessagesGroups?: string[];
+                minTimeBetweenPosts?: number;
+            };
         };
         slack?: {
             shouldIgnoreBotMessages?: boolean;
