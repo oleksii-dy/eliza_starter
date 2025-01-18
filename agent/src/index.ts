@@ -86,7 +86,7 @@ import { openWeatherPlugin } from "@elizaos/plugin-open-weather";
 import { quaiPlugin } from "@elizaos/plugin-quai";
 import { sgxPlugin } from "@elizaos/plugin-sgx";
 import { solanaPlugin } from "@elizaos/plugin-solana";
-import { solanaAgentkitPlugin } from "@elizaos/plugin-solana-agentkit";
+import { solanaAgentkitPlugin } from "@elizaos/plugin-solana-agent-kit";
 import { squidRouterPlugin } from "@elizaos/plugin-squid-router";
 import { stargazePlugin } from "@elizaos/plugin-stargaze";
 import { storyPlugin } from "@elizaos/plugin-story";
@@ -198,7 +198,7 @@ export async function loadCharacterFromOnchain(): Promise<Character[]> {
     const jsonText = onchainJson;
 
     console.log("JSON:", jsonText);
-    if (jsonText == "null") return [];
+    if (!jsonText) return [];
     const loadedCharacters = [];
     try {
         const character = JSON.parse(jsonText);
@@ -771,7 +771,7 @@ export async function createAgent(
     // Validate TEE configuration
     if (teeMode !== TEEMode.OFF && !walletSecretSalt) {
         elizaLogger.error(
-            "WALLET_SECRET_SALT required when TEE_MODE is enabled"
+            "A WALLET_SECRET_SALT required when TEE_MODE is enabled"
         );
         throw new Error("Invalid TEE configuration");
     }
@@ -1201,7 +1201,7 @@ const startAgents = async () => {
         characters = await loadCharacterFromOnchain();
     }
 
-    if ((onchainJson == "null" && charactersArg) || hasValidRemoteUrls()) {
+    if ((!onchainJson && charactersArg) || hasValidRemoteUrls()) {
         characters = await loadCharacters(charactersArg);
     }
 
