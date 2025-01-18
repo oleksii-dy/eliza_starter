@@ -176,6 +176,8 @@ https://discord.com/developers
 Somehow you need to "reset" your token, otherwise you wont see the necessary token (not just numbers, looks like this: TMzMDEzMzE4Njc.....
 Then you can use the invite link generated during startup to add them to your server
 
+You need to set bot permission intentions all to the right, that are disbled by default
+
 ## Advanced Character settings:
 
 Example:
