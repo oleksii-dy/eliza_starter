@@ -132,10 +132,12 @@ CREATE TABLE IF NOT EXISTS  cache (
 );
 
 CREATE TABLE IF NOT EXISTS traces (
-    "run" BIGINT NOT NULL,
+    "id" BIGSERIAL NOT NULL,
+    "run" BIGINT,
     "time" TIMESTAMP NOT NULL,
     "name" VARCHAR(80) NOT NULL,
-    "data" JSON
+    "data" JSON,
+    PRIMARY KEY ("id")
 );
 
 DO $$
