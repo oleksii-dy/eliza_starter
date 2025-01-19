@@ -1,15 +1,5 @@
-import { MAINNET_TOKENS_BY_ADDRESS, MAINNET_TOKENS_BY_SYMBOL, POLYGON_TOKENS_BY_ADDRESS, POLYGON_TOKENS_BY_SYMBOL } from "./constants";
-
-export const tokensByChain = (chainId: number) => {
-    if (chainId === 137) {
-        return POLYGON_TOKENS_BY_SYMBOL;
-    }
-    if (chainId === 1) {
-        return MAINNET_TOKENS_BY_SYMBOL;
-    }
-
-    return MAINNET_TOKENS_BY_SYMBOL;
-};
+import { formatUnits, Hash } from "viem";
+import { EVMTokenRegistry } from "./EVMtokenRegistry";
 
 
 /**
@@ -24,27 +14,21 @@ export function formatTokenAmount(
     address: string,
     chainId: number = 1
 ): string {
-    if (!amount) {
-        return "0";
-    }
+    if (!amount) return "0";
 
-    let tokensByAddress;
-    switch (chainId) {
-        case 137:
-            tokensByAddress = POLYGON_TOKENS_BY_ADDRESS;
-            break;
-        case 1:
-        default:
-            tokensByAddress = MAINNET_TOKENS_BY_ADDRESS;
-            break;
-    }
+    const tokenRegistry = EVMTokenRegistry.getInstance();
+    const token = tokenRegistry.getTokenByAddress(address, chainId);
 
-    // Get token info
-    const tokenInfo = tokensByAddress[address];
+    if (!token) throw new Error(`Token not found for address: ${address}`);
 
-    // Parse and format amount
-    const parsedAmount = Number(amount) / Math.pow(10, tokenInfo.decimals);
-    const symbol = tokenInfo.symbol;
-
-    return `${parsedAmount.toFixed(4)} ${symbol}`;
+    const parsedAmount = formatUnits(BigInt(amount), token.decimals);
+    return `${Number(parsedAmount).toFixed(4)} ${token.symbol}`;
 }
+
+export const getTxReceipt = async (runtime: IAgentRuntime, tx: Hash) => {
+    const publicClient = getPublicClient(runtime);
+    const receipt = await publicClient.waitForTransactionReceipt({
+        hash: tx,
+    });
+    return receipt;
+};

@@ -13,25 +13,27 @@ import {
 import { createClientV2 } from "@0x/swap-ts-sdk";
 import { getIndicativePriceTemplate } from "../templates";
 import { z } from "zod";
-import { tokensByChain } from "../utils";
-import { GetIndicativePriceResponse, PriceInquiry } from "../types";
+import { Chains, GetIndicativePriceResponse, PriceInquiry } from "../types";
 import { parseUnits } from "viem";
-import { ZX_PRICE_MEMORY } from "../constants";
+import { CHAIN_NAMES, ZX_MEMORY } from "../constants";
+import { EVMTokenRegistry } from "../EVMtokenRegistry";
 
 export const IndicativePriceSchema = z.object({
-    sellToken: z.string(),
-    sellAmount: z.number(),
-    buyToken: z.string(),
+    sellTokenSymbol: z.string().nullable(),
+    sellAmount: z.number().nullable(),
+    buyTokenSymbol: z.string().nullable(),
+    chain: z.string().nullable(),
 });
 
 export interface IndicativePriceContent {
-    sellToken: string;
+    sellTokenSymbol: string;
     sellAmount: number;
-    buyToken: string;
+    buyTokenSymbol: string;
+    chain: string;
 }
 
 export const getIndicativePrice: Action = {
-    name: "GET_INDICATIVE_PRICE",
+    name: "GET_INDICATIVE_PRICE_0X",
     similes: [],
     suppressInitialMessage: true,
     description:
@@ -46,16 +48,16 @@ export const getIndicativePrice: Action = {
         options: Record<string, unknown>,
         callback: HandlerCallback
     ) => {
-        // Initialize or update state
+        const supportedChains = Object.keys(Chains).join(" | ");
+
         state = !state
-            ? await runtime.composeState(message)
+            ? await runtime.composeState(message, { supportedChains })
             : await runtime.updateRecentMessageState(state);
 
         const context = composeContext({
             state,
             template: getIndicativePriceTemplate,
         });
-        elizaLogger.info("Context:", context);
 
         const content = await generateObject({
             runtime,
@@ -65,103 +67,120 @@ export const getIndicativePrice: Action = {
         });
 
         if (!isIndicativePriceContent(content.object)) {
-            console.error("Invalid indicative price content:", content.object);
             const missingFields = getMissingIndicativePriceContent(
                 content.object
             );
             callback({
                 text: `Need more information about the swap. Please provide me ${missingFields}`,
             });
-
             return;
         }
 
-        const indicativePrice = content.object as IndicativePriceContent;
-        const { sellToken, sellAmount, buyToken } = indicativePrice;
+        const { sellTokenSymbol, sellAmount, buyTokenSymbol, chain } =
+            content.object;
 
-        elizaLogger.info("Getting indicative price for:", content);
+        // Convert chain string to chainId
+        const chainId = Chains[chain.toLowerCase() as keyof typeof Chains];
+        if (!chainId) {
+            callback({
+                text: `Unsupported chain: ${chain}. Supported chains are: ${Object.keys(
+                    Chains
+                )
+                    .filter((k) => isNaN(Number(k)))
+                    .join(", ")}`,
+            });
+            return;
+        }
+
+        const evmTokenRegistry = EVMTokenRegistry.getInstance();
+        if (evmTokenRegistry.isChainSupported(chainId)) {
+            await evmTokenRegistry.initializeChain(chainId);
+        } else {
+            callback({
+                text: `Chain ${chain} is not supported for token swaps.`,
+            });
+            return;
+        }
+
+        const sellTokenMetadata = evmTokenRegistry.getTokenBySymbol(
+            sellTokenSymbol,
+            chainId
+        );
+        const buyTokenMetadata = evmTokenRegistry.getTokenBySymbol(
+            buyTokenSymbol,
+            chainId
+        );
+
+        if (!sellTokenMetadata || !buyTokenMetadata) {
+            const missingTokens = [];
+            if (!sellTokenMetadata) missingTokens.push(`'${sellTokenSymbol}'`);
+            if (!buyTokenMetadata) missingTokens.push(`'${buyTokenSymbol}'`);
+
+            callback({
+                text: `Token${missingTokens.length > 1 ? 's' : ''} ${missingTokens.join(' and ')} not found on ${chain}. Please check the token symbols and chain.`,
+            });
+            return;
+        }
+
+        elizaLogger.info("Getting indicative price for:", {
+            sellToken: sellTokenMetadata,
+            buyToken: buyTokenMetadata,
+            amount: sellAmount,
+        });
 
         const zxClient = createClientV2({
             apiKey: runtime.getSetting("ZERO_EX_API_KEY"),
         });
 
-        let chainId = 1;
-        const sellTokenObject = tokensByChain(chainId)[sellToken.toLowerCase()];
-        const buyTokenObject = tokensByChain(chainId)[buyToken.toLowerCase()];
-
-        elizaLogger.info("Sell token object:", sellTokenObject);
-        elizaLogger.info("Buy token object:", buyTokenObject);
-        elizaLogger.info("Chain ID:", chainId);
-        elizaLogger.info(
-            "Sell amount:",
-            parseUnits(sellAmount.toString(), sellTokenObject.decimals)
-        );
         const sellAmountBaseUnits = parseUnits(
             sellAmount.toString(),
-            sellTokenObject.decimals
+            sellTokenMetadata.decimals
         ).toString();
 
         try {
-            // TODO: get the chainId from the content
             const price = (await zxClient.swap.permit2.getPrice.query({
                 sellAmount: sellAmountBaseUnits,
-                sellToken: sellTokenObject.address,
-                buyToken: buyTokenObject.address,
-                chainId: chainId, // Assume ETH mainnet
+                sellToken: sellTokenMetadata.address,
+                buyToken: buyTokenMetadata.address,
+                chainId,
             })) as GetIndicativePriceResponse;
 
             // Format amounts to human-readable numbers
             const buyAmount =
-                Number(price.buyAmount) / Math.pow(10, buyTokenObject.decimals);
+                Number(price.buyAmount) /
+                Math.pow(10, buyTokenMetadata.decimals);
             const sellAmount =
                 Number(price.sellAmount) /
-                Math.pow(10, sellTokenObject.decimals);
-            const priceImpact = price.estimatedPriceImpact || "0";
+                Math.pow(10, sellTokenMetadata.decimals);
 
-            elizaLogger.info("Price:", price);
-
-            // Get token symbols from route
-            const { tokens } = price.route;
-            const sellTokenSymbol = tokens.find(
-                (t) => t.address.toLowerCase() === price.sellToken.toLowerCase()
-            )?.symbol;
-            const buyTokenSymbol = tokens.find(
-                (t) => t.address.toLowerCase() === price.buyToken.toLowerCase()
-            )?.symbol;
-
-            // Set state
             await storePriceInquiryToMemory(runtime, message, {
-                sellTokenObject: sellTokenObject,
-                buyTokenObject: buyTokenObject,
-                sellAmountBaseUnits: sellAmountBaseUnits,
-                chainId: chainId,
+                sellTokenObject: sellTokenMetadata,
+                buyTokenObject: buyTokenMetadata,
+                sellAmountBaseUnits,
+                chainId,
                 timestamp: new Date().toISOString(),
             });
 
+            // Updated formatted response to include chain
             const formattedResponse = [
                 `💱 Swap Details:`,
                 `────────────────`,
-                `📤 Sell: ${sellAmount.toFixed(4)} ${sellTokenSymbol}`,
-                `📥 Buy: ${buyAmount.toFixed(4)} ${buyTokenSymbol}`,
-                `📊 Rate: 1 ${sellTokenSymbol} = ${(buyAmount / sellAmount).toFixed(4)} ${buyTokenSymbol}`,
-                `📈 Price Impact: ${Number(priceImpact).toFixed(2)}%`,
-                `🔗 Chain: Ethereum`,
-            ]
-                .filter(Boolean)
-                .join("\n");
+                `📤 Sell: ${sellAmount.toFixed(4)} ${sellTokenMetadata.symbol}`,
+                `📥 Buy: ${buyAmount.toFixed(4)} ${buyTokenMetadata.symbol}`,
+                `📊 Rate: 1 ${sellTokenMetadata.symbol} = ${(buyAmount / sellAmount).toFixed(4)} ${buyTokenMetadata.symbol}`,
+                `🔗 Chain: ${CHAIN_NAMES[chainId]}`,
+                `────────────────`,
+                `💫 Happy with the price? Type 'quote' to continue`,
+            ].join("\n");
 
-            callback({
-                text: formattedResponse,
-            });
+            callback({ text: formattedResponse });
             return true;
         } catch (error) {
             elizaLogger.error("Error getting price:", error);
-            if (callback) {
-                callback({
-                    text: `Error getting price: ${error.message}`,
-                    content: { error: error.message },
-                });
-            }
+            callback({
+                text: `Error getting price: ${error.message}`,
+                content: { error: error.message },
+            });
             return false;
         }
     },
@@ -170,20 +189,14 @@ export const getIndicativePrice: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "What's the price of ETH in USDT?",
+                    text: "What's the price of 2 ETH in USDC on Optimism?",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "Let me check the current exchange rate for ETH/USDT.",
-                    action: "GET_INDICATIVE_PRICE",
-                },
-            },
-            {
-                user: "{{agent}}",
-                content: {
-                    text: "Current exchange rate: 1 USDT = 0.000423 ETH\nEstimated gas cost: 0.002 ETH\nPrice impact: 0.12%",
+                    text: "Let me check the current exchange rate for ETH/USDC on Optimism.",
+                    action: "GET_INDICATIVE_PRICE_0X",
                 },
             },
         ],
@@ -191,21 +204,14 @@ export const getIndicativePrice: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "What's the price of WETH in USDT?",
+                    text: "I want to swap WETH for USDT on Arbitrum",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "Let me get the indicative price for WETH -> USDT.",
-                    action: "GET_INDICATIVE_PRICE",
-                },
-            },
-            {
-                user: "{{agent}}",
-                content: {
-                    text: "I need more information about the swap. What is the amount you are selling?",
-                    action: "GET_INDICATIVE_PRICE",
+                    text: "I'll help you check the price. How much WETH would you like to swap?",
+                    action: "GET_INDICATIVE_PRICE_0X",
                 },
             },
             {
@@ -217,14 +223,23 @@ export const getIndicativePrice: Action = {
             {
                 user: "{{agent}}",
                 content: {
-                    text: "Let me get the indicative price for 5 WETH -> USDT.",
-                    action: "GET_INDICATIVE_PRICE",
+                    text: "Let me get the indicative price for 5 WETH to USDT on Arbitrum.",
+                    action: "GET_INDICATIVE_PRICE_0X",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Price check for 1000 USDC to WETH on Base",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "Current exchange rate: 1 USDT = 0.000423 ETH\nEstimated gas cost: 0.002 ETH\nPrice impact: 0.12%",
+                    text: "I'll check the current exchange rate for 1000 USDC to WETH on Base network.",
+                    action: "GET_INDICATIVE_PRICE_0X",
                 },
             },
         ],
@@ -235,7 +250,6 @@ export const isIndicativePriceContent = (
     object: any
 ): object is IndicativePriceContent => {
     if (IndicativePriceSchema.safeParse(object).success) {
-        console.log("Valid indicative price content:", object);
         return true;
     }
     return false;
@@ -246,8 +260,10 @@ export const getMissingIndicativePriceContent = (
 ): string => {
     const missingFields = [];
 
-    if (typeof content.sellToken !== "string") missingFields.push("sell token");
-    if (typeof content.buyToken !== "string") missingFields.push("buy token");
+    if (typeof content.sellTokenSymbol !== "string")
+        missingFields.push("sell token");
+    if (typeof content.buyTokenSymbol !== "string")
+        missingFields.push("buy token");
     if (typeof content.sellAmount !== "number")
         missingFields.push("sell amount");
 
@@ -265,21 +281,14 @@ export const storePriceInquiryToMemory = async (
         agentId: runtime.agentId,
         content: {
             text: JSON.stringify(priceInquiry),
-            type: ZX_PRICE_MEMORY.type,
+            type: ZX_MEMORY.price.type,
         },
     };
 
     const memoryManager = new MemoryManager({
         runtime,
-        tableName: ZX_PRICE_MEMORY.tableName,
+        tableName: ZX_MEMORY.price.tableName,
     });
 
     await memoryManager.createMemory(memory);
-    const memories = await memoryManager.getMemories({
-        roomId: message.roomId,
-        count: 1,
-        start: 0,
-        end: Date.now(),
-    });
-    console.log("memoriesHERE", memories);
 };

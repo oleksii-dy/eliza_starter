@@ -1,4 +1,15 @@
-import { Address } from "viem";
+export enum Chains {
+    arbitrum = 42161,
+    avalanche = 43114,
+    base = 8453,
+    bsc = 56,
+    blast = 81457,
+    ethereum = 1,
+    linea = 59144,
+    optimism = 10,
+    polygon = 137,
+    scroll = 534352,
+}
 
 export interface SwapRequestParams {
     chainId: string; // e.g., "1" for Ethereum mainnet
@@ -101,7 +112,6 @@ export interface GetQuoteResponse {
     liquidityAvailable: boolean;
     totalNetworkFee: string;
     zid: string;
-
     fees: {
         zeroExFee: {
             amount: string;
@@ -119,7 +129,6 @@ export interface GetQuoteResponse {
             type: string;
         } | null;
     };
-
     issues: {
         allowance: null;
         balance: {
@@ -130,7 +139,6 @@ export interface GetQuoteResponse {
         simulationIncomplete: boolean;
         invalidSourcesPassed: string[];
     };
-
     permit2: {
         type: "Permit2";
         hash: string;
@@ -141,9 +149,10 @@ export interface GetQuoteResponse {
             primaryType: string;
         };
     };
-
     route: {
         fills: Array<{
+            from: string;
+            to: string;
             source: string;
             proportionBps: string;
         }>;
@@ -152,7 +161,6 @@ export interface GetQuoteResponse {
             symbol: string;
         }>;
     };
-
     tokenMetadata: {
         buyToken: {
             buyTaxBps: string;
@@ -163,7 +171,6 @@ export interface GetQuoteResponse {
             sellTaxBps: string;
         };
     };
-
     transaction: {
         to: string;
         data: string;
@@ -173,19 +180,46 @@ export interface GetQuoteResponse {
     };
 }
 
-export interface Token {
+export interface TokenMetadata {
+    chainId: number;
+    address: string;
     name: string;
-    address: Address;
     symbol: string;
     decimals: number;
-    chainId: number;
+    logoURI?: string;
+    type: string;
+}
+
+export interface TrustWalletTokenMetadata {
+    address: string;
+    name: string;
+    symbol: string;
+    decimals: number;
+    logoURI?: string;
+    type: string;
+    pairs: string[];
+}
+
+export interface TrustWalletGithubJson {
+    name: string;
     logoURI: string;
+    timestamp: string;
+    tokens: TrustWalletTokenMetadata[];
 }
 
 export interface PriceInquiry {
-    sellTokenObject: Token;
-    buyTokenObject: Token;
+    sellTokenObject: TokenMetadata;
+    buyTokenObject: TokenMetadata;
     sellAmountBaseUnits: string;
     chainId: number;
+    timestamp: string;
+}
+
+export interface Quote {
+    sellTokenObject: TokenMetadata;
+    buyTokenObject: TokenMetadata;
+    sellAmountBaseUnits: string;
+    chainId: number;
+    quote: GetQuoteResponse;
     timestamp: string;
 }
