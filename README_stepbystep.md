@@ -143,6 +143,7 @@ pm2 start "avatar" -- start --character=~./eliza/characters/avatar.character.jso
 ```
 
 This creates a process, check the status or end the daemon. use pm2 save to save the process
+```
 -     pm2 start eliza
 -     pm2 stop eliza
 -     pm2 log
@@ -150,6 +151,8 @@ This creates a process, check the status or end the daemon. use pm2 save to save
 -     pm2 start "pnpm" -- start --character="/yourpath/characters/avatar.character.json" to create pm2 entry
       pm2 save
 ```
+
+
 ### First Chat
 
 Open a new window, run pnpm start:client
