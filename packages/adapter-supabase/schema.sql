@@ -6,7 +6,7 @@ DROP FUNCTION IF EXISTS get_embedding_list(text,integer,text,text,text,integer);
 DROP FUNCTION IF EXISTS get_goals(uuid,uuid,boolean,integer);
 DROP FUNCTION IF EXISTS get_relationship(uuid,uuid);
 DROP FUNCTION IF EXISTS remove_memories(text,uuid);
-DROP FUNCTION IF EXISTS search_knowledge(vector,uuid,double precision,integer,text);
+DROP FUNCTION IF EXISTS search_knowledge(vector,uuid,double precision,integer,text) CASCADE;
 DROP FUNCTION IF EXISTS check_vector_extension();
 DROP FUNCTION IF EXISTS set_config(text,text);
 DROP FUNCTION IF EXISTS check_similarity_and_insert_knowledge(text,uuid,jsonb,vector,timestamp with time zone,boolean,uuid,integer,boolean,float);
@@ -200,6 +200,9 @@ CREATE TABLE IF NOT EXISTS logs (
     CONSTRAINT fk_room FOREIGN KEY ("roomId") REFERENCES rooms("id") ON DELETE CASCADE,
     CONSTRAINT fk_user FOREIGN KEY ("userId") REFERENCES accounts("id") ON DELETE CASCADE
 );
+
+CREATE INDEX IF NOT EXISTS idx_logs_room_user ON logs("roomId", "userId");
+CREATE INDEX IF NOT EXISTS idx_logs_type ON logs("type");
 
 CREATE TABLE IF NOT EXISTS participants (
     "id" UUID PRIMARY KEY,
@@ -474,11 +477,11 @@ RETURNS TABLE(
     "createdAt" timestamp with time zone,
     "similarity" double precision
 )
-LANGUAGE plpgsql
-AS $$
+LANGUAGE plpgsql AS
+$func$
 BEGIN
     -- Determine embedding size and use appropriate table
-    CASE array_length(query_embedding, 1)
+    CASE vector_dims(query_embedding)
         WHEN 384 THEN
             RETURN QUERY SELECT * FROM search_knowledge_table('knowledge_384', query_embedding, query_agent_id, match_threshold, match_count, search_text);
         WHEN 768 THEN
@@ -488,12 +491,15 @@ BEGIN
         WHEN 1536 THEN
             RETURN QUERY SELECT * FROM search_knowledge_table('knowledge_1536', query_embedding, query_agent_id, match_threshold, match_count, search_text);
         ELSE
-            RAISE EXCEPTION 'Unsupported embedding size: %', array_length(query_embedding, 1);
+            RAISE EXCEPTION 'Unsupported embedding size: %', vector_dims(query_embedding);
     END CASE;
 END;
-$$;
+$func$;
 
--- Helper function to search within a specific knowledge table
+-- Drop the existing function first
+DROP FUNCTION IF EXISTS search_knowledge_table(text,vector,uuid,double precision,integer,text) CASCADE;
+
+-- Create the updated function
 CREATE OR REPLACE FUNCTION search_knowledge_table(
     table_name text,
     query_embedding vector,
@@ -510,8 +516,8 @@ RETURNS TABLE(
     "createdAt" timestamp with time zone,
     "similarity" double precision
 )
-LANGUAGE plpgsql
-AS $$
+LANGUAGE plpgsql AS
+$func$
 BEGIN
     RETURN QUERY EXECUTE format('
         WITH vector_matches AS (
@@ -524,12 +530,12 @@ BEGIN
         keyword_matches AS (
             SELECT k."id",
             CASE
-                WHEN k."content"->''text'' ILIKE ''%%'' || $5 || ''%%'' THEN 3.0
+                WHEN (k."content"->''text'')::text ILIKE ''%%'' || $5 || ''%%'' THEN 3.0
                 ELSE 1.0
             END *
             CASE
-                WHEN k."content"->''metadata''->''isChunk'' = ''true'' THEN 1.5
-                WHEN k."content"->''metadata''->''isMain'' = ''true'' THEN 1.2
+                WHEN (k."content"->''metadata''->''isChunk'')::text = ''true'' THEN 1.5
+                WHEN (k."content"->''metadata''->''isMain'')::text = ''true'' THEN 1.2
                 ELSE 1.0
             END AS "keyword_score"
             FROM %I k
@@ -555,7 +561,7 @@ BEGIN
     ', table_name, table_name, table_name)
     USING query_embedding, query_agent_id, match_threshold, match_count, search_text;
 END;
-$$;
+$func$;
 
 CREATE OR REPLACE FUNCTION check_vector_extension()
 RETURNS boolean
