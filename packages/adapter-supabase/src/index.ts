@@ -3,13 +3,13 @@ import {
     type Memory,
     type Goal,
     type Relationship,
-    Actor,
-    GoalStatus,
-    Account,
+    type Actor,
+    type GoalStatus,
+    type Account,
     type UUID,
-    Participant,
-    Room,
-    RAGKnowledgeItem,
+    type Participant,
+    type Room,
+    type RAGKnowledgeItem,
     elizaLogger,
 } from "@elizaos/core";
 import { DatabaseAdapter } from "@elizaos/core";
@@ -187,7 +187,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             const { data } = response;
 
             return data
-                .map((room) =>
+                .flatMap((room) =>
                     room.participants.map((participant) => {
                         const user = participant.account as unknown as Actor;
                         return {
@@ -197,8 +197,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                             username: user?.username,
                         };
                     })
-                )
-                .flat();
+                );
         } catch (error) {
             elizaLogger.error("error", error);
             throw error;
@@ -368,6 +367,31 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         }
 
         return data as Memory;
+    }
+
+    async getMemoriesByIds(
+        memoryIds: UUID[],
+        tableName?: string
+    ): Promise<Memory[]> {
+        if (memoryIds.length === 0) return [];
+
+        let query = this.supabase
+            .from("memories")
+            .select("*")
+            .in("id", memoryIds);
+
+        if (tableName) {
+            query = query.eq("type", tableName);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+            console.error("Error retrieving memories by IDs:", error);
+            return [];
+        }
+
+        return data as Memory[];
     }
 
     async createMemory(

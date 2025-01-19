@@ -35,7 +35,7 @@ import type { SupportedChain } from "../types";
 
 export class WalletProvider {
     private cache: NodeCache;
-    private cacheKey: string = "evm/wallet";
+    private cacheKey = "evm/wallet";
     private currentChain: SupportedChain = "mainnet";
     private CACHE_EXPIRY_SEC = 5;
     chains: Record<string, Chain> = { ...viemChains };
@@ -306,8 +306,8 @@ export const initWalletProvider = async (runtime: IAgentRuntime) => {
 
         const deriveKeyProvider = new DeriveKeyProvider(teeMode);
         const deriveKeyResult = await deriveKeyProvider.deriveEcdsaKeypair(
-            "/",
             walletSecretSalt,
+            "evm",
             runtime.agentId
         );
         return new WalletProvider(
