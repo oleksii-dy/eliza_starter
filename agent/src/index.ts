@@ -134,6 +134,7 @@ const logFetch = async (url: string, options: any) => {
     elizaLogger.debug(`Fetching ${url}`);
     // Disabled to avoid disclosure of sensitive information such as API keys
     // elizaLogger.debug(JSON.stringify(options, null, 2));
+    Instrumentation.trace("fetch", {url, options});
     return fetch(url, options);
 };
 
@@ -1172,18 +1173,12 @@ const startAgents = async () => {
 
 const db = new PostgresDatabaseAdapter({connectionString: process.env.POSTGRES_URL, parseInputs: true});
 await db.init();
-console.log("Database init finished");
-//const db = initializeDatabase(null) as PostgresDatabaseAdapter;
-//await db.init();
-
 Instrumentation.init((a, b, c, d) => {db.createTrace(a, b, c, d)});
 Instrumentation.run(() => {
     Instrumentation.trace("TEST", {a: 123});
     startAgents().catch((error) => {
         elizaLogger.error("Unhandled error in startAgents:", error);
         process.exit(1);
-    }).then((res) => {
-        // db.close();
     });
 });
 

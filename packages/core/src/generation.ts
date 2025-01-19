@@ -258,6 +258,7 @@ export async function generateText({
         verifiableInference,
     });
     elizaLogger.log("Using provider:", runtime.modelProvider);
+    Instrumentation.trace("generateText", {modelClass, context, runtime});
     // If verifiable inference is requested and adapter is provided, use it
     if (verifiableInference && runtime.verifiableInferenceAdapter) {
         elizaLogger.log(
@@ -1299,6 +1300,8 @@ export async function generateMessageResponse({
     while (true) {
         try {
             elizaLogger.log("Generating message response..");
+
+            Instrumentation.trace("generateMessageResponse", {runtime, context});
 
             const response = await generateText({
                 runtime,

@@ -16,6 +16,12 @@ export class Instrumentation {
         const run = 0;
         const time = new Date();
         (async () => {
+            try {
+                const s = JSON.stringify(payload);
+            } catch (error) {
+                payload = `Error: ${error}`
+                console.log(payload);
+            }
             await this.tracer(run, time, name, payload);
         })();
     }
