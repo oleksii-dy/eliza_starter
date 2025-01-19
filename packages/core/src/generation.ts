@@ -1393,8 +1393,6 @@ export const generateImage = async (
                             return runtime.getSetting("VENICE_API_KEY");
                       case ModelProviderName.LIVEPEER:
                           return runtime.getSetting("LIVEPEER_GATEWAY_URL");
-                      case ModelProviderName.NVIDIA:
-                          return runtime.getSetting("NVIDIA_API_KEY");
                       default:
                           // If no specific match, try the fallback chain
                           return (
@@ -1404,7 +1402,6 @@ export const generateImage = async (
                               runtime.getSetting("FAL_API_KEY") ??
                               runtime.getSetting("OPENAI_API_KEY") ??
                               runtime.getSetting("VENICE_API_KEY") ??
-                              runtime.getSetting("NVIDIA_API_KEY") ??
                               runtime.getSetting("LIVEPEER_GATEWAY_URL")
                           );
                   }
