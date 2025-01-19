@@ -3,13 +3,13 @@ import {
     type Memory,
     type Goal,
     type Relationship,
-    type Actor,
-    type GoalStatus,
-    type Account,
+    Actor,
+    GoalStatus,
+    Account,
     type UUID,
-    type Participant,
-    type Room,
-    type RAGKnowledgeItem,
+    Participant,
+    Room,
+    RAGKnowledgeItem,
     elizaLogger,
     DatabaseAdapter,
     getEmbeddingConfig,
@@ -301,7 +301,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             const { data } = response;
 
             return data
-                .flatMap((room) =>
+                .map((room) =>
                     room.participants.map((participant) => {
                         const user = participant.account as unknown as Actor;
                         return {
@@ -311,7 +311,8 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                             username: user?.username,
                         };
                     })
-                );
+                )
+                .flat();
         } catch (error) {
             elizaLogger.error("error", error);
             throw error;
@@ -1114,11 +1115,9 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         match_count: number;
         searchText?: string;
     }): Promise<RAGKnowledgeItem[]> {
-        const tableName = this.getKnowledgeTableName(params.embedding);
-        elizaLogger.debug(`Searching knowledge in ${tableName}`);
+        elizaLogger.debug(`Searching knowledge with embedding size ${params.embedding.length}`);
 
         const { data, error } = await this.supabase.rpc('search_knowledge', {
-            query_table_name: tableName,
             query_embedding: Array.from(params.embedding),
             query_agent_id: params.agentId,
             match_threshold: params.match_threshold,
@@ -1127,7 +1126,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         });
 
         if (error) {
-            elizaLogger.error(`Error searching knowledge in ${tableName}:`, error);
+            elizaLogger.error(`Error searching knowledge:`, error);
             throw error;
         }
 
@@ -1399,7 +1398,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
 
         // Otherwise get from config
         const embeddingConfig = getEmbeddingConfig();
-        const modelSettings = getEmbeddingModelSettings(ModelProviderName[embeddingConfig.provider.toUpperCase() as keyof typeof ModelProviderName]);
+        const modelSettings = getEmbeddingModelSettings(ModelProviderName[embeddingConfig.provider.toUpperCase()]);
         const embeddingSize = modelSettings?.dimensions;
 
         if (!embeddingSize) {
