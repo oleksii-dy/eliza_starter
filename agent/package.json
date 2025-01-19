@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "start": "node --experimental-specifier-resolution=node --loader ts-node/esm src/index.ts",
-        "dev": "node --loader ts-node/esm src/index.ts ",
+        "dev": "node --loader ts-node/esm src/index.ts",
         "check-types": "tsc --noEmit",
         "test": "jest"
     },
@@ -46,6 +46,7 @@
         "@elizaos/plugin-di": "workspace:*",
         "@elizaos/plugin-cosmos": "workspace:*",
         "@elizaos/plugin-intiface": "workspace:*",
+        "@elizaos/plugin-coinbase": "workspace:*",
         "@elizaos/plugin-conflux": "workspace:*",
         "@elizaos/plugin-evm": "workspace:*",
         "@elizaos/plugin-echochambers": "workspace:*",
