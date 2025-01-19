@@ -11,7 +11,6 @@ import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
-import { DirectClient } from "@elizaos/client-direct";
 import { PrimusAdapter } from "@elizaos/plugin-primus";
 
 import {
@@ -102,7 +101,7 @@ import net from "net";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
-import {dominosPlugin} from "@elizaos/plugin-dominos";
+// import {dominosPlugin} from "@elizaos/plugin-dominos";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -419,10 +418,15 @@ export function getTokenForProvider(
                 character.settings?.secrets?.HYPERBOLIC_API_KEY ||
                 settings.HYPERBOLIC_API_KEY
             );
-        case ModelProviderName.VENICE:
+            case ModelProviderName.VENICE:
+                return (
+                    character.settings?.secrets?.VENICE_API_KEY ||
+                    settings.VENICE_API_KEY
+                );
+        case ModelProviderName.NVIDIA:
             return (
-                character.settings?.secrets?.VENICE_API_KEY ||
-                settings.VENICE_API_KEY
+                character.settings?.secrets?.NVIDIA_API_KEY ||
+                settings.NVIDIA_API_KEY
             );
         case ModelProviderName.AKASH_CHAT_API:
             return (
@@ -756,6 +760,7 @@ export async function createAgent(
             getSecret(character, "FAL_API_KEY") ||
             getSecret(character, "OPENAI_API_KEY") ||
             getSecret(character, "VENICE_API_KEY") ||
+            getSecret(character, "NVIDIA_API_KEY") ||
             getSecret(character, "NINETEEN_AI_API_KEY") ||
             getSecret(character, "HEURIST_API_KEY") ||
             getSecret(character, "LIVEPEER_GATEWAY_URL")

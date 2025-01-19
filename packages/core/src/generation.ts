@@ -965,6 +965,32 @@ export async function generateText({
                 break;
             }
 
+            case ModelProviderName.NVIDIA: {
+                elizaLogger.debug("Initializing NVIDIA model.");
+                const nvidia = createOpenAI({
+                    apiKey: apiKey,
+                    baseURL: endpoint,
+                });
+
+                const { text: nvidiaResponse } = await aiGenerateText({
+                    model: nvidia.languageModel(model),
+                    prompt: context,
+                    system:
+                        runtime.character.system ??
+                        settings.SYSTEM_PROMPT ??
+                        undefined,
+                    tools: tools,
+                    onStepFinish: onStepFinish,
+                    temperature: temperature,
+                    maxSteps: maxSteps,
+                    maxTokens: max_response_length,
+                });
+
+                response = nvidiaResponse;
+                elizaLogger.debug("Received response from NVIDIA model.");
+                break;
+            }
+
             case ModelProviderName.DEEPSEEK: {
                 elizaLogger.debug("Initializing Deepseek model.");
                 const serverUrl = models[provider].endpoint;
@@ -1363,10 +1389,12 @@ export const generateImage = async (
                           return runtime.getSetting("FAL_API_KEY");
                       case ModelProviderName.OPENAI:
                           return runtime.getSetting("OPENAI_API_KEY");
-                      case ModelProviderName.VENICE:
-                          return runtime.getSetting("VENICE_API_KEY");
+                        case ModelProviderName.VENICE:
+                            return runtime.getSetting("VENICE_API_KEY");
                       case ModelProviderName.LIVEPEER:
                           return runtime.getSetting("LIVEPEER_GATEWAY_URL");
+                      case ModelProviderName.NVIDIA:
+                          return runtime.getSetting("NVIDIA_API_KEY");
                       default:
                           // If no specific match, try the fallback chain
                           return (
@@ -1376,6 +1404,7 @@ export const generateImage = async (
                               runtime.getSetting("FAL_API_KEY") ??
                               runtime.getSetting("OPENAI_API_KEY") ??
                               runtime.getSetting("VENICE_API_KEY") ??
+                              runtime.getSetting("NVIDIA_API_KEY") ??
                               runtime.getSetting("LIVEPEER_GATEWAY_URL")
                           );
                   }
