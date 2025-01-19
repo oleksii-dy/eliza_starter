@@ -96,7 +96,9 @@ export const suiTokenInfo: Action = {
 
         if (callback) {
             callback({
-                text: `Detail info:`,
+                text: `🔍 Token Details Information
+
+Here are the detailed insights for the selected token:`,
                 action: 'suiTokenInfo',
                 result: {
                     type: "token_info",
