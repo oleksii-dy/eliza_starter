@@ -384,6 +384,10 @@ LARGE_OLLAMA_MODEL=llama3.1:8b
 you need to set the model to 3.1:8b for small, medium, and large
 also change modelprovider in the characterfile from "akash_chat_api" to "ollama"
 
+### Cosmos Transaction Module:
+
+for now its working solely for tx bank transfers, but with SKIP API it will be able to IBC, trade and stake tokens
+
 ### Community & contact
 
 
