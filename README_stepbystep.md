@@ -372,7 +372,7 @@ down-adjust some values, this version costs 3.5k$ a month..
 You can close your deploy anytime and get your remaining depost back, so if you need it just for 1-2h its pretty cheap though
 add into your .env:
 
-# Ollama Configuration
+## Ollama Configuration
 ```
 OLLAMA_SERVER_URL=http://your-assgined-server:your-mapped-port               # Default: localhost:11434
 OLLAMA_MODEL=llama3.1:8b
@@ -384,7 +384,7 @@ LARGE_OLLAMA_MODEL=llama3.1:8b
 you need to set the model to 3.1:8b for small, medium, and large
 also change modelprovider in the characterfile from "akash_chat_api" to "ollama"
 
-### Cosmos Transaction Module:
+# Cosmos Transaction Module:
 
 for now its working solely for tx bank transfers, but with SKIP API it will be able to IBC, trade and stake tokens
 
