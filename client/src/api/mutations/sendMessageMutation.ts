@@ -8,6 +8,7 @@ export type TextResponse = {
     text: string;
     user: string;
     attachments?: { url: string; contentType: string; title: string }[];
+    result?: any
 };
 
 type SendMessageMutationProps = {

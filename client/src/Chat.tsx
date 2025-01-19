@@ -73,6 +73,7 @@ export default function Chat() {
                                     }`}
                                 >
                                     {message.text}
+                                    {JSON.stringify(message.result, null, 2)}
                                     {message.attachments?.map((attachment, i) => (
                                         attachment.contentType.startsWith('image/') && (
                                             <img
