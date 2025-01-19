@@ -31,7 +31,7 @@ export const characterConfigLoader: ICharacterConfigLoader = {
                 }
             })
 
-            elizaLogger.info(
+            elizaLogger.debug(
                 `getStates result:`, JSON.stringify(objectStates)
             );
 

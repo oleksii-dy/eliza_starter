@@ -1,3 +1,4 @@
+import { hideBin } from 'yargs/helpers';
 import { PGLiteDatabaseAdapter } from "@elizaos/adapter-pglite";
 import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
 import { RedisClient } from "@elizaos/adapter-redis";
@@ -127,7 +128,7 @@ export function parseArguments(): {
     characters?: string;
 } {
     try {
-        return yargs(process.argv.slice(3))
+        return yargs(hideBin(process.argv))
             .option("character", {
                 type: "string",
                 description: "Path to the character JSON file",
@@ -289,7 +290,7 @@ export async function loadCharacterFromLoader(
 ): Promise<Character> {
     let character = await loader.load(uri);
 
-    elizaLogger.info(`loadCharacterFromLoader character config: ${character}`);
+    elizaLogger.info(`loadCharacterFromLoader character config:`, JSON.stringify(character, null, 2));
     validateCharacterConfig(character);
 
     // .id isn't really valid
@@ -334,14 +335,9 @@ export async function loadCharacters(
         .map((filePath) => filePath.trim());
     const loadedCharacters: Character[] = [];
 
-    elizaLogger.info(
-        `characterPaths: ${characterPaths}`
-    );
-
     if (characterPaths?.length > 0) {
         for (const characterPath of characterPaths) {
             try {
-                // example rooch://object/0xd858ebbc8e0e5c2128800b9a715e3bd8ceae2fb8a75df5cc40b58b86f1dc77ee
                 if (characterPath.startsWith("rooch://")) {
                     const character: Character = await loadCharacterFromLoader(roochCharacterConfigLoader, characterPath);
                     loadedCharacters.push(character);
@@ -1117,8 +1113,6 @@ const startAgents = async () => {
     elizaLogger.info(
         `charactersArg: ${charactersArg}`
     );
-
-    charactersArg = "rooch://object/0x167f5fab11227c394905cbad1e8b25d0d12c6a881ba2d6899e9dbf8138eaecfd";
 
     if (charactersArg) {
         characters = await loadCharacters(charactersArg);

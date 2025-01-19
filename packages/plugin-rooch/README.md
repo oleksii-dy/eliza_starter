@@ -59,6 +59,11 @@ User: "What's my wallet balance?"
 Assistant: "Your wallet contains 100 RGas..."
 ```
 
+### Load character from rooch foc_eliza character object
+```bash
+pnpm start --character rooch://object/0x167f5fab11227c394905cbad1e8b25d0d12c6a881ba2d6899e9dbf8138eaecfd
+```
+
 ## API Reference
 
 ### Actions
@@ -141,7 +146,7 @@ Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) fil
 
 This plugin integrates with and builds upon several key technologies:
 
-- [Rooch Network](https://rooch.network): The Bitcoin Application Layer features MoveVM and Bitcoin staking. 
+- [Rooch Network](https://rooch.network): The Bitcoin Application Layer features MoveVM and Bitcoin staking.
 - [@roochnetwork/rooch-sdk](https://www.npmjs.com/package/@roochnetwork/rooch-sdk): Official Rooch SDK
 - [bignumber.js](https://github.com/MikeMcl/bignumber.js/): Precise number handling
 - [node-cache](https://www.npmjs.com/package/node-cache): Caching implementation
