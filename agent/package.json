@@ -58,6 +58,7 @@
         "@elizaos/plugin-lensNetwork": "workspace:*",
         "@elizaos/plugin-icp": "workspace:*",
         "@elizaos/plugin-image-generation": "workspace:*",
+        "@elizaos/plugin-lit": "workspace:*",
         "@elizaos/plugin-movement": "workspace:*",
         "@elizaos/plugin-massa": "workspace:*",
         "@elizaos/plugin-nft-generation": "workspace:*",
