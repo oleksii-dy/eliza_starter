@@ -1,7 +1,7 @@
 {
     "name": "Advisor Agent",
     "clients": ["direct"],
-    "modelProvider": "groq",
+    "modelProvider": "openai",
     "settings": {
         "secrets": {},
         "voice": {
