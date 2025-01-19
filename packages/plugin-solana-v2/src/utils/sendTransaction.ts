@@ -1,3 +1,4 @@
+import { elizaLogger } from '@elizaos/core';
 import {
   getSetComputeUnitLimitInstruction,
   getSetComputeUnitPriceInstruction
@@ -33,17 +34,17 @@ export async function sendTransaction(rpc: Rpc<SolanaRpcApi>, instructions: IIns
     });
   const computeUnitEstimate = await getComputeUnitEstimateForTransactionMessage(transactionMessage)
   const safeComputeUnitEstimate = Math.max(computeUnitEstimate * 1.3, computeUnitEstimate + 100_000);
-  const medianPrioritizationFee = await rpc.getRecentPrioritizationFees()
+  const prioritizationFee = await rpc.getRecentPrioritizationFees()
     .send()
     .then(fees =>
       fees
         .map(fee => Number(fee.prioritizationFee))
         .sort((a, b) => a - b)
-        [Math.floor(fees.length / 2)]
+        [Math.ceil(0.95 * fees.length) - 1]
     );
   const transactionMessageWithComputeUnitInstructions = await prependTransactionMessageInstructions([
-    getSetComputeUnitLimitInstruction({ units: 400_000 }),
-    getSetComputeUnitPriceInstruction({ microLamports: 100_000 })
+    getSetComputeUnitLimitInstruction({ units: safeComputeUnitEstimate }),
+    getSetComputeUnitPriceInstruction({ microLamports: prioritizationFee })
   ], transactionMessage);
   const signedTransaction = await signTransactionMessageWithSigners(transactionMessageWithComputeUnitInstructions)
   const base64EncodedWireTransaction = getBase64EncodedWireTransaction(signedTransaction);
@@ -60,11 +61,10 @@ export async function sendTransaction(rpc: Rpc<SolanaRpcApi>, instructions: IIns
     const statuses = await rpc.getSignatureStatuses([signature]).send();
     if (statuses.value[0]) {
       if (!statuses.value[0].err) {
-        console.log(`Transaction confirmed: ${signature}`);
+        elizaLogger.log(`Transaction confirmed: ${signature}`);
         return signature
       } else {
-        console.error(`Transaction failed: ${statuses.value[0].err.toString()}`);
-        break;
+        throw new Error(`Transaction failed: ${statuses.value[0].err.toString()}`);
       }
     }
     const elapsedTime = Date.now() - transactionStartTime;
@@ -73,4 +73,5 @@ export async function sendTransaction(rpc: Rpc<SolanaRpcApi>, instructions: IIns
       await new Promise(resolve => setTimeout(resolve, remainingTime));
     }
   }
+  throw new Error('Transaction timeout');
 }

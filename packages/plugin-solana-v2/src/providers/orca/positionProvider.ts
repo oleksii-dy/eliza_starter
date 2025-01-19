@@ -1,4 +1,4 @@
-import { embed, formatMessages, IAgentRuntime, Memory, MemoryManager, Provider, settings, State, UUID } from "@elizaos/core";
+import { elizaLogger, IAgentRuntime, Memory, Provider, settings, State } from "@elizaos/core";
 import { createSolanaRpc } from "@solana/web3.js";
 import { loadWallet } from "../../utils/loadWallet";
 import { Address, Rpc, SolanaRpcApi } from "@solana/web3.js";
@@ -21,33 +21,22 @@ export const positionProvider: Provider = {
         message: Memory,
         state?: State
     ) => {
-
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-
         try {
             const { address: ownerAddress } = await loadWallet(
                 runtime,
                 false
             );
-
             const rpc = createSolanaRpc(settings.RPC_URL!);
-
             const positions = await fetchPositions(rpc, ownerAddress);
-
-            state = {
-                ...state,
-                positions: positions,
-            }
-
             const positionsString = JSON.stringify(positions);
-
             return positionsString
         } catch (error) {
-            console.error("Error in wallet provider:", error);
+            elizaLogger.error("Error in wallet provider:", error);
             return null;
         }
     },
@@ -87,7 +76,7 @@ const fetchPositions = async (rpc: Rpc<SolanaRpcApi>, ownerAddress: Address): Pr
             const inRange = whirlpool.tickCurrentIndex >= positionData.tickLowerIndex && whirlpool.tickCurrentIndex <= positionData.tickUpperIndex;
             const positionCenterPrice = (positionLowerPrice + positionUpperPrice) / 2;
             const distanceCenterPositionFromPoolPriceBps = Math.abs(currentPrice - positionCenterPrice) / currentPrice * 10000;
-            const positionWidthBps = (positionUpperPrice - positionLowerPrice) / positionCenterPrice * 10000;
+            const positionWidthBps = ((positionUpperPrice - positionLowerPrice) / positionCenterPrice * 10000) / 2;
 
             return {
                 whirlpoolAddress,
