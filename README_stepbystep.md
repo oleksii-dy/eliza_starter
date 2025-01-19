@@ -68,7 +68,7 @@ nano .env
 
 ### Get Akash API KEY
 Go to https://chatapi.akash.network/ and Generate a API KEY. Question How to use the service? Taking Cosmos into AI age
-
+The API is free to use, and you don't need to re-confirm your email... but it is rate-limited on a per-hour-basis. This limit is set way igher than casual users will ever need it, only from training purposes you will have to chunk the tasks or run a dedicated environment as described below
 
 now edit the .env and add these keys:
 
