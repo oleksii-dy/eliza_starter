@@ -1170,9 +1170,15 @@ const startAgents = async () => {
     );
 };
 
-const db = initializeDatabase(null) as PostgresDatabaseAdapter;
+const db = new PostgresDatabaseAdapter({connectionString: process.env.POSTGRES_URL, parseInputs: true});
+await db.init();
+console.log("Database init finished");
+//const db = initializeDatabase(null) as PostgresDatabaseAdapter;
+//await db.init();
+
 Instrumentation.init((a, b, c, d) => {db.createTrace(a, b, c, d)});
 Instrumentation.run(() => {
+    Instrumentation.trace("TEST", {a: 123});
     startAgents().catch((error) => {
         elizaLogger.error("Unhandled error in startAgents:", error);
         process.exit(1);
