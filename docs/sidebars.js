@@ -161,6 +161,18 @@ const sidebars = {
                 },
             ],
         },
+        {
+            type: 'category',
+            label: 'Plugins',
+            items: [
+                'api/plugins/overview',
+                'api/plugins/twitter',
+                'api/plugins/discord',
+                'api/plugins/telegram',
+                'api/plugins/slack',
+                'api/plugins/liquidation',
+            ],
+        },
     ],
 };
 

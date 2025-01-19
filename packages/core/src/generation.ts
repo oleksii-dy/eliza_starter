@@ -574,8 +574,14 @@ export async function generateText({
                 const openai = createOpenAI({
                     apiKey,
                     baseURL: endpoint,
-                    fetch: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-                        const url = typeof input === 'string' ? input : input.toString();
+                    fetch: async (
+                        input: RequestInfo | URL,
+                        init?: RequestInit
+                    ): Promise<Response> => {
+                        const url =
+                            typeof input === "string"
+                                ? input
+                                : input.toString();
                         const chain_id =
                             runtime.getSetting("ETERNALAI_CHAIN_ID") || "45762";
 
@@ -588,9 +594,11 @@ export async function generateText({
 
                         const fetching = await runtime.fetch(url, options);
 
-                        if (parseBooleanFromText(
-                            runtime.getSetting("ETERNALAI_LOG")
-                        )) {
+                        if (
+                            parseBooleanFromText(
+                                runtime.getSetting("ETERNALAI_LOG")
+                            )
+                        ) {
                             elizaLogger.info(
                                 "Request data: ",
                                 JSON.stringify(options, null, 2)
@@ -1200,30 +1208,35 @@ export async function generateText({
                     messages: [
                         {
                             role: "system",
-                            content: runtime.character.system ?? settings.SYSTEM_PROMPT ?? "You are a helpful assistant"
+                            content:
+                                runtime.character.system ??
+                                settings.SYSTEM_PROMPT ??
+                                "You are a helpful assistant",
                         },
                         {
                             role: "user",
-                            content: context
-                        }
+                            content: context,
+                        },
                     ],
                     max_tokens: max_response_length,
-                    stream: false
+                    stream: false,
                 };
 
-                const fetchResponse = await runtime.fetch(endpoint+'/llm', {
+                const fetchResponse = await runtime.fetch(endpoint + "/llm", {
                     method: "POST",
                     headers: {
-                        "accept": "text/event-stream",
+                        accept: "text/event-stream",
                         "Content-Type": "application/json",
-                        "Authorization": "Bearer eliza-app-llm"
+                        Authorization: "Bearer eliza-app-llm",
                     },
-                    body: JSON.stringify(requestBody)
+                    body: JSON.stringify(requestBody),
                 });
 
                 if (!fetchResponse.ok) {
                     const errorText = await fetchResponse.text();
-                    throw new Error(`Livepeer request failed (${fetchResponse.status}): ${errorText}`);
+                    throw new Error(
+                        `Livepeer request failed (${fetchResponse.status}): ${errorText}`
+                    );
                 }
 
                 const json = await fetchResponse.json();
@@ -1232,8 +1245,13 @@ export async function generateText({
                     throw new Error("Invalid response format from Livepeer");
                 }
 
-                response = json.choices[0].message.content.replace(/<\|start_header_id\|>assistant<\|end_header_id\|>\n\n/, '');
-                elizaLogger.debug("Successfully received response from Livepeer model");
+                response = json.choices[0].message.content.replace(
+                    /<\|start_header_id\|>assistant<\|end_header_id\|>\n\n/,
+                    ""
+                );
+                elizaLogger.debug(
+                    "Successfully received response from Livepeer model"
+                );
                 break;
             }
 
@@ -1991,7 +2009,7 @@ export interface GenerationOptions {
     schemaName?: string;
     schemaDescription?: string;
     stop?: string[];
-    mode?: "auto" | "json" | "tool";
+    mode?: "json"; // Changed from "auto" | "json" | "tool"
     experimental_providerMetadata?: Record<string, unknown>;
     verifiableInference?: boolean;
     verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
@@ -2026,7 +2044,7 @@ export const generateObject = async ({
     schemaName,
     schemaDescription,
     stop,
-    mode = "json",
+    mode = "json", // Default to "json"
     verifiableInference = false,
     verifiableInferenceAdapter,
     verifiableInferenceOptions,
@@ -2039,12 +2057,18 @@ export const generateObject = async ({
 
     const provider = runtime.modelProvider;
     const modelSettings = getModelSettings(runtime.modelProvider, modelClass);
+    if (!modelSettings) {
+        throw new Error(
+            `No model settings found for provider ${provider} and class ${modelClass}`
+        );
+    }
+
     const model = modelSettings.name;
-    const temperature = modelSettings.temperature;
-    const frequency_penalty = modelSettings.frequency_penalty;
-    const presence_penalty = modelSettings.presence_penalty;
-    const max_context_length = modelSettings.maxInputTokens;
-    const max_response_length = modelSettings.maxOutputTokens;
+    const temperature = modelSettings.temperature ?? 0.7;
+    const frequency_penalty = modelSettings.frequency_penalty ?? 0;
+    const presence_penalty = modelSettings.presence_penalty ?? 0;
+    const max_context_length = modelSettings.maxInputTokens ?? 4096;
+    const max_response_length = modelSettings.maxOutputTokens ?? 1024;
     const experimental_telemetry = modelSettings.experimental_telemetry;
     const apiKey = runtime.token;
 
@@ -2459,12 +2483,14 @@ async function handleLivepeer({
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     console.log("Livepeer provider api key:", apiKey);
     if (!apiKey) {
-        throw new Error("Livepeer provider requires LIVEPEER_GATEWAY_URL to be configured");
+        throw new Error(
+            "Livepeer provider requires LIVEPEER_GATEWAY_URL to be configured"
+        );
     }
 
     const livepeerClient = createOpenAI({
         apiKey,
-        baseURL: apiKey // Use the apiKey as the baseURL since it contains the gateway URL
+        baseURL: apiKey, // Use the apiKey as the baseURL since it contains the gateway URL
     });
 
     return await aiGenerateObject({
@@ -2476,7 +2502,6 @@ async function handleLivepeer({
         ...modelOptions,
     });
 }
-
 
 // Add type definition for Together AI response
 interface TogetherAIImageResponse {

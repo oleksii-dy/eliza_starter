@@ -1168,7 +1168,9 @@ export class PostgresDatabaseAdapter
             // Validate embedding dimension
             if (embedding.length !== getEmbeddingConfig().dimensions) {
                 throw new Error(
-                    `Invalid embedding dimension: expected ${getEmbeddingConfig().dimensions}, got ${embedding.length}`
+                    `Invalid embedding dimension: expected ${
+                        getEmbeddingConfig().dimensions
+                    }, got ${embedding.length}`
                 );
             }
 
@@ -1190,7 +1192,9 @@ export class PostgresDatabaseAdapter
 
             let sql = `
                 SELECT *,
-                1 - (embedding <-> $1::vector(${getEmbeddingConfig().dimensions})) as similarity
+                1 - (embedding <-> $1::vector(${
+                    getEmbeddingConfig().dimensions
+                })) as similarity
                 FROM memories
                 WHERE type = $2
             `;
@@ -1415,7 +1419,9 @@ export class PostgresDatabaseAdapter
                         error instanceof Error ? error.message : String(error),
                 });
                 throw new Error(
-                    `Failed to fetch actor details: ${error instanceof Error ? error.message : String(error)}`
+                    `Failed to fetch actor details: ${
+                        error instanceof Error ? error.message : String(error)
+                    }`
                 );
             }
         }, "getActorDetails");
@@ -1809,6 +1815,79 @@ export class PostgresDatabaseAdapter
                 params.isShared,
             ]
         );
+    }
+
+    // Liquidation-specific methods
+    async getLiquidations(params: {
+        startTime: Date;
+        endTime: Date;
+        limit?: number;
+        offset?: number;
+    }): Promise<any[]> {
+        return this.withDatabase(async () => {
+            const { rows } = await this.pool.query(
+                `SELECT * FROM liquidation
+                WHERE created_at BETWEEN $1 AND $2
+                ORDER BY created_at DESC
+                LIMIT $3 OFFSET $4`,
+                [
+                    params.startTime,
+                    params.endTime,
+                    params.limit || 100,
+                    params.offset || 0,
+                ]
+            );
+            return rows;
+        }, "getLiquidations");
+    }
+
+    async getAggregatedLiquidations(params: {
+        interval: "1h" | "4h" | "12h" | "24h";
+        startTime: Date;
+        endTime: Date;
+    }): Promise<any[]> {
+        return this.withDatabase(async () => {
+            const { rows } = await this.pool.query(
+                `SELECT * FROM agg_liquidation_totals
+                WHERE bucketed_time BETWEEN $1 AND $2
+                AND bucket_width = $3
+                ORDER BY bucketed_time DESC`,
+                [params.startTime, params.endTime, params.interval]
+            );
+            return rows;
+        }, "getAggregatedLiquidations");
+    }
+
+    async getLiquidationsByMarket(params: {
+        marketId: string;
+        limit?: number;
+        offset?: number;
+    }): Promise<any[]> {
+        return this.withDatabase(async () => {
+            const { rows } = await this.pool.query(
+                `SELECT * FROM liquidation
+                WHERE market_id = $1
+                ORDER BY created_at DESC
+                LIMIT $2 OFFSET $3`,
+                [params.marketId, params.limit || 100, params.offset || 0]
+            );
+            return rows;
+        }, "getLiquidationsByMarket");
+    }
+
+    async getTotalLiquidationVolume(params: {
+        startTime: Date;
+        endTime: Date;
+    }): Promise<number> {
+        return this.withDatabase(async () => {
+            const { rows } = await this.pool.query(
+                `SELECT SUM(total_amount) as total_volume
+                FROM agg_liquidation_totals
+                WHERE bucketed_time BETWEEN $1 AND $2`,
+                [params.startTime, params.endTime]
+            );
+            return rows[0]?.total_volume || 0;
+        }, "getTotalLiquidationVolume");
     }
 }
 

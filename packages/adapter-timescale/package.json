@@ -1,0 +1,25 @@
+{
+    "name": "@elizaos/adapter-timescale",
+    "version": "1.0.0",
+    "description": "TimescaleDB adapter for ElizaOS",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "type": "module",
+    "scripts": {
+        "build": "tsc",
+        "test": "jest",
+        "clean": "rm -rf dist"
+    },
+    "dependencies": {
+        "@elizaos/adapter-postgres": "workspace:*",
+        "@elizaos/core": "workspace:*",
+        "pg": "^8.11.3"
+    },
+    "devDependencies": {
+        "@types/node": "^18.0.0",
+        "@types/pg": "^8.10.9",
+        "typescript": "5.6.3",
+        "jest": "^29.7.0",
+        "@types/jest": "^29.5.11"
+    }
+}

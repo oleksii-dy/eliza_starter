@@ -20,9 +20,9 @@
         "dist"
     ],
     "scripts": {
-        "build": "tsup --format esm --dts",
+        "build": "tsc -b",
         "watch": "tsc --watch",
-        "dev": "tsup --format esm --dts --watch",
+        "dev": "tsc -b --watch",
         "build:docs": "cd docs && pnpm run build",
         "test": "vitest run",
         "test:coverage": "vitest run --coverage",
