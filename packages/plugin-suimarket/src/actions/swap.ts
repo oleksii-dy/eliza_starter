@@ -92,10 +92,16 @@ export const executeSwap: Action = {
              })
              return false
         }
+        // const responseData = {
+        //     ...content,
+        //     inputTokenAddress:inputTokenObject.type,
+        //     outputTokenAddress:outputTokenObject.type,
+        // }
         const responseData = {
-            ...content,
-            inputTokenAddress:inputTokenObject.type,
-            outputTokenAddress:outputTokenObject.type,
+            amount: content.amount,
+            fromToken: inputTokenObject,
+            toToken:outputTokenObject
+
         }
         try {
 
