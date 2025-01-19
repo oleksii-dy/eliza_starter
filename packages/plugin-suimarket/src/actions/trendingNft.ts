@@ -100,7 +100,7 @@ export const trendingNft: Action = {
                 text: `Below are ${content.size} trending coins we have collected,` ,
                 action: 'trendingNft',
                 result: {
-                    type: "marketStatisticsTable",
+                    type: "trendingNft",
                     data: nfts.slice(0,content.size)
                 }
             });

@@ -103,7 +103,7 @@ export const trendingTokens: Action = {
                 text: `Below are ${content.size} trending coins we have collected,`,
                 action: 'trendingTokens',
                 result: {
-                    type: "marketStatisticsTable",
+                    type: "trendingCoins",
                     data:info.slice(0,content.size)
                 }
             });

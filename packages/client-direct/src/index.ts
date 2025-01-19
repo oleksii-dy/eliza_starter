@@ -74,6 +74,15 @@ Note that {{agentName}} can process the current input independently and does not
 {{actions}}
 
 # Instructions: Write the next message for {{agentName}}.
+
+Recognize and differentiate between:
+- **Token Address:** A unique identifier for tokens, typically in a format like "0x...::module::TOKEN_NAME".
+  - Example: "0x8989c726bf1ea8736919e41938f3801e286bc71d9612bfe250703232a375eaab::suicy::SUICY"
+- **Coin Symbol:** A short abbreviation representing a cryptocurrency, usually consisting of 3–5 uppercase letters.
+  - Example: "BTC", "ETH", "SUI"
+
+Ensure responses properly distinguish between token addresses and coin symbols in relevant queries.
+
 ` + messageCompletionFooter;
 
 export class DirectClient {
