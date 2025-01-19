@@ -91,17 +91,22 @@ head into the character folder:
 ```
 cd characters
 ```
-get rid of racists and sexists
-```
-rm tate.character.json
-rm trump.character.json
-```
-create a template of c3po.character.json:
+create a template of c3po.character.json to use as a template for your own model:
 ```
 cp c3po.character.json avatar.character.json
 nano avatar.character.json
 ```
-The header should be set like this, so fill in the modelProvider. "clients" should be left empty for now, as we need to create Bot Tokens for them to work properly)
+The structure is structured like this:
+bio:  The self-definition passed to the LLM (sub-concisousness so to say)
+lore: Examples of expression, used to generate the style of texting
+knowledge: These are memories at genesis, so if you want your bot to know your website, discord url, etc.. add it here
+
+The header should be set like this, so fill in the modelProvider, in our case this should be:
+```
+ "modelProvider": "akash_chat_api",
+```
+"clients" should be left empty for now, as we need to create Bot Tokens for them to work properly. You add "telegram","discord","twitter" later in a comma seperated way
+
 ```
 {
     "name": "Avatar",
@@ -113,8 +118,7 @@ The header should be set like this, so fill in the modelProvider. "clients" shou
             "model": "en_US-male-medium"
 ```
 
-    - Use `pnpm start --characters="path/to/your/character.json"`
-
+  
 
 
 ### First build initialization
@@ -122,14 +126,23 @@ The header should be set like this, so fill in the modelProvider. "clients" shou
 ```bash
 pnpm i
 pnpm build
-pnpm start --characters="path/to/your/character.json"`
+pnpm start --characters="~./eliza/characters/avatar.character.json"`
 ```
+This should start a running instance
 
-- To keep the instance running after logoff:
+- To keep the instance running after logoff you need process manager pm2:
 -```
 -  npm install pm2
 -```
+
+
+To start the process via pm2
+
 ```
+pm2 start "avatar" -- start --character=~./eliza/characters/avatar.character.json
+```
+
+This creates a process, check the status or end the daemon. use pm2 save to save the process
 -     pm2 start eliza
 -     pm2 stop eliza
 -     pm2 log
@@ -220,11 +233,13 @@ sqlitebrowser db.sqlite
 ```
 check the "memory" table...
 
-## Advanced Vector Index Database:
+
+## Advanced Vector Indexing Database:
 This is not necessary for character imitating models, but is useful for big workloads and long-trained models:
+You can upscale your Database in CPU and HDD with growing demand later easily
 
 Deploy an AKASh Postgres Vector enabled Database with this YAML Sheet:
-
+https://console.akash.network/
 
 ```
 ---
@@ -368,9 +383,9 @@ deployment:
       profile: ollama
       count: 1
 ```
-down-adjust some values, this version costs 3.5k$ a month..
+down-adjust some values, this version costs lot of $$ a month..
 You can close your deploy anytime and get your remaining depost back, so if you need it just for 1-2h its pretty cheap though
-add into your .env:
+so add these lines into your .env:
 
 ## Ollama Configuration
 ```
@@ -383,6 +398,8 @@ LARGE_OLLAMA_MODEL=llama3.1:8b
 ```
 you need to set the model to 3.1:8b for small, medium, and large
 also change modelprovider in the characterfile from "akash_chat_api" to "ollama"
+
+You can also deploy the 405B model, but i didn't test it yet
 
 # Cosmos Transaction Module:
 
