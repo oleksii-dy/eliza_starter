@@ -10,7 +10,13 @@ import {
     settings,
     State,
 } from "@elizaos/core";
-import { address, createSolanaRpc } from "@solana/web3.js";
+import {
+    address,
+    createSolanaRpc,
+    KeyPairSigner,
+    Rpc,
+    SolanaRpcApi
+} from "@solana/web3.js";
 import { fetchMint } from "@solana-program/token-2022";
 import {
     fetchPosition,
@@ -68,8 +74,8 @@ export const managePositions: Action = {
         await handleRepositioning(
             fetchedPositions,
             repositionThresholdBps,
-            slippageToleranceBps,
             rpc,
+            wallet
         );
 
         return true;
@@ -101,16 +107,16 @@ async function extractFetchedPositions(
     runtime: IAgentRuntime
 ): Promise<FetchedPosition[]> {
     const prompt = `Given this message: "${text}", extract the available data and return a JSON object with the following structure:
-                [
-                    {
-                        "whirlpoolAddress": string,
-                        "positionMint": string,
-                        "inRange": boolean,
-                        "distanceCenterPositionFromPoolPriceBps": number,
-                        "positionWidthBps": number
-                    },
-                ]
-            `;
+        [
+            {
+                "whirlpoolAddress": string,
+                "positionMint": string,
+                "inRange": boolean,
+                "distanceCenterPositionFromPoolPriceBps": number,
+                "positionWidthBps": number
+            },
+        ]
+    `;
     const content = await generateText({
         runtime,
         context: prompt,
@@ -180,10 +186,10 @@ function calculatePriceBounds(
 }
 
 async function handleRepositioning(
-    fetchedPositions: any[],
+    fetchedPositions: FetchedPosition[],
     repositionThresholdBps: number,
-    rpc: any,
-    wallet: any
+    rpc: Rpc<SolanaRpcApi>,
+    wallet: KeyPairSigner
 ) {
     return await Promise.all(
         fetchedPositions.map(async (position) => {
