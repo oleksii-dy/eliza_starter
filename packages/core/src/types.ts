@@ -1625,5 +1625,6 @@ export interface ChunkRow {
  * Interface for character config loader
  */
 export interface ICharacterConfigLoader {
+    match(uri: string): boolean;
     load(uri: string): Promise<any>;
 }

@@ -14,6 +14,13 @@ import {
 import { decodeCharacterData } from "../moves/foc_eliza"
 
 export const characterConfigLoader: ICharacterConfigLoader = {
+    match : (uri: string):boolean => {
+        if (uri.startsWith("rooch://")) {
+            return true
+        }
+
+        return false;
+    },
     load: async (uri: string) : Promise<any> => {
         const accessPath = parseAccessPath(uri);
 
