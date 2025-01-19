@@ -10,6 +10,8 @@ import { LensAgentClient } from "@elizaos/client-lens";
 import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
+import { FarcasterClientInterface } from "@elizaos/client-farcaster";
+import { DirectClient } from "@elizaos/client-direct";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
 import { PrimusAdapter } from "@elizaos/plugin-primus";
 import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
@@ -550,7 +552,10 @@ export function getTokenForProvider(
                 character.settings?.secrets?.VENICE_API_KEY ||
                 settings.VENICE_API_KEY
             );
-        // Add Nvidia
+        case ModelProviderName.ATOMA:
+             return (
+                 character.settings?.secrets?.ATOMASDK_BEARER_AUTH ||
+                 settings.ATOMASDK_BEARER_AUTH
         case ModelProviderName.NVIDIA:
             return (
                 character.settings?.secrets?.NVIDIA_API_KEY ||
