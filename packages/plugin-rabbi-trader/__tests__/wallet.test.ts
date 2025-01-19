@@ -5,10 +5,12 @@ import { IAgentRuntime } from '@elizaos/core';
 
 // Mock dependencies
 vi.mock('@solana/web3.js', () => {
+    const mockGetBalance = vi.fn().mockResolvedValue(1000000000); // 1 SOL in lamports
+    const mockConnection = {
+        getBalance: mockGetBalance
+    };
     return {
-        Connection: vi.fn(() => ({
-            getBalance: vi.fn().mockResolvedValue(1000000000) // 1 SOL in lamports
-        })),
+        Connection: vi.fn(() => mockConnection),
         Keypair: {
             fromSecretKey: vi.fn().mockReturnValue({
                 publicKey: {
@@ -26,20 +28,20 @@ describe('Wallet Functions', () => {
     beforeEach(() => {
         // Reset mocks
         vi.clearAllMocks();
-        
+
         // Setup mock runtime
         mockRuntime = {
             getSetting: vi.fn((key: string) => {
                 switch (key) {
                     case 'WALLET_PRIVATE_KEY':
-                        return '5MaiiCavjCmn9Hs1o3eznqDEhRwxo7pXiAYez7keQUviUkauRiTMD8DrESdrNjN8zd9mTmVhRvBJeg5vhyvgrAhG';
+                        // Use a valid base58 string (this is just an example, not a real private key)
+                        return '5KQFVpCEW7wEDVzAj6HnE6YpQem6X2L8qzqXNbrWJCVB';
                     case 'SOLANA_RPC_URL':
                         return 'https://api.mainnet-beta.solana.com';
                     default:
                         return undefined;
                 }
             }),
-            // Add other required runtime methods as needed
             log: vi.fn(),
             error: vi.fn()
         };
