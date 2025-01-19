@@ -21,7 +21,7 @@ import {
 } from "@abstract-foundation/agw-client";
 import { z } from "zod";
 import { useGetAccount, useGetWalletClient } from "../hooks";
-import { abi as basicTokenAbi, bytecode } from "../constants/basicToken";
+import basicToken from "../constants/contracts/basicToken.json";
 import { abstractPublicClient } from "../utils/viemHelpers";
 
 const DeploySchema = z.object({
@@ -147,20 +147,20 @@ export const deployTokenAction: Action = {
 				})) as any; // type being exported as never
 
 				hash = await abstractClient.deployContract({
-					abi: basicTokenAbi,
-					bytecode,
+					abi: basicToken.abi,
+					bytecode: basicToken.bytecode,
 					args: [result.data.name, result.data.symbol, supply],
 				});
 			} else {
 				const walletClient = useGetWalletClient();
 
 				hash = await walletClient.deployContract({
-                    chain: abstractTestnet,
+					chain: abstractTestnet,
 					account,
-					abi: basicTokenAbi,
-					bytecode,
+					abi: basicToken.abi,
+					bytecode: basicToken.bytecode,
 					args: [result.data.name, result.data.symbol, supply],
-                    kzg: undefined
+					kzg: undefined,
 				});
 			}
 

@@ -58,7 +58,7 @@ export async function resolveAddress(
 		elizaLogger.error("Error resolving ENS name:", error);
 	}
 
-	return getAddress(address);
+	return address ? getAddress(address) : null;
 }
 
 const tokens = [
@@ -78,6 +78,10 @@ export function getTokenByName(name: string) {
 	const token = tokens.find(
 		(token) => token.symbol.toLowerCase() === name.toLowerCase(),
 	);
+
+	if (!token) {
+		throw new Error(`Token ${name} not found`);
+	}
 
 	return token;
 }

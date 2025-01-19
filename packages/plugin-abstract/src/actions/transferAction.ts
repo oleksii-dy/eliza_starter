@@ -58,8 +58,8 @@ const transferTemplate = `Respond with a JSON markdown block containing only the
 Example response:
 \`\`\`json
 {
-    "tokenAddress": "0x5A7d6b2F92C77FAD6CCaBd7EE0624E64907Eaf3E",
-    "recipient": "0xCCa8009f5e09F8C5dB63cb0031052F9CB635Af62",
+    "tokenAddress": "<TOKEN_ADDRESS>",
+    "recipient": "<TOKEN_ADDRESS>",
     "amount": "1000",
     "useAGW": true,
     "tokenSymbol": "USDC"
@@ -199,10 +199,10 @@ export const transferAction: Action = {
 			const tokenAmount = parseUnits(amount.toString(), decimals);
 
 			if (useAGW) {
-				const abstractClient = await createAbstractClient({
+				const abstractClient = (await createAbstractClient({
 					chain: abstractTestnet,
 					signer: account,
-				}) as any; // biome-ignore lint/suspicious/noExplicitAny: type being exported as never
+				})) as any; // biome-ignore lint/suspicious/noExplicitAny: type being exported as never
 
 				if (isEthTransfer) {
 					hash = await abstractClient.sendTransaction({

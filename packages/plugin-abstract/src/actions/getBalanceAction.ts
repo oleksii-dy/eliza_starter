@@ -51,8 +51,8 @@ const balanceTemplate = `Respond with a JSON markdown block containing only the 
 Example response:
 \`\`\`json
 {
-    "tokenAddress": "0x5A7d6b2F92C77FAD6CCaBd7EE0624E64907Eaf3E",
-    "walletAddress": "0xCCa8009f5e09F8C5dB63cb0031052F9CB635Af62",
+    "tokenAddress": "<TOKEN_ADDRESS>",
+    "walletAddress": "<TOKEN_ADDRESS>",
     "tokenSymbol": "USDC"
 }
 \`\`\`
