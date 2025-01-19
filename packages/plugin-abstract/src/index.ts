@@ -1,11 +1,11 @@
 import type { Plugin } from "@elizaos/core";
 
-import { transferAction } from "./actions";
+import { transferAction, getBalanceAction, deployTokenAction } from "./actions";
 
 export const abstractPlugin: Plugin = {
     name: "abstract",
     description: "Abstract Plugin for Eliza",
-    actions: [transferAction],
+    actions: [transferAction, getBalanceAction, deployTokenAction],
     evaluators: [],
     providers: [],
 };

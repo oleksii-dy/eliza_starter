@@ -10,34 +10,36 @@ import {
     elizaLogger,
     composeContext,
     generateObject,
+    stringToUuid,
 } from "@elizaos/core";
 import { validateAbstractConfig } from "../environment";
 
 import {
-    type Address,
     erc20Abi,
-    http,
-    parseEther,
+    formatUnits,
     isAddress,
     parseUnits,
-    createPublicClient,
+    type Hash,
 } from "viem";
-import { abstractTestnet, mainnet } from "viem/chains";
-import { normalize } from "viem/ens";
-import { createAbstractClient } from "@abstract-foundation/agw-client";
+import { abstractTestnet,   } from "viem/chains";
+import { type AbstractClient, createAbstractClient } from "@abstract-foundation/agw-client";
 import { z } from "zod";
-import { ValidateContext } from "../utils";
-import { ETH_ADDRESS, ERC20_OVERRIDE_INFO } from "../constants";
+ import { ETH_ADDRESS,   } from "../constants";
 import { useGetAccount, useGetWalletClient } from "../hooks";
+import { resolveAddress, abstractPublicClient, getTokenByName } from "../utils/viemHelpers";
 
-const ethereumClient = createPublicClient({
-    chain: mainnet,
-    transport: http(),
-});
 
 const TransferSchema = z.object({
-    tokenAddress: z.string(),
+    tokenAddress: z.string().optional().nullable(),
     recipient: z.string(),
+    amount: z.string(),
+    useAGW: z.boolean(),
+    tokenSymbol: z.string().optional().nullable(),
+});
+
+const validatedTransferSchema = z.object({
+    tokenAddress: z.string().refine(isAddress, { message: "Invalid token address" }),
+    recipient: z.string().refine(isAddress, { message: "Invalid recipient address" }),
     amount: z.string(),
     useAGW: z.boolean(),
 });
@@ -47,13 +49,10 @@ export interface TransferContent extends Content {
     recipient: string;
     amount: string | number;
     useAGW: boolean;
+    tokenSymbol?: string;
 }
 
 const transferTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
-
-Here are several frequently used addresses. Use these for the corresponding tokens:
-- ETH/eth: 0x000000000000000000000000000000000000800A
-- USDC/usdc: 0xe4c7fbb0a626ed208021ccaba6be1566905e2dfc
 
 Example response:
 \`\`\`json
@@ -61,7 +60,8 @@ Example response:
     "tokenAddress": "0x5A7d6b2F92C77FAD6CCaBd7EE0624E64907Eaf3E",
     "recipient": "0xCCa8009f5e09F8C5dB63cb0031052F9CB635Af62",
     "amount": "1000",
-    "useAGW": true
+    "useAGW": true,
+    "tokenSymbol": "USDC"
 }
 \`\`\`
 
@@ -73,9 +73,10 @@ Given the message, extract the following information about the requested token t
 - Recipient wallet address
 - Amount to transfer
 - Whether to use Abstract Global Wallet aka AGW
+- The symbol of the token that wants to be transferred. Between 1 to 6 characters usually.
 
 If the user did not specify "global wallet", "AGW", "agw", or "abstract global wallet" in their message, set useAGW to false, otherwise set it to true.
-
+s
 Respond with a JSON markdown block containing only the extracted values.`;
 
 export const transferAction: Action = {
@@ -125,120 +126,126 @@ export const transferAction: Action = {
                 modelClass: ModelClass.SMALL,
                 schema: TransferSchema,
             })
-        ).object as unknown as TransferContent;
+        ).object as TransferContent;
 
-        if (!isAddress(content.recipient, { strict: false })) {
-            elizaLogger.log("Resolving ENS name...");
-            try {
-                const name = normalize(content.recipient.trim());
-                const resolvedAddress = await ethereumClient.getEnsAddress({
-                    name,
-                });
+        let tokenAddress = content.tokenAddress
 
-                if (isAddress(resolvedAddress, { strict: false })) {
-                    elizaLogger.log(`${name} resolved to ${resolvedAddress}`);
-                    content.recipient = resolvedAddress;
-                }
-            } catch (error) {
-                elizaLogger.error("Error resolving ENS name:", error);
+
+        console.log("content:::", content)
+
+        if(content.tokenSymbol) {
+            const tokenMemory = await runtime.messageManager.getMemoryById(stringToUuid(`${content.tokenSymbol}-${runtime.agentId}`))
+
+            if(typeof tokenMemory?.content?.tokenAddress === "string") {
+                tokenAddress = tokenMemory.content.tokenAddress
+            }
+
+            if(!tokenAddress) {
+                tokenAddress =  getTokenByName(content.tokenSymbol)?.address
             }
         }
 
-        // Validate transfer content
-        if (!ValidateContext.transferAction(content)) {
-            elizaLogger.error("Invalid content for TRANSFER_TOKEN action.");
+
+        const resolvedRecipient = await resolveAddress(content.recipient);
+
+        const input = {
+            tokenAddress:  tokenAddress,
+            recipient: resolvedRecipient,
+            amount: content.amount.toString(),
+            useAGW: content.useAGW,
+        }
+        const result = validatedTransferSchema.safeParse(input);
+
+
+        if (!result.success) {
+            elizaLogger.error("Invalid content for TRANSFER_TOKEN action.", result.error.message);
             if (callback) {
                 callback({
-                    text: "Unable to process transfer request. Invalid content provided.",
-                    content: { error: "Invalid transfer content" },
+                    text: "Unable to process transfer request. Did not extract valid parameters.",
+                    content: { error: result.error.message, ...input },
                 });
             }
             return false;
         }
 
+        if (!resolvedRecipient) {
+            throw new Error("Invalid recipient address or ENS name");
+        }
+
         try {
             const account = useGetAccount(runtime);
-            let hash;
-            if (content.useAGW) {
+
+            let symbol ="ETH"
+            let decimals = 18
+            const isEthTransfer = result.data.tokenAddress === ETH_ADDRESS
+            const { tokenAddress, recipient, amount, useAGW } = result.data
+
+
+            if(!isEthTransfer) {
+[              symbol, decimals ] = await Promise.all([
+                abstractPublicClient.readContract({
+                     address:  tokenAddress,
+                    abi: erc20Abi,
+                    functionName: "symbol",
+                }),
+                abstractPublicClient.readContract({
+                address:  tokenAddress,
+                    abi: erc20Abi,
+                    functionName: "decimals",
+                }),
+            ]);            }
+            let hash: Hash
+            const tokenAmount = parseUnits(amount.toString(), decimals);
+
+            if (useAGW) {
                 const abstractClient = await createAbstractClient({
                     chain: abstractTestnet,
                     signer: account,
-                });
+                }) as AbstractClient;
 
-                // Handle AGW transfer based on token type
-                if (
-                    content.tokenAddress.toLowerCase() !==
-                    ETH_ADDRESS.toLowerCase()
-                ) {
-                    const tokenInfo =
-                        ERC20_OVERRIDE_INFO[content.tokenAddress.toLowerCase()];
-                    const decimals = tokenInfo?.decimals ?? 18;
-                    const tokenAmount = parseUnits(
-                        content.amount.toString(),
-                        decimals
-                    );
-
-                    // @ts-ignore - will fix later
-                    hash = await abstractClient.writeContract({
-                        chain: abstractTestnet,
-                        address: content.tokenAddress as Address,
-                        abi: erc20Abi,
-                        functionName: "transfer",
-                        args: [content.recipient as Address, tokenAmount],
-                    });
-                } else {
-                    // @ts-ignore
+                if(isEthTransfer) {
                     hash = await abstractClient.sendTransaction({
                         chain: abstractTestnet,
-                        to: content.recipient as Address,
-                        value: parseEther(content.amount.toString()),
+                        to: recipient,
+                        value: tokenAmount,
                         kzg: undefined,
-                    });
+                    })
+                } else {
+                    hash = await abstractClient.writeContract({
+                        chain: abstractTestnet,
+                        address: tokenAddress,
+                        abi: erc20Abi,
+                        functionName: "transfer",
+                        args: [recipient, tokenAmount],
+                    })
                 }
             } else {
                 const walletClient = useGetWalletClient();
-
-                // Handle regular wallet transfer based on token type
-                if (
-                    content.tokenAddress.toLowerCase() !==
-                    ETH_ADDRESS.toLowerCase()
-                ) {
-                    const tokenInfo =
-                        ERC20_OVERRIDE_INFO[content.tokenAddress.toLowerCase()];
-                    const decimals = tokenInfo?.decimals ?? 18;
-                    const tokenAmount = parseUnits(
-                        content.amount.toString(),
-                        decimals
-                    );
-
-                    hash = await walletClient.writeContract({
-                        account,
-                        chain: abstractTestnet,
-                        address: content.tokenAddress as Address,
-                        abi: erc20Abi,
-                        functionName: "transfer",
-                        args: [content.recipient as Address, tokenAmount],
-                    });
-                } else {
+                if(isEthTransfer) {
                     hash = await walletClient.sendTransaction({
                         account,
                         chain: abstractTestnet,
-                        to: content.recipient as Address,
-                        value: parseEther(content.amount.toString()),
+                        to: recipient,
+                        value: tokenAmount,
                         kzg: undefined,
-                    });
+                    })
+                } else {
+                    hash = await walletClient.writeContract({
+                          account,
+                          chain: abstractTestnet,
+                          address: tokenAddress,
+                          abi: erc20Abi,
+                          functionName: "transfer",
+                          args: [recipient, tokenAmount],
+                      })
                 }
             }
 
-            elizaLogger.success(
-                "Transfer completed successfully! Transaction hash: " + hash
-            );
+            elizaLogger.success(`Transfer completed successfully! Transaction hash: ${hash}`);
             if (callback) {
                 callback({
-                    text:
-                        "Transfer completed successfully! Transaction hash: " +
-                        hash,
-                    content: {},
+                    text: `Transfer completed successfully! Succesfully sent ${formatUnits(tokenAmount, decimals)} ${symbol} to ${recipient} using ${useAGW ? "AGW" : "wallet client"}. Transaction hash: ${hash}`,
+                    content: { hash, tokenAmount: formatUnits(tokenAmount, decimals), symbol, recipient, useAGW },
                 });
             }
 
@@ -358,6 +365,27 @@ export const transferAction: Action = {
                 user: "{{agent}}",
                 content: {
                     text: "Successfully sent 0.1 ETH to 0xbD8679cf79137042214fA4239b02F4022208EE82\nTransaction: 0x0b9f23e69ea91ba98926744472717960cc7018d35bc3165bdba6ae41670da0f0",
+                },
+            },
+        ],
+          [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Please send 1 MyToken to 0xbD8679cf79137042214fA4239b02F4022208EE82",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "Of course. Sending 1 MyToken right away.",
+                    action: "SEND_TOKEN",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "Successfully sent 1 MyToken to 0xbD8679cf79137042214fA4239b02F4022208EE82\nTransaction: 0x0b9f23e69ea91ba98926744472717960cc7018d35bc3165bdba6ae41670da0f0",
                 },
             },
         ],
