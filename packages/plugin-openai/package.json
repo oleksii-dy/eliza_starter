@@ -1,6 +1,7 @@
+
 {
-    "name": "@elizaos/plugin-binance",
-    "version": "0.1.9-alpha.1",
+    "name": "@elizaos/plugin-openai",
+    "version": "0.1.0",
     "type": "module",
     "main": "dist/index.js",
     "module": "dist/index.js",
@@ -19,20 +20,15 @@
         "dist"
     ],
     "dependencies": {
-        "@binance/connector": "^3.6.0",
         "@elizaos/core": "workspace:*",
-        "zod": "^3.22.4"
+        "axios": "^1.0.0"
     },
     "devDependencies": {
-        "@types/node": "^20.0.0",
         "tsup": "8.3.5",
-        "vite-tsconfig-paths": "^5.1.4",
-        "vitest": "^3.0.2"
+        "vitest": "^1.0.0"
     },
     "scripts": {
-        "build": "tsup --format esm --dts",
-        "dev": "tsup --format esm --dts --watch",
-        "test": "vitest run",
-        "test:watch": "vitest"
+        "build": "tsup src/index.ts --format esm --dts --tsconfig ./tsconfig.json",
+        "dev": "tsup src/index.ts --format esm --dts --watch --tsconfig ./tsconfig.json"
     }
 }
