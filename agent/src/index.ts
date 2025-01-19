@@ -1045,7 +1045,7 @@ export async function createAgent(
             getSecret(character, "PYTH_MAINNET_PROGRAM_KEY")
                 ? pythDataPlugin
                 : null,
-            getSecret(character, "OPENAI_API_KEY")
+            getSecret(character, "OPENAI_API_KEY") && getSecret(character, "ENABLE_OPEN_AI_COMMUNITY_PLUGIN")
                 ? openaiPlugin
                 : null,
         ].filter(Boolean),
