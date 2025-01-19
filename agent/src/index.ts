@@ -418,11 +418,13 @@ export function getTokenForProvider(
                 character.settings?.secrets?.HYPERBOLIC_API_KEY ||
                 settings.HYPERBOLIC_API_KEY
             );
-            case ModelProviderName.VENICE:
-                return (
-                    character.settings?.secrets?.VENICE_API_KEY ||
-                    settings.VENICE_API_KEY
-                );
+
+        case ModelProviderName.VENICE:
+            return (
+                character.settings?.secrets?.VENICE_API_KEY ||
+                settings.VENICE_API_KEY
+            );
+        // Add Nvidia
         case ModelProviderName.NVIDIA:
             return (
                 character.settings?.secrets?.NVIDIA_API_KEY ||
