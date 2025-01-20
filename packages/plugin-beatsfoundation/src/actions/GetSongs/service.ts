@@ -1,13 +1,14 @@
 import axios from 'axios';
-import { Song } from '../../types';
+import { PaginatedSongsResponse } from '../../types';
 
 export function createSongsService(apiKey: string) {
     return {
-        getSongs: async (limit?: number, offset?: number): Promise<Song[]> => {
+        getSongs: async (limit?: number, offset?: number): Promise<PaginatedSongsResponse> => {
             try {
-                const params: Record<string, any> = {};
-                if (limit !== undefined) params.limit = limit;
-                if (offset !== undefined) params.offset = offset;
+                const params: Record<string, any> = {
+                    limit: Math.min(limit || 10, 100), // Default 10, max 100
+                    offset: Math.max(offset || 0, 0)   // Default 0, min 0
+                };
 
                 const response = await axios.get(
                     'https://www.beatsfoundation.com/api/songs',
@@ -19,7 +20,15 @@ export function createSongsService(apiKey: string) {
                         },
                     }
                 );
-                return response.data.songs;
+                const { songs, total } = response.data;
+                return {
+                    data: songs,
+                    pagination: {
+                        total,
+                        limit: limit || 10, // Default limit
+                        offset: offset || 0  // Default offset
+                    }
+                };
             } catch (error: any) {
                 if (error.response) {
                     throw new Error(`Beats Foundation API Error: ${error.response.data.error || error.response.status}`);

@@ -63,21 +63,15 @@ export default {
             const songsService = createSongsService(config.BEATSFOUNDATION_API_KEY);
 
             try {
-                const songs = await songsService.getSongs(content.limit, content.offset);
+                const result = await songsService.getSongs(content.limit, content.offset);
                 elizaLogger.success(
-                    `Songs retrieved successfully! Count: ${songs.length}`
+                    `Songs retrieved successfully! Count: ${result.data.length}, Total: ${result.pagination.total}`
                 );
 
                 if (callback) {
                     callback({
-                        text: `Retrieved ${songs.length} songs`,
-                        content: {
-                            songs,
-                            pagination: {
-                                limit: content.limit,
-                                offset: content.offset
-                            }
-                        },
+                        text: `Retrieved ${result.data.length} songs (Total: ${result.pagination.total})`,
+                        content: result,
                     });
                 }
 
