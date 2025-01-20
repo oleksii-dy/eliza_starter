@@ -71,7 +71,7 @@ export const lndProvider: Provider = {
                 await lightningProvider.getLndIdentity();
             const { channels } = await lightningProvider.getLndChannel();
             const agentName = state?.agentName || "The agent";
-            return `${agentName}'s Lightning Node publickey : ${nodePubkey}\n,Channel count : ${channels.length}`;
+            return `${agentName}'s Lightning Node publickey: ${nodePubkey}\nChannel count: ${channels.length}`;
         } catch (error) {
             console.error("Error in Lightning provider:", error);
             return null;

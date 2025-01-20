@@ -84,21 +84,23 @@ export const payInvoiceAction = {
 
         try {
             const payInvoiceResp = await action.payInvoice(payInvoiceOptions);
-            console.log("🚀 ~ payInvoiceResp:", payInvoiceResp);
 
             if (callback) {
                 let text = "";
                 if (payInvoiceResp.is_confirmed) {
-                    text = `Successfully payInvoice ${content.request} from ${payInvoiceResp.outgoing_channel};\r\n Amount: ${payInvoiceResp.tokens};\r\n Fee: ${payInvoiceResp.fee};\r\n Payment Hash: ${payInvoiceResp.id};`;
+                    callback({
+                        text: `Successfully paid invoice ${content.request} from ${payInvoiceResp.outgoing_channel};\nAmount: ${payInvoiceResp.tokens};\nFee: ${payInvoiceResp.fee};\nPayment Hash: ${payInvoiceResp.id};`,
+                        content: { success: true }
+                    });
                 } else {
-                    text = `Failed to payInvoice ${content.request} from ${content.outgoing_channel};\r\n Amount: ${payInvoiceResp.tokens};`;
+                    callback({
+                        text: `Failed to payInvoice ${content.request} from ${content.outgoing_channel};\r\n Amount: ${payInvoiceResp.tokens};`,
+                        content: {
+                            success: false,
+                        },
+                    });
                 }
-                callback({
-                    text: text,
-                    content: {
-                        success: true,
-                    },
-                });
+
             }
             return true;
         } catch (error) {

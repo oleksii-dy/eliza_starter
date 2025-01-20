@@ -67,7 +67,7 @@ export const createInvoiceAction = {
 
             if (callback) {
                 callback({
-                    text: `Successfully createInvoice ${createInvoiceResp.tokens}\r\nInvoice:${createInvoiceResp.request}`,
+                    text: `Successfully created invoice for ${createInvoiceResp.tokens.toLocaleString()} sats\r\nInvoice: ${createInvoiceResp.request}`,
                     content: {
                         success: true,
                         invoice: createInvoiceResp.request,
