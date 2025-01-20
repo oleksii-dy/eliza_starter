@@ -240,8 +240,8 @@ Thats the one for Bud:
     "modelProvider": "akash_chat_api",
     "settings": {
         "secrets": {
-            "DISCORD_APPLICATION_ID": "1330133432432456924",
-            "DISCORD_API_TOKEN": "MTMzMDEzMzEkewkjhfi43983648MIT2kuzqmHh7E_9dK3zQp577QWKjS4i-wz78"
+            "DISCORD_APPLICATION_ID": "138364583265387224",
+            "DISCORD_API_TOKEN": "MTMzMDEzMzuihfiuewhfeqiuhfqiuewhfewqHh7E_9dK3zQp577QWKjS4i-wz78"
         },
         "voice": {
             "model": "en_US-male-heavy"
@@ -252,10 +252,10 @@ Thats the one for Bud:
             "isPartOfTeam": true,
             "teamAgentIds": ["1330134542060752936"],
             "teamLeaderId": "1330134542060752936",
-            "teamMemberInterestKeywords": ["Terence", "partner", "team", "friend", "adventure"]
+            "teamMemberInterestKeywords": ["Terence", "partner", "team", "friend", "adventure"],
+            "shouldRespondOnlyToMentions": false
         }
     },
-    "bio": [
 ```
 
 thats the one for Terence:
@@ -266,8 +266,8 @@ thats the one for Terence:
     "modelProvider": "akash_chat_api",
     "settings": {
         "secrets": {
-                "DISCORD_APPLICATION_ID": "133743274832452936",
-                "DISCORD_API_TOKEN": "MTMzMDEzNDU0MjA2MDc8746324kjdsfdfonOly4ZX1HbslgHBvbk6np9Rtf2yvREDgJ8"
+                "DISCORD_APPLICATION_ID": "133487326438726452936",
+                "DISCORD_API_TOKEN": "MTMzMDEziuhfiufheiuqhiuqewhfiuewqhf6np9Rtf2yvREDgJ8"
             },
         "voice": {
             "model": "en_US-male-medium"
@@ -278,10 +278,12 @@ thats the one for Terence:
             "isPartOfTeam": true,
             "teamAgentIds": ["1330133186734456924"],
             "teamLeaderId": "1330134542060752936",
-            "teamMemberInterestKeywords": ["Bud", "buddy", "partner", "team", "friend", "trouble"]
+            "teamMemberInterestKeywords": ["Bud", "buddy", "partner", "team", "friend", "trouble"],
+            "shouldRespondOnlyToMentions": false
         }
     },
 ```
+The "shouldRespondOnlyToMentions": false attribute make some more agile in chats! They will give their 5 cents on every occassion
 
 There is always one Leader, but multiple Members. If you have a bigger team add their id's like this:
 ```
