@@ -4,6 +4,7 @@ import getPrice from "./actions/getPrice";
 import getPricePerAddress from "./actions/getPricePerAddress";
 import getTopGainersLosers from "./actions/getTopGainersLosers";
 import getTrending from "./actions/getTrending";
+import getTrendingPools from "./actions/getTrendingPools";
 import { categoriesProvider } from "./providers/categoriesProvider";
 import { coinsProvider } from "./providers/coinsProvider";
 
@@ -14,6 +15,7 @@ export const coingeckoPlugin: Plugin = {
         getPrice,
         getPricePerAddress,
         getTrending,
+        getTrendingPools,
         getMarkets,
         getTopGainersLosers,
     ],
