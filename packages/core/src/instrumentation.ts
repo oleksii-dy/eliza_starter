@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from "async_hooks";
 import { inspect } from "util";
 import { v4 as uuidv4 } from "uuid";
 
-export type ITrace = (run: number | null, time: Date, name: string, data: any) => void;
+export type ITrace = (run: string | null, time: Date, name: string, data: any) => void;
 
 export function generateRunUUID(): string {
     return uuidv4();
@@ -39,6 +39,7 @@ export class Instrumentation {
     static run(f: () => any, run?: string | null): any {
         const i = new Instrumentation();
         if (run === undefined) run = null;
+        if (!run) run = uuidv4();
         i.run = run;
         return this.store.run(i, f);
     }
