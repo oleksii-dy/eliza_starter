@@ -1,4 +1,4 @@
-import { configSchema } from "./helpers/validate-envs";
+import { configSchema } from "./helpers/validate-config";
 import { z } from "zod";
 
 export interface UserInfo {

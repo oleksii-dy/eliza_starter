@@ -4,6 +4,7 @@ import { PostContentCreator } from "./PostContentCreator";
 import { IntervalsConfig } from "../interfaces";
 import { LinkedInPostPublisher } from "./LinkedinPostPublisher";
 import { elizaLogger, IAgentRuntime } from "@elizaos/core";
+import { getRandomNumber } from "../helpers/get-random-number";
 
 export class PostsManager {
     constructor(
@@ -41,9 +42,7 @@ export class PostsManager {
         const minMinutes = this.intervalsConfig.LINKEDIN_POST_INTERVAL_MIN;
         const maxMinutes = this.intervalsConfig.LINKEDIN_POST_INTERVAL_MAX;
 
-        const randomMinutes =
-            Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) +
-            minMinutes;
+        const randomMinutes = getRandomNumber(minMinutes, maxMinutes);
         const delay = randomMinutes * 60 * 1000;
 
         if (Date.now() > lastPostTimestamp + delay) {

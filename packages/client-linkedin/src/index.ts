@@ -1,5 +1,5 @@
 import { Client, elizaLogger, IAgentRuntime } from "@elizaos/core";
-import { validateEnvs } from "./helpers/validate-envs";
+import { validateConfig } from "./helpers/validate-config";
 import axios from "axios";
 import { LinkedInUserInfoFetcher } from "./services/LinkedinUserInfoFetcher";
 import { PostsManager } from "./services/PostsManager";
@@ -8,7 +8,7 @@ const LINKEDIN_API_URL = "https://api.linkedin.com";
 
 export const LinkedInClient: Client = {
     async start(runtime: IAgentRuntime) {
-        const envs = validateEnvs(runtime);
+        const envs = validateConfig(runtime);
 
         const axiosInstance = axios.create({
             baseURL: LINKEDIN_API_URL,
