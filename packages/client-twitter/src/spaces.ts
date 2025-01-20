@@ -134,6 +134,7 @@ Example:
  * Main class: manage a Twitter Space with N speakers max, speaker queue, filler messages, etc.
  */
 export class TwitterSpaceClient {
+    private runtime: IAgentRuntime;
     private client: ClientBase;
     private scraper: Scraper;
     private isSpaceRunning = false;
@@ -155,6 +156,7 @@ export class TwitterSpaceClient {
     constructor(client: ClientBase, runtime: IAgentRuntime) {
         this.client = client;
         this.scraper = client.twitterClient;
+        this.runtime = runtime;
 
         const charSpaces = runtime.character.twitterSpaces || {};
         this.decisionOptions = {
@@ -307,8 +309,9 @@ export class TwitterSpaceClient {
             this.speakerQueue = [];
 
             // Retrieve keys
-            const openAiKey = process.env.OPENAI_API_KEY || "";
-            const elevenLabsKey = process.env.ELEVENLABS_XI_API_KEY || "";
+            const openAiKey = this.runtime.getSetting("OPENAI_API_KEY") || "";
+            const elevenLabsKey =
+                this.runtime.getSetting("ELEVENLABS_XI_API_KEY") || "";
 
             // Plugins
             if (this.decisionOptions.enableRecording) {
