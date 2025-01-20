@@ -1,7 +1,7 @@
 import {
     composeContext,
     elizaLogger,
-    generateObjectDeprecated,
+    generateObject,
     HandlerCallback,
     IAgentRuntime,
     Memory,
@@ -47,7 +47,7 @@ export default {
                 template: getSongByIdTemplate,
             });
 
-            const content = (await generateObjectDeprecated({
+            const content = (await generateObject({
                 runtime,
                 context,
                 modelClass: ModelClass.SMALL,
