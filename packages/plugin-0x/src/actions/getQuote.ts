@@ -281,6 +281,9 @@ export const storeQuoteToMemory = async (
  */
 
 export const formatRouteInfo = (quote: GetQuoteResponse): string[] => {
+    if (!quote.route.tokens || !quote.route.fills) {
+        return [];
+    }
     // Get unique route path
     const routeTokens = quote.route.tokens;
     const routePath = routeTokens.map((t) => t.symbol).join(" → ");
