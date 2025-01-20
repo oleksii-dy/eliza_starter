@@ -11,7 +11,7 @@ let lastRequestTime = 0;
 /**
  * Interface representing a Devin session
  */
-interface DevinSession {
+export interface DevinSession {
     session_id: string;
     url: string;
     status_enum: "running" | "blocked" | "stopped";
