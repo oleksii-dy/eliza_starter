@@ -115,7 +115,7 @@ export const sendTokenByAddress: Action = {
         try {
 
             callback({
-               text:`Send Tokens ${content.tokenAddress} ${content.tokenSymbol ? content.tokenSymbol : ""} \n To:   ${content.destinationAddress} \n Amount: ${content.amount} \n Please double-check all details before swapping to avoid any loss`,
+               text:`Send Tokens ${content.tokenAddress} ${tokenObject.symbol ? `\n Symbol: ${tokenObject.symbol}` : ""} \n To:   ${content.destinationAddress} \n Amount: ${content.amount} \n Please double-check all details before swapping to avoid any loss`,
                action:"SUI_SEND_TOKEN_BY_ADDRESS",
                result: {
                 type: "send_sui_chain",
