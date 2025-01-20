@@ -17,15 +17,30 @@ TELEGRAM_BOT_TOKEN: The bot token obtained from the Telegram BotFather.
 
 ## Pre-Requisites
 
-1. Add the token to the .env file
-2. Add the same token to the character.json file
+1. Add the token to the `.env` file in the project root:
 
-"clients": ["telegram"]
+```env
+TELEGRAM_BOT_TOKEN=your-bot-token
+```
 
-"secrets": { "key": "<your-bot-token>" }
+2. Add the same token to your character configuration file:
 
+Create or modify `characters/your-character.json`:
+
+````json
+{
+  "clients": ["telegram"],
+  "secrets": {
+    "key": "<your-bot-token>"
+  }
+}
++```
+
+## From the project root:
 npm run dev
 
-pnpm start --character="<path-to-your-character>.json"
+# Or using pnpm:
+pnpm start --character="characters/your-character.json"
 
 ## License
+````
