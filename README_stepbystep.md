@@ -29,7 +29,7 @@
 - 📦 Just works!
 
 
-### This guide wants to empower communities to run their own community bots with ease, but would be a nasty plague in the hand of scammers
+# This guide wants to empower communities to run their own community bots with ease, but would be a nasty plague in the hand of scammers
 So: Please share this guide only with teams, devs, communities and builder you trust and have faith in.
 
 Scammers killing the spaces, making people leaving and disappoining the ecosystem--
@@ -174,9 +174,6 @@ Example:
     "clients": ["telegram"],
     "modelProvider": "akash_chat_api",
     "settings": {
-        "secrets": {
-            "DISCORD_APPLICATION_ID": "13301847328478324",
-            "DISCORD_API_TOKEN": "MTMzlksdjdlsakjdsalkjslkp577QWKjS4i-wz78"
         },
         "voice": {
             "model": "en_US-male-medium"
@@ -188,17 +185,19 @@ beware: you need to leave a space behind the ":" after "clients": --->
 so this is correct:  
 ```"clients": ["telegram"],```
 but not ```"clients":["telegram"],```
+the full set would look like: ["telegram","twitter","discord"],
 
 damn syntax handlers...;)
 
 ### Discord Connection
-
+Head to and create a Bot Token
 https://discord.com/developers
 
 Somehow you need to "reset" your token, otherwise you wont see the necessary token (not just numbers, looks like this: TMzMDEzMzE4Njc.....
 Then you can use the invite link generated during startup to add them to your server
 
 You need to set bot permission intentions all to the right, that are disbled by default
+then enter your Application ID and the API Token like shown below:
 
 ## Advanced Character settings:
 
@@ -220,77 +219,22 @@ Example:
     },
 ```
 
-you can add ```"secrets"``` : This overrides the values given in .env for that specific character. So you can give characters unique tg handles or discord id's
-you can add ```"plugins"``` to embed plugins from the /packages folder. remember to run "npm add eliaos@your-new-lugin" from the main directory to fetch dependencies first
-you can change ```"akash_chat_api"``` to ```"ollama"``` if you want to run your models on your local machine. I recommend you to choose small models only
+ ```"secrets"``` : This overrides the values given in .env for that specific character. So you can give characters unique tg handles or discord id's
+ 
+```"plugins"``` to embed plugins from the /packages folder. remember to run "npm add eliaos@your-new-lugin" from the main directory to fetch dependencies first
 
-## Multiple Characters acting as a Team:
-You can run two characters that can interact.. This is a good example to learn, how the sytem works...
-Lets go:
-```
-pnpm start:debug --characters=~./eliza/characters/bud.character.json,~./eliza/characters/terence.character.json
-```
-start both character the same time. To make them a team and use different Discord Instances, you need to modify their header in the character file:
+Best Plugins right now are
+-web-search (Gives the ability to handle an online search if the model requires more information
+-dexscreener-API
+-coingecko-API
+-image-generation
+-video-generation
+-speech-synthesis (can join discord voice channels)
+-twitter (no API access needed) 
+-discord
+-telegram
+-whatsapp
 
-Thats the one for Bud:
-```
-{
-    "name": "Bud",
-    "plugins": [],
-    "clients": ["discord"],
-    "modelProvider": "akash_chat_api",
-    "settings": {
-        "secrets": {
-            "DISCORD_APPLICATION_ID": "138364583265387224",
-            "DISCORD_API_TOKEN": "MTMzMDEzMzuihfiuewhfeqiuhfqiuewhfewqHh7E_9dK3zQp577QWKjS4i-wz78"
-        },
-        "voice": {
-            "model": "en_US-male-heavy"
-        }
-    },
-    "clientConfig": {
-        "discord": {
-            "isPartOfTeam": true,
-            "teamAgentIds": ["1330134542060752936"],
-            "teamLeaderId": "1330134542060752936",
-            "teamMemberInterestKeywords": ["Terence", "partner", "team", "friend", "adventure"],
-            "shouldRespondOnlyToMentions": false
-        }
-    },
-```
-
-thats the one for Terence:
-```
-{
-    "name": "Terence",
-    "clients": ["discord"],
-    "modelProvider": "akash_chat_api",
-    "settings": {
-        "secrets": {
-                "DISCORD_APPLICATION_ID": "133487326438726452936",
-                "DISCORD_API_TOKEN": "MTMzMDEziuhfiufheiuqhiuqewhfiuewqhf6np9Rtf2yvREDgJ8"
-            },
-        "voice": {
-            "model": "en_US-male-medium"
-        }
-    },
-    "clientConfig": {
-        "discord": {
-            "isPartOfTeam": true,
-            "teamAgentIds": ["1330133186734456924"],
-            "teamLeaderId": "1330134542060752936",
-            "teamMemberInterestKeywords": ["Bud", "buddy", "partner", "team", "friend", "trouble"],
-            "shouldRespondOnlyToMentions": false
-        }
-    },
-```
-The "shouldRespondOnlyToMentions": false attribute make some more agile in chats! They will give their 5 cents on every occassion
-
-There is always one Leader, but multiple Members. If you have a bigger team add their id's like this:
-```
-"teamAgentIds": ["1330133186734456924", "1330133186734456925", "1330133186734456926"]
-```
-you should see the ID in the Logs or you can retrieve them in the database too
 
 ### Accessing the Database:
 ```
@@ -397,7 +341,7 @@ services:
           - global: true
     env:
     #######################
-      - MODEL=llama3.1:8b 
+      - MODEL=llama3.1:405b 
     #######################
     #Supports any model from : https://ollama.com/library
     command:
@@ -461,22 +405,93 @@ so add these lines into your .env:
 ## Ollama Configuration
 ```
 OLLAMA_SERVER_URL=http://your-assgined-server:your-mapped-port               # Default: localhost:11434
-OLLAMA_MODEL=llama3.1:8b
+OLLAMA_MODEL=llama3.1:405b
 OLLAMA_EMBEDDING_MODEL=mxbai-embed-large         # Default: mxbai-embed-large
-SMALL_OLLAMA_MODEL=llama3.1:8b             # Default: llama3.2
-MEDIUM_OLLAMA_MODEL=llama3.1:8b            # Default: hermes3
-LARGE_OLLAMA_MODEL=llama3.1:8b    
+SMALL_OLLAMA_MODEL=llama3.1:405b             # Default: llama3.2
+MEDIUM_OLLAMA_MODEL=llama3.1:405b          # Default: hermes3
+LARGE_OLLAMA_MODEL=llama3.1:405b   
 ```
-you need to set the model to 3.1:8b for small, medium, and large
-also change modelprovider in the characterfile from "akash_chat_api" to "ollama"
+you need to set the model to llama3.1:405b for small, medium, and large
+also change the given modelprovider in the characterfile from "akash_chat_api" to "ollama"
 
-You can also deploy the 405B model, but i didn't test it yet
+
 
 # Cosmos Transaction Module:
 
 for now its working solely for tx bank transfers, but with SKIP API it will be able to IBC, trade and stake tokens
+more to come soon....
 
-### Community & contact
+
+# Running several models 
+
+
+## Multiple Characters acting as a Team:
+You can run two characters that can interact.. This is a good example to learn, how the sytem works...
+Lets go:
+```
+pnpm start:debug --characters=~./eliza/characters/bud.character.json,~./eliza/characters/terence.character.json
+```
+start both character the same time. To make them a team and use different Discord Instances, you need to modify their header in the character file:
+
+Thats the one for Bud:
+```
+{
+    "name": "Bud",
+    "plugins": [],
+    "clients": ["discord"],
+    "modelProvider": "akash_chat_api",
+    "settings": {
+        "secrets": {
+            "DISCORD_APPLICATION_ID": "138364583265387224",
+            "DISCORD_API_TOKEN": "MTMzMDEzMzuihfiuewhfeqiuhfqiuewhfewqHh7E_9dK3zQp577QWKjS4i-wz78"
+        },
+        "voice": {
+            "model": "en_US-male-heavy"
+        }
+    },
+    "clientConfig": {
+        "discord": {
+            "isPartOfTeam": true,
+            "teamAgentIds": ["1330134542060752936"],
+            "teamLeaderId": "1330134542060752936",
+            "teamMemberInterestKeywords": ["Terence", "partner", "team", "friend", "adventure"],
+            "shouldRespondOnlyToMentions": false
+        }
+    },
+```
+
+thats the one for Terence:
+```
+{
+    "name": "Terence",
+    "clients": ["discord"],
+    "modelProvider": "akash_chat_api",
+    "settings": {
+        "secrets": {
+                "DISCORD_APPLICATION_ID": "133487326438726452936",
+                "DISCORD_API_TOKEN": "MTMzMDEziuhfiufheiuqhiuqewhfiuewqhf6np9Rtf2yvREDgJ8"
+            },
+        "voice": {
+            "model": "en_US-male-medium"
+        }
+    },
+    "clientConfig": {
+        "discord": {
+            "isPartOfTeam": true,
+            "teamAgentIds": ["1330133186734456924"],
+            "teamLeaderId": "1330134542060752936",
+            "teamMemberInterestKeywords": ["Bud", "buddy", "partner", "team", "friend", "trouble"],
+            "shouldRespondOnlyToMentions": false
+        }
+    },
+```
+The "shouldRespondOnlyToMentions": false attribute make some more agile in chats! They will give their 5 cents on every occassion
+
+There is always one Leader, but multiple Members. If you have a bigger team add their id's like this:
+```
+"teamAgentIds": ["1330133186734456924", "1330133186734456925", "1330133186734456926"]
+```
+you should see the ID in the Logs or you can retrieve them in the database too
 
 
 - [Discord](https://discord.gg/ai16z). Best for: sharing your applications and hanging out with the community.
