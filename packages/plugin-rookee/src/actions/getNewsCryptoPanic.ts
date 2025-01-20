@@ -65,22 +65,20 @@ const newsCyptoPanicTemplate = `Respond with a JSON markdown block containing on
 
 
 export  const getNewsCryptoPanic: Action = {
-  name: 'analyzeCryptoNewsPanic',
-  description: 'provide news analysis deeply into crypto markets',
+    name: 'ANALYZE_CRYPTO_NEWS_PANIC',
+    description: 'provide news analysis deeply into crypto markets',
     handler: async (runtime: IAgentRuntime,
                     message: Memory,
                     state: State,
                     options: { [key: string]: unknown },
                     callback: HandlerCallback) => {
         try{
-
             // Initialize or update state
             if (!state) {
                 state = (await runtime.composeState(message)) as State;
             } else {
                 state = await runtime.updateRecentMessageState(state);
             }
-
             const newsCryptoPannicContext = composeContext({
                 state,
                 template: newsCyptoPanicTemplate,
@@ -94,13 +92,11 @@ export  const getNewsCryptoPanic: Action = {
             elizaLogger.log("content: ",content);
             // elizaLogger.log("content: ",typeof content);
             const urlCryptoPanic = `${process.env.CRYPTO_PANIC_URL}` || "https://cryptopanic.com/api/free/v1/posts";
-
             if(!content){
                 return true;
             }
             content.auth_token = process.env.CRYPTO_PANIC_API_KEY;
             content.approved=true
-
             if(content.currencies === null){
                 content.currencies = "BTC,ETH,SOL";
             }
@@ -119,7 +115,6 @@ export  const getNewsCryptoPanic: Action = {
                     headers: {
                         "Content-Type": "application/json",
                     },
-
                 };
             const queryString = new URLSearchParams(content).toString();
             const responseCryptoPanic = await fetch(`${urlCryptoPanic}?${queryString}`, requestOptions);
@@ -143,7 +138,6 @@ export  const getNewsCryptoPanic: Action = {
                 }
             });
             let responseMessage = "Stay updated! Here are today’s highlights:";
-
             callback({
                 text: responseMessage,
                 result:{
@@ -183,7 +177,6 @@ export  const getNewsCryptoPanic: Action = {
         "ANALYZE_CRYPTO_MARKET",
         "ANALYZE_BEARISH",
         "ANALYZE_BULLISH",
-
     ],
     examples: [
         [

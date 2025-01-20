@@ -7,12 +7,13 @@
   "dependencies": {
     "@elizaos/core": "workspace:*",
     "@elizaos/plugin-tee": "^0.1.7",
+    "@mysten/sui.js": "^0.53.0",
+    "axios": "^1.7.9",
     "bignumber": "1.1.0",
     "bignumber.js": "9.1.2",
     "node-cache": "5.1.2",
     "tsup": "8.3.5",
-    "vitest": "2.1.4",
-    "axios": "^1.7.9"
+    "vitest": "2.1.4"
   },
   "scripts": {
     "build": "tsup --format esm --dts",
@@ -22,5 +23,8 @@
   "peerDependencies": {
     "form-data": "4.0.1",
     "whatwg-url": "7.1.0"
+  },
+  "devDependencies": {
+    "@mysten/sui": "^1.19.0"
   }
 }

@@ -100,7 +100,10 @@ export const suiTrendingPools: Action = {
 
         if (callback) {
             callback({
-                text: "list token in network",
+                text: `
+🪙 List of Tokens in the Network
+
+Here are the available tokens in the network. You can explore their details, market performance, and trading options:`,
                 action: 'SUI_TRENDING_POOLS',
                 result: {
                     type: "pools",

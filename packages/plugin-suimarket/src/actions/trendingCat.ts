@@ -93,7 +93,7 @@ export const trendingCat: Action = {
                 text: `trending cat:` + (await formatObjectsToText(info)),
                 action: 'trendingCat',
                 result: {
-                    type: "marketStatisticsTable",
+                    type: "trendingCat",
                     data: info.slice(0,content.size)
                 }
             });

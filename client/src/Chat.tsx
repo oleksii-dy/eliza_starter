@@ -73,7 +73,9 @@ export default function Chat() {
                                     }`}
                                 >
                                     <div>{message.text}</div>
-                                    <div color="red">{JSON.stringify(message.result, null, 2)}</div>
+				    <div>{`\n ---TRACE--- \n`}</div>
+                                    <div>{JSON.stringify(message.result, null, 2)}</div>
+				    <div>{`\n ---END TRACE ---\n`}</div>
                                     <div>{message.attachments?.map((attachment, i) => (
                                         attachment.contentType.startsWith('image/') && (
                                             <img

@@ -9,7 +9,10 @@ import { topAiTokens } from './actions/topAiTokens';
 import {  suiTrendingPools} from "./actions/suiTrendingPools";
 import { searchSuiTokenSymbol } from './actions/searchSuiTokenSymbol';
 import { suiTokenInfo } from './actions/suiTokenInfo';
-import { executeSwap } from './actions/swap';
+import { executeSwap } from './actions/swapBySymbol';
+import { executeSwapByAddress } from './actions/swapByAddress';
+import { sendTokenByAddress } from './actions/sendTokenByAddress';
+import { sendTokenBySymbol } from './actions/sendTokenBySymbol';
 
 const suimarketPlugin: Plugin = {
   name: "coingecko",
@@ -25,7 +28,10 @@ const suimarketPlugin: Plugin = {
     suiTrendingPools,
     searchSuiTokenSymbol,
     suiTokenInfo,
-    executeSwap
+    executeSwap,
+    executeSwapByAddress,
+    sendTokenByAddress,
+    sendTokenBySymbol
 ],
   evaluators: [],
   providers: []

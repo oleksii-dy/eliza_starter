@@ -15,7 +15,7 @@ import { z } from "zod";
 
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
 // import { formatObjectToText } from "../utils/format";
-import searchCoinInFIleJsonProvider from "../providers/searchCoinIdInFileJson";
+import { searchCoinInFileJsonProvider, searchCoinInFileJsonProvider2 } from "../providers/searchCoinIdInFileJson";
 
 export interface InfoContent extends Content {
     coin_symbol: string;
@@ -35,7 +35,7 @@ const coinInfoTemplate = `Respond with a JSON markdown block containing only the
 Example response:
 \`\`\`json
 {
-    "coin_symbol": "bitcoin"
+    "coin_symbol": "btc"
     "coin_name":"Bitcoin"
 }
 \`\`\`
@@ -46,7 +46,7 @@ Example response:
 Based on the user's current question, extract the following cryptocurrency information:
     coin_symbol:
         Cryptocurrency symbol in lowercase format
-        Return btc if no valid cryptocurrency symbol is found
+        Return bitcoin if no valid cryptocurrency symbol is found
     coin_name:
         - Full name of the cryptocurrency with proper capitalization (e.g., Bitcoin, Ethereum, Solana)
         - Must match the corresponding symbol
@@ -112,11 +112,10 @@ export const coinInfo: Action = {
             runtime,
             context: _context,
             schema: _schema,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.MEDIUM,
         });
 
         const parsedContent = content.object as InfoContent;
-
 
 
         if (!isInfoContent(parsedContent)) {
@@ -131,13 +130,20 @@ export const coinInfo: Action = {
         }
 
         elizaLogger.log("[coinInfo] parsed content: ", parsedContent);
-        const coinObject = await searchCoinInFIleJsonProvider(parsedContent.coin_symbol,parsedContent.coin_name);
+
+        let coinObject = await searchCoinInFileJsonProvider(parsedContent.coin_symbol);
+        if(parsedContent.coin_symbol === "btc"){
+            coinObject= await searchCoinInFileJsonProvider2(parsedContent.coin_symbol, parsedContent.coin_name)
+        }
         console.log("coinObject",coinObject)
         if(coinObject === null){
+
+
             callback({
-                text: `I cant find infomation of token address` ,
+                text: `I cant find infomation of coin symbol` ,
 
             });
+            return false
         }
         const coinGecko = new CoingeckoProvider();
         const info = await coinGecko.getToken(coinObject.id);
