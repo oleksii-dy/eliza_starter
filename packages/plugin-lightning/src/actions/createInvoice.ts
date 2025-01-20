@@ -3,16 +3,17 @@ import {
     composeContext,
     generateObjectDeprecated,
     ModelClass,
+    elizaLogger,
 } from "@elizaos/core";
 
 import {
     initLightningProvider,
     LightningProvider,
 } from "../providers/lightning";
+
+import { createInvoiceTemplate } from "../templates";
 import { CreateInvoiceResult } from "astra-lightning";
 import { CreateInvoiceArgs } from "../types";
-import { createInvoiceTemplate } from "../templates";
-
 export { createInvoiceTemplate };
 
 export class CreateInvoiceAction {
@@ -21,7 +22,7 @@ export class CreateInvoiceAction {
     }
 
     async createInvoice(
-        params: CreateInvoiceArgs
+        params: CreateInvoiceArgs,
     ): Promise<CreateInvoiceResult> {
         if (!params.tokens) {
             throw new Error("tokens is required.");
@@ -40,9 +41,12 @@ export const createInvoiceAction = {
         _message: Memory,
         state: State,
         _options: any,
-        callback?: (response: { text: string; content?: { success: boolean; invoice?: string } }) => void
+        callback?: (response: {
+            text: string;
+            content?: { success: boolean; invoice?: string };
+        }) => void,
     ) => {
-        console.log("CreateInvoice action handler called");
+        elizaLogger.log("CreateInvoice action handler called");
         const lightningProvider = await initLightningProvider(runtime);
         const action = new CreateInvoiceAction(lightningProvider);
 
@@ -57,7 +61,7 @@ export const createInvoiceAction = {
             modelClass: ModelClass.LARGE,
         });
 
-        const createInvoiceOptions: CreateInvoiceArgs = {
+        const createInvoiceOptions = {
             tokens: content.tokens,
         };
 
@@ -76,7 +80,6 @@ export const createInvoiceAction = {
             }
             return true;
         } catch (error) {
-            console.error("Error in createInvoice handler:", error.message);
             if (callback) {
                 callback({ text: `Error: ${error.message}` });
             }

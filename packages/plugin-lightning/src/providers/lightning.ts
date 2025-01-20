@@ -3,6 +3,7 @@ import {
     type Provider,
     type Memory,
     type State,
+    elizaLogger,
 } from "@elizaos/core";
 import {
     authenticatedLndGrpc,
@@ -11,17 +12,17 @@ import {
     GetChannelsResult,
     getIdentity,
     getChannels,
-    CreateInvoiceResult,
     createInvoice,
     pay,
     PayResult,
+    CreateInvoiceResult,
 } from "astra-lightning";
-import { CreateInvoiceArgs, PayArgs } from "../types";
+import { PayArgs, CreateInvoiceArgs } from "../types";
 export class LightningProvider {
     private lndClient: AuthenticatedLnd;
     constructor(cert: string, macaroon: string, socket: string) {
         if (!cert || !macaroon || !socket) {
-            throw new Error('Missing required LND credentials');
+            throw new Error("Missing required LND credentials");
         }
         try {
             const { lnd } = authenticatedLndGrpc({
@@ -31,7 +32,9 @@ export class LightningProvider {
             });
             this.lndClient = lnd;
         } catch (error) {
-            throw new Error(`Failed to initialize LND client: ${error.message}`);
+            throw new Error(
+                `Failed to initialize LND client: ${error.message}`,
+            );
         }
     }
     async getLndIdentity(): Promise<GetIdentityResult> {
@@ -49,7 +52,7 @@ export class LightningProvider {
         }
     }
     async createInvoice(
-        createInvoiceArgs: CreateInvoiceArgs
+        createInvoiceArgs: CreateInvoiceArgs,
     ): Promise<CreateInvoiceResult> {
         try {
             return await createInvoice({
@@ -80,7 +83,7 @@ export const lndProvider: Provider = {
     async get(
         runtime: IAgentRuntime,
         _message: Memory,
-        state?: State
+        state?: State,
     ): Promise<string | null> {
         try {
             const lightningProvider = await initLightningProvider(runtime);
@@ -90,7 +93,7 @@ export const lndProvider: Provider = {
             const agentName = state?.agentName || "The agent";
             return `${agentName}'s Lightning Node publickey: ${nodePubkey}\nChannel count: ${channels.length}`;
         } catch (error) {
-            console.error("Error in Lightning provider:", error);
+            elizaLogger.error("Error in Lightning provider:", error.message);
             return null;
         }
     },

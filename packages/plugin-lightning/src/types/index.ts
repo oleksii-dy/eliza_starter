@@ -1,37 +1,31 @@
+
 export type CreateInvoiceArgs = {
-    /** CLTV Delta */
-    cltv_delta?: number;
-    /** Invoice Description */
-    description?: string;
-    /** Hashed Description of Payment Hex String */
-    description_hash?: string;
-    /** Expires At ISO 8601 Date */
-    expires_at?: string;
-    /** Use Blinded Paths For Inbound Routes */
-    is_encrypting_routes?: boolean;
-    /** Is Fallback Address Included */
-    is_fallback_included?: boolean;
-    /** Is Fallback Address Nested */
-    is_fallback_nested?: boolean;
-    /** Invoice Includes Private Channels */
-    is_including_private_channels?: boolean;
-    /** Payment Preimage Hex String */
-    secret?: string;
-    /** Millitokens */
-    mtokens?: string;
-    routes?: Array<{
-        public_key: string;
-        base_fee_mtokens?: string;
-        channel?: string;
-        cltv_delta?: number;
-        fee_rate?: number;
-        [key: string]: unknown;
-    }>;
-    /** Tokens */
-    tokens?: number;
-    asset_id?: string;
-    peer_pubkey?: string;
-    tpr?: Record<string, unknown>;
+  /** CLTV Delta */
+  cltv_delta?: number;
+  /** Invoice Description */
+  description?: string;
+  /** Hashed Description of Payment Hex String */
+  description_hash?: string;
+  /** Expires At ISO 8601 Date */
+  expires_at?: string;
+  /** Use Blinded Paths For Inbound Routes */
+  is_encrypting_routes?: boolean;
+  /** Is Fallback Address Included */
+  is_fallback_included?: boolean;
+  /** Is Fallback Address Nested */
+  is_fallback_nested?: boolean;
+  /** Invoice Includes Private Channels */
+  is_including_private_channels?: boolean;
+  /** Payment Preimage Hex String */
+  secret?: string;
+  /** Millitokens */
+  mtokens?: string;
+  routes?: any;
+  /** Tokens */
+  tokens?: number;
+  asset_id?: string;
+  peer_pubkey?: string;
+  tpr?: any;
 };
 
 export type PayArgs = {
