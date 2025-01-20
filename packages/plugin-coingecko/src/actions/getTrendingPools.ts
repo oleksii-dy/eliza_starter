@@ -204,13 +204,13 @@ export default {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "What are the top 5 hottest dex pools?",
+                    text: "What are the top hottest dex pools?",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "I'll fetch the top 5 hottest DEX pools for you.",
+                    text: "I'll fetch the top hottest DEX pools for you.",
                     action: "GET_TRENDING_POOLS",
                 },
             },
