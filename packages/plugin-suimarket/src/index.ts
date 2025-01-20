@@ -11,6 +11,8 @@ import { searchSuiTokenSymbol } from './actions/searchSuiTokenSymbol';
 import { suiTokenInfo } from './actions/suiTokenInfo';
 import { executeSwap } from './actions/swapBySymbol';
 import { executeSwapByAddress } from './actions/swapByAddress';
+import { sendTokenByAddress } from './actions/sendTokenByAddress';
+import { sendTokenBySymbol } from './actions/sendTokenBySymbol';
 
 const suimarketPlugin: Plugin = {
   name: "coingecko",
@@ -27,7 +29,9 @@ const suimarketPlugin: Plugin = {
     searchSuiTokenSymbol,
     suiTokenInfo,
     executeSwap,
-    executeSwapByAddress
+    executeSwapByAddress,
+    sendTokenByAddress,
+    sendTokenBySymbol
 ],
   evaluators: [],
   providers: []
