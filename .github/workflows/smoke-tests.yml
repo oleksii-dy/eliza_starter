@@ -14,6 +14,10 @@ jobs:
             image: node:23.3.0-bullseye  # Exact version to match smokeTests.sh requirement
         env:
             OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+            NODE_OPTIONS: --no-node-snapshot --experimental-loader=ts-node/esm/transpile-only  # Configure Node.js for ESM and native modules
+            DISABLE_PLUGINS: true  # Disable plugins during smoke tests
+            TS_NODE_TRANSPILE_ONLY: true  # Speed up ts-node by skipping type checking
+            NODE_NO_WARNINGS: 1  # Suppress experimental warnings
         steps:
             - uses: actions/checkout@v4
 

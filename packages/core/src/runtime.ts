@@ -403,28 +403,68 @@ export class AgentRuntime implements IAgentRuntime {
         this.token = opts.token;
 
         // Only load plugins if not explicitly disabled
-        this.plugins = process.env.DISABLE_PLUGINS === 'true' ? [] : [
-            ...(opts.character?.plugins ?? []),
-            ...(opts.plugins ?? []),
-        ];
+        // Handle plugin loading with proper error handling
+        if (process.env.DISABLE_PLUGINS === 'true') {
+            elizaLogger.info('Plugins disabled via DISABLE_PLUGINS environment variable');
+            this.plugins = [];
+        } else {
+            try {
+                this.plugins = [
+                    ...(opts.character?.plugins ?? []),
+                    ...(opts.plugins ?? []),
+                ];
 
-        this.plugins.forEach((plugin) => {
-            plugin.actions?.forEach((action) => {
-                this.registerAction(action);
-            });
+                for (const plugin of this.plugins) {
+                    try {
+                        // Register plugin components with individual error handling
+                        if (plugin.actions) {
+                            for (const action of plugin.actions) {
+                                try {
+                                    this.registerAction(action);
+                                } catch (error) {
+                                    elizaLogger.warn(`Failed to register action from plugin: ${error.message}`);
+                                }
+                            }
+                        }
 
-            plugin.evaluators?.forEach((evaluator) => {
-                this.registerEvaluator(evaluator);
-            });
+                        if (plugin.evaluators) {
+                            for (const evaluator of plugin.evaluators) {
+                                try {
+                                    this.registerEvaluator(evaluator);
+                                } catch (error) {
+                                    elizaLogger.warn(`Failed to register evaluator from plugin: ${error.message}`);
+                                }
+                            }
+                        }
 
-            plugin.services?.forEach((service) => {
-                this.registerService(service);
-            });
+                        if (plugin.services) {
+                            for (const service of plugin.services) {
+                                try {
+                                    this.registerService(service);
+                                } catch (error) {
+                                    elizaLogger.warn(`Failed to register service from plugin: ${error.message}`);
+                                }
+                            }
+                        }
 
-            plugin.providers?.forEach((provider) => {
-                this.registerContextProvider(provider);
-            });
-        });
+                        if (plugin.providers) {
+                            for (const provider of plugin.providers) {
+                                try {
+                                    this.registerContextProvider(provider);
+                                } catch (error) {
+                                    elizaLogger.warn(`Failed to register provider from plugin: ${error.message}`);
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        elizaLogger.warn(`Failed to process plugin: ${error.message}`);
+                    }
+                }
+            } catch (error) {
+                elizaLogger.warn('Failed to initialize plugins, continuing without plugins');
+                this.plugins = [];
+            }
+        }
 
         (opts.actions ?? []).forEach((action) => {
             this.registerAction(action);

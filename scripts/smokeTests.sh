@@ -70,8 +70,12 @@ get_server_port() {
     fi
 }
 
-# Start with minimal plugins to avoid dependency issues
-DISABLE_PLUGINS=true pnpm start --character=characters/trump.character.json > "$OUTFILE" 2>&1 &
+# Start with plugins disabled and configure Node.js for ESM and native modules
+export DISABLE_PLUGINS=true
+export NODE_OPTIONS="--no-node-snapshot --experimental-loader=ts-node/esm/transpile-only"
+export TS_NODE_TRANSPILE_ONLY=true
+>&2 echo "Starting with DISABLE_PLUGINS=$DISABLE_PLUGINS and NODE_OPTIONS=$NODE_OPTIONS"
+NODE_NO_WARNINGS=1 pnpm start --character=characters/trump.character.json > "$OUTFILE" 2>&1 &
 
 APP_PID=$!  # Capture the PID of the background process
 SERVER_PORT=""
