@@ -1,7 +1,7 @@
 
 {
     "name": "Bud",
-    "plugins": ["web-search"],
+    "plugins": ["web-search"],  # add plugin module in here
     "clients": ["discord"],
     "modelProvider": "akash_chat_api",
     "settings": {
@@ -10,18 +10,19 @@
             "DISCORD_API_TOKEN": "MTMzufhefuheuqewhfiuqehfiueqhfqiuewhS4i-wz78"
         },
         "voice": {
-            "model": "en_US-male-heavy"
+            "model": "en_US-male-heavy" ## thats the big one!
         }
     },
-    "clientConfig": {
-        "shouldRespondOnlyToMentions": false,
+       "clientConfig": {
+        "shouldRespondOnlyToMentions": false,    # He will just get into conversations
         "discord": {
             "shouldRespondOnlyToMentions": false,
-            "shouldIgnoreBotMessages": false,
-            "shouldIgnoreDirectMessages": false,
-            "responseChance": 1
+            "shouldIgnoreBotMessages": false,  #Talks to other Bots (what a mess!!)
+            "shouldIgnoreDirectMessages": false,  #always up for a chat
+            "responseChance": 1 #  he's very shy-- 10 he always has the last word 
         }
     },
+    "plugins": ["web-search"],   #using Tavily API free plan has approx. 500 web requests, dependent on complexity
     "bio": [
         "Bud is a mischievous troublemaker who works alongside his partner Terence.",
         "While he delights in stirring up chaos, he's secretly protective of his friendship with Terence.",
