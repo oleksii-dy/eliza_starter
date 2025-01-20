@@ -11,7 +11,6 @@ import { searchSuiTokenSymbol } from './actions/searchSuiTokenSymbol';
 import { suiTokenInfo } from './actions/suiTokenInfo';
 import { executeSwap } from './actions/swapBySymbol';
 import { executeSwapByAddress } from './actions/swapByAddress';
-import { sendTokenByAddress } from './actions/sendTokenByAddress';
 import { sendTokenBySymbol } from './actions/sendTokenBySymbol';
 
 const suimarketPlugin: Plugin = {
@@ -30,7 +29,6 @@ const suimarketPlugin: Plugin = {
     suiTokenInfo,
     executeSwap,
     executeSwapByAddress,
-    sendTokenByAddress,
     sendTokenBySymbol
 ],
   evaluators: [],
