@@ -12,16 +12,10 @@ export class EVMTokenRegistry {
     private chainTokenMaps: Map<number, Map<string, TokenMetadata>>;
     private initializedChains: Set<number>;
 
-    // Use the enum values directly
-    private static CHAIN_NAMES: Record<number, string> = Object.entries(Chains)
-        .filter(([key]) => isNaN(Number(key))) // Filter out reverse mappings
-        .reduce(
-            (acc, [name, id]) => ({
-                ...acc,
-                [id]: name.toLowerCase(),
-            }),
-            {}
-        );
+    private static CHAIN_NAMES: Record<number, string> = Object.fromEntries(
+        Object.keys(Chains)
+            .map(name => [Chains[name as keyof typeof Chains], name.toLowerCase()])
+    );
 
     private constructor() {
         this.chainTokenMaps = new Map();

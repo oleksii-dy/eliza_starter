@@ -91,7 +91,11 @@ export const getQuote: Action = {
             if (quote.issues?.balance) {
                 warnings.push(
                     `⚠️ Warnings:`,
-                    `  • Insufficient balance (Have ${formatTokenAmount(quote.issues.balance.actual, quote.issues.balance.token, chainId)})`
+                    `  • Insufficient balance (Have ${formatTokenAmount(
+                        quote.issues.balance.actual,
+                        quote.issues.balance.token,
+                        chainId
+                    )})`
                 );
             }
 
@@ -109,15 +113,30 @@ export const getQuote: Action = {
                     buyTokenObject.address,
                     chainId
                 )}`,
-                `📊 Rate: 1 ${sellTokenObject.symbol} = ${(Number(buyAmountBaseUnitsQuoted) / Number(sellAmountBaseUnitsQuoted)).toFixed(4)} ${buyTokenObject.symbol}`,
+                `📊 Rate: 1 ${sellTokenObject.symbol} = ${(
+                    Number(buyAmountBaseUnitsQuoted) /
+                    Number(sellAmountBaseUnitsQuoted)
+                ).toFixed(4)} ${buyTokenObject.symbol}`,
 
                 // New information specific to quote
-                `💱 Minimum Buy Amount: ${formatTokenAmount(quote.minBuyAmount, quote.buyToken, chainId)}`,
+                `💱 Minimum Buy Amount: ${formatTokenAmount(
+                    quote.minBuyAmount,
+                    quote.buyToken,
+                    chainId
+                )}`,
 
                 // Fee breakdown
                 `💰 Fees Breakdown:`,
-                `  • 0x Protocol Fee: ${formatTokenAmount(quote.fees.zeroExFee?.amount, quote.fees.zeroExFee?.token, chainId)}`,
-                `  • Integrator Fee: ${formatTokenAmount(quote.fees.integratorFee?.amount, quote.fees.integratorFee?.token, chainId)}`,
+                `  • 0x Protocol Fee: ${formatTokenAmount(
+                    quote.fees.zeroExFee?.amount,
+                    quote.fees.zeroExFee?.token,
+                    chainId
+                )}`,
+                `  • Integrator Fee: ${formatTokenAmount(
+                    quote.fees.integratorFee?.amount,
+                    quote.fees.integratorFee?.token,
+                    chainId
+                )}`,
                 `  • Network Gas Fee: ${
                     quote.totalNetworkFee
                         ? formatTokenAmount(
@@ -152,7 +171,7 @@ export const getQuote: Action = {
             if (callback) {
                 callback({
                     text: `Error getting quote: ${error.message}`,
-                    content: { error: error.message },
+                    content: { error: error.message || String(error) },
                 });
             }
             return false;
@@ -289,15 +308,12 @@ export const formatRouteInfo = (quote: GetQuoteResponse): string[] => {
     const routePath = routeTokens.map((t) => t.symbol).join(" → ");
 
     // Group fills by token pairs
-    const fillsByPair = quote.route.fills.reduce(
-        (acc, fill) => {
-            const key = `${fill.from}-${fill.to}`;
-            if (!acc[key]) acc[key] = [];
-            acc[key].push(fill);
-            return acc;
-        },
-        {} as Record<string, typeof quote.route.fills>
-    );
+    const fillsByPair = quote.route.fills.reduce((acc, fill) => {
+        const key = `${fill.from}-${fill.to}`;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(fill);
+        return acc;
+    }, {} as Record<string, typeof quote.route.fills>);
 
     // Format each pair's route details
     const routeDetails = Object.entries(fillsByPair).map(([pair, fills]) => {
@@ -310,7 +326,9 @@ export const formatRouteInfo = (quote: GetQuoteResponse): string[] => {
         )?.symbol;
 
         if (fills.length === 1) {
-            return `  • ${from} → ${to}: ${Number(fills[0].proportionBps) / 100}% via ${fills[0].source}`;
+            return `  • ${from} → ${to}: ${
+                Number(fills[0].proportionBps) / 100
+            }% via ${fills[0].source}`;
         }
         return [
             `  • ${from} → ${to}:`,

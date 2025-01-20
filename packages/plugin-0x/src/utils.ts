@@ -1,6 +1,6 @@
 import { formatUnits, Hash } from "viem";
 import { EVMTokenRegistry } from "./EVMtokenRegistry";
-
+import { IAgentRuntime } from "@elizaos/core";
 
 /**
  * Formats a token amount with its symbol
@@ -24,11 +24,3 @@ export function formatTokenAmount(
     const parsedAmount = formatUnits(BigInt(amount), token.decimals);
     return `${Number(parsedAmount).toFixed(4)} ${token.symbol}`;
 }
-
-export const getTxReceipt = async (runtime: IAgentRuntime, tx: Hash) => {
-    const publicClient = getPublicClient(runtime);
-    const receipt = await publicClient.waitForTransactionReceipt({
-        hash: tx,
-    });
-    return receipt;
-};
