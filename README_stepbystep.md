@@ -139,7 +139,8 @@ This should start a running instance
 To start the process via pm2
 
 ```
-pm2 start "avatar" -- start --character=~./eliza/characters/avatar.character.json
+pm2 start pnpm --name eliza -- start -- --character=./eliza/characters/avatar.character.json
+
 ```
 
 This creates a process, check the status or end the daemon. use pm2 save to save the process
