@@ -1,5 +1,5 @@
 import { beforeAll, afterAll, vi } from 'vitest';
-import { IAgentRuntime, Memory } from '@ai16z/eliza';
+import { IAgentRuntime, Memory } from '@elizaos/core';
 
 export const mockRedditClient = {
     submitSelfpost: vi.fn(),

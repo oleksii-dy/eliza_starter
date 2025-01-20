@@ -1,12 +1,12 @@
 {
   "name": "@elizaos/plugin-reddit",
-  "version": "0.1.0",
+  "version": "0.1.9-alpha.1",
   "main": "dist/index.js",
   "type": "module",
   "types": "dist/index.d.ts",
   "dependencies": {
-    "@ai16z/eliza": "workspace:*",
-    "snoowrap": "^1.23.0"  // Reddit API wrapper
+    "@elizaos/core": "workspace:*",
+    "snoowrap": "^1.23.0"
   },
   "devDependencies": {
     "vitest": "^2.1.4",
