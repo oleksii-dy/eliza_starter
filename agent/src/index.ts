@@ -105,6 +105,7 @@ import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
 import { echoChambersPlugin } from "@elizaos/plugin-echochambers";
 import { dexScreenerPlugin } from "@elizaos/plugin-dexscreener";
 import { pythDataPlugin } from "@elizaos/plugin-pyth-data";
+import { ethstoragePlugin } from "@elizaos/plugin-ethstorage"
 
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
 import Database from "better-sqlite3";
@@ -1038,6 +1039,8 @@ export async function createAgent(
             getSecret(character, "PYTH_MAINNET_PROGRAM_KEY")
                 ? pythDataPlugin
                 : null,
+            getSecret(character, "ETHSTORAGE_SEED") ? ethstoragePlugin : null,
+            getSecret(character, "ETHSTORAGE_RPC") ? ethstoragePlugin : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
