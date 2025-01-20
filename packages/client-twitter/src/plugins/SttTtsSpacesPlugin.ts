@@ -67,7 +67,7 @@ export class SttTtsPlugin implements Plugin {
     private isSpeaking = false;
     private isProcessingAudio = false;
 
-    private userSpeakingTimers = new Map<string, NodeJS.Timeout>();
+    private userSpeakingTimer: NodeJS.Timeout | null = null;
 
     onAttach(_space: Space) {
         elizaLogger.log("[SttTtsPlugin] onAttach => space was attached");
@@ -121,26 +121,10 @@ export class SttTtsPlugin implements Plugin {
         if (maxVal < this.silenceThreshold) {
             return;
         }
-        const timer = this.userSpeakingTimers.get(data.userId);
-        if (timer) {
-            clearTimeout(timer);
-            this.userSpeakingTimers.set(data.userId, null);
-        }
 
-        console.log("receive user voice");
-        this.userSpeakingTimers.set(
-            data.userId,
-            setTimeout(() => {
-                console.log("processing voice");
-                this.userSpeakingTimers.set(data.userId, null);
-                this.processAudio(data.userId).catch((err) =>
-                    elizaLogger.error(
-                        "[SttTtsPlugin] handleSilence error =>",
-                        err
-                    )
-                );
-            }, 1000) // 1-second silence threshold
-        );
+        if (this.userSpeakingTimer) {
+            clearTimeout(this.userSpeakingTimer);
+        }
 
         let arr = this.pcmBuffers.get(data.userId);
         if (!arr) {
@@ -148,6 +132,15 @@ export class SttTtsPlugin implements Plugin {
             this.pcmBuffers.set(data.userId, arr);
         }
         arr.push(data.samples);
+
+        console.log("receive user voice");
+        this.userSpeakingTimer = setTimeout(() => {
+            console.log("processing voice");
+            this.userSpeakingTimer = null;
+            this.processAudio(data.userId).catch((err) =>
+                elizaLogger.error("[SttTtsPlugin] handleSilence error =>", err)
+            );
+        }, 1000); // 1-second silence threshold
     }
 
     // /src/sttTtsPlugin.ts
@@ -480,7 +473,7 @@ export class SttTtsPlugin implements Plugin {
     cleanup(): void {
         elizaLogger.log("[SttTtsPlugin] cleanup => releasing resources");
         this.pcmBuffers.clear();
-        this.userSpeakingTimers.clear();
+        this.userSpeakingTimer = null;
         this.ttsQueue = [];
         this.isSpeaking = false;
     }
