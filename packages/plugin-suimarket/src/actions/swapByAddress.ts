@@ -99,11 +99,11 @@ export const executeSwapByAddress: Action = {
 
             },
             toToken:{...outputTokenObject,
-                type:content.inputTokenAddress
+                type:content.outputTokenAddress
             }
 
         }
-        
+
         try {
 
             callback({

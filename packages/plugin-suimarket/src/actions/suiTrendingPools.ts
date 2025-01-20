@@ -60,8 +60,7 @@ export const suiTrendingPools: Action = {
         "DISPLAY_SUI_TOKEN_MARKET_ACTIVITY",
         "SHOW_SUI_TOKEN_TRADING_DATA",
         "GET_SUI_TOKEN_MARKET_ANALYSIS",
-
-
+        "SUI_TRENDING_TOKEN"
     ],
 
     examples: [],
