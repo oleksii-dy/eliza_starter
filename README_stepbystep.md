@@ -174,8 +174,8 @@ Example:
     "modelProvider": "akash_chat_api",
     "settings": {
         "secrets": {
-            "DISCORD_APPLICATION_ID": "1330176587323924",
-            "DISCORD_API_TOKEN": "MTMzMDEzMzE4NjczNnewf9843f984r98E_9dK3zQp577QWKjS4i-wz78"
+            "DISCORD_APPLICATION_ID": "13301847328478324",
+            "DISCORD_API_TOKEN": "MTMzlksdjdlsakjdsalkjslkp577QWKjS4i-wz78"
         },
         "voice": {
             "model": "en_US-male-medium"
