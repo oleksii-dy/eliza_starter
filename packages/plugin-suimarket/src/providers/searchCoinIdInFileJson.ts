@@ -48,8 +48,8 @@ export const searchCoinInFileJsonProvider2 = async(coinSymbol:string, coinName:s
                 // Tìm kiếm coin gân đúng
                 const foundCoin = coins.find(
                     coin =>
-                        coin.symbol.toLowerCase() === coinSymbol.toLowerCase()&&
-                    coin.name.toLowerCase() === coinName.toLowerCase() &&
+                        (coin.symbol.toLowerCase() === coinSymbol.toLowerCase()||
+                    coin.name.toLowerCase() === coinName.toLowerCase()) &&
                     coin.verified === true
                 );
 
