@@ -22,6 +22,7 @@ export const LinkedInClient: Client = {
             userInfoFetcher: new LinkedInUserInfoFetcher(axiosInstance),
             runtime: this.runtime,
             config: {
+                LINKEDIN_DRY_RUN: envs.LINKEDIN_DRY_RUN,
                 LINKEDIN_POST_INTERVAL_MIN: envs.LINKEDIN_POST_INTERVAL_MIN,
                 LINKEDIN_POST_INTERVAL_MAX: envs.LINKEDIN_POST_INTERVAL_MAX,
             }

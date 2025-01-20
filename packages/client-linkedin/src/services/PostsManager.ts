@@ -1,7 +1,7 @@
 import { AxiosInstance } from "axios";
 import { LinkedInUserInfoFetcher } from "./LinkedinUserInfoFetcher";
 import { PostContentCreator } from "./PostContentCreator";
-import { IntervalsConfig } from "../interfaces";
+import { publisherConfig } from "../interfaces";
 import { LinkedInPostPublisher } from "./LinkedinPostPublisher";
 import { elizaLogger, IAgentRuntime } from "@elizaos/core";
 import { getRandomNumber } from "../helpers/get-random-number";
@@ -12,7 +12,7 @@ export class PostsManager {
         private postPublisher: LinkedInPostPublisher,
         private postContentCreator: PostContentCreator,
         readonly userId: string,
-        readonly intervalsConfig: IntervalsConfig
+        readonly config: publisherConfig
     ) {}
 
     static async create({
@@ -24,7 +24,7 @@ export class PostsManager {
         axiosInstance: AxiosInstance,
         userInfoFetcher: LinkedInUserInfoFetcher,
         runtime: IAgentRuntime,
-        config: IntervalsConfig
+        config: publisherConfig
     }) {
         const userInfo = await userInfoFetcher.getUserInfo();
 
@@ -39,17 +39,22 @@ export class PostsManager {
         }>("linkedin/" + this.userId + "/lastPost");
 
         const lastPostTimestamp = lastPost?.timestamp ?? 0;
-        const minMinutes = this.intervalsConfig.LINKEDIN_POST_INTERVAL_MIN;
-        const maxMinutes = this.intervalsConfig.LINKEDIN_POST_INTERVAL_MAX;
+        const minMinutes = this.config.LINKEDIN_POST_INTERVAL_MIN;
+        const maxMinutes = this.config.LINKEDIN_POST_INTERVAL_MAX;
 
         const randomMinutes = getRandomNumber(minMinutes, maxMinutes);
         const delay = randomMinutes * 60 * 1000;
 
         if (Date.now() > lastPostTimestamp + delay) {
             const postText = await this.postContentCreator.createPostContent(this.userId);
-            await this.postPublisher.publishPost({ postText });
+            console.log(`postText: ${postText}`); // TODO: REMOVE
+            if (!this.config.LINKEDIN_DRY_RUN) {
+                await this.postPublisher.publishPost({ postText });
+                elizaLogger.info("Published post");
+            } else {
+                elizaLogger.warn("Dry run is enabled. To publish posts set LINKEDIN_DRY_RUN to false");
+            }
             await this.runtime.cacheManager.set("linkedin/" + this.userId + "/lastPost", { timestamp: Date.now() });
-            elizaLogger.info("Published post");
         }
 
         setTimeout(() => {

@@ -1,7 +1,7 @@
 {
     "name": "tate",
-    "clients": [],
-    "modelProvider": "anthropic",
+    "clients": ["linkedin"],
+    "modelProvider": "groq",
     "settings": {
         "secrets": {},
         "voice": {
@@ -53,7 +53,7 @@
         ]
     ],
     "postExamples": [""],
-    "topics": [""],
+    "topics": ["Ai autonomy", "AI safety", "AI ethics", "AI governance", "AI regulation", "AI regulation", "AI regulation", "AI companies", "AI in businesses"],
     "style": {
         "all": [""],
         "chat": [""],

@@ -1,4 +1,5 @@
 import { composeContext, generateText, IAgentRuntime, ModelClass, stringToUuid } from "@elizaos/core";
+import { createLinkedinPostTemplate } from "../templates";
 
 export class PostContentCreator {
     constructor(public runtime: IAgentRuntime) {}
@@ -23,8 +24,7 @@ export class PostContentCreator {
 
         const context = composeContext({
             state,
-            template:
-                'post template',
+            template: createLinkedinPostTemplate,
         });
 
         return await generateText({
