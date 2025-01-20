@@ -117,13 +117,22 @@ export class DirectClient {
     public jsonToCharacter: Function; // Store jsonToCharacter functor
 
     constructor() {
+        elizaLogger.info("=== Starting DirectClient initialization ===");
         elizaLogger.log("DirectClient constructor");
         this.app = express();
         this.app.use(cors());
         this.agents = new Map();
+        elizaLogger.info("Express app and CORS middleware initialized");
 
+        elizaLogger.info("Configuring middleware...");
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({ extended: true }));
+        
+        // Add a status endpoint for health checks
+        this.app.get('/status', (req, res) => {
+            res.json({ status: 'ok', timestamp: Date.now() });
+        });
+        elizaLogger.info("Body parser and status endpoint configured");
 
         // Serve both uploads and generated images
         this.app.use(

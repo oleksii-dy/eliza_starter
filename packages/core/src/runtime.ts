@@ -402,7 +402,8 @@ export class AgentRuntime implements IAgentRuntime {
 
         this.token = opts.token;
 
-        this.plugins = [
+        // Only load plugins if not explicitly disabled
+        this.plugins = process.env.DISABLE_PLUGINS === 'true' ? [] : [
             ...(opts.character?.plugins ?? []),
             ...(opts.plugins ?? []),
         ];

@@ -5,6 +5,7 @@ import {
     ModelClass,
     elizaLogger,
 } from "@elizaos/core";
+import { z } from "zod";
 
 import {
     initLightningProvider,
@@ -73,11 +74,20 @@ export const payInvoiceAction = {
             state,
             template: payInvoiceTemplate,
         });
-        const content = await generateObject({
+
+        const payInvoiceSchema = z.object({
+            request: z.string(),
+            outgoing_channel: z.string()
+        });
+
+        const { object } = await generateObject({
             runtime,
             context: payInvoiceContext,
             modelClass: ModelClass.LARGE,
-        });
+            schema: payInvoiceSchema
+        }) as { object: z.infer<typeof payInvoiceSchema> };
+
+        const content = object;
 
         const payInvoiceOptions: PayArgs = {
             request: content.request,
