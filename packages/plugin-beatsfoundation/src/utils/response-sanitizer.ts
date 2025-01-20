@@ -1,4 +1,4 @@
-import { Song } from '../types';
+import { Song } from '../types.js';
 
 /**
  * Fields considered sensitive in song creation requests:

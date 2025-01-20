@@ -9,12 +9,12 @@ import {
     State,
     type Action,
 } from "@elizaos/core";
-import { validateBeatsFoundationConfig } from "../../environment";
-import { getSongsExamples } from "./examples";
-import { createSongsService } from "./service";
-import { getSongsTemplate } from "./template";
-import { GetSongsContent } from "./types";
-import { isGetSongsContent } from "./validation";
+import { validateBeatsFoundationConfig } from "../../environment.js";
+import { getSongsExamples } from "./examples.js";
+import { createSongsService } from "./service.js";
+import { getSongsTemplate } from "./template.js";
+import { GetSongsContent } from "./types.js";
+import { isGetSongsContent } from "./validation.js";
 
 export default {
     name: "GET_SONGS",
@@ -98,4 +98,4 @@ export default {
         }
     },
     examples: getSongsExamples,
-} as Action;
+} satisfies Action;

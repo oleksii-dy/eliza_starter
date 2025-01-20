@@ -10,14 +10,14 @@ import {
     type Action,
 } from "@elizaos/core";
 import axios from 'axios';
-import { validateBeatsFoundationConfig } from "../../environment";
-import { sanitizeCreateSongContent } from "../../utils/content-sanitizer";
-import { createSafeResponse } from "../../utils/response-sanitizer";
-import { createSongExamples } from "./examples";
-import { createSongService } from "./service";
-import { createSongTemplate } from "./template";
-import { CreateSongContent } from "./types";
-import { isCreateSongContent } from "./validation";
+import { validateBeatsFoundationConfig } from "../../environment.js";
+import { sanitizeCreateSongContent } from "../../utils/content-sanitizer.js";
+import { createSafeResponse } from "../../utils/response-sanitizer.js";
+import { createSongExamples } from "./examples.js";
+import { createSongService } from "./service.js";
+import { createSongTemplate } from "./template.js";
+import { CreateSongContent } from "./types.js";
+import { isCreateSongContent } from "./validation.js";
 
 export default {
     name: "CREATE_SONG",
@@ -112,4 +112,4 @@ export default {
         }
     },
     examples: createSongExamples,
-} as Action;
+} satisfies Action;

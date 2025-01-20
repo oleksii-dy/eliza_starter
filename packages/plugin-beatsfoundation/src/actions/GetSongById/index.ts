@@ -9,13 +9,13 @@ import {
     State,
     type Action,
 } from "@elizaos/core";
-import { validateBeatsFoundationConfig } from "../../environment";
-import { handleBeatsFoundationError } from "../../utils/error-handlers";
-import { getSongByIdExamples } from "./examples";
-import { createSongService } from "./service";
-import { getSongByIdTemplate } from "./template";
-import { GetSongByIdContent } from "./types";
-import { isGetSongByIdContent } from "./validation";
+import { validateBeatsFoundationConfig } from "../../environment.js";
+import { handleBeatsFoundationError } from "../../utils/error-handlers.js";
+import { getSongByIdExamples } from "./examples.js";
+import { createSongService } from "./service.js";
+import { getSongByIdTemplate } from "./template.js";
+import { GetSongByIdContent } from "./types.js";
+import { isGetSongByIdContent } from "./validation.js";
 
 export default {
     name: "GET_SONG_BY_ID",
@@ -85,4 +85,4 @@ export default {
         }
     },
     examples: getSongByIdExamples,
-} as Action;
+} satisfies Action;

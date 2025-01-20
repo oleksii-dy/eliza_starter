@@ -1,4 +1,4 @@
-import { CreateSongContent } from "../actions/CreateSong/types";
+import { CreateSongContent } from "../actions/CreateSong/types.js";
 
 const MAX_PROMPT_LENGTH = 1000;
 const MAX_LYRICS_LENGTH = 5000;

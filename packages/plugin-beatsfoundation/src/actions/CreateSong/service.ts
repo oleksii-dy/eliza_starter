@@ -1,6 +1,6 @@
 import axios, { CancelToken } from 'axios';
-import { Song } from '../../types';
-import { CreateSongContent, CreateSongOptions } from './types';
+import { Song } from '../../types.js';
+import { CreateSongContent, CreateSongOptions } from './types.js';
 
 export function createSongService(apiKey: string) {
     // Create axios instance with retry configuration

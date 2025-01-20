@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { PaginatedSongsResponse } from '../../types';
+import { PaginatedSongsResponse } from '../../types.js';
 
 export function createSongsService(apiKey: string) {
     return {

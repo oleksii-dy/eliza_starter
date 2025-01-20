@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Song } from '../../types';
+import { Song } from '../../types.js';
 
 export function createSongService(apiKey: string) {
     return {
@@ -23,4 +23,4 @@ export function createSongService(apiKey: string) {
             }
         }
     };
-} 
+}    
