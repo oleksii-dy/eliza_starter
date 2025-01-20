@@ -12,6 +12,7 @@ import {
 import axios from 'axios';
 import { validateBeatsFoundationConfig } from "../../environment";
 import { sanitizeCreateSongContent } from "../../utils/content-sanitizer";
+import { createSafeResponse } from "../../utils/response-sanitizer";
 import { createSongExamples } from "./examples";
 import { createSongService } from "./service";
 import { createSongTemplate } from "./template";
@@ -78,10 +79,13 @@ export default {
                 if (callback) {
                     callback({
                         text: `Created new song: ${song.title}`,
-                        content: {
+                        content: createSafeResponse(
                             song,
-                            request: content
-                        },
+                            Boolean(sanitizedContent.lyrics),
+                            sanitizedContent.genre,
+                            sanitizedContent.mood,
+                            sanitizedContent.isInstrumental
+                        ),
                     });
                 }
 
