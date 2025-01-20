@@ -25,15 +25,6 @@ jobs:
                   cache: 'pnpm'
                   cache-dependency-path: '**/pnpm-lock.yaml'
 
-            - name: Cache plugin dist
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      **/packages/plugin-*/dist
-                  key: ${{ runner.os }}-plugin-dist-${{ runner.arch }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-plugin-dist-${{ runner.arch }}-
-
             - name: Configure pnpm
               run: |
                   pnpm config set store-dir ~/.pnpm-store
