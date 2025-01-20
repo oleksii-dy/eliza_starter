@@ -11,6 +11,7 @@ import {
 } from "@elizaos/core";
 import axios from 'axios';
 import { validateBeatsFoundationConfig } from "../../environment";
+import { sanitizeCreateSongContent } from "../../utils/content-sanitizer";
 import { createSongExamples } from "./examples";
 import { createSongService } from "./service";
 import { createSongTemplate } from "./template";
@@ -54,10 +55,13 @@ export default {
                 modelClass: ModelClass.SMALL,
             })) as unknown as CreateSongContent;
 
-            // Validate content
+            // Validate and sanitize content
             if (!isCreateSongContent(content)) {
                 throw new Error("Invalid song creation content");
             }
+            
+            // Sanitize content
+            const sanitizedContent = sanitizeCreateSongContent(content);
 
             // Get config with validation
             const config = await validateBeatsFoundationConfig(runtime);
@@ -66,7 +70,7 @@ export default {
             try {
                 // Create cancel token for request cancellation
                 const source = axios.CancelToken.source();
-                const song = await songService.createSong(content, { cancelToken: source.token });
+                const song = await songService.createSong(sanitizedContent, { cancelToken: source.token });
                 elizaLogger.success(
                     `Song created successfully! Title: ${song.title}`
                 );
