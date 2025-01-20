@@ -1,7 +1,7 @@
 {
     "name": "tate",
     "clients": [],
-    "modelProvider": "anthropic",
+    "modelProvider": "deepseek",
     "settings": {
         "secrets": {},
         "voice": {

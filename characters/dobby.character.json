@@ -1,7 +1,7 @@
 {
     "name": "Dobby",
     "clients": [],
-    "modelProvider": "anthropic",
+    "modelProvider": "deepseek",
     "settings": {
         "voice": {
             "model": "en_GB-danny-low"
