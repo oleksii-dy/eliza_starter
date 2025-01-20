@@ -178,8 +178,8 @@ export const getIndicativePrice: Action = {
         } catch (error) {
             elizaLogger.error("Error getting price:", error);
             callback({
-                text: `Error getting price: ${error.message}`,
-                content: { error: error.message },
+                text: `Error getting price: ${error.message || error}`,
+                content: { error: error.message || String(error) },
             });
             return false;
         }
