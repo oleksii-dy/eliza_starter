@@ -18,6 +18,14 @@ const queryClient = new QueryClient({
     },
 });
 
+/**
+ * Root component of the ElizaOS application.
+ * Provides global configuration and routing setup including:
+ * - React Query client for data fetching
+ * - Dark theme configuration
+ * - Router setup with main application routes
+ * - Global UI providers (Tooltip, Sidebar, Toast)
+ */
 function App() {
     useVersion();
     return (
