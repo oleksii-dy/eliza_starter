@@ -60,7 +60,6 @@ export const getQuote: Action = {
                 taker: runtime.getSetting("WALLET_PUBLIC_ADDRESS"),
             })) as GetQuoteResponse;
 
-            elizaLogger.info("Quote:", quote);
             await storeQuoteToMemory(runtime, message, {
                 sellTokenObject,
                 buyTokenObject,
@@ -159,8 +158,6 @@ export const getQuote: Action = {
             ]
                 .filter(Boolean)
                 .join("\n");
-
-            console.log({ formattedResponse });
 
             callback({
                 text: formattedResponse,
