@@ -7,10 +7,8 @@ import path from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const files = [
-    path.join(__dirname, "../src/coin_list/coin_list_part_1.json"),
-    path.join(__dirname, "../src/coin_list/coin_list_part_2.json"),
-    path.join(__dirname, "../src/coin_list/coin_list_part_3.json"),
-    path.join(__dirname, "../src/coin_list/coin_list_part_4.json"),
+    path.join(__dirname, "../src/coin_list/coin_list.json"),
+
 ];
 
 export const searchCoinInFileJsonProvider = async(coinSymbol:string)=>{
@@ -51,7 +49,8 @@ export const searchCoinInFileJsonProvider2 = async(coinSymbol:string, coinName:s
                 const foundCoin = coins.find(
                     coin =>
                         coin.symbol.toLowerCase() === coinSymbol.toLowerCase()&&
-                    coin.name.toLowerCase() === coinName.toLowerCase()
+                    coin.name.toLowerCase() === coinName.toLowerCase() &&
+                    coin.verified === true
                 );
 
                 return foundCoin || null; // Trả về kết quả hoặc null

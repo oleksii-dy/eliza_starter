@@ -131,19 +131,19 @@ export const coinInfo: Action = {
 
         elizaLogger.log("[coinInfo] parsed content: ", parsedContent);
 
-        let coinObject = await searchCoinInFileJsonProvider(parsedContent.coin_symbol);
-        if(parsedContent.coin_symbol === "btc"){
-            coinObject= await searchCoinInFileJsonProvider2(parsedContent.coin_symbol, parsedContent.coin_name)
-        }
+
+        let coinObject= await searchCoinInFileJsonProvider2(parsedContent.coin_symbol, parsedContent.coin_name)
         console.log("coinObject",coinObject)
         if(coinObject === null){
+            coinObject= await searchCoinInFileJsonProvider(parsedContent.coin_symbol)
+            if(coinObject === null){
+                callback({
+                    text: `I cant find infomation of coin symbol` ,
 
+                });
+                return false
+            }
 
-            callback({
-                text: `I cant find infomation of coin symbol` ,
-
-            });
-            return false
         }
         const coinGecko = new CoingeckoProvider();
         const info = await coinGecko.getToken(coinObject.id);
