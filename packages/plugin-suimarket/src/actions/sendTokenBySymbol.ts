@@ -109,7 +109,7 @@ export const sendTokenBySymbol: Action = {
         console.log(checkSuiAddress)
         if(!checkSuiAddress){
             callback({
-                text:`This wallet address ${content.destinationAddress} does not exist. Please enter a valid one.  The wallet address should be in the format 0x...`,
+                text:`This wallet address ${content.destinationAddress} does not exist. Please enter a valid one.`,
                 action:"SUI_SEND_TOKEN_BY_SYMBOL",
 
              })
