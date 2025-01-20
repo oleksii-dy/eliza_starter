@@ -1,15 +1,15 @@
 import {
-    StorageProvider,
+    type StorageProvider,
     StorageProviderEnum,
-    UploadResponse,
+    type UploadResponse,
 } from "./StorageProvider";
-import { elizaLogger, IAgentRuntime } from "@elizaos/core";
-import axios, { AxiosInstance } from "axios";
+import { elizaLogger, type IAgentRuntime } from "@elizaos/core";
+import axios, { type AxiosInstance } from "axios";
 
 export class PinataProvider implements StorageProvider {
     provider = StorageProviderEnum.PINATA;
 
-    private PINATA_API_URL: string = "https://api.pinata.cloud";
+    private PINATA_API_URL = "https://api.pinata.cloud";
     private PINATA_JWT: string;
     private PINATA_GATEWAY_URL: string;
     private client: AxiosInstance;
@@ -63,8 +63,8 @@ export class PinataProvider implements StorageProvider {
                 headers: {
                     "Content-Type": `multipart/form-data`,
                 },
-                maxContentLength: Infinity,
-                maxBodyLength: Infinity,
+                maxContentLength: Number.POSITIVE_INFINITY,
+                maxBodyLength: Number.POSITIVE_INFINITY,
             }
         );
 
@@ -97,7 +97,7 @@ export class PinataProvider implements StorageProvider {
         const url = this.resolveUrl(result.IpfsHash);
 
         return {
-            cid: data.IpfsHash,
+            cid: result.IpfsHash,
             url,
         };
     }
