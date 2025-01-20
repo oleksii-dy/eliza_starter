@@ -134,7 +134,7 @@ export class SttTtsPlugin implements Plugin {
                 console.log("processing voice");
                 this.transcriptionProcessing = true;
                 this.userSpeakingTimers.set(data.userId, null);
-                this.handleMute(data.userId).catch((err) =>
+                this.processTranscription(data.userId).catch((err) =>
                     elizaLogger.error(
                         "[SttTtsPlugin] handleSilence error =>",
                         err
@@ -203,9 +203,9 @@ export class SttTtsPlugin implements Plugin {
     }
 
     /**
-     * On speaker mute => flush STT => GPT => TTS => push to Janus
+     * On speaker silence => flush STT => GPT => TTS => push to Janus
      */
-    private async handleMute(userId: string): Promise<void> {
+    private async processTranscription(userId: string): Promise<void> {
         console.log("strat processing transcription.....");
         const chunks = this.pcmBuffers.get(userId) || [];
         this.pcmBuffers.set(userId, []);
