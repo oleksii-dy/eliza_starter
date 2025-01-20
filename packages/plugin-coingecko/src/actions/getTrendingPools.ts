@@ -183,20 +183,62 @@ export default {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "What are the trending pools?",
+                    text: "Show me trending liquidity pools",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "I'll check the trending pools for you.",
+                    text: "I'll check the trending liquidity pools for you.",
                     action: "GET_TRENDING_POOLS",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "Here are the trending pools:\n1. TRUMP / USDC\n   Market Cap: $8,844,297,825\n   FDV: $43,874,068,484\n   Reserve: $718,413,745\n   Created: 1/17/2025\n{{dynamic}}",
+                    text: "Here are the trending liquidity pools:\n1. MELANIA / USDC\n   Market Cap: $954,636,707\n   FDV: $6,402,478,508\n   Reserve: $363,641,037\n   Created: 1/19/2025\n2. TRUMP / USDC\n   Market Cap: $8,844,297,825\n   FDV: $43,874,068,484\n   Reserve: $718,413,745\n   Created: 1/17/2025",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "What are the top 5 hottest dex pools?",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "I'll fetch the top 5 hottest DEX pools for you.",
+                    action: "GET_TRENDING_POOLS",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "Here are the top 5 hottest DEX pools:\n1. TRUMP / USDC\n   Market Cap: $8,844,297,825\n   FDV: $43,874,068,484\n   Reserve: $718,413,745\n   Created: 1/17/2025\n2. MELANIA / USDC\n   Market Cap: $954,636,707\n   FDV: $6,402,478,508\n   Reserve: $363,641,037\n   Created: 1/19/2025",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "List all trading pools with highest volume",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "I'll get all the trending trading pools for you.",
+                    action: "GET_TRENDING_POOLS",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "Here are all trending trading pools:\n1. MELANIA / USDC\n   Market Cap: $954,636,707\n   FDV: $6,402,478,508\n   Reserve: $363,641,037\n   Created: 1/19/2025\n2. TRUMP / USDC\n   Market Cap: $8,844,297,825\n   FDV: $43,874,068,484\n   Reserve: $718,413,745\n   Created: 1/17/2025",
                 },
             },
         ],
