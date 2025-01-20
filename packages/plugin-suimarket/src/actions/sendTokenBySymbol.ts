@@ -123,7 +123,7 @@ export const sendTokenBySymbol: Action = {
         try {
 
             callback({
-               text:`Send Tokens: \n Token Address: ${tokenObject.type}  ${content.tokenSymbol ? `\n Symbol: ${content.tokenSymbol}` : ""} \n To:   ${content.destinationAddress}  \n Please double-check all details before swapping to avoid any loss`,
+               text:`Please double-check all details before swapping to avoid any loss`,
                action:"SUI_SEND_TOKEN_BY_SYMBOL",
                result: {
                 type: "send_sui_chain",

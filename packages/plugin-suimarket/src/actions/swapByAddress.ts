@@ -107,7 +107,7 @@ export const executeSwapByAddress: Action = {
         try {
 
             callback({
-               text:`Swap Tokens \n From: ${inputTokenObject.symbol} \n To:   ${outputTokenObject.symbol}  \n Please double-check all details before swapping to avoid any loss`,
+               text:`Please double-check all details before swapping to avoid any loss`,
                action:"SUI_EXECUTE_SWAP_BY_ADDRESS",
                result: {
                 type: "swap",
