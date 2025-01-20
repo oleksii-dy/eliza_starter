@@ -94,14 +94,20 @@ export const executeSwapByAddress: Action = {
 
         const responseData = {
             amount: content.amount,
-            fromToken: inputTokenObject,
-            toToken:outputTokenObject
+            fromToken: {...inputTokenObject,
+                type: content.inputTokenAddress
+
+            },
+            toToken:{...outputTokenObject,
+                type:content.inputTokenAddress
+            }
 
         }
+        
         try {
 
             callback({
-               text:`Swap Tokens \n From: ${content.inputTokenSymbol} \n To:   ${content.outputTokenSymbol} \n Amount: ${content.amount} \n Please double-check all details before swapping to avoid any loss`,
+               text:`Swap Tokens \n From: ${inputTokenObject.symbol} \n To:   ${outputTokenObject.symbol} \n Amount: ${content.amount} \n Please double-check all details before swapping to avoid any loss`,
                action:"SUI_EXECUTE_SWAP_BY_ADDRESS",
                result: {
                 type: "swap",

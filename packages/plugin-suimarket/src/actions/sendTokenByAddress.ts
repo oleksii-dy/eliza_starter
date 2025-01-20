@@ -62,7 +62,7 @@ export const sendTokenByAddress: Action = {
         "SUI_ASSET_TRANSFER_OUT_BY_ADDRESS",
         "SUI_TOKENS_SEND_OUT_BY_ADDRESS",
         "SUI_ASSETS_DELIVER_BY_ADDRESS",
-],
+    ],
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         // Check if the necessary parameters are provided in the message
         console.log("Message:", message);
@@ -145,7 +145,7 @@ export const sendTokenByAddress: Action = {
                     text: "Send 10 0xb6a9f896fd6c0f777699b9aa2b1bb745caa5eb1f3978173c1ddffd4bdd3994e9::uni::UNI to 0xa3b1c5d6e7f8g9h0i1j2k3l4m5n6o7p8q9r0",
                     action: "SUI_EXECUTE_SWAP_BY_SYMBOL",
                     params: {
-                        "amount": 10.5,
+                        "amount": 10,
                         "tokenAddress": "0xb6a9f896fd6c0f777699b9aa2b1bb745caa5eb1f3978173c1ddffd4bdd3994e9::uni::UNI",
                         "destinationAddress": "0xa3b1c5d6e7f8g9h0i1j2k3l4m5n6o7p8q9r0"
                     }
