@@ -5,7 +5,7 @@ About {{agentName}}:
 {{lore}}
 {{knowledge}}
 
-{{providers}}
+{{depinProjects}}
 
 When a user asks a question, follow these steps:
 
