@@ -223,6 +223,68 @@ you can add ```"secrets"``` : This overrides the values given in .env for that s
 you can add ```"plugins"``` to embed plugins from the /packages folder. remember to run "npm add eliaos@your-new-lugin" from the main directory to fetch dependencies first
 you can change ```"akash_chat_api"``` to ```"ollama"``` if you want to run your models on your local machine. I recommend you to choose small models only
 
+## Multiple Characters acting as a Team:
+You can run two characters that can interact.. This is a good example to learn, how the sytem works...
+Lets go:
+
+pnpm start:debug --characters=~./eliza/characters/bud.character.json,~./eliza/characters/terence.character.json
+
+start both character the same time. To make them a team and use different Discord Instances, you need to modify their header in the character file:
+
+Thats the one for Bud:
+```
+{
+    "name": "Bud",
+    "plugins": [],
+    "clients": ["discord"],
+    "modelProvider": "akash_chat_api",
+    "settings": {
+        "secrets": {
+            "DISCORD_APPLICATION_ID": "1330133432432456924",
+            "DISCORD_API_TOKEN": "MTMzMDEzMzEkewkjhfi43983648MIT2kuzqmHh7E_9dK3zQp577QWKjS4i-wz78"
+        },
+        "voice": {
+            "model": "en_US-male-heavy"
+        }
+    },
+    "clientConfig": {
+        "discord": {
+            "isPartOfTeam": true,
+            "teamAgentIds": ["1330134542060752936"],
+            "teamLeaderId": "1330134542060752936",
+            "teamMemberInterestKeywords": ["Terence", "partner", "team", "friend", "adventure"]
+        }
+    },
+    "bio": [
+```
+
+thats the one for Terence:
+```
+{
+    "name": "Terence",
+    "clients": ["discord"],
+    "modelProvider": "akash_chat_api",
+    "settings": {
+        "secrets": {
+                "DISCORD_APPLICATION_ID": "133743274832452936",
+                "DISCORD_API_TOKEN": "MTMzMDEzNDU0MjA2MDc8746324kjdsfdfonOly4ZX1HbslgHBvbk6np9Rtf2yvREDgJ8"
+            },
+        "voice": {
+            "model": "en_US-male-medium"
+        }
+    },
+    "clientConfig": {
+        "discord": {
+            "isPartOfTeam": true,
+            "teamAgentIds": ["1330133186734456924"],
+            "teamLeaderId": "1330134542060752936",
+            "teamMemberInterestKeywords": ["Bud", "buddy", "partner", "team", "friend", "trouble"]
+        }
+    },
+```
+
+
+
 
 ### Accessing the Database:
 ```
