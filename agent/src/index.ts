@@ -12,8 +12,10 @@ import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 import { FarcasterClientInterface } from "@elizaos/client-farcaster";
 import { DirectClient } from "@elizaos/client-direct";
+import { agentKitPlugin } from "@elizaos/plugin-agentkit";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
 import { PrimusAdapter } from "@elizaos/plugin-primus";
+import { lightningPlugin } from "@elizaos/plugin-lightning";
 import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
 
 import {
@@ -105,6 +107,10 @@ import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
 import { echoChambersPlugin } from "@elizaos/plugin-echochambers";
 import { dexScreenerPlugin } from "@elizaos/plugin-dexscreener";
 import { pythDataPlugin } from "@elizaos/plugin-pyth-data";
+
+import { openaiPlugin } from '@elizaos/plugin-openai';
+import { devinPlugin } from '@elizaos/plugin-devin';
+
 
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
 import Database from "better-sqlite3";
@@ -206,7 +212,9 @@ export async function loadCharacterFromOnchain(): Promise<Character[]> {
 
         // .id isn't really valid
         const characterId = character.id || character.name;
-        const characterPrefix = `CHARACTER.${characterId.toUpperCase().replace(/ /g, "_")}.`;
+        const characterPrefix = `CHARACTER.${characterId
+            .toUpperCase()
+            .replace(/ /g, "_")}.`;
 
         const characterSettings = Object.entries(process.env)
             .filter(([key]) => key.startsWith(characterPrefix))
@@ -249,7 +257,6 @@ export async function loadCharacterFromOnchain(): Promise<Character[]> {
     }
 }
 
-
 async function loadCharactersFromUrl(url: string): Promise<Character[]> {
     try {
         const response = await fetch(url);
@@ -279,7 +286,9 @@ async function jsonToCharacter(
 
     // .id isn't really valid
     const characterId = character.id || character.name;
-    const characterPrefix = `CHARACTER.${characterId.toUpperCase().replace(/ /g, "_")}.`;
+    const characterPrefix = `CHARACTER.${characterId
+        .toUpperCase()
+        .replace(/ /g, "_")}.`;
     const characterSettings = Object.entries(process.env)
         .filter(([key]) => key.startsWith(characterPrefix))
         .reduce((settings, [key, value]) => {
@@ -380,17 +389,39 @@ function commaSeparatedStringToArray(commaSeparated: string): string[] {
     return commaSeparated?.split(",").map((value) => value.trim());
 }
 
+async function readCharactersFromStorage(characterPaths: string[]): Promise<string[]> {
+    try {
+        const uploadDir = path.join(process.cwd(), "data", "characters");
+        await fs.promises.mkdir(uploadDir, { recursive: true });
+        const fileNames = await fs.promises.readdir(uploadDir);
+        fileNames.forEach(fileName => {
+            characterPaths.push(path.join(uploadDir, fileName));
+        });
+    } catch (err) {
+        elizaLogger.error(`Error reading directory: ${err.message}`);
+    }
+
+    return characterPaths;
+};
+
 export async function loadCharacters(
     charactersArg: string
 ): Promise<Character[]> {
-    const characterPaths = commaSeparatedStringToArray(charactersArg);
+
+    let characterPaths = commaSeparatedStringToArray(charactersArg);
+
+    if(process.env.USE_CHARACTER_STORAGE === "true") {
+        characterPaths = await readCharactersFromStorage(characterPaths);
+    }
+
     const loadedCharacters: Character[] = [];
 
     if (characterPaths?.length > 0) {
         for (const characterPath of characterPaths) {
             try {
-                const character: Character =
-                    await loadCharacterTryPath(characterPath);
+                const character: Character = await loadCharacterTryPath(
+                    characterPath
+                );
                 loadedCharacters.push(character);
             } catch (e) {
                 process.exit(1);
@@ -546,6 +577,7 @@ export function getTokenForProvider(
                 character.settings?.secrets?.HYPERBOLIC_API_KEY ||
                 settings.HYPERBOLIC_API_KEY
             );
+
         case ModelProviderName.VENICE:
             return (
                 character.settings?.secrets?.VENICE_API_KEY ||
@@ -555,6 +587,11 @@ export function getTokenForProvider(
             return (
                 character.settings?.secrets?.ATOMASDK_BEARER_AUTH ||
                 settings.ATOMASDK_BEARER_AUTH
+            );
+        case ModelProviderName.NVIDIA:
+            return (
+                character.settings?.secrets?.NVIDIA_API_KEY ||
+                settings.NVIDIA_API_KEY
             );
         case ModelProviderName.AKASH_CHAT_API:
             return (
@@ -863,6 +900,10 @@ export async function createAgent(
                 ? elizaCodeinPlugin
                 : null,
             bootstrapPlugin,
+            getSecret(character, "CDP_API_KEY_NAME") &&
+            getSecret(character, "CDP_API_KEY_PRIVATE_KEY")
+                ? agentKitPlugin
+                : null,
             getSecret(character, "DEXSCREENER_API_KEY")
                 ? dexScreenerPlugin
                 : null,
@@ -918,6 +959,7 @@ export async function createAgent(
             getSecret(character, "FAL_API_KEY") ||
             getSecret(character, "OPENAI_API_KEY") ||
             getSecret(character, "VENICE_API_KEY") ||
+            getSecret(character, "NVIDIA_API_KEY") ||
             getSecret(character, "NINETEEN_AI_API_KEY") ||
             getSecret(character, "HEURIST_API_KEY") ||
             getSecret(character, "LIVEPEER_GATEWAY_URL")
@@ -1037,6 +1079,18 @@ export async function createAgent(
             getSecret(character, "PYTH_TESTNET_PROGRAM_KEY") ||
             getSecret(character, "PYTH_MAINNET_PROGRAM_KEY")
                 ? pythDataPlugin
+                : null,
+            getSecret(character, "LND_TLS_CERT") &&
+            getSecret(character, "LND_MACAROON") &&
+            getSecret(character, "LND_SOCKET")
+                ? lightningPlugin
+                : null,
+            getSecret(character, "OPENAI_API_KEY") &&
+            getSecret(character, "ENABLE_OPEN_AI_COMMUNITY_PLUGIN")
+                ? openaiPlugin
+                : null,
+            getSecret(character, "DEVIN_API_TOKEN")
+                ? devinPlugin
                 : null,
         ].filter(Boolean),
         providers: [],
@@ -1215,7 +1269,9 @@ const startAgents = async () => {
         characters = await loadCharacterFromOnchain();
     }
 
-    if ((!onchainJson && charactersArg) || hasValidRemoteUrls()) {
+    const notOnchainJson = !onchainJson || onchainJson == "null";
+
+  if ((notOnchainJson && charactersArg) || hasValidRemoteUrls()) {
         characters = await loadCharacters(charactersArg);
     }
 
