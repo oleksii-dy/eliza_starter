@@ -23,8 +23,9 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: |
-                      ~/.pnpm-store
-                      **/node_modules
+                      /__w/.pnpm-store
+                      ~/.local/share/pnpm/store
+                      **/node_modules/.pnpm
                   key: ${{ runner.os }}-pnpm-${{ runner.arch }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/package.json') }}
                   restore-keys: |
                       ${{ runner.os }}-pnpm-${{ runner.arch }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
