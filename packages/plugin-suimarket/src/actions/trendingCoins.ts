@@ -27,7 +27,7 @@ const trendingPromptTemplate = `Respond with a JSON markdown block containing on
 
         Given the recent messages, extract the following information:
 
-        size: Number of news items to return: Must be a positive integer Default is 1 if not specified Maximum value is 100 Minimum value is 1 If mentioned in message, use that number If not mentioned, use default value 1
+        size: Number of news items to return: Must be a positive integer Default is 1 if not specified Maximum value is 100 Minimum value is 1 If mentioned in message, use that number If not mentioned, use default value 10
 
         VALIDATION RULES:
             All property names must use double quotes
@@ -40,7 +40,7 @@ const trendingPromptTemplate = `Respond with a JSON markdown block containing on
 
 
 export const trendingTokens: Action = {
-    name: "trendingTokens",
+    name: "TOP_TRENDING_TOKENS",
 
     description: "Get trending tokens",
 
@@ -100,10 +100,10 @@ export const trendingTokens: Action = {
 
         if (callback) {
             callback({
-                text: `Below are ${content.size} trending coins we have collected,`,
-                action: 'trendingTokens',
+                text: `Below are ${content.size} trending coins we have collected:`,
+                action: 'TOP_TRENDING_TOKENS',
                 result: {
-                    type: "trendingCoins",
+                    type: "trendingTokens",
                     data:info.slice(0,content.size)
                 }
             });

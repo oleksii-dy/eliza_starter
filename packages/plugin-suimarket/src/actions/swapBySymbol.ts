@@ -43,8 +43,8 @@ VALIDATION RULES:
 
 
 export const executeSwap: Action = {
-    name: "SUI_EXECUTE_SWAP",
-    similes: ["SUI_SWAP_TOKENS", "SUI_TOKEN_SWAP", "SUI_TRADE_TOKENS", "SUI_EXCHANGE_TOKENS"],
+    name: "SUI_EXECUTE_SWAP_BY_SYMBOL",
+    similes: ["SUI_SWAP_TOKENS_BY_SYMBOL", "SUI_TOKEN_SWAP_BY_SYMBOL", "SUI_TRADE_TOKENS_BY_SYMBOL", "SUI_EXCHANGE_TOKENS+BY_SYMBOL"],
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         // Check if the necessary parameters are provided in the message
         console.log("Message:", message);
@@ -77,7 +77,6 @@ export const executeSwap: Action = {
         });
         console.log("content:", content);
         const inputTokenObject = await findByVerifiedAndSymbol(content.inputTokenSymbol);
-        console.log(inputTokenObject)
         if(!inputTokenObject){
             callback({
                 text:`We do not support ${content.inputTokenSymbol} token in SUI network yet`,
@@ -85,18 +84,13 @@ export const executeSwap: Action = {
              return false
         }
         const outputTokenObject = await findByVerifiedAndSymbol(content.outputTokenSymbol);
-        console.log(outputTokenObject)
         if(!outputTokenObject){
             callback({
                 text:`We do not support ${content.outputTokenSymbol} token in SUI network yet`,
              })
              return false
         }
-        // const responseData = {
-        //     ...content,
-        //     inputTokenAddress:inputTokenObject.type,
-        //     outputTokenAddress:outputTokenObject.type,
-        // }
+
         const responseData = {
             amount: content.amount,
             fromToken: inputTokenObject,
@@ -107,6 +101,7 @@ export const executeSwap: Action = {
 
             callback({
                text:`Swap Tokens \n From: ${content.inputTokenSymbol} \n To:   ${content.outputTokenSymbol} \n Amount: ${content.amount} \n Please double-check all details before swapping to avoid any loss`,
+               action:"SUI_EXECUTE_SWAP_BY_SYMBOL",
                result: {
                 type: "swap",
                 data:responseData,
@@ -134,7 +129,7 @@ export const executeSwap: Action = {
                 user: "{{user2}}",
                 content: {
                     text: "Initiating swap of 10 SUI for USDT on SUI network...",
-                    action: "SUI_TOKEN_SWAP",
+                    action: "SUI_EXECUTE_SWAP_BY_SYMBOL",
                     params: {
                         inputType: "0x2::sui::SUI",
                         outputType: "0x4fb3c0f9e62b5d3956e2f0e284f2a5d128954750b109203a0f34c92c6ba21247::coin::USDT",
