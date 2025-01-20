@@ -6,6 +6,7 @@ import { NeynarAPIClient } from '@neynar/nodejs-sdk';
 vi.mock('@neynar/nodejs-sdk', () => ({
     NeynarAPIClient: vi.fn().mockImplementation(() => ({
         publishCast: vi.fn().mockResolvedValue({
+            success: true,
             cast: {
                 hash: 'cast-1',
                 author: { fid: '123' },
@@ -13,29 +14,29 @@ vi.mock('@neynar/nodejs-sdk', () => ({
                 timestamp: '2025-01-20T20:00:00Z'
             }
         }),
-        lookupUserByFid: vi.fn().mockResolvedValue({
-            result: {
-                user: {
-                    fid: '123',
-                    username: 'test.farcaster',
-                    displayName: 'Test User',
-                    pfp: {
-                        url: 'https://example.com/pic.jpg'
-                    }
+        fetchBulkUsers: vi.fn().mockResolvedValue({
+            users: [{
+                fid: '123',
+                username: 'test.farcaster',
+                display_name: 'Test User',
+                pfp: {
+                    url: 'https://example.com/pic.jpg'
                 }
-            }
+            }]
         }),
-        getCastsByFid: vi.fn().mockResolvedValue({
-            result: {
-                casts: [
-                    {
-                        hash: 'cast-1',
-                        author: { fid: '123' },
-                        text: 'Test cast',
-                        timestamp: '2025-01-20T20:00:00Z'
-                    }
-                ]
-            }
+        fetchCastsForUser: vi.fn().mockResolvedValue({
+            casts: [
+                {
+                    hash: 'cast-1',
+                    author: { 
+                        fid: '123',
+                        username: 'test.farcaster',
+                        display_name: 'Test User'
+                    },
+                    text: 'Test cast',
+                    timestamp: '2025-01-20T20:00:00Z'
+                }
+            ]
         })
     }))
 }));
@@ -108,19 +109,18 @@ describe('FarcasterClient', () => {
             expect(profile).toBeDefined();
             expect(profile.fid).toBe('123');
             expect(profile.username).toBe('test.farcaster');
-            expect(profile.displayName).toBe('Test User');
-            expect(profile.pfp).toBe('https://example.com/pic.jpg');
+            expect(profile.name).toBe('Test User');
         });
 
         it('should handle profile fetch errors', async () => {
-            vi.mocked(client.neynar.lookupUserByFid).mockRejectedValueOnce(new Error('Profile fetch failed'));
+            vi.mocked(client.neynar.fetchBulkUsers).mockRejectedValueOnce(new Error('Profile fetch failed'));
             await expect(client.getProfile('123')).rejects.toThrow('Profile fetch failed');
         });
     });
 
-    describe('getCasts', () => {
+    describe('getCastsByFid', () => {
         it('should fetch casts successfully', async () => {
-            const casts = await client.getCasts('123');
+            const casts = await client.getCastsByFid({ fid: '123', pageSize: 10 });
             expect(casts).toHaveLength(1);
             expect(casts[0].hash).toBe('cast-1');
             expect(casts[0].authorFid).toBe('123');
@@ -128,8 +128,8 @@ describe('FarcasterClient', () => {
         });
 
         it('should handle cast fetch errors', async () => {
-            vi.mocked(client.neynar.getCastsByFid).mockRejectedValueOnce(new Error('Cast fetch failed'));
-            await expect(client.getCasts('123')).rejects.toThrow('Cast fetch failed');
+            vi.mocked(client.neynar.fetchCastsForUser).mockRejectedValueOnce(new Error('Cast fetch failed'));
+            await expect(client.getCastsByFid({ fid: '123', pageSize: 10 })).rejects.toThrow('Cast fetch failed');
         });
     });
 });

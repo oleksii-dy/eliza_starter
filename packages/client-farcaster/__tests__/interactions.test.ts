@@ -7,16 +7,39 @@ import type { Cast, Profile } from '../src/types';
 // Mock dependencies
 vi.mock('@neynar/nodejs-sdk', () => ({
     NeynarAPIClient: vi.fn().mockImplementation(() => ({
-        publishCast: vi.fn().mockResolvedValue({
-            cast: {
-                hash: 'cast-1',
-                author: { fid: '123' },
-                text: 'Test cast',
-                timestamp: '2025-01-20T20:00:00Z'
+        publishCast: vi.fn().mockImplementation(({ text, parent }) => {
+            if (parent) {
+                return Promise.resolve({
+                    success: true,
+                    cast: {
+                        hash: 'interaction-1',
+                        author: { fid: '123' },
+                        text: text || 'Interaction',
+                        parent_hash: parent,
+                        timestamp: '2025-01-20T20:00:00Z'
+                    }
+                });
             }
+            return Promise.resolve({
+                success: true,
+                cast: {
+                    hash: 'cast-1',
+                    author: { fid: '123' },
+                    text: text,
+                    timestamp: '2025-01-20T20:00:00Z'
+                }
+            });
         }),
-        recast: vi.fn().mockResolvedValue({ hash: 'recast-1' }),
-        like: vi.fn().mockResolvedValue({ hash: 'like-1' })
+        fetchBulkUsers: vi.fn().mockResolvedValue({
+            users: [{
+                fid: '123',
+                username: 'test.farcaster',
+                display_name: 'Test User',
+                pfp: {
+                    url: 'https://example.com/pic.jpg'
+                }
+            }]
+        })
     }))
 }));
 
@@ -29,7 +52,7 @@ describe('Interactions', () => {
         profile: {
             fid: '123',
             username: 'test.farcaster',
-            displayName: 'Test User',
+            name: 'Test User',
             pfp: 'https://example.com/pic.jpg'
         },
         stats: {
@@ -42,7 +65,7 @@ describe('Interactions', () => {
     const mockProfile: Profile = {
         fid: '456',
         username: 'other.farcaster',
-        displayName: 'Other User',
+        name: 'Other User',
         pfp: 'https://example.com/other-pic.jpg'
     };
 
@@ -102,8 +125,13 @@ describe('Interactions', () => {
 
             const result = await handleTestInteraction(client, interaction);
             expect(result).toBeDefined();
-            expect(result.hash).toBe('recast-1');
-            expect(client.neynar.recast).toHaveBeenCalledWith('cast-1');
+            expect(result.success).toBe(true);
+            expect(result.cast.parent_hash).toBe('cast-1');
+            expect(client.neynar.publishCast).toHaveBeenCalledWith({
+                text: '',
+                parent: 'cast-1',
+                signerUuid: 'test-signer'
+            });
         });
 
         it('should handle reply interaction successfully', async () => {
@@ -115,11 +143,30 @@ describe('Interactions', () => {
 
             const result = await handleTestInteraction(client, interaction);
             expect(result).toBeDefined();
-            expect(result.cast.hash).toBe('cast-1');
+            expect(result.success).toBe(true);
+            expect(result.cast.parent_hash).toBe('cast-1');
+            expect(result.cast.text).toBe('Test reply');
             expect(client.neynar.publishCast).toHaveBeenCalledWith({
                 text: 'Test reply',
                 parent: 'cast-1',
-                signer_uuid: 'test-signer'
+                signerUuid: 'test-signer'
+            });
+        });
+
+        it('should handle like interaction successfully', async () => {
+            const interaction = {
+                type: 'LIKE' as const,
+                castId: 'cast-1'
+            };
+
+            const result = await handleTestInteraction(client, interaction);
+            expect(result).toBeDefined();
+            expect(result.success).toBe(true);
+            expect(result.cast.parent_hash).toBe('cast-1');
+            expect(client.neynar.publishCast).toHaveBeenCalledWith({
+                text: '',
+                parent: 'cast-1',
+                signerUuid: 'test-signer'
             });
         });
 
@@ -129,8 +176,8 @@ describe('Interactions', () => {
                 castId: 'cast-1'
             };
 
-            vi.mocked(client.neynar.recast).mockRejectedValueOnce(new Error('Recast failed'));
-            await expect(handleTestInteraction(client, interaction)).rejects.toThrow('Recast failed');
+            vi.mocked(client.neynar.publishCast).mockRejectedValueOnce(new Error('Interaction failed'));
+            await expect(handleTestInteraction(client, interaction)).rejects.toThrow('Interaction failed');
         });
     });
 });

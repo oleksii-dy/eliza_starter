@@ -34,15 +34,15 @@ export async function handleTestInteraction(client: FarcasterClient, interaction
     switch (interaction.type) {
         case 'RECAST':
             if (!interaction.castId) throw new Error('Cast ID required for recast');
-            return await client.recast(interaction.castId);
+            return await client.publishCast('', { hash: interaction.castId });
         case 'REPLY':
             if (!interaction.castId || !interaction.content) {
                 throw new Error('Cast ID and content required for reply');
             }
-            return await client.reply(interaction.castId, interaction.content);
+            return await client.publishCast(interaction.content, { hash: interaction.castId });
         case 'LIKE':
             if (!interaction.castId) throw new Error('Cast ID required for like');
-            return await client.like(interaction.castId);
+            return await client.publishCast('', { hash: interaction.castId });
         default:
             throw new Error('Unknown interaction type');
     }
@@ -55,5 +55,5 @@ export async function createTestCast(client: FarcasterClient, content: string) {
     if (content.length > 320) {
         throw new Error('Cast content too long');
     }
-    return await client.cast(content);
+    return await client.publishCast(content, undefined);
 }

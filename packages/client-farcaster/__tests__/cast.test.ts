@@ -7,12 +7,23 @@ import { NeynarAPIClient } from '@neynar/nodejs-sdk';
 vi.mock('@neynar/nodejs-sdk', () => ({
     NeynarAPIClient: vi.fn().mockImplementation(() => ({
         publishCast: vi.fn().mockResolvedValue({
+            success: true,
             cast: {
                 hash: 'cast-1',
                 author: { fid: '123' },
                 text: 'Test cast',
                 timestamp: '2025-01-20T20:00:00Z'
             }
+        }),
+        fetchBulkUsers: vi.fn().mockResolvedValue({
+            users: [{
+                fid: '123',
+                username: 'test.farcaster',
+                display_name: 'Test User',
+                pfp: {
+                    url: 'https://example.com/pic.jpg'
+                }
+            }]
         })
     }))
 }));
@@ -46,19 +57,19 @@ describe('Cast Functions', () => {
         it('should create a cast successfully', async () => {
             const content = 'Test cast content';
             const result = await createTestCast(client, content);
-
+            
             expect(result).toBeDefined();
-            expect(result.cast.hash).toBe('cast-1');
+            expect(result.success).toBe(true);
+            expect(result.cast.text).toBe(content);
             expect(client.neynar.publishCast).toHaveBeenCalledWith({
                 text: content,
-                signer_uuid: 'test-signer'
+                signerUuid: 'test-signer'
             });
         });
 
         it('should handle cast creation errors', async () => {
             const content = 'Test cast content';
             vi.mocked(client.neynar.publishCast).mockRejectedValueOnce(new Error('Cast creation failed'));
-
             await expect(createTestCast(client, content)).rejects.toThrow('Cast creation failed');
         });
 
