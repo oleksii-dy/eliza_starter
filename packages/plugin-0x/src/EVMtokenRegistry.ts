@@ -57,7 +57,7 @@ export class EVMTokenRegistry {
                 `Failed to fetch token list for chain ${chainName}:`,
                 error
             );
-            return [];
+            throw error;
         }
     }
 
