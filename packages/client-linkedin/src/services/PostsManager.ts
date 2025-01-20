@@ -47,7 +47,7 @@ export class PostsManager {
 
         if (Date.now() > lastPostTimestamp + delay) {
             const postText = await this.postContentCreator.createPostContent(this.userId);
-            console.log(`postText: ${postText}`); // TODO: REMOVE
+            elizaLogger.log(`Generated post text:\n${postText}`);
             if (!this.config.LINKEDIN_DRY_RUN) {
                 await this.postPublisher.publishPost({ postText });
                 elizaLogger.info("Published post");
