@@ -16,12 +16,14 @@ const swapTemplate = `Please extract the following swap details for SUI network:
 {
     "inputTokenSymbol": string | null,     // Token being sold (e.g. "SUI")
     "outputTokenSymbol": string | null,    // Token being bought
-    "amount": number | null,               // Amount to swap
+    "amount": number | 0,               // Amount to swap
 }
 
 Recent messages: {{recentMessages}}
 
 Extract the swap parameters from the conversation and wallet context above. Return only a JSON object with the specified fields. Use null for any values that cannot be determined.
+
+Ensure that all token symbols are converted to uppercase.
 
 Example response:
 {
@@ -122,7 +124,6 @@ export const executeSwap: Action = {
                     inputTokenSymbol: "SUI",
                     outputTokenSymbol: "USDT",
                     amount: 10,
-                    slippageBps: 50
                 }
             },
             {
@@ -131,13 +132,34 @@ export const executeSwap: Action = {
                     text: "Initiating swap of 10 SUI for USDT on SUI network...",
                     action: "SUI_EXECUTE_SWAP_BY_SYMBOL",
                     params: {
-                        inputType: "0x2::sui::SUI",
-                        outputType: "0x4fb3c0f9e62b5d3956e2f0e284f2a5d128954750b109203a0f34c92c6ba21247::coin::USDT",
-                        amount: "10000000000", // Amount in base units
-                        slippageBps: 50
+                        inputTokenSymbol: "SUI",
+                        outputTokenSymbol: "USDT",
+                        amount: "10"
                     }
                 }
             }
-        ]
+        ],
+        [
+            {
+                "user": "{{user1}}",
+                "content": {
+                    "inputTokenSymbol": "CETUS",
+                    "outputTokenSymbol": "DEEP",
+                    "amount": 0
+                }
+            },
+            {
+                "user": "{{user2}}",
+                "content": {
+                    "text": "Initiating swap CeTUS for deep on SUI network...",
+                    "action": "SUI_EXECUTE_SWAP_BY_SYMBOL",
+                    "params": {
+                        "inputTokenSymbol": "CeTUS",
+                        "outputTokenSymbol": "deep",
+                        "amount": "0"
+                    }
+                }
+            }
+            ]
     ] as ActionExample[][],
 } as Action;
