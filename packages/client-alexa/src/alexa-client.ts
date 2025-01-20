@@ -5,7 +5,7 @@ import axios from "axios";
 import { v4 } from "uuid";
 
 export class AlexaClient {
-    private bot: services.proactiveEvents.ProactiveEventsServiceClient;
+    // private bot: services.proactiveEvents.ProactiveEventsServiceClient; Use for conversations
     private LwaServiceClient: services.LwaServiceClient;
     private apiConfiguration: any;
     private runtime: IAgentRuntime;
