@@ -9,7 +9,7 @@ import { weatherDataProvider } from "./providers/weatherDataProvider";
 export const depinPlugin: Plugin = {
     name: "depin",
     description: "DePIN plugin",
-    providers: [depinDataProvider, weatherDataProvider],
+    providers: [depinDataProvider, weatherDataProvider, newsProvider],
     evaluators: [],
     services: [],
     actions: [depinProjects, weather, recentNews],
