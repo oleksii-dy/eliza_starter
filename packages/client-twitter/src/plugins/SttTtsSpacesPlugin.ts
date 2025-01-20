@@ -132,7 +132,6 @@ export class SttTtsPlugin implements Plugin {
             data.userId,
             setTimeout(() => {
                 console.log("processing voice");
-                this.isProcessingAudio = true;
                 this.userSpeakingTimers.set(data.userId, null);
                 this.processAudio(data.userId).catch((err) =>
                     elizaLogger.error(
@@ -206,57 +205,69 @@ export class SttTtsPlugin implements Plugin {
      * On speaker silence => flush STT => GPT => TTS => push to Janus
      */
     private async processAudio(userId: string): Promise<void> {
-        console.log("strat processing transcription.....");
-        const chunks = this.pcmBuffers.get(userId) || [];
-        this.pcmBuffers.set(userId, []);
-
-        if (!chunks.length) {
-            elizaLogger.warn(
-                "[SttTtsPlugin] No audio chunks for user =>",
-                userId
-            );
+        if (this.isProcessingAudio) {
             return;
         }
-        elizaLogger.log(
-            `[SttTtsPlugin] Flushing STT buffer for user=${userId}, chunks=${chunks.length}`
-        );
+        this.isProcessingAudio = true;
+        try {
+            console.log("strat processing transcription.....");
+            const chunks = this.pcmBuffers.get(userId) || [];
+            this.pcmBuffers.set(userId, []);
 
-        const totalLen = chunks.reduce((acc, c) => acc + c.length, 0);
-        const merged = new Int16Array(totalLen);
-        let offset = 0;
-        for (const c of chunks) {
-            merged.set(c, offset);
-            offset += c.length;
-        }
-
-        // Convert PCM to WAV for STT
-        const wavBuffer = await this.convertPcmToWavInMemory(merged, 48000);
-
-        // Whisper STT
-        const sttText = await this.transcriptionService.transcribe(wavBuffer);
-
-        console.log("transcription text:", sttText);
-
-        if (!sttText || !sttText.trim()) {
-            elizaLogger.warn(
-                "[SttTtsPlugin] No speech recognized for user =>",
-                userId
+            if (!chunks.length) {
+                elizaLogger.warn(
+                    "[SttTtsPlugin] No audio chunks for user =>",
+                    userId
+                );
+                return;
+            }
+            elizaLogger.log(
+                `[SttTtsPlugin] Flushing STT buffer for user=${userId}, chunks=${chunks.length}`
             );
-            return;
-        }
-        elizaLogger.log(
-            `[SttTtsPlugin] STT => user=${userId}, text="${sttText}"`
-        );
 
-        // GPT answer
-        const replyText = await this.askChatGPT(sttText);
-        console.log("reply text:", replyText);
-        elizaLogger.log(
-            `[SttTtsPlugin] GPT => user=${userId}, reply="${replyText}"`
-        );
-        this.isProcessingAudio = false;
-        // Use the standard speak method with queue
-        await this.speakText(replyText);
+            const totalLen = chunks.reduce((acc, c) => acc + c.length, 0);
+            const merged = new Int16Array(totalLen);
+            let offset = 0;
+            for (const c of chunks) {
+                merged.set(c, offset);
+                offset += c.length;
+            }
+
+            // Convert PCM to WAV for STT
+            const wavBuffer = await this.convertPcmToWavInMemory(merged, 48000);
+
+            // Whisper STT
+            const sttText = await this.transcriptionService.transcribe(
+                wavBuffer
+            );
+
+            console.log("transcription text:", sttText);
+
+            if (!sttText || !sttText.trim()) {
+                elizaLogger.warn(
+                    "[SttTtsPlugin] No speech recognized for user =>",
+                    userId
+                );
+                return;
+            }
+            elizaLogger.log(
+                `[SttTtsPlugin] STT => user=${userId}, text="${sttText}"`
+            );
+
+            // GPT answer
+            const replyText = await this.askChatGPT(sttText);
+            console.log("reply text:", replyText);
+            elizaLogger.log(
+                `[SttTtsPlugin] GPT => user=${userId}, reply="${replyText}"`
+            );
+            this.isProcessingAudio = false;
+            // Use the standard speak method with queue
+            await this.speakText(replyText);
+        } catch (error) {
+            elizaLogger.error("[SttTtsPlugin] processAudio error =>", error);
+        } finally {
+            this.isProcessingAudio = false;
+        }
     }
 
     /**
