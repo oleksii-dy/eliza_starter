@@ -212,7 +212,7 @@ export class SttTtsPlugin implements Plugin {
         try {
             console.log("strat processing transcription.....");
             const chunks = this.pcmBuffers.get(userId) || [];
-            this.pcmBuffers.set(userId, []);
+            this.pcmBuffers.clear();
 
             if (!chunks.length) {
                 elizaLogger.warn(
