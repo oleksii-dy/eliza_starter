@@ -97,7 +97,7 @@ export const sendTokenByAddress: Action = {
 
         let tokenObject;
 
-        if(content.TokenAddress){
+        if(content.tokenAddress){
             tokenObject = await getInfoTokenOnSui(content.tokenAddress);
             if(tokenObject=== "ADDRESS_NOT_EXIST"){
                 callback({
