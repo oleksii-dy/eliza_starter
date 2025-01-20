@@ -3,17 +3,20 @@
     "compilerOptions": {
         "target": "ESNext",
         "module": "ESNext",
-        "moduleResolution": "NodeNext",
+        "moduleResolution": "Bundler",
         "outDir": "dist",
         "rootDir": "src",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
         "declaration": true,
-        "emitDeclarationOnly": true,
-        "types": ["node"]
+        "resolveJsonModule": true,
+        "allowImportingTsExtensions": true,
+        "baseUrl": ".",
+        "paths": {
+            "@elizaos/core": ["../core/src"]
+        }
     },
-    "include": [
-        "src/**/*.ts"
-    ],
-    "references": [
-        { "path": "../core" }
-    ]
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist"]
 }

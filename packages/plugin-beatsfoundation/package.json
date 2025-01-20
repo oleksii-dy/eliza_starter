@@ -2,8 +2,15 @@
   "name": "@elizaos/plugin-beatsfoundation",
   "version": "0.0.1",
   "description": "Beats Foundation plugin for ElizaOS",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsup --format esm --dts",
     "clean": "rimraf dist",
