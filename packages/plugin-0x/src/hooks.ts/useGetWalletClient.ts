@@ -69,9 +69,16 @@ const CHAIN_CONFIG = {
 export const getWalletClient = (
     chainId: number
 ): WalletClient & PublicClient => {
-    const privateKey = process.env.WALLET_PRIVATE_KEY?.startsWith("0x")
-        ? (process.env.WALLET_PRIVATE_KEY as `0x${string}`)
-        : (`0x${process.env.WALLET_PRIVATE_KEY}` as `0x${string}`);
+    const rawPrivateKey = process.env.WALLET_PRIVATE_KEY;
+    if (!rawPrivateKey) {
+        throw new Error("Wallet private key is required");
+    }
+    if (!/^(0x)?[0-9a-fA-F]{64}$/.test(rawPrivateKey)) {
+        throw new Error("Invalid private key format");
+    }
+    const privateKey = rawPrivateKey.startsWith("0x")
+        ? (rawPrivateKey as `0x${string}`)
+        : (`0x${rawPrivateKey}` as `0x${string}`);
 
     const account = privateKeyToAccount(privateKey);
 
