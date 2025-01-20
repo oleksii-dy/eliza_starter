@@ -495,7 +495,7 @@ export class TwitterPostClient {
                     twitterPostTemplate,
             });
 
-            elizaLogger.debug("generate post prompt:\n" + context);
+            elizaLogger.info("generate post prompt:\n" + context);
 
             const newTweetContent = await generateText({
                 runtime: this.runtime,
@@ -607,6 +607,8 @@ export class TwitterPostClient {
                 this.runtime.character.templates?.twitterPostTemplate ||
                 twitterPostTemplate,
         });
+
+        elizaLogger.info("generate post prompt:\n" + context);
 
         const response = await generateText({
             runtime: this.runtime,
