@@ -226,9 +226,9 @@ you can change ```"akash_chat_api"``` to ```"ollama"``` if you want to run your 
 ## Multiple Characters acting as a Team:
 You can run two characters that can interact.. This is a good example to learn, how the sytem works...
 Lets go:
-
+```
 pnpm start:debug --characters=~./eliza/characters/bud.character.json,~./eliza/characters/terence.character.json
-
+```
 start both character the same time. To make them a team and use different Discord Instances, you need to modify their header in the character file:
 
 Thats the one for Bud:
