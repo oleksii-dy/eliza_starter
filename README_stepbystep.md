@@ -283,8 +283,11 @@ thats the one for Terence:
     },
 ```
 
-
-
+There is always one Leader, but multiple Members. If you have a bigger team add their id's like this:
+```
+"teamAgentIds": ["1330133186734456924", "1330133186734456925", "1330133186734456926"]
+```
+you should see the ID in the Logs or you can retrieve them in the database too
 
 ### Accessing the Database:
 ```
