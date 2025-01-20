@@ -10,6 +10,7 @@ import { LensAgentClient } from "@elizaos/client-lens";
 import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
+import { AlexaClientInterface } from "@elizaos/client-alexa";
 import { FarcasterClientInterface } from "@elizaos/client-farcaster";
 import { DirectClient } from "@elizaos/client-direct";
 import { agentKitPlugin } from "@elizaos/plugin-agentkit";
@@ -703,6 +704,13 @@ export async function initializeClients(
         const twitterClient = await TwitterClientInterface.start(runtime);
         if (twitterClient) {
             clients.twitter = twitterClient;
+        }
+    }
+
+    if(clientTypes.includes(Clients.ALEXA)) {
+        const alexaClient = await AlexaClientInterface.start(runtime);
+        if(alexaClient) {
+            clients.alexa = alexaClient;
         }
     }
 
