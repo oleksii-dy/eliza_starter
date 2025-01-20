@@ -11,10 +11,11 @@ import {
     type Action,
 } from "@elizaos/core";
 import findByVerifiedAndSymbol from "../providers/searchCoinInAggre";
+import { checkSuiAddressExists } from "../providers/checkSuiAddress";
 const sendTokenTemplate = `Please extract the following swap details for SUI network:
 
 {
-    "amount": number | null,               // Amount of tokens to transfer
+    "amount": number | 0,               // Amount of tokens to transfer
     "tokenSymbol": string | null,          // Token symbol on the SUI network (e.g., "SUI", "UNI")
     "destinationAddress": string | null    // Recipient's wallet address
 }
@@ -104,6 +105,16 @@ export const sendTokenBySymbol: Action = {
              })
              return false
         }
+        const checkSuiAddress = await checkSuiAddressExists(content.destinationAddress)
+        console.log(checkSuiAddress)
+        if(!checkSuiAddress){
+            callback({
+                text:`This wallet address ${content.destinationAddress} does not exist. Please enter a valid one.  The wallet address should be in the format 0x...`,
+                action:"SUI_SEND_TOKEN_BY_SYMBOL",
+
+             })
+             return false;
+        }
         const responseData = {
             amount: content.amount,
             token_info: tokenObject,
@@ -112,7 +123,7 @@ export const sendTokenBySymbol: Action = {
         try {
 
             callback({
-               text:`Send Tokens: \n Token Address: ${tokenObject.type}  ${content.tokenSymbol ? `\n Symbol: ${content.tokenSymbol}` : ""} \n To:   ${content.destinationAddress} \n Amount: ${content.amount} \n Please double-check all details before swapping to avoid any loss`,
+               text:`Send Tokens: \n Token Address: ${tokenObject.type}  ${content.tokenSymbol ? `\n Symbol: ${content.tokenSymbol}` : ""} \n To:   ${content.destinationAddress}  \n Please double-check all details before swapping to avoid any loss`,
                action:"SUI_SEND_TOKEN_BY_SYMBOL",
                result: {
                 type: "send_sui_chain",
