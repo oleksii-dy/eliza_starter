@@ -65,7 +65,7 @@ export class SttTtsPlugin implements Plugin {
     // TTS queue for sequentially speaking
     private ttsQueue: string[] = [];
     private isSpeaking = false;
-    private transcriptionProcessing = false;
+    private isProcessingAudio = false;
 
     private userSpeakingTimers = new Map<string, NodeJS.Timeout>();
 
@@ -110,7 +110,7 @@ export class SttTtsPlugin implements Plugin {
      * Called whenever we receive PCM from a speaker
      */
     onAudioData(data: AudioDataWithUser): void {
-        if (this.isSpeaking || this.transcriptionProcessing) {
+        if (this.isSpeaking || this.isProcessingAudio) {
             return;
         }
         let maxVal = 0;
@@ -132,9 +132,9 @@ export class SttTtsPlugin implements Plugin {
             data.userId,
             setTimeout(() => {
                 console.log("processing voice");
-                this.transcriptionProcessing = true;
+                this.isProcessingAudio = true;
                 this.userSpeakingTimers.set(data.userId, null);
-                this.processTranscription(data.userId).catch((err) =>
+                this.processAudio(data.userId).catch((err) =>
                     elizaLogger.error(
                         "[SttTtsPlugin] handleSilence error =>",
                         err
@@ -205,7 +205,7 @@ export class SttTtsPlugin implements Plugin {
     /**
      * On speaker silence => flush STT => GPT => TTS => push to Janus
      */
-    private async processTranscription(userId: string): Promise<void> {
+    private async processAudio(userId: string): Promise<void> {
         console.log("strat processing transcription.....");
         const chunks = this.pcmBuffers.get(userId) || [];
         this.pcmBuffers.set(userId, []);
@@ -254,7 +254,7 @@ export class SttTtsPlugin implements Plugin {
         elizaLogger.log(
             `[SttTtsPlugin] GPT => user=${userId}, reply="${replyText}"`
         );
-        this.transcriptionProcessing = false;
+        this.isProcessingAudio = false;
         // Use the standard speak method with queue
         await this.speakText(replyText);
     }
