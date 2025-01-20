@@ -109,8 +109,8 @@ export const swap: Action = {
         } catch (error) {
             elizaLogger.error("Swap execution failed:", error);
             callback({
-                text: `❌ Failed to execute swap: ${error.message}`,
-                content: { error: error.message },
+                text: `❌ Failed to execute swap: ${error.message || error}`,
+                content: { error: error.message || String(error) },
             });
             return false;
         }
