@@ -25,6 +25,9 @@ interface PluginConfig {
     transcriptionService: ITranscriptionService;
 }
 
+const VOLUME_WINDOW_SIZE = 100;
+const SPEAKING_THRESHOLD = 0.05;
+
 /**
  * MVP plugin for speech-to-text (OpenAI) + conversation + TTS (ElevenLabs)
  * Approach:
@@ -68,6 +71,8 @@ export class SttTtsPlugin implements Plugin {
     private isProcessingAudio = false;
 
     private userSpeakingTimer: NodeJS.Timeout | null = null;
+    private volumeBuffers: Map<string, number[]>;
+    private ttsAbortController: AbortController | null = null;
 
     onAttach(_space: Space) {
         elizaLogger.log("[SttTtsPlugin] onAttach => space was attached");
@@ -104,13 +109,15 @@ export class SttTtsPlugin implements Plugin {
             this.chatContext = config.chatContext;
         }
         elizaLogger.log("[SttTtsPlugin] Plugin config =>", config);
+
+        this.volumeBuffers = new Map<string, number[]>();
     }
 
     /**
      * Called whenever we receive PCM from a speaker
      */
     onAudioData(data: AudioDataWithUser): void {
-        if (this.isSpeaking || this.isProcessingAudio) {
+        if (this.isProcessingAudio) {
             return;
         }
         let maxVal = 0;
@@ -133,14 +140,48 @@ export class SttTtsPlugin implements Plugin {
         }
         arr.push(data.samples);
 
-        console.log("receive user voice");
-        this.userSpeakingTimer = setTimeout(() => {
-            console.log("processing voice");
-            this.userSpeakingTimer = null;
-            this.processAudio(data.userId).catch((err) =>
-                elizaLogger.error("[SttTtsPlugin] handleSilence error =>", err)
+        if (!this.isSpeaking) {
+            this.userSpeakingTimer = setTimeout(() => {
+                console.log("processing voice");
+                this.userSpeakingTimer = null;
+                this.processAudio(data.userId).catch((err) =>
+                    elizaLogger.error(
+                        "[SttTtsPlugin] handleSilence error =>",
+                        err
+                    )
+                );
+            }, 1000); // 1-second silence threshold
+        } else {
+            // check interruption
+            let volumeBuffer = this.volumeBuffers.get(data.userId);
+            if (!volumeBuffer) {
+                volumeBuffer = [];
+                this.volumeBuffers.set(data.userId, volumeBuffer);
+            }
+            const samples = new Int16Array(
+                data.samples.buffer,
+                data.samples.byteOffset,
+                data.samples.length / 2
             );
-        }, 1000); // 1-second silence threshold
+            const maxAmplitude = Math.max(...samples.map(Math.abs)) / 32768;
+            volumeBuffer.push(maxAmplitude);
+
+            if (volumeBuffer.length > VOLUME_WINDOW_SIZE) {
+                volumeBuffer.shift();
+            }
+            const avgVolume =
+                volumeBuffer.reduce((sum, v) => sum + v, 0) /
+                VOLUME_WINDOW_SIZE;
+
+            if (avgVolume > SPEAKING_THRESHOLD) {
+                volumeBuffer.length = 0;
+                if (this.ttsAbortController) {
+                    this.ttsAbortController.abort();
+                    this.isSpeaking = false;
+                    console.log("[SttTtsPlugin] TTS playback interrupted");
+                }
+            }
+        }
     }
 
     // /src/sttTtsPlugin.ts
@@ -254,6 +295,7 @@ export class SttTtsPlugin implements Plugin {
                 `[SttTtsPlugin] GPT => user=${userId}, reply="${replyText}"`
             );
             this.isProcessingAudio = false;
+            this.volumeBuffers.clear();
             // Use the standard speak method with queue
             await this.speakText(replyText);
         } catch (error) {
@@ -287,12 +329,30 @@ export class SttTtsPlugin implements Plugin {
             const text = this.ttsQueue.shift();
             if (!text) continue;
 
+            this.ttsAbortController = new AbortController();
+            const { signal } = this.ttsAbortController;
+
             try {
                 const ttsAudio = await this.elevenLabsTts(text);
                 const pcm = await this.convertMp3ToPcm(ttsAudio, 48000);
+                if (signal.aborted) {
+                    elizaLogger.log(
+                        "[SttTtsPlugin] TTS interrupted before streaming"
+                    );
+                    return;
+                }
                 await this.streamToJanus(pcm, 48000);
+                if (signal.aborted) {
+                    elizaLogger.log(
+                        "[SttTtsPlugin] TTS interrupted after streaming"
+                    );
+                    return;
+                }
             } catch (err) {
                 elizaLogger.error("[SttTtsPlugin] TTS streaming error =>", err);
+            } finally {
+                // Clean up the AbortController
+                this.ttsAbortController = null;
             }
         }
         this.isSpeaking = false;
@@ -429,6 +489,10 @@ export class SttTtsPlugin implements Plugin {
             offset + FRAME_SIZE <= samples.length;
             offset += FRAME_SIZE
         ) {
+            if (this.ttsAbortController?.signal.aborted) {
+                elizaLogger.log("[SttTtsPlugin] streamToJanus interrupted");
+                return;
+            }
             const frame = new Int16Array(FRAME_SIZE);
             frame.set(samples.subarray(offset, offset + FRAME_SIZE));
             this.janus?.pushLocalAudio(frame, sampleRate, 1);
@@ -476,5 +540,6 @@ export class SttTtsPlugin implements Plugin {
         this.userSpeakingTimer = null;
         this.ttsQueue = [];
         this.isSpeaking = false;
+        this.volumeBuffers.clear();
     }
 }
