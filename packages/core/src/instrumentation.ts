@@ -12,17 +12,19 @@ export class Instrumentation {
 
     static trace(name: string, payload: any) {
         if (!this.tracer) return;
+        var jsonPayload;
+        try {
+            jsonPayload = JSON.stringify(payload);
+        } catch (error) {
+            jsonPayload = `Error: ${error}`
+            console.log(`Could not convert object to JSON for ${name}. Please select individual fields that are serializable.`);
+            console.log(payload);
+        }
         const instance = this.store.getStore();
         const run = 0;
         const time = new Date();
         (async () => {
-            try {
-                const s = JSON.stringify(payload);
-            } catch (error) {
-                payload = `Error: ${error}`
-                console.log(payload);
-            }
-            await this.tracer(run, time, name, payload);
+            await this.tracer(run, time, name, jsonPayload);
         })();
     }
 

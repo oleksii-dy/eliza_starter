@@ -1,4 +1,5 @@
 import { embed, getEmbeddingZeroVector } from "./embedding.ts";
+import { Instrumentation } from "./instrumentation.ts";
 import elizaLogger from "./logger.ts";
 import {
     IAgentRuntime,
@@ -97,7 +98,7 @@ export class MemoryManager implements IMemoryManager {
         start?: number;
         end?: number;
     }): Promise<Memory[]> {
-        return await this.runtime.databaseAdapter.getMemories({
+        const result = await this.runtime.databaseAdapter.getMemories({
             roomId,
             count,
             unique,
@@ -106,6 +107,8 @@ export class MemoryManager implements IMemoryManager {
             start,
             end,
         });
+        Instrumentation.trace("MemoryManager.getMemories", {roomId: roomId, count: count, result: result});
+        return result;
     }
 
     async getCachedEmbeddings(content: string): Promise<
@@ -187,6 +190,7 @@ export class MemoryManager implements IMemoryManager {
             this.tableName,
             unique
         );
+        Instrumentation.trace("MemoryManager.createMemory", {memoryId: memory.id, text: memory.content.text})
     }
 
     async getMemoriesByRoomIds(params: { roomIds: UUID[], limit?: number; }): Promise<Memory[]> {
