@@ -28,7 +28,7 @@ vi.mock("@chain-registry/utils", () => ({
     getExponentByDenom: vi.fn((_, denom: string) => {
         if (denom === "fromTokenDenom") return "6";
     }),
-    convertDisplayUnitToBaseUnit: vi.fn(() => "1"),
+    convertDisplayUnitToBaseUnit: vi.fn(() => "1000000"),
     getChainByChainId: vi.fn(() => ({ chainId: "target-chain-id" })),
 }));
 describe("IBCSwapAction", () => {
@@ -109,7 +109,7 @@ describe("IBCSwapAction", () => {
         // Validate the route call
         expect(mockSkipClient.route).toHaveBeenCalledWith({
             smartSwapOptions: {},
-            amountOut: "1000000000",
+            amountOut: "1000000",
             sourceAssetDenom: "fromTokenDenom",
             sourceAssetChainID: "source-chain-id",
             destAssetDenom: "toTokenDenom",
