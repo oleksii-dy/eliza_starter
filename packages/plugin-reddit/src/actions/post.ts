@@ -7,7 +7,8 @@ export const createPost: Action = {
         const hasCredentials = !!runtime.getSetting("REDDIT_CLIENT_ID") &&
                              !!runtime.getSetting("REDDIT_CLIENT_SECRET") &&
                              !!runtime.getSetting("REDDIT_REFRESH_TOKEN");
-        return hasCredentials;
+        const hasContent = message?.content?.text?.trim().length > 0;
+        return hasCredentials && hasContent;
     },
     handler: async (
         runtime: IAgentRuntime,
