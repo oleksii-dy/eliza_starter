@@ -19,6 +19,7 @@ export const newsProvider: Provider = {
         const news = await askQuickSilver(
             `What is the latest news on ${randomTopic}?`
         );
+
         return `
             #### **Latest News on ${randomTopic}**
             ${news}
