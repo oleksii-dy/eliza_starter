@@ -9,6 +9,7 @@ import {
     State,
     type Action,
 } from "@elizaos/core";
+import axios from 'axios';
 import { validateBeatsFoundationConfig } from "../../environment";
 import { createSongExamples } from "./examples";
 import { createSongService } from "./service";
@@ -63,7 +64,9 @@ export default {
             const songService = createSongService(config.BEATSFOUNDATION_API_KEY);
 
             try {
-                const song = await songService.createSong(content);
+                // Create cancel token for request cancellation
+                const source = axios.CancelToken.source();
+                const song = await songService.createSong(content, { cancelToken: source.token });
                 elizaLogger.success(
                     `Song created successfully! Title: ${song.title}`
                 );
