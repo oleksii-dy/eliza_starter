@@ -11,6 +11,7 @@ import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 import { FarcasterClientInterface } from "@elizaos/client-farcaster";
+import { LinkedInClient } from "@elizaos/client-linkedin";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
 import { PrimusAdapter } from "@elizaos/plugin-primus";
 
@@ -624,6 +625,14 @@ export async function initializeClients(
         const farcasterClient = await FarcasterClientInterface.start(runtime);
         if (farcasterClient) {
             clients.farcaster = farcasterClient;
+        }
+    }
+
+    if (clientTypes.includes(Clients.LINKEDIN)) {
+        const linkedInClient = await LinkedInClient.start(runtime);
+
+        if (linkedInClient) {
+            clients.linkedin = LinkedInClient;
         }
     }
     if (clientTypes.includes("lens")) {
