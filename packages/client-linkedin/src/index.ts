@@ -33,7 +33,7 @@ export const LinkedInClient: Client = {
     },
 
     async stop(_runtime: IAgentRuntime) {
-        elizaLogger.warn("Twitter client does not support stopping yet");
+        elizaLogger.warn("LinkedIn client does not support stopping yet");
     },
 };
 
