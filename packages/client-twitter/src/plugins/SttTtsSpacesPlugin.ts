@@ -65,6 +65,7 @@ export class SttTtsPlugin implements Plugin {
     // TTS queue for sequentially speaking
     private ttsQueue: string[] = [];
     private isSpeaking = false;
+    private transcriptionProcessing = false;
 
     private userSpeakingTimers = new Map<string, NodeJS.Timeout>();
 
@@ -109,7 +110,7 @@ export class SttTtsPlugin implements Plugin {
      * Called whenever we receive PCM from a speaker
      */
     onAudioData(data: AudioDataWithUser): void {
-        if (this.isSpeaking) {
+        if (this.isSpeaking || this.transcriptionProcessing) {
             return;
         }
         let maxVal = 0;
@@ -131,6 +132,7 @@ export class SttTtsPlugin implements Plugin {
             data.userId,
             setTimeout(() => {
                 console.log("processing voice");
+                this.transcriptionProcessing = true;
                 this.userSpeakingTimers.set(data.userId, null);
                 this.handleMute(data.userId).catch((err) =>
                     elizaLogger.error(
@@ -252,7 +254,7 @@ export class SttTtsPlugin implements Plugin {
         elizaLogger.log(
             `[SttTtsPlugin] GPT => user=${userId}, reply="${replyText}"`
         );
-
+        this.transcriptionProcessing = false;
         // Use the standard speak method with queue
         await this.speakText(replyText);
     }
