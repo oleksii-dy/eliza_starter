@@ -99,7 +99,8 @@ export const executeSwapByAddress: Action = {
 
             },
             toToken:{...outputTokenObject,
-                type:content.outputTokenAddress
+                type:content.outputTokenAddress,
+                iconUrl: "https://cryptologos.cc/logos/sui-sui-logo.png?v=040"
             }
 
         }

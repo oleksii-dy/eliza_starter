@@ -28,7 +28,7 @@ const listSuiPoolPromptTemplate = `Respond with a JSON markdown block containing
 
         Given the recent messages, extract the following information:
 
-        size: Number of news items to return: Must be a positive integer Default is 1 if not specified Maximum value is 100 Minimum value is 1 If mentioned in message, use that number If not mentioned, use default value 1
+        size: Number of news items to return: Must be a positive integer Default is 1 if not specified Maximum value is 100 Minimum value is 1 If mentioned in message, use that number If not mentioned, use default value 10
 
         VALIDATION RULES:
             All property names must use double quotes
