@@ -7,13 +7,12 @@ export const LinkedInClient: Client = {
         if (!linkedinAccessToken) {
             throw new Error("LinkedIn access token is not set");
         }
-        elizaLogger.warn("LinkedIn client does not support starting yet");
 
         return this;
     },
 
     async stop(_runtime: IAgentRuntime) {
-        elizaLogger.warn("Twitter client does not support stopping yet");
+        elizaLogger.warn("LinkedIn client does not support stopping yet");
     },
 };
 
