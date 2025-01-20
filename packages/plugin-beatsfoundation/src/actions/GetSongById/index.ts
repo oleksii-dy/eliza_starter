@@ -10,6 +10,7 @@ import {
     type Action,
 } from "@elizaos/core";
 import { validateBeatsFoundationConfig } from "../../environment";
+import { handleBeatsFoundationError } from "../../utils/error-handlers";
 import { getSongByIdExamples } from "./examples";
 import { createSongService } from "./service";
 import { getSongByIdTemplate } from "./template";
@@ -77,24 +78,10 @@ export default {
 
                 return true;
             } catch (error: any) {
-                elizaLogger.error("Error in GET_SONG_BY_ID handler:", error);
-                if (callback) {
-                    callback({
-                        text: `Error fetching song: ${error.message}`,
-                        content: { error: error.message },
-                    });
-                }
-                return false;
+                return handleBeatsFoundationError(error, "GET_SONG_BY_ID", callback);
             }
         } catch (error: any) {
-            elizaLogger.error("Error in GET_SONG_BY_ID handler:", error);
-            if (callback) {
-                callback({
-                    text: `Error fetching song: ${error.message}`,
-                    content: { error: error.message },
-                });
-            }
-            return false;
+            return handleBeatsFoundationError(error, "GET_SONG_BY_ID", callback);
         }
     },
     examples: getSongByIdExamples,
