@@ -8,7 +8,6 @@ const plugin: Plugin = {
     description: "Integrates Devin API with Eliza for task automation and session management",
     actions: [startSessionAction],
     providers: [devinProvider],
-    validate: validateDevinConfig,
 };
 
 export default plugin;
