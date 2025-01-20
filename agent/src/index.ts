@@ -1173,7 +1173,7 @@ const startAgents = async () => {
 
 const db = new PostgresDatabaseAdapter({connectionString: process.env.POSTGRES_URL, parseInputs: true});
 await db.init();
-Instrumentation.init((a, b, c, d) => {db.createTrace(a, b, c, d)});
+Instrumentation.init((run, time, name, data) => {db.createTrace(run, time, name, data)});
 Instrumentation.run(() => {
     Instrumentation.trace("TEST", {a: 123});
     startAgents().catch((error) => {
