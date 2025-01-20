@@ -79,14 +79,14 @@ export const executeSwap: Action = {
         const inputTokenObject = await findByVerifiedAndSymbol(content.inputTokenSymbol);
         if(!inputTokenObject){
             callback({
-                text:`We do not support ${content.inputTokenSymbol} token in SUI network yet`,
+                text:`We do not support ${content.inputTokenSymbol} token in SUI network yet, We only support swapping token symbol to token symbol or token address to token address.`,
              })
              return false
         }
         const outputTokenObject = await findByVerifiedAndSymbol(content.outputTokenSymbol);
         if(!outputTokenObject){
             callback({
-                text:`We do not support ${content.outputTokenSymbol} token in SUI network yet`,
+                text:`We do not support ${content.outputTokenSymbol} token in SUI network yet, We only support swapping token symbol to token symbol or token address to token address. `,
              })
              return false
         }

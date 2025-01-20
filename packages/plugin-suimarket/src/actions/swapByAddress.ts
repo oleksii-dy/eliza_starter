@@ -10,7 +10,6 @@ import {
     State,
     type Action,
 } from "@elizaos/core";
-import findByVerifiedAndSymbol from "../providers/searchCoinInAggre";
 import getInfoTokenOnSui from "../providers/coinMetaDataSui";
 const swapTemplate = `Please extract the following swap details for SUI network:
 
@@ -81,14 +80,14 @@ export const executeSwapByAddress: Action = {
 
         if(inputTokenObject=== "ADDRESS_NOT_EXIST"){
             callback({
-                text:`We do not support ${content.inputTokenAddress} token in SUI network yet`,
+                text:`We do not support ${content.inputTokenAddress} token in SUI network yet, We only support swapping token symbol to token symbol or token address to token address.`,
              })
              return false
         }
         const outputTokenObject = await getInfoTokenOnSui(content.outputTokenAddress);
         if(outputTokenObject ==="ADDRESS_NOT_EXIST"){
             callback({
-                text:`We do not support ${content.outputTokenAddress} token in SUI network yet`,
+                text:`We do not support ${content.outputTokenAddress} token in SUI network yet, We only support swapping token symbol to token symbol or token address to token address.`,
              })
              return false
         }
