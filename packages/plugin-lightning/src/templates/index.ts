@@ -55,7 +55,7 @@ First, review the recent messages from the conversation:
    - "outgoing_channel" (optional): This is the Outbound Standard Channel Id String. If not provided, this can be left as "null".
 
 3. **Validation:**
-   - Ensure "request" is valid and starts with "lnbc".
+   - Ensure "request" is valid and starts with one of: "lnbc" (mainnet), "lntb" (testnet), "lnbcrt" (regtest), or "lnsb" (signet).
    - If "outgoing_channel" is present, ensure it is a valid string.
 
 4. **Output:** If all required fields are valid, respond with the following JSON format:

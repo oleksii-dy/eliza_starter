@@ -1,8 +1,9 @@
 import type { IAgentRuntime, Memory, State } from "@elizaos/core";
 import {
     composeContext,
-    generateObjectDeprecated,
+    generateObjectV2,
     ModelClass,
+    elizaLogger,
 } from "@elizaos/core";
 
 import {
@@ -24,10 +25,10 @@ export class PayInvoiceAction {
     async getAvalibleChannelId(): Promise<string> {
         const { channels } = await this.lightningProvider.getLndChannel();
         const filteredActiveChannels = channels.filter(
-            (channel) => channel.is_active === true
+            (channel) => channel.is_active === true,
         );
         const sortedChannels = filteredActiveChannels.sort(
-            (a, b) => b.local_balance - a.local_balance
+            (a, b) => b.local_balance - a.local_balance,
         );
         if (sortedChannels.length > 0) {
             return sortedChannels[0].id;
@@ -60,9 +61,9 @@ export const payInvoiceAction = {
         _message: Memory,
         state: State,
         _options: any,
-        callback?: any
+        callback?: any,
     ) => {
-        console.log("payInvoice action handler called");
+        elizaLogger.log("payInvoice action handler called");
         const lightningProvider = await initLightningProvider(runtime);
         const action = new PayInvoiceAction(lightningProvider);
 
@@ -71,7 +72,7 @@ export const payInvoiceAction = {
             state,
             template: payInvoiceTemplate,
         });
-        const content = await generateObjectDeprecated({
+        const content = await generateObjectV2({
             runtime,
             context: payInvoiceContext,
             modelClass: ModelClass.LARGE,
@@ -84,13 +85,14 @@ export const payInvoiceAction = {
 
         try {
             const payInvoiceResp = await action.payInvoice(payInvoiceOptions);
+            elizaLogger.log("🚀 ~ payInvoiceResp:", payInvoiceResp);
 
             if (callback) {
-                let text = "";
+                const text = "";
                 if (payInvoiceResp.is_confirmed) {
                     callback({
                         text: `Successfully paid invoice ${content.request} from ${payInvoiceResp.outgoing_channel};\nAmount: ${payInvoiceResp.tokens};\nFee: ${payInvoiceResp.fee};\nPayment Hash: ${payInvoiceResp.id};`,
-                        content: { success: true }
+                        content: { success: true },
                     });
                 } else {
                     callback({
@@ -100,14 +102,14 @@ export const payInvoiceAction = {
                         },
                     });
                 }
-
             }
             return true;
         } catch (error) {
-            const err = error?.[2]?.err;
-            console.error("Error in payInvoice handler:", err.details);
+            elizaLogger.error("Error in payInvoice handler:", error);
             if (callback) {
-                callback({ text: `Error: ${err.details}` });
+                callback({
+                    text: `Error: ${error.message || "An error occurred"}`,
+                });
             }
             return false;
         }

@@ -19,12 +19,19 @@ export type CreateInvoiceArgs = {
     secret?: string;
     /** Millitokens */
     mtokens?: string;
-    routes?: any;
+    routes?: Array<{
+        public_key: string;
+        base_fee_mtokens?: string;
+        channel?: string;
+        cltv_delta?: number;
+        fee_rate?: number;
+        [key: string]: unknown;
+    }>;
     /** Tokens */
     tokens?: number;
     asset_id?: string;
     peer_pubkey?: string;
-    tpr?: any;
+    tpr?: Record<string, unknown>;
 };
 
 export type PayArgs = {

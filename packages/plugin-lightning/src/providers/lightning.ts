@@ -18,30 +18,47 @@ import {
 } from "astra-lightning";
 import { CreateInvoiceArgs, PayArgs } from "../types";
 export class LightningProvider {
-    lndClient: AuthenticatedLnd;
+    private lndClient: AuthenticatedLnd;
     constructor(cert: string, macaroon: string, socket: string) {
-        const { lnd } = authenticatedLndGrpc({
-            cert: cert,
-            macaroon: macaroon,
-            socket: socket,
-        });
-        this.lndClient = lnd;
+        if (!cert || !macaroon || !socket) {
+            throw new Error('Missing required LND credentials');
+        }
+        try {
+            const { lnd } = authenticatedLndGrpc({
+                cert: cert,
+                macaroon: macaroon,
+                socket: socket,
+            });
+            this.lndClient = lnd;
+        } catch (error) {
+            throw new Error(`Failed to initialize LND client: ${error.message}`);
+        }
     }
     async getLndIdentity(): Promise<GetIdentityResult> {
-        return await getIdentity({ lnd: this.lndClient });
+        try {
+            return await getIdentity({ lnd: this.lndClient });
+        } catch (error) {
+            throw new Error(`Failed to get LND identity: ${error.message}`);
+        }
     }
     async getLndChannel(): Promise<GetChannelsResult> {
-        const ret = await getChannels({ lnd: this.lndClient });
-        return ret;
+        try {
+            return await getChannels({ lnd: this.lndClient });
+        } catch (error) {
+            throw new Error(`Failed to get LND channels: ${error.message}`);
+        }
     }
     async createInvoice(
         createInvoiceArgs: CreateInvoiceArgs
     ): Promise<CreateInvoiceResult> {
-        const ret = await createInvoice({
-            lnd: this.lndClient,
-            ...createInvoiceArgs,
-        });
-        return ret;
+        try {
+            return await createInvoice({
+                lnd: this.lndClient,
+                ...createInvoiceArgs,
+            });
+        } catch (error) {
+            throw new Error(`Failed to create invoice: ${error.message}`);
+        }
     }
     async payInvoice(payInvoiceArgs: PayArgs): Promise<PayResult> {
         const ret = await pay({
