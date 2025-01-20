@@ -1811,7 +1811,7 @@ export class PostgresDatabaseAdapter
         );
     }
 
-    async createTrace(run: number, time: Date, name: string, data: any): Promise<void> {
+    async createTrace(run: string, time: Date, name: string, data: any): Promise<void> {
         return this.withDatabase(async () => {
             const client = await this.pool.connect();
             try {

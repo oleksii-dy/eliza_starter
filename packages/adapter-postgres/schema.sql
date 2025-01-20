@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS  cache (
 
 CREATE TABLE IF NOT EXISTS traces (
     "id" BIGSERIAL NOT NULL,
-    "run" BIGINT,
+    "run" UUID,
     "time" TIMESTAMP NOT NULL,
     "name" VARCHAR(80) NOT NULL,
     "data" JSON,
