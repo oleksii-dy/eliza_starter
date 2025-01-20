@@ -1,17 +1,28 @@
+export interface PaginatedResponse<T> {
+    data: T[];
+    pagination: {
+        total: number;
+        limit: number;
+        offset: number;
+    };
+}
+
 export interface GenerateSongRequest {
-  prompt: string;
-  lyrics?: string;
-  genre?: string;
-  mood?: string;
-  isInstrumental?: boolean;
+    prompt: string;
+    lyrics?: string;
+    genre?: string;
+    mood?: string;
+    isInstrumental?: boolean;
 }
 
 export interface Song {
-  id: string;
-  title: string;
-  audio_url: string;
-  streams: number;
-  upvote_count: number;
-  song_url: string;
-  username: string;
+    id: string;
+    title: string;
+    audio_url: string;
+    streams: number;
+    upvote_count: number;
+    song_url: string;
+    username: string;
 }
+
+export type PaginatedSongsResponse = PaginatedResponse<Song>;
