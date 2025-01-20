@@ -99,8 +99,7 @@ export const executeSwapByAddress: Action = {
 
             },
             toToken:{...outputTokenObject,
-                type:content.outputTokenAddress,
-                iconUrl: "https://strapi-dev.scand.app/uploads/sui_c07df05f00.png"
+                type:content.outputTokenAddress
             }
 
         }

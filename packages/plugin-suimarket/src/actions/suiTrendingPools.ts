@@ -95,8 +95,11 @@ export const suiTrendingPools: Action = {
         })
         elizaLogger.log("content: ",content);
         const coinGecko = new GeckoTerminalProvider();
-        const info = await coinGecko.fetchPoolsByNetwork('sui-network');
-
+        let info = await coinGecko.fetchPoolsByNetwork('sui-network');
+        info = info.map(item => {
+            item.name = item.name.split(" / ")[0];
+            return item;
+        });
         if (callback) {
             callback({
                 text: `
