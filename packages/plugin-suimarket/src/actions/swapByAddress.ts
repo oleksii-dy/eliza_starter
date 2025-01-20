@@ -16,7 +16,7 @@ const swapTemplate = `Please extract the following swap details for SUI network:
 {
     "inputTokenAddress": string | null,     // Token being sold (e.g. "0xb6a9f896fd6c0f777699b9aa2b1bb745caa5eb1f3978173c1ddffd4bdd3994e9::uni::UNI")
     "outputTokenAddress": string | null,    // Token being bought
-    "amount": number | null,               // Amount to swap
+    "amount": number | 0,               // Amount to swap
 }
 
 Recent messages: {{recentMessages}}
