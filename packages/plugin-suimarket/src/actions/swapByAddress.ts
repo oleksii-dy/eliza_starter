@@ -100,7 +100,7 @@ export const executeSwapByAddress: Action = {
             },
             toToken:{...outputTokenObject,
                 type:content.outputTokenAddress,
-                iconUrl: "https://cryptologos.cc/logos/sui-sui-logo.png?v=040"
+                iconUrl: "https://strapi-dev.scand.app/uploads/sui_c07df05f00.png"
             }
 
         }
