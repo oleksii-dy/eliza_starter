@@ -1,4 +1,5 @@
 import { Content } from "@elizaos/core";
+import { CancelToken } from 'axios';
 
 export interface CreateSongContent extends Content {
     prompt: string;
@@ -6,4 +7,8 @@ export interface CreateSongContent extends Content {
     genre?: string;
     mood?: string;
     isInstrumental?: boolean;
+}
+
+export interface CreateSongOptions {
+    cancelToken?: CancelToken;
 }

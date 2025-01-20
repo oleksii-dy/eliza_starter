@@ -1,15 +1,16 @@
 import axios from 'axios';
 import { Song } from '../../types';
-import { CreateSongContent } from './types';
+import { CreateSongContent, CreateSongOptions } from './types';
 
 export function createSongService(apiKey: string) {
     return {
-        createSong: async (content: CreateSongContent): Promise<Song> => {
+        createSong: async (content: CreateSongContent, options?: CreateSongOptions): Promise<Song> => {
             try {
                 const response = await axios.post(
                     'https://www.beatsfoundation.com/api/songs',
                     content,
                     {
+                        ...options,
                         headers: {
                             Authorization: `Bearer ${apiKey}`,
                             'Content-Type': 'application/json',
