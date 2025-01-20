@@ -503,6 +503,8 @@ export class TwitterPostClient {
                 modelClass: ModelClass.SMALL,
             });
 
+            elizaLogger.info("generate tweet content response:\n" + newTweetContent);
+
             // First attempt to clean content using post tags
             let cleanedContent = this.extractPostContent(newTweetContent);
 
@@ -615,7 +617,7 @@ export class TwitterPostClient {
             context: options?.context || context,
             modelClass: ModelClass.SMALL,
         });
-        elizaLogger.debug("generate tweet content response:\n" + response);
+        elizaLogger.info("generate tweet content response:\n" + response);
 
         // First clean up any markdown and newlines
         const postContent = this.extractPostContent(response);
