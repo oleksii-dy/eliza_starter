@@ -108,6 +108,7 @@ import { echoChambersPlugin } from "@elizaos/plugin-echochambers";
 import { dexScreenerPlugin } from "@elizaos/plugin-dexscreener";
 import { pythDataPlugin } from "@elizaos/plugin-pyth-data";
 import { openaiPlugin } from '@elizaos/plugin-openai';
+import { devinPlugin } from '@elizaos/plugin-devin';
 
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
 import Database from "better-sqlite3";
@@ -1057,6 +1058,9 @@ export async function createAgent(
                     : null,
             getSecret(character, "OPENAI_API_KEY") && getSecret(character, "ENABLE_OPEN_AI_COMMUNITY_PLUGIN")
                 ? openaiPlugin
+                : null,
+            getSecret(character, "DEVIN_API_TOKEN")
+                ? devinPlugin
                 : null,
         ].filter(Boolean),
         providers: [],
