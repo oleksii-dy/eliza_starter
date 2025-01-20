@@ -80,6 +80,7 @@ export class EVMTokenRegistry {
         if (tokenMap.size > 0) {
             this.initializedChains.add(chainId);
         }
+    }
 
     public getTokenBySymbol(
         symbol: string,

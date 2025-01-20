@@ -2237,7 +2237,6 @@ async function handleAnthropic({
     schema,
     schemaName,
     schemaDescription,
-    //mode = "json",
     modelOptions,
     runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
@@ -2246,7 +2245,6 @@ async function handleAnthropic({
     elizaLogger.debug("Anthropic handleAnthropic baseURL:", { baseURL });
 
     const anthropic = createAnthropic({ apiKey, baseURL });
-    elizaLogger.info("**** Im here!");
     return await aiGenerateObject({
         model: anthropic.languageModel(model),
         schema,
