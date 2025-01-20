@@ -2,7 +2,11 @@
 
 import { spawn } from "child_process";
 import { type ITranscriptionService, elizaLogger } from "@elizaos/core";
-import type { Space, JanusClient, AudioDataWithUser } from "agent-twitter-client";
+import type {
+    Space,
+    JanusClient,
+    AudioDataWithUser,
+} from "agent-twitter-client";
 import type { Plugin } from "@elizaos/core";
 
 interface PluginConfig {
@@ -54,11 +58,6 @@ export class SttTtsPlugin implements Plugin {
     private pcmBuffers = new Map<string, Int16Array[]>();
 
     /**
-     * Track mute states: userId => boolean (true=unmuted)
-     */
-    private speakerUnmuted = new Map<string, boolean>();
-
-    /**
      * For ignoring near-silence frames (if amplitude < threshold)
      */
     private silenceThreshold = 50;
@@ -66,6 +65,8 @@ export class SttTtsPlugin implements Plugin {
     // TTS queue for sequentially speaking
     private ttsQueue: string[] = [];
     private isSpeaking = false;
+
+    private userSpeakingTimers = new Map<string, NodeJS.Timeout>();
 
     onAttach(_space: Space) {
         elizaLogger.log("[SttTtsPlugin] onAttach => space was attached");
@@ -102,38 +103,15 @@ export class SttTtsPlugin implements Plugin {
             this.chatContext = config.chatContext;
         }
         elizaLogger.log("[SttTtsPlugin] Plugin config =>", config);
-
-        // Listen for mute events
-        this.space.on(
-            "muteStateChanged",
-            (evt: { userId: string; muted: boolean }) => {
-                elizaLogger.log(
-                    "[SttTtsPlugin] Speaker muteStateChanged =>",
-                    evt
-                );
-                if (evt.muted) {
-                    this.handleMute(evt.userId).catch((err) =>
-                        elizaLogger.error(
-                            "[SttTtsPlugin] handleMute error =>",
-                            err
-                        )
-                    );
-                } else {
-                    this.speakerUnmuted.set(evt.userId, true);
-                    if (!this.pcmBuffers.has(evt.userId)) {
-                        this.pcmBuffers.set(evt.userId, []);
-                    }
-                }
-            }
-        );
     }
 
     /**
      * Called whenever we receive PCM from a speaker
      */
     onAudioData(data: AudioDataWithUser): void {
-        if (!this.speakerUnmuted.get(data.userId)) return;
-
+        if (this.isSpeaking) {
+            return;
+        }
         let maxVal = 0;
         for (let i = 0; i < data.samples.length; i++) {
             const val = Math.abs(data.samples[i]);
@@ -142,6 +120,26 @@ export class SttTtsPlugin implements Plugin {
         if (maxVal < this.silenceThreshold) {
             return;
         }
+        const timer = this.userSpeakingTimers.get(data.userId);
+        if (timer) {
+            clearTimeout(timer);
+            this.userSpeakingTimers.set(data.userId, null);
+        }
+
+        console.log("receive user voice");
+        this.userSpeakingTimers.set(
+            data.userId,
+            setTimeout(() => {
+                console.log("processing voice");
+                this.userSpeakingTimers.set(data.userId, null);
+                this.handleMute(data.userId).catch((err) =>
+                    elizaLogger.error(
+                        "[SttTtsPlugin] handleSilence error =>",
+                        err
+                    )
+                );
+            }, 1000) // 1-second silence threshold
+        );
 
         let arr = this.pcmBuffers.get(data.userId);
         if (!arr) {
@@ -206,7 +204,7 @@ export class SttTtsPlugin implements Plugin {
      * On speaker mute => flush STT => GPT => TTS => push to Janus
      */
     private async handleMute(userId: string): Promise<void> {
-        this.speakerUnmuted.set(userId, false);
+        console.log("strat processing transcription.....");
         const chunks = this.pcmBuffers.get(userId) || [];
         this.pcmBuffers.set(userId, []);
 
@@ -235,6 +233,8 @@ export class SttTtsPlugin implements Plugin {
         // Whisper STT
         const sttText = await this.transcriptionService.transcribe(wavBuffer);
 
+        console.log("transcription text:", sttText);
+
         if (!sttText || !sttText.trim()) {
             elizaLogger.warn(
                 "[SttTtsPlugin] No speech recognized for user =>",
@@ -248,6 +248,7 @@ export class SttTtsPlugin implements Plugin {
 
         // GPT answer
         const replyText = await this.askChatGPT(sttText);
+        console.log("reply text:", replyText);
         elizaLogger.log(
             `[SttTtsPlugin] GPT => user=${userId}, reply="${replyText}"`
         );
@@ -466,7 +467,7 @@ export class SttTtsPlugin implements Plugin {
     cleanup(): void {
         elizaLogger.log("[SttTtsPlugin] cleanup => releasing resources");
         this.pcmBuffers.clear();
-        this.speakerUnmuted.clear();
+        this.userSpeakingTimers.clear();
         this.ttsQueue = [];
         this.isSpeaking = false;
     }
