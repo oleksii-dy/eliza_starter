@@ -82,8 +82,10 @@ export class EVMTokenRegistry {
         }
 
         this.chainTokenMaps.set(chainId, tokenMap);
-        this.initializedChains.add(chainId);
-    }
+        // Only add to initializedChains if tokens were fetched successfully
+        if (tokenMap.size > 0) {
+            this.initializedChains.add(chainId);
+        }
 
     public getTokenBySymbol(
         symbol: string,
