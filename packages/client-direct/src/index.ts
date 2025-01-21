@@ -164,7 +164,7 @@ export class DirectClient {
             "/:agentId/message",
             upload.single("file"),
             async (req: express.Request, res: express.Response) => {
-                console.log("Validate: ", Date.now());
+                elizaLogger.log("Validate ...");
                 const agentId = req.params.agentId;
                 const roomId = stringToUuid(
                     req.body.roomId ?? "default-room-" + agentId
@@ -240,33 +240,38 @@ export class DirectClient {
                     content,
                     createdAt: Date.now(),
                 };
-                console.log("Validate: ", Date.now());
-                console.log("addEmbeddingToMemory: ", Date.now());
+                elizaLogger.log("Validate ... done!");
+
+                elizaLogger.log("addEmbeddingToMemory...");
                 await runtime.messageManager.addEmbeddingToMemory(memory);
-                console.log("addEmbeddingToMemory: ", Date.now());
-                console.log("createMemory:1 ", Date.now());
+                elizaLogger.log("addEmbeddingToMemory ...done!");
+
+                elizaLogger.log("createMemory ...");
                 await runtime.messageManager.createMemory(memory);
-                console.log("createMemory:1 ", Date.now());
-                console.log("call AI: ", Date.now());
-                console.log("call AI -> runtime.composeState: ", Date.now());
+                elizaLogger.log("createMemory ...done!");
+
+                elizaLogger.log("ai compose state ...");
                 let state = await runtime.composeState(userMessage, {
                     agentName: runtime.character.name,
                 });
-                console.log("call AI -> runtime.composeState: ", Date.now());
-                console.log("call AI -> composeContext", Date.now());
+                elizaLogger.log("ai compose state ...done!");
+
+
+                elizaLogger.log("ai compose context ...");
                 const context = composeContext({
                     state,
                     template: messageHandlerTemplate,
                 });
-                console.log("call AI -> composeContext", Date.now());
-                console.log("call AI -> generateMessageResponse", Date.now());
+                elizaLogger.log("ai compose context ...done!");
+
+                elizaLogger.log("ai generate msg response ...");
                 const response = await generateMessageResponse({
                     runtime: runtime,
                     context,
                     modelClass: ModelClass.LARGE,
                 });
-                console.log("call AI -> generateMessageResponse", Date.now());
-                console.log("call AI: ", Date.now());
+                elizaLogger.log("ai generate msg response ...done!");
+
                 if (!response) {
                     res.status(500).send(
                         "No response from generateMessageResponse"
@@ -274,8 +279,7 @@ export class DirectClient {
                     return;
                 }
 
-                // save response to memory
-                console.log("save response to memory: ", Date.now());
+                elizaLogger.log("create memory ...");
                 const responseMessage: Memory = {
                     id: stringToUuid(messageId + "-" + runtime.agentId),
                     ...userMessage,
@@ -284,15 +288,15 @@ export class DirectClient {
                     embedding: getEmbeddingZeroVector(),
                     createdAt: Date.now(),
                 };
-                console.log("save response to memory: ", Date.now());
-                console.log("createMemory:2 ", Date.now());
                 await runtime.messageManager.createMemory(responseMessage);
-                console.log("createMemory:2 ", Date.now());
-                console.log("updateRecentMessageState:2 ", Date.now());
+                elizaLogger.log("create memory ...done!");
+
+                elizaLogger.log("update recent msgs...");
                 state = await runtime.updateRecentMessageState(state);
-                console.log("updateRecentMessageState:2 ", Date.now());
+                elizaLogger.log("update recent msgs...done!");
+
+                elizaLogger.log("process actions...");
                 let message = null as Content | null;
-                console.log("run action:2 ", Date.now());
                 await runtime.processActions(
                     memory,
                     [responseMessage],
@@ -302,10 +306,12 @@ export class DirectClient {
                         return [memory];
                     }
                 );
-                console.log("run action:2 ", Date.now());
-                console.log("run evaluate:2 ", Date.now());
+                elizaLogger.log("process actions...done!");
+
+                elizaLogger.log("evaluate...");
                 await runtime.evaluate(memory, state);
-                console.log("run evaluate:2 ", Date.now());
+                elizaLogger.log("evaluate...done!");
+
                 // Check if we should suppress the initial message
                 const action = runtime.actions.find(
                     (a) => a.name === response.action
@@ -393,13 +399,13 @@ export class DirectClient {
         //             assetId
         //         );
 
-        //         console.log("Download directory:", downloadDir);
+        //         elizaLogger.log("Download directory:", downloadDir);
 
         //         try {
-        //             console.log("Creating directory...");
+        //             elizaLogger.log("Creating directory...");
         //             await fs.promises.mkdir(downloadDir, { recursive: true });
 
-        //             console.log("Fetching file...");
+        //             elizaLogger.log("Fetching file...");
         //             const fileResponse = await fetch(
         //                 `https://api.bageldb.ai/api/v1/asset/${assetId}/download`,
         //                 {
@@ -415,7 +421,7 @@ export class DirectClient {
         //                 );
         //             }
 
-        //             console.log("Response headers:", fileResponse.headers);
+        //             elizaLogger.log("Response headers:", fileResponse.headers);
 
         //             const fileName =
         //                 fileResponse.headers
@@ -423,19 +429,19 @@ export class DirectClient {
         //                     ?.split("filename=")[1]
         //                     ?.replace(/"/g, /* " */ "") || "default_name.txt";
 
-        //             console.log("Saving as:", fileName);
+        //             elizaLogger.log("Saving as:", fileName);
 
         //             const arrayBuffer = await fileResponse.arrayBuffer();
         //             const buffer = Buffer.from(arrayBuffer);
 
         //             const filePath = path.join(downloadDir, fileName);
-        //             console.log("Full file path:", filePath);
+        //             elizaLogger.log("Full file path:", filePath);
 
         //             await fs.promises.writeFile(filePath, buffer);
 
         //             // Verify file was written
         //             const stats = await fs.promises.stat(filePath);
-        //             console.log(
+        //             elizaLogger.log(
         //                 "File written successfully. Size:",
         //                 stats.size,
         //                 "bytes"

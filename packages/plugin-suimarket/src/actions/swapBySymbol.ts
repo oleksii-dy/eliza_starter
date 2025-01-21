@@ -1,6 +1,7 @@
 import {
     ActionExample,
     composeContext,
+    elizaLogger,
     generateObjectDeprecated,
     HandlerCallback,
     IAgentRuntime,
@@ -60,7 +61,8 @@ export const executeSwap: Action = {
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
     ): Promise<boolean> => {
-        // composeState
+        elizaLogger.log("compose history...");
+
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -71,13 +73,16 @@ export const executeSwap: Action = {
             state,
             template: swapTemplate,
         });
+        elizaLogger.log("compose history...done!");
 
+        elizaLogger.log("extract content ...");
         const content = await generateObjectDeprecated({
             runtime,
             context: swapContext,
             modelClass: ModelClass.LARGE,
         });
-        console.log("content:", content);
+        elizaLogger.log("extract content ...done -> ", content);
+
         const inputTokenObject = await findByVerifiedAndSymbol(content.inputTokenSymbol);
         if(!inputTokenObject){
             callback({
@@ -100,7 +105,6 @@ export const executeSwap: Action = {
 
         }
         try {
-
             callback({
                text:`Please double-check all details before swapping to avoid any loss`,
                action:"SUI_EXECUTE_SWAP_BY_SYMBOL",

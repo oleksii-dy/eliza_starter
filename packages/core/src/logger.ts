@@ -118,6 +118,7 @@ class ElizaLogger {
     }
 
     print(foregroundColor = "white", backgroundColor = "black", ...strings) {
+        const timestamp = (new Date()).toISOString();
         // Convert objects to strings
         const processedStrings = strings.map((item) => {
             if (typeof item === "object") {
@@ -130,10 +131,10 @@ class ElizaLogger {
 
         if (this.isNode) {
             const c = this.#getColor(foregroundColor, backgroundColor);
-            console.log(c, processedStrings.join(""), this.#getColorReset());
+            console.log(c, "[" + timestamp + "]  " + processedStrings.join(""), this.#getColorReset());
         } else {
             const style = this.#getColor(foregroundColor, backgroundColor);
-            console.log(`%c${processedStrings.join("")}`, style);
+            console.log(`%c${"[" + timestamp + "]  " + processedStrings.join("")}`, style);
         }
 
         if (this.closeByNewLine) console.log("");
@@ -153,11 +154,11 @@ class ElizaLogger {
         if (strings.length > 1) {
             if (this.isNode) {
                 const c = this.#getColor(fg, bg);
-                console.group(c, (this.useIcons ? icon : "") + groupTitle  + "    Timestamp:   " + Date.now());
+                console.group(c, (this.useIcons ? icon : "") + groupTitle);
             } else {
                 const style = this.#getColor(fg, bg);
                 console.group(
-                    `%c${this.useIcons ? icon : ""}${groupTitle}   Timestamp:  ${Date.now()}`,
+                    `%c${this.useIcons ? icon : ""}${groupTitle}}`,
                     style
                 );
             }
