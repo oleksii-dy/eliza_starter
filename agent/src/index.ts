@@ -905,8 +905,7 @@ export async function createAgent(
                 ? elizaCodeinPlugin
                 : null,
             bootstrapPlugin,
-            getSecret(character, "CDP_API_KEY_NAME") &&
-            getSecret(character, "CDP_API_KEY_PRIVATE_KEY")
+            getSecret(character, "CDP_API_KEY_NAME") && getSecret(character, "CDP_API_KEY_PRIVATE_KEY") && getSecret(character, "CDP_AGENT_KIT_NETWORK")
                 ? agentKitPlugin
                 : null,
             getSecret(character, "DEXSCREENER_API_KEY")

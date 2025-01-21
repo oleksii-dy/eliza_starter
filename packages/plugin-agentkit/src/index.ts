@@ -11,16 +11,13 @@ console.log("│  Version: 0.0.1                        │");
 console.log("└════════════════════════════════════════┘");
 
 const initializeActions = async () => {
-    try {
+
         const actions = await getAgentKitActions({
             getClient,
         });
         console.log("✔ AgentKit actions initialized successfully.");
         return actions;
-    } catch (error) {
-        console.error("❌ Failed to initialize AgentKit actions:", error);
-        return null;
-    }
+
 };
 
 export const agentKitPlugin: Plugin = {
