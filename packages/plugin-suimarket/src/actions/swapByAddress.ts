@@ -97,11 +97,11 @@ export const executeSwapByAddress: Action = {
             amount: content.amount,
             fromToken: {...inputTokenObject,
                 type: content.inputTokenAddress,
-                imgUrlSui: await getImageOnSuiScan(content.inputTokenAddress)
+                imgUrl: await getImageOnSuiScan(content.inputTokenAddress)
             },
             toToken:{...outputTokenObject,
                 type:content.outputTokenAddress,
-                imgUrlSui: await getImageOnSuiScan(content.outputTokenAddress)
+                imgUrl: await getImageOnSuiScan(content.outputTokenAddress)
             }
 
         }

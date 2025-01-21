@@ -153,11 +153,11 @@ class ElizaLogger {
         if (strings.length > 1) {
             if (this.isNode) {
                 const c = this.#getColor(fg, bg);
-                console.group(c, (this.useIcons ? icon : "") + groupTitle);
+                console.group(c, (this.useIcons ? icon : "") + groupTitle  + "    Timestamp:   " + Date.now());
             } else {
                 const style = this.#getColor(fg, bg);
                 console.group(
-                    `%c${this.useIcons ? icon : ""}${groupTitle}`,
+                    `%c${this.useIcons ? icon : ""}${groupTitle}   Timestamp:  ${Date.now()}`,
                     style
                 );
             }
