@@ -26,12 +26,17 @@ const logGranular = (message: string, data?: unknown) => {
 const invoke_url = config.NVIDIA_COSMOS_INVOKE_URL || "https://ai.api.nvidia.com/v1/vlm/nvidia/cosmos-nemotron-34b";
 const kNvcfAssetUrl = config.NVIDIA_COSMOS_ASSET_URL || "https://api.nvcf.nvidia.com/v2/nvcf/assets";
 
-// Default API key as fallback
-const DEFAULT_API_KEY = "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";
-
-// Get API key with fallback to default
+// Get API key with proper error handling
 function getApiKey(config: any): string {
-    return config.NVIDIA_NIM_API_KEY || process.env.TEST_NVCF_API_KEY || DEFAULT_API_KEY;
+    const apiKey = config.NVIDIA_NIM_API_KEY || process.env.TEST_NVCF_API_KEY;
+    if (!apiKey) {
+        throw new NimError(
+            NimErrorCode.VALIDATION_FAILED,
+            "API key is missing. Please set NVIDIA_NIM_API_KEY or TEST_NVCF_API_KEY.",
+            ErrorSeverity.HIGH
+        );
+    }
+    return apiKey;
 }
 
 // Type definitions for supported formats
