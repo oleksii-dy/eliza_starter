@@ -11,7 +11,8 @@ import {
     type Action,
 } from "@elizaos/core";
 import findByVerifiedAndSymbol from "../providers/searchCoinInAggre";
-import { checkSuiAddressExists } from "../providers/checkSuiAddress";
+// import { checkSuiAddressExists } from "../providers/checkSuiAddress";
+import { isValidSuiAddress } from "@mysten/sui/utils";
 const sendTokenTemplate = `Please extract the following swap details for SUI network:
 
 {
@@ -105,8 +106,10 @@ export const sendTokenBySymbol: Action = {
              })
              return false
         }
-        const checkSuiAddress = await checkSuiAddressExists(content.destinationAddress)
-        console.log(checkSuiAddress)
+        // const checkSuiAddress = await checkSuiAddressExists(content.destinationAddress)
+
+        const checkSuiAddress = await isValidSuiAddress(content.destinationAddress)
+
         if(!checkSuiAddress){
             callback({
                 text:`This wallet address ${content.destinationAddress} does not exist. Please enter a valid one.`,

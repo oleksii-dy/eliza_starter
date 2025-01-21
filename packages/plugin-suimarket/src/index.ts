@@ -13,11 +13,13 @@ import { executeSwap } from './actions/swapBySymbol';
 import { executeSwapByAddress } from './actions/swapByAddress';
 import { sendTokenBySymbol } from './actions/sendTokenBySymbol';
 import { checkTxhashOnSui } from './actions/checkInfoTxHash';
+import { chainInfo } from './actions/infoChain';
 
 const suimarketPlugin: Plugin = {
   name: "coingecko",
   description: "Everything about crypyo market infomation",
   actions: [
+    chainInfo,
     topMarkets,
     trendingCat,
     trendingTokens,
@@ -31,7 +33,8 @@ const suimarketPlugin: Plugin = {
     executeSwap,
     executeSwapByAddress,
     sendTokenBySymbol,
-    checkTxhashOnSui
+    checkTxhashOnSui,
+
 ],
   evaluators: [],
   providers: []

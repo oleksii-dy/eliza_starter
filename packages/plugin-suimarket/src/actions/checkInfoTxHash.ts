@@ -83,6 +83,7 @@ export const checkTxhashOnSui: Action = {
             modelClass: ModelClass.SMALL,
         });
         console.log("content:", content);
+
         const checkInfoTxHash = await getTransactionInfo(content.txHash);
 
         try {
@@ -98,6 +99,10 @@ export const checkTxhashOnSui: Action = {
             })
             return true;
         } catch (error) {
+            callback({
+                text:`Your transaction for txhash ${content.txHash} is not available.`,
+                action:"CHECK_TXHASH_SUI_NETWORK",
+             })
             console.error("Error during token swap:", error);
             return false;
         }
@@ -117,6 +122,24 @@ export const checkTxhashOnSui: Action = {
                     "action": "SUI_CHECK_TXHASH",
                     "params": {
                         "txHash": "9XbGmKRrX2cYeHiY4LJDdHNY77c3MzBrMKpxz3F5BV2E"
+                    }
+                }
+            }
+        ],
+        [
+            {
+                "user": "{{user1}}",
+                "content": {
+                    "txHash": "9XbGmKRrX2cYeHiY4LJDdHNY77c3MzBrMKpxz3F5BV2E"
+                }
+            },
+            {
+                "user": "{{user2}}",
+                "content": {
+                    "text": "check txhash 3LvEnUFK7qxTU4Wh3CwgUhJJowiuMAiyNhyMDpteAknC",
+                    "action": "SUI_CHECK_TXHASH",
+                    "params": {
+                        "txHash": "3LvEnUFK7qxTU4Wh3CwgUhJJowiuMAiyNhyMDpteAknC"
                     }
                 }
             }

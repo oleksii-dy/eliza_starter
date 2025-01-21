@@ -11,6 +11,7 @@ import {
     type Action,
 } from "@elizaos/core";
 import getInfoTokenOnSui from "../providers/coinMetaDataSui";
+import { getImageOnSuiScan } from "../providers/getImageOnSuiScan";
 const swapTemplate = `Please extract the following swap details for SUI network:
 
 {
@@ -95,11 +96,12 @@ export const executeSwapByAddress: Action = {
         const responseData = {
             amount: content.amount,
             fromToken: {...inputTokenObject,
-                type: content.inputTokenAddress
-
+                type: content.inputTokenAddress,
+                imgUrlSui: await getImageOnSuiScan(content.inputTokenAddress)
             },
             toToken:{...outputTokenObject,
-                type:content.outputTokenAddress
+                type:content.outputTokenAddress,
+                imgUrlSui: await getImageOnSuiScan(content.outputTokenAddress)
             }
 
         }
