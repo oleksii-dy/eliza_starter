@@ -14,8 +14,6 @@ export class StakingProvider {
         validator_address: string,
         amount: Coin
     ): Promise<DeliverTxResponse> {
-        console.log("delegating tokens to: " + validator_address);
-        console.log("amount: " + JSON.stringify(amount, null, 2));
         const address = await this.wallet.getAddress();
         if (!address) {
             throw new Error("Could not get address");
@@ -29,7 +27,6 @@ export class StakingProvider {
                 "auto",
                 "Delegated tokens using Eliza"
             );
-            console.log("txhash: " + tx.transactionHash);
             return tx;
         } catch (e) {
             elizaLogger.error("Error in delegate: " + e);
@@ -41,8 +38,6 @@ export class StakingProvider {
         validator_address: string,
         amount: Coin
     ): Promise<DeliverTxResponse> {
-        console.log("undelegating tokens from: " + validator_address);
-        console.log("amount: " + JSON.stringify(amount, null, 2));
         const address = await this.wallet.getAddress();
         if (!address) {
             throw new Error("Could not get address");
@@ -56,7 +51,6 @@ export class StakingProvider {
                 "auto",
                 "Undelegated tokens using Eliza"
             );
-            console.log("txhash: " + tx.transactionHash);
             return tx;
         } catch (e) {
             elizaLogger.error("Error in undelegate: " + e);
@@ -69,14 +63,10 @@ export class StakingProvider {
         validator_dst_address: string,
         amount: Coin
     ): Promise<DeliverTxResponse> {
-        console.log("redelegating tokens from: " + validator_src_address);
-        console.log("validator_dst_address: " + validator_dst_address);
-        console.log("amount: " + JSON.stringify(amount, null, 2));
         const address = await this.wallet.getAddress();
         if (!address) {
             throw new Error("Could not get address");
         }
-        console.log("address: " + address);
 
         const msg = {
             typeUrl: "/cosmos.staking.v1beta1.MsgBeginRedelegate",
@@ -95,7 +85,6 @@ export class StakingProvider {
                 "auto",
                 "Redelegated tokens using Eliza"
             );
-            console.log("txhash: " + tx.transactionHash);
             return tx;
         } catch (e) {
             elizaLogger.error("Error in redelegate: " + e);
@@ -108,16 +97,10 @@ export class StakingProvider {
         creation_height: number,
         amount: Coin
     ): Promise<DeliverTxResponse> {
-        console.log(
-            "cancelling unbonding delegation from: " + validator_address
-        );
-        console.log("creation_height: " + creation_height);
-        console.log("amount: " + JSON.stringify(amount, null, 2));
         const address = await this.wallet.getAddress();
         if (!address) {
             throw new Error("Could not get address");
         }
-        console.log("address: " + address);
 
         const msg = {
             typeUrl: "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation",
@@ -137,7 +120,6 @@ export class StakingProvider {
                 "auto",
                 "Cancelled unbonding delegation using Eliza"
             );
-            console.log("txhash: " + tx.transactionHash);
             return tx;
         } catch (e) {
             elizaLogger.error("Error in cancelUnbondingDelegation: " + e);

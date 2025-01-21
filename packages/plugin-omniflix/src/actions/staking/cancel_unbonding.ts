@@ -42,7 +42,6 @@ function isCancelUnbondingContent(content: Content): validationResult {
                 msg += "Invalid validator address.";
             }
         } catch (error) {
-            console.error("Error decoding address:", error);
             msg += "Invalid validator address.";
         }
     }
@@ -96,9 +95,6 @@ export class CancelUnbondingAction {
         message: Memory,
         state: State
     ): Promise<string> {
-        console.log(
-            `Cancelling unbonding delegation: ${params.amount} tokens from (${params.validator_address})`
-        );
         try {
             const wallet: WalletProvider = await walletProvider.get(
                 runtime,
@@ -115,15 +111,6 @@ export class CancelUnbondingAction {
                     params.amount = parseInt(params.amount) * 1000000;
                 }
             }
-
-            console.log(
-                "Cancelling unbonding delegation to:",
-                params.validator_address,
-                "Amount:",
-                params.amount,
-                "Denom:",
-                params.denom
-            );
 
             const txHash = await stakingProvider.cancelUnbondingDelegation(
                 params.validator_address,
@@ -167,10 +154,6 @@ const buildCancelUnbondingContent = async (
 
     const cancelUnbondingContent = content as CancelUnbondingContent;
 
-    console.log(
-        "cancelUnbondingContent: " + JSON.stringify(cancelUnbondingContent)
-    );
-
     return cancelUnbondingContent;
 };
 
@@ -198,10 +181,6 @@ export default {
             cancelUnbondingContent
         );
         if (!validationResult.success) {
-            console.error(
-                "Validation failed for CANCEL_UNBONDING action. " +
-                    validationResult.message
-            );
             if (callback) {
                 callback({
                     text: validationResult.message,
@@ -240,7 +219,6 @@ export default {
             }
             return true;
         } catch (error) {
-            console.error("Error during TOKENS_UNBONDING:", error);
             if (callback) {
                 callback({
                     text: `Error occurred during TOKENS_UNBONDING please try again later with valid details.`,

@@ -14,8 +14,6 @@ export class GovProvider {
         proposalId: string,
         vote: VoteOption
     ): Promise<DeliverTxResponse> {
-        console.log("voting on proposal: " + proposalId);
-        console.log("vote option: " + vote);
         try {
             const address = await this.wallet.getAddress();
             const client = await this.wallet.getClient();
@@ -25,7 +23,6 @@ export class GovProvider {
 
             const voteOption =
                 VoteOption[vote as unknown as keyof typeof VoteOption];
-            console.log("voteOption: " + voteOption);
 
             const msg = {
                 typeUrl: "/cosmos.gov.v1beta1.MsgVote",
@@ -36,15 +33,12 @@ export class GovProvider {
                 },
             };
 
-            console.log("msg: " + msg.value);
-
             const tx = await client.signAndBroadcast(
                 address,
                 [msg],
                 200000,
                 "Voted on proposal using Eliza"
             );
-            console.log("txhash: " + tx.transactionHash);
             return tx;
         } catch (e) {
             elizaLogger.error("Error in voteOnProposal: " + e);

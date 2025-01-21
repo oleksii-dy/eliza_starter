@@ -94,9 +94,6 @@ export class VoteOnProposalAction {
         message: Memory,
         state: State
     ): Promise<string> {
-        console.log(
-            `Voting on proposal: ${params.proposal_id} with vote: ${params.vote}`
-        );
         try {
             const wallet: WalletProvider = await walletProvider.get(
                 runtime,
@@ -108,7 +105,7 @@ export class VoteOnProposalAction {
             const apiEndpoint =
                 runtime.getSetting("apiEndpoint") ||
                 process.env.OMNIFLIX_API_URL ||
-                "https://api.devnet-alpha.omniflix.network";
+                "https://rest.omniflix.network";
 
             const proposalStatus = await verifyProposalStatus(
                 apiEndpoint,
@@ -119,13 +116,6 @@ export class VoteOnProposalAction {
                     `Proposal ${params.proposal_id} is not in voting period.`
                 );
             }
-
-            console.log(
-                "Voting on proposal:",
-                params.proposal_id,
-                "with vote:",
-                params.vote
-            );
 
             const txHash = await govProvider.voteOnProposal(
                 params.proposal_id,
@@ -202,10 +192,6 @@ export default {
 
         const validationResult = isVoteOnProposalContent(voteOnProposalContent);
         if (!validationResult.success) {
-            console.error(
-                "Validation failed for VOTE_ON_PROPOSAL action. " +
-                    validationResult.message
-            );
             if (callback) {
                 callback({
                     text: validationResult.message,
@@ -239,7 +225,6 @@ export default {
             }
             return true;
         } catch (error) {
-            console.error("Error during vote on proposal:", error);
             if (callback) {
                 callback({
                     text: `Error voting on proposal: ${error.message}`,

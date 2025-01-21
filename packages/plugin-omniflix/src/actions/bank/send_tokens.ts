@@ -38,8 +38,7 @@ function isSendTokensContent(content: Content): validationResult {
                 msg +=
                     "Please provide a valid Omniflix address for the transfer request.";
             }
-        } catch (error) {
-            console.error("Error decoding address:", error);
+        } catch {
             msg +=
                 "Please provide a valid Omniflix address for the transfer request.";
         }
@@ -89,10 +88,6 @@ export class SendTokensAction {
         message: Memory,
         state: State
     ): Promise<string> {
-        console.log(
-            `Transferring: ${params.amount} tokens to (${params.recipient})`
-        );
-        console.log("params: " + JSON.stringify(params));
         try {
             const wallet: WalletProvider = await walletProvider.get(
                 runtime,
@@ -104,7 +99,7 @@ export class SendTokensAction {
                 runtime.getSetting("OMNIFLIX_API_URL") ||
                 process.env.OMNIFLIX_API_URL;
             if (!url) {
-                url = "https://api.devnet-alpha.omniflix.network";
+                url = "https://rest.omniflix.network";
             }
 
             if (params.denom === "FLIX" || params.denom === "flix") {
@@ -115,15 +110,6 @@ export class SendTokensAction {
                     params.amount = parseInt(params.amount) * 1000000;
                 }
             }
-
-            console.log(
-                "Sending tokens to:",
-                params.recipient,
-                "Amount:",
-                params.amount,
-                "Denom:",
-                params.denom
-            );
 
             const txHash = await bankProvider.sendTokens(params.recipient, {
                 amount: params.amount.toString(),
@@ -161,8 +147,6 @@ const buildTransferDetails = async (
 
     const transferContent = content as SendTokensContent;
 
-    console.log("transferContent: " + JSON.stringify(transferContent));
-
     return transferContent;
 };
 
@@ -195,7 +179,6 @@ export default {
         const validationResult = isSendTokensContent(transferDetails);
 
         if (!validationResult.success) {
-            console.error("Invalid content for SEND_TOKENS action.");
             if (callback) {
                 callback({
                     text: validationResult.message,
@@ -240,7 +223,6 @@ export default {
             }
             return true;
         } catch (error) {
-            console.error("Error during token transfer:", error);
             if (callback) {
                 callback({
                     text: `Error transferring tokens: ${error.message}`,

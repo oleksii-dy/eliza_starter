@@ -14,8 +14,6 @@ export class BankProvider {
         recipient: string,
         amount: Coin
     ): Promise<DeliverTxResponse> {
-        console.log("sending tokens to: " + recipient);
-        console.log("amount: " + JSON.stringify(amount, null, 2));
         try {
             const address = await this.wallet.getAddress();
             const client = await this.wallet.getClient();
@@ -29,7 +27,6 @@ export class BankProvider {
                 "auto",
                 "Sent tokens using Eliza"
             );
-            console.log("txhash: " + tx.transactionHash);
             return tx;
         } catch (e) {
             elizaLogger.error("Error in sendTokens: " + e);

@@ -106,7 +106,6 @@ export default {
             }
             return true;
         } catch (error) {
-            console.error("Error during staked balance check:", error);
             if (callback) {
                 callback({
                     text: `Error checking staked balance: ${error.message}`,

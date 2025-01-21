@@ -42,7 +42,6 @@ function isDelegateTokensContent(content: Content): validationResult {
                     "Please provide a valid Omniflix validator address for the delegation request.";
             }
         } catch (error) {
-            console.error("Error decoding address:", error);
             msg +=
                 "Please provide a valid Omniflix validator address for the delegation request.";
         }
@@ -92,9 +91,6 @@ export class DelegateTokensAction {
         message: Memory,
         state: State
     ): Promise<string> {
-        console.log(
-            `Delegating: ${params.amount} tokens to (${params.validator_address})`
-        );
         try {
             const wallet: WalletProvider = await walletProvider.get(
                 runtime,
@@ -111,15 +107,6 @@ export class DelegateTokensAction {
                     params.amount = parseInt(params.amount) * 1000000;
                 }
             }
-
-            console.log(
-                "Delegating tokens to:",
-                params.validator_address,
-                "Amount:",
-                params.amount,
-                "Denom:",
-                params.denom
-            );
 
             const txHash = await stakingProvider.delegate(
                 params.validator_address,
@@ -160,8 +147,6 @@ const buildDelegateTokensContent = async (
 
     const delegateContent = content as DelegateTokensContent;
 
-    console.log("delegateContent: " + JSON.stringify(delegateContent));
-
     return delegateContent;
 };
 
@@ -191,10 +176,6 @@ export default {
 
         const validationResult = isDelegateTokensContent(delegateContent);
         if (!validationResult.success) {
-            console.error(
-                "Validation failed for TOKENS_DELEGATE action. " +
-                    validationResult.message
-            );
             if (callback) {
                 callback({
                     text: validationResult.message,
@@ -232,7 +213,6 @@ export default {
             }
             return true;
         } catch (error) {
-            console.error("Error during TOKENS_DELEGATE:", error);
             if (callback) {
                 callback({
                     text: `Error occurred during TOKENS_DELEGATE please try again later with valid details.`,

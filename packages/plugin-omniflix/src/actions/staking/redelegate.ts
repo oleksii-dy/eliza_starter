@@ -43,8 +43,7 @@ function isRedelegateTokensContent(content: Content): validationResult {
                 msg +=
                     "Please provide a valid Omniflix validator source address for the redelegation request.";
             }
-        } catch (error) {
-            console.error("Error decoding address:", error);
+        } catch {
             msg +=
                 "Please provide a valid Omniflix validator source address for the redelegation request.";
         }
@@ -62,7 +61,6 @@ function isRedelegateTokensContent(content: Content): validationResult {
                     "Please provide a valid Omniflix validator destination address for the redelegation request.";
             }
         } catch (error) {
-            console.error("Error decoding address:", error);
             msg +=
                 "Please provide a valid Omniflix validator destination address for the redelegation request.";
         }
@@ -114,9 +112,6 @@ export class RedelegateTokensAction {
         message: Memory,
         state: State
     ): Promise<string> {
-        console.log(
-            `Redelegating: ${params.amount} tokens from (${params.validator_src_address}) to (${params.validator_dst_address})`
-        );
         try {
             const wallet: WalletProvider = await walletProvider.get(
                 runtime,
@@ -133,17 +128,6 @@ export class RedelegateTokensAction {
                     params.amount = parseInt(params.amount) * 1000000;
                 }
             }
-
-            console.log(
-                "Redelegating tokens from:",
-                params.validator_src_address,
-                "to:",
-                params.validator_dst_address,
-                "Amount:",
-                params.amount,
-                "Denom:",
-                params.denom
-            );
 
             const txHash = await stakingProvider.redelegate(
                 params.validator_src_address,
@@ -185,10 +169,6 @@ const buildRedelegateDetails = async (
 
     const redelegateContent = content as RedelegateTokensContent;
 
-    console.log(
-        "Redelegate tokens content: " + JSON.stringify(redelegateContent)
-    );
-
     return redelegateContent;
 };
 
@@ -219,10 +199,6 @@ export default {
         const validationResult = isRedelegateTokensContent(redelegateDetails);
 
         if (!validationResult.success) {
-            console.error(
-                "Content validation failed for TOKENS_REDELEGATE action. " +
-                    validationResult.message
-            );
             if (callback) {
                 callback({
                     text: validationResult.message,
@@ -263,7 +239,6 @@ export default {
             }
             return true;
         } catch (error) {
-            console.error("Error during TOKENS_REDELEGATE:", error);
             if (callback) {
                 callback({
                     text: `Error redelegating tokens: ${error.message}`,

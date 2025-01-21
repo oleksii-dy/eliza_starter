@@ -21,7 +21,7 @@ export class GetBalanceAction {
                 runtime.getSetting("rpcEndpoint") ||
                 process.env.OMNIFLIX_RPC_ENDPOINT;
             if (!rpcEndpoint) {
-                rpcEndpoint = "https://rpc.devnet-alpha.omniflix.network:443";
+                rpcEndpoint = "https://rpc.omniflix.network:443";
             }
 
             const wallet: WalletProvider = await walletProvider.get(
@@ -101,7 +101,6 @@ export default {
             }
             return true;
         } catch (error) {
-            console.error("Error during balance check:", error);
             if (callback) {
                 callback({
                     text: `Error checking balance: ${error.message}`,

@@ -42,8 +42,7 @@ function isUndelegateTokensContent(content: Content): validationResult {
                 msg +=
                     "Please provide a valid Omniflix validator address for the undelegation request.";
             }
-        } catch (error) {
-            console.error("Error decoding address:", error);
+        } catch {
             msg +=
                 "Please provide a valid Omniflix validator address for the undelegation request.";
         }
@@ -73,7 +72,7 @@ Example response:
 {
     "validator_address": "omniflixvaloper...",
     "amount": "100",
-    "denom": "uflix"
+    "denom": "FLIX"
 }
 \`\`\`
 
@@ -93,9 +92,6 @@ export class UndelegateTokensAction {
         message: Memory,
         state: State
     ): Promise<string> {
-        console.log(
-            `Undelegating: ${params.amount} tokens from (${params.validator_address})`
-        );
         try {
             const wallet: WalletProvider = await walletProvider.get(
                 runtime,
@@ -111,15 +107,6 @@ export class UndelegateTokensAction {
                     params.amount = parseInt(params.amount) * 1000000;
                 }
             }
-
-            console.log(
-                "Undelegating tokens from:",
-                params.validator_address,
-                "Amount:",
-                params.amount,
-                "Denom:",
-                params.denom
-            );
 
             const txHash = await stakingProvider.undelegate(
                 params.validator_address,
@@ -160,8 +147,6 @@ const buildUndelegateTokensContent = async (
 
     const undelegateContent = content as UndelegateTokensContent;
 
-    console.log("undelegateContent: " + JSON.stringify(undelegateContent));
-
     return undelegateContent;
 };
 
@@ -195,10 +180,6 @@ export default {
         const validationResult = isUndelegateTokensContent(undelegateContent);
 
         if (!validationResult.success) {
-            console.error(
-                "Validation failed for TOKENS_UNDELEGATE action. " +
-                    validationResult.message
-            );
             if (callback) {
                 callback({
                     text: validationResult.message,
@@ -238,7 +219,6 @@ export default {
             }
             return true;
         } catch (error) {
-            console.error("Error during TOKENS_UNDELEGATE:", error);
             if (callback) {
                 callback({
                     text: `Error transferring tokens: ${error.message}`,
