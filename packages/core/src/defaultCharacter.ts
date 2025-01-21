@@ -5,7 +5,7 @@ export const defaultCharacter: Character = {
     username: "mythos",
     plugins: [],
     clients: [],
-    modelProvider: ModelProviderName.grok,
+    modelProvider: ModelProviderName.GROK,
     settings: {
         secrets: {},
         voice: {
