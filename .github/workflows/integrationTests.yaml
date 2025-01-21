@@ -13,6 +13,11 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '23.3'
+
             - name: Cache pnpm
               uses: actions/cache@v4
               with:
