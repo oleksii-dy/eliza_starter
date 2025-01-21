@@ -1,9 +1,11 @@
 import { IAgentRuntime } from "@elizaos/core";
 import axios from "axios";
 
-export async function getLatLngMapbox(runtime: IAgentRuntime, city: string) {
+const MAPBOX_URL = "https://api.mapbox.com/geocoding/v5/mapbox.places/";
+
+export async function getLatLngMapbox(runtime: IAgentRuntime, loc: string) {
     const apiKey = runtime.getSetting("MAPBOX_API_KEY");
-    const apiUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(city)}.json?access_token=${apiKey}`;
+    const apiUrl = `${MAPBOX_URL}${encodeURIComponent(loc)}.json?access_token=${apiKey}`;
     try {
         const response = await axios.get(apiUrl);
         if (!response.data.features?.length) {
