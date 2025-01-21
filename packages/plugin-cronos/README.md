@@ -67,11 +67,13 @@ Create a `your-character.character.json` file with the following structure:
                     },
                     "toAddress": {
                         "type": "string",
-                        "description": "The recipient's wallet address"
+                        "description": "The recipient's wallet address",
+                        "pattern": "^0x[a-fA-F0-9]{40}$"
                     },
                     "amount": {
                         "type": "string",
-                        "description": "The amount of tokens to transfer"
+                        "description": "The amount of tokens to transfer",
+                        "pattern": "^[0-9]*(\\.[0-9]+)?$"
                     }
                 },
                 "required": ["fromChain", "toAddress", "amount"]
