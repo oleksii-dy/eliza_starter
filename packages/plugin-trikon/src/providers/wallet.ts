@@ -1,5 +1,23 @@
 import { elizaLogger, type Provider } from "@elizaos/core";
 
+function validateAddress(address: string | undefined): string {
+    if (!address) {
+        throw new Error('TRIKON_WALLET_ADDRESS environment variable is required');
+    }
+    if (!/^0x[a-fA-F0-9]{64}$/.test(address)) {
+        throw new Error('Invalid wallet address format');
+    }
+    return address;
+}
+
+function validateBalance(balance: string | undefined): string {
+    if (!balance) return "0";
+    if (!/^\d+$/.test(balance)) {
+        throw new Error('Invalid balance format');
+    }
+    return balance;
+}
+
 export interface WalletProvider {
     address: string;
     balance: string;
@@ -11,10 +29,10 @@ export const walletProvider: Provider = {
     get: async () => {
         elizaLogger.log("Getting Trikon wallet provider...");
         return {
-            address: process.env.TRIKON_WALLET_ADDRESS || "0x4f2e63be8e7fe287836e29cde6f3d5cbc96eefd0c0e3f3747668faa2ae7324b0",
-            balance: process.env.TRIKON_INITIAL_BALANCE || "0",
-            getBalance: async () => process.env.TRIKON_INITIAL_BALANCE || "0",
-            getAddress: async () => process.env.TRIKON_WALLET_ADDRESS || "0x4f2e63be8e7fe287836e29cde6f3d5cbc96eefd0c0e3f3747668faa2ae7324b0"
+            address: validateAddress(process.env.TRIKON_WALLET_ADDRESS),
+            balance: validateBalance(process.env.TRIKON_INITIAL_BALANCE),
+            getBalance: async () => validateBalance(process.env.TRIKON_INITIAL_BALANCE),
+            getAddress: async () => validateAddress(process.env.TRIKON_WALLET_ADDRESS)
         };
     }
 };

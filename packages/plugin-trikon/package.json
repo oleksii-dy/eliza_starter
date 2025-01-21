@@ -22,8 +22,12 @@
         "@elizaos/core": "workspace:*"
     },
     "devDependencies": {
+        "@types/node": "^20.0.0",
         "tsup": "8.3.5",
-        "vitest": "2.1.4"
+        "eslint": "^9.0.0",
+        "@typescript-eslint/parser": "^7.0.0",
+        "@typescript-eslint/eslint-plugin": "^7.0.0",
+        "globals": "^14.0.0"
     },
     "scripts": {
         "build": "tsup --format esm --dts",

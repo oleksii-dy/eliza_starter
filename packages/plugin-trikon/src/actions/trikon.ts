@@ -12,17 +12,32 @@ import {
 import { composeContext } from "@elizaos/core";
 import { generateObjectDeprecated } from "@elizaos/core";
 
+class TransferValidationError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'TransferValidationError';
+    }
+}
+
+class InsufficientBalanceError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'InsufficientBalanceError';
+    }
+}
+
 export interface TransferContent extends Content {
     recipient: string;
     amount: string | number;
 }
 
 function isTransferContent(content: any): content is TransferContent {
-    elizaLogger.log("Content for transfer", content);
     return (
         typeof content.recipient === "string" &&
+        /^0x[a-fA-F0-9]{64}$/.test(content.recipient) &&
         (typeof content.amount === "string" ||
-            typeof content.amount === "number")
+            typeof content.amount === "number") &&
+        Number(content.amount) > 0
     );
 }
 
@@ -55,7 +70,13 @@ export default {
     ],
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         elizaLogger.log("Validating trikon transfer from user:", message.userId);
-        return false;
+        try {
+            // Add actual validation logic here
+            return true;
+        } catch (error) {
+            elizaLogger.error("Validation error:", error);
+            return false;
+        }
     },
     description: "Transfer tokens from the agent's wallet to another address",
     handler: async (
@@ -67,40 +88,29 @@ export default {
     ): Promise<boolean> => {
         elizaLogger.log("Starting SEND_TOKEN handler...");
 
-        // Initialize or update state
-        if (!state) {
-            state = (await runtime.composeState(message)) as State;
-        } else {
-            state = await runtime.updateRecentMessageState(state);
-        }
-
-        // Compose transfer context
-        const transferContext = composeContext({
-            state,
-            template: transferTemplate,
-        });
-
-        // Generate transfer content
-        const content = await generateObjectDeprecated({
-            runtime,
-            context: transferContext,
-            modelClass: ModelClass.SMALL,
-        });
-
-        // Validate transfer content
-        if (!isTransferContent(content)) {
-            elizaLogger.error("Invalid content for TRANSFER_TOKEN action.");
-            if (callback) {
-                callback({
-                    text: "Unable to process transfer request. Invalid content provided.",
-                    content: { error: "Invalid transfer content" },
-                });
-            }
-            return false;
-        }
-
         try {
-            // TODO: Implement Trikon-specific transfer logic here
+            if (!state) {
+                state = (await runtime.composeState(message)) as State;
+            } else {
+                state = await runtime.updateRecentMessageState(state);
+            }
+
+            const transferContext = composeContext({
+                state,
+                template: transferTemplate,
+            });
+
+            const content = await generateObjectDeprecated({
+                runtime,
+                context: transferContext,
+                modelClass: ModelClass.SMALL,
+            });
+
+            if (!isTransferContent(content)) {
+                throw new TransferValidationError("Invalid transfer content provided");
+            }
+
+            // TODO: Implement actual transfer logic here
             elizaLogger.log(
                 `Would transfer ${content.amount} tokens to ${content.recipient}`
             );
@@ -118,23 +128,40 @@ export default {
 
             return true;
         } catch (error) {
-            elizaLogger.error("Error during token transfer:", error);
-            if (callback) {
-                callback({
-                    text: `Error transferring tokens: ${error.message}`,
-                    content: { error: error.message },
-                });
+            if (error instanceof TransferValidationError) {
+                elizaLogger.error("Transfer validation error:", error);
+                if (callback) {
+                    callback({
+                        text: `Invalid transfer request: ${error.message}`,
+                        content: { error: error.message },
+                    });
+                }
+            } else if (error instanceof InsufficientBalanceError) {
+                elizaLogger.error("Insufficient balance:", error);
+                if (callback) {
+                    callback({
+                        text: `Insufficient balance: ${error.message}`,
+                        content: { error: error.message },
+                    });
+                }
+            } else {
+                elizaLogger.error("Unexpected error during token transfer:", error);
+                if (callback) {
+                    callback({
+                        text: `Error transferring tokens: ${error.message}`,
+                        content: { error: error.message },
+                    });
+                }
             }
             return false;
         }
     },
-
     examples: [
         [
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Send 100 TRK tokens to 0xa385EEeFB533703dc4c811CB6Eb44cac2C14af07",
+                    text: "Send 100 TRK tokens to 0x4f2e63be8e7fe287836e29cde6f3d5cbc96eefd0c0e3f3747668faa2ae7324b0",
                 },
             },
             {
@@ -147,7 +174,23 @@ export default {
             {
                 user: "{{user2}}",
                 content: {
-                    text: "Successfully sent 100 TRK tokens to 0xa385EEeFB533703dc4c811CB6Eb44cac2C14af07",
+                    text: "Successfully sent 100 TRK tokens to 0x4f2e63be8e7fe287836e29cde6f3d5cbc96eefd0c0e3f3747668faa2ae7324b0",
+                },
+            },
+        ],
+        // Added example for failed transfer
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Send 1000000 TRK tokens to 0x4f2e63be8e7fe287836e29cde6f3d5cbc96eefd0c0e3f3747668faa2ae7324b0",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Unable to send tokens - insufficient balance",
+                    action: "SEND_TOKEN",
                 },
             },
         ],
