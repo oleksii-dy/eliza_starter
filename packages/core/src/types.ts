@@ -832,6 +832,7 @@ export type Character = {
             [key: string]: any[];
         };
         transcription?: TranscriptionProvider;
+        translation?: TranslationProvider;
         ragKnowledge?: boolean;
     };
 
@@ -1350,6 +1351,10 @@ export interface ITranscriptionService extends Service {
     transcribeLocally(audioBuffer: ArrayBuffer): Promise<string | null>;
 }
 
+export interface ITranslationService extends Service {
+    translate(text: string, targetLanguage: string): Promise<string | null>;
+}
+
 export interface IVideoService extends Service {
     isVideoUrl(url: string): boolean;
     fetchVideoInfo(url: string): Promise<Media>;
@@ -1484,6 +1489,7 @@ export interface ITeeLogService extends Service {
 export enum ServiceType {
     IMAGE_DESCRIPTION = "image_description",
     TRANSCRIPTION = "transcription",
+    TRANSLATION = "translation",
     VIDEO = "video",
     TEXT_GENERATION = "text_generation",
     BROWSER = "browser",
@@ -1616,6 +1622,10 @@ export enum TranscriptionProvider {
     OpenAI = "openai",
     Deepgram = "deepgram",
     Local = "local",
+}
+
+export enum TranslationProvider {
+    OpenAI = "openai",
 }
 
 export enum ActionTimelineType {
