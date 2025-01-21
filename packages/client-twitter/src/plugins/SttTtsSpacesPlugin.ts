@@ -10,15 +10,19 @@ import {
     getEmbeddingZeroVector,
     generateMessageResponse,
     ModelClass,
+    Content,
+    IAgentRuntime,
+    Memory,
+    Plugin,
+    UUID,
 } from "@elizaos/core";
 import type {
     Space,
     JanusClient,
     AudioDataWithUser,
 } from "agent-twitter-client";
-import type { Content, IAgentRuntime, Memory, Plugin } from "@elizaos/core";
 import { ClientBase } from "../base";
-import { UUID } from "@elizaos/core";
+import { twitterVoiceHandlerTemplate } from "./templates";
 
 interface PluginConfig {
     runtime: IAgentRuntime;
@@ -385,26 +389,6 @@ export class SttTtsPlugin implements Plugin {
         if (!this.openAiApiKey) {
             throw new Error("[SttTtsPlugin] No OpenAI API key for ChatGPT");
         }
-
-        const twitterVoiceHandlerTemplate =
-            `# Task: Generate conversational voice dialog for {{agentName}}.
-            About {{agentName}}:
-            {{bio}}
-
-            # Attachments
-            {{attachments}}
-
-            # Capabilities
-            Note that {{agentName}} is capable of reading/seeing/hearing various forms of media, including images, videos, audio, plaintext and PDFs. Recent attachments have been included above under the "Attachments" section.
-
-            {{actions}}
-
-            {{messageDirections}}
-
-            {{recentMessages}}
-
-            # Instructions: Write the next message for {{agentName}}. Include an optional action if appropriate. {{actionNames}}
-            ` + messageCompletionFooter;
 
         await this.runtime.ensureUserExists(
             this.runtime.agentId,
