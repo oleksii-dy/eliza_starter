@@ -14,10 +14,6 @@ import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 import { agentKitPlugin } from "@elizaos/plugin-agentkit";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
-import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
-import { lightningPlugin } from "@elizaos/plugin-lightning";
-import { PrimusAdapter } from "@elizaos/plugin-primus";
-
 import {
     AgentRuntime,
     CacheManager,
@@ -41,13 +37,17 @@ import {
 } from "@elizaos/core";
 import { zgPlugin } from "@elizaos/plugin-0g";
 import { goplusPlugin } from "@elizaos/plugin-goplus";
+import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
+import { lightningPlugin } from "@elizaos/plugin-lightning";
+import { PrimusAdapter } from "@elizaos/plugin-primus";
+import { solanaAgentkitPlugin } from "@elizaos/plugin-solana-agent-kit";
 
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import { normalizeCharacter } from "@elizaos/plugin-di";
 import createGoatPlugin from "@elizaos/plugin-goat";
 // import { intifacePlugin } from "@elizaos/plugin-intiface";
 import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
-import { abstractPlugin } from "@elizaos/plugin-abstract";
+//import { abstractPlugin } from "@elizaos/plugin-abstract";
 import { akashPlugin } from "@elizaos/plugin-akash";
 import { alloraPlugin } from "@elizaos/plugin-allora";
 import { aptosPlugin } from "@elizaos/plugin-aptos";
@@ -1008,9 +1008,9 @@ export async function createAgent(
                 ? coingeckoPlugin
                 : null,
             getSecret(character, "EVM_PROVIDER_URL") ? goatPlugin : null,
-            getSecret(character, "ABSTRACT_PRIVATE_KEY")
-                ? abstractPlugin
-                : null,
+            // getSecret(character, "ABSTRACT_PRIVATE_KEY")
+            //     ? abstractPlugin
+            //     : null,
             getSecret(character, "B2_PRIVATE_KEY") ? b2Plugin : null,
             getSecret(character, "BINANCE_API_KEY") &&
             getSecret(character, "BINANCE_SECRET_KEY")

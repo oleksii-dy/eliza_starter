@@ -10,7 +10,7 @@ import {
     State,
 } from "@elizaos/core";
 import { encodingForModel, TiktokenModel } from "js-tiktoken";
-import { webSearch } from "./actions/webSearch";
+//import { webSearch } from "./actions/webSearch";
 import { WebSearchService } from "./services/webSearchService";
 
 const DEFAULT_MAX_WEB_SEARCH_TOKENS = 4000;
