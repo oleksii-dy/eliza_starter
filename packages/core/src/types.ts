@@ -919,7 +919,25 @@ export type Character = {
 
     /**Optinal Parent characters to inherit information from */
     extends?: string[];
+
+    twitterSpaces: TwitterSpaceDecisionOptions;
 };
+
+export interface TwitterSpaceDecisionOptions {
+    maxSpeakers?: number;
+    topics?: string[];
+    typicalDurationMinutes?: number;
+    idleKickTimeoutMs?: number;
+    minIntervalBetweenSpacesMinutes?: number;
+    businessHoursOnly?: boolean;
+    randomChance?: number;
+    enableIdleMonitor?: boolean;
+    enableSttTts?: boolean;
+    enableRecording?: boolean;
+    voiceId?: string;
+    sttLanguage?: string;
+    speakerMaxDurationMs?: number;
+}
 
 /**
  * Interface for database operations

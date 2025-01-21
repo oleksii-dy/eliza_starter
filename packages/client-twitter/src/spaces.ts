@@ -6,6 +6,7 @@ import {
     ModelClass,
     ServiceType,
     type ITranscriptionService,
+    TwitterSpaceDecisionOptions,
 } from "@elizaos/core";
 import type { ClientBase } from "./base";
 import {
@@ -17,22 +18,6 @@ import {
     type SpeakerRequest,
 } from "agent-twitter-client";
 import { SttTtsPlugin } from "./plugins/SttTtsSpacesPlugin.ts";
-
-interface SpaceDecisionOptions {
-    maxSpeakers?: number;
-    topics?: string[];
-    typicalDurationMinutes?: number;
-    idleKickTimeoutMs?: number;
-    minIntervalBetweenSpacesMinutes?: number;
-    businessHoursOnly?: boolean;
-    randomChance?: number;
-    enableIdleMonitor?: boolean;
-    enableSttTts?: boolean;
-    enableRecording?: boolean;
-    voiceId?: string;
-    sttLanguage?: string;
-    speakerMaxDurationMs?: number;
-}
 
 interface CurrentSpeakerState {
     userId: string;
@@ -149,7 +134,7 @@ export class TwitterSpaceClient {
     private activeSpeakers: CurrentSpeakerState[] = [];
     private speakerQueue: SpeakerRequest[] = [];
 
-    private decisionOptions: SpaceDecisionOptions;
+    private decisionOptions: TwitterSpaceDecisionOptions;
 
     constructor(client: ClientBase, runtime: IAgentRuntime) {
         this.client = client;
