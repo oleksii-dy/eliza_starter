@@ -10,6 +10,7 @@ import { LensAgentClient } from "@elizaos/client-lens";
 import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
+import { OmniflixPlugin } from "@elizaos/plugin-omniflix";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
 import { PrimusAdapter } from "@elizaos/plugin-primus";
 
@@ -799,9 +800,13 @@ export async function createAgent(
                   ]
                 : []),
             ...(teeMode !== TEEMode.OFF && walletSecretSalt ? [teePlugin] : []),
-            (teeMode !== TEEMode.OFF && walletSecretSalt &&getSecret(character,"VLOG")
-                ? verifiableLogPlugin
-                : null),
+            teeMode !== TEEMode.OFF &&
+            walletSecretSalt &&
+            getSecret(character, "OMNIFLIX_API_URL") &&
+            getSecret(character, "OMNIFLIX_MNEMONIC")
+                ? OmniflixPlugin
+                : null,
+            getSecret(character, "VLOG") ? verifiableLogPlugin : null,
             getSecret(character, "SGX") ? sgxPlugin : null,
             getSecret(character, "ENABLE_TEE_LOG") &&
             ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
