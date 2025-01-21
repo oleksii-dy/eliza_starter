@@ -10,8 +10,8 @@ import {
 export const topGainer: Action = {
   name: 'topGainer',
   description: 'Get the top gainer trading code today',
-  handler: async (runtime: IAgentRuntime, 
-                  message: Memory,  
+  handler: async (runtime: IAgentRuntime,
+                  message: Memory,
                   state: State,
                   options: { [key: string]: unknown },
                   callback: HandlerCallback) => {
@@ -29,7 +29,7 @@ export const topGainer: Action = {
           return false;
       }
   },
-  validate: async (runtime: IAgentRuntime, message: Memory) => {
+  validate: async (_runtime: IAgentRuntime, _message: Memory) => {
     elizaLogger.log("[topgainer] Validating ...");
     elizaLogger.log("[topgainer] Validating ...DONE");
     return true;

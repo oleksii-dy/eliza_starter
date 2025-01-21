@@ -54,8 +54,8 @@ export const transferToken: Action = {
         "SEND_SUI",
         "PAY",
     ],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
-        console.log("Validating sui transfer from user:", message.userId);
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
+        // console.log("Validating sui transfer from user:", message.userId);
         //add custom validate logic here
         /*
             const adminIds = runtime.getSetting("ADMIN_USER_IDS")?.split(",") || [];

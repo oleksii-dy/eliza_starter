@@ -10,8 +10,8 @@ import {
 export const topLoser: Action = {
   name: 'topLoser',
   description: 'Get the top loser trading code today',
-  handler: async (runtime: IAgentRuntime, 
-                  message: Memory,  
+  handler: async (runtime: IAgentRuntime,
+                  message: Memory,
                   state: State,
                   options: { [key: string]: unknown },
                   callback: HandlerCallback) => {
@@ -29,9 +29,9 @@ export const topLoser: Action = {
           return false;
       }
   },
-  validate: async (runtime: IAgentRuntime, message: Memory) => {
-    elizaLogger.log("[toploser] Validating ...");
-    elizaLogger.log("[toploser] Validating ...DONE");
+  validate: async (_runtime: IAgentRuntime, _message: Memory) => {
+    // elizaLogger.log("[toploser] Validating ...");
+    // elizaLogger.log("[toploser] Validating ...DONE");
     return true;
   },
   similes:["top_loser", "max_loser", "most_loser", "top lost crypto symbol", "top lost crypto today"],

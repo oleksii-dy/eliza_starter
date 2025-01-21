@@ -154,8 +154,8 @@ export  const getNewsCryptoPanic: Action = {
         }
     },
     validate: async (_runtime: IAgentRuntime, _message: Memory) => {
-      elizaLogger.log("[news] Validating ...");
-      elizaLogger.log("[news] Validating ...DONE");
+    //   elizaLogger.log("[news] Validating ...");
+    //   elizaLogger.log("[news] Validating ...DONE");
       return true;
     },
     similes: [

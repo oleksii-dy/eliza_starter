@@ -35,7 +35,7 @@ Return a simple yes/no response in this JSON structure:
 
 export const topAiTokens: Action = {
     name: "topAiTokens",
-   
+
     similes: [
         "show ai cryptocurrencies",
         "list artificial intelligence tokens",
@@ -53,15 +53,15 @@ export const topAiTokens: Action = {
         "list ai infrastructure tokens",
         "display ai ecosystem coins"
       ],
-    
+
     examples: [],
-    
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         return true;
     },
 
     description: "Retrieves a list of top AI-focused cryptocurrency tokens including price, market cap, and key metrics",
-    
+
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,

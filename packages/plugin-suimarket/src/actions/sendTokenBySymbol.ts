@@ -67,9 +67,9 @@ export const sendTokenBySymbol: Action = {
 
 
 ],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         // Check if the necessary parameters are provided in the message
-        console.log("Message:", message);
+        // console.log("Message:", message);
         return true;
     },
     description: "Perform a token swap.",

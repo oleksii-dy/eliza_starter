@@ -46,9 +46,9 @@ VALIDATION RULES:
 export const executeSwapByAddress: Action = {
     name: "SUI_EXECUTE_SWAP_BY_ADDRESS",
     similes: ["SUI_SWAP_TOKENS_BY_ADDRESS", "SUI_TOKEN_SWAP_BY_ADDRESS", "SUI_TRADE_TOKENS_BY_ADDRESS", "SUI_EXCHANGE_TOKENS_BY_ADDRESS"],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         // Check if the necessary parameters are provided in the message
-        console.log("Message:", message);
+        // console.log("Message:", message);
         return true;
     },
     description: "Perform a token swap.",

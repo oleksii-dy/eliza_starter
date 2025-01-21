@@ -30,8 +30,8 @@ export const bestTrader: Action = {
         }
     },
     validate: async (_runtime: IAgentRuntime, _message: Memory) => {
-      elizaLogger.log("[portfolio] Validating ...");
-      elizaLogger.log("[portfolio] Validating ...DONE");
+    //   elizaLogger.log("[portfolio] Validating ...");
+    //   elizaLogger.log("[portfolio] Validating ...DONE");
       return true;
     },
     similes:["portfolio_best", "portfolio_infulencer", "top_portfolio"],

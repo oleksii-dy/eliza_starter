@@ -47,9 +47,9 @@ VALIDATION RULES:
 export const executeSwap: Action = {
     name: "SUI_EXECUTE_SWAP_BY_SYMBOL",
     similes: ["SUI_SWAP_TOKENS_BY_SYMBOL", "SUI_TOKEN_SWAP_BY_SYMBOL", "SUI_TRADE_TOKENS_BY_SYMBOL", "SUI_EXCHANGE_TOKENS+BY_SYMBOL"],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         // Check if the necessary parameters are provided in the message
-        console.log("Message:", message);
+        // console.log("Message:", message);
         return true;
     },
     description: "Perform a token swap.",

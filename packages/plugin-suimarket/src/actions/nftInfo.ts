@@ -118,12 +118,12 @@ export const nftInfo: Action = {
         ]
     ] as ActionExample [][],
 
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         return true;
     },
 
     description: "Get NFT's info from CoinGecko",
-    
+
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
