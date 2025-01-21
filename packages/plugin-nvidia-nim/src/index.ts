@@ -93,7 +93,7 @@ if (NVIDIA_NIM_SPASH) {
 
 const nvidiaNimPlugin: Plugin = {
   name: "nvidia-nim",
-  description: "NVIDIA NIM Plugin for price feeds and market data",
+  description: "NVIDIA NIM Plugin for AI Foundation Models integration",
   actions: actions,
   evaluators: []
 };
