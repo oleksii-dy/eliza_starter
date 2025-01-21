@@ -21,6 +21,8 @@ export class MongoDBDatabaseAdapter
     private databaseName: string;
     private hasVectorSearch: boolean;
     private isConnected: boolean = false;
+    private isVectorSearchIndexComputable: boolean;
+
 
     constructor(client: MongoClient, databaseName: string) {
         super();
@@ -28,6 +30,7 @@ export class MongoDBDatabaseAdapter
         this.databaseName = databaseName;
         this.hasVectorSearch = false;
         this.isConnected = false;
+        this.isVectorSearchIndexComputable = true;
     }
 
     async init() {
@@ -36,60 +39,95 @@ export class MongoDBDatabaseAdapter
         }
 
         try {
+            // Connect first
             await this.db.connect();
-            this.isConnected = true;
+
+            // Get database reference
             this.database = this.db.db(this.databaseName);
 
-            // Track whether vector search is available
-            this.hasVectorSearch = false;
+            // Define collections and their indexes
+            const collectionsWithIndexes = [
+                {
+                    collectionName: 'memories',
+                    indexes: [
+                        { key: { type: 1, roomId: 1, agentId: 1, createdAt: -1 } },
+                        { key: { content: "text" }, options: { weights: { content: 10 } } }
+                    ]
+                },
+                {
+                    collectionName: 'participants',
+                    indexes: [
+                        { key: { userId: 1, roomId: 1 }, options: { unique: true } }
+                    ]
+                },
+                {
+                    collectionName: 'cache',
+                    indexes: [
+                        { key: { expiresAt: 1 }, options: { expireAfterSeconds: 0 } }
+                    ]
+                }
+            ];
 
-            // Create required indexes
-            await Promise.all([
-                // Try to create vector search index, but don't fail if unavailable
-                (async () => {
-                    try {
-                        await this.database.collection('memories').createIndex(
-                            { embedding: "vectorSearch" },
-                            {
-                                name: "vector_index",
-                                definition: {
-                                    vectorSearchConfig: {
-                                        dimensions: 1536,
-                                        similarity: "cosine",
-                                        numLists: 100,
-                                        efConstruction: 128
-                                    }
+            // Initialize indexes for each collection
+            await Promise.all(collectionsWithIndexes.map(async ({ collectionName, indexes }) => {
+                const collection = this.database.collection(collectionName);
+                const existingIndexes = await collection.listIndexes().toArray();
+
+                for (const index of indexes) {
+                    const indexExists = existingIndexes.some(existingIndex =>
+                        JSON.stringify(existingIndex.key) === JSON.stringify(index.key)
+                    );
+
+                    if (!indexExists) {
+                        console.log(`Creating index for ${collectionName}:`, index.key);
+                        await collection.createIndex(index.key, index.options || {});
+                    } else {
+                        console.log(`Index already exists for ${collectionName}:`, index.key);
+                    }
+                }
+            }));
+
+            // Try to create vector search index
+            if (this.isVectorSearchIndexComputable) {
+                try {
+                    await this.database.collection('memories').createIndex(
+                        { embedding: "vectorSearch" },
+                        {
+                            name: "vector_index",
+                            definition: {
+                                vectorSearchConfig: {
+                                    dimensions: 1536,
+                                    similarity: "cosine",
+                                    numLists: 100,
+                                    efConstruction: 128
                                 }
                             }
-                        );
-                        this.hasVectorSearch = true;
-                        console.log("Vector search capabilities are available and enabled");
-                    } catch (error) {
-                        console.log("Vector search not available, falling back to standard search", error);
-                        // Create a standard index on embedding field instead
-                        await this.database.collection('memories').createIndex(
-                            { embedding: 1 }
-                        );
-                    }
-                })(),
+                        }
+                    );
+                    this.hasVectorSearch = true;
+                    console.log("Vector search capabilities are available and enabled");
 
-                // Regular indexes that should always be created
-                this.database.collection('memories').createIndex(
-                    { type: 1, roomId: 1, agentId: 1, createdAt: -1 }
-                ),
-                this.database.collection('participants').createIndex(
-                    { userId: 1, roomId: 1 },
-                    { unique: true }
-                ),
-                this.database.collection('memories').createIndex(
-                    { "content": "text" },
-                    { weights: { "content": 10 } }
-                ),
-                this.database.collection('cache').createIndex(
-                    { expiresAt: 1 },
-                    { expireAfterSeconds: 0 }
-                )
-            ]);
+                    // Check sharding status
+                    const dbInfo = await this.database.admin().command({ listDatabases: 1, nameOnly: true });
+                    const collectionStats = await this.database.collection('memories').stats();
+
+                    const isDatabaseSharded = Boolean(dbInfo?.sharded);
+                    const isCollectionSharded = Boolean(collectionStats?.sharded);
+
+                    if (isDatabaseSharded && isCollectionSharded) {
+                        this.isVectorSearchIndexComputable = false;
+                        this.hasVectorSearch = false;
+                    }
+                } catch (error) {
+                    console.log("Vector search not available, falling back to standard search", error);
+                    this.isVectorSearchIndexComputable = false;
+                    this.hasVectorSearch = false;
+                    // Create a standard index on embedding field instead
+                    await this.database.collection('memories').createIndex(
+                        { embedding: 1 }
+                    );
+                }
+            }
 
             try {
                 // Enable sharding for better performance
@@ -103,8 +141,13 @@ export class MongoDBDatabaseAdapter
             } catch (error) {
                 console.log("Sharding may already be enabled or insufficient permissions", error);
             }
+
+            // Only set isConnected to true after all initialization is complete
+            this.isConnected = true;
+
         } catch (error) {
             this.isConnected = false;
+            this.isVectorSearchIndexComputable = false;
             console.error("Failed to initialize MongoDB connection:", error);
             throw error;
         }
