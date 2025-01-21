@@ -1106,6 +1106,7 @@ export async function createAgent(
             getSecret(character, "NVIDIA_NGC_API_KEY")
                 ? nvidiaNimPlugin
                 : null,
+            getSecret(character, "INITIA_PRIVATE_KEY") && getSecret(character, "INITIA_NODE_URL") ? initiaPlugin : null
         ].filter(Boolean),
         providers: [],
         actions: [],

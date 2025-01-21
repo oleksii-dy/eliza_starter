@@ -18,4 +18,6 @@ export default defineConfig({
     "viem",
     "@elizaos/core",
   ],
+  platform: 'node',
+  noExternal: ['node-cache']
 });
