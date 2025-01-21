@@ -21,7 +21,13 @@ export const DevaClientInterface: Client = {
         return deva;
     },
     async stop(_runtime: IAgentRuntime) {
-        elizaLogger.warn("Deva client does not support stopping yet");
+        try {
+            // Add cleanup logic here
+              elizaLogger.warn("Deva client does not support stopping yet");
+        } catch (error) {
+            elizaLogger.error("Failed to stop Deva client:", error);
+            throw error;
+        }
     },
 };
 

@@ -42,7 +42,7 @@ graph TD
 - **Telegram** (`@eliza/client-telegram`) - Telegram bot integration
 - **Direct** (`@eliza/client-direct`) - Direct API interface for custom integrations
 - **Auto** (`@eliza/client-auto`) - Automated trading and interaction client
-- # **Deva** (`@eliza/client-deva`) - Client for integrating with Deva.me
+- **Deva** (`@elizaos/client-deva`) - Client for integrating with Deva.me
 - **Discord** (`@elizaos/client-discord`) - Full Discord bot integration
 - **Twitter** (`@elizaos/client-twitter`) - Twitter bot and interaction handling
 - **Telegram** (`@elizaos/client-telegram`) - Telegram bot integration
@@ -70,7 +70,7 @@ pnpm add @elizaos/client-direct
 pnpm add @elizaos/client-auto
 
 # Deva Client
-pnpm add @eliza/client-deva
+pnpm add @elizaos/client-deva
 ```
 
 ---

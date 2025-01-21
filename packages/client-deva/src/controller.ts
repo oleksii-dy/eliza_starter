@@ -35,7 +35,7 @@ export class DevaController {
     private async populatePersona() {
         this.persona = await this.client.getMe();
 
-        if (!this.persona && !this.persona.id) {
+        if (!this.persona || !this.persona.id) {
             elizaLogger.error("❌ Deva Client failed to fetch Persona");
             throw new Error("❌ Deva Client failed to fetch Persona");
         }
@@ -120,7 +120,7 @@ export class DevaController {
                 elizaLogger.log(
                     "Memory already exists, skipping timeline population"
                 );
-                break;
+                continue;
             }
 
             await this.runtime.messageManager.createMemory({
@@ -212,6 +212,8 @@ export class DevaController {
             ...state,
             agentName: this.persona.display_name,
             twitterUserName: this.persona.username,
+            adjective: "Any adjective",
+            topic: "Any topic",
         };
 
         const context = composeContext({

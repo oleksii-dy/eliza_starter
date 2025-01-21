@@ -18,11 +18,18 @@ export class ClientBase {
     }
 
     public async getMe(): Promise<DevaPersona | null> {
-        return await fetch(`${this.apiBaseUrl}/persona`, {
-            headers: { ...this.defaultHeaders },
-        })
-            .then((res) => res.json())
-            .catch(() => null);
+        try {
+            const response = await fetch(`${this.apiBaseUrl}/persona`, {
+                headers: { ...this.defaultHeaders },
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            elizaLogger.error("Failed to fetch persona:", error);
+            return null;
+        }
     }
 
     public async getPersonaPosts(personaId: string): Promise<DevaPost[]> {
@@ -33,7 +40,7 @@ export class ClientBase {
                     Authorization: `Bearer ${this.accessToken}`,
                     "Content-Type": "application/json",
                 },
-            }
+            },
         ).then((res) => res.json());
         return res.items;
     }

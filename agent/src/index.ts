@@ -768,8 +768,10 @@ export async function initializeClients(
     }
 
     if (clientTypes.includes("deva")) {
-        const devaClients = await DevaClientInterface.start(runtime);
-        clients.push(devaClients);
+        if (clientTypes.includes("deva")) {
+            const devaClient = await DevaClientInterface.start(runtime);
+            if (devaClient) clients.deva = devaClient;
+        }
     }
 
     function determineClientType(client: Client): string {
