@@ -142,7 +142,7 @@ COSMOS_AVAILABLE_CHAINS=osmosis,neutron,axelar,cosmoshub,terra2,pryzm
 ```
 Keep in mind that most swaps require intermediate chains. These chains must also be included in the env file.
 
-You can check which chains are supported by the Skip API and this plugin here: Skip API Documentation.
+You can check which chains are supported by the Skip API and this plugin here: [Skip API Documentation](https://docs.skip.build/).
 
 The list below contains all supported chains extracted from the Skip API:
 ```env

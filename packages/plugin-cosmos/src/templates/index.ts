@@ -125,8 +125,8 @@ Respond with a JSON markdown block containing only the extracted values. All fie
     "fromTokenSymbol": string, // Symbol of token to be swapped (String).
     "fromTokenAmount": string, // Amount of tokens to be swapped (String).
     "toChainName": string, // Name of chain on which result token is hosted (String).
-    "toTokenSymbol": string // Symbol of result token (String).
-    "fromTokenDenom": string // denom of token to be swapped (String). Optional, might not be present.
+    "toTokenSymbol": string, // Symbol of result token (String).
+    "fromTokenDenom": string, // denom of token to be swapped (String). Optional, might not be present.
     "toTokenDenom": string // denom of result token (String). Optional, might not be present.
 }
 \`\`\`
@@ -140,7 +140,7 @@ Example response for the input: "Swap {{1}} {{ATOM}} from {{cosmoshub}} to {{OM}
     "fromTokenDenom": null,
     "toChainName": "mantrachain",
     "toTokenSymbol": "OM",
-    "fromTokenDenom": null
+    "toTokenDenom": null
 }
 \`\`\`
 
@@ -176,7 +176,7 @@ Example response for the input: "Swap {{100}} {{USDC}} with denom {{uusdc}} from
 {
     "fromChainName": "axelar",
     "fromTokenSymbol": "USDC",
-    "fromTokenAmount": "1",
+    "fromTokenAmount": "100",
     "fromTokenDenom": "uusdc",
     "toChainName": "cosmoshub",
     "toTokenSymbol": "ATOM",

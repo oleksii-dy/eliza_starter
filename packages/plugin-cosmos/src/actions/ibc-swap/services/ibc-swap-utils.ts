@@ -1,10 +1,13 @@
-import { assets } from "chain-registry";
+import {assets} from "chain-registry";
 
 export const prepareAmbiguityErrorMessage = (
     coinSymbol: string,
     chainName: string
 ): string => {
     const chainAssets = assets.find((chain) => chain.chain_name === chainName);
+    if (!chainAssets) {
+        throw new Error(`Chain ${chainName} not found in registry`);
+    }
 
     const ambiguousAssets = chainAssets.assets.filter(
         (asset) => asset.symbol === coinSymbol

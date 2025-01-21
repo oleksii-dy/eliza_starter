@@ -1,11 +1,11 @@
-import { assets, chains } from "chain-registry";
+import {assets, chains} from "chain-registry";
 import {
     ICosmosActionService,
     ICosmosPluginCustomChainData,
     ICosmosSwap,
     ICosmosWalletChains,
 } from "../../../shared/interfaces.ts";
-import { IBCSwapActionParams } from "../types.ts";
+import {IBCSwapActionParams} from "../types.ts";
 import {
     convertDisplayUnitToBaseUnit,
     getChainByChainName,
@@ -13,8 +13,8 @@ import {
     getDenomBySymbol,
     getExponentByDenom,
 } from "@chain-registry/utils";
-import { getAvailableAssets } from "../../../shared/helpers/cosmos-assets.ts";
-import { HandlerCallback } from "@elizaos/core";
+import {getAvailableAssets} from "../../../shared/helpers/cosmos-assets.ts";
+import {HandlerCallback} from "@elizaos/core";
 
 export class IBCSwapAction implements ICosmosActionService {
     constructor(private cosmosWalletChains: ICosmosWalletChains) {
@@ -27,7 +27,14 @@ export class IBCSwapAction implements ICosmosActionService {
         _callback?: HandlerCallback
     ): Promise<ICosmosSwap> {
         const fromChain = getChainByChainName(chains, params.fromChainName);
+        if (!fromChain) {
+            throw new Error(`Cannot find source chain: ${params.fromChainName}`);
+        }
+
         const toChain = getChainByChainName(chains, params.toChainName);
+        if (!toChain) {
+            throw new Error(`Cannot find destination chain: ${params.toChainName}`);
+        }
 
         const availableAssets = getAvailableAssets(assets, customChainAssets);
 
@@ -38,6 +45,9 @@ export class IBCSwapAction implements ICosmosActionService {
                 params.fromTokenSymbol,
                 params.fromChainName
             );
+        if (!denomFrom) {
+            throw new Error(`Cannot find source token denom for symbol: ${params.fromTokenSymbol}`);
+        }
 
         const exponentFrom = getExponentByDenom(
             availableAssets,
@@ -52,6 +62,9 @@ export class IBCSwapAction implements ICosmosActionService {
                 params.toTokenSymbol,
                 params.toChainName
             );
+        if (!denomTo) {
+            throw new Error(`Cannot find destination token denom for symbol: ${params.toTokenSymbol}`);
+        }
 
         console.log(
             `Swap data: Swapping token ${denomFrom} with exponent ${exponentFrom} to token ${denomTo}`
