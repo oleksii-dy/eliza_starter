@@ -7,7 +7,7 @@ import Database from "better-sqlite3";
 import path from "path";
 
 export class TeeLogService extends Service implements ITeeLogService {
-    private readonly dbPath = path.resolve("agent/data/tee_log.sqlite");
+    private readonly dbPath = path.resolve("data/tee_log.sqlite");
 
     private initialized = false;
     private enableTeeLog = false;
