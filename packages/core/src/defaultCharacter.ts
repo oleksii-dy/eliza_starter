@@ -5,7 +5,7 @@ export const defaultCharacter: Character = {
     username: "mythosbuild",
     plugins: [],
     clients: [
-        "twitter"
+        Clients.TWITTER
     ],
     modelProvider: ModelProviderName.GROK,
     settings: {
