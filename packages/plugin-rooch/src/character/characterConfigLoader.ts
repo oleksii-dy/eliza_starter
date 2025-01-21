@@ -42,10 +42,14 @@ export const characterConfigLoader: ICharacterConfigLoader = {
                 `getStates result:`, JSON.stringify(objectStates)
             );
 
+            if (!objectStates || objectStates.length==0) {
+                throw new Error(`Not found character with uri: ${uri}`)
+            }
+
             return decodeCharacterData(objectStates[0].decoded_value.value)
         } catch (error) {
             console.error("Error in wallet provider:", error);
-            return null;
+            return error;
         }
     }
 };
