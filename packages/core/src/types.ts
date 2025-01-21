@@ -920,7 +920,7 @@ export type Character = {
     /**Optinal Parent characters to inherit information from */
     extends?: string[];
 
-    twitterSpaces: TwitterSpaceDecisionOptions;
+    twitterSpaces?: TwitterSpaceDecisionOptions;
 };
 
 export interface TwitterSpaceDecisionOptions {
