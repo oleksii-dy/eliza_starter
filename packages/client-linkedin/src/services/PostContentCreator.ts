@@ -6,6 +6,7 @@ import {
     stringToUuid,
 } from "@elizaos/core";
 import { createLinkedinPostTemplate } from "../templates";
+import removeMd from "remove-markdown";
 
 export class PostContentCreator {
     constructor(public runtime: IAgentRuntime) {}
@@ -29,10 +30,12 @@ export class PostContentCreator {
             template: createLinkedinPostTemplate,
         });
 
-        return await generateText({
+        const text = await generateText({
             runtime: this.runtime,
             context,
             modelClass: ModelClass.SMALL,
         });
+
+        return removeMd(text);
     }
 }

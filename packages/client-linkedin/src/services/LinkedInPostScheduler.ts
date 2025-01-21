@@ -1,7 +1,7 @@
 import { AxiosInstance } from "axios";
 import { LinkedInUserInfoFetcher } from "../repositories/LinkedinUserInfoFetcher";
 import { PostContentCreator } from "./PostContentCreator";
-import { elizaLogger, IAgentRuntime } from "@elizaos/core";
+import { elizaLogger, IAgentRuntime, stringToUuid } from "@elizaos/core";
 import { getRandomInteger } from "../helpers/get-random-integer";
 import { LinkedInPostPublisher } from "../repositories/LinkedinPostPublisher";
 import { PublisherConfig } from "../interfaces";
@@ -59,7 +59,9 @@ export class LinkedInPostScheduler {
             const postText = await this.postContentCreator.createPostContent(
                 this.userId
             );
-            elizaLogger.log(`Generated post text:\n${postText}`);
+
+            elizaLogger.log(`Generated post text`);
+            elizaLogger.log(postText);
 
             if (!this.config.LINKEDIN_DRY_RUN) {
                 await this.postPublisher.publishPost({ postText });
@@ -69,6 +71,15 @@ export class LinkedInPostScheduler {
                     "Dry run is enabled. To publish posts set LINKEDIN_DRY_RUN to false"
                 );
             }
+
+            this.runtime.messageManager.createMemory({
+                userId: this.runtime.agentId,
+                agentId: this.runtime.agentId,
+                roomId: stringToUuid("linkedin_generate_room-" + this.userId),
+                content: {
+                    text: postText,
+                },
+            });
 
             await this.runtime.cacheManager.set(
                 "linkedin/" + this.userId + "/lastPost",

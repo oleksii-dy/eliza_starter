@@ -18,9 +18,6 @@ Style Guidelines:
 - Don't use first-person narrative.
 
 Formatting:
-- Do NOT use markdown format (no * or ** for bold/italic).
-- Bold text: 𝐄𝐱𝐚𝐦𝐩𝐥𝐞 𝐭𝐞𝐱𝐭 123
-- Use bold as in 𝐄𝐱𝐚𝐦𝐩𝐥𝐞 𝐭𝐞𝐱𝐭 for header and highlighting
 - Use normal text for rest of post
 - Use emojis sparingly.
 
@@ -29,6 +26,8 @@ Hashtags:
 
 Avoid:
 - Generic advice, motivational content, personal experiences, company-specific information, markdown formatting.
+- Post similar to published post from {{state}}, first try to create post about topic not mentioned in {{state}}, if all topics are mentioned in {{state}} then create post about topic that is not mentioned in {{state}} but is related to one of the topics from {{state}}.
+- Markdown formatting.
 
 Important Note:
 - Ensure that the reply strictly adheres to the formatting rules provided in the prompt, especially avoiding markdown formatting and using the specified text styles for bold, italics, and bold italics.
