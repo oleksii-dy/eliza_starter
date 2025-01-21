@@ -40,6 +40,7 @@ graph TD
 - **Telegram** (`@elizaos/client-telegram`) - Telegram bot integration
 - **Direct** (`@elizaos/client-direct`) - Direct API interface for custom integrations
 - **Auto** (`@elizaos/client-auto`) - Automated trading and interaction client
+- **Alexa skill** (`@elizaos/client-alexa`) - Alexa skill API integration
 
 ---
 
@@ -289,6 +290,41 @@ class AutoClient {
 
         // Execute trades
         await this.executeTrades(analysis);
+    }
+}
+```
+
+## Alexa Client
+
+The Alexa client provides API integration with alexa skill.
+
+### Basic Setup
+
+```typescript
+import { AlexaClientInterface } from "@elizaos/client-alexa";
+
+// Initialize client
+const client = await AlexaClientInterface.start(runtime);
+
+// Configuration in .env
+ALEXA_SKILL_ID= your_alexa_skill_id
+ALEXA_CLIENT_ID= your_alexa_client_id #Alexa developer console permissions tab
+ALEXA_CLIENT_SECRET= your_alexa_client_secret #Alexa developer console permissions tab
+```
+
+### Message Management
+
+```typescript
+class TelegramClient {
+    async handleMessage(message) {
+        // Process message content
+        const content = await this.processMessage(message);
+
+        // Generate response
+        const response = await this.generateResponse(content);
+
+        // Send response
+        await this.sendMessage(message.chat.id, response);
     }
 }
 ```
