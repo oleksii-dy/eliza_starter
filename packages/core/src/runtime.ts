@@ -790,7 +790,7 @@ export class AgentRuntime implements IAgentRuntime {
     ) {
         const { userId, roomId } = message;
 
-        const conversationLength = this.getConversationLength();
+        // const conversationLength = this.getConversationLength();
 
         const [actorsData, recentMessagesData, goalsData]: [
             Actor[],
@@ -800,7 +800,8 @@ export class AgentRuntime implements IAgentRuntime {
             getActorDetails({ runtime: this, roomId }),
             this.messageManager.getMemories({
                 roomId,
-                count: conversationLength,
+                // count: conversationLength,
+                count: 10,
                 unique: false,
             }),
             getGoals({
@@ -873,12 +874,12 @@ export class AgentRuntime implements IAgentRuntime {
             .map(
                 (attachment) =>
                     `ID: ${attachment.id}
-Name: ${attachment.title}
-URL: ${attachment.url}
-Type: ${attachment.source}
-Description: ${attachment.description}
-Text: ${attachment.text}
-  `
+                    Name: ${attachment.title}
+                    URL: ${attachment.url}
+                    Type: ${attachment.source}
+                    Description: ${attachment.description}
+                    Text: ${attachment.text}
+                    `
             )
             .join("\n");
 
