@@ -1,7 +1,7 @@
 {
     "extends": "../core/tsconfig.json",
     "compilerOptions": {
-        "outDir": "../adapter-pglite/dist",
+        "outDir": "../adapter-mongodb/dist",
         "rootDir": "src",
         "strict": true
     },

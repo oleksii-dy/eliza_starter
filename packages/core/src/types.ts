@@ -1,4 +1,9 @@
 import { Readable } from "stream";
+import {SupabaseDatabaseAdapter} from "@elizaos/adapter-supabase";
+import {SqliteDatabaseAdapter} from "@elizaos/adapter-sqlite";
+import PostgresDatabaseAdapter from "@elizaos/adapter-postgres";
+import PGLiteDatabaseAdapter from "@elizaos/adapter-pglite";
+import {MongoDatabaseAdapter} from "@elizaos/adapter-mongodb";
 
 /**
  * Represents a UUID string in the format "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -876,13 +881,17 @@ export type Character = {
     /**Optinal Parent characters to inherit information from */
     extends?: string[];
 };
-
+export type UsedDatabaseAdapter = PostgresDatabaseAdapter
+    | SqliteDatabaseAdapter
+    | SupabaseDatabaseAdapter
+    | MongoDatabaseAdapter
+    | PGLiteDatabaseAdapter;
 /**
  * Interface for database operations
  */
 export interface IDatabaseAdapter {
     /** Database instance */
-    db: any;
+    db: UsedDatabaseAdapter;
 
     /** Optional initialization */
     init(): Promise<void>;

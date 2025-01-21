@@ -30,7 +30,7 @@ import {
     IDatabaseCacheAdapter,
     ModelProviderName,
     settings,
-    stringToUuid,
+    stringToUuid, UsedDatabaseAdapter,
     validateCharacterConfig,
 } from "@elizaos/core";
 import { zgPlugin } from "@elizaos/plugin-0g";
@@ -103,6 +103,7 @@ import { fileURLToPath } from "url";
 import yargs from "yargs";
 import { verifiableLogPlugin } from "@elizaos/plugin-tee-verifiable-log";
 import createNFTCollectionsPlugin from "@elizaos/plugin-nft-collections";
+import { MongoDatabaseAdapter } from "@elizaos/adapter-mongodb";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -479,74 +480,77 @@ export function getTokenForProvider(
             throw new Error(errorMessage);
     }
 }
-
-function initializeDatabase(dataDir: string) {
-    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-        elizaLogger.info("Initializing Supabase connection...");
-        const db = new SupabaseDatabaseAdapter(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_ANON_KEY
+function getEnvVariable(envVariableName: string, alternativeValue?: string): string {
+    const envVariable = process.env[envVariableName] ?? alternativeValue;
+    if (!envVariable) {
+        throw new Error(
+            `Environment variable ${envVariableName} is not set, and no alternative value was provided`
         );
-
-        // Test the connection
-        db.init()
-            .then(() => {
-                elizaLogger.success(
-                    "Successfully connected to Supabase database"
-                );
-            })
-            .catch((error) => {
-                elizaLogger.error("Failed to connect to Supabase:", error);
-            });
-
-        return db;
-    } else if (process.env.POSTGRES_URL) {
-        elizaLogger.info("Initializing PostgreSQL connection...");
-        const db = new PostgresDatabaseAdapter({
-            connectionString: process.env.POSTGRES_URL,
-            parseInputs: true,
+    }
+    return envVariable;
+}
+function initializeDatabase(dbAdapter: UsedDatabaseAdapter, dbName: string) {
+    dbAdapter.init()
+        .then(() => {
+            elizaLogger.success(`Successfully connected to ${dbName} database`);
+        })
+        .catch((error) => {
+            elizaLogger.error(`Failed to connect to ${dbName}:`, error);
         });
-
-        // Test the connection
-        db.init()
-            .then(() => {
-                elizaLogger.success(
-                    "Successfully connected to PostgreSQL database"
-                );
-            })
-            .catch((error) => {
-                elizaLogger.error("Failed to connect to PostgreSQL:", error);
-            });
-
-        return db;
-    } else if (process.env.PGLITE_DATA_DIR) {
-        elizaLogger.info("Initializing PgLite adapter...");
-        // `dataDir: memory://` for in memory pg
-        const db = new PGLiteDatabaseAdapter({
-            dataDir: process.env.PGLITE_DATA_DIR,
-        });
-        return db;
-    } else {
-        const filePath =
-            process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
-        elizaLogger.info(`Initializing SQLite database at ${filePath}...`);
-        const db = new SqliteDatabaseAdapter(new Database(filePath));
-
-        // Test the connection
-        db.init()
-            .then(() => {
-                elizaLogger.success(
-                    "Successfully connected to SQLite database"
-                );
-            })
-            .catch((error) => {
-                elizaLogger.error("Failed to connect to SQLite:", error);
-            });
-
-        return db;
+    return dbAdapter;
+}
+function initializeSupabase() {
+    const supabaseUrl = getEnvVariable("SUPABASE_URL");
+    const supabaseAnonKey = getEnvVariable("SUPABASE_ANON_KEY");
+    elizaLogger.info("Initializing Supabase connection...");
+    const db = new SupabaseDatabaseAdapter(
+        supabaseUrl,
+        supabaseAnonKey
+    );
+    return initializeDatabase(db, "Supabase");
+}
+function initializePostgres() {
+    const postgresUrl = getEnvVariable("POSTGRES_URL");
+    elizaLogger.info("Initializing PostgreSQL connection...");
+    const db = new PostgresDatabaseAdapter({
+        connectionString: process.env.POSTGRES_URL,
+        parseInputs: true,
+    });
+    return initializeDatabase(db, "PostgreSQL");
+}
+function initializePgLite() {
+    const dataDir = getEnvVariable("PGLITE_DATA_DIR");
+    elizaLogger.info("Initializing PgLite adapter...");
+    const db = new PGLiteDatabaseAdapter({ dataDir });
+    return initializeDatabase(db, "PGLite");
+}
+function initializeMongoDb() {
+    const mongoDbConectionString = getEnvVariable("MONGODB_CONNECTION_STRING");
+    const mongoDbName = getEnvVariable("MONGODB_NAME", "CumulusAiAgent");
+    const db = new MongoDatabaseAdapter(mongoDbConectionString, mongoDbName);
+    return initializeDatabase(db, "MongoDB");
+}
+function initializeSqlLite(dataDir: string) {
+    const filePath = getEnvVariable("SQLITE_FILE", path.resolve(dataDir, "db.sqlite"));
+    elizaLogger.info(`Initializing SQLite database at ${filePath}...`);
+    const db = new SqliteDatabaseAdapter(new Database(filePath));
+    return initializeDatabase(db, "SQLite");
+}
+function initializeDatabaseAdapter(dataDir: string): UsedDatabaseAdapter {
+    const usedDbAdapter = getEnvVariable("USED_DB_ADAPTER");
+    switch(usedDbAdapter) {
+       case 'supabase':
+           return initializeSupabase();
+       case 'postgres':
+           return initializePostgres();
+       case 'pglite':
+           return initializePgLite();
+       case 'mongodb':
+           return initializeMongoDb();
+       default:
+           return initializeSqlLite(dataDir);
     }
 }
-
 // also adds plugins from character file into the runtime
 export async function initializeClients(
     character: Character,
@@ -983,7 +987,7 @@ async function startAgent(
             fs.mkdirSync(dataDir, { recursive: true });
         }
 
-        db = initializeDatabase(dataDir) as IDatabaseAdapter &
+        db = initializeDatabaseAdapter(dataDir) as IDatabaseAdapter &
             IDatabaseCacheAdapter;
 
         await db.init();
