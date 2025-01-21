@@ -2,23 +2,23 @@ import { configSchema } from "./helpers/validate-config";
 import { z } from "zod";
 
 export interface UserInfo {
-  sub: string;
-  email_verified: boolean;
-  name: string;
-  locale: { country: string; language: string };
-  given_name: string;
-  family_name: string,
-  email: string,
-  picture?: string;
-};
+    sub: string;
+    email_verified: boolean;
+    name: string;
+    locale: { country: string; language: string };
+    given_name: string;
+    family_name: string;
+    email: string;
+    picture?: string;
+}
 
 export interface MediaUploadUrl {
-  value: {
-    uploadUrlExpiresAt: number,
-    uploadUrl: string,
-    image: string
-  }
-};
+    value: {
+        uploadUrlExpiresAt: number;
+        uploadUrl: string;
+        image: string;
+    };
+}
 
 export interface BasePostRequest {
     author: string;
@@ -33,6 +33,14 @@ export interface BasePostRequest {
     isReshareDisabledByAuthor: boolean;
 }
 
+export interface PublishPostParams {
+    postText: string;
+    media?: {
+        title: string;
+        id: string;
+    };
+}
+
 export interface PostRequestWithMedia extends BasePostRequest {
     content?: {
         media: {
@@ -45,4 +53,7 @@ export interface PostRequestWithMedia extends BasePostRequest {
 export const API_VERSION_HEADER = "LinkedIn-Version";
 export const API_VERSION = "202411";
 export type Envs = z.infer<typeof configSchema>;
-export type IntervalsConfig = Omit<Envs, "LINKEDIN_ACCESS_TOKEN">;
+export type IntervalsConfig = Pick<
+    Envs,
+    "LINKEDIN_POST_INTERVAL_MAX" | "LINKEDIN_POST_INTERVAL_MIN"
+>;

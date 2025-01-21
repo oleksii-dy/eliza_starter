@@ -1,10 +1,18 @@
 import { z, ZodError } from "zod";
 import { IAgentRuntime } from "@elizaos/core";
 
-const checkIfIsNumber = (val: string | number | null, ctx: z.RefinementCtx, path: string) => {
+const DEFAULT_LINKEDIN_API_URL = "https://api.linkedin.com";
+const DEFAULT_LINKEDIN_POST_INTERVAL_MIN = 60;
+const DEFAULT_LINKEDIN_POST_INTERVAL_MAX = 120;
+
+const parseNumber = (
+    val: string | number | null,
+    ctx: z.RefinementCtx,
+    path: string
+) => {
     const num = Number(val);
 
-    if(Number.isNaN(num)) {
+    if (Number.isNaN(num)) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: `Invalid number: ${val}`,
@@ -13,43 +21,69 @@ const checkIfIsNumber = (val: string | number | null, ctx: z.RefinementCtx, path
     }
 
     return num;
-}
+};
 
-export const configSchema = z.object({
-    LINKEDIN_ACCESS_TOKEN: z.string(),
-    LINKEDIN_POST_INTERVAL_MIN: z.union([z.number(), z.string()])
-        .nullable()
-        .optional()
-        .default(60)
-        .transform((val, ctx) => checkIfIsNumber(val, ctx, 'LINKEDIN_POST_INTERVAL_MIN')),
-    LINKEDIN_POST_INTERVAL_MAX: z.union([z.number(), z.string()])
-        .nullable()
-        .optional()
-        .default(120)
-        .transform((val, ctx) => checkIfIsNumber(val, ctx, 'LINKEDIN_POST_INTERVAL_MAX')),
-});
+export const configSchema = z
+    .object({
+        LINKEDIN_ACCESS_TOKEN: z.string(),
+        LINKEDIN_POST_INTERVAL_MIN: z
+            .union([z.number(), z.string(), z.null(), z.undefined()])
+            .transform((val, ctx) => {
+                if (val === null || val === undefined) {
+                    return DEFAULT_LINKEDIN_POST_INTERVAL_MIN;
+                }
+                return parseNumber(val, ctx, "LINKEDIN_POST_INTERVAL_MIN");
+            }),
+        LINKEDIN_POST_INTERVAL_MAX: z
+            .union([z.number(), z.string(), z.null(), z.undefined()])
+            .transform((val, ctx) => {
+                if (val === null || val === undefined) {
+                    return DEFAULT_LINKEDIN_POST_INTERVAL_MAX;
+                }
+                return parseNumber(val, ctx, "LINKEDIN_POST_INTERVAL_MAX");
+            }),
+        LINKEDIN_API_URL: z
+            .union([z.string(), z.null(), z.undefined()])
+            .transform((val) => val ?? DEFAULT_LINKEDIN_API_URL),
+    })
+    .superRefine((data, ctx) => {
+        if (data.LINKEDIN_POST_INTERVAL_MIN > data.LINKEDIN_POST_INTERVAL_MAX) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Min value cannot be greater than max value",
+                path: ["LINKEDIN_POST_INTERVAL_MIN"],
+            });
+        }
+    });
 
 export const validateConfig = (runtime: IAgentRuntime) => {
     const LINKEDIN_ACCESS_TOKEN = runtime.getSetting("LINKEDIN_ACCESS_TOKEN");
-    const LINKEDIN_POST_INTERVAL_MIN  = runtime.getSetting('LINKEDIN_POST_INTERVAL_MIN');
-    const LINKEDIN_POST_INTERVAL_MAX  = runtime.getSetting("LINKEDIN_POST_INTERVAL_MAX");
+    const LINKEDIN_POST_INTERVAL_MIN = runtime.getSetting(
+        "LINKEDIN_POST_INTERVAL_MIN"
+    );
+    const LINKEDIN_POST_INTERVAL_MAX = runtime.getSetting(
+        "LINKEDIN_POST_INTERVAL_MAX"
+    );
+    const LINKEDIN_API_URL = runtime.getSetting("LINKEDIN_API_URL");
 
     try {
         const envs = configSchema.parse({
             LINKEDIN_ACCESS_TOKEN,
             LINKEDIN_POST_INTERVAL_MIN,
             LINKEDIN_POST_INTERVAL_MAX,
+            LINKEDIN_API_URL,
         });
 
         return envs;
     } catch (error) {
-        if(error instanceof ZodError) {
-            throw new Error(`Invalid environment variables. Validating envs failed with error: ${
-                error.issues.map(issue => issue.path.join('.') + ': ' + issue.message).join(' , ')
-            }`);
+        if (error instanceof ZodError) {
+            throw new Error(
+                `Invalid environment variables. Validating envs failed with error: ${error.issues
+                    .map((issue) => issue.path.join(".") + ": " + issue.message)
+                    .join(" , ")}`
+            );
         } else {
-            throw new Error('Invalid environment variables.');
+            throw new Error("Invalid environment variables.");
         }
-
     }
-}
+};

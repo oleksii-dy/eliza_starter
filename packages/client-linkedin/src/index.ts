@@ -1,32 +1,30 @@
 import { Client, elizaLogger, IAgentRuntime } from "@elizaos/core";
 import { validateConfig } from "./helpers/validate-config";
 import axios from "axios";
-import { LinkedInUserInfoFetcher } from "./services/LinkedinUserInfoFetcher";
-import { PostsManager } from "./services/PostsManager";
-
-const LINKEDIN_API_URL = "https://api.linkedin.com";
+import { LinkedInUserInfoFetcher } from "./repositories/LinkedinUserInfoFetcher";
+import { LinkedInPostScheduler } from "./services/LinkedInPostScheduler";
 
 export const LinkedInClient: Client = {
     async start(runtime: IAgentRuntime) {
         const envs = validateConfig(runtime);
 
         const axiosInstance = axios.create({
-            baseURL: LINKEDIN_API_URL,
+            baseURL: envs.LINKEDIN_API_URL,
             headers: {
                 "Authorization": `Bearer ${envs.LINKEDIN_ACCESS_TOKEN}`,
             },
         });
 
-        const postManager = await PostsManager.create({
+        const linkedInPostScheduler = await LinkedInPostScheduler.createPostScheduler({
             axiosInstance,
             userInfoFetcher: new LinkedInUserInfoFetcher(axiosInstance),
-            runtime: this.runtime,
+            runtime,
             config: {
                 LINKEDIN_POST_INTERVAL_MIN: envs.LINKEDIN_POST_INTERVAL_MIN,
                 LINKEDIN_POST_INTERVAL_MAX: envs.LINKEDIN_POST_INTERVAL_MAX,
             }
         });
-        postManager.createPostPublicationLoop();
+        linkedInPostScheduler.createPostPublicationLoop();
 
 
         return this;
