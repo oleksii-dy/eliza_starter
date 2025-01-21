@@ -56,9 +56,6 @@ pnpm run test
 1. Execute other messages like delegate, undelegate.
 2. Interacting with minitia.
 
-## Contributing
-
-Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
 
 ## License
 
