@@ -7,8 +7,8 @@ services:
         tty: true
         volumes:
             - /var/run/tappd.sock:/var/run/tappd.sock
-            - eliza:/app/packages/client-twitter/src/tweetcache
-            - eliza:/app/db.sqlite
+            - eliza_data:/app/packages/client-twitter/src/tweetcache
+            - eliza_data:/app/db.sqlite
         environment:
             - OPENAI_API_KEY=
             - REDPILL_API_KEY=
@@ -34,9 +34,9 @@ services:
             - WALLET_SECRET_SALT=secret_salt
             # Refer to: https://github.com/elizaOS/eliza/blob/develop/.env.example for all available environment variables
         ports:
-            - "3000:3000"
-            - "5173:5173"
+          #  - "3000:3000"
+           # - "5173:5173"
         restart: always
 
 volumes:
-    eliza:
+    eliza_data:
