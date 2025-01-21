@@ -23,7 +23,7 @@
         "@elizaos/plugin-node": "workspace:*",
         "ask-sdk-core": "^2.14.0",
         "ask-sdk-model": "^1.86.0",
-        "axios": "^1.7.9"
+        "axios": "1.7.9"
     },
     "devDependencies": {
         "tsup": "8.3.5",

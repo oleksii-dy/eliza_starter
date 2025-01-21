@@ -109,9 +109,8 @@ import { echoChambersPlugin } from "@elizaos/plugin-echochambers";
 import { dexScreenerPlugin } from "@elizaos/plugin-dexscreener";
 import { pythDataPlugin } from "@elizaos/plugin-pyth-data";
 
-import { openaiPlugin } from '@elizaos/plugin-openai';
-import { devinPlugin } from '@elizaos/plugin-devin';
-
+import { openaiPlugin } from "@elizaos/plugin-openai";
+import { devinPlugin } from "@elizaos/plugin-devin";
 
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
 import Database from "better-sqlite3";
@@ -390,12 +389,14 @@ function commaSeparatedStringToArray(commaSeparated: string): string[] {
     return commaSeparated?.split(",").map((value) => value.trim());
 }
 
-async function readCharactersFromStorage(characterPaths: string[]): Promise<string[]> {
+async function readCharactersFromStorage(
+    characterPaths: string[]
+): Promise<string[]> {
     try {
         const uploadDir = path.join(process.cwd(), "data", "characters");
         await fs.promises.mkdir(uploadDir, { recursive: true });
         const fileNames = await fs.promises.readdir(uploadDir);
-        fileNames.forEach(fileName => {
+        fileNames.forEach((fileName) => {
             characterPaths.push(path.join(uploadDir, fileName));
         });
     } catch (err) {
@@ -403,15 +404,14 @@ async function readCharactersFromStorage(characterPaths: string[]): Promise<stri
     }
 
     return characterPaths;
-};
+}
 
 export async function loadCharacters(
     charactersArg: string
 ): Promise<Character[]> {
-
     let characterPaths = commaSeparatedStringToArray(charactersArg);
 
-    if(process.env.USE_CHARACTER_STORAGE === "true") {
+    if (process.env.USE_CHARACTER_STORAGE === "true") {
         characterPaths = await readCharactersFromStorage(characterPaths);
     }
 
@@ -738,9 +738,9 @@ export async function initializeClients(
         }
     }
 
-    if(clientTypes.includes(Clients.ALEXA)) {
+    if (clientTypes.includes(Clients.ALEXA)) {
         const alexaClient = await AlexaClientInterface.start(runtime);
-        if(alexaClient) {
+        if (alexaClient) {
             clients.alexa = alexaClient;
         }
     }
@@ -1097,9 +1097,7 @@ export async function createAgent(
             getSecret(character, "ENABLE_OPEN_AI_COMMUNITY_PLUGIN")
                 ? openaiPlugin
                 : null,
-            getSecret(character, "DEVIN_API_TOKEN")
-                ? devinPlugin
-                : null,
+            getSecret(character, "DEVIN_API_TOKEN") ? devinPlugin : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
@@ -1279,7 +1277,7 @@ const startAgents = async () => {
 
     const notOnchainJson = !onchainJson || onchainJson == "null";
 
-  if ((notOnchainJson && charactersArg) || hasValidRemoteUrls()) {
+    if ((notOnchainJson && charactersArg) || hasValidRemoteUrls()) {
         characters = await loadCharacters(charactersArg);
     }
 

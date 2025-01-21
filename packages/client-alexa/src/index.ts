@@ -1,5 +1,5 @@
 import { Client, IAgentRuntime, elizaLogger } from "@elizaos/core";
-import { AlexaClient } from "./alexa-client.ts";
+import { AlexaClient } from "./alexa-client";
 
 export const AlexaClientInterface: Client = {
     start: async (runtime: IAgentRuntime) => {

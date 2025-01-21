@@ -38,7 +38,7 @@ graph TD
 -   **Discord** (`@elizaos/client-discord`) - Full Discord bot integration
 -   **Twitter** (`@elizaos/client-twitter`) - Twitter bot and interaction handling
 -   **Telegram** (`@elizaos/client-telegram`) - Telegram bot integration
--   **Direct** (`@elizaos/client-direct`) - Direct API interface for custom integrations
+-   **Direct** (`@elizaos/client-direct`) - Direct API for custom integrations
 -   **Auto** (`@elizaos/client-auto`) - Automated trading and interaction client
 -   **Alexa skill** (`@elizaos/client-alexa`) - Alexa skill API integration
 

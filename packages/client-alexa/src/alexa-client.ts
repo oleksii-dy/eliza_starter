@@ -50,13 +50,10 @@ export class AlexaClient {
             "alexa::proactive_events"
         );
 
-        this.sendProactiveEvent(access_token, "Hello from Eliza!");
+        await this.sendProactiveEvent(access_token);
     }
 
-    async sendProactiveEvent(
-        access_token: string,
-        message?: string
-    ): Promise<void> {
+    async sendProactiveEvent(access_token: string): Promise<void> {
         const event = {
             timestamp: new Date().toISOString(),
             referenceId: v4(),
@@ -70,9 +67,9 @@ export class AlexaClient {
                     },
                     messageGroup: {
                         creator: {
-                            name: "Andy",
+                            name: "Eliza",
                         },
-                        count: 5,
+                        count: 1,
                     },
                 },
             },
@@ -99,7 +96,19 @@ export class AlexaClient {
                     },
                 }
             );
-            elizaLogger.log("✅ Proactive event sent successfully.");
+            switch (response.status) {
+                case 202:
+                    elizaLogger.log("✅ Proactive event sent successfully.");
+                    break;
+                case 400:
+                    elizaLogger.error(
+                        `${response.data.code} - ${response.data.message}}`
+                    );
+                    break;
+                case 401:
+                    elizaLogger.error("Unauthorized");
+                    break;
+            }
         } catch (error) {
             elizaLogger.error("Error", error);
         }
