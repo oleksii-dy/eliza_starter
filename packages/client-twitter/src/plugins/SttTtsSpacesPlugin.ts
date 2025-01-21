@@ -161,7 +161,10 @@ export class SttTtsPlugin implements Plugin {
 
         if (!this.isSpeaking) {
             this.userSpeakingTimer = setTimeout(() => {
-                console.log("processing voice");
+                elizaLogger.log(
+                    "[SttTtsPlugin] start processing audio for user =>",
+                    data.userId
+                );
                 this.userSpeakingTimer = null;
                 this.processAudio(data.userId).catch((err) =>
                     elizaLogger.error(
@@ -197,7 +200,7 @@ export class SttTtsPlugin implements Plugin {
                 if (this.ttsAbortController) {
                     this.ttsAbortController.abort();
                     this.isSpeaking = false;
-                    console.log("[SttTtsPlugin] TTS playback interrupted");
+                    elizaLogger.log("[SttTtsPlugin] TTS playback interrupted");
                 }
             }
         }
@@ -263,7 +266,10 @@ export class SttTtsPlugin implements Plugin {
         }
         this.isProcessingAudio = true;
         try {
-            console.log("strat processing transcription.....");
+            elizaLogger.log(
+                "[SttTtsPlugin] Starting audio processing for user:",
+                userId
+            );
             const chunks = this.pcmBuffers.get(userId) || [];
             this.pcmBuffers.clear();
 
@@ -294,7 +300,9 @@ export class SttTtsPlugin implements Plugin {
                 wavBuffer
             );
 
-            console.log("transcription text:", sttText);
+            elizaLogger.log(
+                `[SttTtsPlugin] Transcription result: "${sttText}"`
+            );
 
             if (!sttText || !sttText.trim()) {
                 elizaLogger.warn(
@@ -316,9 +324,8 @@ export class SttTtsPlugin implements Plugin {
                 );
                 return;
             }
-            console.log("reply text:", replyText);
             elizaLogger.log(
-                `[SttTtsPlugin] GPT => user=${userId}, reply="${replyText}"`
+                `[SttTtsPlugin] user=${userId}, reply="${replyText}"`
             );
             this.isProcessingAudio = false;
             this.volumeBuffers.clear();
@@ -487,7 +494,9 @@ export class SttTtsPlugin implements Plugin {
         response.source = "discord";
 
         if (!response) {
-            console.error("No response from generateMessageResponse");
+            elizaLogger.error(
+                "[SttTtsPlugin] No response from generateMessageResponse"
+            );
             return;
         }
 
@@ -502,7 +511,6 @@ export class SttTtsPlugin implements Plugin {
     }
 
     private async _shouldIgnore(message: Memory): Promise<boolean> {
-        // console.log("message: ", message);
         elizaLogger.debug("message.content: ", message.content);
         // if the message is 3 characters or less, ignore it
         if ((message.content as Content).text.length < 3) {
@@ -588,7 +596,7 @@ export class SttTtsPlugin implements Plugin {
         } else if (response === "STOP") {
             return false;
         } else {
-            console.error(
+            elizaLogger.error(
                 "Invalid response from response generateText:",
                 response
             );
