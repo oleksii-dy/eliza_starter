@@ -1,10 +1,10 @@
-import { Character, Clients, ModelProviderName } from "./types.ts";
+import { type Character, ModelProviderName } from "./types.ts";
 
 export const defaultCharacter: Character = {
     name: "Eliza",
     username: "eliza",
     plugins: [],
-    clients: [Clients.DEVA],
+    clients: [],
     modelProvider: ModelProviderName.OPENAI,
     settings: {
         secrets: {},
