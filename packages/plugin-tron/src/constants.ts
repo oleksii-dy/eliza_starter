@@ -1,8 +1,32 @@
-export const WRAPPED_TRX_ADDRESS = "TNUC9Qb1rRpS5CbWLmNMxXBjyFoydXjWFR";
-export const SUNSWAPV2_ROUTER = "TXF1xDbVGdxFGbovmmmXvBGu8ZiE3Lq4mR";
-export const SUNSWAPV2_FACTORY = "TKWJdrQkqHisa1X8HUdHEfREvTzw4pMAaY";
+import { IAgentRuntime } from "@elizaos/core";
 
-export const SWAP_FEE_LIMIT = 100_000_000;
-export const WRAP_FEE_LIMIT = 1_000_000_000;
+// Transaction fee limits - these are safe to expose as they are network constants
+export const SWAP_FEE_LIMIT = 100_000_000; // 100 TRX
+export const WRAP_FEE_LIMIT = 1_000_000_000; // 1000 TRX
 
-export const SYMBIOSIS_API = "https://api.symbiosis.finance/crosschain/v1/swap";
+// Contract addresses and API endpoints must be configured via environment
+export interface TronAddresses {
+    WRAPPED_TRX_ADDRESS: string;
+    SUNSWAPV2_ROUTER: string;
+    SUNSWAPV2_FACTORY: string;
+}
+
+export interface TronEndpoints {
+    SYMBIOSIS_API: string;
+}
+
+export const getContractAddresses = async (runtime: IAgentRuntime): Promise<TronAddresses> => {
+    const config = await runtime.getValidatedConfig();
+    return {
+        WRAPPED_TRX_ADDRESS: config.TRON_WRAPPED_ADDRESS,
+        SUNSWAPV2_ROUTER: config.TRON_SUNSWAP_ROUTER,
+        SUNSWAPV2_FACTORY: config.TRON_SUNSWAP_FACTORY,
+    };
+};
+
+export const getApiEndpoints = async (runtime: IAgentRuntime): Promise<TronEndpoints> => {
+    const config = await runtime.getValidatedConfig();
+    return {
+        SYMBIOSIS_API: config.TRON_SYMBIOSIS_API,
+    };
+};
