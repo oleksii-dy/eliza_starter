@@ -1,15 +1,29 @@
 // src/plugins/SttTtsPlugin.ts
 
 import { spawn } from "child_process";
-import { type ITranscriptionService, elizaLogger } from "@elizaos/core";
+import {
+    type ITranscriptionService,
+    elizaLogger,
+    stringToUuid,
+    composeContext,
+    messageCompletionFooter,
+    getEmbeddingZeroVector,
+    generateMessageResponse,
+    ModelClass,
+} from "@elizaos/core";
 import type {
     Space,
     JanusClient,
     AudioDataWithUser,
 } from "agent-twitter-client";
-import type { Plugin } from "@elizaos/core";
+import type { Content, IAgentRuntime, Memory, Plugin } from "@elizaos/core";
+import { ClientBase } from "../base";
+import { UUID } from "@elizaos/core";
 
 interface PluginConfig {
+    runtime: IAgentRuntime;
+    client: ClientBase;
+    spaceId: string;
     openAiApiKey?: string; // for STT & ChatGPT
     elevenLabsApiKey?: string; // for TTS
     sttLanguage?: string; // e.g. "en" for Whisper
@@ -37,6 +51,9 @@ const SPEAKING_THRESHOLD = 0.05;
 export class SttTtsPlugin implements Plugin {
     name = "SttTtsPlugin";
     description = "Speech-to-text (OpenAI) + conversation + TTS (ElevenLabs)";
+    private runtime: IAgentRuntime;
+    private client: ClientBase;
+    private spaceId: string;
 
     private space?: Space;
     private janus?: JanusClient;
@@ -89,6 +106,9 @@ export class SttTtsPlugin implements Plugin {
             | undefined;
 
         const config = params.pluginConfig as PluginConfig;
+        this.runtime = config?.runtime;
+        this.client = config?.client;
+        this.spaceId = config?.spaceId;
         this.openAiApiKey = config?.openAiApiKey;
         this.elevenLabsApiKey = config?.elevenLabsApiKey;
         this.transcriptionService = config.transcriptionService;
@@ -238,7 +258,7 @@ export class SttTtsPlugin implements Plugin {
     /**
      * On speaker silence => flush STT => GPT => TTS => push to Janus
      */
-    private async processAudio(userId: string): Promise<void> {
+    private async processAudio(userId: UUID): Promise<void> {
         if (this.isProcessingAudio) {
             return;
         }
@@ -289,7 +309,7 @@ export class SttTtsPlugin implements Plugin {
             );
 
             // GPT answer
-            const replyText = await this.askChatGPT(sttText);
+            const replyText = await this.askChatGPT(sttText, userId);
             console.log("reply text:", replyText);
             elizaLogger.log(
                 `[SttTtsPlugin] GPT => user=${userId}, reply="${replyText}"`
@@ -361,41 +381,127 @@ export class SttTtsPlugin implements Plugin {
     /**
      * Simple ChatGPT call
      */
-    private async askChatGPT(userText: string): Promise<string> {
+    private async askChatGPT(userText: string, userId: UUID): Promise<string> {
         if (!this.openAiApiKey) {
             throw new Error("[SttTtsPlugin] No OpenAI API key for ChatGPT");
         }
-        const url = "https://api.openai.com/v1/chat/completions";
-        const messages = [
-            { role: "system", content: this.systemPrompt },
-            ...this.chatContext,
-            { role: "user", content: userText },
-        ];
 
-        const resp = await fetch(url, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${this.openAiApiKey}`,
-                "Content-Type": "application/json",
+        const twitterVoiceHandlerTemplate =
+            `# Task: Generate conversational voice dialog for {{agentName}}.
+            About {{agentName}}:
+            {{bio}}
+
+            # Attachments
+            {{attachments}}
+
+            # Capabilities
+            Note that {{agentName}} is capable of reading/seeing/hearing various forms of media, including images, videos, audio, plaintext and PDFs. Recent attachments have been included above under the "Attachments" section.
+
+            {{actions}}
+
+            {{messageDirections}}
+
+            {{recentMessages}}
+
+            # Instructions: Write the next message for {{agentName}}. Include an optional action if appropriate. {{actionNames}}
+            ` + messageCompletionFooter;
+
+        await this.runtime.ensureUserExists(
+            this.runtime.agentId,
+            this.client.profile.username,
+            this.runtime.character.name,
+            "twitter"
+        );
+
+        const roomId = stringToUuid("twitter_generate_room-" + this.spaceId);
+        let state = await this.runtime.composeState(
+            {
+                agentId: this.runtime.agentId,
+                content: { text: userText, source: "twitter" },
+                userId,
+                roomId,
             },
-            body: JSON.stringify({
-                model: this.gptModel,
-                messages,
-            }),
+            {
+                twitterUserName: this.client.profile.username,
+                agentName: this.runtime.character.name,
+            }
+        );
+
+        const memory = {
+            id: stringToUuid(roomId + "-voice-message-" + Date.now()),
+            agentId: this.runtime.agentId,
+            content: {
+                text: userText,
+                source: "twitter",
+            },
+            userId,
+            roomId,
+            embedding: getEmbeddingZeroVector(),
+            createdAt: Date.now(),
+        };
+
+        await this.runtime.messageManager.createMemory(memory);
+
+        state = await this.runtime.updateRecentMessageState(state);
+
+        const context = composeContext({
+            state,
+            template:
+                this.runtime.character.templates?.twitterVoiceHandlerTemplate ||
+                this.runtime.character.templates?.messageHandlerTemplate ||
+                twitterVoiceHandlerTemplate,
         });
 
-        if (!resp.ok) {
-            const errText = await resp.text();
-            throw new Error(
-                `[SttTtsPlugin] ChatGPT error => ${resp.status} ${errText}`
-            );
+        const responseContent = await this._generateResponse(memory, context);
+
+        const responseMemory: Memory = {
+            id: stringToUuid(memory.id + "-voice-response-" + Date.now()),
+            agentId: this.runtime.agentId,
+            userId: this.runtime.agentId,
+            content: {
+                ...responseContent,
+                user: this.runtime.character.name,
+                inReplyTo: memory.id,
+            },
+            roomId,
+            embedding: getEmbeddingZeroVector(),
+        };
+
+        const reply = responseMemory.content.text?.trim();
+        if (reply) {
+            await this.runtime.messageManager.createMemory(responseMemory);
         }
 
-        const json = await resp.json();
-        const reply = json.choices?.[0]?.message?.content || "";
-        this.chatContext.push({ role: "user", content: userText });
-        this.chatContext.push({ role: "assistant", content: reply });
-        return reply.trim();
+        return reply;
+    }
+
+    private async _generateResponse(
+        message: Memory,
+        context: string
+    ): Promise<Content> {
+        const { userId, roomId } = message;
+
+        const response = await generateMessageResponse({
+            runtime: this.runtime,
+            context,
+            modelClass: ModelClass.SMALL,
+        });
+
+        response.source = "discord";
+
+        if (!response) {
+            console.error("No response from generateMessageResponse");
+            return;
+        }
+
+        await this.runtime.databaseAdapter.log({
+            body: { message, context, response },
+            userId: userId,
+            roomId,
+            type: "response",
+        });
+
+        return response;
     }
 
     /**

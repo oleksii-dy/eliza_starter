@@ -740,6 +740,7 @@ export type Character = {
         twitterPostTemplate?: TemplateType;
         twitterMessageHandlerTemplate?: TemplateType;
         twitterShouldRespondTemplate?: TemplateType;
+        twitterVoiceHandlerTemplate?: TemplateType;
         instagramPostTemplate?: TemplateType;
         instagramMessageHandlerTemplate?: TemplateType;
         instagramShouldRespondTemplate?: TemplateType;
@@ -1622,4 +1623,3 @@ export interface ChunkRow {
     id: string;
     // Add other properties if needed
 }
-

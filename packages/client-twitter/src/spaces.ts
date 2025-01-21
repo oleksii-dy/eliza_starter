@@ -313,6 +313,8 @@ export class TwitterSpaceClient {
             const elevenLabsKey =
                 this.runtime.getSetting("ELEVENLABS_XI_API_KEY") || "";
 
+            const broadcastInfo = await this.currentSpace.initialize(config);
+            this.spaceId = broadcastInfo.room_id;
             // Plugins
             if (this.decisionOptions.enableRecording) {
                 elizaLogger.log("[Space] Using RecordToDiskPlugin");
@@ -324,6 +326,9 @@ export class TwitterSpaceClient {
                 const sttTts = new SttTtsPlugin();
                 this.sttTtsPlugin = sttTts;
                 this.currentSpace.use(sttTts, {
+                    runtime: this.runtime,
+                    client: this.client,
+                    spaceId: this.spaceId,
                     openAiApiKey: openAiKey,
                     elevenLabsApiKey: elevenLabsKey,
                     voiceId: this.decisionOptions.voiceId,
@@ -347,8 +352,6 @@ export class TwitterSpaceClient {
                 );
             }
 
-            const broadcastInfo = await this.currentSpace.initialize(config);
-            this.spaceId = broadcastInfo.room_id;
             this.isSpaceRunning = true;
             await this.scraper.sendTweet(
                 broadcastInfo.share_url.replace("broadcasts", "spaces")
