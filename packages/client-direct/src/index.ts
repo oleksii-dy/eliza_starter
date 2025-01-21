@@ -248,20 +248,24 @@ export class DirectClient {
                 await runtime.messageManager.createMemory(memory);
                 console.log("createMemory:1 ", Date.now());
                 console.log("call AI: ", Date.now());
+                console.log("call AI -> runtime.composeState: ", Date.now());
                 let state = await runtime.composeState(userMessage, {
                     agentName: runtime.character.name,
                 });
-
+                console.log("call AI -> runtime.composeState: ", Date.now());
+                console.log("call AI -> composeContext", Date.now());
                 const context = composeContext({
                     state,
                     template: messageHandlerTemplate,
                 });
-
+                console.log("call AI -> composeContext", Date.now());
+                console.log("call AI -> generateMessageResponse", Date.now());
                 const response = await generateMessageResponse({
                     runtime: runtime,
                     context,
                     modelClass: ModelClass.LARGE,
                 });
+                console.log("call AI -> generateMessageResponse", Date.now());
                 console.log("call AI: ", Date.now());
                 if (!response) {
                     res.status(500).send(
