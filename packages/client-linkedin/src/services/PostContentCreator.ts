@@ -36,6 +36,22 @@ export class PostContentCreator {
             modelClass: ModelClass.SMALL,
         });
 
-        return removeMd(text);
+        return this.removeMd(this.escapeSpecialCharacters(text));
+    }
+
+    removeMd(content: string) {
+        return removeMd(content);
+    }
+
+    escapeSpecialCharacters(content: string): string {
+        const escapedCharacters = content
+            .replace(/\(/g, "\\(")
+            .replace(/\)/g, "\\)")
+            .replace(/\[/g, "\\[")
+            .replace(/\]/g, "\\]")
+            .replace(/\{/g, "\\{")
+            .replace(/\}/g, "\\}");
+
+        return escapedCharacters;
     }
 }
