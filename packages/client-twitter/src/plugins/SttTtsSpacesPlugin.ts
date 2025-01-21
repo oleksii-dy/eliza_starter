@@ -51,6 +51,7 @@ interface PluginConfig {
 
 const VOLUME_WINDOW_SIZE = 100;
 const SPEAKING_THRESHOLD = 0.05;
+const SILENCE_DETECTION_THRESHOLD_MS = 1000; // 1-second silence threshold
 
 /**
  * MVP plugin for speech-to-text (OpenAI) + conversation + TTS (ElevenLabs)
@@ -180,7 +181,7 @@ export class SttTtsPlugin implements Plugin {
                         err
                     )
                 );
-            }, 1000); // 1-second silence threshold
+            }, SILENCE_DETECTION_THRESHOLD_MS);
         } else {
             // check interruption
             let volumeBuffer = this.volumeBuffers.get(data.userId);
