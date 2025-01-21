@@ -17,6 +17,7 @@ import { agentKitPlugin } from "@elizaos/plugin-agentkit";
 import { PrimusAdapter } from "@elizaos/plugin-primus";
 import { lightningPlugin } from "@elizaos/plugin-lightning";
 import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
+import { holdstationPlugin } from "@elizaos/plugin-holdstation";
 
 import {
     AgentRuntime,
@@ -390,10 +391,31 @@ function commaSeparatedStringToArray(commaSeparated: string): string[] {
     return commaSeparated?.split(",").map((value) => value.trim());
 }
 
+async function readCharactersFromStorage(characterPaths: string[]): Promise<string[]> {
+    try {
+        const uploadDir = path.join(process.cwd(), "data", "characters");
+        await fs.promises.mkdir(uploadDir, { recursive: true });
+        const fileNames = await fs.promises.readdir(uploadDir);
+        fileNames.forEach(fileName => {
+            characterPaths.push(path.join(uploadDir, fileName));
+        });
+    } catch (err) {
+        elizaLogger.error(`Error reading directory: ${err.message}`);
+    }
+
+    return characterPaths;
+};
+
 export async function loadCharacters(
     charactersArg: string
 ): Promise<Character[]> {
-    const characterPaths = commaSeparatedStringToArray(charactersArg);
+
+    let characterPaths = commaSeparatedStringToArray(charactersArg);
+
+    if(process.env.USE_CHARACTER_STORAGE === "true") {
+        characterPaths = await readCharactersFromStorage(characterPaths);
+    }
+
     const loadedCharacters: Character[] = [];
 
     if (characterPaths?.length > 0) {
@@ -1067,11 +1089,14 @@ export async function createAgent(
                 ? lightningPlugin
                 : null,
             getSecret(character, "OPENAI_API_KEY") &&
-            getSecret(character, "ENABLE_OPEN_AI_COMMUNITY_PLUGIN")
+            parseBooleanFromText(getSecret(character, "ENABLE_OPEN_AI_COMMUNITY_PLUGIN"))
                 ? openaiPlugin
                 : null,
             getSecret(character, "DEVIN_API_TOKEN")
                 ? devinPlugin
+                : null,
+            getSecret(character, "HOLDSTATION_PRIVATE_KEY")
+                ? holdstationPlugin
                 : null,
         ].filter(Boolean),
         providers: [],
@@ -1250,7 +1275,9 @@ const startAgents = async () => {
         characters = await loadCharacterFromOnchain();
     }
 
-    if ((!onchainJson && charactersArg) || hasValidRemoteUrls()) {
+    const notOnchainJson = !onchainJson || onchainJson == "null";
+
+  if ((notOnchainJson && charactersArg) || hasValidRemoteUrls()) {
         characters = await loadCharacters(charactersArg);
     }
 
