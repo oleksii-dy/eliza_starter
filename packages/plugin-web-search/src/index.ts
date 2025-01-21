@@ -1,19 +1,24 @@
+import type { Plugin } from "@elizaos/core";
 import {
-    Action, elizaLogger, generateSerperSearch,
+    Action,
+    elizaLogger,
+    generateSerperSearch,
     HandlerCallback,
     IAgentRuntime,
     Memory,
-    Plugin,
-    SerperOrganicResult, State
+    SerperOrganicResult,
+    State,
 } from "@elizaos/core";
 import { encodingForModel, TiktokenModel } from "js-tiktoken";
+import { webSearch } from "./actions/webSearch";
+import { WebSearchService } from "./services/webSearchService";
 
 const DEFAULT_MAX_WEB_SEARCH_TOKENS = 4000;
 const DEFAULT_MODEL_ENCODING = "gpt-3.5-turbo";
 
 function getTotalTokensFromString(
     str: string,
-    encodingName: TiktokenModel = DEFAULT_MODEL_ENCODING
+    encodingName: TiktokenModel = DEFAULT_MODEL_ENCODING,
 ) {
     const encoding = encodingForModel(encodingName);
     return encoding.encode(str).length;
@@ -21,7 +26,7 @@ function getTotalTokensFromString(
 
 function MaxTokens(
     data: string,
-    maxTokens: number = DEFAULT_MAX_WEB_SEARCH_TOKENS
+    maxTokens: number = DEFAULT_MAX_WEB_SEARCH_TOKENS,
 ): string {
     if (getTotalTokensFromString(data) >= maxTokens) {
         return data.slice(0, maxTokens);
@@ -54,7 +59,7 @@ const webSearch: Action = {
         message: Memory,
         state: State,
         options: any,
-        callback: HandlerCallback
+        callback: HandlerCallback,
     ) => {
         elizaLogger.log("Composing state for message:", message);
         state = (await runtime.composeState(message)) as State;
@@ -69,28 +74,31 @@ const webSearch: Action = {
         //     webSearchPrompt,
         //     runtime
         // );
-        const cleansePrompt =  webSearchPrompt.replace(/@\S+/g, '');
+        const cleansePrompt = webSearchPrompt.replace(/@\S+/g, "");
         const serperResponse = await generateSerperSearch(
             cleansePrompt,
-            runtime
+            runtime,
         );
 
-        if(serperResponse && serperResponse.organic.length){
+        if (serperResponse && serperResponse.organic.length) {
             const responseList = serperResponse?.answerBox?.snippet
-            ? `${serperResponse.answerBox.snippet}${
-                  Array.isArray(serperResponse.organic) &&
-                  serperResponse.organic.length > 0
-                      ? `\n\nFor more details, you can check out these resources:\n${serperResponse.organic
-                            .map(
-                                (result: SerperOrganicResult, index: number) =>
-                                    `${index + 1}. [${result.title}](${result.link})`
-                            )
-                            .join("\n")}`
-                      : ""
-              }`
-            : (
-                serperResponse.organic.length > 0 ?  serperResponse.organic[0].snippet : ""
-            );
+                ? `${serperResponse.answerBox.snippet}${
+                      Array.isArray(serperResponse.organic) &&
+                      serperResponse.organic.length > 0
+                          ? `\n\nFor more details, you can check out these resources:\n${serperResponse.organic
+                                .map(
+                                    (
+                                        result: SerperOrganicResult,
+                                        index: number,
+                                    ) =>
+                                        `${index + 1}. [${result.title}](${result.link})`,
+                                )
+                                .join("\n")}`
+                          : ""
+                  }`
+                : serperResponse.organic.length > 0
+                  ? serperResponse.organic[0].snippet
+                  : "";
 
             callback({
                 text: MaxTokens(responseList, DEFAULT_MAX_WEB_SEARCH_TOKENS),
@@ -115,7 +123,7 @@ const webSearch: Action = {
         //         text: MaxTokens(responseList, DEFAULT_MAX_WEB_SEARCH_TOKENS),
         //     });
         // }
-         else {
+        else {
             elizaLogger.error("search failed or returned no data.");
         }
     },
@@ -226,10 +234,12 @@ const webSearch: Action = {
 
 export const webSearchPlugin: Plugin = {
     name: "webSearch",
-    description: "Search web",
+    description: "Search the web and get news",
     actions: [webSearch],
     evaluators: [],
     providers: [],
+    services: [new WebSearchService()],
+    clients: [],
 };
 
 export default webSearchPlugin;

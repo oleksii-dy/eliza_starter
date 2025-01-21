@@ -1,10 +1,14 @@
 import {
-    Account,
-    Actor,
-    DatabaseAdapter,
-    GoalStatus,
-    Participant,
-    RAGKnowledgeItem,
+    type Memory,
+    type Goal,
+    type Relationship,
+    type Actor,
+    type GoalStatus,
+    type Account,
+    type UUID,
+    type Participant,
+    type Room,
+    type RAGKnowledgeItem,
     elizaLogger,
     type Goal,
     type Memory,
@@ -215,7 +219,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             const { data } = response;
 
             return data
-                .map((room) =>
+                .flatMap((room) =>
                     room.participants.map((participant) => {
                         const user = participant.account as unknown as Actor;
                         return {
@@ -225,8 +229,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                             username: user?.username,
                         };
                     })
-                )
-                .flat();
+                );
         } catch (error) {
             elizaLogger.error("error", error);
             throw error;
@@ -422,6 +425,9 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         }
 
         return null;
+    }
+
+        return data as Memory;
     }
 
     async getMemoriesByIds(

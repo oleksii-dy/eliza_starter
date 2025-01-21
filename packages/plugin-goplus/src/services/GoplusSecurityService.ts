@@ -1,5 +1,5 @@
 import {
-    IAgentRuntime,
+    type IAgentRuntime,
     ModelClass,
     Service,
     ServiceType,
@@ -7,7 +7,11 @@ import {
     generateObjectDeprecated,
     generateText,
 } from "@elizaos/core";
-import { GoPlusManage, GoPlusParamType, GoPlusType } from "../lib/GoPlusManage";
+import {
+    GoPlusManage,
+    type GoPlusParamType,
+    GoPlusType,
+} from "../lib/GoPlusManage";
 import { requestPrompt, responsePrompt } from "../templates";
 
 export interface IGoplusSecurityService extends Service {
@@ -53,65 +57,65 @@ export class GoplusSecurityService
                 case GoPlusType.EVMTOKEN_SECURITY_CHECK:
                     checkResult = await goPlusManage.tokenSecurity(
                         obj.network,
-                        obj.token
+                        obj.token,
                     );
                     break;
                 case GoPlusType.SOLTOKEN_SECURITY_CHECK:
                     checkResult =
                         await goPlusManage.solanaTokenSecurityUsingGET(
-                            obj.token
+                            obj.token,
                         );
                     break;
                 case GoPlusType.SUITOKEN_SECURITY_CHECK:
                     checkResult = await goPlusManage.suiTokenSecurityUsingGET(
-                        obj.token
+                        obj.token,
                     );
                     break;
                 case GoPlusType.RUGPULL_SECURITY_CHECK:
                     checkResult = await goPlusManage.rugpullDetection(
                         obj.network,
-                        obj.contract
+                        obj.contract,
                     );
                     break;
                 case GoPlusType.NFT_SECURITY_CHECK:
                     checkResult = await goPlusManage.nftSecurity(
                         obj.network,
-                        obj.token
+                        obj.token,
                     );
                     break;
                 case GoPlusType.ADRESS_SECURITY_CHECK:
                     checkResult = await goPlusManage.addressSecurity(
-                        obj.wallet
+                        obj.wallet,
                     );
                     break;
                 case GoPlusType.APPROVAL_SECURITY_CHECK:
                     checkResult = await goPlusManage.approvalSecurity(
                         obj.network,
-                        obj.contract
+                        obj.contract,
                     );
                     break;
                 case GoPlusType.ACCOUNT_ERC20_SECURITY_CHECK:
                     checkResult = await goPlusManage.erc20ApprovalSecurity(
                         obj.network,
-                        obj.wallet
+                        obj.wallet,
                     );
                     break;
                 case GoPlusType.ACCOUNT_ERC721_SECURITY_CHECK:
                     checkResult = await goPlusManage.erc721ApprovalSecurity(
                         obj.network,
-                        obj.wallet
+                        obj.wallet,
                     );
                     break;
                 case GoPlusType.ACCOUNT_ERC1155_SECURITY_CHECK:
                     checkResult = await goPlusManage.erc1155ApprovalSecurity(
                         obj.network,
-                        obj.wallet
+                        obj.wallet,
                     );
                     break;
                 case GoPlusType.SIGNATURE_SECURITY_CHECK:
                     checkResult = await goPlusManage.inputDecode(
                         obj.network,
-                        obj.data
+                        obj.data,
                     );
                     break;
                 case GoPlusType.URL_SECURITY_CHECK:
