@@ -312,8 +312,8 @@ export class SttTtsPlugin implements Plugin {
                 `[SttTtsPlugin] STT => user=${userId}, text="${sttText}"`
             );
 
-            // GPT answer
-            const replyText = await this.askChatGPT(sttText, userId);
+            // Get response
+            const replyText = await this.handleUserMessage(sttText, userId);
             console.log("reply text:", replyText);
             elizaLogger.log(
                 `[SttTtsPlugin] GPT => user=${userId}, reply="${replyText}"`
@@ -383,9 +383,12 @@ export class SttTtsPlugin implements Plugin {
     }
 
     /**
-     * Simple ChatGPT call
+     * Handle User Message
      */
-    private async askChatGPT(userText: string, userId: UUID): Promise<string> {
+    private async handleUserMessage(
+        userText: string,
+        userId: UUID
+    ): Promise<string> {
         if (!this.openAiApiKey) {
             throw new Error("[SttTtsPlugin] No OpenAI API key for ChatGPT");
         }
