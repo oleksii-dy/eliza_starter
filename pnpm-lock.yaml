@@ -401,8 +401,8 @@ importers:
         specifier: 11.6.0
         version: 11.6.0
       sqlite-vec:
-        specifier: 0.1.6
-        version: 0.1.6
+        specifier: 0.1.7-alpha.2
+        version: 0.1.7-alpha.2
       whatwg-url:
         specifier: 7.1.0
         version: 7.1.0
@@ -814,30 +814,6 @@ importers:
         specifier: ^0.34.6
         version: 0.34.6(@vitest/ui@0.34.7)(jsdom@25.0.1(bufferutil@4.0.9)(canvas@2.11.2(encoding@0.1.13))(utf-8-validate@5.0.10))(playwright@1.48.2)(terser@5.37.0)
 
-  packages/plugin-autonome:
-    dependencies:
-      '@coral-xyz/anchor':
-        specifier: 0.30.1
-        version: 0.30.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      '@elizaos/core':
-        specifier: workspace:*
-        version: link:../core
-      '@elizaos/plugin-tee':
-        specifier: workspace:*
-        version: link:../plugin-tee
-      '@elizaos/plugin-trustdb':
-        specifier: workspace:*
-        version: link:../plugin-trustdb
-      axios:
-        specifier: ^1.7.9
-        version: 1.7.9
-      form-data:
-        specifier: 4.0.1
-        version: 4.0.1
-      whatwg-url:
-        specifier: 7.1.0
-        version: 7.1.0
-
   packages/plugin-bootstrap:
     dependencies:
       '@elizaos/core':
@@ -849,34 +825,6 @@ importers:
       whatwg-url:
         specifier: 7.1.0
         version: 7.1.0
-
-  packages/plugin-coingecko:
-    dependencies:
-      '@elizaos/core':
-        specifier: workspace:*
-        version: link:../core
-      axios:
-        specifier: ^1.6.7
-        version: 1.7.9
-      tsup:
-        specifier: ^8.3.5
-        version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
-
-  packages/plugin-coinmarketcap:
-    dependencies:
-      '@elizaos/core':
-        specifier: workspace:*
-        version: link:../core
-      axios:
-        specifier: ^1.6.7
-        version: 1.7.9
-      zod:
-        specifier: ^3.22.4
-        version: 3.23.8
-    devDependencies:
-      tsup:
-        specifier: ^8.3.5
-        version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
 
   packages/plugin-goat:
     dependencies:
@@ -13897,28 +13845,33 @@ packages:
   sprintf-js@1.1.3:
     resolution: {integrity: sha512-Oo+0REFV59/rz3gfJNKQiBlwfHaSESl1pcGyABQsnnIfWOFt6JNj5gCog2U6MLZ//IGYD+nA8nI+mTShREReaA==}
 
-  sqlite-vec-darwin-arm64@0.1.6:
-    resolution: {integrity: sha512-5duw/xhM3xE6BCQd//eAkyHgBp9FIwK6veldRhPG96dT6Zpjov3bG02RuE7JAQj0SVJYRW8bJwZ4LxqW0+Q7Dw==}
+  sqlite-vec-darwin-arm64@0.1.7-alpha.2:
+    resolution: {integrity: sha512-raIATOqFYkeCHhb/t3r7W7Cf2lVYdf4J3ogJ6GFc8PQEgHCPEsi+bYnm2JT84MzLfTlSTIdxr4/NKv+zF7oLPw==}
     cpu: [arm64]
     os: [darwin]
 
-  sqlite-vec-darwin-x64@0.1.6:
-    resolution: {integrity: sha512-MFkKjNfJ5pamFHhyTsrqdxALrjuvpSEZdu6Q/0vMxFa6sr5YlfabeT5xGqEbuH0iobsT1Hca5EZxLhLy0jHYkw==}
+  sqlite-vec-darwin-x64@0.1.7-alpha.2:
+    resolution: {integrity: sha512-jeZEELsQjjRsVojsvU5iKxOvkaVuE+JYC8Y4Ma8U45aAERrDYmqZoHvgSG7cg1PXL3bMlumFTAmHynf1y4pOzA==}
     cpu: [x64]
     os: [darwin]
 
-  sqlite-vec-linux-x64@0.1.6:
-    resolution: {integrity: sha512-411tWPswywIzdkp+zsAUav4A03f0FjnNfpZFlOw8fBebFR74RSFkwM8Xryf18gLHiYAXUBI4mjY9+/xjwBjKpg==}
+  sqlite-vec-linux-arm64@0.1.7-alpha.2:
+    resolution: {integrity: sha512-6Spj4Nfi7tG13jsUG+W7jnT0bCTWbyPImu2M8nWp20fNrd1SZ4g3CSlDAK8GBdavX7wRlbBHCZ+BDa++rbDewA==}
+    cpu: [arm64]
+    os: [linux]
+
+  sqlite-vec-linux-x64@0.1.7-alpha.2:
+    resolution: {integrity: sha512-IcgrbHaDccTVhXDf8Orwdc2+hgDLAFORl6OBUhcvlmwswwBP1hqBTSEhovClG4NItwTOBNgpwOoQ7Qp3VDPWLg==}
     cpu: [x64]
     os: [linux]
 
-  sqlite-vec-windows-x64@0.1.6:
-    resolution: {integrity: sha512-Dy9/KlKJDrjuQ/RRkBqGkMZuSh5bTJDMMOFZft9VJZaXzpYxb5alpgdvD4bbKegpDdfPi2BT4+PBivsNJSlMoQ==}
+  sqlite-vec-windows-x64@0.1.7-alpha.2:
+    resolution: {integrity: sha512-TRP6hTjAcwvQ6xpCZvjP00pdlda8J38ArFy1lMYhtQWXiIBmWnhMaMbq4kaeCYwvTTddfidatRS+TJrwIKB/oQ==}
     cpu: [x64]
     os: [win32]
 
-  sqlite-vec@0.1.6:
-    resolution: {integrity: sha512-hQZU700TU2vWPXZYDULODjKXeMio6rKX7UpPN7Tq9qjPW671IEgURGrcC5LDBMl0q9rBvAuzmcmJmImMqVibYQ==}
+  sqlite-vec@0.1.7-alpha.2:
+    resolution: {integrity: sha512-rNgRCv+4V4Ed3yc33Qr+nNmjhtrMnnHzXfLVPeGb28Dx5mmDL3Ngw/Wk8vhCGjj76+oC6gnkmMG8y73BZWGBwQ==}
 
   srcset@4.0.0:
     resolution: {integrity: sha512-wvLeHgcVHKO8Sc/H/5lkGreJQVeYMm9rlmt8PuR1xE31rIuXhuzznUUqAt8MqLhB3MqJdFzlNAfpcWnxiFUcPw==}
@@ -33245,24 +33198,28 @@ snapshots:
 
   sprintf-js@1.1.3: {}
 
-  sqlite-vec-darwin-arm64@0.1.6:
+  sqlite-vec-darwin-arm64@0.1.7-alpha.2:
     optional: true
 
-  sqlite-vec-darwin-x64@0.1.6:
+  sqlite-vec-darwin-x64@0.1.7-alpha.2:
     optional: true
 
-  sqlite-vec-linux-x64@0.1.6:
+  sqlite-vec-linux-arm64@0.1.7-alpha.2:
     optional: true
 
-  sqlite-vec-windows-x64@0.1.6:
+  sqlite-vec-linux-x64@0.1.7-alpha.2:
     optional: true
 
-  sqlite-vec@0.1.6:
+  sqlite-vec-windows-x64@0.1.7-alpha.2:
+    optional: true
+
+  sqlite-vec@0.1.7-alpha.2:
     optionalDependencies:
-      sqlite-vec-darwin-arm64: 0.1.6
-      sqlite-vec-darwin-x64: 0.1.6
-      sqlite-vec-linux-x64: 0.1.6
-      sqlite-vec-windows-x64: 0.1.6
+      sqlite-vec-darwin-arm64: 0.1.7-alpha.2
+      sqlite-vec-darwin-x64: 0.1.7-alpha.2
+      sqlite-vec-linux-arm64: 0.1.7-alpha.2
+      sqlite-vec-linux-x64: 0.1.7-alpha.2
+      sqlite-vec-windows-x64: 0.1.7-alpha.2
 
   srcset@4.0.0: {}
 
