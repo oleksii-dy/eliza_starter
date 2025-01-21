@@ -34,6 +34,8 @@
         "@elizaos/plugin-abstract": "workspace:*",
         "@elizaos/plugin-aptos": "workspace:*",
         "@elizaos/plugin-bootstrap": "workspace:*",
+        "@elizaos/plugin-pear": "workspace:*",
+        "@elizaos/plugin-news": "workspace:*",
         "@elizaos/plugin-intiface": "workspace:*",
         "@elizaos/plugin-coinbase": "workspace:*",
         "@elizaos/plugin-conflux": "workspace:*",

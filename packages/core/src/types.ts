@@ -813,6 +813,7 @@ export type Character = {
             teamAgentIds?: string[];
             teamLeaderId?: string;
             teamMemberInterestKeywords?: string[];
+            telegramBotToken?: string;
         };
         slack?: {
             shouldIgnoreBotMessages?: boolean;

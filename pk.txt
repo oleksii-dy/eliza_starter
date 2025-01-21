@@ -1,0 +1,305 @@
+Pear Protocol Is An Innovative Approach to On-Chain Pairs Trading
+Pear Protocol is an array of engineering solutions aimed to address the inherent inefficiencies and complexities when pair-trading cryptocurrencies. By enabling leveraged long and short positions within a single on-chain transaction, the protocol significantly improves the process of pair-trading execution, with a superior front-end for risk management.
+This is done by integrating a wide array of on-chain trading engines with a dedicated UI and UX, thus simplifying the process of opening simultaneous long and short positions in correlated assets. For example, initiating a long position in $BTC while shorting $ETH (with leverage) at the same time.
+By integrating with various trading engines (e.g., GMX, Vertex and SYMM), Pear Protocol becomes liquidity agnostic, ensuring that users always have access to the deepest liquidity possible. The platform's design emphasizes not only scalability but also flexibility - whereby users can manage margin, leverage and other parameters like net funding in a seamless manner.
+Reducing Risks, Increasing Usability
+The protocol is designed to revolutionise the way pair trading execution is done.
+These issues are particularly exacerbated when attempting to establish multiple pair trades, which can result in convoluted portfolio management and intricate profit-and-loss calculations. For example, reconciling a complex portfolio with varied long and short positions on a CEX demands laborious manual handling, a process that is prone to errors.
+Furthermore, the protocol aims to mitigate the custody and trust issues associated with centralized exchanges (CEXs). Pear Protocol's decentralized genesis and use of decentralized trading engines ensure that traders retain custody over their assets.
+More Than Just Trading
+Pear Protocol's technical blueprint offers use cases that span across various market dynamics, from short term narrative trading through to more sophisticated market-neutral positions. Professional and retail traders stand to benefit from an integrated monitoring and risk management system for individual pair trades.
+Moreover, Pear introduces an innovative tokenized trading system that enhances position utility. By representing trading positions as ERC-721 tokens, these positions become transferable and can be integrated as collateral within DeFi protocols, paving the way for a higher degree of composability in DeFi ecosystems.
+
+The key technical features of Pear Protocol include:
+
+Simplicity: Leveraged long and short positions conducted in a single, consolidated transaction.
+
+Flexibility: Seamless integration with an array of on-chain liquidity sources and DeFi platforms.
+
+Scalability: Cross-chain expansion to facilitate efficient and rapid trading in multiple ecosystems (coming soon).
+
+Optionality: Various trading engines that allow multiple types of trading for different pair-trading needs.
+
+Ease of use: User-friendly interface for straightforward operations, reducing manual handling with multiple position-managing and charting tools that alleviate trading difficulties
+
+Leveraging its first-mover advantage, Pear Protocol also commits to thought leadership and educational outreach, fostering community engagement and forging strategic alliances with key opinion leaders in the space.
+
+This multifaceted approach not only solidifies Pear Protocol's market position but also contributes to the broader adoption and advancement of decentralized finance trading solutions.
+
+⛓️What is Pairs Trading?
+
+What is Pairs-Trading?
+
+While pairs trading is common in traditional finance, it is currently highly inconvenient and not widely adopted across the cryptocurrency markets. Until now, there has been no platform that enables users to long one token and short another, with leverage, in a single transaction.
+
+Introduction
+
+Pair trading is often implemented in one of two ways. The statistical approach looks for two correlated assets that often move together. When the spread between the two assets (i.e., the difference in their prices) deviates from its historical mean, a trading opportunity arises. Traders can buy the underperforming asset while selling the outperforming asset, expecting the spread to mean revert over time.
+
+However, there is also another simpler way to perform pairs-trading, which is more narrative-based. When a trader believes that Asset A will outperform Asset B, then they can go long Asset A and short Asset B, thus netting the difference between the profit on the long leg and the loss on the short leg (if they are correct). Such narrative-based pairs trading is the primary use case of Pear Protocol.
+
+This also works in reverse, if a trader believes Asset B will fall, but doesn’t wish to be outright short in case the market goes up, then they can long Asset A and make a net profit as long as the gain on the short of Asset B is greater than the loss on being long Asset A.
+
+An example of a pair trade would be to be long $ETH and simultaneously short $BTC. This is denoted as $ETH / $BTC.
+
+There are two reasons why you might want to do this. The first is for better risk-adjusted returns (1), and the latter is for narrative trading (2).
+
+1. Market-Neutral Strategy in Crypto
+
+As a market-neutral strategy, pairs trading in the crypto market does not rely on the overall market direction to generate returns. Instead, it focuses on the relative performance of the correlated cryptocurrencies. This characteristic allows traders to potentially profit in various market conditions, including bullish, bearish, or sideways markets.
+
+2. Narrative Trading in Crypto
+
+Narrative trading incorporates an understanding of prevailing market narratives or themes that can influence sentiment and price movements of related assets. Identifying dominant narratives in the crypto market enables traders to make informed decisions when selecting cryptocurrency pairs.
+
+For example, if there is a dominant narrative favoring the tokens of a growing Layer 1 Blockchain (e.g. $SOL) versus the price expectation of another Layer 1 (e.g. $ETH), then the trade idea would be to be Long $SOL and short $ETH, possibly with leverage to amplify your gains.
+
+PreviousWhat is Pear Protocol?NextEntering the dApp
+
+🫐Isolated Margin (GMX)
+
+This product is fully on-chain, sourcing liquidity directly from GMX v2. It currently has access to 21 underlying perpetual markets. In an upcoming product update, you will not only be able to open and close a Long/Short trade in 1 click with up to 50x leverage, but also mint every position as an NFT (ERC-721) giving full composability across DeFi
+
+How does it work?
+
+Visual example of Pear Protocol's Isolated Margin Engine
+
+The user opens Pear Protocol's /trade page. Choose to trade with Isolated Margin.
+
+Then, the user chooses a pair of assets to long and short.
+
+The user confirms the collateral of USDC to use for the transaction, along with the amount in USDC (pre-approved).
+
+Pear Factory contract takes an opening fee and stores in the smart contract to be withdrawn by the treasury (MPC address).
+
+Pear Factory contract determines which Pear Adapter to use, and then deploys a proxy (ERC1967) with the selected Pear Adapter implementation.
+
+Pear Factory contract calls the createPair method from the smart contract, sending the original amount minus the open fee.
+
+Depending on the implementation of the adapter and the external platform, a pair trade will be created there. The owner of the trades will be the proxy. The external platform may or may not take open fees
+
+Depending on the external platform implementation, some more calls by our off-chain components may be needed
+
+Pear Factory contract can mint an NFT (ERC721)
+
+Closing a trade
+
+Select Close Trade from the UI
+
+Proxy closes trades, sends PnL minus fee to position owner
+
+NFT will be burned (the image will remain in your dashboard)
+
+ISOLATED MARGIN RISKS
+
+When trading with Isolated Margin the UI will document the estimated liquidation price automatically. However, it is worth noting that each leg shall have its own individual entry and liquidation price.
+
+When using high leverage it is likely that one leg can be individually liquidated without warning. Leaving just the opposing leg running.
+
+The UI will show the Entry Price, Estimated Liquidation Price, Collateral, PnL, and Net Value of just the open leg once this has happened. Users will also get a description of this directly on their position list, indicating which side of the trade was liquidated and which one is still being tracked.
+
+It is therefore recommended to be careful with the leverage and size of trades when using the platform, thus avoiding potential loss of funds suddenly.
+
+Users can monitor their individual liquidation prices by navigating to the hamburger menu (3 dots) for any given position and viewing their trade details.
+
+Here they will be able to see the liquidation prices for each individual leg:
+
+We have also built the functionality for users to manage their collateral and deposit or withdraw collateral accordingly.
+
+Cross Margin (Vertex)
+The Cross Margin product has been built on top of the Vertex CLOB (central limit order book), a cross-margin trading engine.
+
+Vertex brings 49 assets for users to trade, with more being constantly added.
+
+In addition, this integration with Vertex allows multiple improvements such as deeper liquidity, faster execution, and native cross-margining across all positions.
+
+General workflow
+
+The USDC deposit made into the Cross Margin product is used to open a new sub-account for the user. This USDC is shared as margin between all open positions. Calculations of portfolio health are performed automatically.
+
+Deposit Funds
+Before starting trading, users should make their first deposit into the trading engine. Deposits are collateral that can be used to trade. By depositing assets, the users are depositing them into Vertex Protocol smart contracts on Arbitrum. Vertex is non-custodial, meaning the user maintains control over their assets and can withdraw anytime. Once the user hits the deposit button, Vertex SDK is called, which triggers Vertex API which deposits the funds in the Vertex Protocol smart contracts.
+
+Enabling One-Click Trading (Optional)
+After depositing on Vertex, the user will need to choose a trading mode. There are 2 trading modes on Vertex:
+
+One-Click-Trading (1CT) - After signing one approval transaction, the user is not required to sign any further open or close position transactions. By enabling one-click trading user allows a private key held by Vertex API to sign his open/close position transactions
+
+Sign Every Transaction -- Every action while using Vertex will require a signature.
+
+Opening a Trade
+The user chooses a pair of asset to long and short.
+
+The user chooses collateral amount.
+
+The user chooses leverage and slippage.
+
+The user clicks the OpenPosition button and confirms the order through a confirmation modal.
+
+Then, Vertex API is called through the Vertex SDK which opens both long and short positions on Vertex contracts.
+
+Closing a Trade
+Once opened a position, it can be found in the positions list
+
+The position could be closed by choosing “close trade” and confirmation through close trade modal dialog. After confirmation Vertex API is called through Vertex SDK which closes both long and short positions on Vertex contracts.
+
+Withdrawing Funds
+The user is always able to withdraw all available funds by using the UI form provided
+
+Withdrawals are processed on-chain, and flow from the Vertex non-custodial smart contracts back to the user's wallet through our front-end interface. Users may need to wait anywhere between 30seconds - 10 minutes for these transactions to settle on-chain. The latter is only during extremely busy periods on the Arbitrum network.
+
+Liquidations
+Since all your positions are in cross-margin, the concept of being liquidated on a single leg (like in Isolated Margin) does not apply in the same way.
+
+Instead, traders have a margin against ALL their positions (portfolio margining). The risk engine then allocates a portion of that margin to a specific leg (subject to initial and maintanance weights for each underlying).
+
+When the margin allocated for a specific leg runs out, the position is identified as closed which takes the margin away from the total Funds Available (funds deposited, used for margin on pair trades) on the account/wallet.
+
+Thus, we cannot show an accurate liquidation level for each pair trade. Users who are familiar with trading on a CEX like Binance, or a DEX like dYdX will be familiar with this idea of account health. The key concept to understand is Liquidation Risk % (Margin), which is shown in the Pear Protocol front end.
+
+Initial & Maintenance Margin (Health) = Health is the amount of capital (quoted in $USDC) your account has to trade with before it can be liquidated. You can think of Health as your Margin, and you have 2 different kinds:
+
+Initial
+
+Maintenance
+
+Your Health is determined by giving each balance and position a Weighted Value. There are two types of weights:
+
+Initial
+
+Maintenance
+
+The weights are set so that initial health is always less than maintenance health.
+
+For more details on weighting, please refer to the section on health calculations. Once all of your Initial Health is depleted, your account goes into Maintenance Mode, which means no more risk can be taken.
+
+The remaining Maintenance Health acts as a buffer for the user to de-risk before risking liquidation. Once all of the Maintenance Health is used, your account can be partially or fully liquidated.
+
+⛺
+Intent Based RFQ (SYMM)
+Instead of relying on virtual automated market maker pools (vAMM), or a central limit order book (CLOB), both of which execute orders against pre-committed liquidity, users of this product express their trading intentions, which will be executed by external solvers. Liquidity is thus coming directly from market makers, and this process is facilitated by SYMMIO as the Execution Engine.
+
+Architecture Overview
+
+SYMMIO has pioneered the concept of AMFQ (Automated Market for Quotes) perps, or rather, a way to trade perps in an OTC manner directly against a Solver/Market Maker (MM).
+
+Solvers stream indicative trade quotes (bid-offers on all the assets). Users then submit specific quotes, detailing their desired trade size, direction, leverage, and other parameters. In response, the solver decides whether to fill the trader’s order.
+
+Upon agreement on price and fees, both parties deposit collateral into the fully audited SYMMIO bilateral trade agreement contract. This contract is akin to a peer-to-peer OTC trade, which is subject to liquidation from either side if the collateral isn't maintained. Crucially, this agreement is trustless and symmetric between the counterparties. Only the trader has the authority to ‘close’ the position, barring any liquidation scenarios by third-party ‘keepers’.
+
+Process
+
+Users connect their wallet, deposit USDC into the trading engine, which automatically creates a sub-account for the user. In this example, we’ll be connecting and depositing $100 USDC. Like any other smart contract, you must first approve, then deposit and allocate this USDC to your account.
+
+This will then load the Account Overview, and you’re ready to trade. Details of what each of these parameters mean are in the Account Information - Key Terms and Definitions section of our docs.
+
+A trader submits the trade details (intent) of their desired trade (e.g. long $BTC / short $ETH)
+
+The solver (market maker) provides an offer with conditions for the trade (price, slippage, fees, funding rates, collateral, etc.). This step happens automatically and in real time. No capital is committed by the solver at this time.
+
+Once satisfied with the conditions of the trade, the trader sends a “Request to Trade” to the solver, including locking their required collateral.
+
+The solver then observes the request and chooses to accept it, depositing their equal collateral into the contract.
+
+This forms a “bilateral agreement” between the solver and the trader. It is an isolated and perfectly symmetrical contract, and depending on the price movement of the position, one party is obligated to pay the other party as PnL. This bilateral agreement exists in perpetuity until either (1) the trader closes the position, or (2) one of the parties is liquidated (automatically executed by a neutral third party based on margin health).
+
+The solver can then “hedge” their position exposure (in this example, it would be long 1 BTC) on any number of sources, including a CEX, another DEX, an OTC desk, non-linear options, or even spot holdings. The solver can also net his positions with other positions or with other solvers in the network (future implementation).
+
+Note: Step 8 takes place off-chain and the solver is solely responsible for managing their hedging strategy. Because collateral is locked into the Bilateral Agreement and completely isolated from external factors, users do not have to make any trust assumptions regarding the solvency of the solver on-chain.
+
+Account Information - Key Terms and Definitions
+
+The Account Overview shows you all the relevant information to monitor and manage your risk. This is also where you can Deposit more collateral, or withdraw.
+
+Account Health
+
+Represented as a percentage, it indicates the health of a trader's sub-account.
+
+When the Equity Balance matches the Maintenance Margin, you will risk liquidation.
+
+Formula:
+
+AccountHealth = (EquityBalance - MaintenanceMargin ) / (allocatedBalance - maintenanceMargin)
+
+Equity Balance
+
+A combination of a trader's dedicated account balance and UPNL, this metric indicates the probable future balance.
+
+If it dips to the amount of the Maintenance Margin, liquidation ensues.
+
+Formula: EquityBalance = AllocatedBalance + UPNL
+
+Unrealised Profit and Loss (uPnL)
+
+UPNL showcases potential gains or losses that would result if a trader closed their active position(s).
+
+It's calculated by evaluating the difference in USD terms between the average entry price and the prevailing index price.
+
+Maintenance Margin (CVA)
+
+Considered the trader's "security deposit." If the equity balance (which combines account balance and UPNL) drops to this mark, liquidation is imminent.
+
+This margin is locked and non-transferable, encompassing all open positions.
+
+Allocated Balance
+
+Represents funds assigned by traders for a specific Margin Sub-Account.
+
+These funds can either initiate margin positions or be available for withdraw.
+
+Locked Margin
+
+The Initial Margin feeds into the Locked Margin. The Locked Margin represents margins engaged across all live positions.
+
+While part of a trader's Equity, the Locked Margin acts as a buffer, deterring excessive position openings.
+
+Available for Margin
+
+Denotes the account balance still accessible for Requests and Orders.
+
+Formula: AvailableForOrders = EquityBalance - LockedMargin - MaintenanceMargin
+
+Account Information - Trade example
+
+Let’s build an example, where a user has deposited $100 into the Account.
+
+The user then goes to open a trade that is long MATIC/ short SUSHI for $50 with 3x leverage
+
+Note that because of minimum trade sizes, the locked value is slightly less than $50 ($49.5), the remaining $0.50 remains in the users wallet.
+
+Users can now view their updated Account Overview. Here are the calculations:
+
+uPnL = PnL on open positions
+
+uPnL = +$0.15
+
+Equity Balance = Allocated Balance + uPnL - fees paid ($0.09)
+
+Equity Balance = $99.91 + $0.0218 = $100.064
+
+CVA = Set aside by the Solver for each trade (and thus varies)
+
+CVA = $3.16
+
+Locked Margin = The initial $50 that was used to put on the trade - CVA - fees - uPnL
+
+Locked Margin = $50 - $3.16 - $0.09 - $0.15
+Locked Margin = $46.6
+
+Available for Orders = EquityBalance - LockedMargin -MaintenanceMargin
+
+Available for Orders = $100.06 - 46.6 - 3.16
+
+Available for Orders = $50.3
+
+Liquidations
+
+A liquidation event occurs when a trader's account and positions are forcibly closed by a liquidator due to insufficient margin in their account to cover unrealized losses.
+
+This happens when the trader's positions move against them to the point where the Equity Balance falls below the Maintenance Margin (CVA).
+
+In the event of liquidation, the entirety of the account CVA is paid to the Solver.
+
+Warning: Accounts a Pear x SYMM operate in cross-margin. Meaning Equity Balance takes into consideration the entire account balance, and liquidations will result in the entire account balance to be lost. Users can create isolated sub-accounts to better manage their liquidation risk.
+
+Technical Information
