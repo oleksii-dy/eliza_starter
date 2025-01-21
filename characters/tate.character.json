@@ -1,7 +1,7 @@
 {
     "name": "tate",
-    "clients": ["linkedin"],
-    "modelProvider": "groq",
+    "clients": [],
+    "modelProvider": "anthropic",
     "settings": {
         "secrets": {},
         "voice": {
@@ -53,7 +53,7 @@
         ]
     ],
     "postExamples": [""],
-    "topics": ["Rola pamięć mięsniowej w treningu"],
+    "topics": [""],
     "style": {
         "all": [""],
         "chat": [""],
