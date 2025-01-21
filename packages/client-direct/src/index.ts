@@ -164,6 +164,7 @@ export class DirectClient {
             "/:agentId/message",
             upload.single("file"),
             async (req: express.Request, res: express.Response) => {
+                console.log("Validate: ", Date.now());
                 const agentId = req.params.agentId;
                 const roomId = stringToUuid(
                     req.body.roomId ?? "default-room-" + agentId
@@ -239,10 +240,14 @@ export class DirectClient {
                     content,
                     createdAt: Date.now(),
                 };
-
+                console.log("Validate: ", Date.now());
+                console.log("addEmbeddingToMemory: ", Date.now());
                 await runtime.messageManager.addEmbeddingToMemory(memory);
+                console.log("addEmbeddingToMemory: ", Date.now());
+                console.log("createMemory:1 ", Date.now());
                 await runtime.messageManager.createMemory(memory);
-
+                console.log("createMemory:1 ", Date.now());
+                console.log("call AI: ", Date.now());
                 let state = await runtime.composeState(userMessage, {
                     agentName: runtime.character.name,
                 });
@@ -257,7 +262,7 @@ export class DirectClient {
                     context,
                     modelClass: ModelClass.LARGE,
                 });
-
+                console.log("call AI: ", Date.now());
                 if (!response) {
                     res.status(500).send(
                         "No response from generateMessageResponse"
@@ -266,6 +271,7 @@ export class DirectClient {
                 }
 
                 // save response to memory
+                console.log("save response to memory: ", Date.now());
                 const responseMessage: Memory = {
                     id: stringToUuid(messageId + "-" + runtime.agentId),
                     ...userMessage,
@@ -274,13 +280,15 @@ export class DirectClient {
                     embedding: getEmbeddingZeroVector(),
                     createdAt: Date.now(),
                 };
-
+                console.log("save response to memory: ", Date.now());
+                console.log("createMemory:2 ", Date.now());
                 await runtime.messageManager.createMemory(responseMessage);
-
+                console.log("createMemory:2 ", Date.now());
+                console.log("updateRecentMessageState:2 ", Date.now());
                 state = await runtime.updateRecentMessageState(state);
-
+                console.log("updateRecentMessageState:2 ", Date.now());
                 let message = null as Content | null;
-
+                console.log("run action:2 ", Date.now());
                 await runtime.processActions(
                     memory,
                     [responseMessage],
@@ -290,9 +298,10 @@ export class DirectClient {
                         return [memory];
                     }
                 );
-
+                console.log("run action:2 ", Date.now());
+                console.log("run evaluate:2 ", Date.now());
                 await runtime.evaluate(memory, state);
-
+                console.log("run evaluate:2 ", Date.now());
                 // Check if we should suppress the initial message
                 const action = runtime.actions.find(
                     (a) => a.name === response.action
