@@ -1,3 +1,3 @@
 
 #!/bin/bash
-pnpm build && pnpm start --characters="characters/portfolio.json"
+pnpm build && pnpm start --characters="characters/rockee_standard.json"
