@@ -1,36 +1,46 @@
 import { AxiosInstance } from "axios";
-import { LinkedInUserInfoFetcher } from "./LinkedinUserInfoFetcher";
+import { LinkedInUserInfoFetcher } from "../repositories/LinkedinUserInfoFetcher";
 import { PostContentCreator } from "./PostContentCreator";
-import { publisherConfig } from "../interfaces";
-import { LinkedInPostPublisher } from "./LinkedinPostPublisher";
 import { elizaLogger, IAgentRuntime } from "@elizaos/core";
-import { getRandomNumber } from "../helpers/get-random-number";
+import { getRandomInteger } from "../helpers/get-random-integer";
+import { LinkedInPostPublisher } from "../repositories/LinkedinPostPublisher";
+import { PublisherConfig } from "../interfaces";
 
-export class PostsManager {
+export class LinkedInPostScheduler {
     constructor(
         private runtime: IAgentRuntime,
         private postPublisher: LinkedInPostPublisher,
         private postContentCreator: PostContentCreator,
         readonly userId: string,
-        readonly config: publisherConfig
+        readonly config: PublisherConfig
     ) {}
 
-    static async create({
+    static async createPostScheduler({
         axiosInstance,
         userInfoFetcher,
         runtime,
-        config
+        config,
     }: {
-        axiosInstance: AxiosInstance,
-        userInfoFetcher: LinkedInUserInfoFetcher,
-        runtime: IAgentRuntime,
-        config: publisherConfig
+        axiosInstance: AxiosInstance;
+        userInfoFetcher: LinkedInUserInfoFetcher;
+        runtime: IAgentRuntime;
+        config: PublisherConfig;
     }) {
         const userInfo = await userInfoFetcher.getUserInfo();
 
-        const postPublisher = new LinkedInPostPublisher(axiosInstance, userInfo.sub);
+        const postPublisher = new LinkedInPostPublisher(
+            axiosInstance,
+            userInfo.sub
+        );
         const postContentCreator = new PostContentCreator(runtime);
-        return new PostsManager(runtime, postPublisher, postContentCreator, userInfo.sub, config);
+
+        return new LinkedInPostScheduler(
+            runtime,
+            postPublisher,
+            postContentCreator,
+            userInfo.sub,
+            config
+        );
     }
 
     async createPostPublicationLoop() {
@@ -42,19 +52,28 @@ export class PostsManager {
         const minMinutes = this.config.LINKEDIN_POST_INTERVAL_MIN;
         const maxMinutes = this.config.LINKEDIN_POST_INTERVAL_MAX;
 
-        const randomMinutes = getRandomNumber(minMinutes, maxMinutes);
+        const randomMinutes = getRandomInteger(minMinutes, maxMinutes);
         const delay = randomMinutes * 60 * 1000;
 
         if (Date.now() > lastPostTimestamp + delay) {
-            const postText = await this.postContentCreator.createPostContent(this.userId);
+            const postText = await this.postContentCreator.createPostContent(
+                this.userId
+            );
             elizaLogger.log(`Generated post text:\n${postText}`);
+
             if (!this.config.LINKEDIN_DRY_RUN) {
                 await this.postPublisher.publishPost({ postText });
                 elizaLogger.info("Published post");
             } else {
-                elizaLogger.warn("Dry run is enabled. To publish posts set LINKEDIN_DRY_RUN to false");
+                elizaLogger.warn(
+                    "Dry run is enabled. To publish posts set LINKEDIN_DRY_RUN to false"
+                );
             }
-            await this.runtime.cacheManager.set("linkedin/" + this.userId + "/lastPost", { timestamp: Date.now() });
+
+            await this.runtime.cacheManager.set(
+                "linkedin/" + this.userId + "/lastPost",
+                { timestamp: Date.now() }
+            );
         }
 
         setTimeout(() => {
