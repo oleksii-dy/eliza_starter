@@ -4,7 +4,12 @@ import { IAgentRuntime } from "@elizaos/core";
 export const SWAP_FEE_LIMIT = 100_000_000; // 100 TRX
 export const WRAP_FEE_LIMIT = 1_000_000_000; // 1000 TRX
 
-// Contract addresses and API endpoints must be configured via environment
+/**
+ * Contract addresses and API endpoints configuration
+ * SECURITY: All values must be provided through environment variables
+ * DO NOT hardcode these values or expose them in logs
+ * Use proper access control and validation before operations
+ */
 export interface TronAddresses {
     WRAPPED_TRX_ADDRESS: string;
     SUNSWAPV2_ROUTER: string;

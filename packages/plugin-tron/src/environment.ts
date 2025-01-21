@@ -68,8 +68,17 @@ export async function validateTronConfig(
         return validatedConfig;
     } catch (error) {
         if (error instanceof z.ZodError) {
+            // Ensure error messages don't leak sensitive data
             const errorMessages = error.errors
-                .map((err) => `${err.path.join(".")}: ${err.message}`)
+                .map((err) => {
+                    const path = err.path.join(".");
+                    // Mask sensitive fields in error messages
+                    if (path.toLowerCase().includes("key") || 
+                        path.toLowerCase().includes("private")) {
+                        return `${path}: Invalid format`;
+                    }
+                    return `${path}: ${err.message}`;
+                })
                 .join("\n");
             throw new Error(
                 `TRON configuration validation failed:\n${errorMessages}`
