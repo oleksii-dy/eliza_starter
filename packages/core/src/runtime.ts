@@ -811,7 +811,6 @@ export class AgentRuntime implements IAgentRuntime {
                 roomId,
             }),
         ]);
-
         const goals = formatGoalsAsString({ goals: goalsData });
 
         const actors = formatActors({ actors: actorsData ?? [] });
@@ -1232,10 +1231,11 @@ export class AgentRuntime implements IAgentRuntime {
     }
 
     async updateRecentMessageState(state: State): Promise<State> {
-        const conversationLength = this.getConversationLength();
+        // const conversationLength = this.getConversationLength();
         const recentMessagesData = await this.messageManager.getMemories({
             roomId: state.roomId,
-            count: conversationLength,
+            // count: conversationLength,
+            count:3,
             unique: false,
         });
 

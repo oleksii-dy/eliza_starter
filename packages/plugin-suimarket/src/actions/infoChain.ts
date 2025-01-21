@@ -49,7 +49,7 @@ export const chainInfo: Action = {
         return true;
     },
 
-    description: "Get detail of token",
+    description: "Get detailed information about a blockchain network.",
 
     handler: async (
         runtime: IAgentRuntime,

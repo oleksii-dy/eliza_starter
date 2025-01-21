@@ -323,7 +323,6 @@ export async function generateText({
                     baseURL: endpoint,
                     fetch: runtime.fetch,
                 });
-
                 const { text: openaiResponse } = await aiGenerateText({
                     model: openai.languageModel(model),
                     prompt: context,
