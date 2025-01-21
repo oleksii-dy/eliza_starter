@@ -1,5 +1,5 @@
 import type { Action } from "@elizaos/core";
-import { ActionExample, HandlerCallback, IAgentRuntime, Memory, State, elizaLogger } from "@elizaos/core";
+import { type ActionExample, type HandlerCallback, type IAgentRuntime, type Memory, type State, elizaLogger } from "@elizaos/core";
 import { checkColdWalletReward } from "mind-randgen-sdk";
 import { isAddress, formatEther } from "ethers";
 
@@ -8,18 +8,21 @@ export const checkRewardAction: Action = {
     similes: [
         "MIND_GET_VOTING_REWARD",
     ],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
-        if (isAddress(runtime.getSetting("MIND_COLD_WALLET_ADDRESS"))) {
-            return true;
-        } else {
-            return false;
+    validate: async (runtime: IAgentRuntime, _message: Memory) => {
+        const address = runtime.getSetting("MIND_COLD_WALLET_ADDRESS");
+        if (!address) {
+            throw new Error("MIND_COLD_WALLET_ADDRESS is not configured");
         }
+        if (!isAddress(address)) {
+            throw new Error("Invalid cold wallet address format");
+        }
+        return true;
     },
     description: "Get user's voting reward amount earned via voting in Mind Network.",
     handler: async (
-        runtime: IAgentRuntime,
-        message: Memory,
-        state: State,
+        _runtime: IAgentRuntime,
+        _message: Memory,
+        _state: State,
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
     ): Promise<boolean> => {
@@ -79,7 +82,7 @@ export const checkRewardAction: Action = {
                 user: "{{agent}}",
                 content: {
                     text: "Sure, I'll check how much reward you have earned in Mind Network.",
-                    action: "CHECK_VOTING_REWARD",
+                    action: "MIND_CHECK_VOTING_REWARD",
                 },
             },
             {

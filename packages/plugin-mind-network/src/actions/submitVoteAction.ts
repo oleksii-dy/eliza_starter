@@ -1,5 +1,5 @@
 import type { Action } from "@elizaos/core";
-import { ActionExample, HandlerCallback, IAgentRuntime, Memory, State, elizaLogger } from "@elizaos/core";
+import { type ActionExample, type HandlerCallback, type IAgentRuntime, type Memory, type State, elizaLogger } from "@elizaos/core";
 import { submitVote } from "mind-randgen-sdk";
 import cache from "../utils/cache";
 
@@ -11,25 +11,24 @@ export const submitVoteAction: Action = {
         "MIND_VOTE",
         "MIND_SUBMIT_VOTE",
     ],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (runtime: IAgentRuntime, _message: Memory) => {
         if (runtime.getSetting("MIND_HOT_WALLET_PRIVATE_KEY")) {
             return true;
-        } else {
-            return false;
         }
+        return false;
     },
     description: "Submit the encrypted number as a vote to Mind Network.",
     handler: async (
-        runtime: IAgentRuntime,
-        message: Memory,
-        state: State,
+        _runtime: IAgentRuntime,
+        _message: Memory,
+        _state: State,
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
     ): Promise<boolean> => {
         elizaLogger.log("Starting Mind Network MIND_FHE_VOTE handler...");
 
         if (!cache.latestEncryptedNumber) {
-            const reply = `You need to encrypt a number of your choice first. Tell me your number of choice for FHE encryption.`
+            const reply = "You need to encrypt a number of your choice first. Tell me your number of choice for FHE encryption."
             elizaLogger.success(reply);
             if (callback) {
                 callback({
@@ -56,7 +55,7 @@ export const submitVoteAction: Action = {
         try {
             await submitVote(cache.latestEncryptedNumber);
             cache.lastVoteTs = Date.now();
-            const reply = `You vote has been submitted successfully.`
+            const reply = "You vote has been submitted successfully."
             elizaLogger.success(reply);
             if (callback) {
                 callback({

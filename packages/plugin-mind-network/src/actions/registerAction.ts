@@ -1,5 +1,5 @@
 import type { Action } from "@elizaos/core";
-import { ActionExample, HandlerCallback, IAgentRuntime, Memory, State, elizaLogger } from "@elizaos/core";
+import { type ActionExample, type HandlerCallback, type IAgentRuntime, type Memory, type State, elizaLogger } from "@elizaos/core";
 import { registerVoter } from "mind-randgen-sdk";
 import { isAddress } from "ethers";
 
@@ -8,18 +8,17 @@ export const registerAction: Action = {
     similes: [
         "MIND_VOTER_REGISTRATION",
     ],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (runtime: IAgentRuntime, _message: Memory) => {
         if (isAddress(runtime.getSetting("MIND_COLD_WALLET_ADDRESS")) && runtime.getSetting("MIND_HOT_WALLET_PRIVATE_KEY")) {
             return true;
-        } else {
-            return false;
         }
+        return false;
     },
     description: "Register as a voter so that user can vote in Mind Network Randgen Hub.",
     handler: async (
-        runtime: IAgentRuntime,
-        message: Memory,
-        state: State,
+        _runtime: IAgentRuntime,
+        _message: Memory,
+        _state: State,
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
     ): Promise<boolean> => {
@@ -27,7 +26,7 @@ export const registerAction: Action = {
 
         try {
             await registerVoter();
-            const reply = `You have registered successfully.`
+            const reply = "You have registered successfully."
             elizaLogger.success(reply);
             if (callback) {
                 callback({

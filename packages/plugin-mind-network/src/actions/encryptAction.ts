@@ -1,5 +1,5 @@
 import type { Action } from "@elizaos/core";
-import { ActionExample, Content, HandlerCallback, IAgentRuntime, Memory, ModelClass, State, elizaLogger, composeContext, generateObject, } from "@elizaos/core";
+import { type ActionExample, type Content, type HandlerCallback, type IAgentRuntime, type Memory, ModelClass, type State, elizaLogger, composeContext, generateObject, } from "@elizaos/core";
 import { z } from "zod";
 import { encrypt } from "mind-randgen-sdk";
 import cache from "../utils/cache";
@@ -9,7 +9,7 @@ export interface DataContent extends Content {
 }
 
 const dataSchema = z.object({
-    walletAddress: z.number()
+    numberToEncrypt: z.number()
 });
 
 const dataExtractionTemplate = `
@@ -33,7 +33,7 @@ export const encryptAction: Action = {
     similes: [
         "MIND_ENCRYPT",
     ],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         return true;
     },
     description: "Encrypt a number of user's choice with FHE.",
@@ -45,13 +45,12 @@ export const encryptAction: Action = {
         callback?: HandlerCallback
     ): Promise<boolean> => {
         elizaLogger.log("Starting Mind Network MIND_FHE_ENCRYPT handler...");
-        if (!state) {
-            state = (await runtime.composeState(message)) as State;
-        } else {
-            state = await runtime.updateRecentMessageState(state);
-        }
+        const resolvedState = state
+            ? await runtime.updateRecentMessageState(state)
+            : (await runtime.composeState(message)) as State;
+
         const dataContext = composeContext({
-            state,
+            state: resolvedState,
             template: dataExtractionTemplate,
         });
         const content = (
@@ -82,8 +81,8 @@ export const encryptAction: Action = {
             elizaLogger.error("Error during FHE encryption:", error);
             if (callback) {
                 callback({
-                    text: `Error during FHE encryption: ${error.message}`,
-                    content: { error: error.message },
+                    text: `Error during FHE encryption: ${error}`,
+                    content: { error },
                 });
             }
             return false;
