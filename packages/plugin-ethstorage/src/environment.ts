@@ -1,33 +1,32 @@
 import type { IAgentRuntime } from "@elizaos/core";
 import { z } from "zod";
 
-export const availEnvSchema = z.object({
-    AVAIL_ADDRESS: z.string().min(1, "Avail address is required"),
-    AVAIL_SEED: z.string().min(1, "Avail account seed phrase is required"),
+export const ethstorageEnvSchema = z.object({
+    ETHSTORAGE_RPC_URL: z.string().min(1, "EthStorage RPC url is required"),
+    ETHSTORAGE_PRIVATE_KEY: z.string().min(1, "EthStorage private key is required"),
 });
 
-export type availConfig = z.infer<typeof availEnvSchema>;
+export type ethstorageConfig = z.infer<typeof ethstorageEnvSchema>;
 
-export async function validateAvailConfig(
+export async function ethstorageAvailConfig(
     runtime: IAgentRuntime
-): Promise<availConfig> {
+): Promise<ethstorageConfig> {
     try {
         const config = {
-            AVAIL_ADDRESS:
-                runtime.getSetting("AVAIL_ADDRESS") ||
-                process.env.AVAIL_ADDRESS,
-            AVAIL_SEED:
-                runtime.getSetting("AVAIL_SEED") || process.env.AVAIL_SEED,
+            ETHSTORAGE_RPC_URL:
+                runtime.getSetting("ETHSTORAGE_RPC_URL") || process.env.ETHSTORAGE_RPC_URL,
+            ETHSTORAGE_PRIVATE_KEY:
+                runtime.getSetting("ETHSTORAGE_PRIVATE_KEY") || process.env.ETHSTORAGE_PRIVATE_KEY,
         };
 
-        return availEnvSchema.parse(config);
+        return ethstorageEnvSchema.parse(config);
     } catch (error) {
         if (error instanceof z.ZodError) {
             const errorMessages = error.errors
                 .map((err) => `${err.path.join(".")}: ${err.message}`)
                 .join("\n");
             throw new Error(
-                `Avail configuration validation failed:\n${errorMessages}`
+                `EthStorage configuration validation failed:\n${errorMessages}`
             );
         }
         throw error;

@@ -11,25 +11,11 @@ import {
     composeContext,
     generateObjectDeprecated,
 } from "@elizaos/core";
-import { validateAvailConfig } from "../environment";
-import {
-    //getDecimals,
-    initialize,
-    getKeyringFromSeed,
-} from "avail-js-sdk";
-import type { ISubmittableResult } from "@polkadot/types/types/extrinsic";
-import type { H256 } from "@polkadot/types/interfaces/runtime";
+import { EthStorage } from "ethstorage-sdk";
+import { ethstorageAvailConfig } from "../environment";
 
 export interface DataContent extends Content {
     data: string;
-}
-
-export function isDataContent(content: DataContent): content is DataContent {
-    // Validate types
-    const validTypes = typeof content.data === "string";
-    if (!validTypes) {
-        return false;
-    }
 }
 
 const submitDataTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
@@ -44,7 +30,7 @@ Example response:
 
 {{recentMessages}}
 
-Given the recent messages, extract the following information about the requested Ethstorage token transfer:
+Given the recent messages, extract the following information about the requested EthStorage token transfer:
 - Data to be submitted
 
 Respond with a JSON markdown block containing only the extracted values.`;
@@ -69,10 +55,10 @@ export default {
         "UPLOAD_DATA_TO_ETHSTORAGE_NETWORK",
     ],
     validate: async (runtime: IAgentRuntime, _message: Memory) => {
-        await validateAvailConfig(runtime);
+        await ethstorageAvailConfig(runtime);
         return true;
     },
-    description: "Submit data to Ethstorage as per user command",
+    description: "Submit data to EthStorage as per user command",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -102,98 +88,38 @@ export default {
             modelClass: ModelClass.SMALL,
         });
 
-        // Validate transfer content
-        // if (!isDataContent(content)) {
-        //     console.log(content + typeof(content.data))
-        //     console.error("Invalid content for SUBMIT_DATA action.");
-        //     if (callback) {
-        //         callback({
-        //             text: "Unable to process submit data request. Invalid content provided.",
-        //             content: { error: "Invalid data content" },
-        //         });
-        //     }
-        //     return false;
-        // }
         if (content.data != null) {
             try {
-                const SEED = runtime.getSetting("ETHSTORAGE_SEED")!;
-                //const ACCOUNT = runtime.getSetting("ETHSTORAGE_ADDRESS")!;
-                const ENDPOINT = runtime.getSetting("ETHSTORAGE_RPC_URL");
-                const APP_ID = runtime.getSetting("ETHSTORAGE_APP_ID");
+                const RPC = runtime.getSetting("ETHSTORAGE_RPC_URL");
+                const PRIVATE_KEY = runtime.getSetting("ETHSTORAGE_PRIVATE_KEY")!;
 
-                const api = await initialize(ENDPOINT);
-                const keyring = getKeyringFromSeed(SEED);
-                const options = { app_id: APP_ID, nonce: -1 };
-                //const decimals = getDecimals(api);
-                const data = content.data;
-
-                const submitDataInfo = await api.tx.dataAvailability
-                    .submitData(data)
-                    .paymentInfo(keyring);
-                //print estimated fees
-                elizaLogger.log(`Transaction Fee for Submit Data:
-            class=${submitDataInfo.class.toString()},
-            weight=${submitDataInfo.weight.toString()},
-            partialFee=${submitDataInfo.partialFee.toHuman()}
-          `);
-
+                elizaLogger.log(`Transaction Data is ${content.data}`);
+                const data = Buffer.from(content.data);
+                const es = await EthStorage.create({
+                    rpc: RPC,
+                    privateKey: PRIVATE_KEY
+                })
                 //submit data
-                const txResult = await new Promise<ISubmittableResult>(
-                    (res) => {
-                        api.tx.dataAvailability
-                            .submitData(data)
-                            .signAndSend(
-                                keyring,
-                                options,
-                                (result: ISubmittableResult) => {
-                                    elizaLogger.log(
-                                        `Tx status: ${result.status}`
-                                    );
-                                    if (result.isFinalized || result.isError) {
-                                        res(result);
-                                    }
-                                }
-                            );
+                const submitStatus = await es.write("", data);
+                if (submitStatus) {
+                    elizaLogger.success(
+                        "Data submitted successfully!"
+                    );
+                    if (callback) {
+                        await callback({
+                            text: `Data submitted successfully!`,
+                            content: {},
+                        });
                     }
-                );
-
-                // Rejected Transaction handling
-                if (txResult.isError) {
-                    console.log(`Transaction was not executed`);
-                }
-
-                // Failed Transaction handling
-                const error = txResult.dispatchError;
-                if (error != undefined) {
-                    if (error.isModule) {
-                        const decoded = api.registry.findMetaError(
-                            error.asModule
-                        );
-                        const { docs, name, section } = decoded;
-                        console.log(`${section}.${name}: ${docs.join(" ")}`);
-                    } else {
-                        console.log(error.toString());
-                    }
-                }
-
-                elizaLogger.success(
-                    "Data submitted successfully! tx: \n " +
-                        `Tx Hash: ${txResult.txHash as H256}, Block Hash: ${txResult.status.asFinalized as H256}`
-                );
-                if (callback) {
-                    callback({
-                        text: `Data submitted successfully! tx hash: ${txResult.txHash as H256} Block Hash: ${txResult.status.asFinalized as H256} `,
-                        content: {},
-                    });
                 }
 
                 return true;
             } catch (error) {
                 elizaLogger.error("Error during data submission:", error);
                 if (callback) {
-                    callback({
+                    await callback({
                         text: `Error submitting data: ${error.message}`,
-                        content: { error: error.message },
+                        content: {error: error.message},
                     });
                 }
                 return false;
@@ -208,20 +134,20 @@ export default {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Submit the following data to Ethstorage 'Hello World!'",
+                    text: "Submit the following data to EthStorage 'Hello World!'",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "Sure, I'll send the data 'Hello World!' to Ethstorage now.",
+                    text: "Sure, I'll send the data 'Hello World!' to EthStorage now.",
                     action: "SUBMIT_DATA",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "Successfully submitted the data 'Hello World!' to Ethstorage \nTransaction: 0x748057951ff79cea6de0e13b2ef70a1e9f443e9c83ed90e5601f8b45144a4ed4",
+                    text: "Successfully submitted the data 'Hello World!' to EthStorage \nTransaction: 0x748057951ff79cea6de0e13b2ef70a1e9f443e9c83ed90e5601f8b45144a4ed4",
                 },
             },
         ],
@@ -229,20 +155,20 @@ export default {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Submit 'Don't Fight, Unite!' to Ethstorage",
+                    text: "Submit 'Don't Fight, Unite!' to EthStorage",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "Sure, I'll send the data 'Don't Fight, Unite!' to Ethstorage now.",
+                    text: "Sure, I'll send the data 'Don't Fight, Unite!' to EthStorage now.",
                     action: "SUBMIT_DATA",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "Successfully submitted the data 'Don't Fight, Unite!' to Ethstorage \nTransaction: 0x748057951ff79cea6de0e13b2ef70a1e9f443e9c83ed90e5601f8b45144a4ed4",
+                    text: "Successfully submitted the data 'Don't Fight, Unite!' to EthStorage \nTransaction: 0x748057951ff79cea6de0e13b2ef70a1e9f443e9c83ed90e5601f8b45144a4ed4",
                 },
             },
         ],

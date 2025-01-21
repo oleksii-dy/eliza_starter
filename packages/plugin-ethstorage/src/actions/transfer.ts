@@ -11,16 +11,17 @@ import {
     composeContext,
     generateObjectDeprecated,
 } from "@elizaos/core";
-import { validateAvailConfig } from "../environment";
+import { ethstorageAvailConfig } from "../environment";
+
 import {
-    getDecimals,
-    initialize,
-    formatNumberToBalance,
-    getKeyringFromSeed,
-    isValidAddress,
-} from "avail-js-sdk";
-import type { ISubmittableResult } from "@polkadot/types/types/extrinsic";
-import type { H256 } from "@polkadot/types/interfaces/runtime";
+    type Address,
+    http,
+    isAddress,
+    parseEther,
+    createWalletClient,
+    defineChain
+} from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 
 export interface TransferContent extends Content {
     recipient: string;
@@ -40,8 +41,7 @@ export function isTransferContent(
     }
 
     // Validate addresses
-    const validAddresses = isValidAddress(content.recipient);
-    return validAddresses;
+    return isAddress(content.recipient, { strict: false });
 }
 
 const transferTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
@@ -50,38 +50,35 @@ const transferTemplate = `Respond with a JSON markdown block containing only the
 Example response:
 \`\`\`json
 {
-    "recipient": "5GWbvXjefEvXXETtKQH7YBsUaPc379KAQATW1eqeJT26cbsK",
+    "recipient": "0x341Cb1a94ef69499F97E93c41707B21326C0Cc87",
     "amount": "1000"
 }
 \`\`\`
 
 {{recentMessages}}
 
-Given the recent messages, extract the following information about the requested AVAIL token transfer:
+Given the recent messages, extract the following information about the requested ETHSTORAGE token transfer:
 - Recipient wallet address
-- Amount of AVAIL to transfer
+- Amount of QKC to transfer
 
 Respond with a JSON markdown block containing only the extracted values.`;
 
 export default {
-    name: "SEND_AVAIL",
+    name: "SEND_TOKEN",
     similes: [
-        "TRANSFER_AVAIL_TOKEN",
         "TRANSFER_TOKEN",
-        "TRANSFER_TOKENS_ON_AVAIL",
-        "TRANSFER_TOKEN_ON_AVAIL",
-        "SEND_TOKENS_ON_AVAIL",
-        "SEND_TOKENS_ON_AVAIL_NETWORK",
-        "SEND_AVAIL_ON_AVAIL_NETWORK",
-        "SEND_AVAIL_TOKEN_ON_AVAIL_DA",
-        "PAY_ON_AVAIL",
+        "TRANSFER_TOKEN_ON_ETHSTORAGE",
+        "TRANSFER_TOKENS_ON_ETHSTORAGE",
+        "SEND_TOKEN_ON_ETHSTORAGE",
+        "SEND_TOKENS_ON_ETHSTORAGE",
+        "PAY_ON_ETHSTORAGE",
     ],
     validate: async (runtime: IAgentRuntime, _message: Memory) => {
-        await validateAvailConfig(runtime);
+        await ethstorageAvailConfig(runtime);
         return true;
     },
     description:
-        "Transfer AVAIL tokens from the agent's wallet to another address",
+        "Transfer tokens from the agent's wallet to another address",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -116,9 +113,9 @@ export default {
             console.log(content);
             console.error("Invalid content for TRANSFER_TOKEN action.");
             if (callback) {
-                callback({
+                await callback({
                     text: "Unable to process transfer request. Invalid content provided.",
-                    content: { error: "Invalid transfer content" },
+                    content: {error: "Invalid transfer content"},
                 });
             }
             return false;
@@ -126,75 +123,46 @@ export default {
 
         if (content.amount != null && content.recipient != null) {
             try {
-                const SEED = runtime.getSetting("AVAIL_SEED")!;
-                //const PUBLIC_KEY = runtime.getSetting("AVAIL_ADDRESS")!;
-                const ENDPOINT = runtime.getSetting("AVAIL_RPC_URL");
+                const RPC = runtime.getSetting("ETHSTORAGE_RPC_URL");
+                const myChain = defineChain({
+                    id: 3335,
+                    name: "QuarkChain",
+                    network: "QuarkChain",
+                    nativeCurrency: {
+                        name: "QKC",
+                        symbol: "QKC",
+                        decimals: 18,
+                    },
+                    rpcUrls: {
+                        default: {
+                            http: [RPC],
+                        },
+                    },
+                });
+                const walletClient = createWalletClient({
+                    chain: myChain,
+                    transport: http(),
+                });
 
-                const api = await initialize(ENDPOINT);
-                const keyring = getKeyringFromSeed(SEED);
-                const options = { app_id: 0, nonce: -1 };
-                const decimals = getDecimals(api);
-                const amount = formatNumberToBalance(content.amount, decimals);
+                const PRIVATE_KEY = runtime.getSetting("ETHSTORAGE_PRIVATE_KEY")!;
+                const account = privateKeyToAccount(`0x${PRIVATE_KEY}`);
 
-                const oldBalance: any = await api.query.system.account(
-                    content.recipient
-                );
-                elizaLogger.log(
-                    `Balance before the transfer call: ${oldBalance["data"]["free"].toHuman()}`
-                );
-
-                // Transaction call
-                const txResult = await new Promise<ISubmittableResult>(
-                    (res) => {
-                        api.tx.balances
-                            .transferKeepAlive(content.recipient, amount)
-                            .signAndSend(
-                                keyring,
-                                options,
-                                (result: ISubmittableResult) => {
-                                    elizaLogger.log(
-                                        `Tx status: ${result.status}`
-                                    );
-                                    if (result.isFinalized || result.isError) {
-                                        res(result);
-                                    }
-                                }
-                            );
-                    }
-                );
-
-                // Error handling
-                const error = txResult.dispatchError;
-                if (txResult.isError) {
-                    elizaLogger.log(`Transaction was not executed`);
-                } else if (error != undefined) {
-                    if (error.isModule) {
-                        const decoded = api.registry.findMetaError(
-                            error.asModule
-                        );
-                        const { docs, name, section } = decoded;
-                        elizaLogger.log(
-                            `${section}.${name}: ${docs.join(" ")}`
-                        );
-                    } else {
-                        elizaLogger.log(error.toString());
-                    }
-                }
-
-                const newBalance: any = await api.query.system.account(
-                    content.recipient
-                );
-                elizaLogger.log(
-                    `Balance after the transfer call: ${newBalance["data"]["free"].toHuman()}`
-                );
+                let hash = await walletClient.sendTransaction({
+                    account: account,
+                    chain: myChain,
+                    to: content.recipient as Address,
+                    value: parseEther(content.amount.toString()),
+                    kzg: undefined,
+                });
 
                 elizaLogger.success(
-                    "Transfer completed successfully! tx: \n " +
-                        `Tx Hash: ${txResult.txHash as H256}, Block Hash: ${txResult.status.asFinalized as H256}`
+                    "Transfer completed successfully! Transaction hash: " + hash
                 );
                 if (callback) {
                     callback({
-                        text: `Transfer completed successfully! tx hash: ${txResult.txHash as H256} Block Hash: ${txResult.status.asFinalized as H256} `,
+                        text:
+                            "Transfer completed successfully! Transaction hash: " +
+                            hash,
                         content: {},
                     });
                 }
@@ -220,20 +188,20 @@ export default {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Send 100 AVAIL to 5GWbvXjefEvXXETtKQH7YBsUaPc379KAQATW1eqeJT26cbsK",
+                    text: "Send 100 QKC to 0x114B242D931B47D5cDcEe7AF065856f70ee278C4",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "Sure, I'll send 100 AVAIL to that address now.",
-                    action: "SEND_AVAIL",
+                    text: "Sure, I'll send 100 QKC to that address now.",
+                    action: "SEND_TOKEN",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "Successfully sent 100 AVAIL to 5GWbvXjefEvXXETtKQH7YBsUaPc379KAQATW1eqeJT26cbsK\nTransaction: 0x748057951ff79cea6de0e13b2ef70a1e9f443e9c83ed90e5601f8b45144a4ed4",
+                    text: "Successfully sent 100 QKC to 0x114B242D931B47D5cDcEe7AF065856f70ee278C4\nTransaction: 0x748057951ff79cea6de0e13b2ef70a1e9f443e9c83ed90e5601f8b45144a4ed4",
                 },
             },
         ],
@@ -241,20 +209,20 @@ export default {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Please send 100 AVAIL tokens to 5GWbvXjefEvXXETtKQH7YBsUaPc379KAQATW1eqeJT26cbsK",
+                    text: "Please send 100 QKC tokens to 0x114B242D931B47D5cDcEe7AF065856f70ee278C4",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "Of course. Sending 100 AVAIL to that address now.",
+                    text: "Of course. Sending 100 QKC to that address now.",
                     action: "SEND_TOKEN",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "Successfully sent 100 AVAIL to 5GWbvXjefEvXXETtKQH7YBsUaPc379KAQATW1eqeJT26cbsK\nTransaction: 0x0b9f23e69ea91ba98926744472717960cc7018d35bc3165bdba6ae41670da0f0",
+                    text: "Successfully sent 100 QKC to 0x114B242D931B47D5cDcEe7AF065856f70ee278C4\nTransaction: 0x0b9f23e69ea91ba98926744472717960cc7018d35bc3165bdba6ae41670da0f0",
                 },
             },
         ],

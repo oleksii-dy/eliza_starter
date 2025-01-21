@@ -6,7 +6,8 @@
     "dependencies": {
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-trustdb": "workspace:*",
-        "ethstorage-sdk": "^3.0.0"
+        "ethstorage-sdk": "^3.0.0",
+        "viem": "2.22.2"
     },
     "devDependencies": {
         "tsup": "8.3.5",
