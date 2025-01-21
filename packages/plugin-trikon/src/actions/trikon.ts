@@ -1,18 +1,3 @@
-// import type { Action } from "@elizaos/core";
-
-// export const trikonAction: Action = {
-//     name: "Trikon",
-//     description: "A Trikon action for Trikon plugin",
-//     execute: async (context) => {
-//         // Implementation here
-//         return {
-//             success: true,
-//             message: "Trikon action executed successfully"
-//         };
-//     }
-// };
-
-// export default trikonAction;
 import { elizaLogger } from "@elizaos/core";
 import {
     type ActionExample,
