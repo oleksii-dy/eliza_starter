@@ -801,7 +801,7 @@ export class AgentRuntime implements IAgentRuntime {
             this.messageManager.getMemories({
                 roomId,
                 // count: conversationLength,
-                count: 10,
+                count:3,
                 unique: false,
             }),
             getGoals({
