@@ -6,7 +6,6 @@ import {
     elizaLogger,
     stringToUuid,
     composeContext,
-    messageCompletionFooter,
     getEmbeddingZeroVector,
     generateMessageResponse,
     ModelClass,
@@ -34,14 +33,11 @@ interface PluginConfig {
     runtime: IAgentRuntime;
     client: ClientBase;
     spaceId: string;
-    openAiApiKey?: string; // for STT & ChatGPT
     elevenLabsApiKey?: string; // for TTS
     sttLanguage?: string; // e.g. "en" for Whisper
-    gptModel?: string; // e.g. "gpt-3.5-turbo"
     silenceThreshold?: number; // amplitude threshold for ignoring silence
     voiceId?: string; // specify which ElevenLabs voice to use
     elevenLabsModel?: string; // e.g. "eleven_monolingual_v1"
-    systemPrompt?: string; // ex. "You are a helpful AI assistant"
     chatContext?: Array<{
         role: "system" | "user" | "assistant";
         content: string;
@@ -69,13 +65,10 @@ export class SttTtsPlugin implements Plugin {
     private space?: Space;
     private janus?: JanusClient;
 
-    private openAiApiKey?: string;
     private elevenLabsApiKey?: string;
 
-    private gptModel = "gpt-3.5-turbo";
     private voiceId = "21m00Tcm4TlvDq8ikWAM";
     private elevenLabsModel = "eleven_monolingual_v1";
-    private systemPrompt = "You are a helpful AI assistant.";
     private chatContext: Array<{
         role: "system" | "user" | "assistant";
         content: string;
@@ -120,10 +113,8 @@ export class SttTtsPlugin implements Plugin {
         this.runtime = config?.runtime;
         this.client = config?.client;
         this.spaceId = config?.spaceId;
-        this.openAiApiKey = config?.openAiApiKey;
         this.elevenLabsApiKey = config?.elevenLabsApiKey;
         this.transcriptionService = config.transcriptionService;
-        if (config?.gptModel) this.gptModel = config.gptModel;
         if (typeof config?.silenceThreshold === "number") {
             this.silenceThreshold = config.silenceThreshold;
         }
@@ -132,9 +123,6 @@ export class SttTtsPlugin implements Plugin {
         }
         if (config?.elevenLabsModel) {
             this.elevenLabsModel = config.elevenLabsModel;
-        }
-        if (config?.systemPrompt) {
-            this.systemPrompt = config.systemPrompt;
         }
         if (config?.chatContext) {
             this.chatContext = config.chatContext;
@@ -403,10 +391,6 @@ export class SttTtsPlugin implements Plugin {
         userText: string,
         userId: UUID
     ): Promise<string> {
-        if (!this.openAiApiKey) {
-            throw new Error("[SttTtsPlugin] No OpenAI API key for ChatGPT");
-        }
-
         await this.runtime.ensureUserExists(
             this.runtime.agentId,
             this.client.profile.username,
@@ -714,19 +698,6 @@ export class SttTtsPlugin implements Plugin {
             // Short pause so we don't overload
             await new Promise((r) => setTimeout(r, 10));
         }
-    }
-
-    public setSystemPrompt(prompt: string) {
-        this.systemPrompt = prompt;
-        elizaLogger.log("[SttTtsPlugin] setSystemPrompt =>", prompt);
-    }
-
-    /**
-     * Change the GPT model at runtime (e.g. "gpt-4", "gpt-3.5-turbo", etc.).
-     */
-    public setGptModel(model: string) {
-        this.gptModel = model;
-        elizaLogger.log("[SttTtsPlugin] setGptModel =>", model);
     }
 
     /**

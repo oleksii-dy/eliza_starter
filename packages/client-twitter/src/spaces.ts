@@ -31,8 +31,6 @@ interface SpaceDecisionOptions {
     enableRecording?: boolean;
     voiceId?: string;
     sttLanguage?: string;
-    gptModel?: string;
-    systemPrompt?: string;
     speakerMaxDurationMs?: number;
 }
 
@@ -176,8 +174,6 @@ export class TwitterSpaceClient {
                 runtime.character.settings.voice.model ||
                 "Xb7hH8MSUJpSbSDYk0k2",
             sttLanguage: charSpaces.sttLanguage || "en",
-            gptModel: charSpaces.gptModel,
-            systemPrompt: charSpaces.systemPrompt,
             speakerMaxDurationMs: charSpaces.speakerMaxDurationMs ?? 4 * 60_000,
         };
     }
@@ -309,7 +305,6 @@ export class TwitterSpaceClient {
             this.speakerQueue = [];
 
             // Retrieve keys
-            const openAiKey = this.runtime.getSetting("OPENAI_API_KEY") || "";
             const elevenLabsKey =
                 this.runtime.getSetting("ELEVENLABS_XI_API_KEY") || "";
 
@@ -329,11 +324,8 @@ export class TwitterSpaceClient {
                     runtime: this.runtime,
                     client: this.client,
                     spaceId: this.spaceId,
-                    openAiApiKey: openAiKey,
                     elevenLabsApiKey: elevenLabsKey,
                     voiceId: this.decisionOptions.voiceId,
-                    gptModel: this.decisionOptions.gptModel,
-                    systemPrompt: this.decisionOptions.systemPrompt,
                     sttLanguage: this.decisionOptions.sttLanguage,
                     transcriptionService:
                         this.client.runtime.getService<ITranscriptionService>(
