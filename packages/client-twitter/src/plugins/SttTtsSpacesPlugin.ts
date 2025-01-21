@@ -15,6 +15,9 @@ import {
     Memory,
     Plugin,
     UUID,
+    State,
+    composeRandomUser,
+    generateShouldRespond,
 } from "@elizaos/core";
 import type {
     Space,
@@ -22,7 +25,10 @@ import type {
     AudioDataWithUser,
 } from "agent-twitter-client";
 import { ClientBase } from "../base";
-import { twitterVoiceHandlerTemplate } from "./templates";
+import {
+    twitterVoiceHandlerTemplate,
+    twitterShouldRespondTemplate,
+} from "./templates";
 
 interface PluginConfig {
     runtime: IAgentRuntime;
@@ -314,6 +320,13 @@ export class SttTtsPlugin implements Plugin {
 
             // Get response
             const replyText = await this.handleUserMessage(sttText, userId);
+            if (!replyText || !replyText.length || !replyText.trim()) {
+                elizaLogger.warn(
+                    "[SttTtsPlugin] No replyText for user =>",
+                    userId
+                );
+                return;
+            }
             console.log("reply text:", replyText);
             elizaLogger.log(
                 `[SttTtsPlugin] GPT => user=${userId}, reply="${replyText}"`
@@ -431,6 +444,18 @@ export class SttTtsPlugin implements Plugin {
 
         state = await this.runtime.updateRecentMessageState(state);
 
+        const shouldIgnore = await this._shouldIgnore(memory);
+
+        if (shouldIgnore) {
+            return "";
+        }
+
+        const shouldRespond = await this._shouldRespond(userText, state);
+
+        if (!shouldRespond) {
+            return "";
+        }
+
         const context = composeContext({
             state,
             template:
@@ -489,6 +514,101 @@ export class SttTtsPlugin implements Plugin {
         });
 
         return response;
+    }
+
+    private async _shouldIgnore(message: Memory): Promise<boolean> {
+        // console.log("message: ", message);
+        elizaLogger.debug("message.content: ", message.content);
+        // if the message is 3 characters or less, ignore it
+        if ((message.content as Content).text.length < 3) {
+            return true;
+        }
+
+        const loseInterestWords = [
+            // telling the bot to stop talking
+            "shut up",
+            "stop",
+            "dont talk",
+            "silence",
+            "stop talking",
+            "be quiet",
+            "hush",
+            "stfu",
+            "stupid bot",
+            "dumb bot",
+
+            // offensive words
+            "fuck",
+            "shit",
+            "damn",
+            "suck",
+            "dick",
+            "cock",
+            "sex",
+            "sexy",
+        ];
+        if (
+            (message.content as Content).text.length < 50 &&
+            loseInterestWords.some((word) =>
+                (message.content as Content).text?.toLowerCase().includes(word)
+            )
+        ) {
+            return true;
+        }
+
+        const ignoreWords = ["k", "ok", "bye", "lol", "nm", "uh"];
+        if (
+            (message.content as Content).text?.length < 8 &&
+            ignoreWords.some((word) =>
+                (message.content as Content).text?.toLowerCase().includes(word)
+            )
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private async _shouldRespond(
+        message: string,
+        state: State
+    ): Promise<boolean> {
+        const lowerMessage = message.toLowerCase();
+        const characterName = this.runtime.character.name.toLowerCase();
+
+        if (lowerMessage.includes(characterName)) {
+            return true;
+        }
+
+        // If none of the above conditions are met, use the generateText to decide
+        const shouldRespondContext = composeContext({
+            state,
+            template:
+                this.runtime.character.templates
+                    ?.twitterShouldRespondTemplate ||
+                this.runtime.character.templates?.shouldRespondTemplate ||
+                composeRandomUser(twitterShouldRespondTemplate, 2),
+        });
+
+        const response = await generateShouldRespond({
+            runtime: this.runtime,
+            context: shouldRespondContext,
+            modelClass: ModelClass.SMALL,
+        });
+
+        if (response === "RESPOND") {
+            return true;
+        } else if (response === "IGNORE") {
+            return false;
+        } else if (response === "STOP") {
+            return false;
+        } else {
+            console.error(
+                "Invalid response from response generateText:",
+                response
+            );
+            return false;
+        }
     }
 
     /**
