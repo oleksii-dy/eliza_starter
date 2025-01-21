@@ -1,5 +1,6 @@
 import {
     Action,
+    HandlerCallback,
     IAgentRuntime,
     Memory,
     State,
@@ -13,16 +14,18 @@ export const fetchMatchAction: Action = {
     description: "Fetch live match scores and events",
     validate: async (
         runtime: IAgentRuntime,
-        message: Memory,
-        state?: State
+        _message: Memory,
+        _state?: State
     ) => {
         const apiKey = runtime.getSetting("FOOTBALL_API_KEY");
         return !!apiKey;
     },
     handler: async (
         runtime: IAgentRuntime,
-        message: Memory,
-        state?: State
+        _message: Memory,
+        _state?: State,
+        options?: { [key: string]: unknown },
+        callback?: HandlerCallback
     ): Promise<any> => {
         try {
             const apiKey = runtime.getSetting("FOOTBALL_API_KEY");
@@ -33,22 +36,39 @@ export const fetchMatchAction: Action = {
                 signal: AbortSignal.timeout(5000),
             });
 
+
             if (!response.ok) {
                 elizaLogger.error(
                     "Error fetching live match data:",
                     response.statusText
                 );
+                callback({
+                    text: "Error fetching live match data:",
+                    action: "FETCH_MATCH",
+                });
                 return false;
             }
 
             const matchData = await response.json();
-            elizaLogger.log("Fetched match data:", matchData);
+            // elizaLogger.log("Fetched match data:", matchData);
 
             if (!isValidMatchData(matchData)) {
                 elizaLogger.error("Invalid match data format");
+                callback({
+                    text: "Error fetching live match data:",
+                });
                 return false;
             }
-            return matchData;
+            callback(
+                {
+                    text: `Football match data fetched successfully:
+                    - Result: ${matchData}`,
+                },
+                []
+            );
+
+
+            return;
         } catch (error) {
             elizaLogger.error("Error in fetchMatchAction:", error);
             return false;
@@ -59,7 +79,7 @@ export const fetchMatchAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "What’s the score of the Chelsea vs Arsenal match?",
+                    text: "What's the score of the Chelsea vs Arsenal match?",
                 },
             },
             {
@@ -74,7 +94,7 @@ export const fetchMatchAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Give me the latest score for today’s match!",
+                    text: "Give me the latest score for today's match!",
                 },
             },
             {
@@ -89,7 +109,7 @@ export const fetchMatchAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "What’s the score in the Premier League game?",
+                    text: "What's the score in the Premier League game?",
                 },
             },
             {
@@ -103,12 +123,12 @@ export const fetchMatchAction: Action = {
         [
             {
                 user: "{{user1}}",
-                content: { text: "What’s the score for today’s matches?" },
+                content: { text: "What's the score for today's matches?" },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Here are today’s live scores for the matches:",
+                    text: "Here are today's live scores for the matches:",
                     action: "FETCH_MATCH",
                 },
             },
