@@ -106,3 +106,20 @@ export interface PairStatsContent {
 export interface TokenPairsContent {
     tokenAddress: string;
 }
+
+// Token Stats Response Types
+export interface TokenStatsContent {
+    tokenAddress: string;
+}
+
+export interface TokenStats {
+    totalLiquidityUsd: number;
+    totalActivePairs: number;
+    totalActiveDexes: number;
+    totalSwaps: TimeFrameStats;
+    totalVolume: TimeFrameStats;
+    totalBuyVolume: TimeFrameStats;
+    totalSellVolume: TimeFrameStats;
+    totalBuyers: TimeFrameStats;
+    totalSellers: TimeFrameStats;
+}

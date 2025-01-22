@@ -8,5 +8,7 @@ export const API_ENDPOINTS = {
             `/token/mainnet/pairs/${pairAddress}/stats`,
         PAIR_OHLCV: (pairAddress: string) =>
             `/token/mainnet/pairs/${pairAddress}/ohlcv`,
+        TOKEN_STATS: (tokenAddress: string) =>
+            `/token/mainnet/${tokenAddress}/pairs/stats`,
     },
 } as const;
