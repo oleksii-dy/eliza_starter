@@ -8307,8 +8307,8 @@ packages:
       axios: ^1.3.1
       rxjs: ^6.0.0 || ^7.0.0
 
-  '@nestjs/common@10.4.6':
-    resolution: {integrity: sha512-KkezkZvU9poWaNq4L+lNvx+386hpOxPJkfXBBeSMrcqBOx8kVr36TGN2uYkF4Ta4zNu1KbCjmZbc0rhHSg296g==}
+  '@nestjs/common@10.4.15':
+    resolution: {integrity: sha512-vaLg1ZgwhG29BuLDxPA9OAcIlgqzp9/N8iG0wGapyUNTf4IY4O6zAHgN6QalwLhFxq7nOI021vdRojR1oF3bqg==}
     peerDependencies:
       class-transformer: '*'
       class-validator: '*'
@@ -8320,8 +8320,8 @@ packages:
       class-validator:
         optional: true
 
-  '@nestjs/core@10.4.6':
-    resolution: {integrity: sha512-zXVPxCNRfO6gAy0yvEDjUxE/8gfZICJFpsl2lZAUH31bPb6m+tXuhUq2mVCTEltyMYQ+DYtRe+fEYM2v152N1g==}
+  '@nestjs/core@10.4.15':
+    resolution: {integrity: sha512-UBejmdiYwaH6fTsz2QFBlC1cJHM+3UDeLZN+CiP9I1fRv2KlBZsmozGLbV5eS1JAVWJB4T5N5yQ0gjN8ZvcS2w==}
     peerDependencies:
       '@nestjs/common': ^10.0.0
       '@nestjs/microservices': ^10.0.0
@@ -9011,8 +9011,8 @@ packages:
       borsh: ^0.7.0
       buffer: 6.0.1
 
-  '@openapitools/openapi-generator-cli@2.15.4':
-    resolution: {integrity: sha512-O4OaZI1abqDLbNTfiHiOfoV5JE9Qw8lENCpwD+ncKOf/CB5+HXF4l/z5l+mE3jBW0fmm8GZLg6M/VU7XkvNoNQ==}
+  '@openapitools/openapi-generator-cli@2.16.2':
+    resolution: {integrity: sha512-AjPxFPpCr8atXYWAFRlWttWcLz0+2VEEw2dTk8wLBwzwz3+dN/8t1Zi4s89QNPJyrOm1lc+g42nNIy8MJlWOIA==}
     engines: {node: '>=16'}
     hasBin: true
 
@@ -13171,9 +13171,6 @@ packages:
   axios@1.7.4:
     resolution: {integrity: sha512-DukmaFRnY6AzAALSH4J2M3k6PkaC+MfaAGdEERRWcC9q3/TWQwLpHR8ZRLKTdQ3aBDL64EdluRDjJqKw+BPZEw==}
 
-  axios@1.7.7:
-    resolution: {integrity: sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==}
-
   axios@1.7.8:
     resolution: {integrity: sha512-Uu0wb7KNqK2t5K+YQyVCLM76prD5sRFjKHbJYCP1J7JFGEQ6nN7HWn9+04LAeiJ3ji54lgS/gZCH1oxyrf1SPw==}
 
@@ -14550,8 +14547,8 @@ packages:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
 
-  crossws@0.3.1:
-    resolution: {integrity: sha512-HsZgeVYaG+b5zA+9PbIPGq4+J/CJynJuearykPsXx4V/eMhyQ5EDVg3Ak2FBZtVXCiOLu/U7IiwDHTr9MA+IKw==}
+  crossws@0.3.2:
+    resolution: {integrity: sha512-S2PpQHRcgYABOS2465b34wqTOn5dbLL+iSvyweJYGGFLDsKq88xrjDXUiEhfYkhWZq1HuS6of3okRHILbkrqxw==}
 
   crypto-browserify@3.12.1:
     resolution: {integrity: sha512-r4ESw/IlusD17lgQi1O20Fa3qNnsckR126TdUuBgAu7GBYSIPvdNyONd3Zrxh0xCwA4+6w/TDArBPsMvhur+KQ==}
@@ -35044,39 +35041,39 @@ snapshots:
       near-api-js: 0.44.2(encoding@0.1.13)
       rxjs: 7.8.1
 
-  '@nestjs/axios@3.1.3(@nestjs/common@10.4.6(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1))(axios@1.7.7)(rxjs@7.8.1)':
+  '@nestjs/axios@3.1.3(@nestjs/common@10.4.15(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1))(axios@1.7.9)(rxjs@7.8.1)':
     dependencies:
-      '@nestjs/common': 10.4.6(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1)
-      axios: 1.7.7
+      '@nestjs/common': 10.4.15(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1)
+      axios: 1.7.9
       rxjs: 7.8.1
 
-  '@nestjs/common@10.4.6(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1)':
+  '@nestjs/common@10.4.15(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1)':
     dependencies:
       iterare: 1.2.1
       reflect-metadata: 0.1.13
       rxjs: 7.8.1
-      tslib: 2.7.0
+      tslib: 2.8.1
       uid: 2.0.2
     optionalDependencies:
       class-transformer: 0.5.1
 
-  '@nestjs/core@10.4.6(@nestjs/common@10.4.6(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1))(encoding@0.1.13)(reflect-metadata@0.1.13)(rxjs@7.8.1)':
+  '@nestjs/core@10.4.15(@nestjs/common@10.4.15(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1))(encoding@0.1.13)(reflect-metadata@0.1.13)(rxjs@7.8.1)':
     dependencies:
-      '@nestjs/common': 10.4.6(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1)
+      '@nestjs/common': 10.4.15(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1)
       '@nuxtjs/opencollective': 0.3.2(encoding@0.1.13)
       fast-safe-stringify: 2.1.1
       iterare: 1.2.1
       path-to-regexp: 3.3.0
       reflect-metadata: 0.1.13
       rxjs: 7.8.1
-      tslib: 2.7.0
+      tslib: 2.8.1
       uid: 2.0.2
     transitivePeerDependencies:
       - encoding
 
   '@neynar/nodejs-sdk@2.8.1(bufferutil@4.0.9)(class-transformer@0.5.1)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)':
     dependencies:
-      '@openapitools/openapi-generator-cli': 2.15.4(class-transformer@0.5.1)(encoding@0.1.13)
+      '@openapitools/openapi-generator-cli': 2.16.2(class-transformer@0.5.1)(encoding@0.1.13)
       semver: 7.6.3
       viem: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)
     transitivePeerDependencies:
@@ -36011,13 +36008,13 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@openapitools/openapi-generator-cli@2.15.4(class-transformer@0.5.1)(encoding@0.1.13)':
+  '@openapitools/openapi-generator-cli@2.16.2(class-transformer@0.5.1)(encoding@0.1.13)':
     dependencies:
-      '@nestjs/axios': 3.1.3(@nestjs/common@10.4.6(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1))(axios@1.7.7)(rxjs@7.8.1)
-      '@nestjs/common': 10.4.6(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1)
-      '@nestjs/core': 10.4.6(@nestjs/common@10.4.6(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1))(encoding@0.1.13)(reflect-metadata@0.1.13)(rxjs@7.8.1)
+      '@nestjs/axios': 3.1.3(@nestjs/common@10.4.15(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1))(axios@1.7.9)(rxjs@7.8.1)
+      '@nestjs/common': 10.4.15(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1)
+      '@nestjs/core': 10.4.15(@nestjs/common@10.4.15(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1))(encoding@0.1.13)(reflect-metadata@0.1.13)(rxjs@7.8.1)
       '@nuxtjs/opencollective': 0.3.2(encoding@0.1.13)
-      axios: 1.7.7
+      axios: 1.7.9
       chalk: 4.1.2
       commander: 8.3.0
       compare-versions: 4.1.4
@@ -43381,14 +43378,6 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  axios@1.7.7:
-    dependencies:
-      follow-redirects: 1.15.9(debug@4.3.4)
-      form-data: 4.0.1
-      proxy-from-env: 1.1.0
-    transitivePeerDependencies:
-      - debug
-
   axios@1.7.8:
     dependencies:
       follow-redirects: 1.15.9(debug@4.3.4)
@@ -45165,7 +45154,7 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
-  crossws@0.3.1:
+  crossws@0.3.2:
     dependencies:
       uncrypto: 0.1.3
 
@@ -48501,7 +48490,7 @@ snapshots:
   h3@1.13.1:
     dependencies:
       cookie-es: 1.2.2
-      crossws: 0.3.1
+      crossws: 0.3.2
       defu: 6.1.4
       destr: 2.0.3
       iron-webcrypto: 1.2.1
