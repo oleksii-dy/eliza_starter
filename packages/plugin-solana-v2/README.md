@@ -2,9 +2,6 @@
 
 The **Solana Plugin V2** leverages the latest features of `@solana/web3.js` v2 to provide a modern, efficient, and composable solution for Solana integrations within the Eliza AI agent framework.
 
-## Orca DEX integration
-This plugin is designed for advanced position management and introduces foundational tools for building DeFi strategies on Orca.
-
 ---
 
 ## Key Features 🚀
@@ -16,8 +13,8 @@ This plugin is designed for advanced position management and introduces foundati
   - Zero-dependency design
   - Functional programming approach
 
-### Backward Compatibility
-- This plugin can be used alongside existing plugins that use `@solana/web3.js` v1.
+### Compatibility with existing solana V1 plugins
+- This plugin can be used by the agent alongside existing plugins that use `@solana/web3.js` v1.
 
 ### Common Utilities
 The `Utils` class provides shared functionality across the plugin, offering flexibility and ease of integration.
@@ -31,22 +28,74 @@ The `Utils` class provides shared functionality across the plugin, offering flex
 #### Trusted Execution Environment (TEE)
 - For Trusted Execution Environment (TEE) functionality, this plugin transitions from `Keypair` (used in v1) to `CryptoKeyPair` from the Web Crypto API. This change aligns with `@solana/web3.js` v2's zero-dependency, modern JavaScript architecture.
 - A modified implementation for TEE integration is included in `src/utils/`, following the same patterns used in `plugin-tee`.
+
 ---
 
 ## Current Functionality 🎯
 
 ### Liquidity Position Management
 - **Reposition Liquidity**:
-  - Automatically repositions liquidity positions if the center price of the position deviates from the current pool price by more than a user-specified threshold (`repositionThresholdBps`).
+  - Automatically repositions Orca liquidity positions if the center price of the position deviates from the current pool price by more than a user-specified threshold (`repositionThresholdBps`).
   - Maintains the original width of the position during repositioning.
-  - Example: To ensure the center price is within 3% of the current price, set `repositionThresholdBps` to 300.
+  - Repositions at a user defined time interval.
+  - Uses a slippage tolerance set by the user.
 
-### Built-in Utilities
-- **`Utils` Class**:
-  - `loadWallet`: Integrates wallet loading with TEE functionality.
-  - `sendTransaction`: Smart transaction handling with CU optimization.
+### How to run the Orca LP Management tool
+#### 1. Set up your environment variables
+- In the root of the repositorty, copy `.env.example` to `.env`
+- Fill in the following parameters:
+  - `SOLANA_PRIVATE_KEY`
+  - `SOLANA_PUBLIC_KEY`
+  - `SOLANA_RPC_URL`
 
----
+#### 2. RPC requirements
+Most often, free-tier RPC URLs are not sufficient for this plugin.
+- Eliza needs to fetch all your token-accounts in order to find the position NFTs that represent Orca positions. Such calls are done through the `getProgramAccounts` method of the RPC client, which can be expensive.
+- To ensure transaction landing, the plugin makes use of a client-side retry logic (read more [here](https://www.helius.dev/blog/how-to-land-transactions-on-solana#how-do-i-land-transactions)), which also puts a heavier load on the RPC.
+- The amount of positions you own and the update interval you set can also contribute to RPC limits.
+
+#### 3. Update the agent
+In `agent/src/index.ts`, search for the function `createAgent`, and add `solana_plugin_v2` to the `AgentRuntime` like so:
+```typescript
+export async function createAgent(
+    character: Character,
+    db: IDatabaseAdapter,
+    cache: ICacheManager,
+    token: string
+): Promise<AgentRuntime> {
+    // Rest of the code ...
+
+    return new AgentRuntime({
+        // Other parameters
+        plugins: [
+            // Other plutins
+            getSecret(character, "SOLANA_PUBLIC_KEY") ||
+            (getSecret(character, "WALLET_PUBLIC_KEY") &&
+                !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
+                ? solanaPluginV2
+                : null,
+    // Rest of the code
+```
+
+#### 4. Use LP Manager character
+Copy `packages/plugin-solana-v2/src/character/orca/lpmanager.character.json` to `characters/lpmanager.character.json`.
+
+#### 5. Install and build the repo
+Follow the general installation and build steps from the README in the root of the repo
+
+#### 5. Run the agent
+Start the the agent with the following command:
+```sh
+pnpm start --characters="characters/lpmanager.character.json"
+```
+
+Start the client (chat terminal) with:
+```sh
+pnpm start:client
+```
+
+#### 6. Start prompting
+Ask the agent what it can do for you. Provide the appropriate parameters and let the agent reposition your positions automatically.
 
 ## Future Functionality 🔮
 
@@ -63,33 +112,7 @@ The `Utils` class provides shared functionality across the plugin, offering flex
 
 ---
 
-## Usage 🛠️
-
-### Plugin Configuration For Automated Repositioning
-```typescript
-export const solanaPluginV2: Plugin = {
-  name: "solanaV2",
-  description: "Solana Plugin V2 for Eliza",
-  actions: [managePositions, repositionPosition],
-  evaluators: [repositionEvaluator],
-  providers: [positionProvider],
-};
-```
-
-### Example Integration
-In your `.env` variable, set the following parameters:
-```bash
-SOLANA_PRIVATE_KEY=
-SOLANA_PUBLIC_KEY=
-RPC_URL=
-```
-
----
-
 ## Contributing 🤝
 Contributions are welcome! If you wish to extend `plugin-solana-v2` with your tools, ensure compatibility with `@solana/web3.js` v2.
 
 ---
-
-## Notes 📝
-- Refer to the [Orca Whirlpools SDK](https://orca-so.github.io/whirlpools/) for additional resources and context.

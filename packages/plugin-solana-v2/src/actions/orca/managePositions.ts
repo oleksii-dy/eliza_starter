@@ -67,7 +67,7 @@ export const managePositions: Action = {
         elizaLogger.log("Fetched positions:", fetchedPositions);
 
         const { signer: wallet } = await loadWallet(runtime, true);
-        const rpc = createSolanaRpc(settings.RPC_URL!);
+        const rpc = createSolanaRpc(settings.SOLANA_RPC_URL!);
         setDefaultSlippageToleranceBps(slippageToleranceBps);
         setDefaultFunder(wallet);
 

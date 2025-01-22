@@ -11,12 +11,4 @@ export const solanaPluginV2: Plugin = {
     providers: [positionProvider],
 };
 
-// export const orcaPlugin: Plugin = {
-//     name: "orca",
-//     description: "Orca Plugin for Eliza",
-//     actions: [managePositions, repositionPositions],
-//     evaluators: [repositionEvaluator],
-//     providers: [positionProvider],
-// }
-
 export default solanaPluginV2;

@@ -31,7 +31,7 @@ export const positionProvider: Provider = {
                 runtime,
                 false
             );
-            const rpc = createSolanaRpc(settings.RPC_URL!);
+            const rpc = createSolanaRpc(settings.SOLANA_RPC_URL!);
             const positions = await fetchPositions(rpc, ownerAddress);
             const positionsString = JSON.stringify(positions);
             return positionsString
