@@ -19,6 +19,7 @@ import {
     getKeyringFromSeed,
     isValidAddress,
 } from "avail-js-sdk";
+import type { ISubmittableResult } from "@polkadot/types/types/extrinsic";
 import type { H256 } from "@polkadot/types/interfaces/runtime";
 
 export interface TransferContent extends Content {
@@ -143,14 +144,14 @@ export default {
                 );
 
                 // Transaction call
-                const txResult = await new Promise<{ status: any; isFinalized: boolean; isError: boolean; dispatchError?: { isModule: boolean; asModule: any; toString: () => string }; txHash: any }>(
+                const txResult = await new Promise<ISubmittableResult>(
                     (res) => {
                         api.tx.balances
                             .transferKeepAlive(content.recipient, amount)
                             .signAndSend(
                                 keyring,
                                 options,
-                                (result: { status: any; isFinalized: boolean; isError: boolean; dispatchError?: { isModule: boolean; asModule: any; toString: () => string }; txHash: any }) => {
+                                (result: ISubmittableResult) => {
                                     elizaLogger.log(
                                         `Tx status: ${result.status}`
                                     );
