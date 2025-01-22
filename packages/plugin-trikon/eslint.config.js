@@ -10,6 +10,9 @@ export default [
             globals: {
                 ...globals.node
             },
+            parserOptions: {
+                project: "./tsconfig.json"
+            }
         },
         plugins: {
             "@typescript-eslint": tsPlugin
