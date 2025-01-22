@@ -20,7 +20,7 @@ The **Solana Plugin V2** leverages the latest features of `@solana/web3.js` v2 t
 The `Utils` class provides shared functionality across the plugin, offering flexibility and ease of integration.
 
 #### `sendTransaction`
-- Accepts the RPC isntance, transaction instructions, and a wallet.
+- Accepts the RPC instance, transaction instructions, and a wallet.
 - Utilizes Solana's Compute Budget Program for optimized CU usage and priority fees.
 - Implements client-side retry logic to enhance transaction landing success.
 - More details on optimizing transactions can be found [here](https://orca-so.github.io/whirlpools/Whirlpools%20SDKs/Whirlpools/Send%20Transaction).
