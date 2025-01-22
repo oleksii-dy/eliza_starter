@@ -1,7 +1,7 @@
 import { Plugin } from "@elizaos/core";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 
-import { detectImage } from "./actions/sn34.ts";
+import { analyzeImage, analysisHistory } from "./actions/sn34.ts";
 import { factEvaluator } from "./evaluators/fact.ts";
 import { timeProvider } from "./providers/time.ts";
 
@@ -14,7 +14,8 @@ export const bittensorPlugin: Plugin = {
     name: "bittensor",
     description: "Utilize the BitMind API to access a range of digital commodities, including inference, media generation, and deepfake detection, on Bittensor's decentralized AI network.",
     actions: [
-        detectImage,
+        analyzeImage,
+        analysisHistory
     ],
     evaluators: [factEvaluator],
     providers: [timeProvider],
