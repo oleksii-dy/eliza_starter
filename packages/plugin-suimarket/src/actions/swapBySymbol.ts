@@ -12,6 +12,7 @@ import {
     type Action,
 } from "@elizaos/core";
 import findByVerifiedAndSymbol from "../providers/searchCoinInAggre";
+// import { RedisClient } from "@elizaos/adapter-redis";
 const swapTemplate = `Please extract the following swap details for SUI network:
 
 {
@@ -47,10 +48,9 @@ VALIDATION RULES:
 
 export const executeSwap: Action = {
     name: "SUI_EXECUTE_SWAP_BY_SYMBOL",
-    similes: ["SUI_SWAP_TOKENS_BY_SYMBOL", "SUI_TOKEN_SWAP_BY_SYMBOL", "SUI_TRADE_TOKENS_BY_SYMBOL", "SUI_EXCHANGE_TOKENS+BY_SYMBOL"],
+    similes: ["SUI_SWAP_TOKENS_BY_SYMBOL", "SUI_TOKEN_SWAP_BY_SYMBOL", "SUI_TRADE_TOKENS_BY_SYMBOL", "SUI_EXCHANGE_TOKENS_BY_SYMBOL"],
     validate: async (_runtime: IAgentRuntime, _message: Memory) => {
-        // Check if the necessary parameters are provided in the message
-        // console.log("Message:", message);
+
         return true;
     },
     description: "Perform a token swap.",
@@ -79,10 +79,14 @@ export const executeSwap: Action = {
         const content = await generateObjectDeprecated({
             runtime,
             context: swapContext,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
         });
         elizaLogger.log("extract content ...done -> ", content);
-
+        await callback({
+            text:`Please double-check all details before swapping to avoid any loss`,
+            action:"SUI_EXECUTE_SWAP_BY_SYMBOL",
+           
+         })
         const inputTokenObject = await findByVerifiedAndSymbol(content.inputTokenSymbol);
         if(!inputTokenObject){
             callback({
@@ -105,7 +109,7 @@ export const executeSwap: Action = {
 
         }
         try {
-            callback({
+            await callback({
                text:`Please double-check all details before swapping to avoid any loss`,
                action:"SUI_EXECUTE_SWAP_BY_SYMBOL",
                result: {
@@ -114,6 +118,7 @@ export const executeSwap: Action = {
 
             }
             })
+
             return true;
         } catch (error) {
             console.error("Error during token swap:", error);

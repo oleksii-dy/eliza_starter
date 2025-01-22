@@ -12,6 +12,7 @@ import {
 } from "@elizaos/core";
 import getInfoTokenOnSui from "../providers/coinMetaDataSui";
 import { getImageOnSuiScan } from "../providers/getImageOnSuiScan";
+// import { RedisClient } from "@elizaos/adapter-redis";
 const swapTemplate = `Please extract the following swap details for SUI network:
 
 {
@@ -45,10 +46,17 @@ VALIDATION RULES:
 
 export const executeSwapByAddress: Action = {
     name: "SUI_EXECUTE_SWAP_BY_ADDRESS",
-    similes: ["SUI_SWAP_TOKENS_BY_ADDRESS", "SUI_TOKEN_SWAP_BY_ADDRESS", "SUI_TRADE_TOKENS_BY_ADDRESS", "SUI_EXCHANGE_TOKENS_BY_ADDRESS"],
+    similes: [
+        "SUI_SWAP_TOKENS_BY_ADDRESS",
+        "SUI_TOKEN_SWAP_BY_ADDRESS",
+        "SUI_TRADE_TOKENS_BY_ADDRESS",
+        "SUI_EXCHANGE_TOKENS_BY_ADDRESS",
+
+    ],
     validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         // Check if the necessary parameters are provided in the message
-        // console.log("Message:", message);
+
+        // console.log("Message:", _message);
         return true;
     },
     description: "Perform a token swap.",
@@ -74,7 +82,7 @@ export const executeSwapByAddress: Action = {
         const content = await generateObjectDeprecated({
             runtime,
             context: swapContext,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
         });
         console.log("content:", content);
         const inputTokenObject = await getInfoTokenOnSui(content.inputTokenAddress);
@@ -117,6 +125,7 @@ export const executeSwapByAddress: Action = {
 
             }
             })
+
             return true;
         } catch (error) {
             console.error("Error during token swap:", error);

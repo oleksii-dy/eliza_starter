@@ -72,7 +72,9 @@ export const coinInfo: Action = {
         "GET_PRICE",
         "PRICE_INFO",
         "COIN_METRICS",
-        "COIN_STATS"
+        "COIN_STATS",
+        "COIN_INFORMATION",
+        "PRICE_COIN"
     ],
 
     examples: [],

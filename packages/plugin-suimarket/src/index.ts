@@ -5,12 +5,13 @@ import { topMarkets } from "./actions/topMarkets";
 import {  trendingTokens} from "./actions/trendingCoins";
 import { topAiTokens } from './actions/topAiTokens';
 import { searchSuiTokenSymbol } from './actions/searchSuiTokenSymbol';
-import { suiTokenInfo } from './actions/suiTokenInfo';
+import { suiTokenInfo } from './actions/suiTokenInfoByAddress';
 import { executeSwap } from './actions/swapBySymbol';
 import { executeSwapByAddress } from './actions/swapByAddress';
 import { sendTokenBySymbol } from './actions/sendTokenBySymbol';
 import { checkTxhashOnSui } from './actions/checkInfoTxHash';
 import { chainInfo } from './actions/infoChain';
+import { suiTokenInfoBySymbol } from './actions/suiTokenInfoBySymbol';
 
 const suimarketPlugin: Plugin = {
   name: "suimarketPlugin",
@@ -27,6 +28,7 @@ const suimarketPlugin: Plugin = {
     executeSwapByAddress,
     sendTokenBySymbol,
     checkTxhashOnSui,
+    suiTokenInfoBySymbol
 ],
   evaluators: [],
   providers: []
