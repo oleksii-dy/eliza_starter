@@ -252,10 +252,7 @@ export const analysisHistory: Action = {
                 limit: limit * 5
             }) as AIImageAnalysisMemory[];
     
-            elizaLogger.info("Raw memories:", allMemories);
             elizaLogger.info(`📊 BitMind: Retrieved ${allMemories.length} memories`);
-            elizaLogger.info("📊 BitMind: Memory action types:", 
-                allMemories.map(mem => mem.content?.actionType || 'undefined'));
     
             const imageAnalyses = allMemories.filter(
                 mem => mem.content.actionType === 'DETECT_IMAGE'
