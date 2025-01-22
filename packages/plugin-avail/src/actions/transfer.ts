@@ -144,24 +144,22 @@ export default {
                 );
 
                 // Transaction call
-                const txResult = await new Promise<ISubmittableResult>(
-                    (res) => {
-                        api.tx.balances
-                            .transferKeepAlive(content.recipient, amount)
-                            .signAndSend(
-                                keyring,
-                                options,
-                                (result: ISubmittableResult) => {
-                                    elizaLogger.log(
-                                        `Tx status: ${result.status}`
-                                    );
-                                    if (result.isFinalized || result.isError) {
-                                        res(result);
-                                    }
+                const txResult = await new Promise<ISubmittableResult>((res) => {
+                    api.tx.balances
+                        .transferKeepAlive(content.recipient, amount)
+                        .signAndSend(
+                            keyring,
+                            options,
+                            (result: ISubmittableResult, _extra: any) => {
+                                elizaLogger.log(
+                                    `Tx status: ${result.status}`
+                                );
+                                if (result.isFinalized || result.isError) {
+                                    res(result as ISubmittableResult);
                                 }
-                            );
-                    }
-                );
+                            }
+                        );
+                });
 
                 // Error handling
                 const error = txResult.dispatchError;
