@@ -45,7 +45,9 @@
     "pnpm": {
         "overrides": {
             "onnxruntime-node": "1.20.1",
-            "viem": "2.21.58"
+            "viem": "2.21.58",
+            "@polkadot/types": "10.13.1",
+            "@polkadot/api": "10.13.1"
         }
     },
     "engines": {
