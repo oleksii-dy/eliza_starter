@@ -84,7 +84,7 @@ export async function sendTweet(twitterClient: Scraper, content: string) {
     return true;
 }
 
-async function postTweet(
+export async function postTweet(
     runtime: IAgentRuntime,
     content: string
 ): Promise<boolean> {

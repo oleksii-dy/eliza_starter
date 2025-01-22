@@ -8,29 +8,40 @@ import {
     stringToUuid,
     composeContext,
     generateText,
-    ModelClass
+    ModelClass,
+    State
 } from "@elizaos/core";
 import { postTweet } from "@elizaos/plugin-twitter";
 import express from "express";
 import { WebhookEvent } from "./types";
-// import { pnlProvider } from "@elizaos/plugin-coinbase";
+import { pnlProvider } from "@elizaos/plugin-coinbase";
+import { Coinbase, Wallet } from "@coinbase/coinbase-sdk";
+import { initializeWallet } from "../../plugin-coinbase/src/utils";
+
+ export type WalletType = 'short_term_trading' | 'long_term_trading' | 'dry_powder' | 'operational_capital';
+ export type CoinbaseWallet = { wallet: Wallet, walletType: WalletType };
 
 export class CoinbaseClient implements Client {
     private runtime: IAgentRuntime;
     private server: express.Application;
     private port: number;
+    private wallets: CoinbaseWallet[];
 
     constructor(runtime: IAgentRuntime) {
         this.runtime = runtime;
         this.server = express();
         this.port = Number(runtime.getSetting("COINBASE_WEBHOOK_PORT")) || 3001;
+        this.wallets = [];
     }
 
     async initialize(): Promise<void> {
         elizaLogger.info("Initializing Coinbase client");
         try {
             elizaLogger.info("Coinbase client initialized successfully");
+            await this.initializeWallets();
+            elizaLogger.info("Wallets initialized successfully");
             await this.setupWebhookEndpoint();
+            elizaLogger.info("Webhook endpoint setup successfully");
         } catch (error) {
             elizaLogger.error("Failed to initialize Coinbase client:", error);
             throw error;
@@ -94,19 +105,37 @@ export class CoinbaseClient implements Client {
         });
     }
 
-    private async generateTweetContent(event: WebhookEvent, _tradeAmount: number, formattedTimestamp: string): Promise<string> {
-        try {
-            const roomId = stringToUuid("coinbase-trading");
-            const amount = Number(this.runtime.getSetting('COINBASE_TRADING_AMOUNT')) ?? 1;
+    private async initializeWallets() {
+        Coinbase.configure({
+            apiKeyName:
+                this.runtime.getSetting("COINBASE_API_KEY") ??
+                process.env.COINBASE_API_KEY,
+            privateKey:
+                this.runtime.getSetting("COINBASE_PRIVATE_KEY") ??
+                process.env.COINBASE_PRIVATE_KEY,
+        });
+       const walletTypes: WalletType[] = ['short_term_trading', 'long_term_trading', 'dry_powder', 'operational_capital'];
+       const networkId = Coinbase.networks.BaseMainnet;
+       for (const walletType of walletTypes) {
+           elizaLogger.log('walletType ', walletType);
+           const wallet = await initializeWallet(this.runtime, networkId, walletType);
+           elizaLogger.log('Successfully loaded wallet ', wallet.wallet.getId());
+           this.wallets.push(wallet);
+       }
+    }
 
+
+    private async generateTweetContent(event: WebhookEvent, amountInCurrency: number, pnlText: string, formattedTimestamp: string, state: State): Promise<string> {
+        try {
             const tradeTweetTemplate = `
 # Task
 Create an engaging and unique tweet announcing a Coinbase trade. Be creative but professional.
 
 Trade details:
 - ${event.event.toUpperCase()} order for ${event.ticker}
-- Trading amount: $${amount.toFixed(2)}
+- Trading amount: $${amountInCurrency.toFixed(2)}
 - Current price: $${Number(event.price).toFixed(2)}
+- Overall Unrealized PNL: $${pnlText}
 - Time: ${formattedTimestamp}
 
 Requirements:
@@ -119,42 +148,23 @@ Requirements:
 7. Include the key information: action, amount, ticker, and price
 
 Example variations for buys:
-"📈 Just added $1,000 of BTC to the portfolio at $50,000.00"
-"🎯 Strategic BTC purchase: $1,000 at $50,000.00"
+"📈 Just added $1,000 of BTC to the portfolio at $50,000.00. Overall Unrealized PNL: $${pnlText}"
+"🎯 Strategic BTC purchase: $1,000 at $50,000.00. Overall Unrealized PNL: $${pnlText}"
 
 Example variations for sells:
-"💫 Executed BTC position: Sold $1,000 at $52,000.00"
-"📊 Strategic exit: Released $1,000 of BTC at $52,000.00"
+"💫 Executed BTC position: Sold $1,000 at $52,000.00. Overall Unrealized PNL: $${pnlText}"
+"📊 Strategic exit: Released $1,000 of BTC at $52,000.00. Overall Unrealized PNL: $${pnlText}"
 
 Generate only the tweet text, no commentary or markdown.`;
-
             const context = composeContext({
                 template: tradeTweetTemplate,
-                state: {
-                    event: event.event.toUpperCase(),
-                    ticker: event.ticker,
-                    amount: `${amount.toFixed(2)}`,
-                    price: `${Number(event.price).toFixed(2)}`,
-                    timestamp: formattedTimestamp,
-                    bio: '',
-                    lore: '',
-                    messageDirections: '',
-                    postDirections: '',
-                    persona: '',
-                    personality: '',
-                    role: '',
-                    scenario: '',
-                    roomId,
-                    actors: '',
-                    recentMessages: '',
-                    recentMessagesData: []
-                }
+                state
             });
 
             const tweetContent = await generateText({
                 runtime: this.runtime,
                 context,
-                modelClass: ModelClass.SMALL,
+                modelClass: ModelClass.LARGE,
             });
 
             const trimmedContent = tweetContent.trim();
@@ -172,6 +182,12 @@ Generate only the tweet text, no commentary or markdown.`;
         const roomId = stringToUuid("coinbase-trading");
         await this.runtime.ensureRoomExists(roomId);
         await this.runtime.ensureParticipantInRoom(this.runtime.agentId, roomId);
+        // TODO: based off of the signal decide which wallet to use
+        const wallet = this.wallets.find(wallet => wallet.walletType === 'short_term_trading');
+        if (!wallet) {
+            elizaLogger.error("Short term trading wallet not found");
+            return;
+        }
 
         const amount = Number(this.runtime.getSetting('COINBASE_TRADING_AMOUNT')) ?? 1;
         const memory: Memory = {
@@ -180,7 +196,7 @@ Generate only the tweet text, no commentary or markdown.`;
             agentId: this.runtime.agentId,
             roomId,
             content: {
-                text: `Place an advanced market order to ${event.event.toLowerCase()} $${amount} worth of ${event.ticker}`,
+                text: `Place an advanced trade market order to ${event.event.toLowerCase()} $${amount} worth of ${event.ticker}`,
                 action: "EXECUTE_ADVANCED_TRADE",
                 source: "coinbase",
                 metadata: {
@@ -188,14 +204,16 @@ Generate only the tweet text, no commentary or markdown.`;
                     side: event.event.toUpperCase(),
                     price: event.price,
                     amount: amount,
-                    timestamp: event.timestamp
+                    timestamp: event.timestamp,
+                    walletType: wallet.walletType,
                 }
             },
             createdAt: Date.now()
         };
-
+        // get short term trading wallet
+        // call dex on short term trading wallet
         await this.runtime.messageManager.createMemory(memory);
-
+        const state = await this.runtime.composeState(memory);
         const callback: HandlerCallback = async (content: Content) => {
             if (!content.text.includes("Trade executed successfully")) {
                 return [];
@@ -208,32 +226,21 @@ Generate only the tweet text, no commentary or markdown.`;
             timeZoneName: 'short'
         }).format(new Date(event.timestamp));
 
-//         const pnl = await pnlProvider.get(this.runtime, memory);
+        // const pnl = await pnlProvider.get(this.runtime, memory);
 
+        // const pnlText = `Unrealized PNL: $${pnl.toFixed(2)}`;
 
-//         const pnlText = pnl ? `Realized PNL: ${JSON.stringify(pnl.realizedPnl)}, Unrealized PNL: ${JSON.stringify(pnl.unrealizedPnl)}` : "";
-
-//         const tweetContent = `🚀 ${event.event.toUpperCase()} for ${event.ticker}!
-// Amount: $${amount}.
-// Price: $${event.price}.
-// Time: ${formattedTimestamp} 🌀
-// ${pnlText}
-// `;
-
-        try {
-            const tweetContent = await this.generateTweetContent(event, amount, formattedTimestamp);
-            elizaLogger.info("Generated tweet content:", tweetContent);
-            const response = await postTweet(tweetContent);
-            elizaLogger.info("Tweet response:", response);
-        } catch (error) {
-            elizaLogger.error("Failed to post tweet:", error);
-        }
-            return [];
+        // try {
+        //     const tweetContent = await this.generateTweetContent(event, amount, pnlText, formattedTimestamp, state);
+        //     elizaLogger.info("Generated tweet content:", tweetContent);
+        //     // const response = await postTweet(tweetContent);
+        //     // elizaLogger.info("Tweet response:", response);
+        // } catch (error) {
+        //     elizaLogger.error("Failed to post tweet:", error);
+        // }
         };
 
-        const state = await this.runtime.composeState(memory);
         await this.runtime.processActions(memory, [memory], state, callback);
-
     }
 
     async stop(): Promise<void> {

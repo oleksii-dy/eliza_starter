@@ -1,5 +1,6 @@
 import {
     Coinbase,
+    MnemonicSeedPhrase,
     Trade,
     Transfer,
     Wallet,
@@ -22,22 +23,70 @@ const tradeCsvFilePath = path.join(baseDir, "trades.csv");
 const transactionCsvFilePath = path.join(baseDir, "transactions.csv");
 const webhookCsvFilePath = path.join(baseDir, "webhooks.csv");
 
+export type WalletType = 'short_term_trading' | 'long_term_trading' | 'dry_powder' | 'operational_capital';
+export type CoinbaseWallet = { wallet: Wallet, walletType: WalletType };
+
 export async function initializeWallet(
     runtime: IAgentRuntime,
-    networkId: string = Coinbase.networks.EthereumMainnet
-) {
+    networkId: string = Coinbase.networks.EthereumMainnet,
+    walletType: WalletType = "short_term_trading"
+): Promise<CoinbaseWallet> {
     let wallet: Wallet;
-    const storedSeed =
-        runtime.getSetting("COINBASE_GENERATED_WALLET_HEX_SEED") ??
-        process.env.COINBASE_GENERATED_WALLET_HEX_SEED;
-
-    const storedWalletId =
-        runtime.getSetting("COINBASE_GENERATED_WALLET_ID") ??
-        process.env.COINBASE_GENERATED_WALLET_ID;
-    if (!storedSeed || !storedWalletId) {
+    let seed: string;
+    let storedSeed: string;
+    let walletId: string;
+    // get working
+    switch (walletType) {
+        case 'short_term_trading':
+            storedSeed = runtime.getSetting("COINBASE_SHORT_TERM_TRADING_WALLET_SEED") ??
+                process.env.COINBASE_SHORT_TERM_TRADING_WALLET_SEED;
+            if (storedSeed != null) {
+                seed = storedSeed
+            }
+            walletId = runtime.getSetting("COINBASE_SHORT_TERM_TRADING_WALLET_ID") ??
+                process.env.COINBASE_SHORT_TERM_TRADING_WALLET_ID;
+            break;
+        case 'long_term_trading':
+            storedSeed = runtime.getSetting("COINBASE_LONG_TERM_TRADING_WALLET_SEED") ??
+                process.env.COINBASE_LONG_TERM_TRADING_WALLET_SEED;
+            if (storedSeed != null) {
+                seed = storedSeed
+            }
+            walletId = runtime.getSetting("COINBASE_LONG_TERM_TRADING_WALLET_ID") ??
+                process.env.COINBASE_LONG_TERM_TRADING_WALLET_ID;
+            break;
+        case 'dry_powder':
+            seed = runtime.getSetting("COINBASE_DRY_POWDER_WALLET_SEED") ??
+                process.env.COINBASE_DRY_POWDER_WALLET_SEED;
+            if (storedSeed != null) {
+                seed = storedSeed
+            }
+            walletId = runtime.getSetting("COINBASE_DRY_POWDER_WALLET_ID") ??
+                process.env.COINBASE_DRY_POWDER_WALLET_ID;
+            break;
+        case 'operational_capital':
+            seed = runtime.getSetting("COINBASE_OPERATIONAL_CAPITAL_WALLET_SEED") ??
+                process.env.COINBASE_OPERATIONAL_CAPITAL_WALLET_SEED;
+            if (storedSeed != null) {
+                seed = storedSeed
+            }
+            walletId = runtime.getSetting("COINBASE_OPERATIONAL_CAPITAL_WALLET_ID") ??
+                process.env.COINBASE_OPERATIONAL_CAPITAL_WALLET_ID;
+            break;
+        default:
+            elizaLogger.error("Invalid wallet type provided.");
+            throw new Error("Invalid wallet type");
+    }
+    elizaLogger.log("Importing existing wallet using stored seed and wallet ID:", {
+        seed,
+        walletId,
+        walletType,
+        networkId,
+    });
+    if (!seed || seed === '') {
         // No stored seed or wallet ID, creating a new wallet
-        wallet = await Wallet.create({ networkId });
-
+        wallet = await Wallet.create({ networkId: "ethereum-mainnet" });
+        elizaLogger.log("Created new wallet:", wallet.getId());
         // Export wallet data directly
         const walletData: WalletData = wallet.export();
         const walletAddress = await wallet.getDefaultAddress();
@@ -45,12 +94,12 @@ export async function initializeWallet(
             const characterFilePath = `characters/${runtime.character.name.toLowerCase()}.character.json`;
             const walletIDSave = await updateCharacterSecrets(
                 characterFilePath,
-                "COINBASE_GENERATED_WALLET_ID",
-                walletData.walletId
+                `COINBASE_${walletType.toUpperCase()}_WALLET_ID`,
+                walletId
             );
             const seedSave = await updateCharacterSecrets(
                 characterFilePath,
-                "COINBASE_GENERATED_WALLET_HEX_SEED",
+                `COINBASE_${walletType.toUpperCase()}_WALLET_SEED`,
                 walletData.seed
             );
             if (walletIDSave && seedSave) {
@@ -77,11 +126,27 @@ export async function initializeWallet(
     } else {
         // Importing existing wallet using stored seed and wallet ID
         // Always defaults to base-mainnet we can't select the network here
-        wallet = await Wallet.import({
-            seed: storedSeed,
-            walletId: storedWalletId,
-        });
-        const networkId = wallet.getNetworkId();
+        wallet = await Wallet.import(
+            seed as unknown as MnemonicSeedPhrase,
+            networkId,
+        );
+        // wallet.createWithSeed({seed, networkId})
+        if (!walletId) {
+            try {
+                const characterFilePath = `characters/${runtime.character.name.toLowerCase()}.character.json`;
+                const walletIDSave = await updateCharacterSecrets(
+                    characterFilePath,
+                    `COINBASE_${walletType.toUpperCase()}_WALLET_ID`,
+                    walletId
+                );
+                if (walletIDSave) {
+                        elizaLogger.log("Successfully updated character secrets.");
+                    }
+                } catch (error) {
+                    elizaLogger.error("Error updating character wallet id", error);
+                    throw error;
+                }
+        }
         elizaLogger.log("Imported existing wallet for network:", networkId);
 
         // Logging wallet import
@@ -91,7 +156,7 @@ export async function initializeWallet(
         );
     }
 
-    return wallet;
+    return { wallet, walletType };
 }
 
 /**
@@ -109,7 +174,7 @@ export async function executeTradeAndCharityTransfer(
     sourceAsset: string,
     targetAsset: string
 ) {
-    const wallet = await initializeWallet(runtime, network);
+    const {wallet} = await initializeWallet(runtime, network);
 
     elizaLogger.log("Wallet initialized:", {
         network,
@@ -285,11 +350,12 @@ export async function updateCharacterSecrets(
     value: string
 ): Promise<boolean> {
     try {
-        const characterFilePath = path.resolve(
-            process.cwd(),
-            characterfilePath
-        );
-
+        // const characterFilePath = path.resolve(
+        //     '/Users/a/Desktop/eliza/',
+        //     characterfilePath
+        // );
+        // elizaLogger.log("Character file path:", characterFilePath);
+        const characterFilePath = '/Users/a/Desktop/eliza/characters/prosper.character.json'
         // Check if the character file exists
         if (!fs.existsSync(characterFilePath)) {
             elizaLogger.error("Character file not found:", characterFilePath);
@@ -369,7 +435,7 @@ export async function getWalletDetails(
 }> {
     try {
         // Initialize the wallet, defaulting to the specified network or ETH mainnet
-        const wallet = await initializeWallet(runtime, networkId);
+        const { wallet } = await initializeWallet(runtime, networkId);
 
         // Fetch balances
         const balances = await wallet.listBalances();
