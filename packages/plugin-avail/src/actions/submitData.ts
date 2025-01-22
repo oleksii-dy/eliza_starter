@@ -141,7 +141,7 @@ export default {
                             .signAndSend(
                                 keyring,
                                 options,
-                                (result: ISubmittableResult) => {
+                                (result: any) => {
                                     elizaLogger.log(
                                         `Tx status: ${result.status}`
                                     );
