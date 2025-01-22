@@ -47,6 +47,7 @@ The `Utils` class provides shared functionality across the plugin, offering flex
   - `SOLANA_PRIVATE_KEY`
   - `SOLANA_PUBLIC_KEY`
   - `SOLANA_RPC_URL`
+  - `OPENAI_API_KEY`
 
 #### 2. RPC requirements
 Most often, free-tier RPC URLs are not sufficient for this plugin.
