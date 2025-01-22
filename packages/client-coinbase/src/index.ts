@@ -14,7 +14,6 @@ import {
 import { postTweet } from "@elizaos/plugin-twitter";
 import express from "express";
 import { WebhookEvent } from "./types";
-import { pnlProvider } from "@elizaos/plugin-coinbase";
 import { Coinbase, Wallet } from "@coinbase/coinbase-sdk";
 import { initializeWallet } from "../../plugin-coinbase/src/utils";
 
@@ -230,14 +229,18 @@ Generate only the tweet text, no commentary or markdown.`;
 
         // const pnlText = `Unrealized PNL: $${pnl.toFixed(2)}`;
 
-        // try {
-        //     const tweetContent = await this.generateTweetContent(event, amount, pnlText, formattedTimestamp, state);
-        //     elizaLogger.info("Generated tweet content:", tweetContent);
-        //     // const response = await postTweet(tweetContent);
-        //     // elizaLogger.info("Tweet response:", response);
-        // } catch (error) {
-        //     elizaLogger.error("Failed to post tweet:", error);
-        // }
+        try {
+            const tweetContent = await this.generateTweetContent(event, amount, '', formattedTimestamp, state);
+            elizaLogger.info("Generated tweet content:", tweetContent);
+            if (this.runtime.getSetting('TWITTER_DRY_RUN')) {
+                elizaLogger.info("Dry run mode enabled. Skipping tweet posting.",);
+                return;
+            }
+            const response = await postTweet(this.runtime, tweetContent);
+            elizaLogger.info("Tweet response:", response);
+        } catch (error) {
+            elizaLogger.error("Failed to post tweet:", error);
+        }
         };
 
         await this.runtime.processActions(memory, [memory], state, callback);
