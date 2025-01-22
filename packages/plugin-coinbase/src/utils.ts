@@ -130,7 +130,6 @@ export async function initializeWallet(
             seed as unknown as MnemonicSeedPhrase,
             networkId,
         );
-        // wallet.createWithSeed({seed, networkId})
         if (!walletId) {
             try {
                 const characterFilePath = `characters/${runtime.character.name.toLowerCase()}.character.json`;
