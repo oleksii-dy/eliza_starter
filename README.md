@@ -330,3 +330,37 @@ pnpm install --include=optional sharp
 
 [![Star History Chart](https://api.star-history.com/svg?repos=elizaos/eliza&type=Date)](https://star-history.com/#elizaos/eliza&Date)
 
+
+## notes
+
+```
+cd
+cd cloud-deployment-eliza/
+python ./ssh-ssm.py
+```
+
+`asciinema rec  port_forward.cast`
+`asciinema upload  port_forward.cast`
+
+
+# diagnose ssh
+`ssh localhost -p 2222`
+`ssh -vvvvvv localhost -p 2222`
+
+# checking key
+`cat ~/id_rsa.pub `
+`cat ~/.ssh/id_rsa.pub  | pastebinit -b paste.debian.net`
+
+# missing user (defaults to current)
+`ssh -vvvvvv localhost -p 2222`
+
+# find the right user name
+`ssh ubuntu@localhost -p 2222`
+
+
+# pull and copy from server
+`git remote add agentgit git+ssh://ubuntu@localhost:2222/opt/git/agent`
+`git pull agentgit`
+`git checkout -b agentgit/feature/arm64_fastembed`
+`git push origin`
+
