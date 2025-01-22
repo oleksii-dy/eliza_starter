@@ -12,16 +12,7 @@ import {
     generateObjectDeprecated,
 } from "@elizaos/core";
 import { ethstorageAvailConfig } from "../environment";
-
-import {
-    type Address,
-    http,
-    isAddress,
-    parseEther,
-    createWalletClient,
-    defineChain
-} from "viem";
-import { privateKeyToAccount } from "viem/accounts";
+import { ethers } from "ethers";
 
 export interface TransferContent extends Content {
     recipient: string;
@@ -41,7 +32,7 @@ export function isTransferContent(
     }
 
     // Validate addresses
-    return isAddress(content.recipient, { strict: false });
+    return ethers.isAddress(content.recipient);
 }
 
 const transferTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
@@ -124,35 +115,13 @@ export default {
         if (content.amount != null && content.recipient != null) {
             try {
                 const RPC = runtime.getSetting("ETHSTORAGE_RPC_URL");
-                const myChain = defineChain({
-                    id: 3335,
-                    name: "QuarkChain",
-                    network: "QuarkChain",
-                    nativeCurrency: {
-                        name: "QKC",
-                        symbol: "QKC",
-                        decimals: 18,
-                    },
-                    rpcUrls: {
-                        default: {
-                            http: [RPC],
-                        },
-                    },
-                });
-                const walletClient = createWalletClient({
-                    chain: myChain,
-                    transport: http(),
-                });
-
                 const PRIVATE_KEY = runtime.getSetting("ETHSTORAGE_PRIVATE_KEY")!;
-                const account = privateKeyToAccount(`0x${PRIVATE_KEY}`);
 
-                let hash = await walletClient.sendTransaction({
-                    account: account,
-                    chain: myChain,
-                    to: content.recipient as Address,
-                    value: parseEther(content.amount.toString()),
-                    kzg: undefined,
+                const provider = new ethers.JsonRpcProvider(RPC);
+                const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+                let hash = await wallet.sendTransaction({
+                    to: content.recipient,
+                    value: ethers.parseEther(content.amount.toString()),
                 });
 
                 elizaLogger.success(

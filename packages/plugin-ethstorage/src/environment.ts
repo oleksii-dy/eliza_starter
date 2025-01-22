@@ -2,8 +2,9 @@ import type { IAgentRuntime } from "@elizaos/core";
 import { z } from "zod";
 
 export const ethstorageEnvSchema = z.object({
-    ETHSTORAGE_RPC_URL: z.string().min(1, "EthStorage RPC url is required"),
     ETHSTORAGE_PRIVATE_KEY: z.string().min(1, "EthStorage private key is required"),
+    ETHSTORAGE_ADDRESS: z.string().min(1, "EthStorage address is required"),
+    ETHSTORAGE_RPC_URL: z.string().min(1, "EthStorage RPC url is required"),
 });
 
 export type ethstorageConfig = z.infer<typeof ethstorageEnvSchema>;
@@ -13,10 +14,12 @@ export async function ethstorageAvailConfig(
 ): Promise<ethstorageConfig> {
     try {
         const config = {
-            ETHSTORAGE_RPC_URL:
-                runtime.getSetting("ETHSTORAGE_RPC_URL") || process.env.ETHSTORAGE_RPC_URL,
             ETHSTORAGE_PRIVATE_KEY:
                 runtime.getSetting("ETHSTORAGE_PRIVATE_KEY") || process.env.ETHSTORAGE_PRIVATE_KEY,
+            ETHSTORAGE_ADDRESS:
+                runtime.getSetting("ETHSTORAGE_ADDRESS") || process.env.ETHSTORAGE_ADDRESS,
+            ETHSTORAGE_RPC_URL:
+                runtime.getSetting("ETHSTORAGE_RPC_URL") || process.env.ETHSTORAGE_RPC_URL,
         };
 
         return ethstorageEnvSchema.parse(config);

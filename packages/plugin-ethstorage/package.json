@@ -6,12 +6,12 @@
     "dependencies": {
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-trustdb": "workspace:*",
-        "ethstorage-sdk": "^3.0.0",
-        "viem": "2.22.2"
+        "ethers": "^6.13.5",
+        "kzg-wasm": "^0.4.0"
     },
     "devDependencies": {
-        "tsup": "8.3.5",
-        "@types/node": "^20.0.0"
+        "@types/node": "^20.0.0",
+        "tsup": "8.3.5"
     },
     "scripts": {
         "build": "tsup --format esm --dts",

@@ -14,7 +14,7 @@ importers:
     dependencies:
       '@0glabs/0g-ts-sdk':
         specifier: 0.2.1
-        version: 0.2.1(bufferutil@4.0.9)(ethers@6.13.4(bufferutil@4.0.9)(utf-8-validate@6.0.5))(utf-8-validate@6.0.5)
+        version: 0.2.1(bufferutil@4.0.9)(ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@6.0.5))(utf-8-validate@6.0.5)
       '@coinbase/coinbase-sdk':
         specifier: 0.10.0
         version: 0.10.0(bufferutil@4.0.9)(typescript@5.6.3)(utf-8-validate@6.0.5)(zod@3.24.1)
@@ -939,7 +939,7 @@ importers:
         version: link:../core
       '@lens-protocol/client':
         specifier: 2.2.0
-        version: 2.2.0(@jest/globals@29.7.0)(@lens-protocol/metadata@1.2.0(zod@3.23.8))(@types/react@19.0.7)(bufferutil@4.0.9)(encoding@0.1.13)(ethers@6.13.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(react@19.0.0)(utf-8-validate@5.0.10)
+        version: 2.2.0(@jest/globals@29.7.0)(@lens-protocol/metadata@1.2.0(zod@3.23.8))(@types/react@19.0.7)(bufferutil@4.0.9)(encoding@0.1.13)(ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10))(react@19.0.0)(utf-8-validate@5.0.10)
       '@lens-protocol/metadata':
         specifier: 1.2.0
         version: 1.2.0(zod@3.23.8)
@@ -1884,9 +1884,12 @@ importers:
       '@elizaos/plugin-trustdb':
         specifier: workspace:*
         version: link:../plugin-trustdb
-      ethstorage-sdk:
-        specifier: ^3.0.0
-        version: 3.0.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+      ethers:
+        specifier: ^6.13.5
+        version: 6.13.5(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+      kzg-wasm:
+        specifier: ^0.4.0
+        version: 0.4.0
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -2808,7 +2811,7 @@ importers:
     dependencies:
       '@avnu/avnu-sdk':
         specifier: ^2.1.1
-        version: 2.1.1(ethers@6.13.4(bufferutil@4.0.9)(utf-8-validate@6.0.5))(qs@6.14.0)(starknet@6.18.0(encoding@0.1.13))
+        version: 2.1.1(ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@6.0.5))(qs@6.14.0)(starknet@6.18.0(encoding@0.1.13))
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
@@ -3062,7 +3065,7 @@ importers:
     dependencies:
       '@avnu/avnu-sdk':
         specifier: 2.1.1
-        version: 2.1.1(ethers@6.13.4(bufferutil@4.0.9)(utf-8-validate@6.0.5))(qs@6.14.0)(starknet@6.18.0(encoding@0.1.13))
+        version: 2.1.1(ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@6.0.5))(qs@6.14.0)(starknet@6.18.0(encoding@0.1.13))
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
@@ -3254,7 +3257,7 @@ importers:
         version: link:../core
       thirdweb:
         specifier: ^5.80.0
-        version: 5.84.0(@types/react-dom@19.0.3(@types/react@19.0.7))(@types/react@19.0.7)(bufferutil@4.0.9)(encoding@0.1.13)(ethers@6.13.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(ioredis@5.4.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.1)
+        version: 5.84.0(@types/react-dom@19.0.3(@types/react@19.0.7))(@types/react@19.0.7)(bufferutil@4.0.9)(encoding@0.1.13)(ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10))(ioredis@5.4.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.1)
       tsup:
         specifier: 8.3.5
         version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.5.1)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
@@ -12286,9 +12289,6 @@ packages:
     resolution: {integrity: sha512-LElXdjswlqjWrPpJFg1Fx4wpkOCxj1TDHlSV4PlaRxHGWko024xICaa97ZkMfs6DRKlCguiAI+rbXv5GWwXIkg==}
     hasBin: true
 
-  async-mutex@0.5.0:
-    resolution: {integrity: sha512-1A94B18jkJ3DYq284ohPxoXbfTA5HsQ7/Mf4DEhcyLx3Bz27Rh59iScbB6EPiP+B+joue6YCxcMXSbFC1tZKwA==}
-
   async-retry@1.3.3:
     resolution: {integrity: sha512-wfr/jstw9xNi/0teMHrRW7dsz3Lt5ARhYNZ2ewpadnhaIp5mbALhOAP+EAdsC7t4Z6wqsDVv9+W6gm1Dk9mEyw==}
 
@@ -14999,6 +14999,10 @@ packages:
     resolution: {integrity: sha512-21YtnZVg4/zKkCQPjrDj38B1r4nQvTZLopUGMLQ1ePU2zV/joCfDC3t3iKQjWRzjjjbzR+mdAIoikeBRNkdllA==}
     engines: {node: '>=14.0.0'}
 
+  ethers@6.13.5:
+    resolution: {integrity: sha512-+knKNieu5EKRThQJWwqaJ10a6HE9sSehGeqWN65//wE7j47ZpFhKAnHB/JJFibwwg61I/koxaPsXbXpD/skNOQ==}
+    engines: {node: '>=14.0.0'}
+
   ethers@6.8.1:
     resolution: {integrity: sha512-iEKm6zox5h1lDn6scuRWdIdFJUCGg3+/aQWu0F4K0GVyEZiktFkqrJbRjTn1FlYEPz7RKA707D6g5Kdk6j7Ljg==}
     engines: {node: '>=14.0.0'}
@@ -15010,9 +15014,6 @@ packages:
   ethjs-util@0.1.6:
     resolution: {integrity: sha512-CUnVOQq7gSpDHZVVrQW8ExxUETWrnrvXYvYz55wOU8Uj4VCgw56XC2B/fVqQN+f7gmrnRHSLVnFAwsCuNwji8w==}
     engines: {node: '>=6.5.0', npm: '>=3'}
-
-  ethstorage-sdk@3.0.0:
-    resolution: {integrity: sha512-qCoAd5WPU52iRSLuvxCrnVz0H2o0AW2T3vi5JWTx8fKqNFFpKbco0E9Tsr6CywLJ0xFEbY+WX5w5LAFHoElsVw==}
 
   eval-estree-expression@2.0.3:
     resolution: {integrity: sha512-6zXgUV+NHvx6PwHxPsIQ8T4cCUgsnhaH6ZyYF1OSKZIrkcAzvSvZgHAbdj72GlNm8eH6c8FI8ywcwqm42Xq1aQ==}
@@ -24013,9 +24014,6 @@ packages:
   wordwrap@1.0.0:
     resolution: {integrity: sha512-gvVzJFlPycKc5dZN4yPkP8w7Dc37BtP1yczEneOb4uq34pXZcvrtRTmWV8W+Ume+XCxKgbjM+nevkyFPMybd4Q==}
 
-  workerpool@9.2.0:
-    resolution: {integrity: sha512-PKZqBOCo6CYkVOwAxWxQaSF2Fvb5Iv2fCeTP7buyWI2GiynWr46NcXSgK/idoV6e60dgCBfgYc+Un3HMvmqP8w==}
-
   wrap-ansi@6.2.0:
     resolution: {integrity: sha512-r6lPcBGxZXlIcymEu7InxDMhdW0KDxpLgoFLcguasxCaJ/SOIZwINatK9KY/tf+ZrlywOKU0UDj3ATXUBfxJXA==}
     engines: {node: '>=8'}
@@ -24300,6 +24298,18 @@ snapshots:
       '@ethersproject/bytes': 5.7.0
       '@ethersproject/keccak256': 5.7.0
       ethers: 6.13.4(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+      open-jsonrpc-provider: 0.2.1(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - supports-color
+      - utf-8-validate
+
+  '@0glabs/0g-ts-sdk@0.2.1(bufferutil@4.0.9)(ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@6.0.5))(utf-8-validate@6.0.5)':
+    dependencies:
+      '@ethersproject/bytes': 5.7.0
+      '@ethersproject/keccak256': 5.7.0
+      ethers: 6.13.5(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       open-jsonrpc-provider: 0.2.1(bufferutil@4.0.9)(utf-8-validate@6.0.5)
     transitivePeerDependencies:
       - bufferutil
@@ -24921,9 +24931,9 @@ snapshots:
       protobufjs: 7.4.0
       typescript: 5.6.3
 
-  '@avnu/avnu-sdk@2.1.1(ethers@6.13.4(bufferutil@4.0.9)(utf-8-validate@6.0.5))(qs@6.14.0)(starknet@6.18.0(encoding@0.1.13))':
+  '@avnu/avnu-sdk@2.1.1(ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@6.0.5))(qs@6.14.0)(starknet@6.18.0(encoding@0.1.13))':
     dependencies:
-      ethers: 6.13.4(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+      ethers: 6.13.5(bufferutil@4.0.9)(utf-8-validate@6.0.5)
       qs: 6.14.0
       starknet: 6.18.0(encoding@0.1.13)
 
@@ -31424,7 +31434,7 @@ snapshots:
       - utf-8-validate
       - wait-for-expect
 
-  '@lens-protocol/client@2.2.0(@jest/globals@29.7.0)(@lens-protocol/metadata@1.2.0(zod@3.23.8))(@types/react@19.0.7)(bufferutil@4.0.9)(encoding@0.1.13)(ethers@6.13.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(react@19.0.0)(utf-8-validate@5.0.10)':
+  '@lens-protocol/client@2.2.0(@jest/globals@29.7.0)(@lens-protocol/metadata@1.2.0(zod@3.23.8))(@types/react@19.0.7)(bufferutil@4.0.9)(encoding@0.1.13)(ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10))(react@19.0.0)(utf-8-validate@5.0.10)':
     dependencies:
       '@ethersproject/abi': 5.7.0
       '@ethersproject/abstract-signer': 5.7.0
@@ -31435,7 +31445,7 @@ snapshots:
       '@ethersproject/providers': 5.7.2(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       '@ethersproject/wallet': 5.7.0
       '@lens-protocol/blockchain-bindings': 0.10.2(@jest/globals@29.7.0)(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      '@lens-protocol/gated-content': 0.5.1(@ethersproject/abi@5.7.0)(@ethersproject/address@5.7.0)(@ethersproject/bignumber@5.7.0)(@ethersproject/contracts@5.7.0)(@ethersproject/hash@5.7.0)(@ethersproject/providers@5.7.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@ethersproject/wallet@5.7.0)(@lens-protocol/metadata@1.2.0(zod@3.23.8))(@types/react@19.0.7)(bufferutil@4.0.9)(encoding@0.1.13)(ethers@6.13.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(react@19.0.0)(utf-8-validate@5.0.10)(zod@3.23.8)
+      '@lens-protocol/gated-content': 0.5.1(@ethersproject/abi@5.7.0)(@ethersproject/address@5.7.0)(@ethersproject/bignumber@5.7.0)(@ethersproject/contracts@5.7.0)(@ethersproject/hash@5.7.0)(@ethersproject/providers@5.7.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@ethersproject/wallet@5.7.0)(@lens-protocol/metadata@1.2.0(zod@3.23.8))(@types/react@19.0.7)(bufferutil@4.0.9)(encoding@0.1.13)(ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10))(react@19.0.0)(utf-8-validate@5.0.10)(zod@3.23.8)
       '@lens-protocol/shared-kernel': 0.12.0
       '@lens-protocol/storage': 0.8.1
       graphql: 16.10.0
@@ -31484,7 +31494,7 @@ snapshots:
     optionalDependencies:
       '@jest/globals': 29.7.0
 
-  '@lens-protocol/gated-content@0.5.1(@ethersproject/abi@5.7.0)(@ethersproject/address@5.7.0)(@ethersproject/bignumber@5.7.0)(@ethersproject/contracts@5.7.0)(@ethersproject/hash@5.7.0)(@ethersproject/providers@5.7.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@ethersproject/wallet@5.7.0)(@lens-protocol/metadata@1.2.0(zod@3.23.8))(@types/react@19.0.7)(bufferutil@4.0.9)(encoding@0.1.13)(ethers@6.13.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(react@19.0.0)(utf-8-validate@5.0.10)(zod@3.23.8)':
+  '@lens-protocol/gated-content@0.5.1(@ethersproject/abi@5.7.0)(@ethersproject/address@5.7.0)(@ethersproject/bignumber@5.7.0)(@ethersproject/contracts@5.7.0)(@ethersproject/hash@5.7.0)(@ethersproject/providers@5.7.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@ethersproject/wallet@5.7.0)(@lens-protocol/metadata@1.2.0(zod@3.23.8))(@types/react@19.0.7)(bufferutil@4.0.9)(encoding@0.1.13)(ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10))(react@19.0.0)(utf-8-validate@5.0.10)(zod@3.23.8)':
     dependencies:
       '@ethersproject/abi': 5.7.0
       '@ethersproject/address': 5.7.0
@@ -31501,7 +31511,7 @@ snapshots:
       '@lit-protocol/encryption': 2.1.62(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       '@lit-protocol/node-client': 2.1.62(@ethersproject/contracts@5.7.0)(@ethersproject/hash@5.7.0)(@ethersproject/providers@5.7.2(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@ethersproject/wallet@5.7.0)(@types/react@19.0.7)(bufferutil@4.0.9)(encoding@0.1.13)(react@19.0.0)(utf-8-validate@5.0.10)
       '@lit-protocol/types': 2.1.62
-      siwe: 2.3.2(ethers@6.13.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))
+      siwe: 2.3.2(ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10))
       tslib: 2.8.1
       zod: 3.23.8
     transitivePeerDependencies:
@@ -40540,10 +40550,6 @@ snapshots:
 
   astring@1.9.0: {}
 
-  async-mutex@0.5.0:
-    dependencies:
-      tslib: 2.8.1
-
   async-retry@1.3.3:
     dependencies:
       retry: 0.13.1
@@ -41012,7 +41018,7 @@ snapshots:
 
   bip39@3.1.0:
     dependencies:
-      '@noble/hashes': 1.3.0
+      '@noble/hashes': 1.7.0
 
   bitcoinjs-lib@7.0.0-rc.0(typescript@5.7.3):
     dependencies:
@@ -44255,6 +44261,32 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10):
+    dependencies:
+      '@adraffy/ens-normalize': 1.10.1
+      '@noble/curves': 1.2.0
+      '@noble/hashes': 1.3.2
+      '@types/node': 22.7.5
+      aes-js: 4.0.0-beta.5
+      tslib: 2.7.0
+      ws: 8.17.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@6.0.5):
+    dependencies:
+      '@adraffy/ens-normalize': 1.10.1
+      '@noble/curves': 1.2.0
+      '@noble/hashes': 1.3.2
+      '@types/node': 22.7.5
+      aes-js: 4.0.0-beta.5
+      tslib: 2.7.0
+      ws: 8.17.1(bufferutil@4.0.9)(utf-8-validate@6.0.5)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   ethers@6.8.1(bufferutil@4.0.9)(utf-8-validate@5.0.10):
     dependencies:
       '@adraffy/ens-normalize': 1.10.0
@@ -44277,17 +44309,6 @@ snapshots:
     dependencies:
       is-hex-prefixed: 1.0.0
       strip-hex-prefix: 1.0.0
-
-  ethstorage-sdk@3.0.0(bufferutil@4.0.9)(utf-8-validate@6.0.5):
-    dependencies:
-      async-mutex: 0.5.0
-      dotenv: 16.4.7
-      ethers: 6.13.4(bufferutil@4.0.9)(utf-8-validate@6.0.5)
-      kzg-wasm: 0.4.0
-      workerpool: 9.2.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
 
   eval-estree-expression@2.0.3: {}
 
@@ -52883,11 +52904,11 @@ snapshots:
       arg: 5.0.2
       sax: 1.4.1
 
-  siwe@2.3.2(ethers@6.13.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)):
+  siwe@2.3.2(ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10)):
     dependencies:
       '@spruceid/siwe-parser': 2.1.2
       '@stablelib/random': 1.0.2
-      ethers: 6.13.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      ethers: 6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       uri-js: 4.4.1
       valid-url: 1.0.9
 
@@ -53914,7 +53935,7 @@ snapshots:
     dependencies:
       any-promise: 1.3.0
 
-  thirdweb@5.84.0(@types/react-dom@19.0.3(@types/react@19.0.7))(@types/react@19.0.7)(bufferutil@4.0.9)(encoding@0.1.13)(ethers@6.13.4(bufferutil@4.0.9)(utf-8-validate@5.0.10))(ioredis@5.4.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.1):
+  thirdweb@5.84.0(@types/react-dom@19.0.3(@types/react@19.0.7))(@types/react@19.0.7)(bufferutil@4.0.9)(encoding@0.1.13)(ethers@6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10))(ioredis@5.4.2)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.1):
     dependencies:
       '@coinbase/wallet-sdk': 4.2.4
       '@emotion/react': 11.14.0(@types/react@19.0.7)(react@19.0.0)
@@ -53939,7 +53960,7 @@ snapshots:
       uqr: 0.1.2
       viem: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.1)
     optionalDependencies:
-      ethers: 6.13.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      ethers: 6.13.5(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       react: 19.0.0
       typescript: 5.7.3
     transitivePeerDependencies:
@@ -56806,8 +56827,6 @@ snapshots:
   word-wrap@1.2.5: {}
 
   wordwrap@1.0.0: {}
-
-  workerpool@9.2.0: {}
 
   wrap-ansi@6.2.0:
     dependencies:
