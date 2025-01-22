@@ -1,0 +1,20 @@
+{
+    "extends": "../core/tsconfig.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "src",
+        "paths": {
+            "@elizaos/eliza": [
+                "../eliza/src"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*.ts"
+    ],
+    "references": [
+        {
+            "path": "../eliza"
+        }
+    ]
+}
