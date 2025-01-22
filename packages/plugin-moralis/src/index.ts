@@ -1,0 +1,14 @@
+import { Plugin } from "@elizaos/core";
+import getTokenPairs from "./actions/solana/getTokenPairs";
+import getPairStats from "./actions/solana/getPairStats";
+import getPairOHLCV from "./actions/solana/getPairOHLCV";
+
+export const moralisPlugin: Plugin = {
+    name: "moralis",
+    description: "Moralis Plugin for Eliza",
+    actions: [getTokenPairs, getPairStats, getPairOHLCV],
+    evaluators: [],
+    providers: [],
+};
+
+export default moralisPlugin;
