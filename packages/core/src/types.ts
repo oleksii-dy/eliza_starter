@@ -1,4 +1,4 @@
-import { Readable } from "stream";
+import type { Readable } from "stream";
 
 /**
  * Represents a UUID string in the format "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -224,11 +224,13 @@ export type Models = {
     [ModelProviderName.NANOGPT]: Model;
     [ModelProviderName.HYPERBOLIC]: Model;
     [ModelProviderName.VENICE]: Model;
+    [ModelProviderName.NVIDIA]: Model;
     [ModelProviderName.NINETEEN_AI]: Model;
     [ModelProviderName.AKASH_CHAT_API]: Model;
     [ModelProviderName.LIVEPEER]: Model;
     [ModelProviderName.DEEPSEEK]: Model;
     [ModelProviderName.INFERA]: Model;
+    [ModelProviderName.ATOMA]: Model;
 };
 
 /**
@@ -258,12 +260,14 @@ export enum ModelProviderName {
     NANOGPT = "nanogpt",
     HYPERBOLIC = "hyperbolic",
     VENICE = "venice",
+    NVIDIA = "nvidia",
     NINETEEN_AI = "nineteen_ai",
     AKASH_CHAT_API = "akash_chat_api",
     LIVEPEER = "livepeer",
     LETZAI = "letzai",
     DEEPSEEK = "deepseek",
     INFERA = "infera",
+    ATOMA = "atoma",
 }
 
 /**
@@ -649,6 +653,7 @@ export enum Clients {
     AUTO = "auto",
     SLACK = "slack",
     GITHUB = "github",
+    INSTAGRAM = "instagram",
 }
 
 export interface IAgentConfig {
@@ -704,6 +709,9 @@ export type Character = {
     /** Optional username */
     username?: string;
 
+    /** Optional email */
+    email?: string;
+
     /** Optional system prompt */
     system?: string;
 
@@ -732,6 +740,10 @@ export type Character = {
         twitterPostTemplate?: TemplateType;
         twitterMessageHandlerTemplate?: TemplateType;
         twitterShouldRespondTemplate?: TemplateType;
+        twitterVoiceHandlerTemplate?: TemplateType;
+        instagramPostTemplate?: TemplateType;
+        instagramMessageHandlerTemplate?: TemplateType;
+        instagramShouldRespondTemplate?: TemplateType;
         farcasterPostTemplate?: TemplateType;
         lensPostTemplate?: TemplateType;
         farcasterMessageHandlerTemplate?: TemplateType;
@@ -740,6 +752,10 @@ export type Character = {
         lensShouldRespondTemplate?: TemplateType;
         telegramMessageHandlerTemplate?: TemplateType;
         telegramShouldRespondTemplate?: TemplateType;
+        telegramAutoPostTemplate?: string;
+        telegramPinnedMessageTemplate?: string;
+        discordAutoPostTemplate?: string;
+        discordAnnouncementHypeTemplate?: string;
         discordVoiceHandlerTemplate?: TemplateType;
         discordShouldRespondTemplate?: TemplateType;
         discordMessageHandlerTemplate?: TemplateType;
@@ -782,6 +798,7 @@ export type Character = {
             steps?: number;
             width?: number;
             height?: number;
+            cfgScale?: number;
             negativePrompt?: string;
             numIterations?: number;
             guidanceScale?: number;
@@ -791,6 +808,7 @@ export type Character = {
             count?: number;
             stylePreset?: string;
             hideWatermark?: boolean;
+            safeMode?: boolean;
         };
         voice?: {
             model?: string; // For VITS
@@ -828,6 +846,14 @@ export type Character = {
             teamAgentIds?: string[];
             teamLeaderId?: string;
             teamMemberInterestKeywords?: string[];
+            autoPost?: {
+                enabled?: boolean;
+                monitorTime?: number;
+                inactivityThreshold?: number;
+                mainChannelId?: string;
+                announcementChannelIds?: string[];
+                minTimeBetweenPosts?: number;
+            };
         };
         telegram?: {
             shouldIgnoreBotMessages?: boolean;
@@ -840,6 +866,14 @@ export type Character = {
             teamAgentIds?: string[];
             teamLeaderId?: string;
             teamMemberInterestKeywords?: string[];
+            autoPost?: {
+                enabled?: boolean;
+                monitorTime?: number;
+                inactivityThreshold?: number;
+                mainChannelId?: string;
+                pinnedMessagesGroups?: string[];
+                minTimeBetweenPosts?: number;
+            };
         };
         slack?: {
             shouldIgnoreBotMessages?: boolean;
@@ -869,13 +903,41 @@ export type Character = {
         bio: string;
         nicknames?: string[];
     };
+
+    /** Optional Instagram profile */
+    instagramProfile?: {
+        id: string;
+        username: string;
+        bio: string;
+        nicknames?: string[];
+    };
+
     /** Optional NFT prompt */
     nft?: {
         prompt: string;
     };
+
     /**Optinal Parent characters to inherit information from */
     extends?: string[];
+
+    twitterSpaces?: TwitterSpaceDecisionOptions;
 };
+
+export interface TwitterSpaceDecisionOptions {
+    maxSpeakers?: number;
+    topics?: string[];
+    typicalDurationMinutes?: number;
+    idleKickTimeoutMs?: number;
+    minIntervalBetweenSpacesMinutes?: number;
+    businessHoursOnly?: boolean;
+    randomChance?: number;
+    enableIdleMonitor?: boolean;
+    enableSttTts?: boolean;
+    enableRecording?: boolean;
+    voiceId?: string;
+    sttLanguage?: string;
+    speakerMaxDurationMs?: number;
+}
 
 /**
  * Interface for database operations
@@ -1139,6 +1201,7 @@ export interface IRAGKnowledgeManager {
         type: "pdf" | "md" | "txt";
         isShared: boolean;
     }): Promise<void>;
+    cleanupDeletedKnowledgeFiles(): Promise<void>;
 }
 
 export type CacheOptions = {
@@ -1365,13 +1428,13 @@ export interface GraphQLTag {
     values: any[];
 }
 
-export const enum IrysMessageType {
+export enum IrysMessageType {
     REQUEST = "REQUEST",
     DATA_STORAGE = "DATA_STORAGE",
     REQUEST_RESPONSE = "REQUEST_RESPONSE",
 }
 
-export const enum IrysDataType {
+export enum IrysDataType {
     FILE = "FILE",
     IMAGE = "IMAGE",
     OTHER = "OTHER",
@@ -1418,28 +1481,6 @@ export interface ITeeLogService extends Service {
     ): Promise<boolean>;
 }
 
-export type SearchImage = {
-    url: string;
-    description?: string;
-};
-
-export type SearchResult = {
-    title: string;
-    url: string;
-    content: string;
-    rawContent?: string;
-    score: number;
-    publishedDate?: string;
-};
-
-export type SearchResponse = {
-    answer?: string;
-    query: string;
-    responseTime: number;
-    images: SearchImage[];
-    results: SearchResult[];
-};
-
 export enum ServiceType {
     IMAGE_DESCRIPTION = "image_description",
     TRANSCRIPTION = "transcription",
@@ -1456,6 +1497,7 @@ export enum ServiceType {
     IRYS = "irys",
     TEE_LOG = "tee_log",
     GOPLUS_SECURITY = "goplus_security",
+    WEB_SEARCH = "web_search",
 }
 
 export enum LoggingLevel {
@@ -1579,4 +1621,23 @@ export enum TranscriptionProvider {
 export enum ActionTimelineType {
     ForYou = "foryou",
     Following = "following",
+}
+
+export enum KnowledgeScope {
+    SHARED = "shared",
+    PRIVATE = "private",
+}
+
+export enum CacheKeyPrefix {
+    KNOWLEDGE = "knowledge",
+}
+
+export interface DirectoryItem {
+    directory: string;
+    shared?: boolean;
+}
+
+export interface ChunkRow {
+    id: string;
+    // Add other properties if needed
 }
