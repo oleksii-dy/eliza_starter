@@ -94,14 +94,14 @@ export const suiTokenInfoBySymbol: Action = {
         console.log(info)
         if (callback) {
             callback({
-                text: `Name ${info.name} (${info.symbol})
-Slogan: ${""}
-Website: ${tokenInfo.website}
-X: ${tokenInfo.xSocial}
-Telegram channel: ${tokenInfo.Telegram || ""}
-Coingecko: ${tokenInfo.coingeckoUrl}
-MCap ranking: 430
-Token price: ${await coinGecko.getTokenPrice("sui-network",tokenInfo.type)}
+                text: `Name ${info.name} (${info.symbol}) \n
+Slogan: ${""} \n
+Website: ${tokenInfo.website} \n
+X: ${tokenInfo.xSocial} \n
+Telegram channel: ${tokenInfo.Telegram || ""} \n
+Coingecko: ${tokenInfo.coingeckoUrl}\n
+MCap ranking: 430 \n
+Token price: ${await coinGecko.getTokenPrice("sui-network",tokenInfo.type)} \n
 Markets: Binance, HTX, Gates, MEXC, Cetus..."`,
                 action: 'TOKEN_INFO_SUI_NETWORK_BY_SYMBOL',
                 result: {
