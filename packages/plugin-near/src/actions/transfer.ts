@@ -1,18 +1,18 @@
 import {
-    ActionExample,
-    Content,
-    HandlerCallback,
-    IAgentRuntime,
-    Memory,
+    type ActionExample,
+    type Content,
+    type HandlerCallback,
+    type IAgentRuntime,
+    type Memory,
     ModelClass,
-    State,
+    type State,
     elizaLogger,
     type Action,
     composeContext,
     generateObject,
 } from "@elizaos/core";
 import { connect, keyStores, utils } from "near-api-js";
-import { KeyPairString } from "near-api-js/lib/utils";
+import type { KeyPairString } from "near-api-js/lib/utils";
 import { utils as nearUtils } from "near-api-js";
 // import BigNumber from "bignumber.js";
 
@@ -64,7 +64,7 @@ async function transferNEAR(
 ): Promise<string> {
     const networkId = runtime.getSetting("NEAR_NETWORK") || "testnet";
     const nodeUrl =
-        runtime.getSetting("RPC_URL") || "https://rpc.testnet.near.org";
+        runtime.getSetting("NEAR_RPC_URL") || "https://rpc.testnet.near.org";
     const accountId = runtime.getSetting("NEAR_ADDRESS");
     const secretKey = runtime.getSetting("NEAR_WALLET_SECRET_KEY");
 

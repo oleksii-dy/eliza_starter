@@ -1,11 +1,11 @@
 import {
-    ActionExample,
-    HandlerCallback,
+    type ActionExample,
+    type HandlerCallback,
     elizaLogger,
-    IAgentRuntime,
-    Memory,
+    type IAgentRuntime,
+    type Memory,
     ModelClass,
-    State,
+    type State,
     type Action,
     composeContext,
     generateObject,
@@ -21,7 +21,7 @@ import {
     ONE_YOCTO_NEAR,
 } from "@ref-finance/ref-sdk";
 import { walletProvider } from "../providers/wallet";
-import { KeyPairString } from "near-api-js/lib/utils";
+import type { KeyPairString } from "near-api-js/lib/utils";
 
 async function checkStorageBalance(
     account: any,
@@ -55,7 +55,7 @@ async function swapToken(
         const tokenOut = await ftGetTokenMetadata(outputTokenId);
         const networkId = runtime.getSetting("NEAR_NETWORK") || "testnet";
         const nodeUrl =
-            runtime.getSetting("RPC_URL") || "https://rpc.testnet.near.org";
+            runtime.getSetting("NEAR_RPC_URL") || "https://rpc.testnet.near.org";
 
         // Get all pools for estimation
         // ratedPools, unRatedPools,
@@ -257,7 +257,7 @@ export const executeSwap: Action = {
                 networkId: runtime.getSetting("NEAR_NETWORK") || "testnet",
                 keyStore,
                 nodeUrl:
-                    runtime.getSetting("RPC_URL") ||
+                    runtime.getSetting("NEAR_RPC_URL") ||
                     "https://rpc.testnet.near.org",
             });
 
