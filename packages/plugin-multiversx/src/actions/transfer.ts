@@ -20,14 +20,6 @@ export interface TransferContent extends Content {
     tokenIdentifier?: string;
 }
 
-function isTransferContent(_runtime: IAgentRuntime, content: TransferContent) {
-    console.log("Content for transfer", content);
-    return (
-        typeof content.tokenAddress === "string" &&
-        typeof content.amount === "string"
-    );
-}
-
 const transferTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 
 Example response:
@@ -68,7 +60,7 @@ export default {
         message: Memory,
         state: State,
         _options: { [key: string]: unknown },
-        callback?: HandlerCallback
+        callback?: HandlerCallback,
     ) => {
         elizaLogger.log("Starting SEND_TOKEN handler...");
 
@@ -93,10 +85,13 @@ export default {
             schema: transferSchema,
         });
 
-        const payload = content.object as TransferContent;
+        const transferContent = content.object as TransferContent;
+        const isTransferContent =
+            typeof transferContent.tokenAddress === "string" &&
+            typeof transferContent.amount === "string";
 
         // Validate transfer content
-        if (!isTransferContent(runtime, payload)) {
+        if (!isTransferContent) {
             console.error("Invalid content for TRANSFER_TOKEN action.");
             if (callback) {
                 callback({
@@ -114,27 +109,29 @@ export default {
             const walletProvider = new WalletProvider(privateKey, network);
 
             if (
-                payload.tokenIdentifier &&
-                payload.tokenIdentifier.toLowerCase() !== "egld"
+                transferContent.tokenIdentifier &&
+                transferContent.tokenIdentifier.toLowerCase() !== "egld"
             ) {
                 await walletProvider.sendESDT({
-                    receiverAddress: payload.tokenAddress,
-                    amount: payload.amount,
-                    identifier: payload.tokenIdentifier,
+                    receiverAddress: transferContent.tokenAddress,
+                    amount: transferContent.amount,
+                    identifier: transferContent.tokenIdentifier,
                 });
+
                 return true;
             }
 
             await walletProvider.sendEGLD({
-                receiverAddress: payload.tokenAddress,
-                amount: payload.amount,
+                receiverAddress: transferContent.tokenAddress,
+                amount: transferContent.amount,
             });
+
             return true;
         } catch (error) {
             console.error("Error during token transfer:", error);
             if (callback) {
                 callback({
-                    text: `Error transferring tokens: ${error.message}`,
+                    text: error.message,
                     content: { error: error.message },
                 });
             }

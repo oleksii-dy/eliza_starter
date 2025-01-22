@@ -12,7 +12,7 @@ import {
     type Transaction,
     TokenManagementTransactionsFactory,
 } from "@multiversx/sdk-core";
-import { denominateAmount } from "../utils/amount";
+import { denominateAmount, getRawAmount } from "../utils/amount";
 
 // Network configuration object for different environments (mainnet, devnet, testnet)
 const MVX_NETWORK_CONFIG = {
@@ -39,6 +39,7 @@ export class WalletProvider {
     private apiNetworkProvider: ApiNetworkProvider; // Interacts with the MultiversX network
     private chainID: string; // Current network chain ID
     private explorerURL: string; // Current network explorer URL
+    private minEGLD: number = 0.0005; // Minimum balance for EGLD, in order to cover gas fees
 
     /**
      * Constructor to initialize WalletProvider with a private key and network configuration
@@ -83,6 +84,25 @@ export class WalletProvider {
     }
 
     /**
+     * Fetch the wallet's current EGLD balance
+     * @returns Promise resolving to the wallet's balance as a string
+     */
+    public async getFungibleBalance(token: string): Promise<string> {
+        const address = new Address(this.getAddress());
+        const data = await this.apiNetworkProvider.getFungibleTokenOfAccount(
+            address,
+            token,
+        );
+        const { balance, rawResponse } = data;
+        const amount = getRawAmount({
+            amount: balance.toString(),
+            decimals: rawResponse.decimals,
+        });
+
+        return amount;
+    }
+
+    /**
      * Sign a transaction using the wallet's private key
      * @param transaction - The transaction object to sign
      * @returns The transaction signature as a string
@@ -108,6 +128,12 @@ export class WalletProvider {
         amount: string;
     }): Promise<string> {
         try {
+            const hasEgldBalance = await this.hasEgldBalance(amount);
+
+            if (!hasEgldBalance) {
+                throw new Error("Insufficient balance.");
+            }
+
             const receiver = new Address(receiverAddress);
             const value = denominateAmount({ amount, decimals: 18 }); // Convert amount to the smallest unit
             const senderAddress = this.getAddress();
@@ -126,7 +152,7 @@ export class WalletProvider {
                     sender: this.getAddress(),
                     receiver: receiver,
                     nativeAmount: BigInt(value),
-                }
+                },
             );
 
             // Get the sender's account details to set the nonce
@@ -144,13 +170,13 @@ export class WalletProvider {
 
             elizaLogger.log(`TxHash: ${txHash}`); // Log transaction hash
             elizaLogger.log(
-                `Transaction URL: ${this.explorerURL}/transactions/${txHash}`
+                `Transaction URL: ${this.explorerURL}/transactions/${txHash}`,
             ); // View Transaction
             return txHash;
         } catch (error) {
             console.error("Error sending EGLD transaction:", error);
             throw new Error(
-                `Failed to send EGLD: ${error.message || "Unknown error"}`
+                `Failed to send EGLD: ${error.message || "Unknown error"}`,
             );
         }
     }
@@ -172,6 +198,27 @@ export class WalletProvider {
         identifier: string;
     }): Promise<string> {
         try {
+            const hasEgldBalance = await this.hasEgldBalance();
+
+            if (!hasEgldBalance) {
+                throw new Error(
+                    `Insufficient balance, wallet should have a minimum of ${this.minEGLD} EGLD`,
+                );
+            }
+
+            const tokenBalance = await this.getFungibleBalance(identifier);
+
+            const tokenBalanceNum = Number(tokenBalance);
+            const transferAmountNum = Number(amount);
+
+            // Perform the calculation and comparison
+            const hasBalance =
+                tokenBalanceNum >= tokenBalanceNum - transferAmountNum;
+
+            if (!hasBalance) {
+                throw new Error("Insufficient balance for token transfer");
+            }
+
             const address = this.getAddress();
 
             // Set up transaction factory for ESDT transfers
@@ -184,7 +231,7 @@ export class WalletProvider {
             const token =
                 await this.apiNetworkProvider.getFungibleTokenOfAccount(
                     address,
-                    identifier
+                    identifier,
                 );
 
             // Convert amount to the token's smallest unit
@@ -215,15 +262,14 @@ export class WalletProvider {
             const txHash =
                 await this.apiNetworkProvider.sendTransaction(transaction);
 
+            const transactionURL = this.getTransactionURL(txHash);
             elizaLogger.log(`TxHash: ${txHash}`); // Log transaction hash
-            elizaLogger.log(
-                `Transaction URL: ${this.explorerURL}/transactions/${txHash}`
-            ); // View Transaction
+            elizaLogger.log(`Transaction URL: ${transactionURL}`); // View Transaction
             return txHash;
         } catch (error) {
             console.error("Error sending ESDT transaction:", error);
             throw new Error(
-                `Failed to send ESDT: ${error.message || "Unknown error"}`
+                `Failed to send ESDT: ${error.message || "Unknown error"}`,
             );
         }
     }
@@ -248,6 +294,14 @@ export class WalletProvider {
         decimals: number;
     }): Promise<string> {
         try {
+            const hasEgldBalance = await this.hasEgldBalance();
+
+            if (!hasEgldBalance) {
+                throw new Error(
+                    `Insufficient balance, wallet should have a minimum of ${this.minEGLD} EGLD`,
+                );
+            }
+
             const address = this.getAddress(); // Retrieve the sender's address
 
             const factoryConfig = new TransactionsFactoryConfig({
@@ -285,17 +339,48 @@ export class WalletProvider {
             const txHash =
                 await this.apiNetworkProvider.sendTransaction(transaction);
 
+            const transactionURL = this.getTransactionURL(txHash);
             elizaLogger.log(`TxHash: ${txHash}`); // Log the transaction hash
-            elizaLogger.log(
-                `Transaction URL: ${this.explorerURL}/transactions/${txHash}`
-            ); // View Transaction
+            elizaLogger.log(`Transaction URL: ${transactionURL}`); // View Transaction
 
             return txHash; // Return the transaction hash
         } catch (error) {
             console.error("Error creating ESDT:", error);
             throw new Error(
-                `Failed to create ESDT: ${error.message || "Unknown error"}`
+                `Failed to create ESDT: ${error.message || "Unknown error"}`,
             ); // Throw an error if creation fails
         }
+    }
+
+    /**
+     * Create a transaction URL.
+     * @param txHash - Transaction hash
+     * @returns The transaction url for the given hash.
+     */
+    public getTransactionURL(txHash: string) {
+        return `${this.explorerURL}/transactions/${txHash}`;
+    }
+
+    /**
+     * Check if wallet has EGLD balance
+     * @param amount - EGLD amount to check
+     * @returns boolean
+     */
+    public async hasEgldBalance(amount?: string) {
+        const denominatedBalance = await this.getBalance();
+        const rawBalance = getRawAmount({
+            amount: denominatedBalance,
+            decimals: 18,
+        });
+        const rawBalanceNum = Number(rawBalance);
+
+        if (amount) {
+            const amountNum = Number(amount);
+            const hasBalance = rawBalanceNum >= amountNum + this.minEGLD;
+
+            return hasBalance;
+        }
+
+        return rawBalanceNum >= this.minEGLD;
     }
 }

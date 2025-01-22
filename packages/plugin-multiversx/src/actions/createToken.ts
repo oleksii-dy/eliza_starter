@@ -21,14 +21,6 @@ export interface CreateTokenContent extends Content {
     amount: string;
 }
 
-function isCreateTokenContent(
-    runtime: IAgentRuntime,
-    content: CreateTokenContent
-) {
-    console.log("Content for create token", content);
-    return content.tokenName && content.tokenName && content.tokenName;
-}
-
 const createTokenTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 
 Example response:
@@ -65,7 +57,7 @@ export default {
         message: Memory,
         state: State,
         _options: { [key: string]: unknown },
-        callback?: HandlerCallback
+        callback?: HandlerCallback,
     ) => {
         elizaLogger.log("Starting CREATE_TOKEN handler...");
 
@@ -91,9 +83,11 @@ export default {
         });
 
         const payload = content.object as CreateTokenContent;
+        const isCreateTokenContent =
+            payload.tokenName && payload.tokenName && payload.tokenName;
 
         // Validate transfer content
-        if (!isCreateTokenContent(runtime, payload)) {
+        if (!isCreateTokenContent) {
             console.error("Invalid content for CREATE_TOKEN action.");
             if (callback) {
                 callback({
