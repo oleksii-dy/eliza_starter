@@ -4,6 +4,7 @@ import { IAgentRuntime } from "@elizaos/core";
 const DEFAULT_LINKEDIN_API_URL = "https://api.linkedin.com";
 const DEFAULT_LINKEDIN_POST_INTERVAL_MIN = 60;
 const DEFAULT_LINKEDIN_POST_INTERVAL_MAX = 120;
+const DEFAULT_LINKEDIN_DRY_RUN = false;
 
 const parseNumber = (
     val: string | number | null,
@@ -45,6 +46,11 @@ export const configSchema = z
         LINKEDIN_API_URL: z
             .union([z.string(), z.null(), z.undefined()])
             .transform((val) => val ?? DEFAULT_LINKEDIN_API_URL),
+        LINKEDIN_DRY_RUN: z.union([
+            z.boolean(),
+            z.null(),
+            z.undefined(),
+        ]).transform((val) => val ?? DEFAULT_LINKEDIN_DRY_RUN),
     })
     .superRefine((data, ctx) => {
         if (data.LINKEDIN_POST_INTERVAL_MIN > data.LINKEDIN_POST_INTERVAL_MAX) {
@@ -65,6 +71,7 @@ export const validateConfig = (runtime: IAgentRuntime) => {
         "LINKEDIN_POST_INTERVAL_MAX"
     );
     const LINKEDIN_API_URL = runtime.getSetting("LINKEDIN_API_URL");
+    const LINKEDIN_DRY_RUN = runtime.getSetting("LINKEDIN_DRY_RUN");
 
     try {
         const envs = configSchema.parse({
@@ -72,6 +79,7 @@ export const validateConfig = (runtime: IAgentRuntime) => {
             LINKEDIN_POST_INTERVAL_MIN,
             LINKEDIN_POST_INTERVAL_MAX,
             LINKEDIN_API_URL,
+            LINKEDIN_DRY_RUN
         });
 
         return envs;

@@ -5,6 +5,8 @@ import {
     ModelClass,
     stringToUuid,
 } from "@elizaos/core";
+import { createLinkedinPostTemplate } from "../templates";
+import removeMd from "remove-markdown";
 
 export class PostContentCreator {
     constructor(public runtime: IAgentRuntime) {}
@@ -25,13 +27,31 @@ export class PostContentCreator {
 
         const context = composeContext({
             state,
-            template: "post template",
+            template: createLinkedinPostTemplate,
         });
 
-        return await generateText({
+        const text = await generateText({
             runtime: this.runtime,
             context,
             modelClass: ModelClass.SMALL,
         });
+
+        return this.removeMd(this.escapeSpecialCharacters(text));
+    }
+
+    removeMd(content: string) {
+        return removeMd(content);
+    }
+
+    escapeSpecialCharacters(content: string): string {
+        const escapedCharacters = content
+            .replace(/\(/g, "\\(")
+            .replace(/\)/g, "\\)")
+            .replace(/\[/g, "\\[")
+            .replace(/\]/g, "\\]")
+            .replace(/\{/g, "\\{")
+            .replace(/\}/g, "\\}");
+
+        return escapedCharacters;
     }
 }
