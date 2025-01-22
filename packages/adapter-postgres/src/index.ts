@@ -25,7 +25,7 @@ import {
     DatabaseAdapter,
     EmbeddingProvider,
 } from "@elizaos/core";
-// import fs from "fs";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
 
@@ -210,11 +210,11 @@ export class PostgresDatabaseAdapter
                 await client.query("SET app.use_gaianet_embedding = 'false'");
             }
 
-            // const schema = fs.readFileSync(
-            //     path.resolve(__dirname, "../schema.sql"),
-            //     "utf8"
-            // );
-            // await client.query(schema);
+            const schema = fs.readFileSync(
+                path.resolve(__dirname, "../schema_eliza.sql"),
+                "utf8"
+            );
+            await client.query(schema);
 
             await client.query("COMMIT");
         } catch (error) {
