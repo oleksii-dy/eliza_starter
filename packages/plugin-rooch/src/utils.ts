@@ -1,32 +1,20 @@
-import { IAgentRuntime, settings } from "@elizaos/core";
-import { ParsedKeypair, decodeRoochSercetKey } from "@roochnetwork/rooch-sdk/dist/esm";
-
-const ROOCH_SECRET_KEY_PREFIX = "roochsecretkey"
+import { IAgentRuntime } from "@elizaos/core";
+import bs58check from 'bs58check';
+import { ParsedKeypair } from "@roochnetwork/rooch-sdk/dist/esm";
 
 const parseKeypair = (runtime: IAgentRuntime): ParsedKeypair => {
-    const privateKey = runtime.getSetting("ROOCH_PRIVATE_KEY");
-    if (!privateKey) {
-        throw new Error("ROOCH_PRIVATE_KEY is not set");
+    const wifPrivateKey = runtime.getSetting("BITCOIN_WIF_PRIVATE_KEY");
+    if (!wifPrivateKey) {
+        throw new Error("BITCOIN_WIF_PRIVATE_KEY is not set");
     }
 
-    if (!privateKey.startsWith(ROOCH_SECRET_KEY_PREFIX)) {
-        throw new Error("ROOCH_PRIVATE_KEY is invalid");
-    }
+    const decoded = bs58check.decode(wifPrivateKey);
+    const secretKey = decoded.slice(1, 33);
 
-    return decodeRoochSercetKey(privateKey);
-};
-
-const parseKeypairFromSettings = (): ParsedKeypair => {
-    const privateKey = settings["ROOCH_PRIVATE_KEY"];
-    if (!privateKey) {
-        throw new Error("ROOCH_PRIVATE_KEY is not set");
-    }
-
-    if (!privateKey.startsWith(ROOCH_SECRET_KEY_PREFIX)) {
-        throw new Error("ROOCH_PRIVATE_KEY is invalid");
-    }
-
-    return decodeRoochSercetKey(privateKey);
+    return {
+        schema: "Secp256k1",
+        secretKey: secretKey
+    } as ParsedKeypair;
 };
 
 const parseAccessPath = (uri: string): string => {
@@ -38,4 +26,4 @@ const parseAccessPath = (uri: string): string => {
     throw new Error("Invalid URI format");
 };
 
-export { parseKeypair, parseKeypairFromSettings, parseAccessPath };
+export { parseKeypair, parseAccessPath };

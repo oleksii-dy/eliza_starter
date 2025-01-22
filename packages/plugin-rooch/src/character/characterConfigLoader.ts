@@ -46,7 +46,12 @@ export const characterConfigLoader: ICharacterConfigLoader = {
                 throw new Error(`Not found character with uri: ${uri}`)
             }
 
-            return decodeCharacterData(objectStates[0].decoded_value.value)
+            const characterData = decodeCharacterData(objectStates[0].decoded_value.value) as any;
+            if (characterData) {
+                characterData.settings = {}
+            }
+
+            return characterData
         } catch (error) {
             console.error("Error in wallet provider:", error);
             return error;

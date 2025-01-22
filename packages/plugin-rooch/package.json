@@ -6,7 +6,8 @@
     "types": "dist/index.d.ts",
     "dependencies": {
         "@elizaos/core": "workspace:*",
-        "@roochnetwork/rooch-sdk": "^0.2.9"
+        "@roochnetwork/rooch-sdk": "^0.2.9",
+        "@types/bs58check": "^2.1.2"
     },
     "devDependencies": {
         "@types/node": "^20.0.0",

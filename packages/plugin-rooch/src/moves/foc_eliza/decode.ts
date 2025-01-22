@@ -242,9 +242,5 @@ function removeNullValues(obj: any): any {
 // Modified decodeCharacterData function
 export function decodeCharacterData(decoded_value: any): CharacterData {
     const parsed = parseCharacterData(decoded_value);
-    if (parsed) {
-        parsed.settings = {}
-    }
-
     return removeNullValues(parsed) as CharacterData;
 }
