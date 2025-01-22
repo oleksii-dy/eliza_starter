@@ -151,12 +151,12 @@ export default {
                             .signAndSend(
                                 keyring,
                                 options,
-                                (result: any) => {
+                                (result: { status: any; isFinalized: boolean; isError: boolean; dispatchError?: { isModule: boolean; asModule: any; toString: () => string }; txHash: any }) => {
                                     elizaLogger.log(
                                         `Tx status: ${result.status}`
                                     );
                                     if (result.isFinalized || result.isError) {
-                                        res(result);
+                                        res(result as any);
                                     }
                                 }
                             );
