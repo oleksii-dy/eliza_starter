@@ -53,7 +53,9 @@ export interface PostRequestWithMedia extends BasePostRequest {
 export const API_VERSION_HEADER = "LinkedIn-Version";
 export const API_VERSION = "202411";
 export type Envs = z.infer<typeof configSchema>;
-export type IntervalsConfig = Pick<
+export type PublisherConfig = Pick<
     Envs,
-    "LINKEDIN_POST_INTERVAL_MAX" | "LINKEDIN_POST_INTERVAL_MIN"
+    | "LINKEDIN_POST_INTERVAL_MAX"
+    | "LINKEDIN_POST_INTERVAL_MIN"
+    | "LINKEDIN_DRY_RUN"
 >;

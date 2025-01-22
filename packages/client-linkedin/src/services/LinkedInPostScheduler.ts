@@ -1,10 +1,10 @@
 import { AxiosInstance } from "axios";
 import { LinkedInUserInfoFetcher } from "../repositories/LinkedinUserInfoFetcher";
 import { PostContentCreator } from "./PostContentCreator";
-import { IntervalsConfig } from "../interfaces";
-import { LinkedInPostPublisher } from "../repositories/LinkedinPostPublisher";
-import { elizaLogger, IAgentRuntime } from "@elizaos/core";
+import { elizaLogger, IAgentRuntime, stringToUuid } from "@elizaos/core";
 import { getRandomInteger } from "../helpers/get-random-integer";
+import { LinkedInPostPublisher } from "../repositories/LinkedinPostPublisher";
+import { PublisherConfig } from "../interfaces";
 
 export class LinkedInPostScheduler {
     constructor(
@@ -12,7 +12,7 @@ export class LinkedInPostScheduler {
         private postPublisher: LinkedInPostPublisher,
         private postContentCreator: PostContentCreator,
         readonly userId: string,
-        readonly intervalsConfig: IntervalsConfig
+        readonly config: PublisherConfig
     ) {}
 
     static async createPostScheduler({
@@ -24,7 +24,7 @@ export class LinkedInPostScheduler {
         axiosInstance: AxiosInstance;
         userInfoFetcher: LinkedInUserInfoFetcher;
         runtime: IAgentRuntime;
-        config: IntervalsConfig;
+        config: PublisherConfig;
     }) {
         const userInfo = await userInfoFetcher.getUserInfo();
 
@@ -49,8 +49,8 @@ export class LinkedInPostScheduler {
         }>("linkedin/" + this.userId + "/lastPost");
 
         const lastPostTimestamp = lastPost?.timestamp ?? 0;
-        const minMinutes = this.intervalsConfig.LINKEDIN_POST_INTERVAL_MIN;
-        const maxMinutes = this.intervalsConfig.LINKEDIN_POST_INTERVAL_MAX;
+        const minMinutes = this.config.LINKEDIN_POST_INTERVAL_MIN;
+        const maxMinutes = this.config.LINKEDIN_POST_INTERVAL_MAX;
 
         const randomMinutes = getRandomInteger(minMinutes, maxMinutes);
         const delay = randomMinutes * 60 * 1000;
@@ -59,12 +59,32 @@ export class LinkedInPostScheduler {
             const postText = await this.postContentCreator.createPostContent(
                 this.userId
             );
-            await this.postPublisher.publishPost({ postText });
+
+            elizaLogger.log(`Generated post text`);
+            elizaLogger.log(postText);
+
+            if (!this.config.LINKEDIN_DRY_RUN) {
+                await this.postPublisher.publishPost({ postText });
+                elizaLogger.info("Published post");
+            } else {
+                elizaLogger.warn(
+                    "Dry run is enabled. To publish posts set LINKEDIN_DRY_RUN to false"
+                );
+            }
+
+            this.runtime.messageManager.createMemory({
+                userId: this.runtime.agentId,
+                agentId: this.runtime.agentId,
+                roomId: stringToUuid("linkedin_generate_room-" + this.userId),
+                content: {
+                    text: postText,
+                },
+            });
+
             await this.runtime.cacheManager.set(
                 "linkedin/" + this.userId + "/lastPost",
                 { timestamp: Date.now() }
             );
-            elizaLogger.info("Published post");
         }
 
         setTimeout(() => {
