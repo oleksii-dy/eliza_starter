@@ -62,9 +62,12 @@ pnpm start:client
 ### Running the GAIA characters
 
 1. Edit characters in `characters/`
-2. Run multiple characters with: `pnpm start --character="characters/gaia.character.json,characters/terranova.character.json,characters/aquarius.character.json,characters/nexus.character.json"`
+2. Run multiple characters with: 
+```
+pnpm start --character="characters/gaia.character.json,characters/terranova.character.json,characters/aquarius.character.json,characters/nexus.character.json"
+```
 3. Connect with X and discord
-    - change `"clients": []` to `"clients": ["twitter","discord"]` in the character file to connect with X
+    - change `"clients": []` to `"clients": ["twitter","discord"]` in the character files to connect agents to X or discord
 
 ### Manually Start Gaia
 
