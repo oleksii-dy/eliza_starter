@@ -17,7 +17,6 @@ import {
     initialize,
     getKeyringFromSeed,
 } from "avail-js-sdk";
-import type { ISubmittableResult } from "@polkadot/types/types/extrinsic";
 import type { H256 } from "@polkadot/types/interfaces/runtime";
 
 export interface DataContent extends Content {
@@ -134,7 +133,7 @@ export default {
           `);
 
                 //submit data
-                const txResult = await new Promise<ISubmittableResult>(
+                const txResult = await new Promise<{ status: any; isFinalized: boolean; isError: boolean; dispatchError?: { isModule: boolean; asModule: any; toString: () => string }; txHash: any }>(
                     (res) => {
                         api.tx.dataAvailability
                             .submitData(data)
