@@ -1,3 +1,4 @@
+import { HandlerCallback } from "@elizaos/core";
 import {
     Action,
     IAgentRuntime,
@@ -5,7 +6,6 @@ import {
     State,
     elizaLogger,
 } from "@elizaos/core";
-import { isValidStandingsData } from "../types";
 
 const TIMEOUT_MS = 5000;
 const RATE_LIMIT_WINDOW_MS = 60000;
@@ -17,16 +17,18 @@ export const fetchStandingsAction: Action = {
     description: "Fetch current league standings",
     validate: async (
         runtime: IAgentRuntime,
-        message: Memory,
-        state?: State
+        _message: Memory,
+        _state?: State,
     ) => {
         const apiKey = runtime.getSetting("FOOTBALL_API_KEY");
         return !!apiKey;
     },
     handler: async (
         runtime: IAgentRuntime,
-        message: Memory,
-        state?: State
+        _message: Memory,
+        _state?: State,
+        options?: { [key: string]: unknown },
+        callback?: HandlerCallback,
     ): Promise<any> => {
         try {
             const league = runtime.getSetting("LEAGUE_ID") || "PL";
@@ -59,20 +61,25 @@ export const fetchStandingsAction: Action = {
             if (!response.ok) {
                 elizaLogger.error(
                     "Error fetching standings data:",
-                    response.statusText
+                    response.statusText,
                 );
+                callback({
+                    text: "Error fetching standings data:",
+                    action: "FETCH_STANDINGS",
+                });
                 return false;
             }
 
             const standingsData = await response.json();
+            callback(
+                {
+                    text: `Football standings data fetched successfully:
+                    - Result: ${JSON.stringify(standingsData, null, 2)}`,
+                },
+                [],
+            );
 
-            if (!isValidStandingsData(standingsData)) {
-                elizaLogger.error("Invalid standings data format");
-                return false;
-            }
-
-            elizaLogger.log("Fetched standings data:", standingsData);
-            return standingsData;
+            return;
         } catch (error) {
             elizaLogger.error("Error in fetchStandingsAction:", error);
             return false;
