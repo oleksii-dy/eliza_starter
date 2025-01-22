@@ -3,6 +3,7 @@ import {
     IAwsS3Service,
     Service,
     ServiceType,
+    elizaLogger,
 } from "@elizaos/core";
 import {
     GetObjectCommand,
@@ -32,7 +33,7 @@ export class AwsS3Service extends Service implements IAwsS3Service {
     private runtime: IAgentRuntime | null = null;
 
     async initialize(runtime: IAgentRuntime): Promise<void> {
-        console.log("Initializing AwsS3Service");
+        elizaLogger.log("Initializing AwsS3Service");
         this.runtime = runtime;
         this.fileUploadPath = runtime.getSetting("AWS_S3_UPLOAD_PATH") ?? "";
     }
@@ -57,7 +58,17 @@ export class AwsS3Service extends Service implements IAwsS3Service {
             return false;
         }
 
+        /** Optional fields to allow for other providers */
+        const endpoint = this.runtime.getSetting("AWS_S3_ENDPOINT");
+        const sslEnabled = this.runtime.getSetting("AWS_S3_SSL_ENABLED");
+        const forcePathStyle = this.runtime.getSetting("AWS_S3_FORCE_PATH_STYLE");
+
         this.s3Client = new S3Client({
+            ...(endpoint ? { endpoint } : {}),
+            ...(sslEnabled ? { sslEnabled } : {}),
+            ...(forcePathStyle
+                ? { forcePathStyle: Boolean(forcePathStyle) }
+                : {}),
             region: AWS_REGION,
             credentials: {
                 accessKeyId: AWS_ACCESS_KEY_ID,

@@ -1,219 +1,599 @@
-import { Octokit } from "@octokit/rest";
-import { glob } from "glob";
-import simpleGit, { SimpleGit } from "simple-git";
-import path from "path";
-import fs from "fs/promises";
-import { existsSync } from "fs";
-import { createHash } from "crypto";
 import {
     elizaLogger,
-    AgentRuntime,
     Client,
     IAgentRuntime,
-    knowledge,
+    Character,
+    ModelClass,
+    composeContext,
+    Memory,
+    Content,
+    HandlerCallback,
+    UUID,
+    generateObject,
     stringToUuid,
+    State,
 } from "@elizaos/core";
 import { validateGithubConfig } from "./environment";
+import { EventEmitter } from "events";
+import {
+    addCommentToIssueAction,
+    closeIssueAction,
+    closePRAction,
+    createCommitAction,
+    createIssueAction,
+    createMemoriesFromFilesAction,
+    createPullRequestAction,
+    getFilesFromMemories,
+    getIssuesFromMemories,
+    getPullRequestsFromMemories,
+    ideationAction,
+    initializeRepositoryAction,
+    modifyIssueAction,
+    reactToIssueAction,
+    reactToPRAction,
+    saveIssuesToMemory,
+    savePullRequestsToMemory,
+} from "@elizaos/plugin-github";
+import { isOODAContent, OODAContent, OODASchema } from "./types";
+import { oodaTemplate } from "./templates";
+import fs from "fs/promises";
+import { configGithubInfoAction } from "./actions/configGithubInfo";
+import {
+    participateToRoom,
+    registerActions,
+    sleep,
+    unregisterActions,
+} from "./utils";
 
-export interface GitHubConfig {
-    owner: string;
-    repo: string;
-    branch?: string;
-    path?: string;
-    token: string;
-}
+export class GitHubClient extends EventEmitter {
+    apiToken: string;
+    runtime: IAgentRuntime;
+    character: Character;
+    state: State | null;
+    roomId: UUID;
+    stopped: boolean;
 
-export class GitHubClient {
-    private octokit: Octokit;
-    private git: SimpleGit;
-    private config: GitHubConfig;
-    private runtime: AgentRuntime;
-    private repoPath: string;
+    constructor(runtime: IAgentRuntime) {
+        super();
 
-    constructor(runtime: AgentRuntime) {
+        this.apiToken = runtime.getSetting("GITHUB_API_TOKEN") as string;
+
         this.runtime = runtime;
-        this.config = {
-            owner: runtime.getSetting("GITHUB_OWNER") as string,
-            repo: runtime.getSetting("GITHUB_REPO") as string,
-            branch: runtime.getSetting("GITHUB_BRANCH") as string,
-            path: runtime.getSetting("GITHUB_PATH") as string,
-            token: runtime.getSetting("GITHUB_API_TOKEN") as string,
-        };
-        this.octokit = new Octokit({ auth: this.config.token });
-        this.git = simpleGit();
-        this.repoPath = path.join(
-            process.cwd(),
-            ".repos",
-            this.config.owner,
-            this.config.repo
-        );
+        this.character = runtime.character;
+        this.state = null;
+        this.roomId = stringToUuid(`default-room-${this.runtime.agentId}`);
+        this.stopped = false;
+
+        this.start();
     }
 
-    async initialize() {
-        // Create repos directory if it doesn't exist
-        await fs.mkdir(path.join(process.cwd(), ".repos", this.config.owner), {
-            recursive: true,
-        });
+    private async start() {
+        elizaLogger.log("Starting GitHub client...");
 
-        // Clone or pull repository
-        if (!existsSync(this.repoPath)) {
-            await this.cloneRepository();
-        } else {
-            const git = simpleGit(this.repoPath);
-            await git.pull();
-        }
+        // wait for 1 second
+        await sleep(1000);
 
-        // Checkout specified branch if provided
-        if (this.config.branch) {
-            const git = simpleGit(this.repoPath);
-            await git.checkout(this.config.branch);
-        }
-    }
+        await participateToRoom(this.runtime, this.roomId);
 
-    private async cloneRepository() {
-        const repositoryUrl = `https://github.com/${this.config.owner}/${this.config.repo}.git`;
-        const maxRetries = 3;
-        let retries = 0;
+        const githubInfoDiscoveryActions = [configGithubInfoAction];
 
-        while (retries < maxRetries) {
-            try {
-                await this.git.clone(repositoryUrl, this.repoPath);
-                elizaLogger.log(
-                    `Successfully cloned repository from ${repositoryUrl}`
-                );
+        // register action
+        registerActions(this.runtime, githubInfoDiscoveryActions);
+
+        const githubInfoDiscoveryInterval =
+            Number(
+                this.runtime.getSetting("GITHUB_INFO_DISCOVERY_INTERVAL_MS")
+            ) || 1000; // Default to 1 second
+
+        // github info discovery loop
+        while (true) {
+            if (this.stopped) {
+                unregisterActions(this.runtime, githubInfoDiscoveryActions);
+                elizaLogger.log("GitHubClient stopped successfully.");
                 return;
-            } catch {
-                elizaLogger.error(`Failed to clone repository from ${repositoryUrl}. Retrying...`);
-                retries++;
-                if (retries === maxRetries) {
-                    throw new Error(
-                        `Unable to clone repository from ${repositoryUrl} after ${maxRetries} retries.`
-                    );
-                }
             }
-        }
-    }
 
-    async createMemoriesFromFiles() {
-        console.log("Create memories");
-        const searchPath = this.config.path
-            ? path.join(this.repoPath, this.config.path, "**/*")
-            : path.join(this.repoPath, "**/*");
+            elizaLogger.log("Processing Github info discovery cycle...");
 
-        const files = await glob(searchPath, { nodir: true });
+            const memories = await this.runtime.messageManager.getMemories({
+                roomId: this.roomId,
+            });
 
-        for (const file of files) {
-            const relativePath = path.relative(this.repoPath, file);
-            const content = await fs.readFile(file, "utf-8");
-            const contentHash = createHash("sha256")
-                .update(content)
-                .digest("hex");
-            const knowledgeId = stringToUuid(
-                `github-${this.config.owner}-${this.config.repo}-${relativePath}`
-            );
-
-            const existingDocument =
-                await this.runtime.documentsManager.getMemoryById(knowledgeId);
-
-            if (
-                existingDocument &&
-                existingDocument.content["hash"] == contentHash
-            ) {
+            // if memories is empty skip the cycle
+            if (memories.length === 0) {
+                elizaLogger.log(
+                    "No memories found, skip to the next github info discovery cycle."
+                );
+                await sleep(githubInfoDiscoveryInterval);
                 continue;
             }
 
-            console.log(
-                "Processing knowledge for ",
-                this.runtime.character.name,
-                " - ",
-                relativePath
+            // get the last memory
+            const message = memories[0];
+
+            if (!this.state) {
+                this.state = (await this.runtime.composeState(
+                    message
+                )) as State;
+            } else {
+                this.state = await this.runtime.updateRecentMessageState(
+                    this.state
+                );
+            }
+
+            const context = composeContext({
+                state: this.state,
+                template: oodaTemplate,
+            });
+
+            const details = await generateObject({
+                runtime: this.runtime,
+                context,
+                modelClass: ModelClass.SMALL,
+                schema: OODASchema,
+            });
+
+            if (!isOODAContent(details.object)) {
+                elizaLogger.error("Invalid content:", details.object);
+                throw new Error("Invalid content");
+            }
+
+            const content = details.object as OODAContent;
+
+            await fs.writeFile(
+                "/tmp/client-github-content.txt",
+                JSON.stringify(content, null, 2)
             );
 
-            await knowledge.set(this.runtime, {
-                id: knowledgeId,
-                content: {
-                    text: content,
-                    hash: contentHash,
-                    source: "github",
-                    attachments: [],
-                    metadata: {
-                        path: relativePath,
-                        repo: this.config.repo,
-                        owner: this.config.owner,
-                    },
-                },
-            });
-        }
-    }
+            // if content has the owner, repo and branch fields set, then we can stop the github info discovery cycle
+            if (content.owner && content.repo && content.branch) {
+                elizaLogger.log(
+                    `Repository configuration complete for ${content.owner}/${content.repo} on ${content.branch} branch`
+                );
 
-    async createPullRequest(
-        title: string,
-        branch: string,
-        files: Array<{ path: string; content: string }>,
-        description?: string
-    ) {
-        // Create new branch
-        const git = simpleGit(this.repoPath);
-        await git.checkout(["-b", branch]);
+                this.state.owner = content.owner;
+                this.state.repo = content.repo;
+                this.state.branch = content.branch;
 
-        // Write files
-        for (const file of files) {
-            const filePath = path.join(this.repoPath, file.path);
-            await fs.mkdir(path.dirname(filePath), { recursive: true });
-            await fs.writeFile(filePath, file.content);
+                // stop the github info discovery loop
+                break;
+            }
+
+            await sleep(githubInfoDiscoveryInterval);
         }
 
-        // Commit and push changes
-        await git.add(".");
-        await git.commit(title);
-        await git.push("origin", branch);
+        // sleep for 5 seconds
+        await sleep(5000);
 
-        // Create PR
-        const pr = await this.octokit.pulls.create({
-            owner: this.config.owner,
-            repo: this.config.repo,
-            title,
-            body: description || title,
-            head: branch,
-            base: this.config.branch || "main",
+        // unregister action
+        unregisterActions(this.runtime, githubInfoDiscoveryActions);
+
+        const repoInitActions = [
+            initializeRepositoryAction,
+            createMemoriesFromFilesAction,
+        ];
+
+        // register the initial actions
+        registerActions(this.runtime, repoInitActions);
+
+        const initializeRepositoryMemoryTimestamp = Date.now();
+        const initializeRepositoryMemory: Memory = {
+            id: stringToUuid(
+                `${this.roomId}-${this.runtime.agentId}-${initializeRepositoryMemoryTimestamp}-initialize-repository`
+            ),
+            userId: this.runtime.agentId,
+            agentId: this.runtime.agentId,
+            content: {
+                text: `Initialize the repository ${this.state.owner}/${this.state.repo} on ${this.state.branch} branch`,
+                action: "INITIALIZE_REPOSITORY",
+                source: "github",
+                inReplyTo: stringToUuid(
+                    `${this.roomId}-${this.runtime.agentId}`
+                ),
+            },
+            roomId: this.roomId,
+            createdAt: initializeRepositoryMemoryTimestamp,
+        };
+        await this.runtime.messageManager.createMemory(
+            initializeRepositoryMemory
+        );
+
+        const createMemoriesFromFilesMemoryTimestamp = Date.now();
+        const createMemoriesFromFilesMemory = {
+            id: stringToUuid(
+                `${this.roomId}-${this.runtime.agentId}-${createMemoriesFromFilesMemoryTimestamp}-create-memories-from-files`
+            ),
+            userId: this.runtime.agentId,
+            agentId: this.runtime.agentId,
+            content: {
+                text: `Create memories from files for the repository ${this.state.owner}/${this.state.repo} @ branch ${this.state.branch} and path '/'`,
+                action: "CREATE_MEMORIES_FROM_FILES",
+                source: "github",
+                inReplyTo: stringToUuid(
+                    `${this.roomId}-${this.runtime.agentId}`
+                ),
+            },
+            roomId: this.roomId,
+            createdAt: createMemoriesFromFilesMemoryTimestamp,
+        };
+        await this.runtime.messageManager.createMemory(
+            createMemoriesFromFilesMemory
+        );
+
+        // retrieve memories
+        const memories = await this.runtime.messageManager.getMemories({
+            roomId: this.roomId,
         });
 
-        return pr.data;
-    }
-
-    async createCommit(
-        message: string,
-        files: Array<{ path: string; content: string }>
-    ) {
-        const git = simpleGit(this.repoPath);
-
-        // Write files
-        for (const file of files) {
-            const filePath = path.join(this.repoPath, file.path);
-            await fs.mkdir(path.dirname(filePath), { recursive: true });
-            await fs.writeFile(filePath, file.content);
+        // if memories is empty throw an error
+        if (memories.length === 0) {
+            elizaLogger.error(
+                "No memories found, repo init loop cannot continue."
+            );
+            throw new Error(
+                "No memories found, repo init loop cannot continue."
+            );
         }
 
-        // Commit and push changes
-        await git.add(".");
-        await git.commit(message);
-        await git.push();
+        // retrieve last message
+        const message = memories[0];
+
+        const issuesLimit =
+            Number(this.runtime.getSetting("GITHUB_ISSUES_LIMIT")) || 10;
+        const pullRequestsLimit =
+            Number(this.runtime.getSetting("GITHUB_PULL_REQUESTS_LIMIT")) || 10;
+
+        // save issues and pull requests to memory
+        await saveIssuesToMemory(
+            this.runtime,
+            message,
+            this.state.owner as string,
+            this.state.repo as string,
+            this.state.branch as string,
+            this.apiToken,
+            issuesLimit,
+            true
+        );
+        await savePullRequestsToMemory(
+            this.runtime,
+            message,
+            this.state.owner as string,
+            this.state.repo as string,
+            this.state.branch as string,
+            this.apiToken,
+            pullRequestsLimit,
+            true
+        );
+
+        const callback: HandlerCallback = async (content: Content) => {
+            console.log("callback content: ", content);
+
+            const timestamp = Date.now();
+
+            const responseMemory: Memory = {
+                id: stringToUuid(
+                    `${this.roomId}-${this.runtime.agentId}-${timestamp}-${content.action}-response`
+                ),
+                agentId: this.runtime.agentId,
+                userId: this.runtime.agentId,
+                content: {
+                    ...content,
+                    user: this.runtime.character.name,
+                    inReplyTo:
+                        content.action === "INITIALIZE_REPOSITORY"
+                            ? initializeRepositoryMemory.id
+                            : createMemoriesFromFilesMemory.id,
+                },
+                roomId: this.roomId,
+                createdAt: timestamp,
+            };
+
+            // print responseMemory
+            elizaLogger.log("responseMemory: ", responseMemory);
+
+            if (responseMemory.content.text?.trim()) {
+                await this.runtime.messageManager.createMemory(responseMemory);
+                this.state = await this.runtime.updateRecentMessageState(
+                    this.state
+                );
+            } else {
+                elizaLogger.error("Empty response, skipping");
+            }
+
+            return [responseMemory];
+        };
+
+        await this.runtime.processActions(
+            message,
+            [initializeRepositoryMemory, createMemoriesFromFilesMemory],
+            this.state,
+            callback
+        );
+
+        // get memories and write it to file
+        const memoriesPostRepoInitProcessActions =
+            await this.runtime.messageManager.getMemories({
+                roomId: this.roomId,
+                count: 1000,
+            });
+        await fs.writeFile(
+            "/tmp/client-github-memories-post-repo-init-process-actions.txt",
+            JSON.stringify(memoriesPostRepoInitProcessActions, null, 2)
+        );
+
+        // get state and write it to file
+        await fs.writeFile(
+            "/tmp/client-github-state-post-repo-init-process-actions.txt",
+            JSON.stringify(this.state, null, 2)
+        );
+
+        const githubRepoInitInterval =
+            Number(this.runtime.getSetting("GITHUB_REPO_INIT_INTERVAL_MS")) ||
+            5000; // Default to 5 second
+
+        await sleep(githubRepoInitInterval);
+
+        // repo init loop
+        while (true) {
+            if (this.stopped) {
+                unregisterActions(this.runtime, repoInitActions);
+                elizaLogger.log("GitHubClient stopped successfully.");
+                return;
+            }
+
+            elizaLogger.log("Processing repo init cycle...");
+
+            // retrieve memories
+            const memories = await this.runtime.messageManager.getMemories({
+                roomId: this.roomId,
+            });
+
+            await fs.writeFile(
+                "/tmp/client-github-memories.txt",
+                JSON.stringify(memories, null, 2)
+            );
+
+            // if memories is empty skip to the next repo init cycle
+            if (memories.length === 0) {
+                elizaLogger.log(
+                    "No memories found, skipping to the next repo init cycle."
+                );
+                await sleep(githubRepoInitInterval);
+                continue;
+            }
+
+            // retrieve last message
+            const message = memories[0];
+
+            // retrieve files from memories
+            const files = await getFilesFromMemories(this.runtime, message);
+
+            if (files.length === 0) {
+                elizaLogger.log(
+                    "No files found, skipping to the next repo init cycle."
+                );
+                await sleep(githubRepoInitInterval);
+                continue;
+            }
+
+            // if files are found, set files, issues and PRs to state and stop the repo init loop
+            this.state.files = files;
+
+            const previousIssues = await getIssuesFromMemories(
+                this.runtime,
+                message
+            );
+            this.state.previousIssues = JSON.stringify(
+                previousIssues.map((issue) => ({
+                    title: issue.content.text,
+                    body: (issue.content.metadata as any).body,
+                    url: (issue.content.metadata as any).url,
+                    number: (issue.content.metadata as any).number,
+                    state: (issue.content.metadata as any).state,
+                })),
+                null,
+                2
+            );
+
+            const previousPRs = await getPullRequestsFromMemories(
+                this.runtime,
+                message
+            );
+            this.state.previousPRs = JSON.stringify(
+                previousPRs.map((pr) => ({
+                    title: pr.content.text,
+                    body: (pr.content.metadata as any).body,
+                    url: (pr.content.metadata as any).url,
+                    number: (pr.content.metadata as any).number,
+                    state: (pr.content.metadata as any).state,
+                    diff: (pr.content.metadata as any).diff,
+                    comments: (pr.content.metadata as any).comments,
+                })),
+                null,
+                2
+            );
+
+            break;
+        }
+
+        await sleep(githubRepoInitInterval);
+
+        // unregister actions
+        unregisterActions(this.runtime, repoInitActions);
+
+        const oodaActions = [
+            addCommentToIssueAction,
+            closeIssueAction,
+            closePRAction,
+            createCommitAction,
+            createIssueAction,
+            createPullRequestAction,
+            ideationAction,
+            modifyIssueAction,
+            reactToIssueAction,
+            reactToPRAction,
+        ];
+
+        // register actions
+        registerActions(this.runtime, oodaActions);
+
+        const githubOodaInterval =
+            Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) || 60000; // Default to 1 minute
+
+        // ooda loop
+        while (true) {
+            if (this.stopped) {
+                unregisterActions(this.runtime, oodaActions);
+                elizaLogger.log("GitHubClient stopped successfully.");
+                return;
+            }
+
+            elizaLogger.log("Processing OODA cycle...");
+
+            // retrieve memories
+            const memories = await this.runtime.messageManager.getMemories({
+                roomId: this.roomId,
+            });
+
+            await fs.writeFile(
+                "/tmp/client-github-memories.txt",
+                JSON.stringify(memories, null, 2)
+            );
+
+            // if memories is empty skip to the next ooda cycle
+            if (memories.length === 0) {
+                elizaLogger.log(
+                    "No memories found, skipping to the next OODA cycle."
+                );
+                await sleep(githubOodaInterval);
+                continue;
+            }
+
+            // get the last memory
+            const message = memories[0];
+
+            if (!this.state) {
+                this.state = (await this.runtime.composeState(
+                    message
+                )) as State;
+            } else {
+                this.state = await this.runtime.updateRecentMessageState(
+                    this.state
+                );
+            }
+
+            let context = composeContext({
+                state: this.state,
+                template: oodaTemplate,
+            });
+
+            await fs.writeFile("/tmp/client-github-context.txt", context);
+
+            const details = await generateObject({
+                runtime: this.runtime,
+                context,
+                modelClass: ModelClass.SMALL,
+                schema: OODASchema,
+            });
+
+            if (!isOODAContent(details.object)) {
+                elizaLogger.error("Invalid content:", details.object);
+                throw new Error("Invalid content");
+            }
+
+            let content = details.object as OODAContent;
+
+            await fs.writeFile(
+                "/tmp/client-github-content.txt",
+                JSON.stringify(content, null, 2)
+            );
+
+            if (content.action === "NOTHING") {
+                elizaLogger.log(
+                    "Skipping to the next OODA cycle as action is NOTHING"
+                );
+                await sleep(githubOodaInterval);
+                continue;
+            }
+
+            // create new memory with retry logic
+            const timestamp = Date.now();
+            const actionMemory: Memory = {
+                id: stringToUuid(
+                    `${this.roomId}-${this.runtime.agentId}-${timestamp}-${content.action}`
+                ),
+                userId: this.runtime.agentId,
+                agentId: this.runtime.agentId,
+                content: {
+                    text: `Going to execute action: ${content.action}`,
+                    action: content.action,
+                    source: "github",
+                    inReplyTo: stringToUuid(
+                        `${this.roomId}-${this.runtime.agentId}`
+                    ),
+                },
+                roomId: this.roomId,
+                createdAt: timestamp,
+            };
+
+            try {
+                await this.runtime.messageManager.createMemory(actionMemory);
+            } catch (error) {
+                elizaLogger.error("Error creating memory:", error);
+                throw error; // Re-throw other errors
+            }
+
+            const callback: HandlerCallback = async (
+                content: Content,
+                files: any[]
+            ) => {
+                elizaLogger.log("Callback called with content:", content);
+                return [];
+            };
+
+            // process the actions with the new memory and state
+            elizaLogger.log("Processing actions for action:", content.action);
+            await this.runtime.processActions(
+                message,
+                [actionMemory],
+                this.state,
+                callback
+            );
+
+            elizaLogger.log("OODA cycle completed.");
+
+            await sleep(githubOodaInterval);
+        }
+    }
+
+    stop() {
+        try {
+            // set stopped to true
+            this.stopped = true;
+        } catch (e) {
+            elizaLogger.error("GitHubClient stop error:", e);
+        }
     }
 }
 
 export const GitHubClientInterface: Client = {
     start: async (runtime: IAgentRuntime) => {
         await validateGithubConfig(runtime);
-        elizaLogger.log("GitHubClientInterface start");
+        elizaLogger.log(
+            "Starting GitHub client with agent ID:",
+            runtime.agentId
+        );
 
-        const client = new GitHubClient(runtime as AgentRuntime);
-        await client.initialize();
-        await client.createMemoriesFromFiles();
-
+        const client = new GitHubClient(runtime);
         return client;
     },
-    stop: async (_runtime: IAgentRuntime) => {
-        elizaLogger.log("GitHubClientInterface stop");
+    stop: async (runtime: IAgentRuntime) => {
+        try {
+            elizaLogger.log("Stopping GitHub client");
+            await runtime.clients.github.stop();
+        } catch (e) {
+            elizaLogger.error("GitHub client stop error:", e);
+        }
     },
 };
 

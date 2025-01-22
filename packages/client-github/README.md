@@ -1,147 +1,135 @@
-# Client-GitHub for Eliza Framework
+# Guide to Using the GitHub Client&#x20;
 
-## Overview
+This guide provides detailed instructions for setting up and using the GitHub client with a specific pull request (PR) branch in the \`sa-eliza\` repository. Follow these steps to configure and test the system before the PR is merged into the `sif-dev` branch.
 
-The `client-github` module is a component of the Eliza framework designed to interact with GitHub repositories. It provides functionalities to clone repositories, manage branches, create pull requests, and maintain file-based knowledge for Eliza agents.
+## Prerequisites
 
-This client leverages GitHub's REST API via the `@octokit/rest` library and includes robust error handling and configuration validation.
+- Access to a terminal with `git`, `pnpm`, and a compatible Node.js version installed.
+- Internet connection to clone the repository and install dependencies.
 
-## Features
+## Setup Instructions
 
-- **Repository Management**: Clone, pull, and switch branches
-- **File Processing**: Generate agent memories from repository files
-- **Pull Request Management**: Create and manage pull requests programmatically
-- **Commit Operations**: Stage, commit, and push files with ease
-- **Knowledge Base Integration**: Convert repository content into agent memories
-- **Branch Management**: Flexible branch switching and creation
+### 1. Clone the Repository
 
-## Installation
-
-Install the package as part of the Eliza framework:
-bash
-pnpm add @elizaos/client-github
-
-## Configuration
-
-The GitHub client requires the following environment variables:
-
-| Variable           | Description                        | Required |
-|-------------------|------------------------------------|----------|
-| `GITHUB_OWNER`    | Owner of the GitHub repository     | Yes      |
-| `GITHUB_REPO`     | Repository name                    | Yes      |
-| `GITHUB_BRANCH`   | Target branch (default: `main`)    | Yes      |
-| `GITHUB_PATH`     | Path to focus on within the repo   | Yes      |
-| `GITHUB_API_TOKEN`| GitHub API token for authentication| Yes      |
-
-## Usage
-
-### Initialization
-typescript:packages/client-github/README.md
-import { GitHubClientInterface } from "@elizaos/client-github";
-// Initialize the client
-const client = await GitHubClientInterface.start(runtime);
-
-### Creating Memories
-
-```typescript
-// Convert repository files to agent memories
-await client.createMemoriesFromFiles();
-
-typescript
-// Convert repository files to agent memories
-await client.createMemoriesFromFiles();
-```
-
-### Creating Pull Requests
-
-```typescript
-await client.createPullRequest(
-    "Feature: Add new functionality",
-    "feature/new-feature",
-    [
-        {
-            path: "src/feature.ts",
-            content: "// New feature implementation"
-        }
-    ],
-    "Implements new functionality with tests"
-);
-
-
-typescript
-await client.createPullRequest(
-"Feature: Add new functionality",
-"feature/new-feature",
-[
-{
-path: "src/feature.ts",
-content: "// New feature implementation"
-}
-],
-"Implements new functionality with tests"
-);
-```
-
-### Direct Commits
-
-```typescript
-await client.createCommit(
-    "Update configuration",
-    [
-        {
-            path: "config.json",
-            content: JSON.stringify(config, null, 2)
-        }
-    ]
-);
-
-
-```
-
-## API Reference
-
-### GitHubClientInterface
-
-- `start(runtime: IAgentRuntime)`: Initialize the client
-- `stop(runtime: IAgentRuntime)`: Clean up resources
-
-### GitHubClient
-
-- `initialize()`: Set up repository and configuration
-- `createMemoriesFromFiles()`: Generate agent memories
-- `createPullRequest(title: string, branch: string, files: Array<{path: string, content: string}>, description?: string)`: Create PR
-- `createCommit(message: string, files: Array<{path: string, content: string}>)`: Direct commit
-
-## Scripts
+Clone the `sa-eliza` repository to your local machine:
 
 ```bash
-# Build the project
-pnpm run build
-
-# Development with watch mode
-pnpm run dev
-
-# Lint the codebase
-pnpm run lint
+git clone https://github.com/Sifchain/sa-eliza.git
 ```
 
-## Dependencies
+### 2. Checkout the PR Branch
 
-- `@elizaos/core`: ^0.1.7-alpha.2
-- `@octokit/rest`: ^20.1.1
-- `@octokit/types`: ^12.6.0
-- `glob`: ^10.4.5
-- `simple-git`: ^3.27.0
+Navigate to the repository folder and checkout the `sif-dev` branch:
 
-## Development Dependencies
+```bash
+cd sa-eliza
+git checkout sif-dev
+```
 
-- `@types/glob`: ^8.1.0
-- `tsup`: ^8.3.5
+### 3. Ensure Secure Configuration
 
-## Contribution
+Set the following environment variables within the `.env` file. See the next section to know how to create a new GitHub API token.
 
-Contributions are welcome! Please ensure all code adheres to the framework's standards and passes linting checks.
+- `GITHUB_API_TOKEN`: API key for GitHub API access.
 
-## License
+### 4. Creating a GitHub Classic Token with `public_repo` Scope
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+To generate a GitHub Classic token with the required `public_repo` scope, follow these steps:
+
+- **Log in to GitHub**: Go to [GitHub](https://github.com/) and log in to your account.
+
+- **Access Personal Access Tokens**:
+
+  - Navigate to **Settings** by clicking on your profile picture in the top-right corner.
+  - Under **Developer settings**, select **Personal access tokens** > **Tokens (classic)**.
+  - Alternatively, you can go directly to [GitHub's token settings page](https://github.com/settings/tokens).
+
+- **Generate New Token**:
+
+  - Click on **Generate new token**.
+  - Provide a note to identify the purpose of the token (e.g., "Plugin API Access").
+
+- **Select the Scope**:
+
+  - Under **Select scopes**, check the box for `public_repo`. This grants access to public repositories.
+
+- **Generate and Save the Token**:
+
+  - Scroll to the bottom and click **Generate token**.
+  - **Important**: Copy and save the token securely as it will not be shown again.
+
+- **Set the Token as Environment Variable**:
+
+  - Add the generated token to your `.env` file:
+    - `GITHUB_API_TOKEN=<your_token>`bash
+      cd sa-eliza
+      git checkout feat/client-github-load-github-info-via-messages
+
+### 5. Install Dependencies
+
+Install all necessary dependencies:
+
+```
+pnpm install -r --no-frozen-lockfile
+```
+
+### 6. Build the Packages
+
+Build the project packages:
+
+```bash
+pnpm build
+```
+
+### 7. Start the Agent
+
+Start the agent along with the desired character configuration:
+
+```bash
+pnpm cleanstart --character=characters/staff-engineer.character.json
+```
+
+### 8. Start the Eliza UI
+
+Run the following command to start the Eliza user interface:
+
+```bash
+pnpm start:client
+```
+
+### 9. Open the Eliza UI in a Browser
+
+Open the Eliza UI in your web browser at the following URL:
+
+```
+http://localhost:5173/
+```
+
+### 10. Select the Staff Engineer Agent
+
+From the UI, select the **Staff Engineer** agent. Send the following message to trigger the GitHub client process:
+
+```
+Configure the GitHub repository `snobbee/todo-list` on main branch
+```
+
+You may use another repository if desired. The specified repository is public and contains a simple todo-list app written in Node.js. You can view it here:
+[https://github.com/snobbee/todo-list](https://github.com/snobbee/todo-list)
+
+### 11. Observe the Process and Validate
+
+You should see several messages added to the chat history:
+
+- Configure repo settings
+- Initialize repo
+- Memorize repo
+- Create issues
+
+Visit the repository link to view the created issues:
+[https://github.com/snobbee/todo-list/issues](https://github.com/snobbee/todo-list/issues)
+
+## Notes
+
+- Ensure that your environment meets all prerequisites to avoid errors.
+- If you encounter issues during setup or usage, review the terminal output for debugging information.
+

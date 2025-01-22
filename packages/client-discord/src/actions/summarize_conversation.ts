@@ -1,7 +1,6 @@
-import { composeContext } from "@elizaos/core";
+import { composeContext, getModelSettings } from "@elizaos/core";
 import { generateText, splitChunks, trimTokens } from "@elizaos/core";
 import { getActorDetails } from "@elizaos/core";
-import { models } from "@elizaos/core";
 import { parseJSONObjectFromText } from "@elizaos/core";
 import {
     Action,
@@ -29,7 +28,7 @@ export const dateRangeTemplate = `# Messages we are summarizing (the conversatio
 {{recentMessages}}
 
 # Instructions: {{senderName}} is requesting a summary of the conversation. Your goal is to determine their objective, along with the range of dates that their request covers.
-The "objective" is a detailed description of what the user wants to summarize based on the conversation. If they just ask for a general summary, you can either base it off the converation if the summary range is very recent, or set the object to be general, like "a detailed summary of the conversation between all users".
+The "objective" is a detailed description of what the user wants to summarize based on the conversation. If they just ask for a general summary, you can either base it off the conversation if the summary range is very recent, or set the object to be general, like "a detailed summary of the conversation between all users".
 The "start" and "end" are the range of dates that the user wants to summarize, relative to the current time. The start and end should be relative to the current time, and measured in seconds, minutes, hours and days. The format is "2 days ago" or "3 hours ago" or "4 minutes ago" or "5 seconds ago", i.e. "<integer> <unit> ago".
 If you aren't sure, you can use a default range of "0 minutes ago" to "2 hours ago" or more. Better to err on the side of including too much than too little.
 
@@ -247,8 +246,11 @@ const summarizeAction = {
 
         let currentSummary = "";
 
-        const model = models[runtime.character.settings.model];
-        const chunkSize = model.settings.maxContextLength - 1000;
+        const modelSettings = getModelSettings(
+            runtime.character.modelProvider,
+            ModelClass.SMALL
+        );
+        const chunkSize = modelSettings.maxOutputTokens - 1000;
 
         const chunks = await splitChunks(formattedMemories, chunkSize, 0);
 
@@ -379,7 +381,7 @@ ${currentSummary.trim()}
             {
                 user: "{{user2}}",
                 content: {
-                    text: "no probblem, give me a few minutes to read through everything",
+                    text: "no problem, give me a few minutes to read through everything",
                     action: "SUMMARIZE",
                 },
             },
