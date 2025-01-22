@@ -17,7 +17,6 @@ import { agentKitPlugin } from "@elizaos/plugin-agentkit";
 import { PrimusAdapter } from "@elizaos/plugin-primus";
 import { lightningPlugin } from "@elizaos/plugin-lightning";
 import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
-import { holdstationPlugin } from "@elizaos/plugin-holdstation";
 
 import {
     AgentRuntime,
@@ -58,6 +57,7 @@ import { avalanchePlugin } from "@elizaos/plugin-avalanche";
 import { b2Plugin } from "@elizaos/plugin-b2";
 import { binancePlugin } from "@elizaos/plugin-binance";
 import { birdeyePlugin } from "@elizaos/plugin-birdeye";
+import { bnbPlugin } from "@elizaos/plugin-bnb";
 import {
     advancedTradePlugin,
     coinbaseCommercePlugin,
@@ -119,6 +119,7 @@ import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
 
 import { nvidiaNimPlugin } from "@elizaos/plugin-nvidia-nim";
 
+import { zxPlugin } from "@elizaos/plugin-0x";
 import Database from "better-sqlite3";
 import fs from "fs";
 import net from "net";
@@ -1092,6 +1093,7 @@ export async function createAgent(
             getSecret(character, "RESERVOIR_API_KEY")
                 ? createNFTCollectionsPlugin()
                 : null,
+            getSecret(character, "ZERO_EX_API_KEY") ? zxPlugin : null,
             getSecret(character, "DKG_PRIVATE_KEY") ? dkgPlugin : null,
             getSecret(character, "PYTH_TESTNET_PROGRAM_KEY") ||
             getSecret(character, "PYTH_MAINNET_PROGRAM_KEY")
@@ -1108,9 +1110,8 @@ export async function createAgent(
             )
                 ? openaiPlugin
                 : null,
-            getSecret(character, "DEVIN_API_TOKEN") ? devinPlugin : null,
-            getSecret(character, "HOLDSTATION_PRIVATE_KEY")
-                ? holdstationPlugin
+            getSecret(character, "DEVIN_API_TOKEN")
+                ? devinPlugin
                 : null,
             getSecret(character, "INITIA_PRIVATE_KEY") ? initiaPlugin : null,
 
@@ -1118,7 +1119,11 @@ export async function createAgent(
             getSecret(character, "NVIDIA_NGC_API_KEY")
                 ? nvidiaNimPlugin
                 : null,
-            getSecret(character, "INITIA_PRIVATE_KEY") && getSecret(character, "INITIA_NODE_URL") ? initiaPlugin : null
+            getSecret(character, "INITIA_PRIVATE_KEY") && getSecret(character, "INITIA_NODE_URL") ? initiaPlugin : null,
+            getSecret(character, "BNB_PRIVATE_KEY") ||
+            getSecret(character, "BNB_PUBLIC_KEY")?.startsWith("0x")
+                ? bnbPlugin
+                : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
