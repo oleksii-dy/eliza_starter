@@ -12,6 +12,7 @@ import {
     generateMessageResponse
 } from "@elizaos/core";
 import { auditTemplate } from "../templates";
+import { extractTokenInfo } from "../utils/chain-detection";
 
 class TokenAuditAction {
     private apiKey: string;
@@ -101,31 +102,11 @@ export const auditAction: Action = {
 
             // Extract chain and address from the message content
             const messageText = message.content.text;
-            // const chainMatch = messageText.match(/on\s+(bsc|eth|polygon|arbitrum|avalanche|base|sonic)/i);
-            // const addressMatch = messageText.match(/0x[a-fA-F0-9]{40}/i);
+            const { chain, tokenAddress } = extractTokenInfo(messageText);
 
-            // if (!chainMatch?.[1] || !addressMatch?.[0]) {
-            //     throw new Error("Could not determine chain and token address from message");
-            // }
-
-            // const chain = chainMatch[1].toLowerCase();
-            // const tokenAddress = addressMatch[0];
-
-            // Match any chain name mentioned after common prepositions
-            const chainPattern = /(?:on|for|in|at|chain)\s+([a-zA-Z0-9]+)/i;
-            const chainMatch = messageText.match(chainPattern);
-
-            // Match any token address format (EVM, Solana, etc.)
-            // Looks for strings of 30+ alphanumeric characters
-            const addressPattern = /\b([0-9a-zA-Z]{30,})\b/i;
-            const addressMatch = messageText.match(addressPattern);
-
-            if (!chainMatch?.[1] || !addressMatch?.[1]) {
+            if (!chain || !tokenAddress) {
                 throw new Error("Could not determine chain and token address. Please specify both the chain and token address.");
             }
-
-            const chain = chainMatch[1].toLowerCase();
-            const tokenAddress = addressMatch[1];
 
             // Perform audit
             elizaLogger.log("Performing audit for:", { chain, tokenAddress });
