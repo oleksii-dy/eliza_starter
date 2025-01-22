@@ -104,7 +104,7 @@ export default {
             console.log(content);
             console.error("Invalid content for TRANSFER_TOKEN action.");
             if (callback) {
-                await callback({
+                callback({
                     text: "Unable to process transfer request. Invalid content provided.",
                     content: {error: "Invalid transfer content"},
                 });
@@ -119,19 +119,18 @@ export default {
 
                 const provider = new ethers.JsonRpcProvider(RPC);
                 const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
-                let hash = await wallet.sendTransaction({
+                const tx = await wallet.sendTransaction({
                     to: content.recipient,
                     value: ethers.parseEther(content.amount.toString()),
                 });
+                await tx.wait();
 
                 elizaLogger.success(
-                    "Transfer completed successfully! Transaction hash: " + hash
+                    "Transfer completed successfully! Transaction hash: " + tx.hash
                 );
                 if (callback) {
                     callback({
-                        text:
-                            "Transfer completed successfully! Transaction hash: " +
-                            hash,
+                        text: `Transfer completed successfully! Transaction hash: ${tx.hash} `,
                         content: {},
                     });
                 }

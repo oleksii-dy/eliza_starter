@@ -33,9 +33,11 @@ const KEY = "data_key";
 export async function sendData(
     RPC: string, privateKey: string,
     address: string, data: Buffer
-): Promise<boolean> {
+): Promise<string> {
     const blobUploader = await BlobUploader.create(RPC, privateKey);
-    const contract = new ethers.Contract(this.contractAddr, EthStorageAbi, this.wallet);
+    const provider = new ethers.JsonRpcProvider(RPC);
+    const wallet = new ethers.Wallet(privateKey, provider);
+    const contract = new ethers.Contract(address, EthStorageAbi, wallet);
     const hexKey = ethers.keccak256(stringToHex(KEY));
     const storageCost = await contract.upfrontPayment();
     const tx = await contract.putBlob.populateTransaction(hexKey, 0, data.length, {
@@ -44,9 +46,9 @@ export async function sendData(
 
     const blobs = encodeOpBlobs(data);
     const txRes = await blobUploader.sendTx(tx, blobs);
-    elizaLogger.success(`Data submitted! tx: \n Tx Hash: ${txRes.hash}`);
+    elizaLogger.log(`tx hash ${txRes.hash}`);
     const receipt = await txRes.wait();
-    return receipt?.status === 1;
+    return receipt?.status === 1 ? txRes.hash : undefined;
 }
 
 const submitDataTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
@@ -129,14 +131,14 @@ export default {
                 const data = Buffer.from(content.data);
 
                 //submit data
-                const submitStatus= await sendData(RPC, privateKey, address, data);
-                if (submitStatus) {
+                const hash= await sendData(RPC, privateKey, address, data);
+                if (hash) {
                     elizaLogger.success(
-                        "Data submitted successfully!"
+                        `Data submitted! \n Tx Hash: ${hash}`
                     );
                     if (callback) {
                         await callback({
-                            text: `Data submitted successfully!`,
+                            text: `Data submitted! \n Tx Hash: ${hash}`,
                             content: {},
                         });
                     }
@@ -146,9 +148,9 @@ export default {
             } catch (error) {
                 elizaLogger.error("Error during data submission:", error);
                 if (callback) {
-                    await callback({
+                    callback({
                         text: `Error submitting data: ${error.message}`,
-                        content: {error: error.message},
+                        content: { error: error.message },
                     });
                 }
                 return false;
