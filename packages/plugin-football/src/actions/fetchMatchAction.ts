@@ -6,7 +6,6 @@ import {
     State,
     elizaLogger,
 } from "@elizaos/core";
-import { isValidMatchData } from "../types";
 
 export const fetchMatchAction: Action = {
     name: "FETCH_MATCH",
@@ -15,7 +14,7 @@ export const fetchMatchAction: Action = {
     validate: async (
         runtime: IAgentRuntime,
         _message: Memory,
-        _state?: State
+        _state?: State,
     ) => {
         const apiKey = runtime.getSetting("FOOTBALL_API_KEY");
         return !!apiKey;
@@ -25,7 +24,7 @@ export const fetchMatchAction: Action = {
         _message: Memory,
         _state?: State,
         options?: { [key: string]: unknown },
-        callback?: HandlerCallback
+        callback?: HandlerCallback,
     ): Promise<any> => {
         try {
             const apiKey = runtime.getSetting("FOOTBALL_API_KEY");
@@ -36,11 +35,10 @@ export const fetchMatchAction: Action = {
                 signal: AbortSignal.timeout(5000),
             });
 
-
             if (!response.ok) {
                 elizaLogger.error(
                     "Error fetching live match data:",
-                    response.statusText
+                    response.statusText,
                 );
                 callback({
                     text: "Error fetching live match data:",
@@ -50,23 +48,28 @@ export const fetchMatchAction: Action = {
             }
 
             const matchData = await response.json();
-            // elizaLogger.log("Fetched match data:", matchData);
+            elizaLogger.log("Fetched match data:", matchData);
 
-            if (!isValidMatchData(matchData)) {
-                elizaLogger.error("Invalid match data format");
-                callback({
-                    text: "Error fetching live match data:",
-                });
-                return false;
-            }
             callback(
                 {
                     text: `Football match data fetched successfully:
-                    - Result: ${matchData}`,
-                },
-                []
-            );
+                    - Matches found: ${matchData.resultSet.count}
+                    - Competitions: ${matchData.resultSet.competitions}
+                    - Date range: ${matchData.filters.dateFrom} to ${matchData.filters.dateTo}
 
+                    Match Results:
+                    ${matchData.matches
+                        .map(
+                            (match) => `
+                    ${match.competition.name}
+                    ${match.homeTeam.name} ${match.score.fullTime.home} - ${match.score.fullTime.away} ${match.awayTeam.name}
+                    Status: ${match.status}
+                    `,
+                        )
+                        .join("\n")}`,
+                },
+                [],
+            );
 
             return;
         } catch (error) {
