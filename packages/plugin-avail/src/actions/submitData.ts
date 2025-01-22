@@ -13,7 +13,6 @@ import {
 } from "@elizaos/core";
 import { validateAvailConfig } from "../environment";
 import {
-    //getDecimals,
     initialize,
     getKeyringFromSeed,
 } from "avail-js-sdk";
@@ -33,7 +32,6 @@ export function isDataContent(content: DataContent): content is DataContent {
 }
 
 const submitDataTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
-
 
 Example response:
 \`\`\`json
@@ -141,7 +139,7 @@ export default {
                             .signAndSend(
                                 keyring,
                                 options,
-                                (result: ISubmittableResult, _extra: undefined) => {
+                                (result: ISubmittableResult, _extra?: unknown) => {
                                     elizaLogger.log(
                                         `Tx status: ${result.status}`
                                     );
