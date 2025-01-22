@@ -57,9 +57,10 @@ export default {
                 runtime,
                 context: ohlcvContext,
                 modelClass: ModelClass.LARGE,
-            })) as unknown as OHLCVParams & { pairAddress: string };
-
-            console.log("User extracted params", content);
+            })) as unknown as OHLCVParams & {
+                pairAddress: string;
+                displayCandles?: number;
+            };
 
             if (!content || typeof content !== "object") {
                 throw new Error("Invalid response format from model");
@@ -69,48 +70,78 @@ export default {
                 throw new Error("No Solana pair address provided");
             }
 
-            const config = await validateMoralisConfig(runtime);
-            elizaLogger.log(
-                `Fetching OHLCV data for Solana pair ${content.pairAddress}...`
-            );
+            // Get current date if not provided
+            const now = new Date();
+            const defaultFromDate = new Date(
+                now.getTime() - 7 * 24 * 60 * 60 * 1000
+            )
+                .toISOString()
+                .split("T")[0];
+            const defaultToDate = now.toISOString().split("T")[0];
 
-            const response = await axios.get<OHLCVResponse>(
-                `${SOLANA_API_BASE_URL}${API_ENDPOINTS.SOLANA.PAIR_OHLCV(content.pairAddress)}`,
-                {
-                    params: {
-                        timeframe: content.timeframe || "1h",
-                        currency: content.currency || "usd",
-                        fromDate: content.fromDate,
-                        toDate: content.toDate,
-                        limit: content.limit || 24,
-                    },
-                    headers: {
-                        "X-API-Key": config.MORALIS_API_KEY,
-                        accept: "application/json",
-                    },
-                }
-            );
+            const params = {
+                timeframe: content.timeframe || "1h",
+                currency: content.currency || "usd",
+                fromDate: content.fromDate || defaultFromDate,
+                toDate: content.toDate || defaultToDate,
+                limit: content.limit || 168, // Default to 1 week of hourly data
+            };
+
+            elizaLogger.log("Request params:", params);
+
+            const config = await validateMoralisConfig(runtime);
+            const url = `${SOLANA_API_BASE_URL}${API_ENDPOINTS.SOLANA.PAIR_OHLCV(content.pairAddress)}`;
+            elizaLogger.log(`Making request to: ${url}`);
+
+            const response = await axios.get<OHLCVResponse>(url, {
+                params,
+                headers: {
+                    "X-API-Key": config.MORALIS_API_KEY,
+                    accept: "application/json",
+                },
+            });
+
+            elizaLogger.log("API Response:", response.data);
+
+            if (!response.data.result || !Array.isArray(response.data.result)) {
+                throw new Error("Invalid response format from API");
+            }
 
             const candles = response.data.result;
+
+            if (candles.length === 0) {
+                if (callback) {
+                    callback({
+                        text: `No price history data available for this Solana trading pair in the specified time range.`,
+                        content: {
+                            candles: [],
+                            pairAddress: content.pairAddress,
+                            timeframe: params.timeframe,
+                            currency: params.currency,
+                        },
+                    });
+                }
+                return true;
+            }
+
             elizaLogger.success(
                 `Successfully fetched ${candles.length} OHLCV candles for pair ${content.pairAddress}`
             );
 
             if (callback) {
-                const timeframe = content.timeframe || "1h";
-                const currency = (content.currency || "usd").toUpperCase();
+                const timeframe = params.timeframe;
+                const currency = params.currency.toUpperCase();
 
-                const formattedCandles = candles.map((candle) => ({
-                    time: new Date(candle.timestamp).toLocaleString(),
-                    open: `$${candle.open.toFixed(4)}`,
-                    high: `$${candle.high.toFixed(4)}`,
-                    low: `$${candle.low.toFixed(4)}`,
-                    close: `$${candle.close.toFixed(4)}`,
-                    volume: `$${Math.round(candle.volume).toLocaleString()}`,
-                    trades: candle.trades.toLocaleString(),
-                }));
+                // Sort candles by timestamp in descending order
+                const sortedCandles = [...candles].sort(
+                    (a, b) =>
+                        new Date(b.timestamp).getTime() -
+                        new Date(a.timestamp).getTime()
+                );
 
-                let summaryText = `Here's the ${timeframe} price history in ${currency} for the Solana trading pair:\n\n`;
+                let summaryText =
+                    `Here's the ${timeframe} price history in ${currency} for the Solana trading pair ` +
+                    `from ${params.fromDate} to ${params.toDate}:\n\n`;
 
                 // Add price range summary
                 const priceRange = {
@@ -118,6 +149,14 @@ export default {
                     max: Math.max(...candles.map((c) => c.high)),
                 };
                 summaryText += `Price Range: $${priceRange.min.toFixed(4)} - $${priceRange.max.toFixed(4)}\n`;
+
+                // Calculate period returns
+                const firstCandle = sortedCandles[sortedCandles.length - 1];
+                const lastCandle = sortedCandles[0];
+                const periodReturn =
+                    ((lastCandle.close - firstCandle.open) / firstCandle.open) *
+                    100;
+                summaryText += `Period Return: ${periodReturn.toFixed(2)}%\n`;
 
                 // Add volume summary
                 const totalVolume = candles.reduce(
@@ -133,22 +172,31 @@ export default {
                 );
                 summaryText += `Total Trades: ${totalTrades.toLocaleString()}\n\n`;
 
-                // Add candlestick data
-                summaryText += `Latest ${Math.min(5, candles.length)} candles:\n`;
-                formattedCandles.slice(0, 5).forEach((candle) => {
+                // Get display count (default 5, max 100)
+                const displayCount = Math.min(content.displayCandles || 5, 100);
+                summaryText += `Latest ${displayCount} candles:\n`;
+
+                // Add latest candles
+                sortedCandles.slice(0, displayCount).forEach((candle) => {
+                    const date = new Date(candle.timestamp).toLocaleString();
                     summaryText +=
-                        `\nTime: ${candle.time}\n` +
-                        `Open: ${candle.open}, High: ${candle.high}, Low: ${candle.low}, Close: ${candle.close}\n` +
-                        `Volume: ${candle.volume}, Trades: ${candle.trades}`;
+                        `\nTime: ${date}\n` +
+                        `Open: $${candle.open.toFixed(4)}, High: $${candle.high.toFixed(4)}, ` +
+                        `Low: $${candle.low.toFixed(4)}, Close: $${candle.close.toFixed(4)}\n` +
+                        `Volume: $${Math.round(candle.volume).toLocaleString()}, ` +
+                        `Trades: ${candle.trades.toLocaleString()}`;
                 });
 
                 callback({
                     text: summaryText,
                     content: {
-                        candles: response.data.result,
+                        candles: sortedCandles,
                         pairAddress: content.pairAddress,
                         timeframe,
                         currency,
+                        fromDate: params.fromDate,
+                        toDate: params.toDate,
+                        displayCount,
                     },
                 });
             }
@@ -156,10 +204,11 @@ export default {
             return true;
         } catch (error: any) {
             elizaLogger.error("Error in GET_SOLANA_PAIR_OHLCV handler:", error);
+            const errorMessage = error.response?.data?.message || error.message;
             if (callback) {
                 callback({
-                    text: `Error fetching Solana pair OHLCV data: ${error.message}`,
-                    content: { error: error.message },
+                    text: `Error fetching Solana pair OHLCV data: ${errorMessage}`,
+                    content: { error: errorMessage },
                 });
             }
             return false;
@@ -171,13 +220,13 @@ export default {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Get hourly price history for Solana pair A8nPhpCJqtqHdqUk35Uj9Hy2YsGXFkCZGuNwvkD3k7VC",
+                    text: "Show me last 15 candles for Solana pair A8nPhpCJqtqHdqUk35Uj9Hy2YsGXFkCZGuNwvkD3k7VC",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "I'll fetch the hourly price history for this Solana trading pair.",
+                    text: "I'll retrieve the last 15 candlesticks for this Solana trading pair.",
                     action: "GET_SOLANA_PAIR_OHLCV",
                 },
             },
@@ -186,13 +235,13 @@ export default {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Show me 15-minute candles for Solana pair 83v8iPyZihDEjDdY8RdZddyZNyUtXngz69Lgo9Kt5d6d",
+                    text: "Get hourly candlesticks for past 2 days for Solana pair A8nPhpCJqtqHdqUk35Uj9Hy2YsGXFkCZGuNwvkD3k7VC",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "I'll retrieve the 15-minute candlestick data for this Solana trading pair.",
+                    text: "I'll fetch the hourly price history for this Solana trading pair.",
                     action: "GET_SOLANA_PAIR_OHLCV",
                 },
             },
