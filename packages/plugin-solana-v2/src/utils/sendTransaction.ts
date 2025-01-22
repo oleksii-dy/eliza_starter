@@ -44,7 +44,7 @@ export async function sendTransaction(rpc: Rpc<SolanaRpcApi>, instructions: IIns
     );
   const transactionMessageWithComputeUnitInstructions = await prependTransactionMessageInstructions([
     getSetComputeUnitLimitInstruction({ units: safeComputeUnitEstimate }),
-    getSetComputeUnitPriceInstruction({ microLamports: 200_000 })
+    getSetComputeUnitPriceInstruction({ microLamports: prioritizationFee })
   ], transactionMessage);
   const signedTransaction = await signTransactionMessageWithSigners(transactionMessageWithComputeUnitInstructions)
   const base64EncodedWireTransaction = getBase64EncodedWireTransaction(signedTransaction);

@@ -98,6 +98,9 @@ pnpm start:client
 #### 6. Start prompting
 Ask the agent what it can do for you. Provide the appropriate parameters and let the agent reposition your positions automatically.
 
+#### 7. Other configurations
+In `packages/plugin-solana-v2/src/utils/sendTransaction.ts`, you can set the priority fees. They are by default set to use the dynamic fees, but you can adjust this as you like.
+
 ## Future Functionality 🔮
 
 ### Position Management Enhancements
