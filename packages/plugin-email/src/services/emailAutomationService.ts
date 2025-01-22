@@ -22,16 +22,17 @@ export class EmailAutomationService extends Service {
 
     async initialize(runtime: IAgentRuntime): Promise<void> {
         this.runtime = runtime;
-        elizaLogger.info("🔄 Initializing Email Automation Service...");
 
         // Check if enabled
         const isEnabled = runtime.getSetting('EMAIL_AUTOMATION_ENABLED')?.toLowerCase() === 'true' || false;
-        elizaLogger.info(`📋 Email Automation Enabled: ${isEnabled}`);
+        elizaLogger.debug(`📋 Email Automation Enabled: ${isEnabled}`);
 
         if (!isEnabled) {
-            elizaLogger.info("❌ Email automation is disabled");
+            elizaLogger.debug("❌ Email automation is disabled");
             return;
         }
+
+        elizaLogger.info("🔄 Initializing Email Automation Service...");
 
         try {
             // Required settings
