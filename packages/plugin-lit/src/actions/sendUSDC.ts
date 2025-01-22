@@ -3,6 +3,8 @@ import { ethers } from "ethers";
 import { LitNodeClient } from "@lit-protocol/lit-node-client";
 import { LIT_RPC, LIT_ABILITY } from "@lit-protocol/constants";
 import { LitPKPResource, createSiweMessageWithRecaps, generateAuthSig, LitActionResource } from "@lit-protocol/auth-helpers";
+import { z } from "zod";
+import { ModelClass, composeContext, generateObject, Content } from "@elizaos/core";
 
 const USDC_CONTRACT_ADDRESS = "0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8"; // Sepolia USDC (AAVE)
 const USDC_ABI = ["function transfer(address to, uint256 amount) returns (bool)"];
@@ -19,6 +21,44 @@ interface LitState {
   };
 }
 
+// Add template for content extraction
+const sendUsdcTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
+
+Example response:
+\`\`\`json
+{
+    "amount": "10",
+    "to": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
+}
+\`\`\`
+
+{{recentMessages}}
+
+Given the recent messages, extract the following information about the USDC transfer:
+- amount (the amount of USDC to send)
+- to (the destination address)
+
+Respond with a JSON markdown block containing only the extracted values.`;
+
+// Define the schema type
+const sendUsdcSchema = z.object({
+    amount: z.string().nullable(),
+    to: z.string().nullable()
+});
+
+// Add type guard function
+function isSendUsdcContent(content: Content): content is SendUsdcContent {
+    return (
+        (typeof content.amount === "string" || content.amount === null) &&
+        (typeof content.to === "string" || content.to === null)
+    );
+}
+
+interface SendUsdcContent extends Content {
+    amount: string | null;
+    to: string | null;
+}
+
 export const sendUSDC: Action = {
   name: "SEND_USDC",
   description: "Sends USDC to an address on Sepolia using PKP wallet",
@@ -32,10 +72,53 @@ export const sendUSDC: Action = {
     callback?: HandlerCallback
   ): Promise<boolean> => {
     try {
-      const matches = message.content.text.match(/send ([\d.]+) usdc to (0x[a-fA-F0-9]{40})/i);
-      if (!matches) throw new Error("Could not parse USDC amount and address");
+      // Update state if needed
+      if (!state) {
+        state = await runtime.composeState(message);
+      } else {
+        state = await runtime.updateRecentMessageState(state);
+      }
 
-      const [_, amount, to] = matches;
+      // Compose context and generate content
+      const sendUsdcContext = composeContext({
+        state,
+        template: sendUsdcTemplate,
+      });
+
+      // Generate content with the schema
+      const content = await generateObject({
+        runtime,
+        context: sendUsdcContext,
+        schema: sendUsdcSchema as any,
+        modelClass: ModelClass.LARGE,
+      });
+
+      const sendUsdcContent = content.object as SendUsdcContent;
+
+      // Validate content
+      if (!isSendUsdcContent(sendUsdcContent)) {
+        console.error("Invalid content for SEND_USDC action.");
+        callback?.({
+          text: "Unable to process USDC transfer request. Invalid content provided.",
+          content: { error: "Invalid send USDC content" }
+        });
+        return false;
+      }
+
+      if (!sendUsdcContent.amount) {
+        console.log("Amount is not provided, skipping transfer");
+        callback?.({ text: "The amount must be provided" });
+        return false;
+      }
+
+      if (!sendUsdcContent.to) {
+        console.log("Destination address is not provided, skipping transfer");
+        callback?.({ text: "The destination address must be provided" });
+        return false;
+      }
+
+      const amount = sendUsdcContent.amount;
+      const to = sendUsdcContent.to;
       const litState = (state.lit || {}) as LitState;
       if (!litState.nodeClient || !litState.pkp || !litState.evmWallet || !litState.capacityCredit?.tokenId) {
         throw new Error("Lit environment not fully initialized");

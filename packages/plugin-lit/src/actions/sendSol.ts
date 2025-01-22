@@ -4,6 +4,7 @@ import {
     IAgentRuntime,
     Memory,
     State,
+    Content,
 } from "@elizaos/core";
 import { LitNodeClient } from "@lit-protocol/lit-node-client";
 import { LIT_ABILITY } from "@lit-protocol/constants";
@@ -13,6 +14,8 @@ import { api } from "@lit-protocol/wrapped-keys";
 import * as web3 from "@solana/web3.js";
 import * as ethers from "ethers";
 import { LitConfigManager } from "../config/configManager";
+import { composeContext, generateObject, ModelClass } from "@elizaos/core";
+import { z } from "zod";
 
 const { importPrivateKey, signTransactionWithEncryptedKey } = api;
 
@@ -28,6 +31,44 @@ interface LitState {
         tokenId: string;
     };
     wrappedKeyId?: string;
+}
+
+// Add template for content extraction
+const sendSolTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
+
+Example response:
+\`\`\`json
+{
+    "amount": "0.1",
+    "to": "7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU"
+}
+\`\`\`
+
+{{recentMessages}}
+
+Given the recent messages, extract the following information about the SOL transfer:
+- amount (the amount of SOL to send)
+- to (the destination address)
+
+Respond with a JSON markdown block containing only the extracted values.`;
+
+// Define the schema type
+const sendSolSchema = z.object({
+    amount: z.string().nullable(),
+    to: z.string().nullable()
+});
+
+// Add type guard function
+function isSendSolContent(content: Content): content is SendSolContent {
+    return (
+        (typeof content.amount === "string" || content.amount === null) &&
+        (typeof content.to === "string" || content.to === null)
+    );
+}
+
+interface SendSolContent extends Content {
+    amount: string | null;
+    to: string | null;
 }
 
 export const sendSol: Action = {
@@ -51,19 +92,50 @@ export const sendSol: Action = {
     ): Promise<boolean> => {
         console.log("SEND_SOL handler started");
         try {
-            const messageText = message.content.text as string;
-            const matches = messageText.match(
-                /send ([\d.]+) sol to ([1-9A-HJ-NP-Za-km-z]{32,44})/i
-            );
-
-            if (!matches) {
-                throw new Error("Could not parse SOL amount and address from message");
+            // Update state if needed
+            if (!state) {
+                state = await runtime.composeState(message);
+            } else {
+                state = await runtime.updateRecentMessageState(state);
             }
 
-            const content = {
-                amount: matches[1],
-                to: matches[2],
-            };
+            // Compose context and generate content
+            const sendSolContext = composeContext({
+                state,
+                template: sendSolTemplate,
+            });
+
+            // Generate content with the schema
+            const content = await generateObject({
+                runtime,
+                context: sendSolContext,
+                schema: sendSolSchema as any,
+                modelClass: ModelClass.LARGE,
+            });
+
+            const sendSolContent = content.object as SendSolContent;
+
+            // Validate content
+            if (!isSendSolContent(sendSolContent)) {
+                console.error("Invalid content for SEND_SOL action.");
+                callback?.({
+                    text: "Unable to process SOL transfer request. Invalid content provided.",
+                    content: { error: "Invalid send SOL content" }
+                });
+                return false;
+            }
+
+            if (!sendSolContent.amount) {
+                console.log("Amount is not provided, skipping transfer");
+                callback?.({ text: "The amount must be provided" });
+                return false;
+            }
+
+            if (!sendSolContent.to) {
+                console.log("Destination address is not provided, skipping transfer");
+                callback?.({ text: "The destination address must be provided" });
+                return false;
+            }
 
             // Validate Lit environment
             const litState = (state.lit || {}) as LitState;
@@ -136,7 +208,7 @@ export const sendSol: Action = {
 
             // Fund the wallet with 2 devnet SOL if needed
             const fromPubkey = new web3.PublicKey(litState.pkp.solanaAddress!);
-            const toPubkey = new web3.PublicKey(content.to);
+            const toPubkey = new web3.PublicKey(sendSolContent.to);
 
             console.log("Sending from wallet address:", fromPubkey.toString());
 
@@ -177,7 +249,7 @@ export const sendSol: Action = {
                 web3.SystemProgram.transfer({
                     fromPubkey,
                     toPubkey,
-                    lamports: web3.LAMPORTS_PER_SOL * parseFloat(content.amount),
+                    lamports: web3.LAMPORTS_PER_SOL * parseFloat(sendSolContent.amount),
                 })
             );
 
@@ -222,12 +294,12 @@ export const sendSol: Action = {
             });
 
             callback?.({
-                text: `Successfully sent ${content.amount} SOL to ${content.to}. Transaction signature: ${signedTx}`,
+                text: `Successfully sent ${sendSolContent.amount} SOL to ${sendSolContent.to}. Transaction signature: ${signedTx}`,
                 content: {
                     success: true,
                     signature: signedTx,
-                    amount: content.amount,
-                    to: content.to,
+                    amount: sendSolContent.amount,
+                    to: sendSolContent.to,
                 },
             });
 
