@@ -20,7 +20,7 @@ export const detectImage: Action = {
             return false;
         }
 
-        if (!runtime?.character?.settings?.secrets?.bitmind) {
+        if (!runtime?.character?.settings?.secrets?.BITMIND) {
             elizaLogger.error("❌ BitMind: API token not configured");
             return false;
         }
@@ -43,10 +43,10 @@ export const detectImage: Action = {
 
         elizaLogger.log("🤖 BitMind: Starting image detection...");
         
-        if (!runtime.character?.settings?.secrets?.bitmind) {
+        if (!runtime.character?.settings?.secrets?.BITMIND) {
             throw new Error("BitMind API token not configured");
         }
-        const token = runtime.character.settings.secrets.bitmind;
+        const token = runtime.character.settings.secrets.BITMIND;
 
         const urlMatch = message.content.text.match(/https?:\/\/[^\s]+/);
 
