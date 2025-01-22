@@ -1,12 +1,32 @@
 import { Client, elizaLogger, IAgentRuntime } from "@elizaos/core";
-
+import { validateConfig } from "./helpers/validate-config";
+import axios from "axios";
+import { LinkedInUserInfoFetcher } from "./repositories/LinkedinUserInfoFetcher";
+import { LinkedInPostScheduler } from "./services/LinkedInPostScheduler";
 
 export const LinkedInClient: Client = {
     async start(runtime: IAgentRuntime) {
-        const linkedinAccessToken = runtime.getSetting("LINKEDIN_ACCESS_TOKEN");
-        if (!linkedinAccessToken) {
-            throw new Error("LinkedIn access token is not set");
-        }
+        const envs = validateConfig(runtime);
+
+        const axiosInstance = axios.create({
+            baseURL: envs.LINKEDIN_API_URL,
+            headers: {
+                "Authorization": `Bearer ${envs.LINKEDIN_ACCESS_TOKEN}`,
+            },
+        });
+
+        const linkedInPostScheduler = await LinkedInPostScheduler.createPostScheduler({
+            axiosInstance,
+            userInfoFetcher: new LinkedInUserInfoFetcher(axiosInstance),
+            runtime,
+            config: {
+                LINKEDIN_DRY_RUN: envs.LINKEDIN_DRY_RUN,
+                LINKEDIN_POST_INTERVAL_MIN: envs.LINKEDIN_POST_INTERVAL_MIN,
+                LINKEDIN_POST_INTERVAL_MAX: envs.LINKEDIN_POST_INTERVAL_MAX,
+            }
+        });
+        linkedInPostScheduler.createPostPublicationLoop();
+
 
         return this;
     },
