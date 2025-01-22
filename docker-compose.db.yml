@@ -16,6 +16,8 @@ services:
             POSTGRES_DB: eliza
             POSTGRES_USER: eliza
             POSTGRES_PASSWORD: eliza
+        volumes:
+            - /home/ubuntu/eliza/packages/adapter-postgres:/mnt/adapter-postgres
         networks:
             - eliza_network
 
