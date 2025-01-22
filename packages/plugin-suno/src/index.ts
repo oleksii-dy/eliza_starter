@@ -1,4 +1,4 @@
-import { Plugin } from "@elizaos/core";
+import { Plugin } from "@elizaos/eliza";
 import generateMusic from "./actions/generate";
 import customGenerateMusic from "./actions/customGenerate";
 import extendAudio from "./actions/extend";

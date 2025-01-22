@@ -20,7 +20,7 @@ QUICK START
 1. Register the plugin with ElizaOS:
 
     import { sunoPlugin } from '@elizaos/plugin-suno';
-    import { Eliza } from '@elizaos/core';
+    import { Eliza } from '@elizaos/eliza';
 
     const eliza = new Eliza();
     eliza.registerPlugin(sunoPlugin);

@@ -1,4 +1,4 @@
-import { Provider } from "@elizaos/core";
+import { Provider } from "@elizaos/eliza";
 
 export interface SunoConfig {
     apiKey: string;

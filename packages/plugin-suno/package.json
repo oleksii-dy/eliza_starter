@@ -18,6 +18,6 @@
     "@types/jest": "^27.0.0"
   },
   "peerDependencies": {
-    "@elizaos/core": "^0.1.0"
+    "@elizaos/eliza": "^0.1.0"
   }
 }

@@ -1,4 +1,4 @@
-import { Action } from "@elizaos/core";
+import { Action } from "@elizaos/eliza";
 import { SunoProvider } from "../providers/suno";
 import { GenerateParams, GenerationResponse } from "../types";
 
