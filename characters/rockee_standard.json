@@ -1,7 +1,7 @@
 {
     "name": "Rockee AI Agent",
     "clients": ["direct"],
-    "modelProvider": "openai",
+    "modelProvider": "groq",
     "plugins": ["@elizaos/plugin-suimarket"],
 
     "settings": {
