@@ -46,11 +46,15 @@ export const configSchema = z
         LINKEDIN_API_URL: z
             .union([z.string(), z.null(), z.undefined()])
             .transform((val) => val ?? DEFAULT_LINKEDIN_API_URL),
-        LINKEDIN_DRY_RUN: z.union([
-            z.boolean(),
-            z.null(),
-            z.undefined(),
-        ]).transform((val) => val ?? DEFAULT_LINKEDIN_DRY_RUN),
+        LINKEDIN_DRY_RUN: z
+            .union([z.string(), z.null(), z.undefined()])
+            .transform((val) => {
+                if (val === null || val === undefined) {
+                    return DEFAULT_LINKEDIN_DRY_RUN;
+                }
+
+                return val === "true";
+            }),
     })
     .superRefine((data, ctx) => {
         if (data.LINKEDIN_POST_INTERVAL_MIN > data.LINKEDIN_POST_INTERVAL_MAX) {
@@ -63,23 +67,25 @@ export const configSchema = z
     });
 
 export const validateConfig = (runtime: IAgentRuntime) => {
-    const LINKEDIN_ACCESS_TOKEN = runtime.getSetting("LINKEDIN_ACCESS_TOKEN");
-    const LINKEDIN_POST_INTERVAL_MIN = runtime.getSetting(
-        "LINKEDIN_POST_INTERVAL_MIN"
-    );
-    const LINKEDIN_POST_INTERVAL_MAX = runtime.getSetting(
-        "LINKEDIN_POST_INTERVAL_MAX"
-    );
-    const LINKEDIN_API_URL = runtime.getSetting("LINKEDIN_API_URL");
-    const LINKEDIN_DRY_RUN = runtime.getSetting("LINKEDIN_DRY_RUN");
-
     try {
+        const LINKEDIN_ACCESS_TOKEN = runtime.getSetting(
+            "LINKEDIN_ACCESS_TOKEN"
+        );
+        const LINKEDIN_POST_INTERVAL_MIN = runtime.getSetting(
+            "LINKEDIN_POST_INTERVAL_MIN"
+        );
+        const LINKEDIN_POST_INTERVAL_MAX = runtime.getSetting(
+            "LINKEDIN_POST_INTERVAL_MAX"
+        );
+        const LINKEDIN_API_URL = runtime.getSetting("LINKEDIN_API_URL");
+        const LINKEDIN_DRY_RUN = runtime.getSetting("LINKEDIN_DRY_RUN");
+
         const envs = configSchema.parse({
             LINKEDIN_ACCESS_TOKEN,
             LINKEDIN_POST_INTERVAL_MIN,
             LINKEDIN_POST_INTERVAL_MAX,
             LINKEDIN_API_URL,
-            LINKEDIN_DRY_RUN
+            LINKEDIN_DRY_RUN,
         });
 
         return envs;
