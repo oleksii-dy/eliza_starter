@@ -52,20 +52,28 @@ export class TwitterSearchClient {
         this.client = client;
         this.runtime = runtime;
         this.twitterUsername = this.client.twitterConfig.TWITTER_USERNAME;
+        this.running = false;
     }
 
     async start() {
+        this.running = true;
         this.engageWithSearchTermsLoop();
     }
 
+    async stop() {
+        this.running = false;
+    }
+
     private engageWithSearchTermsLoop() {
-        this.engageWithSearchTerms().then();
-        const randomMinutes = (Math.floor(Math.random() * (120 - 60 + 1)) + 60);
-        elizaLogger.log(`Next twitter search scheduled in ${randomMinutes} minutes`);
-        setTimeout(
-            () => this.engageWithSearchTermsLoop(),
-            randomMinutes * 60 * 1000
-        );
+        if (!this.running) return;
+        this.engageWithSearchTerms().then(() => {
+            const randomMinutes = (Math.floor(Math.random() * (120 - 60 + 1)) + 60);
+            elizaLogger.log(`Next twitter search scheduled in ${randomMinutes} minutes`);
+            setTimeout(
+                () => this.engageWithSearchTermsLoop(),
+                randomMinutes * 60 * 1000
+            );
+        });
     }
 
     private async engageWithSearchTerms() {
