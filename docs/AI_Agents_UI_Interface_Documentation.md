@@ -165,8 +165,11 @@ Agent:
 **When to Use:**
 
 Version Control: Use the agent for adding or updating code changes to a repository in an efficient, automated manner.
+
 Collaboration: Commit updates as part of a collaborative development process, enabling team members to stay up to date.
+
 Consistency: Ensure that commits are properly structured with meaningful messages and accurately applied to the specified branch.
+
 Automation: Ideal for CI/CD pipelines or scenarios requiring frequent, repetitive commits, reducing manual overhead.
 ___
 **Use Case 6: Adding Comments to Issues**
@@ -204,11 +207,14 @@ Agent:
 **Description:** This use case highlights the agent's ability to add comments to issues in a repository. The user specifies the issue number, repository, and the content of the comment. The agent processes the request, posts the comment to the issue, and provides a confirmation message that includes a direct link to the posted comment for reference.
 This functionality supports various scenarios such as providing updates, requesting additional information, or tracking progress on issues, streamlining communication and collaboration within the repository.
 
-**When to Use:**
+**When to Use:** 
 
 Collaboration: Use the agent to streamline communication and provide updates or clarifications on issues in repositories.
+
 Project Tracking: Add comments to issues to document progress, decisions, or discussions.
+
 Automation: Automate repetitive tasks such as posting templated responses or updating multiple issues, saving time and effort.
+
 By leveraging this functionality, teams can ensure issues are well-documented, with clear and traceable discussions.
 ___
 **Use Case 7: Modifying Issues**
@@ -225,7 +231,5 @@ Agent:
 ```
 **Description:** This use case highlights the agent's ability to modify an issues in a repository. The user specifies the issue number, repository, and the change. The agent processes the request, modifies the issue, and provides a confirmation message.
 
-**When to Use:**
-
-Automation: Automate repetitive tasks such as modifying multiple issues.
+**When to Use:** Automation: Automate repetitive tasks such as modifying multiple issues.
 
