@@ -147,7 +147,7 @@ export class GeckoTerminalProvider {
       return [];
     }
   }
-
+  
   // Flatten a single pool object
   private flattenPool(pool: PoolRaw): PoolFlat {
     return {

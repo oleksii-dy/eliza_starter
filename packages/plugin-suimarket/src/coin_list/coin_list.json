@@ -10880,7 +10880,8 @@
     {
       "id": "bluefin",
       "symbol": "blue",
-      "name": "Bluefin"
+      "name": "Bluefin",
+      "verified": true
     },
     {
       "id": "blue-footed-booby",
@@ -10915,7 +10916,8 @@
     {
       "id": "bluemove",
       "symbol": "move",
-      "name": "BlueMove"
+      "name": "BlueMove",
+      "verified":true
     },
     {
       "id": "blue-on-base",
@@ -15030,7 +15032,8 @@
     {
       "id": "cetus-protocol",
       "symbol": "cetus",
-      "name": "Cetus Protocol"
+      "name": "Cetus Protocol",
+      "verified":true
     },
     {
       "id": "cfgi",
@@ -20400,7 +20403,8 @@
     {
       "id": "deep",
       "symbol": "deep",
-      "name": "DeepBook"
+      "name": "DeepBook",
+      "verified": true
     },
     {
       "id": "deepbrain-chain",
@@ -45414,7 +45418,8 @@
     {
       "id": "memefi-2",
       "symbol": "memefi",
-      "name": "MemeFi"
+      "name": "MemeFi",
+      "verified":true
     },
     {
       "id": "memefi-toybox-404",
@@ -49719,7 +49724,8 @@
     {
       "id": "navi",
       "symbol": "navx",
-      "name": "NAVI Protocol"
+      "name": "NAVI Protocol",
+      "verified":true
     },
     {
       "id": "navy-seal",
@@ -69896,7 +69902,8 @@
     {
       "id": "suilend",
       "symbol": "send",
-      "name": "Suilend"
+      "name": "Suilend",
+      "verified":true
     },
     {
       "id": "suiman",
@@ -69916,7 +69923,8 @@
     {
       "id": "suins-token",
       "symbol": "ns",
-      "name": "SuiNS Token"
+      "name": "SuiNS Token",
+      "verified":true
     },
     {
       "id": "suipad",
@@ -74901,7 +74909,8 @@
     {
       "id": "turbos-finance",
       "symbol": "turbos",
-      "name": "Turbos Finance"
+      "name": "Turbos Finance",
+      "verified":true
     },
     {
       "id": "turbo-wallet",

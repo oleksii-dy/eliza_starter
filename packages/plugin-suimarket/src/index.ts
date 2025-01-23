@@ -11,7 +11,8 @@ import { executeSwapByAddress } from './actions/swapByAddress';
 import { sendTokenBySymbol } from './actions/sendTokenBySymbol';
 import { checkTxhashOnSui } from './actions/checkInfoTxHash';
 import { chainInfo } from './actions/infoChain';
-import { suiTokenInfoBySymbol } from './actions/suiTokenInfoBySymbol';
+import { projectInfo } from './actions/projectCoinOverview';
+// import { suiTokenInfoBySymbol } from './actions/suiTokenInfoBySymbol';
 
 const suimarketPlugin: Plugin = {
   name: "suimarketPlugin",
@@ -28,7 +29,10 @@ const suimarketPlugin: Plugin = {
     executeSwapByAddress,
     sendTokenBySymbol,
     checkTxhashOnSui,
-    suiTokenInfoBySymbol
+    projectInfo,
+    // suiTokenInfoBySymbol,
+
+
 ],
   evaluators: [],
   providers: []
