@@ -14,6 +14,7 @@ This project provides a user interface for interacting with AI agents. It includ
 2. [UI Components](#ui-components)
 3. [Features](#features)
 4. [Usage](#usage)
+5. [Limitations](#limitations)
 
 
 ---
@@ -232,4 +233,97 @@ Agent:
 **Description:** This use case highlights the agent's ability to modify an issues in a repository. The user specifies the issue number, repository, and the change. The agent processes the request, modifies the issue, and provides a confirmation message.
 
 **When to Use:** Automation: Automate repetitive tasks such as modifying multiple issues.
+___
+**Use Case 8: Stop Actions**
 
+Prompt Example 1:
+
+User:
+```plaintext
+"Stop"
+```
+Agent:
+```plaintext
+"Stopped successfully!"
+```
+**Description:** This use case highlights the agent's ability to process a generic stop command without any specific context. When the user requests to "Stop," the agent halts its ongoing activity and confirms the action with a success message.
+
+**When to Use:**
+This is useful when users want to quickly interrupt or terminate an unspecified process, relying on the agent to determine the context and take appropriate action.
+
+Prompt Example 2:
+
+User:
+```plaintext
+"Stop the OODA loop"
+```
+Agent:
+```plaintext
+"OODA loop stopped successfully!"
+```
+
+**Description:** This use case demonstrates the agent’s capability to halt a specific process, in this case, the OODA loop (Observe, Orient, Decide, Act). The user specifies the OODA loop, and the agent processes the request to terminate it, returning a confirmation message.
+
+**When to Use:** This is ideal in scenarios where the OODA loop is actively running and needs to be stopped immediately, such as during real-time decision-making simulations or strategic operations.
+
+Prompt Example 3:
+
+User:
+```plaintext
+"Stop the client"
+```
+Agent:
+```plaintext
+"Client stopped successfully!"
+```
+**Description:** This use case showcases the agent's ability to stop a specific client. The user instructs the agent to terminate the client (likely referring to a software client), and the agent confirms that the operation has been completed successfully.
+
+**When to Use:** This is beneficial when a specific client program is running and needs to be halted, such as during debugging, client switching, or shutting down resources.
+
+Prompt Example 4:
+
+User:
+```plaintext
+"Stop the agent"
+```
+Agent:
+```plaintext
+"Agent stopped successfully!"
+```
+**Description:** This use case highlights the agent’s ability to terminate its own operations. Upon receiving the command, the agent ceases its tasks and confirms the stop action.
+
+**When to Use:** This is useful when the user needs to pause or completely stop the AI agent from performing any tasks, especially in scenarios where further actions are no longer needed or the system requires troubleshooting.
+
+Prompt Example 5:
+
+User:
+```plaintext
+"Stop the GitHub client"
+```
+Agent:
+```plaintext
+"GitHub client stopped successfully!"
+```
+**Description:** This use case highlights the agent’s ability to stop the GitHub client, which could be an interface or service related to GitHub operations. The agent processes the request and terminates the GitHub client, providing a success message.
+
+**When to Use:** This is useful when the GitHub client is actively running and needs to be halted, such as during the configuration of repositories, stopping automated pull requests, or terminating CI/CD tasks.
+
+Prompt Example 6:
+
+User:
+```plaintext
+"Stop GitHub"
+```
+Agent:
+```plaintext
+"GitHub stopped successfully!"
+```
+
+**Description:**
+This use case demonstrates the agent's ability to stop all GitHub-related activities or connections. The user specifies GitHub as the target, and the agent confirms that all relevant processes have been halted.
+
+**When to Use:**
+This feature is useful in scenarios where the user wants to terminate GitHub-related processes entirely, such as stopping repository access, API integrations, or GitHub automation tools.
+___
+## Limitations 
+Currently the GitHub plug-in can be used for small and medium repositories. We are actively integrating Decentralized Knowledge Graphs (DKG) to expand context limits and improve the relevance and accuracy of interactions, ensuring a more powerful and efficient AI experience.
