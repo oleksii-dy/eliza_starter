@@ -118,12 +118,12 @@ export default {
         // Validate transfer content
         if (!isSwapContent) {
             console.error("Invalid content for SWAP action.");
-            if (callback) {
-                callback({
-                    text: "Unable to process swap request. Invalid content provided.",
-                    content: { error: "Invalid swap content" },
-                });
-            }
+
+            callback?.({
+                text: "Unable to process swap request. Invalid content provided.",
+                content: { error: "Invalid swap content" },
+            });
+
             return false;
         }
 
