@@ -1,19 +1,33 @@
-import { Provider } from "@elizaos/eliza";
+import { IAgentRuntime, Memory, State, type Provider } from "@elizaos/core";
 import { UdioGenerateResponse, UdioSamplerOptions, UdioSong } from "../types";
 
 const API_BASE_URL = "https://www.udio.com/api";
 
-export interface UdioProvider extends Provider {
+export interface UdioConfig {
     authToken: string;
-    makeRequest(url: string, method: string, data?: any): Promise<any>;
-    generateSong(prompt: string, samplerOptions: UdioSamplerOptions, customLyrics?: string): Promise<UdioGenerateResponse>;
-    checkSongStatus(songIds: string[]): Promise<{songs: UdioSong[]}>;
+    baseUrl?: string;
 }
 
-export const udioProvider: UdioProvider = {
-    name: "udio",
-    description: "Udio AI Music Generation Provider",
-    authToken: "",
+export class UdioProvider implements Provider {
+    private authToken: string;
+    private baseUrl: string;
+
+    static async get(runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<UdioProvider> {
+        const authToken = runtime.getSetting("UDIO_AUTH_TOKEN");
+        if (!authToken) {
+            throw new Error("UDIO_AUTH_TOKEN is required");
+        }
+        return new UdioProvider({ authToken });
+    }
+
+    constructor(config: UdioConfig) {
+        this.authToken = config.authToken;
+        this.baseUrl = config.baseUrl || API_BASE_URL;
+    }
+
+    async get(_runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<any> {
+        return this;
+    }
 
     async makeRequest(url: string, method: string, data?: any) {
         const headers = {
@@ -32,23 +46,23 @@ export const udioProvider: UdioProvider = {
 
         const response = await fetch(url, options);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`UDIO_API_ERROR: ${response.status}`);
         }
         return response.json();
-    },
+    }
 
-    async generateSong(prompt: string, samplerOptions: UdioSamplerOptions, customLyrics?: string) {
-        const url = `${API_BASE_URL}/generate-proxy`;
+    async generateSong(prompt: string, samplerOptions: UdioSamplerOptions, customLyrics?: string): Promise<UdioGenerateResponse> {
+        const url = `${this.baseUrl}/generate-proxy`;
         const data = {
             prompt,
             samplerOptions,
             ...(customLyrics && { lyricInput: customLyrics }),
         };
         return this.makeRequest(url, 'POST', data);
-    },
+    }
 
-    async checkSongStatus(songIds: string[]) {
-        const url = `${API_BASE_URL}/songs?songIds=${songIds.join(',')}`;
+    async checkSongStatus(songIds: string[]): Promise<{songs: UdioSong[]}> {
+        const url = `${this.baseUrl}/songs?songIds=${songIds.join(',')}`;
         return this.makeRequest(url, 'GET');
     }
-};
+}
