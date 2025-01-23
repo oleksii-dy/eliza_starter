@@ -23,6 +23,7 @@
         "@elizaos/adapter-redis": "workspace:*",
         "@elizaos/adapter-sqlite": "workspace:*",
         "@elizaos/adapter-pglite": "workspace:*",
+        "@elizaos/adapter-qdrant": "workspace:*",
         "@elizaos/client-auto": "workspace:*",
         "@elizaos/client-direct": "workspace:*",
         "@elizaos/client-discord": "workspace:*",
@@ -119,6 +120,7 @@
         "@elizaos/plugin-dkg": "workspace:*",
         "@elizaos/plugin-email": "workspace:*",
         "@elizaos/plugin-omniflix": "workspace:*",
+        "@elizaos/plugin-suno": "workspace:*",
         "readline": "1.3.0",
         "ws": "8.18.0",
         "yargs": "17.7.2"
