@@ -37,11 +37,11 @@ export class PostgresDatabaseAdapter
     implements IDatabaseCacheAdapter
 {
     private pool: Pool;
-    private readonly maxRetries: number = 3;
-    private readonly baseDelay: number = 1000; // 1 second
-    private readonly maxDelay: number = 10000; // 10 seconds
-    private readonly jitterMax: number = 1000; // 1 second
-    private readonly connectionTimeout: number = 5000; // 5 seconds
+    private readonly maxRetries: number = 30;
+    private readonly baseDelay: number = 10000; // 1 second
+    private readonly maxDelay: number = 100000; // 10 seconds
+    private readonly jitterMax: number = 10000; // 1 second
+    private readonly connectionTimeout: number = 50000; // 5 seconds
 
     constructor(connectionConfig: any) {
         super({
@@ -103,6 +103,7 @@ export class PostgresDatabaseAdapter
             try {
                 return await operation();
             } catch (error) {
+                console.log('postgres operation error', error)
                 lastError = error as Error;
 
                 if (attempt < this.maxRetries) {
@@ -136,9 +137,11 @@ export class PostgresDatabaseAdapter
                                 : String(error),
                         totalAttempts: attempt,
                     });
+                    /*
                     throw error instanceof Error
                         ? error
                         : new Error(String(error));
+                    */
                 }
             }
         }
@@ -170,7 +173,8 @@ export class PostgresDatabaseAdapter
                         ? reconnectError.message
                         : String(reconnectError),
             });
-            throw reconnectError;
+            //throw reconnectError;
+            this.handlePoolError(error)
         }
     }
 
@@ -187,41 +191,53 @@ export class PostgresDatabaseAdapter
         await this.testConnection();
 
         const client = await this.pool.connect();
-        try {
-            await client.query("BEGIN");
 
-            // Set application settings for embedding dimension
-            const embeddingConfig = getEmbeddingConfig();
-            if (embeddingConfig.provider === EmbeddingProvider.OpenAI) {
-                await client.query("SET app.use_openai_embedding = 'true'");
-                await client.query("SET app.use_ollama_embedding = 'false'");
-                await client.query("SET app.use_gaianet_embedding = 'false'");
-            } else if (embeddingConfig.provider === EmbeddingProvider.Ollama) {
-                await client.query("SET app.use_openai_embedding = 'false'");
-                await client.query("SET app.use_ollama_embedding = 'true'");
-                await client.query("SET app.use_gaianet_embedding = 'false'");
-            } else if (embeddingConfig.provider === EmbeddingProvider.GaiaNet){
-                await client.query("SET app.use_openai_embedding = 'false'");
-                await client.query("SET app.use_ollama_embedding = 'false'");
-                await client.query("SET app.use_gaianet_embedding = 'true'");
-            } else {
-                await client.query("SET app.use_openai_embedding = 'false'");
-                await client.query("SET app.use_ollama_embedding = 'false'");
-                await client.query("SET app.use_gaianet_embedding = 'false'");
-            }
-
-            const schema = fs.readFileSync(
-                path.resolve(__dirname, "../schema.sql"),
-                "utf8"
+        // check for rooms
+        const { rows } = await client.query(`
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables
+                WHERE table_name = 'rooms'
             );
-            await client.query(schema);
+        `);
 
-            await client.query("COMMIT");
-        } catch (error) {
-            await client.query("ROLLBACK");
-            throw error;
-        } finally {
-            client.release();
+        if (!rows[0].exists) {
+            elizaLogger.log('postgresql - checking schema')
+            try {
+                await client.query("BEGIN");
+
+                // Set application settings for embedding dimension
+                const embeddingConfig = getEmbeddingConfig();
+                if (embeddingConfig.provider === EmbeddingProvider.OpenAI) {
+                    await client.query("SET app.use_openai_embedding = 'true'");
+                    await client.query("SET app.use_ollama_embedding = 'false'");
+                    await client.query("SET app.use_gaianet_embedding = 'false'");
+                } else if (embeddingConfig.provider === EmbeddingProvider.Ollama) {
+                    await client.query("SET app.use_openai_embedding = 'false'");
+                    await client.query("SET app.use_ollama_embedding = 'true'");
+                    await client.query("SET app.use_gaianet_embedding = 'false'");
+                } else if (embeddingConfig.provider === EmbeddingProvider.GaiaNet){
+                    await client.query("SET app.use_openai_embedding = 'false'");
+                    await client.query("SET app.use_ollama_embedding = 'false'");
+                    await client.query("SET app.use_gaianet_embedding = 'true'");
+                } else {
+                    await client.query("SET app.use_openai_embedding = 'false'");
+                    await client.query("SET app.use_ollama_embedding = 'false'");
+                    await client.query("SET app.use_gaianet_embedding = 'false'");
+                }
+
+                const schema = fs.readFileSync(
+                    path.resolve(__dirname, "../schema.sql"),
+                    "utf8"
+                );
+                await client.query(schema);
+
+                await client.query("COMMIT");
+            } catch (error) {
+                await client.query("ROLLBACK");
+                throw error;
+            } finally {
+                client.release();
+            }
         }
     }
 
@@ -241,12 +257,15 @@ export class PostgresDatabaseAdapter
             return true;
         } catch (error) {
             elizaLogger.error("Database connection test failed:", error);
+            /*
             throw new Error(
                 `Failed to connect to database: ${(error as Error).message}`
             );
+            */
         } finally {
             if (client) client.release();
         }
+        return false;
     }
 
     async cleanup(): Promise<void> {
