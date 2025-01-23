@@ -87,20 +87,20 @@ export const createCommitAction: Action = {
         const repoPath = getRepoPath(content.owner, content.repo);
 
         try {
-            await checkoutBranch(repoPath, "realitySpiral/demoPR", true);
+            await checkoutBranch(repoPath, content.branch, true);
             await writeFiles(repoPath, content.files);
             const commit = await commitAndPushChanges(
                 repoPath,
                 content.message,
-                "realitySpiral/demoPR"
+                content.branch
             );
             const hash = commit.commit;
             elizaLogger.info(
-                `Commited changes to the repository ${content.owner}/${content.repo} successfully to branch 'realitySpiral/demoPR'! commit hash: ${hash}`
+                `Commited changes to the repository ${content.owner}/${content.repo} successfully to branch '${content.branch}'! commit hash: ${hash}`
             );
             if (callback) {
                 callback({
-                    text: `Changes commited to repository ${content.owner}/${content.repo} successfully to branch 'realitySpiral/demoPR'! commit hash: ${hash}`,
+                    text: `Changes commited to repository ${content.owner}/${content.repo} successfully to branch '${content.branch}'! commit hash: ${hash}`,
                     attachments: [],
                 });
             }

@@ -1096,7 +1096,7 @@ export const implementFeatureAction: Action = {
                 JSON.stringify(codeFileChangesContent, null, 2)
             );
 
-            message.content.text = `Commit changes to the repository ${content.owner}/${content.repo} on branch realitySpiral/demoPR with the commit message: ${content.feature}`;
+            message.content.text = `Commit changes to the repository ${content.owner}/${content.repo} on branch '${content.branch}' with the commit message: ${content.feature}`;
 
             // Commit changes
             const commit = await createCommitAction.handler(
