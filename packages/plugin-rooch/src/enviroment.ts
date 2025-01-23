@@ -2,7 +2,7 @@ import { IAgentRuntime } from "@elizaos/core";
 import { z } from "zod";
 
 export const roochEnvSchema = z.object({
-    BITCOIN_WIF_PRIVATE_KEY: z.string().min(1, "Bitcoin private key is required"),
+    BITCOIN_PRIVATE_KEY: z.string().min(1, "Bitcoin private key is required"),
     ROOCH_NETWORK: z.enum(["mainnet", "testnet"]),
 });
 
@@ -13,9 +13,9 @@ export async function validateRoochConfig(
 ): Promise<RoochConfig> {
     try {
         const config = {
-            BITCOIN_WIF_PRIVATE_KEY:
-                runtime.getSetting("BITCOIN_WIF_PRIVATE_KEY") ||
-                process.env.BITCOIN_WIF_PRIVATE_KEY,
+            BITCOIN_PRIVATE_KEY:
+                runtime.getSetting("BITCOIN_PRIVATE_KEY") ||
+                process.env.BITCOIN_PRIVATE_KEY,
             ROOCH_NETWORK:
                 runtime.getSetting("ROOCH_NETWORK") || process.env.ROOCH_NETWORK,
         };
