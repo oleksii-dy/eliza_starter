@@ -108,7 +108,7 @@ export class GeckoTerminalProvider2 {
   }
 
   async getTokenDetails(networkId: string = 'sui-network', tokenId: string = '0x7123ef5ec546c363f270ef770472dfad231eeb86469a2d1fba566d6fd74cb9e1::craft::CRAFT'): Promise<TokenDetailFlat | null> {
-    const url = `/networks/${networkId}/tokens/${encodeURIComponent(tokenId)}/info`;
+    const url = `/networks/${networkId}/tokens/${encodeURIComponent(tokenId)}`;
 
     try {
       const response = await this.api.get(url);
@@ -137,7 +137,24 @@ export class GeckoTerminalProvider2 {
       return null;
     }
   }
+  async getTokenPrice(networkId: string = 'sui-network', tokenId: string = '0x7123ef5ec546c363f270ef770472dfad231eeb86469a2d1fba566d6fd74cb9e1::craft::CRAFT'): Promise<number | null> {
+    const url = `/networks/${networkId}/tokens/${encodeURIComponent(tokenId)}/pools`;
 
+    try {
+      const response = await this.api.get(url);
+
+      // Flatten token detail data
+      console.log(response.data)
+      const tokenDetail = response.data.data[0].attributes;
+      return tokenDetail.token_price_usd
+    } catch (error) {
+      console.error(`Error fetching token details for ${tokenId}:`, error.message);
+      return null;
+    }
+
+
+
+  }
   async trendingTokens(networkId: string = 'sui-network', page: number = 1 , query: string = null): Promise<TokenFlat[]> {
   }
 

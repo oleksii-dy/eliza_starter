@@ -270,6 +270,17 @@ export class CoingeckoProvider {
       throw new Error("Failed to fetch AI tokens");
     }
   }
+
+  async getCoinDataById(coinId: string) {
+
+    try {
+      const response = await this.axiosInstance.get(`/coins/${coinId}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching coin data for ${coinId}:`, error);
+      throw new Error("Failed to fetch coin data");
+    }
+  }
 }
 
 export default CoingeckoProvider;

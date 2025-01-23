@@ -32,7 +32,7 @@ Extract the swap parameters from the conversation and wallet context above, foll
 
 export const executeSwap: Action = {
     name: "SUI_EXECUTE_SWAP_BY_SYMBOL",
-    similes: ["SUI_SWAP_TOKENS_BY_SYMBOL", "SUI_TOKEN_SWAP_BY_SYMBOL", "SUI_TRADE_TOKENS_BY_SYMBOL", "SUI_EXCHANGE_TOKENS+BY_SYMBOL"],
+    similes: ["SUI_SWAP_TOKENS_BY_SYMBOL", "SUI_TOKEN_SWAP_BY_SYMBOL", "SUI_TRADE_TOKENS_BY_SYMBOL", "SUI_EXCHANGE_TOKENS_BY_SYMBOL"],
     validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         return true;
     },
@@ -67,7 +67,11 @@ export const executeSwap: Action = {
         });
 
         elizaLogger.log("extract content ...done -> ", content);
+        await callback({
+            text:`Please double-check all details before swapping to avoid any loss`,
+            action:"SUI_EXECUTE_SWAP_BY_SYMBOL",
 
+         })
         const inputTokenObject = await findByVerifiedAndSymbol(content.inputTokenSymbol);
         if(!inputTokenObject){
             callback({
@@ -90,7 +94,7 @@ export const executeSwap: Action = {
 
         }
         try {
-            callback({
+            await callback({
                text:`Please double-check all details before swapping to avoid any loss`,
                action:"SUI_EXECUTE_SWAP_BY_SYMBOL",
                result: {
@@ -99,6 +103,7 @@ export const executeSwap: Action = {
 
             }
             })
+
             return true;
         } catch (error) {
             console.error("Error during token swap:", error);

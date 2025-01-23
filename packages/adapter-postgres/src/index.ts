@@ -25,7 +25,7 @@ import {
     DatabaseAdapter,
     EmbeddingProvider,
 } from "@elizaos/core";
-// import fs from "fs";
+import fs from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
 
@@ -211,7 +211,7 @@ export class PostgresDatabaseAdapter
             }
 
             // const schema = fs.readFileSync(
-            //     path.resolve(__dirname, "../schema.sql"),
+            //     path.resolve(__dirname, "../schema_eliza.sql"),
             //     "utf8"
             // );
             // await client.query(schema);
