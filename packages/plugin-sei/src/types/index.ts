@@ -9,6 +9,7 @@ import type {
     WalletClient,
 } from "viem";
 import * as viemChains from "viem/chains";
+export * from "./precompiles"
 
 const _SupportedChainList = Object.keys([viemChains.seiDevnet, viemChains.seiTestnet, viemChains.sei]) as Array<
     keyof typeof viemChains
@@ -23,7 +24,7 @@ export interface ChainWithName {
 export interface Transaction {
     hash: Hash;
     from: Address;
-    to: Address;
+    to: string;
     value: bigint;
     data?: `0x${string}`;
     chainId?: number;
@@ -53,7 +54,7 @@ export interface ChainConfig {
 
 // Action parameters
 export interface TransferParams {
-    toAddress: Address;
+    toAddress: string;
     amount: string;
     data?: `0x${string}`;
 }

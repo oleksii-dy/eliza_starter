@@ -11,7 +11,7 @@ import {
 } from "@elizaos/core";
 
 import { initWalletProvider, WalletProvider } from "../providers/wallet";
-import type { Transaction, TransferParams } from "../types";
+import { ADDRESS_PRECOMPILE_ABI, ADDRESS_PRECOMPILE_ADDRESS, type Transaction, type TransferParams } from "../types";
 
 export const transferTemplate = `You are an AI assistant specialized in processing cryptocurrency transfer requests. Your task is to extract specific information from user messages and format it into a structured JSON response.
 
@@ -67,12 +67,32 @@ export class TransferAction {
             `Transferring: ${params.amount} tokens to (${params.toAddress} on ${chain.name})`
         );
 
+        let recipientAddress
+        if (params.toAddress.startsWith("sei")) {
+            const publicClient = this.walletProvider.getEvmPublicClient();
+            const evmAddress = await publicClient.readContract({
+                address: ADDRESS_PRECOMPILE_ADDRESS,
+                abi: ADDRESS_PRECOMPILE_ABI,
+                functionName: 'getEvmAddr',
+                args: [params.toAddress],
+            })
+
+            if (!evmAddress || !evmAddress.startsWith("0x")) {
+                throw new Error(`ERROR: Recipient does not have valid EVM address. Got: ${evmAddress}`);
+            }
+
+            console.log(`Translated address ${params.toAddress} to EVM address ${evmAddress}`)
+            recipientAddress = evmAddress
+        } else {
+            recipientAddress = params.toAddress
+        }
+
         const walletClient = this.walletProvider.getEvmWalletClient();
 
         try {
             const hash = await walletClient.sendTransaction({
                 account: walletClient.account,
-                to: params.toAddress,
+                to: recipientAddress,
                 value: parseEther(params.amount),
                 data: params.data as Hex,
                 kzg: {
@@ -196,5 +216,5 @@ export const transferAction: Action = {
             },
         ],
     ],
-    similes: ["SEND_TOKENS", "TOKEN_TRANSFER", "MOVE_TOKENS"],
+    similes: ["SEND_TOKENS", "TOKEN_TRANSFER", "MOVE_TOKENS", "SEND_SEI"],
 };

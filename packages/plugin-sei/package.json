@@ -20,6 +20,7 @@
     ],
     "dependencies": {
         "@elizaos/core": "workspace:*",
+        "@sei-js/evm": "^1.4.2",
         "node-cache": "5.1.2",
         "tsup": "8.3.5",
         "vitest": "2.1.4"

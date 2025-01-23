@@ -1,11 +1,8 @@
 import {
     createPublicClient,
-    createTestClient,
     createWalletClient,
     formatUnits,
     http,
-    publicActions,
-    walletActions,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import {
@@ -86,6 +83,17 @@ export class WalletProvider {
         });
 
         return walletClient;
+    }
+
+    getEvmPublicClient() {
+        const transport = this.createHttpTransport();
+
+        const publicClient = createPublicClient({
+            chain: this.currentChain.chain,
+            transport: transport,
+        });
+
+        return publicClient
     }
 
     async getWalletBalance(): Promise<string | null> {

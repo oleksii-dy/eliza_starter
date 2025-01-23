@@ -5,7 +5,7 @@ Sei Network plugin for Eliza OS that enables Eliza agents to perform actions on 
 
 This plugin provides functionality to:
 
-- Transfer SEI tokens between wallets
+- Transfer SEI tokens to other `0x` or `sei` addresses
 - Query wallet balances
 
 ## Installation
@@ -19,7 +19,8 @@ npm install @elizaos/plugin-sei
 The plugin requires the following environment variables:
 
 ```env
-SEI_PRIVATE_KEY=your_private_key
+SEI_PRIVATE_KEY= #your_private_key
+SEI_NETWORK= #"mainnet","testnet", or "devnet"
 ```
 
 ## Usage
@@ -43,7 +44,13 @@ Transfer SEI tokens to another address:
 
 ```typescript
 // Example conversation
-User: "Send 1 SEI to 0x4f2e63be8e7fe287836e29cde6f3d5cbc96eefd0c0e3f3747668faa2ae7324b0";
+User: "Send 1 SEI to 0xD5ca6eA5e33606554F746606157a7512FA738A12";
+Assistant: "I'll send 1 SEI token now...";
+```
+
+```typescript
+// Example conversation
+User: "Send 1 SEI to sei1vpz36punknkdjfs7ew2vkdwws8ydcquy00hhsd";
 Assistant: "I'll send 1 SEI token now...";
 ```
 
@@ -54,7 +61,7 @@ Query wallet balance and portfolio value:
 ```typescript
 // Example conversation
 User: "What's my wallet balance?";
-Assistant: "Your wallet contains 10.5 SEI ($42.00 USD)...";
+Assistant: "Your wallet contains 10.5 SEI ($5.25 USD)...";
 ```
 
 ## API Reference
@@ -72,22 +79,22 @@ Assistant: "Your wallet contains 10.5 SEI ($42.00 USD)...";
 ### Building
 
 ```bash
-npm run build
+pnpm build
 ```
 
 ### Testing
 
 ```bash
-npm run test
+pnpm test
 ```
 
 ## Future Enhancements
 
-The following features and improvements are planned for future releases:
-
-## Contributing
-
-Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
+Some features planned for future releases include:
+- On chain actions such as Staking and Unstaking, Governance, and native token creation
+- Complex queries and transaction history tracking
+- Smart contract deployment and interaction
+- Integration with DeFi protocols on Sei, such as DEXes, Lending Protocols and Money Markets.
 
 ## Credits
 
