@@ -1,14 +1,14 @@
-import { Tweet } from "agent-twitter-client";
+import type { Tweet } from "agent-twitter-client";
 import { getEmbeddingZeroVector } from "@elizaos/core";
-import { Content, Memory, UUID } from "@elizaos/core";
+import type { Content, Memory, UUID } from "@elizaos/core";
 import { stringToUuid } from "@elizaos/core";
-import { ClientBase } from "./base";
+import type { ClientBase } from "./base";
 import { elizaLogger } from "@elizaos/core";
-import { Media } from "@elizaos/core";
+import type { Media } from "@elizaos/core";
 import fs from "fs";
 import path from "path";
 
-export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
+export const wait = (minTime = 1000, maxTime = 3000) => {
     const waitTime =
         Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
     return new Promise((resolve) => setTimeout(resolve, waitTime));
@@ -32,12 +32,12 @@ export const isValidTweet = (tweet: Tweet): boolean => {
 export async function buildConversationThread(
     tweet: Tweet,
     client: ClientBase,
-    maxReplies: number = 10
+    maxReplies = 10
 ): Promise<Tweet[]> {
     const thread: Tweet[] = [];
     const visited: Set<string> = new Set();
 
-    async function processThread(currentTweet: Tweet, depth: number = 0) {
+    async function processThread(currentTweet: Tweet, depth = 0) {
         elizaLogger.debug("Processing tweet:", {
             id: currentTweet.id,
             inReplyToStatusId: currentTweet.inReplyToStatusId,
@@ -412,19 +412,19 @@ function deduplicateMentions(paragraph: string) {
   }
 
   // Extract mentions from the match groups
-  let mentions = matches.slice(1).filter(Boolean) as string[];
+  let mentions = matches.slice(0, 1)[0].trim().split(' ')
 
   // Deduplicate mentions
   mentions = [...new Set(mentions)];
 
   // Reconstruct the string with deduplicated mentions
-  const uniqueMentionsString = `@${mentions.join(' ')}`;
+  const uniqueMentionsString = mentions.join(' ');
 
   // Find where the mentions end in the original string
   const endOfMentions = paragraph.indexOf(matches[0]) + matches[0].length;
 
   // Construct the result by combining unique mentions with the rest of the string
-  return uniqueMentionsString + paragraph.slice(endOfMentions);
+  return uniqueMentionsString + ' ' + paragraph.slice(endOfMentions);
 }
 
 function restoreUrls(
