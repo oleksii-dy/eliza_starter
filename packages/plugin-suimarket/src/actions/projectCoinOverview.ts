@@ -1,6 +1,4 @@
 import {
-    // ActionExample,
-    Content,
     HandlerCallback,
     IAgentRuntime,
     Memory,
@@ -180,6 +178,7 @@ export const projectInfo: Action = {
                                 .slice(0, 5)
                                 .map(item => item.market.name)
                                 .join(",")}....`,
+                        categories: infoDetail.categories,
                         ...infoPrice
                     }
                 }
