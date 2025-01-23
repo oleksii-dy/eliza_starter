@@ -16,6 +16,25 @@ export class TelegramClient {
         elizaLogger.log("📱 Constructing new TelegramClient...");
         this.runtime = runtime;
         this.bot = new Telegraf(botToken);
+
+        // Global error handler for all updates
+        this.bot.catch((err: Error, ctx: Context) => {
+          elizaLogger.error(`Error while handling update ${ctx.update.update_id}:`, err);
+          // Optionally notify yourself or log to a service
+          // ctx.telegram.sendMessage(ADMIN_ID, `Error: ${err.message}`);
+        });
+
+        // Error handling middleware
+        this.bot.use(async (ctx, next) => {
+          try {
+            await next();
+          } catch (err) {
+            console.error('Error in middleware:', err);
+            // Optionally send an error message to the user
+            await ctx.reply('Sorry, something went wrong').catch(elizaLogger.error);
+          }
+        });
+
         this.messageManager = new MessageManager(this.bot, this.runtime);
         this.backend = runtime.getSetting("BACKEND_URL");
         this.backendToken = runtime.getSetting("BACKEND_TOKEN");
@@ -36,16 +55,24 @@ export class TelegramClient {
     }
 
     private async initializeBot(): Promise<void> {
-        this.bot.launch({ dropPendingUpdates: true });
-        elizaLogger.log(
-            "✨ Telegram bot successfully launched and is running!"
-        );
+        try {
+            this.bot.launch({ dropPendingUpdates: true }).catch(e => {
+              elizaLogger.error("Launch failed", e)
+            });
+            elizaLogger.log(
+                "✨ Telegram bot successfully launched and is running!"
+            );
 
-        const botInfo = await this.bot.telegram.getMe();
-        this.bot.botInfo = botInfo;
-        elizaLogger.success(`Bot username: @${botInfo.username}`);
+            const botInfo = await this.bot.telegram.getMe().catch(e => {
+              elizaLogger.error("getMe failed", e)
+            });
+            this.bot.botInfo = botInfo;
+            elizaLogger.success(`Bot username: @${botInfo.username}`);
 
-        this.messageManager.bot = this.bot;
+            this.messageManager.bot = this.bot;
+        } catch(e) {
+            elizaLogger.error('tg::initializeBot - error', e)
+        }
     }
 
     private async isGroupAuthorized(ctx: Context): Promise<boolean> {
