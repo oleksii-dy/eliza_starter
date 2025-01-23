@@ -9,8 +9,6 @@ The Udio plugin integrates Udio AI's powerful music generation capabilities into
 - Create custom music with advanced control over style and lyrics
 - Extend existing audio tracks with AI-powered continuation
 
-Original Plugin adapted for ElizaOS: https://github.com/flowese/UdioWrapper/
-
 INSTALLATION
 
     npm install @elizaos/plugin-udio
@@ -25,13 +23,9 @@ QUICK START
     const eliza = new Eliza();
     eliza.registerPlugin(udioPlugin);
 
-2. Configure the Udio provider with your API credentials:
+2. Configure your Udio authentication token in your environment:
 
-    import { udioProvider } from '@elizaos/plugin-udio';
-
-    udioProvider.configure({
-      authToken: 'your-udio-auth-token'
-    });
+    UDIO_AUTH_TOKEN=your-udio-auth-token
 
 FEATURES
 
@@ -60,7 +54,8 @@ FEATURES
       audioConditioningPath: "path/to/audio.mp3",
       audioConditioningSongId: "original-song-id",
       cropStartTime: 30,
-      seed: 12345
+      seed: 12345,
+      customLyrics: "Additional lyrics for the extension"
     });
 
 Generation Parameters Explained:
@@ -68,37 +63,31 @@ Generation Parameters Explained:
 - seed: Controls the randomness of generation
   * Same seed will produce similar results
   * Different seeds create variations
+  * Defaults to -1 if not specified
 
 - cropStartTime: Controls where the extension begins (for extend action)
   * Specified in seconds
-  * Useful for precise control over continuation point
+  * Optional parameter for precise control over continuation point
 
 API REFERENCE
-
-UdioProvider Configuration
-The Udio provider accepts the following configuration options:
-
-    interface UdioConfig {
-      authToken: string;
-    }
 
 Action Parameters:
 
 1. Generate Music (udio.generate)
-    interface GenerateParams {
-      prompt: string;
-      seed?: number;           // Optional seed for reproducibility
-      customLyrics?: string;   // Optional custom lyrics
+    interface UdioGenerateOptions {
+      prompt: string;           // Required: Text description of desired music
+      seed?: number;           // Optional: Seed for reproducibility
+      customLyrics?: string;   // Optional: Custom lyrics
     }
 
 2. Extend Audio (udio.extend)
-    interface ExtendParams {
-      prompt: string;
-      audioConditioningPath: string;    // Path to original audio
-      audioConditioningSongId: string;  // ID of original song
-      cropStartTime?: number;           // Start time in seconds
-      seed?: number;                    // Optional seed
-      customLyrics?: string;            // Optional lyrics for extension
+    interface UdioExtendOptions {
+      prompt: string;                    // Required: Description for continuation
+      audioConditioningPath: string;     // Required: Path to original audio
+      audioConditioningSongId: string;   // Required: ID of original song
+      cropStartTime?: number;            // Optional: Start time in seconds
+      seed?: number;                     // Optional: Seed for reproducibility
+      customLyrics?: string;             // Optional: Lyrics for extension
     }
 
 Response Types:
@@ -120,10 +109,8 @@ The plugin includes built-in error handling for common scenarios:
     try {
       await eliza.execute('udio.generate', params);
     } catch (error) {
-      if (error.code === 'UDIO_API_ERROR') {
-        // Handle API-specific errors
-      }
-      // Handle other errors
+      // Handle errors
+      console.error(error.message);
     }
 
 EXAMPLES
@@ -139,10 +126,11 @@ Creating a Pop Song:
 Extending an Existing Track:
 
     const extended = await eliza.execute('udio.extend', {
-      prompt: "Continue the melody with similar style",
+      prompt: "Continue with the same energy and mood",
       audioConditioningPath: "/path/to/original.mp3",
       audioConditioningSongId: "original-123",
-      cropStartTime: 60  // Start continuation from 1 minute mark
+      cropStartTime: 60,  // Start continuation from 1 minute mark
+      customLyrics: "Verse 2: Continuing the story..."
     });
 
 LICENSE
