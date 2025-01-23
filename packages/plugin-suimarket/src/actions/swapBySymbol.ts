@@ -11,46 +11,29 @@ import {
     State,
     type Action,
 } from "@elizaos/core";
-import {findByVerifiedAndSymbol} from "../providers/searchCoinInAggre";
-// import { RedisClient } from "@elizaos/adapter-redis";
-const swapTemplate = `Please extract the following swap details for SUI network:
+import findByVerifiedAndSymbol from "../providers/searchCoinInAggre";
 
-{
-    "inputTokenSymbol": string | null,     // Token being sold (e.g. "SUI")
-    "outputTokenSymbol": string | null,    // Token being bought
-    "amount": number | 0,               // Amount to swap
-}
-
+const swapTemplate = `
 Recent messages: {{recentMessages}}
-
-Extract the swap parameters from the conversation and wallet context above. Return only a JSON object with the specified fields. Use null for any values that cannot be determined.
-
-Ensure that all token symbols are converted to uppercase.
-
-Example response:
-{
-    "inputTokenSymbol": "SUI",
-    "outputTokenSymbol": "USDC",
-    "amount": 1.5,
-}
-\`\`\`
-VALIDATION RULES:
-            All property names must use double quotes
-            All string values must use double quotes
-            null values should not use quotes
-            No trailing commas allowed
-            No single quotes anywhere in the JSON
-
-
+Extract the swap parameters from the conversation and wallet context above, follows these rules:
+    - Return only a JSON object with the specified fields in thise format:
+        {
+            "inputTokenSymbol": string | null,     // Token being sold (e.g. "SUI")
+            "outputTokenSymbol": string | null,    // Token being bought
+            "amount": number | 0,               // Amount to swap
+        }
+    - Use null for any values that cannot be determined.
+    - All property names must use double quotes
+    - Null values should not use quotes
+    - No trailing commas allowed
+    - No single quotes anywhere in the JSON
+    - Ensure that all token symbols are converted to uppercase.
 `;
-
-
 
 export const executeSwap: Action = {
     name: "SUI_EXECUTE_SWAP_BY_SYMBOL",
     similes: ["SUI_SWAP_TOKENS_BY_SYMBOL", "SUI_TOKEN_SWAP_BY_SYMBOL", "SUI_TRADE_TOKENS_BY_SYMBOL", "SUI_EXCHANGE_TOKENS_BY_SYMBOL"],
     validate: async (_runtime: IAgentRuntime, _message: Memory) => {
-
         return true;
     },
     description: "Perform a token swap.",
@@ -73,6 +56,7 @@ export const executeSwap: Action = {
             state,
             template: swapTemplate,
         });
+
         elizaLogger.log("compose history...done!");
 
         elizaLogger.log("extract content ...");
@@ -81,6 +65,7 @@ export const executeSwap: Action = {
             context: swapContext,
             modelClass: ModelClass.SMALL,
         });
+
         elizaLogger.log("extract content ...done -> ", content);
         await callback({
             text:`Please double-check all details before swapping to avoid any loss`,
