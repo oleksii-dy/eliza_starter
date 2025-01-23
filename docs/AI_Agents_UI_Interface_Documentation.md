@@ -22,7 +22,7 @@ This project provides a user interface for interacting with AI agents. It includ
 
 The AI Agents UI can be accessed via the following URL:
 
-- **[AI Agents UI Interface](static/img/Eliza_UI_Interace.png)**
+- **[AI Agents UI Interface](https://eliza-dev.realityspiral.com/))**
 
 Simply visit this link in your web browser to interact with the user interface. There is no need for local installation or setup; the interface is hosted and available for immediate use.
 
