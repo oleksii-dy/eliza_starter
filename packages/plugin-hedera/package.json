@@ -6,7 +6,7 @@
     "types": "dist/index.d.ts",
     "dependencies": {
         "@elizaos/core": "workspace:*",
-        "hedera-agent-kit": "^1.0.2",
+        "hedera-agent-kit": "git://github.com/mateuszm-arianelabs/hedera-agent-kit.git",
         "tsup": "8.3.5"
     },
     "scripts": {
