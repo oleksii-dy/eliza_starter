@@ -59,7 +59,9 @@ class RequestQueue {
         while (this.queue.length > 0) {
             const request = this.queue.shift()!;
             try {
-                await request();
+                await request().catch(e => {
+                  console.error('client.twitter.base - request err', e)
+                });
             } catch (error) {
                 console.error("Error processing request:", error);
                 this.queue.unshift(request);
@@ -80,6 +82,37 @@ class RequestQueue {
         const delay = Math.floor(Math.random() * 2000) + 1500;
         await new Promise((resolve) => setTimeout(resolve, delay));
     }
+}
+
+let lastStart = Date.now()
+
+function doLogin(username, cb) {
+    const ts = Date.now()
+    const since = ts - lastStart
+    elizaLogger.log('last login', since, 'ms ago')
+    const delay = 5 * 1000
+    if (since > delay) {
+        const twitterClient = new Scraper();
+        ClientBase._twitterClients[username] = twitterClient;
+        lastStart = ts
+        cb(twitterClient)
+    } else {
+        elizaLogger.log('Delaying twitter login for', username)
+        setTimeout(() => {
+          doLogin(username, cb)
+        }, delay)
+    }
+}
+
+export function getScrapper(username:string):twitterClient {
+    return new Promise(resolve => {
+        if (ClientBase._twitterClients[username]) {
+            const twitterClient = ClientBase._twitterClients[username];
+            resolve(twitterClient)
+        } else {
+            doLogin(username, resolve)
+        }
+    })
 }
 
 export class ClientBase extends EventEmitter {
@@ -141,12 +174,9 @@ export class ClientBase extends EventEmitter {
         this.runtime = runtime;
         this.twitterConfig = twitterConfig;
         const username = twitterConfig.TWITTER_USERNAME;
-        if (ClientBase._twitterClients[username]) {
-            this.twitterClient = ClientBase._twitterClients[username];
-        } else {
-            this.twitterClient = new Scraper();
-            ClientBase._twitterClients[username] = this.twitterClient;
-        }
+        getScrapper(username).then(tc => {
+          this.twitterClient = tc;
+        })
 
         this.directions =
             "- " +
@@ -197,7 +227,7 @@ export class ClientBase extends EventEmitter {
                     }
                 }
             } catch (error) {
-                elizaLogger.error(`Login attempt failed: ${error.message}`);
+                elizaLogger.error(`${this.runtime.character.name}(${this.runtime.agentId}): Login attempt failed: ${error.message} for twitter @${username}`);
             }
 
             retries--;
@@ -209,7 +239,8 @@ export class ClientBase extends EventEmitter {
                 elizaLogger.error(
                     "Max retries reached. Exiting login process."
                 );
-                throw new Error("Twitter login failed after maximum retries.");
+                //throw new Error("Twitter login failed after maximum retries.");
+                return
             }
 
             await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -232,7 +263,10 @@ export class ClientBase extends EventEmitter {
                 nicknames: this.profile.nicknames,
             };
         } else {
+            /*
             throw new Error("Failed to load profile");
+            */
+            return false;
         }
 
         await this.loadLatestCheckedTweetId();
@@ -444,7 +478,7 @@ export class ClientBase extends EventEmitter {
                     const userId =
                         tweet.userId === this.profile.id
                             ? this.runtime.agentId
-                            : stringToUuid(tweet.userId);
+                            : stringToUuid(tweet.userId + "");
 
                     if (tweet.userId === this.profile.id) {
                         await this.runtime.ensureConnection(
