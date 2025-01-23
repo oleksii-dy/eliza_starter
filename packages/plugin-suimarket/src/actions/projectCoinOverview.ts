@@ -159,10 +159,7 @@ export const projectInfo: Action = {
         const coinGecko = new CoingeckoProvider();
         const infoPrice = await coinGecko.getToken(coinObject.id);
         const infoDetail = await coinGecko.getCoinDataById(coinObject.id);
-        const responseText = `Name:${infoDetail.name} ($${infoDetail.symbol}) \n Slogan:${infoDetail.description.en} \n Website: ${infoDetail.links.homepage[0]}  \n X: https://x.com/${infoDetail.links.twitter_screen_name} \n Telegram channel:${infoDetail.links.telegram_channel_identifier} \n Coingecko: https://www.coingecko.com/en/coins/${infoDetail.id} \n MCap ranking: ${infoDetail.market_cap_rank} \n Token price: ${infoPrice.usd} \n Markets: ${infoDetail.tickers.filter(item => item.market.name === "target:USDT")
-            .slice(0, 5)
-            .map(item => item.market.name)
-            .join(",")}`
+        const responseText = `Name:${infoDetail.name} ($${infoDetail.symbol})`
         if (callback) {
             callback({
                 text: responseText,
