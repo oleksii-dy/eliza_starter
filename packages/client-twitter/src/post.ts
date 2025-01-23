@@ -624,12 +624,13 @@ export class TwitterPostClient {
             modelClass: ModelClass.SMALL,
         });
 
-        elizaLogger.debug("generate tweet content response:\n" + response);
+        console.log("generate tweet content response:\n" + response);
 
         // First clean up any markdown and newlines
         const cleanedResponse = response
             .replace(/```json\s*/g, "") // Remove ```json
             .replace(/```\s*/g, "") // Remove any remaining ```
+            .replace(/(\r\n|\n|\r)/g, "")
             .trim();
 
         // Try to parse as JSON first
