@@ -55,10 +55,14 @@ export const createCommitAction: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
+        //trace(stringify(state))
+
         const context = composeContext({
             state,
             template: createCommitTemplate,
         });
+
+        //trace(context)
         await fs.writeFile(
             "createCommitContext.json",
             JSON.stringify(context, null, 2)
@@ -70,12 +74,15 @@ export const createCommitAction: Action = {
             schema: CreateCommitSchema,
         });
 
+        // trace(details.object)
+
         if (!isCreateCommitContent(details.object)) {
             elizaLogger.error("Invalid content:", details.object);
             throw new Error("Invalid content");
         }
 
         const content = details.object as CreateCommitContent;
+        // trace(stringify(content))
         await fs.writeFile(
             "createCommit.json",
             JSON.stringify(content, null, 2)
