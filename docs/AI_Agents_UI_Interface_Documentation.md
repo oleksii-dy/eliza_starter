@@ -4,6 +4,8 @@
 
 This project provides a user interface for interacting with AI agents. It includes various features, such as agent selection, chat, Github plug-in performing Git-hub actions: connecting to a repository, implementing new features, creating issues , as well as output visualization. This documentation will guide users through the functionality and usage of the interface.
 
+![Eliza UI Interface](docs/static/img/Eliza_UI_Interace.png)
+
 ---
 
 ## Table of Contents
