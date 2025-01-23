@@ -48,7 +48,7 @@ export const createCommitAction: Action = {
         options: any,
         callback: HandlerCallback
     ) => {
-        elizaLogger.log("[createCommit] Composing state for message:", message);
+        // elizaLogger.log("[createCommit] Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -61,7 +61,7 @@ export const createCommitAction: Action = {
         });
         await fs.writeFile(
             "createCommitContext.json",
-            JSON.stringify(context, null, 2)
+            JSON.stringify(context, null, 2),
         );
         const details = await generateObject({
             runtime,
@@ -78,10 +78,10 @@ export const createCommitAction: Action = {
         const content = details.object as CreateCommitContent;
         await fs.writeFile(
             "createCommit.json",
-            JSON.stringify(content, null, 2)
+            JSON.stringify(content, null, 2),
         );
         elizaLogger.info(
-            `Committing changes to the repository ${content.owner}/${content.repo} on branch ${content.branch}...`
+            `Committing changes to the repository ${content.owner}/${content.repo} on branch ${content.branch}...`,
         );
 
         const repoPath = getRepoPath(content.owner, content.repo);
@@ -92,11 +92,11 @@ export const createCommitAction: Action = {
             const commit = await commitAndPushChanges(
                 repoPath,
                 content.message,
-                "realitySpiral/demoPR"
+                "realitySpiral/demoPR",
             );
             const hash = commit.commit;
             elizaLogger.info(
-                `Commited changes to the repository ${content.owner}/${content.repo} successfully to branch 'realitySpiral/demoPR'! commit hash: ${hash}`
+                `Commited changes to the repository ${content.owner}/${content.repo} successfully to branch 'realitySpiral/demoPR'! commit hash: ${hash}`,
             );
             if (callback) {
                 callback({
@@ -107,14 +107,14 @@ export const createCommitAction: Action = {
             return commit;
         } catch (error) {
             elizaLogger.error(
-                `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}: See error: ${error.message}`
+                `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}: See error: ${error.message}`,
             );
             if (callback) {
                 callback(
                     {
                         text: `Error committing to the repository ${content.owner}/${content.repo} on branch '${content.branch}' message ${content.message}. Please try again See error: ${error.message}.`,
                     },
-                    []
+                    [],
                 );
             }
         }

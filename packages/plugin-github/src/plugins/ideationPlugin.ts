@@ -41,7 +41,7 @@ export const ideationAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log("[ideation] Composing state for message:", message);
+        // elizaLogger.log("[ideation] Composing state for message:", message);
 
         if (!state) {
             state = (await runtime.composeState(message, {})) as State;
@@ -73,7 +73,7 @@ export const ideationAction: Action = {
         const timestamp = Date.now();
         const userIdUUID = stringToUuid(`${runtime.agentId}-${timestamp}`);
         const memoryUUID = stringToUuid(
-            `${message.roomId}-${runtime.agentId}-${timestamp}`
+            `${message.roomId}-${runtime.agentId}-${timestamp}`,
         );
 
         const newMemory: Memory = {

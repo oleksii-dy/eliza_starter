@@ -80,10 +80,10 @@ export const configGithubInfoAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log(
-            "[configGithubInfoAction] Composing state for message:",
-            message
-        );
+        // elizaLogger.log(
+        //     "[configGithubInfoAction] Composing state for message:",
+        //     message
+        // );
 
         if (!state) {
             state = (await runtime.composeState(message)) as State;
@@ -111,12 +111,12 @@ export const configGithubInfoAction: Action = {
         const content = details.object as ConfigGithubInfoContent;
 
         elizaLogger.info(
-            `Configuring GitHub repository ${content.owner}/${content.repo} on branch ${content.branch}...`
+            `Configuring GitHub repository ${content.owner}/${content.repo} on branch ${content.branch}...`,
         );
 
         try {
             elizaLogger.info(
-                `Repository configured successfully! URL: https://github.com/${content.owner}/${content.repo} @ branch: ${content.branch}`
+                `Repository configured successfully! URL: https://github.com/${content.owner}/${content.repo} @ branch: ${content.branch}`,
             );
 
             if (callback) {
@@ -128,14 +128,14 @@ export const configGithubInfoAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 `Error configuring repository ${content.owner}/${content.repo} branch ${content.branch}:`,
-                error
+                error,
             );
             if (callback) {
                 callback(
                     {
                         text: `Error configuring repository ${content.owner}/${content.repo} branch ${content.branch}. Please try again.`,
                     },
-                    []
+                    [],
                 );
             }
         }

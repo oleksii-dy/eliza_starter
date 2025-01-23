@@ -66,7 +66,7 @@ export function AppSidebar() {
                                             <SidebarMenuItem key={index}>
                                                 <SidebarMenuSkeleton />
                                             </SidebarMenuItem>
-                                        )
+                                        ),
                                     )}
                                 </div>
                             ) : (
@@ -79,7 +79,7 @@ export function AppSidebar() {
                                                 >
                                                     <SidebarMenuButton
                                                         isActive={location.pathname.includes(
-                                                            agent.id
+                                                            agent.id,
                                                         )}
                                                     >
                                                         <User />
@@ -89,7 +89,7 @@ export function AppSidebar() {
                                                     </SidebarMenuButton>
                                                 </NavLink>
                                             </SidebarMenuItem>
-                                        )
+                                        ),
                                     )}
                                 </div>
                             )}
@@ -101,7 +101,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <NavLink
-                            to="https://elizaos.github.io/eliza/docs/intro/"
+                            to="https://github.com/Sifchain/sa-eliza/blob/sif-dev/docs/AI_Agents_UI_Interface_Documentation.md"
                             target="_blank"
                         >
                             <SidebarMenuButton>
