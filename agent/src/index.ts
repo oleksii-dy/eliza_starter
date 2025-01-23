@@ -107,6 +107,7 @@ import { dexScreenerPlugin } from "@elizaos/plugin-dexscreener";
 import { pythDataPlugin } from "@elizaos/plugin-pyth-data";
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
 import { litPlugin } from "@elizaos/plugin-lit";
+import { shogunPlugin } from "@elizaos/plugin-shogun";
 import Database from "better-sqlite3";
 import fs from "fs";
 import net from "net";

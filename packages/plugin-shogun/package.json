@@ -1,0 +1,40 @@
+{
+  "name": "@elizaos/plugin-shogun",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@elizaos/core": "0.1.7",
+    "@shogun/sdk": "file:packages/shogun-sdk",
+    "@solana/web3.js": "^1.95.8",
+    "axios": "^1.7.2",
+    "bs58": "^6.0.0",
+    "viem": "^2.21.54",
+    "@ethersproject/abstract-provider": "^5.0.0",
+    "@lit-protocol/auth-helpers": "^7.0.2",
+    "@lit-protocol/constants": "^7.0.2",
+    "@lit-protocol/contracts-sdk": "^7.0.2",
+    "@lit-protocol/lit-auth-client": "^7.0.2",
+    "@lit-protocol/lit-node-client": "^7.0.2",
+    "@lit-protocol/pkp-client": "6.11.3",
+    "@lit-protocol/pkp-ethers": "^7.0.2",
+    "@lit-protocol/types": "^6.11.3",
+    "ethers": "^5.7.2",
+    "siwe": "^2.0.0",
+    "tsup": "8.3.5",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^20.13.0",
+    "@types/yargs": "^17.0.33",
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5",
+    "vitest": "^1.2.1"
+  }
+}
