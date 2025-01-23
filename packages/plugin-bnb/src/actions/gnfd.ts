@@ -272,7 +272,7 @@ export const greenfieldAction = {
                     break;
                 }
 
-                case "transfer": {
+                case "transferBNBToGreenfield": {
                     const hash = await action.bnbTransferToGnfd(content.content, runtime)
                     result = `transfer bnb to greenfield successfully, hash: ${hash}`;
                     break;
@@ -329,8 +329,11 @@ export const greenfieldAction = {
             {
                 user: "user",
                 content: {
-                    text: "for create account on greenfield, transfer ${amount} BNB to myself",
+                    text: "Transfer 0.00001 BNB to myself greenfield for create account",
                     action: "GREENFIELD_ACTION",
+                    content: {
+                        amount: "0.00001"
+                    }
                 },
             },
         ],
@@ -340,7 +343,7 @@ export const greenfieldAction = {
         "CREATE_BUCKET",
         "UPLOAD_OBJECT",
         "DELETE_BUCKET",
-        "BNB_TRANSFER_TO_GREENFIELD",
+        "TRANSFER_BNB_TO_GREENFIELD",
     ],
 };
 

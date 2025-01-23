@@ -183,14 +183,14 @@ Respond with a JSON markdown block containing only the extracted values. Use nul
 \`\`\`
 `;
 
-export const greenfieldTemplate = `Given the recent messages and wallet information below:
+export const greenfieldTemplate = `Given the recent messages and wallet information below(only including 'Greenfield' keyword):
 
 {{recentMessages}}
 
 {{walletInfo}}
 
 Extract the following details for Greenfield operations:
-- **actionType** (string): The type of operation to perform (e.g., "createBucket", "uploadObject", "deleteObject", "transfer")
+- **actionType** (string): The type of operation to perform (e.g., "createBucket", "uploadObject", "deleteObject", "transferBNBToGreenfield")
 - **bucketName** (string, optional): The name of the bucket to operate
 - **objectName** (string, optional): The name of the object for upload operations
 - **visibility** (string, optional): Bucket visibility setting ("private" or "public")
@@ -199,7 +199,7 @@ Extract the following details for Greenfield operations:
 Required response format:
 \`\`\`json
 {
-    "actionType": "createBucket" | "uploadObject" | "deleteObject" | "transfer",
+    "actionType": "createBucket" | "uploadObject" | "deleteObject" | "transferBNBToGreenfield",
     "bucketName": string,
     "objectName": string,
     "visibility": "private" | "public",
