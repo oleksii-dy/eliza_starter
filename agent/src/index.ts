@@ -131,6 +131,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
 import { emailPlugin } from "@elizaos/plugin-email";
+import { emailAutomationPlugin } from "@elizaos/plugin-email-automation";
 import { sunoPlugin } from "@elizaos/plugin-suno";
 import { udioPlugin } from "@elizaos/plugin-udio";
 
@@ -935,6 +936,7 @@ export async function createAgent(
         character,
         // character.plugins are handled when clients are added
         plugins: [
+            getSecret(character, "EMAIL_AUTOMATION_ENABLED") ? emailAutomationPlugin : null,
             getSecret(character, "IQ_WALLET_ADDRESS") &&
             getSecret(character, "IQSOlRPC")
                 ? elizaCodeinPlugin

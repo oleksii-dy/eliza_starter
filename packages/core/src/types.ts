@@ -1513,6 +1513,7 @@ export enum ServiceType {
     TEE_LOG = "tee_log",
     GOPLUS_SECURITY = "goplus_security",
     WEB_SEARCH = "web_search",
+    EMAIL_AUTOMATION = "email_automation",
 }
 
 export enum LoggingLevel {
