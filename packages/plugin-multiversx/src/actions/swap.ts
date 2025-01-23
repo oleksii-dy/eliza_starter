@@ -152,7 +152,6 @@ export default {
             const accessToken =
                 await nativeAuthProvider.getAccessToken(walletProvider);
 
-            console.log({ accessToken });
             const graphqlProvider = new GraphqlProvider(
                 networkConfig.graphURL,
                 { Authorization: `Bearer ${accessToken}` },
