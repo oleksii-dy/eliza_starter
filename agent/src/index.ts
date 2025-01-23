@@ -132,6 +132,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
 import { emailPlugin } from "@elizaos/plugin-email";
+import { sunoPlugin } from "@elizaos/plugin-suno";
 
 import {
     githubInitializePlugin,
