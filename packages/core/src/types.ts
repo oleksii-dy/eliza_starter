@@ -654,6 +654,7 @@ export enum Clients {
     SLACK = "slack",
     GITHUB = "github",
     INSTAGRAM = "instagram",
+    SIMSAI = "simsai"
 }
 
 export interface IAgentConfig {
@@ -740,6 +741,7 @@ export type Character = {
         twitterPostTemplate?: TemplateType;
         twitterMessageHandlerTemplate?: TemplateType;
         twitterShouldRespondTemplate?: TemplateType;
+        twitterVoiceHandlerTemplate?: TemplateType;
         instagramPostTemplate?: TemplateType;
         instagramMessageHandlerTemplate?: TemplateType;
         instagramShouldRespondTemplate?: TemplateType;
@@ -760,6 +762,11 @@ export type Character = {
         discordMessageHandlerTemplate?: TemplateType;
         slackMessageHandlerTemplate?: TemplateType;
         slackShouldRespondTemplate?: TemplateType;
+        jeeterPostTemplate?: string;
+        jeeterSearchTemplate?: string;
+        jeeterInteractionTemplate?: string;
+        jeeterMessageHandlerTemplate?: string;
+        jeeterShouldRespondTemplate?: string;
     };
 
     /** Character biography */
@@ -911,6 +918,14 @@ export type Character = {
         nicknames?: string[];
     };
 
+    /** Optional SimsAI profile */
+    simsaiProfile?: {
+        id: string;
+        username: string;
+        screenName: string;
+        bio: string;
+    };
+
     /** Optional NFT prompt */
     nft?: {
         prompt: string;
@@ -918,7 +933,25 @@ export type Character = {
 
     /**Optinal Parent characters to inherit information from */
     extends?: string[];
+
+    twitterSpaces?: TwitterSpaceDecisionOptions;
 };
+
+export interface TwitterSpaceDecisionOptions {
+    maxSpeakers?: number;
+    topics?: string[];
+    typicalDurationMinutes?: number;
+    idleKickTimeoutMs?: number;
+    minIntervalBetweenSpacesMinutes?: number;
+    businessHoursOnly?: boolean;
+    randomChance?: number;
+    enableIdleMonitor?: boolean;
+    enableSttTts?: boolean;
+    enableRecording?: boolean;
+    voiceId?: string;
+    sttLanguage?: string;
+    speakerMaxDurationMs?: number;
+}
 
 /**
  * Interface for database operations
@@ -1622,4 +1655,3 @@ export interface ChunkRow {
     id: string;
     // Add other properties if needed
 }
-
