@@ -970,7 +970,8 @@ export class TwitterPostClient {
                                 twitterUserName: this.twitterUsername,
                                 currentPost: `From @${tweet.username}: ${tweet.text}`,
                                 formattedConversation,
-                                imageContext:
+                                //imageContext:
+                                imageDescriptions:
                                     imageDescriptions.length > 0
                                         ? `\nImages in Tweet:\n${imageDescriptions
                                               .map(
