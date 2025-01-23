@@ -118,14 +118,11 @@ import { pythDataPlugin } from "@elizaos/plugin-pyth-data";
 import { openaiPlugin } from "@elizaos/plugin-openai";
 import nitroPlugin from "@elizaos/plugin-router-nitro";
 import { devinPlugin } from "@elizaos/plugin-devin";
-
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
-
 import { chainbasePlugin } from "@elizaos/plugin-chainbase";
-
 import { nvidiaNimPlugin } from "@elizaos/plugin-nvidia-nim";
-
 import { zxPlugin } from "@elizaos/plugin-0x";
+import { hyperbolicPlugin } from "@elizaos/plugin-hyperbolic";
 import Database from "better-sqlite3";
 import fs from "fs";
 import net from "net";
