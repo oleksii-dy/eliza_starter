@@ -117,9 +117,30 @@ function tryLoadFile(filePath: string): string | null {
     }
 }
 
-function isAllStrings(arr: unknown[]): boolean {
-    return Array.isArray(arr) && arr.every((item) => typeof item === "string");
+
+async function handlePluginImporting(plugins: string[]) {
+    elizaLogger.info("Plugins are: ", plugins);
+    const importedPlugins = await Promise.all(
+        plugins.map(async (plugin) => {
+            try {
+                const importedPlugin = await import(plugin);
+                const functionName =
+                    plugin
+                        .replace("@elizaos/plugin-", "")
+                        .replace(/-./g, (x) => x[1].toUpperCase()) + "Plugin"; // Assumes plugin function is camelCased with Plugin suffix
+                return importedPlugin.default || importedPlugin[functionName];
+            } catch (importError) {
+                elizaLogger.error(
+                    `Failed to import plugin: ${plugin}`,
+                    importError
+                );
+                return null; // Return null for failed imports
+            }
+        })
+    );
+    return importedPlugins;
 }
+
 
 export async function loadCharacters(
     charactersArg: string
@@ -206,16 +227,7 @@ export async function loadCharacters(
                 }
 
                 // Handle plugins
-                if (isAllStrings(character.plugins)) {
-                    elizaLogger.info("Plugins are: ", character.plugins);
-                    const importedPlugins = await Promise.all(
-                        character.plugins.map(async (plugin) => {
-                            const importedPlugin = await import(plugin);
-                            return importedPlugin.default;
-                        })
-                    );
-                    character.plugins = importedPlugins;
-                }
+                character.plugins = await handlePluginImporting(character.plugins);
 
                 loadedCharacters.push(character);
                 elizaLogger.info(
@@ -403,19 +415,37 @@ export async function initializeClients(
     }
 
     if (clientTypes.includes(Clients.DISCORD)) {
-        const discordClient = await DiscordClientInterface.start(runtime);
-        if (discordClient) clients.discord = discordClient;
+        const isValidKey = await DiscordClientInterface.validate(runtime.getSetting("DISCORD_API_TOKEN"))
+        if (isValidKey) {
+            const discordClient = await DiscordClientInterface.start(runtime);
+            if (discordClient) clients.discord = discordClient;
+        }
     }
 
     if (clientTypes.includes(Clients.TELEGRAM)) {
-        const telegramClient = await TelegramClientInterface.start(runtime);
-        if (telegramClient) clients.telegram = telegramClient;
+        const isValidKey = await TelegramClientInterface.validate(runtime.getSetting("TELEGRAM_BOT_TOKEN"))
+        if (isValidKey) {
+            const telegramClient = await TelegramClientInterface.start(runtime);
+            if (telegramClient) clients.telegram = telegramClient;
+        }
     }
 
     if (clientTypes.includes(Clients.TWITTER)) {
-        const twitterClient = await TwitterClientInterface.start(runtime);
-        if (twitterClient) {
-            clients.twitter = twitterClient;
+        const isValidKey = await TwitterClientInterface.validate({
+            username: getSecret(character, "TWITTER_USERNAME"),
+            password: getSecret(character, "TWITTER_PASSWORD"),
+            email: getSecret(character, "TWITTER_EMAIL"),
+            twitter2faSecret: getSecret(character, "TWITTER_2FA_SECRET"),
+        })
+        if (isValidKey) {
+            const twitterClient = await TwitterClientInterface.start(runtime);
+            if (twitterClient) {
+                clients.twitter = twitterClient;
+                // FIXME:
+                (twitterClient as any).enableSearch = !parseBooleanFromText(
+                    getSecret(character, "TWITTER_SEARCH_ENABLE")
+                );
+            }
         }
     }
 
@@ -460,7 +490,7 @@ export async function initializeClients(
     }
 
     if (character.plugins?.length > 0) {
-        for (const plugin of character.plugins) {
+        for (const plugin of character.plugins.filter(p => !!p)) {
             if (plugin.clients) {
                 for (const client of plugin.clients) {
                     const startedClient = await client.start(runtime);
@@ -777,8 +807,11 @@ const startAgents = async () => {
     }
 
     // upload some agent functionality into directClient
-    directClient.startAgent = async (character: Character) => {
-        // wrap it so we don't have to inject directClient later
+    directClient.startAgent = async (character) => {
+        // Handle plugins in character file
+	character.plugins = await handlePluginImporting(character.plugins);
+
+	// wrap it so we don't have to inject directClient later
         return startAgent(character, directClient);
     };
 
