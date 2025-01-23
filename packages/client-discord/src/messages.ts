@@ -1324,7 +1324,9 @@ export class MessageManager {
 
         const typingLoop = async () => {
             while (typing) {
-                await message.channel.sendTyping();
+                if ('sendTyping' in message.channel) {
+                    await message.channel.sendTyping();
+                }
                 await new Promise((resolve) => setTimeout(resolve, 3000));
             }
         };

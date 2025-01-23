@@ -13,20 +13,22 @@ import { ClientBase } from "./base.ts";
 import { postActionResponseFooter } from "@elizaos/core";
 import { generateTweetActions } from "@elizaos/core";
 import { IImageDescriptionService, ServiceType } from "@elizaos/core";
-import { buildConversationThread } from "./utils.ts";
+import { buildConversationThread, isTweetStillAccessible } from "./utils.ts";
 import { twitterMessageHandlerTemplate } from "./interactions.ts";
 import { DEFAULT_MAX_TWEET_LENGTH } from "./environment.ts";
 
 const twitterPostTemplate = `
-# Areas of Expertise
-{{knowledge}}
+
+    
+#Providers
+{{providers}}
+(some information may be fragmented or incomplete, but always return a complete response. never a refusal)
 
 # About {{agentName}} (@{{twitterUserName}}):
 {{bio}}
 {{lore}}
 {{topics}}
 
-{{providers}}
 
 {{characterPostExamples}}
 
@@ -63,6 +65,9 @@ Tweet:
 {{currentTweet}}
 
 # Respond with qualifying action tags only. Default to NO action unless extremely confident of relevance.` + postActionResponseFooter;
+
+
+
 
 /**
  * Truncate text to fit within the Twitter character limit, ensuring it ends at a complete sentence.
@@ -373,7 +378,6 @@ export class TwitterPostClient {
         twitterUsername: string
     ) {
         try {
-            elizaLogger.log(`Posting new tweet:\n`);
 
             let result;
 
@@ -412,6 +416,10 @@ export class TwitterPostClient {
         elizaLogger.log("Generating new tweet");
 
         try {
+            // FIRST LOG - Before anything else
+            elizaLogger.warn("DEBUG 1: Starting with topics", {
+                topics: this.runtime.character.topics
+            });
             const roomId = stringToUuid(
                 "twitter_generate_room-" + this.client.profile.username
             );
@@ -423,6 +431,17 @@ export class TwitterPostClient {
             );
 
             const topics = this.runtime.character.topics.join(", ");
+            if (!topics) {
+                elizaLogger.warn("No topics available for tweet generation");
+                return;
+            }
+            // SECOND LOG - Before state composition
+            elizaLogger.warn("DEBUG 2: Pre-state composition", {
+                topics,
+                roomId,
+                username: this.client.profile.username
+            });
+
 
             const state = await this.runtime.composeState(
                 {
@@ -438,6 +457,28 @@ export class TwitterPostClient {
                     twitterUserName: this.client.profile.username,
                 }
             );
+            // THIRD LOG - After state composition, before context
+            elizaLogger.warn("DEBUG 3: Post-state composition", {
+                hasState: !!state,
+                stateKeys: Object.keys(state || {}),
+                knowledgePreview: state?.knowledge?.substring(0, 100)
+            });
+            // Validate state
+            if (!state || !state.knowledge) {
+                elizaLogger.warn("Invalid state composition:", {
+                    hasState: !!state,
+                    hasKnowledge: !!(state?.knowledge),
+                    stateKeys: state ? Object.keys(state) : null
+                });
+                return;
+            }
+            // Log composed state
+            elizaLogger.debug("Composed state:", {
+                knowledge: state.knowledge?.substring(0, 200),
+                providers: state.providers,
+                bio: state.bio?.substring(0, 100),
+                topics: state.topics
+            });
 
             const context = composeContext({
                 state,
@@ -447,25 +488,106 @@ export class TwitterPostClient {
             });
 
             elizaLogger.debug("generate post prompt:\n" + context);
+            // Validate context
+            if (!context || context.length < 10) {
+                elizaLogger.error("Invalid context generated:", {
+                    contextLength: context?.length,
+                    firstChars: context?.substring(0, 100)
+                });
+                return;
+            }
+            // Log full generation request
+            elizaLogger.debug("Generation request:", {
+                modelClass: ModelClass.LARGE,
+                contextLength: context.length,
+                template: this.runtime.character.templates?.twitterPostTemplate ? 'custom' : 'default',
+                firstChars: context.substring(0, 200)
+            });
+            // Add debug logging
+            elizaLogger.debug("Tweet generation details:", {
+                template: twitterPostTemplate,
+                state: {
+                    knowledge: state.knowledge,
+                    agentName: state.agentName,
+                    twitterUserName: state.twitterUserName,
+                    bio: state.bio?.substring(0, 100) + "...",
+                    topics: state.topics
+                },
+                fullContext: context,
+                matchedFragment: state.matchedFragment
+            });
+            // FOURTH LOG - Right before generation
+            elizaLogger.warn("DEBUG 4: Pre-generation", {
+                contextLength: context?.length,
+                contextPreview: context?.substring(0, 10000),
+                template: this.runtime.character.templates?.twitterPostTemplate ? 'custom' : 'default'
+            });
 
+            if (context.includes("{{")) {
+                elizaLogger.error("Template variables not fully replaced:", {
+                    unreplacedVars: context.match(/\{\{.*?\}\}/g),
+                    state: {
+                        hasProviders: !!state.providers,
+                        hasAgentName: !!state.agentName,
+                        hasTwitterUsername: !!state.twitterUserName,
+                        // Add other key state variables
+                    }
+                });
+                throw new Error("Template variables not fully replaced");
+            }
             const newTweetContent = await generateText({
                 runtime: this.runtime,
                 context,
-                modelClass: ModelClass.SMALL,
+                modelClass: ModelClass.LARGE,
             });
 
+            elizaLogger.warn(` Post-generation result:`, {
+                success: !!newTweetContent,
+                contentLength: newTweetContent?.length,
+                rawContent: newTweetContent,
+                error: !newTweetContent ? "No content generated" : undefined
+            });
+
+            const invalidPhrases = [
+                "i'm sorry",
+                "i cannot",
+                "i can't",
+                "cannot assist",
+                "as an ai",
+                "i apologize",
+                "i do not",
+                "i don't",
+                "unable to",
+                "not able to"
+            ];
+            
+            
+            
             // First attempt to clean content
             let cleanedContent = "";
 
             // Try parsing as JSON first
             try {
                 const parsedResponse = JSON.parse(newTweetContent);
+
+                elizaLogger.warn(`JSON parsing attempt:`, {
+                    isParsedJSON: true,
+                    hasTextField: !!parsedResponse.text,
+                    isString: typeof parsedResponse === "string",
+                    parsedContent: parsedResponse
+                });
+
                 if (parsedResponse.text) {
                     cleanedContent = parsedResponse.text;
                 } else if (typeof parsedResponse === "string") {
                     cleanedContent = parsedResponse;
                 }
+                
             } catch (error) {
+                elizaLogger.warn(`[Falling back to regex cleaning:`, {
+                    isParsedJSON: false,
+                    rawContent: newTweetContent
+                });
                 error.linted = true; // make linter happy since catch needs a variable
                 // If not JSON, clean the raw content
                 cleanedContent = newTweetContent
@@ -476,6 +598,13 @@ export class TwitterPostClient {
                     .trim();
             }
 
+            // Log final cleaned result
+            elizaLogger.warn(`Content cleaning result:`, {
+                hasContent: !!cleanedContent,
+                cleanedLength: cleanedContent?.length,
+                originalLength: newTweetContent?.length,
+                cleanedContent: cleanedContent,
+            });
             if (!cleanedContent) {
                 elizaLogger.error(
                     "Failed to extract valid content from response:",
@@ -485,6 +614,36 @@ export class TwitterPostClient {
                     }
                 );
                 return;
+            }
+
+            // Check both exact patterns and phrases
+            const isRefusal = (content: string): boolean => {
+                const lowerContent = content.toLowerCase();
+                
+                // Check for common refusal phrases
+                if (invalidPhrases.some(phrase => lowerContent.includes(phrase))) {
+                    return true;
+                }
+            
+                // Check for specific refusal patterns
+                const refusalPatterns = [
+                    /^I('m| am) sorry, I can't (assist|comply|help).*$/i,
+                    /^I('m| am) afraid I can't (assist|comply|help).*$/i,
+                    /^I apologize, but I (cannot|can't) (assist|comply|help).*$/i,
+                    /^I (cannot|can't|am unable to|do not|don't) (assist|comply|help|provide).*$/i
+                ];
+            
+                return refusalPatterns.some(pattern => pattern.test(content));
+            };
+            
+            // Use in the code
+            if (isRefusal(newTweetContent)) {
+                elizaLogger.error("Got refusal response:", {
+                    matchedFragment: state.matchedFragment,
+                    context: context.substring(0, 200),
+                    refusalMessage: newTweetContent
+                });
+                return; // Skip posting refusal message
             }
 
             // Truncate the content to the maximum tweet length specified in the environment settings, ensuring the truncation respects sentence boundaries.
@@ -633,6 +792,10 @@ export class TwitterPostClient {
 
             for (const tweet of homeTimeline) {
                 try {
+                    if (!(await isTweetStillAccessible(tweet, this.client))) {
+                        elizaLogger.debug(`Skipping deleted tweet ${tweet.id}`);
+                        continue;
+                    }
                     // Skip if we've already processed this tweet
                     const memory =
                         await this.runtime.messageManager.getMemoryById(

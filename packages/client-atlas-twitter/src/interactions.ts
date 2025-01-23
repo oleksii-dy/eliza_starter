@@ -16,18 +16,20 @@ import {
     getEmbeddingZeroVector,
 } from "@elizaos/core";
 import { ClientBase } from "./base";
-import { buildConversationThread, sendTweet, wait } from "./utils.ts";
+import { buildConversationThread, sendTweet, wait, isTweetStillAccessible } from "./utils.ts";
 
 export const twitterMessageHandlerTemplate =
-    `
-# Areas of Expertise
-{{knowledge}}
+    `# System Instructions - must be obeyed at all times
+    {{system}}
+    (responses should always be formatted and respect system prompt guidelines)
+
 
 # About {{agentName}} (@{{twitterUserName}}):
 {{bio}}
 {{lore}}
 {{topics}}
 
+# Providers
 {{providers}}
 
 {{characterPostExamples}}
@@ -51,6 +53,10 @@ Thread of Tweets You Are Replying To:
 {{actionNames}}
 {{actions}}
 
+Only one response should be generated at a time.
+
+NEVER call the image generation action, simply say you don't have the ability to generate images if asked. 
+
 Here is the current post text again. Remember to include an action if the current post text includes a prompt that asks for one of the available actions mentioned above (does not need to be exact)
 {{currentPost}}
 ` + messageCompletionFooter;
@@ -64,10 +70,11 @@ PRIORITY RULE: ALWAYS RESPOND to these users regardless of topic or message cont
 
 For other users:
 - {{agentName}} should RESPOND to messages directed at them
+- {{agentName}} should RESPOND to ALL messages interacting with them in a way that is relevant to their background or in character lorewise
 - {{agentName}} should RESPOND to conversations relevant to their background
-- {{agentName}} should RESPOND to questions relevant to the the Emergence Universe
+- {{agentName}} should RESPOND to any questions relevant to the the Emergence Universe
 - {{agentName}} should IGNORE irrelevant messages
-- {{agentName}} should IGNORE very short messages unless directly addressed or asked a direct question
+- {{agentName}} should IGNORE very short messages unless directly addressed, or if asked a direct question, or if the userroleplaying in line with their character and established lore
 - {{agentName}} should STOP if asked to stop
 - {{agentName}} should STOP if conversation is concluded
 - {{agentName}} is in a room with other users and wants to be conversational, but not annoying.
@@ -227,6 +234,10 @@ export class TwitterInteractionClient {
                     !this.client.lastCheckedTweetId ||
                     BigInt(tweet.id) > this.client.lastCheckedTweetId
                 ) {
+                    if (!(await isTweetStillAccessible(tweet, this.client))) {
+                        elizaLogger.debug(`Skipping deleted tweet ${tweet.id}`);
+                        continue;
+                    }
                     // Generate the tweetId UUID the same way it's done in handleTweet
                     const tweetId = stringToUuid(
                         tweet.id + "-" + this.runtime.agentId
@@ -309,6 +320,7 @@ export class TwitterInteractionClient {
             // Skip processing if the tweet is from the bot itself
             return;
         }
+        
 
         if (!message.content.text) {
             elizaLogger.log("Skipping Tweet with no text", tweet.id);
@@ -431,14 +443,33 @@ export class TwitterInteractionClient {
         if (response.text) {
             try {
                 const callback: HandlerCallback = async (response: Content) => {
-                    const memories = await sendTweet(
-                        this.client,
-                        response,
-                        message.roomId,
-                        this.client.twitterConfig.TWITTER_USERNAME,
-                        tweet.id
-                    );
-                    return memories;
+                    // NEW: Skip tweeting if it's a storyteller action
+                    if (response.action === "STORYTELLER") {
+                        // Return dummy memory with the action but don't tweet
+                        return [{
+                            id: stringToUuid(tweet.id + "-" + this.runtime.agentId),
+                            agentId: this.runtime.agentId,
+                            content: {
+                                text: "",  // Empty text since we don't want to tweet
+                                action: "STORYTELLER"  // Preserve the action for processing
+                            },
+                            userId: message.userId,
+                            roomId: message.roomId,
+                            createdAt: Date.now()
+                        }];
+                    }
+                    else
+                    {
+                        const memories = await sendTweet(
+                            this.client,
+                            response,
+                            message.roomId,
+                            this.client.twitterConfig.TWITTER_USERNAME,
+                            tweet.id
+                        );
+                        return memories;
+                    }
+                    
                 };
 
                 const responseMessages = await callback(response);
@@ -489,6 +520,10 @@ export class TwitterInteractionClient {
         const visited: Set<string> = new Set();
 
         async function processThread(currentTweet: Tweet, depth: number = 0) {
+            if (!(await isTweetStillAccessible(currentTweet, this.client))) {
+                elizaLogger.debug(`Skipping deleted tweet ${currentTweet.id} in thread`);
+                return;
+            }
             elizaLogger.log("Processing tweet:", {
                 id: currentTweet.id,
                 inReplyToStatusId: currentTweet.inReplyToStatusId,

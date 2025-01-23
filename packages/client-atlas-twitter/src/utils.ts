@@ -361,3 +361,13 @@ function splitParagraph(paragraph: string, maxLength: number): string[] {
 
     return chunks;
 }
+
+export async function isTweetStillAccessible(tweet: Tweet, client: ClientBase): Promise<boolean> {
+    try {
+        const tweetCheck = await client.twitterClient.getTweet(tweet.id);
+        return !!tweetCheck;
+    } catch (error) {
+        elizaLogger.debug(`Tweet ${tweet.id} no longer accessible`);
+        return false;
+    }
+}

@@ -1001,6 +1001,8 @@ export interface IDatabaseAdapter {
 
     getParticipantsForRoom(roomId: UUID): Promise<UUID[]>;
 
+    isFreshDatabase(): Promise<boolean>;
+
     getParticipantUserState(
         roomId: UUID,
         userId: UUID

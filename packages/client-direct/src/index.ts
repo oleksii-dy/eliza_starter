@@ -45,18 +45,21 @@ const upload = multer({ storage });
 
 export const messageHandlerTemplate =
     // {{goals}}
-    `# Action Examples
+    `# System Instructions - must be obeyed at all times
+    {{system}}
+
+    (responses should always be formatted and respect system prompt guidelines)
+
+# Action Examples
 {{actionExamples}}
 (Action examples are for reference only. Do not use the information from them in your response.)
-
-# Knowledge
-{{knowledge}}
 
 # Task: Generate dialog and actions for the character {{agentName}}.
 About {{agentName}}:
 {{bio}}
 {{lore}}
 
+# Providers
 {{providers}}
 
 {{attachments}}
@@ -243,12 +246,16 @@ export class DirectClient {
 
                 let state = await runtime.composeState(userMessage, {
                     agentName: runtime.character.name,
+                    system: runtime.character.system,
                 });
 
                 const context = composeContext({
                     state,
                     template: messageHandlerTemplate,
                 });
+
+                elizaLogger.log("Composing context: ", context);
+
 
                 const response = await generateMessageResponse({
                     runtime: runtime,

@@ -224,6 +224,30 @@ export class PostgresDatabaseAdapter
             client.release();
         }
     }
+    async isFreshDatabase(): Promise<boolean> {
+        return this.withCircuitBreaker(async () => {
+            try {
+                // Check for any existing data in key tables
+                const tables = ['accounts', 'memories', 'participants', 'rooms', 'relationships'];
+                
+                for (const table of tables) {
+                    const { rows } = await this.pool.query(
+                        `SELECT EXISTS (SELECT 1 FROM ${table} LIMIT 1)`
+                    );
+                    if (rows[0].exists) {
+                        return false; // If any table has data, database is not fresh
+                    }
+                }
+                
+                elizaLogger.info("Fresh database detected - no existing data found");
+                return true;
+                
+            } catch (error) {
+                elizaLogger.error("Error checking if database is fresh:", error);
+                throw error;
+            }
+        }, "isFreshDatabase");
+    }
 
     async close() {
         await this.pool.end();
@@ -1375,6 +1399,7 @@ export class PostgresDatabaseAdapter
             }
         }, "getCache");
     }
+    
 
     async setCache(params: {
         key: string;
@@ -1458,5 +1483,6 @@ export class PostgresDatabaseAdapter
         }, "deleteCache");
     }
 }
+
 
 export default PostgresDatabaseAdapter;

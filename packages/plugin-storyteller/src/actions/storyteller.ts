@@ -12,20 +12,20 @@ import {
     HandlerCallback,
 } from "@elizaos/core";
 import { storytellerTemplate } from "../templates/storytellerTemplate";
-import { StoryStructure } from "../types";
-
+import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
 export const storytellerAction: Action = {
     name: "STORYTELLER",
     similes: [
         "STORY",
     ],
     suppressInitialMessage: true,
-    validate: async (_runtime: IAgentRuntime, message: Memory, state?: State) => {
-        // Require either a direct prompt or a story structure
-        return (message?.content?.text?.length > 0) || (state?.storyStructure !== undefined);
+    validate: async (_runtime: IAgentRuntime, message: Memory, _state?: State) => {
+        // Only require a direct prompt
+        return message?.content?.text?.length > 0;
     },
     description:
-        "Call this when you want to tell a story set within the world of the Emergence Universe. The story must be in line with Emergence canon. Do not call this action if the conversation does not call for a story.",
+        "Call this when you want to tell a story set within the world of the Emergence Universe, or if the user directly requests an archive entry or fragment. The story must be in line with Emergence canon, meaning don't make up anything that directly contradicts canon. Do not call this action if the conversation does not call for a story.",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -36,15 +36,13 @@ export const storytellerAction: Action = {
         try {
             elizaLogger.info("Starting storyteller handler with:", {
                 messageText: message?.content?.text,
-                hasState: !!state,
-                storyStructure: state?.storyStructure
+                hasState: !!state
             });
 
             const context = composeContext({
                 state: {
                     ...state,
                     userPrompt: message?.content?.text,
-                    storyStructure: state?.storyStructure as StoryStructure,
                     recentMessages: state?.recentMessages,
                     storyContext: state?.providers || ""
                 },
@@ -74,7 +72,31 @@ export const storytellerAction: Action = {
             if (state) {
                 // Clean up the story text by removing extra newlines
                 const story = (storyContent.object as StoryResponse).story.trim();
-                state.generatedStory = story;
+                const fragmentId = Math.random().toString(36).substring(2, 7).toUpperCase();
+                const formattedStory = `Generating Archive Fragment ${fragmentId}:\n\n${story}`;
+
+
+                // Create memory with embedding
+                const memoryWithEmbedding = await runtime.messageManager.addEmbeddingToMemory({
+                    id: randomUUID(),
+                    roomId: message.roomId,
+                    userId: runtime.agentId,
+                    agentId: runtime.agentId,
+                    createdAt: Date.now(),
+                    content: {
+                        text: formattedStory,
+                        type: 'story',
+                        metadata: {
+                            prompt: message.content.text,
+                            timestamp: Date.now()
+                        }
+                    }
+                });
+                // Save the story as a tagged memory
+                await runtime.messageManager.createMemory(memoryWithEmbedding);
+
+
+                state.generatedStory = formattedStory;
                 state.lastStoryGeneratedAt = new Date().toISOString();
                 elizaLogger.info("Story saved to state:", { 
                     storyLength: story.length,
@@ -84,7 +106,8 @@ export const storytellerAction: Action = {
                 if (callback) {
                     callback({
                         type: "story",
-                        text: story
+                        text: formattedStory,
+                        action: "COMPLETE"
                     });
                     elizaLogger.info("Story sent via callback");
                 }
@@ -101,61 +124,22 @@ export const storytellerAction: Action = {
         [
             {
                 user: "{{user1}}",
-                content: { text: "Tell me a story about a magical forest" },
+                content: { text: "Tell me a story about the Shard" },
             },
             {
                 user: "{{user2}}",
-                content: { text: "I'd love to share a tale about the Whispering Woods...", action: "STORYTELLING" },
+                content: { text: "I'd love to share a tale about the Shards discovery of...", action: "STORYTELLING" },
             },
         ],
         [
             {
                 user: "{{user1}}",
-                content: { text: "What happened to the dragon after the great battle?" },
+                content: { text: "The Kind probably recouped after the great battle..." },
             },
             {
                 user: "{{user2}}",
                 content: { 
-                    text: "After the battle, the dragon retreated to the Crystal Mountains where...",
-                    action: "STORYTELLING"
-                },
-            },
-        ],
-        [
-            {
-                user: "{{user1}}",
-                content: { text: "Can you tell me about the ancient prophecy?" },
-            },
-            {
-                user: "{{user2}}",
-                content: {
-                    text: "The prophecy speaks of three chosen warriors who...",
-                    action: "STORYTELLING"
-                },
-            },
-        ],
-        [
-            {
-                user: "{{user1}}",
-                content: { text: "What's the origin story of the magic sword?" },
-            },
-            {
-                user: "{{user2}}",
-                content: {
-                    text: "The Blade of Dawn was forged in the fires of...",
-                    action: "STORYTELLING"
-                },
-            },
-        ],
-        [
-            {
-                user: "{{user1}}",
-                content: { text: "Tell me about the hidden city beneath the ocean" },
-            },
-            {
-                user: "{{user2}}",
-                content: {
-                    text: "Deep beneath the waves lies Aquapolis, a marvel of...",
+                    text: "Let's tell a story about the Kind where...",
                     action: "STORYTELLING"
                 },
             },

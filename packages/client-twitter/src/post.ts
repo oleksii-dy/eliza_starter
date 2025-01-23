@@ -18,15 +18,16 @@ import { twitterMessageHandlerTemplate } from "./interactions.ts";
 import { DEFAULT_MAX_TWEET_LENGTH } from "./environment.ts";
 
 const twitterPostTemplate = `
+    
 # Areas of Expertise
 {{knowledge}}
+{{providers}}
 
 # About {{agentName}} (@{{twitterUserName}}):
 {{bio}}
 {{lore}}
 {{topics}}
 
-{{providers}}
 
 {{characterPostExamples}}
 
@@ -504,7 +505,6 @@ export class TwitterPostClient {
             }
 
             try {
-                elizaLogger.log(`Posting new tweet:\n ${cleanedContent}`);
                 this.postTweet(
                     this.runtime,
                     this.client,

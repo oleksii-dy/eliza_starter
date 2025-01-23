@@ -90,6 +90,7 @@ const logFetch = async (url: string, options: any) => {
     return fetch(url, options);
 };
 
+
 export function parseArguments(): {
     character?: string;
     characters?: string;
@@ -122,6 +123,15 @@ function tryLoadFile(filePath: string): string | null {
 
 function isAllStrings(arr: unknown[]): boolean {
     return Array.isArray(arr) && arr.every((item) => typeof item === "string");
+}
+
+function cleanSystemPrompt(prompt: string): string {
+    return prompt
+        .replace(/\\"/g, '"')  // Replace escaped quotes with regular quotes
+        .replace(/^["']|["']$/g, '')  // Remove wrapping quotes
+        .replace(/\\n/g, '\n')  // Replace escaped newlines
+        .replace(/\s+/g, ' ')  // Normalize whitespace
+        .trim();
 }
 
 export async function loadCharacters(
@@ -227,12 +237,14 @@ export async function loadCharacters(
 
                 // Add these logs
                 elizaLogger.info("Loading character:", character.name);
-                elizaLogger.info("System Prompt:", character.settings?.systemPrompt);
+                elizaLogger.info("System Prompt:", character?.system);
                 
-                if (character.settings?.systemPrompt?.startsWith("@import:")) {
-                    const promptPath = character.settings.systemPrompt.replace("@import:", "");
+                if (character?.system?.startsWith("@import:")) {
+                    const promptPath = character.system.replace("@import:", "");
                     const pathsToTry = [
+                        path.resolve(process.cwd(), promptPath + '.txt'),
                         path.resolve(process.cwd(), promptPath + '.js'),
+                        path.resolve(__dirname, '..', promptPath + '.txt'),
                         path.resolve(__dirname, '..', promptPath + '.js')
                     ];
                 
@@ -246,16 +258,27 @@ export async function loadCharacters(
                         try {
                             if (fs.existsSync(tryPath)) {
                                 const content = fs.readFileSync(tryPath, 'utf8');
-                                // Updated regex to match the actual file format
-                                const match = content.match(/export const atlasSystemPrompt = "([\s\S]*)"/);
-                                if (match && match[1]) {
-                                    character.settings.systemPrompt = match[1];
+                                
+                                if (tryPath.endsWith('.js')) {
+                                    const match = content.match(/export const atlasSystemPrompt = "([\s\S]*)"/);
+                                    if (match && match[1]) {
+                                        character.system = cleanSystemPrompt(match[1]);
+                                        elizaLogger.info("Successfully loaded system prompt from:", tryPath);
+                                        elizaLogger.info("Prompt content:", character.system.substring(0, 100) + "...");
+                                        imported = true;
+                                        break;
+                                    } else {
+                                        elizaLogger.error("Failed to extract prompt from JS content:", content.substring(0, 100) + "...");
+                                    }
+                                } else if (tryPath.endsWith('.txt')) {
+                                    // For .txt files, use the content directly
+                                    //character.system = content.trim(); // Added trim() to remove any extra whitespace
+                                    character.system = cleanSystemPrompt(content);
+
                                     elizaLogger.info("Successfully loaded system prompt from:", tryPath);
-                                    elizaLogger.info("Prompt content:", character.settings.systemPrompt.substring(0, 100) + "...");
+                                    elizaLogger.info("Prompt content:", character.system.substring(0, 100) + "...");
                                     imported = true;
                                     break;
-                                } else {
-                                    elizaLogger.error("Failed to extract prompt from content:", content.substring(0, 100) + "...");
                                 }
                             }
                         } catch (error) {
@@ -404,7 +427,7 @@ export function getTokenForProvider(
     }
 }
 
-function initializeDatabase(dataDir: string) {
+async function initializeDatabase(dataDir: string) {
     if (process.env.POSTGRES_URL) {
         elizaLogger.info("Initializing PostgreSQL connection...");
         const db = new PostgresDatabaseAdapter({
@@ -412,23 +435,18 @@ function initializeDatabase(dataDir: string) {
             parseInputs: true,
         });
 
-        // Test the connection
-        db.init()
-            .then(() => {
-                elizaLogger.success(
-                    "Successfully connected to PostgreSQL database"
-                );
-            })
-            .catch((error) => {
-                elizaLogger.error("Failed to connect to PostgreSQL:", error);
-            });
-
-        return db;
+        try {
+            await db.init();
+            elizaLogger.success("Successfully connected to PostgreSQL database");
+            return db;
+        } catch (error) {
+            elizaLogger.error("Failed to connect to PostgreSQL:", error);
+            throw error;
+        }
     } else {
-        const filePath =
-            process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
-        // ":memory:";
+        const filePath = process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
         const db = new SqliteDatabaseAdapter(new Database(filePath));
+        await db.init();  // Also wait for SQLite initialization
         return db;
     }
 }
@@ -740,10 +758,28 @@ async function startAgent(
             fs.mkdirSync(dataDir, { recursive: true });
         }
 
-        db = initializeDatabase(dataDir) as IDatabaseAdapter &
+        
+        db = await initializeDatabase(dataDir) as IDatabaseAdapter &
             IDatabaseCacheAdapter;
 
         await db.init();
+
+        await db.deleteCache({
+            key: '*',  // Match all keys
+            agentId: character.id
+        });
+        await db.removeAllMemories('*-*-*-*-*', '*');  // UUID pattern for roomId, wildcard for tableName
+        
+
+
+        //const isFresh = await db.isFreshDatabase();
+        // Delete all caches for this agent
+
+       
+
+        
+        elizaLogger.info("Caches cleared for agent:", character.name);
+
 
         const cache = initializeCache(
             process.env.CACHE_STORE ?? CacheStore.DATABASE,
@@ -751,6 +787,29 @@ async function startAgent(
             "",
             db
         ); // "" should be replaced with dir for file system caching. THOUGHTS: might probably make this into an env
+        /*
+        if (isFresh) {
+            elizaLogger.info("Fresh database detected - clearing all caches");
+            // Clear Twitter-specific caches
+            await cache.delete('twitter/*');
+            await cache.delete(`twitter/${character.name}/*`);
+            await cache.delete('twitter/tweet_generation_*');
+            await cache.delete('twitter/quote_generation_*'); 
+            await cache.delete('twitter/reply_generation_*');
+            // Clear embedding caches
+            await cache.delete('embedding/*');
+            elizaLogger.info("Caches cleared");
+        }
+        */
+        await cache.delete('twitter/*');
+        await cache.delete(`twitter/${character.name}/*`);
+        await cache.delete('twitter/tweet_generation_*');
+        await cache.delete('twitter/quote_generation_*'); 
+        await cache.delete('twitter/reply_generation_*');
+        // Clear embedding caches
+        await cache.delete('embedding/*');
+        elizaLogger.info("Caches cleared");
+
         const runtime: AgentRuntime = await createAgent(
             character,
             db,
@@ -851,3 +910,4 @@ startAgents().catch((error) => {
     elizaLogger.error("Unhandled error in startAgents:", error);
     process.exit(1);
 });
+
