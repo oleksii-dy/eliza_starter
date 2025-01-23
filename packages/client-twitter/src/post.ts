@@ -630,7 +630,7 @@ export class TwitterPostClient {
         const cleanedResponse = response
             .replace(/```json\s*/g, "") // Remove ```json
             .replace(/```\s*/g, "") // Remove any remaining ```
-            .replace(/(\r\n|\n|\r)/g, "")
+            .replace(/(\r\n|\n|\r)/g, "") // Remove line break
             .trim();
 
         // Try to parse as JSON first
