@@ -52,6 +52,9 @@ All string values must use double quotes
 null values should not use quotes
 No trailing commas allowed
 No single quotes anywhere in the JSON
+
+
+
 Respond with a JSON markdown block containing only the extracted values.
 
 
