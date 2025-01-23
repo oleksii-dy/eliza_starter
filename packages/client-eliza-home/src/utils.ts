@@ -1,4 +1,4 @@
-import { elizaLogger } from "@elizaos/eliza";
+import { elizaLogger } from "@elizaos/core";
 
 export async function retryWithBackoff<T>(
     operation: () => Promise<T>,

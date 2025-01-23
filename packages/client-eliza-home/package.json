@@ -1,21 +1,18 @@
 {
-    "name": "@elizaos/client-eliza-home",
-    "version": "0.1.0",
-    "main": "dist/index.js",
-    "type": "module",
-    "types": "dist/index.d.ts",
-    "dependencies": {
-        "@elizaos/eliza": "workspace:*",
-        "@types/node": "^20.0.0",
-        "zod": "^3.22.4"
-    },
-    "devDependencies": {
-        "@types/node": "^20.0.0",
-        "tsup": "8.3.5"
-    },
-    "scripts": {
-        "build": "tsup --format esm --dts",
-        "dev": "tsup --format esm --dts --watch",
-        "lint": "eslint . --fix"
-    }
+  "name": "@elizaos/client-eliza-home",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "type": "module",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@elizaos/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "8.3.5"
+  },
+  "scripts": {
+    "build": "tsup --format esm --dts",
+    "dev": "tsup --format esm --dts --watch",
+    "lint": "eslint . --fix"
+  }
 }

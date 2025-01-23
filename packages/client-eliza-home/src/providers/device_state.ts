@@ -1,4 +1,5 @@
-import { IAgentRuntime, Provider } from "@elizaos/eliza";
+import { IAgentRuntime } from "@elizaos/core";
+import { Provider } from "@elizaos/core";
 import { EntityManager } from "../entities.ts";
 import { SmartThingsCapability } from '../capabilities';
 
@@ -18,7 +19,6 @@ export interface DeviceState {
 }
 
 export const deviceStateProvider: Provider = {
-    name: "device-state",
     get: async (runtime: IAgentRuntime) => {
         const entityManager = new EntityManager(runtime);
         await entityManager.discoverEntities();
@@ -54,6 +54,7 @@ export class DeviceStateProvider {
       // ... handle other capabilities
     }
 
-    this.emit('deviceStateChanged', device);
+    this.devices.set(deviceId, device);
+
   }
 }

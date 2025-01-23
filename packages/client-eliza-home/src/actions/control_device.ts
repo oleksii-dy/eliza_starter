@@ -6,7 +6,7 @@ import {
     IAgentRuntime,
     Memory,
     State,
-} from "@elizaos/eliza";
+} from "@elizaos/core";
 import { SmartHomeManager } from "../smart_home.ts";
 import { smartThingsApi } from "../services/smart_things_api.ts";
 import { deviceStateProvider } from "../providers/device_state.ts";

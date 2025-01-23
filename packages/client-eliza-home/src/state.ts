@@ -1,4 +1,4 @@
-import { IAgentRuntime, Provider } from "@elizaos/eliza";
+import { IAgentRuntime, Provider } from "@elizaos/core";
 import { Entity } from "./entities.ts";
 
 export class StateManager {

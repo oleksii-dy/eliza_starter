@@ -6,7 +6,7 @@ import {
     IAgentRuntime,
     Memory,
     State,
-} from "@elizaos/eliza";
+} from "@elizaos/core";
 import { EntityManager } from "../entities.ts";
 import { CAPABILITIES } from '../capabilities';
 import { smartThingsApi } from "../services/smart_things_api.ts";

@@ -7,7 +7,7 @@ import {
     getEmbeddingZeroVector,
     Memory,
     Content,
-} from "@elizaos/eliza";
+} from "@elizaos/core";
 import { validateHomeConfig } from "./environment.ts";
 import { CapabilityManager } from "./capabilities.ts";
 import { EntityManager } from "./entities.ts";

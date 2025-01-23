@@ -1,4 +1,4 @@
-import { messageCompletionFooter, shouldRespondFooter } from "@elizaos/eliza";
+import { messageCompletionFooter, shouldRespondFooter } from "@elizaos/core";
 
 export const homeShouldRespondTemplate = `
 # Task: Decide if the assistant should respond to home automation requests.

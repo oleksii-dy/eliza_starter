@@ -1,4 +1,4 @@
-import { IAgentRuntime, Provider } from "@elizaos/eliza";
+import { IAgentRuntime, Provider } from "@elizaos/core";
 
 export const automationStateProvider: Provider = {
     name: "automation-state",
