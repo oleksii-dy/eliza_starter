@@ -14,6 +14,7 @@ import {
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
 // import { formatObjectToText } from "../utils/format";
 import { searchCoinInFileJsonProvider, searchCoinInFileJsonProvider2 } from "../providers/searchCoinIdInFileJson";
+import {findByVerifiedAndName} from "../providers/searchCoinInAggre";
 
 const projectInfoTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 
@@ -137,14 +138,18 @@ export const projectInfo: Action = {
             modelClass: ModelClass.SMALL,
         })
         elizaLogger.log("content: ",content);
-        if(content.token_symbol === null){
-            content.token_symbol  = content.project_name.toLowerCase()
+        const tokenObject = await findByVerifiedAndName(content.project_name)
+        console.log("tokenObject",tokenObject)
+        if(!tokenObject){
+            callback({
+                text:`We do not support ${content.project_name} token in SUI network yet. However, if your token is supported, we can proceed with sending tokens using the token's address `,
+             })
+             return false
         }
-
-        let coinObject= await searchCoinInFileJsonProvider2(content.token_symbol, content.project_name)
+        let coinObject= await searchCoinInFileJsonProvider2(tokenObject.symbol, tokenObject.name)
         console.log("coinObject",coinObject)
         if(coinObject === null){
-            coinObject= await searchCoinInFileJsonProvider(content.token_symbol)
+            coinObject= await searchCoinInFileJsonProvider(tokenObject.symbol)
             if(coinObject === null){
                 callback({
                     text: `I cant find infomation of project` ,

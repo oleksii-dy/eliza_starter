@@ -63324,7 +63324,8 @@
     {
       "id": "scallop-2",
       "symbol": "sca",
-      "name": "Scallop"
+      "name": "Scallop",
+      "verified":true
     },
     {
       "id": "scamfari",

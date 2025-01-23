@@ -10,7 +10,7 @@ import {
     State,
     type Action,
 } from "@elizaos/core";
-import findByVerifiedAndSymbol from "../providers/searchCoinInAggre";
+import { findByVerifiedAndSymbol } from "../providers/searchCoinInAggre";
 // import { checkSuiAddressExists } from "../providers/checkSuiAddress";
 import { isValidSuiAddress } from "@mysten/sui/utils";
 const sendTokenTemplate = `Please extract the following swap details for SUI network:
