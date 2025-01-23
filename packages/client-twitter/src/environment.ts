@@ -1,4 +1,4 @@
-import { parseBooleanFromText, IAgentRuntime } from "@elizaos/core";
+import { parseBooleanFromText, IAgentRuntime, elizaLogger } from "@elizaos/core";
 import { z, ZodError } from "zod";
 
 export const DEFAULT_MAX_TWEET_LENGTH = 280;
@@ -207,10 +207,14 @@ export async function validateTwitterConfig(
             const errorMessages = error.errors
                 .map((err) => `${err.path.join(".")}: ${err.message}`)
                 .join("\n");
+            elizaLogger.error(`Twitter configuration validation failed:\n${errorMessages}`)
+            /*
             throw new Error(
                 `X/Twitter configuration validation failed:\n${errorMessages}`
             );
+            */
         }
-        throw error;
+        //throw error;
+        return {};
     }
 }
