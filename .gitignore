@@ -9,12 +9,15 @@ concatenated-output.ts
 embedding-cache.json
 packages/plugin-buttplug/intiface-engine
 
+node-compile-cache
+
 .idea
 .DS_Store
 
 dist/
 # Allow models directory but ignore model files
 models/*.gguf
+pgLite/
 
 cookies.json
 
@@ -50,9 +53,18 @@ tsup.config.bundled_*.mjs
 
 .turbo
 .cursorrules
+.pnpm-store
+instructions.md
+wallet_data.txt
 
 coverage
 .eslintcache
 
 agent/content
-.vscode/
+
+eliza.manifest
+eliza.manifest.sgx
+eliza.sig
+packages/plugin-nvidia-nim/extra
+packages/plugin-nvidia-nim/old_code
+packages/plugin-nvidia-nim/docs
