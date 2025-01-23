@@ -34,7 +34,7 @@ export const createIssueAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log("[createIssue] Composing state for message:", message);
+        // elizaLogger.log("[createIssue] Composing state for message:", message);
 
         if (!state) {
             state = (await runtime.composeState(message, {})) as State;
@@ -74,11 +74,11 @@ export const createIssueAction: Action = {
             const issue = await githubService.createIssue(
                 content.title,
                 content.body,
-                content.labels
+                content.labels,
             );
 
             elizaLogger.info(
-                `Created issue successfully! Issue number: ${issue.number}`
+                `Created issue successfully! Issue number: ${issue.number}`,
             );
 
             const memory = await saveIssueToMemory(runtime, message, issue);
@@ -91,7 +91,7 @@ export const createIssueAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 `Error creating issue in repository ${content.owner}/${content.repo}:`,
-                error
+                error,
             );
 
             if (callback) {
@@ -99,7 +99,7 @@ export const createIssueAction: Action = {
                     {
                         text: `Error creating issue in repository ${content.owner}/${content.repo}. Please try again.`,
                     },
-                    []
+                    [],
                 );
             }
         }

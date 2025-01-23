@@ -84,9 +84,9 @@ export const reactToPRAction: Action = {
         message: Memory,
         state: State,
         options: any,
-        callback?: HandlerCallback
+        callback?: HandlerCallback,
     ) => {
-        elizaLogger.log("[reactToPR] Composing state for message:", message);
+        // elizaLogger.log("[reactToPR] Composing state for message:", message);
 
         if (!state) {
             state = (await runtime.composeState(message)) as State;
@@ -127,13 +127,13 @@ export const reactToPRAction: Action = {
                     content.owner,
                     content.repo,
                     content.pullRequest,
-                    content.reaction
+                    content.reaction,
                 );
             const pr = await githubService.getPullRequest(content.pullRequest);
 
             elizaLogger.info("Reaction:", JSON.stringify(reaction, null, 2));
             elizaLogger.info(
-                `Added reaction to pull request #${content.pullRequest} successfully! PR: ${pr.html_url}`
+                `Added reaction to pull request #${content.pullRequest} successfully! PR: ${pr.html_url}`,
             );
 
             if (callback) {
@@ -145,14 +145,14 @@ export const reactToPRAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 `Error adding reaction to pull request #${content.pullRequest} in repository ${content.owner}/${content.repo}:`,
-                error
+                error,
             );
             if (callback) {
                 callback(
                     {
                         text: `Error adding reaction to pull request #${content.pullRequest}. Please try again.`,
                     },
-                    []
+                    [],
                 );
             }
         }
@@ -245,12 +245,12 @@ export const addCommentToPRAction: Action = {
         message: Memory,
         state: State,
         options: any,
-        callback?: HandlerCallback
+        callback?: HandlerCallback,
     ) => {
-        elizaLogger.log(
-            "[addCommentToPR] Composing state for message:",
-            message
-        );
+        // elizaLogger.log(
+        //     "[addCommentToPR] Composing state for message:",
+        //     message
+        // );
 
         if (!state) {
             state = (await runtime.composeState(message)) as State;
@@ -288,7 +288,7 @@ export const addCommentToPRAction: Action = {
         let pullRequest = await getPullRequestFromMemories(
             runtime,
             message,
-            content.pullRequest
+            content.pullRequest,
         );
         let pr = await githubService.getPullRequest(content.pullRequest);
         const diffText = await githubService.getPRDiffText(pr.diff_url);
@@ -304,13 +304,13 @@ export const addCommentToPRAction: Action = {
                 created_at: pr.created_at,
                 updated_at: pr.updated_at,
                 comments: await githubService.getPRCommentsText(
-                    pr.review_comment_url
+                    pr.review_comment_url,
                 ),
                 nonReviewComments: await githubService.getPRCommentsText(
-                    pr.comments_url
+                    pr.comments_url,
                 ),
                 labels: pr.labels.map((label: any) =>
-                    typeof label === "string" ? label : label?.name
+                    typeof label === "string" ? label : label?.name,
                 ),
                 body: pr.body,
                 diff: diffText,
@@ -337,7 +337,7 @@ export const addCommentToPRAction: Action = {
         if (!isGenerateCommentForASpecificPRSchema(commentDetails.object)) {
             elizaLogger.error(
                 "Invalid comment content:",
-                commentDetails.object
+                commentDetails.object,
             );
             throw new Error("Invalid comment content");
         }
@@ -350,7 +350,7 @@ export const addCommentToPRAction: Action = {
                 pullRequest,
                 comment,
                 lineLevelComments: comment.lineLevelComments,
-            }
+            },
         );
         const sanitizedLineLevelComments = await Promise.all(
             comment.lineLevelComments.map(async (lineLevelComment) => {
@@ -358,9 +358,9 @@ export const addCommentToPRAction: Action = {
                     diffText,
                     lineLevelComment.path,
                     lineLevelComment.line,
-                    lineLevelComment.body
+                    lineLevelComment.body,
                 );
-            })
+            }),
         );
 
         try {
@@ -368,12 +368,12 @@ export const addCommentToPRAction: Action = {
                 content.pullRequest,
                 comment.comment,
                 sanitizedLineLevelComments,
-                comment.approvalEvent
+                comment.approvalEvent,
             );
 
             elizaLogger.info("Comment:", JSON.stringify(comment, null, 2));
             elizaLogger.info(
-                `Added comment to pull request #${content.pullRequest} successfully! See comment at ${addedComment.html_url}. Approval status: ${comment.approvalEvent}`
+                `Added comment to pull request #${content.pullRequest} successfully! See comment at ${addedComment.html_url}. Approval status: ${comment.approvalEvent}`,
             );
 
             if (content.emojiReaction) {
@@ -398,7 +398,7 @@ export const addCommentToPRAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 `Error adding comment to pull request #${content.pullRequest} in repository ${content.owner}/${content.repo}:`,
-                error
+                error,
             );
 
             if (callback) {
@@ -406,7 +406,7 @@ export const addCommentToPRAction: Action = {
                     {
                         text: `Error adding comment to pull request #${content.pullRequest}. Please try again.`,
                     },
-                    []
+                    [],
                 );
             }
         }
@@ -548,9 +548,9 @@ export const closePRAction: Action = {
         message: Memory,
         state: State,
         options: any,
-        callback?: HandlerCallback
+        callback?: HandlerCallback,
     ) => {
-        elizaLogger.log("[closePR] Composing state for message:", message);
+        // elizaLogger.log("[closePR] Composing state for message:", message);
 
         if (!state) {
             state = (await runtime.composeState(message)) as State;
@@ -591,12 +591,12 @@ export const closePRAction: Action = {
                 content.pullRequest,
                 undefined,
                 undefined,
-                "closed"
+                "closed",
             );
 
             elizaLogger.info("Pull request:", JSON.stringify(pr, null, 2));
             elizaLogger.info(
-                `Closed pull request #${content.pullRequest} successfully!`
+                `Closed pull request #${content.pullRequest} successfully!`,
             );
 
             if (callback) {
@@ -608,7 +608,7 @@ export const closePRAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 `Error closing pull request #${content.pullRequest} in repository ${content.owner}/${content.repo}:`,
-                error
+                error,
             );
 
             if (callback) {
@@ -616,7 +616,7 @@ export const closePRAction: Action = {
                     {
                         text: `Error closing pull request #${content.pullRequest}. Please try again.`,
                     },
-                    []
+                    [],
                 );
             }
         }
@@ -660,9 +660,9 @@ export const mergePRAction: Action = {
         message: Memory,
         state: State,
         options: any,
-        callback?: HandlerCallback
+        callback?: HandlerCallback,
     ) => {
-        elizaLogger.log("[mergePR] Composing state for message:", message);
+        // elizaLogger.log("[mergePR] Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -701,15 +701,15 @@ export const mergePRAction: Action = {
                 content.owner,
                 content.repo,
                 content.pullRequest,
-                content.mergeMethod
+                content.mergeMethod,
             );
 
             elizaLogger.info(
                 "Merge result:",
-                JSON.stringify(mergeResult, null, 2)
+                JSON.stringify(mergeResult, null, 2),
             );
             elizaLogger.info(
-                `Merged pull request #${content.pullRequest} successfully!`
+                `Merged pull request #${content.pullRequest} successfully!`,
             );
 
             if (callback) {
@@ -721,7 +721,7 @@ export const mergePRAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 `Error merging pull request #${content.pullRequest} in repository ${content.owner}/${content.repo}:`,
-                error
+                error,
             );
 
             if (callback) {
@@ -729,7 +729,7 @@ export const mergePRAction: Action = {
                     {
                         text: `Error merging pull request #${content.pullRequest}. Please try again.`,
                     },
-                    []
+                    [],
                 );
             }
         }
@@ -812,12 +812,12 @@ export const replyToPRCommentAction: Action = {
         message: Memory,
         state: State,
         options: any,
-        callback?: HandlerCallback
+        callback?: HandlerCallback,
     ) => {
-        elizaLogger.log(
-            "[replyToPRComment] Composing state for message:",
-            message
-        );
+        // elizaLogger.log(
+        //     "[replyToPRComment] Composing state for message:",
+        //     message
+        // );
 
         if (!state) {
             state = (await runtime.composeState(message)) as State;
@@ -852,7 +852,7 @@ export const replyToPRCommentAction: Action = {
 
         // reply to all comments in the pull request
         const pullRequest = await githubService.getPullRequest(
-            content.pullRequest
+            content.pullRequest,
         );
 
         state.specificPullRequest = JSON.stringify(pullRequest);
@@ -868,17 +868,17 @@ export const replyToPRCommentAction: Action = {
 
         elizaLogger.info(
             "Review Comments:",
-            JSON.stringify(reviewComments, null, 2)
+            JSON.stringify(reviewComments, null, 2),
         );
 
         const reviewCommentsArray = JSON.parse(reviewComments);
         const nonReviewComments = await githubService.getPRCommentsText(
-            pullRequest.comments_url
+            pullRequest.comments_url,
         );
 
         elizaLogger.info(
             "Non-Review Comments:",
-            JSON.stringify(nonReviewComments, null, 2)
+            JSON.stringify(nonReviewComments, null, 2),
         );
 
         const nonReviewCommentsArray = JSON.parse(nonReviewComments);
@@ -898,7 +898,7 @@ export const replyToPRCommentAction: Action = {
             if (!isGeneratePRCommentReplyContent(replyDetails.object)) {
                 elizaLogger.error(
                     "Invalid reply content:",
-                    replyDetails.object
+                    replyDetails.object,
                 );
                 throw new Error("Invalid reply content");
             }
@@ -913,7 +913,7 @@ export const replyToPRCommentAction: Action = {
 
             elizaLogger.info(
                 "Replying to pull request comment...",
-                JSON.stringify(replyContent, null, 2)
+                JSON.stringify(replyContent, null, 2),
             );
 
             try {
@@ -921,15 +921,15 @@ export const replyToPRCommentAction: Action = {
                     content.pullRequest,
                     comment.id,
                     replyContent.comment,
-                    replyContent.emojiReaction
+                    replyContent.emojiReaction,
                 );
 
                 elizaLogger.log(
                     "Replied message:",
-                    JSON.stringify(repliedMessage, null, 2)
+                    JSON.stringify(repliedMessage, null, 2),
                 );
                 elizaLogger.info(
-                    `Replied to comment #${comment.id} in pull request #${content.pullRequest} successfully with emoji reaction: ${replyContent.emojiReaction}!`
+                    `Replied to comment #${comment.id} in pull request #${content.pullRequest} successfully with emoji reaction: ${replyContent.emojiReaction}!`,
                 );
 
                 if (callback) {
@@ -941,7 +941,7 @@ export const replyToPRCommentAction: Action = {
             } catch (error) {
                 elizaLogger.error(
                     `Error replying to comment #${comment.id} in pull request #${content.pullRequest} in repository ${content.owner}/${content.repo}:`,
-                    error
+                    error,
                 );
 
                 if (callback) {
@@ -949,7 +949,7 @@ export const replyToPRCommentAction: Action = {
                         {
                             text: `Error replying to comment #${comment.id} in pull request #${content.pullRequest}. Please try again.`,
                         },
-                        []
+                        [],
                     );
                 }
             }
@@ -1005,10 +1005,10 @@ export const implementFeatureAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log(
-            "[implementFeature] Composing state for message:",
-            message
-        );
+        // elizaLogger.log(
+        //     "[implementFeature] Composing state for message:",
+        //     message
+        // );
 
         if (!state) {
             state = (await runtime.composeState(message)) as State;
@@ -1024,7 +1024,7 @@ export const implementFeatureAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: ImplementFeatureSchema,
         });
 
@@ -1046,7 +1046,7 @@ export const implementFeatureAction: Action = {
 
             if (content.issue != null) {
                 elizaLogger.info(
-                    `Getting issue ${content.issue} from repository ${content.owner}/${content.repo}`
+                    `Getting issue ${content.issue} from repository ${content.owner}/${content.repo}`,
                 );
 
                 issue = await githubService.getIssue(content.issue);
@@ -1057,7 +1057,7 @@ export const implementFeatureAction: Action = {
                     runtime,
                     message,
                     state,
-                    options
+                    options,
                 );
 
                 elizaLogger.info(`Created issue successfully!`);
@@ -1073,7 +1073,7 @@ export const implementFeatureAction: Action = {
             const codeFileChangesDetails = await generateObject({
                 runtime,
                 context: codeFileChangesContext,
-                modelClass: ModelClass.LARGE,
+                modelClass: ModelClass.SMALL,
                 schema: GenerateCodeFileChangesSchema,
             });
 
@@ -1082,7 +1082,7 @@ export const implementFeatureAction: Action = {
             ) {
                 elizaLogger.error(
                     "Invalid code file changes content:",
-                    codeFileChangesDetails.object
+                    codeFileChangesDetails.object,
                 );
                 throw new Error("Invalid code file changes content");
             }
@@ -1093,7 +1093,7 @@ export const implementFeatureAction: Action = {
 
             elizaLogger.info(
                 `Generated code file changes successfully!`,
-                JSON.stringify(codeFileChangesContent, null, 2)
+                JSON.stringify(codeFileChangesContent, null, 2),
             );
 
             message.content.text = `Commit changes to the repository ${content.owner}/${content.repo} on branch '${content.branch}' with the commit message: ${content.feature}`;
@@ -1103,13 +1103,13 @@ export const implementFeatureAction: Action = {
                 runtime,
                 message,
                 state,
-                options
+                options,
             );
             state.specificCommit = commit;
 
             elizaLogger.info(
                 `Committed changes successfully!`,
-                JSON.stringify(commit, null, 2)
+                JSON.stringify(commit, null, 2),
             );
 
             message.content.text = `Create a pull request on repository ${content.owner}/${content.repo} with branch '${content.branch}', title '${content.feature}' against base '${content.base}' and files ${JSON.stringify([])}`;
@@ -1119,7 +1119,7 @@ export const implementFeatureAction: Action = {
                 runtime,
                 message,
                 state,
-                options
+                options,
             );
 
             elizaLogger.info(`Pull request created successfully!`);
@@ -1133,7 +1133,7 @@ export const implementFeatureAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 `Error implementing feature in repository ${content.owner}/${content.repo} on branch ${content.branch}:`,
-                error
+                error,
             );
 
             if (callback) {
@@ -1141,7 +1141,7 @@ export const implementFeatureAction: Action = {
                     {
                         text: `Error implementing feature in repository ${content.owner}/${content.repo}. Please try again.`,
                     },
-                    []
+                    [],
                 );
             }
         }

@@ -52,12 +52,12 @@ export const addCommentToIssueAction: Action = {
         message: Memory,
         state: State,
         options: any,
-        callback?: HandlerCallback
+        callback?: HandlerCallback,
     ) => {
-        elizaLogger.log(
-            "[addCommentToIssue] Composing state for message:",
-            message
-        );
+        // elizaLogger.log(
+        //     "[addCommentToIssue] Composing state for message:",
+        //     message
+        // );
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -102,10 +102,10 @@ export const addCommentToIssueAction: Action = {
                 created_at: issueData.created_at,
                 updated_at: issueData.updated_at,
                 comments: await githubService.getIssueCommentsText(
-                    issueData.comments_url
+                    issueData.comments_url,
                 ),
                 labels: issueData.labels.map((label: any) =>
-                    typeof label === "string" ? label : label?.name
+                    typeof label === "string" ? label : label?.name,
                 ),
                 body: issueData.body,
             };
@@ -128,7 +128,7 @@ export const addCommentToIssueAction: Action = {
         if (!isGenerateCommentForASpecificPRSchema(commentDetails.object)) {
             elizaLogger.error(
                 "Invalid comment content:",
-                commentDetails.object
+                commentDetails.object,
             );
             throw new Error("Invalid comment content");
         }
@@ -144,11 +144,11 @@ export const addCommentToIssueAction: Action = {
             const comment = await githubService.addIssueComment(
                 content.issue,
                 commentBody,
-                emojiReaction
+                emojiReaction,
             );
 
             elizaLogger.info(
-                `Added comment to issue #${content.issue} successfully! See comment at ${comment.html_url}`
+                `Added comment to issue #${content.issue} successfully! See comment at ${comment.html_url}`,
             );
             if (callback) {
                 callback({
@@ -159,14 +159,14 @@ export const addCommentToIssueAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 `Error adding comment to issue #${content.issue} in repository ${content.owner}/${content.repo}:`,
-                error
+                error,
             );
             if (callback) {
                 callback(
                     {
                         text: `Error adding comment to issue #${content.issue}. Please try again.`,
                     },
-                    []
+                    [],
                 );
             }
         }
@@ -264,9 +264,9 @@ export const reactToIssueAction: Action = {
         message: Memory,
         state: State,
         options: any,
-        callback?: HandlerCallback
+        callback?: HandlerCallback,
     ) => {
-        elizaLogger.log("[reactToIssue] Composing state for message:", message);
+        // elizaLogger.log("[reactToIssue] Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -303,13 +303,13 @@ export const reactToIssueAction: Action = {
                 content.owner,
                 content.repo,
                 content.issue,
-                content.reaction
+                content.reaction,
             );
             const issue = await githubService.getIssue(content.issue);
 
             elizaLogger.info("Reaction:", JSON.stringify(reaction, null, 2));
             elizaLogger.info(
-                `Added reaction to issue #${content.issue} successfully! Issue: ${issue.html_url}`
+                `Added reaction to issue #${content.issue} successfully! Issue: ${issue.html_url}`,
             );
 
             if (callback) {
@@ -321,14 +321,14 @@ export const reactToIssueAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 `Error adding reaction to issue #${content.issue} in repository ${content.owner}/${content.repo}:`,
-                error
+                error,
             );
             if (callback) {
                 callback(
                     {
                         text: `Error adding reaction to issue #${content.issue}. Please try again.`,
                     },
-                    []
+                    [],
                 );
             }
         }
@@ -412,7 +412,7 @@ export const closeIssueAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log("[closeIssue] Composing state for message:", message);
+        // elizaLogger.log("[closeIssue] Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -461,14 +461,14 @@ export const closeIssueAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 `Error closing issue #${content.issue} in repository ${content.owner}/${content.repo}:`,
-                error
+                error,
             );
             if (callback) {
                 callback(
                     {
                         text: `Error closing issue #${content.issue}. Please try again.`,
                     },
-                    []
+                    [],
                 );
             }
         }

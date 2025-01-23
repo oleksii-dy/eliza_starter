@@ -52,10 +52,10 @@ export const createPullRequestAction: Action = {
         options: any,
         callback: HandlerCallback
     ) => {
-        elizaLogger.log(
-            "[createPullRequest] Composing state for message:",
-            message
-        );
+        // elizaLogger.log(
+        //     "[createPullRequest] Composing state for message:",
+        //     message
+        // );
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -70,7 +70,7 @@ export const createPullRequestAction: Action = {
         const details = await generateObject({
             runtime,
             context,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
             schema: CreatePullRequestSchema,
         });
 
@@ -96,7 +96,7 @@ export const createPullRequestAction: Action = {
                 content.branch,
                 content.title,
                 content.description,
-                content.base
+                content.base,
             );
             await saveCreatedPullRequestToMemory(
                 runtime,
@@ -105,11 +105,11 @@ export const createPullRequestAction: Action = {
                 content.owner,
                 content.repo,
                 content.branch,
-                runtime.getSetting("GITHUB_API_TOKEN")
+                runtime.getSetting("GITHUB_API_TOKEN"),
             );
 
             elizaLogger.info(
-                `Pull request created successfully! URL: ${pullRequest.html_url}`
+                `Pull request created successfully! URL: ${pullRequest.html_url}`,
             );
             if (callback) {
                 callback({
@@ -121,14 +121,14 @@ export const createPullRequestAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 `Error creating pull request on ${content.owner}/${content.repo} branch ${content.branch}:`,
-                error
+                error,
             );
             if (callback) {
                 callback(
                     {
                         text: `Error creating pull request on ${content.owner}/${content.repo} branch ${content.branch}. Please try again.`,
                     },
-                    []
+                    [],
                 );
             }
         }
