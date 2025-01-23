@@ -1,15 +1,16 @@
-import { Action, ActionExample, composeContext, elizaLogger, generateObject, HandlerCallback, IAgentRuntime, Memory, ModelClass, State } from "@elizaos/core";
+import { Action, composeContext, elizaLogger, generateObject, HandlerCallback, IAgentRuntime, Memory, ModelClass, State } from "@elizaos/core";
 import { AgentSDK, VerifyParams } from "ai-agent-sdk-js";
 import { verifyDataTemplate } from "../templates";
 import { isVerifyParams, VerifyParamsSchema } from "../types";
+import { ContractTransactionResponse } from "ethers";
 
 export const verifyData: Action = {
   name: "VERIFY",
   similes: [
     'VERIFY_DATA',
   ],
-  description: "verify data",
-  validate: async (runtime: IAgentRuntime, message: Memory) => {
+  description: "Verify data with APRO. User must provide data to verify.",
+  validate: async (_runtime: IAgentRuntime, _message: Memory) => {
     return true;
   },
   handler: async (
@@ -19,66 +20,83 @@ export const verifyData: Action = {
     _options?: { [key: string]: unknown },
     callback?: HandlerCallback
   ) => {
-    elizaLogger.info("Composing state for message:", message.content.text);
     if (!state) {
-    state = (await runtime.composeState(message)) as State;
+        state = (await runtime.composeState(message)) as State;
     } else {
-    state = await runtime.updateRecentMessageState(state);
+        state = await runtime.updateRecentMessageState(state);
     }
 
-    const context = composeContext({
-        state,
-        template: verifyDataTemplate,
-    });
-
+    // Generate verify params
     let verifyParams: VerifyParams;
     try {
         const response = await generateObject({
             runtime,
-            context,
+            context: composeContext({
+                state,
+                template: verifyDataTemplate,
+            }),
             modelClass: ModelClass.LARGE,
             schema: VerifyParamsSchema,
         });
 
         verifyParams = response.object as VerifyParams;
-        if (!isVerifyParams(verifyParams)) {
-            throw new Error();
-        }
-
-        elizaLogger.info('verify params received:', verifyParams);
+        elizaLogger.info('The verify params received:', verifyParams);
     }  catch (error: any) {
-        elizaLogger.error('Invalid content: ', verifyParams ? JSON.stringify(verifyParams) : null, error);
-        callback({ text: 'Cannot verify data because of invalid content: ' + verifyParams ? JSON.stringify(verifyParams) : null });
+        elizaLogger.error('Failed to generate verify params:', error);
+        callback({
+            text: 'Failed to generate verify params. Please provide valid input.',
+        });
         return;
     }
 
+    // Validate verify params
+    if (!isVerifyParams(verifyParams)) {
+        elizaLogger.error('Invalid verify params:', verifyParams);
+        callback({
+            text: 'Invalid verify params. Please provide valid input.',
+        });
+        return;
+    }
+
+    // Create SDK agent
+    let agent: AgentSDK
     try {
-        const agent = new AgentSDK({
+        agent = new AgentSDK({
             proxyAddress: runtime.getSetting('APRO_PROXY_ADDRESS') ?? process.env.APRO_PROXY_ADDRESS,
             rpcUrl: runtime.getSetting('APRO_RPC_URL') ?? process.env.APRO_RPC_URL,
             privateKey: runtime.getSetting('APRO_PRIVATE_KEY') ?? process.env.APRO_PRIVATE_KEY,
             autoHashData: (runtime.getSetting('APRO_AUTO_HASH_DATA') ?? process.env.APRO_AUTO_HASH_DATA) === 'true',
             converterAddress: runtime.getSetting('APRO_CONVERTER_ADDRESS') ?? process.env.APRO_CONVERTER_ADDRESS,
         });
+    } catch (error: any) {
+        elizaLogger.error('Failed to create Agent SDK:', error);
+        callback({
+            text: 'Failed to create Agent SDK. Please check the apro plugin configuration.',
+        });
+        return;
+    }
 
-        const tx = await agent.verify(verifyParams)
-        elizaLogger.log(`Transaction ID: ${tx.hash}`);
+    // Verify data
+    let tx: ContractTransactionResponse
+    try {
+        tx = await agent.verify(verifyParams)
+        elizaLogger.info(`Data verification transaction sent. Transaction ID: ${tx.hash}`);
 
         const receipt = await tx.wait();
-        elizaLogger.log(`Data verified successfully. Transaction ID: ${receipt.hash}`);
+        elizaLogger.info(`Data verified successfully.`);
 
-        callback(
-            {
-                text: 'Success: Data verified successfully. Transaction ID: ' + receipt.hash,
-            }
-        )
+        callback({
+            text: 'Success: Data verified successfully. Transaction ID: ' + receipt.hash,
+        })
     } catch (error: any) {
         elizaLogger.error(`Error verify data: ${error.message}`);
-        callback(
-            {
-                text: 'Error verifying data: ' + error.message,
-            }
-        )
+        let message = 'Error verifying data: ' + error.message
+        if (tx?.hash) {
+            message += ` Transaction hash: ${tx.hash}`
+        }
+        callback({
+            text: message,
+        })
     }
   },
   examples: [
@@ -86,20 +104,14 @@ export const verifyData: Action = {
       {
         user: "{{user1}}",
         content: {
-          text: "I want to verify data:",
+          text: "I want to verify data: ...",
         },
       },
       {
-        user: "{{agentName}}",
+        user: "{{user2}}",
         content: {
-          text: "Verifying data...",
+          text: "Sure, I'll verify the data.",
           action: "VERIFY",
-        },
-      },
-      {
-        user: "{{agentName}}",
-        content: {
-          text: "Data verified successfully. Transaction ID: 0x...",
         },
       },
     ]

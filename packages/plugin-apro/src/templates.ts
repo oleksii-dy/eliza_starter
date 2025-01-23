@@ -139,42 +139,39 @@ Remember: When in doubt, use null. Never generate fake data.
 `;
 
 export const priceQueryTemplate = `
-TASK: STRICTLY extract cryptocurrency trading pair information from user input. ONLY extract pairs that are EXPLICITLY mentioned in the format BASE/QUOTE or similar recognizable patterns.
+TASK: Extract cryptocurrency trading pair information from user input. Extract pairs that follow the specified format patterns, regardless of whether the symbols represent actual cryptocurrencies.
 
 TRADING PAIR RULES:
-1. Valid Format Requirements:
-   - Must contain two currency symbols separated by a delimiter
+1. Format Requirements:
+   - Must contain two symbols separated by a delimiter
    - Acceptable delimiters: '/', '-', '_', or space
-   - Both currencies must be valid cryptocurrency or fiat currency symbols
    - Convert all pairs to standardized FORMAT: BASE/QUOTE
    - Convert all letters to uppercase
 
-2. Valid Currency Examples:
-   - Cryptocurrencies: BTC, ETH, USDT, BNB, XRP, etc.
-   - Fiat currencies: USD, EUR, JPY, GBP, etc.
-
-3. Pattern Recognition:
-   - "BTC/USD" -> Valid
-   - "BTC-USD" -> Convert to "BTC/USD"
-   - "BTC USD" -> Convert to "BTC/USD"
-   - "BTCUSD" -> Convert to "BTC/USD"
-   - "Bitcoin/USD" -> Invalid (must use symbol)
-   - "BTC to USD" -> Convert to "BTC/USD"
-
-STRICT VALIDATION:
-1. REJECT and return null if:
-   - Only one currency is mentioned
-   - Currencies use full names instead of symbols
-   - Format is completely unrecognizable
-   - Symbols are invalid or unknown
-   - More than two currencies are mentioned
-   - Symbols contain invalid characters
-
-2. Currency Symbol Requirements:
+2. Symbol Requirements:
    - Must be 2-5 characters long
    - Must contain only letters
-   - Must be recognized cryptocurrency or fiat symbols
    - Must be uppercase in output
+
+3. Pattern Recognition Examples:
+   - "ABC/USD" -> Valid, return "ABC/USD"
+   - "ABC-USD" -> Convert to "ABC/USD"
+   - "ABC USD" -> Convert to "ABC/USD"
+   - "ABCUSD" -> Convert to "ABC/USD"
+   - "ABCoin/USD" -> Invalid (symbol too long)
+   - "ABC to USD" -> Convert to "ABC/USD"
+   - "123/USD" -> Invalid (contains numbers)
+   - "A/USD" -> Invalid (symbol too short)
+   - "ABCDEF/USD" -> Invalid (symbol too long)
+
+VALIDATION:
+1. REJECT and return null if:
+   - Only one symbol is mentioned
+   - Symbols are longer than 5 characters
+   - Symbols are shorter than 2 characters
+   - Symbols contain non-letter characters
+   - Format is completely unrecognizable
+   - More than two symbols are mentioned
 
 OUTPUT FORMAT:
 \`\`\`json
@@ -183,25 +180,12 @@ OUTPUT FORMAT:
 }
 \`\`\`
 
-EXAMPLES:
-Input: "What's the ETH/USD price?"
-Output: {"pair": "ETH/USD"}
-
-Input: "Show me ethereum price"
-Output: {"pair": null}
-
-Input: "BTC to USDT"
-Output: {"pair": "BTC/USDT"}
-
-Input: "What's the price?"
-Output: {"pair": null}
-
 IMPORTANT NOTES:
-1. DO NOT generate or infer trading pairs
-2. DO NOT create pairs from context
-3. ONLY extract explicitly mentioned pairs
-4. When in doubt, return null
-5. DO NOT accept invalid or unofficial symbols
+1. DO NOT modify or correct user-provided symbols
+2. DO NOT validate if symbols represent real cryptocurrencies
+3. ONLY check format compliance
+4. When format is invalid, return null
+5. Accept ANY symbols that meet format requirements
 
 Input context to process:
 {{recentMessages}}

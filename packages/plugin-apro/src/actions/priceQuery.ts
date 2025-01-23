@@ -13,7 +13,7 @@ export const priceQuery: Action = {
     similes: [
         'PRICE_FETCH',
     ],
-    description: "Fetch price data",
+    description: "Call remote API to fetch price data for a given pair.",
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         return true;
     },
@@ -24,53 +24,65 @@ export const priceQuery: Action = {
         _options?: { [key: string]: unknown },
         callback?: HandlerCallback
     ) => {
-        elizaLogger.info("Composing state for message:", message.content.text);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        const context = composeContext({
-            state,
-            template: priceQueryTemplate,
-        });
-
+        // Generate price query params
         let priceQueryParams: PriceQueryParams;
         try {
             const response = await generateObject({
                 runtime,
-                context,
+                context: composeContext({
+                    state,
+                    template: priceQueryTemplate,
+                }),
                 modelClass: ModelClass.LARGE,
                 schema: PriceQueryParamsSchema,
             });
-
             priceQueryParams = response.object as PriceQueryParams;
-            if (!isPriceQueryParams(priceQueryParams)) {
-                throw new Error();
-            }
-            elizaLogger.info('price query params received:', priceQueryParams);
+            elizaLogger.info('The price query params received:', priceQueryParams);
         } catch (error: any) {
-            elizaLogger.error('Invalid content: ', priceQueryParams ? JSON.stringify(priceQueryParams) : null, error);
-            callback({ text: 'Cannot fetch price data because of invalid content: ' + priceQueryParams ? JSON.stringify(priceQueryParams) : null });
+            elizaLogger.error('Failed to generate price query params:', error);
+            callback({
+                text: 'Failed to generate price query params. Please provide valid input.',
+            });
             return;
         }
 
-        try {
-            const priceData = await fetchPriceData(priceQueryParams.pair);
-            elizaLogger.info('price data received:', priceData);
-
-            let priceDataString = '';
-            priceData.forEach((data) => {
-                priceDataString += `Feed ID: ${data.feedId}\nBid Price: ${data.bidPrice}\nMid Price: ${data.midPrice}\nAsk Price: ${data.askPrice}\nTimestamp: ${data.timestamp}`;
+        // Validate price query params
+        if (!isPriceQueryParams(priceQueryParams)) {
+            elizaLogger.error('Invalid price query params:', priceQueryParams);
+            callback({
+                text: 'Invalid price query params. Please provide valid input.',
             });
-            if (callback) {
+            return;
+        }
+
+        // Fetch price data
+        try {
+            const { pair } = priceQueryParams;
+            const priceData = await fetchPriceData(pair);
+            elizaLogger.info('The Price data received:', priceData);
+
+            if (!priceData || priceData.length === 0) {
+                elizaLogger.error('No price data found for pair:', pair);
                 callback({
-                    text: `Price data for pair ${priceQueryParams.pair}: \n${priceDataString}`,
+                    text: `No price data found for pair ${pair}.`,
                 });
+                return;
             }
+
+            let priceDataString = priceData.map((data) => {
+                return `Feed ID: ${data.feedId}\nBid Price: ${data.bidPrice}\nMid Price: ${data.midPrice}\nAsk Price: ${data.askPrice}\nTimestamp: ${data.timestamp}`;
+            }).join('\n\n');
+            callback({
+                text: `Price data for pair ${pair}: \n${priceDataString}`,
+            });
         } catch (error: any) {
-            elizaLogger.error(`Error fetching price data: ${error.message}`);
+            elizaLogger.error(`Error fetching price data, error: `, error);
             callback(
                 {
                     text: 'Error fetching price data, error: ' + error.message,
@@ -83,14 +95,14 @@ export const priceQuery: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Fetch price data for pair BTC/USD",
+                    text: "Can you fetch price data for pair BTC/USD?",
                 },
             },
             {
-                user: "{{agentName}}",
+                user: "{{user2}}",
                 content: {
-                    text: "Fetching price data, please wait...",
-                    action: "PRICE_QUERY",
+                    text: "I'll fetch price data for pair BTC/USD.",
+                    action: 'PRICE_QUERY',
                 },
             }
         ],
