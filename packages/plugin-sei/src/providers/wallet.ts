@@ -30,27 +30,29 @@ import * as viemChains from "viem/chains";
 import NodeCache from "node-cache";
 import * as path from "path";
 
-import type { SupportedChain } from "../types";
+import type { ChainWithName } from "../types";
+
+export const seiChains = {
+    "mainnet": viemChains.sei,
+    "testnet": viemChains.seiTestnet,
+    "devnet": viemChains.seiDevnet,
+}
 
 export class WalletProvider {
     private cache: NodeCache;
     private cacheKey: string = "evm/wallet";
-    private currentChain: SupportedChain = "sei";
+    private currentChain: ChainWithName;
     private CACHE_EXPIRY_SEC = 5;
-    chains: Record<string, Chain> = { ...viemChains };
     account: PrivateKeyAccount;
 
     constructor(
         accountOrPrivateKey: PrivateKeyAccount | `0x${string}`,
         private cacheManager: ICacheManager,
-        chains?: Record<string, Chain>
+        chain: ChainWithName,
     ) {
         this.setAccount(accountOrPrivateKey);
-        this.setChains(chains);
 
-        if (chains && Object.keys(chains).length > 0) {
-            this.setCurrentChain(Object.keys(chains)[0] as SupportedChain);
-        }
+        this.setCurrentChain(chain);
 
         this.cache = new NodeCache({ stdTTL: this.CACHE_EXPIRY_SEC });
     }
@@ -59,27 +61,26 @@ export class WalletProvider {
         return this.account.address;
     }
 
-    getCurrentChain(): Chain {
-        return this.chains[this.currentChain];
+    getCurrentChain(): ChainWithName {
+        return this.currentChain;
     }
 
-    getPublicClient(
-        chainName: SupportedChain
-    ): PublicClient<HttpTransport, Chain, Account | undefined> {
-        const transport = this.createHttpTransport(chainName);
+    getPublicClient(): PublicClient<HttpTransport, Chain, Account | undefined> {
+        const transport = this.createHttpTransport();
 
         const publicClient = createPublicClient({
-            chain: this.chains[chainName],
+            chain: this.currentChain.chain,
             transport,
         });
+
         return publicClient;
     }
 
-    getWalletClient(chainName: SupportedChain): WalletClient {
-        const transport = this.createHttpTransport(chainName);
+    getWalletClient(): WalletClient {
+        const transport = this.createHttpTransport();
 
         const walletClient = createWalletClient({
-            chain: this.chains[chainName],
+            chain: this.currentChain.chain,
             transport,
             account: this.account,
         });
@@ -87,39 +88,19 @@ export class WalletProvider {
         return walletClient;
     }
 
-    getTestClient(): TestClient {
-        return createTestClient({
-            chain: viemChains.hardhat,
-            mode: "hardhat",
-            transport: http(),
-        })
-            .extend(publicActions)
-            .extend(walletActions);
-    }
-
-    getChainConfigs(chainName: SupportedChain): Chain {
-        const chain = viemChains[chainName];
-
-        if (!chain?.id) {
-            throw new Error("Invalid chain name");
-        }
-
-        return chain;
-    }
-
     async getWalletBalance(): Promise<string | null> {
-        const cacheKey = "walletBalance_" + this.currentChain;
+        const cacheKey = "seiWalletBalance_" + this.currentChain.name;
         const cachedData = await this.getCachedData<string>(cacheKey);
         if (cachedData) {
             elizaLogger.log(
-                "Returning cached wallet balance for chain: " +
-                    this.currentChain
+                "Returning cached wallet balance for sei chain: " +
+                    this.currentChain.name
             );
             return cachedData;
         }
 
         try {
-            const client = this.getPublicClient(this.currentChain);
+            const client = this.getPublicClient();
             const balance = await client.getBalance({
                 address: this.account.address,
             });
@@ -127,43 +108,13 @@ export class WalletProvider {
             this.setCachedData<string>(cacheKey, balanceFormatted);
             elizaLogger.log(
                 "Wallet balance cached for chain: ",
-                this.currentChain
+                this.currentChain.name
             );
             return balanceFormatted;
         } catch (error) {
             console.error("Error getting wallet balance:", error);
             return null;
         }
-    }
-
-    async getWalletBalanceForChain(
-        chainName: SupportedChain
-    ): Promise<string | null> {
-        try {
-            const client = this.getPublicClient(chainName);
-            const balance = await client.getBalance({
-                address: this.account.address,
-            });
-            return formatUnits(balance, 18);
-        } catch (error) {
-            console.error("Error getting wallet balance:", error);
-            return null;
-        }
-    }
-
-    addChain(chain: Record<string, Chain>) {
-        this.setChains(chain);
-    }
-
-    switchChain(chainName: SupportedChain, customRpcUrl?: string) {
-        if (!this.chains[chainName]) {
-            const chain = WalletProvider.genChainFromName(
-                chainName,
-                customRpcUrl
-            );
-            this.addChain({ [chainName]: chain });
-        }
-        this.setCurrentChain(chainName);
     }
 
     private async readFromCache<T>(key: string): Promise<T | null> {
@@ -215,21 +166,12 @@ export class WalletProvider {
         }
     };
 
-    private setChains = (chains?: Record<string, Chain>) => {
-        if (!chains) {
-            return;
-        }
-        Object.keys(chains).forEach((chain: string) => {
-            this.chains[chain] = chains[chain];
-        });
-    };
-
-    private setCurrentChain = (chain: SupportedChain) => {
+    private setCurrentChain = (chain: ChainWithName) => {
         this.currentChain = chain;
     };
 
-    private createHttpTransport = (chainName: SupportedChain) => {
-        const chain = this.chains[chainName];
+    private createHttpTransport = () => {
+        const chain = this.currentChain.chain;
 
         if (chain.rpcUrls.custom) {
             return http(chain.rpcUrls.custom.http[0]);
@@ -237,17 +179,17 @@ export class WalletProvider {
         return http(chain.rpcUrls.default.http[0]);
     };
 
-    static genChainFromName(
+    static genSeiChainFromName(
         chainName: string,
         customRpcUrl?: string | null
     ): Chain {
-        const baseChain = viemChains[chainName];
+        const baseChain = seiChains[chainName];
 
         if (!baseChain?.id) {
             throw new Error("Invalid chain name");
         }
 
-        const viemChain: Chain = customRpcUrl
+        const seiChain: Chain = customRpcUrl
             ? {
                   ...baseChain,
                   rpcUrls: {
@@ -259,47 +201,42 @@ export class WalletProvider {
               }
             : baseChain;
 
-        return viemChain;
+        return seiChain;
     }
 }
 
-const genChainsFromRuntime = (
+const genChainFromRuntime = (
     runtime: IAgentRuntime
-): Record<string, Chain> => {
-    const chainNames =
-        ["sei", "seiTestnet", "seiDevnet"];
-    const chains = {};
-
-    chainNames.forEach((chainName) => {
-        const rpcUrl = runtime.getSetting(
-            "ETHEREUM_PROVIDER_" + chainName.toUpperCase()
-        );
-        const chain = WalletProvider.genChainFromName(chainName, rpcUrl);
-        chains[chainName] = chain;
-    });
-
-    const mainnet_rpcurl = runtime.getSetting("SEI_RPC_URL");
-    if (mainnet_rpcurl) {
-        const chain = WalletProvider.genChainFromName(
-            "sei",
-            mainnet_rpcurl
-        );
-        chains["sei"] = chain;
+): ChainWithName => {
+    const sei_network = runtime.getSetting("SEI_NETWORK");
+    const validChains = Object.keys(seiChains)
+    if (!validChains.includes(sei_network)) {
+        console.log("Invalid SEI_NETWORK " + sei_network + " Must be one of " + validChains)
+        return null
     }
 
-    return chains;
+    let chain = seiChains[sei_network]
+    const rpcurl = runtime.getSetting("SEI_RPC_URL");
+    if (rpcurl) {
+        chain = WalletProvider.genSeiChainFromName(
+            sei_network,
+            rpcurl
+        );
+    }
+
+    return {name: sei_network, chain: chain};
 };
 
 export const initWalletProvider = async (runtime: IAgentRuntime) => {
 
-    const chains = genChainsFromRuntime(runtime);
+    const chainData = genChainFromRuntime(runtime)
     const privateKey = runtime.getSetting(
         "SEI_PRIVATE_KEY"
     ) as `0x${string}`;
     if (!privateKey) {
         throw new Error("SEI_PRIVATE_KEY is missing");
     }
-    return new WalletProvider(privateKey, runtime.cacheManager, chains);
+    return new WalletProvider(privateKey, runtime.cacheManager, chainData);
 };
 
 export const evmWalletProvider: Provider = {
@@ -312,7 +249,7 @@ export const evmWalletProvider: Provider = {
             const walletProvider = await initWalletProvider(runtime);
             const address = walletProvider.getAddress();
             const balance = await walletProvider.getWalletBalance();
-            const chain = walletProvider.getCurrentChain();
+            const chain = walletProvider.getCurrentChain().chain;
             const agentName = state?.agentName || "The agent";
             return `${agentName}'s Sei Wallet Address: ${address}\nBalance: ${balance} ${chain.nativeCurrency.symbol}\nChain ID: ${chain.id}, Name: ${chain.name}`;
         } catch (error) {

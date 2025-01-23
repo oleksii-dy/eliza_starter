@@ -14,7 +14,10 @@ const _SupportedChainList = Object.keys([viemChains.seiDevnet, viemChains.seiTes
     keyof typeof viemChains
 >;
 
-export type SupportedChain = (typeof _SupportedChainList)[number];
+export interface ChainWithName {
+    name: string;
+    chain: Chain
+}
 
 // Transaction types
 export interface Transaction {
@@ -36,7 +39,7 @@ export interface TokenWithBalance {
 }
 
 export interface WalletBalance {
-    chain: SupportedChain;
+    chain: string;
     address: Address;
     totalValueUSD: string;
     tokens: TokenWithBalance[];
@@ -52,7 +55,6 @@ export interface ChainConfig {
 export interface TransferParams {
     toAddress: Address;
     amount: string;
-    chain: SupportedChain;
     data?: `0x${string}`;
 }
 

@@ -24,14 +24,12 @@ First, review the recent messages from the conversation:
 Your goal is to extract the following information about the requested transfer:
 1. Amount to transfer in SEI
 2. Recipient address
-3. Which chain the tranfer should take place on (mainnet, testnet, devnet or local)
 
 Before providing the final JSON output, show your reasoning process inside <analysis> tags. Follow these steps:
 
 1. Identify the relevant information from the user's message:
    - Quote the part mentioning the amount.
    - Quote the part mentioning the recipient address.
-   - Quote the part mentioning the chain (or show that it was not provided)
 
 2. Validate each piece of information:
    - Amount: Attempt to convert the amount to a number to verify it's valid.
@@ -49,14 +47,12 @@ After your analysis, provide the final output in a JSON markdown block. All fiel
 {
     "amount": string,
     "toAddress": string,
-    "chain": string
 }
 \`\`\`
 
 Remember:
 - The amount should be a string representing the SEI amount without any currency symbol.
 - The recipient address must be a valid Ethereum address starting with "0x" or a vald SEI address startng with "sei1".
-- The chain should be one of either 'mainnet', 'testnet', 'devnet' or 'local'
 
 Now, process the user's request and provide your response.
 `;
@@ -66,15 +62,12 @@ export class TransferAction {
     constructor(private walletProvider: WalletProvider) {}
 
     async transfer(params: TransferParams): Promise<Transaction> {
+        const chain = this.walletProvider.getCurrentChain()
         console.log(
-            `Transferring: ${params.amount} tokens to (${params.toAddress} on ${params.chain})`
+            `Transferring: ${params.amount} tokens to (${params.toAddress} on ${chain.name})`
         );
 
-        this.walletProvider.switchChain(params.chain);
-
-        const walletClient = this.walletProvider.getWalletClient(
-            params.chain
-        );
+        const walletClient = this.walletProvider.getWalletClient();
 
         try {
             const hash = await walletClient.sendTransaction({
@@ -114,9 +107,6 @@ const buildTransferDetails = async (
     runtime: IAgentRuntime,
     wp: WalletProvider
 ): Promise<TransferParams> => {
-    const chains = Object.keys(wp.chains);
-    state.supportedChains = chains.map((item) => `"${item}"`).join("|");
-
     const context = composeContext({
         state,
         template: transferTemplate,
@@ -127,17 +117,6 @@ const buildTransferDetails = async (
         context,
         modelClass: ModelClass.SMALL,
     })) as TransferParams;
-
-    const existingChain = wp.chains[transferDetails.chain];
-
-    if (!existingChain) {
-        throw new Error(
-            "The chain " +
-                transferDetails.chain +
-                " not configured yet. Add the chain or choose one from configured: " +
-                chains.toString()
-        );
-    }
 
     return transferDetails;
 };
@@ -179,7 +158,7 @@ export const transferAction: Action = {
                         hash: transferResp.hash,
                         amount: formatEther(transferResp.value),
                         recipient: transferResp.to,
-                        chain: paramOptions.chain,
+                        chain: walletProvider.getCurrentChain().name,
                     },
                 });
             }
@@ -196,7 +175,7 @@ export const transferAction: Action = {
         }
     },
     validate: async (runtime: IAgentRuntime) => {
-        const privateKey = runtime.getSetting("EVM_PRIVATE_KEY");
+        const privateKey = runtime.getSetting("SEI_PRIVATE_KEY");
         return typeof privateKey === "string" && privateKey.startsWith("0x");
     },
     examples: [
@@ -204,14 +183,14 @@ export const transferAction: Action = {
             {
                 user: "assistant",
                 content: {
-                    text: "I'll help you transfer 1 ETH to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+                    text: "I'll help you transfer 1 SEI to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
                     action: "SEND_TOKENS",
                 },
             },
             {
                 user: "user",
                 content: {
-                    text: "Transfer 1 ETH to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+                    text: "Transfer 1 SEI to 0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
                     action: "SEND_TOKENS",
                 },
             },
