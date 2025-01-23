@@ -73,6 +73,7 @@ Simply visit this link in your web browser to interact with the user interface. 
 The AI agents in this system can be used to automate tasks related to GitHub repository management, such as creating pull requests for implementing new features or refactoring code across a repository. Below are two specific use cases with corresponding prompts.
 
 **Use Case 1: Refactoring Code Across the Repository**
+
 Prompt Example:
 
 User: "Implement replacing console.log with elizaLogger.log across the repo on repository user1/repo1 branch user1/demo against base develop."
@@ -83,6 +84,7 @@ Description: This use case demonstrates an agent tasked with refactoring the cod
 When to Use: This agent can be used whenever you need to perform a global search-and-replace operation or apply a specific code refactor across an entire repository, automating the creation of the pull request and facilitating code review.
 
 **Use Case 2: Implementing a Feature for an Issue**
+
 Prompt Example:
 
 User: "Implement feature for issue #42 in repository user1/repo1 branch demo against base demo."
@@ -93,6 +95,7 @@ Description: In this use case, the agent is tasked with implementing a feature r
 When to Use: This agent is useful when working on specific issues or feature requests in a repository. It automates the task of creating a pull request after implementing a feature and ensures that the correct branch and issue are referenced.
 
 **Use Case 3: Creating a New Bug Report**
+
 Prompt Example:
 User: "Create an issue in repository user1/repo1 titled 'Bug: Application crashes on startup'."
 Agent: "Created issue #1 successfully!"
@@ -105,6 +108,7 @@ This feature is useful for project management workflows, allowing developers or 
 
 
 **Use Case 4: Branch Management**
+
 Prompt Example:
 User: "Create a new branch named feature/login-screen from main in the teamApp/frontend repository."
 Agent: "Branch feature/login-screen created successfully in teamApp/frontend repository."
@@ -138,6 +142,7 @@ Consistency: Ensure that commits are properly structured with meaningful message
 Automation: Ideal for CI/CD pipelines or scenarios requiring frequent, repetitive commits, reducing manual overhead.
 
 **Use Case 6: Adding Comments to Issues**
+
 Prompt Example 1:
 User: "Add a comment to issue #1 in repository user1/repo1: 'This is fixed in the latest release'."
 Agent: "Added comment to issue #1 successfully! See comment at https://github.com/user1/repo1/issues/1#issuecomment-1234567890"
