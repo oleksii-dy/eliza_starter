@@ -58,7 +58,7 @@ Simply visit this link in your web browser to interact with the user interface. 
    
 
 ### 5. **Documentation**
-   - Links to this user guide providing project information and agent usecase.
+   - Links to this user guide providing project information and agent usecases.
 
 
 ---
@@ -67,143 +67,165 @@ Simply visit this link in your web browser to interact with the user interface. 
 
 
 
-#### Siff Engineer
 
-#### Agent Use Cases
+### **Agent Use Cases**
 
-#### Siff Engineer
 The AI agents in this system can be used to automate tasks related to GitHub repository management, such as creating pull requests for implementing new features or refactoring code across a repository. Below are two specific use cases with corresponding prompts.
 
-**Use Case 1: Refactoring Code Across the Repository**
+#### **Use Case 1: Refactoring Code Across the Repository**
 
 Prompt Example:
 
-User: "Implement replacing console.log with elizaLogger.log across the repo on repository user1/repo1 branch user1/demo against base develop."
+User:
 
-Agent: "Pull request created successfully! URL: https://github.com/user1/repo1/demo/pull/1"
+```plaintext
+ "Implement replacing console.log with elizaLogger.log across the repo on repository user1/repo1 branch user1/demo against base develop."
+```
+Agent: 
+```plaintext
+"Pull request created successfully! URL: https://github.com/user1/repo1/demo/pull/1"
+```
+**Description:** This use case demonstrates an agent tasked with refactoring the code in a repository. The user specifies a task to replace all instances of console.log with elizaLogger.log across the user1/repo1 repository in the user1/demo branch. Once the agent processes the request, it creates a pull request with the proposed changes and returns a success message with the pull request URL.
 
-Description: This use case demonstrates an agent tasked with refactoring the code in a repository. The user specifies a task to replace all instances of console.log with elizaLogger.log across the user1/repo1 repository in the user1/demo branch. Once the agent processes the request, it creates a pull request with the proposed changes and returns a success message with the pull request URL.
-
-When to Use: This agent can be used whenever you need to perform a global search-and-replace operation or apply a specific code refactor across an entire repository, automating the creation of the pull request and facilitating code review.
-
+**When to Use:** This agent can be used whenever you need to perform a global search-and-replace operation or apply a specific code refactor across an entire repository, automating the creation of the pull request and facilitating code review.
+___
 **Use Case 2: Implementing a Feature for an Issue**
 
 Prompt Example:
 
-User: "Implement feature for issue #42 in repository user1/repo1 branch demo against base demo."
+User: 
+```plaintext
+"Implement feature for issue #42 in repository user1/repo1 branch demo against base demo."
+```
+Agent:
+```plaintext
+"Pull request created successfully! URL: https://github.com/user1/repo1/demo/pull/2"
+```
+**Description:** In this use case, the agent is tasked with implementing a feature related to a specific issue (e.g., issue #42). The user specifies the repository and branch where the feature should be developed. The agent then processes the request and creates a pull request with the necessary changes, including the reference to the issue being addressed. The agent responds with a success message along with the URL to the created pull request.
 
-Agent: "Pull request created successfully! URL: https://github.com/user1/repo1/demo/pull/2"
-
-Description: In this use case, the agent is tasked with implementing a feature related to a specific issue (e.g., issue #42). The user specifies the repository and branch where the feature should be developed. The agent then processes the request and creates a pull request with the necessary changes, including the reference to the issue being addressed. The agent responds with a success message along with the URL to the created pull request.
-
-When to Use: This agent is useful when working on specific issues or feature requests in a repository. It automates the task of creating a pull request after implementing a feature and ensures that the correct branch and issue are referenced.
-
+**When to Use:** This agent is useful when working on specific issues or feature requests in a repository. It automates the task of creating a pull request after implementing a feature and ensures that the correct branch and issue are referenced.
+___
 **Use Case 3: Creating a New Bug Report**
 
 Prompt Example:
 
-User: "Create an issue in repository user1/repo1 titled 'Bug: Application crashes on startup'."
+User: 
+```plaintext
+"Create an issue in repository user1/repo1 titled 'Bug: Application crashes on startup'."
+```
+Agent: 
+```plaintext
+"Created issue #1 successfully!"
+```
+**Description:** This use case highlights the agent's ability to create a new issue in a specified repository. For instance, the user reports a bug causing the application to crash on startup and provides details like the repository (user1/repo1) and issue title. The agent processes this request, creates the issue in the repository, and returns a success message with the issue number.
 
-Agent: "Created issue #1 successfully!"
-
-Description:
-
-This use case highlights the agent's ability to create a new issue in a specified repository. For instance, the user reports a bug causing the application to crash on startup and provides details like the repository (user1/repo1) and issue title. The agent processes this request, creates the issue in the repository, and returns a success message with the issue number.
-
-When to Use:
-
-This feature is useful for project management workflows, allowing developers or stakeholders to report bugs or tasks efficiently. The agent streamlines the issue creation process, ensuring consistency and accuracy in tracking work.
-
+**When to Use:** This feature is useful for project management workflows, allowing developers or stakeholders to report bugs or tasks efficiently. The agent streamlines the issue creation process, ensuring consistency and accuracy in tracking work.
+___
 
 **Use Case 4: Branch Management**
 
 Prompt Example:
 
-User: "Create a new branch named feature/login-screen from main in the teamApp/frontend repository."
+User: 
+```plaintext
+"Create a new branch named feature/login-screen from main in the teamApp/frontend repository."
+```
+Agent: 
+```plaintext
+"Branch feature/login-screen created successfully in teamApp/frontend repository."
+```
+**Description:** In this use case, the agent facilitates branch creation for a repository. The user specifies the branch name (feature/login-screen), the base branch (main), and the repository (teamApp/frontend). The agent executes the request, creating the branch and confirming the success of the operation.
 
-Agent: "Branch feature/login-screen created successfully in teamApp/frontend repository."
-
-Description:
-
-In this use case, the agent facilitates branch creation for a repository. The user specifies the branch name (feature/login-screen), the base branch (main), and the repository (teamApp/frontend). The agent executes the request, creating the branch and confirming the success of the operation.
-
-When to Use:
-
-This is particularly useful for managing feature branches or preparing for new development tasks. By automating branch creation, the agent saves time and ensures the branch structure adheres to specified naming conventions.
-
+**When to Use:** This is particularly useful for managing feature branches or preparing for new development tasks. By automating branch creation, the agent saves time and ensures the branch structure adheres to specified naming conventions.
+___
 **Use Case 5: Committing Changes to a Repository**
 
 Prompt Example 1:
 
-User: "Commit changes to the repository user1/repo1 on branch 'main' with the commit message: 'Initial commit'."
-
-Agent: "Changes committed to repository user1/repo1 successfully to branch 'main'! Commit hash: abcdef1"
-
+User: 
+```plaintext
+"Commit changes to the repository user1/repo1 on branch 'main' with the commit message: 'Initial commit'."
+```
+Agent:
+```plaintext
+"Changes committed to repository user1/repo1 successfully to branch 'main'! Commit hash: abcdef1"
+```
 Prompt Example 2:
 
-User: "Create a commit in the repository user1/repo1 on branch 'main' with the commit message: 'Fix bug'."
+User:
+```plaintext
+"Create a commit in the repository user1/repo1 on branch 'main' with the commit message: 'Fix bug'."
+```
+Agent:
+```plaintext
+"Changes committed to repository user1/repo1 successfully to branch 'main'! Commit hash: abcdef3"
+```
+**Description:** This use case demonstrates the agent's ability to automate the process of committing changes to a specified repository and branch with a given commit message. Whether it's an initial commit, a README update, bug fix, feature addition, code refactor, or performance improvement, the agent ensures changes are applied to the desired branch and provides a confirmation message, including the unique commit hash for tracking purposes.The agent handles variations in wording and context (e.g., "create a commit" vs. "commit changes") while consistently delivering the desired outcome. It works seamlessly across repositories hosted on platforms like GitHub, with actions tailored to specific repository management systems (e.g., CREATE_COMMIT, GITHUB_COMMIT).
 
-Agent: "Changes committed to repository user1/repo1 successfully to branch 'main'! Commit hash: abcdef3"
-
-Description:
-
-This use case demonstrates the agent's ability to automate the process of committing changes to a specified repository and branch with a given commit message. Whether it's an initial commit, a README update, bug fix, feature addition, code refactor, or performance improvement, the agent ensures changes are applied to the desired branch and provides a confirmation message, including the unique commit hash for tracking purposes.
-
-The agent handles variations in wording and context (e.g., "create a commit" vs. "commit changes") while consistently delivering the desired outcome. It works seamlessly across repositories hosted on platforms like GitHub, with actions tailored to specific repository management systems (e.g., CREATE_COMMIT, GITHUB_COMMIT).
-
-When to Use:
+**When to Use:**
 
 Version Control: Use the agent for adding or updating code changes to a repository in an efficient, automated manner.
 Collaboration: Commit updates as part of a collaborative development process, enabling team members to stay up to date.
 Consistency: Ensure that commits are properly structured with meaningful messages and accurately applied to the specified branch.
 Automation: Ideal for CI/CD pipelines or scenarios requiring frequent, repetitive commits, reducing manual overhead.
-
+___
 **Use Case 6: Adding Comments to Issues**
 
 Prompt Example 1:
 
-User: "Add a comment to issue #1 in repository user1/repo1: 'This is fixed in the latest release'."
-
-Agent: "Added comment to issue #1 successfully! See comment at https://github.com/user1/repo1/issues/1#issuecomment-1234567890"
-
+User: 
+```plaintext
+"Add a comment to issue #1 in repository user1/repo1: 'This is fixed in the latest release'."
+```
+Agent:
+```plaintext
+"Added comment to issue #1 successfully! See comment at https://github.com/user1/repo1/issues/1#issuecomment-1234567890"
+```
 Prompt Example 2:
 
-User: "Add a comment to issue #2 in repository user2/repo2: 'Can you provide more details on this issue?'"
-
-Agent: "Added comment to issue #2 successfully! See comment at https://github.com/user2/repo2/issues/2#issuecomment-0987654321"
-
+User:
+```plaintext
+"Add a comment to issue #2 in repository user2/repo2: 'Can you provide more details on this issue?'"
+```
+Agent:
+```plaintext
+"Added comment to issue #2 successfully! See comment at https://github.com/user2/repo2/issues/2#issuecomment-0987654321"
+```
 Prompt Example 3:
 
-User: "Add a comment to issue #3 in repository user3/repo3: 'We are working on a fix for this issue.'"
-
-Agent: "Added comment to issue #3 successfully! See comment at https://github.com/user3/repo3/issues/3#issuecomment-1122334455"
-
-Description:
-
-This use case highlights the agent's ability to add comments to issues in a repository. The user specifies the issue number, repository, and the content of the comment. The agent processes the request, posts the comment to the issue, and provides a confirmation message that includes a direct link to the posted comment for reference.
-
+User:
+```plaintext
+"Add a comment to issue #3 in repository user3/repo3: 'We are working on a fix for this issue.'"
+```
+Agent:
+```plaintext
+"Added comment to issue #3 successfully! See comment at https://github.com/user3/repo3/issues/3#issuecomment-1122334455"
+```
+**Description:** This use case highlights the agent's ability to add comments to issues in a repository. The user specifies the issue number, repository, and the content of the comment. The agent processes the request, posts the comment to the issue, and provides a confirmation message that includes a direct link to the posted comment for reference.
 This functionality supports various scenarios such as providing updates, requesting additional information, or tracking progress on issues, streamlining communication and collaboration within the repository.
 
-When to Use:
+**When to Use:**
 
 Collaboration: Use the agent to streamline communication and provide updates or clarifications on issues in repositories.
 Project Tracking: Add comments to issues to document progress, decisions, or discussions.
 Automation: Automate repetitive tasks such as posting templated responses or updating multiple issues, saving time and effort.
 By leveraging this functionality, teams can ensure issues are well-documented, with clear and traceable discussions.
-
+___
 **Use Case 7: Modifying Issues**
 
 Prompt Example 1:
 
-User: "Update issue #1 in repository user1/repo1 to add the label 'bug'."
+User:
+```plaintext
+"Update issue #1 in repository user1/repo1 to add the label 'bug'."
+```
+Agent:
+```plaintext
+"Modified issue #1 successfully!"
+```
+**Description:** This use case highlights the agent's ability to modify an issues in a repository. The user specifies the issue number, repository, and the change. The agent processes the request, modifies the issue, and provides a confirmation message.
 
-Agent: "Modified issue #1 successfully!"
-
-Description:
-
-This use case highlights the agent's ability to modify an issues in a repository. The user specifies the issue number, repository, and the change. The agent processes the request, modifies the issue, and provides a confirmation message.
-
-When to USe:
+**When to Use:**
 
 Automation: Automate repetitive tasks such as modifying multiple issues.
 
