@@ -51,11 +51,15 @@ Given the recent messages, extract the following information about the requested
 Respond with a JSON markdown block containing only the extracted values.`;
 
 export class TransferAction {
-    constructor(private walletProvider: WalletProvider) {}
+    private walletProvider: WalletProvider;
+
+    constructor(walletProvider: WalletProvider) {
+        this.walletProvider = walletProvider;
+    }
 
     async transfer(params: TransferContent): Promise<string> {
         console.log(
-            `Transferring: ${params.amount} tokens to (${params.recipient})`
+            `Transferring: ${params.amount} tokens to (${params.recipient})`,
         );
 
         const walletClient = this.walletProvider.getWalletClient();
@@ -90,7 +94,7 @@ export class TransferAction {
 const buildTransferDetails = async (
     runtime: IAgentRuntime,
     message: Memory,
-    state: State
+    state: State,
 ): Promise<TransferContent> => {
     const walletInfo = await nativeWalletProvider.get(runtime, message, state);
     state.walletInfo = walletInfo;
@@ -136,14 +140,14 @@ export default {
         message: Memory,
         state: State,
         options: any,
-        callback?: HandlerCallback
+        callback?: HandlerCallback,
     ) => {
         elizaLogger.log("Starting SEND_TOKEN handler...");
 
         const transferDetails = await buildTransferDetails(
             runtime,
             message,
-            state
+            state,
         );
 
         // Validate transfer content
