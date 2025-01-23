@@ -24,7 +24,7 @@ export const priceQuery: Action = {
         _options?: { [key: string]: unknown },
         callback?: HandlerCallback
     ) => {
-        elizaLogger.info("Composing state for message:", message);
+        elizaLogger.info("Composing state for message:", message.content.text);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -45,7 +45,7 @@ export const priceQuery: Action = {
                 schema: PriceQueryParamsSchema,
             });
 
-            const priceQueryParams = response.object as PriceQueryParams;
+            priceQueryParams = response.object as PriceQueryParams;
             if (!isPriceQueryParams(priceQueryParams)) {
                 throw new Error();
             }
@@ -89,7 +89,7 @@ export const priceQuery: Action = {
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Price data for pair BTC/USD: \nFeed ID: 1, Bid: 10000, Mid: 10001, Ask: 10002\nFeed ID: 2, Bid: 10003, Mid: 10004, Ask: 10005",
+                    text: "Fetching price data, please wait...",
                     action: "PRICE_QUERY",
                 },
             }

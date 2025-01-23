@@ -40,7 +40,7 @@ export const verifyData: Action = {
             schema: VerifyParamsSchema,
         });
 
-        const verifyParams = response.object as VerifyParams;
+        verifyParams = response.object as VerifyParams;
         if (!isVerifyParams(verifyParams)) {
             throw new Error();
         }
