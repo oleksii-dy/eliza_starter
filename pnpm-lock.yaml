@@ -1842,8 +1842,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       hedera-agent-kit:
-        specifier: ^1.0.2
-        version: 1.0.2(encoding@0.1.13)(openai@4.78.1(encoding@0.1.13)(zod@3.23.8))
+        specifier: git://github.com/mateuszm-arianelabs/hedera-agent-kit.git
+        version: https://codeload.github.com/mateuszm-arianelabs/hedera-agent-kit/tar.gz/e1016a03942668d79696c0b4fb5de5fb0a97de66(encoding@0.1.13)(openai@4.78.1(encoding@0.1.13)(zod@3.24.1))
       tsup:
         specifier: 8.3.5
         version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
@@ -14672,8 +14672,9 @@ packages:
   headers-polyfill@3.3.0:
     resolution: {integrity: sha512-5e57etwBpNcDc0b6KCVWEh/Ro063OxPvzVimUdM0/tsYM/T7Hfy3kknIGj78SFTOhNd8AZY41U8mOHoO4LzmIQ==}
 
-  hedera-agent-kit@1.0.2:
-    resolution: {integrity: sha512-F8eHizgczguXlOwPZa3iTBE85Wvxmo7koYE6vUPM767fmlJ8vvqUp6asOzVQDikU8ZPemY4sR2HZaldVCW+1lA==}
+  hedera-agent-kit@https://codeload.github.com/mateuszm-arianelabs/hedera-agent-kit/tar.gz/e1016a03942668d79696c0b4fb5de5fb0a97de66:
+    resolution: {tarball: https://codeload.github.com/mateuszm-arianelabs/hedera-agent-kit/tar.gz/e1016a03942668d79696c0b4fb5de5fb0a97de66}
+    version: 1.0.2
 
   help-me@5.0.0:
     resolution: {integrity: sha512-7xgomUX6ADmcYzFik0HzAxh/73YlKR9bmFzf51CZwR+b6YtzU2m0u49hQCqV6SvlqIqsaxovfwdvbnsw3b/zpg==}
@@ -32943,7 +32944,7 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.26.0
       '@noble/curves': 1.8.0
-      '@noble/hashes': 1.5.0
+      '@noble/hashes': 1.7.0
       '@solana/buffer-layout': 4.0.1
       agentkeepalive: 4.6.0
       bigint-buffer: 1.1.5
@@ -40983,12 +40984,12 @@ snapshots:
 
   headers-polyfill@3.3.0: {}
 
-  hedera-agent-kit@1.0.2(encoding@0.1.13)(openai@4.78.1(encoding@0.1.13)(zod@3.23.8)):
+  hedera-agent-kit@https://codeload.github.com/mateuszm-arianelabs/hedera-agent-kit/tar.gz/e1016a03942668d79696c0b4fb5de5fb0a97de66(encoding@0.1.13)(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)):
     dependencies:
       '@hashgraph/sdk': 2.56.0
-      '@langchain/core': 0.3.29(openai@4.78.1(encoding@0.1.13)(zod@3.23.8))
-      '@langchain/langgraph': 0.2.39(@langchain/core@0.3.29(openai@4.78.1(encoding@0.1.13)(zod@3.23.8)))
-      '@langchain/openai': 0.3.17(@langchain/core@0.3.29(openai@4.78.1(encoding@0.1.13)(zod@3.23.8)))(encoding@0.1.13)
+      '@langchain/core': 0.3.29(openai@4.78.1(encoding@0.1.13)(zod@3.24.1))
+      '@langchain/langgraph': 0.2.39(@langchain/core@0.3.29(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))
+      '@langchain/openai': 0.3.17(@langchain/core@0.3.29(openai@4.78.1(encoding@0.1.13)(zod@3.24.1)))(encoding@0.1.13)
       dotenv: 16.4.7
     transitivePeerDependencies:
       - debug
