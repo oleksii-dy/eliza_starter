@@ -1,4 +1,4 @@
-import { Provider } from "@elizaos/eliza";
+import { IAgentRuntime, Memory, State, type Provider } from "@elizaos/core";
 
 export interface SunoConfig {
     apiKey: string;
@@ -9,9 +9,21 @@ export class SunoProvider implements Provider {
     private apiKey: string;
     private baseUrl: string;
 
+    static async get(runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<SunoProvider> {
+        const apiKey = runtime.getSetting("SUNO_API_KEY");
+        if (!apiKey) {
+            throw new Error("SUNO_API_KEY is required");
+        }
+        return new SunoProvider({ apiKey });
+    }
+
     constructor(config: SunoConfig) {
         this.apiKey = config.apiKey;
         this.baseUrl = config.baseUrl || 'https://api.suno.ai/v1';
+    }
+
+    async get(_runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<any> {
+        return this;
     }
 
     async request(endpoint: string, options: RequestInit = {}) {
@@ -34,8 +46,6 @@ export class SunoProvider implements Provider {
         return response.json();
     }
 }
-
-export const sunoProvider = new SunoProvider({ apiKey: process.env.SUNO_API_KEY || '' });
 
 export interface GenerateParams {
     prompt: string;
