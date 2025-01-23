@@ -11,7 +11,7 @@ import {
     State,
     type Action,
 } from "@elizaos/core";
-import findByVerifiedAndSymbol from "../providers/searchCoinInAggre";
+import {findByVerifiedAndSymbol} from "../providers/searchCoinInAggre";
 
 const swapTemplate = `
 Recent messages: {{recentMessages}}
