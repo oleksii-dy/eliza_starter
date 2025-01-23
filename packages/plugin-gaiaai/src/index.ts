@@ -1,6 +1,7 @@
 import { Plugin } from "@elizaos/core";
-import { missionProvider } from "./providers/mission.ts";
-import { missionEvaluator } from "./evaluators/mission.ts";
+// import { missionProvider } from "./providers/mission.ts";
+// import { missionEvaluator } from "./evaluators/mission.ts";
+import { messageSizeEvaluator } from "./evaluators/messageSizeEvaluator.ts";
 
 export * as providers from "./providers";
 
@@ -9,7 +10,7 @@ export const bootstrapPlugin: Plugin = {
     description: "GUILD OF ALTRUISTIC INTEROPERABLE AGENTS",
     actions: [
     ],
-    evaluators: [missionEvaluator],
-    providers: [missionProvider],
+    evaluators: [messageSizeEvaluator],
+    providers: [],
 };
 export default bootstrapPlugin;
