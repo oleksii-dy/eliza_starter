@@ -5,7 +5,9 @@ export function stringToUuid(target: string | number): UUID {
     if (typeof target === "number") {
         target = (target as number).toString();
     }
-
+    if (typeof target !== "string") {
+        target = target + ''
+    }
     if (typeof target !== "string") {
         throw TypeError("Value must be string");
     }
