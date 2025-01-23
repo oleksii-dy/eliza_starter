@@ -237,8 +237,8 @@ export class TwitterPostClient {
             }>("twitter/" + this.twitterUsername + "/lastPost");
 
             const lastPostTimestamp = lastPost?.timestamp ?? 0;
-            const minMinutes = this.client.twitterConfig.POST_INTERVAL_MIN;
-            const maxMinutes = this.client.twitterConfig.POST_INTERVAL_MAX;
+            const minMinutes = 1;
+            const maxMinutes = 1;
             const randomMinutes =
                 Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) +
                 minMinutes;
@@ -630,7 +630,7 @@ export class TwitterPostClient {
             modelClass: ModelClass.SMALL,
         });
 
-        console.log("generate tweet content response:\n" + response);
+        elizaLogger.log("generate tweet content response:\n" + response);
 
         // First clean up any markdown and newlines
         const cleanedResponse = response
@@ -882,7 +882,7 @@ export class TwitterPostClient {
                     }
                 }
 
-                if (actionResponse.quote) {
+                if (true) {
                     try {
                         // Build conversation thread for context
                         const thread = await buildConversationThread(
@@ -1032,7 +1032,7 @@ export class TwitterPostClient {
                     }
                 }
 
-                if (actionResponse.reply) {
+                if (true) {
                     try {
                         await this.handleTextOnlyReply(
                             tweet,
