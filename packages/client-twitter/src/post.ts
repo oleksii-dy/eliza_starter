@@ -145,14 +145,18 @@ export class TwitterPostClient {
                 "Twitter client initialized in dry run mode - no actual tweets should be posted"
             );
         }
+
+        this.running = false;
     }
 
     async start() {
+        this.running = true;
         if (!this.client.profile) {
             await this.client.init();
         }
 
         const generateNewTweetLoop = async () => {
+            if (!this.running) return;
             const lastPost = await this.runtime.cacheManager.get<{
                 timestamp: number;
             }>("twitter/" + this.twitterUsername + "/lastPost");
@@ -180,6 +184,7 @@ export class TwitterPostClient {
             const actionInterval = this.client.twitterConfig.ACTION_INTERVAL; // Defaults to 5 minutes
 
             while (!this.stopProcessingActions) {
+                elizaLogger.log('ACTION_INTERVAL', actionInterval, this.client.twitterConfig.TWITTER_USERNAME)
                 try {
                     const results = await this.processTweetActions();
                     if (results) {
@@ -927,7 +932,7 @@ export class TwitterPostClient {
             return results; // Return results array to indicate completion
         } catch (error) {
             elizaLogger.error("Error in processTweetActions:", error);
-            throw error;
+            //throw error;
         } finally {
             this.isProcessing = false;
         }
@@ -1062,6 +1067,7 @@ export class TwitterPostClient {
     }
 
     async stop() {
+        this.running = false;
         this.stopProcessingActions = true;
     }
 }
