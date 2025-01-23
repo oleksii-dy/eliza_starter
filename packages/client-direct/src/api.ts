@@ -1,6 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
+import { TwitterClientInterface } from "@elizaos/client-twitter";
 
 import {
     AgentRuntime,
@@ -29,7 +30,7 @@ export function createApiRouter(
     );
 
     router.get("/", (req, res) => {
-        res.send("Welcome, this is the REST API!");
+        res.send("Welcome, this is the REST API!", req.connection.remoteAddress);
     });
 
     router.get("/hello", (req, res) => {
@@ -56,14 +57,32 @@ export function createApiRouter(
 
         res.json({
             id: agent.agentId,
-            character: agent.character,
+            character: {...agent.character, settings: {} },
         });
     });
+
+    router.post("/clients/twitter/test", async (req, res) => {
+      const body = req.body
+      //console.log('body', body)
+      if (!body.user || !body.pass || !body.em) {
+        res.status(400).json({ error: "Params not found" });
+        return;
+      }
+      elizaLogger.log('REST Validating client.twitter', body.user)
+      const isValidKey = await TwitterClientInterface.validate({
+          username: body.user,
+          password: body.pass,
+          email: body.em,
+          twitter2faSecret: body.mfa,
+      })
+      res.json(isValidKey)
+    })
 
     router.post("/agents/:agentId/set", async (req, res) => {
         const agentId = req.params.agentId;
         console.log("agentId", agentId);
         let agent: AgentRuntime = agents.get(agentId);
+        console.log('ip', req.connection.remoteAddress)
 
         // update character
         if (agent) {
@@ -75,6 +94,7 @@ export function createApiRouter(
 
         // load character from body
         const character = req.body;
+        console.log('character', character);
         try {
             validateCharacterConfig(character);
         } catch (e) {
