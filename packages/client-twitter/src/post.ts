@@ -509,11 +509,17 @@ export class TwitterPostClient {
 
             elizaLogger.debug("generate post prompt:\n" + context);
 
-            const newTweetContent = await generateText({
+            const response = await generateText({
                 runtime: this.runtime,
                 context,
                 modelClass: ModelClass.SMALL,
             });
+
+            const newTweetContent = response
+                .replace(/```json\s*/g, "") // Remove ```json
+                .replace(/```\s*/g, "") // Remove any remaining ```
+                .replace(/(\r\n|\n|\r)/g, "") // Remove line break
+                .trim();
 
             // First attempt to clean content
             let cleanedContent = "";
