@@ -1,6 +1,6 @@
 import { IAgentRuntime } from "@elizaos/core";
 import bs58check from 'bs58check';
-import { ParsedKeypair } from "@roochnetwork/rooch-sdk/dist/esm";
+import { ParsedKeypair, Secp256k1Keypair, BitcoinAddress } from "@roochnetwork/rooch-sdk/dist/esm";
 
 const parseKeypair = (runtime: IAgentRuntime): ParsedKeypair => {
     const wifPrivateKey = runtime.getSetting("BITCOIN_PRIVATE_KEY");
@@ -24,6 +24,12 @@ const parseKeypair = (runtime: IAgentRuntime): ParsedKeypair => {
     }
 };
 
+const parseBitcoinAddress = (runtime: IAgentRuntime): BitcoinAddress => {
+    const parsedKeypair = parseKeypair(runtime)
+    const keypair = Secp256k1Keypair.fromSecretKey(parsedKeypair.secretKey, false)
+    return keypair.getBitcoinAddress()
+}
+
 const parseAccessPath = (uri: string): string => {
     // Adjust the regex to ensure correct matching
     const match = uri.match(/^rooch:\/\/object\/(0x[a-fA-F0-9]+)$/);
@@ -33,4 +39,4 @@ const parseAccessPath = (uri: string): string => {
     throw new Error("Invalid URI format");
 };
 
-export { parseKeypair, parseAccessPath };
+export { parseKeypair, parseBitcoinAddress, parseAccessPath };

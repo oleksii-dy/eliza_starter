@@ -53,3 +53,15 @@ export interface ExamplePluginConfig {
     apiSecret: string;
     endpoint?: string;
 }
+
+
+export interface BTCUTXO {
+    utxo?: string;
+    sats?: string;
+}
+
+export interface RoochCoin {
+    symbol: string;
+    name: string;
+    balance: number;
+}
