@@ -10,6 +10,10 @@
         "imageGeneration": false,
         "modelConfig": {
             "temperature": 0.3
+        },
+        "memory": {
+            "historyLimit": 10,
+            "recentMessagesLimit": 3
         }
    },
 
