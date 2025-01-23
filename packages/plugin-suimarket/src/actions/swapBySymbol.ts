@@ -1,5 +1,6 @@
 import {
     ActionExample,
+    CacheOptions,
     composeContext,
     elizaLogger,
     generateObjectDeprecated,
@@ -12,6 +13,8 @@ import {
     type Action,
 } from "@elizaos/core";
 import findByVerifiedAndSymbol from "../providers/searchCoinInAggre";
+
+import { hashUserMsg } from "../utils/format";
 
 const swapTemplate = `
 Recent messages: {{recentMessages}}
@@ -52,26 +55,31 @@ export const executeSwap: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        const swapContext = composeContext({
-            state,
-            template: swapTemplate,
-        });
+        let msgHash = hashUserMsg(message, "swap01");
+        let content = await runtime.cacheManager.get(msgHash);
 
-        elizaLogger.log("compose history...done!");
+        elizaLogger.log("---- cache info: ", msgHash, "--->", content);
 
-        elizaLogger.log("extract content ...");
-        const content = await generateObjectDeprecated({
-            runtime,
-            context: swapContext,
-            modelClass: ModelClass.SMALL,
-        });
+        if(!content){
+            const swapContext = composeContext({
+                state,
+                template: swapTemplate,
+            });
 
-        elizaLogger.log("extract content ...done -> ", content);
+            content = await generateObjectDeprecated({
+                runtime,
+                context: swapContext,
+                modelClass: ModelClass.SMALL,
+            });
+
+            await runtime.cacheManager.set(msgHash, content, {expires: Date.now() + 300000});
+        }
+
         await callback({
             text:`Please double-check all details before swapping to avoid any loss`,
             action:"SUI_EXECUTE_SWAP_BY_SYMBOL",
+         });
 
-         })
         const inputTokenObject = await findByVerifiedAndSymbol(content.inputTokenSymbol);
         if(!inputTokenObject){
             callback({
@@ -98,12 +106,10 @@ export const executeSwap: Action = {
                text:`Please double-check all details before swapping to avoid any loss`,
                action:"SUI_EXECUTE_SWAP_BY_SYMBOL",
                result: {
-                type: "swap",
-                data:responseData,
-
-            }
+                    type: "swap",
+                    data: responseData,
+                }
             })
-
             return true;
         } catch (error) {
             console.error("Error during token swap:", error);

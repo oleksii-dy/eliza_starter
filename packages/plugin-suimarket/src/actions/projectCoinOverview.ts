@@ -15,8 +15,6 @@ import { CoingeckoProvider } from "../providers/coingeckoProvider";
 // import { formatObjectToText } from "../utils/format";
 import { searchCoinInFileJsonProvider, searchCoinInFileJsonProvider2 } from "../providers/searchCoinIdInFileJson";
 
-
-
 const projectInfoTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 
 Example response:
@@ -62,23 +60,22 @@ Respond with a JSON markdown block containing only the extracted values.
 
 export const projectInfo: Action = {
     name: "PROJECT_OVERVIEW",
-
     similes: [
-       "PROJECT_SUMMARY",
-    "PROJECT_DESCRIPTION",
-    "OVERVIEW",
-    "PROJECT_DETAILS",
-    "PROJECT_INFO",
-    "PROJECT_INTRO",
-    "PROJECT_SCOPE",
-    "PROJECT_HIGHLIGHTS",
-    "PROJECT_BACKGROUND",
-    "PROJECT_OBJECTIVES",
-    "PROJECT_VISION",
-    "PROJECT_MISSION",
-    "PROJECT_OVERVIEW",
-    "PROJECT_ANALYSIS",
-    "PROJECT_CONTEXT"
+        "PROJECT_SUMMARY",
+        "PROJECT_DESCRIPTION",
+        "OVERVIEW",
+        "PROJECT_DETAILS",
+        "PROJECT_INFO",
+        "PROJECT_INTRO",
+        "PROJECT_SCOPE",
+        "PROJECT_HIGHLIGHTS",
+        "PROJECT_BACKGROUND",
+        "PROJECT_OBJECTIVES",
+        "PROJECT_VISION",
+        "PROJECT_MISSION",
+        "PROJECT_OVERVIEW",
+        "PROJECT_ANALYSIS",
+        "PROJECT_CONTEXT"
     ],
 
     examples: [
