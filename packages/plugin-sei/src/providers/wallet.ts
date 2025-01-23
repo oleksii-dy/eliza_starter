@@ -76,7 +76,7 @@ export class WalletProvider {
         return publicClient;
     }
 
-    getWalletClient(): WalletClient {
+    getEvmWalletClient(): WalletClient {
         const transport = this.createHttpTransport();
 
         const walletClient = createWalletClient({

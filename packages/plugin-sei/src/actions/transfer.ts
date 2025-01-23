@@ -67,7 +67,7 @@ export class TransferAction {
             `Transferring: ${params.amount} tokens to (${params.toAddress} on ${chain.name})`
         );
 
-        const walletClient = this.walletProvider.getWalletClient();
+        const walletClient = this.walletProvider.getEvmWalletClient();
 
         try {
             const hash = await walletClient.sendTransaction({
