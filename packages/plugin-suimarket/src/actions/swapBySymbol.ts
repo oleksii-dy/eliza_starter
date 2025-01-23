@@ -11,7 +11,7 @@ import {
     State,
     type Action,
 } from "@elizaos/core";
-import findByVerifiedAndSymbol from "../providers/searchCoinInAggre";
+import {findByVerifiedAndSymbol} from "../providers/searchCoinInAggre";
 // import { RedisClient } from "@elizaos/adapter-redis";
 const swapTemplate = `Please extract the following swap details for SUI network:
 
@@ -85,7 +85,7 @@ export const executeSwap: Action = {
         await callback({
             text:`Please double-check all details before swapping to avoid any loss`,
             action:"SUI_EXECUTE_SWAP_BY_SYMBOL",
-           
+
          })
         const inputTokenObject = await findByVerifiedAndSymbol(content.inputTokenSymbol);
         if(!inputTokenObject){

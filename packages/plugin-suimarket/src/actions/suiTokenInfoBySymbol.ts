@@ -15,7 +15,7 @@ import {
 // import {  formatObjectToText } from "../utils/format";
 
 import GeckoTerminalProvider2 from "../providers/coingeckoTerminalProvider2";
-import findByVerifiedAndSymbol from "../providers/searchCoinInAggre";
+import {findByVerifiedAndSymbol} from "../providers/searchCoinInAggre";
 
 const promptSuiTokenInfoTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 
