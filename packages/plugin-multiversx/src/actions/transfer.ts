@@ -14,6 +14,10 @@ import {
 import { WalletProvider } from "../providers/wallet";
 import { validateMultiversxConfig } from "../enviroment";
 import { transferSchema } from "../utils/schemas";
+import { GraphqlProvider } from "../providers/graphql";
+import { MVX_NETWORK_CONFIG } from "../constants";
+import { NativeAuthProvider } from "../providers/nativeAuth";
+import { getToken } from "../utils/getToken";
 export interface TransferContent extends Content {
     tokenAddress: string;
     amount: string;
@@ -105,6 +109,7 @@ export default {
         try {
             const privateKey = runtime.getSetting("MVX_PRIVATE_KEY");
             const network = runtime.getSetting("MVX_NETWORK");
+            const networkConfig = MVX_NETWORK_CONFIG[network];
 
             const walletProvider = new WalletProvider(privateKey, network);
 
@@ -112,29 +117,65 @@ export default {
                 transferContent.tokenIdentifier &&
                 transferContent.tokenIdentifier.toLowerCase() !== "egld"
             ) {
-                await walletProvider.sendESDT({
+                const [ticker, nonce] =
+                    transferContent.tokenIdentifier.split("-");
+
+                let identifier = transferContent.tokenIdentifier;
+                if (!nonce) {
+                    const nativeAuthProvider = new NativeAuthProvider({
+                        apiUrl: networkConfig.apiURL,
+                    });
+
+                    await nativeAuthProvider.initializeClient();
+
+                    const accessToken =
+                        await nativeAuthProvider.getAccessToken(walletProvider);
+
+                    const graphqlProvider = new GraphqlProvider(
+                        networkConfig.graphURL,
+                        { Authorization: `Bearer ${accessToken}` },
+                    );
+
+                    const token = await getToken({
+                        provider: graphqlProvider,
+                        ticker,
+                    });
+
+                    identifier = token.identifier;
+                }
+
+                const txHash = await walletProvider.sendESDT({
                     receiverAddress: transferContent.tokenAddress,
                     amount: transferContent.amount,
-                    identifier: transferContent.tokenIdentifier,
+                    identifier,
+                });
+
+                const txURL = walletProvider.getTransactionURL(txHash);
+                callback?.({
+                    text: `Transaction sent successfully! You can view it here: ${txURL}.`,
                 });
 
                 return true;
             }
 
-            await walletProvider.sendEGLD({
+            const txHash = await walletProvider.sendEGLD({
                 receiverAddress: transferContent.tokenAddress,
                 amount: transferContent.amount,
+            });
+
+            const txURL = walletProvider.getTransactionURL(txHash);
+            callback?.({
+                text: `Transaction sent successfully! You can view it here: ${txURL}.`,
             });
 
             return true;
         } catch (error) {
             console.error("Error during token transfer:", error);
-            if (callback) {
-                callback({
-                    text: error.message,
-                    content: { error: error.message },
-                });
-            }
+            callback?.({
+                text: error.message,
+                content: { error: error.message },
+            });
+
             return "";
         }
     },

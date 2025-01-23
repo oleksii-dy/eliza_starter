@@ -104,11 +104,16 @@ export default {
 
             const walletProvider = new WalletProvider(privateKey, network);
 
-            await walletProvider.createESDT({
+            const txHash = await walletProvider.createESDT({
                 tokenName: payload.tokenName,
                 amount: payload.amount,
                 decimals: Number(payload.decimals) || 18,
                 tokenTicker: payload.tokenTicker,
+            });
+
+            const txURL = walletProvider.getTransactionURL(txHash);
+            callback?.({
+                text: `Transaction sent successfully! You can view it here: ${txURL}.`,
             });
             return true;
         } catch (error) {
