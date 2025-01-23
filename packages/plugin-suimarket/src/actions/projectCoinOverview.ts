@@ -179,6 +179,8 @@ export const projectInfo: Action = {
                                 .map(item => item.market.name)
                                 .join(",")}....`,
                         categories: infoDetail.categories,
+                        imgUrl: infoDetail.image.small,
+                        contract_address: infoDetail.contract_address,
                         ...infoPrice
                     }
                 }
