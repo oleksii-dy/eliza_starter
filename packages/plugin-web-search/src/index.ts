@@ -44,6 +44,7 @@ const webSearch: Action = {
         "WEB_LOOKUP",
         "ONLINE_SEARCH",
         "FIND_INFORMATION",
+        "ANALYZE_PAGE",
     ],
     description:
         "Perform a web search to find information related to the message.",
@@ -67,13 +68,13 @@ const webSearch: Action = {
         const webSearchPrompt = message.content.text;
         elizaLogger.log("web search prompt received:", webSearchPrompt);
 
-        elizaLogger.log("Generating image with prompt:", webSearchPrompt);
         const searchResponse = await generateWebSearch(
             webSearchPrompt,
             runtime
         );
 
         if (searchResponse && searchResponse.results.length) {
+            elizaLogger.log("web search performed. Result length:", searchResponse.results.length);
             const responseList = searchResponse.answer
                 ? `${searchResponse.answer}${
                       Array.isArray(searchResponse.results) &&
@@ -87,7 +88,6 @@ const webSearch: Action = {
                           : ""
                   }`
                 : "";
-
             callback({
                 text: MaxTokens(responseList, DEFAULT_MAX_WEB_SEARCH_TOKENS),
             });
@@ -100,13 +100,13 @@ const webSearch: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Find the latest news about SpaceX launches.",
+                    text: "Please analyze the following github repo: https://github.com/ElizaOS/Eliza.",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Here is the latest news about SpaceX launches:",
+                    text: "I'll analyze the repo...",
                     action: "WEB_SEARCH",
                 },
             },
@@ -115,13 +115,13 @@ const webSearch: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Can you find details about the iPhone 16 release?",
+                    text: "Please provide a web search on the eliza os framework.",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Here are the details I found about the iPhone 16 release:",
+                    text: "I'll perform a web search to learn about eliza os framework...",
                     action: "WEB_SEARCH",
                 },
             },
@@ -136,20 +136,7 @@ const webSearch: Action = {
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Here is the schedule for the next FIFA World Cup:",
-                    action: "WEB_SEARCH",
-                },
-            },
-        ],
-        [
-            {
-                user: "{{user1}}",
-                content: { text: "Check the latest stock price of Tesla." },
-            },
-            {
-                user: "{{agentName}}",
-                content: {
-                    text: "Here is the latest stock price of Tesla I found:",
+                    text: "I'll perform a web search to get the schedule details...",
                     action: "WEB_SEARCH",
                 },
             },
@@ -164,7 +151,7 @@ const webSearch: Action = {
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Here are the current trending movies in the US:",
+                    text: "I'll perform a web search to find out...",
                     action: "WEB_SEARCH",
                 },
             },
@@ -179,20 +166,7 @@ const webSearch: Action = {
             {
                 user: "{{agentName}}",
                 content: {
-                    text: "Here is the latest score from the NBA finals:",
-                    action: "WEB_SEARCH",
-                },
-            },
-        ],
-        [
-            {
-                user: "{{user1}}",
-                content: { text: "When is the next Apple keynote event?" },
-            },
-            {
-                user: "{{agentName}}",
-                content: {
-                    text: "Here is the information about the next Apple keynote event:",
+                    text: "Let me search the web...",
                     action: "WEB_SEARCH",
                 },
             },
