@@ -716,8 +716,8 @@ export class TwitterPostClient {
             );
 
             const timelines = await this.client.fetchTimelineForActions(
-                //MAX_TIMELINES_TO_FETCH
-                this.client.twitterConfig.MAX_ACTIONS_PROCESSING // fetch only the maximum number of tweets to process
+                MAX_TIMELINES_TO_FETCH
+                //this.client.twitterConfig.MAX_ACTIONS_PROCESSING // fetch only the maximum number of tweets to process
             );
             const maxActionsProcessing =
                 this.client.twitterConfig.MAX_ACTIONS_PROCESSING;
