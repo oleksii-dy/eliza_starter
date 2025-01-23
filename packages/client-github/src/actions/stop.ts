@@ -9,39 +9,8 @@ import {
     ModelClass,
     composeContext,
 } from "@elizaos/core";
-import { z } from "zod";
-
-export const stopTemplate = `
-Stop the OODA loop and wait for user input.
-
-Extract the details for stopping the OODA loop:
-- **action** (string): The action to stop the OODA loop (e.g., "STOP")
-
-Provide the action in the following JSON format:
-
-\`\`\`json
-{
-    "action": "<action>"
-}
-\`\`\`
-
-Here are the recent messages:
-{{recentMessages}}
-`;
-
-export const StopSchema = z.object({
-    action: z.literal("STOP"),
-});
-
-export interface StopContent {}
-
-export const isStopContent = (object: any): object is StopContent => {
-    if (StopSchema.safeParse(object).success) {
-        return true;
-    }
-    elizaLogger.error("Invalid content:", object);
-    return false;
-};
+import { StopSchema, StopContent, isStopContent } from "../types";
+import { stopTemplate } from "../templates";
 
 export const stopAction: Action = {
     name: "STOP",

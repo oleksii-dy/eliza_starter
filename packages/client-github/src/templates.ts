@@ -7,6 +7,44 @@ import { contextTemplate } from "@elizaos/plugin-github";
 // TODO: Have a way to prevent duplicates potentially hae separate llm post process to explicitly check for duplicates (snobbee)
 // TODO: Make sure previous issues / pull requests from repo are considered (snobbee)
 
+export const configGithubInfoTemplate = `
+Extract the details for configuring the GitHub repository:
+- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
+- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
+- **branch** (string): The branch of the GitHub repository (e.g., "main")
+
+Provide the repository details in the following JSON format:
+
+\`\`\`json
+{
+    "owner": "<owner>",
+    "repo": "<repo>",
+    "branch": "<branch>"
+}
+\`\`\`
+
+Here are the recent user messages for context:
+{{recentMessages}}
+`;
+
+export const stopTemplate = `
+Stop the OODA loop and wait for user input.
+
+Extract the details for stopping the OODA loop:
+- **action** (string): The action to stop the OODA loop (e.g., "STOP")
+
+Provide the action in the following JSON format:
+
+\`\`\`json
+{
+    "action": "<action>"
+}
+\`\`\`
+
+Here are the recent messages:
+{{recentMessages}}
+`;
+
 export const oodaTemplate = `
     Extract the details for configuring the GitHub repository:
     - **owner** (string): The owner of the GitHub repository (e.g., "octocat")
@@ -23,7 +61,8 @@ export const oodaTemplate = `
     }
     \`\`\`
 
-    Determine the appropriate action based on the following criteria:
+    Based on the following criteria, select the most appropriate action. If there is any uncertainty, default to the "NOTHING" action.
+
     1. CREATE_ISSUE:
         - When a new bug, feature request, or task is identified that is not already tracked.
         - Criteria:
@@ -90,8 +129,6 @@ export const oodaTemplate = `
             - No code improvements, bugs, or potential enhancements can be identified.
             - No ongoing discussions would benefit from additional feedback or reactions.
             - WARNING: This action indicates a complete lack of needed work. Be extremely certain no other actions are appropriate before selecting it.
-
-    If you are not sure about the action to take, please select the "NOTHING" action.
 
     Context:
     ${contextTemplate}

@@ -9,49 +9,12 @@ import {
     ModelClass,
     generateObject,
 } from "@elizaos/core";
-import { z } from "zod";
-
-export const configGithubInfoTemplate = `
-Extract the details for configuring the GitHub repository:
-- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
-- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
-- **branch** (string): The branch of the GitHub repository (e.g., "main")
-
-Provide the repository details in the following JSON format:
-
-\`\`\`json
-{
-    "owner": "<owner>",
-    "repo": "<repo>",
-    "branch": "<branch>"
-}
-\`\`\`
-
-Here are the recent user messages for context:
-{{recentMessages}}
-`;
-
-export const ConfigGithubInfoSchema = z.object({
-    owner: z.string().min(1, "GitHub owner is required"),
-    repo: z.string().min(1, "GitHub repo is required"),
-    branch: z.string().min(1, "GitHub branch is required"),
-});
-
-export interface ConfigGithubInfoContent {
-    owner: string;
-    repo: string;
-    branch: string;
-}
-
-export const isConfigGithubInfoContent = (
-    object: any
-): object is ConfigGithubInfoContent => {
-    if (ConfigGithubInfoSchema.safeParse(object).success) {
-        return true;
-    }
-    elizaLogger.error("Invalid content: ", object);
-    return false;
-};
+import {
+    ConfigGithubInfoContent,
+    ConfigGithubInfoSchema,
+    isConfigGithubInfoContent,
+} from "../types";
+import { configGithubInfoTemplate } from "../templates";
 
 export const configGithubInfoAction: Action = {
     name: "CONFIG_GITHUB_INFO",
