@@ -33,18 +33,24 @@ export const createAndRegisterAgent: Action = {
         template: createAgentTemplate,
     });
 
-    const agentSettingsDetail = await generateObject({
-        runtime,
-        context,
-        modelClass: ModelClass.LARGE,
-        schema: AgentSettingsSchema,
-    });
-
-    const agentSettings = agentSettingsDetail.object as AgentSettings;
-    if (!isAgentSettings(agentSettings)) {
-        throw new Error('Invalid content: ' + JSON.stringify(agentSettings));
+    let agentSettings: AgentSettings
+    try {
+        const agentSettingsDetail = await generateObject({
+            runtime,
+            context,
+            modelClass: ModelClass.LARGE,
+            schema: AgentSettingsSchema,
+        });
+        agentSettings = agentSettingsDetail.object as AgentSettings;
+        if (!isAgentSettings(agentSettings)) {
+            throw new Error();
+        }
+        elizaLogger.info('Agent settings received:', agentSettings);
+    } catch (error: any) {
+        elizaLogger.error('Invalid content:', agentSettings ? JSON.stringify(agentSettings) : null, error);
+        callback({ text: 'Cannot create agent because of invalid content: ' + agentSettings ? JSON.stringify(agentSettings) : null });
+        return;
     }
-    elizaLogger.info('Agent settings received:', agentSettings);
 
     let tx: ContractTransactionResponse
     try {
@@ -87,12 +93,9 @@ export const createAndRegisterAgent: Action = {
   threshold: 3,
   converterAddress: "0x24c36e9996eb84138Ed7cAa483B4c59FF7640E5C",
   agentHeader: {
-    messageId: '2fd6db38-ce5c-473f-81c5-4fd62407b7bd',
-    sourceAgentId: '32698bf1-ba3d-4334-8e66-cce5aa0bd3e8',
 	sourceAgentName: 'ElizaOS Test Agent',
 	targetAgentId: '1105302c-7556-49b2-b6fe-3aedba9c0682',
 	messageType: 0,
-    timestamp: 1737293817,
 	priority: 1,
 	ttl: 3600,
   },

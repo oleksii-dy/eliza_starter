@@ -31,19 +31,26 @@ export const verifyData: Action = {
         template: verifyDataTemplate,
     });
 
-    const response = await generateObject({
-        runtime,
-        context,
-        modelClass: ModelClass.LARGE,
-        schema: VerifyParamsSchema,
-    });
+    let verifyParams: VerifyParams;
+    try {
+        const response = await generateObject({
+            runtime,
+            context,
+            modelClass: ModelClass.LARGE,
+            schema: VerifyParamsSchema,
+        });
 
-    const verifyParams = response.object as VerifyParams;
-    if (!isVerifyParams(verifyParams)) {
-        throw new Error('Invalid content: ' + JSON.stringify(verifyParams));
+        const verifyParams = response.object as VerifyParams;
+        if (!isVerifyParams(verifyParams)) {
+            throw new Error();
+        }
+
+        elizaLogger.info('verify params received:', verifyParams);
+    }  catch (error: any) {
+        elizaLogger.error('Invalid content: ', verifyParams ? JSON.stringify(verifyParams) : null, error);
+        callback({ text: 'Cannot verify data because of invalid content: ' + verifyParams ? JSON.stringify(verifyParams) : null });
+        return;
     }
-
-    elizaLogger.info('verify params received:', verifyParams);
 
     try {
         const agent = new AgentSDK({

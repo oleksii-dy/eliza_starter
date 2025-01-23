@@ -20,7 +20,7 @@
     ],
     "dependencies": {
         "@elizaos/core": "workspace:*",
-        "ai-agent-sdk-js": "^0.0.1"
+        "ai-agent-sdk-js": "^0.0.2"
     },
     "scripts": {
         "build": "tsup --format esm --dts",

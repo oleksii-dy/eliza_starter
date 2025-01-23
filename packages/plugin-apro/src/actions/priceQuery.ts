@@ -36,19 +36,25 @@ export const priceQuery: Action = {
             template: priceQueryTemplate,
         });
 
-        const response = await generateObject({
-            runtime,
-            context,
-            modelClass: ModelClass.LARGE,
-            schema: PriceQueryParamsSchema,
-        });
+        let priceQueryParams: PriceQueryParams;
+        try {
+            const response = await generateObject({
+                runtime,
+                context,
+                modelClass: ModelClass.LARGE,
+                schema: PriceQueryParamsSchema,
+            });
 
-        const priceQueryParams = response.object as PriceQueryParams;
-        if (!isPriceQueryParams(priceQueryParams)) {
-            throw new Error('Invalid content: ' + JSON.stringify(priceQueryParams));
+            const priceQueryParams = response.object as PriceQueryParams;
+            if (!isPriceQueryParams(priceQueryParams)) {
+                throw new Error();
+            }
+            elizaLogger.info('price query params received:', priceQueryParams);
+        } catch (error: any) {
+            elizaLogger.error('Invalid content: ', priceQueryParams ? JSON.stringify(priceQueryParams) : null, error);
+            callback({ text: 'Cannot fetch price data because of invalid content: ' + priceQueryParams ? JSON.stringify(priceQueryParams) : null });
+            return;
         }
-
-        elizaLogger.info('price query params received:', priceQueryParams);
 
         try {
             const priceData = await fetchPriceData(priceQueryParams.pair);

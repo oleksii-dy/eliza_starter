@@ -21,11 +21,11 @@ export const AgentSettingsSchema = z.object({
     threshold: z.number(),
     converterAddress: z.string(),
     agentHeader: z.object({
-        messageId: z.string().optional(),
-        sourceAgentId: z.string().optional(),
+        messageId: z.string().nullish(),
+        sourceAgentId: z.string().nullish(),
         sourceAgentName: z.string(),
         targetAgentId: z.string(),
-        timestamp: z.number().optional(),
+        timestamp: z.number().nullish(),
         messageType: z.number(),
         priority: z.number(),
         ttl: z.number(),
@@ -64,17 +64,17 @@ export const VerifyParamsSchema = z.object({
     digest: z.string(),
     payload: z.object({
         data: z.string(),
-        dataHash: z.string().optional(),
+        dataHash: z.string().nullish(),
         signatures: z.array(z.object({
             r: z.string(),
             s: z.string(),
             v: z.number(),
         })),
         metadata: z.object({
-            contentType: z.string(),
-            encoding: z.string(),
-            compression: z.string(),
-        }).optional(),
+            contentType: z.string().nullish(),
+            encoding: z.string().nullish(),
+            compression: z.string().nullish(),
+        }).nullish(),
     }),
 });
 

@@ -9,6 +9,8 @@ Extract the following details to create an agent configuration:
 - **converterAddress** (string): The address of the converter contract, a 42-character hexadecimal string starting with '0x' (e.g., '0xc2C85e5f5471c0c87c7c3fB91C3C4f95A7a720C1').
 
 - **agentHeader** (object): Contains the following fields:
+  - **messageId** (string): The UUID of the message (e.g., '2fd6db38-ce5c-473f-81c5-4fd62407b7bd').
+  - **sourceAgentId** (string): The UUID of the source agent (e.g., '32698bf1-ba3d-4334-8e66-cce5aa0bd3e8').
   - **sourceAgentName** (string): The name of the source agent (e.g., 'Apro AI Agent').
   - **targetAgentId** (string): The UUID of the target agent (e.g., '5c5c6e0a-bbbb-4246-9f1f-81d9f1fed712').
   - **messageType** (number): The type of message, represented as an integer (e.g., 0).
@@ -27,6 +29,8 @@ Provide the values in the following JSON format:
     "threshold": <number>,
     "converterAddress": "<converter_address>",
     "agentHeader": {
+        "messageId": "<uuid>",
+        "sourceAgentId": "<uuid>",
         "sourceAgentName": "<string>",
         "targetAgentId": "<uuid>",
         "messageType": <number>,
@@ -36,6 +40,8 @@ Provide the values in the following JSON format:
 }
 \`\`\`
 
+Use null for any values that cannot be determined.
+
 Here are the recent user messages for context:
 
 {{recentMessages}}
@@ -43,15 +49,19 @@ Here are the recent user messages for context:
 `;
 
 export const verifyDataTemplate = `
-
 Extract the following details to create a structured JSON response:
 
 - **payload** (object): Contains the following fields:
   - **data** (string): A hexadecimal string representing the data (e.g., '0x1234567890abcdef').
+  - **dataHash** (string): A hexadecimal string representing the hash of the data
   - **signatures** (array of objects): Each object contains:
     - **r** (string): The 'r' value of the signature, a hexadecimal string (e.g., '097dda4dd6f7113a710c9b5b56ce458c0791469bb5de01a71a5413ff43eb8b2a').
     - **s** (string): The 's' value of the signature, a hexadecimal string (e.g., '6249bbc444f934de2707d20502d439be8c077d34dd196cfe19bb6e5e251a3a').
     - **v** (number): The 'v' value of the signature, an integer (e.g., 28).
+  - **metadata** (object): Contains metadata information:
+    - **contentType** (string): The type of content (e.g., 'application/abi').
+    - **encoding** (string): The encoding type, use null if not applicable.
+    - **compression** (string): The compression type, use null if not applicable.
 
 - **agent** (string): The agent's address, a 42-character hexadecimal string starting with '0x' (e.g., '0x1234567890123456789012345678901234567890').
 
@@ -63,6 +73,7 @@ Provide the values in the following JSON format:
 {
     "payload": {
         "data": "<hex_data>",
+        "dataHash": "<hex_data_hash>",
         "signatures": [
             {
                 "r": "<hex_r>",
@@ -70,16 +81,22 @@ Provide the values in the following JSON format:
                 "v": <number>
             }
         ],
+        "metadata": {
+            "contentType": "<content_type>",
+            "encoding": "<encoding>",
+            "compression": "<compression>"
+        }
     },
     "agent": "<agent_address>",
     "digest": "<digest>"
 }
 \`\`\`
 
+Use null for any values that cannot be determined.
+
 Here are the recent user messages for context:
 
 {{recentMessages}}
-
 `;
 
 export const priceQueryTemplate = `
@@ -100,7 +117,7 @@ Provide the values in the following JSON format:
 }
 \`\`\`
 
-Use 'undefined' for any values that cannot be determined.
+Use null for any values that cannot be determined.
 
 Here are the recent user messages for context:
 
