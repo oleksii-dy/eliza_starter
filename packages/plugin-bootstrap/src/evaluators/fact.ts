@@ -7,6 +7,7 @@ import {
     Memory,
     ModelClass,
     Evaluator,
+    elizaLogger,
 } from "@elizaos/core";
 
 export const formatFacts = (facts: Memory[]) => {
@@ -52,8 +53,10 @@ Response should be a JSON object array inside a JSON markdown block. Correct res
 \`\`\``;
 
 async function handler(runtime: IAgentRuntime, message: Memory) {
+    elizaLogger.log('Starting fact extraction...');
     const state = await runtime.composeState(message);
 
+    elizaLogger.log('State:', state);
     const { agentId, roomId } = state;
 
     const context = composeContext({
@@ -61,11 +64,15 @@ async function handler(runtime: IAgentRuntime, message: Memory) {
         template: runtime.character.templates?.factsTemplate || factsTemplate,
     });
 
+    elizaLogger.log('Context:', context);
+
     const facts = await generateObjectArray({
         runtime,
         context,
         modelClass: ModelClass.LARGE,
     });
+
+    console.log("Facts Extracted:\n", facts);
 
     const factsManager = new MemoryManager({
         runtime,
@@ -114,18 +121,16 @@ export const factEvaluator: Evaluator = {
         "EXTRACT_CLAIM",
         "EXTRACT_INFORMATION",
     ],
-    validate: async (
-        runtime: IAgentRuntime,
-
-        message: Memory
-    ): Promise<boolean> => {
+    validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
+        // Get recent messages with options
         const messageCount = (await runtime.messageManager.countMemories(
-            message.roomId
+            message.roomId,
+            false
         )) as number;
 
-        const reflectionCount = Math.ceil(runtime.getConversationLength() / 2);
-
-        return messageCount % reflectionCount === 0;
+        console.log(`Fact Evaluator Validation:\n- Messages Retrieved: ${messageCount}\n`);
+        // console.log(`Handling Facts: ${messageCount % 2 === 0}\n`);
+        return true;
     },
     description:
         "Extract factual information about the people in the conversation, the current events in the world, and anything else that might be important to remember.",
