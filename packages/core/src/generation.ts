@@ -154,53 +154,113 @@ async function truncateTiktoken(
     }
 }
 
-/**
- * Send a message to the model for a text generateText - receive a string back and parse how you'd like
- * @param opts - The options for the generateText request.
- * @param opts.context The context of the message to be completed.
- * @param opts.stop A list of strings to stop the generateText at.
- * @param opts.model The model to use for generateText.
- * @param opts.frequency_penalty The frequency penalty to apply to the generateText.
- * @param opts.presence_penalty The presence penalty to apply to the generateText.
- * @param opts.temperature The temperature to apply to the generateText.
- * @param opts.max_context_length The maximum length of the context to apply to the generateText.
- * @returns The completed message.
- */
+import { promises as fs } from "fs";
+import {
+    accessSync,
+    mkdirSync,
+    appendFileSync,
+    writeFileSync,
+    readdirSync,
+    unlinkSync,
+} from "fs";
+import { resolve, dirname } from "path";
 
-export async function generateText({
-    runtime,
-    context,
-    modelClass,
-    tools = {},
-    onStepFinish,
-    maxSteps = 1,
-    stop,
-    customSystemPrompt,
-}: {
-    runtime: IAgentRuntime;
-    context: string;
-    modelClass: string;
-    tools?: Record<string, Tool>;
-    onStepFinish?: (event: StepResult) => Promise<void> | void;
-    maxSteps?: number;
-    stop?: string[];
-    customSystemPrompt?: string;
-}): Promise<string> {
-    if (!context) {
-        console.error("generateText context is empty");
-        return "";
+// Synchronous version
+function mkdirpSync(targetPath) {
+    // Convert to absolute path and normalize
+    targetPath = resolve(targetPath);
+
+    try {
+        accessSync(targetPath, fs.constants.F_OK);
+        return targetPath; // Directory already exists
+    } catch {
+        // Directory doesn't exist, proceed with creation
     }
 
-    elizaLogger.log("Generating text...");
+    const parentDir = dirname(targetPath);
 
-    elizaLogger.info("Generating text with options:", {
-        modelProvider: runtime.modelProvider,
-        model: modelClass,
-    });
+    // If we're at root directory and it doesn't exist, error out
+    if (parentDir === targetPath) {
+        throw new Error("Root directory does not exist");
+    }
 
+    // Recursively create parent directory
+    mkdirpSync(parentDir);
+
+    try {
+        mkdirSync(targetPath);
+    } catch (err) {
+        // Handle race condition
+        if (err.code !== "EEXIST") {
+            throw err;
+        }
+    }
+
+    return targetPath;
+}
+
+function logGenerate(
+    type: "text" | "image",
+    runtime: IAgentRuntime,
+    provider: string,
+    model: string,
+    modelClass: string,
+    context: string,
+    response: string,
+    error: string
+) {
+    if (runtime?.agentId) {
+        console.log("generate " + type + " - agent", runtime.agentId);
+        const dir = `logs/generate`;
+        const dirJson = `${dir}/${runtime.agentId}`;
+        mkdirpSync(dirJson);
+
+        const logData = {
+            agentId: runtime.agentId,
+            type,
+            provider,
+            model,
+            modelClass,
+            context,
+            response,
+            error,
+        };
+
+        const ts = Date.now();
+        const jsonLogFilePath = `${dirJson}/${ts}.json`;
+
+        // Append to the running log file
+        try {
+            appendFileSync(
+                `${dir}/${runtime.agentId}.log`,
+                JSON.stringify(logData) + "\n"
+            );
+            writeFileSync(jsonLogFilePath, JSON.stringify(logData));
+        } catch (err) {
+            console.error("Error writing log file:", err);
+        }
+
+        // Remove old log files if there are more than 10
+        const files = readdirSync(dirJson).filter((file) =>
+            file.endsWith(".json")
+        );
+        if (files.length > 10) {
+            const oldFiles = files
+                .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
+                .slice(0, files.length - 10);
+            oldFiles.forEach((file) => {
+                try {
+                    unlinkSync(`${dirJson}/${file}`);
+                } catch (err) {
+                    console.error("Error deleting old log file:", err);
+                }
+            });
+        }
+    }
+}
+
+export function getSizeModel(runtime, modelClass) {
     const provider = runtime.modelProvider;
-    const endpoint =
-        runtime.character.modelEndpointOverride || models[provider].endpoint;
     let model = models[provider].model[modelClass];
 
     // allow character.json settings => secrets to override models
@@ -268,6 +328,56 @@ export async function generateText({
             }
             break;
     }
+    return model;
+}
+
+/**
+ * Send a message to the model for a text generateText - receive a string back and parse how you'd like
+ * @param opts - The options for the generateText request.
+ * @param opts.context The context of the message to be completed.
+ * @param opts.stop A list of strings to stop the generateText at.
+ * @param opts.model The model to use for generateText.
+ * @param opts.frequency_penalty The frequency penalty to apply to the generateText.
+ * @param opts.presence_penalty The presence penalty to apply to the generateText.
+ * @param opts.temperature The temperature to apply to the generateText.
+ * @param opts.max_context_length The maximum length of the context to apply to the generateText.
+ * @returns The completed message.
+ */
+
+export async function generateText({
+    runtime,
+    context,
+    modelClass,
+    tools = {},
+    onStepFinish,
+    maxSteps = 1,
+    stop,
+    customSystemPrompt,
+}: {
+    runtime: IAgentRuntime;
+    context: string;
+    modelClass: string;
+    tools?: Record<string, Tool>;
+    onStepFinish?: (event: StepResult) => Promise<void> | void;
+    maxSteps?: number;
+    stop?: string[];
+    customSystemPrompt?: string;
+}): Promise<string> {
+    if (!context) {
+        console.error("generateText context is empty");
+        return "";
+    }
+
+    elizaLogger.log("Generating text...");
+
+    elizaLogger.info("Generating text with options:", {
+        modelProvider: runtime.modelProvider,
+        model: modelClass,
+    });
+    const provider = runtime.modelProvider;
+    const endpoint =
+        runtime.character.modelEndpointOverride || models[provider].endpoint;
+    const model = getSizeModel(runtime, modelClass);
 
     elizaLogger.info("Selected model:", model);
 
@@ -310,6 +420,7 @@ export async function generateText({
         switch (provider) {
             // OPENAI & LLAMACLOUD shared same structure.
             case ModelProviderName.OPENAI:
+            case ModelProviderName.ETERNALAI:
             case ModelProviderName.ALI_BAILIAN:
             case ModelProviderName.VOLENGINE:
             case ModelProviderName.LLAMACLOUD:
@@ -801,9 +912,28 @@ export async function generateText({
                 throw new Error(errorMessage);
             }
         }
-
+        logGenerate(
+            "text",
+            runtime,
+            provider,
+            model,
+            modelClass,
+            context,
+            response,
+            ""
+        );
         return response;
     } catch (error) {
+        logGenerate(
+            "text",
+            runtime,
+            provider,
+            model,
+            modelClass,
+            context,
+            "",
+            error
+        );
         elizaLogger.error("Error in generateText:", error);
         throw error;
     }
@@ -1218,6 +1348,16 @@ export const generateImage = async (
             }
 
             const imageURL = await response.json();
+            logGenerate(
+                "image",
+                runtime,
+                runtime.imageModelProvider,
+                model,
+                data.modelId,
+                data.prompt,
+                imageURL,
+                ""
+            );
             return { success: true, data: [imageURL] };
         } else if (
             runtime.imageModelProvider === ModelProviderName.TOGETHER ||
@@ -1276,6 +1416,16 @@ export const generateImage = async (
             }
 
             elizaLogger.debug(`Generated ${base64s.length} images`);
+            logGenerate(
+                "image",
+                runtime,
+                runtime.imageModelProvider,
+                model,
+                data.modelId,
+                data.prompt,
+                "Sample: " + base64s[0].slice(0, 100) + " .... ",
+                ""
+            );
             return { success: true, data: base64s };
         } else if (runtime.imageModelProvider === ModelProviderName.FAL) {
             fal.config({
@@ -1330,6 +1480,16 @@ export const generateImage = async (
             });
 
             const base64s = await Promise.all(base64Promises);
+            logGenerate(
+                "image",
+                runtime,
+                runtime.imageModelProvider,
+                model,
+                data.modelId,
+                data.prompt,
+                "Sample: " + base64s[0].slice(0, 100) + " .... ",
+                ""
+            );
             return { success: true, data: base64s };
         } else if (runtime.imageModelProvider === ModelProviderName.VENICE) {
             const response = await fetch(
@@ -1368,7 +1528,16 @@ export const generateImage = async (
                 }
                 return `data:image/png;base64,${base64String}`;
             });
-
+            logGenerate(
+                "image",
+                runtime,
+                runtime.imageModelProvider,
+                model,
+                data.modelId,
+                data.prompt,
+                "Sample: " + base64s[0].slice(0, 100) + " .... ",
+                ""
+            );
             return { success: true, data: base64s };
         } else if (runtime.imageModelProvider === ModelProviderName.LIVEPEER) {
             if (!apiKey) {
@@ -1421,6 +1590,16 @@ export const generateImage = async (
                         return `data:image/jpeg;base64,${base64}`;
                     })
                 );
+                logGenerate(
+                    "image",
+                    runtime,
+                    runtime.imageModelProvider,
+                    model,
+                    data.modelId,
+                    data.prompt,
+                    "Sample: " + base64Images[0].slice(0, 100) + " .... ",
+                    ""
+                );
                 return {
                     success: true,
                     data: base64Images,
@@ -1455,9 +1634,29 @@ export const generateImage = async (
             const base64s = response.data.map(
                 (image) => `data:image/png;base64,${image.b64_json}`
             );
+            logGenerate(
+                "image",
+                runtime,
+                runtime.imageModelProvider,
+                model,
+                data.modelId,
+                data.prompt,
+                "Sample: " + base64s[0].slice(0, 100) + " .... ",
+                ""
+            );
             return { success: true, data: base64s };
         }
     } catch (error) {
+        logGenerate(
+            "image",
+            runtime,
+            runtime.imageModelProvider,
+            model,
+            data.modelId,
+            data.prompt,
+            "",
+            error
+        );
         console.error(error);
         return { success: false, error: error };
     }
@@ -1939,3 +2138,4 @@ export async function generateTweetActions({
         retryDelay *= 2;
     }
 }
+
