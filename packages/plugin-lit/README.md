@@ -1,4 +1,4 @@
-# @ai16z/plugin-lit
+# @elizaos/plugin-lit
 
 A comprehensive blockchain interaction plugin for the Eliza Agent Stack, powered by Lit Protocol's Programmable Key Pairs (PKPs). This plugin enables autonomous agents to perform secure cross-chain transactions through decentralized key management and threshold cryptography.
 
@@ -32,9 +32,9 @@ The Lit Protocol plugin provides:
   - Session management
   - Capacity credit monitoring
 
-## Installation 
+## Installation
 ```bash
-npm install @ai16z/plugin-lit
+npm install @elizaos/plugin-lit
 ```
 
 ## Configuration
@@ -42,15 +42,23 @@ npm install @ai16z/plugin-lit
 Required environment variables:
 ```env
 FUNDING_PRIVATE_KEY=   # Private key for funding operations
-RPC_URL=              # RPC endpoint for blockchain interactions
-LIT_PKP_PUBLIC_KEY=   # (Optional) Existing PKP public key
+EVM_RPC_URL=           # RPC endpoint for blockchain interactions
+LIT_PKP_PUBLIC_KEY=    # (Optional) Existing PKP public key
 ```
+
+## Important: Wallet Funding
+
+Before executing any transactions, you must fund the generated Lit wallet address with the necessary assets (ETH, SOL, or USDC). The plugin will create a new PKP wallet address if one isn't provided, and this address will need to hold sufficient funds to:
+1. Cover the amount being transferred
+2. Pay for transaction fees (gas fees on EVM chains, transaction fees on Solana)
+
+You can view your PKP wallet address after initializing the plugin using the configuration file (`lit-config.json`).
 
 ## Usage
 
 ### Basic Setup
 ```typescript
-import { litPlugin } from '@ai16z/plugin-lit';
+import { litPlugin } from '@elizaos/plugin-lit';
 
 // Register the plugin
 runtime.registerPlugin(litPlugin);
@@ -102,10 +110,6 @@ The plugin consists of several key components:
   - `sendEth`: ETH transfer functionality
   - `sendSol`: SOL transfer functionality
   - `sendUSDC`: USDC transfer functionality
-
-- **Evaluators**
-  - `pkpEvaluator`: Manages PKP lifecycle and validation
-  - `securityEvaluator`: Validates transaction safety
 
 ## Configuration Management
 

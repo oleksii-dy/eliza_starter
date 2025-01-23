@@ -65,5 +65,3 @@ eliza.manifest.sgx
 eliza.sig
 
 lit-config.json
-
-packages/plugin-lit/src/evaluators/*

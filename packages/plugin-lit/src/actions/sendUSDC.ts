@@ -124,7 +124,7 @@ export const sendUSDC: Action = {
         throw new Error("Lit environment not fully initialized");
       }
 
-      const provider = new ethers.providers.JsonRpcProvider(runtime.getSetting("RPC_URL"));
+      const provider = new ethers.providers.JsonRpcProvider(runtime.getSetting("EVM_RPC_URL"));
       const usdcContract = new ethers.Contract(USDC_CONTRACT_ADDRESS, USDC_ABI, provider);
       const decimals = 6; // USDC has 6 decimals
       const value = ethers.utils.parseUnits(amount, decimals);
