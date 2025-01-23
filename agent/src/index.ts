@@ -120,6 +120,7 @@ import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
 import { chainbasePlugin } from "@elizaos/plugin-chainbase";
 
 import { nvidiaNimPlugin } from "@elizaos/plugin-nvidia-nim";
+import { ethstoragePlugin } from "@elizaos/plugin-ethstorage"
 
 import { zxPlugin } from "@elizaos/plugin-0x";
 import Database from "better-sqlite3";
@@ -1130,7 +1131,9 @@ export async function createAgent(
                 : null,
             getSecret(character, "EMAIL_INCOMING_USER") && getSecret(character, "EMAIL_INCOMING_PASS") ||
             getSecret(character, "EMAIL_OUTGOING_USER") && getSecret(character, "EMAIL_OUTGOING_PASS") ?
-            emailPlugin : null
+            emailPlugin : null,
+
+            getSecret(character, "ETHSTORAGE_PRIVATE_KEY") ? ethstoragePlugin : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
