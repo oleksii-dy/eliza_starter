@@ -1,5 +1,6 @@
 import { PGLiteDatabaseAdapter } from "@elizaos/adapter-pglite";
 import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
+import { QdrantDatabaseAdapter } from "@elizaos/adapter-qdrant";
 import { RedisClient } from "@elizaos/adapter-redis";
 import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
 import { SupabaseDatabaseAdapter } from "@elizaos/adapter-supabase";
@@ -11,6 +12,7 @@ import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 import { FarcasterClientInterface } from "@elizaos/client-farcaster";
+import { OmniflixPlugin } from "@elizaos/plugin-omniflix";
 import { JeeterClientInterface } from "@elizaos/client-simsai";
 
 import { DirectClient } from "@elizaos/client-direct";
@@ -131,6 +133,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
 import { emailPlugin } from "@elizaos/plugin-email";
+import { sunoPlugin } from "@elizaos/plugin-suno";
+import { udioPlugin } from "@elizaos/plugin-udio";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -700,7 +704,20 @@ function initializeDatabase(dataDir: string) {
             dataDir: process.env.PGLITE_DATA_DIR,
         });
         return db;
-    } else {
+    } else if (process.env.QDRANT_URL
+        && process.env.QDRANT_KEY
+        && process.env.QDRANT_PORT
+        && process.env.QDRANT_VECTOR_SIZE
+    ) {
+        elizaLogger.info("Initializing Qdrant adapter...");
+        const db = new QdrantDatabaseAdapter(
+            process.env.QDRANT_URL,
+            process.env.QDRANT_KEY,
+            Number(process.env.QDRANT_PORT),
+            Number(process.env.QDRANT_VECTOR_SIZE)
+        );
+        return db;
+    }else {
         const filePath =
             process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
         elizaLogger.info(`Initializing SQLite database at ${filePath}...`);
@@ -1017,6 +1034,10 @@ export async function createAgent(
                 getSecret(character, "SGX"))
                 ? teeLogPlugin
                 : null,
+            getSecret(character, "OMNIFLIX_API_URL") &&
+            getSecret(character, "OMNIFLIX_MNEMONIC")
+                ? OmniflixPlugin
+                : null,
             getSecret(character, "COINBASE_API_KEY") &&
             getSecret(character, "COINBASE_PRIVATE_KEY") &&
             getSecret(character, "COINBASE_NOTIFICATION_URI")
@@ -1139,7 +1160,9 @@ export async function createAgent(
                 : null,
             getSecret(character, "EMAIL_INCOMING_USER") && getSecret(character, "EMAIL_INCOMING_PASS") ||
             getSecret(character, "EMAIL_OUTGOING_USER") && getSecret(character, "EMAIL_OUTGOING_PASS") ?
-            emailPlugin : null
+            emailPlugin : null,
+            getSecret(character, "SUNO_API_KEY") ? sunoPlugin : null,
+            getSecret(character, "UDIO_AUTH_TOKEN") ? udioPlugin : null
         ].filter(Boolean),
         providers: [],
         managers: [],
