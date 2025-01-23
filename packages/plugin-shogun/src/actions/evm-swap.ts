@@ -191,7 +191,7 @@ export const evmSwap: Action = {
             );
 
             // Add capacity delegation
-            const { capacityDelegationAuthSig } = 
+            const { capacityDelegationAuthSig } =
                 await litState.nodeClient.createCapacityDelegationAuthSig({
                     dAppOwnerWallet: fundingWallet,
                     capacityTokenId: litState.capacityCredit.tokenId,
@@ -245,18 +245,18 @@ export const evmSwap: Action = {
                 srcChain: ChainId.BASE,
                 destChain: ChainId.BASE,
             });
-            
+
             console.log(`Expected to receive: ${
             formatStringEstimation(quote.outputAmount.value, quote.outputAmount.decimals)
             } ${quote.outputAmount.symbol}`);
-            
+
             await approveIfRequired(
                 litState.evmWallet as any,
                 srcToken,
                 quote.calldatas.to,
                 amount.toString()
             );
-            
+
             const swapTx = await litState.evmWallet.sendTransaction({
                 to: quote.calldatas.to,
                 data: quote.calldatas.data,
@@ -264,7 +264,7 @@ export const evmSwap: Action = {
             });
 
             await swapTx.wait();
-            
+
             console.log(`https://basescan.org/tx/${swapTx.hash}`);
 
             return true;

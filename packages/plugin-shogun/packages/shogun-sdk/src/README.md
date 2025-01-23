@@ -43,6 +43,6 @@ pnpm test:watch
 
 ### Test Coverage
 The test suite currently covers:
-- Quote fetching with valid Solana addresses
-- Token swap parameters validation
-- API response handling
+- Quote fetching with valid EVM addresses on Base network
+- Token swap parameters validation (ETH/USDC pairs)
+- Dextra API response handling and estimation formatting

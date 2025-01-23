@@ -65,6 +65,36 @@ FUNDING_PRIVATE_KEY=   # Private key for funding operations
 LIT_PKP_PUBLIC_KEY=    # (Optional) Existing PKP public key
 ```
 
+## Important: Wallet Funding
+
+Before executing any swaps, you must fund the generated Lit wallet address with the necessary assets. The plugin will create a new PKP wallet address if one isn't provided, and this address will need to hold sufficient funds to:
+1. Cover the amount being swapped
+2. Pay for transaction fees (gas fees) on both source and destination chains
+3. Cover any bridge fees for cross-chain swaps
+
+You can view your PKP wallet address after initializing the plugin using the Lit Protocol configuration file (`lit-config.json`).
+
+## Adding New Networks
+
+To add support for additional networks, follow the pattern in `network.ts`. For each new network, you'll need to:
+
+1. Add the RPC URL to your environment variables
+2. Create a provider and signer pair using ethers.js
+
+Example:
+```typescript
+// In your .env file
+NEW_NETWORK_URL=https://your-network-rpc-url
+
+// In network.ts
+export const newNetworkProvider = ethers.getDefaultProvider(process.env.NEW_NETWORK_URL!);
+export const newNetworkSigner = new ethers.Wallet(process.env.EVM_PRIVATE_KEY!).connect(newNetworkProvider);
+```
+
+Currently supported networks:
+- Base
+- Arbitrum
+
 ## Usage
 
 ### Basic Setup

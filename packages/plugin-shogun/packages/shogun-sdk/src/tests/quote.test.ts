@@ -2,6 +2,7 @@ import { expect, test } from 'vitest';
 import { fetchEvmQuote } from '../scripts/fetchQuote';
 import { ChainId } from '../constants';
 import { ethers } from 'ethers';
+import { DextraQuoteEstimation } from '../types';
 
 test('fetch evm quote', async () => {
   const testWallet = ethers.Wallet.createRandom();
@@ -21,7 +22,7 @@ test('fetch evm quote', async () => {
     senderAddress: `${params.senderAddress.slice(0, 6)}...${params.senderAddress.slice(-6)}`
   });
 
-  const quote = await fetchEvmQuote(params);
+  const quote = await fetchEvmQuote(params) as DextraQuoteEstimation;
 
   expect(quote).toBeDefined();
   expect(quote.outputAmount).toBeDefined();

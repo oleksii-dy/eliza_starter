@@ -17,7 +17,7 @@ async function main() {
   const srcChain = ChainId.ARBITRUM_ONE;
   const destChain = ChainId.ARBITRUM_ONE;
 
-  const AaveDepositorInterface = new ethers.Interface(IAaveDepositor);
+  const AaveDepositorInterface = new ethers.utils.Interface(IAaveDepositor);
 
   const externalCall = {
     type: 'evm',
