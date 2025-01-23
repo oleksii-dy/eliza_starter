@@ -93,10 +93,12 @@ export class TwitterInteractionClient {
     constructor(client: ClientBase, runtime: IAgentRuntime) {
         this.client = client;
         this.runtime = runtime;
+        this.running = false;
     }
 
     async start() {
         const handleTwitterInteractionsLoop = () => {
+            if (!this.running) return;
             this.handleTwitterInteractions();
             setTimeout(
                 handleTwitterInteractionsLoop,
@@ -104,11 +106,21 @@ export class TwitterInteractionClient {
                 this.client.twitterConfig.TWITTER_POLL_INTERVAL * 1000
             );
         };
+        this.running = true;
         handleTwitterInteractionsLoop();
+    }
+
+    async stop() {
+        this.running = false;
     }
 
     async handleTwitterInteractions() {
         elizaLogger.log("Checking Twitter interactions");
+
+        if (!this.client.profile) {
+          elizaLogger.error('handleTwitterInteractions: No profile');
+          return;
+        }
 
         const twitterUsername = this.client.profile.username;
         try {
