@@ -1,11 +1,17 @@
-import {IAgentRuntime, Memory, State} from "@elizaos/core";
+import {elizaLogger, IAgentRuntime, Memory, State} from "@elizaos/core";
 import {HederaAgentKit} from "hedera-agent-kit";
 
 const initAgentKit = (_runtime: IAgentRuntime) => {
     const accountID = _runtime.getSetting("HEDERA_ACCOUNT_ID");
     const privateKey = _runtime.getSetting("HEDERA_PRIVATE_KEY");
-
-    return new HederaAgentKit(accountID, privateKey, 'testnet'); // TODO: define network type as env variable
+    const networkType = _runtime.getSetting("HEDERA_NETWORK_TYPE") as "mainnet" | "testnet" | "previewnet";
+    let hederaAgentKit: HederaAgentKit;
+    try {
+        hederaAgentKit = new HederaAgentKit(accountID, privateKey, networkType);
+    } catch (error) {
+        elizaLogger.error('Error initialising HederaAgentKit: ',error);
+    }
+    return hederaAgentKit;
 }
 
 export const hederaClientProvider = {
@@ -22,7 +28,7 @@ export const hederaClientProvider = {
 
             return `${agentName}'s Hedera Wallet Address: ${address}\nBalance: ${balance} HBAR\n`;
         } catch (error) {
-            console.error("Error in Hedera client provider:", error);
+            elizaLogger.error("Error in Hedera client provider:", error);
             return null;
         }
     }

@@ -856,7 +856,11 @@ export async function createAgent(
             getSecret(character, "QUAI_PRIVATE_KEY")
                 ? quaiPlugin
                 : null,
-            hederaPlugin,
+            getSecret(character, "HEDERA_PRIVATE_KEY") &&
+            getSecret(character, "HEDERA_ACCOUNT_ID") &&
+            getSecret(character, "HEDERA_NETWORK_TYPE")
+                ? hederaPlugin
+                : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
