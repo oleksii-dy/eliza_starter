@@ -237,8 +237,8 @@ export class TwitterPostClient {
             }>("twitter/" + this.twitterUsername + "/lastPost");
 
             const lastPostTimestamp = lastPost?.timestamp ?? 0;
-            const minMinutes = 1;
-            const maxMinutes = 1;
+            const minMinutes = this.client.twitterConfig.POST_INTERVAL_MIN;
+            const maxMinutes = this.client.twitterConfig.POST_INTERVAL_MAX;
             const randomMinutes =
                 Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) +
                 minMinutes;
@@ -419,7 +419,7 @@ export class TwitterPostClient {
             );
             const body = await standardTweetResult.json();
             if (!body?.data?.create_tweet?.tweet_results?.result) {
-                console.error("Error sending tweet; Bad response:", body);
+                elizaLogger.error("Error sending tweet; Bad response:", body);
                 return;
             }
             return body.data.create_tweet.tweet_results.result;
@@ -882,7 +882,7 @@ export class TwitterPostClient {
                     }
                 }
 
-                if (true) {
+                if (actionResponse.quote) {
                     try {
                         // Build conversation thread for context
                         const thread = await buildConversationThread(
@@ -1032,7 +1032,7 @@ export class TwitterPostClient {
                     }
                 }
 
-                if (true) {
+                if (actionResponse.reply) {
                     try {
                         await this.handleTextOnlyReply(
                             tweet,
