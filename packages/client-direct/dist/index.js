@@ -7448,6 +7448,9 @@ var DirectClient = class {
           content,
           createdAt: Date.now()
         };
+        elizaLogger2.log("---msg sniffer start ----");
+        elizaLogger2.log(JSON.stringify(memory));
+        elizaLogger2.log("---msg sniffer end ----");
         elizaLogger2.log("Validate ... done!");
         elizaLogger2.log("addEmbeddingToMemory...");
         await runtime.messageManager.addEmbeddingToMemory(memory);
@@ -7470,7 +7473,7 @@ var DirectClient = class {
         const response = await generateMessageResponse({
           runtime,
           context,
-          modelClass: ModelClass.LARGE
+          modelClass: ModelClass.SMALL
         });
         elizaLogger2.log("ai generate msg response ...done!");
         if (!response) {

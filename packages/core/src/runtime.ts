@@ -646,6 +646,8 @@ export class AgentRuntime implements IAgentRuntime {
             return [];
         }
 
+        elizaLogger.log("mapping evaluators...");
+
         const context = composeContext({
             state: {
                 ...state,
@@ -666,6 +668,9 @@ export class AgentRuntime implements IAgentRuntime {
         const evaluators = parseJsonArrayFromText(
             result
         ) as unknown as string[];
+
+        elizaLogger.log("mapping evaluators...done -->", JSON.stringify(evaluators));
+
 
         for (const evaluator of this.evaluators) {
             if (!evaluators.includes(evaluator.name)) continue;

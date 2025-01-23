@@ -1,5 +1,5 @@
 {
-    "name": "Rockee AI Agent(Standard Version)",
+    "name": "Rockee AI Agent(Plus Version)",
     "clients": ["direct"],
     "modelProvider": "openai",
     "plugins": ["@elizaos/plugin-suimarket"],
