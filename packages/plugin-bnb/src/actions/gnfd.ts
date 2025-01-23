@@ -17,13 +17,14 @@ import {
 import { readFileSync, statSync } from "fs";
 import { lookup } from "mime-types";
 import { extname } from "node:path";
-import { CONFIG, InitGnfdClient } from "../providers/gnfd";
+import { CONFIG, getGnfdConfig, InitGnfdClient } from "../providers/gnfd";
 import { initWalletProvider, WalletProvider } from "../providers/wallet";
 import { greenfieldTemplate } from "../templates";
 import { DelegatedPubObjectRequest } from "@bnb-chain/greenfield-js-sdk";
 import { SupportedChain } from "../types";
 import { CROSS_CHAIN_ABI } from "../abi/CrossChainAbi";
 import { TOKENHUB_ABI } from "../abi/TokenHubAbi";
+import { stringToHex } from "viem";
 
 export { greenfieldTemplate };
 
@@ -66,12 +67,13 @@ export class GreenfieldAction {
         return selectSpInfo;
     }
 
-    async bnbTransferToGnfd(amount: bigint, chain: SupportedChain) {
+    async bnbTransferToGnfd(amount: bigint, runtime: IAgentRuntime) {
+        const config = await getGnfdConfig(runtime)
+
+        const chain: SupportedChain = config.NETWORK === 'TESTNET' ? 'bscTestnet' : 'bsc'
         this.walletProvider.switchChain(chain);
         const publicClient = this.walletProvider.getPublicClient(chain);
         const walletClient = this.walletProvider.getWalletClient(chain);
-
-        const config = chain === "bsc" ? CONFIG["MAINNET"] : CONFIG["TESTNET"];
 
         const [relayFee, ackRelayFee] = await publicClient.readContract({
             address: config.CROSSCHAIN_ADDRESS as `0x${string}`,
@@ -123,6 +125,11 @@ export class GreenfieldAction {
         return createBucketTxRes.transactionHash;
     }
 
+    async headBucket(bucketName: string) {
+        const {bucketInfo} = await this.gnfdClient.bucket.headBucket(bucketName)
+        return bucketInfo.id;
+    }
+
     async uploadObject(msg: DelegatedPubObjectRequest) {
         const uploadRes = await this.gnfdClient.object.delegateUploadObject(
             msg,
@@ -135,6 +142,11 @@ export class GreenfieldAction {
             elizaLogger.log("upload object success");
         }
         return uploadRes.message;
+    }
+
+    async headObject(bucketName: string, objectName: string) {
+        const {objectInfo} = await this.gnfdClient.object.headObject(bucketName, objectName);
+        return objectInfo.id;
     }
 
     async deleteObject(msg: MsgDeleteObject) {
@@ -194,11 +206,11 @@ export const greenfieldAction = {
 
         elizaLogger.log("content", content);
 
+        const config = await getGnfdConfig(runtime)
         const gnfdClient = await InitGnfdClient(runtime);
         const walletProvider = initWalletProvider(runtime);
         const action = new GreenfieldAction(walletProvider, gnfdClient);
 
-        let result;
         const actionType = content.actionType;
         const spInfo = await action.selectSp();
 
@@ -207,71 +219,81 @@ export const greenfieldAction = {
         const { bucketName, objectName } = content;
         const attachments = message.content.attachments;
 
-        switch (actionType) {
-            case "createBucket": {
-                const hash = await action.createBucket({
-                    bucketName: bucketName,
-                    creator: walletProvider.account.address,
-                    visibility: VisibilityType.VISIBILITY_TYPE_PUBLIC_READ,
-                    chargedReadQuota: Long.fromString("0"),
-                    paymentAddress: walletProvider.account.address,
-                    primarySpAddress: spInfo.primarySpAddress,
-                });
-                result = `create bucket successfully, hash: ${hash}`;
-                break;
-            }
-
-            case "uploadObject": {
-                if (!attachments) {
-                    throw new Error("no file to upload");
-                }
-
-                const uploadObjName = objectName;
-
-                await action.uploadObject({
-                    bucketName,
-                    objectName: uploadObjName,
-                    body: generateFile(attachments[0]),
-                    delegatedOpts: {
-                        visibility: VisibilityType.VISIBILITY_TYPE_PUBLIC_READ,
-                    },
-                });
-
-                if (attachments.length > 1) {
-                    result += `Only one object can be uploaded. \n`;
-                }
-                result += `Upload object successfully, name: ${uploadObjName}`;
-                break;
-            }
-
-            case "deleteObject": {
-                const hash = await action.deleteObject({
-                    bucketName,
-                    objectName,
-                    operator: walletProvider.account.address,
-                });
-                result = `delete object successfully, hash: ${hash}`;
-                break;
-            }
-        }
-
-        if (result) {
-            callback?.({
-                text: result,
-            });
-        } else {
-            callback?.({
-                text: `Unsuccessfully ${actionType}`,
-                content: { ...result },
-            });
-        }
-
         try {
+            let result = '';
+            switch (actionType) {
+                case "createBucket": {
+                    const msg = {
+                        bucketName: bucketName,
+                        creator: walletProvider.account.address,
+                        visibility: VisibilityType.VISIBILITY_TYPE_PUBLIC_READ,
+                        chargedReadQuota: Long.fromString("0"),
+                        paymentAddress: walletProvider.account.address,
+                        primarySpAddress: spInfo.primarySpAddress,
+                    }
+                    const hash = await action.createBucket(msg);
+                    const bucketId = await action.headBucket(msg.bucketName)
+                    result = `create bucket successfully, details: ${config.GREENFIELD_SCAN}/bucket/${toHex(bucketId)}`;
+                    break;
+                }
+
+                case "uploadObject": {
+                    if (!attachments) {
+                        throw new Error("no file to upload");
+                    }
+
+                    const uploadObjName = objectName;
+
+                    await action.uploadObject({
+                        bucketName,
+                        objectName: uploadObjName,
+                        body: generateFile(attachments[0]),
+                        delegatedOpts: {
+                            visibility: VisibilityType.VISIBILITY_TYPE_PUBLIC_READ,
+                        },
+                    });
+
+                    const objectId = await action.headObject(bucketName, objectName)
+
+                    if (attachments.length > 1) {
+                        result += `Only one object can be uploaded. \n`;
+                    }
+                    result += `Upload object (${uploadObjName}) successfully, details: ${config.GREENFIELD_SCAN}/object/${toHex(objectId)}`;
+                    break;
+                }
+
+                case "deleteObject": {
+                    const hash = await action.deleteObject({
+                        bucketName,
+                        objectName,
+                        operator: walletProvider.account.address,
+                    });
+                    result = `delete object successfully, hash: 0x${hash}`;
+                    break;
+                }
+
+                case "transfer": {
+                    const hash = await action.bnbTransferToGnfd(content.content, runtime)
+                    result = `transfer bnb to greenfield successfully, hash: ${hash}`;
+                    break;
+                }
+            }
+            if (result) {
+                callback?.({
+                    text: result,
+                });
+            } else {
+                callback?.({
+                    text: `Unsuccessfully ${actionType || ''}`,
+                    content: result,
+                });
+            }
+
             return true;
-        } catch (error) {
-            elizaLogger.error("Error in get balance:", error.message);
+        } catch (error)  {
+            elizaLogger.error("Error execute greenfield action:", error.message);
             callback?.({
-                text: `Getting balance failed`,
+                text: `Bridge failed: ${error.message}`,
                 content: { error: error.message },
             });
             return false;
@@ -286,28 +308,28 @@ export const greenfieldAction = {
             {
                 user: "user",
                 content: {
-                    text: "Create a bucket on greenfield",
+                    text: "Create a bucket(${bucketName}) on greenfield",
                     action: "GREENFIELD_ACTION",
                 },
             },
             {
                 user: "user",
                 content: {
-                    text: "Upload a object on greenfield",
+                    text: "Upload a object(${objectName}) in bucket(${bucketName}) on greenfield",
                     action: "GREENFIELD_ACTION",
                 },
             },
             {
                 user: "user",
                 content: {
-                    text: "Delete object on  greenfield",
+                    text: "Delete object(${objectName}) in bucket(${bucketName}) on greenfield",
                     action: "GREENFIELD_ACTION",
                 },
             },
             {
                 user: "user",
                 content: {
-                    text: "Transfer bnb to greenfield",
+                    text: "for create account on greenfield, transfer ${amount} BNB to myself",
                     action: "GREENFIELD_ACTION",
                 },
             },
@@ -344,4 +366,8 @@ function generateFile(attachment: Media) {
 
 function fixPath(url: string) {
     return url.replace("/agent/agent/", "/agent/");
+}
+
+function toHex(n: string) {
+    return "0x" + Number(n).toString(16).padStart(64, '0');
 }

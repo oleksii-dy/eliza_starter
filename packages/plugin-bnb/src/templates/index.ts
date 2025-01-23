@@ -194,15 +194,16 @@ Extract the following details for Greenfield operations:
 - **bucketName** (string, optional): The name of the bucket to operate
 - **objectName** (string, optional): The name of the object for upload operations
 - **visibility** (string, optional): Bucket visibility setting ("private" or "public")
-- **amount** (string, optianal): BNB transfer to greenfield token amount.
+- **amount** (string, optional): BNB transfer to greenfield token amount.
 
 Required response format:
 \`\`\`json
 {
-    "actionType": "createBucket" | "uploadObject" | "deleteBucket" | "downloadObject",
+    "actionType": "createBucket" | "uploadObject" | "deleteObject" | "transfer",
     "bucketName": string,
     "objectName": string,
-    "visibility": "private" | "public"
+    "visibility": "private" | "public",
+    "amount": number
 }
 \`\`\`
 `;
