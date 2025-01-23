@@ -125,7 +125,7 @@ export const cryptoNewsData: Provider = {
                 // Timestamp <--- the time of the news\n\n
                 // `;
 
-                chainCatcher.data.list.forEach((article) => {
+                articles.forEach((article) => {
                     output += `- ${article.title}\n${article.description}\nTime: ${article.releaseTime}\n\n`;
                 });
 
