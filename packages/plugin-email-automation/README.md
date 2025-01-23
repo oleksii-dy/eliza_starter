@@ -1,8 +1,6 @@
-# @elizaos/plugin-email
+# @elizaos/plugin-email-automation
 
 AI-powered email automation plugin for Eliza that intelligently detects email-worthy conversations and handles generation/delivery. This is not perfect and is simply a solid starting point, and I would encourage any and all contributions!
-
-> **Note**: For traditional SMTP/IMAP email setup without AI features and core functionality like send/receive emails, see [README_traditional.md](./README_traditional.md). This guide is focused on the Resend AI integration.
 
 ## Features
 
@@ -34,7 +32,7 @@ EMAIL_EVALUATION_PROMPT=        # Custom detection criteria for shouldEmail
 
 ### Basic Usage
 ```typescript
-import { emailPlugin } from '@elizaos/plugin-email';
+import { emailPlugin } from '@elizaos/plugin-email-automation';
 
 // Add to your Eliza configuration
 {
@@ -114,9 +112,6 @@ This template produces professional emails like the example shown in the image a
 2. Registering it with the template manager
 3. Specifying your template when sending emails
 
-## Traditional Email Setup
-For traditional SMTP/IMAP configuration and usage, please see [README_traditional.md](./README_traditional.md)
-
 ## Development
 
 ```bash
@@ -146,26 +141,15 @@ graph TD
     B --> C{AI Evaluation}
     C -->|Yes| D[Generation Service]
     D --> E[Email Service]
-
-    E --> F{Provider Selection}
-    F -->|Resend| G1[Resend Provider]
-    F -->|SMTP| G2[SMTP Provider]
-
-    H[Incoming Email] --> I{Protocol}
-    I -->|IMAP| J1[IMAP Listener]
-    I -->|SMTP| J2[SMTP Receiver]
-
-    J1 --> K[Email Client]
-    J2 --> K
-    G1 --> L[Delivery]
-    G2 --> L
+    E --> F[Resend Provider]
+    F --> G[Delivery]
 ```
 
 Architecture Overview:
-- Multiple provider support (Resend, SMTP)
-- Bi-directional email handling (sending/receiving)
-- Protocol-specific implementations
-- Unified client interface
+- Resend Provider support (more to come)
+- AI-powered email detection
+- Context-aware content generation
+- Professional template rendering
 
 ## Credits
 
