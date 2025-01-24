@@ -14,8 +14,9 @@ import {
 
 // import {  formatObjectToText } from "../utils/format";
 
-import GeckoTerminalProvider2 from "../providers/coingeckoTerminalProvider2";
+// import GeckoTerminalProvider2 from "../providers/coingeckoTerminalProvider2";
 import {findByVerifiedAndSymbol} from "../providers/searchCoinInAggre";
+import { getTokenOnSuiScan } from "../providers/getInfoCoinOnSuiScan";
 
 const promptSuiTokenInfoTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 
@@ -41,18 +42,14 @@ No trailing commas allowed
 No single quotes anywhere in the JSON
 Respond with a JSON markdown block containing only the extracted values.`
 
-export const suiTokenInfoBySymbol: Action = {
-    name: "TOKEN_INFO_SUI_NETWORK_BY_SYMBOL",
+export const suiTokenPriceBySymbol: Action = {
+    name: "TOKEN_PRICE_INFO_BY_SYMBOL",
 
-    description: "query token SYMBOL on Sui",
+    description: "pRICE OF TOKEN symbol ON sui",
 
     similes: [
-        "PARSE_SUI_TOKEN_{INPUT}",
-        "EXTRACT_SUI_TOKEN_DETAILS_{INPUT}",
-        "GET_SUI_TOKEN_DATA_{INPUT}",
-        "IDENTIFY_SUI_TOKEN_{INPUT}",
-        "FIND_SUI_TOKEN_INFO_{INPUT}",
-        "PROJECT_OVERVIEW_{INPUT}_SUI",
+        "{INPUT}_PRICE",
+        "PRICE_{INPUT}",
       ],
 
     examples: [],
@@ -88,25 +85,22 @@ export const suiTokenInfoBySymbol: Action = {
         elizaLogger.log("content: ",content);
 
         const tokenInfo = await findByVerifiedAndSymbol(content.token_symbol);
-        console.log(tokenInfo)
-        let coinGecko = new GeckoTerminalProvider2();
-        let info = await coinGecko.getTokenDetails("sui-network",tokenInfo.type);
+        const info = await getTokenOnSuiScan(tokenInfo.type);
+
         console.log(info)
         if (callback) {
             callback({
-                text: `Name ${info.name} (${info.symbol}) \n
-Slogan: ${""} \n
-Website: ${tokenInfo.website} \n
-X: ${tokenInfo.xSocial} \n
-Telegram channel: ${tokenInfo.Telegram || ""} \n
-Coingecko: ${tokenInfo.coingeckoUrl}\n
-MCap ranking: 430 \n
-Token price: ${await coinGecko.getTokenPrice("sui-network",tokenInfo.type)} \n
-Markets: Binance, HTX, Gates, MEXC, Cetus..."`,
-                action: 'TOKEN_INFO_SUI_NETWORK_BY_SYMBOL',
+                text: ``,
+                action: 'TOKEN_PRICE_INFO_BY_SYMBOL',
                 result: {
-                    type: "token_info",
-                    data:info,
+                    type: "token_price",
+                    data:{
+                        symbol: info.symbol,
+                        name: info.name,
+                        market_cap:  info.marketCap,
+                        price: info.tokenPrice,
+                        icon_url: info.iconUrl,
+                    },
 
                 }
             });

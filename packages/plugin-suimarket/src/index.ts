@@ -5,7 +5,7 @@ import { Plugin } from '@elizaos/core';
 // import {  trendingTokens} from "./actions/trendingCoins";
 // import { topAiTokens } from './actions/topAiTokens';
 import { searchSuiTokenSymbol } from './actions/searchSuiTokenSymbol';
-import { suiTokenInfo } from './actions/suiTokenInfoByAddress';
+import { suiTokenPriceByAddress } from './actions/suiTokenPriceByAddress';
 import { executeSwap } from './actions/swapBySymbol';
 import { executeSwapByAddress } from './actions/swapByAddress';
 import { sendTokenBySymbol } from './actions/sendTokenBySymbol';
@@ -13,7 +13,8 @@ import { checkTxhashOnSui } from './actions/checkInfoTxHash';
 import { chainInfo } from './actions/infoChain';
 import { projectInfo } from './actions/projectCoinOverview';
 import { topDexInfo } from './actions/topDexByNetwork';
-// import { suiTokenInfoBySymbol } from './actions/suiTokenInfoBySymbol';
+// import { sui } from './actions/suiTokenInfoBySymbol';
+import { suiTokenPriceBySymbol } from './actions/suiTokenPriceBySymbol';
 
 const suimarketPlugin: Plugin = {
   name: "suimarketPlugin",
@@ -25,14 +26,16 @@ const suimarketPlugin: Plugin = {
     // coinInfo,
     // topAiTokens,
     searchSuiTokenSymbol,
-    suiTokenInfo,
+    // suiTokenInfo,
     executeSwap,
     executeSwapByAddress,
     sendTokenBySymbol,
     checkTxhashOnSui,
     projectInfo,
     // suiTokenInfoBySymbol,
-    topDexInfo
+    topDexInfo,
+    suiTokenPriceBySymbol,
+    suiTokenPriceByAddress
 
 ],
   evaluators: [],

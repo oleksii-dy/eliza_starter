@@ -14,7 +14,8 @@ import {
 
 // import {  formatObjectToText } from "../utils/format";
 
-import GeckoTerminalProvider2 from "../providers/coingeckoTerminalProvider2";
+// import GeckoTerminalProvider2 from "../providers/coingeckoTerminalProvider2";
+import { getTokenOnSuiScan } from "../providers/getInfoCoinOnSuiScan";
 
 const promptSuiTokenInfoTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 
@@ -45,18 +46,14 @@ No trailing commas allowed
 No single quotes anywhere in the JSON
 Respond with a JSON markdown block containing only the extracted values.`
 
-export const suiTokenInfo: Action = {
-    name: "TOKEN_INFO_SUI_NETWORK_BY_ADDRESS",
+export const suiTokenPriceByAddress: Action = {
+    name: "TOKEN_PRICE_INFO_BY_ADDRESS",
 
-    description: "query token ADDRESS on Sui",
+    description: "pRICE OF TOKEN address ON sui",
 
     similes: [
-        "PARSE_SUI_TOKEN_{INPUT}",
-        "EXTRACT_SUI_TOKEN_DETAILS_{INPUT}",
-        "GET_SUI_TOKEN_DATA_{INPUT}",
-        "IDENTIFY_SUI_TOKEN_{INPUT}",
-        "FIND_SUI_TOKEN_INFO_{INPUT}",
-        "PROJECT_OVERVIEW_{INPUT}"
+        "{INPUT}_PRICE",
+        "PRICE_{INPUT}",
       ],
 
     examples: [],
@@ -90,25 +87,14 @@ export const suiTokenInfo: Action = {
             modelClass: ModelClass.SMALL,
         })
         elizaLogger.log("content: ",content);
-
-
-        let coinGecko = new GeckoTerminalProvider2();
-        let info = await coinGecko.getTokenDetails("sui-network",content.token_address);
+        const info = await getTokenOnSuiScan(content.type);
         console.log(info)
         if (callback) {
             callback({
-                text: `"Name ($Symbol)
-Slogan
-Website:
-X:
-Telegram channel:
-Coingecko:
-MCap ranking:
-Token price:
-Markets: Binance, HTX, Gates, MEXC, Cetus..."`,
+                text: ``,
                 action: 'suiTokenInfo',
                 result: {
-                    type: "token_info",
+                    type: "token_price",
                     data:info,
 
                 }
