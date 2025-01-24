@@ -46,7 +46,7 @@ import {
     isReactToPRContent,
     isReplyToPRCommentContent,
 } from "../types";
-import { getPullRequestFromMemories } from "../utils";
+import { getPullRequestFromMemories, initRepo } from "../utils";
 import {
     addCommentToPRTemplate,
     closePRActionTemplate,
@@ -63,6 +63,7 @@ import {
 import { createIssueAction } from "./createIssue";
 import { createCommitAction } from "./createCommit";
 import { createPullRequestAction } from "./createPullRequest";
+import { initializeRepositoryAction } from "./initializeRepository";
 
 export const reactToPRAction: Action = {
     name: "REACT_TO_PR",
@@ -1003,7 +1004,7 @@ export const implementFeatureAction: Action = {
         message: Memory,
         state: State,
         options: any,
-        callback?: HandlerCallback
+        callback?: HandlerCallback,
     ) => {
         // elizaLogger.log(
         //     "[implementFeature] Composing state for message:",
@@ -1096,6 +1097,14 @@ export const implementFeatureAction: Action = {
                 JSON.stringify(codeFileChangesContent, null, 2),
             );
 
+            // Initialize repository
+            await initRepo(
+                runtime.getSetting("GITHUB_API_TOKEN"),
+                content.owner,
+                content.repo,
+                content.base,
+            );
+
             message.content.text = `Commit changes to the repository ${content.owner}/${content.repo} on branch '${content.branch}' with the commit message: ${content.feature}`;
 
             // Commit changes
@@ -1151,7 +1160,7 @@ export const implementFeatureAction: Action = {
             {
                 user: "{{user}}",
                 content: {
-                    text: "Implement replacing console.log with elizaLogger.log across the repo on repository elizaOS/eliza branch realitySpiral/demo against base develop",
+                    text: "Implement replacing console.log with elizaLogger.log across the repo on repository elizaOS/eliza branch realitySpiral/demo against base main",
                 },
             },
             {
@@ -1166,7 +1175,7 @@ export const implementFeatureAction: Action = {
             {
                 user: "{{user}}",
                 content: {
-                    text: "Implement feature for issue #42 in repository elizaOS/eliza branch develop against base develop",
+                    text: "Implement feature for issue #42 in repository elizaOS/eliza branch develop against base main",
                 },
             },
             {

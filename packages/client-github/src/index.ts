@@ -68,7 +68,6 @@ export class GitHubClient extends EventEmitter {
         super();
 
         this.apiToken = runtime.getSetting("GITHUB_API_TOKEN") as string;
-
         this.runtime = runtime;
         this.character = runtime.character;
         this.states = new Map();
@@ -690,7 +689,13 @@ export class GitHubClient extends EventEmitter {
 
 export const GitHubClientInterface: Client = {
     start: async (runtime: IAgentRuntime) => {
-        await validateGithubConfig(runtime);
+        const config = await validateGithubConfig(runtime);
+
+        if (config.GITHUB_CLIENT_ENABLED !== "true") {
+            elizaLogger.info("GitHub client is not enabled, skipping...");
+            return;
+        }
+
         elizaLogger.info(
             "Starting GitHub client with agent ID:",
             runtime.agentId,

@@ -944,7 +944,7 @@ export async function createAgent(
 
     return new AgentRuntime({
         conversationLength: Number(
-            getSecret(character, "CONVERSATION_LENGTH") || "32"
+            getSecret(character, "CONVERSATION_LENGTH") || "32",
         ),
         databaseAdapter: db,
         token,
@@ -1151,7 +1151,7 @@ export async function createAgent(
             getSecret(character, "PYTH_MAINNET_PROGRAM_KEY")
                 ? pythDataPlugin
                 : null,
-            ...(getSecret(character, "GITHUB_PLUGIN_ENABLED") &&
+            ...(getSecret(character, "GITHUB_PLUGIN_ENABLED") === "true" &&
             getSecret(character, "GITHUB_API_TOKEN")
                 ? [
                       githubInitializePlugin,

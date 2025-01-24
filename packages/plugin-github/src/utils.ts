@@ -38,29 +38,42 @@ export async function createReposDirectory(owner: string) {
     }
 }
 
+export async function initRepo(
+    token: string,
+    owner: string,
+    repo: string,
+    branch: string,
+) {
+    const repoPath = getRepoPath(owner, repo);
+    await createReposDirectory(owner);
+    await cloneOrPullRepository(token, owner, repo, repoPath, branch);
+    await checkoutBranch(repoPath, branch);
+}
+
 export async function cloneOrPullRepository(
+    token: string,
     owner: string,
     repo: string,
     repoPath: string,
-    branch: string = "main"
+    branch: string = "main",
 ) {
     try {
         elizaLogger.info(
-            `Cloning or pulling repository ${owner}/${repo}... @ branch: ${branch}`
+            `Cloning or pulling repository ${owner}/${repo}... @ branch: ${branch}`,
         );
         elizaLogger.info(
-            `URL: https://github.com/${owner}/${repo}.git @ branch: ${branch}`
+            `URL: https://github.com/${owner}/${repo}.git @ branch: ${branch}`,
         );
 
         // Clone or pull repository
         if (!existsSync(repoPath)) {
             const git = simpleGit();
             await git.clone(
-                `https://github.com/${owner}/${repo}.git`,
+                `https://${token}@github.com/${owner}/${repo}.git`,
                 repoPath,
                 {
                     "--branch": branch,
-                }
+                },
             );
         } else {
             const git = simpleGit(repoPath);
@@ -69,7 +82,7 @@ export async function cloneOrPullRepository(
     } catch (error) {
         elizaLogger.error(
             `Error cloning or pulling repository ${owner}/${repo}:`,
-            error
+            error,
         );
         throw new Error(`Error cloning or pulling repository: ${error}`);
     }
