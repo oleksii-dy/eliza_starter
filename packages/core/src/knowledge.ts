@@ -136,12 +136,12 @@ export function preprocess(content: string): string {
             // Remove comments
             .replace(/\/\*[\s\S]*?\*\//g, "")
             .replace(/\/\/.*/g, "")
-            // Normalize whitespace
-            .replace(/\s+/g, " ")
+            // Normalize whitespace (including Chinese non-breaking spaces)
+            .replace(/[\s\u3000]+/g, " ")
             // Remove multiple newlines
             .replace(/\n{3,}/g, "\n\n")
-            // Remove special characters except those common in URLs
-            .replace(/[^a-zA-Z0-9\s\-_./:?=&]/g, "")
+            // Allow Chinese characters and common punctuation while removing unwanted special characters
+            .replace(/[^a-zA-Z0-9\u4e00-\u9fa5\s\-_./:?=&，。！？、（）【】《》：“”‘’]/g, "")
             .trim()
             .toLowerCase()
     );
