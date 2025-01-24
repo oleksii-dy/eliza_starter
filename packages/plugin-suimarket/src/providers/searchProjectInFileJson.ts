@@ -33,3 +33,23 @@ export const searchProjectInFileJson = async(name:string)=>{
 
     return results.find(result => result !== null) || null;
 }
+export const searchCategoriesInFileJson = async(nameCategories :string= "Meme")=>{
+    const results = await Promise.all(
+        files.map(async (file) => {
+            try {
+                const data = await fs.readFile(file, 'utf8');
+                const projects = JSON.parse(data);
+
+                const project = projects.filter(item => item.categories.includes(nameCategories)).map(project => project.symbol);
+
+                return project
+            } catch (err) {
+                console.error(`Error reading file ${file}:`, err);
+                return null;
+            }
+        })
+    );
+
+
+    return results.find(result => result !== null) || null;
+}

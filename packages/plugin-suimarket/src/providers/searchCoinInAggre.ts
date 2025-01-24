@@ -37,5 +37,10 @@ export async function findByVerifiedAndName(name) {
     return verifiedItem || matchingItems[0];
 }
 
-
+export async function findTypesBySymbols(symbols: string[]){
+    return symbols.map(symbol => {
+      const token = data.find((t: any) => t.symbol === symbol);
+      return token ? token.type : null;
+    }).filter(type => type !== null) as string[];
+  }
 

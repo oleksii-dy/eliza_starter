@@ -15,6 +15,8 @@ import { projectInfo } from './actions/projectCoinOverview';
 import { topDexInfo } from './actions/topDexByNetwork';
 // import { sui } from './actions/suiTokenInfoBySymbol';
 import { suiTokenPriceBySymbol } from './actions/suiTokenPriceBySymbol';
+import { topMeme } from './actions/topMeMeToken';
+import { topDefi } from './actions/topDefiToken';
 
 const suimarketPlugin: Plugin = {
   name: "suimarketPlugin",
@@ -35,7 +37,9 @@ const suimarketPlugin: Plugin = {
     // suiTokenInfoBySymbol,
     topDexInfo,
     suiTokenPriceBySymbol,
-    suiTokenPriceByAddress
+    suiTokenPriceByAddress,
+    topMeme,
+    topDefi
 
 ],
   evaluators: [],

@@ -147,7 +147,19 @@ export class GeckoTerminalProvider {
       return [];
     }
   }
-  
+  async fetchMultipleTokenOnNetwork(networkId: string = "sui-network", tokenAddresses: string[]) {
+    const url = `/networks/${networkId}/tokens/multi/${tokenAddresses.join(",")}`;
+    try {
+        const response = await this.api.get(url,{params: {include: "top_pools"}});
+        const pools = response.data;
+        console.log(pools)
+        // Flatten and map pools
+        return pools;
+      } catch (error) {
+        console.error(`Error fetching pools for token ${tokenAddresses.join(",")} on network ${networkId}:`, error.message);
+        return [];
+      }
+  }
   // Flatten a single pool object
   private flattenPool(pool: PoolRaw): PoolFlat {
     return {
