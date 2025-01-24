@@ -5,17 +5,16 @@ import {
     parseJSONObjectFromText,
     getModelSettings,
 } from "@elizaos/core";
-import { models } from "@elizaos/core";
 import {
-    Action,
-    ActionExample,
-    Content,
-    HandlerCallback,
-    Handler,
-    IAgentRuntime,
-    Memory,
+    type Action,
+    type ActionExample,
+    type Content,
+    type HandlerCallback,
+    type Handler,
+    type IAgentRuntime,
+    type Memory,
     ModelClass,
-    State,
+    type State,
 } from "@elizaos/core";
 
 export const summarizationTemplate = `# Summarized so far (we are adding to this)

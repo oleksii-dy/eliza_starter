@@ -1,4 +1,4 @@
-import {
+import type {
     Action,
     HandlerCallback,
     IAgentRuntime,
@@ -13,7 +13,7 @@ export const sentientAI: Action = {
         "NEWS",
         "WEATHER"
     ],
-    description: "Provde realtime information for Weather, News.",
+    description: "Provide realtime information for Weather, News.",
     examples: [
         [
             {
@@ -61,7 +61,7 @@ export const sentientAI: Action = {
             },
         ],
     ],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         // no extra validation needed
         return true;
     },

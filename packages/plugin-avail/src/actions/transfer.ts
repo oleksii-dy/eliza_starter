@@ -1,15 +1,14 @@
 import {
-    ActionExample,
-    Content,
-    HandlerCallback,
-    IAgentRuntime,
-    Memory,
+    type ActionExample,
+    type Content,
+    type HandlerCallback,
+    type IAgentRuntime,
+    type Memory,
     ModelClass,
-    State,
+    type State,
     type Action,
     elizaLogger,
     composeContext,
-    generateObject,
     generateObjectDeprecated,
 } from "@elizaos/core";
 import { validateAvailConfig } from "../environment";
@@ -20,8 +19,8 @@ import {
     getKeyringFromSeed,
     isValidAddress,
 } from "avail-js-sdk";
-import { ISubmittableResult } from "@polkadot/types/types/extrinsic";
-import { H256 } from "@polkadot/types/interfaces/runtime";
+import type { ISubmittableResult } from "@polkadot/types/types/extrinsic";
+import type { H256 } from "@polkadot/types/interfaces/runtime";
 
 export interface TransferContent extends Content {
     recipient: string;
@@ -77,7 +76,7 @@ export default {
         "SEND_AVAIL_TOKEN_ON_AVAIL_DA",
         "PAY_ON_AVAIL",
     ],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (runtime: IAgentRuntime, _message: Memory) => {
         await validateAvailConfig(runtime);
         return true;
     },
@@ -128,7 +127,7 @@ export default {
         if (content.amount != null && content.recipient != null) {
             try {
                 const SEED = runtime.getSetting("AVAIL_SEED")!;
-                const PUBLIC_KEY = runtime.getSetting("AVAIL_ADDRESS")!;
+                //const PUBLIC_KEY = runtime.getSetting("AVAIL_ADDRESS")!;
                 const ENDPOINT = runtime.getSetting("AVAIL_RPC_URL");
 
                 const api = await initialize(ENDPOINT);
@@ -145,19 +144,19 @@ export default {
                 );
 
                 // Transaction call
-                const txResult = await new Promise<ISubmittableResult>(
+                const txResult:ISubmittableResult = await new Promise(
                     (res) => {
                         api.tx.balances
                             .transferKeepAlive(content.recipient, amount)
                             .signAndSend(
                                 keyring,
                                 options,
-                                (result: ISubmittableResult) => {
+                                (result) => {
                                     elizaLogger.log(
                                         `Tx status: ${result.status}`
                                     );
                                     if (result.isFinalized || result.isError) {
-                                        res(result);
+                                        res(result as any);
                                     }
                                 }
                             );
