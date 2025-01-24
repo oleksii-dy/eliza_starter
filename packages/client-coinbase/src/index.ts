@@ -15,10 +15,14 @@ import { postTweet } from "@elizaos/plugin-twitter";
 import express from "express";
 import { WebhookEvent } from "./types";
 import { Coinbase, Wallet } from "@coinbase/coinbase-sdk";
+
+import { Token, CurrencyAmount, TradeType, Percent } from '@uniswap/sdk-core';
+import { Route, Trade } from '@uniswap/sdk-core';
+import { ethers } from 'ethers';
 import { initializeWallet } from "../../plugin-coinbase/src/utils";
 
- export type WalletType = 'short_term_trading' | 'long_term_trading' | 'dry_powder' | 'operational_capital';
- export type CoinbaseWallet = { wallet: Wallet, walletType: WalletType };
+export type WalletType = 'short_term_trading' | 'long_term_trading' | 'dry_powder' | 'operational_capital';
+export type CoinbaseWallet = { wallet: Wallet, walletType: WalletType };
 
 export class CoinbaseClient implements Client {
     private runtime: IAgentRuntime;
@@ -113,18 +117,17 @@ export class CoinbaseClient implements Client {
                 this.runtime.getSetting("COINBASE_PRIVATE_KEY") ??
                 process.env.COINBASE_PRIVATE_KEY,
         });
-       const walletTypes: WalletType[] = ['short_term_trading', 'long_term_trading', 'dry_powder', 'operational_capital'];
-       const networkId = Coinbase.networks.BaseMainnet;
-       for (const walletType of walletTypes) {
-           elizaLogger.log('walletType ', walletType);
-           const wallet = await initializeWallet(this.runtime, networkId, walletType);
-           elizaLogger.log('Successfully loaded wallet ', wallet.wallet.getId());
-           this.wallets.push(wallet);
-       }
+        const walletTypes: WalletType[] = ['short_term_trading', 'long_term_trading', 'dry_powder', 'operational_capital'];
+        const networkId = Coinbase.networks.BaseMainnet;
+        for (const walletType of walletTypes) {
+            elizaLogger.log('walletType ', walletType);
+            const wallet = await initializeWallet(this.runtime, networkId, walletType);
+            elizaLogger.log('Successfully loaded wallet ', wallet.wallet.getId());
+            this.wallets.push(wallet);
+        }
     }
 
-
-    private async generateTweetContent(event: WebhookEvent, amountInCurrency: number, pnlText: string, formattedTimestamp: string, state: State): Promise<string> {
+    private async generateTweetContent(event: WebhookEvent, amountInCurrency: number, pnlText: string, formattedTimestamp: string, state: State, tx: ethers.Transaction): Promise<string> {
         try {
             const tradeTweetTemplate = `
 # Task
@@ -136,7 +139,7 @@ Trade details:
 - Current price: $${Number(event.price).toFixed(2)}
 - Overall Unrealized PNL: $${pnlText}
 - Time: ${formattedTimestamp}
-
+- Transaction: ${tx.hash}
 Requirements:
 1. Must be under 180 characters
 2. Use 1-2 relevant emojis
@@ -151,8 +154,8 @@ Example variations for buys:
 "🎯 Strategic BTC purchase: $1,000 at $50,000.00. Overall Unrealized PNL: $${pnlText}"
 
 Example variations for sells:
-"💫 Executed BTC position: Sold $1,000 at $52,000.00. Overall Unrealized PNL: $${pnlText}"
-"📊 Strategic exit: Released $1,000 of BTC at $52,000.00. Overall Unrealized PNL: $${pnlText}"
+"💫 Executed BTC position: Sold $1,000 at $52,000.00. Overall Unrealized PNL: $${pnlText}. See transaction: ${tx.hash}"
+"📊 Strategic exit: Released $1,000 of BTC at $52,000.00. Overall Unrealized PNL: $${pnlText}. See transaction: ${tx.hash}"
 
 Generate only the tweet text, no commentary or markdown.`;
             const context = composeContext({
@@ -228,19 +231,22 @@ Generate only the tweet text, no commentary or markdown.`;
         // const pnl = await pnlProvider.get(this.runtime, memory);
 
         // const pnlText = `Unrealized PNL: $${pnl.toFixed(2)}`;
+        const tx = await this.swapUSDCForToken(event.ticker, amount);
+        // TODO: get pnl
 
-        try {
-            const tweetContent = await this.generateTweetContent(event, amount, '', formattedTimestamp, state);
-            elizaLogger.info("Generated tweet content:", tweetContent);
-            if (this.runtime.getSetting('TWITTER_DRY_RUN')) {
-                elizaLogger.info("Dry run mode enabled. Skipping tweet posting.",);
-                return;
+
+            try {
+                const tweetContent = await this.generateTweetContent(event, amount, '', formattedTimestamp, state, tx);
+                elizaLogger.info("Generated tweet content:", tweetContent);
+                if (this.runtime.getSetting('TWITTER_DRY_RUN')) {
+                    elizaLogger.info("Dry run mode enabled. Skipping tweet posting.",);
+                    return;
+                }
+                const response = await postTweet(this.runtime, tweetContent);
+                elizaLogger.info("Tweet response:", response);
+            } catch (error) {
+                elizaLogger.error("Failed to post tweet:", error);
             }
-            const response = await postTweet(this.runtime, tweetContent);
-            elizaLogger.info("Tweet response:", response);
-        } catch (error) {
-            elizaLogger.error("Failed to post tweet:", error);
-        }
         };
 
         await this.runtime.processActions(memory, [memory], state, callback);
@@ -273,6 +279,34 @@ Generate only the tweet text, no commentary or markdown.`;
 
     async start(): Promise<void> {
         await this.initialize();
+    }
+
+    private async swapUSDCForToken(ticker: string, amountIn: number) {
+        const USDC = new Token(1, '0xA0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', 6, 'USDC', 'USD Coin');
+        const token = new Token(1, ticker, 18); // Assuming the token has 18 decimals
+
+        const provider = new ethers.JsonRpcProvider(process.env.ETHEREUM_RPC_URL);
+        const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+
+        const amountInCurrency = CurrencyAmount.fromRawAmount(USDC, amountIn * 10 ** USDC.decimals);
+
+        const route = new Route([USDC, token], USDC);
+        const trade = new Trade(route, amountInCurrency, TradeType.EXACT_INPUT);
+
+        const slippageTolerance = new Percent('50', '10000'); // 0.50%
+        const amountOutMin = trade.minimumAmountOut(slippageTolerance).toExact();
+
+        const transaction = {
+            to: route.path[1].address,
+            value: ethers.utils.parseUnits(amountOutMin, token.decimals),
+            gasLimit: ethers.utils.hexlify(100000),
+            gasPrice: ethers.utils.parseUnits('20', 'gwei'),
+        };
+
+        const tx = await wallet.sendTransaction(transaction);
+        await tx.wait();
+        elizaLogger.log("tx", JSON.stringify(tx));
+        return tx;
     }
 }
 
