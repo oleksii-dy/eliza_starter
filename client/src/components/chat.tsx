@@ -159,6 +159,13 @@ export default function Page({ agentId }: { agentId: UUID }) {
         }
     };
 
+    const joinRoomQuery = useQuery({
+        queryKey: ["joinRoom", agentId],
+        queryFn: () => apiClient.joinRoom(agentId),
+        enabled: false,
+        staleTime: Infinity,
+    });
+
     const { data: latestMessage } = useQuery({
         queryKey: ["lastMessage", agentId],
         queryFn: () => apiClient.getMemories(agentId),
@@ -170,14 +177,18 @@ export default function Page({ agentId }: { agentId: UUID }) {
                     agentId,
                 ]) || [];
 
+            if (data.memories.length === 0 && !joinRoomQuery.isSuccess) {
+                joinRoomQuery.refetch();
+            }
+
             // Filter out messages that already exist in our cache
             const newMessages = data.memories
                 .reverse()
                 .filter(
                     (newMsg: any) =>
                         !existingMessages.some(
-                            (existingMsg: any) => existingMsg.id === newMsg.id
-                        )
+                            (existingMsg: any) => existingMsg.id === newMsg.id,
+                        ),
                 );
 
             // If we have new messages, add them to our messages
@@ -193,7 +204,7 @@ export default function Page({ agentId }: { agentId: UUID }) {
                 ];
                 queryClient.setQueryData(
                     ["messages", agentId],
-                    updatedMessages
+                    updatedMessages,
                 );
                 return updatedMessages;
             }
