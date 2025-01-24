@@ -15,7 +15,8 @@ import {
     TokenPerformance,
     TokenRecommendation,
     TradePerformance,
-    TrustScoreDatabase,
+    ITrustDatabase,
+    initTrustDatabase,
 } from "@elizaos/plugin-trustdb";
 import { getTokenBalance } from "../utils/index.ts";
 import { TokenProvider } from "./token.ts";
@@ -52,7 +53,7 @@ interface TokenRecommendationSummary {
 }
 export class TrustScoreManager {
     private tokenProvider: TokenProvider;
-    private trustScoreDb: TrustScoreDatabase;
+    private trustScoreDb: ITrustDatabase;
     private DECAY_RATE = 0.95;
     private MAX_DECAY_DAYS = 30;
     private backend;
@@ -61,7 +62,7 @@ export class TrustScoreManager {
     constructor(
         runtime: IAgentRuntime,
         tokenProvider: TokenProvider,
-        trustScoreDb: TrustScoreDatabase
+        trustScoreDb: ITrustDatabase
     ) {
         this.tokenProvider = tokenProvider;
         this.trustScoreDb = trustScoreDb;
@@ -129,19 +130,23 @@ export class TrustScoreManager {
         );
         const decayedScore = recommenderMetrics.trustScore * decayFactor;
         const validationTrustScore =
-            this.trustScoreDb.calculateValidationTrust(tokenAddress);
+            await this.trustScoreDb.calculateValidationTrust(tokenAddress);
 
         return {
             tokenPerformance: {
                 tokenAddress:
                     processedData.dexScreenerData.pairs[0]?.baseToken.address ||
                     "",
-                symbol: processedData.dexScreenerData.pairs[0]?.baseToken.symbol || "",
+                symbol:
+                    processedData.dexScreenerData.pairs[0]?.baseToken.symbol ||
+                    "",
                 balance: 0, // TODO: Implement balance check
-                initialMarketCap: processedData.dexScreenerData.pairs[0]?.marketCap || 0,
+                initialMarketCap:
+                    processedData.dexScreenerData.pairs[0]?.marketCap || 0,
                 priceChange24h:
                     processedData.tradeData.market.priceChangePercentage24h,
-                volumeChange24h: processedData.tradeData.market.starknetVolume24h,
+                volumeChange24h:
+                    processedData.tradeData.market.starknetVolume24h,
                 trade_24h_change:
                     processedData.tradeData.market.starknetTradingVolume24h,
                 liquidity:
@@ -292,7 +297,8 @@ export class TrustScoreManager {
     async suspiciousVolume(tokenAddress: string): Promise<boolean> {
         const processedData: ProcessedTokenData =
             await this.tokenProvider.getProcessedTokenData();
-        const unique_wallet_24h = processedData.tradeData.market.starknetTradingVolume24h;
+        const unique_wallet_24h =
+            processedData.tradeData.market.starknetTradingVolume24h;
         const volume_24h = processedData.tradeData.market.starknetVolume24h;
         const suspiciousVolume = unique_wallet_24h / volume_24h > 0.5;
         elizaLogger.log(
@@ -309,7 +315,8 @@ export class TrustScoreManager {
         );
 
         // Use starknetTradingVolume24h as a proxy for volume growth
-        const currentVolume = processedData.tradeData.market.starknetTradingVolume24h;
+        const currentVolume =
+            processedData.tradeData.market.starknetTradingVolume24h;
 
         // Define a growth threshold (e.g., $1M volume as sustained growth)
         const growthThreshold = 1_000_000;
@@ -325,7 +332,8 @@ export class TrustScoreManager {
         );
 
         // Use priceChangePercentage24h as a proxy for rapid dump
-        const priceChange24h = processedData.tradeData.market.priceChangePercentage24h;
+        const priceChange24h =
+            processedData.tradeData.market.priceChangePercentage24h;
 
         // Consider a rapid dump if the price drops more than 50% in 24 hours
         return priceChange24h < -50;
@@ -374,10 +382,13 @@ export class TrustScoreManager {
         const prices = await wallet.getTokenUsdValues();
         const solPrice = prices.solana?.usd;
         if (!solPrice) {
-            throw new Error("Unable to fetch Solana price (cryptoName: 'solana').");
+            throw new Error(
+                "Unable to fetch Solana price (cryptoName: 'solana')."
+            );
         }
         const buySol = data.buy_amount / solPrice;
-        const buy_value_usd = data.buy_amount * processedData.tradeData.market.currentPrice;
+        const buy_value_usd =
+            data.buy_amount * processedData.tradeData.market.currentPrice;
 
         const creationData = {
             token_address: tokenAddress,
@@ -488,11 +499,14 @@ export class TrustScoreManager {
         const prices = await wallet.getTokenUsdValues();
         const solPrice = prices.solana?.usd;
         if (!solPrice) {
-            throw new Error("Unable to fetch Solana price (cryptoName: 'solana').");
+            throw new Error(
+                "Unable to fetch Solana price (cryptoName: 'solana')."
+            );
         }
         const sellSol = sellDetails.sell_amount / solPrice;
         const sell_value_usd =
-            sellDetails.sell_amount * processedData.tradeData.market.currentPrice;
+            sellDetails.sell_amount *
+            processedData.tradeData.market.currentPrice;
         const trade = await this.trustScoreDb.getLatestTradePerformance(
             tokenAddress,
             recommender.id,
@@ -542,10 +556,11 @@ export class TrustScoreManager {
         startDate: Date,
         endDate: Date
     ): Promise<Array<TokenRecommendationSummary>> {
-        const recommendations = this.trustScoreDb.getRecommendationsByDateRange(
-            startDate,
-            endDate
-        );
+        const recommendations =
+            await this.trustScoreDb.getRecommendationsByDateRange(
+                startDate,
+                endDate
+            );
 
         // Group recommendations by tokenAddress
         const groupedRecommendations = recommendations.reduce(
@@ -558,8 +573,8 @@ export class TrustScoreManager {
             {} as Record<string, Array<TokenRecommendation>>
         );
 
-        const result = Object.keys(groupedRecommendations).map(
-            (tokenAddress) => {
+        const result = await Promise.all(
+            Object.keys(groupedRecommendations).map(async (tokenAddress) => {
                 const tokenRecommendations =
                     groupedRecommendations[tokenAddress];
 
@@ -569,25 +584,27 @@ export class TrustScoreManager {
                 let totalConsistencyScore = 0;
                 const recommenderData = [];
 
-                tokenRecommendations.forEach((recommendation) => {
+                for (const recommendation of tokenRecommendations) {
                     const tokenPerformance =
-                        this.trustScoreDb.getTokenPerformance(
+                        await this.trustScoreDb.getTokenPerformance(
                             recommendation.tokenAddress
                         );
                     const recommenderMetrics =
-                        this.trustScoreDb.getRecommenderMetrics(
+                        await this.trustScoreDb.getRecommenderMetrics(
                             recommendation.recommenderId
                         );
 
-                    const trustScore = this.calculateTrustScore(
+                    const trustScore = await this.calculateTrustScore(
                         tokenPerformance,
                         recommenderMetrics
                     );
-                    const consistencyScore = this.calculateConsistencyScore(
-                        tokenPerformance,
-                        recommenderMetrics
-                    );
-                    const riskScore = this.calculateRiskScore(tokenPerformance);
+                    const consistencyScore =
+                        await this.calculateConsistencyScore(
+                            tokenPerformance,
+                            recommenderMetrics
+                        );
+                    const riskScore =
+                        await this.calculateRiskScore(tokenPerformance);
 
                     // Accumulate scores for averaging
                     totalTrustScore += trustScore;
@@ -601,7 +618,7 @@ export class TrustScoreManager {
                         consistencyScore,
                         recommenderMetrics,
                     });
-                });
+                }
 
                 // Calculate averages for this token
                 const averageTrustScore =
@@ -618,7 +635,7 @@ export class TrustScoreManager {
                     averageConsistencyScore,
                     recommenders: recommenderData,
                 };
-            }
+            })
         );
 
         // Sort recommendations by the highest average trust score
@@ -635,17 +652,10 @@ export const trustScoreProvider: Provider = {
         _state?: State
     ): Promise<string> {
         try {
-            // if the database type is postgres, we don't want to run this evaluator because it relies on sql queries that are currently specific to sqlite. This check can be removed once the trust score provider is updated to work with postgres.
-            if (runtime.getSetting("POSTGRES_URL")) {
-                elizaLogger.warn(
-                    "skipping trust evaluator because db is postgres"
-                );
-                return "";
-            }
-
-            const trustScoreDb = new TrustScoreDatabase(
-                runtime.databaseAdapter.db
-            );
+            const trustScoreDb = await initTrustDatabase({
+                db: runtime.databaseAdapter.db,
+                dbConfig: runtime.getSetting("POSTGRES_URL"),
+            });
 
             // Get the user ID from the message
             const userId = message.userId;
