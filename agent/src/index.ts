@@ -11,6 +11,7 @@ import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb"
+
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
 import {
     AgentRuntime,
@@ -453,6 +454,7 @@ export async function initializeClients(
     const clientTypes: string[] =
         character.clients?.map((str) => str.toLowerCase()) || [];
     elizaLogger.log("initializeClients", clientTypes, "for", character.name);
+
 
     // Start Auto Client if "auto" detected as a configured client
     if (clientTypes.includes(Clients.AUTO)) {
