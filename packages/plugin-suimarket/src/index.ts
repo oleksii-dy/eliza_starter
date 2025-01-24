@@ -1,5 +1,5 @@
 import { Plugin } from '@elizaos/core';
-import { coinInfo } from './actions/coinInfo';
+// import { coinInfo } from './actions/coinInfo';
 // import { trendingCat } from './actions/trendingCat';
 import { topMarkets } from "./actions/topMarkets";
 // import {  trendingTokens} from "./actions/trendingCoins";
@@ -22,7 +22,7 @@ const suimarketPlugin: Plugin = {
     chainInfo,
     topMarkets,
     // trendingTokens,
-    coinInfo,
+    // coinInfo,
     // topAiTokens,
     searchSuiTokenSymbol,
     suiTokenInfo,
