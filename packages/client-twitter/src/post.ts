@@ -51,10 +51,11 @@ Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}}
 Your response must include the summary of the # NEWS above into a sentences and Dont discard or remove any important numbers and informations
 If the news isnt about SUI or SUIRISE, dont mix the context with SUI Shilling. keep the original and relevant context of the news.
 Your response should be 1, 2, or 3 sentences (choose the length at random).
-Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than {{maxTweetLength}}. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.
-Your response should replace any entities , person, organization name on your response with its twitter account handler. Search from the web even if you think you know it and if you still cant find it just leave it as the original text.
+Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than 400. No emojis. Use \n\n (double spaces) between statements if there are multiple statements in your response.
+Your response should replace any entities , person, organization name on your response with its twitter account handler.
 Your response should replace any crypto project name such as Ethereum, Bitcoin, or something else with its ticker starting with $.
 Your response should replace any crypto project ticker that doesnt have $ before it you have to add the $ so for example ETH become $ETH.
+Your response should not include ChainCatcher text on it.
 `;
 
 export const twitterActionTemplate =
