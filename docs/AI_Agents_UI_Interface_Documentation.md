@@ -72,6 +72,8 @@ Simply visit this link in your web browser to interact with the user interface. 
 ### **Agent Use Cases**
 ### **GitHub Plugin**
 
+![](static/img/github.png)
+
 The AI agents in this system can be used to automate tasks related to GitHub repository management, such as creating pull requests for implementing new features or refactoring code across a repository. Below are two specific use cases with corresponding prompts.
 
 #### **Use Case 1: Refactoring Code Across the Repository**
@@ -329,6 +331,7 @@ ___
 
 ### **Coinbase Plugin**
 
+![](static/img/coinbase.png)
 
 **Use Case 1: Simple Tradeing**
 
