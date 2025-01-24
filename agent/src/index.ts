@@ -1,3 +1,4 @@
+import { MongoClient } from 'mongodb';
 import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
 import { RedisClient } from "@elizaos/adapter-redis";
 import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
@@ -9,6 +10,7 @@ import { LensAgentClient } from "@elizaos/client-lens";
 import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
+import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb"
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
 import {
     AgentRuntime,
@@ -390,7 +392,7 @@ function initializeDatabase(dataDir: string) {
             retryReads: true
         });
 
-        const dbName = process.env.MONGODB_DATABASE_NAME || 'CumulusAiAgent'; // Default database name
+        const dbName = process.env.MONGODB_DATABASE || 'CumulusAiAgent'; // Default database name
         const db = new MongoDBDatabaseAdapter(client, dbName);
 
         // Test the connection

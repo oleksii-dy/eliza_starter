@@ -1,6 +1,7 @@
 import { MongoClient } from 'mongodb';
 import {
     DatabaseAdapter,
+    RAGKnowledgeItem,
     IDatabaseCacheAdapter,
     Account,
     Actor,
@@ -10,8 +11,29 @@ import {
     type Memory,
     type Relationship,
     type UUID, elizaLogger,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 import { v4 } from "uuid";
+
+interface KnowledgeDocument {
+    id: UUID;
+    agentId: UUID;
+    content: string | {
+        text: string;
+        metadata?: {
+            isShared?: boolean;
+            isMain?: boolean;
+            isChunk?: boolean;
+            originalId?: string;
+            chunkIndex?: number;
+        };
+    };
+    embedding: number[] | null;
+    createdAt: Date | number;
+    isMain: boolean;
+    originalId: string | null;
+    chunkIndex: number | null;
+    isShared: boolean;
+}
 
 export class MongoDBDatabaseAdapter
     extends DatabaseAdapter<MongoClient>
@@ -23,7 +45,6 @@ export class MongoDBDatabaseAdapter
     private isConnected: boolean = false;
     private isVectorSearchIndexComputable: boolean;
 
-
     constructor(client: MongoClient, databaseName: string) {
         super();
         this.db = client;
@@ -33,101 +54,165 @@ export class MongoDBDatabaseAdapter
         this.isVectorSearchIndexComputable = true;
     }
 
+    private async initializeCollections(): Promise<void> {
+        const collections = [
+            'memories',
+            'participants',
+            'cache',
+            'knowledge',
+            'rooms',
+            'accounts',
+            'goals',
+            'logs',
+            'relationships'
+        ];
+
+        for (const collectionName of collections) {
+            try {
+                await this.database.createCollection(collectionName);
+                console.log(`Collection ${collectionName} created or already exists`);
+            } catch (error) {
+                if ((error as any).code !== 48) { // 48 is "collection already exists"
+                    console.error(`Error creating collection ${collectionName}:`, error);
+                }
+            }
+        }
+    }
+
+    private async initializeStandardIndexes(): Promise<void> {
+        const collectionsWithIndexes = [
+            {
+                collectionName: 'memories',
+                indexes: [
+                    { key: { type: 1, roomId: 1, agentId: 1, createdAt: -1 } },
+                    { key: { content: "text" }, options: { weights: { content: 10 } } }
+                ]
+            },
+            {
+                collectionName: 'participants',
+                indexes: [
+                    { key: { userId: 1, roomId: 1 }, options: { unique: true } }
+                ]
+            },
+            {
+                collectionName: 'cache',
+                indexes: [
+                    { key: { expiresAt: 1 }, options: { expireAfterSeconds: 0 } }
+                ]
+            },
+            {
+                collectionName: 'knowledge',
+                indexes: [
+                    { key: { agentId: 1 } },
+                    { key: { isShared: 1 } },
+                    { key: { id: 1 }, options: { unique: true } },
+                    { key: { "content.text": "text" } }
+                ]
+            }
+        ];
+
+        await Promise.all(collectionsWithIndexes.map(async ({ collectionName, indexes }) => {
+            const collection = this.database.collection(collectionName);
+            const existingIndexes = await collection.listIndexes().toArray();
+
+            for (const index of indexes) {
+                const indexExists = existingIndexes.some(existingIndex =>
+                    JSON.stringify(existingIndex.key) === JSON.stringify(index.key)
+                );
+
+                if (!indexExists) {
+                    console.log(`Creating index for ${collectionName}:`, index.key);
+                    await collection.createIndex(index.key, index.options || {});
+                } else {
+                    console.log(`Index already exists for ${collectionName}:`, index.key);
+                }
+            }
+        }));
+    }
+
+    private async initializeVectorSearch(): Promise<void> {
+        try {
+            // Check if vector search is supported
+            const dbStatus = await this.database.admin().serverStatus();
+            const vectorSearchSupported = dbStatus.vectorSearch?.supported === true;
+
+            if (vectorSearchSupported && this.isVectorSearchIndexComputable) {
+                const vectorSearchConfig = {
+                    name: "vector_index",
+                    definition: {
+                        vectorSearchConfig: {
+                            dimensions: 1536,
+                            similarity: "cosine",
+                            numLists: 100,
+                            efConstruction: 128
+                        }
+                    }
+                };
+
+                try {
+                    // Create vector search indexes for both collections
+                    for (const collection of ['memories', 'knowledge']) {
+                        await this.database.collection(collection).createIndex(
+                            { embedding: "vectorSearch" },
+                            vectorSearchConfig
+                        );
+                    }
+
+                    this.hasVectorSearch = true;
+                    console.log("Vector search capabilities are available and enabled");
+
+                    // Check sharding status
+                    const dbInfo = await this.database.admin().command({ listDatabases: 1, nameOnly: true });
+                    const memoriesStats = await this.database.collection('memories').stats();
+
+                    if (dbInfo?.sharded && memoriesStats?.sharded) {
+                        this.isVectorSearchIndexComputable = false;
+                        this.hasVectorSearch = false;
+                        await this.createStandardEmbeddingIndexes();
+                    }
+                } catch (error) {
+                    console.log("Vector search initialization failed, falling back to standard search", error);
+                    this.isVectorSearchIndexComputable = false;
+                    this.hasVectorSearch = false;
+                    await this.createStandardEmbeddingIndexes();
+                }
+            } else {
+                console.log("Vector search not supported, using standard search");
+                this.isVectorSearchIndexComputable = false;
+                this.hasVectorSearch = false;
+                await this.createStandardEmbeddingIndexes();
+            }
+        } catch (error) {
+            console.log("Error checking vector search capability, defaulting to standard search", error);
+            this.isVectorSearchIndexComputable = false;
+            this.hasVectorSearch = false;
+            await this.createStandardEmbeddingIndexes();
+        }
+    }
+
+    private async createStandardEmbeddingIndexes(): Promise<void> {
+        try {
+            for (const collection of ['memories', 'knowledge']) {
+                await this.database.collection(collection).createIndex({ embedding: 1 });
+            }
+            console.log("Standard embedding indexes created successfully");
+        } catch (error) {
+            console.error("Failed to create standard embedding indexes:", error);
+        }
+    }
+
     async init() {
         if (this.isConnected) {
             return;
         }
 
         try {
-            // Connect first
             await this.db.connect();
-
-            // Get database reference
             this.database = this.db.db(this.databaseName);
 
-            // Define collections and their indexes
-            const collectionsWithIndexes = [
-                {
-                    collectionName: 'memories',
-                    indexes: [
-                        { key: { type: 1, roomId: 1, agentId: 1, createdAt: -1 } },
-                        { key: { content: "text" }, options: { weights: { content: 10 } } }
-                    ]
-                },
-                {
-                    collectionName: 'participants',
-                    indexes: [
-                        { key: { userId: 1, roomId: 1 }, options: { unique: true } }
-                    ]
-                },
-                {
-                    collectionName: 'cache',
-                    indexes: [
-                        { key: { expiresAt: 1 }, options: { expireAfterSeconds: 0 } }
-                    ]
-                }
-            ];
-
-            // Initialize indexes for each collection
-            await Promise.all(collectionsWithIndexes.map(async ({ collectionName, indexes }) => {
-                const collection = this.database.collection(collectionName);
-                const existingIndexes = await collection.listIndexes().toArray();
-
-                for (const index of indexes) {
-                    const indexExists = existingIndexes.some(existingIndex =>
-                        JSON.stringify(existingIndex.key) === JSON.stringify(index.key)
-                    );
-
-                    if (!indexExists) {
-                        console.log(`Creating index for ${collectionName}:`, index.key);
-                        await collection.createIndex(index.key, index.options || {});
-                    } else {
-                        console.log(`Index already exists for ${collectionName}:`, index.key);
-                    }
-                }
-            }));
-
-            // Try to create vector search index
-            if (this.isVectorSearchIndexComputable) {
-                try {
-                    await this.database.collection('memories').createIndex(
-                        { embedding: "vectorSearch" },
-                        {
-                            name: "vector_index",
-                            definition: {
-                                vectorSearchConfig: {
-                                    dimensions: 1536,
-                                    similarity: "cosine",
-                                    numLists: 100,
-                                    efConstruction: 128
-                                }
-                            }
-                        }
-                    );
-                    this.hasVectorSearch = true;
-                    console.log("Vector search capabilities are available and enabled");
-
-                    // Check sharding status
-                    const dbInfo = await this.database.admin().command({ listDatabases: 1, nameOnly: true });
-                    const collectionStats = await this.database.collection('memories').stats();
-
-                    const isDatabaseSharded = Boolean(dbInfo?.sharded);
-                    const isCollectionSharded = Boolean(collectionStats?.sharded);
-
-                    if (isDatabaseSharded && isCollectionSharded) {
-                        this.isVectorSearchIndexComputable = false;
-                        this.hasVectorSearch = false;
-                    }
-                } catch (error) {
-                    console.log("Vector search not available, falling back to standard search", error);
-                    this.isVectorSearchIndexComputable = false;
-                    this.hasVectorSearch = false;
-                    // Create a standard index on embedding field instead
-                    await this.database.collection('memories').createIndex(
-                        { embedding: 1 }
-                    );
-                }
-            }
+            await this.initializeCollections();
+            await this.initializeStandardIndexes();
+            await this.initializeVectorSearch();
 
             try {
                 // Enable sharding for better performance
@@ -142,7 +227,6 @@ export class MongoDBDatabaseAdapter
                 console.log("Sharding may already be enabled or insufficient permissions", error);
             }
 
-            // Only set isConnected to true after all initialization is complete
             this.isConnected = true;
 
         } catch (error) {
@@ -386,10 +470,12 @@ export class MongoDBDatabaseAdapter
             }));
     }
 
-    private cosineSimilarity(a: number[], b: number[]): number {
-        const dotProduct = a.reduce((sum, val, i) => sum + val * b[i], 0);
-        const magnitudeA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
-        const magnitudeB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
+    private cosineSimilarity(a: Float32Array | number[], b: Float32Array | number[]): number {
+        const aArr = Array.from(a);
+        const bArr = Array.from(b);
+        const dotProduct = aArr.reduce((sum, val, i) => sum + val * bArr[i], 0);
+        const magnitudeA = Math.sqrt(aArr.reduce((sum, val) => sum + val * val, 0));
+        const magnitudeB = Math.sqrt(bArr.reduce((sum, val) => sum + val * val, 0));
         return dotProduct / (magnitudeA * magnitudeB);
     }
 
@@ -1033,6 +1119,299 @@ export class MongoDBDatabaseAdapter
         } catch (error) {
             console.log("Error removing cache", error);
             return false;
+        }
+    }
+
+    async getKnowledge(params: {
+        id?: UUID;
+        agentId: UUID;
+        limit?: number;
+        query?: string;
+    }): Promise<RAGKnowledgeItem[]> {
+        await this.ensureConnection();
+
+        const query: any = {
+            $or: [
+                { agentId: params.agentId },
+                { isShared: true }
+            ]
+        };
+
+        if (params.id) {
+            query.id = params.id;
+        }
+
+        const knowledge = await this.database.collection('knowledge')
+            .find(query)
+            .limit(params.limit || 0)
+            .toArray();
+
+        return knowledge.map(item => ({
+            id: item.id,
+            agentId: item.agentId,
+            content: typeof item.content === 'string' ? JSON.parse(item.content) : item.content,
+            embedding: item.embedding ? new Float32Array(item.embedding) : undefined,
+            createdAt: typeof item.createdAt === "string" ? Date.parse(item.createdAt) : item.createdAt
+        }));
+    }
+
+    async searchKnowledge(params: {
+        agentId: UUID;
+        embedding: Float32Array;
+        match_threshold: number;
+        match_count: number;
+        searchText?: string;
+    }): Promise<RAGKnowledgeItem[]> {
+        await this.ensureConnection();
+
+        const cacheKey = `embedding_${params.agentId}_${params.searchText}`;
+        const cachedResult = await this.getCache({
+            key: cacheKey,
+            agentId: params.agentId
+        });
+
+        if (cachedResult) {
+            return JSON.parse(cachedResult);
+        }
+
+        try {
+            let results: KnowledgeDocument[];
+
+            if (this.hasVectorSearch) {
+                try {
+                    results = await this.vectorSearchKnowledge(params);
+                } catch (error) {
+                    console.log("Vector search failed, falling back to standard search", error);
+                    results = await this.fallbackSearchKnowledge(params);
+                }
+            } else {
+                results = await this.fallbackSearchKnowledge(params);
+            }
+
+            const mappedResults = results.map(item => ({
+                id: item.id,
+                agentId: item.agentId, // This will always be UUID
+                content: typeof item.content === 'string' ? JSON.parse(item.content) : item.content,
+                embedding: item.embedding ? new Float32Array(item.embedding) : undefined,
+                createdAt: typeof item.createdAt === "string" ? Date.parse(item.createdAt) : item.createdAt,
+                similarity: (item as any).combinedScore || 0
+            })) as RAGKnowledgeItem[];
+
+            await this.setCache({
+                key: cacheKey,
+                agentId: params.agentId,
+                value: JSON.stringify(mappedResults)
+            });
+
+            return mappedResults;
+        } catch (error) {
+            console.error("Error in searchKnowledge:", error);
+            throw error;
+        }
+    }
+
+    private async vectorSearchKnowledge(params: {
+        agentId: UUID;
+        embedding: Float32Array;
+        match_threshold: number;
+        match_count: number;
+        searchText?: string;
+    }): Promise<KnowledgeDocument[]> {
+        const pipeline = [
+            {
+                $search: {
+                    vectorSearch: {
+                        queryVector: Array.from(params.embedding),
+                        path: "embedding",
+                        numCandidates: params.match_count * 2,
+                        limit: params.match_count * 2,
+                        index: "vector_index"
+                    }
+                }
+            },
+            ...this.getKnowledgeSearchPipeline(params)
+        ];
+
+        return await this.database.collection('knowledge')
+            .aggregate(pipeline)
+            .toArray();
+    }
+
+    private async fallbackSearchKnowledge(params: {
+        agentId: UUID;
+        embedding: Float32Array;
+        match_threshold: number;
+        match_count: number;
+        searchText?: string;
+    }): Promise<KnowledgeDocument[]> {
+        const pipeline = [
+            {
+                $match: {
+                    $or: [
+                        { agentId: params.agentId },
+                        { isShared: true, agentId: null }
+                    ]
+                }
+            },
+            ...this.getKnowledgeSearchPipeline(params)
+        ];
+
+        return await this.database.collection('knowledge')
+            .aggregate(pipeline)
+            .toArray();
+    }
+
+    private getKnowledgeSearchPipeline(params: {
+        agentId: UUID;
+        embedding: Float32Array;
+        match_threshold: number;
+        searchText?: string;
+    }): object[] {
+        return [
+            {
+                $addFields: {
+                    vectorScore: this.hasVectorSearch ?
+                        { $meta: "vectorSearchScore" } :
+                        {
+                            $let: {
+                                vars: {
+                                    embedding: { $ifNull: ["$embedding", []] }
+                                },
+                                in: {
+                                    $cond: {
+                                        if: { $eq: [{ $size: "$$embedding" }, 0] },
+                                        then: 0,
+                                        else: {
+                                            $divide: [
+                                                1,
+                                                { $add: [1, { $function: {
+                                                            body: this.cosineSimilarity.toString(),
+                                                            args: [params.embedding, "$$embedding"],
+                                                            lang: "js"
+                                                        }}] }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                    keywordScore: this.calculateKeywordScore(params.searchText)
+                }
+            },
+            {
+                $addFields: {
+                    combinedScore: { $multiply: ["$vectorScore", "$keywordScore"] }
+                }
+            },
+            {
+                $match: {
+                    $or: [
+                        { vectorScore: { $gte: params.match_threshold } },
+                        {
+                            $and: [
+                                { keywordScore: { $gt: 1.0 } },
+                                { vectorScore: { $gte: 0.3 } }
+                            ]
+                        }
+                    ]
+                }
+            },
+            { $sort: { combinedScore: -1 } }
+        ];
+    }
+
+    private calculateKeywordScore(searchText?: string): object {
+        return {
+            $multiply: [
+                {
+                    $cond: {
+                        if: searchText ? {
+                            $regexMatch: {
+                                input: { $toLower: "$content.text" },
+                                regex: new RegExp(searchText.toLowerCase())
+                            }
+                        } : false,
+                        then: 3.0,
+                        else: 1.0
+                    }
+                },
+                {
+                    $cond: {
+                        if: { $eq: ["$content.metadata.isChunk", true] },
+                        then: 1.5,
+                        else: {
+                            $cond: {
+                                if: { $eq: ["$content.metadata.isMain", true] },
+                                then: 1.2,
+                                else: 1.0
+                            }
+                        }
+                    }
+                }
+            ]
+        };
+    }
+
+    // Update error handling in createKnowledge
+    async createKnowledge(knowledge: RAGKnowledgeItem): Promise<void> {
+        await this.ensureConnection();
+
+        try {
+            const metadata = knowledge.content.metadata || {};
+            const isShared = metadata.isShared || false;
+
+            const doc = {
+                id: knowledge.id,
+                agentId: knowledge.agentId,
+                content: typeof knowledge.content === 'string' ?
+                    knowledge.content :
+                    JSON.stringify(knowledge.content),
+                embedding: knowledge.embedding ? Array.from(knowledge.embedding) : null,
+                createdAt: knowledge.createdAt || Date.now(),
+                isMain: metadata.isMain || false,
+                originalId: metadata.originalId || null,
+                chunkIndex: metadata.chunkIndex || null,
+                isShared
+            };
+
+            await this.database.collection('knowledge').updateOne(
+                { id: knowledge.id },
+                { $setOnInsert: doc },
+                { upsert: true }
+            );
+        } catch (err) {
+            if (err instanceof Error) {
+                const error = err as Error & { code?: number };
+                const isShared = knowledge.content.metadata?.isShared;
+
+                if (isShared && error.code === 11000) {
+                    console.info(`Shared knowledge ${knowledge.id} already exists, skipping`);
+                    return;
+                }
+
+                console.error(`Error creating knowledge ${knowledge.id}:`, error);
+                throw error;
+            }
+            throw err;
+        }
+    }
+
+    async removeKnowledge(id: UUID): Promise<void> {
+        await this.ensureConnection();
+        await this.database.collection('knowledge').deleteOne({ id });
+    }
+
+    async clearKnowledge(agentId: UUID, shared?: boolean): Promise<void> {
+        await this.ensureConnection();
+        const query = shared ?
+            { $or: [{ agentId }, { isShared: true }] } :
+            { agentId };
+
+        try {
+            await this.database.collection('knowledge').deleteMany(query);
+        } catch (error) {
+            console.error(`Error clearing knowledge for agent ${agentId}:`, error);
+            throw error;
         }
     }
 
