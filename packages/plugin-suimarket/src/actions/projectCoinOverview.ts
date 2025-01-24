@@ -118,6 +118,7 @@ export const projectInfo: Action = {
         })
         elizaLogger.log("content: ",content);
         const projectObj = await searchProjectInFileJson(content.project_name);
+        console.log(projectObj)
         const tokenObject = await findByVerifiedAndName(content.project_name);
         let responseText = `Name:${tokenObject.name} ($${tokenObject.symbol})`
         if(!tokenObject || !projectObj){

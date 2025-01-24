@@ -3,7 +3,7 @@
       "id": 1,
       "name": "Cetus",
       "symbol": "CETUS",
-      "categories": "DEX",
+      "categories": ["DEX"],
       "website": "https://www.cetus.zone/",
       "x_website": "https://x.com/CetusProtocol",
       "verified": "Yes",
@@ -462,7 +462,7 @@
     {
       "id": 47,
       "name": "Fud the Pug",
-      "symbol": "",
+      "symbol": "FUD",
       "categories": ["Meme"],
       "website": "https://spreadfudlovethepug.bigcartel.com/",
       "x_website": "https://x.com/FudthePugcoin",
