@@ -1,6 +1,5 @@
 import { Pool } from "pg";
 import { initTrustDatabase, ITrustDatabase } from "../../index";
-import { TrustPostgresDatabase } from "../../adapters/postgres";
 import { TEST_DB_CONFIG } from "./config";
 
 export class TestDatabaseManager {

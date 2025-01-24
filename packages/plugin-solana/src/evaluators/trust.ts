@@ -12,7 +12,7 @@ import {
     MemoryManager,
     ModelClass,
 } from "@elizaos/core";
-import { TrustScoreDatabase } from "@elizaos/plugin-trustdb";
+import { initTrustDatabase } from "@elizaos/plugin-trustdb";
 import { Connection } from "@solana/web3.js";
 import { getWalletKey } from "../keypairUtils.ts";
 import { TokenProvider } from "../providers/token.ts";
@@ -82,12 +82,6 @@ Response should be a JSON object array inside a JSON markdown block. Correct res
 async function handler(runtime: IAgentRuntime, message: Memory) {
     elizaLogger.log("Evaluating for trust");
     const state = await runtime.composeState(message);
-
-    // if the database type is postgres, we don't want to run this because it relies on sql queries that are currently specific to sqlite. This check can be removed once the trust score provider is updated to work with postgres.
-    if (runtime.getSetting("POSTGRES_URL")) {
-        elizaLogger.warn("skipping trust evaluator because db is postgres");
-        return [];
-    }
 
     const { agentId, roomId } = state;
 
@@ -194,7 +188,10 @@ async function handler(runtime: IAgentRuntime, message: Memory) {
 
         // create the trust score manager
 
-        const trustScoreDb = new TrustScoreDatabase(runtime.databaseAdapter.db);
+        const trustScoreDb = await initTrustDatabase({
+            db: runtime.databaseAdapter.db,
+            dbConfig: runtime.getSetting("POSTGRES_URL")
+        });
         const trustScoreManager = new TrustScoreManager(
             runtime,
             tokenProvider,
