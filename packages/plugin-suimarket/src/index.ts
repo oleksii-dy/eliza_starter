@@ -12,6 +12,7 @@ import { sendTokenBySymbol } from './actions/sendTokenBySymbol';
 import { checkTxhashOnSui } from './actions/checkInfoTxHash';
 import { chainInfo } from './actions/infoChain';
 import { projectInfo } from './actions/projectCoinOverview';
+import { topDexInfo } from './actions/topDexOnSui';
 // import { suiTokenInfoBySymbol } from './actions/suiTokenInfoBySymbol';
 
 const suimarketPlugin: Plugin = {
@@ -31,7 +32,7 @@ const suimarketPlugin: Plugin = {
     checkTxhashOnSui,
     projectInfo,
     // suiTokenInfoBySymbol,
-
+    topDexInfo
 
 ],
   evaluators: [],

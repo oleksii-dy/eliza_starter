@@ -1,6 +1,6 @@
 import {
     ActionExample,
-    CacheOptions,
+    // CacheOptions,
     composeContext,
     elizaLogger,
     generateObjectDeprecated,
@@ -55,8 +55,8 @@ export const executeSwap: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        let msgHash = hashUserMsg(message, "swap01");
-        let content = await runtime.cacheManager.get(msgHash);
+        const msgHash = hashUserMsg(message, "swap01");
+        let content:any = await runtime.cacheManager.get(msgHash);
 
         elizaLogger.log("---- cache info: ", msgHash, "--->", content);
 

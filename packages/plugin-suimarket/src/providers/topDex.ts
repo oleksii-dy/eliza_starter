@@ -5,7 +5,7 @@ const axiosInstance: AxiosInstance = axios.create({
     timeout: 5000,
   });
 
-export async function fetchTopDexByNetwork(network) {
+export async function fetchTopDexByNetwork(network="sui-network") {
     try {
       return axiosInstance.get(`/dexes?network=${network}&include=network%2Cdex_metric`, {
 

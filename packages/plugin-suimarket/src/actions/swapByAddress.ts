@@ -14,23 +14,12 @@ import getInfoTokenOnSui from "../providers/coinMetaDataSui";
 import { getTokenOnSuiScan } from "../providers/getInfoCoinOnSuiScan";
 // import { RedisClient } from "@elizaos/adapter-redis";
 const swapTemplate = `Please extract the following swap details for SUI network:
-
 {
     "inputTokenAddress": string | null,     // Token being sold (e.g. "0xb6a9f896fd6c0f777699b9aa2b1bb745caa5eb1f3978173c1ddffd4bdd3994e9::uni::UNI")
     "outputTokenAddress": string | null,    // Token being bought
     "amount": number | 0,               // Amount to swap
 }
-
 Recent messages: {{recentMessages}}
-
-Extract the swap parameters from the conversation and wallet context above. Return only a JSON object with the specified fields. Use null for any values that cannot be determined.
-
-Example response:
-{
-    "inputTokenAddress": "0xb6a9f896fd6c0f777699b9aa2b1bb745caa5eb1f3978173c1ddffd4bdd3994e9::uni::UNI",
-    "outputTokenAddress": "0xb6a9f896fd6c0f777699b9aa2b1bb745caa5eb1f3978173c1ddffd4bdd3994e9::suicy::SUICY",
-    "amount": 1.5,
-}
 \`\`\`
 VALIDATION RULES:
             All property names must use double quotes
@@ -38,8 +27,6 @@ VALIDATION RULES:
             null values should not use quotes
             No trailing commas allowed
             No single quotes anywhere in the JSON
-
-
 `;
 
 
