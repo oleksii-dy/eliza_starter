@@ -61,6 +61,7 @@ export class TransferAction {
         console.log(
             `Transferring: ${params.amount} tokens to (${params.recipient})`,
         );
+        // { recipient: 'xx', amount: '0\\.3'}
 
         const walletClient = this.walletProvider.getWalletClient();
         const contract = walletClient.open(this.walletProvider.wallet);
@@ -69,12 +70,12 @@ export class TransferAction {
             // Create a transfer
             const seqno: number = await contract.getSeqno();
             await sleep(1500);
-            const transfer = await contract.createTransfer({
+            const transfer = contract.createTransfer({
                 seqno,
                 secretKey: this.walletProvider.keypair.secretKey,
                 messages: [
                     internal({
-                        value: params.amount.toString(),
+                        value: params.amount.toString().replace(/\\/g, ""),
                         to: params.recipient,
                         body: "eliza ton wallet plugin",
                         bounce: false,
@@ -149,7 +150,11 @@ const buildTransferDetails = async (
         modelClass: ModelClass.SMALL,
     });
 
-    const transferContent = content.object as TransferContent;
+    let transferContent: TransferContent = content.object as TransferContent;
+
+    if (transferContent === undefined) {
+        transferContent = content as any;
+    }
 
     return transferContent;
 };
@@ -187,12 +192,14 @@ export default {
         }
 
         try {
+            // TODO check token balance before transfer
             const walletProvider = await initWalletProvider(runtime);
             const action = new TransferAction(walletProvider);
             const hash = await action.transfer(transferDetails);
 
             if (callback) {
                 callback({
+                    // TODO wait for transaction to complete
                     text: `Successfully transferred ${transferDetails.amount} TON to ${transferDetails.recipient}, Transaction: ${hash}`,
                     content: {
                         success: true,
