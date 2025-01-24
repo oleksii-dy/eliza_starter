@@ -1,5 +1,6 @@
 import { PGLiteDatabaseAdapter } from "@elizaos/adapter-pglite";
 import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
+import { QdrantDatabaseAdapter } from "@elizaos/adapter-qdrant";
 import { RedisClient } from "@elizaos/adapter-redis";
 import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
 import { SupabaseDatabaseAdapter } from "@elizaos/adapter-supabase";
@@ -12,9 +13,12 @@ import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 import { AlexaClientInterface } from "@elizaos/client-alexa";
 import { FarcasterClientInterface } from "@elizaos/client-farcaster";
+import { OmniflixPlugin } from "@elizaos/plugin-omniflix";
+import { JeeterClientInterface } from "@elizaos/client-simsai";
+
 import { DirectClient } from "@elizaos/client-direct";
 import { agentKitPlugin } from "@elizaos/plugin-agentkit";
-// import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
+
 import { PrimusAdapter } from "@elizaos/plugin-primus";
 import { lightningPlugin } from "@elizaos/plugin-lightning";
 import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
@@ -41,6 +45,7 @@ import {
     validateCharacterConfig,
 } from "@elizaos/core";
 import { zgPlugin } from "@elizaos/plugin-0g";
+import { footballPlugin } from "@elizaos/plugin-football";
 
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import { normalizeCharacter } from "@elizaos/plugin-di";
@@ -58,6 +63,7 @@ import { avalanchePlugin } from "@elizaos/plugin-avalanche";
 import { b2Plugin } from "@elizaos/plugin-b2";
 import { binancePlugin } from "@elizaos/plugin-binance";
 import { birdeyePlugin } from "@elizaos/plugin-birdeye";
+import { bnbPlugin } from "@elizaos/plugin-bnb";
 import {
     advancedTradePlugin,
     coinbaseCommercePlugin,
@@ -76,6 +82,7 @@ import { flowPlugin } from "@elizaos/plugin-flow";
 import { fuelPlugin } from "@elizaos/plugin-fuel";
 import { genLayerPlugin } from "@elizaos/plugin-genlayer";
 import { gitcoinPassportPlugin } from "@elizaos/plugin-gitcoin-passport";
+import { initiaPlugin } from "@elizaos/plugin-initia";
 import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
 import { lensPlugin } from "@elizaos/plugin-lensNetwork";
 import { multiversxPlugin } from "@elizaos/plugin-multiversx";
@@ -100,6 +107,7 @@ import { teeMarlinPlugin } from "@elizaos/plugin-tee-marlin";
 import { verifiableLogPlugin } from "@elizaos/plugin-tee-verifiable-log";
 import { tonPlugin } from "@elizaos/plugin-ton";
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
+import { dkgPlugin } from "@elizaos/plugin-dkg";
 import { injectivePlugin } from "@elizaos/plugin-injective";
 import { giphyPlugin } from "@elizaos/plugin-giphy";
 import { letzAIPlugin } from "@elizaos/plugin-letzai";
@@ -108,17 +116,26 @@ import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
 import { echoChambersPlugin } from "@elizaos/plugin-echochambers";
 import { dexScreenerPlugin } from "@elizaos/plugin-dexscreener";
 import { pythDataPlugin } from "@elizaos/plugin-pyth-data";
-
 import { openaiPlugin } from "@elizaos/plugin-openai";
+import nitroPlugin from "@elizaos/plugin-router-nitro";
 import { devinPlugin } from "@elizaos/plugin-devin";
-
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
+import { chainbasePlugin } from "@elizaos/plugin-chainbase";
+import { holdstationPlugin } from "@elizaos/plugin-holdstation";
+import { nvidiaNimPlugin } from "@elizaos/plugin-nvidia-nim";
+import { zxPlugin } from "@elizaos/plugin-0x";
+import { hyperbolicPlugin } from "@elizaos/plugin-hyperbolic";
+import { litPlugin } from "@elizaos/plugin-lit";
 import Database from "better-sqlite3";
 import fs from "fs";
 import net from "net";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
+import { emailPlugin } from "@elizaos/plugin-email";
+import { seiPlugin } from "@elizaos/plugin-sei";
+import { sunoPlugin } from "@elizaos/plugin-suno";
+import { udioPlugin } from "@elizaos/plugin-udio";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -594,6 +611,11 @@ export function getTokenForProvider(
                 character.settings?.secrets?.NVIDIA_API_KEY ||
                 settings.NVIDIA_API_KEY
             );
+        case ModelProviderName.NVIDIA:
+            return (
+                character.settings?.secrets?.NVIDIA_API_KEY ||
+                settings.NVIDIA_API_KEY
+            );
         case ModelProviderName.AKASH_CHAT_API:
             return (
                 character.settings?.secrets?.AKASH_CHAT_API_KEY ||
@@ -682,6 +704,20 @@ function initializeDatabase(dataDir: string) {
             dataDir: process.env.PGLITE_DATA_DIR,
         });
         return db;
+    } else if (
+        process.env.QDRANT_URL &&
+        process.env.QDRANT_KEY &&
+        process.env.QDRANT_PORT &&
+        process.env.QDRANT_VECTOR_SIZE
+    ) {
+        elizaLogger.info("Initializing Qdrant adapter...");
+        const db = new QdrantDatabaseAdapter(
+            process.env.QDRANT_URL,
+            process.env.QDRANT_KEY,
+            Number(process.env.QDRANT_PORT),
+            Number(process.env.QDRANT_VECTOR_SIZE)
+        );
+        return db;
     } else {
         const filePath =
             process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
@@ -758,10 +794,16 @@ export async function initializeClients(
             clients.farcaster = farcasterClient;
         }
     }
+
     if (clientTypes.includes("lens")) {
         const lensClient = new LensAgentClient(runtime);
         lensClient.start();
         clients.lens = lensClient;
+    }
+
+    if (clientTypes.includes(Clients.SIMSAI)) {
+        const simsaiClient = await JeeterClientInterface.start(runtime);
+        if (simsaiClient) clients.simsai = simsaiClient;
     }
 
     elizaLogger.log("client keys", Object.keys(clients));
@@ -909,16 +951,22 @@ export async function createAgent(
                 : null,
             bootstrapPlugin,
             getSecret(character, "CDP_API_KEY_NAME") &&
-            getSecret(character, "CDP_API_KEY_PRIVATE_KEY")
+            getSecret(character, "CDP_API_KEY_PRIVATE_KEY") &&
+            getSecret(character, "CDP_AGENT_KIT_NETWORK")
                 ? agentKitPlugin
                 : null,
             getSecret(character, "DEXSCREENER_API_KEY")
                 ? dexScreenerPlugin
                 : null,
+            getSecret(character, "FOOTBALL_API_KEY") ? footballPlugin : null,
             getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
                 ? confluxPlugin
                 : null,
             nodePlugin,
+            getSecret(character, "ROUTER_NITRO_EVM_PRIVATE_KEY") &&
+            getSecret(character, "ROUTER_NITRO_EVM_ADDRESS")
+                ? nitroPlugin
+                : null,
             getSecret(character, "TAVILY_API_KEY") ? webSearchPlugin : null,
             getSecret(character, "SOLANA_PUBLIC_KEY") ||
             (getSecret(character, "WALLET_PUBLIC_KEY") &&
@@ -994,6 +1042,10 @@ export async function createAgent(
             ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
                 getSecret(character, "SGX"))
                 ? teeLogPlugin
+                : null,
+            getSecret(character, "OMNIFLIX_API_URL") &&
+            getSecret(character, "OMNIFLIX_MNEMONIC")
+                ? OmniflixPlugin
                 : null,
             getSecret(character, "COINBASE_API_KEY") &&
             getSecret(character, "COINBASE_PRIVATE_KEY") &&
@@ -1080,10 +1132,13 @@ export async function createAgent(
             getSecret(character, "AKASH_WALLET_ADDRESS")
                 ? akashPlugin
                 : null,
+            getSecret(character, "CHAINBASE_API_KEY") ? chainbasePlugin : null,
             getSecret(character, "QUAI_PRIVATE_KEY") ? quaiPlugin : null,
             getSecret(character, "RESERVOIR_API_KEY")
                 ? createNFTCollectionsPlugin()
                 : null,
+            getSecret(character, "ZERO_EX_API_KEY") ? zxPlugin : null,
+            getSecret(character, "DKG_PRIVATE_KEY") ? dkgPlugin : null,
             getSecret(character, "PYTH_TESTNET_PROGRAM_KEY") ||
             getSecret(character, "PYTH_MAINNET_PROGRAM_KEY")
                 ? pythDataPlugin
@@ -1094,14 +1149,46 @@ export async function createAgent(
                 ? lightningPlugin
                 : null,
             getSecret(character, "OPENAI_API_KEY") &&
-            getSecret(character, "ENABLE_OPEN_AI_COMMUNITY_PLUGIN")
+            parseBooleanFromText(
+                getSecret(character, "ENABLE_OPEN_AI_COMMUNITY_PLUGIN")
+            )
                 ? openaiPlugin
                 : null,
             getSecret(character, "DEVIN_API_TOKEN") ? devinPlugin : null,
+            getSecret(character, "INITIA_PRIVATE_KEY") ? initiaPlugin : null,
+            getSecret(character, "HOLDSTATION_PRIVATE_KEY")
+                ? holdstationPlugin
+                : null,
+            getSecret(character, "NVIDIA_NIM_API_KEY") ||
+            getSecret(character, "NVIDIA_NGC_API_KEY")
+                ? nvidiaNimPlugin
+                : null,
+            getSecret(character, "INITIA_PRIVATE_KEY") &&
+            getSecret(character, "INITIA_NODE_URL")
+                ? initiaPlugin
+                : null,
+            getSecret(character, "BNB_PRIVATE_KEY") ||
+            getSecret(character, "BNB_PUBLIC_KEY")?.startsWith("0x")
+                ? bnbPlugin
+                : null,
+            (getSecret(character, "EMAIL_INCOMING_USER") &&
+                getSecret(character, "EMAIL_INCOMING_PASS")) ||
+            (getSecret(character, "EMAIL_OUTGOING_USER") &&
+                getSecret(character, "EMAIL_OUTGOING_PASS"))
+                ? emailPlugin
+                : null,
+            getSecret(character, "SEI_PRIVATE_KEY") ? seiPlugin : null,
+            getSecret(character, "HYPERBOLIC_API_KEY")
+                ? hyperbolicPlugin
+                : null,
+            getSecret(character, "SUNO_API_KEY") ? sunoPlugin : null,
+            getSecret(character, "UDIO_AUTH_TOKEN") ? udioPlugin : null,
+            getSecret(character, "FUNDING_PRIVATE_KEY") &&
+            getSecret(character, "EVM_RPC_URL")
+                ? litPlugin
+                : null,
         ].filter(Boolean),
         providers: [],
-        actions: [],
-        services: [],
         managers: [],
         cacheManager: cache,
         fetch: logFetch,
@@ -1334,12 +1421,12 @@ if (
     parseBooleanFromText(process.env.PREVENT_UNHANDLED_EXIT)
 ) {
     // Handle uncaught exceptions to prevent the process from crashing
-    process.on("uncaughtException", (err) => {
+    process.on("uncaughtException", function (err) {
         console.error("uncaughtException", err);
     });
 
     // Handle unhandled rejections to prevent the process from crashing
-    process.on("unhandledRejection", (err) => {
+    process.on("unhandledRejection", function (err) {
         console.error("unhandledRejection", err);
     });
 }
