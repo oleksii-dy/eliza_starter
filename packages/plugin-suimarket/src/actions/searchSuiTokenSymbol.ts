@@ -114,9 +114,6 @@ export const searchSuiTokenSymbol: Action = {
                 result: {
                     type: "pools",
                     data:info.slice(0,content.size),
-
-
-
                 }
             });
         }
