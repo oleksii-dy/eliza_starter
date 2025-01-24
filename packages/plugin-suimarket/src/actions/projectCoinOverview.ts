@@ -45,17 +45,11 @@ export const projectInfo: Action = {
         "OVERVIEW_{PROJECT_NAME}",
         "PROJECT_DETAILS_{PROJECT_NAME}",
         "PROJECT_INFO_{PROJECT_NAME}",
-        "PROJECT_INTRO_{PROJECT_NAME}",
-        "PROJECT_SCOPE_{PROJECT_NAME}",
-        "PROJECT_HIGHLIGHTS_{PROJECT_NAME}",
-        "PROJECT_BACKGROUND_{PROJECT_NAME}",
-        "PROJECT_OBJECTIVES_{PROJECT_NAME}",
-        "PROJECT_VISION_{PROJECT_NAME}",
-        "PROJECT_MISSION_{PROJECT_NAME}",
-        "PROJECT_OVERVIEW_{PROJECT_NAME}",
-        "PROJECT_ANALYSIS_{PROJECT_NAME}",
-        "PROJECT_CONTEXT_{PROJECT_NAME}",
-        "{PROJECT_NAME}"
+        "{PROJECT_NAME}",
+        "{PROJECT_NAME}_project",
+        "{PROJECT_NAME}_infor",
+        "{PROJECT_NAME}_overview",
+        "what_is_{PROJECT_NAME}?",
     ],
 
     examples: [
