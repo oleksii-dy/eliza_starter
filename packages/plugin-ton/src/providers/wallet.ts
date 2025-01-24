@@ -247,7 +247,6 @@ export class WalletProvider {
         const formattedAddress = this.wallet.address.toString({
             bounceable: false,
             urlSafe: true,
-            testOnly: true,
         });
         return formattedAddress;
     }
