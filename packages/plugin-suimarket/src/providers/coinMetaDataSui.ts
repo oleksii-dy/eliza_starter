@@ -1,6 +1,6 @@
 import { SuiClient} from "@mysten/sui/client"
 const suiClient = new SuiClient({
-    url: "https://fullnode.mainnet.sui.io", // Hoặc testnet/devnet nếu cần
+    url: "https://fullnode.mainnet.sui.io", 
   });
 
 export default async function getInfoTokenOnSui(coinType:string){

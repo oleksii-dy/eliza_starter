@@ -274,7 +274,9 @@ export class CoingeckoProvider {
   async getCoinDataById(coinId: string) {
 
     try {
+    console.log(`https://api.coingecko.com/api/v3/coins/${coinId}`)
       const response = await this.axiosInstance.get(`/coins/${coinId}`);
+
       return response.data;
     } catch (error) {
       console.error(`Error fetching coin data for ${coinId}:`, error);

@@ -1,7 +1,6 @@
 import fs from "fs"
 import path from "path";
 import { fileURLToPath } from "url";
-// Chuyển đổi import.meta.url sang __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const file = path.join(__dirname, "../src/coin-info-sui.json")
@@ -16,7 +15,6 @@ export async function findByVerifiedAndSymbol( symbol) {
         // No items match the symbol
         return null;
     }
-
     // Find the first verified item
     const verifiedItem = matchingItems.find(item => item.verified === true);
 
@@ -24,7 +22,7 @@ export async function findByVerifiedAndSymbol( symbol) {
     return verifiedItem || matchingItems[0];
 }
 
-export async function findByVerifiedAndName( name) {
+export async function findByVerifiedAndName(name) {
     const matchingItems = data.filter(item => item.name.toLowerCase().includes(name.toLowerCase()));
 
     if (matchingItems.length === 0) {

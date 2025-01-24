@@ -1,0 +1,502 @@
+[
+    {
+      "id": 1,
+      "name": "Cetus",
+      "symbol": "CETUS",
+      "categories": "DEX",
+      "website": "https://www.cetus.zone/",
+      "x_website": "https://x.com/CetusProtocol",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/cetus-protocol"
+    },
+    {
+      "id": 2,
+      "name": "NAVI",
+      "symbol": "NAVX",
+      "categories": "DEX",
+      "website": "https://naviprotocol.io/",
+      "x_website": "https://x.com/navi_protocol",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/navi"
+    },
+    {
+      "id": 3,
+      "name": "DeepBook",
+      "symbol": "DEEP",
+      "categories": "CLOB, Defi",
+      "website": "https://deepbook.tech/",
+      "x_website": "https://x.com/DeepBookonSui",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/deepbook"
+    },
+    {
+      "id": 4,
+      "name": "Walrus",
+      "symbol": "NA",
+      "categories": "Decentralized Philanthropy, Blockchain-based Donation Platforms",
+      "website": "https://www.walrus.xyz/vi",
+      "x_website": "https://x.com/WalrusProtocol",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 5,
+      "name": "BIRDS",
+      "symbol": "NA",
+      "categories": "Gamefi",
+      "website": "https://birds.dog/",
+      "x_website": "https://x.com/TheBirdsDogs",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 6,
+      "name": "FanTV",
+      "symbol": "NA",
+      "categories": "SociaFI",
+      "website": "https://fantv.world/",
+      "x_website": "https://x.com/FanTV_official",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 7,
+      "name": "Wave",
+      "symbol": "NA",
+      "categories": "Infrastructure",
+      "website": "https://waveonsui.com/",
+      "x_website": "https://x.com/WaveOnSui",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 8,
+      "name": "7K",
+      "symbol": "NA",
+      "categories": "DEX",
+      "website": "https://7k.ag/trade/swap",
+      "x_website": "https://x.com/7k_ag_",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 9,
+      "name": "Haedal",
+      "symbol": "NA",
+      "categories": "Liquid Staking",
+      "website": "https://www.haedal.xyz/",
+      "x_website": "https://x.com/HaedalProtocol",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/haedal-staked-sui"
+    },
+    {
+      "id": 10,
+      "name": "Aftermath",
+      "symbol": "",
+      "categories": "DEX",
+      "website": "https://aftermath.finance/",
+      "x_website": "https://x.com/AftermathFi",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 11,
+      "name": "Bluefin",
+      "symbol": "BLUE",
+      "categories": "Perp DEX",
+      "website": "https://bluefin.io/",
+      "x_website": "https://x.com/bluefinapp",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/bluefin"
+    },
+    {
+      "id": 12,
+      "name": "BlueMove",
+      "symbol": "MOVE",
+      "categories": "DEX",
+      "website": "https://DEX.bluemove.net/",
+      "x_website": "https://x.com/BlueMove_OA",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/bluemove"
+    },
+    {
+      "id": 13,
+      "name": "Turbos",
+      "symbol": "TURBOS",
+      "categories": "DEX",
+      "website": "https://turbos.finance/",
+      "x_website": "https://x.com/Turbos_finance",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/turbos-finance"
+    },
+    {
+      "id": 14,
+      "name": "Hop Aggregator",
+      "symbol": "NA",
+      "categories": "Decentralized trading aggregation",
+      "website": "https://hop.ag/",
+      "x_website": "https://x.com/HopAggregator",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 15,
+      "name": "Bucket Protocol",
+      "symbol": "",
+      "categories": "Infrastructure",
+      "website": "https://legacy.bucketprotocol.io/dashboard",
+      "x_website": "https://x.com/bucket_protocol",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/bucket-protocol-buck-stablecoin"
+    },
+    {
+      "id": 16,
+      "name": "Scallop",
+      "symbol": "SCA",
+      "categories": "Lending",
+      "website": "https://scallop.io/",
+      "x_website": "https://x.com/Scallop_io",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/scallop-2"
+    },
+    {
+      "id": 17,
+      "name": "Memefi",
+      "symbol": "MEME",
+      "categories": "Gamefi",
+      "website": "https://www.memefi.club/",
+      "x_website": "https://x.com/memeficlub",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/memefi"
+    },
+    {
+      "id": 18,
+      "name": "Tradeport",
+      "symbol": "NA",
+      "categories": "NFT Marketplace",
+      "website": "https://www.tradeport.xyz/",
+      "x_website": "https://x.com/tradeportxyz",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 19,
+      "name": "SuiNS",
+      "symbol": "NS",
+      "categories": "Infrastructure",
+      "website": "https://suins.io/",
+      "x_website": "https://x.com/SuiNSdapp",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/suins-token"
+    },
+    {
+      "id": 20,
+      "name": "Suilend",
+      "symbol": "SEND",
+      "categories": "Defi",
+      "website": "https://suilend.fi/",
+      "x_website": "https://x.com/suilendprotocol",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/suilend"
+    },
+    {
+      "id": 21,
+      "name": "SuiPlay",
+      "symbol": "NA",
+      "categories": "GAME",
+      "website": "https://www.suiplay0x1.com/",
+      "x_website": "https://x.com/suiplay",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 22,
+      "name": "RaidenX",
+      "symbol": "",
+      "categories": "Trading Tool",
+      "website": "https://raidenx.io/",
+      "x_website": "https://x.com/raidenx_io",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 23,
+      "name": "Typus Finance",
+      "symbol": "",
+      "categories": "Infrastructure",
+      "website": "https://typus.finance/",
+      "x_website": "https://x.com/TypusFinance",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/typus"
+    },
+    {
+      "id": 24,
+      "name": "Kriya",
+      "symbol": "",
+      "categories": "Defi",
+      "website": "https://app.kriya.finance/",
+      "x_website": "https://x.com/KriyaDEX",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 25,
+      "name": "FlowX",
+      "symbol": "FLX",
+      "categories": "DEX",
+      "website": "https://flowx.finance/",
+      "x_website": "https://x.com/FlowX_finance",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/flowx-finance"
+    },
+    {
+      "id": 26,
+      "name": "Sudo Finance",
+      "symbol": "",
+      "categories": "Perp DEX",
+      "website": "https://www.sudo.finance/",
+      "x_website": "https://x.com/sudofinance",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 27,
+      "name": "AlphaFi",
+      "symbol": "ALPHA",
+      "categories": "Yield Aggregator",
+      "website": "https://alphafi.xyz/portfolio",
+      "x_website": "https://x.com/AlphaFiSUI",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/alpha-fi"
+    },
+    {
+      "id": 28,
+      "name": "Kai Finance",
+      "symbol": "",
+      "categories": "Yield Aggregator",
+      "website": "https://kai.finance/",
+      "x_website": "https://x.com/kai_finance_sui",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 29,
+      "name": "Strater",
+      "symbol": "",
+      "categories": "Yield Aggregator",
+      "website": "https://www.strater.xyz/",
+      "x_website": "https://x.com/strater_sui",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 30,
+      "name": "Volo",
+      "symbol": "",
+      "categories": "Liquid Staking",
+      "website": "https://www.volosui.com/",
+      "x_website": "https://x.com/volo_sui",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/volo-staked-sui"
+    },
+    {
+      "id": 31,
+      "name": "Suiet",
+      "symbol": "",
+      "categories": "Wallet",
+      "website": "https://suiet.app/",
+      "x_website": "https://x.com/suiet_wallet",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 32,
+      "name": "Ethos Wallet",
+      "symbol": "",
+      "categories": "Wallet",
+      "website": "https://ethoswallet.xyz/blog/post/Sunsetting-Ethos-Sui-Blockchain-Products",
+      "x_website": "https://x.com/EthosWalletXYZ",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 33,
+      "name": "Surf wallet",
+      "symbol": "",
+      "categories": "Wallet",
+      "website": "https://surf.tech/",
+      "x_website": "https://x.com/surf_wallet",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 34,
+      "name": "Nightly",
+      "symbol": "",
+      "categories": "Wallet",
+      "website": "https://nightly.app/",
+      "x_website": "https://x.com/Nightly_app",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 35,
+      "name": "Martian wallet",
+      "symbol": "",
+      "categories": "Wallet",
+      "website": "https://martianwallet.xyz/?utm_source=twitter&utm_medium=CTAlink&utm_campaign=visitwebsite&utm_id=twitterbio",
+      "x_website": "https://x.com/martian_wallet",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 36,
+      "name": "Stashed",
+      "symbol": "",
+      "categories": "Wallet",
+      "website": "https://getstashed.com/auth",
+      "x_website": "https://x.com/stashedofficial",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 37,
+      "name": "Suia",
+      "symbol": "",
+      "categories": "SociaFi",
+      "website": "https://suia.io/",
+      "x_website": "https://x.com/Suia2023",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/suia"
+    },
+    {
+      "id": 38,
+      "name": "SeaPad",
+      "symbol": "SPT",
+      "categories": "Launchpad",
+      "website": "https://t.co/7HJlSBc80p",
+      "x_website": "https://x.com/SeaPad_defi",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/seapad"
+    },
+    {
+      "id": 39,
+      "name": "DARKTIMES",
+      "symbol": "",
+      "categories": "Gamefi",
+      "website": "https://playdarktimes.com/",
+      "x_website": "https://x.com/playDARKTIMES",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/times"
+    },
+    {
+      "id": 40,
+      "name": "Cosmocadia",
+      "symbol": "",
+      "categories": "Gamefi, NFT",
+      "website": "https://discord.com/invite/cosmocadia",
+      "x_website": "https://x.com/Cosmocadia",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 41,
+      "name": "Panzerdogs",
+      "symbol": "",
+      "categories": "Gamefi, NFT",
+      "website": "https://www.panzerdogs.io/",
+      "x_website": "https://x.com/panzerdogs",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 42,
+      "name": "MotoDEX",
+      "symbol": "",
+      "categories": "Gamefi",
+      "website": "https://www.DEXstudios.net/",
+      "x_website": "https://x.com/motoDEX_game",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 43,
+      "name": "Capybara",
+      "symbol": "",
+      "categories": "Gamefi",
+      "website": "https://www.capybara.vip/",
+      "x_website": "https://x.com/capybaraonsui",
+      "verified": "No",
+      "congecko_link": "x"
+    },
+    {
+      "id": 44,
+      "name": "Sacabam",
+      "symbol": "",
+      "categories": "Meme",
+      "website": "https://linktr.ee/sacabamfun",
+      "x_website": "https://x.com/sacabamfun",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/sacabam"
+    },
+    {
+      "id": 45,
+      "name": "SuDeng",
+      "symbol": "HIPPO",
+      "categories": "Meme",
+      "website": "x",
+      "x_website": "https://x.com/SUDENG_HIPPO",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/sudeng"
+    },
+    {
+      "id": 46,
+      "name": "Blub",
+      "symbol": "BLUB",
+      "categories": "Meme",
+      "website": "https://www.blubsui.com/",
+      "x_website": "https://x.com/blubsui",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/blub"
+    },
+    {
+      "id": 47,
+      "name": "Fud the Pug",
+      "symbol": "",
+      "categories": "Meme",
+      "website": "https://spreadfudlovethepug.bigcartel.com/",
+      "x_website": "https://x.com/FudthePugcoin",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/fud-the-pug"
+    },
+    {
+      "id": 48,
+      "name": "Suiman",
+      "symbol": "",
+      "categories": "Meme",
+      "website": "https://linktr.ee/suimanmeme",
+      "x_website": "https://x.com/SuimanFanPage",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/suiman"
+    },
+    {
+      "id": 49,
+      "name": "Suipad",
+      "symbol": "SUIP",
+      "categories": "Launchpad",
+      "website": "",
+      "x_website": "https://x.com/SuiPadxyz",
+      "verified": "Yes",
+      "congecko_link": "https://www.coingecko.com/en/coins/suipad"
+    },
+    {
+      "id": 50,
+      "name": "Rockee AI",
+      "symbol": "ROOK",
+      "categories": "Defai",
+      "website": "https://rockee.ai/",
+      "x_website": "https://x.com/RockeeAI",
+      "verified": "Yes",
+      "congecko_link": ""
+    }
+  ]

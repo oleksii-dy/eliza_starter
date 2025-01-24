@@ -19,21 +19,20 @@ export const searchCoinInFileJsonProvider = async(coinSymbol:string)=>{
                 const data = await fs.readFile(file, 'utf8');
                 const coins = JSON.parse(data);
 
-                // Tìm kiếm coin
                 const foundCoin = coins.find(
                     coin =>
                         coin.symbol.toLowerCase() === coinSymbol.toLowerCase()
                 );
 
-                return foundCoin || null; // Trả về kết quả hoặc null
+                return foundCoin || null;
             } catch (err) {
                 console.error(`Error reading file ${file}:`, err);
-                return null; // Trả về null nếu xảy ra lỗi
+                return null;
             }
         })
     );
 
-    // Lọc kết quả để tìm phần tử đầu tiên không null
+
     return results.find(result => result !== null) || null;
 }
 // Module exports
@@ -45,7 +44,7 @@ export const searchCoinInFileJsonProvider2 = async(coinSymbol:string, coinName:s
                 const data = await fs.readFile(file, 'utf8');
                 const coins = JSON.parse(data);
 
-                // Tìm kiếm coin gân đúng
+
                 const foundCoin = coins.find(
                     coin =>
                         (coin.symbol.toLowerCase() === coinSymbol.toLowerCase()||
@@ -53,14 +52,13 @@ export const searchCoinInFileJsonProvider2 = async(coinSymbol:string, coinName:s
                     coin.verified === true
                 );
 
-                return foundCoin || null; // Trả về kết quả hoặc null
+                return foundCoin || null;
             } catch (err) {
                 console.error(`Error reading file ${file}:`, err);
-                return null; // Trả về null nếu xảy ra lỗi
+                return null;
             }
         })
     );
 
-    // Lọc kết quả để tìm phần tử đầu tiên không null
     return results.find(result => result !== null) || null;
 }

@@ -11,7 +11,7 @@ import {
     type Action,
 } from "@elizaos/core";
 import getInfoTokenOnSui from "../providers/coinMetaDataSui";
-import { getImageOnSuiScan } from "../providers/getImageOnSuiScan";
+import { getTokenOnSuiScan } from "../providers/getInfoCoinOnSuiScan";
 // import { RedisClient } from "@elizaos/adapter-redis";
 const swapTemplate = `Please extract the following swap details for SUI network:
 
@@ -100,16 +100,17 @@ export const executeSwapByAddress: Action = {
              })
              return false
         }
-
+        const imageFrom =await getTokenOnSuiScan(content.inputTokenAddress)
+        const imageTo =await getTokenOnSuiScan(content.inputTokenAddress)
         const responseData = {
             amount: content.amount,
             fromToken: {...inputTokenObject,
                 type: content.inputTokenAddress,
-                imgUrl: await getImageOnSuiScan(content.inputTokenAddress)
+                imgUrl: imageFrom.iconUrl
             },
             toToken:{...outputTokenObject,
                 type:content.outputTokenAddress,
-                imgUrl: await getImageOnSuiScan(content.outputTokenAddress)
+                imgUrl: imageTo.iconUrl
             }
 
         }
