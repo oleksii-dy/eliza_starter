@@ -14,3 +14,11 @@ export const moment = dayjs;
 export const formatAgentName = (name: string) => {
     return name.substring(0, 2);
 };
+
+export const getSessionId = () => {
+    if (!sessionStorage.getItem("sessionId")) {
+        const sessionId = crypto.randomUUID();
+        sessionStorage.setItem("sessionId", sessionId);
+    }
+    return sessionStorage.getItem("sessionId");
+};

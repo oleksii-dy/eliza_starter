@@ -12,6 +12,7 @@ import {
     validateCharacterConfig,
     ServiceType,
     stringToUuid,
+    Character,
 } from "@elizaos/core";
 
 import type { TeeLogQuery, TeeLogService } from "@elizaos/plugin-tee-log";
@@ -22,11 +23,16 @@ import { validateUuid } from "@elizaos/core";
 interface UUIDParams {
     agentId: UUID;
     roomId?: UUID;
+    sessionId?: UUID;
 }
 
 function validateUUIDParams(
-    params: { agentId: string; roomId?: string },
-    res: express.Response
+    params: {
+        agentId: string;
+        roomId?: string;
+        sessionId?: string;
+    },
+    res: express.Response,
 ): UUIDParams | null {
     const agentId = validateUuid(params.agentId);
     if (!agentId) {
@@ -47,12 +53,23 @@ function validateUUIDParams(
         return { agentId, roomId };
     }
 
+    if (params.sessionId) {
+        const sessionId = validateUuid(params.sessionId);
+        if (!sessionId) {
+            res.status(400).json({
+                error: "Invalid SessionId format. Expected to be a UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+            });
+            return null;
+        }
+        return { agentId, sessionId };
+    }
+
     return { agentId };
 }
 
 export function createApiRouter(
     agents: Map<string, AgentRuntime>,
-    directClient: DirectClient
+    directClient: DirectClient,
 ) {
     const router = express.Router();
 
@@ -62,7 +79,7 @@ export function createApiRouter(
     router.use(
         express.json({
             limit: getEnvVariable("EXPRESS_MAX_PAYLOAD") || "100kb",
-        })
+        }),
     );
 
     router.get("/", (req, res) => {
@@ -82,7 +99,7 @@ export function createApiRouter(
         res.json({ agents: agentsList });
     });
 
-    router.get('/storage', async (req, res) => {
+    router.get("/storage", async (req, res) => {
         try {
             const uploadDir = path.join(process.cwd(), "data", "characters");
             const files = await fs.promises.readdir(uploadDir);
@@ -184,7 +201,7 @@ export function createApiRouter(
                 const uploadDir = path.join(
                     process.cwd(),
                     "data",
-                    "characters"
+                    "characters",
                 );
                 const filepath = path.join(uploadDir, filename);
                 await fs.promises.mkdir(uploadDir, { recursive: true });
@@ -193,15 +210,15 @@ export function createApiRouter(
                     JSON.stringify(
                         { ...characterJson, id: agent.agentId },
                         null,
-                        2
-                    )
+                        2,
+                    ),
                 );
                 elizaLogger.info(
-                    `Character stored successfully at ${filepath}`
+                    `Character stored successfully at ${filepath}`,
                 );
             } catch (error) {
                 elizaLogger.error(
-                    `Failed to store character: ${error.message}`
+                    `Failed to store character: ${error.message}`,
                 );
             }
         }
@@ -242,13 +259,19 @@ export function createApiRouter(
         }
     });
 
-    const getMemories = async (agentId: UUID, roomId: UUID, req, res) => {
+    const getMemories = async (
+        agentId: UUID,
+        roomId: UUID,
+        userId: UUID | null,
+        req,
+        res,
+    ) => {
         let runtime = agents.get(agentId);
 
         // if runtime is null, look for runtime with the same name
         if (!runtime) {
             runtime = Array.from(agents.values()).find(
-                (a) => a.character.name.toLowerCase() === agentId.toLowerCase()
+                (a) => a.character.name.toLowerCase() === agentId.toLowerCase(),
             );
         }
 
@@ -266,12 +289,14 @@ export function createApiRouter(
             const filteredMemories = memories.filter(
                 (memory) =>
                     (memory.content.metadata as any)?.type !== "file" &&
-                    memory.content?.source !== "direct"
+                    memory.content?.source !== "direct" &&
+                    (userId ? memory.userId === userId : true),
             );
 
             const response = {
                 agentId,
                 roomId,
+                userId,
                 memories: filteredMemories.map((memory) => ({
                     id: memory.id,
                     userId: memory.userId,
@@ -292,7 +317,7 @@ export function createApiRouter(
                                 description: attachment.description,
                                 text: attachment.text,
                                 contentType: attachment.contentType,
-                            })
+                            }),
                         ),
                     },
                     embedding: memory.embedding,
@@ -316,20 +341,22 @@ export function createApiRouter(
         };
         if (!agentId || !roomId) return;
 
-        await getMemories(agentId, roomId, req, res);
+        await getMemories(agentId, roomId, null, req, res);
     });
 
-    router.get("/agents/:agentId/memories", async (req, res) => {
-        const { agentId } = validateUUIDParams(req.params, res) ?? {
+    router.get("/agents/:agentId/memories/:sessionId", async (req, res) => {
+        const { agentId, sessionId } = validateUUIDParams(req.params, res) ?? {
             agentId: null,
+            sessionId: null,
         };
-        if (!agentId) return;
+        if (!agentId || !sessionId) return;
 
+        const userId = stringToUuid(sessionId);
         const roomId = stringToUuid(
-            req.body.roomId ?? "default-room-" + agentId
+            req.body.roomId ?? "default-room-" + agentId,
         );
 
-        await getMemories(agentId, roomId, req, res);
+        await getMemories(agentId, roomId, userId, req, res);
     });
 
     router.get("/tee/agents", async (req, res) => {
@@ -350,7 +377,7 @@ export function createApiRouter(
                 .getService<TeeLogService>(ServiceType.TEE_LOG)
                 .getInstance();
             const attestation = await teeLogService.generateAttestation(
-                JSON.stringify(allAgents)
+                JSON.stringify(allAgents),
             );
             res.json({ agents: allAgents, attestation: attestation });
         } catch (error) {
@@ -376,7 +403,7 @@ export function createApiRouter(
 
             const teeAgent = await teeLogService.getAgent(agentId);
             const attestation = await teeLogService.generateAttestation(
-                JSON.stringify(teeAgent)
+                JSON.stringify(teeAgent),
             );
             res.json({ agent: teeAgent, attestation: attestation });
         } catch (error) {
@@ -411,10 +438,10 @@ export function createApiRouter(
                 const pageQuery = await teeLogService.getLogs(
                     teeLogQuery,
                     page,
-                    pageSize
+                    pageSize,
                 );
                 const attestation = await teeLogService.generateAttestation(
-                    JSON.stringify(pageQuery)
+                    JSON.stringify(pageQuery),
                 );
                 res.json({
                     logs: pageQuery,
@@ -426,7 +453,7 @@ export function createApiRouter(
                     error: "Failed to get TEE logs",
                 });
             }
-        }
+        },
     );
 
     router.post("/agent/start", async (req, res) => {
@@ -438,7 +465,7 @@ export function createApiRouter(
             if (characterJson) {
                 character = await directClient.jsonToCharacter(
                     characterPath,
-                    characterJson
+                    characterJson,
                 );
             } else if (characterPath) {
                 character =
