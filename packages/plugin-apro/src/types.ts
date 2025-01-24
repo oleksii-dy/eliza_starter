@@ -36,7 +36,6 @@ export const isAgentSettings = (value: any): value is AgentSettings => {
     if (AgentSettingsSchema.safeParse(value).success) {
         return true;
     }
-    console.error('Invalid agent settings:', value);
     return false;
 }
 
@@ -82,7 +81,6 @@ export const isVerifyParams = (value: any): value is VerifyParams => {
     if (VerifyParamsSchema.safeParse(value).success) {
         return true;
     }
-    console.error('Invalid verify params:', value);
     return false;
 }
 
@@ -98,7 +96,6 @@ export const isPriceQueryParams = (value: any): value is PriceQueryParams => {
     if (PriceQueryParamsSchema.safeParse(value).success) {
         return true;
     }
-    console.error('Invalid price query params:', value);
     return false;
 }
 
@@ -113,4 +110,33 @@ export interface PriceData {
     askPriceChange: number
     midPriceChange: number
     timestamp: number
+}
+
+export const AttpsPriceQuerySchema = z.object({
+    sourceAgentId: z.string(),
+    feedId: z.string(),
+});
+
+export const isAttpsPriceQuery = (value: any): value is AttpsPriceQuery => {
+    if (AttpsPriceQuerySchema.safeParse(value).success) {
+        return true;
+    }
+    return false;
+}
+
+export interface AttpsPriceQuery {
+    sourceAgentId: string
+    feedId: string
+}
+
+export interface AttpsPriceQueryResponse {
+    feedId: string
+    validTimeStamp: number
+    observeTimeStamp: number
+    nativeFee: number
+    tokenFee: number
+    expireTimeStamp: number
+    midPrice: string
+    askPrice: string
+    bidPrice: string
 }

@@ -190,3 +190,49 @@ IMPORTANT NOTES:
 Input context to process:
 {{recentMessages}}
 `;
+
+export const attpsPriceQueryTemplate = `
+
+TASK: Extract source agent and message identifiers from user input. Validate and format according to specified patterns.
+
+PARAMETER RULES:
+
+1. sourceAgentId Requirements:
+   - Format: UUID v4 format (8-4-4-4-12 hexadecimal)
+   - Case insensitive input but output must be lowercase
+   - Example: "b660e3f4-bbfe-4acb-97bd-c0869a7ea142"
+
+2. feedId Requirements:
+   - Format: 64-character hexadecimal prefixed with 0x
+   - Must be exactly 66 characters long including prefix
+   - Example: "0x0003665949c883f9e0f6f002eac32e00bd59dfe6c34e92a91c37d6a8322d6489"
+
+VALIDATION:
+
+1. REJECT and set to null if:
+   - Invalid UUID structure for sourceAgentId
+   - feedId length ≠ 66 characters
+   - feedId missing 0x prefix
+   - Contains non-hexadecimal characters
+   - Extra/missing hyphens in UUID
+   - Incorrect segment lengths
+
+OUTPUT FORMAT:
+\`\`\`json
+{
+    "sourceAgentId": null,
+    "feedId": null
+}
+\`\`\`
+
+PROCESSING RULES:
+1. Normalize sourceAgentId to lowercase
+2. Preserve original feedId casing
+3. Strict format validation before acceptance
+4. Partial matches should return null
+5. Return null for ambiguous formats
+
+Input context to process:
+{{recentMessages}}
+
+`;
