@@ -1,12 +1,12 @@
 # @elizaos/plugin-discourse
 
-Discourse plugin for Eliza OS that adds a provider that will fetch data from a target Discourse instance, such as posts. Discourse is used widely in the DAO and governance community. Giving agents access to a DAO's knowledge base will enhance collaboration and decision-making within the DAO. Of course, this plugin is not limited to DAOs, it can be used outside of the web3 ecosystem.
+Discourse plugin for Eliza OS that adds a provider which will fetch data from a target Discourse instance, such as posts. Discourse is used widely in the web3 DAO and governance community. Giving agents access to a DAO's Discourse data will enhance collaboration and decision-making within the DAO. Of course, this plugin is not limited to DAOs, it can be used outside of the web3 ecosystem.
 
 ## Overview
 
 This plugin provides functionality to:
 
--   TODO
+-   Export data from a Discourse instance in the form of a provider
 
 ## Installation
 
@@ -22,11 +22,14 @@ pnpm add @elizaos/plugin-discourse
 
 The plugin requires the following environment variables:
 
-```env
-# TODO - check these
-DISCOURSE_API_KEY=your_api_key
-DISCOURSE_API_SECRET=your_api_secret
-DISCOURSE_API_URL=your_api_url
+```bash
+DISCOURSE_INSTANCE_URL=your_discourse_instance_url
+```
+
+Example:
+
+```
+DISCOURSE_INSTANCE_URL=https://gov.uniswap.org
 ```
 
 ## Usage
@@ -55,11 +58,6 @@ Assistant: "I'll check the Discourse forum and provide a summary of the latest g
 ```
 
 ## API Reference
-
-### Actions
-
--   `FETCH_POSTS`: Fetch posts from a Discourse forum
--   `SUMMARIZE_POSTS`: Summarize the latest governance activity on Discourse
 
 ### Providers
 
