@@ -237,7 +237,80 @@ Agent:
 
 **When to Use:** Automation: Automate repetitive tasks such as modifying multiple issues.
 ___
-**Use Case 8: Stop Actions**
+**Use Case 8: Ideation**
+
+Prompt Example 1:
+
+User:
+```plaintext
+"Think about ways to enhance the security of user1/repo1."
+```
+Agent:
+```plaintext
+"Here are some detailed suggestions for improving security in user1/repo1:
+
+Enhance documentation by providing clear setup instructions to prevent misconfigurations.
+Implement static code analysis to identify vulnerabilities early.
+Use OAuth 2.0 for authentication to secure user data.
+Conduct a security audit to identify and mitigate potential risks.
+Ensure dependencies are updated to avoid known vulnerabilities."
+```
+**Description:**
+This use case focuses on the agent's ability to analyze a repository's security aspects and suggest targeted improvements. By addressing authentication, code vulnerabilities, dependency management, and configuration issues, the agent provides actionable insights to enhance repository security.
+
+**When to Use:**
+This is ideal when there are concerns about vulnerabilities, risks to sensitive data, or the need to implement stronger security protocols. It’s especially useful before releasing new features or after identifying potential security incidents.
+
+
+Prompt Example 2:
+
+User:
+```plaintext
+"Ideate on improving the frontend of user2/repo2."
+```
+
+Agent:
+```plaintext
+"Analyzing user2/repo2 and previous feedback, here are some ideas for improving the frontend:
+
+Redesign the UI for better navigation using a modern framework like Material-UI.
+Improve accessibility by implementing ARIA roles and ensuring proper color contrast.
+Optimize asset loading by lazy-loading images and scripts for faster load times.
+Enhance state management by using Redux for better data consistency.
+Implement responsive design to ensure compatibility with various screen sizes."
+```
+**Description:**
+This use case highlights the agent's ability to generate actionable ideas for improving a repository's frontend. Suggestions focus on user experience, performance, and accessibility improvements to create a polished and intuitive interface.
+
+**When to Use:**
+Use this when enhancing the visual appeal, usability, or performance of a web application's frontend is a priority. It's particularly valuable after receiving user feedback or planning a redesign.
+
+
+Prompt Example 3:
+
+User:
+```plaintext
+"Co-create ideas for improving the deployment process of user4/repo4."
+```
+Agent:
+```plaintext
+"Here are some ideas to improve the deployment process:
+
+Automate deployments using GitHub Actions to streamline workflows.
+Implement blue-green deployments for minimal downtime and safe rollbacks.
+Containerize applications using Docker for consistency across environments.
+Monitor deployment metrics with tools like Prometheus and Grafana.
+Optimize the build process to reduce build times using caching and parallel builds."
+```
+**Description:**
+This use case focuses on the agent's ability to suggest strategies for optimizing and automating deployment processes, reducing errors, and improving efficiency.
+
+**When to Use:**
+Use this when deployment inefficiencies or errors are affecting workflows
+___
+
+
+**Use Case 9: Stop Actions**
 
 Prompt Example 1:
 
