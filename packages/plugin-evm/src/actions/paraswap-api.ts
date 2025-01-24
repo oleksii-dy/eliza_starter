@@ -13,13 +13,21 @@ import { swapTemplate } from "../templates";
 const PARASWAP_API_URL = "https://api.paraswap.io";
 
 export class SwapAction {
+    private tokenDecimals: Map<string, number> = new Map();
+
     constructor(private walletProvider: WalletProvider) {}
 
     private async getSwapData(params: SwapParams) {
+        const inputTokenDecimals =
+            this.tokenDecimals.get(params.fromToken.toLowerCase()) || 18;
+        const amount = (
+            Number(params.amount) * Math.pow(10, inputTokenDecimals)
+        ).toString();
+
         const queryParams = {
             srcToken: params.fromToken,
             destToken: params.toToken,
-            amount: parseEther(params.amount).toString(),
+            amount: amount,
             userAddress: this.walletProvider.getAddress(),
             network: this.walletProvider
                 .getChainConfigs(params.chain)
@@ -29,14 +37,45 @@ export class SwapAction {
             slippage: "250",
         };
 
+        // console.log("queryParams", queryParams);
+
         const response = await fetch(
             `${PARASWAP_API_URL}/swap?${new URLSearchParams(queryParams)}`
         );
+
+        // console.log("response", response);
+
         if (!response.ok)
             throw new Error(
                 (await response.json()).message || "Failed to get swap quote"
             );
         return response.json();
+    }
+
+    public async validateTokens(
+        inputToken: string,
+        outputToken: string
+    ): Promise<boolean> {
+        const chainId = this.walletProvider.getCurrentChain().id;
+        const response = await fetch(`${PARASWAP_API_URL}/tokens/${chainId}`);
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch token list");
+        }
+
+        const { tokens } = await response.json();
+
+        // Store token symbols (lowercase) and their decimals in the map
+        tokens.forEach((token: { symbol: string; decimals: number }) => {
+            this.tokenDecimals.set(token.symbol.toLowerCase(), token.decimals);
+        });
+
+        // console.log("tokenDecimals", this.tokenDecimals);
+
+        return (
+            this.tokenDecimals.has(inputToken.toLowerCase()) &&
+            this.tokenDecimals.has(outputToken.toLowerCase())
+        );
     }
 
     async swap(params: SwapParams): Promise<Transaction> {
@@ -118,12 +157,26 @@ export const swapAction = {
                 modelClass: ModelClass.LARGE,
             });
 
-            if (content.inputToken !== "ETH") {
-                await action.approveTokenIfNeeded(
-                    parseEther(content.amount).toString(),
-                    content.inputToken
-                );
+            if (
+                !(await action.validateTokens(
+                    content.inputToken,
+                    content.outputToken
+                ))
+            ) {
+                if (callback) {
+                    callback({
+                        text: `Error: One or both tokens are not supported on ParaSwap`,
+                    });
+                }
+                return false;
             }
+
+            // if (content.inputToken !== "ETH") {
+            //     await action.approveTokenIfNeeded(
+            //         parseEther(content.amount).toString(),
+            //         content.inputToken
+            //     );
+            // }
 
             const swapResp = await action.swap({
                 chain: content.chain,
