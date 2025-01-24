@@ -1164,8 +1164,8 @@ export async function createAgent(
                 ? hyperbolicPlugin
                 : null,
             getSecret(character, "SUNO_API_KEY") ? sunoPlugin : null,
-            getSecret(character, "UDIO_AUTH_TOKEN") ? udioPlugin : null
-            litPlugin,
+            getSecret(character, "UDIO_AUTH_TOKEN") ? udioPlugin : null,
+            getSecret(character, "FUNDING_PRIVATE_KEY") && getSecret(character, "EVM_RPC_URL") ? litPlugin : null            ,
         ].filter(Boolean),
         providers: [],
         managers: [],
