@@ -17,7 +17,7 @@ import { TrustScoreProvider } from "./providers/trustScoreProvider";
 import { SimulationService } from "./services/simulationService";
 import { SAFETY_LIMITS } from "./constants";
 import NodeCache from "node-cache";
-import { TrustScoreDatabase } from "@elizaos/plugin-trustdb";
+import { initTrustDatabase, ITrustDatabase } from "@elizaos/plugin-trustdb";
 import { v4 as uuidv4 } from "uuid";
 import { actions } from "./actions";
 import {
@@ -270,7 +270,10 @@ async function updateSellDetails(
     latestTrade: any,
     tokenData: any
 ) {
-    const trustScoreDb = new TrustScoreDatabase(runtime.databaseAdapter.db);
+    const trustScoreDb = await initTrustDatabase({
+        db: runtime.databaseAdapter.db,
+        dbConfig: runtime.getSetting("POSTGRES_URL"),
+    });
 
     const trade = await trustScoreDb.getLatestTradePerformance(
         tokenAddress,
@@ -462,7 +465,8 @@ async function createRabbiTraderPlugin(
 
     // Move connection initialization to the top
     const connection = new Connection(
-        runtime?.getSetting("SOLANA_RPC_URL") || "https://api.mainnet-beta.solana.com"
+        runtime?.getSetting("SOLANA_RPC_URL") ||
+            "https://api.mainnet-beta.solana.com"
     );
 
     const keypair = getWalletKeypair(runtime);
@@ -716,10 +720,13 @@ async function analyzeToken(
         };
 
         // Initialize trustScoreDb
-        const trustScoreDb = new TrustScoreDatabase(runtime.databaseAdapter.db);
+        const trustScoreDb = await initTrustDatabase({
+            db: runtime.databaseAdapter.db,
+            dbConfig: runtime.getSetting("POSTGRES_URL"),
+        });
 
         // Before creating analysisParams, get the latest trade performance
-        const latestTrade = trustScoreDb.getLatestTradePerformance(
+        const latestTrade = await trustScoreDb.getLatestTradePerformance(
             tokenAddress,
             runtime.agentId,
             false // not simulation
@@ -969,9 +976,10 @@ async function buy({
                 }
 
                 // Record trade using TrustScoreDatabase methods
-                const trustScoreDb = new TrustScoreDatabase(
-                    runtime.databaseAdapter.db
-                );
+                const trustScoreDb = await initTrustDatabase({
+                    db: runtime.databaseAdapter.db,
+                    dbConfig: runtime.getSetting("POSTGRES_URL"),
+                });
 
                 try {
                     // Remove the PublicKey validation for Base addresses
@@ -1109,7 +1117,7 @@ async function sell({
     tokenAddress: string;
     tokenProvider: TokenProvider;
     twitterService: TwitterService;
-    trustScoreDb: TrustScoreDatabase;
+    trustScoreDb: ITrustDatabase;
     result: any;
     latestTrade: TradePerformance;
     trustScore: number;
