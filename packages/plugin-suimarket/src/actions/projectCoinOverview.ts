@@ -40,21 +40,22 @@ Respond with a JSON markdown block containing only the extracted values.
 export const projectInfo: Action = {
     name: "PROJECT_OVERVIEW",
     similes: [
-       "PROJECT_SUMMARY",
-        "PROJECT_DESCRIPTION",
-        "OVERVIEW",
-        "PROJECT_DETAILS",
-        "PROJECT_INFO",
-        "PROJECT_INTRO",
-        "PROJECT_SCOPE",
-        "PROJECT_HIGHLIGHTS",
-        "PROJECT_BACKGROUND",
-        "PROJECT_OBJECTIVES",
-        "PROJECT_VISION",
-        "PROJECT_MISSION",
-        "PROJECT_OVERVIEW",
-        "PROJECT_ANALYSIS",
-        "PROJECT_CONTEXT"
+       "PROJECT_SUMMARY_{PROJECT_NAME}",
+        "PROJECT_DESCRIPTION_{PROJECT_NAME}",
+        "OVERVIEW_{PROJECT_NAME}",
+        "PROJECT_DETAILS_{PROJECT_NAME}",
+        "PROJECT_INFO_{PROJECT_NAME}",
+        "PROJECT_INTRO_{PROJECT_NAME}",
+        "PROJECT_SCOPE_{PROJECT_NAME}",
+        "PROJECT_HIGHLIGHTS_{PROJECT_NAME}",
+        "PROJECT_BACKGROUND_{PROJECT_NAME}",
+        "PROJECT_OBJECTIVES_{PROJECT_NAME}",
+        "PROJECT_VISION_{PROJECT_NAME}",
+        "PROJECT_MISSION_{PROJECT_NAME}",
+        "PROJECT_OVERVIEW_{PROJECT_NAME}",
+        "PROJECT_ANALYSIS_{PROJECT_NAME}",
+        "PROJECT_CONTEXT_{PROJECT_NAME}",
+        "{PROJECT_NAME}"
     ],
 
     examples: [
@@ -164,7 +165,7 @@ export const projectInfo: Action = {
                             .slice(0, 5)
                             .map(item => item.market.name)
                             .join(",")}....`,
-                    categories: projectObj.categories,
+                    categories: projectObj.categories.join(", "),
                     imgUrl: tokenSuiInfo.iconUrl,
                     contract_address: tokenSuiInfo.type,
                     ...infoPrice
