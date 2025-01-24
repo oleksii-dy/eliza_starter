@@ -5,7 +5,7 @@ import {
   init_lib,
   lib_default,
   require_node_ponyfill
-} from "./chunk-W2OETGYU.js";
+} from "./chunk-GJR6AK5I.js";
 import {
   __commonJS,
   __toESM
@@ -8094,7 +8094,7 @@ var fetchWithAuth = (apiKey, customFetch) => {
 };
 var resolveResponse = () => __awaiter2(void 0, void 0, void 0, function* () {
   if (typeof Response === "undefined") {
-    return (yield import("./node-ponyfill-XYSXBJLI.js")).Response;
+    return (yield import("./node-ponyfill-KWL5YYVU.js")).Response;
   }
   return Response;
 });

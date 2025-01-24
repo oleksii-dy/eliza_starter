@@ -1,9 +1,9 @@
 import { Plugin } from '@elizaos/core';
 import { coinInfo } from './actions/coinInfo';
-import { trendingCat } from './actions/trendingCat';
+// import { trendingCat } from './actions/trendingCat';
 import { topMarkets } from "./actions/topMarkets";
-import {  trendingTokens} from "./actions/trendingCoins";
-import { topAiTokens } from './actions/topAiTokens';
+// import {  trendingTokens} from "./actions/trendingCoins";
+// import { topAiTokens } from './actions/topAiTokens';
 import { searchSuiTokenSymbol } from './actions/searchSuiTokenSymbol';
 import { suiTokenInfo } from './actions/suiTokenInfoByAddress';
 import { executeSwap } from './actions/swapBySymbol';
@@ -12,7 +12,7 @@ import { sendTokenBySymbol } from './actions/sendTokenBySymbol';
 import { checkTxhashOnSui } from './actions/checkInfoTxHash';
 import { chainInfo } from './actions/infoChain';
 import { projectInfo } from './actions/projectCoinOverview';
-import { topDexInfo } from './actions/topDexOnSui';
+import { topDexInfo } from './actions/topDexByNetwork';
 // import { suiTokenInfoBySymbol } from './actions/suiTokenInfoBySymbol';
 
 const suimarketPlugin: Plugin = {
@@ -21,7 +21,7 @@ const suimarketPlugin: Plugin = {
   actions: [
     chainInfo,
     topMarkets,
-    trendingTokens,
+    // trendingTokens,
     coinInfo,
     // topAiTokens,
     searchSuiTokenSymbol,

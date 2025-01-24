@@ -11,7 +11,11 @@
     "axios": "^1.7.9",
     "bignumber": "1.1.0",
     "bignumber.js": "9.1.2",
+    "cheerio": "^1.0.0",
     "node-cache": "5.1.2",
+    "puppeteer": "^24.1.1",
+    "puppeteer-extra": "3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "tsup": "8.3.5",
     "vitest": "2.1.4"
   },
