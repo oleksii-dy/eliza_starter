@@ -18,7 +18,6 @@ import {findByVerifiedAndName} from "../providers/searchCoinInAggre";
 import { searchProjectInFileJson } from "../providers/searchProjectInFileJson";
 import { getTokenOnSuiScan } from "../providers/getInfoCoinOnSuiScan";
 
-
 const projectInfoTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 Example response:
     \`\`\`json
@@ -40,7 +39,6 @@ Respond with a JSON markdown block containing only the extracted values.
 
 export const projectInfo: Action = {
     name: "PROJECT_OVERVIEW",
-
     similes: [
        "PROJECT_SUMMARY",
         "PROJECT_DESCRIPTION",
@@ -127,7 +125,7 @@ export const projectInfo: Action = {
              })
              return false
         }
-        
+
         const tokenSuiInfo = await getTokenOnSuiScan(tokenObject.symbol);
         let coinObject= await searchCoinInFileJsonProvider2(tokenObject.symbol, tokenObject.name)
         if(coinObject === null){

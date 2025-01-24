@@ -9,7 +9,8 @@ import {
     // generateCaption,
     // generateImage,
     Media,
-    getEmbeddingZeroVector
+    getEmbeddingZeroVector,
+    CacheOptions
 } from "@elizaos/core";
 import { composeContext } from "@elizaos/core";
 import { generateMessageResponse } from "@elizaos/core";
@@ -27,6 +28,26 @@ import { settings } from "@elizaos/core";
 import  createApiRouter from "./routes/index";
 import * as fs from "fs";
 import * as path from "path";
+import crypto from 'crypto';
+import { hashUserMsg } from "./utilities/format";
+
+function normalizeText(text: string): string {
+    return text
+        .toLowerCase()           // Convert to lowercase
+        .replace(/\s+/g, ' ')   // Replace multiple spaces/newlines with a single space
+        .trim();                 // Trim leading and trailing spaces
+}
+
+function hashText(text: string): string {
+    return crypto.createHash('sha256')
+                 .update(text, 'utf8')
+                 .digest('hex');
+}
+
+function normalizeUserMsg(userMsg: any): string {
+    const text = normalizeText(userMsg.content.text);
+    return hashText("direct_client:" + userMsg.agentId + userMsg.roomId + userMsg.userId + text);
+}
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -260,30 +281,36 @@ export class DirectClient {
                 });
                 elizaLogger.log("ai compose state ...done!");
 
+                let msgHash = hashUserMsg(userMessage, "direct_client:");
+                let response: Content = await runtime.cacheManager.get(msgHash);
 
-                elizaLogger.log("ai compose context ...");
-                const context = composeContext({
-                    state,
-                    template: messageHandlerTemplate,
-                });
-                elizaLogger.log("ai compose context ...done!");
+                if(!response){
+                    elizaLogger.log("ai compose response ...");
+                    const context = composeContext({
+                        state,
+                        template: messageHandlerTemplate,
+                    });
+                    response = await generateMessageResponse({
+                        runtime: runtime,
+                        context,
+                        modelClass: ModelClass.SMALL,
+                    });
+                    elizaLogger.log("ai compose response ...done!");
 
-                elizaLogger.log("ai generate msg response ...");
-                const response = await generateMessageResponse({
-                    runtime: runtime,
-                    context,
-                    modelClass: ModelClass.SMALL,
-                });
-                elizaLogger.log("ai generate msg response ...done!");
+                    if (!response) {
+                        res.status(500).send(
+                            "No response from generateMessageResponse"
+                        );
+                        return;
+                    }
 
-                if (!response) {
-                    res.status(500).send(
-                        "No response from generateMessageResponse"
-                    );
-                    return;
+                    elizaLogger.log("set cache >>>>", msgHash, response);
+                    await runtime.cacheManager.set(msgHash, response, {expires: Date.now() + 300000});
+                }
+                else{
+                    elizaLogger.log("[direct-client] use cache: ", msgHash, response);
                 }
 
-                elizaLogger.log("create memory ...");
                 const responseMessage: Memory = {
                     id: stringToUuid(messageId + "-" + runtime.agentId),
                     ...userMessage,
@@ -293,11 +320,8 @@ export class DirectClient {
                     createdAt: Date.now(),
                 };
                 await runtime.messageManager.createMemory(responseMessage);
-                elizaLogger.log("create memory ...done!");
 
-                elizaLogger.log("update recent msgs...");
                 state = await runtime.updateRecentMessageState(state);
-                elizaLogger.log("update recent msgs...done!");
 
                 elizaLogger.log("process actions...");
                 let message = null as Content | null;
