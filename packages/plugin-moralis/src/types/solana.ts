@@ -123,3 +123,47 @@ export interface TokenStats {
     totalBuyers: TimeFrameStats;
     totalSellers: TimeFrameStats;
 }
+
+export interface TokenPriceContent {
+    tokenAddress: string;
+}
+
+export interface NativePrice {
+    value: string;
+    symbol: string;
+    name: string;
+    decimals: number;
+}
+
+export interface TokenPrice {
+    exchangeName: string;
+    exchangeAddress: string;
+    nativePrice: NativePrice;
+    usdPrice: number;
+}
+
+export interface TokenMetadataContent {
+    tokenAddress: string;
+}
+
+export interface MetaplexMetadata {
+    metadataUri: string;
+    masterEdition: boolean;
+    isMutable: boolean;
+    primarySaleHappened: number;
+    sellerFeeBasisPoints: number;
+    updateAuthority: string;
+}
+
+export interface TokenMetadata {
+    mint: string;
+    standard: string;
+    name: string;
+    symbol: string;
+    logo: string | null;
+    decimals: string;
+    totalSupply: string;
+    totalSupplyFormatted: string;
+    fullyDilutedValue: string;
+    metaplex: MetaplexMetadata;
+}

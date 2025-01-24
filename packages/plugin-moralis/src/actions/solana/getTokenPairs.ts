@@ -12,7 +12,7 @@ import {
 } from "@elizaos/core";
 import axios from "axios";
 import { validateMoralisConfig } from "../../environment";
-import { getTokenPairsTemplate } from "../../templates/getTokenPairs";
+import { getTokenPairsTemplate } from "../../templates/tokenPairs";
 import { API_ENDPOINTS, SOLANA_API_BASE_URL } from "../../utils/constants";
 import { TokenPairsContent, TokenPairsResponse } from "../../types/solana";
 

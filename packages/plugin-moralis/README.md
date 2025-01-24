@@ -96,48 +96,38 @@ Supports:
 - Custom date ranges
 - Price data in different currencies
 
-### GET_FILTERED_TOKENS
+### GET_SOLANA_TOKEN_PRICE
 
-Discovers and filters tokens on Solana blockchain based on various criteria like volume, security, age, and trading metrics.
+Fetches current token price from the main liquidity source.
 
 Examples:
 
-- "Find tokens with high trading volume and security score above 70"
-- "Show me new tokens launched this week with growing liquidity"
-- "Get top 10 most actively traded tokens with good security"
-- "Find tokens that have price growth in the last 24 hours"
-- "Show me tokens with experienced traders and stable liquidity"
+- "Get current price of Solana token 6Rwcmkz9yiYVM5EzyMcr4JsQPGEAWhcUvLvfBperYnUt"
+- "What's the current price for BONK?"
 
-Supports filtering by:
+Returns:
 
-- Market metrics (marketCap, price)
-- Volume metrics (volumeUsd, buyVolume, sellVolume)
-- User activity (holders, buyers, sellers)
-- Trading experience (experiencedBuyers, experiencedSellers)
-- Technical metrics (tokenAge, securityScore)
-- Price changes (usdPricePercentChange)
-- Liquidity metrics (liquidityChange, liquidityChangeUSD)
+- USD price
+- Native price (e.g., in SOL)
+- Exchange name and address
 
-Response includes:
+### GET_SOLANA_TOKEN_METADATA
 
-- Token identifiers (name, symbol, address)
-- Current price and market cap
-- 24h trading volume and price changes
-- Security score and warning flags
-- Trader activity metrics
-- Liquidity information
-- Buy/Sell breakdowns
+- Fetches comprehensive token metadata including supply and valuation metrics.
 
-Time frames available:
+Examples:
 
-- tenMinutes
-- thirtyMinutes
-- oneHour
-- fourHours
-- twelveHours
-- oneDay
-- oneWeek
-- oneMonth
+- "What's the FDV and supply for SRM token?"
+- "Show me metadata for BONK token"
+
+Returns:
+
+- Token name and symbol
+- Contract address
+- Total supply (raw and formatted)
+- Fully Diluted Valuation (FDV)
+- Token standard and decimals
+- Metaplex-specific details
 
 ## Usage Tips
 

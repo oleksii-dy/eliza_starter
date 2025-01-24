@@ -3,7 +3,8 @@ import getTokenPairs from "./actions/solana/getTokenPairs";
 import getPairStats from "./actions/solana/getPairStats";
 import getPairOHLCV from "./actions/solana/getPairOHLCV";
 import getTokenStats from "./actions/solana/getTokenStats";
-import getFilteredTokens from "./actions/solana/getFilteredTokens";
+import getTokenPrice from "./actions/solana/getTokenPrice";
+import getTokenMetadata from "./actions/solana/getTokenMetadata";
 
 export const moralisPlugin: Plugin = {
     name: "moralis",
@@ -13,7 +14,8 @@ export const moralisPlugin: Plugin = {
         getPairStats,
         getPairOHLCV,
         getTokenStats,
-        getFilteredTokens,
+        getTokenPrice,
+        getTokenMetadata,
     ],
     evaluators: [],
     providers: [],
