@@ -171,6 +171,7 @@ export default {
 
             if (callback) {
                 callback({
+                    // TODO wait for transaction to complete
                     text: `Successfully transferred ${transferDetails.amount} TON to ${transferDetails.recipient}, Transaction: ${hash}`,
                     content: {
                         success: true,
