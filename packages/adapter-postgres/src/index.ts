@@ -37,7 +37,7 @@ export class PostgresDatabaseAdapter
     extends DatabaseAdapter<Pool>
     implements IDatabaseCacheAdapter
 {
-    private pool: Pool;
+    protected pool: Pool;
     private readonly maxRetries: number = 3;
     private readonly baseDelay: number = 1000; // 1 second
     private readonly maxDelay: number = 10000; // 10 seconds
@@ -88,7 +88,7 @@ export class PostgresDatabaseAdapter
         });
     }
 
-    private async withDatabase<T>(
+    protected async withDatabase<T>(
         operation: () => Promise<T>,
         context: string
     ): Promise<T> {

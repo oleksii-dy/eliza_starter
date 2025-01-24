@@ -1,145 +1,19 @@
-import { Database } from "better-sqlite3";
+import type { Database } from "better-sqlite3";
 import { v4 as uuidv4 } from "uuid";
+import type {
+    Recommender,
+    RecommenderMetrics,
+    RecommenderMetricsHistory,
+    RecommenderMetricsRow,
+    TokenPerformance,
+    TokenPerformanceRow,
+    TokenRecommendation,
+    TradePerformance,
+    Transaction,
+    ITrustDatabase,
+} from "../types";
 
-export interface Recommender {
-    id: string; // UUID
-    address: string;
-    solanaPubkey?: string;
-    telegramId?: string;
-    discordId?: string;
-    twitterId?: string;
-    ip?: string;
-}
-
-export interface RecommenderMetrics {
-    recommenderId: string;
-    trustScore: number;
-    totalRecommendations: number;
-    successfulRecs: number;
-    avgTokenPerformance: number;
-    riskScore: number;
-    consistencyScore: number;
-    virtualConfidence: number;
-    lastActiveDate: Date;
-    trustDecay: number;
-    lastUpdated: Date;
-}
-
-export interface TokenPerformance {
-    tokenAddress: string;
-    symbol: string;
-    priceChange24h: number;
-    volumeChange24h: number;
-    trade_24h_change: number;
-    liquidity: number;
-    liquidityChange24h: number;
-    holderChange24h: number;
-    rugPull: boolean;
-    isScam: boolean;
-    marketCapChange24h: number;
-    sustainedGrowth: boolean;
-    rapidDump: boolean;
-    suspiciousVolume: boolean;
-    validationTrust: number;
-    balance: number;
-    initialMarketCap: number;
-    lastUpdated: Date;
-}
-
-export interface TokenRecommendation {
-    id: string; // UUID
-    recommenderId: string;
-    tokenAddress: string;
-    timestamp: Date;
-    initialMarketCap?: number;
-    initialLiquidity?: number;
-    initialPrice?: number;
-}
-export interface RecommenderMetricsHistory {
-    historyId: string; // UUID
-    recommenderId: string;
-    trustScore: number;
-    totalRecommendations: number;
-    successfulRecs: number;
-    avgTokenPerformance: number;
-    riskScore: number;
-    consistencyScore: number;
-    virtualConfidence: number;
-    trustDecay: number;
-    recordedAt: Date;
-}
-
-export interface TradePerformance {
-    token_address: string;
-    recommender_id: string;
-    buy_price: number;
-    sell_price: number;
-    buy_timeStamp: string;
-    sell_timeStamp: string;
-    buy_amount: number;
-    sell_amount: number;
-    buy_sol: number;
-    received_sol: number;
-    buy_value_usd: number;
-    sell_value_usd: number;
-    profit_usd: number;
-    profit_percent: number;
-    buy_market_cap: number;
-    sell_market_cap: number;
-    market_cap_change: number;
-    buy_liquidity: number;
-    sell_liquidity: number;
-    liquidity_change: number;
-    last_updated: string;
-    rapidDump: boolean;
-}
-
-interface RecommenderMetricsRow {
-    recommender_id: string;
-    trust_score: number;
-    total_recommendations: number;
-    successful_recs: number;
-    avg_token_performance: number;
-    risk_score: number;
-    consistency_score: number;
-    virtual_confidence: number;
-    last_active_date: Date;
-    trust_decay: number;
-    last_updated: string;
-}
-
-interface TokenPerformanceRow {
-    token_address: string;
-    symbol: string;
-    price_change_24h: number;
-    volume_change_24h: number;
-    trade_24h_change: number;
-    liquidity: number;
-    liquidity_change_24h: number;
-    holder_change_24h: number;
-    rug_pull: number;
-    is_scam: number;
-    market_cap_change24h: number;
-    sustained_growth: number;
-    rapid_dump: number;
-    suspicious_volume: number;
-    validation_trust: number;
-    balance: number;
-    initial_market_cap: number;
-    last_updated: string;
-}
-
-interface Transaction {
-    tokenAddress: string;
-    transactionHash: string;
-    type: "buy" | "sell";
-    amount: number;
-    price: number;
-    isSimulation: boolean;
-    timestamp: string;
-}
-
-export class TrustScoreDatabase {
+export class TrustSQLiteDatabase implements ITrustDatabase {
     private db: Database;
 
     constructor(db: Database) {
@@ -152,11 +26,11 @@ export class TrustScoreDatabase {
             )
             .all();
         if (tables.length !== 5) {
-            this.initializeSchema();
+            this.initialize();
         }
     }
 
-    private initializeSchema() {
+    public async initialize(): Promise<void> {
         // Enable Foreign Key Support
         this.db.exec(`PRAGMA foreign_keys = ON;`);
 
@@ -329,7 +203,7 @@ export class TrustScoreDatabase {
      * @param recommender Recommender object
      * @returns boolean indicating success
      */
-    addRecommender(recommender: Recommender): string | null {
+    async addRecommender(recommender: Recommender): Promise<string | null> {
         const sql = `
             INSERT INTO recommenders (id, address, solana_pubkey, telegram_id, discord_id, twitter_id, ip)
             VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -360,7 +234,7 @@ export class TrustScoreDatabase {
      * @param identifier Any of the recommender's identifiers
      * @returns Recommender object or null
      */
-    getRecommender(identifier: string): Recommender | null {
+    async getRecommender(identifier: string): Promise<Recommender | null> {
         const sql = `
             SELECT * FROM recommenders
             WHERE id = ? OR address = ? OR solana_pubkey = ? OR telegram_id = ? OR discord_id = ? OR twitter_id = ?;
@@ -384,29 +258,33 @@ export class TrustScoreDatabase {
      * @param recommender Recommender object containing at least one identifier
      * @returns Recommender object with all details, or null if failed
      */
-    getOrCreateRecommender(recommender: Recommender): Recommender | null {
+    async getOrCreateRecommender(
+        recommender: Recommender
+    ): Promise<Recommender | null> {
         try {
             // Begin a transaction
-            const transaction = this.db.transaction(() => {
+            const transaction = this.db.transaction(async () => {
                 // Attempt to retrieve the recommender
-                const existingRecommender = this.getRecommender(
+                const existingRecommender = await this.getRecommender(
                     recommender.address
                 );
                 if (existingRecommender) {
                     // Recommender exists, ensure metrics are initialized
-                    this.initializeRecommenderMetrics(existingRecommender.id!);
+                    await this.initializeRecommenderMetrics(
+                        existingRecommender.id!
+                    );
                     return existingRecommender;
                 }
 
                 // Recommender does not exist, create a new one
-                const newRecommenderId = this.addRecommender(recommender);
+                const newRecommenderId = await this.addRecommender(recommender);
                 if (!newRecommenderId) {
                     throw new Error("Failed to add new recommender.");
                 }
 
                 // Initialize metrics for the new recommender
                 const metricsInitialized =
-                    this.initializeRecommenderMetrics(newRecommenderId);
+                    await this.initializeRecommenderMetrics(newRecommenderId);
                 if (!metricsInitialized) {
                     throw new Error(
                         "Failed to initialize recommender metrics."
@@ -414,7 +292,8 @@ export class TrustScoreDatabase {
                 }
 
                 // Retrieve and return the newly created recommender
-                const newRecommender = this.getRecommender(newRecommenderId);
+                const newRecommender =
+                    await this.getRecommender(newRecommenderId);
                 if (!newRecommender) {
                     throw new Error(
                         "Failed to retrieve the newly created recommender."
@@ -445,9 +324,10 @@ export class TrustScoreDatabase {
     ): Promise<Recommender | null> {
         try {
             // Begin a transaction
-            const transaction = this.db.transaction(() => {
+            const transaction = this.db.transaction(async () => {
                 // Attempt to retrieve the recommender
-                const existingRecommender = this.getRecommender(discordId);
+                const existingRecommender =
+                    await this.getRecommender(discordId);
                 if (existingRecommender) {
                     // Recommender exists, ensure metrics are initialized
                     this.initializeRecommenderMetrics(existingRecommender.id!);
@@ -460,14 +340,15 @@ export class TrustScoreDatabase {
                     address: discordId,
                     discordId: discordId,
                 };
-                const newRecommenderId = this.addRecommender(newRecommender);
+                const newRecommenderId =
+                    await this.addRecommender(newRecommender);
                 if (!newRecommenderId) {
                     throw new Error("Failed to add new recommender.");
                 }
 
                 // Initialize metrics for the new recommender
                 const metricsInitialized =
-                    this.initializeRecommenderMetrics(newRecommenderId);
+                    await this.initializeRecommenderMetrics(newRecommenderId);
                 if (!metricsInitialized) {
                     throw new Error(
                         "Failed to initialize recommender metrics."
@@ -475,7 +356,7 @@ export class TrustScoreDatabase {
                 }
 
                 // Retrieve and return the newly created recommender
-                const recommender = this.getRecommender(newRecommenderId);
+                const recommender = await this.getRecommender(newRecommenderId);
                 if (!recommender) {
                     throw new Error(
                         "Failed to retrieve the newly created recommender."
@@ -509,9 +390,10 @@ export class TrustScoreDatabase {
     ): Promise<Recommender | null> {
         try {
             // Begin a transaction
-            const transaction = this.db.transaction(() => {
+            const transaction = this.db.transaction(async () => {
                 // Attempt to retrieve the recommender
-                const existingRecommender = this.getRecommender(telegramId);
+                const existingRecommender =
+                    await this.getRecommender(telegramId);
                 if (existingRecommender) {
                     // Recommender exists, ensure metrics are initialized
                     this.initializeRecommenderMetrics(existingRecommender.id!);
@@ -524,14 +406,15 @@ export class TrustScoreDatabase {
                     address: telegramId,
                     telegramId: telegramId,
                 };
-                const newRecommenderId = this.addRecommender(newRecommender);
+                const newRecommenderId =
+                    await this.addRecommender(newRecommender);
                 if (!newRecommenderId) {
                     throw new Error("Failed to add new recommender.");
                 }
 
                 // Initialize metrics for the new recommender
                 const metricsInitialized =
-                    this.initializeRecommenderMetrics(newRecommenderId);
+                    await this.initializeRecommenderMetrics(newRecommenderId);
                 if (!metricsInitialized) {
                     throw new Error(
                         "Failed to initialize recommender metrics."
@@ -539,7 +422,7 @@ export class TrustScoreDatabase {
                 }
 
                 // Retrieve and return the newly created recommender
-                const recommender = this.getRecommender(newRecommenderId);
+                const recommender = await this.getRecommender(newRecommenderId);
                 if (!recommender) {
                     throw new Error(
                         "Failed to retrieve the newly created recommender."
@@ -565,7 +448,9 @@ export class TrustScoreDatabase {
      * Initializes metrics for a recommender if not present.
      * @param recommenderId Recommender's UUID
      */
-    initializeRecommenderMetrics(recommenderId: string): boolean {
+    async initializeRecommenderMetrics(
+        recommenderId: string
+    ): Promise<boolean> {
         const sql = `
             INSERT OR IGNORE INTO recommender_metrics (recommender_id)
             VALUES (?);
@@ -584,7 +469,9 @@ export class TrustScoreDatabase {
      * @param recommenderId Recommender's UUID
      * @returns RecommenderMetrics object or null
      */
-    getRecommenderMetrics(recommenderId: string): RecommenderMetrics | null {
+    async getRecommenderMetrics(
+        recommenderId: string
+    ): Promise<RecommenderMetrics | null> {
         const sql = `SELECT * FROM recommender_metrics WHERE recommender_id = ?;`;
         const row = this.db.prepare(sql).get(recommenderId) as
             | RecommenderMetricsRow
@@ -610,9 +497,9 @@ export class TrustScoreDatabase {
      * Logs the current metrics of a recommender into the history table.
      * @param recommenderId Recommender's UUID
      */
-    logRecommenderMetricsHistory(recommenderId: string): void {
+    async logRecommenderMetricsHistory(recommenderId: string): Promise<void> {
         // Retrieve current metrics
-        const currentMetrics = this.getRecommenderMetrics(recommenderId);
+        const currentMetrics = await this.getRecommenderMetrics(recommenderId);
         if (!currentMetrics) {
             console.warn(
                 `No metrics found for recommender ID: ${recommenderId}`
@@ -675,9 +562,9 @@ export class TrustScoreDatabase {
      * Updates metrics for a recommender.
      * @param metrics RecommenderMetrics object
      */
-    updateRecommenderMetrics(metrics: RecommenderMetrics): void {
+    async updateRecommenderMetrics(metrics: RecommenderMetrics): Promise<void> {
         // Log current metrics before updating
-        this.logRecommenderMetricsHistory(metrics.recommenderId);
+        await this.logRecommenderMetricsHistory(metrics.recommenderId);
 
         const sql = `
             UPDATE recommender_metrics
@@ -716,8 +603,10 @@ export class TrustScoreDatabase {
      * Adds or updates token performance metrics.
      * @param performance TokenPerformance object
      */
-    upsertTokenPerformance(performance: TokenPerformance): boolean {
-        const validationTrust = this.calculateValidationTrust(
+    async upsertTokenPerformance(
+        performance: TokenPerformance
+    ): Promise<boolean> {
+        const validationTrust = await this.calculateValidationTrust(
             performance.tokenAddress
         );
 
@@ -790,7 +679,10 @@ export class TrustScoreDatabase {
 
     // update token balance
 
-    updateTokenBalance(tokenAddress: string, balance: number): boolean {
+    async updateTokenBalance(
+        tokenAddress: string,
+        balance: number
+    ): Promise<boolean> {
         const sql = `
             UPDATE token_performance
             SET balance = ?,
@@ -798,7 +690,7 @@ export class TrustScoreDatabase {
             WHERE token_address = ?;
         `;
         try {
-            this.db.prepare(sql).run(balance, tokenAddress);
+            await this.db.prepare(sql).run(balance, tokenAddress);
             console.log(`Updated token balance for ${tokenAddress}`);
             return true;
         } catch (error) {
@@ -812,9 +704,11 @@ export class TrustScoreDatabase {
      * @param tokenAddress Token's address
      * @returns TokenPerformance object or null
      */
-    getTokenPerformance(tokenAddress: string): TokenPerformance | null {
+    async getTokenPerformance(
+        tokenAddress: string
+    ): Promise<TokenPerformance | null> {
         const sql = `SELECT * FROM token_performance WHERE token_address = ?;`;
-        const row = this.db.prepare(sql).get(tokenAddress) as
+        const row = (await this.db.prepare(sql).get(tokenAddress)) as
             | TokenPerformanceRow
             | undefined;
         if (!row) return null;
@@ -842,17 +736,19 @@ export class TrustScoreDatabase {
     }
 
     //getTokenBalance
-    getTokenBalance(tokenAddress: string): number {
+    async getTokenBalance(tokenAddress: string): Promise<number> {
         const sql = `SELECT balance FROM token_performance WHERE token_address = ?;`;
-        const row = this.db.prepare(sql).get(tokenAddress) as {
+        const row = (await this.db.prepare(sql).get(tokenAddress)) as {
             balance: number;
         };
         return row.balance;
     }
 
-    getAllTokenPerformancesWithBalance(): TokenPerformance[] {
+    async getAllTokenPerformancesWithBalance(): Promise<TokenPerformance[]> {
         const sql = `SELECT * FROM token_performance WHERE balance > 0;`;
-        const rows = this.db.prepare(sql).all() as TokenPerformanceRow[];
+        const rows = (await this.db
+            .prepare(sql)
+            .all()) as TokenPerformanceRow[];
 
         return rows.map((row) => ({
             tokenAddress: row.token_address,
@@ -883,7 +779,7 @@ export class TrustScoreDatabase {
      * @param tokenAddress The address of the token.
      * @returns The average trust score (validationTrust).
      */
-    calculateValidationTrust(tokenAddress: string): number {
+    async calculateValidationTrust(tokenAddress: string): Promise<number> {
         const sql = `
         SELECT rm.trust_score
         FROM token_recommendations tr
@@ -906,7 +802,9 @@ export class TrustScoreDatabase {
      * @param recommendation TokenRecommendation object
      * @returns boolean indicating success
      */
-    addTokenRecommendation(recommendation: TokenRecommendation): boolean {
+    async addTokenRecommendation(
+        recommendation: TokenRecommendation
+    ): Promise<boolean> {
         const sql = `
             INSERT INTO token_recommendations (
                 id,
@@ -919,7 +817,7 @@ export class TrustScoreDatabase {
             ) VALUES (?, ?, ?, ?, ?, ?, ?);
         `;
         try {
-            this.db
+            await this.db
                 .prepare(sql)
                 .run(
                     recommendation.id || uuidv4(),
@@ -942,11 +840,11 @@ export class TrustScoreDatabase {
      * @param recommenderId Recommender's UUID
      * @returns Array of TokenRecommendation objects
      */
-    getRecommendationsByRecommender(
+    async getRecommendationsByRecommender(
         recommenderId: string
-    ): TokenRecommendation[] {
+    ): Promise<TokenRecommendation[]> {
         const sql = `SELECT * FROM token_recommendations WHERE recommender_id = ? ORDER BY timestamp DESC;`;
-        const rows = this.db.prepare(sql).all(recommenderId) as Array<{
+        const rows = (await this.db.prepare(sql).all(recommenderId)) as Array<{
             id: string;
             recommender_id: string;
             token_address: string;
@@ -972,9 +870,11 @@ export class TrustScoreDatabase {
      * @param tokenAddress Token's address
      * @returns Array of TokenRecommendation objects
      */
-    getRecommendationsByToken(tokenAddress: string): TokenRecommendation[] {
+    async getRecommendationsByToken(
+        tokenAddress: string
+    ): Promise<TokenRecommendation[]> {
         const sql = `SELECT * FROM token_recommendations WHERE token_address = ? ORDER BY timestamp DESC;`;
-        const rows = this.db.prepare(sql).all(tokenAddress) as Array<{
+        const rows = (await this.db.prepare(sql).all(tokenAddress)) as Array<{
             id: string;
             recommender_id: string;
             token_address: string;
@@ -1001,18 +901,18 @@ export class TrustScoreDatabase {
      * @param endDate End date
      * @returns Array of TokenRecommendation objects
      */
-    getRecommendationsByDateRange(
+    async getRecommendationsByDateRange(
         startDate: Date,
         endDate: Date
-    ): TokenRecommendation[] {
+    ): Promise<TokenRecommendation[]> {
         const sql = `
             SELECT * FROM token_recommendations
             WHERE timestamp BETWEEN ? AND ?
             ORDER BY timestamp DESC;
         `;
-        const rows = this.db
+        const rows = (await this.db
             .prepare(sql)
-            .all(startDate.toISOString(), endDate.toISOString()) as Array<{
+            .all(startDate.toISOString(), endDate.toISOString())) as Array<{
             id: string;
             recommender_id: string;
             token_address: string;
@@ -1038,15 +938,15 @@ export class TrustScoreDatabase {
      * @param recommenderId Recommender's UUID
      * @returns Array of RecommenderMetricsHistory objects
      */
-    getRecommenderMetricsHistory(
+    async getRecommenderMetricsHistory(
         recommenderId: string
-    ): RecommenderMetricsHistory[] {
+    ): Promise<RecommenderMetricsHistory[]> {
         const sql = `
           SELECT * FROM recommender_metrics_history
           WHERE recommender_id = ?
           ORDER BY recorded_at DESC;
       `;
-        const rows = this.db.prepare(sql).all(recommenderId) as Array<{
+        const rows = (await this.db.prepare(sql).all(recommenderId)) as Array<{
             history_id: string;
             recommender_id: string;
             trust_score: number;
@@ -1081,10 +981,10 @@ export class TrustScoreDatabase {
      * @param isSimulation Whether the trade is a simulation. If true, inserts into simulation_trade; otherwise, into trade.
      * @returns boolean indicating success.
      */
-    addTradePerformance(
+    async addTradePerformance(
         trade: TradePerformance,
         isSimulation: boolean
-    ): boolean {
+    ): Promise<boolean> {
         const tableName = isSimulation ? "simulation_trade" : "trade";
         const sql = `
       INSERT INTO ${tableName} (
@@ -1113,7 +1013,7 @@ export class TrustScoreDatabase {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
   `;
         try {
-            this.db
+            await this.db
                 .prepare(sql)
                 .run(
                     trade.token_address,
@@ -1157,7 +1057,7 @@ export class TrustScoreDatabase {
      * @returns boolean indicating success.
      */
 
-    updateTradePerformanceOnSell(
+    async updateTradePerformanceOnSell(
         tokenAddress: string,
         recommenderId: string,
         buyTimeStamp: string,
@@ -1177,7 +1077,7 @@ export class TrustScoreDatabase {
             sell_recommender_id: string | null;
         },
         isSimulation: boolean
-    ): boolean {
+    ): Promise<boolean> {
         const tableName = isSimulation ? "simulation_trade" : "trade";
         const sql = `
         UPDATE ${tableName}
@@ -1201,24 +1101,26 @@ export class TrustScoreDatabase {
             buy_timeStamp = ?;
     `;
         try {
-            const result = this.db.prepare(sql).run(
-                sellDetails.sell_price,
-                sellDetails.sell_timeStamp,
-                sellDetails.sell_amount,
-                sellDetails.received_sol,
-                sellDetails.sell_value_usd,
-                sellDetails.profit_usd,
-                sellDetails.profit_percent,
-                sellDetails.sell_market_cap,
-                sellDetails.market_cap_change,
-                sellDetails.sell_liquidity,
-                sellDetails.liquidity_change,
-                sellDetails.rapidDump ? 1 : 0,
-                sellDetails.sell_recommender_id,
-                tokenAddress,
-                recommenderId,
-                buyTimeStamp
-            );
+            const result = await this.db
+                .prepare(sql)
+                .run(
+                    sellDetails.sell_price,
+                    sellDetails.sell_timeStamp,
+                    sellDetails.sell_amount,
+                    sellDetails.received_sol,
+                    sellDetails.sell_value_usd,
+                    sellDetails.profit_usd,
+                    sellDetails.profit_percent,
+                    sellDetails.sell_market_cap,
+                    sellDetails.market_cap_change,
+                    sellDetails.sell_liquidity,
+                    sellDetails.liquidity_change,
+                    sellDetails.rapidDump ? 1 : 0,
+                    sellDetails.sell_recommender_id,
+                    tokenAddress,
+                    recommenderId,
+                    buyTimeStamp
+                );
 
             if (result.changes === 0) {
                 console.warn(
@@ -1245,17 +1147,17 @@ export class TrustScoreDatabase {
      * @returns TradePerformance object or null
      */
 
-    getTradePerformance(
+    async getTradePerformance(
         tokenAddress: string,
         recommenderId: string,
         buyTimeStamp: string,
         isSimulation: boolean
-    ): TradePerformance | null {
+    ): Promise<TradePerformance | null> {
         const tableName = isSimulation ? "simulation_trade" : "trade";
         const sql = `SELECT * FROM ${tableName} WHERE token_address = ? AND recommender_id = ? AND buy_timeStamp = ?;`;
-        const row = this.db
+        const row = (await this.db
             .prepare(sql)
-            .get(tokenAddress, recommenderId, buyTimeStamp) as
+            .get(tokenAddress, recommenderId, buyTimeStamp)) as
             | TradePerformance
             | undefined;
         if (!row) return null;
@@ -1293,11 +1195,11 @@ export class TrustScoreDatabase {
      * @param isSimulation Whether the trade is a simulation. If true, retrieves from simulation_trade; otherwise, from trade.
      * @returns TradePerformance object or null
      */
-    getLatestTradePerformance(
+    async getLatestTradePerformance(
         tokenAddress: string,
         recommenderId: string,
         isSimulation: boolean
-    ): TradePerformance | null {
+    ): Promise<TradePerformance | null> {
         const tableName = isSimulation ? "simulation_trade" : "trade";
         const sql = `
         SELECT * FROM ${tableName}
@@ -1305,9 +1207,9 @@ export class TrustScoreDatabase {
         ORDER BY buy_timeStamp DESC
         LIMIT 1;
     `;
-        const row = this.db.prepare(sql).get(tokenAddress, recommenderId) as
-            | TradePerformance
-            | undefined;
+        const row = (await this.db
+            .prepare(sql)
+            .get(tokenAddress, recommenderId)) as TradePerformance | undefined;
         if (!row) return null;
 
         return {
@@ -1343,7 +1245,7 @@ export class TrustScoreDatabase {
      * @returns boolean indicating success
      */
 
-    addTransaction(transaction: Transaction): boolean {
+    async addTransaction(transaction: Transaction): Promise<boolean> {
         const sql = `
         INSERT INTO transactions (
             token_address,
@@ -1356,7 +1258,7 @@ export class TrustScoreDatabase {
         ) VALUES (?, ?, ?, ?, ?, ?);
     `;
         try {
-            this.db
+            await this.db
                 .prepare(sql)
                 .run(
                     transaction.tokenAddress,
@@ -1379,9 +1281,9 @@ export class TrustScoreDatabase {
      * @param tokenAddress Token's address
      * @returns Array of Transaction objects
      */
-    getTransactionsByToken(tokenAddress: string): Transaction[] {
+    async getTransactionsByToken(tokenAddress: string): Promise<Transaction[]> {
         const sql = `SELECT * FROM transactions WHERE token_address = ? ORDER BY timestamp DESC;`;
-        const rows = this.db.prepare(sql).all(tokenAddress) as Array<{
+        const rows = (await this.db.prepare(sql).all(tokenAddress)) as Array<{
             token_address: string;
             transaction_hash: string;
             type: string;
@@ -1408,44 +1310,47 @@ export class TrustScoreDatabase {
             };
         });
     }
-        /**
+    /**
      * Executes a custom query on the trade table with parameters.
      * @param query SQL query string
      * @param params Query parameters
      * @returns Array of TradePerformance objects
      */
-        getTradesByQuery(query: string, params: any[]): TradePerformance[] {
-            try {
-                const rows = this.db.prepare(query).all(params) as any[];
+    async getTradesByQuery(
+        query: string,
+        params: any[]
+    ): Promise<TradePerformance[]> {
+        try {
+            const rows = (await this.db.prepare(query).all(params)) as any[];
 
-                return rows.map(row => ({
-                    token_address: row.token_address,
-                    recommender_id: row.recommender_id,
-                    buy_price: row.buy_price,
-                    sell_price: row.sell_price,
-                    buy_timeStamp: row.buy_timeStamp,
-                    sell_timeStamp: row.sell_timeStamp,
-                    buy_amount: row.buy_amount,
-                    sell_amount: row.sell_amount,
-                    buy_sol: row.buy_sol,
-                    received_sol: row.received_sol,
-                    buy_value_usd: row.buy_value_usd,
-                    sell_value_usd: row.sell_value_usd,
-                    profit_usd: row.profit_usd,
-                    profit_percent: row.profit_percent,
-                    buy_market_cap: row.buy_market_cap,
-                    sell_market_cap: row.sell_market_cap,
-                    market_cap_change: row.market_cap_change,
-                    buy_liquidity: row.buy_liquidity,
-                    sell_liquidity: row.sell_liquidity,
-                    liquidity_change: row.liquidity_change,
-                    last_updated: row.last_updated,
-                    rapidDump: row.rapidDump === 1
-                }));
-            } catch (error) {
-                console.error("Error executing trade query:", error);
-                return [];
-            }
+            return rows.map((row) => ({
+                token_address: row.token_address,
+                recommender_id: row.recommender_id,
+                buy_price: row.buy_price,
+                sell_price: row.sell_price,
+                buy_timeStamp: row.buy_timeStamp,
+                sell_timeStamp: row.sell_timeStamp,
+                buy_amount: row.buy_amount,
+                sell_amount: row.sell_amount,
+                buy_sol: row.buy_sol,
+                received_sol: row.received_sol,
+                buy_value_usd: row.buy_value_usd,
+                sell_value_usd: row.sell_value_usd,
+                profit_usd: row.profit_usd,
+                profit_percent: row.profit_percent,
+                buy_market_cap: row.buy_market_cap,
+                sell_market_cap: row.sell_market_cap,
+                market_cap_change: row.market_cap_change,
+                buy_liquidity: row.buy_liquidity,
+                sell_liquidity: row.sell_liquidity,
+                liquidity_change: row.liquidity_change,
+                last_updated: row.last_updated,
+                rapidDump: row.rapidDump === 1,
+            }));
+        } catch (error) {
+            console.error("Error executing trade query:", error);
+            return [];
+        }
     }
 
     /**

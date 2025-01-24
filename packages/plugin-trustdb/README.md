@@ -20,114 +20,123 @@ npm install @elizaos/plugin-trustdb
 
 ## Configuration
 
-The plugin uses SQLite as its database backend and requires proper initialization:
+The plugin supports both PostgreSQL and SQLite as database backends:
 
 ```typescript
-import { TrustScoreDatabase } from "@elizaos/plugin-trustdb";
-import Database from "better-sqlite3";
+import { initTrustDatabase } from "@elizaos/plugin-trustdb";
 
-const db = new Database("path/to/database.sqlite");
-const trustDB = new TrustScoreDatabase(db);
+// PostgreSQL
+const trustDB = await initTrustDatabase({
+    dbConfig: "postgres://connection-string"
+});
+
+// SQLite
+const trustDB = await initTrustDatabase({
+    db: sqliteDb
+});
 ```
 
 ## Usage
 
-Import and use the TrustDB functionality in your application:
+### Managing Recommenders
 
 ```typescript
-import { TrustScoreDatabase } from "@elizaos/plugin-trustdb";
-
-// Initialize database
-const trustDB = new TrustScoreDatabase(db);
-
 // Add a recommender
 const recommender = {
     id: "uuid",
     address: "wallet-address",
-    telegramId: "telegram-id",
+    telegramId: "telegram-id"
 };
-trustDB.addRecommender(recommender);
+await trustDB.addRecommender(recommender);
 
-// Track token performance
-const performance = {
-    tokenAddress: "token-address",
-    priceChange24h: 10.5,
-    volumeChange24h: 25.3,
-    // ... other metrics
-};
-trustDB.upsertTokenPerformance(performance);
+// Get recommender by ID
+const existingRecommender = await trustDB.getRecommender(id);
+
+// Get or create recommender
+const recommenderWithMetrics = await trustDB.getOrCreateRecommender({
+    address: "wallet-address",
+    telegramId: "user-id"
+});
 ```
 
-## Features
-
-### TrustScoreDatabase
-
-The main database manager providing comprehensive tracking and analysis:
+### Trust Metrics
 
 ```typescript
-// Get or create a recommender
-const recommender = await trustDB.getOrCreateRecommender({
-    address: "wallet-address",
-    telegramId: "user-id",
-});
-
 // Update recommender metrics
-trustDB.updateRecommenderMetrics({
+await trustDB.updateRecommenderMetrics({
     recommenderId: "uuid",
     trustScore: 85.5,
     totalRecommendations: 10,
-    // ... other metrics
+    successfulRecs: 5,
+    avgTokenPerformance: 12.3,
+    riskScore: 45.2,
+    consistencyScore: 78.9,
+    virtualConfidence: 65.4,
+    trustDecay: 0.1
 });
+
+// Get metrics history
+const history = await trustDB.getRecommenderMetricsHistory(recommenderId);
 ```
 
-### Performance Tracking
+### Token Performance
 
 ```typescript
-// Add trade performance
-trustDB.addTradePerformance(
+// Add/update token performance
+await trustDB.upsertTokenPerformance({
+    tokenAddress: "address",
+    symbol: "TOKEN",
+    priceChange24h: 5.2,
+    volumeChange24h: 15.3,
+    liquidity: 100000,
+    holderChange24h: 2.1
+});
+
+// Get token performance
+const performance = await trustDB.getTokenPerformance("token-address");
+```
+
+### Trade Performance
+
+```typescript
+// Record trade
+await trustDB.addTradePerformance({
+    token_address: "address",
+    recommender_id: "uuid",
+    buy_price: 1.0,
+    buy_timeStamp: new Date().toISOString(),
+    buy_amount: 100,
+    buy_value_usd: 100,
+    buy_market_cap: 1000000,
+    buy_liquidity: 500000
+}, false);
+
+// Update trade with sell details
+await trustDB.updateTradePerformanceOnSell(
+    "token-address",
+    "recommender-id",
+    "buy-timestamp",
     {
-        token_address: "address",
-        recommender_id: "uuid",
-        buy_price: 1.0,
-        // ... other trade details
+        sell_price: 1.2,
+        sell_timeStamp: new Date().toISOString(),
+        sell_amount: 100,
+        received_sol: 120,
+        sell_value_usd: 120,
+        profit_usd: 20,
+        profit_percent: 20,
+        sell_market_cap: 1100000,
+        market_cap_change: 100000,
+        sell_liquidity: 550000,
+        liquidity_change: 50000,
+        rapidDump: false
     },
     false
 );
-
-// Get token performance
-const tokenMetrics = trustDB.getTokenPerformance("token-address");
 ```
 
-## Development
+## Core Interfaces
 
-### Building
-
-```bash
-npm run build
-```
-
-### Testing
-
-```bash
-npm run test
-```
-
-### Linting
-
-```bash
-npm run lint
-```
-
-## Dependencies
-
-- `better-sqlite3`: SQLite database interface
-- `uuid`: Unique identifier generation
-- `dompurify`: HTML sanitization
-- Other standard dependencies listed in package.json
-
-## API Reference
-
-### Core Interfaces
+### Recommender
 
 ```typescript
 interface Recommender {
@@ -139,7 +148,11 @@ interface Recommender {
     twitterId?: string;
     ip?: string;
 }
+```
 
+### RecommenderMetrics
+
+```typescript
 interface RecommenderMetrics {
     recommenderId: string;
     trustScore: number;
@@ -153,70 +166,85 @@ interface RecommenderMetrics {
     trustDecay: number;
     lastUpdated: Date;
 }
+```
 
+### TokenPerformance
+
+```typescript
 interface TokenPerformance {
     tokenAddress: string;
     symbol: string;
     priceChange24h: number;
     volumeChange24h: number;
-    // ... other performance metrics
+    trade_24h_change: number;
+    liquidity: number;
+    liquidityChange24h: number;
+    holderChange24h: number;
+    rugPull: boolean;
+    isScam: boolean;
+    marketCapChange24h: number;
+    sustainedGrowth: boolean;
+    rapidDump: boolean;
+    suspiciousVolume: boolean;
+    validationTrust: number;
+    balance: number;
+    initialMarketCap: number;
+    lastUpdated: Date;
 }
 ```
 
-### Database Methods
+### TradePerformance
 
-- `addRecommender`: Add new recommender to database
-- `getRecommenderMetrics`: Retrieve recommender performance metrics
-- `updateRecommenderMetrics`: Update recommender metrics
-- `upsertTokenPerformance`: Add or update token performance
-- `getTokenPerformance`: Retrieve token performance metrics
-- Many more specialized methods for tracking and analysis
+```typescript
+interface TradePerformance {
+    token_address: string;
+    recommender_id: string;
+    buy_price: number;
+    sell_price: number;
+    buy_timeStamp: string;
+    sell_timeStamp: string;
+    buy_amount: number;
+    sell_amount: number;
+    buy_sol: number;
+    received_sol: number;
+    buy_value_usd: number;
+    sell_value_usd: number;
+    profit_usd: number;
+    profit_percent: number;
+    buy_market_cap: number;
+    sell_market_cap: number;
+    market_cap_change: number;
+    buy_liquidity: number;
+    sell_liquidity: number;
+    liquidity_change: number;
+    last_updated: string;
+    rapidDump: boolean;
+}
+```
 
-## Common Issues/Troubleshooting
+## Development
 
-### Issue: Database Connection Errors
+```bash
+npm run build   # Build the plugin
+npm run dev     # Development mode with watch
+npm run test    # Run tests (requires PostgreSQL connection)
+npm run lint    # Lint code
+```
 
-- **Cause**: Incorrect database path or permissions
-- **Solution**: Verify database path and file permissions
+## Dependencies
 
-### Issue: Data Consistency
+- `better-sqlite3`: SQLite database interface
+- `uuid`: Unique identifier generation
+- `dompurify`: HTML sanitization
+- Other standard dependencies listed in package.json
 
-- **Cause**: Concurrent database access
-- **Solution**: Use proper transaction handling
+## Security Measures
 
-## Security Best Practices
-
-- Implement proper database backup procedures
-- Use parameterized queries to prevent SQL injection
-- Validate all input data before storage
-- Maintain regular database maintenance
-- Keep dependencies updated for security patches
-
-## Contributing
-
-Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
-
-## Credits
-
-This plugin integrates with and builds upon several key technologies:
-
-- [better-sqlite3](https://github.com/WiseLibs/better-sqlite3): High-performance SQLite3 driver
-- [uuid](https://github.com/uuidjs/uuid): UUID generation
-- [DOMPurify](https://github.com/cure53/DOMPurify): HTML sanitization library
-
-Special thanks to:
-
-- The better-sqlite3 team for their excellent database driver
-- The UUID.js maintainers for reliable identifier generation
-- The DOMPurify team for security-focused sanitization tools
-- The Eliza community for their contributions and feedback
-
-For more information about database management and security:
-
-- [SQLite Documentation](https://www.sqlite.org/docs.html)
-- [Database Security Best Practices](https://www.sqlite.org/security.html)
-- [Data Sanitization Guide](https://github.com/cure53/DOMPurify/wiki/Security-Goals-&-Threat-Model)
+- Input validation on all parameters
+- Transaction handling with rollbacks
+- Secure database connections
+- Regular backup procedures recommended
 
 ## License
 
-This plugin is part of the Eliza project. See the main project repository for license information.
+Part of the Eliza project. See main repository for license information.
