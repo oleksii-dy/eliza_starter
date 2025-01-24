@@ -131,12 +131,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
 import { emailPlugin } from "@elizaos/plugin-email";
-<<<<<<< HEAD
 import { seiPlugin } from "@elizaos/plugin-sei"
-=======
 import { sunoPlugin } from "@elizaos/plugin-suno";
 import { udioPlugin } from "@elizaos/plugin-udio";
->>>>>>> develop
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
