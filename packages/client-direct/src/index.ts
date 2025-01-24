@@ -304,7 +304,7 @@ export class DirectClient {
                 const responseMessage: Memory = {
                     id: stringToUuid(messageId + "-" + runtime.agentId),
                     ...userMessage,
-                    userId: runtime.agentId,
+                    userId,
                     content: response,
                     embedding: getEmbeddingZeroVector(),
                     createdAt: Date.now(),

@@ -81,7 +81,12 @@ export const createIssueAction: Action = {
                 `Created issue successfully! Issue number: ${issue.number}`,
             );
 
-            const memory = await saveIssueToMemory(runtime, message, issue);
+            const memory = await saveIssueToMemory(
+                message.userId,
+                runtime,
+                message,
+                issue,
+            );
 
             if (callback) {
                 await callback(memory.content);

@@ -1,4 +1,5 @@
 import type { UUID, Character } from "@elizaos/core";
+import { getSessionId } from "./utils";
 
 const BASE_URL = `http://localhost:${import.meta.env.VITE_SERVER_PORT ?? 3000}`;
 
@@ -62,11 +63,15 @@ export const apiClient = {
     sendMessage: (
         agentId: string,
         message: string,
-        selectedFile?: File | null
+        selectedFile?: File | null,
     ) => {
         const formData = new FormData();
         formData.append("text", message);
-        formData.append("user", "user");
+
+        const sessionId = getSessionId();
+
+        formData.append("user", sessionId ?? "user");
+        formData.append("userId", sessionId ?? "user");
 
         if (selectedFile) {
             formData.append("file", selectedFile);
@@ -102,10 +107,14 @@ export const apiClient = {
             body: formData,
         });
     },
-    getMemories: (agentId: string) =>
-        fetcher({
-            url: `/agents/${agentId}/memories`,
+    getMemories: (agentId: string) => {
+        const sessionId = getSessionId();
+        if (!sessionId) {
+            throw new Error("Session ID not found");
+        }
+        return fetcher({
+            url: `/agents/${agentId}/memories/${sessionId}`,
             method: "GET",
-        }),
+        });
+    },
 };
-
