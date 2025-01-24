@@ -24,7 +24,7 @@ import { DelegatedPubObjectRequest } from "@bnb-chain/greenfield-js-sdk";
 import { SupportedChain } from "../types";
 import { CROSS_CHAIN_ABI } from "../abi/CrossChainAbi";
 import { TOKENHUB_ABI } from "../abi/TokenHubAbi";
-import { stringToHex } from "viem";
+import { parseEther, stringToHex } from "viem";
 
 export { greenfieldTemplate };
 
@@ -214,7 +214,7 @@ export const greenfieldAction = {
         const actionType = content.actionType;
         const spInfo = await action.selectSp();
 
-        elizaLogger.log("spInfo", spInfo);
+        elizaLogger.log('content', content)
 
         const { bucketName, objectName } = content;
         const attachments = message.content.attachments;
@@ -272,8 +272,8 @@ export const greenfieldAction = {
                     break;
                 }
 
-                case "transferBNBToGreenfield": {
-                    const hash = await action.bnbTransferToGnfd(content.content, runtime)
+                case "crossChainTransfer": {
+                    const hash = await action.bnbTransferToGnfd(parseEther(String(content.amount)), runtime)
                     result = `transfer bnb to greenfield successfully, hash: ${hash}`;
                     break;
                 }
@@ -329,7 +329,7 @@ export const greenfieldAction = {
             {
                 user: "user",
                 content: {
-                    text: "Transfer 0.00001 BNB to myself greenfield for create account",
+                    text: "Cross Chain Transfer 0.00001 BNB to myself greenfield for create account",
                     action: "GREENFIELD_ACTION",
                     content: {
                         amount: "0.00001"
