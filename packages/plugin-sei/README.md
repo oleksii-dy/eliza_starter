@@ -11,7 +11,7 @@ This plugin provides functionality to:
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-sei
+pnpm install @elizaos/plugin-sei
 ```
 
 ## Configuration
