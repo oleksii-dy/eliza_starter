@@ -70,6 +70,9 @@ Simply visit this link in your web browser to interact with the user interface. 
 
 
 ### **Agent Use Cases**
+### **GitHub Plugin**
+
+![](static/img/github.png)
 
 The AI agents in this system can be used to automate tasks related to GitHub repository management, such as creating pull requests for implementing new features or refactoring code across a repository. Below are two specific use cases with corresponding prompts.
 
@@ -325,5 +328,243 @@ This use case demonstrates the agent's ability to stop all GitHub-related activi
 **When to Use:**
 This feature is useful in scenarios where the user wants to terminate GitHub-related processes entirely, such as stopping repository access, API integrations, or GitHub automation tools.
 ___
+
+### **Coinbase Plugin**
+
+![](static/img/coinbase.png)
+
+**Use Case 1: Simple Tradeing**
+
+Prompt Example 1:
+
+User:
+```plaintext
+"Swap 1 ETH for USDC on base network."
+```
+Agent:
+```plaintext
+Trade executed successfully:
+- Swapped 1 ETH for USDC on base network
+- Transaction URL: https://basescan.io/tx/...
+- Status: Completed
+```
+**Description:**
+This scenario demonstrates the agent's ability to perform a token swap on the Base network, converting 1 ETH into USDC. The agent processes the request, executes the trade, and provides a transaction URL for verification along with a completion status.
+
+**When to Use:**
+This feature is useful for users who want to execute simple swaps between two tokens on the Base network without needing to interact directly with DeFi protocols.
+
+**Use Case 2: Placing an Advanced Market Order**
+
+Prompt Example1:
+
+User:
+```plaintext
+"Place an advanced market order to buy $1 worth of BTC"
+```
+Agent:
+
+```plaintext
+Advanced Trade executed successfully:
+- Product: BTC-USD
+- Type: Market Order
+- Side: BUY
+- Amount: 1000
+- Order ID: CB-ADV-12345
+- Success: true
+- Response: {"success_response":{}}
+- Order Configuration: {"market_market_ioc":{"quote_size":"1000"}}
+```
+**Description:** This scenario demonstrates the agent’s ability to execute an advanced market order. The user instructs the agent to buy $1 worth of Bitcoin (BTC) using advanced trading options. The agent processes the request and confirms the details of the executed order, including:
+
+The product being traded (BTC-USD).
+The type of order (Market Order).
+The trade side (BUY).
+The exact amount ($1, converted to a quote size of 1000 in satoshis).
+The agent also provides an order ID, a success message, and details of the configuration used for the market order.
+
+**When to Use:** This is useful for users who want to quickly execute trades at the current market price without specifying additional conditions, such as limit prices or time constraints.
+___
+**Use case 3: Setting a Limit Order**
+
+Prompt Example 1:
+
+
+User:
+```plaintext
+"Set a limit order to sell 0.5 ETH at $2000"
+```
+Agent:
+```plaintext
+Advanced Trade executed successfully:
+- Product: ETH-USD
+- Type: Limit Order
+- Side: SELL
+- Amount: 0.5
+- Limit Price: 2000
+- Order ID: CB-ADV-67890
+- Success: true
+- Response: {"success_response":{}}
+- Order Configuration: {"limit_limit_gtc":{"baseSize":"0.5","limitPrice":"2000","postOnly":false}}
+```
+
+**Description:**
+In this scenario, the user requests the agent to set a limit order to sell 0.5 ETH at a price of $2000. The agent successfully processes the request and provides the following details:
+
+The product being traded (ETH-USD).
+The type of order (Limit Order).
+The trade side (SELL).
+The quantity of ETH (0.5).
+The limit price ($2000).
+The agent confirms the success of the order and includes technical details of the order configuration, such as the postOnly flag and the type of limit order (gtc for "good till canceled").
+
+**When to Use:**
+This feature is ideal for users who want to set specific conditions for a trade, such as selling an asset at a particular price point, rather than executing the trade immediately at market price.
+
+___
+**Use case 4: Creating a Fixed-Price Charge for Digital Art NFT** 
+
+Prompt Example 1:
+
+User:
+```plaintext
+"Create a charge for $100 USD for Digital Art NFT with description 'Exclusive digital artwork collection'."
+```
+Agent:
+```plaintext
+Charge created successfully:
+- Amount: $100 USD
+- Name: Digital Art NFT
+- Description: Exclusive digital artwork collection
+- Type: fixed_price
+- Charge URL: https://commerce.coinbase.com/charges/...
+```
+
+**Description:**
+This scenario highlights the agent's ability to create a fixed-price charge for selling a product or service. The user specifies the amount ($100), name (Digital Art NFT), and description (Exclusive digital artwork collection). The agent processes this request and provides a charge URL that can be shared with customers for payment.
+
+**When to Use:**
+This feature is useful for creators, artists, or merchants looking to sell products or services with a fixed price, enabling seamless payment collection.
+___
+**Use case 5: Creating a Dynamic-Price Charge for Premium Membership**
+
+Prompt Example:
+User:
+```plaintext
+"Set up a dynamic price charge for Premium Membership named 'VIP Access Pass'."
+```
+
+Agent:
+
+```plaintext
+Charge created successfully:
+- Type: dynamic_price
+- Name: VIP Access Pass
+- Description: Premium Membership
+- Charge URL: https://commerce.coinbase.com/charges/...
+```
+
+**Description:**
+This scenario demonstrates the agent’s ability to create a dynamic-price charge, where the price of the product or service (e.g., VIP Access Pass) may fluctuate depending on external factors such as cryptocurrency rates. The agent sets up the charge with the specified name and description, and provides a payment URL.
+
+**When to Use:**
+Dynamic-price charges are ideal for products or memberships where pricing may vary based on external factors or market conditions, such as cryptocurrency value.
+___
+
+**Use case 6: Generating a Payment Request for Workshop Registration**
+
+Prompt Example 1:
+
+User:
+
+"Generate a payment request for 50 EUR for Workshop Registration."
+Agent:
+```plaintext
+Charge created successfully:
+- Amount: 50 EUR
+- Name: Workshop Registration
+- Type: fixed_price
+- Charge URL: https://commerce.coinbase.com/charges/...
+```
+
+**Description:**
+This scenario showcases the agent’s ability to create a fixed-price payment request. The user specifies the amount (50 EUR), the name of the payment (Workshop Registration), and the agent generates a charge URL for easy payment collection.
+
+**When to Use:**
+This is useful for event organizers or businesses who need to collect payments for one-time events, such as workshops or registrations, using a specified price.
+
+**Use case 7: Creating an Invoice for Consulting Services**
+
+Prompt Example:
+User:
+```plaintext
+"Create an invoice for 1000 USDC for Consulting Services."
+```
+Agent:
+
+```plaintext
+Charge created successfully:
+- Amount: 1000 USDC
+- Name: Consulting Services
+- Type: fixed_price
+- Charge URL: https://commerce.coinbase.com/charges/...
+```
+
+**Description:**
+This scenario illustrates the agent’s ability to generate an invoice for a fixed amount in cryptocurrency (e.g., 1000 USDC). The user specifies the service (Consulting Services) and amount, and the agent creates a payment link to be shared with the client.
+
+**When to Use:**
+This is suitable for professionals or businesses offering services and seeking to collect payments in cryptocurrency for a specific invoice.
+
+
+
+**Use case 8: Checking the Status of a Specific Charge**
+
+Prompt Example 1:
+User:
+```plaintext
+"Check the status of charge abc-123-def."
+```
+Agent:
+```plaintext
+Charge details retrieved:
+- ID: abc-123-def
+- Status: COMPLETED
+- Amount: 100 USD
+- Created: 2024-01-20T10:00:00Z
+- Expires: 2024-01-21T10:00:00Z
+```
+
+**Description:**
+This scenario highlights the agent’s ability to retrieve the current status of a specific charge by its ID (e.g., abc-123-def). The agent provides detailed information, including the charge status (e.g., COMPLETED), amount, creation time, and expiration time.
+
+**When to Use:**
+This is useful for tracking payment statuses or verifying whether a charge has been completed, is pending, or has expired.
+
+**Use case 9: Listing All Active Charges**
+Prompt Example 1:
+
+User:
+```plaintext
+"List all active charges."
+```
+Agent:
+```plaintext
+Active charges retrieved:
+1. ID: abc-123 - $100 USD - Digital Art NFT
+2. ID: def-456 - 50 EUR - Workshop
+3. ID: ghi-789 - 1000 USDC - Consulting
+
+Total active charges: 3
+```
+**Description:**
+This scenario demonstrates the agent’s ability to list all currently active charges. It retrieves a summary of charges, including their IDs, amounts, and associated descriptions (e.g., Digital Art NFT, Workshop). The agent also provides the total number of active charges.
+
+**When to Use:**
+This feature is ideal for merchants or businesses who need an overview of outstanding payment requests or active charges for tracking purposes.
+
+
 ## Limitations 
 Currently the GitHub plug-in can be used for small and medium repositories. We are actively integrating Decentralized Knowledge Graphs (DKG) to expand context limits and improve the relevance and accuracy of interactions, ensuring a more powerful and efficient AI experience.
+
+
