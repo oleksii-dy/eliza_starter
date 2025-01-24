@@ -32,6 +32,8 @@ export interface SendEmailParams {
     subject: string;
     text: string;
     html?: string;
+    inReplyTo?: string;
+    references?: string;
 }
 
 export interface IMailAdapter {

@@ -16,14 +16,13 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
     private mailbox: MailboxObject;
     private mailer: Transporter<any, any>;
     private config: MailConfig;
-    private lastUID: number | null = null;
-    private uidValidity: number | null = null;
     private isConnected: boolean = false;
     private isConnecting: boolean = false;
     private connectionPromise: Promise<void> | null = null;
     private reconnectAttempts: number = 0;
     private readonly MAX_RECONNECT_ATTEMPTS = 3;
     private readonly RECONNECT_DELAY = 5000;
+    private lastCheck: Date | null = null;
 
     constructor(config: ImapSmtpMailConfig) {
         if (!config.imap) throw new Error("IMAP configuration is required");
@@ -46,9 +45,8 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
                 user: this.config.imap.user,
                 pass: this.config.imap.password,
             },
-            // logger: false,
-            // emitLogs: false,
-            disableAutoIdle: true,
+            logger: false,
+            emitLogs: false,
             tls: {
                 rejectUnauthorized: true,
                 minVersion: "TLSv1.2",
@@ -115,12 +113,6 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
                 elizaLogger.debug("Connected to IMAP server");
             } catch (error) {
                 this.handleDisconnect();
-                elizaLogger.error("Failed to connect to IMAP server:", {
-                    error: (error as any).message,
-                    code: (error as any).code,
-                    command: (error as any).command,
-                    attempt: this.reconnectAttempts,
-                });
 
                 if (this.reconnectAttempts < this.MAX_RECONNECT_ATTEMPTS) {
                     await new Promise((resolve) =>
@@ -128,6 +120,14 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
                     );
                     return this.ensureConnection();
                 }
+
+                elizaLogger.error("Failed to connect to IMAP server:", {
+                    error: (error as any).message,
+                    code: (error as any).code,
+                    command: (error as any).command,
+                    attempt: this.reconnectAttempts,
+                });
+
                 throw error;
             } finally {
                 this.isConnecting = false;
@@ -140,67 +140,48 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
     async getRecentEmails(): Promise<EmailMessage[]> {
         await this.ensureConnection();
 
+        const now = new Date();
         elizaLogger.debug("Fetching new emails", {
-            lastUID: this.lastUID,
-            uidValidity: this.uidValidity,
+            lastCheck: this.lastCheck,
             maxEmails: this.config.maxEmails,
         });
 
         try {
-            if (
-                this.uidValidity &&
-                this.uidValidity !== this.mailbox.uidValidity
-            ) {
-                elizaLogger.warn("UIDVALIDITY changed, resetting lastUID", {
-                    old: this.uidValidity,
-                    new: this.mailbox.uidValidity,
-                });
-                this.lastUID = null;
-            }
-            this.uidValidity = this.mailbox.uidValidity;
+            const searchCriteria: any = {
+                or: [
+                    {
+                        seen: false,
+                    },
+                    {
+                        recent: true,
+                    },
+                    {
+                        since:
+                            this.lastCheck ??
+                            new Date(now.getTime() - 15 * 60 * 1000),
+                    },
+                ],
+            };
 
-            if (this.lastUID === null) {
-                this.lastUID = this.mailbox.uidNext - 1;
-                elizaLogger.debug("First run, storing latest UID", {
-                    lastUID: this.lastUID,
-                });
-                return [];
-            }
+            const results = await this.client.search(searchCriteria);
 
             const emails: EmailMessage[] = [];
-            let highestUID = this.lastUID;
+            for await (const message of this.client.fetch(results, {
+                uid: true,
+                envelope: true,
+                source: true,
+                internalDate: true,
+                flags: true,
+            })) {
+                if (emails.length >= this.config.maxEmails) break;
 
-            try {
-                for await (const message of this.client.fetch(
-                    `${this.lastUID + 1}:*`,
-                    {
-                        uid: true,
-                        envelope: true,
-                        source: true,
-                        internalDate: true,
-                        flags: true,
-                    }
-                )) {
-                    if (emails.length >= this.config.maxEmails) break;
-
-                    const parsed = await this.parseMessage(message);
-                    if (parsed) {
-                        emails.push(parsed);
-                    }
-
-                    highestUID = Math.max(highestUID, message.uid);
+                const parsed = await this.parseMessage(message);
+                if (parsed) {
+                    emails.push(parsed);
                 }
-            } catch (error) {
-                elizaLogger.error("Error fetching messages:", error);
-                throw error;
             }
 
-            this.lastUID = highestUID;
-            elizaLogger.debug("Updated lastUID", {
-                newLastUID: this.lastUID,
-                resultsCount: emails.length,
-            });
-
+            this.lastCheck = now;
             return emails;
         } catch (error) {
             elizaLogger.error("Error fetching messages:", error);
@@ -264,6 +245,8 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
             subject: params.subject,
             text: params.text,
             html: params.html,
+            inReplyTo: params.inReplyTo,
+            references: params.references,
         });
     }
 

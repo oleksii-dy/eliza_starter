@@ -1,5 +1,6 @@
 import { ImapSmtpMailAdapter } from "../adapters/imapSmtp";
 import {
+    EmailMessage,
     IMailAdapter,
     MailConfig,
     SearchCriteria,
@@ -44,11 +45,11 @@ export class MailService {
         await this.adapter.connect();
     }
 
-    async getRecentEmails(): Promise<any[]> {
+    async getRecentEmails(): Promise<EmailMessage[]> {
         return this.adapter.getRecentEmails();
     }
 
-    async searchEmails(criteria: SearchCriteria): Promise<any[]> {
+    async searchEmails(criteria: SearchCriteria): Promise<EmailMessage[]> {
         return this.adapter.searchEmails(criteria);
     }
 

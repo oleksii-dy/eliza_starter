@@ -1,7 +1,7 @@
-import { IAgentRuntime, elizaLogger, stringToUuid } from "@elizaos/core";
+import { IAgentRuntime, elizaLogger } from "@elizaos/core";
 import { validateMailConfig } from "../environment";
 import { handleEmail } from "./emailHandler";
-import { EmailMessage } from "../types";
+import { hasBeenHandled } from "./hasBeenHandled";
 
 export class EmailChecker {
     private runtime: IAgentRuntime;
@@ -12,26 +12,6 @@ export class EmailChecker {
         this.runtime = runtime;
     }
 
-    private async hasBeenProcessed(email: EmailMessage): Promise<boolean> {
-        if (!email.messageId) return false;
-
-        // Check for original email memory
-        const memoryId = stringToUuid(
-            email.messageId + "-" + this.runtime.agentId
-        );
-        const existing =
-            await this.runtime.messageManager.getMemoryById(memoryId);
-
-        // Check for response memory
-        const responseMemoryId = stringToUuid(
-            `${email.messageId}-response-${this.runtime.agentId}`
-        );
-        const existingResponse =
-            await this.runtime.messageManager.getMemoryById(responseMemoryId);
-
-        return !!(existing || existingResponse);
-    }
-
     async startPeriodicCheck() {
         if (this.checkInterval) {
             return;
@@ -39,63 +19,46 @@ export class EmailChecker {
 
         const mailConfig = validateMailConfig(this.runtime);
 
-        this.checkInterval = setInterval(
-            async () => {
-                try {
-                    if (this.checking) {
-                        elizaLogger.info("Already checking for emails...");
-                        return;
-                    }
+        const checkEmails = async () => {
+            if (this.checking) return;
 
-                    this.checking = true;
-                    const emails = await global.mailService.getRecentEmails();
+            try {
+                this.checking = true;
 
-                    elizaLogger.info("Checking for new emails", {
-                        count: emails.length,
-                    });
+                elizaLogger.debug("Checking for emails...");
+                const emails = await global.mailService.getRecentEmails();
 
-                    if (emails.length === 0) {
-                        elizaLogger.info("No new emails found");
-                        return;
-                    }
-
-                    const state = await this.runtime.composeState({
-                        id: stringToUuid("initial-" + this.runtime.agentId),
-                        userId: this.runtime.agentId,
-                        agentId: this.runtime.agentId,
-                        roomId: this.runtime.agentId,
-                        content: { text: "" },
-                    });
-
-                    elizaLogger.info("Processing emails", {
-                        count: emails.length,
-                    });
-
-                    for (const email of emails) {
-                        // Skip if already processed
-                        if (await this.hasBeenProcessed(email)) {
-                            elizaLogger.info(
-                                "Email already processed, skipping",
-                                {
-                                    messageId: email.messageId,
-                                }
-                            );
-                            continue;
-                        }
-
-                        await handleEmail(email, this.runtime, state);
-                    }
-                } catch (error: any) {
-                    elizaLogger.error("Error checking emails:", {
-                        code: error.code,
-                        command: error.command,
-                        message: error.message,
-                        stack: error.stack,
-                    });
-                } finally {
-                    this.checking = false;
+                if (emails.length === 0) {
+                    elizaLogger.debug("No new emails found");
+                    return;
                 }
-            },
+
+                elizaLogger.debug(`Found ${emails.length} emails...`);
+
+                for (const email of emails) {
+                    if (await hasBeenHandled(email, this.runtime)) {
+                        elizaLogger.debug("Email already processed, skipping", {
+                            messageId: email.messageId,
+                        });
+                        continue;
+                    }
+
+                    await handleEmail(email, this.runtime);
+                }
+            } catch (error: any) {
+                elizaLogger.error("Error checking emails:", {
+                    code: error.code,
+                    command: error.command,
+                    message: error.message,
+                    stack: error.stack,
+                });
+            } finally {
+                this.checking = false;
+            }
+        };
+
+        this.checkInterval = setInterval(
+            checkEmails,
             (mailConfig.checkInterval || 60) * 1000
         );
     }

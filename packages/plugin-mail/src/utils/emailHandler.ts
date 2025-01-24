@@ -52,7 +52,6 @@ RESPOND:
 
 IGNORE:
 - Spam
-- Irrelevant messages
 - Unsolicited messages
 - Messages from yourself ({{agentEmail}})
 
@@ -63,8 +62,7 @@ STOP:
 
 export async function handleEmail(
     email: EmailMessage,
-    runtime: IAgentRuntime,
-    initialState: State
+    runtime: IAgentRuntime
 ): Promise<void> {
     if (!email.messageId) {
         elizaLogger.warn("Email missing messageId, skipping");
@@ -78,15 +76,11 @@ export async function handleEmail(
         text: email.text,
     });
 
-    const memoryId = stringToUuid(email.messageId + "-" + runtime.agentId);
-
-    const existing = await runtime.messageManager.getMemoryById(memoryId);
-    if (existing) {
-        elizaLogger.log(`Already processed email ${memoryId}, skipping`);
-        return;
-    }
-
     try {
+        const memoryId = stringToUuid(email.messageId + "-" + runtime.agentId);
+
+        await global.mailService.markAsRead(email.id);
+
         const memory: Memory = {
             id: memoryId,
             agentId: runtime.agentId,
@@ -126,11 +120,9 @@ export async function handleEmail(
         });
 
         if (shouldRespond !== "RESPOND") {
-            elizaLogger.log("Not responding to email");
+            elizaLogger.debug("Not responding to email");
             await global.mailService.markAsRead(email.id);
             return;
-        } else {
-            elizaLogger.info("Responding to email");
         }
 
         const context = composeContext({
@@ -145,15 +137,21 @@ export async function handleEmail(
         });
 
         if (response.text) {
+            elizaLogger.info("Generating response", {
+                response,
+            });
+
             const callback: HandlerCallback = async (response: Content) => {
-                elizaLogger.info("Sending email response...");
-                const mailService = MailService.getInstance();
-                await mailService.sendEmail({
-                    to: email.from?.value?.[0]?.address || "",
-                    subject: `Re: ${email.subject}`,
+                const emailToSend = {
+                    from: runtime.getSetting("EMAIL_SMTP_FROM"),
+                    to: email.from?.text || email.from?.value?.[0]?.address,
+                    subject: email.subject,
                     text: response.text,
-                    html: response.text,
-                });
+                    inReplyTo: email.messageId,
+                    references: email.messageId,
+                };
+
+                await global.mailService.sendEmail(emailToSend);
 
                 const responseMemory: Memory = {
                     id: stringToUuid(
@@ -163,11 +161,12 @@ export async function handleEmail(
                     roomId: runtime.agentId,
                     userId: runtime.agentId,
                     content: {
-                        text: response.text,
+                        ...emailToSend,
                         source: "email",
                         messageId: email.messageId,
                         inReplyTo: memoryId,
-                        action: response.action,
+                        action: "CONTINUE",
+                        processed: true,
                     },
                     createdAt: Date.now(),
                     embedding: getEmbeddingZeroVector(),
@@ -179,7 +178,7 @@ export async function handleEmail(
             const responseMessages = await callback(response);
 
             for (const responseMessage of responseMessages) {
-                elizaLogger.info("Creating response memory", {
+                elizaLogger.debug("Creating response memory", {
                     memoryId: responseMessage.id,
                 });
                 await runtime.messageManager.createMemory(responseMessage);
@@ -191,7 +190,6 @@ export async function handleEmail(
                 state,
                 callback
             );
-            await global.mailService.markAsRead(email.id);
         }
     } catch (error) {
         elizaLogger.error("Error handling email:", error);

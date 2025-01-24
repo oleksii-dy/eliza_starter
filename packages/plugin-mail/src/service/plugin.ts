@@ -18,9 +18,17 @@ export class MailPluginService extends Service {
 
     private runtime: IAgentRuntime;
     private emailChecker: EmailChecker;
+    private initialized = false;
 
     async initialize(runtime: IAgentRuntime) {
         this.runtime = runtime;
+
+        if (this.initialized) {
+            elizaLogger.debug("Mail plugin already initialized");
+            return;
+        }
+
+        this.initialized = true;
 
         elizaLogger.info("Initializing mail plugin");
         const mailConfig = validateMailConfig(this.runtime);

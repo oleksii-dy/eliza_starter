@@ -1,27 +1,15 @@
 import {
     Action,
-    composeContext,
     elizaLogger,
     generateText,
     HandlerCallback,
     IAgentRuntime,
     Memory,
     ModelClass,
-    State,
+    stringToUuid,
 } from "@elizaos/core";
-import { SendEmailParams } from "../types";
-
-const emailTemplate = `Based on the user's message: "{{message}}"
-
-Extract and format the email details in this exact format:
-To: [recipient email]
-Subject: [email subject]
-Message: [email content]
-
-For example, if the message is "send an email to john@example.com about Meeting saying Let's meet tomorrow", the output should be:
-To: john@example.com
-Subject: Meeting
-Message: Let's meet tomorrow`;
+import { EmailMessage, SendEmailParams } from "../types";
+import { hasBeenHandled } from "../utils/hasBeenHandled";
 
 export class SendEmailAction {
     constructor() {
@@ -65,7 +53,16 @@ export class SendEmailAction {
 export const sendEmailAction: Action = {
     name: "sendEmail",
     description: "Send an email to a specified recipient",
-    similes: ["send", "email", "write", "compose", "mail"],
+    similes: [
+        "send",
+        "email",
+        "write",
+        "compose",
+        "mail",
+        "reply",
+        "respond",
+        "reply to",
+    ],
     examples: [
         [
             {
@@ -104,9 +101,31 @@ export const sendEmailAction: Action = {
             return false;
         }
 
-        const emailContext = `Given this request: "${message.content.text}", extract email parameters. Return only a JSON object with these fields:
+        if (
+            await hasBeenHandled(
+                message.content as any as EmailMessage,
+                runtime
+            )
+        ) {
+            await callback?.({ text: "Email already processed" });
+            return false;
+        }
+
+        const memoryId = stringToUuid(
+            message.id + "-response-" + runtime.agentId
+        );
+        const existing = await runtime.messageManager?.getMemoryById(memoryId);
+
+        if (existing) {
+            await callback?.({ text: "Email already sent" });
+            return false;
+        }
+
+        const emailContext = `Given this request: "${JSON.stringify(
+            message.content
+        )}", extract email parameters. Return only a JSON object with these fields:
         {
-            "to": "recipient's email address (required, must not be an example.com address)",
+            "to": "recipient's email address)",
             "subject": "email subject line (required)",
             "text": "email body content (required)"
         }
@@ -118,7 +137,7 @@ export const sendEmailAction: Action = {
         const emailParams = await generateText({
             runtime,
             context: emailContext,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
         });
 
         let params: SendEmailParams;
@@ -131,12 +150,6 @@ export const sendEmailAction: Action = {
 
             if (!params.to || !params.subject || !params.text) {
                 throw new Error("Missing required email parameters");
-            }
-
-            if (params.to.includes("@example.com")) {
-                throw new Error(
-                    "Recipient email cannot be an example.com address"
-                );
             }
         } catch (err) {
             elizaLogger.error("Failed to parse email parameters", {

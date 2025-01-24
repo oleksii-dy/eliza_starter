@@ -58,7 +58,9 @@ export const searchEmailsAction: Action = {
         try {
             await global.mailService.connect();
 
-            const searchContext = `Given this request: "${message.content.text}", extract search criteria for emails. Return only a JSON object with these optional fields:
+            const searchContext = `Given this request: "${JSON.stringify(
+                message.content
+            )}", extract search criteria for emails. Return only a JSON object with these optional fields:
         {
             "from": "email address",
             "to": "email address",
