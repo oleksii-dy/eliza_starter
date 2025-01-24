@@ -663,6 +663,7 @@ export enum Clients {
     SIMSAI = "simsai",
     XMTP = "xmtp",
     DEVA = "deva",
+    GMAIL = "gmail",
 }
 
 export interface IAgentConfig {
@@ -776,6 +777,8 @@ export type Character = {
         jeeterMessageHandlerTemplate?: string;
         jeeterShouldRespondTemplate?: string;
         devaPostTemplate?: string;
+        gmailShouldRespondTemplate?: TemplateType;
+        gmailMessageHandlerTemplate?: TemplateType;
     };
 
     /** Character biography */
@@ -981,6 +984,9 @@ export interface IDatabaseAdapter {
 
     /** Create new account */
     createAccount(account: Account): Promise<boolean>;
+
+    /** Update account */
+    updateAccount(account: Account): Promise<boolean>;
 
     /** Get memories matching criteria */
     getMemories(params: {
