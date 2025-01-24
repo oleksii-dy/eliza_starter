@@ -219,8 +219,7 @@ const genChainFromRuntime = (
     const sei_network = runtime.getSetting("SEI_NETWORK");
     const validChains = Object.keys(seiChains)
     if (!validChains.includes(sei_network)) {
-        console.log("Invalid SEI_NETWORK " + sei_network + " Must be one of " + validChains)
-        return null
+        throw new Error("Invalid SEI_NETWORK " + sei_network + " Must be one of " + validChains.join(", "));
     }
 
     let chain = seiChains[sei_network]
