@@ -48,7 +48,7 @@ import fs from "fs/promises";
 import { configGithubInfoAction } from "./actions/configGithubInfo";
 import { stopAction } from "./actions/stop";
 import {
-    getUserLastMemory,
+    getLastMemory,
     registerActions,
     sleep,
     unregisterActions,
@@ -59,7 +59,6 @@ export class GitHubClient extends EventEmitter {
     runtime: IAgentRuntime;
     character: Character;
     states: Map<UUID, State>;
-    roomId: UUID;
     stopped: boolean;
     userProcesses: Map<UUID, Promise<void>>;
     actions: Action[];
@@ -71,7 +70,6 @@ export class GitHubClient extends EventEmitter {
         this.runtime = runtime;
         this.character = runtime.character;
         this.states = new Map();
-        this.roomId = stringToUuid(`default-room-${this.runtime.agentId}`);
         this.stopped = false;
         this.userProcesses = new Map();
         this.actions = [
@@ -108,32 +106,52 @@ export class GitHubClient extends EventEmitter {
     }
 
     private async monitorUsers() {
-        const userCheckInterval = 5000; // Check every 5 seconds
+        const githubUserCheckInterval =
+            Number(this.runtime.getSetting("GITHUB_USER_CHECK_INTERVAL_MS")) ||
+            5000; // Default to 5 seconds
+        const joinRoomId = stringToUuid(`default-room-${this.runtime.agentId}`);
 
         while (!this.stopped) {
             try {
-                const memories = await this.runtime.messageManager.getMemories({
-                    roomId: this.roomId,
-                    count: 1000,
-                    unique: false,
-                });
+                // First check the default room for join messages
+                const joinMemories =
+                    await this.runtime.messageManager.getMemories({
+                        roomId: joinRoomId,
+                        count: 1000,
+                        unique: false,
+                    });
 
-                // Get unique userIds from memories
+                // Get unique userIds from join messages
                 const userIds = new Set(
-                    memories
+                    joinMemories
                         .map((memory) => memory.userId)
                         .filter((userId) => userId !== this.runtime.agentId),
                 );
 
                 elizaLogger.info("User IDs:", Array.from(userIds).join(", "));
 
-                // Start process for new users
+                // Start process for new users with user-specific room IDs
                 for (const userId of userIds) {
                     if (!this.userProcesses.has(userId)) {
                         elizaLogger.info(
                             `Starting process for new user: ${userId}`,
                         );
-                        const process = this.startUserProcess(userId);
+                        // Create user-specific room ID
+                        const userRoomId = stringToUuid(
+                            `default-room-${this.runtime.agentId}-${userId}`,
+                        );
+                        // Add user to new room
+                        await this.runtime.ensureConnection(
+                            userId,
+                            userRoomId,
+                            "user" + userId,
+                            "user" + userId,
+                            "github",
+                        );
+                        const process = this.startUserProcess(
+                            userId,
+                            userRoomId,
+                        );
                         this.userProcesses.set(userId, process);
                     }
                 }
@@ -143,37 +161,32 @@ export class GitHubClient extends EventEmitter {
 
             elizaLogger.info("Sleeping for 5 seconds");
 
-            await sleep(userCheckInterval);
+            await sleep(githubUserCheckInterval);
         }
     }
 
-    private async startUserProcess(userId: UUID) {
+    private async startUserProcess(userId: UUID, userRoomId: UUID) {
         try {
-            // Add user to room
-            await this.runtime.ensureConnection(
-                userId,
-                this.roomId,
-                "user" + userId,
-                "user" + userId,
-                "github",
-            );
-
-            // Discover github info and initialize state for this user
-            let userState = await this.discoverGithubInfo(userId);
+            // Use user-specific room ID for all subsequent operations
+            let userState = await this.discoverGithubInfo(userId, userRoomId);
             if (!userState) {
                 return;
             }
             this.states.set(userId, userState);
 
             // Initialize repository
-            userState = await this.initializeRepository(userId, userState);
+            userState = await this.initializeRepository(
+                userId,
+                userState,
+                userRoomId,
+            );
             if (!userState) {
                 return;
             }
             this.states.set(userId, userState);
 
-            // Start OODA loop for this user
-            userState = await this.startOODALoop(userId, userState);
+            // Start OODA loop
+            userState = await this.startOODALoop(userId, userState, userRoomId);
             if (!userState) {
                 return;
             }
@@ -183,7 +196,10 @@ export class GitHubClient extends EventEmitter {
         }
     }
 
-    private async discoverGithubInfo(userId: UUID): Promise<State | null> {
+    private async discoverGithubInfo(
+        userId: UUID,
+        userRoomId: UUID,
+    ): Promise<State | null> {
         // init state
         let state: State | null = null;
 
@@ -191,6 +207,8 @@ export class GitHubClient extends EventEmitter {
             Number(
                 this.runtime.getSetting("GITHUB_INFO_DISCOVERY_INTERVAL_MS"),
             ) || 1000; // Default to 1 second
+
+        await sleep(githubInfoDiscoveryInterval);
 
         // github info discovery loop
         while (true) {
@@ -201,18 +219,14 @@ export class GitHubClient extends EventEmitter {
             }
             if (!this.userProcesses.has(userId)) {
                 elizaLogger.info(
-                    `User ${userId} not found in userProcesses, stopping user OODA cycle.`,
+                    `User ${userId} not found in userProcesses, stopping user discovery github info cycle.`,
                 );
                 return null;
             }
 
             elizaLogger.info("Processing Github info discovery cycle...");
 
-            const message = await getUserLastMemory(
-                this.runtime,
-                this.roomId,
-                userId,
-            );
+            const message = await getLastMemory(this.runtime, userRoomId);
 
             // if message is null skip the github info discovery cycle
             if (!message) {
@@ -291,11 +305,12 @@ export class GitHubClient extends EventEmitter {
     private async initializeRepository(
         userId: UUID,
         state: State,
+        userRoomId: UUID,
     ): Promise<State | null> {
         const initializeRepositoryMemoryTimestamp = Date.now();
         const initializeRepositoryMemory: Memory = {
             id: stringToUuid(
-                `${this.roomId}-${this.runtime.agentId}-${userId}-${initializeRepositoryMemoryTimestamp}-initialize-repository`,
+                `${userRoomId}-${this.runtime.agentId}-${userId}-${initializeRepositoryMemoryTimestamp}-initialize-repository`,
             ),
             userId,
             agentId: this.runtime.agentId,
@@ -305,7 +320,7 @@ export class GitHubClient extends EventEmitter {
                 source: "github",
                 inReplyTo: userId,
             },
-            roomId: this.roomId,
+            roomId: userRoomId,
             createdAt: initializeRepositoryMemoryTimestamp,
         };
         await this.runtime.messageManager.createMemory(
@@ -315,7 +330,7 @@ export class GitHubClient extends EventEmitter {
         const createMemoriesFromFilesMemoryTimestamp = Date.now();
         const createMemoriesFromFilesMemory = {
             id: stringToUuid(
-                `${this.roomId}-${this.runtime.agentId}-${userId}-${createMemoriesFromFilesMemoryTimestamp}-create-memories-from-files`,
+                `${userRoomId}-${this.runtime.agentId}-${userId}-${createMemoriesFromFilesMemoryTimestamp}-create-memories-from-files`,
             ),
             userId,
             agentId: this.runtime.agentId,
@@ -325,18 +340,14 @@ export class GitHubClient extends EventEmitter {
                 source: "github",
                 inReplyTo: userId,
             },
-            roomId: this.roomId,
+            roomId: userRoomId,
             createdAt: createMemoriesFromFilesMemoryTimestamp,
         };
         await this.runtime.messageManager.createMemory(
             createMemoriesFromFilesMemory,
         );
 
-        const message = await getUserLastMemory(
-            this.runtime,
-            this.roomId,
-            userId,
-        );
+        const message = await getLastMemory(this.runtime, userRoomId);
 
         // if message is null throw an error
         if (!message) {
@@ -382,7 +393,7 @@ export class GitHubClient extends EventEmitter {
 
             const responseMemory: Memory = {
                 id: stringToUuid(
-                    `${this.roomId}-${this.runtime.agentId}-${userId}-${timestamp}-${content.action}-response`,
+                    `${userRoomId}-${this.runtime.agentId}-${userId}-${timestamp}-${content.action}-response`,
                 ),
                 agentId: this.runtime.agentId,
                 userId,
@@ -394,7 +405,7 @@ export class GitHubClient extends EventEmitter {
                             ? initializeRepositoryMemory.id
                             : createMemoriesFromFilesMemory.id,
                 },
-                roomId: this.roomId,
+                roomId: userRoomId,
                 createdAt: timestamp,
             };
 
@@ -421,7 +432,7 @@ export class GitHubClient extends EventEmitter {
         // get memories and write it to file
         const memoriesPostRepoInitProcessActions =
             await this.runtime.messageManager.getMemories({
-                roomId: this.roomId,
+                roomId: userRoomId,
                 count: 1000,
             });
         await fs.writeFile(
@@ -450,7 +461,7 @@ export class GitHubClient extends EventEmitter {
             }
             if (!this.userProcesses.has(userId)) {
                 elizaLogger.info(
-                    `User ${userId} not found in userProcesses, stopping user OODA cycle.`,
+                    `User ${userId} not found in userProcesses, stopping user initialize repository cycle.`,
                 );
                 return null;
             }
@@ -459,7 +470,7 @@ export class GitHubClient extends EventEmitter {
 
             // retrieve memories
             const memories = await this.runtime.messageManager.getMemories({
-                roomId: this.roomId,
+                roomId: userRoomId,
             });
 
             await fs.writeFile(
@@ -539,6 +550,7 @@ export class GitHubClient extends EventEmitter {
     private async startOODALoop(
         userId: UUID,
         state: State,
+        userRoomId: UUID,
     ): Promise<State | null> {
         const githubOodaInterval =
             Number(this.runtime.getSetting("GITHUB_OODA_INTERVAL_MS")) || 60000; // Default to 1 minute
@@ -559,11 +571,7 @@ export class GitHubClient extends EventEmitter {
 
             elizaLogger.info("Processing OODA cycle...");
 
-            const message = await getUserLastMemory(
-                this.runtime,
-                this.roomId,
-                userId,
-            );
+            const message = await getLastMemory(this.runtime, userRoomId);
 
             await fs.writeFile(
                 "/tmp/client-github-message.txt",
@@ -629,7 +637,7 @@ export class GitHubClient extends EventEmitter {
             const timestamp = Date.now();
             const actionMemory: Memory = {
                 id: stringToUuid(
-                    `${this.roomId}-${this.runtime.agentId}-${userId}-${timestamp}-${content.action}`,
+                    `${userRoomId}-${this.runtime.agentId}-${userId}-${timestamp}-${content.action}`,
                 ),
                 userId,
                 agentId: this.runtime.agentId,
@@ -639,7 +647,7 @@ export class GitHubClient extends EventEmitter {
                     source: "github",
                     inReplyTo: userId,
                 },
-                roomId: this.roomId,
+                roomId: userRoomId,
                 createdAt: timestamp,
             };
 

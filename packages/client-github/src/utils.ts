@@ -15,24 +15,22 @@ export function unregisterActions(runtime: IAgentRuntime, actions: Action[]) {
     );
 }
 
-export async function getUserMemories(
+export async function getMemories(
     runtime: IAgentRuntime,
     roomId: UUID,
-    userId: UUID,
 ): Promise<Memory[]> {
     const memories = await runtime.messageManager.getMemories({
         roomId,
         unique: false,
     });
-    return memories.filter((memory) => memory.userId === userId);
+    return memories;
 }
 
-export async function getUserLastMemory(
+export async function getLastMemory(
     runtime: IAgentRuntime,
     roomId: UUID,
-    userId: UUID,
 ): Promise<Memory | null> {
-    const memories = await getUserMemories(runtime, roomId, userId);
+    const memories = await getMemories(runtime, roomId);
     if (memories.length === 0) {
         return null;
     }

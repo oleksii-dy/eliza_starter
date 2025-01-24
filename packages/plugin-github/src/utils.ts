@@ -77,7 +77,7 @@ export async function cloneOrPullRepository(
             );
         } else {
             const git = simpleGit(repoPath);
-            await git.pull();
+            await git.pull("origin", branch);
         }
     } catch (error) {
         elizaLogger.error(
@@ -564,7 +564,7 @@ export async function saveCreatedPullRequestToMemory(
         agentId: runtime.agentId,
         roomId: message.roomId,
         content: {
-            text: `Pull Request Created: ${pullRequest.title}`,
+            text: `Pull Request Created: ${pullRequest.title} (${pullRequest.html_url})`,
             action: "CREATE_PULL_REQUEST",
             metadata: await getCreatedPullRequestMetadata(
                 pullRequest,

@@ -23,14 +23,14 @@ import { validateUuid } from "@elizaos/core";
 interface UUIDParams {
     agentId: UUID;
     roomId?: UUID;
-    sessionId?: UUID;
+    userId?: UUID;
 }
 
 function validateUUIDParams(
     params: {
         agentId: string;
         roomId?: string;
-        sessionId?: string;
+        userId?: string;
     },
     res: express.Response,
 ): UUIDParams | null {
@@ -53,15 +53,15 @@ function validateUUIDParams(
         return { agentId, roomId };
     }
 
-    if (params.sessionId) {
-        const sessionId = validateUuid(params.sessionId);
-        if (!sessionId) {
+    if (params.userId) {
+        const userId = validateUuid(params.userId);
+        if (!userId) {
             res.status(400).json({
                 error: "Invalid SessionId format. Expected to be a UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
             });
             return null;
         }
-        return { agentId, sessionId };
+        return { agentId, userId };
     }
 
     return { agentId };
@@ -289,8 +289,7 @@ export function createApiRouter(
             const filteredMemories = memories.filter(
                 (memory) =>
                     (memory.content.metadata as any)?.type !== "file" &&
-                    memory.content?.source !== "direct" &&
-                    (userId ? memory.userId === userId : true),
+                    memory.content?.source !== "direct",
             );
 
             const response = {
@@ -344,16 +343,15 @@ export function createApiRouter(
         await getMemories(agentId, roomId, null, req, res);
     });
 
-    router.get("/agents/:agentId/memories/:sessionId", async (req, res) => {
-        const { agentId, sessionId } = validateUUIDParams(req.params, res) ?? {
+    router.get("/agents/:agentId/memories/:userId", async (req, res) => {
+        const { agentId, userId } = validateUUIDParams(req.params, res) ?? {
             agentId: null,
-            sessionId: null,
+            userId: null,
         };
-        if (!agentId || !sessionId) return;
+        if (!agentId || !userId) return;
 
-        const userId = stringToUuid(sessionId);
         const roomId = stringToUuid(
-            req.body.roomId ?? "default-room-" + agentId,
+            (req.query.roomId as string) ?? "default-room-" + agentId,
         );
 
         await getMemories(agentId, roomId, userId, req, res);
