@@ -1415,5 +1415,30 @@ export class MongoDBDatabaseAdapter
         }
     }
 
+    async getMemoriesByIds(memoryIds: UUID[], tableName?: string): Promise<Memory[]> {
+        await this.ensureConnection();
+        const collection = tableName || 'memories';
+
+        try {
+            const memories = await this.database.collection(collection)
+                .find({ id: { $in: memoryIds } })
+                .toArray();
+
+            return memories.map(memory => ({
+                id: memory.id,
+                roomId: memory.roomId,
+                agentId: memory.agentId,
+                type: memory.type,
+                content: memory.content,
+                embedding: memory.embedding,
+                createdAt: memory.createdAt instanceof Date ? memory.createdAt.getTime() : memory.createdAt,
+                metadata: memory.metadata || {}
+            }));
+        } catch (error) {
+            elizaLogger.error('Failed to get memories by IDs:', error);
+            return [];
+        }
+    }
+
 }
 
