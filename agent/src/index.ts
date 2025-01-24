@@ -129,6 +129,7 @@ import { seiPlugin } from "@elizaos/plugin-sei"
 import { sunoPlugin } from "@elizaos/plugin-suno"
 import { udioPlugin } from "@elizaos/plugin-udio"
 import { imgflipPlugin } from "@elizaos/plugin-imgflip"
+import { ethstoragePlugin } from "@elizaos/plugin-ethstorage"
 
 import {
     githubInitializePlugin,
