@@ -40,12 +40,12 @@ import {
     stringToUuid,
     validateCharacterConfig,
 } from "@elizaos/core";
-// import { zgPlugin } from "@elizaos/plugin-0g";
+import { zgPlugin } from "@elizaos/plugin-0g";
 
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import { normalizeCharacter } from "@elizaos/plugin-di";
 import createGoatPlugin from "@elizaos/plugin-goat";
-import { intifacePlugin } from "@elizaos/plugin-intiface";
+// import { intifacePlugin } from "@elizaos/plugin-intiface";
 import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
 import { abstractPlugin } from "@elizaos/plugin-abstract";
 import { akashPlugin } from "@elizaos/plugin-akash";
@@ -121,7 +121,6 @@ import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
 import { nvidiaNimPlugin } from "@elizaos/plugin-nvidia-nim";
 
 import { zxPlugin } from "@elizaos/plugin-0x";
-
 import Database from "better-sqlite3";
 import fs from "fs";
 import net from "net";
