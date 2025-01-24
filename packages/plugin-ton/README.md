@@ -12,6 +12,16 @@ This plugin provides functionality to:
 - Format and cache transaction data
 - Interface with TON blockchain via RPC endpoints
 
+### Screenshot
+
+![alt text](./screenshot/transfer.png "Transfer TON")
+
+### Quick Start
+
+```bash
+bash ./packages/plugin-ton/debug.sh
+```
+
 ## Installation
 
 ```bash
@@ -25,6 +35,7 @@ The plugin requires the following environment variables:
 ```env
 TON_PRIVATE_KEY=your_mnemonic_phrase  # Required - wallet mnemonic words
 TON_RPC_URL=your_rpc_endpoint  # Optional - defaults to mainnet RPC
+TON_RPC_API_KEY=
 ```
 
 ## Usage
