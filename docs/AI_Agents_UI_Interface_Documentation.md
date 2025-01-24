@@ -95,6 +95,8 @@ Agent:
 ___
 **Use Case 2: Implementing a Feature for an Issue**
 
+In order to use this feature in the current version you will need to add SpiralAgent234 as a collaborator to the public repository.
+
 Prompt Example:
 
 User: 
@@ -128,6 +130,8 @@ ___
 
 **Use Case 4: Branch Management**
 
+In order to use this feature in the current version you will need to add SpiralAgent234 as a collaborator to the public repository.
+
 Prompt Example:
 
 User: 
@@ -143,6 +147,8 @@ Agent:
 **When to Use:** This is particularly useful for managing feature branches or preparing for new development tasks. By automating branch creation, the agent saves time and ensures the branch structure adheres to specified naming conventions.
 ___
 **Use Case 5: Committing Changes to a Repository**
+
+In order to use this feature in the current version you will need to add SpiralAgent234 as a collaborator to the public repository.
 
 Prompt Example 1:
 
