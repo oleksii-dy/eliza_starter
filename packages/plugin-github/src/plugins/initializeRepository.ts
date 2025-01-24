@@ -88,8 +88,14 @@ export const initializeRepositoryAction: Action = {
         elizaLogger.info(`Repository path: ${repoPath}`);
 
         try {
+            const token = runtime.getSetting("GITHUB_API_TOKEN");
+            if (!token) {
+                throw new Error("GITHUB_API_TOKEN is not set");
+            }
+
             await createReposDirectory(content.owner);
             await cloneOrPullRepository(
+                token,
                 content.owner,
                 content.repo,
                 repoPath,
