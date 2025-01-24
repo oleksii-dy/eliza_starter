@@ -17,7 +17,7 @@ import { WebhookEvent } from "./types";
 import { Coinbase, Wallet } from "@coinbase/coinbase-sdk";
 
 import { Token, CurrencyAmount, TradeType, Percent } from '@uniswap/sdk-core';
-import { Route, Trade } from '@uniswap/sdk-core';
+import { ChainId, Fetcher, WETH, Route, Trade, TokenAmount, TradeType } from '@uniswap/sdk-core';
 import { ethers } from 'ethers';
 import { initializeWallet } from "../../plugin-coinbase/src/utils";
 
@@ -228,15 +228,12 @@ Generate only the tweet text, no commentary or markdown.`;
             timeZoneName: 'short'
         }).format(new Date(event.timestamp));
 
-        // const pnl = await pnlProvider.get(this.runtime, memory);
-
-        // const pnlText = `Unrealized PNL: $${pnl.toFixed(2)}`;
         const tx = await this.swapUSDCForToken(event.ticker, amount);
-        // TODO: get pnl
-
+        const pnl = await this.calculateOverallPNL(event.ticker, amount, amount);
+        const pnlText = `Overall PNL: $${pnl.toFixed(2)}`;
 
             try {
-                const tweetContent = await this.generateTweetContent(event, amount, '', formattedTimestamp, state, tx);
+                const tweetContent = await this.generateTweetContent(event, amount, pnlText, formattedTimestamp, state, tx);
                 elizaLogger.info("Generated tweet content:", tweetContent);
                 if (this.runtime.getSetting('TWITTER_DRY_RUN')) {
                     elizaLogger.info("Dry run mode enabled. Skipping tweet posting.",);
@@ -308,6 +305,12 @@ Generate only the tweet text, no commentary or markdown.`;
         elizaLogger.log("tx", JSON.stringify(tx));
         return tx;
     }
+
+    private async calculateOverallPNL(ticker: string, amountReceived: number, initialInvestment: number): Promise<number> {
+       // TODO: implement
+       return 0;
+    }
+
 }
 
 export const CoinbaseClientInterface: Client = {
