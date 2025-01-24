@@ -690,8 +690,7 @@ function initializeDatabase(dataDir: string) {
             });
 
         return db;
-    } else if
-    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+    } else if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
         elizaLogger.info("Initializing Supabase connection...");
         const db = new SupabaseDatabaseAdapter(
             process.env.SUPABASE_URL,
