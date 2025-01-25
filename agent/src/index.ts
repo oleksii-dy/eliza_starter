@@ -1,26 +1,3 @@
-<<<<<<< HEAD
-import { PGLiteDatabaseAdapter } from "@elizaos/adapter-pglite";
-import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
-import { RedisClient } from "@elizaos/adapter-redis";
-import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
-import { SupabaseDatabaseAdapter } from "@elizaos/adapter-supabase";
-import { AutoClientInterface } from "@elizaos/client-auto";
-import { DiscordClientInterface } from "@elizaos/client-discord";
-import { InstagramClientInterface } from "@elizaos/client-instagram";
-import { LensAgentClient } from "@elizaos/client-lens";
-import { SlackClientInterface } from "@elizaos/client-slack";
-import { TelegramClientInterface } from "@elizaos/client-telegram";
-import { TwitterClientInterface } from "@elizaos/client-twitter";
-import { DevaClientInterface } from "@elizaos/client-deva";
-import { FarcasterClientInterface } from "@elizaos/client-farcaster";
-import { DirectClient } from "@elizaos/client-direct";
-import { agentKitPlugin } from "@elizaos/plugin-agentkit";
-// import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
-import { PrimusAdapter } from "@elizaos/plugin-primus";
-import { lightningPlugin } from "@elizaos/plugin-lightning";
-import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
-import { holdstationPlugin } from "@elizaos/plugin-holdstation";
-=======
 import { PGLiteDatabaseAdapter } from "@elizaos/adapter-pglite"
 import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres"
 import { QdrantDatabaseAdapter } from "@elizaos/adapter-qdrant"
@@ -36,7 +13,7 @@ import { TelegramClientInterface } from "@elizaos/client-telegram"
 import { TwitterClientInterface } from "@elizaos/client-twitter"
 import { AlexaClientInterface } from "@elizaos/client-alexa";
 import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb"
->>>>>>> develop
+import { DevaClientInterface } from "@elizaos/client-deva"
 
 import { FarcasterClientInterface } from "@elizaos/client-farcaster"
 import { OmniflixPlugin } from "@elizaos/plugin-omniflix"
@@ -700,7 +677,6 @@ export async function initializeClients(character: Character, runtime: IAgentRun
 
 	elizaLogger.log("client keys", Object.keys(clients))
 
-<<<<<<< HEAD
     if (clientTypes.includes("deva")) {
         if (clientTypes.includes("deva")) {
             const devaClient = await DevaClientInterface.start(runtime);
@@ -713,10 +689,9 @@ export async function initializeClients(character: Character, runtime: IAgentRun
         if ("type" in client) {
             return (client as any).type;
         }
-=======
-	// TODO: Add Slack client to the list
-	// Initialize clients as an object
->>>>>>> develop
+
+		// TODO: Add Slack client to the list
+		// Initialize clients as an object
 
 	if (clientTypes.includes("slack")) {
 		const slackClient = await SlackClientInterface.start(runtime)

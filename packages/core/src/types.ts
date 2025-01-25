@@ -657,11 +657,8 @@ export enum Clients {
     SLACK = "slack",
     GITHUB = "github",
     INSTAGRAM = "instagram",
-<<<<<<< HEAD
+    SIMSAI = "simsai",
     DEVA = "deva",
-=======
-    SIMSAI = "simsai"
->>>>>>> develop
 }
 
 export interface IAgentConfig {
@@ -769,15 +766,12 @@ export type Character = {
         discordMessageHandlerTemplate?: TemplateType;
         slackMessageHandlerTemplate?: TemplateType;
         slackShouldRespondTemplate?: TemplateType;
-<<<<<<< HEAD
-        devaPostTemplate?: string;
-=======
         jeeterPostTemplate?: string;
         jeeterSearchTemplate?: string;
         jeeterInteractionTemplate?: string;
         jeeterMessageHandlerTemplate?: string;
         jeeterShouldRespondTemplate?: string;
->>>>>>> develop
+        devaPostTemplate?: string;
     };
 
     /** Character biography */
