@@ -851,6 +851,7 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			getSecret(character, "FUNDING_PRIVATE_KEY") && getSecret(character, "EVM_RPC_URL") ? litPlugin : null,
 			getSecret(character, "ETHSTORAGE_PRIVATE_KEY") ? ethstoragePlugin : null,
 			getSecret(character, "MINA_PRIVATE_KEY") ? minaPlugin : null,
+            getSecret(character, "FORM_PRIVATE_KEY") ? formPlugin : null,
 		].filter(Boolean),
 		providers: [],
 		managers: [],
