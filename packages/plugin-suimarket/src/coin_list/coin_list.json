@@ -15,6 +15,12 @@
       "name": "Bitcoin Dogs"
     },
     {
+      "id": "sui",
+      "symbol": "sui",
+      "name": "Sui",
+      "verified":true
+    },
+    {
       "id": "0-knowledge-network",
       "symbol": "0kn",
       "name": "0 Knowledge Network"
@@ -69793,12 +69799,6 @@
       "id": "sugaryield",
       "symbol": "sugar",
       "name": "SugarYield"
-    },
-    {
-      "id": "sui",
-      "symbol": "sui",
-      "name": "Sui",
-      "verified":true
     },
     {
       "id": "suia",
