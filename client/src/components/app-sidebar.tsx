@@ -37,7 +37,7 @@ export function AppSidebar() {
                         <SidebarMenuButton size="lg" asChild>
                             <NavLink to="/">
                                 <img
-                                    src="/elizaos-icon.png"
+                                    src="/favicon-32x32.png"
                                     width="100%"
                                     height="100%"
                                     className="size-7"
@@ -45,9 +45,8 @@ export function AppSidebar() {
 
                                 <div className="flex flex-col gap-0.5 leading-none">
                                     <span className="font-semibold">
-                                        ElizaOS
+                                        Reality Spiral
                                     </span>
-                                    <span className="">v{info?.version}</span>
                                 </div>
                             </NavLink>
                         </SidebarMenuButton>
