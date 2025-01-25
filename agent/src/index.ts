@@ -21,7 +21,7 @@ import { agentKitPlugin } from "@elizaos/plugin-agentkit"
 import { PrimusAdapter } from "@elizaos/plugin-primus"
 import { lightningPlugin } from "@elizaos/plugin-lightning"
 import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900"
-
+import { dcapPlugin } from "@elizaos/plugin-dcap"
 import {
     AgentRuntime,
     CacheManager,
@@ -849,6 +849,7 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			getSecret(character, "FUNDING_PRIVATE_KEY") && getSecret(character, "EVM_RPC_URL") ? litPlugin : null,
 			getSecret(character, "ETHSTORAGE_PRIVATE_KEY") ? ethstoragePlugin : null,
 			getSecret(character, "MINA_PRIVATE_KEY") ? minaPlugin : null,
+			getSecret(character, "DCAP_EVM_PRIVATE_KEY") && getSecret(character, "DCAP_MODE") ? dcapPlugin : null,
 		].filter(Boolean),
 		providers: [],
 		managers: [],
