@@ -44,6 +44,7 @@ export class MongoDBDatabaseAdapter
     private hasVectorSearch: boolean;
     private isConnected: boolean = false;
     private isVectorSearchIndexComputable: boolean;
+    public db: MongoClient;
 
     constructor(client: MongoClient, databaseName: string) {
         super();

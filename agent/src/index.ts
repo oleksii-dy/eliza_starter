@@ -139,6 +139,7 @@ import { zerionPlugin } from "@elizaos/plugin-zerion"
 import { minaPlugin } from "@elizaos/plugin-mina"
 import { ankrPlugin } from "@elizaos/plugin-ankr";
 import { formPlugin } from "@elizaos/plugin-form";
+import { MongoClient } from "mongodb";
 
 const __filename = fileURLToPath(import.meta.url) // get the resolved path to the file
 const __dirname = path.dirname(__filename) // get the name of the directory
@@ -526,7 +527,7 @@ function initializeDatabase(dataDir: string) {
             retryReads: true
         });
 
-        const dbName = process.env.MONGODB_DATABASE || 'CumulusAiAgent'; // Default database name
+        const dbName = process.env.MONGODB_DATABASE || 'elizaAgent';
         const db = new MongoDBDatabaseAdapter(client, dbName);
 
         // Test the connection
