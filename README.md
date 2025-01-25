@@ -46,9 +46,7 @@
 
 ### Prerequisites
 
-- [Python 2.7+](https://www.python.org/downloads/)
-- [Node.js 23+](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
-- [pnpm](https://pnpm.io/installation)
+- [mise](https://github.com/jdx/mise?tab=readme-ov-file#quickstart)
 
 > **Note for Windows Users:** [WSL 2](https://learn.microsoft.com/en-us/windows/wsl/install-manual) is required.
 
@@ -57,6 +55,8 @@
 ```bash
 git clone https://github.com/elizaos/eliza-starter.git
 cd eliza-starter
+mise trust mise.toml
+mise install
 cp .env.example .env
 pnpm i && pnpm build && pnpm start
 ```
@@ -69,6 +69,8 @@ pnpm i && pnpm build && pnpm start
 # Clone the repository
 git clone https://github.com/elizaos/eliza.git
 
+mise trust mise.toml
+mise install
 # This project iterates fast, so we recommend checking out the latest release
 git checkout $(git describe --tags --abbrev=0)
 # If the above doesn't checkout the latest release, this should work:
