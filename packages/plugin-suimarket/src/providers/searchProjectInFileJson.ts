@@ -17,13 +17,15 @@ export const searchProjectInFileJson = async(name:string)=>{
                 const data = await fs.readFile(file, 'utf8');
                 const projects = JSON.parse(data);
 
-                const foundCoin = projects.find(
+                const foundProject = projects.find(
                     (project: { name: string }) => {
-                        return project.name && project.name.toLowerCase() === name.toLowerCase();
+                        return (
+                            (project.name && project.name.toLowerCase() === name.toLowerCase())
+                        );
                     }
                 );
 
-                return foundCoin || null;
+                return foundProject || null;
             } catch (err) {
                 console.error(`Error reading file ${file}:`, err);
                 return null;
