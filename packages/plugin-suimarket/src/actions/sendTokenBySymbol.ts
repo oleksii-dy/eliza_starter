@@ -14,32 +14,18 @@ import { findByVerifiedAndSymbol } from "../providers/searchCoinInAggre";
 // import { checkSuiAddressExists } from "../providers/checkSuiAddress";
 import { isValidSuiAddress } from "@mysten/sui/utils";
 const sendTokenTemplate = `Please extract the following swap details for SUI network:
-
 {
     "amount": number | 0,               // Amount of tokens to transfer
-    "tokenSymbol": string | null,          // Token symbol on the SUI network (e.g., "SUI", "UNI")
+    "tokenSymbol": string | SUI,          // Token symbol on the SUI network (e.g., "SUI", "UNI")
     "destinationAddress": string | null    // Recipient's wallet address
 }
-
 Recent messages: {{recentMessages}}
-
 Extract the token transfer parameters from the conversation and wallet context above. Return only a JSON object with the specified fields. Use null for any values that cannot be determined.
-
-Example Response:
-{
-    "amount": 10.5,
-    "tokenSymbol": "UNI",
-    "destinationAddress": "0xa3b1c5d6e7f8g9h0i1j2k3l4m5n6o7p8q9r0"
-}
-\`\`\`
-VALIDATION RULES:
-            All property names must use double quotes
-            All string values must use double quotes
-            null values should not use quotes
-            No trailing commas allowed
-            No single quotes anywhere in the JSON
-
-
+All property names must use double quotes
+All string values must use double quotes
+null values should not use quotes
+No trailing commas allowed
+No single quotes anywhere in the JSON
 `;
 
 
