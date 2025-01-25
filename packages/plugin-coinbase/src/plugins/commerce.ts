@@ -29,6 +29,20 @@ interface ChargeRequest {
     };
 }
 
+export function sanitizeInvoices(data) {
+    return data.map(invoice => {
+        return {
+            type: invoice.pricing_type,
+            currency: invoice.pricing.local.currency,
+            name: invoice.name,
+            description: invoice.description,
+            amount: invoice.pricing.local.amount,
+            url: invoice.hosted_url,
+        };
+    });
+}
+
+
 export async function createCharge(apiKey: string, params: ChargeRequest) {
     elizaLogger.debug("Starting createCharge function");
     try {
@@ -347,11 +361,10 @@ export const getAllChargesAction: Action = {
             );
 
             elizaLogger.info("Fetched all charges:", charges);
-
+            const sanitizedCharges = sanitizeInvoices(charges);
             callback(
                 {
-                    text: `Successfully fetched all charges. Total charges: ${charges.length}`,
-                    attachments: charges,
+                    text: `Successfully fetched all charges. Total charges: ${charges.length}.\nSee Details:\n${sanitizedCharges.map((charge) => `\nName: ${charge.name} Description: ${charge.description} Amount: ${charge.amount} Currency: ${charge.currency} Url: ${charge.url}`).join(",\n")}`,
                 },
                 []
             );
@@ -536,5 +549,5 @@ export const coinbaseCommercePlugin: Plugin = {
         getChargeDetailsAction,
     ],
     evaluators: [],
-    providers: [chargeProvider],
+    providers: [],
 };

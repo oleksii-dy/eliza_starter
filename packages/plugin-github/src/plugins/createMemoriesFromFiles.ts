@@ -160,14 +160,14 @@ export const createMemoriesFromFilesAction: Action = {
             );
 
             elizaLogger.info("Memories created successfully!");
-            if (callback) {
-                callback({
-                    text: "Memories created successfully!",
-                    action: "CREATE_MEMORIES_FROM_FILES",
-                    source: "github",
-                    attachments: [],
-                });
-            }
+            // if (callback) {
+            //     callback({
+            //         text: "Memories created successfully!",
+            //         action: "CREATE_MEMORIES_FROM_FILES",
+            //         source: "github",
+            //         attachments: [],
+            //     });
+            // }
         } catch (error) {
             elizaLogger.error(
                 `Error creating memories from files on ${content.owner}/${content.repo} path ${content.path}:`,

@@ -1131,11 +1131,11 @@ export const implementFeatureAction: Action = {
                 options,
             );
 
-            elizaLogger.info(`Pull request created successfully!`);
+            elizaLogger.info(`Pull request created successfully! ${(pullRequest as any).html_url}`);
 
             if (callback) {
                 callback({
-                    text: `Pull request created successfully!`,
+                    text: `Pull request created successfully! ${(pullRequest as any).html_url}`,
                     attachments: [],
                 });
             }
