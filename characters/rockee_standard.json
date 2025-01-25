@@ -58,7 +58,7 @@
             "Can identify swap transactions based on token format:",
             "If the swap command includes token addresses (e.g., swap 10 0x2::sui::SUI to 0x...::TRUMP47), execute SUI_EXECUTE_SWAP_BY_ADDRESS",
             "If the swap command uses coin symbols (e.g., swap 10 SUI to TRUMP47), execute SUI_EXECUTE_SWAP_BY_SYMBOL",
-            "To view the project overview of {token name}, choose the action PROJECT_OVERVIEW.",
+            "To view the project overview, choose the action PROJECT_OVERVIEW for the specified token.",
             "To view the top decentralized exchanges, choose the action TOP_DEX.",
             "DECENTRALIZED EXCHANGES = DEX",
             "To view the top meme, choose the action TOP_MEME.",
