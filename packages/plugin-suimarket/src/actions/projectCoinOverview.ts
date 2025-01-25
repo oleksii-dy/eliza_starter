@@ -17,6 +17,7 @@ import { searchCoinInFileJsonProvider, searchCoinInFileJsonProvider2 } from "../
 import {findByVerifiedAndName} from "../providers/searchCoinInAggre";
 import { searchProjectInFileJson } from "../providers/searchProjectInFileJson";
 import { getTokenOnSuiScan } from "../providers/getInfoCoinOnSuiScan";
+import { hashUserMsg } from "../utils/format";
 
 const projectInfoTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 Example response:
@@ -104,8 +105,24 @@ export const projectInfo: Action = {
             state,
             template: projectInfoTemplate,
         });
+        const msgHash = hashUserMsg(message, "project_overview");
+        let content:any = await runtime.cacheManager.get(msgHash)
+        elizaLogger.log("---- cache info: ", msgHash, "--->", content)
+        if(!content){
+            const projectInfoContext = composeContext({
+                state,
+                template: projectInfoTemplate,
+            })
+            content = await generateObjectDeprecated({
+                runtime,
+                context: projectInfoContext,
+                modelClass: ModelClass.SMALL,
+            })
+            await runtime.cacheManager.set(msgHash, content, {expires: Date.now() + 300000});
+        }
+
         // Generate transfer content
-        const content = await generateObjectDeprecated({
+        content = await generateObjectDeprecated({
             runtime,
             context: projectPromptTemplateContext,
             modelClass: ModelClass.SMALL,

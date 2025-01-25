@@ -72,7 +72,7 @@ export const topDexInfo: Action = {
             state,
             template: topDexTemplate,
         });
-        const msgHash = hashUserMsg(message, "swap01");
+        const msgHash = hashUserMsg(message, "top_dex");
         let content:any = await runtime.cacheManager.get(msgHash);
 
         if(!content){

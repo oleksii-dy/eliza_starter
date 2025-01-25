@@ -55,7 +55,7 @@ export const executeSwap: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        const msgHash = hashUserMsg(message, "top_dex");
+        const msgHash = hashUserMsg(message, "swap_symbol");
         let content:any = await runtime.cacheManager.get(msgHash);
 
         elizaLogger.log("---- cache info: ", msgHash, "--->", content);
