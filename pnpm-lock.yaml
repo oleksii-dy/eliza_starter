@@ -145,12 +145,12 @@ importers:
       '@elizaos/client-slack':
         specifier: workspace:*
         version: link:../packages/client-slack
-      '@elizaos/client-telegram':
-        specifier: workspace:*
-        version: link:../packages/client-telegram
       '@elizaos/client-twitter':
         specifier: workspace:*
         version: link:../packages/client-twitter
+      '@elizaos/client-xmtp':
+        specifier: workspace:*
+        version: link:../packages/client-xmtp
       '@elizaos/core':
         specifier: workspace:*
         version: link:../packages/core
@@ -982,6 +982,19 @@ importers:
       vitest:
         specifier: 1.1.3
         version: 1.1.3(@types/node@22.10.5)(jsdom@25.0.1(bufferutil@4.0.9)(canvas@2.11.2(encoding@0.1.13))(utf-8-validate@6.0.5))(terser@5.37.0)
+
+  packages/client-xmtp:
+    dependencies:
+      '@elizaos/core':
+        specifier: workspace:*
+        version: link:../core
+      '@xmtp/agent-starter':
+        specifier: ^0.0.6
+        version: 0.0.6(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)
+    devDependencies:
+      tsup:
+        specifier: 8.3.5
+        version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
 
   packages/core:
     dependencies:
@@ -5852,6 +5865,10 @@ packages:
     resolution: {integrity: sha512-MNCnE5icY+OM5ahgYJItmydZ7AxhtzhgA5tQI13jVntzhLT0z+tetHIlAL1VA0XFZgldDzqxeTf9Pr5TW3VErg==}
     engines: {node: '>=18.0.0'}
 
+  '@fastify/busboy@2.1.1':
+    resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
+    engines: {node: '>=14'}
+
   '@ffmpeg-installer/darwin-arm64@4.1.5':
     resolution: {integrity: sha512-hYqTiP63mXz7wSQfuqfFwfLOfwwFChUedeCVKkBtl/cliaTM7/ePI9bVzfZ2c+dWu3TqCwLDRWNSJ5pqZl8otA==}
     cpu: [arm64]
@@ -6987,6 +7004,9 @@ packages:
   '@noble/hashes@1.7.0':
     resolution: {integrity: sha512-HXydb0DgzTpDPwbVeDGCG1gIu7X6+AuU6Zl6av/E/KG8LMsvPntvq+w17CHRpKBmN6Ybdrt1eP3k4cj8DJa78w==}
     engines: {node: ^14.21.3 || >=16}
+
+  '@noble/secp256k1@1.7.1':
+    resolution: {integrity: sha512-hOUk6AyBFmqVrv7k5WAw/LpszxVbj9gGN4JRkIX52fdFAj1UA61KXmZDvqVEm+pOyec3+fIeZB02LYa/pWOArw==}
 
   '@node-llama-cpp/linux-arm64@3.1.1':
     resolution: {integrity: sha512-rrn1O9zmg8L47e16YlbGI3+Uw1Z8HCTNiBqnz+qcfH2H6HnHd1IenM1CgR9+PVODCnUXE7ErN2moto1XsOxifQ==}
@@ -10545,6 +10565,42 @@ packages:
 
   '@webassemblyjs/wast-printer@1.14.1':
     resolution: {integrity: sha512-kPSSXE6De1XOR820C90RIo2ogvZG+c3KiHzqUoO/F34Y2shGzesfqv7o57xrxovZJH/MetF5UjroJ/R/3isoiw==}
+
+  '@xmtp/agent-starter@0.0.6':
+    resolution: {integrity: sha512-QHC1wWnTGX8YDMjrnB/EJT9RZk3GquVYiHCW8Jq9AKGpwxod0Gj6iiCxyKDS9MjCllZ19jlJnc6s0SSqTYCcIg==}
+    engines: {node: '>=22'}
+
+  '@xmtp/content-type-group-updated@2.0.0':
+    resolution: {integrity: sha512-gxYM4gM2IuKXpOwDcu6+RS7tkUMX6VStgdzFq8ruo3GVLZ03mwb9zjMNVhFwyRcdx6mNSDOTV01y+5P8aslkRg==}
+
+  '@xmtp/content-type-primitives@2.0.0':
+    resolution: {integrity: sha512-ZutFl+dv9jZgGdRDuZZuJj9XNhq1RfSiCryX25HGs/3rVS3FYfVc3y26iV4jdSN2UALCkznXFuD/GXv5eZSN/w==}
+
+  '@xmtp/content-type-reaction@2.0.0':
+    resolution: {integrity: sha512-Qx5LVHiQeHSN/sl7A705vOjo2qwmAd2qR+2wMZd81bDMmXzeMLLeHzxUlWDxVQBP6ZSAO5C7tLZWaonnr0tvPA==}
+
+  '@xmtp/content-type-read-receipt@2.0.0':
+    resolution: {integrity: sha512-16KG2U5ys2L3quqIZ7fyP1qdqoXvzA0dsy5nl8UWVaGYfysGyOUqtRSHlfTmeLKr/qEXkUEgNi2HVlvUsCq1lA==}
+
+  '@xmtp/content-type-remote-attachment@2.0.0':
+    resolution: {integrity: sha512-DRMQHLp4+9cJIxA25Ey1uNzNVdBK2v8gpB+OZUGnSPrpQo9gdBpfXIi6z7eO9Z04P6KX/zSdjLRR4zUoN42qTg==}
+
+  '@xmtp/content-type-reply@2.0.0':
+    resolution: {integrity: sha512-AY3REqxxFi/jRLNMkqVXmd+BWN6ztBF+ToUcyXGl8FFFiG0W5ZsvooHCVEysUw+33QAkhpKWkMofEyyD9cYgsA==}
+
+  '@xmtp/content-type-text@2.0.0':
+    resolution: {integrity: sha512-WcFMhjubA6E8j42L6XIsLipDo5AP70TdS2taEH2Ry6V1NeZf8+cjHVrwh60fZeGnrcLWy/tDV4QyXUsD3j045w==}
+
+  '@xmtp/node-bindings@0.0.34':
+    resolution: {integrity: sha512-1k6sZkEs5AC6YqLNUzZtb58GKLTwizn+g3NP4r/vMWtLzRV53jHyLGdDZYBgKcxh9xNR+TevnSNN0sFqNWKbog==}
+    engines: {node: '>=18'}
+
+  '@xmtp/node-sdk@0.0.40':
+    resolution: {integrity: sha512-qJaiF7F1ObcKW+1ef7p2SytgDT6Lo9Hn3tMVbzjHf6R5mBxNQttytx2JeN6RUFFO1I+NdOuJIdtGmNrJWEyZWA==}
+    engines: {node: '>=20'}
+
+  '@xmtp/proto@3.73.0':
+    resolution: {integrity: sha512-Rgtfme8KeQ5lMI62o1Wq+7fJhoOS4QR94fx84+83NEZyYT7VBd+V/13B5a/OSzz6EnWWEyYEg+Dv7ZxV4KouQA==}
 
   '@xtuc/ieee754@1.2.0':
     resolution: {integrity: sha512-DX8nKgqcGwsc0eJSqYt5lwP4DH5FlHnmuWWBRy7X0NcaGR0ZtuyeESgMwTYVEtxmsNGY+qit4QYT/MIYTOTPeA==}
@@ -21190,6 +21246,10 @@ packages:
   undici-types@6.20.0:
     resolution: {integrity: sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg==}
 
+  undici@5.28.5:
+    resolution: {integrity: sha512-zICwjrDrcrUE0pyyJc1I2QzBkLM8FINsgOrt6WjA+BgajVq9Nxu2PbFFXUrAggLfDXlZGZBVZYw7WNV5KiBiBA==}
+    engines: {node: '>=14.0'}
+
   undici@6.19.8:
     resolution: {integrity: sha512-U8uCCl2x9TK3WANvmBavymRzxbfFYG+tAu+fgx3zxQy3qdagQqBLwJVrdyO1TBfUXvfKveMKJZhpvUYoOjM+4g==}
     engines: {node: '>=18.17'}
@@ -27305,6 +27365,8 @@ snapshots:
       eventsource-parser: 1.1.2
       robot3: 0.4.1
 
+  '@fastify/busboy@2.1.1': {}
+
   '@ffmpeg-installer/darwin-arm64@4.1.5':
     optional: true
 
@@ -29588,6 +29650,8 @@ snapshots:
   '@noble/hashes@1.6.1': {}
 
   '@noble/hashes@1.7.0': {}
+
+  '@noble/secp256k1@1.7.1': {}
 
   '@node-llama-cpp/linux-arm64@3.1.1':
     optional: true
@@ -35274,6 +35338,71 @@ snapshots:
       '@webassemblyjs/ast': 1.14.1
       '@xtuc/long': 4.2.2
 
+  '@xmtp/agent-starter@0.0.6(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)':
+    dependencies:
+      '@xmtp/content-type-primitives': 2.0.0
+      '@xmtp/content-type-reaction': 2.0.0
+      '@xmtp/content-type-read-receipt': 2.0.0
+      '@xmtp/content-type-remote-attachment': 2.0.0
+      '@xmtp/content-type-reply': 2.0.0
+      '@xmtp/content-type-text': 2.0.0
+      '@xmtp/node-sdk': 0.0.40
+      viem: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - zod
+
+  '@xmtp/content-type-group-updated@2.0.0':
+    dependencies:
+      '@xmtp/content-type-primitives': 2.0.0
+      '@xmtp/proto': 3.73.0
+
+  '@xmtp/content-type-primitives@2.0.0':
+    dependencies:
+      '@xmtp/proto': 3.73.0
+
+  '@xmtp/content-type-reaction@2.0.0':
+    dependencies:
+      '@xmtp/content-type-primitives': 2.0.0
+
+  '@xmtp/content-type-read-receipt@2.0.0':
+    dependencies:
+      '@xmtp/content-type-primitives': 2.0.0
+
+  '@xmtp/content-type-remote-attachment@2.0.0':
+    dependencies:
+      '@noble/secp256k1': 1.7.1
+      '@xmtp/content-type-primitives': 2.0.0
+      '@xmtp/proto': 3.73.0
+
+  '@xmtp/content-type-reply@2.0.0':
+    dependencies:
+      '@xmtp/content-type-primitives': 2.0.0
+      '@xmtp/proto': 3.73.0
+
+  '@xmtp/content-type-text@2.0.0':
+    dependencies:
+      '@xmtp/content-type-primitives': 2.0.0
+
+  '@xmtp/node-bindings@0.0.34': {}
+
+  '@xmtp/node-sdk@0.0.40':
+    dependencies:
+      '@xmtp/content-type-group-updated': 2.0.0
+      '@xmtp/content-type-primitives': 2.0.0
+      '@xmtp/content-type-text': 2.0.0
+      '@xmtp/node-bindings': 0.0.34
+      '@xmtp/proto': 3.73.0
+
+  '@xmtp/proto@3.73.0':
+    dependencies:
+      long: 5.2.4
+      protobufjs: 7.4.0
+      rxjs: 7.8.1
+      undici: 5.28.5
+
   '@xtuc/ieee754@1.2.0': {}
 
   '@xtuc/long@4.2.2': {}
@@ -39605,7 +39734,7 @@ snapshots:
 
   extract-zip@2.0.1:
     dependencies:
-      debug: 4.3.4
+      debug: 4.4.0(supports-color@5.5.0)
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
@@ -49370,6 +49499,10 @@ snapshots:
   undici-types@6.19.8: {}
 
   undici-types@6.20.0: {}
+
+  undici@5.28.5:
+    dependencies:
+      '@fastify/busboy': 2.1.1
 
   undici@6.19.8: {}
 
