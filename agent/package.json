@@ -65,7 +65,6 @@
 		"@elizaos/plugin-image-generation": "workspace:*",
 		"@elizaos/plugin-lit": "workspace:*",
         "@elizaos/plugin-moralis": "workspace:*",
-        "@elizaos/plugin-lit": "workspace:*",
         "@elizaos/plugin-shogun": "workspace:*",
 		"@elizaos/plugin-movement": "workspace:*",
 		"@elizaos/plugin-massa": "workspace:*",
