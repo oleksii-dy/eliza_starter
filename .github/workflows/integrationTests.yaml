@@ -27,9 +27,6 @@ jobs:
           node-version: "23.3"
           cache: "pnpm"
 
-      - name: Clean pnpm
-        run: pnpm clean
-
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 

@@ -3125,9 +3125,6 @@ importers:
       mind-randgen-sdk:
         specifier: ^1.0.0
         version: 1.0.2(bufferutil@4.0.9)(utf-8-validate@6.0.5)
-      viem:
-        specifier: 2.21.58
-        version: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)
       whatwg-url:
         specifier: 7.1.0
         version: 7.1.0
@@ -51330,7 +51327,7 @@ snapshots:
 
   extract-zip@2.0.1:
     dependencies:
-      debug: 4.3.4
+      debug: 4.4.0(supports-color@8.1.1)
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
