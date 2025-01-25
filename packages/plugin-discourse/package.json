@@ -20,6 +20,7 @@
     ],
     "dependencies": {
         "@elizaos/core": "workspace:*",
+        "axios": "1.7.9",
         "node-cache": "5.1.2",
         "tsup": "8.3.5",
         "vitest": "2.1.4"
@@ -27,6 +28,5 @@
     "scripts": {
         "build": "tsup --format esm --dts",
         "test": "vitest run"
-    },
-    "peerDependencies": {}
+    }
 }
