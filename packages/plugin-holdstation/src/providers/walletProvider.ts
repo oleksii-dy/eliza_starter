@@ -24,38 +24,10 @@ import { PrivateKeyAccount } from "viem/accounts";
 import { useGetAccount, useGetWalletClient } from "../hooks";
 import { Item, SendTransactionParams, WalletPortfolio } from "../types";
 
-// Add this simple cache class
-class SimpleCache {
-    private cache: Map<string, { value: any; expiry: number }>;
-    private defaultTTL: number;
-
-    constructor(defaultTTL: number = 300) { // 300 seconds = 5 minutes
-        this.cache = new Map();
-        this.defaultTTL = defaultTTL;
-    }
-
-    set(key: string, value: any): void {
-        this.cache.set(key, {
-            value,
-            expiry: Date.now() + (this.defaultTTL * 1000)
-        });
-    }
-
-    get<T>(key: string): T | undefined {
-        const item = this.cache.get(key);
-        if (!item) return undefined;
-
-        if (Date.now() > item.expiry) {
-            this.cache.delete(key);
-            return undefined;
-        }
-
-        return item.value as T;
-    }
-}
+import NodeCache from "node-cache";
 
 export class WalletProvider {
-    private cache: SimpleCache;
+    private cache: NodeCache;
     account: PrivateKeyAccount;
     walletClient: WalletClient;
     publicClient: PublicClient<HttpTransport, Chain, Account | undefined>;
@@ -67,7 +39,7 @@ export class WalletProvider {
             chain: zksync,
             transport: http(),
         }) as PublicClient<HttpTransport, Chain, Account | undefined>;
-        this.cache = new SimpleCache(300); // 5 minutes TTL
+        this.cache = new NodeCache({ stdTTL: 300 });
     }
 
     getAddress() {
@@ -81,7 +53,7 @@ export class WalletProvider {
     async getAllowace(
         tokenAddress: Address,
         owner: Address,
-        spender: Address,
+        spender: Address
     ): Promise<any> {
         return this.publicClient.readContract({
             address: tokenAddress,
@@ -94,7 +66,7 @@ export class WalletProvider {
     async approve(
         spenderAddress: Address,
         tokenAddress: Address,
-        amount: bigint,
+        amount: bigint
     ) {
         const result = await this.walletClient.writeContract({
             account: this.account,
@@ -137,7 +109,7 @@ export class WalletProvider {
                 throw new Error(
                     `Failed to fetch portfolio: ${
                         portfolioData?.error || "Unknown error"
-                    }`,
+                    }`
                 );
             }
 
@@ -148,7 +120,7 @@ export class WalletProvider {
                         address: item.contract_address,
                         symbol: item.contract_ticker_symbol,
                         decimals: item.contract_decimals,
-                    }),
+                    })
                 ) || [];
             const portfolio: WalletPortfolio = { items };
 
@@ -179,7 +151,7 @@ export class WalletProvider {
                 throw new Error(
                     `Failed to fetch all tokens: ${
                         tokensData?.error || "Unknown error"
-                    }`,
+                    }`
                 );
             }
 
@@ -190,7 +162,7 @@ export class WalletProvider {
                         address: item.address,
                         symbol: item.symbol,
                         decimals: item.decimals,
-                    }),
+                    })
                 ) || [];
 
             this.cache.set(cacheKey, tokens);
@@ -212,7 +184,7 @@ export const holdstationWalletProvider: Provider = {
     get: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
+        state: State
     ): Promise<any> => {
         try {
             const walletProvider = await initWalletProvider(runtime);
