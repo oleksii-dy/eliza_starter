@@ -4,7 +4,7 @@ import { Plugin } from '@elizaos/core';
 // import { topMarkets } from "./actions/topMarkets";
 // import {  trendingTokens} from "./actions/trendingCoins";
 // import { topAiTokens } from './actions/topAiTokens';
-import { searchSuiTokenSymbol } from './actions/searchSuiTokenSymbol';
+// import { searchSuiTokenSymbol } from './actions/searchSuiTokenSymbol';
 import { suiTokenPriceByAddress } from './actions/suiTokenPriceByAddress';
 import { executeSwap } from './actions/swapBySymbol';
 import { executeSwapByAddress } from './actions/swapByAddress';
@@ -27,7 +27,7 @@ const suimarketPlugin: Plugin = {
     // trendingTokens,
     // coinInfo,
     // topAiTokens,
-    searchSuiTokenSymbol,
+    // searchSuiTokenSymbol,
     // suiTokenInfo,
     executeSwap,
     executeSwapByAddress,
