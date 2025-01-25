@@ -51,6 +51,8 @@ export const projectInfo: Action = {
         "{PROJECT_NAME}_infor",
         "{PROJECT_NAME}_overview",
         "what_is_{PROJECT_NAME}?",
+        "{PROJECT_NAME}_info",
+        "{PROJECT_NAME}_infomation"
     ],
 
     examples: [
@@ -131,7 +133,7 @@ export const projectInfo: Action = {
         const projectObj = await searchProjectInFileJson(content.project_name);
         console.log(projectObj)
         const tokenObject = await findByVerifiedAndName(content.project_name);
-        let responseText = `Name:${tokenObject.name} ($${tokenObject.symbol})`
+        const responseText = `Name:${tokenObject.name} ($${tokenObject.symbol})`
         if(!tokenObject || !projectObj){
             callback({
                 text:`We do not support ${content.project_name} token in SUI network yet. However, if your token is supported, we can proceed with sending tokens using the token's address `,
