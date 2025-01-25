@@ -22,7 +22,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
     private reconnectAttempts: number = 0;
     private readonly MAX_RECONNECT_ATTEMPTS = 3;
     private readonly RECONNECT_DELAY = 5000;
-    private lastCheck: Date | null = null;
+    private readonly MAILBOX_NAME = "INBOX";
 
     constructor(config: ImapSmtpMailConfig) {
         if (!config.imap) throw new Error("IMAP configuration is required");
@@ -64,14 +64,16 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
         });
 
         this.client.on("close", () => {
-            elizaLogger.warn("IMAP connection closed");
+            elizaLogger.debug("IMAP connection closed");
             this.handleDisconnect();
         });
     }
 
     private handleDisconnect() {
+        this.client.close();
         this.isConnected = false;
         this.connectionPromise = null;
+        this.mailbox = null;
         // Reset reconnect attempts after a period of successful connection
         setTimeout(() => {
             this.reconnectAttempts = 0;
@@ -83,7 +85,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
     }
 
     private async ensureConnection() {
-        if (this.isConnected) {
+        if (this.isConnected && this.mailbox) {
             return;
         }
 
@@ -93,7 +95,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
 
         if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
             throw new Error(
-                `Max reconnection attempts (${this.MAX_RECONNECT_ATTEMPTS}) reached`
+                `Max reconnection attempts (${this.MAX_RECONNECT_ATTEMPTS}) reached`,
             );
         }
 
@@ -104,9 +106,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
 
                 await this.client.connect();
 
-                this.mailbox = await this.client.mailboxOpen("INBOX", {
-                    readOnly: true,
-                });
+                this.mailbox = await this.client.mailboxOpen(this.MAILBOX_NAME);
 
                 this.isConnected = true;
                 this.connectionPromise = null;
@@ -116,7 +116,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
 
                 if (this.reconnectAttempts < this.MAX_RECONNECT_ATTEMPTS) {
                     await new Promise((resolve) =>
-                        setTimeout(resolve, this.RECONNECT_DELAY)
+                        setTimeout(resolve, this.RECONNECT_DELAY),
                     );
                     return this.ensureConnection();
                 }
@@ -140,30 +140,10 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
     async getRecentEmails(): Promise<EmailMessage[]> {
         await this.ensureConnection();
 
-        const now = new Date();
-        elizaLogger.debug("Fetching new emails", {
-            lastCheck: this.lastCheck,
-            maxEmails: this.config.maxEmails,
-        });
-
         try {
-            const searchCriteria: any = {
-                or: [
-                    {
-                        seen: false,
-                    },
-                    {
-                        recent: true,
-                    },
-                    {
-                        since:
-                            this.lastCheck ??
-                            new Date(now.getTime() - 15 * 60 * 1000),
-                    },
-                ],
-            };
-
-            const results = await this.client.search(searchCriteria);
+            const results = await this.client.search({
+                unseen: true,
+            });
 
             const emails: EmailMessage[] = [];
             for await (const message of this.client.fetch(results, {
@@ -176,12 +156,12 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
                 if (emails.length >= this.config.maxEmails) break;
 
                 const parsed = await this.parseMessage(message);
+
                 if (parsed) {
                     emails.push(parsed);
                 }
             }
 
-            this.lastCheck = now;
             return emails;
         } catch (error) {
             elizaLogger.error("Error fetching messages:", error);
@@ -259,7 +239,7 @@ export class ImapSmtpMailAdapter implements IMailAdapter {
     async dispose(): Promise<void> {
         if (this.isConnected) {
             try {
-                elizaLogger.info("Disposing IMAP client");
+                elizaLogger.debug("Disposing IMAP client");
                 await this.client.logout();
             } finally {
                 this.isConnected = false;

@@ -48,7 +48,7 @@ export const searchEmailsAction: Action = {
         message: Memory,
         _state: any,
         _options: any,
-        callback?: HandlerCallback
+        callback?: HandlerCallback,
     ) => {
         if (!global.mailService) {
             await callback?.({ text: "Email service is not initialized" });
@@ -59,7 +59,7 @@ export const searchEmailsAction: Action = {
             await global.mailService.connect();
 
             const searchContext = `Given this request: "${JSON.stringify(
-                message.content
+                message.content,
             )}", extract search criteria for emails. Return only a JSON object with these optional fields:
         {
             "from": "email address",
@@ -121,7 +121,7 @@ export const searchEmailsAction: Action = {
                 const summary = emails
                     .map(
                         (email, i) =>
-                            `${i + 1}. From: ${email.from?.text || "Unknown"}\n   Subject: ${email.subject || "No subject"}\n   Date: ${email.date?.toLocaleString() || "Unknown"}`
+                            `${i + 1}. From: ${email.from?.text || "Unknown"}\n   Subject: ${email.subject || "No subject"}\n   Date: ${email.date?.toLocaleString() || "Unknown"}`,
                     )
                     .join("\n\n");
 
@@ -140,7 +140,7 @@ export const searchEmailsAction: Action = {
                 return false;
             }
         } finally {
-            elizaLogger.info("Disposing IMAP client (searchEmails)");
+            elizaLogger.debug("Disposing IMAP client (searchEmails)");
             await global.mailService.dispose();
         }
     },

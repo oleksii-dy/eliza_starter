@@ -26,17 +26,17 @@ export function validateMailConfig(runtime: IAgentRuntime): MailConfig {
         checkInterval: parseInt(
             runtime.getSetting("EMAIL_CHECK_INTERVAL") ||
                 String(DEFAULT_CHECK_INTERVAL),
-            10
+            60,
         ),
         maxEmails: parseInt(
             runtime.getSetting("EMAIL_MAX_EMAILS") ||
                 String(DEFAULT_MAX_EMAILS),
-            10
+            10,
         ),
         markAsRead: runtime.getSetting("EMAIL_MARK_AS_READ") === "true",
     };
 
-    elizaLogger.info("Mail configuration validation", {
+    elizaLogger.debug("Mail configuration validation", {
         imap: {
             host: mailConfig.imap.host,
             port: mailConfig.imap.port,

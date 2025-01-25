@@ -19,7 +19,7 @@ export class SendEmailAction {
     }
 
     async send(
-        params: SendEmailParams
+        params: SendEmailParams,
     ): Promise<{ success: boolean; message: string }> {
         elizaLogger.info("Sending email with params", { params });
 
@@ -43,26 +43,28 @@ export class SendEmailAction {
             params.to,
             params.subject,
             params.text,
-            params.html
+            params.html,
         );
 
         return { success: true, message: `Email sent to ${params.to}` };
     }
 }
 
+export const sendEmailSimilies = [
+    "send",
+    "email",
+    "write",
+    "compose",
+    "mail",
+    "reply",
+    "respond",
+    "reply to",
+];
+
 export const sendEmailAction: Action = {
     name: "sendEmail",
     description: "Send an email to a specified recipient",
-    similes: [
-        "send",
-        "email",
-        "write",
-        "compose",
-        "mail",
-        "reply",
-        "respond",
-        "reply to",
-    ],
+    similes: sendEmailSimilies,
     examples: [
         [
             {
@@ -94,7 +96,7 @@ export const sendEmailAction: Action = {
         message: Memory,
         _state: any,
         _options: any,
-        callback?: HandlerCallback
+        callback?: HandlerCallback,
     ) => {
         if (!global.mailService) {
             await callback?.({ text: "Email service is not initialized" });
@@ -104,7 +106,7 @@ export const sendEmailAction: Action = {
         if (
             await hasBeenHandled(
                 message.content as any as EmailMessage,
-                runtime
+                runtime,
             )
         ) {
             await callback?.({ text: "Email already processed" });
@@ -112,7 +114,7 @@ export const sendEmailAction: Action = {
         }
 
         const memoryId = stringToUuid(
-            message.id + "-response-" + runtime.agentId
+            message.id + "-response-" + runtime.agentId,
         );
         const existing = await runtime.messageManager?.getMemoryById(memoryId);
 
@@ -122,7 +124,7 @@ export const sendEmailAction: Action = {
         }
 
         const emailContext = `Given this request: "${JSON.stringify(
-            message.content
+            message.content,
         )}", extract email parameters. Return only a JSON object with these fields:
         {
             "to": "recipient's email address)",

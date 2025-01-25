@@ -18,6 +18,7 @@ import {
 import { MailService } from "../service/mail";
 import { EmailMessage } from "../types";
 import { validateMailConfig } from "../environment";
+import { sendEmailSimilies } from "../actions";
 
 const emailMessageHandlerTemplate =
     `# TASK: Generate an email reply as {{agentName}}
@@ -62,7 +63,7 @@ STOP:
 
 export async function handleEmail(
     email: EmailMessage,
-    runtime: IAgentRuntime
+    runtime: IAgentRuntime,
 ): Promise<void> {
     if (!email.messageId) {
         elizaLogger.warn("Email missing messageId, skipping");
@@ -155,7 +156,7 @@ export async function handleEmail(
 
                 const responseMemory: Memory = {
                     id: stringToUuid(
-                        `${email.messageId}-response-${runtime.agentId}`
+                        `${email.messageId}-response-${runtime.agentId}`,
                     ),
                     agentId: runtime.agentId,
                     roomId: runtime.agentId,
@@ -165,7 +166,7 @@ export async function handleEmail(
                         source: "email",
                         messageId: email.messageId,
                         inReplyTo: memoryId,
-                        action: "CONTINUE",
+                        action: response.action,
                         processed: true,
                     },
                     createdAt: Date.now(),
@@ -184,12 +185,17 @@ export async function handleEmail(
                 await runtime.messageManager.createMemory(responseMessage);
             }
 
-            await runtime.processActions(
-                memory,
-                responseMessages,
-                state,
-                callback
-            );
+            if (
+                response.action &&
+                !sendEmailSimilies.includes(response.action.toLowerCase())
+            ) {
+                await runtime.processActions(
+                    memory,
+                    responseMessages,
+                    state,
+                    callback,
+                );
+            }
         }
     } catch (error) {
         elizaLogger.error("Error handling email:", error);
@@ -199,7 +205,7 @@ export async function handleEmail(
 
 export async function summarizeEmail(
     email: EmailMessage,
-    runtime: IAgentRuntime
+    runtime: IAgentRuntime,
 ): Promise<string> {
     elizaLogger.info("Summarizing email");
 
