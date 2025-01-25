@@ -87,15 +87,21 @@ export const suiTokenPriceByAddress: Action = {
             modelClass: ModelClass.SMALL,
         })
         elizaLogger.log("content: ",content);
-        const info = await getTokenOnSuiScan(content.type);
+        const info = await getTokenOnSuiScan(content.token_address);
         console.log(info)
         if (callback) {
             callback({
                 text: ``,
-                action: 'suiTokenInfo',
+                action: 'TOKEN_PRICE_INFO_BY_ADDRESS',
                 result: {
                     type: "token_price",
-                    data:info,
+                    data:{
+                        symbol: info.symbol,
+                        name: info.name,
+                        market_cap:  info.marketCap,
+                        price: info.tokenPrice,
+                        icon_url: info.iconUrl,
+                    },
 
                 }
             });
