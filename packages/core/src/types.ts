@@ -790,6 +790,9 @@ export type Character = {
     /** Example messages */
     messageExamples: MessageExample[][];
 
+    /** Example emails */
+    emailExamples: MessageExample[][];
+
     /** Example posts */
     postExamples: string[];
 

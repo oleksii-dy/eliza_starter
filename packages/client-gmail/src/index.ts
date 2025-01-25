@@ -17,7 +17,7 @@ import { EventEmitter } from "events";
 import { GoogleClient } from "./google_client";
 import { google } from "googleapis";
 import { gmail } from "googleapis/build/src/apis/gmail";
-import { extractEmailText, isCalendarInvite } from "./mail";
+import { cleanEmailText, extractEmailText, isCalendarInvite } from "./mail";
 
 import {
     gmailMessageHandlerTemplate,
@@ -100,6 +100,10 @@ export class GmailClient extends EventEmitter {
             (header: any) => header.name === "From"
         ).value;
         const emailFromAddress = emailFrom.split("<")[1].split(">")[0];
+        let emailFromName = emailFrom.split("<")[0].trim();
+        if (emailFromName == "") {
+            emailFromName = emailFromAddress;
+        }
         const emailDateStr = email.data.payload.headers.find(
             (header: any) => header.name === "Date"
         ).value;
@@ -112,7 +116,7 @@ export class GmailClient extends EventEmitter {
 
         // Clean the message text
         console.log("🧹 Step 3: Cleaning message text");
-        const cleanedText = mailText;
+        const cleanedText = cleanEmailText(mailText);
 
         // Generate unique IDs
         console.log("🔑 Step 4: Generating conversation IDs");
@@ -156,6 +160,15 @@ export class GmailClient extends EventEmitter {
             await this.runtime.messageManager.createMemory(memory);
         }
 
+        // Ensure both the sender and agent are properly set up in the room
+        await this.runtime.ensureConnection(
+            userId,
+            roomId,
+            emailFromName,
+            emailFromAddress,
+            "gmail"
+        );
+
         // Initial state composition
         console.log("🔄 Step 7: Composing initial state");
         let state = await this.runtime.composeState(
@@ -169,9 +182,6 @@ export class GmailClient extends EventEmitter {
         // Update state with recent messages
         console.log("🔄 Step 8: Updating state with recent messages");
         state = await this.runtime.updateRecentMessageState(state);
-
-        console.log("State: ", state);
-        console.log("Recent messages: ", state.recentMessages);
 
         // Check if we should respond
         console.log("🤔 Step 9: Checking if we should respond");

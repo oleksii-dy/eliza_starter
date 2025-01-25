@@ -20,7 +20,9 @@ Result: [RESPOND]
 <user>: @{{agentName}} shut up
 Result: [STOP]
 
-<user>: Hey @{{agentName}}, can you help me with something?
+From: <user>
+Subject: Quick Question
+Message: Hey {{agentName}}, can you review this document?
 Result: [RESPOND]
 
 <user>: @{{agentName}} please stop
@@ -40,10 +42,9 @@ Respond with [RESPOND] to messages that:
 - Are relevant to ongoing conversations {{agentName}} is part of
 
 Respond with [IGNORE] to messages that:
-- Are not directed at {{agentName}}
+- Are not directed at {{agentName}}, if there are other recipients and not just {{agentName}}
 - Are system generated or marketing emails
 - Are not follow-ups to {{agentName}}'s previous messages
-- Are very short or lack context
 - Are part of conversations {{agentName}} isn't involved in
 - Are calendar invitations
 
@@ -74,7 +75,7 @@ About {{agentName}}:
 {{lore}}
 
 Examples of {{agentName}}'s dialog and actions:
-{{characterMessageExamples}}
+{{characterEmailExamples}}
 
 {{providers}}
 
