@@ -1,46 +1,45 @@
+# Build and dependency directories
 node_modules
 /out
+dist/
+.turbo
+.pnpm-store
 
-.env
-.env.production
-.env.local
-.env_main
-concatenated-output.ts
-embedding-cache.json
-packages/plugin-buttplug/intiface-engine
+# Environment and config files
+.env*
+lit-config.json
+.cursorrules
 
+# Cache directories and files
 node-compile-cache
+*cache/
+.eslintcache
+embedding-cache.json
+tokencache/
+content_cache/
+packages/core/src/providers/cache
+cache/
 
+# IDE and system files
 .idea
 .DS_Store
 
-dist/
-# Allow models directory but ignore model files
-models/*.gguf
-pgLite/
-
-cookies.json
-
+# Database and data files
+*.sqlite
 db.sqlite
-searches/
-tweets/
+wallet_data.txt
 
+# Model and media files
 *.gguf
 *.onnx
 *.wav
 *.mp3
+models/*.gguf
 
+# Log and report files
 logs/
-
 test-report.json
-content_cache/
-test_data/
-tokencache/
-tweetcache/
-twitter_cookies.json
-timeline_cache.json
-
-*.sqlite
+coverage
 
 # Character configurations
 characters/**/secrets.json
@@ -48,26 +47,25 @@ characters/**/*.env
 characters/**/*.key
 characters/**/private/
 
-packages/core/src/providers/cache
-packages/core/src/providers/cache/*
-cache/*
+# Specific application files
+concatenated-output.ts
+packages/plugin-buttplug/intiface-engine
 packages/plugin-coinbase/src/plugins/transactions.csv
-
 tsup.config.bundled_*.mjs
-
-.turbo
-.cursorrules
-.pnpm-store
 instructions.md
-wallet_data.txt
 
-coverage
-.eslintcache
+# Cookie and authentication files
+cookies.json
+twitter_cookies.json
 
-agent/content
+# Search and cache directories
+searches/
+tweets/
+test_data/
+tweetcache/
+timeline_cache.json
 
+# SGX related files
 eliza.manifest
 eliza.manifest.sgx
 eliza.sig
-
-lit-config.json

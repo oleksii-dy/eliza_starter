@@ -111,14 +111,13 @@ import { dexScreenerPlugin } from "@elizaos/plugin-dexscreener"
 import { pythDataPlugin } from "@elizaos/plugin-pyth-data"
 import { openaiPlugin } from "@elizaos/plugin-openai"
 import nitroPlugin from "@elizaos/plugin-router-nitro"
-import { devinPlugin } from "@elizaos/plugin-devin"import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era"
+import { devinPlugin } from "@elizaos/plugin-devin"
+import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era"
 import { chainbasePlugin } from "@elizaos/plugin-chainbase"
 import { holdstationPlugin } from "@elizaos/plugin-holdstation"
 import { nvidiaNimPlugin } from "@elizaos/plugin-nvidia-nim"
 import { zxPlugin } from "@elizaos/plugin-0x"
 import { hyperbolicPlugin } from "@elizaos/plugin-hyperbolic"
-import { litPlugin } from "@elizaos/plugin-lit"
-import { litPlugin } from "@elizaos/plugin-lit";
 import { shogunPlugin } from "@elizaos/plugin-shogun";
 import Database from "better-sqlite3"
 import fs from "fs"
@@ -137,6 +136,7 @@ import { zerionPlugin } from "@elizaos/plugin-zerion"
 import { minaPlugin } from "@elizaos/plugin-mina"
 import { ankrPlugin } from "@elizaos/plugin-ankr";
 import { formPlugin } from "@elizaos/plugin-form";
+import { litPlugin } from "@elizaos/plugin-lit"
 
 const __filename = fileURLToPath(import.meta.url) // get the resolved path to the file
 const __dirname = path.dirname(__filename) // get the name of the directory
@@ -810,7 +810,8 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			getSecret(character, "THIRDWEB_SECRET_KEY") ? thirdwebPlugin : null,
 			getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
 			getSecret(character, "STORY_PRIVATE_KEY") ? storyPlugin : null,
-			getSecret(character, "SQUID_SDK_URL") && getSecret(character, "SQUID_INTEGRATOR_ID") && getSecret(character, "SQUID_EVM_ADDRESS") && getSecret(character, "SQUID_EVM_PRIVATE_KEY") && getSecret(character, "SQUID_API_THROTTLE_INTERVAL")
+			getSecret(character, "SQUID_SDK_URL")
+            && getSecret(character, "SQUID_INTEGRATOR_ID") && getSecret(character, "SQUID_EVM_ADDRESS") && getSecret(character, "SQUID_EVM_PRIVATE_KEY") && getSecret(character, "SQUID_API_THROTTLE_INTERVAL")
 				? squidRouterPlugin
 				: null,
 			getSecret(character, "FUEL_PRIVATE_KEY") ? fuelPlugin : null,
@@ -855,7 +856,6 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			getSecret(character, "MINA_PRIVATE_KEY") ? minaPlugin : null,
             getSecret(character, "FORM_PRIVATE_KEY") ? formPlugin : null,
             getSecret(character, "ANKR_WALLET") ? ankrPlugin : null,
-            litPlugin,
 		].filter(Boolean),
 		providers: [],
 		managers: [],
