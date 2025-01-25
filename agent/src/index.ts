@@ -23,25 +23,25 @@ import { lightningPlugin } from "@elizaos/plugin-lightning"
 import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900"
 
 import {
-	AgentRuntime,
-	CacheManager,
-	CacheStore,
-	type Character,
-	type Client,
-	Clients,
-	DbCacheAdapter,
-	defaultCharacter,
-	elizaLogger,
-	FsCacheAdapter,
-	type IAgentRuntime,
-	type ICacheManager,
-	type IDatabaseAdapter,
-	type IDatabaseCacheAdapter,
-	ModelProviderName,
-	parseBooleanFromText,
-	settings,
-	stringToUuid,
-	validateCharacterConfig,
+    AgentRuntime,
+    CacheManager,
+    CacheStore,
+    type Character,
+    type Client,
+    Clients,
+    DbCacheAdapter,
+    defaultCharacter,
+    elizaLogger,
+    FsCacheAdapter,
+    type IAgentRuntime,
+    type ICacheManager,
+    type IDatabaseAdapter,
+    type IDatabaseCacheAdapter,
+    ModelProviderName,
+    parseBooleanFromText,
+    settings,
+    stringToUuid,
+    validateCharacterConfig,
 } from "@elizaos/core"
 import { zgPlugin } from "@elizaos/plugin-0g"
 import { footballPlugin } from "@elizaos/plugin-football"
@@ -131,6 +131,7 @@ import { sunoPlugin } from "@elizaos/plugin-suno"
 import { udioPlugin } from "@elizaos/plugin-udio"
 import { imgflipPlugin } from "@elizaos/plugin-imgflip"
 import { ethstoragePlugin } from "@elizaos/plugin-ethstorage"
+import { zerionPlugin } from "@elizaos/plugin-zerion"
 import { minaPlugin } from "@elizaos/plugin-mina"
 
 const __filename = fileURLToPath(import.meta.url) // get the resolved path to the file
@@ -439,6 +440,8 @@ export function getTokenForProvider(provider: ModelProviderName, character: Char
 		case ModelProviderName.OLLAMA:
 			return ""
 		case ModelProviderName.GAIANET:
+            return "";
+        case ModelProviderName.BEDROCK:
 			return ""
 		case ModelProviderName.OPENAI:
 			return character.settings?.secrets?.OPENAI_API_KEY || settings.OPENAI_API_KEY
@@ -764,6 +767,7 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 				: null,
 			getSecret(character, "ZEROG_PRIVATE_KEY") ? zgPlugin : null,
 			getSecret(character, "COINMARKETCAP_API_KEY") ? coinmarketcapPlugin : null,
+			getSecret(character, "ZERION_API_KEY") ? zerionPlugin : null,
 			getSecret(character, "COINBASE_COMMERCE_KEY") ? coinbaseCommercePlugin : null,
 			getSecret(character, "FAL_API_KEY") ||
 			getSecret(character, "OPENAI_API_KEY") ||
