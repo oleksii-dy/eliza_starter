@@ -11,6 +11,7 @@ import { LensAgentClient } from "@elizaos/client-lens"
 import { SlackClientInterface } from "@elizaos/client-slack"
 import { TelegramClientInterface } from "@elizaos/client-telegram"
 import { TwitterClientInterface } from "@elizaos/client-twitter"
+import { AlexaClientInterface } from "@elizaos/client-alexa";
 import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb"
 
 import { FarcasterClientInterface } from "@elizaos/client-farcaster"
@@ -80,6 +81,7 @@ import { gitcoinPassportPlugin } from "@elizaos/plugin-gitcoin-passport"
 import { initiaPlugin } from "@elizaos/plugin-initia"
 import { imageGenerationPlugin } from "@elizaos/plugin-image-generation"
 import { lensPlugin } from "@elizaos/plugin-lensNetwork"
+import { mindNetworkPlugin } from "@elizaos/plugin-mind-network";
 import { multiversxPlugin } from "@elizaos/plugin-multiversx"
 import { nearPlugin } from "@elizaos/plugin-near"
 import createNFTCollectionsPlugin from "@elizaos/plugin-nft-collections"
@@ -140,6 +142,7 @@ import { minaPlugin } from "@elizaos/plugin-mina"
 import { ankrPlugin } from "@elizaos/plugin-ankr";
 import { formPlugin } from "@elizaos/plugin-form";
 import { MongoClient } from "mongodb";
+import { quickIntelPlugin } from "@elizaos/plugin-quick-intel"
 
 const __filename = fileURLToPath(import.meta.url) // get the resolved path to the file
 const __dirname = path.dirname(__filename) // get the name of the directory
@@ -639,6 +642,13 @@ export async function initializeClients(character: Character, runtime: IAgentRun
 		}
 	}
 
+    if (clientTypes.includes(Clients.ALEXA)) {
+        const alexaClient = await AlexaClientInterface.start(runtime);
+        if (alexaClient) {
+            clients.alexa = alexaClient;
+        }
+    }
+
 	if (clientTypes.includes(Clients.INSTAGRAM)) {
 		const instagramClient = await InstagramClientInterface.start(runtime)
 		if (instagramClient) {
@@ -838,6 +848,7 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			getSecret(character, "FLOW_ADDRESS") && getSecret(character, "FLOW_PRIVATE_KEY") ? flowPlugin : null,
 			getSecret(character, "LENS_ADDRESS") && getSecret(character, "LENS_PRIVATE_KEY") ? lensPlugin : null,
 			getSecret(character, "APTOS_PRIVATE_KEY") ? aptosPlugin : null,
+            getSecret(character, "MIND_COLD_WALLET_ADDRESS") ? mindNetworkPlugin : null,
 			getSecret(character, "MVX_PRIVATE_KEY") ? multiversxPlugin : null,
 			getSecret(character, "ZKSYNC_PRIVATE_KEY") ? zksyncEraPlugin : null,
 			getSecret(character, "CRONOSZKEVM_PRIVATE_KEY") ? cronosZkEVMPlugin : null,
@@ -891,6 +902,7 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
             getSecret(character, "FORM_PRIVATE_KEY") ? formPlugin : null,
             getSecret(character, "ANKR_WALLET") ? ankrPlugin : null,
 			getSecret(character, "DCAP_EVM_PRIVATE_KEY") && getSecret(character, "DCAP_MODE") ? dcapPlugin : null,
+			getSecret(character, "QUICKINTEL_API_KEY") ? quickIntelPlugin : null,
 		].filter(Boolean),
 		providers: [],
 		managers: [],

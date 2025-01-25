@@ -1,5 +1,5 @@
 {
-    "name": "@elizaos/plugin-abstract",
+    "name": "@elizaos/plugin-mind-network",
     "version": "0.1.9-alpha.1",
     "type": "module",
     "main": "dist/index.js",
@@ -19,27 +19,13 @@
         "dist"
     ],
     "dependencies": {
-        "@abstract-foundation/agw-client": "1.0.1",
         "@elizaos/core": "workspace:*",
-        "tsup": "^8.3.5",
-        "viem": "2.22.2"
+        "mind-randgen-sdk": "^1.0.0"
     },
     "scripts": {
-        "lint": "eslint --fix  --cache .",
-        "build": "tsup --format esm --no-dts",
-        "dev": "tsup --format esm --no-dts --watch",
-        "test": "vitest run",
-        "test:watch": "vitest watch",
-        "test:coverage": "vitest run --coverage"
-    },
-    "devDependencies": {
-        "vitest": "^1.0.0"
+        "build": "tsup --format esm --dts"
     },
     "peerDependencies": {
         "whatwg-url": "7.1.0"
-    },
-    "devDependencies": {
-        "tsup": "8.3.5",
-        "typescript": "4.9"
     }
 }
