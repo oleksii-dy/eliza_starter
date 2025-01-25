@@ -18,8 +18,6 @@ export const fetchTopDexByNetwork = async (network: string) => {
     const jsonText: string = $("pre").text().trim();
     try {
         const jsonData: any = JSON.parse(jsonText);
-        console.log("✅ JSON Extracted Successfully:", jsonData);
-
         return jsonData;
     } catch (error) {
         console.error("❌ JSON:", error);
