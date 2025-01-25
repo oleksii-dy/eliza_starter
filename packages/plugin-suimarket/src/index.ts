@@ -10,7 +10,7 @@ import { executeSwap } from './actions/swapBySymbol';
 import { executeSwapByAddress } from './actions/swapByAddress';
 import { sendTokenBySymbol } from './actions/sendTokenBySymbol';
 import { checkTxhashOnSui } from './actions/checkInfoTxHash';
-import { chainInfo } from './actions/infoChain';
+// import { chainInfo } from './actions/infoChain';
 import { projectInfo } from './actions/projectCoinOverview';
 import { topDexInfo } from './actions/topDexByNetwork';
 // import { sui } from './actions/suiTokenInfoBySymbol';
@@ -22,7 +22,7 @@ const suimarketPlugin: Plugin = {
   name: "suimarketPlugin",
   description: "Everything about Sui blockchain",
   actions: [
-    chainInfo,
+    // chainInfo,
     // topMarkets,
     // trendingTokens,
     // coinInfo,
