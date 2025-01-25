@@ -1,8 +1,8 @@
-import { Plugin } from "@elizaos/eliza";
+import { type Plugin } from "@elizaos/core";
 import generateMusic from "./actions/generate";
 import customGenerateMusic from "./actions/customGenerate";
 import extendAudio from "./actions/extend";
-import { SunoProvider, sunoProvider } from "./providers/suno";
+import { SunoProvider } from "./providers/suno";
 
 export {
     SunoProvider,
@@ -16,7 +16,7 @@ export const sunoPlugin: Plugin = {
     description: "Suno AI Music Generation Plugin for Eliza",
     actions: [generateMusic, customGenerateMusic, extendAudio],
     evaluators: [],
-    providers: [sunoProvider],
+    providers: [SunoProvider],
 };
 
 export default sunoPlugin;

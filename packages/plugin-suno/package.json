@@ -5,19 +5,17 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
     "test": "jest"
   },
   "dependencies": {
     "@elizaos/core": "^0.1.0"
   },
   "devDependencies": {
-    "typescript": "^4.9.0",
+    "typescript": "^5.0.0",
     "@types/node": "^16.0.0",
     "jest": "^27.0.0",
-    "@types/jest": "^27.0.0"
-  },
-  "peerDependencies": {
-    "@elizaos/eliza": "^0.1.0"
+    "@types/jest": "^27.0.0",
+    "tsup": "^7.2.0"
   }
 }
