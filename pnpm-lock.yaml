@@ -281,9 +281,6 @@ importers:
       '@elizaos/plugin-email':
         specifier: workspace:*
         version: link:../packages/plugin-email
-      '@elizaos/plugin-ethstorage':
-        specifier: workspace:*
-        version: link:../packages/plugin-ethstorage
       '@elizaos/plugin-evm':
         specifier: workspace:*
         version: link:../packages/plugin-evm
@@ -329,9 +326,6 @@ importers:
       '@elizaos/plugin-image-generation':
         specifier: workspace:*
         version: link:../packages/plugin-image-generation
-      '@elizaos/plugin-imgflip':
-        specifier: workspace:*
-        version: link:../packages/plugin-imgflip
       '@elizaos/plugin-initia':
         specifier: workspace:*
         version: link:../packages/plugin-initia
