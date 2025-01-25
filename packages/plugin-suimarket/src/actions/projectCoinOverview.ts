@@ -121,12 +121,12 @@ export const projectInfo: Action = {
              })
              return false
         }
-
-        const tokenSuiInfo = await getTokenOnSuiScan(tokenObject.symbol);
+        const tokenSuiInfo = await getTokenOnSuiScan(tokenObject.type);
         let coinObject= await searchCoinInFileJsonProvider2(tokenObject.symbol, tokenObject.name)
         if(coinObject === null){
             coinObject= await searchCoinInFileJsonProvider(tokenObject.symbol)
         }
+
         const coinGecko = new CoingeckoProvider();
         let getToken, getDetail;
         let infoPrice= {market_cap_rank:"N/A", price_change_24h:"N/A", price:tokenSuiInfo.tokenPrice, market_cap:tokenSuiInfo.marketCap};

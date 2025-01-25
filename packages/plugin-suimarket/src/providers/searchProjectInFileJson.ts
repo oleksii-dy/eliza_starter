@@ -19,7 +19,6 @@ export const searchProjectInFileJson = async(name:string)=>{
 
                 const foundCoin = projects.find(
                     (project: { name: string }) => {
-                        console.log(project.name, name);
                         return project.name && project.name.toLowerCase() === name.toLowerCase();
                     }
                 );
