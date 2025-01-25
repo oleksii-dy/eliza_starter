@@ -37,17 +37,13 @@ graph TD
 
 ## Available Clients
 
-- **Discord** (`@eliza/client-discord`) - Full Discord bot integration
-- **Twitter** (`@eliza/client-twitter`) - Twitter bot and interaction handling
-- **Telegram** (`@eliza/client-telegram`) - Telegram bot integration
-- **Direct** (`@eliza/client-direct`) - Direct API interface for custom integrations
-- **Auto** (`@eliza/client-auto`) - Automated trading and interaction client
-- **Deva** (`@elizaos/client-deva`) - Client for integrating with Deva.me
-- **Discord** (`@elizaos/client-discord`) - Full Discord bot integration
-- **Twitter** (`@elizaos/client-twitter`) - Twitter bot and interaction handling
-- **Telegram** (`@elizaos/client-telegram`) - Telegram bot integration
-- **Direct** (`@elizaos/client-direct`) - Direct API interface for custom integrations
-- **Auto** (`@elizaos/client-auto`) - Automated trading and interaction client
+-   **Discord** (`@elizaos/client-discord`) - Full Discord bot integration
+-   **Twitter** (`@elizaos/client-twitter`) - Twitter bot and interaction handling
+-   **Telegram** (`@elizaos/client-telegram`) - Telegram bot integration
+-   **Direct** (`@elizaos/client-direct`) - Direct API for custom integrations
+-   **Auto** (`@elizaos/client-auto`) - Automated trading and interaction client
+-   **Alexa skill** (`@elizaos/client-alexa`) - Alexa skill API integration
+-   **Deva** (`@elizaos/client-deva`) - Client for integrating with Deva.me
 
 ---
 
@@ -94,11 +90,11 @@ DISCORD_API_TOKEN = your_bot_token;
 
 ### Features
 
-- Voice channel integration
-- Message attachments
-- Reactions handling
-- Media transcription
-- Room management
+-   Voice channel integration
+-   Message attachments
+-   Reactions handling
+-   Media transcription
+-   Room management
 
 ### Voice Integration
 
@@ -156,9 +152,9 @@ TWITTER_EMAIL = your_email;
 
 ### Components
 
-- **PostClient**: Handles creating and managing posts
-- **SearchClient**: Handles search functionality
-- **InteractionClient**: Manages user interactions
+-   **PostClient**: Handles creating and managing posts
+-   **SearchClient**: Handles search functionality
+-   **InteractionClient**: Manages user interactions
 
 ### Post Management
 
@@ -283,12 +279,9 @@ class AutoClient {
         this.runtime = runtime;
 
         // Start trading loop
-        this.interval = setInterval(
-            () => {
-                this.makeTrades();
-            },
-            60 * 60 * 1000,
-        ); // 1 hour interval
+        this.interval = setInterval(() => {
+            this.makeTrades();
+        }, 60 * 60 * 1000); // 1 hour interval
     }
 
     async makeTrades() {
@@ -302,6 +295,24 @@ class AutoClient {
         await this.executeTrades(analysis);
     }
 }
+```
+
+## Alexa Client
+
+The Alexa client provides API integration with alexa skill.
+
+### Basic Setup
+
+```typescript
+import { AlexaClientInterface } from "@elizaos/client-alexa";
+
+// Initialize client
+const client = await AlexaClientInterface.start(runtime);
+
+// Configuration in .env
+ALEXA_SKILL_ID= your_alexa_skill_id
+ALEXA_CLIENT_ID= your_alexa_client_id #Alexa developer console permissions tab
+ALEXA_CLIENT_SECRET= your_alexa_client_secret #Alexa developer console permissions tab
 ```
 
 ## Deva Client
@@ -336,11 +347,11 @@ export const DevaClientInterface: Client = {
 
 ```typescript
 public async getMe(): Promise<DevaPersona | null> {
-  return await fetch(`${this.apiBaseUrl}/persona`, {
-    headers: { ...this.defaultHeaders },
-  })
-    .then((res) => res.json())
-    .catch(() => null);
+    return await fetch(`${this.apiBaseUrl}/persona`, {
+		    headers: { ...this.defaultHeaders },
+    })
+        .then((res) => res.json())
+        .catch(() => null);
 }
 ```
 
@@ -348,16 +359,17 @@ public async getMe(): Promise<DevaPersona | null> {
 
 ```typescript
 public async getPersonaPosts(personaId: string): Promise<DevaPost[]> {
-  const res = await fetch(
-    `${this.apiBaseUrl}/post?filter_persona_id=${personaId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-        "Content-Type": "application/json",
-      },
-    }
-  ).then((res) => res.json());
-  return res.items;
+	  const res = await fetch(
+		    `${this.apiBaseUrl}/post?filter_persona_id=${personaId}`, 
+        {
+			      headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+            "Content-Type": "application/json",
+        },
+    })
+        .then((res) => res.json());
+	  
+	  return res.items;
 }
 ```
 
@@ -365,17 +377,16 @@ public async getPersonaPosts(personaId: string): Promise<DevaPost[]> {
 
 ```typescript
 public async makePost({ text, in_reply_to_id }: { text: string; in_reply_to_id: string }): Promise<DevaPost> {
-   const res = await fetch(`${this.apiBaseUrl}/post`, {
-      method: "POST",
-      headers: {
-         Authorization: `Bearer ${this.accessToken}`,
-         "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ text, in_reply_to_id, author_type: "BOT" }),
-   }).then((res) => res.json());
+    const res = await fetch(`${this.apiBaseUrl}/post`, {
+		    method: "POST", 
+        headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text, in_reply_to_id, author_type: "BOT" }),
+    }).then((res) => res.json());
 
-   console.log(res);
-   return res;
+    return res;
 ```
 
 ## Common Features
@@ -386,11 +397,9 @@ All clients implement standard message handling:
 
 ```typescript
 interface ClientInterface {
-  async handleMessage(message: Message): Promise<void>;
-
-  async generateResponse(context: Context): Promise<Response>;
-
-  async sendMessage(destination: string, content: Content): Promise<void>;
+    handleMessage(message: Message): Promise<void>;
+    generateResponse(context: Context): Promise<Response>;
+    sendMessage(destination: string, content: Content): Promise<void>;
 }
 ```
 
@@ -398,11 +407,9 @@ interface ClientInterface {
 
 ```typescript
 interface MediaProcessor {
-  async processImage(image: Image): Promise<ProcessedImage>;
-
-  async processVideo(video: Video): Promise<ProcessedVideo>;
-
-  async processAudio(audio: Audio): Promise<ProcessedAudio>;
+    processImage(image: Image): Promise<ProcessedImage>;
+    processVideo(video: Video): Promise<ProcessedVideo>;
+    processAudio(audio: Audio): Promise<ProcessedAudio>;
 }
 ```
 
@@ -509,7 +516,7 @@ class RateLimiter {
     private calculateBackoff(error: RateLimitError): number {
         return Math.min(
             this.baseDelay * Math.pow(2, this.attempts),
-            this.maxDelay,
+            this.maxDelay
         );
     }
 }
@@ -596,4 +603,4 @@ async processMessage(message) {
 
 ## Related Resources
 
-- [Error Handling](../../packages/core)
+-   [Error Handling](../../packages/core)
