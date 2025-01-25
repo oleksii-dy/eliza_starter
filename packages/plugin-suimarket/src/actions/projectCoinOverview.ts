@@ -103,10 +103,10 @@ export const projectInfo: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        const projectPromptTemplateContext = composeContext({
-            state,
-            template: projectInfoTemplate,
-        });
+        // const projectPromptTemplateContext = composeContext({
+        //     state,
+        //     template: projectInfoTemplate,
+        // });
         const msgHash = hashUserMsg(message, "project_overview");
         let content:any = await runtime.cacheManager.get(msgHash)
         elizaLogger.log("---- cache info: ", msgHash, "--->", content)
@@ -124,14 +124,13 @@ export const projectInfo: Action = {
         }
 
         // Generate transfer content
-        content = await generateObjectDeprecated({
-            runtime,
-            context: projectPromptTemplateContext,
-            modelClass: ModelClass.SMALL,
-        })
-        elizaLogger.log("content: ",content);
+        // content = await generateObjectDeprecated({
+        //     runtime,
+        //     context: projectPromptTemplateContext,
+        //     modelClass: ModelClass.SMALL,
+        // })
+        // elizaLogger.log("content: ",content);
         const projectObj = await searchProjectInFileJson(content.project_name);
-        console.log(projectObj)
         const tokenObject = await findByVerifiedAndName(content.project_name);
         const responseText = `Name:${tokenObject.name} ($${tokenObject.symbol})`
         if(!tokenObject || !projectObj){
