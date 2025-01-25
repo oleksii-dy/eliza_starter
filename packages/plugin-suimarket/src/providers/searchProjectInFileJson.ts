@@ -18,8 +18,10 @@ export const searchProjectInFileJson = async(name:string)=>{
                 const projects = JSON.parse(data);
 
                 const foundCoin = projects.find(
-                    project =>
-                        project.name.toLowerCase() === name.toLowerCase()
+                    (project: { name: string }) => {
+                        console.log(project.name, name);
+                        return project.name && project.name.toLowerCase() === name.toLowerCase();
+                    }
                 );
 
                 return foundCoin || null;
