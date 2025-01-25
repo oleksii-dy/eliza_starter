@@ -131,7 +131,7 @@ import { udioPlugin } from "@elizaos/plugin-udio"
 import { imgflipPlugin } from "@elizaos/plugin-imgflip"
 import { ethstoragePlugin } from "@elizaos/plugin-ethstorage"
 import { minaPlugin } from "@elizaos/plugin-mina"
-
+import { ankrPlugin } from "@elizaos/plugin-ankr";
 const __filename = fileURLToPath(import.meta.url) // get the resolved path to the file
 const __dirname = path.dirname(__filename) // get the name of the directory
 
@@ -843,6 +843,9 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			getSecret(character, "FUNDING_PRIVATE_KEY") && getSecret(character, "EVM_RPC_URL") ? litPlugin : null,
 			getSecret(character, "ETHSTORAGE_PRIVATE_KEY") ? ethstoragePlugin : null,
 			getSecret(character, "MINA_PRIVATE_KEY") ? minaPlugin : null,
+            getSecret(character, "ANKR_WALLET")
+            ? ankrPlugin
+            : null,
 		].filter(Boolean),
 		providers: [],
 		managers: [],
