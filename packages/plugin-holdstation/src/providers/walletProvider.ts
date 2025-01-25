@@ -53,7 +53,7 @@ export class WalletProvider {
     async getAllowace(
         tokenAddress: Address,
         owner: Address,
-        spender: Address,
+        spender: Address
     ): Promise<any> {
         return this.publicClient.readContract({
             address: tokenAddress,
@@ -66,7 +66,7 @@ export class WalletProvider {
     async approve(
         spenderAddress: Address,
         tokenAddress: Address,
-        amount: bigint,
+        amount: bigint
     ) {
         const result = await this.walletClient.writeContract({
             account: this.account,
@@ -109,7 +109,7 @@ export class WalletProvider {
                 throw new Error(
                     `Failed to fetch portfolio: ${
                         portfolioData?.error || "Unknown error"
-                    }`,
+                    }`
                 );
             }
 
@@ -120,7 +120,7 @@ export class WalletProvider {
                         address: item.contract_address,
                         symbol: item.contract_ticker_symbol,
                         decimals: item.contract_decimals,
-                    }),
+                    })
                 ) || [];
             const portfolio: WalletPortfolio = { items };
 
@@ -151,7 +151,7 @@ export class WalletProvider {
                 throw new Error(
                     `Failed to fetch all tokens: ${
                         tokensData?.error || "Unknown error"
-                    }`,
+                    }`
                 );
             }
 
@@ -162,7 +162,7 @@ export class WalletProvider {
                         address: item.address,
                         symbol: item.symbol,
                         decimals: item.decimals,
-                    }),
+                    })
                 ) || [];
 
             this.cache.set(cacheKey, tokens);
@@ -184,7 +184,7 @@ export const holdstationWalletProvider: Provider = {
     get: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
+        state: State
     ): Promise<any> => {
         try {
             const walletProvider = await initWalletProvider(runtime);
