@@ -44,6 +44,7 @@ export const projectInfo: Action = {
        "PROJECT_SUMMARY_{PROJECT_NAME}",
         "PROJECT_DESCRIPTION_{PROJECT_NAME}",
         "OVERVIEW_{PROJECT_NAME}",
+        "{PROJECT_NAME}_OVERVIEW",
         "PROJECT_DETAILS_{PROJECT_NAME}",
         "PROJECT_INFO_{PROJECT_NAME}",
         "{PROJECT_NAME}",
