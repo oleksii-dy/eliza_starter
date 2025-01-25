@@ -150,7 +150,7 @@ export const projectInfo: Action = {
                     name: projectObj.name,
                     symbol: projectObj.symbol,
                     Slogan: projectObj.slogan,
-                    websites: projectObj.websites,
+                    websites: projectObj.website,
                     x_url: projectObj.x_website,
                     telegram_channel_identifier: `${infoDetail.links.telegram_channel_identifier}`,
                     coin_gecko_url: projectObj.congecko_link==="x"? null: projectObj.congecko_link,
