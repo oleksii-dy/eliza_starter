@@ -432,7 +432,7 @@
     {
       "id": 44,
       "name": "Sacabam",
-      "symbol": "",
+      "symbol": "SCB",
       "categories": ["Meme"],
       "website": "https://linktr.ee/sacabamfun",
       "x_website": "https://x.com/sacabamfun",
@@ -509,5 +509,78 @@
       "x_website": "https://x.com/SuiNetwork",
       "verified": "Yes",
       "congecko_link": "https://www.coingecko.com/en/coins/sui"
+    },
+    {
+        "id": 52,
+        "name": "Lofi",
+        "symbol": "LOFI",
+        "categories": ["Meme"],
+        "website": "https://lofitheyeti.com/",
+        "x_website": "https://x.com/lofitheyeti",
+        "verified": "Yes",
+        "congecko_link": "https://www.coingecko.com/en/coins/lofi-2"
+    },
+    {
+        "id": 53,
+        "name": "Sui Agents",
+        "symbol": "SUAI",
+        "categories": ["AI"],
+        "website": "https://suiagents.ai/",
+        "x_website": "https://x.com/SUI_agents",
+        "verified": "Yes",
+        "congecko_link": "https://www.coingecko.com/en/coins/sui-agents"
+    }
+    ,
+    {
+        "id": 53,
+        "name": "SuiAI",
+        "symbol": "SUAI",
+        "categories": ["AI"],
+        "website": "https://suiagents.ai/",
+        "x_website": "https://x.com/SUI_agents",
+        "verified": "Yes",
+        "congecko_link": "https://www.coingecko.com/en/coins/suiai"
+    }
+    ,
+    {
+        "id": 54,
+        "name": "AXOL",
+        "symbol": "AXOL",
+        "categories": ["Game"],
+        "website": "https://www.axolcoin.xyz/",
+        "x_website": "https://x.com/Axolonsui",
+        "verified": "Yes",
+        "congecko_link": "https://www.coingecko.com/en/coins/axol"
+    },
+    {
+        "id": 54,
+        "name": "Agents S",
+        "symbol": "S",
+        "categories": ["AI"],
+        "website": "https://agent-s.site/",
+        "x_website": "https://x.com/0xAgent_S",
+        "verified": "Yes",
+        "congecko_link": "https://www.coingecko.com/en/coins/agent-s"
+    }
+    ,
+    {
+        "id": 55,
+        "name": "LumiWave",
+        "symbol": "LWA",
+        "categories": ["Infrastructure"],
+        "website": "https://lumiwavelab.com/",
+        "x_website": "https://x.com/LumiWave_Lab",
+        "verified": "Yes",
+        "congecko_link": "https://www.coingecko.com/en/coins/lumiwave-2"
+    },
+    {
+        "id": 56,
+        "name": "Bucket",
+        "symbol": "$BUT",
+        "categories": ["DeFi","Stablecoin"],
+        "website": "",
+        "x_website": "https://x.com/bucket_protocol",
+        "verified": "Yes",
+        "congecko_link": "https://www.coingecko.com/en/coins/bucket-token"
     }
   ]
