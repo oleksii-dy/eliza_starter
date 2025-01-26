@@ -228,7 +228,7 @@ ${deploymentDetails.totalSupply !== "N/A" ? `- Total Supply: ${deploymentDetails
             elizaLogger.error("Error deploying token contract:", error);
             callback(
                 {
-                    text: "Failed to deploy token contract. ",
+                    text: `Failed to deploy token contract: ${error.message}`,
                 },
                 []
             );
@@ -407,10 +407,10 @@ ${assetId ? `- Asset ID: ${assetId}` : ""}`,
                 []
             );
         } catch (error) {
-            elizaLogger.error("Error invoking contract method:", error);
+            elizaLogger.error("Error invoking contract method: ", error.message);
             callback(
                 {
-                    text: "Failed to invoke contract method. ",
+                    text: `Failed to invoke contract method: ${error.message}`,
                 },
                 []
             );
@@ -536,7 +536,7 @@ export const readContractAction: Action = {
                 []
             );
         } catch (error) {
-            elizaLogger.error("Error reading contract:", error);
+            elizaLogger.error("Error reading contract: ", error.message);
             callback(
                 {
                     text: `Failed to read contract: ${error instanceof Error ? error.message : "Unknown error"}`,

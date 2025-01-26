@@ -28,6 +28,20 @@ const __dirname = path.dirname(__filename);
 const baseDir = path.resolve(__dirname, "../../plugin-coinbase/src/plugins");
 const tradeCsvFilePath = path.join(baseDir, "trades.csv");
 
+// async function getPrice(ticker: string) {
+//     elizaLogger.debug("Fetching product info for productId:", productId);
+//     try {
+//         const productInfo = await client.getProduct({productId});
+//         const price = JSON.parse(productInfo)?.price;
+//         elizaLogger.info("Product info retrieved:", productInfo);
+//         elizaLogger.info("Price:", price);
+//         return Number(price);
+//     } catch (error) {
+//         elizaLogger.error("Error fetching product info:", error);
+//         return null;
+//     }
+// }
+
 export const tradeProvider: Provider = {
     get: async (runtime: IAgentRuntime, _message: Memory) => {
         elizaLogger.debug("Starting tradeProvider.get function");
@@ -86,7 +100,7 @@ export const tradeProvider: Provider = {
                 transactions,
             };
         } catch (error) {
-            elizaLogger.error("Error in tradeProvider:", error);
+            elizaLogger.error("Error in tradeProvider: ", error.message);
             return [];
         }
     },
@@ -191,10 +205,10 @@ export const executeTradeAction: Action = {
 
             callback({ text: responseText }, []);
         } catch (error) {
-            elizaLogger.error("Error during trade execution:", error.message);
+            elizaLogger.error("Error during trade execution: ", error.message);
             callback(
                 {
-                    text: "Failed to execute the trade. ",
+                    text: `Failed to execute the trade: ${error.message}`,
                 },
                 []
             );

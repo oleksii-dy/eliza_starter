@@ -64,7 +64,7 @@ export async function createCharge(apiKey: string, params: ChargeRequest) {
         const data = await response.json();
         return data.data;
     } catch (error) {
-        elizaLogger.error("Error creating charge:", error);
+        elizaLogger.error("Error creating charge:", error.message);
         throw error;
     }
 }
@@ -90,7 +90,7 @@ export async function getAllCharges(apiKey: string) {
         const data = await response.json();
         return data.data;
     } catch (error) {
-        elizaLogger.error("Error fetching charges:", error);
+        elizaLogger.error("Error fetching charges:", error.message);
         throw error;
     }
 }
@@ -120,7 +120,7 @@ export async function getChargeDetails(apiKey: string, chargeId: string) {
     } catch (error) {
         elizaLogger.error(
             `Error fetching charge details for ID ${chargeId}:`,
-            error
+            error.message
         );
         throw error;
     }
@@ -253,11 +253,11 @@ export const createCoinbaseChargeAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 "Error creating Coinbase Commerce charge:",
-                error
+                error.message
             );
             callback(
                 {
-                    text: "Failed to create a charge. Please try again.",
+                    text: `Failed to create a charge: ${error.message}`,
                 },
                 []
             );
@@ -390,10 +390,10 @@ export const getAllChargesAction: Action = {
                 []
             );
         } catch (error) {
-            elizaLogger.error("Error fetching all charges:", error);
+            elizaLogger.error("Error fetching all charges:", error.message);
             callback(
                 {
-                    text: "Failed to fetch all charges. Please try again.",
+                    text: `Failed to fetch all charges: ${error.message}`,
                 },
                 []
             );
@@ -496,11 +496,11 @@ export const getChargeDetailsAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 `Error fetching details for charge ID ${charge.id}:`,
-                error
+                error.message
             );
             callback(
                 {
-                    text: `Failed to fetch details for charge ID: ${charge.id}. Please try again.`,
+                    text: `Failed to fetch details for charge ID: ${charge.id}. ${error.message}`,
                 },
                 []
             );

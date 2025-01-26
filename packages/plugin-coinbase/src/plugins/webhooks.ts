@@ -155,10 +155,10 @@ export const createWebhookAction: Action = {
             await appendWebhooksToCsv([webhook]);
             elizaLogger.info("Webhook appended to CSV successfully");
         } catch (error) {
-            elizaLogger.error("Error during webhook creation:", error);
+            elizaLogger.error("Error during webhook creation:", error.message);
             callback(
                 {
-                    text: "Failed to create the webhook. ",
+                    text: `Failed to create the webhook: ${error.message}`,
                 },
                 []
             );
