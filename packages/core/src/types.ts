@@ -603,8 +603,13 @@ export type Media = {
  * Client interface for platform connections
  */
 export type Client = {
+    runtime?: any;
+
     /** Start client connection */
     start: (runtime: IAgentRuntime) => Promise<unknown>;
+
+    /** validate config */
+    validate?: (any) => Promise<boolean>;
 
     /** Stop client connection */
     stop: (runtime: IAgentRuntime) => Promise<unknown>;
