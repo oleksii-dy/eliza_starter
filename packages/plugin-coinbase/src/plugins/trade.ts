@@ -173,14 +173,15 @@ export const executeTradeAction: Action = {
                 sourceAsset,
                 targetAsset
             );
-
+            elizaLogger.info("Trade executed successfully:", JSON.stringify(trade));
+            elizaLogger.info("Transfer executed successfully:", JSON.stringify(transfer));
             let responseText = `Trade executed successfully:
 - Network: ${network}
 - Amount: ${trade.getFromAmount()}
 - From: ${sourceAsset}
 - To: ${targetAsset}
-- Transaction URL: ${trade.getTransaction().getTransactionLink() || ""}
-- Charity Transaction URL: ${transfer.getTransactionLink() || ""}`;
+- Transaction URL: ${trade.getApproveTransaction().getTransactionLink() || ""}
+- Charity Transaction URL: ${transfer?.getTransactionLink() || "N/A"}`;
 
             if (transfer) {
                 responseText += `\n- Charity Amount: ${transfer.getAmount()}`;
@@ -190,7 +191,7 @@ export const executeTradeAction: Action = {
 
             callback({ text: responseText }, []);
         } catch (error) {
-            elizaLogger.error("Error during trade execution:", error);
+            elizaLogger.error("Error during trade execution:", error.message);
             callback(
                 {
                     text: "Failed to execute the trade. Please check the logs for more details.",
