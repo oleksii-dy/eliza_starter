@@ -65,7 +65,8 @@
             "To view the top decentralized exchanges, choose the action TOP_DEX.",
             "DECENTRALIZED EXCHANGES = DEX",
             "To view the top meme, choose the action TOP_MEME.",
-            "The following are project names within the Sui Network: Cetus, NAVI, DeepBook, Walrus, BIRDS, FanTV, Wave, 7K, Haedal, Aftermath, Bluefin, BlueMove, Turbos, Hop Aggregator, Bucket Protocol, Scallop, Memefi, Tradeport, SuiNS, Suilend, SuiPlay, RaidenX, Typus Finance, Kriya, FlowX, Sudo Finance, AlphaFi, Kai Finance, Strater, Volo, Suiet, Ethos Wallet, Surf Wallet, Nightly, Martian Wallet, Stashed, Suia, SeaPad, DARKTIMES, Cosmocadia, Panzerdogs, MotoDEX, Capybara, Sacabam, SuDeng, Blub, Fud the Pug, Suiman, Suipad, Rockee AI, SUI."
+            "The following are project names within the Sui Network:Cetus, NAVI, DeepBook, Walrus, BIRDS, FanTV, Wave, 7K, Haedal, Aftermath, Bluefin, BlueMove, Turbos, Hop Aggregator, Bucket Protocol, Scallop, Memefi, Tradeport, SuiNS, Suilend, SuiPlay, RaidenX, Typus Finance, Kriya, FlowX, Sudo Finance, AlphaFi, Kai Finance, Strater, Volo, Suiet, Ethos Wallet, Surf wallet, Nightly, Martian wallet, Stashed, Suia, SeaPad, DARKTIMES, Cosmocadia, Panzerdogs, MotoDEX, Capybara, Sacabam, SuDeng, Blub, Fud the Pug, Suiman, Suipad, Rockee AI, Sui, Lofi, Sui Agents, SuiAI, AXOL, Agents S, LumiWave, Bucket",
+            "The following are token symbols within the Sui Network: CETUS, NAVX, DEEP, BLUE, MOVE, TURBOS, SCA, MEME, NS, SEND, FLX, ALPHA, SPT, SCB, HIPPO, BLUB, FUD, SUIP, ROOK, SUI, LOFI, SUAI, SUAI, AXOL, S, LWA, BUT"
 
         ],
     "messageExamples": [

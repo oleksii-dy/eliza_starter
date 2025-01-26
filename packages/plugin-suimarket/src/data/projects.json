@@ -576,7 +576,7 @@
     {
         "id": 56,
         "name": "Bucket",
-        "symbol": "$BUT",
+        "symbol": "BUT",
         "categories": ["DeFi","Stablecoin"],
         "website": "",
         "x_website": "https://x.com/bucket_protocol",
