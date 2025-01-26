@@ -194,7 +194,7 @@ export const executeTradeAction: Action = {
             elizaLogger.error("Error during trade execution:", error.message);
             callback(
                 {
-                    text: "Failed to execute the trade. Please check the logs for more details.",
+                    text: "Failed to execute the trade. ",
                 },
                 []
             );

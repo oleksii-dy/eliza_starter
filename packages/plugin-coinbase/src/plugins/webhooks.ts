@@ -158,7 +158,7 @@ export const createWebhookAction: Action = {
             elizaLogger.error("Error during webhook creation:", error);
             callback(
                 {
-                    text: "Failed to create the webhook. Please check the logs for more details.",
+                    text: "Failed to create the webhook. ",
                 },
                 []
             );

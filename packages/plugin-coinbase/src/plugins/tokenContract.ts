@@ -228,7 +228,7 @@ ${deploymentDetails.totalSupply !== "N/A" ? `- Total Supply: ${deploymentDetails
             elizaLogger.error("Error deploying token contract:", error);
             callback(
                 {
-                    text: "Failed to deploy token contract. Please check the logs for more details.",
+                    text: "Failed to deploy token contract. ",
                 },
                 []
             );
@@ -401,11 +401,8 @@ export const invokeContractAction: Action = {
 - Method: ${method}
 - Network: ${networkId}
 - Status: ${invocation.getStatus()}
-- Transaction URL: ${invocation.getTransactionLink() || "N/A"}
-${amount ? `- Amount: ${amount}` : ""}
-${assetId ? `- Asset ID: ${assetId}` : ""}
-
-Contract invocation has been logged to the CSV file.`,
+- Transaction URL: ${invocation.getTransactionLink() || "N/A"}${amount ? `\n- Amount: ${amount}` : ""}
+${assetId ? `- Asset ID: ${assetId}` : ""}`,
                 },
                 []
             );
@@ -413,7 +410,7 @@ Contract invocation has been logged to the CSV file.`,
             elizaLogger.error("Error invoking contract method:", error);
             callback(
                 {
-                    text: "Failed to invoke contract method. Please check the logs for more details.",
+                    text: "Failed to invoke contract method. ",
                 },
                 []
             );

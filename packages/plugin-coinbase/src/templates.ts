@@ -111,6 +111,7 @@ Here are the recent user messages for context:
 
 export const advancedTradeTemplate = `
 Extract the following details for processing an advanced trade using the Coinbase Advanced Trading API:
+{{message}}
 - **productId** (string): The trading pair ID (e.g., "BTC-USD", "ETH-USD", "SOL-USD")
 - **side** (string): The side of the trade (must be either "BUY" or "SELL")
 - **amount** (number): The amount to trade
