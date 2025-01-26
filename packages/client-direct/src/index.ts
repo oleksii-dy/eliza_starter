@@ -1025,9 +1025,11 @@ export const DirectClientInterface: Client = {
         return client;
     },
     stop: async (_runtime: IAgentRuntime, client?: Client) => {
+        /*
         if (client instanceof DirectClient) {
             client.stop();
         }
+        */
     },
 };
 
