@@ -208,14 +208,18 @@ export class TwitterPostClient {
         this.discordClientForApproval.login(
             this.runtime.getSetting("TWITTER_APPROVAL_DISCORD_BOT_TOKEN")
         );
+        this.running = false;
     }
 
     async start() {
+        this.running = true;
         if (!this.client.profile) {
             await this.client.init();
         }
 
         const generateNewTweetLoop = async () => {
+            if (!this.running) return;
+
             // Check for pending tweets first
             if (this.approvalRequired) await this.handlePendingTweet();
 
@@ -246,6 +250,7 @@ export class TwitterPostClient {
             const actionInterval = this.client.twitterConfig.ACTION_INTERVAL; // Defaults to 5 minutes
 
             while (!this.stopProcessingActions) {
+                elizaLogger.log('ACTION_INTERVAL', actionInterval, this.client.twitterConfig.TWITTER_USERNAME)
                 try {
                     const results = await this.processTweetActions();
                     if (results) {
@@ -1052,7 +1057,6 @@ export class TwitterPostClient {
                         createdAt: tweet.timestamp * 1000,
                     });
                 }
-
                 results.push({
                     tweetId: tweet.id,
                     actionResponse: actionResponse,
@@ -1061,6 +1065,8 @@ export class TwitterPostClient {
             } catch (error) {
                 elizaLogger.error(`Error processing tweet ${tweet.id}:`, error);
                 continue;
+            } finally {
+                this.isProcessing = false;
             }
         }
 
@@ -1195,6 +1201,7 @@ export class TwitterPostClient {
     }
 
     async stop() {
+        this.running = false;
         this.stopProcessingActions = true;
     }
 

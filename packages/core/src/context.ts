@@ -1,6 +1,55 @@
 import handlebars from "handlebars";
-import { type State, type TemplateType } from "./types.ts";
+import { ModelClass, type State, type TemplateType } from "./types.ts";
 import { names, uniqueNamesGenerator } from "unique-names-generator";
+import { models } from "./models.ts";
+import { getSizeModel } from "./generation.ts";
+
+import { promises as fs } from 'fs';
+import { access, mkdir, accessSync, mkdirSync } from 'fs';
+import { resolve, dirname } from 'path';
+
+// Synchronous version
+function mkdirpSync(targetPath) {
+    // Convert to absolute path and normalize
+    targetPath = resolve(targetPath);
+
+    try {
+        accessSync(targetPath, fs.constants.F_OK);
+        return targetPath; // Directory already exists
+    } catch (err) {
+        // Directory doesn't exist, proceed with creation
+    }
+
+    const parentDir = dirname(targetPath);
+
+    // If we're at root directory and it doesn't exist, error out
+    if (parentDir === targetPath) {
+        throw new Error('Root directory does not exist');
+    }
+
+    // Recursively create parent directory
+    mkdirpSync(parentDir);
+
+    try {
+        mkdirSync(targetPath);
+    } catch (err) {
+        // Handle race condition
+        if (err.code !== 'EEXIST') {
+            throw err;
+        }
+    }
+
+    return targetPath;
+}
+
+function YYMMDDHH(date = new Date()) {
+  const year = date.getFullYear().toString().slice(-2);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = String(date.getHours()).padStart(2, '0');
+
+  return `${year}${month}${day}${hour}`;
+}
 
 /**
  * Composes a context string by replacing placeholders in a template with corresponding values from the state.
@@ -38,10 +87,16 @@ export const composeContext = ({
     state,
     template,
     templatingEngine,
+    runtime = false,
+    modelProvider = "unknown",
+    modelSize = ModelClass.SMALL,
 }: {
     state: State;
     template: TemplateType;
     templatingEngine?: "handlebars";
+    runtime?: any,
+    modelProvider?: string,
+    modelSize?: string,
 }) => {
     const templateStr =
         typeof template === "function" ? template({ state }) : template;
@@ -56,6 +111,25 @@ export const composeContext = ({
         const key = match.replace(/{{|}}/g, "");
         return state[key] ?? "";
     });
+    /*
+    if (state?.agentId) {
+        console.log('composContext - agent', state.agentId, state.agentName)
+        const ts = Date.now()
+        const dir = 'logs/context/' + state.agentName + '/' + YYMMDDHH()
+        mkdirpSync(dir)
+
+        let model = modelProvider;
+        if (modelProvider !== "unknown" && runtime) {
+          model = getSizeModel(runtime, modelSize);
+        }
+        fs.writeFile(dir + '/' + ts + '.json', JSON.stringify({
+          modelProvider,
+          modelSize,
+          model,
+          context: out,
+        }))
+    }
+    */
     return out;
 };
 

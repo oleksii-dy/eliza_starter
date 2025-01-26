@@ -1087,8 +1087,13 @@ export class VoiceManager extends EventEmitter {
         const connection = this.getVoiceConnection(interaction.guildId as any);
 
         if (!connection) {
-            await interaction.reply("Not currently in a voice channel.");
-            return;
+            try {
+                await interaction.reply("Not currently in a voice channel.");
+                return;
+            } catch (e) {
+                console.error('client-discord:handleLeaveChannelCommand', e)
+                return;
+            }
         }
 
         try {

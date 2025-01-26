@@ -164,6 +164,18 @@ async function truncateTiktoken(
     }
 }
 
+import { promises as fs } from "fs";
+import {
+    accessSync,
+    mkdirSync,
+    appendFileSync,
+    writeFileSync,
+    readdirSync,
+    unlinkSync,
+} from "fs";
+import { resolve, dirname } from "path";
+
+
 // Synchronous version
 function mkdirpSync(targetPath) {
     // Convert to absolute path and normalize
@@ -424,6 +436,7 @@ export async function generateText({
         verifiableInference,
     });
     elizaLogger.log("Using provider:", runtime.modelProvider);
+
     // If verifiable inference is requested and adapter is provided, use it
     if (verifiableInference && runtime.verifiableInferenceAdapter) {
         elizaLogger.log(
@@ -506,6 +519,7 @@ export async function generateText({
         switch (provider) {
             // OPENAI & LLAMACLOUD shared same structure.
             case ModelProviderName.OPENAI:
+            case ModelProviderName.ETERNALAI:
             case ModelProviderName.ALI_BAILIAN:
             case ModelProviderName.VOLENGINE:
             case ModelProviderName.LLAMACLOUD:
@@ -1774,7 +1788,6 @@ export const generateImage = async (
                 "Sample: " + base64s[0].slice(0, 100) + " .... ",
                 ""
             );
-
             return { success: true, data: base64s };
         } else if (runtime.imageModelProvider === ModelProviderName.LIVEPEER) {
             if (!apiKey) {
@@ -1833,7 +1846,8 @@ export const generateImage = async (
                     model,
                     data.modelId,
                     data.prompt,
-                    "Sample: " + base64s[0].slice(0, 100) + " .... ",
+                    //"Sample: " + base64s[0].slice(0, 100) + " .... ",
+                    "Sample: " + base64Images[0].slice(0, 100) + " .... ",
                     ""
                 );
                 return {
@@ -2461,3 +2475,4 @@ export async function generateTweetActions({
         retryDelay *= 2;
     }
 }
+

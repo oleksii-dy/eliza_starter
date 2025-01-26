@@ -124,6 +124,10 @@ export class TwitterInteractionClient {
         this.running = false;
     }
 
+    async stop() {
+        this.running = false;
+    }
+
     async handleTwitterInteractions() {
         elizaLogger.log("Checking Twitter interactions");
 

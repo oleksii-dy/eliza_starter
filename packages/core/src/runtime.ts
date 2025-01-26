@@ -265,14 +265,15 @@ export class AgentRuntime implements IAgentRuntime {
 
         // By convention, we create a user and room using the agent id.
         // Memories related to it are considered global context for the agent.
-        this.ensureRoomExists(this.agentId);
-        this.ensureUserExists(
-            this.agentId,
-            this.character.name,
-            this.character.name
-        ).then(() => {
-            // postgres needs the user to exist before you can add a participant
-            this.ensureParticipantExists(this.agentId, this.agentId);
+        this.ensureRoomExists(this.agentId).then(() => {
+            this.ensureUserExists(
+                this.agentId,
+                this.character.name,
+                this.character.name
+            ).then(() => {
+                // postgres needs the user to exist before you can add a participant
+                this.ensureParticipantExists(this.agentId, this.agentId);
+            });
         });
 
         elizaLogger.success(`Agent ID: ${this.agentId}`);
@@ -374,7 +375,7 @@ export class AgentRuntime implements IAgentRuntime {
         this.plugins = [
             ...(opts.character?.plugins ?? []),
             ...(opts.plugins ?? []),
-        ];
+        ].filter(p => !!p);
 
         this.plugins.forEach((plugin) => {
             plugin.actions?.forEach((action) => {
@@ -463,14 +464,14 @@ export class AgentRuntime implements IAgentRuntime {
 
         // client have a start
         for (const cStr in this.clients) {
+            // in telegram c is not the interface but TelegramClient
             const c = this.clients[cStr];
-            elizaLogger.log(
-                "runtime::stop - requesting",
-                cStr,
-                "client stop for",
-                this.character.name
-            );
-            c.stop();
+            elizaLogger.log('runtime::stop - requesting', cStr, 'client stop for', this.character.name)
+            if (c.stop) {
+              await c.stop()
+            } else {
+              elizaLogger.error('runtime::stop - no stop for', cStr)
+            }
         }
         // we don't need to unregister with directClient
         // don't need to worry about knowledge
@@ -849,7 +850,11 @@ export class AgentRuntime implements IAgentRuntime {
             template:
                 this.character.templates?.evaluationTemplate ||
                 evaluationTemplate,
+            runtime: this,
+            modelProvider: this.modelProvider,
+            modelSize: ModelClass.SMALL,
         });
+        console.log('composeState after composeContext')
 
         const result = await generateText({
             runtime: this,

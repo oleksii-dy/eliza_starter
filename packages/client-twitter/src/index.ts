@@ -62,6 +62,7 @@ class TwitterManager {
 export const TwitterClientInterface: Client = {
     runtime: false,
     async start(runtime: IAgentRuntime) {
+
         let twitterConfig: TwitterConfig
         try {
             twitterConfig = await validateTwitterConfig(runtime);
@@ -72,6 +73,10 @@ export const TwitterClientInterface: Client = {
               runtime.getSetting("TWITTER_EMAIL") || process.env.TWITTER_EMAIL,
             );
             return;
+        }
+        if (!twitterConfig.TWITTER_USERNAME) {
+            elizaLogger.error('Twitter failed to validate config, no username');
+            return false;
         }
 
         elizaLogger.log("Twitter client started");
@@ -154,6 +159,9 @@ export const TwitterClientInterface: Client = {
                 // it's still starting up
             }
         } // already stoped
+
+        // mark it offline
+        delete runtime.clients.twitter;
     },
 };
 

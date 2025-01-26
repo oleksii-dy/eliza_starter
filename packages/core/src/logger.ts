@@ -200,6 +200,7 @@ class ElizaLogger {
     }
 
     error(...strings) {
+        console.trace()
         this.#logWithStyle(strings, {
             fg: "red",
             bg: "",

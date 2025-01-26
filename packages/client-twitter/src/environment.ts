@@ -2,6 +2,7 @@ import {
     parseBooleanFromText,
     IAgentRuntime,
     ActionTimelineType,
+    elizaLogger,
 } from "@elizaos/core";
 import { z, ZodError } from "zod";
 
@@ -231,10 +232,14 @@ export async function validateTwitterConfig(
             const errorMessages = error.errors
                 .map((err) => `${err.path.join(".")}: ${err.message}`)
                 .join("\n");
+            elizaLogger.error(`Twitter configuration validation failed:\n${errorMessages}`)
+            /*
             throw new Error(
                 `X/Twitter configuration validation failed:\n${errorMessages}`
             );
+            */
         }
-        throw error;
+        //throw error;
+        return {};
     }
 }
