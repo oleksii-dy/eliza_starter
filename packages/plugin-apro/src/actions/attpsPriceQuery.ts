@@ -11,6 +11,10 @@ async function fetchPriceData(sourceAgentId: string, feedId: string) {
     return result as AttpsPriceQueryResponse;
 }
 
+function cleanNumber(numStr: string) {
+    return parseFloat(numStr).toString();
+}
+
 export const attpsPriceQuery: Action = {
     name: "ATTPS_PRICE_QUERY",
     similes: [
@@ -70,7 +74,7 @@ export const attpsPriceQuery: Action = {
             const priceData = await fetchPriceData(sourceAgentId, feedId);
             elizaLogger.info('The Price data received:', priceData);
 
-            const message = `Ask price: ${priceData.askPrice}\nBid price: ${priceData.bidPrice}\nMid price: ${priceData.midPrice}\nTimestamp: ${priceData.validTimeStamp}`;
+            const message = `Ask price: ${cleanNumber(priceData.askPrice)}\nBid price: ${cleanNumber(priceData.bidPrice)}\nMid price: ${cleanNumber(priceData.midPrice)}\nTimestamp: ${priceData.validTimeStamp}`;
             callback({
                 text: `Here is the price data:\n${message}`,
             });
