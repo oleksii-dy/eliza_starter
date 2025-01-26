@@ -21,7 +21,7 @@ export class TelegramClient {
             },
         };
         this.runtime = runtime;
-        this.bot = new Telegraf(botToken,this.options);
+        this.bot = new Telegraf(botToken, this.options);
         this.messageManager = new MessageManager(this.bot, this.runtime);
         this.backend = runtime.getSetting("BACKEND_URL");
         this.backendToken = runtime.getSetting("BACKEND_TOKEN");
@@ -42,14 +42,20 @@ export class TelegramClient {
     }
 
     private async initializeBot(): Promise<void> {
-        this.bot.launch({ dropPendingUpdates: true });
+        this.bot.launch({ dropPendingUpdates: true }).catch(e => {
+          elizaLogger.error('client-telegram::initializeBot - launch err', e)
+        });
         elizaLogger.log(
             "✨ Telegram bot successfully launched and is running!"
         );
 
-        const botInfo = await this.bot.telegram.getMe();
-        this.bot.botInfo = botInfo;
-        elizaLogger.success(`Bot username: @${botInfo.username}`);
+        const botInfo = await this.bot.telegram.getMe().catch(e => {
+          elizaLogger.error('client-telegram::initializeBot - getMe err', e)
+        });;
+        if (botInfo) {
+            this.bot.botInfo = botInfo;
+            elizaLogger.success(`Bot username: @${botInfo.username}`);
+        }
 
         this.messageManager.bot = this.bot;
     }
@@ -197,7 +203,7 @@ export class TelegramClient {
 
     public async stop(): Promise<void> {
         elizaLogger.log("Stopping Telegram bot...");
-        //await 
+        //await
             this.bot.stop();
         elizaLogger.log("Telegram bot stopped");
     }
