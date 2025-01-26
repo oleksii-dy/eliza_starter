@@ -174,7 +174,7 @@ export const projectInfo: Action = {
                 data:{
                     name: projectObj.name,
                     symbol: projectObj.symbol,
-                    Slogan: projectObj.slogan,
+                    slogan: projectObj.slogan,
                     websites: projectObj.website,
                     x_url: projectObj.x_website,
                     coin_gecko_url: projectObj.congecko_link==="x"? null: projectObj.congecko_link,
