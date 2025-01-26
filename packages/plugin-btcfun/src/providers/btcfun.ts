@@ -18,8 +18,11 @@ export class BtcfunProvider {
         this.apiUrl = apiUrl;
     }
 
-    async validateBrc20(address: string, ticker: string) {
-        const response = await fetch(`${this.apiUrl}/api/v1/import/brc20_validate`, {
+    async validateToken(tokenType: string, address: string, ticker: string) {
+        const url = tokenType === "runes"
+            ? `${this.apiUrl}/api/v1/import/rune_validate`
+            : `${this.apiUrl}/api/v1/import/brc20_validate`;
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -37,8 +40,11 @@ export class BtcfunProvider {
         return response.json();
     }
 
-    async createBrc20Order(paymentFromPubKey: string, paymentFrom: string, ordinalsFromPubKey: string, ordinalsFrom: string, feeRate: number, tick: string, addressFundraisingCap: string, mintDeadline: number, mintCap: string) {
-        const response = await fetch(`${this.apiUrl}/api/v1/import/brc20_order`, {
+    async createOrder(tokenType: string, paymentFromPubKey: string, paymentFrom: string, ordinalsFromPubKey: string, ordinalsFrom: string, feeRate: number, tick: string, addressFundraisingCap: string, mintDeadline: number, mintCap: string) {
+        const url = tokenType === "runes"
+            ? `${this.apiUrl}/api/v1/import/rune_order`
+            : `${this.apiUrl}/api/v1/import/brc20_order`;
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -87,6 +93,7 @@ export class BtcfunProvider {
             throw new Error(`Error: ${response.statusText}`);
         }
         const result = await response.json();
+        console.log("broadcastOrder result", result);
 
         if (result.code === "OK" && result.data) {
             return result.data;
