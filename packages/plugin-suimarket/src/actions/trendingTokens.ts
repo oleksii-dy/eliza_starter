@@ -19,7 +19,7 @@ const trendingPromptTemplate = `Respond with a JSON markdown block containing on
     Example response:
     \`\`\`json
     {
-        size:1
+        size:5
     }
     \`\`\`
     {{recentMessages}}
@@ -28,7 +28,7 @@ const trendingPromptTemplate = `Respond with a JSON markdown block containing on
 
         Given the recent messages, extract the following information:
 
-        size: Number of news items to return: Must be a positive integer Default is 1 if not specified Maximum value is 100 Minimum value is 1 If mentioned in message, use that number If not mentioned, use default value 5
+        size: Number of news items to return: Must be a positive integer Default is 5 if not specified Maximum value is 100 Minimum value is 1 If mentioned in message, use that number If not mentioned, use default value 5
 
         VALIDATION RULES:
             All property names must use double quotes
