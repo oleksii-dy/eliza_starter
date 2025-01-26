@@ -44,3 +44,9 @@ export async function findTypesBySymbols(symbols: string[]){
     }).filter(type => type !== null) as string[];
   }
 
+  export async function findTypesBySymbolsv2(symbols){
+    return symbols.map(symbol => {
+      const token = data.find((t: any) => t.symbol === symbol);
+      return token ? { symbol: token.symbol, type: token.type,iconUrl:token.iconUrl }: null;
+    }).filter(entry => entry !== null);
+  }
