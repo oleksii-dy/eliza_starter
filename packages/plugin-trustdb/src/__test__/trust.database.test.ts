@@ -9,7 +9,6 @@ import {
 } from "vitest";
 import { Pool } from "pg";
 import { TestDatabaseManager } from "./setup/testDatabaseManager";
-import { TrustPostgresDatabase } from "../adapters/postgres";
 import { v4 as uuidv4 } from "uuid";
 import {
     Recommender,
@@ -17,19 +16,20 @@ import {
     TokenRecommendation,
     TradePerformance,
     Transaction,
+    ITrustDatabase,
 } from "../types";
 import { TEST_DB_CONFIG } from "./setup/config";
 import { elizaLogger } from "@elizaos/core";
 
 describe("Database Connection", () => {
     let testDbManager: TestDatabaseManager;
-    let db: TrustPostgresDatabase;
+    let db: ITrustDatabase;
 
     beforeAll(async () => {
         testDbManager = TestDatabaseManager.getInstance();
         await testDbManager.initialize();
-        db = testDbManager.getDatabase() as TrustPostgresDatabase;
-    }, 3500);
+        db = testDbManager.getDatabase();
+    }, 3000);
 
     afterAll(async () => {
         await testDbManager.cleanup();
@@ -72,7 +72,7 @@ describe("Database Schema", () => {
         testDbManager = TestDatabaseManager.getInstance();
         await testDbManager.initialize();
         pool = new Pool(TEST_DB_CONFIG);
-    }, 3500);
+    }, 3000);
 
     afterAll(async () => {
         try {
@@ -238,13 +238,13 @@ describe("Database Schema", () => {
 
 describe("Error Handling", () => {
     let testDbManager: TestDatabaseManager;
-    let db: TrustPostgresDatabase;
+    let db: ITrustDatabase;
 
     beforeAll(async () => {
         testDbManager = TestDatabaseManager.getInstance();
         await testDbManager.initialize();
-        db = testDbManager.getDatabase() as TrustPostgresDatabase;
-    }, 3500);
+        db = testDbManager.getDatabase();
+    }, 3000);
 
     afterAll(async () => {
         await testDbManager.cleanup();
@@ -463,13 +463,13 @@ describe("Error Handling", () => {
 
 describe("Performance Testing", () => {
     let testDbManager: TestDatabaseManager;
-    let db: TrustPostgresDatabase;
+    let db: ITrustDatabase;
 
     beforeAll(async () => {
         testDbManager = TestDatabaseManager.getInstance();
         await testDbManager.initialize();
-        db = testDbManager.getDatabase() as TrustPostgresDatabase;
-    }, 3500);
+        db = testDbManager.getDatabase();
+    }, 3000);
 
     afterAll(async () => {
         await testDbManager.cleanup();
@@ -667,13 +667,13 @@ describe("Performance Testing", () => {
 
 describe("Recommender Metrics Operations", () => {
     let testDbManager: TestDatabaseManager;
-    let db: TrustPostgresDatabase;
+    let db: ITrustDatabase;
     let recommenderId: string;
 
     beforeAll(async () => {
         testDbManager = TestDatabaseManager.getInstance();
         await testDbManager.initialize();
-        db = testDbManager.getDatabase() as TrustPostgresDatabase;
+        db = testDbManager.getDatabase();
 
         const recommender = {
             id: uuidv4(),
@@ -681,7 +681,7 @@ describe("Recommender Metrics Operations", () => {
         };
         await db.addRecommender(recommender);
         recommenderId = recommender.id;
-    }, 3500);
+    }, 3000);
 
     afterAll(async () => {
         await testDbManager.cleanup();
@@ -756,13 +756,13 @@ describe("Recommender Metrics Operations", () => {
 
 describe("Recommender Operations", () => {
     let testDbManager: TestDatabaseManager;
-    let db: TrustPostgresDatabase;
+    let db: ITrustDatabase;
 
     beforeEach(async () => {
         testDbManager = TestDatabaseManager.getInstance();
         await testDbManager.initialize();
-        db = testDbManager.getDatabase() as TrustPostgresDatabase;
-    }, 3500);
+        db = testDbManager.getDatabase();
+    }, 8000);
 
     afterEach(async () => {
         await testDbManager.cleanup();
@@ -920,13 +920,13 @@ describe("Recommender Operations", () => {
 
 describe("Validation Trust", () => {
     let testDbManager: TestDatabaseManager;
-    let db: TrustPostgresDatabase;
+    let db: ITrustDatabase;
 
     beforeAll(async () => {
         testDbManager = TestDatabaseManager.getInstance();
         await testDbManager.initialize();
-        db = testDbManager.getDatabase() as TrustPostgresDatabase;
-    }, 3500);
+        db = testDbManager.getDatabase();
+    }, 3000);
 
     afterAll(async () => {
         await testDbManager.cleanup();
@@ -1068,14 +1068,14 @@ describe("Validation Trust", () => {
 
 describe("Token Performance Operations", () => {
     let testDbManager: TestDatabaseManager;
-    let db: TrustPostgresDatabase;
+    let db: ITrustDatabase;
     let tokenAddress: string;
     let initialTokenPerformance;
 
     beforeAll(async () => {
         testDbManager = TestDatabaseManager.getInstance();
         await testDbManager.initialize();
-        db = testDbManager.getDatabase() as TrustPostgresDatabase;
+        db = testDbManager.getDatabase();
         tokenAddress = `token-${uuidv4()}`;
 
         initialTokenPerformance = {
@@ -1098,7 +1098,7 @@ describe("Token Performance Operations", () => {
             initialMarketCap: 100000,
             lastUpdated: new Date(),
         };
-    }, 3500);
+    }, 3000);
 
     afterAll(async () => {
         await testDbManager.cleanup();
@@ -1172,14 +1172,14 @@ describe("Token Performance Operations", () => {
 
 describe("Token Recommendation Operations", () => {
     let testDbManager: TestDatabaseManager;
-    let db: TrustPostgresDatabase;
+    let db: ITrustDatabase;
     let recommenderId: string;
     let tokenAddress: string;
 
     beforeAll(async () => {
         testDbManager = TestDatabaseManager.getInstance();
         await testDbManager.initialize();
-        db = testDbManager.getDatabase() as TrustPostgresDatabase;
+        db = testDbManager.getDatabase();
         tokenAddress = `token-${uuidv4()}`;
 
         // Setup test recommender
@@ -1216,7 +1216,7 @@ describe("Token Recommendation Operations", () => {
             initialMarketCap: 100000,
             lastUpdated: new Date(),
         });
-    }, 3500);
+    }, 10000);
 
     afterAll(async () => {
         await testDbManager.cleanup();
@@ -1294,7 +1294,7 @@ describe("Token Recommendation Operations", () => {
                 await db.addTokenRecommendation(recommendation);
                 testRecommendations.push(recommendation);
             }
-        }, 3500);
+        }, 3000);
 
         it("should get recommendations by recommender", async () => {
             const recommendations =
@@ -1414,7 +1414,7 @@ describe("Token Recommendation Operations", () => {
 
 describe("Trade Performance Operations", () => {
     let testDbManager: TestDatabaseManager;
-    let db: TrustPostgresDatabase;
+    let db: ITrustDatabase;
     let tokenAddress: string;
     let recommenderId: string;
     let initialTrade: TradePerformance;
@@ -1422,7 +1422,7 @@ describe("Trade Performance Operations", () => {
     beforeAll(async () => {
         testDbManager = TestDatabaseManager.getInstance();
         await testDbManager.initialize();
-        db = testDbManager.getDatabase() as TrustPostgresDatabase;
+        db = testDbManager.getDatabase();
 
         tokenAddress = `token-${uuidv4()}`;
         recommenderId = uuidv4();
@@ -1479,7 +1479,7 @@ describe("Trade Performance Operations", () => {
             last_updated: new Date().toISOString(),
             rapidDump: false,
         };
-    }, 3500);
+    }, 3000);
 
     afterAll(async () => {
         await testDbManager.cleanup();
@@ -1609,14 +1609,14 @@ describe("Trade Performance Operations", () => {
 
 describe("Transaction Operations", () => {
     let testDbManager: TestDatabaseManager;
-    let db: TrustPostgresDatabase;
+    let db: ITrustDatabase;
     let tokenAddress: string;
     let transactionHash: string;
 
     beforeAll(async () => {
         testDbManager = TestDatabaseManager.getInstance();
         await testDbManager.initialize();
-        db = testDbManager.getDatabase() as TrustPostgresDatabase;
+        db = testDbManager.getDatabase();
         tokenAddress = `token-${uuidv4()}`;
         transactionHash = `txn-${uuidv4()}`;
 
@@ -1640,7 +1640,7 @@ describe("Transaction Operations", () => {
             initialMarketCap: 100000,
             lastUpdated: new Date(),
         });
-    }, 3500);
+    }, 3000);
 
     afterAll(async () => {
         await testDbManager.cleanup();
