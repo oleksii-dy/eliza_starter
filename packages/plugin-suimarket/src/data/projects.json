@@ -1,4 +1,13 @@
-[
+[{
+    "id": 51,
+    "name": "Sui",
+    "symbol": "SUI",
+    "categories": ["Layer1"],
+    "website": "https://sui.io/",
+    "x_website": "https://x.com/SuiNetwork",
+    "verified": "Yes",
+    "congecko_link": "https://www.coingecko.com/en/coins/sui"
+  },
     {
       "id": 1,
       "name": "Cetus",
@@ -500,17 +509,8 @@
       "verified": "Yes",
       "congecko_link": ""
     }
+
     ,
-    {
-      "id": 51,
-      "name": "Sui",
-      "symbol": "SUI",
-      "categories": ["Layer1"],
-      "website": "https://sui.io/",
-      "x_website": "https://x.com/SuiNetwork",
-      "verified": "Yes",
-      "congecko_link": "https://www.coingecko.com/en/coins/sui"
-    },
     {
         "id": 52,
         "name": "Lofi",
