@@ -36,65 +36,7 @@ The database schema includes several key tables:
 
 ### PostgreSQL Setup
 
-1. **Install PostgreSQL Extensions**
-
-```sql
-CREATE EXTENSION IF NOT EXISTS vector;
-CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-```
-
-2. **Initialize Core Tables**
-
-```sql
--- Create base tables
-CREATE TABLE accounts (
-    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "name" TEXT,
-    "username" TEXT UNIQUE,
-    "email" TEXT NOT NULL UNIQUE,
-    "avatarUrl" TEXT,
-    "details" JSONB DEFAULT '{}'::jsonb
-);
-
-CREATE TABLE rooms (
-    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE memories (
-    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    "type" TEXT NOT NULL,
-    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "content" JSONB NOT NULL,
-    "embedding" vector(1536),
-    "userId" UUID REFERENCES accounts("id"),
-    "agentId" UUID REFERENCES accounts("id"),
-    "roomId" UUID REFERENCES rooms("id"),
-    "isUnique" BOOLEAN DEFAULT true NOT NULL
-);
-
-CREATE TABLE participants (
-    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    "userId" UUID REFERENCES accounts("id"),
-    "roomId" UUID REFERENCES rooms("id"),
-    "joinedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-3. **Set Up Indexes**
-
-```sql
-CREATE INDEX idx_memories_embedding ON memories
-    USING hnsw ("embedding" vector_cosine_ops);
-
-CREATE INDEX idx_memories_type_room ON memories("type", "roomId");
-
-CREATE INDEX idx_participants_user ON participants("userId");
-CREATE INDEX idx_participants_room ON participants("roomId");
-
-```
+Run code in [schema.sql](https://github.com/elizaOS/eliza/blob/0f9441a03ff4e721937c37e89aea87827166ada1/packages/adapter-postgres/schema.sql) in your postgreSQL terminal.
 
 ### Connection Configuration
 
