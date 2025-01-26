@@ -187,6 +187,21 @@ async function hasEnoughBalance(
     }
 }
 
+async function getPrice(client: RESTClient, productId: string) {
+    elizaLogger.debug("Fetching product info for productId:", productId);
+    try {
+        const productInfo = await client.getProduct({productId});
+        const price = JSON.parse(productInfo)?.price;
+        elizaLogger.info("Product info retrieved:", productInfo);
+        elizaLogger.info("Price:", price);
+        return Number(price);
+    } catch (error) {
+        elizaLogger.error("Error fetching product info:", error);
+        return null;
+    }
+}
+
+
 export const executeAdvancedTradeAction: Action = {
     name: "EXECUTE_ADVANCED_TRADE",
     description: "Execute a trade using Coinbase Advanced Trading API",
@@ -282,18 +297,25 @@ export const executeAdvancedTradeAction: Action = {
         // Configure order
         let orderConfiguration: OrderConfiguration;
         elizaLogger.debug("Starting order configuration");
+        let amountInCurrency = amount;
         try {
             if (orderType === "MARKET") {
+                const priceInUSD = await getPrice(client, productId);
+                elizaLogger.info("Price:", priceInUSD);
+                if (side === "SELL") {
+                    amountInCurrency = parseFloat(((1 / priceInUSD) * amountInCurrency).toFixed(7));
+                }
+                elizaLogger.info("Amount in currency:", amountInCurrency);
                 orderConfiguration =
                     side === "BUY"
                         ? {
                               market_market_ioc: {
-                                  quote_size: amount.toString(),
+                                  quote_size: amountInCurrency.toString(),
                               },
                           }
                         : {
                               market_market_ioc: {
-                                  base_size: amount.toString(),
+                                  base_size: amountInCurrency.toString(),
                               },
                           };
             } else {
@@ -302,7 +324,7 @@ export const executeAdvancedTradeAction: Action = {
                 }
                 orderConfiguration = {
                     limit_limit_gtc: {
-                        baseSize: amount.toString(),
+                        baseSize: amountInCurrency.toString(),
                         limitPrice: limitPrice.toString(),
                         postOnly: false,
                     },
@@ -327,14 +349,13 @@ export const executeAdvancedTradeAction: Action = {
         }
 
         // Execute trade
-        let order: CreateOrderResponse;
         try {
             elizaLogger.debug("Executing the trade");
             if (
                 !(await hasEnoughBalance(
                     client,
                     productId.split("-")[0],
-                    amount,
+                    amountInCurrency,
                     side
                 ))
             ) {
@@ -347,7 +368,7 @@ export const executeAdvancedTradeAction: Action = {
                 return;
             }
 
-            order = await client.createOrder({
+           const order = await client.createOrder({
                 clientOrderId: crypto.randomUUID(),
                 productId,
                 side: side === "BUY" ? OrderSide.BUY : OrderSide.SELL,
@@ -355,6 +376,29 @@ export const executeAdvancedTradeAction: Action = {
             });
 
             elizaLogger.info("Trade executed successfully:", order);
+            const parsedOrder = JSON.parse(order);
+            elizaLogger.info("Parsed order:", JSON.stringify(parsedOrder));
+            elizaLogger.info("Parsed order success:", parsedOrder.success);
+            if (parsedOrder.success == true) {
+                callback(
+                    {
+                        text: `Advanced Trade executed successfully:
+    - Product: ${productId}
+    - Type: ${orderType} Order
+    - Side: ${side}
+    - Amount: ${amountInCurrency}
+    ${orderType === "LIMIT" ? `- Limit Price: ${limitPrice}\n` : ""}`,
+                },
+                []
+            );
+        } else {
+            callback(
+                {
+                    text: `Failed to execute trade: ${(parsedOrder as any)?.error_response?.message ?? "Unknown error occurred"}`,
+                },
+                []
+            );
+        }
         } catch (error) {
             elizaLogger.error("Trade execution failed:", error?.message);
             callback(
@@ -374,17 +418,6 @@ export const executeAdvancedTradeAction: Action = {
             // Continue execution as this is non-critical
         }
 
-        callback(
-            {
-                text: `Advanced Trade executed successfully:
-- Product: ${productId}
-- Type: ${orderType} Order
-- Side: ${side}
-- Amount: ${amount}
-${orderType === "LIMIT" ? `- Limit Price: ${limitPrice}\n` : ""}`,
-            },
-            []
-        );
     },
     examples: [
         [
