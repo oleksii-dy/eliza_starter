@@ -133,24 +133,29 @@ export const projectInfo: Action = {
         // })
         elizaLogger.log("content: ",content);
         const projectObj = await searchProjectInFileJson(content.project_name?content.project_name:content.token_symbol);
+        console.log("projectObj", projectObj)
         const tokenObject = await findByVerifiedAndName(content.project_name?content.project_name:content.token_symbol);
-        const responseText = `Name:${tokenObject.name} ($${tokenObject.symbol})`
-        if(!tokenObject || !projectObj){
+        console.log("tokenObject", tokenObject)
+        const responseText = `Name:${projectObj.name} ($${projectObj.symbol})`
+        if(!projectObj){
             callback({
                 text:`We do not support ${content.project_name} token in SUI network yet. However, if your token is supported, we can proceed with sending tokens using the token's address `,
              })
              return false
         }
-        const tokenSuiInfo = await getTokenOnSuiScan(tokenObject.type);
-        let coinObject= await searchCoinInFileJsonProvider2(tokenObject.symbol, tokenObject.name)
-        if(coinObject === null){
-            coinObject= await searchCoinInFileJsonProvider(tokenObject.symbol)
+        let tokenSuiInfo, coinObject;
+        let infoPrice,infoDetail;
+        if(tokenObject){
+            tokenSuiInfo = await getTokenOnSuiScan(tokenObject.type);
+            coinObject= await searchCoinInFileJsonProvider2(tokenObject.symbol, tokenObject.name);
+            if(coinObject === null){
+                coinObject= await searchCoinInFileJsonProvider(tokenObject.symbol)
+            }
+            infoPrice = {market_cap_rank:"N/A", price_change_24h:"N/A", price:tokenSuiInfo.tokenPrice, market_cap:tokenSuiInfo.marketCap};
+            infoDetail= {market_cap_rank:"N/A", tickers:[]};
         }
-
         const coinGecko = new CoingeckoProvider();
         let getToken, getDetail;
-        let infoPrice= {market_cap_rank:"N/A", price_change_24h:"N/A", price:tokenSuiInfo.tokenPrice, market_cap:tokenSuiInfo.marketCap};
-        let infoDetail= {market_cap_rank:"N/A", links:{telegram_channel_identifier:"N/A"}, tickers:[]};
         if(coinObject){
             getToken = await coinGecko.getToken(coinObject.id);
             getDetail = await coinGecko.getCoinDataById(coinObject.id);
@@ -173,61 +178,20 @@ export const projectInfo: Action = {
                     websites: projectObj.website,
                     x_url: projectObj.x_website,
                     coin_gecko_url: projectObj.congecko_link==="x"? null: projectObj.congecko_link,
-                    market_cap_rank: infoDetail.market_cap_rank,
-                    markets: `${infoDetail.tickers.filter(item => item.target === "USDT")
+                    market_cap_rank: infoDetail && infoDetail.market_cap_rank? infoDetail.market_cap_rank: 0,
+                    markets: `${infoDetail && infoDetail.tickers?infoDetail.tickers.filter(item => item.target === "USDT")
                             .sort((a, b) => (a.market.name === "Binance" ? -1 : 1) - (b.market.name === "Binance" ? -1 : 1))
                             .slice(0, 5)
                             .map(item => item.market.name)
-                            .join(",")}....`,
+                            .join(","):""},...`,
                     categories: projectObj.categories.join(", "),
-                    imgUrl: tokenSuiInfo.iconUrl,
-                    contract_address: tokenSuiInfo.type,
+                    imgUrl: tokenSuiInfo&&tokenSuiInfo.iconUrl? tokenSuiInfo.iconUrl: "",
+                    contract_address: tokenSuiInfo&&tokenSuiInfo.type?tokenSuiInfo.type:"",
                     ...infoPrice
                 }
             }
         });
         return true;
-        //     let coinObject= await searchCoinInFileJsonProvider2(tokenObject.symbol, tokenObject.name)
-        //     if(coinObject === null){
-        //         coinObject= await searchCoinInFileJsonProvider(tokenObject.symbol)
-        //         if(coinObject === null){
-        //             callback({
-        //                 text: `I cant find infomation of project` ,
-        //             });
-        //         return false
-        //          }
-        //     }
-        //     const coinGecko = new CoingeckoProvider();
-        //     const infoPrice = await coinGecko.getToken(coinObject.id);
-        //     const infoDetail = await coinGecko.getCoinDataById(coinObject.id);
-        //     responseText= `Name:${infoDetail.name} ($${infoDetail.symbol})`
-        //     callback({
-        //         text: responseText,
-        //         action: 'project_overview',
-        //         result: {
-        //             type:"project_overview",
-        //             data:{
-        //                 name: infoDetail.name,
-        //                 symbol: infoDetail.symbol,
-        //                 Slogan: infoDetail.description.en,
-        //                 websites: infoDetail.links.homepage[0],
-        //                 x_url: `https://x.com/${infoDetail.links.twitter_screen_name}`,
-        //                 telegram_channel_identifier: `${infoDetail.links.telegram_channel_identifier}`,
-        //                 coin_gecko_url: `https://www.coingecko.com/en/coins/${infoDetail.id}`,
-        //                 market_cap_rank: infoDetail.market_cap_rank,
-        //                 markets: `${infoDetail.tickers.filter(item => item.target === "USDT")
-        //                         .sort((a, b) => (a.market.name === "Binance" ? -1 : 1) - (b.market.name === "Binance" ? -1 : 1))
-        //                         .slice(0, 5)
-        //                         .map(item => item.market.name)
-        //                         .join(",")}....`,
-        //                 categories: infoDetail.categories,
-        //                 imgUrl: infoDetail.image.small,
-        //                 contract_address: infoDetail.contract_address,
-        //                 ...infoPrice
-        //             }
-        //         }
-        //     });
-        //     return true;
 
 
 
