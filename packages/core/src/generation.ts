@@ -164,6 +164,100 @@ async function truncateTiktoken(
     }
 }
 
+// Synchronous version
+function mkdirpSync(targetPath) {
+    // Convert to absolute path and normalize
+    targetPath = resolve(targetPath);
+
+    try {
+        accessSync(targetPath, fs.constants.F_OK);
+        return targetPath; // Directory already exists
+    } catch {
+        // Directory doesn't exist, proceed with creation
+    }
+
+    const parentDir = dirname(targetPath);
+
+    // If we're at root directory and it doesn't exist, error out
+    if (parentDir === targetPath) {
+        throw new Error("Root directory does not exist");
+    }
+
+    // Recursively create parent directory
+    mkdirpSync(parentDir);
+
+    try {
+        mkdirSync(targetPath);
+    } catch (err) {
+        // Handle race condition
+        if (err.code !== "EEXIST") {
+            throw err;
+        }
+    }
+
+    return targetPath;
+}
+
+function logGenerate(
+    type: "text" | "image",
+    runtime: IAgentRuntime,
+    provider: string,
+    model: string,
+    modelClass: string,
+    context: string,
+    response: string,
+    error: string
+) {
+    if (runtime?.agentId) {
+        console.log("generate " + type + " - agent", runtime.agentId);
+        const dir = `logs/generate`;
+        const dirJson = `${dir}/${runtime.agentId}`;
+        mkdirpSync(dirJson);
+
+        const logData = {
+            agentId: runtime.agentId,
+            type,
+            provider,
+            model,
+            modelClass,
+            context,
+            response,
+            error,
+        };
+
+        const ts = Date.now();
+        const jsonLogFilePath = `${dirJson}/${ts}.json`;
+
+        // Append to the running log file
+        try {
+            appendFileSync(
+                `${dir}/${runtime.agentId}.log`,
+                JSON.stringify(logData) + "\n"
+            );
+            writeFileSync(jsonLogFilePath, JSON.stringify(logData));
+        } catch (err) {
+            console.error("Error writing log file:", err);
+        }
+
+        // Remove old log files if there are more than 10
+        const files = readdirSync(dirJson).filter((file) =>
+            file.endsWith(".json")
+        );
+        if (files.length > 10) {
+            const oldFiles = files
+                .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
+                .slice(0, files.length - 10);
+            oldFiles.forEach((file) => {
+                try {
+                    unlinkSync(`${dirJson}/${file}`);
+                } catch (err) {
+                    console.error("Error deleting old log file:", err);
+                }
+            });
+        }
+    }
+}
+
 /**
  * Gets the Cloudflare Gateway base URL for a specific provider if enabled
  * @param runtime The runtime environment
@@ -206,6 +300,78 @@ function getCloudflareGatewayBaseURL(runtime: IAgentRuntime, provider: string): 
     });
 
     return baseURL;
+}
+
+export function getSizeModel(runtime, modelClass) {
+    const provider = runtime.modelProvider;
+    let model = models[provider].model[modelClass];
+
+    // allow character.json settings => secrets to override models
+    // FIXME: add MODEL_MEDIUM support
+    switch (provider) {
+        // if runtime.getSetting("LLAMACLOUD_MODEL_LARGE") is true and modelProvider is LLAMACLOUD, then use the large model
+        case ModelProviderName.LLAMACLOUD:
+            {
+                switch (modelClass) {
+                    case ModelClass.LARGE:
+                        {
+                            model =
+                                runtime.getSetting("LLAMACLOUD_MODEL_LARGE") ||
+                                model;
+                        }
+                        break;
+                    case ModelClass.SMALL:
+                        {
+                            model =
+                                runtime.getSetting("LLAMACLOUD_MODEL_SMALL") ||
+                                model;
+                        }
+                        break;
+                }
+            }
+            break;
+        case ModelProviderName.TOGETHER:
+            {
+                switch (modelClass) {
+                    case ModelClass.LARGE:
+                        {
+                            model =
+                                runtime.getSetting("TOGETHER_MODEL_LARGE") ||
+                                model;
+                        }
+                        break;
+                    case ModelClass.SMALL:
+                        {
+                            model =
+                                runtime.getSetting("TOGETHER_MODEL_SMALL") ||
+                                model;
+                        }
+                        break;
+                }
+            }
+            break;
+        case ModelProviderName.OPENROUTER:
+            {
+                switch (modelClass) {
+                    case ModelClass.LARGE:
+                        {
+                            model =
+                                runtime.getSetting("LARGE_OPENROUTER_MODEL") ||
+                                model;
+                        }
+                        break;
+                    case ModelClass.SMALL:
+                        {
+                            model =
+                                runtime.getSetting("SMALL_OPENROUTER_MODEL") ||
+                                model;
+                        }
+                        break;
+                }
+            }
+            break;
+    }
+    return model;
 }
 
 /**
@@ -300,73 +466,7 @@ export async function generateText({
     const endpoint =
         runtime.character.modelEndpointOverride || getEndpoint(provider);
     const modelSettings = getModelSettings(runtime.modelProvider, modelClass);
-    let model = modelSettings.name;
-
-    // allow character.json settings => secrets to override models
-    // FIXME: add MODEL_MEDIUM support
-    switch (provider) {
-        // if runtime.getSetting("LLAMACLOUD_MODEL_LARGE") is true and modelProvider is LLAMACLOUD, then use the large model
-        case ModelProviderName.LLAMACLOUD:
-            {
-                switch (modelClass) {
-                    case ModelClass.LARGE:
-                        {
-                            model =
-                                runtime.getSetting("LLAMACLOUD_MODEL_LARGE") ||
-                                model;
-                        }
-                        break;
-                    case ModelClass.SMALL:
-                        {
-                            model =
-                                runtime.getSetting("LLAMACLOUD_MODEL_SMALL") ||
-                                model;
-                        }
-                        break;
-                }
-            }
-            break;
-        case ModelProviderName.TOGETHER:
-            {
-                switch (modelClass) {
-                    case ModelClass.LARGE:
-                        {
-                            model =
-                                runtime.getSetting("TOGETHER_MODEL_LARGE") ||
-                                model;
-                        }
-                        break;
-                    case ModelClass.SMALL:
-                        {
-                            model =
-                                runtime.getSetting("TOGETHER_MODEL_SMALL") ||
-                                model;
-                        }
-                        break;
-                }
-            }
-            break;
-        case ModelProviderName.OPENROUTER:
-            {
-                switch (modelClass) {
-                    case ModelClass.LARGE:
-                        {
-                            model =
-                                runtime.getSetting("LARGE_OPENROUTER_MODEL") ||
-                                model;
-                        }
-                        break;
-                    case ModelClass.SMALL:
-                        {
-                            model =
-                                runtime.getSetting("SMALL_OPENROUTER_MODEL") ||
-                                model;
-                        }
-                        break;
-                }
-            }
-            break;
-    }
+    const model = getSizeModel(runtime, modelClass);
 
     elizaLogger.info("Selected model:", model);
 
@@ -442,7 +542,7 @@ export async function generateText({
                 });
 
                 response = openaiResponse;
-                console.log("Received response from OpenAI model.");
+                elizaLogger.debug("Received response from OpenAI model.");
                 break;
             }
 
@@ -1002,9 +1102,28 @@ export async function generateText({
                 throw new Error(errorMessage);
             }
         }
-
+        logGenerate(
+            "text",
+            runtime,
+            provider,
+            model,
+            modelClass,
+            context,
+            response,
+            ""
+        );
         return response;
     } catch (error) {
+        logGenerate(
+            "text",
+            runtime,
+            provider,
+            model,
+            modelClass,
+            context,
+            "",
+            error
+        );
         elizaLogger.error("Error in generateText:", error);
         throw error;
     }
@@ -1417,6 +1536,16 @@ export const generateImage = async (
             }
 
             const imageURL = await response.json();
+            logGenerate(
+                "image",
+                runtime,
+                runtime.imageModelProvider,
+                model,
+                data.modelId,
+                data.prompt,
+                imageURL,
+                ""
+            );
             return { success: true, data: [imageURL] };
         } else if (
             runtime.imageModelProvider === ModelProviderName.TOGETHER ||
@@ -1475,6 +1604,16 @@ export const generateImage = async (
             }
 
             elizaLogger.debug(`Generated ${base64s.length} images`);
+            logGenerate(
+                "image",
+                runtime,
+                runtime.imageModelProvider,
+                model,
+                data.modelId,
+                data.prompt,
+                "Sample: " + base64s[0].slice(0, 100) + " .... ",
+                ""
+            );
             return { success: true, data: base64s };
         } else if (runtime.imageModelProvider === ModelProviderName.FAL) {
             fal.config({
@@ -1529,6 +1668,16 @@ export const generateImage = async (
             });
 
             const base64s = await Promise.all(base64Promises);
+            logGenerate(
+                "image",
+                runtime,
+                runtime.imageModelProvider,
+                model,
+                data.modelId,
+                data.prompt,
+                "Sample: " + base64s[0].slice(0, 100) + " .... ",
+                ""
+            );
             return { success: true, data: base64s };
         } else if (runtime.imageModelProvider === ModelProviderName.VENICE) {
             const response = await fetch(
@@ -1567,7 +1716,16 @@ export const generateImage = async (
                 }
                 return `data:image/png;base64,${base64String}`;
             });
-
+            logGenerate(
+                "image",
+                runtime,
+                runtime.imageModelProvider,
+                model,
+                data.modelId,
+                data.prompt,
+                "Sample: " + base64s[0].slice(0, 100) + " .... ",
+                ""
+            );
             return { success: true, data: base64s };
         } else if (
             runtime.imageModelProvider === ModelProviderName.NINETEEN_AI
@@ -1606,6 +1764,16 @@ export const generateImage = async (
                 }
                 return `data:image/png;base64,${base64String}`;
             });
+            logGenerate(
+                "image",
+                runtime,
+                runtime.imageModelProvider,
+                model,
+                data.modelId,
+                data.prompt,
+                "Sample: " + base64s[0].slice(0, 100) + " .... ",
+                ""
+            );
 
             return { success: true, data: base64s };
         } else if (runtime.imageModelProvider === ModelProviderName.LIVEPEER) {
@@ -1658,6 +1826,16 @@ export const generateImage = async (
                         return `data:image/jpeg;base64,${base64}`;
                     })
                 );
+                logGenerate(
+                    "image",
+                    runtime,
+                    runtime.imageModelProvider,
+                    model,
+                    data.modelId,
+                    data.prompt,
+                    "Sample: " + base64s[0].slice(0, 100) + " .... ",
+                    ""
+                );
                 return {
                     success: true,
                     data: base64Images,
@@ -1692,9 +1870,29 @@ export const generateImage = async (
             const base64s = response.data.map(
                 (image) => `data:image/png;base64,${image.b64_json}`
             );
+            logGenerate(
+                "image",
+                runtime,
+                runtime.imageModelProvider,
+                model,
+                data.modelId,
+                data.prompt,
+                "Sample: " + base64s[0].slice(0, 100) + " .... ",
+                ""
+            );
             return { success: true, data: base64s };
         }
     } catch (error) {
+        logGenerate(
+            "image",
+            runtime,
+            runtime.imageModelProvider,
+            model,
+            data.modelId,
+            data.prompt,
+            "",
+            error
+        );
         console.error(error);
         return { success: false, error: error };
     }
