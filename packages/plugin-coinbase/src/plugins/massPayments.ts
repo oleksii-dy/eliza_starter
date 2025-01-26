@@ -381,9 +381,9 @@ Check the CSV file for full details.`,
                 []
             );
         } catch (error) {
-            elizaLogger.error("Error during mass payouts:", error);
+            elizaLogger.error("Error during mass payouts:", error.message);
             callback(
-                { text: "Failed to complete payouts. Please try again." },
+                { text: `Failed to complete payouts: ${error.message}` },
                 []
             );
         }
