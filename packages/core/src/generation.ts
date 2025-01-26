@@ -215,7 +215,7 @@ function logGenerate(
     runtime: IAgentRuntime,
     provider: string,
     model: string,
-    modelClass: string,
+    modelClass: string | ModelClass, // has to be a string for image gen
     context: string,
     response: string,
     error: string
@@ -314,9 +314,11 @@ function getCloudflareGatewayBaseURL(runtime: IAgentRuntime, provider: string): 
     return baseURL;
 }
 
-export function getSizeModel(runtime, modelClass) {
+export function getSizeModel(runtime, modelClass: ModelClass) {
     const provider = runtime.modelProvider;
-    let model = models[provider].model[modelClass];
+    const modelSettings = getModelSettings(runtime.modelProvider, modelClass);
+    //let model = models[provider].model[modelClass];
+    let model = modelSettings.name;
 
     // allow character.json settings => secrets to override models
     // FIXME: add MODEL_MEDIUM support
@@ -424,7 +426,7 @@ export async function generateText({
     verifiableInferenceOptions?: VerifiableInferenceOptions;
 }): Promise<string> {
     if (!context) {
-        console.error("generateText context is empty");
+        elizaLogger.error("generateText context is empty");
         return "";
     }
 
@@ -479,7 +481,11 @@ export async function generateText({
     const endpoint =
         runtime.character.modelEndpointOverride || getEndpoint(provider);
     const modelSettings = getModelSettings(runtime.modelProvider, modelClass);
-    const model = getSizeModel(runtime, modelClass);
+    // let model = models[provider].model[modelClass];
+    const model = getSizeModel(runtime, modelClass); // returns modelName
+    // does it return an obj or string
+    // I think  it should be a string
+    console.log('modelClass', modelClass, 'getSizeModel gave', model)
 
     elizaLogger.info("Selected model:", model);
 
@@ -666,9 +672,11 @@ export async function generateText({
             case ModelProviderName.ANTHROPIC: {
                 elizaLogger.debug("Initializing Anthropic model with Cloudflare check");
                 const baseURL = getCloudflareGatewayBaseURL(runtime, 'anthropic') || "https://api.anthropic.com/v1";
-                elizaLogger.debug("Anthropic baseURL result:", { baseURL });
+                elizaLogger.log("Anthropic baseURL result:", { baseURL });
 
                 const anthropic = createAnthropic({ apiKey, baseURL, fetch: runtime.fetch });
+                console.log('model', model)
+
                 const { text: anthropicResponse } = await aiGenerateText({
                     model: anthropic.languageModel(model),
                     prompt: context,
@@ -1846,7 +1854,6 @@ export const generateImage = async (
                     model,
                     data.modelId,
                     data.prompt,
-                    //"Sample: " + base64s[0].slice(0, 100) + " .... ",
                     "Sample: " + base64Images[0].slice(0, 100) + " .... ",
                     ""
                 );
