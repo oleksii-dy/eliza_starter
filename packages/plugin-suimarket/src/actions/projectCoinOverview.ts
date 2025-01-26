@@ -105,7 +105,7 @@ export const projectInfo: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-        console.log(state.recentMessages)
+        console.log("state:->>",state.recentMessages)
         // const projectPromptTemplateContext = composeContext({
         //     state,
         //     template: projectInfoTemplate,
