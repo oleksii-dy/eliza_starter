@@ -20,7 +20,7 @@ export const searchProjectInFileJson = async(name:string)=>{
                 const foundProject = projects.find(
                     (project: { name: string }) => {
                         return (
-                            (project.name && project.name.toLowerCase() === name.toLowerCase())
+                            (project.name && project.name.toLowerCase().includes(name.toLowerCase()) )
                         );
                     }
                 );

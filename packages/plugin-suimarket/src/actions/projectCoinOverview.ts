@@ -41,19 +41,20 @@ Respond with a JSON markdown block containing only the extracted values.
 export const projectInfo: Action = {
     name: "PROJECT_OVERVIEW",
     similes: [
-       "PROJECT_SUMMARY_{PROJECT_NAME}",
-        "PROJECT_DESCRIPTION_{PROJECT_NAME}",
-        "OVERVIEW_{PROJECT_NAME}",
-        "{PROJECT_NAME}_OVERVIEW",
-        "PROJECT_DETAILS_{PROJECT_NAME}",
-        "PROJECT_INFO_{PROJECT_NAME}",
-        "{PROJECT_NAME}",
-        "{PROJECT_NAME}_project",
-        "{PROJECT_NAME}_infor",
-        "{PROJECT_NAME}_overview",
-        "what_is_{PROJECT_NAME}?",
-        "{PROJECT_NAME}_info",
-        "{PROJECT_NAME}_information"
+       "PROJECT_SUMMARY_{INPUT}",
+        "PROJECT_DESCRIPTION_{INPUT}",
+        "OVERVIEW_{INPUT}",
+        "{INPUT}_OVERVIEW",
+        "PROJECT_DETAILS_{INPUT}",
+        "PROJECT_INFO_{INPUT}",
+        "{INPUT}_project",
+        "{INPUT}_infor",
+        "{INPUT}_overview",
+        "what_is__{INPUT}?",
+        "{INPUT}_info",
+        "{INPUT}_information",
+        "{INPUT}_IN4",
+        "IN4_{INPUT}"
     ],
 
     examples: [
@@ -130,7 +131,7 @@ export const projectInfo: Action = {
         //     context: projectPromptTemplateContext,
         //     modelClass: ModelClass.SMALL,
         // })
-        // elizaLogger.log("content: ",content);
+        elizaLogger.log("content: ",content);
         const projectObj = await searchProjectInFileJson(content.project_name?content.project_name:content.token_symbol);
         const tokenObject = await findByVerifiedAndName(content.project_name?content.project_name:content.token_symbol);
         const responseText = `Name:${tokenObject.name} ($${tokenObject.symbol})`
