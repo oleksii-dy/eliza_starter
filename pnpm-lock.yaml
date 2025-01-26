@@ -1794,7 +1794,7 @@ importers:
         version: link:../core
       '@goat-sdk/adapter-vercel-ai':
         specifier: 0.2.0
-        version: 0.2.0(@goat-sdk/core@0.4.0)(ai@4.1.5(react@19.0.0)(zod@3.23.8))
+        version: 0.2.0(@goat-sdk/core@0.4.0)(ai@4.1.6(react@19.0.0)(zod@3.23.8))
       '@goat-sdk/core':
         specifier: 0.4.0
         version: 0.4.0
@@ -2985,8 +2985,8 @@ packages:
     peerDependencies:
       zod: ^3.0.0
 
-  '@ai-sdk/openai@1.1.2':
-    resolution: {integrity: sha512-9rfcwjl4g1/Bdr2SmgFQr+aw81r62MvIKE7QDHMC4ulFd/Hej2oClROSMpDFZHXzs7RGeb32VkRyCHUWWgN3RQ==}
+  '@ai-sdk/openai@1.1.3':
+    resolution: {integrity: sha512-U+LqNAyB5/4KmOrU1U8NEQMLlLTzKhuVkpKo8xvlpz662TnOBxyGjGnf8Kbqw7VXyeHg0tpuHincolOuvnpynA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.0.0
@@ -3027,8 +3027,8 @@ packages:
       zod:
         optional: true
 
-  '@ai-sdk/provider-utils@2.1.2':
-    resolution: {integrity: sha512-ezpQT6kzy/2O4yyn/2YigMqynBYjZIOam3/EMNVzju+Ogj+Z+pf27c/Th78ce0A2ltgrXx6xN14sal/HHZNOOw==}
+  '@ai-sdk/provider-utils@2.1.3':
+    resolution: {integrity: sha512-NamxUnRCnG7aSnYhnhX5in5KZtwIIrafURABuAmrV3mGT5YZPzqfsXdnsXY0GbzDgbl+A7R1IPxrA4at2fU/XQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.0.0
@@ -3068,8 +3068,8 @@ packages:
       zod:
         optional: true
 
-  '@ai-sdk/react@1.1.3':
-    resolution: {integrity: sha512-W9R3vIcb3xkV3Vl6/8HSMeiKkJ1IQyCSSA1Ahi0beox8SBfQb4I3h+tTiBT5EU2UZKKsM1SLKeFp6M06T6w8ag==}
+  '@ai-sdk/react@1.1.4':
+    resolution: {integrity: sha512-gU8k7ub2LGpmifJH5HjGlQaiEFSVG2Y8rt63tCz3IQ7ChFBHD7P1X+EzR6e5XcyqhNPMBoGFhEm4Mx17LCzlEg==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ^19 || ^19.0.0-rc
@@ -3107,8 +3107,8 @@ packages:
       zod:
         optional: true
 
-  '@ai-sdk/ui-utils@1.1.3':
-    resolution: {integrity: sha512-DczePOv7SxXNY7IkHo4dbN6DT68vmDLCm5uJNUQy0eVkF6cfTbGmScgU36UQ63v7ggUTGffexOo0aB3eJOdFcw==}
+  '@ai-sdk/ui-utils@1.1.4':
+    resolution: {integrity: sha512-bqWg0d5Hcw1sZbWBrrm9XBbCuuiHDtBE6hWaOYBuOy90tGLFE0n21ku110dvoVNjKW2rmpNGEipgwi8f7BCVeA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.0.0
@@ -7617,8 +7617,8 @@ packages:
       borsh: ^0.7.0
       buffer: 6.0.1
 
-  '@openapitools/openapi-generator-cli@2.16.2':
-    resolution: {integrity: sha512-AjPxFPpCr8atXYWAFRlWttWcLz0+2VEEw2dTk8wLBwzwz3+dN/8t1Zi4s89QNPJyrOm1lc+g42nNIy8MJlWOIA==}
+  '@openapitools/openapi-generator-cli@2.16.3':
+    resolution: {integrity: sha512-HUpxQW45MLoWruXPvwnS2p6PkbnEIeWuDq4AembALRNGbIbg158k3peBCIbnn4PzGura9TnhaPPjOl3BF5PinQ==}
     engines: {node: '>=16'}
     hasBin: true
 
@@ -9456,8 +9456,8 @@ packages:
   '@substrate/connect-extension-protocol@2.2.1':
     resolution: {integrity: sha512-GoafTgm/Jey9E4Xlj4Z5ZBt/H4drH2CNq8VrAro80rtoznrXnFDNVivLQzZN0Xaj2g8YXSn9pC9Oc9IovYZJXw==}
 
-  '@substrate/connect-known-chains@1.9.0':
-    resolution: {integrity: sha512-R7yE0kIRUnvNlMiYramQ+dQwSY0ZpqRJ1mK8hLKlvCbEMqjSFa0n/WYYG6/bst9nNA1O6OZLWpvMso6yhENe3A==}
+  '@substrate/connect-known-chains@1.9.1':
+    resolution: {integrity: sha512-dWNf5x3hjrY4s+WEovPKL0jH58pyIaIiAM918aAdnp/VKkAMqOfhKzRWL7BqJDKCm95bL4fqnOfaXZ3SQpVoYw==}
 
   '@substrate/connect@0.8.8':
     resolution: {integrity: sha512-zwaxuNEVI9bGt0rT8PEJiXOyebLIo6QN1SyiAHRPBOl6g3Sy0KKdSN8Jmyn++oXhVRD8aIe75/V8ZkS81T+BPQ==}
@@ -10978,8 +10978,8 @@ packages:
       zod:
         optional: true
 
-  ai@4.1.5:
-    resolution: {integrity: sha512-R8z9+0bTJtmtKazGNqqAJ5vyWchj7EQJls2eYwOUPbvBAY3V5uKmwkRPsKi3Npnbd/mbjl28N1xpKGTw7aE1nA==}
+  ai@4.1.6:
+    resolution: {integrity: sha512-4NjzmfV0eWHRMVIzuzrZCizjLO+5d6sahZvaRALe+hjvcnZOtfo6aepF7UliM1ZR7yopK2o/edCxDlvxr4ECyA==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ^19 || ^19.0.0-rc
@@ -19324,8 +19324,8 @@ packages:
     resolution: {integrity: sha512-Rb5RVBy1iyqOtNl15Cw/llpeLH8bsb37gM1FUfKQ+Wck6xHlbAhWGUFiTRHtkjqGTA5pSHz6+0hrPW/oECihPQ==}
     engines: {node: '>= 14'}
 
-  proxy-agent@6.4.0:
-    resolution: {integrity: sha512-u0piLU+nCOHMgGjRbimiXmA9kM/L9EHh3zL81xCdp7m+Y2pHIsnmbdDoEDoAz5geaonNR6q6+yOPQs6n4T6sBQ==}
+  proxy-agent@6.5.0:
+    resolution: {integrity: sha512-TmatMXdr2KlRiA2CyDu8GqR8EjahTG3aY3nXjdzFyoZbmB8hrBsTyMezhULIXKnC0jpfjlmiZ3+EaCzoInSu/A==}
     engines: {node: '>= 14'}
 
   proxy-compare@2.5.1:
@@ -21263,14 +21263,14 @@ packages:
     resolution: {integrity: sha512-n1cw8k1k0x4pgA2+9XrOkFydTerNcJ1zWCO5Nn9scWHTD+5tp8dghT2x1uduQePZTZgd3Tupf+x9BxJjeJi77Q==}
     engines: {node: '>=14.0.0'}
 
-  tldts-core@6.1.74:
-    resolution: {integrity: sha512-gTwtY6L2GfuxiL4CWpLknv9JDYYqBvKCk/BT5uAaAvCA0s6pzX7lr2IrkQZSUlnSjRHIjTl8ZwKCVXJ7XNRWYw==}
+  tldts-core@6.1.75:
+    resolution: {integrity: sha512-AOvV5YYIAFFBfransBzSTyztkc3IMfz5Eq3YluaRiEu55nn43Fzaufx70UqEKYr8BoLCach4q8g/bg6e5+/aFw==}
 
-  tldts-experimental@6.1.74:
-    resolution: {integrity: sha512-ryoxUvUmhrlGDgTcNu6Qc3nizKyDXOcmwJsW8IZSAhrfCHYbh2xnixh7eU69WApkLAm17pXDjR7J4zs1sm4ocw==}
+  tldts-experimental@6.1.75:
+    resolution: {integrity: sha512-iTy/MkRgDWJClAi3v8jzB4vGSws8MW/Z6asSol2KRbBu3sbyFhRBeV8xhxEHcvfLw9QrObaPpdYc4+XihicHdQ==}
 
-  tldts@6.1.74:
-    resolution: {integrity: sha512-O5vTZ1UmmEmrLl/59U9igitnSMlprALLaLgbv//dEvjobPT9vyURhHXKMCDLEhn3qxZFIkb9PwAfNYV0Ol7RPQ==}
+  tldts@6.1.75:
+    resolution: {integrity: sha512-+lFzEXhpl7JXgWYaXcB6DqTYXbUArvrWAE/5ioq/X3CdWLbDjpPP4XTrQBmEJ91y3xbe4Fkw7Lxv4P3GWeJaNg==}
     hasBin: true
 
   tmp-promise@3.0.3:
@@ -23208,10 +23208,10 @@ snapshots:
       '@ai-sdk/provider-utils': 2.0.2(zod@3.23.8)
       zod: 3.23.8
 
-  '@ai-sdk/openai@1.1.2(zod@3.24.1)':
+  '@ai-sdk/openai@1.1.3(zod@3.24.1)':
     dependencies:
       '@ai-sdk/provider': 1.0.6
-      '@ai-sdk/provider-utils': 2.1.2(zod@3.24.1)
+      '@ai-sdk/provider-utils': 2.1.3(zod@3.24.1)
       zod: 3.24.1
 
   '@ai-sdk/provider-utils@1.0.20(zod@3.23.8)':
@@ -23259,7 +23259,7 @@ snapshots:
     optionalDependencies:
       zod: 3.23.8
 
-  '@ai-sdk/provider-utils@2.1.2(zod@3.23.8)':
+  '@ai-sdk/provider-utils@2.1.3(zod@3.23.8)':
     dependencies:
       '@ai-sdk/provider': 1.0.6
       eventsource-parser: 3.0.0
@@ -23268,7 +23268,7 @@ snapshots:
     optionalDependencies:
       zod: 3.23.8
 
-  '@ai-sdk/provider-utils@2.1.2(zod@3.24.1)':
+  '@ai-sdk/provider-utils@2.1.3(zod@3.24.1)':
     dependencies:
       '@ai-sdk/provider': 1.0.6
       eventsource-parser: 3.0.0
@@ -23307,20 +23307,20 @@ snapshots:
       react: 19.0.0
       zod: 3.23.8
 
-  '@ai-sdk/react@1.1.3(react@19.0.0)(zod@3.23.8)':
+  '@ai-sdk/react@1.1.4(react@19.0.0)(zod@3.23.8)':
     dependencies:
-      '@ai-sdk/provider-utils': 2.1.2(zod@3.23.8)
-      '@ai-sdk/ui-utils': 1.1.3(zod@3.23.8)
+      '@ai-sdk/provider-utils': 2.1.3(zod@3.23.8)
+      '@ai-sdk/ui-utils': 1.1.4(zod@3.23.8)
       swr: 2.3.0(react@19.0.0)
       throttleit: 2.1.0
     optionalDependencies:
       react: 19.0.0
       zod: 3.23.8
 
-  '@ai-sdk/react@1.1.3(react@19.0.0)(zod@3.24.1)':
+  '@ai-sdk/react@1.1.4(react@19.0.0)(zod@3.24.1)':
     dependencies:
-      '@ai-sdk/provider-utils': 2.1.2(zod@3.24.1)
-      '@ai-sdk/ui-utils': 1.1.3(zod@3.24.1)
+      '@ai-sdk/provider-utils': 2.1.3(zod@3.24.1)
+      '@ai-sdk/ui-utils': 1.1.4(zod@3.24.1)
       swr: 2.3.0(react@19.0.0)
       throttleit: 2.1.0
     optionalDependencies:
@@ -23354,18 +23354,18 @@ snapshots:
     optionalDependencies:
       zod: 3.23.8
 
-  '@ai-sdk/ui-utils@1.1.3(zod@3.23.8)':
+  '@ai-sdk/ui-utils@1.1.4(zod@3.23.8)':
     dependencies:
       '@ai-sdk/provider': 1.0.6
-      '@ai-sdk/provider-utils': 2.1.2(zod@3.23.8)
+      '@ai-sdk/provider-utils': 2.1.3(zod@3.23.8)
       zod-to-json-schema: 3.24.1(zod@3.23.8)
     optionalDependencies:
       zod: 3.23.8
 
-  '@ai-sdk/ui-utils@1.1.3(zod@3.24.1)':
+  '@ai-sdk/ui-utils@1.1.4(zod@3.24.1)':
     dependencies:
       '@ai-sdk/provider': 1.0.6
-      '@ai-sdk/provider-utils': 2.1.2(zod@3.24.1)
+      '@ai-sdk/provider-utils': 2.1.3(zod@3.24.1)
       zod-to-json-schema: 3.24.1(zod@3.24.1)
     optionalDependencies:
       zod: 3.24.1
@@ -25249,7 +25249,7 @@ snapshots:
       '@cliqz/adblocker': 1.34.0
       '@cliqz/adblocker-content': 1.34.0
       playwright: 1.48.2
-      tldts-experimental: 6.1.74
+      tldts-experimental: 6.1.75
 
   '@cliqz/adblocker@1.34.0':
     dependencies:
@@ -25260,7 +25260,7 @@ snapshots:
       '@remusao/smaz': 1.10.0
       '@types/chrome': 0.0.278
       '@types/firefox-webext-browser': 120.0.4
-      tldts-experimental: 6.1.74
+      tldts-experimental: 6.1.75
 
   '@coinbase-samples/advanced-sdk-ts@file:packages/plugin-coinbase/advanced-sdk-ts(encoding@0.1.13)':
     dependencies:
@@ -28293,10 +28293,10 @@ snapshots:
       '@shikijs/types': 1.29.1
       '@shikijs/vscode-textmate': 10.0.1
 
-  '@goat-sdk/adapter-vercel-ai@0.2.0(@goat-sdk/core@0.4.0)(ai@4.1.5(react@19.0.0)(zod@3.23.8))':
+  '@goat-sdk/adapter-vercel-ai@0.2.0(@goat-sdk/core@0.4.0)(ai@4.1.6(react@19.0.0)(zod@3.23.8))':
     dependencies:
       '@goat-sdk/core': 0.4.0
-      ai: 4.1.5(react@19.0.0)(zod@3.23.8)
+      ai: 4.1.6(react@19.0.0)(zod@3.23.8)
       zod: 3.23.8
 
   '@goat-sdk/core@0.3.8(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@5.0.10)':
@@ -30656,7 +30656,7 @@ snapshots:
 
   '@neynar/nodejs-sdk@2.9.0(bufferutil@4.0.9)(class-transformer@0.5.1)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)':
     dependencies:
-      '@openapitools/openapi-generator-cli': 2.16.2(class-transformer@0.5.1)(encoding@0.1.13)
+      '@openapitools/openapi-generator-cli': 2.16.3(class-transformer@0.5.1)(encoding@0.1.13)
       semver: 7.6.3
       viem: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)
     transitivePeerDependencies:
@@ -31497,7 +31497,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@openapitools/openapi-generator-cli@2.16.2(class-transformer@0.5.1)(encoding@0.1.13)':
+  '@openapitools/openapi-generator-cli@2.16.3(class-transformer@0.5.1)(encoding@0.1.13)':
     dependencies:
       '@nestjs/axios': 3.1.3(@nestjs/common@10.4.15(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1))(axios@1.7.9)(rxjs@7.8.1)
       '@nestjs/common': 10.4.15(class-transformer@0.5.1)(reflect-metadata@0.1.13)(rxjs@7.8.1)
@@ -31513,7 +31513,7 @@ snapshots:
       glob: 9.3.5
       inquirer: 8.2.6
       lodash: 4.17.21
-      proxy-agent: 6.4.0
+      proxy-agent: 6.5.0
       reflect-metadata: 0.1.13
       rxjs: 7.8.1
       tslib: 2.8.1
@@ -34252,7 +34252,7 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.26.7
       '@noble/curves': 1.8.1
-      '@noble/hashes': 1.7.1
+      '@noble/hashes': 1.5.0
       '@solana/buffer-layout': 4.0.1
       agentkeepalive: 4.6.0
       bigint-buffer: 1.1.5
@@ -34538,13 +34538,13 @@ snapshots:
   '@substrate/connect-extension-protocol@2.2.1':
     optional: true
 
-  '@substrate/connect-known-chains@1.9.0':
+  '@substrate/connect-known-chains@1.9.1':
     optional: true
 
   '@substrate/connect@0.8.8(bufferutil@4.0.9)(utf-8-validate@6.0.5)':
     dependencies:
       '@substrate/connect-extension-protocol': 2.2.1
-      '@substrate/connect-known-chains': 1.9.0
+      '@substrate/connect-known-chains': 1.9.1
       '@substrate/light-client-extension-helpers': 0.0.4(smoldot@2.0.22(bufferutil@4.0.9)(utf-8-validate@6.0.5))
       smoldot: 2.0.22(bufferutil@4.0.9)(utf-8-validate@6.0.5)
     transitivePeerDependencies:
@@ -34559,7 +34559,7 @@ snapshots:
       '@polkadot-api/json-rpc-provider-proxy': 0.0.1-492c132563ea6b40ae1fc5470dec4cd18768d182.1.0
       '@polkadot-api/substrate-client': 0.0.1-492c132563ea6b40ae1fc5470dec4cd18768d182.1.0
       '@substrate/connect-extension-protocol': 2.2.1
-      '@substrate/connect-known-chains': 1.9.0
+      '@substrate/connect-known-chains': 1.9.1
       rxjs: 7.8.1
       smoldot: 2.0.22(bufferutil@4.0.9)(utf-8-validate@6.0.5)
     optional: true
@@ -37150,24 +37150,24 @@ snapshots:
       - solid-js
       - vue
 
-  ai@4.1.5(react@19.0.0)(zod@3.23.8):
+  ai@4.1.6(react@19.0.0)(zod@3.23.8):
     dependencies:
       '@ai-sdk/provider': 1.0.6
-      '@ai-sdk/provider-utils': 2.1.2(zod@3.23.8)
-      '@ai-sdk/react': 1.1.3(react@19.0.0)(zod@3.23.8)
-      '@ai-sdk/ui-utils': 1.1.3(zod@3.23.8)
+      '@ai-sdk/provider-utils': 2.1.3(zod@3.23.8)
+      '@ai-sdk/react': 1.1.4(react@19.0.0)(zod@3.23.8)
+      '@ai-sdk/ui-utils': 1.1.4(zod@3.23.8)
       '@opentelemetry/api': 1.9.0
       jsondiffpatch: 0.6.0
     optionalDependencies:
       react: 19.0.0
       zod: 3.23.8
 
-  ai@4.1.5(react@19.0.0)(zod@3.24.1):
+  ai@4.1.6(react@19.0.0)(zod@3.24.1):
     dependencies:
       '@ai-sdk/provider': 1.0.6
-      '@ai-sdk/provider-utils': 2.1.2(zod@3.24.1)
-      '@ai-sdk/react': 1.1.3(react@19.0.0)(zod@3.24.1)
-      '@ai-sdk/ui-utils': 1.1.3(zod@3.24.1)
+      '@ai-sdk/provider-utils': 2.1.3(zod@3.24.1)
+      '@ai-sdk/react': 1.1.4(react@19.0.0)(zod@3.24.1)
+      '@ai-sdk/ui-utils': 1.1.4(zod@3.24.1)
       '@opentelemetry/api': 1.9.0
       jsondiffpatch: 0.6.0
     optionalDependencies:
@@ -48403,7 +48403,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  proxy-agent@6.4.0:
+  proxy-agent@6.5.0:
     dependencies:
       agent-base: 7.1.3
       debug: 4.4.0(supports-color@5.5.0)
@@ -49949,7 +49949,7 @@ snapshots:
   solana-agent-kit@1.4.4(@noble/hashes@1.7.1)(@solana/buffer-layout@4.0.1)(@swc/core@1.10.9(@swc/helpers@0.5.15))(@types/node@20.17.9)(arweave@1.15.5)(axios@1.7.9)(borsh@2.0.0)(buffer@6.0.3)(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(handlebars@4.7.8)(react@19.0.0)(sodium-native@3.4.1)(typescript@5.6.3)(utf-8-validate@5.0.10)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)):
     dependencies:
       '@3land/listings-sdk': 0.0.7(@swc/core@1.10.9(@swc/helpers@0.5.15))(@types/node@20.17.9)(arweave@1.15.5)(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
-      '@ai-sdk/openai': 1.1.2(zod@3.24.1)
+      '@ai-sdk/openai': 1.1.3(zod@3.24.1)
       '@bonfida/spl-name-service': 3.0.8(@solana/web3.js@1.98.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
       '@cks-systems/manifest-sdk': 0.1.59(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
       '@coral-xyz/anchor': 0.29.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -49982,7 +49982,7 @@ snapshots:
       '@tensor-oss/tensorswap-sdk': 4.5.0(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
       '@tiplink/api': 0.3.1(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(sodium-native@3.4.1)(utf-8-validate@5.0.10)
       '@voltr/vault-sdk': 0.1.3(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
-      ai: 4.1.5(react@19.0.0)(zod@3.24.1)
+      ai: 4.1.6(react@19.0.0)(zod@3.24.1)
       bn.js: 5.2.1
       bs58: 6.0.0
       chai: 5.1.2
@@ -50896,15 +50896,15 @@ snapshots:
 
   tinyspy@3.0.2: {}
 
-  tldts-core@6.1.74: {}
+  tldts-core@6.1.75: {}
 
-  tldts-experimental@6.1.74:
+  tldts-experimental@6.1.75:
     dependencies:
-      tldts-core: 6.1.74
+      tldts-core: 6.1.75
 
-  tldts@6.1.74:
+  tldts@6.1.75:
     dependencies:
-      tldts-core: 6.1.74
+      tldts-core: 6.1.75
 
   tmp-promise@3.0.3:
     dependencies:
@@ -50976,7 +50976,7 @@ snapshots:
 
   tough-cookie@5.1.0:
     dependencies:
-      tldts: 6.1.74
+      tldts: 6.1.75
 
   tr46@0.0.3: {}
 
