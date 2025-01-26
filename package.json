@@ -45,11 +45,16 @@
     "pnpm": {
         "overrides": {
             "onnxruntime-node": "1.20.1",
+            "@solana/web3.js@1.95.5": "npm:@solana/web3.js@1.95.5",
+            "@solana/web3.js@1.95.8": "npm:@solana/web3.js@1.95.8",
+            "@solana/web3.js@2": "npm:@solana/web3.js@2.0.0",
             "viem": "2.21.58",
             "@polkadot/util": "12.6.2",
             "@polkadot/util-crypto": "12.6.2",
             "@polkadot/types-create": "10.13.1",
-            "@polkadot/types-codec": "10.13.1"
+            "@polkadot/types-codec": "10.13.1",
+            "@ai-sdk/provider": "1.0.6",
+            "@ai-sdk/provider-utils": "2.1.2"
         }
     },
     "engines": {
