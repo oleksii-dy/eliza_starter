@@ -6,7 +6,8 @@
     "website": "https://sui.io/",
     "x_website": "https://x.com/SuiNetwork",
     "verified": "Yes",
-    "congecko_link": "https://www.coingecko.com/en/coins/sui"
+    "congecko_link": "https://www.coingecko.com/en/coins/sui",
+    "slogan": "Sui is a decentralized permissionless smart contract platform biased towards low-latency management of assets. "
   },
     {
       "id": 1,
@@ -16,7 +17,8 @@
       "website": "https://www.cetus.zone/",
       "x_website": "https://x.com/CetusProtocol",
       "verified": "Yes",
-      "congecko_link": "https://www.coingecko.com/en/coins/cetus-protocol"
+      "congecko_link": "https://www.coingecko.com/en/coins/cetus-protocol",
+      "slogan":"Cetus Protocol is the leading DEX and liquidity protocol on Sui. It serves as the key liquidity and swap infra of the Sui ecosystem."
     },
     {
       "id": 2,
@@ -26,7 +28,8 @@
       "website": "https://naviprotocol.io/",
       "x_website": "https://x.com/navi_protocol",
       "verified": "Yes",
-      "congecko_link": "https://www.coingecko.com/en/coins/navi"
+      "congecko_link": "https://www.coingecko.com/en/coins/navi",
+      "slogan":"NAVI Protocol is the first Native One-Stop Liquidity Protocol on Sui, allowing to participate as liquidity providers or borrowers within the Ecosystem."
     },
     {
       "id": 3,
@@ -36,8 +39,8 @@
       "website": "https://deepbook.tech/",
       "x_website": "https://x.com/DeepBookonSui",
       "verified": "Yes",
-      "congecko_link": "https://www.coingecko.com/en/coins/deepbook"
-
+      "congecko_link": "https://www.coingecko.com/en/coins/deepbook",
+      "slogan":"DeepBook is a decentralized order book on Sui, using parallel execution and low fees to offer a high-performance, low-latency on-chain exchange."
     },
     {
       "id": 4,
@@ -47,7 +50,8 @@
       "website": "https://www.walrus.xyz/vi",
       "x_website": "https://x.com/WalrusProtocol",
       "verified": "No",
-      "congecko_link": "x"
+      "congecko_link": "x",
+      "slogan": "Walrus, decentralized storage network for blockchain apps, is now available as a developer preview for Sui builders to gather feedback."
     },
     {
       "id": 5,
@@ -57,7 +61,8 @@
       "website": "https://birds.dog/",
       "x_website": "https://x.com/TheBirdsDogs",
       "verified": "No",
-      "congecko_link": "x"
+      "congecko_link": "x",
+      "slogan": "MemeFi is the Leading Telegram gaming ecosystem with over 50M users"
     },
     {
       "id": 6,
@@ -87,7 +92,8 @@
       "website": "https://7k.ag/trade/swap",
       "x_website": "https://x.com/7k_ag_",
       "verified": "No",
-      "congecko_link": "x"
+      "congecko_link": "x",
+      "slogan":"FlowX Finance is an ecosystem-focused decentralized exchange built on the Sui blockchain, designed to offer a seamless, user-friendly trading experience for the entire ecosystem."
     },
     {
       "id": 9,
@@ -107,7 +113,8 @@
       "website": "https://aftermath.finance/",
       "x_website": "https://x.com/AftermathFi",
       "verified": "No",
-      "congecko_link": "x"
+      "congecko_link": "x",
+      "slogan":"Aftermath is building an all-in-one platform for trading, investing, and earning yield that is fast, inexpensive, and fully transparent. "
     },
     {
       "id": 11,
@@ -117,7 +124,8 @@
       "website": "https://bluefin.io/",
       "x_website": "https://x.com/bluefinapp",
       "verified": "Yes",
-      "congecko_link": "https://www.coingecko.com/en/coins/bluefin"
+      "congecko_link": "https://www.coingecko.com/en/coins/bluefin",
+      "slogan":"Bluefin is a Financial Network With Parallelized Performance. It is building a performant, accessible, and intuitive DeFi ecosystem"
     },
     {
       "id": 12,
@@ -137,7 +145,8 @@
       "website": "https://turbos.finance/",
       "x_website": "https://x.com/Turbos_finance",
       "verified": "Yes",
-      "congecko_link": "https://www.coingecko.com/en/coins/turbos-finance"
+      "congecko_link": "https://www.coingecko.com/en/coins/turbos-finance",
+      "slogan":"Turbos Finance is the ultimate asset management, trading gateway and meme/gamefi hub for Sui, powered by Concentrated Liquidity Market Making (CLMM) model."
     },
     {
       "id": 14,
@@ -147,7 +156,8 @@
       "website": "https://hop.ag/",
       "x_website": "https://x.com/HopAggregator",
       "verified": "No",
-      "congecko_link": "x"
+      "congecko_link": "x",
+      "slogan":"Swap on Sui Network for the best price with zero fees on Hop Aggregator"
     },
     {
       "id": 15,
@@ -167,7 +177,8 @@
       "website": "https://scallop.io/",
       "x_website": "https://x.com/Scallop_io",
       "verified": "Yes",
-      "congecko_link": "https://www.coingecko.com/en/coins/scallop-2"
+      "congecko_link": "https://www.coingecko.com/en/coins/scallop-2",
+      "slogan":"Scallop is the first peer-to-peer money market on Sui and the first DeFi protocol to receive an official grant from the Sui Foundation."
     },
     {
       "id": 17,
@@ -177,7 +188,8 @@
       "website": "https://www.memefi.club/",
       "x_website": "https://x.com/memeficlub",
       "verified": "Yes",
-      "congecko_link": "https://www.coingecko.com/en/coins/memefi"
+      "congecko_link": "https://www.coingecko.com/en/coins/memefi",
+      "slogan":"MemeFi is the Leading Telegram gaming ecosystem with over 50M users"
     },
     {
       "id": 18,
@@ -197,7 +209,8 @@
       "website": "https://suins.io/",
       "x_website": "https://x.com/SuiNSdapp",
       "verified": "Yes",
-      "congecko_link": "https://www.coingecko.com/en/coins/suins-token"
+      "congecko_link": "https://www.coingecko.com/en/coins/suins-token",
+      "slogan":"Your web3 identity for all things Sui!"
     },
     {
       "id": 20,
@@ -207,7 +220,8 @@
       "website": "https://suilend.fi/",
       "x_website": "https://x.com/suilendprotocol",
       "verified": "Yes",
-      "congecko_link": "https://www.coingecko.com/en/coins/suilend"
+      "congecko_link": "https://www.coingecko.com/en/coins/suilend",
+      "slogan":"Suilend is the fastest-growing lending protocol on Sui, built by the team behind Solend. "
     },
     {
       "id": 21,
@@ -237,7 +251,8 @@
       "website": "https://typus.finance/",
       "x_website": "https://x.com/TypusFinance",
       "verified": "Yes",
-      "congecko_link": "https://www.coingecko.com/en/coins/typus"
+      "congecko_link": "https://www.coingecko.com/en/coins/typus",
+      "slogan":"Real Yield Infrastructure - Trade Options, Perps, and Yield products."
     },
     {
       "id": 24,
@@ -257,7 +272,8 @@
       "website": "https://flowx.finance/",
       "x_website": "https://x.com/FlowX_finance",
       "verified": "Yes",
-      "congecko_link": "https://www.coingecko.com/en/coins/flowx-finance"
+      "congecko_link": "https://www.coingecko.com/en/coins/flowx-finance",
+      "slogan":"FlowX Finance is an ecosystem-focused decentralized exchange built on the Sui blockchain, designed to offer a seamless, user-friendly trading experience for the entire ecosystem."
     },
     {
       "id": 26,
@@ -317,7 +333,8 @@
       "website": "https://suiet.app/",
       "x_website": "https://x.com/suiet_wallet",
       "verified": "No",
-      "congecko_link": "x"
+      "congecko_link": "x",
+      "slogan":"Suiet Wallet is a user-friendly, secure wallet designed for the Sui blockchain, offering seamless transactions, storage, and interaction with dApps. "
     },
     {
       "id": 32,
@@ -327,7 +344,8 @@
       "website": "https://ethoswallet.xyz/blog/post/Sunsetting-Ethos-Sui-Blockchain-Products",
       "x_website": "https://x.com/EthosWalletXYZ",
       "verified": "No",
-      "congecko_link": "x"
+      "congecko_link": "x",
+      "slogan":"Ethos Wallet is a user-friendly crypto wallet built on Sui, designed to make managing digital assets and interacting with dApps seamless and secure."
     },
     {
       "id": 33,
@@ -357,7 +375,8 @@
       "website": "https://martianwallet.xyz/?utm_source=twitter&utm_medium=CTAlink&utm_campaign=visitwebsite&utm_id=twitterbio",
       "x_website": "https://x.com/martian_wallet",
       "verified": "No",
-      "congecko_link": "x"
+      "congecko_link": "x",
+      "slogan":"Martian wallet is a crypto wallet that can be used to manage digital assets and access decentralized applications on the Sui and Aptos blockchain. "
     },
     {
       "id": 36,
@@ -381,13 +400,15 @@
     },
     {
       "id": 38,
-      "name": "SeaPad",
+      "name": "Seafi",
       "symbol": "SPT",
       "categories": ["Launchpad"],
       "website": "https://t.co/7HJlSBc80p",
       "x_website": "https://x.com/SeaPad_defi",
       "verified": "Yes",
-      "congecko_link": "https://www.coingecko.com/en/coins/seapad"
+      "congecko_link": "https://www.coingecko.com/en/coins/seapad",
+      "slogan":"SeaFi is the DeFi AI and Launchpad, empowering project launches, smart trading, yield optimization, and AI-driven innovation"
+
     },
     {
       "id": 39,
@@ -457,7 +478,8 @@
       "website": "x",
       "x_website": "https://x.com/SUDENG_HIPPO",
       "verified": "Yes",
-      "congecko_link": "https://www.coingecko.com/en/coins/sudeng"
+      "congecko_link": "https://www.coingecko.com/en/coins/sudeng",
+      "slogan":"SuDeng is the cutest $HIPPO on SUI."
     },
     {
       "id": 46,
@@ -467,7 +489,8 @@
       "website": "https://www.blubsui.com/",
       "x_website": "https://x.com/blubsui",
       "verified": "Yes",
-      "congecko_link": "https://www.coingecko.com/en/coins/blub"
+      "congecko_link": "https://www.coingecko.com/en/coins/blub",
+      "slogan":"The #1 Meme on Sui. A Dirty Fish in the Waters of the Sui Ocean. "
     },
     {
       "id": 47,
