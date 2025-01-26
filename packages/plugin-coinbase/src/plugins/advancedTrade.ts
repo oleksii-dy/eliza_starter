@@ -381,7 +381,7 @@ export const executeAdvancedTradeAction: Action = {
 - Type: ${orderType} Order
 - Side: ${side}
 - Amount: ${amount}
-- ${orderType === "LIMIT" ? `- Limit Price: ${limitPrice}\n` : ""}`,
+${orderType === "LIMIT" ? `- Limit Price: ${limitPrice}\n` : ""}`,
             },
             []
         );

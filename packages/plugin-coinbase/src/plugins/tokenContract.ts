@@ -220,9 +220,7 @@ export const deployTokenContractAction: Action = {
 - Contract Address: ${contractAddress}
 - Transaction URL: ${transaction}
 ${deploymentDetails.baseURI !== "N/A" ? `- Base URI: ${deploymentDetails.baseURI}` : ""}
-${deploymentDetails.totalSupply !== "N/A" ? `- Total Supply: ${deploymentDetails.totalSupply}` : ""}
-
-Contract deployment has been logged to the CSV file.`,
+${deploymentDetails.totalSupply !== "N/A" ? `- Total Supply: ${deploymentDetails.totalSupply}` : ""}.`,
                 },
                 []
             );
