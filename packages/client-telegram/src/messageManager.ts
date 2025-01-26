@@ -701,7 +701,9 @@ export class MessageManager {
                                 : undefined,
                         parse_mode: "Markdown",
                     }
-                )) as Message.TextMessage;
+                ).catch(e => {
+                  console.error('tg::sendMessage', e)
+                })) as Message.TextMessage
 
                 sentMessages.push(sentMessage);
             }
@@ -1086,7 +1088,9 @@ export class MessageManager {
                     ctx,
                     content,
                     message.message_id
-                );
+                ).catch(e => {
+                  console.error('tg::sendMessage', e)
+                });
                 if (sentMessages) {
                     const memories: Memory[] = [];
 
