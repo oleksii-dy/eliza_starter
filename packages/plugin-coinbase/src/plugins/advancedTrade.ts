@@ -381,11 +381,7 @@ export const executeAdvancedTradeAction: Action = {
 - Type: ${orderType} Order
 - Side: ${side}
 - Amount: ${amount}
-- ${orderType === "LIMIT" ? `- Limit Price: ${limitPrice}\n` : ""}- Order ID: ${order.order_id}
-- Status: ${order.success}
-- Order Id:  ${order.order_id}
-- Response: ${JSON.stringify(order.response)}
-- Order Configuration: ${JSON.stringify(order.order_configuration)}`,
+- ${orderType === "LIMIT" ? `- Limit Price: ${limitPrice}\n` : ""}`,
             },
             []
         );

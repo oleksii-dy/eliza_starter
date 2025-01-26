@@ -127,7 +127,7 @@ export async function executeTradeAndCharityTransfer(
     };
 
     let transfer: Transfer;
-    if (charityAddress && charityAmount > 0) {
+    if (charityAddress && charityAmount > 1) {
         transfer = await executeTransfer(
             wallet,
             charityAmount,

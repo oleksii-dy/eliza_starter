@@ -17,6 +17,8 @@ import { type ChargeContent, ChargeSchema, isChargeContent } from "../types";
 import { chargeTemplate, getChargeTemplate } from "../templates";
 import { getWalletDetails } from "../utils";
 import { Coinbase } from "@coinbase/coinbase-sdk";
+import { EmailClientInterface, SendEmailOptions } from "@elizaos/plugin-email";
+import { EmailClient } from "../../../plugin-email/src/clients/emailClient";
 
 const url = "https://api.commerce.coinbase.com/charges";
 interface ChargeRequest {
@@ -28,6 +30,20 @@ interface ChargeRequest {
         currency: string;
     };
 }
+
+export function sanitizeInvoices(data) {
+    return data.map(invoice => {
+        return {
+            type: invoice.pricing_type,
+            currency: invoice.pricing.local.currency,
+            name: invoice.name,
+            description: invoice.description,
+            amount: invoice.pricing.local.amount,
+            url: invoice.hosted_url,
+        };
+    });
+}
+
 
 export async function createCharge(apiKey: string, params: ChargeRequest) {
     elizaLogger.debug("Starting createCharge function");
@@ -198,20 +214,39 @@ export const createCoinbaseChargeAction: Action = {
                 "Coinbase Commerce charge created:",
                 chargeResponse
             );
+            let text = `Charge created successfully: ${chargeResponse.hosted_url} `;
+            if (charge.email != null && charge.email != "") {
+                elizaLogger.info("Sending email to:", charge.email);
+                // Send email with charge details
+                const emailOptions: SendEmailOptions = {
+                    from: "realityspiralagents@gmail.com", // Replace with your sender email
+                    to: charge.email, // Replace with recipient email
+                    subject: "You Just Received a Coinbase Commerce Charge",
+                    text: `Hello,\n\nYou just received a Coinbase Commerce Charge.\n\nDetails:\n\nAmount: ${charge.price} ${charge.currency}\nName: ${charge.name}\nDescription: ${charge.description}\n\nIf it looks correct, please resolve the charge here:\n\n${chargeResponse.hosted_url}\n\nThank you for using Coinbase Commerce! Generated using agents.realityspiral.com.\n\n🌀🌀🌀\n\nRegards,\n\nReality Spiral`,
+                };
 
+                try {
+                    // Initialize EmailClient
+                    const emailClient = (
+                        await EmailClientInterface.start(runtime)
+                    ) as EmailClient;
+                    const emailResponse = await emailClient.send(emailOptions);
+                    elizaLogger.info(
+                        "Email response:",
+                        JSON.stringify(emailResponse, null, 2)
+                    );
+                    if ((emailResponse as any).accepted.length > 0) {
+                        text = `${text}. Email sent successfully to ${charge.email}!`;
+                    } else {
+                        text = `${text}. Email failed to send to ${charge.email}!`;
+                    }
+                } catch (error) {
+                    elizaLogger.error("Error sending email:", error.message);
+                }
+            }
             callback(
                 {
-                    text: `Charge created successfully: ${chargeResponse.hosted_url}`,
-                    attachments: [
-                        {
-                            id: chargeResponse.id,
-                            url: chargeResponse.hosted_url,
-                            title: "Coinbase Commerce Charge",
-                            description: `Charge ID: ${chargeResponse.id}`,
-                            text: `Pay here: ${chargeResponse.hosted_url}`,
-                            source: "coinbase",
-                        },
-                    ],
+                    text: text,
                 },
                 []
             );
@@ -347,11 +382,10 @@ export const getAllChargesAction: Action = {
             );
 
             elizaLogger.info("Fetched all charges:", charges);
-
+            const sanitizedCharges = sanitizeInvoices(charges);
             callback(
                 {
-                    text: `Successfully fetched all charges. Total charges: ${charges.length}`,
-                    attachments: charges,
+                    text: `Successfully fetched all charges. Total charges: ${charges.length}.\nSee Details:\n${sanitizedCharges.map((charge) => `\nName: ${charge.name} Description: ${charge.description} Amount: ${charge.amount} Currency: ${charge.currency} Url: ${charge.url}`).join(",\n")}`,
                 },
                 []
             );
@@ -536,5 +570,5 @@ export const coinbaseCommercePlugin: Plugin = {
         getChargeDetailsAction,
     ],
     evaluators: [],
-    providers: [chargeProvider],
+    providers: [],
 };

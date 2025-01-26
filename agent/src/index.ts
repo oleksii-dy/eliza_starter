@@ -834,7 +834,7 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
             ...(getSecret(character, "COINBASE_API_KEY") &&
             getSecret(character, "COINBASE_PRIVATE_KEY")
                 ? [
-                      coinbaseMassPaymentsPlugin,
+                    //   coinbaseMassPaymentsPlugin,
                       tradePlugin,
                       tokenContractPlugin,
                       advancedTradePlugin,
@@ -857,8 +857,7 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
                 ? OmniflixPlugin
                 : null,
             getSecret(character, "COINBASE_API_KEY") &&
-            getSecret(character, "COINBASE_PRIVATE_KEY") &&
-            getSecret(character, "COINBASE_NOTIFICATION_URI")
+            getSecret(character, "COINBASE_PRIVATE_KEY")
                 ? webhookPlugin
                 : null,
             goatPlugin,

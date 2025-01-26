@@ -5,7 +5,7 @@ Extract the following details to create a Coinbase charge:
 - **type** (string): The pricing type for the charge (e.g., fixed_price, dynamic_price). Assume price type is fixed unless otherwise stated
 - **name** (string): A non-empty name for the charge (e.g., "The Human Fund").
 - **description** (string): A non-empty description of the charge (e.g., "Money For People").
-
+- **email** (string): The email address to send the charge to (e.g., "abc@gmail.com").
 Provide the values in the following JSON format:
 
 \`\`\`json
@@ -14,7 +14,8 @@ Provide the values in the following JSON format:
     "currency": "<currency>",
     "type": "<type>",
     "name": "<name>",
-    "description": "<description>"
+    "description": "<description>",
+    "email": "<email>"
 }
 \`\`\`
 
@@ -303,13 +304,16 @@ export interface Array<WebhookEventFilter> {
      */
     'to_address'?: string;
 }
+- **webhookUrl** (string): The URL to send the webhook to.
+
 Provide the details in the following JSON format:
 \`\`\`json
 {
     "networkId": "<networkId>",
     "eventType": "<eventType>",
     "eventTypeFilter": "<eventTypeFilter>",
-    "eventFilters": [<eventFilter1>, <eventFilter2>]
+    "eventFilters": [<eventFilter1>, <eventFilter2>],
+    "webhookUrl": "<webhookUrl>"
 }
 \`\`\`
 
@@ -327,6 +331,7 @@ Example for creating a webhook on the Sepolia testnet for ERC20 transfers origin
     eventFilters: [{
       from_address: '0xbcF7C64B880FA89a015970dC104E848d485f99A3',
     }],
+    webhookUrl: 'https://example.com/webhook'
 });
 \`\`\`
 
