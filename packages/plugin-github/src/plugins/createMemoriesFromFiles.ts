@@ -13,6 +13,7 @@ import {
     ModelClass,
     Plugin,
     State,
+    Instrumentation,
 } from "@elizaos/core";
 import { createMemoriesFromFilesTemplate } from "../templates";
 import {

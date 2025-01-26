@@ -9,6 +9,7 @@ import {
     ModelClass,
     Plugin,
     State,
+    Instrumentation,
 } from "@elizaos/core";
 import { createCommitTemplate } from "../templates";
 import {
@@ -54,15 +55,14 @@ export const createCommitAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-
-        //trace(stringify(state))
+        Instrumentation.trace("plugin-github/createCommitAction.state", state);
 
         const context = composeContext({
             state,
             template: createCommitTemplate,
         });
+        Instrumentation.trace("plugin-github/createCommitAction.context", context);
 
-        //trace(context)
         await fs.writeFile(
             "createCommitContext.json",
             JSON.stringify(context, null, 2)
@@ -73,8 +73,7 @@ export const createCommitAction: Action = {
             modelClass: ModelClass.SMALL,
             schema: CreateCommitSchema,
         });
-
-        // trace(details.object)
+        Instrumentation.trace("plugin-github/createCommitAction.details", details.object);
 
         if (!isCreateCommitContent(details.object)) {
             elizaLogger.error("Invalid content:", details.object);
@@ -82,7 +81,7 @@ export const createCommitAction: Action = {
         }
 
         const content = details.object as CreateCommitContent;
-        // trace(stringify(content))
+        Instrumentation.trace("plugin-github/createCommitAction.content", content);
         await fs.writeFile(
             "createCommit.json",
             JSON.stringify(content, null, 2)

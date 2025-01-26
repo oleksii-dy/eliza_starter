@@ -21,6 +21,7 @@ import {
     stringToUuid,
     settings,
     IAgentRuntime,
+    Instrumentation,
 } from "@elizaos/core";
 import { createApiRouter } from "./api.ts";
 import * as fs from "fs";
@@ -281,10 +282,14 @@ export class DirectClient {
                     agentName: runtime.character.name,
                 });
 
+                Instrumentation.trace("client-direct/state", state);
+
                 const context = composeContext({
                     state,
                     template: messageHandlerTemplate,
                 });
+
+                Instrumentation.trace("client-direct/context", context);
 
                 const response = await generateMessageResponse({
                     runtime: runtime,
@@ -309,6 +314,8 @@ export class DirectClient {
                     createdAt: Date.now(),
                 };
 
+                Instrumentation.trace("client-direct/responseMessage", responseMessage);
+
                 await runtime.messageManager.createMemory(responseMessage);
 
                 state = await runtime.updateRecentMessageState(state);
@@ -324,6 +331,8 @@ export class DirectClient {
                         return [memory];
                     }
                 );
+
+                Instrumentation.trace("client-direct/memory", memory);
 
                 await runtime.evaluate(memory, state);
 

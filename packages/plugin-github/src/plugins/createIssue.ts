@@ -9,6 +9,7 @@ import {
     ModelClass,
     Plugin,
     State,
+    Instrumentation,
 } from "@elizaos/core";
 import { GitHubService } from "../services/github";
 import { createIssueTemplate } from "../templates";
@@ -41,11 +42,13 @@ export const createIssueAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
+        Instrumentation.trace("plugin-github/createIssueAction.state", state);
 
         const context = composeContext({
             state,
             template: createIssueTemplate,
         });
+        Instrumentation.trace("plugin-github/createIssueAction.context", context);
 
         const details = await generateObject({
             runtime,
@@ -53,6 +56,7 @@ export const createIssueAction: Action = {
             modelClass: ModelClass.SMALL,
             schema: CreateIssueSchema,
         });
+        Instrumentation.trace("plugin-github/createIssueAction.details", details);
 
         if (!isCreateIssueContent(details.object)) {
             elizaLogger.error("Invalid content:", details.object);
@@ -60,6 +64,7 @@ export const createIssueAction: Action = {
         }
 
         const content = details.object as CreateIssueContent;
+        Instrumentation.trace("plugin-github/createIssueAction.content", content);
 
         elizaLogger.info("Creating issue in the repository...");
 

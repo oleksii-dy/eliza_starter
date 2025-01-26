@@ -743,6 +743,8 @@ export class AgentRuntime implements IAgentRuntime {
 
             elizaLogger.success(`Normalized action: ${normalizedAction}`);
 
+            Instrumentation.trace("core/processActions.normalizedAction", normalizedAction);
+
             let action = this.actions.find(
                 (a: { name: string }) =>
                     a.name
@@ -789,6 +791,8 @@ export class AgentRuntime implements IAgentRuntime {
                 elizaLogger.error(`Action ${action.name} has no handler.`);
                 continue;
             }
+
+            Instrumentation.trace("core/processActions.action", action);
 
             try {
                 elizaLogger.info(
@@ -860,7 +864,7 @@ export class AgentRuntime implements IAgentRuntime {
             verifiableInferenceAdapter: this.verifiableInferenceAdapter,
         });
 
-        Instrumentation.trace("evaluate", {context: context, result: result});
+        Instrumentation.trace("core/runtime.evaluate", {context: context, result: result});
 
         const evaluators = parseJsonArrayFromText(
             result

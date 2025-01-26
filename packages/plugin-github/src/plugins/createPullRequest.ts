@@ -9,6 +9,7 @@ import {
     ModelClass,
     Plugin,
     State,
+    Instrumentation,
 } from "@elizaos/core";
 import { createPullRequestTemplate } from "../templates";
 import {
@@ -61,11 +62,13 @@ export const createPullRequestAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
+        Instrumentation.trace("plugin-github/createPullRequestAction.state", state);
 
         const context = composeContext({
             state,
             template: createPullRequestTemplate,
         });
+        Instrumentation.trace("plugin-github/createPullRequestAction.context", context);
 
         const details = await generateObject({
             runtime,
@@ -73,6 +76,7 @@ export const createPullRequestAction: Action = {
             modelClass: ModelClass.LARGE,
             schema: CreatePullRequestSchema,
         });
+        Instrumentation.trace("plugin-github/createPullRequestAction.details", details);
 
         if (!isCreatePullRequestContent(details.object)) {
             elizaLogger.error("Invalid content:", details.object);
@@ -80,6 +84,7 @@ export const createPullRequestAction: Action = {
         }
 
         const content = details.object as CreatePullRequestContent;
+        Instrumentation.trace("plugin-github/createPullRequestAction.content", content);
 
         elizaLogger.info("Creating a pull request...");
 
