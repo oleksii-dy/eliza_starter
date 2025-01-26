@@ -64,7 +64,7 @@ export function createApiRouter(
     );
 
     router.get("/", (req, res) => {
-        res.send("Welcome, this is the REST API!");
+        res.send("Welcome, this is the REST API!", req.connection.remoteAddress);
     });
 
     router.get("/hello", (req, res) => {

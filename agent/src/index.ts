@@ -206,6 +206,36 @@ async function loadCharacter(filePath: string): Promise<Character> {
     return character;
 }
 
+async function handlePluginImporting(plugins: string[]) {
+    if (plugins.length > 0) {
+        elizaLogger.info("Plugins are: ", plugins);
+        const importedPlugins = await Promise.all(
+            plugins.map(async (plugin) => {
+                try {
+                    const importedPlugin = await import(plugin);
+                    const functionName =
+                        plugin
+                            .replace("@elizaos/plugin-", "")
+                            .replace(/-./g, (x) => x[1].toUpperCase()) +
+                        "Plugin"; // Assumes plugin function is camelCased with Plugin suffix
+                    return (
+                        importedPlugin.default || importedPlugin[functionName]
+                    );
+                } catch (importError) {
+                    elizaLogger.error(
+                        `Failed to import plugin: ${plugin}`,
+                        importError
+                    );
+                    return []; // Return null for failed imports
+                }
+            })
+        );
+        return importedPlugins;
+    } else {
+        return [];
+    }
+}
+
 export async function loadCharacters(
     charactersArg: string
 ): Promise<Character[]> {
@@ -270,6 +300,33 @@ export async function loadCharacters(
             try {
                 const character: Character = await loadCharacter(resolvedPath);
 
+                /*
+                //const character = JSON.parse(content);
+                //validateCharacterConfig(character);
+
+                // .id isn't really valid
+                const characterId = character.id || character.name;
+                const characterPrefix = `CHARACTER.${characterId.toUpperCase().replace(/ /g, "_")}.`;
+
+                const characterSettings = Object.entries(process.env)
+                    .filter(([key]) => key.startsWith(characterPrefix))
+                    .reduce((settings, [key, value]) => {
+                        const settingKey = key.slice(characterPrefix.length);
+                        return { ...settings, [settingKey]: value };
+                    }, {});
+
+                if (Object.keys(characterSettings).length > 0) {
+                    character.settings = character.settings || {};
+                    character.settings.secrets = {
+                        ...characterSettings,
+                        ...character.settings.secrets,
+                    };
+                }
+
+                // Handle plugins
+                character.plugins = await handlePluginImporting(character.plugins);
+                */
+
                 loadedCharacters.push(character);
                 elizaLogger.info(
                     `Successfully loaded character from: ${resolvedPath}`
@@ -289,36 +346,6 @@ export async function loadCharacters(
     }
 
     return loadedCharacters;
-}
-
-async function handlePluginImporting(plugins: string[]) {
-    if (plugins.length > 0) {
-        elizaLogger.info("Plugins are: ", plugins);
-        const importedPlugins = await Promise.all(
-            plugins.map(async (plugin) => {
-                try {
-                    const importedPlugin = await import(plugin);
-                    const functionName =
-                        plugin
-                            .replace("@elizaos/plugin-", "")
-                            .replace(/-./g, (x) => x[1].toUpperCase()) +
-                        "Plugin"; // Assumes plugin function is camelCased with Plugin suffix
-                    return (
-                        importedPlugin.default || importedPlugin[functionName]
-                    );
-                } catch (importError) {
-                    elizaLogger.error(
-                        `Failed to import plugin: ${plugin}`,
-                        importError
-                    );
-                    return []; // Return null for failed imports
-                }
-            })
-        );
-        return importedPlugins;
-    } else {
-        return [];
-    }
 }
 
 export function getTokenForProvider(
@@ -617,7 +644,7 @@ export async function initializeClients(
     }
 
     if (character.plugins?.length > 0) {
-        for (const plugin of character.plugins) {
+        for (const plugin of character.plugins.filter(p => !!p)) {
             if (plugin.clients) {
                 for (const client of plugin.clients) {
                     const startedClient = await client.start(runtime);
@@ -1064,7 +1091,7 @@ const startAgents = async () => {
 
     // upload some agent functionality into directClient
     directClient.startAgent = async (character) => {
-        // Handle plugins
+        // Handle plugins in character file
         character.plugins = await handlePluginImporting(character.plugins);
 
         // wrap it so we don't have to inject directClient later

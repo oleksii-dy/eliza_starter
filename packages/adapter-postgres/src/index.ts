@@ -244,7 +244,7 @@ export class PostgresDatabaseAdapter
                 } else {
                     await client.query("SET app.use_openai_embedding = 'false'");
                     await client.query("SET app.use_ollama_embedding = 'false'");
-                        await client.query("SET app.use_gaianet_embedding = 'false'");
+                    await client.query("SET app.use_gaianet_embedding = 'false'");
                 }
 
                 // Check if schema already exists (check for a core table)
