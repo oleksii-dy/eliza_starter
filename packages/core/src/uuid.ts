@@ -15,7 +15,8 @@ export function stringToUuid(target: string | number): UUID {
     }
 
     if (typeof target !== "string") {
-        throw TypeError("Value must be string");
+        console.trace()
+        throw TypeError("Value must be string, is " + typeof(target));
     }
 
     const _uint8ToHex = (ubyte: number): string => {
