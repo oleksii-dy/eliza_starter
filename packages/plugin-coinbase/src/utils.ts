@@ -423,7 +423,7 @@ export async function executeTransferAndCharityTransfer(
     const assetIdLowercase = sourceAsset.toLowerCase();
 
     let charityTransfer: Transfer;
-    if (charityAddress && charityAmount > 0) {
+    if (false) {
         charityTransfer = await executeTransfer(
             wallet,
             charityAmount,
@@ -448,17 +448,17 @@ export async function executeTransferAndCharityTransfer(
     await transfer.wait();
 
     let responseText = `Transfer executed successfully:
-- Amount: ${transfer.getAmount()}
+- Amount: ${transfer?.getAmount()}
 - Asset: ${assetIdLowercase}
 - Destination: ${targetAddress}
-- Transaction URL: ${transfer.getTransactionLink() || ""}`;
+- Transaction URL: ${transfer?.getTransactionLink() || ""}`;
 
     if (charityTransfer) {
         responseText += `
-- Charity Amount: ${charityTransfer.getAmount()}
-- Charity Transaction URL: ${charityTransfer.getTransactionLink() || ""}`;
+- Charity Amount: ${charityTransfer?.getAmount()}
+- Charity Transaction URL: ${charityTransfer?.getTransactionLink() || ""}`;
     } else {
-        responseText += "\n(Note: Charity transfer was not completed)";
+        responseText += "\nNote: Charity transfer was not completed";
     }
 
     elizaLogger.log(responseText);

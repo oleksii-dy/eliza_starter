@@ -21,6 +21,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 import { createArrayCsvWriter } from "csv-writer";
+import { RESTClient } from "../../advanced-sdk-ts/src/rest";
 
 // Dynamically resolve the file path to the src/plugins directory
 const __filename = fileURLToPath(import.meta.url);
@@ -28,19 +29,34 @@ const __dirname = path.dirname(__filename);
 const baseDir = path.resolve(__dirname, "../../plugin-coinbase/src/plugins");
 const tradeCsvFilePath = path.join(baseDir, "trades.csv");
 
-// async function getPrice(ticker: string) {
-//     elizaLogger.debug("Fetching product info for productId:", productId);
-//     try {
-//         const productInfo = await client.getProduct({productId});
-//         const price = JSON.parse(productInfo)?.price;
-//         elizaLogger.info("Product info retrieved:", productInfo);
-//         elizaLogger.info("Price:", price);
-//         return Number(price);
-//     } catch (error) {
-//         elizaLogger.error("Error fetching product info:", error);
-//         return null;
-//     }
-// }
+async function getPrice(runtime: IAgentRuntime, ticker: string) {
+    Coinbase.configure({
+        apiKeyName:
+            runtime.getSetting("COINBASE_API_KEY") ??
+            process.env.COINBASE_API_KEY,
+        privateKey:
+            runtime.getSetting("COINBASE_PRIVATE_KEY") ??
+            process.env.COINBASE_PRIVATE_KEY,
+    });
+    const productId = `${ticker.toUpperCase()}-USD`;
+    const client = new RESTClient(
+        runtime.getSetting("COINBASE_API_KEY") ??
+            process.env.COINBASE_API_KEY,
+        runtime.getSetting("COINBASE_PRIVATE_KEY") ??
+            process.env.COINBASE_PRIVATE_KEY
+    );
+    elizaLogger.debug("Fetching product info for productId:", productId);
+    try {
+        const productInfo = await client.getProduct({productId});
+        const price = JSON.parse(productInfo)?.price;
+        elizaLogger.info("Product info retrieved:", productInfo);
+        elizaLogger.info("Price:", price);
+        return Number(price);
+    } catch (error) {
+        elizaLogger.error("Error fetching product info:", error);
+        return null;
+    }
+}
 
 export const tradeProvider: Provider = {
     get: async (runtime: IAgentRuntime, _message: Memory) => {
@@ -164,9 +180,9 @@ export const executeTradeAction: Action = {
                 return;
             }
 
-            const { network, amount, sourceAsset, targetAsset } =
+            const { network, amount, sourceAsset, targetAsset, side } =
                 tradeDetails.object as TradeContent;
-
+            elizaLogger.info("Trade details:", JSON.stringify(tradeDetails.object));
             const allowedNetworks = ["base", "sol", "eth", "arb", "pol"];
             if (!allowedNetworks.includes(network)) {
                 callback(
@@ -179,14 +195,27 @@ export const executeTradeAction: Action = {
                 );
                 return;
             }
+            let amountInCurrency = amount
+            try {
+                if (side === "SELL") {
+                    const priceInUSD = await getPrice(runtime, sourceAsset);
+                    await new Promise(resolve => setTimeout(resolve, 5000));
+                    elizaLogger.info("PriceInUSD:", priceInUSD);
+                    amountInCurrency = parseFloat(((1 / priceInUSD) * amountInCurrency).toFixed(7));
+                    elizaLogger.info("Amount in currency:", amountInCurrency);
+                }
+            } catch (error) {
+                elizaLogger.error("Error fetching price:", error.message);
+            }
 
             const { trade, transfer } = await executeTradeAndCharityTransfer(
                 runtime,
                 network,
-                amount,
+                amountInCurrency,
                 sourceAsset,
                 targetAsset
             );
+            await new Promise(resolve => setTimeout(resolve, 5000));
             elizaLogger.info("Trade executed successfully:", JSON.stringify(trade));
             elizaLogger.info("Transfer executed successfully:", JSON.stringify(transfer));
             let responseText = `Trade executed successfully:
@@ -194,7 +223,7 @@ export const executeTradeAction: Action = {
 - Amount: ${trade.getFromAmount()}
 - From: ${sourceAsset}
 - To: ${targetAsset}
-- Transaction URL: ${trade.getApproveTransaction().getTransactionLink() || ""}
+- Transaction URL: ${trade.getApproveTransaction()?.getTransactionLink() || trade.getTransaction()?.getTransactionLink() || ""}
 - Charity Transaction URL: ${transfer?.getTransactionLink() || "N/A"}`;
 
             if (transfer) {
