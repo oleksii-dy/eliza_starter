@@ -116,7 +116,7 @@ async function getRemoteEmbedding(
         return data?.data?.[0].embedding;
     } catch (e) {
         elizaLogger.error("Full error details:", e);
-        throw e;
+        //throw e;
     }
 }
 
