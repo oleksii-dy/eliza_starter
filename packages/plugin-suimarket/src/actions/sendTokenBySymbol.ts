@@ -81,7 +81,7 @@ export const sendTokenBySymbol: Action = {
         const content = await generateObjectDeprecated({
             runtime,
             context: sendTokenContext,
-            modelClass: ModelClass.LARGE,
+            modelClass: ModelClass.SMALL,
         });
         console.log("content:", content);
 
