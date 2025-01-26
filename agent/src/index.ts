@@ -207,28 +207,34 @@ async function loadCharacter(filePath: string): Promise<Character> {
 }
 
 async function handlePluginImporting(plugins: string[]) {
-    elizaLogger.info("Plugins are: ", plugins);
-    const importedPlugins = await Promise.all(
-        plugins.map(async (plugin) => {
-            try {
-                const importedPlugin = await import(plugin);
-                const functionName =
-                    plugin
-                        .replace("@elizaos/plugin-", "")
-                        .replace(/-./g, (x) => x[1].toUpperCase()) + "Plugin"; // Assumes plugin function is camelCased with Plugin suffix
-                return importedPlugin.default || importedPlugin[functionName];
-            } catch (importError) {
-                elizaLogger.error(
-                    `Failed to import plugin: ${plugin}`,
-                    importError
-                );
-                return null; // Return null for failed imports
-            }
-        })
-    );
-    return importedPlugins;
+    if (plugins.length > 0) {
+        elizaLogger.info("Plugins are: ", plugins);
+        const importedPlugins = await Promise.all(
+            plugins.map(async (plugin) => {
+                try {
+                    const importedPlugin = await import(plugin);
+                    const functionName =
+                        plugin
+                            .replace("@elizaos/plugin-", "")
+                            .replace(/-./g, (x) => x[1].toUpperCase()) +
+                        "Plugin"; // Assumes plugin function is camelCased with Plugin suffix
+                    return (
+                        importedPlugin.default || importedPlugin[functionName]
+                    );
+                } catch (importError) {
+                    elizaLogger.error(
+                        `Failed to import plugin: ${plugin}`,
+                        importError
+                    );
+                    return []; // Return null for failed imports
+                }
+            })
+        );
+        return importedPlugins;
+    } else {
+        return [];
+    }
 }
-
 
 export async function loadCharacters(
     charactersArg: string
@@ -292,10 +298,11 @@ export async function loadCharacters(
             }
 
             try {
-                //const character: Character = await loadCharacter(resolvedPath);
+                const character: Character = await loadCharacter(resolvedPath);
 
-                const character = JSON.parse(content);
-                validateCharacterConfig(character);
+                /*
+                //const character = JSON.parse(content);
+                //validateCharacterConfig(character);
 
                 // .id isn't really valid
                 const characterId = character.id || character.name;
@@ -318,6 +325,7 @@ export async function loadCharacters(
 
                 // Handle plugins
                 character.plugins = await handlePluginImporting(character.plugins);
+                */
 
                 loadedCharacters.push(character);
                 elizaLogger.info(
@@ -338,36 +346,6 @@ export async function loadCharacters(
     }
 
     return loadedCharacters;
-}
-
-async function handlePluginImporting(plugins: string[]) {
-    if (plugins.length > 0) {
-        elizaLogger.info("Plugins are: ", plugins);
-        const importedPlugins = await Promise.all(
-            plugins.map(async (plugin) => {
-                try {
-                    const importedPlugin = await import(plugin);
-                    const functionName =
-                        plugin
-                            .replace("@elizaos/plugin-", "")
-                            .replace(/-./g, (x) => x[1].toUpperCase()) +
-                        "Plugin"; // Assumes plugin function is camelCased with Plugin suffix
-                    return (
-                        importedPlugin.default || importedPlugin[functionName]
-                    );
-                } catch (importError) {
-                    elizaLogger.error(
-                        `Failed to import plugin: ${plugin}`,
-                        importError
-                    );
-                    return []; // Return null for failed imports
-                }
-            })
-        );
-        return importedPlugins;
-    } else {
-        return [];
-    }
 }
 
 export function getTokenForProvider(
