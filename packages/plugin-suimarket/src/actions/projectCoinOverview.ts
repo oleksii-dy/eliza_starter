@@ -53,7 +53,7 @@ export const projectInfo: Action = {
         "{PROJECT_NAME}_overview",
         "what_is_{PROJECT_NAME}?",
         "{PROJECT_NAME}_info",
-        "{PROJECT_NAME}_infomation"
+        "{PROJECT_NAME}_information"
     ],
 
     examples: [
