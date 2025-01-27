@@ -14,6 +14,7 @@ const PARASWAP_API_URL = "https://api.paraswap.io";
 
 export class SwapAction {
     private tokenDecimals: Map<string, number> = new Map();
+    public tokenAddresses: Map<string, string> = new Map();
 
     constructor(private walletProvider: WalletProvider) {}
 
@@ -66,9 +67,18 @@ export class SwapAction {
         const { tokens } = await response.json();
 
         // Store token symbols (lowercase) and their decimals in the map
-        tokens.forEach((token: { symbol: string; decimals: number }) => {
-            this.tokenDecimals.set(token.symbol.toLowerCase(), token.decimals);
-        });
+        tokens.forEach(
+            (token: { symbol: string; decimals: number; address: string }) => {
+                this.tokenDecimals.set(
+                    token.symbol.toLowerCase(),
+                    token.decimals
+                );
+                this.tokenAddresses.set(
+                    token.symbol.toLowerCase(),
+                    token.address
+                );
+            }
+        );
 
         // console.log("tokenDecimals", this.tokenDecimals);
 
@@ -103,38 +113,82 @@ export class SwapAction {
         };
     }
 
+    private readonly ERC20_ABI = [
+        {
+            constant: false,
+            inputs: [
+                { name: "spender", type: "address" },
+                { name: "amount", type: "uint256" },
+            ],
+            name: "approve",
+            outputs: [{ name: "", type: "bool" }],
+            payable: false,
+            stateMutability: "nonpayable",
+            type: "function",
+        },
+        {
+            name: "allowance",
+            type: "function",
+            stateMutability: "view",
+            inputs: [
+                { name: "owner", type: "address" },
+                { name: "spender", type: "address" },
+            ],
+            outputs: [{ name: "", type: "uint256" }],
+        },
+    ] as const;
+
     async approveTokenIfNeeded(
         amount: string,
-        tokenAddress: string
+        tokenAddress: string,
+        spenderAddress: string,
+        callback?: any
     ): Promise<Hash | null> {
-        const chainId = this.walletProvider.getCurrentChain().id;
-        const allowanceResp = await fetch(
-            `${PARASWAP_API_URL}/tokens/${tokenAddress}/allowance/${this.walletProvider.getAddress()}?network=${chainId}`
-        );
-        if (!allowanceResp.ok) throw new Error("Failed to check allowance");
-        const { allowance } = await allowanceResp.json();
+        try {
+            const currentChain = this.walletProvider
+                .getCurrentChain()
+                .name.toLowerCase() as SupportedChain;
+            const walletClient =
+                this.walletProvider.getWalletClient(currentChain);
+            const publicClient =
+                this.walletProvider.getPublicClient(currentChain);
+            const amountBigInt = BigInt(amount);
 
-        if (BigInt(allowance) < BigInt(amount)) {
-            const contractsResp = await fetch(
-                `${PARASWAP_API_URL}/adapters/contracts?network=${chainId}`
-            );
-            const { tokenTransferProxy } = await contractsResp.json();
-            const walletClient = this.walletProvider.getWalletClient(
-                this.walletProvider
-                    .getCurrentChain()
-                    .name.toLowerCase() as SupportedChain
-            );
-
-            return walletClient.sendTransaction({
-                account: walletClient.account,
-                to: tokenAddress as Address,
-                data: `0x095ea7b3${tokenTransferProxy.slice(2).padStart(64, "0")}${"f".repeat(64)}` as `0x${string}`,
-                value: 0n,
-                chain: this.walletProvider.getCurrentChain(),
-                kzg: undefined,
+            const allowance = await publicClient.readContract({
+                address: tokenAddress as Address,
+                abi: this.ERC20_ABI,
+                functionName: "allowance",
+                args: [
+                    this.walletProvider.getAddress(),
+                    spenderAddress as Address,
+                ],
             });
+
+            if (allowance >= amountBigInt) {
+                return null;
+            }
+
+            const hash = await walletClient.writeContract({
+                address: tokenAddress as Address,
+                abi: this.ERC20_ABI,
+                functionName: "approve",
+                args: [spenderAddress as Address, amountBigInt],
+                account: walletClient.account,
+                chain: this.walletProvider.getCurrentChain(),
+            });
+
+            if (callback) {
+                callback({
+                    text: `Successfully approved ${amount} tokens. Hash: ${hash}`,
+                });
+            }
+        } catch (error) {
+            if (callback) {
+                callback({
+                    text: `Token Approval Error: ${error.message}`,
+                });
+            }
         }
-        return null;
     }
 }
 
@@ -171,12 +225,14 @@ export const swapAction = {
                 return false;
             }
 
-            // if (content.inputToken !== "ETH") {
-            //     await action.approveTokenIfNeeded(
-            //         parseEther(content.amount).toString(),
-            //         content.inputToken
-            //     );
-            // }
+            if (content.inputToken !== "ETH") {
+                await action.approveTokenIfNeeded(
+                    parseEther(content.amount).toString(),
+                    action.tokenAddresses.get(content.inputToken.toLowerCase()),
+                    "0x6a000f20005980200259b80c5102003040001068",
+                    callback
+                );
+            }
 
             const swapResp = await action.swap({
                 chain: content.chain,
@@ -187,7 +243,7 @@ export const swapAction = {
 
             if (callback) {
                 callback({
-                    text: `Successfully swapped ${content.amount} tokens\nTransaction Hash: ${swapResp.hash}`,
+                    text: `Successfully swapped ${content.amount} ${content.inputToken} to ${content.outputToken}\nTransaction Hash: ${swapResp.hash}`,
                     content: {
                         success: true,
                         hash: swapResp.hash,
@@ -219,7 +275,14 @@ export const swapAction = {
                     action: "TOKEN_SWAP",
                 },
             },
+            {
+                user: "user",
+                content: {
+                    text: "Swap 1 USDC for DAI",
+                    action: "TOKEN_SWAP",
+                },
+            },
         ],
     ],
-    similes: ["TOKEN_SWAP", "EXCHANGE_TOKENS", "TRADE_TOKENS"],
+    similes: ["TOKEN_SWAP", "EXCHANGE_TOKENS", "TRADE_TOKENS", "SWAP_TOKENS"],
 };
