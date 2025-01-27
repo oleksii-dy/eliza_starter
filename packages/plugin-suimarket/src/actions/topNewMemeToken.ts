@@ -36,26 +36,12 @@ Respond with a JSON markdown block containing only the extracted values.`;
 
 
 export const trendingTokens: Action = {
-    name: "TOP_TRENDING_TOKENS",
+    name: "TOP_NEW_MEME_TOKEN",
 
-    description: "Get trending tokens",
+    description: "TOP NEW MEME TOKEN",
 
     similes: [
-        "SHOW_TRENDING_COINS",
-        "GET_HOT_TOKENS",
-        "FETCH_TRENDING_CRYPTO",
-        "DISPLAY_POPULAR_TOKENS",
-        "SHOW_WHATS_TRENDING",
-        "GET_MOST_SEARCHED_TOKENS",
-        "LIST_VIRAL_CRYPTOCURRENCIES",
-        "SHOW_BUZZING_TOKENS",
-        "GET_HYPED_COINS",
-        "DISPLAY_TRENDING_GAINERS",
-        "FETCH_TRENDING_MOVERS",
-        "SHOW_TRENDING_MOMENTUM",
-        "GET_VIRAL_TOKENS",
-        "DISPLAY_TRENDING_MARKETS",
-        "SHOW_BREAKOUT_TOKENS"
+        
     ],
 
     examples: [

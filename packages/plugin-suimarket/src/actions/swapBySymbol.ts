@@ -48,38 +48,30 @@ export const executeSwap: Action = {
         callback?: HandlerCallback
     ): Promise<boolean> => {
         elizaLogger.log("compose history...");
-
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
-
         const msgHash = hashUserMsg(message, "swap_symbol");
         let content:any = await runtime.cacheManager.get(msgHash);
-
         elizaLogger.log("---- cache info: ", msgHash, "--->", content);
-
         if(!content){
             const swapContext = composeContext({
                 state,
                 template: swapTemplate,
             });
-
             content = await generateObjectDeprecated({
                 runtime,
                 context: swapContext,
                 modelClass: ModelClass.SMALL,
             });
-
             await runtime.cacheManager.set(msgHash, content, {expires: Date.now() + 300000});
         }
-
         await callback({
             text:`Please double-check all details before swapping to avoid any loss`,
             action:"SUI_EXECUTE_SWAP_BY_SYMBOL",
-         });
-
+        });
         const inputTokenObject = await findByVerifiedAndSymbol(content.inputTokenSymbol);
         if(!inputTokenObject){
             callback({
@@ -94,7 +86,6 @@ export const executeSwap: Action = {
              })
              return false
         }
-
         const responseData = {
             amount: content.amount,
             fromToken: inputTokenObject,

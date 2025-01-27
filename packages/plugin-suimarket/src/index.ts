@@ -26,7 +26,6 @@ const suimarketPlugin: Plugin = {
     topMeme,
     topDefi,
     trendingTokens
-
 ],
   evaluators: [],
   providers: []
