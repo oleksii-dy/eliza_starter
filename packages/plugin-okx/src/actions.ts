@@ -310,8 +310,9 @@ function getActionHandler(
                         fromTokenAddress: params.fromTokenAddress,
                         toTokenAddress: params.toTokenAddress,
                         amount: params.amount,
-                        autoSlippage: true,
-                        maxAutoSlippage: "1000",
+                        slippage: "0.5",
+                        // autoSlippage: true,
+                        // maxAutoSlippage: "1000",
                         userWalletAddress: process.env.OKX_WALLET_ADDRESS,
                     });
 
@@ -323,6 +324,22 @@ function getActionHandler(
                     }
 
                     result = formatQuoteResponse(swapResponse.data[0]);
+
+                    const swapData = swapResponse.data[0];
+    
+                    // Extract transaction data
+                    const transactionData = {
+                        chainId: swapData.routerResult.chainId,
+                        estimateGasFee: swapData.routerResult.estimateGasFee,
+                        tx: swapData.tx || null
+                    };
+                
+                    const txData = {
+                        ...formatQuoteResponse(swapData),
+                        transaction: transactionData
+                    };
+                    console.log('OKX Swap Result:', JSON.stringify(txData, null, 2));
+
                     break;
                 }
 

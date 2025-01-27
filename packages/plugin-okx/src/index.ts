@@ -41,8 +41,7 @@ export const OKXPlugin = async (character: Character): Promise<Plugin> => {
         actions.forEach(action => {
             console.log(`- ${action.name}: ${action.description}`);
         });
-        console.log(`\nTotal actions: ${actions.length}\n`);
-
+        
         return {
             name: "OKX DEX Plugin",
             description: "OKX DEX integration for Solana swaps",
