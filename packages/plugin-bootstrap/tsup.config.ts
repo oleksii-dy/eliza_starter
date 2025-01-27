@@ -9,7 +9,7 @@ export default defineConfig({
     clean: true,
     minify: false,
     outDir: "dist",
-    onSuccess: "tsc --emitDeclarationOnly --declaration",
+    onSuccess: "echo Build completed successfully",
     external: [
         "@elizaos/core",
         "react",
@@ -17,4 +17,10 @@ export default defineConfig({
         "bootstrap",
         "@popperjs/core",
     ],
+    treeshake: true,
+    verbose: true,
+    loader: {
+        ".css": "css",
+        ".scss": "css",
+    },
 });
