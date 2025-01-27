@@ -658,6 +658,7 @@ export enum Clients {
     GITHUB = "github",
     INSTAGRAM = "instagram",
     SIMSAI = "simsai",
+    XMTP = "xmtp",
     DEVA = "deva",
 }
 

@@ -18,34 +18,34 @@ import { DevaClientInterface } from "@elizaos/client-deva"
 import { FarcasterClientInterface } from "@elizaos/client-farcaster"
 import { OmniflixPlugin } from "@elizaos/plugin-omniflix"
 import { JeeterClientInterface } from "@elizaos/client-simsai"
-
+import { XmtpClientInterface } from "@elizaos/client-xmtp";
 import { DirectClient } from "@elizaos/client-direct"
 import { agentKitPlugin } from "@elizaos/plugin-agentkit"
-
+import { gelatoPlugin } from "@elizaos/plugin-gelato";
 import { PrimusAdapter } from "@elizaos/plugin-primus"
 import { lightningPlugin } from "@elizaos/plugin-lightning"
 import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900"
 import { dcapPlugin } from "@elizaos/plugin-dcap"
 import {
-    AgentRuntime,
-    CacheManager,
-    CacheStore,
-    type Character,
-    type Client,
-    Clients,
-    DbCacheAdapter,
-    defaultCharacter,
-    elizaLogger,
-    FsCacheAdapter,
-    type IAgentRuntime,
-    type ICacheManager,
-    type IDatabaseAdapter,
-    type IDatabaseCacheAdapter,
-    ModelProviderName,
-    parseBooleanFromText,
-    settings,
-    stringToUuid,
-    validateCharacterConfig,
+	AgentRuntime,
+	CacheManager,
+	CacheStore,
+	type Character,
+	type Client,
+	Clients,
+	DbCacheAdapter,
+	defaultCharacter,
+	elizaLogger,
+	FsCacheAdapter,
+	type IAgentRuntime,
+	type ICacheManager,
+	type IDatabaseAdapter,
+	type IDatabaseCacheAdapter,
+	ModelProviderName,
+	parseBooleanFromText,
+	settings,
+	stringToUuid,
+	validateCharacterConfig,
 } from "@elizaos/core"
 import { zgPlugin } from "@elizaos/plugin-0g"
 import { footballPlugin } from "@elizaos/plugin-football"
@@ -85,6 +85,7 @@ import { lensPlugin } from "@elizaos/plugin-lensNetwork"
 import { mindNetworkPlugin } from "@elizaos/plugin-mind-network";
 import { multiversxPlugin } from "@elizaos/plugin-multiversx"
 import { nearPlugin } from "@elizaos/plugin-near"
+import { newsPlugin } from "@elizaos/plugin-news";
 import createNFTCollectionsPlugin from "@elizaos/plugin-nft-collections"
 import { nftGenerationPlugin } from "@elizaos/plugin-nft-generation"
 import { createNodePlugin } from "@elizaos/plugin-node"
@@ -94,6 +95,7 @@ import { openWeatherPlugin } from "@elizaos/plugin-open-weather"
 import { quaiPlugin } from "@elizaos/plugin-quai"
 import { sgxPlugin } from "@elizaos/plugin-sgx"
 import { solanaPlugin } from "@elizaos/plugin-solana"
+import { solanaPluginV2 } from "@elizaos/plugin-solana-v2";
 import { solanaAgentkitPlugin } from "@elizaos/plugin-solana-agent-kit"
 import { squidRouterPlugin } from "@elizaos/plugin-squid-router"
 import { stargazePlugin } from "@elizaos/plugin-stargaze"
@@ -145,6 +147,7 @@ import { formPlugin } from "@elizaos/plugin-form";
 import { MongoClient } from "mongodb";
 import { quickIntelPlugin } from "@elizaos/plugin-quick-intel"
 
+import { trikonPlugin } from "@elizaos/plugin-trikon"
 const __filename = fileURLToPath(import.meta.url) // get the resolved path to the file
 const __dirname = path.dirname(__filename) // get the name of the directory
 
@@ -451,8 +454,8 @@ export function getTokenForProvider(provider: ModelProviderName, character: Char
 		case ModelProviderName.OLLAMA:
 			return ""
 		case ModelProviderName.GAIANET:
-            return "";
-        case ModelProviderName.BEDROCK:
+			return "";
+		case ModelProviderName.BEDROCK:
 			return ""
 		case ModelProviderName.OPENAI:
 			return character.settings?.secrets?.OPENAI_API_KEY || settings.OPENAI_API_KEY
@@ -517,42 +520,42 @@ export function getTokenForProvider(provider: ModelProviderName, character: Char
 }
 
 function initializeDatabase(dataDir: string) {
-    if (process.env.MONGODB_CONNECTION_STRING) {
-        elizaLogger.log("Initializing database on MongoDB Atlas");
-        const client = new MongoClient(process.env.MONGODB_CONNECTION_STRING, {
-            maxPoolSize: 100,
-            minPoolSize: 5,
-            maxIdleTimeMS: 60000,
-            connectTimeoutMS: 10000,
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-            compressors: ['zlib'],
-            retryWrites: true,
-            retryReads: true
-        });
+	if (process.env.MONGODB_CONNECTION_STRING) {
+		elizaLogger.log("Initializing database on MongoDB Atlas");
+		const client = new MongoClient(process.env.MONGODB_CONNECTION_STRING, {
+			maxPoolSize: 100,
+			minPoolSize: 5,
+			maxIdleTimeMS: 60000,
+			connectTimeoutMS: 10000,
+			serverSelectionTimeoutMS: 5000,
+			socketTimeoutMS: 45000,
+			compressors: ['zlib'],
+			retryWrites: true,
+			retryReads: true
+		});
 
-        const dbName = process.env.MONGODB_DATABASE || 'elizaAgent';
-        const db = new MongoDBDatabaseAdapter(client, dbName);
+		const dbName = process.env.MONGODB_DATABASE || 'elizaAgent';
+		const db = new MongoDBDatabaseAdapter(client, dbName);
 
-        // Test the connection
-        db.init()
-            .then(() => {
-                elizaLogger.success(
-                    "Successfully connected to MongoDB Atlas"
-                );
-            })
-            .catch((error) => {
-                elizaLogger.error("Failed to connect to MongoDB Atlas:", error);
-                throw error; // Re-throw to handle it in the calling code
-            });
+		// Test the connection
+		db.init()
+			.then(() => {
+				elizaLogger.success(
+					"Successfully connected to MongoDB Atlas"
+				);
+			})
+			.catch((error) => {
+				elizaLogger.error("Failed to connect to MongoDB Atlas:", error);
+				throw error; // Re-throw to handle it in the calling code
+			});
 
-        return db;
-    } else if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-        elizaLogger.info("Initializing Supabase connection...");
-        const db = new SupabaseDatabaseAdapter(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_ANON_KEY,
-        );
+		return db;
+	} else if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+		elizaLogger.info("Initializing Supabase connection...");
+		const db = new SupabaseDatabaseAdapter(
+			process.env.SUPABASE_URL,
+			process.env.SUPABASE_ANON_KEY,
+		);
 
 		// Test the connection
 		db.init()
@@ -589,11 +592,11 @@ function initializeDatabase(dataDir: string) {
 		})
 		return db
 	} else if (
-        process.env.QDRANT_URL && process.env.QDRANT_KEY && process.env.QDRANT_PORT && process.env.QDRANT_VECTOR_SIZE) {
+		process.env.QDRANT_URL && process.env.QDRANT_KEY && process.env.QDRANT_PORT && process.env.QDRANT_VECTOR_SIZE) {
 		elizaLogger.info("Initializing Qdrant adapter...")
 		const db = new QdrantDatabaseAdapter(process.env.QDRANT_URL, process.env.QDRANT_KEY, Number(process.env.QDRANT_PORT), Number(process.env.QDRANT_VECTOR_SIZE),)
 		return db
-	}  else {
+	} else {
 		const filePath = process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite")
 		elizaLogger.info(`Initializing SQLite database at ${filePath}...`)
 		const db = new SqliteDatabaseAdapter(new Database(filePath))
@@ -626,6 +629,11 @@ export async function initializeClients(character: Character, runtime: IAgentRun
 		if (autoClient) clients.auto = autoClient
 	}
 
+	if (clientTypes.includes(Clients.XMTP)) {
+        const xmtpClient = await XmtpClientInterface.start(runtime);
+        if (xmtpClient) clients.xmtp = xmtpClient;
+    }
+
 	if (clientTypes.includes(Clients.DISCORD)) {
 		const discordClient = await DiscordClientInterface.start(runtime)
 		if (discordClient) clients.discord = discordClient
@@ -643,12 +651,12 @@ export async function initializeClients(character: Character, runtime: IAgentRun
 		}
 	}
 
-    if (clientTypes.includes(Clients.ALEXA)) {
-        const alexaClient = await AlexaClientInterface.start(runtime);
-        if (alexaClient) {
-            clients.alexa = alexaClient;
-        }
-    }
+	if (clientTypes.includes(Clients.ALEXA)) {
+		const alexaClient = await AlexaClientInterface.start(runtime);
+		if (alexaClient) {
+			clients.alexa = alexaClient;
+		}
+	}
 
 	if (clientTypes.includes(Clients.INSTAGRAM)) {
 		const instagramClient = await InstagramClientInterface.start(runtime)
@@ -807,8 +815,8 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 		character,
 		// character.plugins are handled when clients are added
 		plugins: [
-            parseBooleanFromText(getSecret(character, "BITMIND")) && getSecret(character, "BITMIND_API_TOKEN") ? bittensorPlugin : null,
-            parseBooleanFromText(getSecret(character, "EMAIL_AUTOMATION_ENABLED")) ? emailAutomationPlugin : null,
+			parseBooleanFromText(getSecret(character, "BITMIND")) && getSecret(character, "BITMIND_API_TOKEN") ? bittensorPlugin : null,
+			parseBooleanFromText(getSecret(character, "EMAIL_AUTOMATION_ENABLED")) ? emailAutomationPlugin : null,
 			getSecret(character, "IQ_WALLET_ADDRESS") && getSecret(character, "IQSOlRPC") ? elizaCodeinPlugin : null,
 			bootstrapPlugin,
 			getSecret(character, "CDP_API_KEY_NAME") && getSecret(character, "CDP_API_KEY_PRIVATE_KEY") && getSecret(character, "CDP_AGENT_KIT_NETWORK") ? agentKitPlugin : null,
@@ -818,7 +826,7 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			nodePlugin,
 			getSecret(character, "ROUTER_NITRO_EVM_PRIVATE_KEY") && getSecret(character, "ROUTER_NITRO_EVM_ADDRESS") ? nitroPlugin : null,
 			getSecret(character, "TAVILY_API_KEY") ? webSearchPlugin : null,
-			getSecret(character, "SOLANA_PUBLIC_KEY") || (getSecret(character, "WALLET_PUBLIC_KEY") && !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x")) ? solanaPlugin : null,
+			getSecret(character, "SOLANA_PUBLIC_KEY") || (getSecret(character, "WALLET_PUBLIC_KEY") && !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x")) ? [solanaPlugin, solanaPluginV2] : null,
 			getSecret(character, "SOLANA_PRIVATE_KEY") ? solanaAgentkitPlugin : null,
 			getSecret(character, "AUTONOME_JWT_TOKEN") ? autonomePlugin : null,
 			(getSecret(character, "NEAR_ADDRESS") || getSecret(character, "NEAR_WALLET_PUBLIC_KEY")) && getSecret(character, "NEAR_WALLET_SECRET_KEY") ? nearPlugin : null,
@@ -826,9 +834,9 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			(getSecret(character, "EVM_PUBLIC_KEY") || getSecret(character, "INJECTIVE_PUBLIC_KEY")) && getSecret(character, "INJECTIVE_PRIVATE_KEY") ? injectivePlugin : null,
 			getSecret(character, "COSMOS_RECOVERY_PHRASE") && getSecret(character, "COSMOS_AVAILABLE_CHAINS") && createCosmosPlugin(),
 			(getSecret(character, "SOLANA_PUBLIC_KEY") || (getSecret(character, "WALLET_PUBLIC_KEY") && !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))) &&
-			getSecret(character, "SOLANA_ADMIN_PUBLIC_KEY") &&
-			getSecret(character, "SOLANA_PRIVATE_KEY") &&
-			getSecret(character, "SOLANA_ADMIN_PRIVATE_KEY")
+				getSecret(character, "SOLANA_ADMIN_PUBLIC_KEY") &&
+				getSecret(character, "SOLANA_PRIVATE_KEY") &&
+				getSecret(character, "SOLANA_ADMIN_PRIVATE_KEY")
 				? nftGenerationPlugin
 				: null,
 			getSecret(character, "ZEROG_PRIVATE_KEY") ? zgPlugin : null,
@@ -836,12 +844,12 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			getSecret(character, "ZERION_API_KEY") ? zerionPlugin : null,
 			getSecret(character, "COINBASE_COMMERCE_KEY") ? coinbaseCommercePlugin : null,
 			getSecret(character, "FAL_API_KEY") ||
-			getSecret(character, "OPENAI_API_KEY") ||
-			getSecret(character, "VENICE_API_KEY") ||
-			getSecret(character, "NVIDIA_API_KEY") ||
-			getSecret(character, "NINETEEN_AI_API_KEY") ||
-			getSecret(character, "HEURIST_API_KEY") ||
-			getSecret(character, "LIVEPEER_GATEWAY_URL")
+				getSecret(character, "OPENAI_API_KEY") ||
+				getSecret(character, "VENICE_API_KEY") ||
+				getSecret(character, "NVIDIA_API_KEY") ||
+				getSecret(character, "NINETEEN_AI_API_KEY") ||
+				getSecret(character, "HEURIST_API_KEY") ||
+				getSecret(character, "LIVEPEER_GATEWAY_URL")
 				? imageGenerationPlugin
 				: null,
 			getSecret(character, "FAL_API_KEY") ? ThreeDGenerationPlugin : null,
@@ -854,7 +862,7 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			getSecret(character, "COINBASE_API_KEY") && getSecret(character, "COINBASE_PRIVATE_KEY") && getSecret(character, "COINBASE_NOTIFICATION_URI") ? webhookPlugin : null,
 			goatPlugin,
 			getSecret(character, "COINGECKO_API_KEY") || getSecret(character, "COINGECKO_PRO_API_KEY") ? coingeckoPlugin : null,
-            getSecret(character, "MORALIS_API_KEY") ? moralisPlugin : null,
+			getSecret(character, "MORALIS_API_KEY") ? moralisPlugin : null,
 			getSecret(character, "EVM_PROVIDER_URL") ? goatPlugin : null,
 			getSecret(character, "ABSTRACT_PRIVATE_KEY") ? abstractPlugin : null,
 			getSecret(character, "B2_PRIVATE_KEY") ? b2Plugin : null,
@@ -862,7 +870,7 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			getSecret(character, "FLOW_ADDRESS") && getSecret(character, "FLOW_PRIVATE_KEY") ? flowPlugin : null,
 			getSecret(character, "LENS_ADDRESS") && getSecret(character, "LENS_PRIVATE_KEY") ? lensPlugin : null,
 			getSecret(character, "APTOS_PRIVATE_KEY") ? aptosPlugin : null,
-            getSecret(character, "MIND_COLD_WALLET_ADDRESS") ? mindNetworkPlugin : null,
+			getSecret(character, "MIND_COLD_WALLET_ADDRESS") ? mindNetworkPlugin : null,
 			getSecret(character, "MVX_PRIVATE_KEY") ? multiversxPlugin : null,
 			getSecret(character, "ZKSYNC_PRIVATE_KEY") ? zksyncEraPlugin : null,
 			getSecret(character, "CRONOSZKEVM_PRIVATE_KEY") ? cronosZkEVMPlugin : null,
@@ -913,11 +921,13 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			getSecret(character, "FUNDING_PRIVATE_KEY") && getSecret(character, "EVM_RPC_URL") ? litPlugin : null,
 			getSecret(character, "ETHSTORAGE_PRIVATE_KEY") ? ethstoragePlugin : null,
 			getSecret(character, "MINA_PRIVATE_KEY") ? minaPlugin : null,
-            getSecret(character, "FORM_PRIVATE_KEY") ? formPlugin : null,
-            getSecret(character, "ANKR_WALLET") ? ankrPlugin : null,
+			getSecret(character, "FORM_PRIVATE_KEY") ? formPlugin : null,
+			getSecret(character, "ANKR_WALLET") ? ankrPlugin : null,
 			getSecret(character, "DCAP_EVM_PRIVATE_KEY") && getSecret(character, "DCAP_MODE") ? dcapPlugin : null,
 			getSecret(character, "QUICKINTEL_API_KEY") ? quickIntelPlugin : null,
-		].filter(Boolean),
+			getSecret(character, "GELATO_RELAY_API_KEY") ? gelatoPlugin : null,
+			getSecret(character, "TRIKON_WALLET_ADDRESS") ? trikonPlugin : null,
+		].flat().filter(Boolean),
 		providers: [],
 		managers: [],
 		cacheManager: cache,
@@ -1106,16 +1116,16 @@ startAgents().catch((error) => {
 
 // Prevent unhandled exceptions from crashing the process if desired
 if (
-    process.env.PREVENT_UNHANDLED_EXIT &&
-    parseBooleanFromText(process.env.PREVENT_UNHANDLED_EXIT)
+	process.env.PREVENT_UNHANDLED_EXIT &&
+	parseBooleanFromText(process.env.PREVENT_UNHANDLED_EXIT)
 ) {
-    // Handle uncaught exceptions to prevent the process from crashing
-    process.on("uncaughtException", function (err) {
-        console.error("uncaughtException", err);
-    });
+	// Handle uncaught exceptions to prevent the process from crashing
+	process.on("uncaughtException", function (err) {
+		console.error("uncaughtException", err);
+	});
 
-    // Handle unhandled rejections to prevent the process from crashing
-    process.on("unhandledRejection", function (err) {
-        console.error("unhandledRejection", err);
-    });
+	// Handle unhandled rejections to prevent the process from crashing
+	process.on("unhandledRejection", function (err) {
+		console.error("unhandledRejection", err);
+	});
 }
