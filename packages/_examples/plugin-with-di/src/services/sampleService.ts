@@ -8,9 +8,9 @@ import {
     Memory,
     State,
 } from "@elizaos/core";
+import { globalContainer } from "@elizaos/plugin-di";
 
 import { SampleProvider } from "../providers/sampleProvider";
-
 
 // Add SAMPLE to ServiceType enum in types.ts
 declare module "@elizaos/core" {
@@ -112,7 +112,11 @@ export class SampleService extends Service {
                 recentMessages: "",
                 recentMessagesData: [],
             };
-            await this.sampleProvider.get(this.runtime, dummyMemory, dummyState);
+            await this.sampleProvider.get(
+                this.runtime,
+                dummyMemory,
+                dummyState
+            );
 
             // hello world log example
             elizaLogger.info("SampleService: Hello world");
@@ -143,5 +147,8 @@ export class SampleService extends Service {
         await this.fetchSample();
     }
 }
+
+// Register the provider with the global container
+globalContainer.bind(SampleService).toSelf().inSingletonScope();
 
 export default SampleService;
