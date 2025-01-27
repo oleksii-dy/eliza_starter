@@ -1,0 +1,234 @@
+// It should transfer tokens from the agent's wallet to the recipient.
+import {
+    type Action,
+    ActionExample,
+    composeContext,
+    Content,
+    elizaLogger,
+    generateObject,
+    HandlerCallback,
+    IAgentRuntime,
+    Memory,
+    ModelClass,
+    State,
+} from "@elizaos/core";
+
+import * as path from "path";
+import { z } from "zod";
+import { AccountUpdate, fetchAccount, Mina, PublicKey } from "o1js";
+
+import { walletProvider, initWalletProvider } from "../providers/wallet";
+import { transactionFee, MINA_DECIMALS } from "../environment";
+
+export interface TransferContent extends Content {
+    recipient: string;
+    amount: string | number;
+}
+
+function isTransferContent(content: Content): content is TransferContent {
+    elizaLogger.log("Content for transfer", content);
+    return (
+        typeof content.recipient === "string" &&
+        (typeof content.amount === "string" ||
+            typeof content.amount === "number")
+    );
+}
+
+const transferTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
+
+Example response:
+\`\`\`json
+{
+    "recipient": "B62qoK2E55aZKaCjVRGxwJ2XJUoZduq8xphTDLEEK7hTZpLHXBa48b3",
+    "amount": "1"
+}
+\`\`\`
+
+{{recentMessages}}
+
+Given the recent messages, extract the following information about the requested token transfer:
+- Recipient wallet address
+- Amount to transfer
+
+Respond with a JSON markdown block containing only the extracted values.`;
+
+export default {
+    name: "SEND_MINA_TOKEN",
+    similes: [
+        "TRANSFER_TOKEN",
+        "TRANSFER_TOKENS",
+        "SEND_TOKEN",
+        "SEND_TOKENS",
+        "SEND_MINA",
+        "PAY",
+    ],
+    validate: async (runtime: IAgentRuntime, message: Memory) => {
+        elizaLogger.log("Validating Mina token transfer from user:", message.userId);
+        //add custom validate logic here
+        /*
+            const adminIds = runtime.getSetting("ADMIN_USER_IDS")?.split(",") || [];
+            //elizaLogger.log("Admin IDs from settings:", adminIds);
+
+            const isAdmin = adminIds.includes(message.userId);
+
+            if (isAdmin) {
+                //elizaLogger.log(`Authorized transfer from user: ${message.userId}`);
+                return true;
+            }
+            else
+            {
+                //elizaLogger.log(`Unauthorized transfer attempt from user: ${message.userId}`);
+                return false;
+            }
+            */
+        return true;
+    },
+    description: "Transfer tokens from the agent's wallet to another address",
+    handler: async (
+        runtime: IAgentRuntime,
+        message: Memory,
+        state: State,
+        _options: { [key: string]: unknown },
+        callback?: HandlerCallback
+    ): Promise<boolean> => {
+        elizaLogger.log("Starting SEND_MINA_TOKEN handler...");
+
+        const walletInfo = await walletProvider.get(runtime, message, state);
+        state.walletInfo = walletInfo;
+
+        // Initialize or update state
+        if (!state) {
+            state = (await runtime.composeState(message)) as State;
+        } else {
+            state = await runtime.updateRecentMessageState(state);
+        }
+
+        // Define the schema for the expected output
+        const transferSchema = z.object({
+            recipient: z.string(),
+            amount: z.string() || z.number(),
+        });
+
+        // Compose transfer context
+        const transferContext = composeContext({
+            state,
+            template: transferTemplate,
+        });
+
+        // Generate transfer content with the schema
+        const content = await generateObject({
+            runtime,
+            context: transferContext,
+            schema: transferSchema,
+            modelClass: ModelClass.SMALL,
+        });
+
+        const transferContent = content.object as TransferContent;
+
+        // Validate transfer content
+        if (!isTransferContent(transferContent)) {
+            elizaLogger.error("Invalid content for TRANSFER_MINA_TOKEN action.");
+            if (callback) {
+                callback({
+                    text: "Unable to process transfer request. Invalid content provided.",
+                    content: { error: "Invalid transfer content" },
+                });
+            }
+            return false;
+        }
+
+        try {
+            const provider = initWalletProvider(runtime);
+            const privateKey = provider.privateKey;
+            const publicKey = provider.publicKey;
+            const senderAddress = provider.address;
+
+            const senderAccount = await fetchAccount({ publicKey: publicKey });
+            if (senderAccount.error && senderAccount.error.statusCode != 404) {
+                elizaLogger.error(`network issue when fetchAccount: ${senderAddress}, please check your network connection!`);
+                throw new Error("network issue when fetchAccount: ${senderAddress},please check your network connection!");
+            }
+            const nonce = Number(senderAccount.account!.nonce.toString());
+            const recipientAddress: string = transferContent.recipient.trim();
+            // const recipientAddress1: string = "B62qpfDuhWCLDUp4qjiaE5PfM76qbyJcEbyZWnZ5fb7ZMbxzo1SUgF1";
+            elizaLogger.log(`recipientAddress: ${recipientAddress}`);
+            // elizaLogger.log(`recipientAddress1: ${recipientAddress1}`);
+
+            const recipient = PublicKey.fromBase58(recipientAddress);
+
+            const recipientAccount = await fetchAccount({ publicKey: recipient });
+            if (recipientAccount.error && recipientAccount.error.statusCode != 404) {
+                elizaLogger.error(`network issue when fetchAccount: ${recipientAddress}, please check your network connection!`);
+                throw new Error(`network issue when fetchAccount: ${recipientAddress}, please check your network connection!`);
+            }
+
+            const sendAmount = Number(transferContent.amount) * Math.pow(10, MINA_DECIMALS);
+
+            const tx = await Mina.transaction({
+                sender: publicKey,
+                fee: transactionFee,
+                memo: 'ElizaOS Mina Plugin @aiqubits',
+                nonce: nonce
+            }, async () => {
+                if (!recipientAccount.account) {
+                    throw new Error(`recipient account not found: ${recipientAddress}, you need to create the account first!`);
+                    // AccountUpdate.fundNewAccount(publicKey);// 需要为新账户创建而花费1MINA
+                }
+                const senderAcctUpt = AccountUpdate.createSigned(publicKey);
+                senderAcctUpt.send({ to: recipient, amount: sendAmount });
+            });
+
+            const signTx = tx.sign([privateKey]);
+            const hashTx = await signTx.send();
+            elizaLogger.log("Transfer successful:", hashTx);
+
+            const txUrl = path.join(await provider.getBaseTXUrl(runtime), hashTx.hash);
+            if (callback) {
+                callback({
+                    text: `Successfully transferred ${transferContent.amount} MINA to ${recipientAddress}, Click to view Transactions: ${txUrl}`,
+                    content: {
+                        success: true,
+                        hash: hashTx.hash,
+                        amount: transferContent.amount,
+                        recipient: recipientAddress,
+                    },
+                });
+            }
+
+            return true;
+        } catch (error) {
+            elizaLogger.error("Error during token transfer:", error);
+            if (callback) {
+                callback({
+                    text: `Error transferring tokens: ${error.message}`,
+                    content: { error: error.message },
+                });
+            }
+            return false;
+        }
+    },
+
+    examples: [
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Send 1 MINA tokens to 0x4f2e63be8e7fe287836e29cde6f3d5cbc96eefd0c0e3f3747668faa2ae7324b0",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "I'll send 1 MINA tokens now...",
+                    action: "SEND_MINA_TOKEN",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Successfully sent 1 MINA tokens to 0x4f2e63be8e7fe287836e29cde6f3d5cbc96eefd0c0e3f3747668faa2ae7324b0, Transaction: 0x39a8c432d9bdad993a33cc1faf2e9b58fb7dd940c0425f1d6db3997e4b4b05c0",
+                },
+            },
+        ],
+    ] as ActionExample[][],
+} as Action;

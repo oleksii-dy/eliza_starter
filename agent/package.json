@@ -32,6 +32,7 @@
         "@elizaos/client-twitter": "workspace:*",
         "@elizaos/client-slack": "workspace:*",
         "@elizaos/core": "workspace:*",
+        "@elizaos/plugin-mina": "workspace:*",
         "@elizaos/plugin-0g": "workspace:*",
         "@elizaos/plugin-abstract": "workspace:*",
         "@elizaos/plugin-aptos": "workspace:*",
