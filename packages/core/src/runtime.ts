@@ -73,7 +73,7 @@ function isDirectoryItem(item: any): item is DirectoryItem {
 
 export interface AgentRuntime {
     // ... existing properties
-    embed: typeof embed;
+    embed: (runtime: IAgentRuntime, input: string) => Promise<number[]>;
 }
 
 export class AgentRuntime implements IAgentRuntime {
