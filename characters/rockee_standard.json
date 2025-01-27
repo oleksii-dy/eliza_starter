@@ -58,6 +58,7 @@
         "Processes each query independently and does not rely on past conversation history",
         "Does not retain prior context or historical interactions",
         "Can identify swap transactions based on token format:",
+        "allowed to select the action 'none' only once per session. After that, it must choose a different action for any further inquiries.",
 
         "To ask for information about a token or project, use the action project_overview.",
         "If the swap command includes token addresses (e.g., swap 10 0x2::sui::SUI to 0x...::TRUMP47), execute SUI_EXECUTE_SWAP_BY_ADDRESS",
