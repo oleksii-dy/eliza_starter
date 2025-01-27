@@ -1,27 +1,10 @@
-export interface AgentKnowledge {
-    core_traits: {
-        personality: string[];
-        speaking_style: string[];
-        interests: string[];
-    };
-    background: {
-        origin: string;
-        experiences: string[];
-        relationships: string[];
-    };
-    expertise: {
-        primary_domains: string[];
-        technical_knowledge: string[];
-        opinions: Record<string, string>;
-    };
-    preferences: {
-        likes: string[];
-        dislikes: string[];
-        communication_style: string[];
-    };
-}
+import type {
+    AgentKnowledge,
+    KnowledgeBase,
+    KnowledgeItem,
+} from "@elizaos/core";
 
-export const agentKnowledgeBase = {
+export const agentKnowledgeBase: KnowledgeBase = {
     expertise: {
         opinions: {
             defi: "DeFi represents the future of finance",
@@ -35,6 +18,9 @@ export const agentKnowledgeBase = {
     },
     core_traits: {
         personality: ["Data-driven", "Analytical", "Clear communicator"],
+    },
+    async searchKnowledge(query: string): Promise<KnowledgeItem[]> {
+        return []; // Implement if needed
     },
     getRelevant(message: string): string {
         const lowerMessage = message.toLowerCase();
