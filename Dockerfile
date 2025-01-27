@@ -46,8 +46,8 @@ RUN cd packages/core && pnpm build
 # Build adapter-pglite specifically
 RUN cd packages/adapter-pglite && pnpm build
 
-# Build all packages
-RUN pnpm run build --verbose
+# Build all packages with increased verbosity
+RUN pnpm run build --filter=!eliza-docs --verbosity=2
 
 # Verify built files exist
 RUN ls -la packages/adapter-pglite/dist/index.js || echo "adapter-pglite build missing!"
