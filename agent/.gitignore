@@ -6,4 +6,4 @@
 .env*
 /data
 /generatedImages
-!/utils/cronJobManager.ts
+!src/utils/cronJobManager.ts
