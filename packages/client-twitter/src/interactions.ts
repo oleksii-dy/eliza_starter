@@ -15,7 +15,7 @@ import {
     elizaLogger,
     getEmbeddingZeroVector,
     type IImageDescriptionService,
-    ServiceType
+    ServiceType,
 } from "@elizaos/core";
 import type { ClientBase } from "./base";
 import { buildConversationThread, sendTweet, wait } from "./utils.ts";
@@ -31,6 +31,9 @@ export const twitterMessageHandlerTemplate =
 {{topics}}
 
 {{providers}}
+
+# Real-time Information:
+{{perplexityData}}
 
 {{characterPostExamples}}
 
@@ -207,7 +210,10 @@ export class TwitterInteractionClient {
                                 ];
                             selectedTweets.push(randomTweet);
                             elizaLogger.log(
-                                `Selected tweet from ${username}: ${randomTweet.text?.substring(0, 100)}`
+                                `Selected tweet from ${username}: ${randomTweet.text?.substring(
+                                    0,
+                                    100
+                                )}`
                             );
                         }
                     }
@@ -313,8 +319,12 @@ export class TwitterInteractionClient {
         thread: Tweet[];
     }) {
         // Only skip if tweet is from self AND not from a target user
-        if (tweet.userId === this.client.profile.id &&
-            !this.client.twitterConfig.TWITTER_TARGET_USERS.includes(tweet.username)) {
+        if (
+            tweet.userId === this.client.profile.id &&
+            !this.client.twitterConfig.TWITTER_TARGET_USERS.includes(
+                tweet.username
+            )
+        ) {
             return;
         }
 
@@ -346,7 +356,7 @@ export class TwitterInteractionClient {
             .join("\n\n");
 
         const imageDescriptionsArray = [];
-        try{
+        try {
             for (const photo of tweet.photos) {
                 const description = await this.runtime
                     .getService<IImageDescriptionService>(
@@ -356,27 +366,33 @@ export class TwitterInteractionClient {
                 imageDescriptionsArray.push(description);
             }
         } catch (error) {
-    // Handle the error
-    elizaLogger.error("Error Occured during describing image: ", error);
-}
-
-
-
+            // Handle the error
+            elizaLogger.error("Error Occured during describing image: ", error);
+        }
 
         let state = await this.runtime.composeState(message, {
             twitterClient: this.client.twitterClient,
             twitterUserName: this.client.twitterConfig.TWITTER_USERNAME,
             currentPost,
             formattedConversation,
-            imageDescriptions: imageDescriptionsArray.length > 0
-            ? `\nImages in Tweet:\n${imageDescriptionsArray.map((desc, i) =>
-              `Image ${i + 1}: Title: ${desc.title}\nDescription: ${desc.description}`).join("\n\n")}`:""
+            imageDescriptions:
+                imageDescriptionsArray.length > 0
+                    ? `\nImages in Tweet:\n${imageDescriptionsArray
+                          .map(
+                              (desc, i) =>
+                                  `Image ${i + 1}: Title: ${
+                                      desc.title
+                                  }\nDescription: ${desc.description}`
+                          )
+                          .join("\n\n")}`
+                    : "",
         });
 
         // check if the tweet exists, save if it doesn't
         const tweetId = stringToUuid(tweet.id + "-" + this.runtime.agentId);
-        const tweetExists =
-            await this.runtime.messageManager.getMemoryById(tweetId);
+        const tweetExists = await this.runtime.messageManager.getMemoryById(
+            tweetId
+        );
 
         if (!tweetExists) {
             elizaLogger.log("tweet does not exist, saving");
@@ -434,20 +450,28 @@ export class TwitterInteractionClient {
                 ...state,
                 // Convert actionNames array to string
                 actionNames: Array.isArray(state.actionNames)
-                    ? state.actionNames.join(', ')
-                    : state.actionNames || '',
+                    ? state.actionNames.join(", ")
+                    : state.actionNames || "",
                 actions: Array.isArray(state.actions)
-                    ? state.actions.join('\n')
-                    : state.actions || '',
+                    ? state.actions.join("\n")
+                    : state.actions || "",
                 // Ensure character examples are included
                 characterPostExamples: this.runtime.character.messageExamples
                     ? this.runtime.character.messageExamples
-                        .map(example =>
-                            example.map(msg =>
-                                `${msg.user}: ${msg.content.text}${msg.content.action ? ` [Action: ${msg.content.action}]` : ''}`
-                            ).join('\n')
-                        ).join('\n\n')
-                    : '',
+                          .map((example) =>
+                              example
+                                  .map(
+                                      (msg) =>
+                                          `${msg.user}: ${msg.content.text}${
+                                              msg.content.action
+                                                  ? ` [Action: ${msg.content.action}]`
+                                                  : ""
+                                          }`
+                                  )
+                                  .join("\n")
+                          )
+                          .join("\n\n")
+                    : "",
             },
             template:
                 this.runtime.character.templates
@@ -650,4 +674,77 @@ export class TwitterInteractionClient {
 
         return thread;
     }
+}
+
+export async function handleTwitterInteraction(
+    runtime: IAgentRuntime,
+    message: Memory,
+    state: State,
+    callback: HandlerCallback
+): Promise<void> {
+    try {
+        // Check if message needs real-time data
+        if (needsRealTimeData(message.content.text)) {
+            // Use perplexityReply action from bootstrap plugin
+            const perplexityAction = runtime.actions.find(
+                (a) =>
+                    a.name === "PERPLEXITY_REPLY" ||
+                    a.similes?.includes("PERPLEXITY_REPLY")
+            );
+
+            if (perplexityAction) {
+                const success = await perplexityAction.handler(
+                    runtime,
+                    message,
+                    state,
+                    {},
+                    callback
+                );
+
+                if (success) return;
+            }
+        }
+
+        // Fallback to regular Twitter interaction if needed
+        const context = composeContext({
+            state,
+            template: twitterMessageHandlerTemplate,
+        });
+
+        const response = await generateMessageResponse({
+            runtime,
+            context,
+            modelClass: ModelClass.LARGE,
+        });
+
+        await callback({
+            text: response.text,
+            inReplyTo: message.id,
+            action: "TWITTER_REPLY",
+        });
+    } catch (error) {
+        elizaLogger.error("Error handling Twitter interaction:", error);
+        throw error;
+    }
+}
+
+function needsRealTimeData(text: string): boolean {
+    const triggers = [
+        "what's happening",
+        "what is happening",
+        "latest",
+        "news",
+        "current",
+        "update",
+        "real time",
+        "realtime",
+        "right now",
+        "today",
+        "price",
+        "weather",
+        "stats",
+        "statistics",
+    ];
+
+    return triggers.some((trigger) => text.toLowerCase().includes(trigger));
 }

@@ -6,6 +6,7 @@ import { muteRoomAction } from "./actions/muteRoom.ts";
 import { noneAction } from "./actions/none.ts";
 import { unfollowRoomAction } from "./actions/unfollowRoom.ts";
 import { unmuteRoomAction } from "./actions/unmuteRoom.ts";
+import { perplexityReplyAction } from "./actions/perplexityReply.ts";
 import { factEvaluator } from "./evaluators/fact.ts";
 import { goalEvaluator } from "./evaluators/goal.ts";
 import { boredomProvider } from "./providers/boredom.ts";
@@ -27,6 +28,7 @@ export const bootstrapPlugin: Plugin = {
         noneAction,
         muteRoomAction,
         unmuteRoomAction,
+        perplexityReplyAction,
     ],
     evaluators: [factEvaluator, goalEvaluator],
     providers: [boredomProvider, timeProvider, factsProvider],

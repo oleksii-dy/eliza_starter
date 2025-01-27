@@ -1,39 +1,68 @@
-# Sample Plugin for Eliza
+# Perplexity X Integration Plugin for Eliza
 
-The Sample Plugin for Eliza extends the functionality of the Eliza platform by providing additional actions, providers, evaluators, and more. This plugin is designed to be easily extendable and customizable to fit various use cases.
+The Perplexity X Integration Plugin extends Eliza's functionality by enabling real-time data analysis and automated responses on X.com using the Perplexity API.
 
 ## Description
 
-The Sample Plugin offers a set of features that can be integrated into the Eliza platform to enhance its capabilities. Below is a high-level overview of the different components available in this plugin.
+This plugin connects to both Perplexity's API and X.com's API to monitor tweets, analyze them using Perplexity's AI capabilities, and post responses in real-time.
 
 ## Actions
 
-- **createResourceAction**: This action enables the creation and management of generic resources. It can be customized to handle different types of resources and integrate with various data sources.
+-   **monitorXStreamAction**: Monitors X.com's streaming API for specified keywords or accounts
+-   **perplexityQueryAction**: Queries Perplexity API with the tweet content to generate relevant responses
+-   **postXReplyAction**: Posts the generated response back to X.com as a reply
 
 ## Providers
 
-- **sampleProvider**: This provider offers a mechanism to supply data or services to the plugin. It can be extended to include additional providers as needed.
+-   **perplexityProvider**: Manages authentication and communication with Perplexity API
+-   **xApiProvider**: Handles X.com API authentication and requests
 
 ## Evaluators
 
-- **sampleEvaluator**: This evaluator provides a way to assess or analyze data within the plugin. It can be extended to include additional evaluators as needed.
+-   **tweetRelevanceEvaluator**: Evaluates if a tweet requires a response
+-   **responseQualityEvaluator**: Assesses the quality of Perplexity-generated responses before posting
 
 ## Services
 
-- **[ServiceName]**: Description of the service and its functionality. This can be extended to include additional services as needed.
+-   **PerplexityService**: Handles communication with Perplexity API, including rate limiting and error handling
+-   **XStreamService**: Manages real-time tweet monitoring and response posting
+-   **ResponseFormattingService**: Formats Perplexity responses to fit X.com's requirements
 
-## Clients
+## Configuration
 
-- **[ClientName]**: Description of the client and its functionality. This can be extended to include additional clients as needed.
+To use this plugin, you'll need to set up the following:
 
-## How to Extend
+1. Perplexity API credentials in your environment:
 
-To extend the Sample Plugin, you can add new actions, providers, evaluators, services, and clients by following the structure provided in the plugin. Each component can be customized to fit your specific requirements.
+    ```env
+    PERPLEXITY_API_KEY=your_api_key
+    ```
 
-1. **Actions**: Add new actions by defining them in the `actions` array.
-2. **Providers**: Add new providers by defining them in the `providers` array.
-3. **Evaluators**: Add new evaluators by defining them in the `evaluators` array.
-4. **Services**: Add new services by defining them in the `services` array.
-5. **Clients**: Add new clients by defining them in the `clients` array.
+2. X.com API credentials:
+    ```env
+    X_API_KEY=your_api_key
+    X_API_SECRET=your_api_secret
+    X_ACCESS_TOKEN=your_access_token
+    X_ACCESS_SECRET=your_access_token_secret
+    ```
 
-For more detailed information on how to extend the plugin, refer to the documentation provided in the Eliza platform.
+## How to Use
+
+1. Install the plugin in your Eliza instance
+2. Configure the API credentials
+3. Define monitoring parameters (keywords, accounts to monitor)
+4. Start the plugin:
+    ```bash
+    eliza plugin start perplexity-x
+    ```
+
+## Example Implementation
+
+Create the following files in your plugin directory:
+
+1. `src/actions/monitorXStream.ts` - For X.com stream monitoring
+2. `src/actions/perplexityQuery.ts` - For Perplexity API integration
+3. `src/providers/perplexityProvider.ts` - For Perplexity API authentication
+4. `src/services/responseFormatter.ts` - For response formatting
+
+For detailed implementation examples, check the `examples` directory in this plugin.
