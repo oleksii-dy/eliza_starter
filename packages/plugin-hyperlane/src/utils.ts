@@ -1,12 +1,12 @@
 // src/actions/hyperlane/utils.ts
+import { IAgentRuntime, elizaLogger } from "@elizaos/core";
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Wallet } from '@ethersproject/wallet';
-import { MultiProvider, HyperlaneCore } from '@hyperlane-xyz/sdk';
-import { IAgentRuntime, elizaLogger } from "@elizaos/core";
+import { HyperlaneCore, MultiProvider } from '@hyperlane-xyz/sdk';
 import { Address, ProtocolType } from '@hyperlane-xyz/utils';
-import { chainData } from "../chainMetadata";
-import { ChainConfig, HyperlaneAddresses, HyperlaneContractAddresses } from './types';
 import pino from 'pino';
+import { chainData } from "../chainMetadata";
+import { ChainConfig, HyperlaneContractAddresses } from './types';
 
 // Create logger instance
 export const logger = pino({
