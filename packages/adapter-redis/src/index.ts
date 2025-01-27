@@ -72,9 +72,9 @@ export class RedisClient implements IDatabaseCacheAdapter {
         return `${agentId}:${key}`; // Constructs a unique key based on agentId and key
     }
 
-    async setValue(params: { key: string; value: string }): Promise<boolean> {
+    async setValue(params: { key: string; value: string; ttl?: number }): Promise<boolean> {
         try {
-            await this.client.set(params.key, params.value);
+            await this.client.set(params.key, params.value, 'EX', params.ttl || 300);
             return true;
         } catch (err) {
             elizaLogger.error("Error setting value:", err);
