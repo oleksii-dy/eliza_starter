@@ -10,6 +10,7 @@ import { InstagramClientInterface } from "@elizaos/client-instagram"
 import { LensAgentClient } from "@elizaos/client-lens"
 import { SlackClientInterface } from "@elizaos/client-slack"
 import { TelegramClientInterface } from "@elizaos/client-telegram"
+import { TelegramAccountClientInterface } from "@elizaos/client-telegram-account"
 import { TwitterClientInterface } from "@elizaos/client-twitter"
 import { AlexaClientInterface } from "@elizaos/client-alexa";
 import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb"
@@ -17,10 +18,10 @@ import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb"
 import { FarcasterClientInterface } from "@elizaos/client-farcaster"
 import { OmniflixPlugin } from "@elizaos/plugin-omniflix"
 import { JeeterClientInterface } from "@elizaos/client-simsai"
-
+import { XmtpClientInterface } from "@elizaos/client-xmtp";
 import { DirectClient } from "@elizaos/client-direct"
 import { agentKitPlugin } from "@elizaos/plugin-agentkit"
-
+import { gelatoPlugin } from "@elizaos/plugin-gelato";
 import { PrimusAdapter } from "@elizaos/plugin-primus"
 import { lightningPlugin } from "@elizaos/plugin-lightning"
 import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900"
@@ -52,6 +53,8 @@ import { footballPlugin } from "@elizaos/plugin-football"
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap"
 import { normalizeCharacter } from "@elizaos/plugin-di"
 import createGoatPlugin from "@elizaos/plugin-goat"
+import createZilliqaPlugin from "@elizaos/plugin-zilliqa";
+
 // import { intifacePlugin } from "@elizaos/plugin-intiface";
 import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation"
 import { abstractPlugin } from "@elizaos/plugin-abstract"
@@ -146,6 +149,7 @@ import { formPlugin } from "@elizaos/plugin-form";
 import { MongoClient } from "mongodb";
 import { quickIntelPlugin } from "@elizaos/plugin-quick-intel"
 
+import { trikonPlugin } from "@elizaos/plugin-trikon"
 const __filename = fileURLToPath(import.meta.url) // get the resolved path to the file
 const __dirname = path.dirname(__filename) // get the name of the directory
 
@@ -627,6 +631,11 @@ export async function initializeClients(character: Character, runtime: IAgentRun
 		if (autoClient) clients.auto = autoClient
 	}
 
+	if (clientTypes.includes(Clients.XMTP)) {
+        const xmtpClient = await XmtpClientInterface.start(runtime);
+        if (xmtpClient) clients.xmtp = xmtpClient;
+    }
+
 	if (clientTypes.includes(Clients.DISCORD)) {
 		const discordClient = await DiscordClientInterface.start(runtime)
 		if (discordClient) clients.discord = discordClient
@@ -636,6 +645,11 @@ export async function initializeClients(character: Character, runtime: IAgentRun
 		const telegramClient = await TelegramClientInterface.start(runtime)
 		if (telegramClient) clients.telegram = telegramClient
 	}
+
+    if (clientTypes.includes(Clients.TELEGRAM_ACCOUNT)) {
+        const telegramAccountClient = await TelegramAccountClientInterface.start(runtime);
+        if (telegramAccountClient) clients.telegram_account = telegramAccountClient;
+    }
 
 	if (clientTypes.includes(Clients.TWITTER)) {
 		const twitterClient = await TwitterClientInterface.start(runtime)
@@ -744,6 +758,13 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 		goatPlugin = await createGoatPlugin((secret) => getSecret(character, secret))
 	}
 
+        let zilliqaPlugin: any | undefined;
+        if (getSecret(character, "ZILLIQA_PRIVATE_KEY")) {
+          zilliqaPlugin = await createZilliqaPlugin((secret) =>
+             getSecret(character, secret)
+          );
+        }
+
 	// Initialize Reclaim adapter if environment variables are present
 	// let verifiableInferenceAdapter;
 	// if (
@@ -840,7 +861,8 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			getSecret(character, "ENABLE_TEE_LOG") && ((teeMode !== TEEMode.OFF && walletSecretSalt) || getSecret(character, "SGX")) ? teeLogPlugin : null,
 			getSecret(character, "OMNIFLIX_API_URL") && getSecret(character, "OMNIFLIX_MNEMONIC") ? OmniflixPlugin : null,
 			getSecret(character, "COINBASE_API_KEY") && getSecret(character, "COINBASE_PRIVATE_KEY") && getSecret(character, "COINBASE_NOTIFICATION_URI") ? webhookPlugin : null,
-			goatPlugin,
+   		        goatPlugin,
+                        zilliqaPlugin,
 			getSecret(character, "COINGECKO_API_KEY") || getSecret(character, "COINGECKO_PRO_API_KEY") ? coingeckoPlugin : null,
 			getSecret(character, "MORALIS_API_KEY") ? moralisPlugin : null,
 			getSecret(character, "EVM_PROVIDER_URL") ? goatPlugin : null,
@@ -905,6 +927,8 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			getSecret(character, "ANKR_WALLET") ? ankrPlugin : null,
 			getSecret(character, "DCAP_EVM_PRIVATE_KEY") && getSecret(character, "DCAP_MODE") ? dcapPlugin : null,
 			getSecret(character, "QUICKINTEL_API_KEY") ? quickIntelPlugin : null,
+			getSecret(character, "GELATO_RELAY_API_KEY") ? gelatoPlugin : null,
+			getSecret(character, "TRIKON_WALLET_ADDRESS") ? trikonPlugin : null,
 		].flat().filter(Boolean),
 		providers: [],
 		managers: [],

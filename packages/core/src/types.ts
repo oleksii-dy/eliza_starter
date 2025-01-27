@@ -651,13 +651,15 @@ export enum Clients {
     DIRECT = "direct",
     TWITTER = "twitter",
     TELEGRAM = "telegram",
+    TELEGRAM_ACCOUNT = "telegram-account",
     FARCASTER = "farcaster",
     LENS = "lens",
     AUTO = "auto",
     SLACK = "slack",
     GITHUB = "github",
     INSTAGRAM = "instagram",
-    SIMSAI = "simsai"
+    SIMSAI = "simsai",
+    XMTP = "xmtp",
 }
 
 export interface IAgentConfig {
