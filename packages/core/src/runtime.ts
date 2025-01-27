@@ -73,7 +73,7 @@ function isDirectoryItem(item: any): item is DirectoryItem {
 
 export interface AgentRuntime {
     // ... existing properties
-    embed: (runtime: IAgentRuntime, input: string) => Promise<number[]>;
+    embed: (text: string, agentId?: UUID) => Promise<number[]>;
 }
 
 export class AgentRuntime implements IAgentRuntime {
@@ -180,7 +180,9 @@ export class AgentRuntime implements IAgentRuntime {
 
     verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
 
-    embed = (text: string, agentId?: UUID) => embed(this, text);
+    embed = async (text: string, agentId?: UUID) => {
+        return embed(this, text);
+    };
 
     registerMemoryManager(manager: IMemoryManager): void {
         if (!manager.tableName) {
