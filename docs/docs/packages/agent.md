@@ -145,11 +145,6 @@ export async function initializeClients(
     if (clientTypes.includes(Clients.TELEGRAM)) {
         clients.push(await TelegramClientInterface.start(runtime));
     }
-
-    if (clientTypes.includes(Clients.XMTP)) {
-        clients.push(await Xmtp.start(runtime));
-    }
-
     if (clientTypes.includes(Clients.TWITTER)) {
         clients.push(await TwitterClientInterface.start(runtime));
     }
@@ -164,6 +159,17 @@ export async function initializeClients(
 ## Best Practices
 
 ### Token Management
+
+Tokens can be configured in two ways:
+
+1. Using namespaced environment variables:
+
+```env
+CHARACTER.YOUR_CHARACTER_NAME.OPENAI_API_KEY=sk-...
+CHARACTER.YOUR_CHARACTER_NAME.ANTHROPIC_API_KEY=sk-...
+```
+
+2. Using character settings:
 
 ```typescript
 export function getTokenForProvider(
@@ -185,6 +191,12 @@ export function getTokenForProvider(
     }
 }
 ```
+
+The system will check for tokens in the following order:
+
+1. Character-specific namespaced env variables
+2. Character settings from JSON
+3. Global environment variables
 
 ### Database Selection
 
