@@ -3,7 +3,7 @@ import type { Plugin } from "@elizaos/core";
 import { getOKXActions } from "./actions";
 
 export const createOKXPlugin = async (
-    getSetting: (key: string) => string | undefined
+    getSetting: (key: string) => string | undefined,
 ): Promise<Plugin> => {
     // Validate required settings
     const requiredSettings = [
@@ -11,18 +11,18 @@ export const createOKXPlugin = async (
         "OKX_SECRET_KEY",
         "OKX_API_PASSPHRASE",
         "OKX_PROJECT_ID",
-        "SOLANA_RPC_URL",
-        "PRIVATE_KEY",
+        "OKX_SOLANA_RPC_URL",
+        "OKX_WALLET_PRIVATE_KEY",
     ];
 
     const missingSettings = requiredSettings.filter(
-        (setting) => !getSetting(setting)
+        (setting) => !getSetting(setting),
     );
     if (missingSettings.length > 0) {
         console.warn(
             `Missing required settings for OKX plugin: ${missingSettings.join(
-                ", "
-            )}`
+                ", ",
+            )}`,
         );
         return {
             name: "OKX DEX Plugin",

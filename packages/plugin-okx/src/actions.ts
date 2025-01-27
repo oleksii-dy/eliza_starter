@@ -75,7 +75,7 @@ async function extractSwapParams(message: Memory, client: OKXDexClient) {
     // If not found in combined patterns, try individual patterns
     if (!amount || !fromToken || !toToken) {
         const amountMatch = messageContent.match(
-            /([+-]?\d*\.?\d+(?:e[+-]?\d+)?)/
+            /([+-]?\d*\.?\d+(?:e[+-]?\d+)?)/,
         );
         const fromMatch =
             messageContent.match(/from\s*([\w.-]+)/i) ||
@@ -98,7 +98,7 @@ async function extractSwapParams(message: Memory, client: OKXDexClient) {
         throw new Error(
             "Could not determine the source token. " +
                 "Please provide a valid token symbol or address. " +
-                "Example: 'quote for 1.5 SOL to USDC'"
+                "Example: 'quote for 1.5 SOL to USDC'",
         );
     }
 
@@ -106,7 +106,7 @@ async function extractSwapParams(message: Memory, client: OKXDexClient) {
         throw new Error(
             "Could not determine the target token. " +
                 "Please provide a valid token symbol or address. " +
-                "Example: 'quote for 1.5 SOL to USDC'"
+                "Example: 'quote for 1.5 SOL to USDC'",
         );
     }
 
@@ -114,7 +114,7 @@ async function extractSwapParams(message: Memory, client: OKXDexClient) {
         throw new Error(
             "Could not determine the amount to swap. " +
                 "Please specify the amount. " +
-                "Example: 'quote for 1.5 SOL to USDC'"
+                "Example: 'quote for 1.5 SOL to USDC'",
         );
     }
 
@@ -188,7 +188,7 @@ async function extractSwapParams(message: Memory, client: OKXDexClient) {
         if (!fromTokenInfo || !toTokenInfo) {
             const availableTokens = Array.from(symbolToToken.keys()).join(", ");
             throw new Error(
-                `Could not resolve tokens. Available tokens: ${availableTokens}`
+                `Could not resolve tokens. Available tokens: ${availableTokens}`,
             );
         }
 
@@ -212,7 +212,7 @@ async function extractSwapParams(message: Memory, client: OKXDexClient) {
             decimals = parseInt(token.decimals);
             if (isNaN(decimals)) {
                 throw new Error(
-                    `Invalid decimal value for token: ${fromToken}`
+                    `Invalid decimal value for token: ${fromToken}`,
                 );
             }
         }
@@ -244,13 +244,13 @@ async function extractSwapParams(message: Memory, client: OKXDexClient) {
         throw new Error(
             `Failed to process swap parameters: ${
                 error instanceof Error ? error.message : String(error)
-            }`
+            }`,
         );
     }
 }
 
 function formatQuoteResponse(
-    data: QuoteData | SwapExecutionData
+    data: QuoteData | SwapExecutionData,
 ): FormattedSwapResponse {
     // Extract the relevant data whether it's a quote or swap response
     const quote = "routerResult" in data ? data.routerResult : data;
@@ -298,14 +298,14 @@ function formatQuoteResponse(
 function getActionHandler(
     actionName: string,
     actionDescription: string,
-    client: OKXDexClient
+    client: OKXDexClient,
 ) {
     return async (
         runtime: IAgentRuntime,
         message: Memory,
         state: State | undefined,
         options?: Record<string, unknown>,
-        callback?: HandlerCallback
+        callback?: HandlerCallback,
     ): Promise<boolean> => {
         let currentState = state ?? (await runtime.composeState(message));
         currentState = await runtime.updateRecentMessageState(currentState);
@@ -315,9 +315,8 @@ function getActionHandler(
 
             switch (actionName) {
                 case "GET_CHAIN_DATA":
-                    const chainData = await client.dex.getSupportedChains(
-                        "501"
-                    );
+                    const chainData =
+                        await client.dex.getSupportedChains("501");
                     result = {
                         chains: chainData.data.map((chain) => ({
                             id: chain.chainId,
@@ -342,19 +341,19 @@ function getActionHandler(
                         toTokenAddress: params.toTokenAddress,
                         amount: params.amount,
                         slippage: "0.1",
-                        userWalletAddress: process.env.WALLET_ADDRESS,
+                        userWalletAddress: process.env.OKX_WALLET_ADDRESS,
                     });
 
                     console.log(
                         "Received quote result:",
-                        JSON.stringify(quoteResult, null, 2)
+                        JSON.stringify(quoteResult, null, 2),
                     );
 
                     if (quoteResult.code === "0" && quoteResult.data?.[0]) {
                         result = formatQuoteResponse(quoteResult.data[0]);
                     } else {
                         throw new Error(
-                            quoteResult.msg || "Failed to get quote"
+                            quoteResult.msg || "Failed to get quote",
                         );
                     }
                     break;
@@ -370,13 +369,13 @@ function getActionHandler(
                         amount: params.amount,
                         autoSlippage: true,
                         maxAutoSlippage: "1000",
-                        userWalletAddress: process.env.WALLET_ADDRESS,
+                        userWalletAddress: process.env.OKX_WALLET_ADDRESS,
                     });
 
                     if (swapResponse.code !== "0" || !swapResponse.data?.[0]) {
                         throw new Error(
                             swapResponse.msg ||
-                                "Failed to get swap transaction data"
+                                "Failed to get swap transaction data",
                         );
                     }
 
@@ -399,17 +398,17 @@ function getActionHandler(
                         toTokenAddress: params.toTokenAddress,
                         amount: params.amount,
                         slippage: "0.5",
-                        userWalletAddress: process.env.WALLET_ADDRESS,
+                        userWalletAddress: process.env.OKX_WALLET_ADDRESS,
                     });
 
                     console.log(
                         "Received swap data response:",
-                        JSON.stringify(swapResponse, null, 2)
+                        JSON.stringify(swapResponse, null, 2),
                     );
 
                     if (swapResponse.code !== "0" || !swapResponse.data?.[0]) {
                         throw new Error(
-                            swapResponse?.msg || "Failed to get swap data"
+                            swapResponse?.msg || "Failed to get swap data",
                         );
                     }
 
@@ -423,7 +422,7 @@ function getActionHandler(
                     ) {
                         console.error(
                             "Missing decimal information in token data:",
-                            routerResult
+                            routerResult,
                         );
                         throw new Error("Invalid token decimal information");
                     }
@@ -458,7 +457,7 @@ function getActionHandler(
                         toTokenAddress: params.toTokenAddress,
                         amount: params.amount,
                         slippage: "0.5",
-                        userWalletAddress: process.env.WALLET_ADDRESS,
+                        userWalletAddress: process.env.OKX_WALLET_ADDRESS,
                     });
 
                     // Format the result for display
@@ -537,7 +536,7 @@ function getActionHandler(
 }
 
 export async function getOKXActions(
-    getSetting: (key: string) => string | undefined
+    getSetting: (key: string) => string | undefined,
 ) {
     const actionsWithoutHandler: Omit<Action, "handler">[] = [
         {
@@ -662,10 +661,10 @@ export async function getOKXActions(
         projectId: getSetting("OKX_PROJECT_ID")!,
         solana: {
             connection: {
-                rpcUrl: getSetting("SOLANA_RPC_URL")!,
-                wsEndpoint: getSetting("SOLANA_WS_URL"),
+                rpcUrl: getSetting("OKX_SOLANA_RPC_URL")!,
+                wsEndpoint: getSetting("OKX_WS_ENDPONT"),
             },
-            privateKey: getSetting("PRIVATE_KEY")!,
+            privateKey: getSetting("OKX_WALLET_PRIVATE_KEY")!,
         },
     });
 
