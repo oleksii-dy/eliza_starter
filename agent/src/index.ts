@@ -764,6 +764,7 @@ async function startAgent(
 
         await db.init();
 
+        /*
         await db.deleteCache({
             key: '*',  // Match all keys
             agentId: character.id
@@ -774,7 +775,7 @@ async function startAgent(
 
         //const isFresh = await db.isFreshDatabase();
         // Delete all caches for this agent
-
+        */
        
 
         
@@ -800,7 +801,7 @@ async function startAgent(
             await cache.delete('embedding/*');
             elizaLogger.info("Caches cleared");
         }
-        */
+       
         await cache.delete('twitter/*');
         await cache.delete(`twitter/${character.name}/*`);
         await cache.delete('twitter/tweet_generation_*');
@@ -809,7 +810,7 @@ async function startAgent(
         // Clear embedding caches
         await cache.delete('embedding/*');
         elizaLogger.info("Caches cleared");
-
+         */
         const runtime: AgentRuntime = await createAgent(
             character,
             db,
