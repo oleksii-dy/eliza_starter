@@ -8,24 +8,23 @@
     "exports": {
         "./package.json": "./package.json",
         ".": {
-            "import": "./dist/index.js",
-            "types": "./dist/index.d.ts"
+            "import": {
+                "@elizaos/source": "./src/index.ts",
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.js"
+            }
         }
     },
     "files": [
         "dist"
     ],
     "dependencies": {
-        "@elizaos/core": "workspace:*"
-    },
-    "devDependencies": {
-        "@types/node": "^20.0.0",
-        "typescript": "^5.0.0",
-        "tsup": "^8.3.5"
+        "@elizaos/core": "workspace:*",
+        "tsup": "8.3.5"
     },
     "scripts": {
-        "build": "tsup",
-        "dev": "tsup --watch"
+        "build": "tsup --format esm --dts",
+        "dev": "tsup --format esm --dts --watch"
     },
     "peerDependencies": {
         "whatwg-url": "7.1.0"
