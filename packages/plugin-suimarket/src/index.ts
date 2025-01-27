@@ -10,6 +10,7 @@ import { suiTokenPriceBySymbol } from './actions/suiTokenPriceBySymbol';
 import { topMeme } from './actions/topMeMeToken';
 import { topDefi } from './actions/topDefiToken';
 import { trendingTokens } from './actions/trendingTokens';
+import { topNewMemeToken } from './actions/topNewMemeToken';
 
 const suimarketPlugin: Plugin = {
   name: "suimarketPlugin",
@@ -25,7 +26,8 @@ const suimarketPlugin: Plugin = {
     suiTokenPriceByAddress,
     topMeme,
     topDefi,
-    trendingTokens
+    trendingTokens,
+    topNewMemeToken
 ],
   evaluators: [],
   providers: []

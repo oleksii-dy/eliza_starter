@@ -1,6 +1,4 @@
 import {
-    // ActionExample,
-    // Content,
     HandlerCallback,
     IAgentRuntime,
     Memory,
@@ -8,13 +6,10 @@ import {
     State,
     composeContext,
     elizaLogger,
-    // generateObject,
     type Action,
 } from "@elizaos/core";
 import { generateObjectDeprecated } from "@elizaos/core";
 import { CoingeckoProvider } from "../providers/coingeckoProvider";
-import {  findTypesBySymbolsv2 } from "../providers/searchCoinInAggre";
-// import { formatObjectsToText } from "../utils/format";
 const trendingPromptTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 Example response:
 \`\`\`json
@@ -35,13 +30,13 @@ VALIDATION RULES:
 Respond with a JSON markdown block containing only the extracted values.`;
 
 
-export const trendingTokens: Action = {
+export const topNewMemeToken: Action = {
     name: "TOP_NEW_MEME_TOKEN",
 
     description: "TOP NEW MEME TOKEN",
 
     similes: [
-        
+
     ],
 
     examples: [
@@ -78,20 +73,13 @@ export const trendingTokens: Action = {
         });
         elizaLogger.log("content: ",content);
         const coinGecko = new CoingeckoProvider();
-        let info = await coinGecko.topSuiTokens();
-        info = info.filter(token => !token.symbol.includes("USD"));
-        const symbolArray = info.map(token => token.symbol);
-        const dataOnSui = await findTypesBySymbolsv2(symbolArray);
-        info = info.map(token => {
-            const meta = dataOnSui.find(m => m.symbol === token.symbol);
-            return meta ? { ...token, ...meta } : token;
-          });
+        let info = await coinGecko.topNewMeMeCoin();
         if (callback) {
             callback({
                 text: `Below are ${content.size} trending coins we have collected:`,
                 action: 'TOP_TRENDING_TOKENS',
                 result: {
-                    type: "sui_trending_tokens",
+                    type: "sui_new_meme_coin",
                     data:info.slice(0,content.size)
                 }
             });
