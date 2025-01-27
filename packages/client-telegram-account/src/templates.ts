@@ -29,7 +29,7 @@ Note that {{agentName}} is capable of reading/seeing/hearing various forms of me
 {{recentMessages}}
 
 # Task: Generate a reply in the voice, style and perspective of {{agentName}} while using the thread above as additional context. You are replying on Telegram.
-# Task: Generate a reply in the voice, style and perspective of {{agentName}} while using the thread above as additional context. You are replying on Telegram.
+
 {{formattedConversation}}
 ` + messageCompletionFooter;
 
