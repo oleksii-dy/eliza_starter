@@ -1,5 +1,5 @@
 {
-    "name": "@elizaos/plugin-trustdb",
+    "name": "@elizaos/adapter-trustdb",
     "version": "0.1.9-alpha.1",
     "type": "module",
     "main": "dist/index.js",

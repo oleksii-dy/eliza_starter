@@ -13,7 +13,7 @@ import {
     TradePerformance,
     ITrustDatabase,
     initTrustDatabase,
-} from "@elizaos/plugin-trustdb";
+} from "@elizaos/adapter-trustdb";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { v4 as uuidv4 } from "uuid";

@@ -17,7 +17,7 @@ import {
     TradePerformance,
     ITrustDatabase,
     initTrustDatabase,
-} from "@elizaos/plugin-trustdb";
+} from "@elizaos/adapter-trustdb";
 import { getTokenBalance } from "../utils/index.ts";
 import { TokenProvider } from "./token.ts";
 import { WalletProvider } from "./portfolioProvider.ts";

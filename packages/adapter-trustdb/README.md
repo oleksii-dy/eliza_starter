@@ -1,4 +1,4 @@
-# @elizaos/plugin-trustdb
+# @elizaos/adapter-trustdb
 
 A plugin for managing trust scores and performance metrics in a secure database, providing recommender tracking and token performance analysis capabilities.
 
@@ -15,7 +15,7 @@ This plugin provides functionality to:
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-trustdb
+pnpm add @elizaos/adapter-trustdb
 ```
 
 ## Configuration
@@ -23,16 +23,16 @@ npm install @elizaos/plugin-trustdb
 The plugin supports both PostgreSQL and SQLite as database backends:
 
 ```typescript
-import { initTrustDatabase } from "@elizaos/plugin-trustdb";
+import { initTrustDatabase } from "@elizaos/adapter-trustdb";
 
 // PostgreSQL
 const trustDB = await initTrustDatabase({
-    dbConfig: "postgres://connection-string"
+    dbConfig: "postgres://connection-string",
 });
 
 // SQLite
 const trustDB = await initTrustDatabase({
-    db: sqliteDb
+    db: sqliteDb,
 });
 ```
 
@@ -45,7 +45,7 @@ const trustDB = await initTrustDatabase({
 const recommender = {
     id: "uuid",
     address: "wallet-address",
-    telegramId: "telegram-id"
+    telegramId: "telegram-id",
 };
 await trustDB.addRecommender(recommender);
 
@@ -55,7 +55,7 @@ const existingRecommender = await trustDB.getRecommender(id);
 // Get or create recommender
 const recommenderWithMetrics = await trustDB.getOrCreateRecommender({
     address: "wallet-address",
-    telegramId: "user-id"
+    telegramId: "user-id",
 });
 ```
 
@@ -72,7 +72,7 @@ await trustDB.updateRecommenderMetrics({
     riskScore: 45.2,
     consistencyScore: 78.9,
     virtualConfidence: 65.4,
-    trustDecay: 0.1
+    trustDecay: 0.1,
 });
 
 // Get metrics history
@@ -89,7 +89,7 @@ await trustDB.upsertTokenPerformance({
     priceChange24h: 5.2,
     volumeChange24h: 15.3,
     liquidity: 100000,
-    holderChange24h: 2.1
+    holderChange24h: 2.1,
 });
 
 // Get token performance
@@ -100,16 +100,19 @@ const performance = await trustDB.getTokenPerformance("token-address");
 
 ```typescript
 // Record trade
-await trustDB.addTradePerformance({
-    token_address: "address",
-    recommender_id: "uuid",
-    buy_price: 1.0,
-    buy_timeStamp: new Date().toISOString(),
-    buy_amount: 100,
-    buy_value_usd: 100,
-    buy_market_cap: 1000000,
-    buy_liquidity: 500000
-}, false);
+await trustDB.addTradePerformance(
+    {
+        token_address: "address",
+        recommender_id: "uuid",
+        buy_price: 1.0,
+        buy_timeStamp: new Date().toISOString(),
+        buy_amount: 100,
+        buy_value_usd: 100,
+        buy_market_cap: 1000000,
+        buy_liquidity: 500000,
+    },
+    false
+);
 
 // Update trade with sell details
 await trustDB.updateTradePerformanceOnSell(
@@ -128,7 +131,7 @@ await trustDB.updateTradePerformanceOnSell(
         market_cap_change: 100000,
         sell_liquidity: 550000,
         liquidity_change: 50000,
-        rapidDump: false
+        rapidDump: false,
     },
     false
 );
@@ -225,18 +228,32 @@ interface TradePerformance {
 ## Development
 
 ```bash
-npm run build   # Build the plugin
-npm run dev     # Development mode with watch
-npm run test    # Run tests (requires PostgreSQL connection)
-npm run lint    # Lint code
+npm build     # Build the plugin
+npm dev       # Development mode with watch
+npm test      # Run tests
+npm test:watch # Run tests in watch mode
+npm lint      # Lint code
+```
+
+## Testing
+
+```bash
+# Set up PostgreSQL connection in .env.test file following config.ts structure
+npm test        # Run tests
+npm test:watch  # Run tests in watch mode
 ```
 
 ## Dependencies
 
+- `@elizaos/adapter-postgres`: PostgreSQL adapter support (required for PostgreSQL usage)
+- `@elizaos/core`: Core functionality
 - `better-sqlite3`: SQLite database interface
-- `uuid`: Unique identifier generation
-- `dompurify`: HTML sanitization
-- Other standard dependencies listed in package.json
+- `uuid`: Unique identifier generation (v11.0.3)
+- `dompurify`: HTML sanitization (v3.2.2)
+- `tsup`: Build tool (v8.3.5)
+- `vitest`: Testing framework (v2.1.5)
+
+Note: Using PostgreSQL requires the `@elizaos/adapter-postgres` package.
 
 ## Security Measures
 

@@ -692,6 +692,33 @@ importers:
         specifier: 8.3.5
         version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
 
+  packages/adapter-trustdb:
+    dependencies:
+      '@elizaos/adapter-postgres':
+        specifier: workspace:*
+        version: link:../adapter-postgres
+      '@elizaos/core':
+        specifier: workspace:*
+        version: link:../core
+      dompurify:
+        specifier: 3.2.2
+        version: 3.2.2
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@22.10.5)(babel-plugin-macros@3.1.0)
+      tsup:
+        specifier: 8.3.5
+        version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
+      uuid:
+        specifier: 11.0.3
+        version: 11.0.3
+      vitest:
+        specifier: 2.1.5
+        version: 2.1.5(@types/node@22.10.5)(jsdom@25.0.1(bufferutil@4.0.9)(canvas@2.11.2(encoding@0.1.13))(utf-8-validate@6.0.5))(terser@5.37.0)
+      whatwg-url:
+        specifier: 7.1.0
+        version: 7.1.0
+
   packages/client-auto:
     dependencies:
       '@elizaos/core':
@@ -1003,9 +1030,6 @@ importers:
       '@ai-sdk/openai':
         specifier: 1.0.5
         version: 1.0.5(zod@3.23.8)
-      '@ai-sdk/provider':
-        specifier: 1.0.6
-        version: 1.0.6
       '@anthropic-ai/sdk':
         specifier: 0.30.1
         version: 0.30.1(encoding@0.1.13)
@@ -1428,15 +1452,15 @@ importers:
       '@coral-xyz/anchor':
         specifier: 0.30.1
         version: 0.30.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5)
+      '@elizaos/adapter-trustdb':
+        specifier: workspace:*
+        version: link:../adapter-trustdb
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
       '@elizaos/plugin-tee':
         specifier: workspace:*
         version: link:../plugin-tee
-      '@elizaos/plugin-trustdb':
-        specifier: workspace:*
-        version: link:../plugin-trustdb
       axios:
         specifier: ^1.7.9
         version: 1.7.9(debug@4.4.0)
@@ -1449,12 +1473,12 @@ importers:
 
   packages/plugin-avail:
     dependencies:
+      '@elizaos/adapter-trustdb':
+        specifier: workspace:*
+        version: link:../adapter-trustdb
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
-      '@elizaos/plugin-trustdb':
-        specifier: workspace:*
-        version: link:../plugin-trustdb
       avail-js-sdk:
         specifier: ^0.3.0
         version: 0.3.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
@@ -2378,12 +2402,12 @@ importers:
       '@avnu/avnu-sdk':
         specifier: ^2.1.1
         version: 2.1.1(ethers@6.13.4(bufferutil@4.0.9)(utf-8-validate@6.0.5))(qs@6.13.1)(starknet@6.18.0(encoding@0.1.13))
+      '@elizaos/adapter-trustdb':
+        specifier: workspace:*
+        version: link:../adapter-trustdb
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
-      '@elizaos/plugin-trustdb':
-        specifier: workspace:*
-        version: link:../plugin-trustdb
       quais:
         specifier: 1.0.0-alpha.25
         version: 1.0.0-alpha.25(bufferutil@4.0.9)(utf-8-validate@6.0.5)
@@ -2399,6 +2423,9 @@ importers:
 
   packages/plugin-rabbi-trader:
     dependencies:
+      '@elizaos/adapter-trustdb':
+        specifier: workspace:*
+        version: link:../adapter-trustdb
       '@elizaos/client-twitter':
         specifier: workspace:*
         version: link:../client-twitter
@@ -2408,9 +2435,6 @@ importers:
       '@elizaos/plugin-solana':
         specifier: workspace:*
         version: link:../plugin-solana
-      '@elizaos/plugin-trustdb':
-        specifier: workspace:*
-        version: link:../plugin-trustdb
       '@goat-sdk/core':
         specifier: 0.3.8
         version: 0.3.8(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@5.0.10)
@@ -2466,15 +2490,15 @@ importers:
       '@coral-xyz/anchor':
         specifier: 0.30.1
         version: 0.30.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@elizaos/adapter-trustdb':
+        specifier: workspace:*
+        version: link:../adapter-trustdb
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
       '@elizaos/plugin-tee':
         specifier: workspace:*
         version: link:../plugin-tee
-      '@elizaos/plugin-trustdb':
-        specifier: workspace:*
-        version: link:../plugin-trustdb
       '@solana/spl-token':
         specifier: 0.4.9
         version: 0.4.9(@solana/web3.js@1.95.8(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)(utf-8-validate@5.0.10)
@@ -2514,15 +2538,15 @@ importers:
       '@coral-xyz/anchor':
         specifier: 0.30.1
         version: 0.30.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
+      '@elizaos/adapter-trustdb':
+        specifier: workspace:*
+        version: link:../adapter-trustdb
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
       '@elizaos/plugin-tee':
         specifier: workspace:*
         version: link:../plugin-tee
-      '@elizaos/plugin-trustdb':
-        specifier: workspace:*
-        version: link:../plugin-trustdb
       '@solana/spl-token':
         specifier: 0.4.9
         version: 0.4.9(@solana/web3.js@1.95.8(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)(utf-8-validate@5.0.10)
@@ -2602,12 +2626,12 @@ importers:
       '@avnu/avnu-sdk':
         specifier: 2.1.1
         version: 2.1.1(ethers@6.13.4(bufferutil@4.0.9)(utf-8-validate@6.0.5))(qs@6.13.1)(starknet@6.18.0(encoding@0.1.13))
+      '@elizaos/adapter-trustdb':
+        specifier: workspace:*
+        version: link:../adapter-trustdb
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
-      '@elizaos/plugin-trustdb':
-        specifier: workspace:*
-        version: link:../plugin-trustdb
       '@uniswap/sdk-core':
         specifier: 6.0.0
         version: 6.0.0
@@ -2784,33 +2808,6 @@ importers:
       tsup:
         specifier: 8.3.5
         version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
-      whatwg-url:
-        specifier: 7.1.0
-        version: 7.1.0
-
-  packages/plugin-trustdb:
-    dependencies:
-      '@elizaos/adapter-postgres':
-        specifier: workspace:*
-        version: link:../adapter-postgres
-      '@elizaos/core':
-        specifier: workspace:*
-        version: link:../core
-      dompurify:
-        specifier: 3.2.2
-        version: 3.2.2
-      jest:
-        specifier: ^29.7.0
-        version: 29.7.0(@types/node@22.10.5)(babel-plugin-macros@3.1.0)
-      tsup:
-        specifier: 8.3.5
-        version: 8.3.5(@swc/core@1.10.7(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.4.49)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
-      uuid:
-        specifier: 11.0.3
-        version: 11.0.3
-      vitest:
-        specifier: 2.1.5
-        version: 2.1.5(@types/node@22.10.5)(jsdom@25.0.1(bufferutil@4.0.9)(canvas@2.11.2(encoding@0.1.13))(utf-8-validate@6.0.5))(terser@5.37.0)
       whatwg-url:
         specifier: 7.1.0
         version: 7.1.0
@@ -3043,10 +3040,6 @@ packages:
 
   '@ai-sdk/provider@1.0.4':
     resolution: {integrity: sha512-lJi5zwDosvvZER3e/pB8lj1MN3o3S7zJliQq56BRr4e9V3fcRyFtwP0JRxaRS5vHYX3OJ154VezVoQNrk0eaKw==}
-    engines: {node: '>=18'}
-
-  '@ai-sdk/provider@1.0.6':
-    resolution: {integrity: sha512-hwj/gFNxpDgEfTaYzCYoslmw01IY9kWLKl/wf8xuPvHtQIzlfXWmmUwc8PnCwxyt8cKzIuV0dfUghCf68HQ0SA==}
     engines: {node: '>=18'}
 
   '@ai-sdk/react@0.0.70':
@@ -22653,10 +22646,6 @@ snapshots:
       json-schema: 0.4.0
 
   '@ai-sdk/provider@1.0.4':
-    dependencies:
-      json-schema: 0.4.0
-
-  '@ai-sdk/provider@1.0.6':
     dependencies:
       json-schema: 0.4.0
 

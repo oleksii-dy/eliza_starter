@@ -3,7 +3,7 @@ import {
     TokenPerformance,
     // TradePerformance,
     TokenRecommendation,
-} from "@elizaos/plugin-trustdb";
+} from "@elizaos/adapter-trustdb";
 import { Connection, PublicKey } from "@solana/web3.js";
 // Assuming TokenProvider and IAgentRuntime are available
 import { TokenProvider } from "./token.ts";

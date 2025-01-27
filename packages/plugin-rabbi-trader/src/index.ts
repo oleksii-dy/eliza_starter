@@ -17,7 +17,7 @@ import { TrustScoreProvider } from "./providers/trustScoreProvider";
 import { SimulationService } from "./services/simulationService";
 import { SAFETY_LIMITS } from "./constants";
 import NodeCache from "node-cache";
-import { initTrustDatabase, ITrustDatabase } from "@elizaos/plugin-trustdb";
+import { initTrustDatabase, ITrustDatabase } from "@elizaos/adapter-trustdb";
 import { v4 as uuidv4 } from "uuid";
 import { actions } from "./actions";
 import {
@@ -410,7 +410,7 @@ async function updateSellDetails(
 }
 
 // Update the module declaration to match the new parameter order
-declare module "@elizaos/plugin-trustdb" {
+declare module "@elizaos/adapter-trustdb" {
     interface TrustScoreDatabase {
         updateTradePerformanceOnSell(
             tokenAddress: string, // Changed order: tokenAddress first

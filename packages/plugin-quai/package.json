@@ -10,7 +10,7 @@
         "tsup": "^8.3.5",
         "vitest": "^2.1.4",
         "@avnu/avnu-sdk": "^2.1.1",
-        "@elizaos/plugin-trustdb": "workspace:*"
+        "@elizaos/adapter-trustdb": "workspace:*"
     },
     "scripts": {
         "build": "tsup --format esm --dts",

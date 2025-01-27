@@ -12,7 +12,7 @@ import {
     MemoryManager,
     ModelClass,
 } from "@elizaos/core";
-import { initTrustDatabase } from "@elizaos/plugin-trustdb";
+import { initTrustDatabase } from "@elizaos/adapter-trustdb";
 import { Connection } from "@solana/web3.js";
 import { getWalletKey } from "../keypairUtils.ts";
 import { TokenProvider } from "../providers/token.ts";
@@ -180,7 +180,9 @@ async function handler(runtime: IAgentRuntime, message: Memory) {
                 const tokenAddress = result?.baseToken?.address;
                 rec.contractAddress = tokenAddress;
                 if (!tokenAddress) {
-                    elizaLogger.warn("Could not find contract address for token");
+                    elizaLogger.warn(
+                        "Could not find contract address for token"
+                    );
                     continue;
                 }
             }
@@ -190,7 +192,7 @@ async function handler(runtime: IAgentRuntime, message: Memory) {
 
         const trustScoreDb = await initTrustDatabase({
             db: runtime.databaseAdapter.db,
-            dbConfig: runtime.getSetting("POSTGRES_URL")
+            dbConfig: runtime.getSetting("POSTGRES_URL"),
         });
         const trustScoreManager = new TrustScoreManager(
             runtime,

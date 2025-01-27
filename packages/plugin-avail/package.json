@@ -5,7 +5,7 @@
     "types": "dist/index.d.ts",
     "dependencies": {
         "@elizaos/core": "workspace:*",
-        "@elizaos/plugin-trustdb": "workspace:*",
+        "@elizaos/adapter-trustdb": "workspace:*",
         "avail-js-sdk": "^0.3.0"
     },
     "devDependencies": {

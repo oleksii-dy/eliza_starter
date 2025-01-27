@@ -24,7 +24,7 @@
         "@elizaos/plugin-solana#build": {
             "outputs": ["dist/**"],
             "dependsOn": [
-                "@elizaos/plugin-trustdb#build",
+                "@elizaos/adapter-trustdb#build",
                 "@elizaos/plugin-tee#build"
             ]
         },
@@ -45,9 +45,7 @@
         },
         "@elizaos/plugin-quai#build": {
             "outputs": ["dist/**"],
-            "dependsOn": [
-                "@elizaos/plugin-trustdb#build"
-            ]
+            "dependsOn": ["@elizaos/adapter-trustdb#build"]
         },
         "eliza-docs#build": {
             "outputs": ["build/**"]
