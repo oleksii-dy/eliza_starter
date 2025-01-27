@@ -147,6 +147,7 @@ import { MongoClient } from "mongodb";
 import { quickIntelPlugin } from "@elizaos/plugin-quick-intel"
 import { btcfunPlugin } from "@elizaos/plugin-btcfun"
 import { trikonPlugin } from "@elizaos/plugin-trikon"
+import arbitragePlugin from "@elizaos/plugin-arbitrage"
 const __filename = fileURLToPath(import.meta.url) // get the resolved path to the file
 const __dirname = path.dirname(__filename) // get the name of the directory
 
@@ -629,9 +630,9 @@ export async function initializeClients(character: Character, runtime: IAgentRun
 	}
 
 	if (clientTypes.includes(Clients.XMTP)) {
-        const xmtpClient = await XmtpClientInterface.start(runtime);
-        if (xmtpClient) clients.xmtp = xmtpClient;
-    }
+		const xmtpClient = await XmtpClientInterface.start(runtime);
+		if (xmtpClient) clients.xmtp = xmtpClient;
+	}
 
 	if (clientTypes.includes(Clients.DISCORD)) {
 		const discordClient = await DiscordClientInterface.start(runtime)
@@ -914,6 +915,11 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			getSecret(character, "GELATO_RELAY_API_KEY") ? gelatoPlugin : null,
 			getSecret(character, "BTC_PRIVATE_KEY_WIF") && getSecret(character, "BTC_FUN_API_URL") ? btcfunPlugin : null,
 			getSecret(character, "TRIKON_WALLET_ADDRESS") ? trikonPlugin : null,
+			getSecret(character, "ARBITRAGE_EVM_PRIVATE_KEY") && 
+			(getSecret(character, "ARBITRAGE_EVM_PROVIDER_URL")
+				|| getSecret(character, "ARBITRAGE_ETHEREUM_WS_URL")) 
+				&& getSecret(character, "ARBITRAGE_FLASHBOTS_RELAY_SIGNING_KEY") 
+				&& getSecret(character, "ARBITRAGE_BUNDLE_EXECUTOR_ADDRESS") ? arbitragePlugin : null,
 		].flat().filter(Boolean),
 		providers: [],
 		managers: [],

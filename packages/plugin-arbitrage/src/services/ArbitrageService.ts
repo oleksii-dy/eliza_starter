@@ -40,13 +40,10 @@ export class ArbitrageService extends Service {
         this.runtime = runtime;
 
         // Get WebSocket URL with multiple fallback options
-        let wsUrl = runtime.getSetting("arbitrage.ethereumWsUrl") ||
-                    runtime.getSetting("provider.wsUrl") ||
-                    process.env.ETHEREUM_WS_URL;
+        let wsUrl = runtime.getSetting("ARBITRAGE_ETHEREUM_WS_URL")
 
-        let rpcUrl = runtime.getSetting("arbitrage.rpcUrl") ||
-                     runtime.getSetting("provider.rpcUrl") ||
-                     process.env.EVM_PROVIDER_URL;
+        let rpcUrl = runtime.getSetting("ARBITRAGE_EVM_PROVIDER_URL") 
+                    
 
         // Debug logging
         console.log('ArbitrageService initialize - URLs:', {
@@ -55,7 +52,7 @@ export class ArbitrageService extends Service {
         });
 
         if (!wsUrl && !rpcUrl) {
-            throw new Error("Missing both arbitrage.ethereumWsUrl and arbitrage.rpcUrl settings");
+            throw new Error("Missing both ARBITRAGE_ETHEREUM_WS_URL and ARBITRAGE_EVM_PROVIDER_URL envs");
         }
 
         // If we only have RPC URL, derive WS URL
@@ -69,9 +66,8 @@ export class ArbitrageService extends Service {
         }
 
         // Initialize wallet and providers
-        const walletKey = runtime.getSetting("arbitrage.walletPrivateKey") ||
-                         process.env.EVM_PRIVATE_KEY;
-        if (!walletKey) throw new Error("Missing arbitrage.walletPrivateKey setting");
+        const walletKey = runtime.getSetting("ARBITRAGE_EVM_PRIVATE_KEY") 
+        if (!walletKey) throw new Error("Missing ARBITRAGE_EVM_PRIVATE_KEY env");
 
         // Initialize provider
         console.log('Initializing WebSocketProvider with URL:', wsUrl);
@@ -79,9 +75,8 @@ export class ArbitrageService extends Service {
         const wallet = new Wallet(walletKey, provider);
 
         // Initialize Flashbots provider
-        const flashbotsKey = runtime.getSetting("arbitrage.flashbotsRelaySigningKey") ||
-                            process.env.FLASHBOTS_RELAY_SIGNING_KEY;
-        if (!flashbotsKey) throw new Error("Missing arbitrage.flashbotsRelaySigningKey setting");
+        const flashbotsKey = runtime.getSetting("FLASHBOTS_RELAY_SIGNING_KEY") 
+        if (!flashbotsKey) throw new Error("Missing FLASHBOTS_RELAY_SIGNING_KEY env");
 
         const flashbotsProvider = await FlashbotsBundleProvider.create(
             provider,
@@ -90,9 +85,9 @@ export class ArbitrageService extends Service {
         );
 
         // Initialize bundle executor contract
-        const bundleExecutorAddress = runtime.getSetting("arbitrage.bundleExecutorAddress") ||
-                                    process.env.BUNDLE_EXECUTOR_ADDRESS;
-        if (!bundleExecutorAddress) throw new Error("Missing arbitrage.bundleExecutorAddress setting");
+        const bundleExecutorAddress = runtime.getSetting("BUNDLE_EXECUTOR_ADDRESS")
+                                    
+        if (!bundleExecutorAddress) throw new Error("Missing BUNDLE_EXECUTOR_ADDRESS env");
 
         // Initialize Arbitrage instance
         this.arbitrage = new Arbitrage(
