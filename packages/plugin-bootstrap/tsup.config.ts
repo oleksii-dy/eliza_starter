@@ -2,10 +2,14 @@ import { defineConfig } from "tsup";
 
 export default defineConfig({
     entry: ["src/index.ts"],
-    outDir: "dist",
+    format: ["esm"],
+    dts: true,
+    splitting: false,
     sourcemap: true,
     clean: true,
-    format: ["esm"], // Ensure you're targeting CommonJS
+    minify: false,
+    outDir: "dist",
+    onSuccess: "tsc --emitDeclarationOnly --declaration",
     external: [
         "dotenv", // Externalize dotenv to prevent bundling
         "fs", // Externalize fs to use Node.js built-in module

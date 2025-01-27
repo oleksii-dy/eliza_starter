@@ -19,17 +19,16 @@
         "dist"
     ],
     "dependencies": {
-        "@elizaos/core": "workspace:*",
-        "tsup": "8.3.5"
+        "@elizaos/core": "workspace:*"
     },
     "devDependencies": {
+        "@types/node": "^20.0.0",
         "typescript": "5.6.3",
-        "tsup": "8.3.5",
-        "@types/node": "^20.0.0"
+        "tsup": "8.3.5"
     },
     "scripts": {
-        "build": "tsup src/index.ts --format esm --dts",
-        "dev": "tsup --format esm --dts --watch"
+        "build": "tsup --config tsup.config.ts",
+        "dev": "tsup --config tsup.config.ts --watch"
     },
     "peerDependencies": {
         "whatwg-url": "7.1.0"
