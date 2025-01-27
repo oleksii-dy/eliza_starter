@@ -14,7 +14,7 @@ import {
 import { fetchTopDexByNetwork } from "../providers/topDex";
 import { hashUserMsg } from "../utils/format";
 import { getTopDexOnSuiScan } from "../providers/getTopDexOnSuiScan";
-
+import {RedisClient} from "@elizaos/adapter-redis"
 export interface InfoContent extends Content {
     coin_symbol: string;
     coin_name: string;
@@ -62,7 +62,7 @@ export const topDexInfo: Action = {
         callback?: HandlerCallback
     ): Promise<boolean> => {
         elizaLogger.log("[tokenInfo]");
-
+        const redis = new RedisClient(process.env.REDIS_URL)
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -90,8 +90,14 @@ export const topDexInfo: Action = {
         }
         console.log("content",content);
         const topDexOnSuiScan = await getTopDexOnSuiScan()
+        let topDexOnCoinGecko:any = await redis.getValue({ key: "TOP_DEX" });
+        console.log(topDexOnCoinGecko)
+        if (topDexOnCoinGecko) {
+            topDexOnCoinGecko = JSON.parse(topDexOnCoinGecko);
+        } else {
+            topDexOnCoinGecko = await fetchTopDexByNetwork(content.network_blockchain);
+        }
 
-        const topDexOnCoinGecko= await fetchTopDexByNetwork(content.network_blockchain);
         const responseData = topDexOnCoinGecko.data.map(dex => {
             const dexMetricId = dex.relationships.dex_metric.data.id;
             const metric = topDexOnCoinGecko.included.find(item => item.id === dexMetricId);

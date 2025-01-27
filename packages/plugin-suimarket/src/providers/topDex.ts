@@ -1,10 +1,11 @@
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import * as cheerio from 'cheerio';
+import { elizaLogger, IAgentRuntime, Memory, Provider, State } from '@elizaos/core';
 
 puppeteer.use(StealthPlugin());
 
-export const fetchTopDexByNetwork = async (network: string) => {
+export const fetchTopDexByNetwork = async (network: string = "sui-network")  => {
 
     const browser = await puppeteer.launch({
         headless: "new",
@@ -25,3 +26,19 @@ export const fetchTopDexByNetwork = async (network: string) => {
     await browser.close();
 
 }
+
+const cronTopDexProvider: Provider = {
+    get: async (
+        _runtime: IAgentRuntime,
+        _message: Memory,
+        _state?: State
+    ): Promise<string | null> => {
+        try {
+            return await fetchTopDexByNetwork("sui-network");
+        } catch (error) {
+            elizaLogger.error("cronTopDex: error", error)
+            return null;
+        }
+    },
+};
+export {cronTopDexProvider}

@@ -11,6 +11,7 @@ import { topMeme } from './actions/topMeMeToken';
 import { topDefi } from './actions/topDefiToken';
 import { trendingTokens } from './actions/trendingTokens';
 import { topNewMemeToken } from './actions/topNewMemeToken';
+import { cronTopDexProvider } from './providers/topDex';
 
 const suimarketPlugin: Plugin = {
   name: "suimarketPlugin",
@@ -30,7 +31,7 @@ const suimarketPlugin: Plugin = {
     topNewMemeToken
 ],
   evaluators: [],
-  providers: []
+  providers: [cronTopDexProvider]
 };
 
 export default suimarketPlugin;
