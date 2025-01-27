@@ -17,6 +17,7 @@ overrides:
   '@ai-sdk/provider': 1.0.6
   '@ai-sdk/provider-utils': 2.1.2
   cookie: 0.7.0
+  bs58: 5.0.0
 
 importers:
 
@@ -41,8 +42,8 @@ importers:
         specifier: 0.10.5
         version: 0.10.5
       bs58:
-        specifier: 4.0.0
-        version: 4.0.0
+        specifier: 5.0.0
+        version: 5.0.0
       csv-parse:
         specifier: 5.6.0
         version: 5.6.0
@@ -1861,8 +1862,8 @@ importers:
         specifier: 9.1.2
         version: 9.1.2
       bs58:
-        specifier: 6.0.0
-        version: 6.0.0
+        specifier: 5.0.0
+        version: 5.0.0
       elliptic:
         specifier: 6.6.1
         version: 6.6.1
@@ -2009,8 +2010,8 @@ importers:
         specifier: 9.1.2
         version: 9.1.2
       bs58:
-        specifier: 6.0.0
-        version: 6.0.0
+        specifier: 5.0.0
+        version: 5.0.0
       fomo-sdk-solana:
         specifier: 1.3.2
         version: 1.3.2(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)(utf-8-validate@5.0.10)
@@ -2522,8 +2523,8 @@ importers:
         specifier: 9.1.2
         version: 9.1.2
       bs58:
-        specifier: 6.0.0
-        version: 6.0.0
+        specifier: 5.0.0
+        version: 5.0.0
       elliptic:
         specifier: 6.6.1
         version: 6.6.1
@@ -3392,8 +3393,8 @@ importers:
         specifier: ^1.7.9
         version: 1.7.9
       bs58:
-        specifier: 6.0.0
-        version: 6.0.0
+        specifier: 5.0.0
+        version: 5.0.0
       express:
         specifier: 4.21.1
         version: 4.21.1
@@ -3688,8 +3689,8 @@ importers:
         specifier: 2.0.0
         version: 2.0.0
       bs58:
-        specifier: 6.0.0
-        version: 6.0.0
+        specifier: 5.0.0
+        version: 5.0.0
       cosmjs-types:
         specifier: ^0.8.0
         version: 0.8.0
@@ -4008,8 +4009,8 @@ importers:
         specifier: 9.1.2
         version: 9.1.2
       bs58:
-        specifier: 6.0.0
-        version: 6.0.0
+        specifier: 5.0.0
+        version: 5.0.0
       fomo-sdk-solana:
         specifier: 1.3.2
         version: 1.3.2(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
@@ -4062,8 +4063,8 @@ importers:
         specifier: 9.1.2
         version: 9.1.2
       bs58:
-        specifier: 6.0.0
-        version: 6.0.0
+        specifier: 5.0.0
+        version: 5.0.0
       fomo-sdk-solana:
         specifier: 1.3.2
         version: 1.3.2(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)(utf-8-validate@5.0.10)
@@ -4125,8 +4126,8 @@ importers:
         specifier: ^4.0.4
         version: 4.0.4
       bs58:
-        specifier: ^6.0.0
-        version: 6.0.0
+        specifier: 5.0.0
+        version: 5.0.0
     devDependencies:
       '@types/node':
         specifier: ^22.8.7
@@ -4321,8 +4322,8 @@ importers:
         specifier: 9.1.2
         version: 9.1.2
       bs58:
-        specifier: 6.0.0
-        version: 6.0.0
+        specifier: 5.0.0
+        version: 5.0.0
       node-cache:
         specifier: 5.1.2
         version: 5.1.2
@@ -5876,7 +5877,7 @@ packages:
     resolution: {integrity: sha512-PtLwVOtKXeFNm9mk3gcoo5YmmUSSGxZFjBSX7Wh+5ubRlPAq40D8VqngO0R3/gnFflopQJ4y+igPOz+0J2cQ3A==}
     peerDependencies:
       bitcoinjs-lib: ^7.0.0-rc.0
-      bs58: ^6.0.0
+      bs58: 5.0.0
       viem: 2.21.58
 
   '@binance/connector@3.6.1':
@@ -9001,7 +9002,7 @@ packages:
   '@lit-protocol/contracts-sdk@6.11.3':
     resolution: {integrity: sha512-5vwdMRVSo+SDD6ZFWNm4m4kLuyDj4pX6gwXw2lj6trD66zT2ODby2lRv8K7m0OVk0HnWONDhWe3933bgu4ltQQ==}
     peerDependencies:
-      bs58: ^5.0.0
+      bs58: 5.0.0
       date-and-time: ^2.4.1
       multiformats: ^9.7.1
 
@@ -15018,19 +15019,11 @@ packages:
       bare-events:
         optional: true
 
-  base-x@2.0.6:
-    resolution: {integrity: sha512-UAmjxz9KbK+YIi66xej+pZVo/vxUOh49ubEvZW5egCbxhur05pBb+hwuireQwKO4nDpsNm64/jEei17LEpsr5g==}
-    engines: {node: '>=4.5.0'}
-    deprecated: use 3.0.0 instead, safe-buffer has been merged and release for compatability
-
   base-x@3.0.10:
     resolution: {integrity: sha512-7d0s06rR9rYaIWHkpfLIFICM/tkSVdoPC9qYAQRpxn9DdKNWNsKC0uk++akckyLq16Tx2WIinnZ6WRriAt6njQ==}
 
   base-x@4.0.0:
     resolution: {integrity: sha512-FuwxlW4H5kh37X/oW59pwTzzTKRzfrrQwhmyspRM7swOEZcHtDZSCt45U6oKgtuFE+WYPblePMVIPR4RZrh/hw==}
-
-  base-x@5.0.0:
-    resolution: {integrity: sha512-sMW3VGSX1QWVFA6l8U62MLKz29rRfpTlYdCqLdpLo1/Yd4zZwSbnUaDfciIAowAqvq7YFnWq9hrhdg1KYgc1lQ==}
 
   base64-arraybuffer@0.2.0:
     resolution: {integrity: sha512-7emyCsu1/xiBXgQZrscw/8KPRT44I4Yq9Pe6EGs3aPRTsWuggML1/1DTuZUuIaJPIm1FTDUVXl4x/yW8s0kQDQ==}
@@ -15337,17 +15330,8 @@ packages:
     resolution: {integrity: sha512-pd8DCoxmbgc7hyPKOvxtqNcjYoOsABPQdcCUjGp3d42VR2CX1ORhk2A87oqqu5R1kk+76nsxZupkmyd+MVtCog==}
     engines: {node: '>= 6'}
 
-  bs58@4.0.0:
-    resolution: {integrity: sha512-/jcGuUuSebyxwLLfKrbKnCJttxRf9PM51EnHTwmFKBxl4z1SGkoAhrfd6uZKE0dcjQTfm6XzTP8DPr1tzE4KIw==}
-
-  bs58@4.0.1:
-    resolution: {integrity: sha512-Ok3Wdf5vOIlBrgCvTq96gBkJw+JUEzdBgyaza5HLtPm7yTHkjRy8+JzNyHF7BHa0bNWOQIp3m5YF0nnFcOIKLw==}
-
   bs58@5.0.0:
     resolution: {integrity: sha512-r+ihvQJvahgYT50JD05dyJNKlmmSlMoOGwn1lCcEzanPglg7TxYjioQUYehQ9mAR/+hOSd2jRc/Z2y5UxBymvQ==}
-
-  bs58@6.0.0:
-    resolution: {integrity: sha512-PD0wEnEYg6ijszw/u8s+iI3H17cTymlrwkKhDhPZq+Sokl3AU4htyBFTjAeNAlCCmg0f53g6ih3jATyCKftTfw==}
 
   bs58check@2.1.2:
     resolution: {integrity: sha512-0TS1jicxdU09dwJMNZtVAfzPi6Q6QeN0pM1Fkzrjn+XYHvzMKPU3pHVpva+769iNVSfIYWf7LJ6WR+BuuMf8cA==}
@@ -28146,7 +28130,7 @@ snapshots:
       '@project-serum/anchor': 0.26.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@solana/web3.js': 1.95.3(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       axios: 1.7.9
-      bs58: 6.0.0
+      bs58: 5.0.0
       cosmjs-types: 0.9.0
       ethers: 6.8.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       ethers-multicall-provider: 5.0.0(bufferutil@4.0.9)(lodash@4.17.21)(utf-8-validate@5.0.10)
@@ -28182,7 +28166,7 @@ snapshots:
       anchor-client-gen: 0.28.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       bn: 1.0.5
       bn.js: 5.2.1
-      bs58: 6.0.0
+      bs58: 5.0.0
       buffer-layout: 1.2.2
       cyrb53: 1.0.0
       fs: 0.0.1-security
@@ -28215,7 +28199,7 @@ snapshots:
       anchor-client-gen: 0.28.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       bn: 1.0.5
       bn.js: 5.2.1
-      bs58: 6.0.0
+      bs58: 5.0.0
       buffer-layout: 1.2.2
       cyrb53: 1.0.0
       fs: 0.0.1-security
@@ -30219,20 +30203,20 @@ snapshots:
 
   '@bcoe/v8-coverage@1.0.2': {}
 
-  '@bigmi/core@0.0.4(bitcoinjs-lib@7.0.0-rc.0(typescript@5.7.3))(bs58@6.0.0)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.1))':
+  '@bigmi/core@0.0.4(bitcoinjs-lib@7.0.0-rc.0(typescript@5.7.3))(bs58@5.0.0)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.1))':
     dependencies:
       '@noble/hashes': 1.7.1
       bech32: 2.0.0
       bitcoinjs-lib: 7.0.0-rc.0(typescript@5.7.3)
-      bs58: 6.0.0
+      bs58: 5.0.0
       viem: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.1)
 
-  '@bigmi/core@0.0.4(bitcoinjs-lib@7.0.0-rc.0(typescript@5.7.3))(bs58@6.0.0)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1))':
+  '@bigmi/core@0.0.4(bitcoinjs-lib@7.0.0-rc.0(typescript@5.7.3))(bs58@5.0.0)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1))':
     dependencies:
       '@noble/hashes': 1.7.1
       bech32: 2.0.0
       bitcoinjs-lib: 7.0.0-rc.0(typescript@5.7.3)
-      bs58: 6.0.0
+      bs58: 5.0.0
       viem: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)
 
   '@binance/connector@3.6.1(bufferutil@4.0.9)(utf-8-validate@6.0.5)':
@@ -30532,7 +30516,7 @@ snapshots:
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       bn.js: 5.2.1
       borsh: 0.7.0
-      bs58: 6.0.0
+      bs58: 5.0.0
       express: 4.21.1
       express-prom-bundle: 7.0.2(prom-client@15.1.3)
       js-sha256: 0.11.0
@@ -30560,7 +30544,7 @@ snapshots:
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       bn.js: 5.2.1
       borsh: 0.7.0
-      bs58: 6.0.0
+      bs58: 5.0.0
       express: 4.21.1
       express-prom-bundle: 7.0.2(prom-client@15.1.3)
       js-sha256: 0.11.0
@@ -30859,7 +30843,7 @@ snapshots:
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       base64-js: 1.5.1
       bn.js: 5.2.1
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer-layout: 1.2.2
       camelcase: 6.3.0
       cross-fetch: 3.2.0(encoding@0.1.13)
@@ -30881,7 +30865,7 @@ snapshots:
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       base64-js: 1.5.1
       bn.js: 5.2.1
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer-layout: 1.2.2
       camelcase: 6.3.0
       cross-fetch: 3.2.0(encoding@0.1.13)
@@ -30903,7 +30887,7 @@ snapshots:
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       base64-js: 1.5.1
       bn.js: 5.2.1
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer-layout: 1.2.2
       camelcase: 6.3.0
       cross-fetch: 3.2.0(encoding@0.1.13)
@@ -30925,7 +30909,7 @@ snapshots:
       '@noble/hashes': 1.7.1
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       bn.js: 5.2.1
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer-layout: 1.2.2
       camelcase: 6.3.0
       cross-fetch: 3.2.0(encoding@0.1.13)
@@ -30947,7 +30931,7 @@ snapshots:
       '@noble/hashes': 1.7.1
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       bn.js: 5.2.1
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer-layout: 1.2.2
       camelcase: 6.3.0
       cross-fetch: 3.2.0(encoding@0.1.13)
@@ -30969,7 +30953,7 @@ snapshots:
       '@noble/hashes': 1.7.1
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5)
       bn.js: 5.2.1
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer-layout: 1.2.2
       camelcase: 6.3.0
       cross-fetch: 3.2.0(encoding@0.1.13)
@@ -33410,7 +33394,7 @@ snapshots:
       '@solana/spl-token': 0.4.9(@solana/web3.js@1.95.8(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5))(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5)
       '@solana/web3.js': 1.95.8(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@6.0.5)
       bignumber.js: 9.1.2
-      bs58: 6.0.0
+      bs58: 5.0.0
       node-cache: 5.1.2
       pumpdotfun-sdk: 1.3.2(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5)
       tsup: 8.3.5(@swc/core@1.10.11(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.5.1)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
@@ -35315,7 +35299,7 @@ snapshots:
       '@irys/arweave': 0.0.2
       '@noble/ed25519': 1.7.3
       base64url: 3.0.1
-      bs58: 4.0.1
+      bs58: 5.0.0
       keccak: 3.0.4
       secp256k1: 5.0.1
     optionalDependencies:
@@ -36400,28 +36384,28 @@ snapshots:
 
   '@lifi/sdk@3.4.1(@solana/wallet-adapter-base@0.9.23)(typescript@5.7.3)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.1))':
     dependencies:
-      '@bigmi/core': 0.0.4(bitcoinjs-lib@7.0.0-rc.0(typescript@5.7.3))(bs58@6.0.0)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.1))
+      '@bigmi/core': 0.0.4(bitcoinjs-lib@7.0.0-rc.0(typescript@5.7.3))(bs58@5.0.0)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.1))
       '@lifi/types': 16.3.0
       '@noble/curves': 1.8.1
       '@noble/hashes': 1.7.1
       '@solana/wallet-adapter-base': 0.9.23(@solana/web3.js@1.92.3(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))
       bech32: 2.0.0
       bitcoinjs-lib: 7.0.0-rc.0(typescript@5.7.3)
-      bs58: 6.0.0
+      bs58: 5.0.0
       viem: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.1)
     transitivePeerDependencies:
       - typescript
 
   '@lifi/sdk@3.4.1(@solana/wallet-adapter-base@0.9.23)(typescript@5.7.3)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1))':
     dependencies:
-      '@bigmi/core': 0.0.4(bitcoinjs-lib@7.0.0-rc.0(typescript@5.7.3))(bs58@6.0.0)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1))
+      '@bigmi/core': 0.0.4(bitcoinjs-lib@7.0.0-rc.0(typescript@5.7.3))(bs58@5.0.0)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1))
       '@lifi/types': 16.3.0
       '@noble/curves': 1.8.1
       '@noble/hashes': 1.7.1
       '@solana/wallet-adapter-base': 0.9.23(@solana/web3.js@1.92.3(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))
       bech32: 2.0.0
       bitcoinjs-lib: 7.0.0-rc.0(typescript@5.7.3)
-      bs58: 6.0.0
+      bs58: 5.0.0
       viem: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)
     transitivePeerDependencies:
       - typescript
@@ -39151,7 +39135,7 @@ snapshots:
 
   '@mysten/bcs@1.2.1':
     dependencies:
-      bs58: 6.0.0
+      bs58: 5.0.0
 
   '@mysten/sui@1.21.0(typescript@5.7.3)':
     dependencies:
@@ -39350,7 +39334,7 @@ snapshots:
   '@near-js/utils@1.0.1':
     dependencies:
       '@near-js/types': 0.3.1
-      bs58: 4.0.0
+      bs58: 5.0.0
       depd: 2.0.0
       mustache: 4.0.0
 
@@ -41212,7 +41196,7 @@ snapshots:
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       base64-js: 1.5.1
       bn.js: 5.2.1
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer-layout: 1.2.2
       camelcase: 5.3.1
       crypto-hash: 1.3.0
@@ -41233,7 +41217,7 @@ snapshots:
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       base64-js: 1.5.1
       bn.js: 5.2.1
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer-layout: 1.2.2
       camelcase: 5.3.1
       cross-fetch: 3.2.0(encoding@0.1.13)
@@ -41254,7 +41238,7 @@ snapshots:
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       base64-js: 1.5.1
       bn.js: 5.2.1
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer-layout: 1.2.2
       camelcase: 6.3.0
       cross-fetch: 3.2.0(encoding@0.1.13)
@@ -42970,7 +42954,7 @@ snapshots:
       '@solana/spl-token': 0.4.9(@solana/web3.js@1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
       '@solana/spl-token-metadata': 0.1.6(@solana/web3.js@1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      bs58: 6.0.0
+      bs58: 5.0.0
       dotenv: 16.4.7
     transitivePeerDependencies:
       - bufferutil
@@ -42984,7 +42968,7 @@ snapshots:
       '@solana/spl-token': 0.4.9(@solana/web3.js@1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)(utf-8-validate@5.0.10)
       '@solana/spl-token-metadata': 0.1.6(@solana/web3.js@1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      bs58: 6.0.0
+      bs58: 5.0.0
       dotenv: 16.4.7
     transitivePeerDependencies:
       - bufferutil
@@ -44248,7 +44232,7 @@ snapshots:
       bigint-buffer: 1.1.5
       bn.js: 5.2.1
       borsh: 0.7.0
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer: 6.0.3
       fast-stable-stringify: 1.0.0
       jayson: 4.1.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -44270,7 +44254,7 @@ snapshots:
       bigint-buffer: 1.1.5
       bn.js: 5.2.1
       borsh: 0.7.0
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer: 6.0.3
       fast-stable-stringify: 1.0.0
       jayson: 4.1.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -44292,7 +44276,7 @@ snapshots:
       bigint-buffer: 1.1.5
       bn.js: 5.2.1
       borsh: 0.7.0
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer: 6.0.3
       fast-stable-stringify: 1.0.0
       jayson: 4.1.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -44314,7 +44298,7 @@ snapshots:
       bigint-buffer: 1.1.5
       bn.js: 5.2.1
       borsh: 0.7.0
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer: 6.0.3
       fast-stable-stringify: 1.0.0
       jayson: 4.1.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -44336,7 +44320,7 @@ snapshots:
       bigint-buffer: 1.1.5
       bn.js: 5.2.1
       borsh: 0.7.0
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer: 6.0.3
       fast-stable-stringify: 1.0.0
       jayson: 4.1.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
@@ -44358,7 +44342,7 @@ snapshots:
       bigint-buffer: 1.1.5
       bn.js: 5.2.1
       borsh: 0.7.0
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer: 6.0.3
       fast-stable-stringify: 1.0.0
       jayson: 4.1.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -44380,7 +44364,7 @@ snapshots:
       bigint-buffer: 1.1.5
       bn.js: 5.2.1
       borsh: 0.7.0
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer: 6.0.3
       fast-stable-stringify: 1.0.0
       jayson: 4.1.3(bufferutil@4.0.9)(utf-8-validate@6.0.5)
@@ -44402,7 +44386,7 @@ snapshots:
       bigint-buffer: 1.1.5
       bn.js: 5.2.1
       borsh: 0.7.0
-      bs58: 4.0.1
+      bs58: 5.0.0
       buffer: 6.0.3
       fast-stable-stringify: 1.0.0
       jayson: 4.1.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -44603,7 +44587,7 @@ snapshots:
     dependencies:
       abitype: 0.10.3(typescript@5.7.3)(zod@3.24.1)
       axios: 1.7.9
-      bs58: 6.0.0
+      bs58: 5.0.0
       dotenv: 16.4.7
       multiformats: 9.9.0
       viem: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)
@@ -44870,7 +44854,7 @@ snapshots:
       axios: 1.7.9
       big.js: 6.2.2
       bn.js: 5.2.1
-      bs58: 6.0.0
+      bs58: 5.0.0
       cron-validator: 1.3.1
       decimal.js: 10.5.0
       js-sha256: 0.11.0
@@ -47103,7 +47087,7 @@ snapshots:
     dependencies:
       '@walletconnect/jsonrpc-utils': 1.0.8
       '@walletconnect/safe-json': 1.0.2
-      cross-fetch: 3.1.8(encoding@0.1.13)
+      cross-fetch: 3.2.0(encoding@0.1.13)
       events: 3.3.0
     transitivePeerDependencies:
       - encoding
@@ -48321,7 +48305,7 @@ snapshots:
       '@irys/arweave': 0.0.2(debug@4.4.0)
       '@noble/ed25519': 1.7.3
       base64url: 3.0.1
-      bs58: 4.0.1
+      bs58: 5.0.0
       keccak: 3.0.4
       secp256k1: 5.0.1
     optionalDependencies:
@@ -48348,7 +48332,7 @@ snapshots:
       '@irys/arweave': 0.0.2
       '@noble/ed25519': 1.7.3
       base64url: 3.0.1
-      bs58: 4.0.1
+      bs58: 5.0.0
       keccak: 3.0.4
       secp256k1: 5.0.1
     optionalDependencies:
@@ -48980,17 +48964,11 @@ snapshots:
       bare-events: 2.5.4
     optional: true
 
-  base-x@2.0.6:
-    dependencies:
-      safe-buffer: 5.2.1
-
   base-x@3.0.10:
     dependencies:
       safe-buffer: 5.2.1
 
   base-x@4.0.0: {}
-
-  base-x@5.0.0: {}
 
   base64-arraybuffer@0.2.0: {}
 
@@ -49246,13 +49224,13 @@ snapshots:
   borsh@0.6.0:
     dependencies:
       bn.js: 5.2.1
-      bs58: 4.0.0
+      bs58: 5.0.0
       text-encoding-utf-8: 1.0.2
 
   borsh@0.7.0:
     dependencies:
       bn.js: 5.2.1
-      bs58: 4.0.0
+      bs58: 5.0.0
       text-encoding-utf-8: 1.0.2
 
   borsh@1.0.0: {}
@@ -49437,25 +49415,13 @@ snapshots:
     dependencies:
       fast-json-stable-stringify: 2.1.0
 
-  bs58@4.0.0:
-    dependencies:
-      base-x: 2.0.6
-
-  bs58@4.0.1:
-    dependencies:
-      base-x: 3.0.10
-
   bs58@5.0.0:
     dependencies:
       base-x: 4.0.0
 
-  bs58@6.0.0:
-    dependencies:
-      base-x: 5.0.0
-
   bs58check@2.1.2:
     dependencies:
-      bs58: 4.0.0
+      bs58: 5.0.0
       create-hash: 1.2.0
       safe-buffer: 5.2.1
 
@@ -49467,7 +49433,7 @@ snapshots:
   bs58check@4.0.0:
     dependencies:
       '@noble/hashes': 1.7.1
-      bs58: 6.0.0
+      bs58: 5.0.0
 
   bser@2.1.1:
     dependencies:
@@ -52898,7 +52864,7 @@ snapshots:
 
   extract-zip@2.0.1:
     dependencies:
-      debug: 4.3.4
+      debug: 4.4.0(supports-color@8.1.1)
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
@@ -53209,7 +53175,7 @@ snapshots:
       '@raydium-io/raydium-sdk-v2': 0.1.82-alpha(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
       '@solana/spl-token': 0.4.9(@solana/web3.js@1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      bs58: 6.0.0
+      bs58: 5.0.0
       coral-xyz3: '@coral-xyz/anchor@0.29.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)'
     transitivePeerDependencies:
       - bufferutil
@@ -53225,7 +53191,7 @@ snapshots:
       '@raydium-io/raydium-sdk-v2': 0.1.82-alpha(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)(utf-8-validate@5.0.10)
       '@solana/spl-token': 0.4.9(@solana/web3.js@1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)(utf-8-validate@5.0.10)
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      bs58: 6.0.0
+      bs58: 5.0.0
       coral-xyz3: '@coral-xyz/anchor@0.29.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)'
     transitivePeerDependencies:
       - bufferutil
@@ -54998,7 +54964,7 @@ snapshots:
 
   is-ipfs@0.6.3:
     dependencies:
-      bs58: 4.0.1
+      bs58: 5.0.0
       cids: 0.7.5
       mafmt: 7.1.0
       multiaddr: 7.5.0
@@ -58445,7 +58411,7 @@ snapshots:
     dependencies:
       bn.js: 5.2.0
       borsh: 0.6.0
-      bs58: 4.0.0
+      bs58: 5.0.0
       depd: 2.0.0
       error-polyfill: 0.1.3
       http-errors: 1.8.1
@@ -58488,7 +58454,7 @@ snapshots:
   near-seed-phrase@0.2.1:
     dependencies:
       bip39-light: 1.0.7
-      bs58: 4.0.1
+      bs58: 5.0.0
       near-hd-key: 1.2.1
       tweetnacl: 1.0.3
 
@@ -62685,7 +62651,7 @@ snapshots:
       '@voltr/vault-sdk': 0.1.3(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
       ai: 4.1.7(react@19.0.0)(zod@3.24.1)
       bn.js: 5.2.1
-      bs58: 6.0.0
+      bs58: 5.0.0
       chai: 5.1.2
       decimal.js: 10.5.0
       dotenv: 16.4.7
@@ -62767,7 +62733,7 @@ snapshots:
       '@voltr/vault-sdk': 0.1.3(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)(utf-8-validate@5.0.10)
       ai: 4.1.7(react@19.0.0)(zod@3.24.1)
       bn.js: 5.2.1
-      bs58: 6.0.0
+      bs58: 5.0.0
       chai: 5.1.2
       decimal.js: 10.5.0
       dotenv: 16.4.7
@@ -62829,7 +62795,7 @@ snapshots:
   solana-bankrun@0.3.1(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10):
     dependencies:
       '@solana/web3.js': 1.95.5(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
-      bs58: 4.0.1
+      bs58: 5.0.0
     optionalDependencies:
       solana-bankrun-darwin-arm64: 0.3.1
       solana-bankrun-darwin-universal: 0.3.1
