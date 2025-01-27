@@ -150,6 +150,7 @@ import { MongoClient } from "mongodb";
 import { quickIntelPlugin } from "@elizaos/plugin-quick-intel"
 
 import { trikonPlugin } from "@elizaos/plugin-trikon"
+import { OKXPlugin } from "@elizaos/plugin-okx"
 const __filename = fileURLToPath(import.meta.url) // get the resolved path to the file
 const __dirname = path.dirname(__filename) // get the name of the directory
 
@@ -929,6 +930,9 @@ export async function createAgent(character: Character, db: IDatabaseAdapter, ca
 			getSecret(character, "QUICKINTEL_API_KEY") ? quickIntelPlugin : null,
 			getSecret(character, "GELATO_RELAY_API_KEY") ? gelatoPlugin : null,
 			getSecret(character, "TRIKON_WALLET_ADDRESS") ? trikonPlugin : null,
+			getSecret(character, "OKX_API_KEY") && getSecret(character, "OKX_SECRET_KEY") && getSecret(character, "OKX_API_PASSPHRASE") && getSecret(character, "OKX_PROJECT_ID") && getSecret(character, "OKX_SOLANA_RPC_URL") && getSecret(character, "OKX_WALLET_ADDRESS") && getSecret(character, "OKX_WALLET_PRIVATE_KEY")
+			? await OKXPlugin(character)
+			: null,
 		].flat().filter(Boolean),
 		providers: [],
 		managers: [],

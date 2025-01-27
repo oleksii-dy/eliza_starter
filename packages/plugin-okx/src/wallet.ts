@@ -5,10 +5,10 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-const solanaWalletAddress = process.env.OKX_WALLET_ADDRESS;
+// const solanaWalletAddress = process.env.OKX_WALLET_ADDRESS;
 const solanaPrivateKeyValue = process.env.OKX_WALLET_PRIVATE_KEY;
 const solanaRpcUrl = process.env.OKX_SOLANA_RPC_URL;
-const solanaWsEndpoint = process.env.OKX_WS_ENDPONT;
+// const solanaWsEndpoint = process.env.OKX_WS_ENDPONT;
 
 // Interface for the wallet client
 export interface SolanaWalletClientBase {
@@ -72,9 +72,9 @@ export function getSolanaWalletClient(
     const rpcUrl = getSetting(solanaRpcUrl);
     if (!rpcUrl) throw new Error("SOLANA_RPC_URL not configured");
 
-    const wsEndpoint = getSetting(solanaWsEndpoint);
+    // const wsEndpoint = getSetting(solanaWsEndpoint);
 
-    return new SolanaWallet(privateKey, rpcUrl, wsEndpoint);
+    return new SolanaWallet(privateKey, rpcUrl); // add if needed wsEndpoint;
 }
 
 export function getSolanaWalletProvider(walletClient: SolanaWalletClientBase) {

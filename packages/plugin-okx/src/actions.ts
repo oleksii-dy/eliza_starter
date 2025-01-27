@@ -605,7 +605,7 @@ export async function getOKXActions(
         solana: {
             connection: {
                 rpcUrl: getSetting("OKX_SOLANA_RPC_URL")!,
-                wsEndpoint: getSetting("OKX_WS_ENDPONT"),
+                // wsEndpoint: getSetting("OKX_WS_ENDPONT"),
             },
             privateKey: getSetting("OKX_WALLET_PRIVATE_KEY")!,
         },
