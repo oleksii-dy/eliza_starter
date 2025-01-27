@@ -40,11 +40,20 @@ COPY . .
 # Install dependencies
 RUN pnpm install --no-frozen-lockfile
 
-# Build the project with verbose logging
-RUN pnpm run build --verbose 2>&1 | tee build.log && \
-    if [ -f packages/plugin-bootstrap/tsup.config.ts ]; then cat packages/plugin-bootstrap/tsup.config.ts; fi && \
-    if [ -f packages/plugin-bootstrap/src/index.ts ]; then cat packages/plugin-bootstrap/src/index.ts; fi && \
-    pnpm prune --prod
+# Build core package first
+RUN cd packages/core && pnpm build
+
+# Build adapter-pglite specifically
+RUN cd packages/adapter-pglite && pnpm build
+
+# Build all packages
+RUN pnpm run build --verbose
+
+# Verify built files exist
+RUN ls -la packages/adapter-pglite/dist/index.js || echo "adapter-pglite build missing!"
+
+# Prune dependencies for production
+RUN pnpm prune --prod
 
 # Final runtime image
 FROM node:23.3.0-slim
@@ -77,7 +86,6 @@ COPY --from=builder /app/characters ./characters
 
 # Expose necessary ports
 EXPOSE $PORT
-# Set the command to run the application
 
 # Command to start the application
 CMD ["sh", "-c", "pnpm start & pnpm start:client"]
