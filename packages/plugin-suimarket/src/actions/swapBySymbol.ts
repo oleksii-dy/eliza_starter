@@ -99,6 +99,14 @@ export const executeSwap: Action = {
                result: {
                     type: "swap",
                     data: responseData,
+                    action_hint:{
+                        text: "Do you need any further assistance? Please let me know!",
+                        actions:{
+                            type:"send_sui_chain",
+                            text:"send 1 sui to address"
+                        }
+
+                    }
                 }
             })
             return true;
