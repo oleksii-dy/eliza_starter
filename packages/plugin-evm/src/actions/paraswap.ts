@@ -13,6 +13,31 @@ import { swapTemplate } from "../templates";
 const PARASWAP_API_URL = "https://api.paraswap.io";
 
 export class SwapAction {
+    private readonly ERC20_ABI = [
+        {
+            constant: false,
+            inputs: [
+                { name: "spender", type: "address" },
+                { name: "amount", type: "uint256" },
+            ],
+            name: "approve",
+            outputs: [{ name: "", type: "bool" }],
+            payable: false,
+            stateMutability: "nonpayable",
+            type: "function",
+        },
+        {
+            name: "allowance",
+            type: "function",
+            stateMutability: "view",
+            inputs: [
+                { name: "owner", type: "address" },
+                { name: "spender", type: "address" },
+            ],
+            outputs: [{ name: "", type: "uint256" }],
+        },
+    ] as const;
+
     private tokenDecimals: Map<string, number> = new Map();
     public tokenAddresses: Map<string, string> = new Map();
 
@@ -38,13 +63,9 @@ export class SwapAction {
             slippage: "250",
         };
 
-        // console.log("queryParams", queryParams);
-
         const response = await fetch(
             `${PARASWAP_API_URL}/swap?${new URLSearchParams(queryParams)}`
         );
-
-        // console.log("response", response);
 
         if (!response.ok)
             throw new Error(
@@ -80,8 +101,6 @@ export class SwapAction {
             }
         );
 
-        // console.log("tokenDecimals", this.tokenDecimals);
-
         return (
             this.tokenDecimals.has(inputToken.toLowerCase()) &&
             this.tokenDecimals.has(outputToken.toLowerCase())
@@ -112,31 +131,6 @@ export class SwapAction {
             chainId: chainConfig.id,
         };
     }
-
-    private readonly ERC20_ABI = [
-        {
-            constant: false,
-            inputs: [
-                { name: "spender", type: "address" },
-                { name: "amount", type: "uint256" },
-            ],
-            name: "approve",
-            outputs: [{ name: "", type: "bool" }],
-            payable: false,
-            stateMutability: "nonpayable",
-            type: "function",
-        },
-        {
-            name: "allowance",
-            type: "function",
-            stateMutability: "view",
-            inputs: [
-                { name: "owner", type: "address" },
-                { name: "spender", type: "address" },
-            ],
-            outputs: [{ name: "", type: "uint256" }],
-        },
-    ] as const;
 
     async approveTokenIfNeeded(
         amount: string,
