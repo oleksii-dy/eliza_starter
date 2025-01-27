@@ -621,6 +621,11 @@ export async function initializeClients(character: Character, runtime: IAgentRun
 		if (slackClient) clients.slack = slackClient // Use object property instead of push
 	}
 
+	if (clientTypes.includes(Clients.XMTP)) {
+        const xmtpClient = await XmtpClientInterface.start(runtime);
+        if (xmtpClient) clients.xmtp = xmtpClient;
+    }
+
 	function determineClientType(client: Client): string {
 		// Check if client has a direct type identifier
 		if ("type" in client) {
