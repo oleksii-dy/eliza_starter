@@ -1,10 +1,13 @@
 import type { ActionResponse } from "./types.ts";
 const jsonBlockPattern = /```json\n([\s\S]*?)\n```/;
 
-export const messageCompletionFooter = `\nResponse format should be formatted in a JSON block like this:
+export const messageCompletionFooter = `\nResponse format should be formatted in a valid JSON block like this:
 \`\`\`json
-{ "user": "{{agentName}}", "text": "string", "action": "string" }
-\`\`\``;
+{ "user": "{{agentName}}", "text": "<string>", "action": "<string>" }
+\`\`\`
+
+The “action” field should be one of the options in [Available Actions] and the "text" field should be the response you want to send.
+`;
 
 export const shouldRespondFooter = `The available options are [RESPOND], [IGNORE], or [STOP]. Choose the most appropriate option.
 If {{agentName}} is talking too much, you can choose [IGNORE]
@@ -60,7 +63,7 @@ export const parseBooleanFromText = (text: string) => {
     return null; // Return null for unrecognized inputs
 };
 
-export const stringArrayFooter = `Respond with a JSON array containing the values in a JSON block formatted for markdown with this structure:
+export const stringArrayFooter = `Respond with a JSON array containing the values in a valid JSON block formatted for markdown with this structure:
 \`\`\`json
 [
   'value',
@@ -68,7 +71,7 @@ export const stringArrayFooter = `Respond with a JSON array containing the value
 ]
 \`\`\`
 
-Your response must include the JSON block.`;
+Your response must include the valid JSON block.`;
 
 /**
  * Parses a JSON array from a given text. The function looks for a JSON block wrapped in triple backticks
@@ -92,7 +95,7 @@ export function parseJsonArrayFromText(text: string) {
             jsonData = JSON.parse(normalizedJson);
         } catch (e) {
             console.error("Error parsing JSON:", e);
-            console.error("Text is not JSON", text);
+            console.error("Failed parsing text:", jsonBlockMatch[1]);
         }
     }
 
@@ -107,8 +110,8 @@ export function parseJsonArrayFromText(text: string) {
                 const normalizedJson = arrayMatch[0].replace(/'/g, '"');
                 jsonData = JSON.parse(normalizedJson);
             } catch (e) {
-                console.error("Text is not JSON", text);
                 console.error("Error parsing JSON:", e);
+                console.error("Failed parsing text:", arrayMatch[0]);
             }
         }
     }
@@ -143,7 +146,7 @@ export function parseJSONObjectFromText(
         } catch (e) {
             console.error("Error parsing JSON:", e);
             console.error("Text is not JSON", text);
-            return null;
+            return extractAttributes(jsonBlockMatch[1]);
         }
     } else {
         const objectPattern = /{[\s\S]*?}/;
@@ -155,7 +158,7 @@ export function parseJSONObjectFromText(
             } catch (e) {
                 console.error("Error parsing JSON:", e);
                 console.error("Text is not JSON", text);
-                return null;
+                return extractAttributes(objectMatch[0]);
             }
         }
     }
@@ -181,18 +184,27 @@ export function parseJSONObjectFromText(
  */
 export function extractAttributes(
     response: string,
-    attributesToExtract: string[],
+    attributesToExtract?: string[],
 ): { [key: string]: string | undefined } {
     const attributes: { [key: string]: string | undefined } = {};
 
-    attributesToExtract.forEach((attribute) => {
-        const match = response.match(
-            new RegExp(`"${attribute}"\\s*:\\s*"([^"]*)"`, "i"),
-        );
-        if (match) {
-            attributes[attribute] = match[1];
+    if (!attributesToExtract || attributesToExtract.length === 0) {
+        // Extract all attributes if no specific attributes are provided
+        const matches = response.matchAll(/"([^"]+)"\s*:\s*"([^"]*)"/g);
+        for (const match of matches) {
+            attributes[match[1]] = match[2];
         }
-    });
+    } else {
+        // Extract only specified attributes
+        attributesToExtract.forEach((attribute) => {
+            const match = response.match(
+                new RegExp(`"${attribute}"\\s*:\\s*"([^"]*)"`, "i"),
+            );
+            if (match) {
+                attributes[attribute] = match[1];
+            }
+        });
+    }
 
     return attributes;
 }
