@@ -19,9 +19,15 @@ import { mintTemplate } from "../templates";
 import {initBtcFunProvider} from "../providers/btcfun.ts";
 export { mintTemplate };
 
+function checkTokenType(tokenType: string) {
+    if (tokenType.toLowerCase() !== "brc20" && tokenType.toLowerCase() !== "runes") {
+        throw new Error("Invalid token type");
+    }
+}
+
 export const btcfunMintAction = {
     name: "mint",
-    description: "btcfun mint brc20",
+    description: "btcfun mint brc20/runes",
     handler: async (
         runtime: IAgentRuntime,
         _message: Memory,
@@ -55,18 +61,20 @@ export const btcfunMintAction = {
             context: mintContext,
             modelClass: ModelClass.LARGE,
         });
+        let tokenType = content.tokenType;
         let tick = content.inputToken;
         let mintcap = content.mintcap ?? runtime.getSetting("MINTCAP");
         let mintdeadline = content.mintdeadline ?? runtime.getSetting("MINTDEADLINE");
         let addressFundraisingCap = content.addressFundraisingCap ?? runtime.getSetting("ADDRESS_FUNDRAISING_CAP");
         console.log("begin to mint token", tick, content)
-        //validateBrc20
-        await btcfunProvider.validateBrc20(address, tick);
-        console.log("validateBrc20 success")
+        checkTokenType(tokenType)
+        //validateToken
+        await btcfunProvider.validateToken(tokenType, address, tick);
+        console.log("validate token success")
 
         try {
-            let {order_id, psbt_hex} = await btcfunProvider.createBrc20Order(
-                publicKeyHex, address, publicKeyHex, address, 10,
+            let {order_id, psbt_hex} = await btcfunProvider.createOrder(
+                tokenType, publicKeyHex, address, publicKeyHex, address, 10,
                 tick, addressFundraisingCap, mintdeadline, mintcap)
             const psbt = Psbt.fromHex(psbt_hex)
             let wallet = new BtcWallet()
@@ -92,12 +100,11 @@ export const btcfunMintAction = {
                 data: params,
             };
             let signedPsbtHex = await wallet.signTransaction(signParams);
-
             const txHash = await btcfunProvider.broadcastOrder(order_id, signedPsbtHex)
             console.log('signedPsbtHex: ', signedPsbtHex, 'orderID: ', order_id, 'txhash', txHash)
             if (callback) {
                 callback({
-                    text: `Successfully mint ${tick} tokens, mintcap ${mintcap}, mintdeadline ${mintdeadline}, addressFundraisingCap ${addressFundraisingCap} ,txhash ${txHash}`,
+                    text: `Successfully mint ${tokenType} ${tick} tokens, mintcap ${mintcap}, mintdeadline ${mintdeadline}, addressFundraisingCap ${addressFundraisingCap} ,txhash ${txHash}`,
                     content: {
                         success: true,
                         orderID: order_id,
@@ -118,8 +125,15 @@ export const btcfunMintAction = {
             {
                 user: "assistant",
                 content: {
-                    text: "I'll help you mint 100000000 Party",
+                    text: "I'll help you mint 100000000 BRC20 Party",
                     action: "MINT_BRC20",
+                },
+            },
+            {
+                user: "assistant",
+                content: {
+                    text: "I'll help you mint 100000000 RUNES Party",
+                    action: "MINT_RUNES",
                 },
             },
             {
@@ -127,6 +141,13 @@ export const btcfunMintAction = {
                 content: {
                     text: "import token BRC20 `Party`, mintcap 100000, addressFundraisingCap 10 mintdeadline 864000",
                     action: "MINT_BRC20",
+                },
+            },
+            {
+                user: "user",
+                content: {
+                    text: "import token RUNES `Party2`, mintcap 100000, addressFundraisingCap 10 mintdeadline 864000",
+                    action: "MINT_RUNES",
                 },
             },
         ],

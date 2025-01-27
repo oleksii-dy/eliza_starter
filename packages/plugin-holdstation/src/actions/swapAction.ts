@@ -31,14 +31,14 @@ export class SwapAction {
             throw new Error("Input token not provided");
         }
 
-        const filters = tokens.filter(
-            (t) =>
-                t.symbol === params.inputTokenSymbol ||
-                t.address === params.inputTokenCA,
-        );
+        const filters = tokens.filter((t) => {
+            return params.inputTokenCA
+                ? t.address === params.inputTokenCA
+                : t.symbol === params.inputTokenSymbol?.toUpperCase();
+        });
         if (filters.length != 1) {
             throw new Error(
-                "Multiple tokens or no tokens found with the symbol",
+                "Multiple tokens or no tokens found with the symbol"
             );
         }
 
@@ -56,14 +56,14 @@ export class SwapAction {
 
         if (!params.outputTokenCA || !params.outputTokenSymbol) {
             const tokens = await this.walletProvider.fetchAllTokens();
-            const filters = tokens.filter(
-                (t) =>
-                    t.symbol === params.outputTokenSymbol ||
-                    t.address === params.outputTokenCA,
-            );
+            const filters = tokens.filter((t) => {
+                return params.outputTokenCA
+                    ? t.address === params.outputTokenCA
+                    : t.symbol === params.outputTokenSymbol?.toUpperCase();
+            });
             if (filters.length != 1) {
                 throw new Error(
-                    "Multiple tokens or no tokens found with the symbol",
+                    "Multiple tokens or no tokens found with the symbol"
                 );
             }
             params.outputTokenCA = filters[0].address;
@@ -82,7 +82,7 @@ export class SwapAction {
         if (!swapData || swapData.error) {
             elizaLogger.error("Swap error:", swapData);
             throw new Error(
-                `Failed to fetch swap: ${swapData?.error || "Unknown error"}`,
+                `Failed to fetch swap: ${swapData?.error || "Unknown error"}`
             );
         }
 
@@ -105,13 +105,13 @@ export class SwapAction {
             const allowance = await this.walletProvider.getAllowace(
                 params.inputTokenCA,
                 walletAddress,
-                HOLDSTATION_ROUTER_ADDRESS,
+                HOLDSTATION_ROUTER_ADDRESS
             );
             if (allowance < tokenAmount) {
                 await this.walletProvider.approve(
                     HOLDSTATION_ROUTER_ADDRESS,
                     params.inputTokenCA,
-                    tokenAmount,
+                    tokenAmount
                 );
             }
         } else {
@@ -147,7 +147,7 @@ export const swapAction: Action = {
         message: Memory,
         state: State,
         _options: any,
-        callback: HandlerCallback,
+        callback: HandlerCallback
     ) => {
         elizaLogger.log("Starting HoldStation Wallet TOKEN_SWAP handler...");
 
@@ -187,7 +187,7 @@ export const swapAction: Action = {
             } = await action.swap(content);
 
             elizaLogger.success(
-                `Swap completed successfully from ${amount} ${inputTokenSymbol} (${inputTokenCA}) to ${outputTokenSymbol} (${outputTokenCA})!\nTransaction Hash: ${hash}`,
+                `Swap completed successfully from ${amount} ${inputTokenSymbol} (${inputTokenCA}) to ${outputTokenSymbol} (${outputTokenCA})!\nTransaction Hash: ${hash}`
             );
 
             if (callback) {

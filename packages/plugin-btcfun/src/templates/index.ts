@@ -5,6 +5,7 @@ export const mintTemplate = `Given the recent messages and wallet information be
 {{walletInfo}}
 
 Extract the following information about the requested token swap:
+- Input token type, eg:runes or brc20, should convert BRC20,brc20 to brc20, runes or RUNES to runes
 - Input token symbol (the token being mint), eg: mint token abc
 - Input token mintcap eg: "10000"
 - Input token addressFundraisingCap everyone can offer eg: "10"
@@ -15,6 +16,7 @@ Respond with a JSON markdown block containing only the extracted values. Use nul
 
 \`\`\`json
 {
+    "tokenType": string | null,
     "inputToken": string | null,
     "mintcap": string | 1000,
     "addressFundraisingCap": string | 10,
