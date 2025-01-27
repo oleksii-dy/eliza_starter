@@ -40,8 +40,11 @@ COPY . .
 # Install dependencies
 RUN pnpm install --no-frozen-lockfile
 
-# Build the project
-RUN pnpm run build && pnpm prune --prod
+# Build the project with verbose logging
+RUN pnpm run build --verbose 2>&1 | tee build.log && \
+    if [ -f packages/plugin-bootstrap/tsup.config.ts ]; then cat packages/plugin-bootstrap/tsup.config.ts; fi && \
+    if [ -f packages/plugin-bootstrap/src/index.ts ]; then cat packages/plugin-bootstrap/src/index.ts; fi && \
+    pnpm prune --prod
 
 # Final runtime image
 FROM node:23.3.0-slim
