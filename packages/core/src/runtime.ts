@@ -56,6 +56,7 @@ import {
 import { stringToUuid } from "./uuid.ts";
 import { glob } from "glob";
 import { existsSync } from "fs";
+import { embed } from "./embedding";
 /**
  * Represents the runtime environment for an agent, handling message processing,
  * action registration, and interaction with external services like OpenAI and Supabase.
@@ -68,6 +69,11 @@ function isDirectoryItem(item: any): item is DirectoryItem {
         "directory" in item &&
         typeof item.directory === "string"
     );
+}
+
+export interface AgentRuntime {
+    // ... existing properties
+    embed: typeof embed;
 }
 
 export class AgentRuntime implements IAgentRuntime {
@@ -173,6 +179,8 @@ export class AgentRuntime implements IAgentRuntime {
     clients: Record<string, any>;
 
     verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
+
+    embed = (text: string, agentId?: UUID) => embed(this, text);
 
     registerMemoryManager(manager: IMemoryManager): void {
         if (!manager.tableName) {
@@ -371,9 +379,7 @@ export class AgentRuntime implements IAgentRuntime {
         this.imageModelProvider =
             this.character.imageModelProvider ?? this.modelProvider;
 
-        elizaLogger.info(
-            `Selected model provider: ${this.modelProvider}`
-        );
+        elizaLogger.info(`Selected model provider: ${this.modelProvider}`);
 
         elizaLogger.info(
             `Selected image model provider: ${this.imageModelProvider}`
@@ -470,7 +476,9 @@ export class AgentRuntime implements IAgentRuntime {
             this.character.knowledge.length > 0
         ) {
             elizaLogger.info(
-                `[RAG Check] RAG Knowledge enabled: ${this.character.settings.ragKnowledge ? true : false}`
+                `[RAG Check] RAG Knowledge enabled: ${
+                    this.character.settings.ragKnowledge ? true : false
+                }`
             );
             elizaLogger.info(
                 `[RAG Check] Knowledge items:`,
@@ -485,18 +493,25 @@ export class AgentRuntime implements IAgentRuntime {
                             if (typeof item === "object") {
                                 if (isDirectoryItem(item)) {
                                     elizaLogger.debug(
-                                        `[RAG Filter] Found directory item: ${JSON.stringify(item)}`
+                                        `[RAG Filter] Found directory item: ${JSON.stringify(
+                                            item
+                                        )}`
                                     );
                                     acc[0].push(item);
                                 } else if ("path" in item) {
                                     elizaLogger.debug(
-                                        `[RAG Filter] Found path item: ${JSON.stringify(item)}`
+                                        `[RAG Filter] Found path item: ${JSON.stringify(
+                                            item
+                                        )}`
                                     );
                                     acc[1].push(item);
                                 }
                             } else if (typeof item === "string") {
                                 elizaLogger.debug(
-                                    `[RAG Filter] Found string item: ${item.slice(0, 100)}...`
+                                    `[RAG Filter] Found string item: ${item.slice(
+                                        0,
+                                        100
+                                    )}...`
                                 );
                                 acc[2].push(item);
                             }
@@ -505,7 +520,7 @@ export class AgentRuntime implements IAgentRuntime {
                         [[], [], []] as [
                             Array<{ directory: string; shared?: boolean }>,
                             Array<{ path: string; shared?: boolean }>,
-                            Array<string>,
+                            Array<string>
                         ]
                     );
 
@@ -520,7 +535,9 @@ export class AgentRuntime implements IAgentRuntime {
                     );
                     for (const dir of directoryKnowledge) {
                         elizaLogger.info(
-                            `  - Directory: ${dir.directory} (shared: ${!!dir.shared})`
+                            `  - Directory: ${
+                                dir.directory
+                            } (shared: ${!!dir.shared})`
                         );
                         await this.processCharacterRAGDirectory(dir);
                     }
@@ -589,8 +606,9 @@ export class AgentRuntime implements IAgentRuntime {
     private async processCharacterKnowledge(items: string[]) {
         for (const item of items) {
             const knowledgeId = stringToUuid(item);
-            const existingDocument =
-                await this.documentsManager.getMemoryById(knowledgeId);
+            const existingDocument = await this.documentsManager.getMemoryById(
+                knowledgeId
+            );
             if (existingDocument) {
                 continue;
             }
@@ -822,7 +840,9 @@ export class AgentRuntime implements IAgentRuntime {
                             const relativePath = join(sanitizedDir, file);
 
                             elizaLogger.debug(
-                                `[RAG Directory] Processing file ${i + 1}/${files.length}:`,
+                                `[RAG Directory] Processing file ${i + 1}/${
+                                    files.length
+                                }:`,
                                 {
                                     file,
                                     relativePath,
@@ -852,7 +872,10 @@ export class AgentRuntime implements IAgentRuntime {
                 );
 
                 elizaLogger.debug(
-                    `[RAG Directory] Completed batch ${Math.min(i + BATCH_SIZE, files.length)}/${files.length} files`
+                    `[RAG Directory] Completed batch ${Math.min(
+                        i + BATCH_SIZE,
+                        files.length
+                    )}/${files.length} files`
                 );
             }
 
@@ -1121,8 +1144,9 @@ export class AgentRuntime implements IAgentRuntime {
     }
 
     async ensureParticipantInRoom(userId: UUID, roomId: UUID) {
-        const participants =
-            await this.databaseAdapter.getParticipantsForRoom(roomId);
+        const participants = await this.databaseAdapter.getParticipantsForRoom(
+            roomId
+        );
         if (!participants.includes(userId)) {
             await this.databaseAdapter.addParticipant(userId, roomId);
             if (userId === this.agentId) {
@@ -1197,7 +1221,7 @@ export class AgentRuntime implements IAgentRuntime {
         const [actorsData, recentMessagesData, goalsData]: [
             Actor[],
             Memory[],
-            Goal[],
+            Goal[]
         ] = await Promise.all([
             getActorDetails({ runtime: this, roomId }),
             this.messageManager.getMemories({
@@ -1254,20 +1278,17 @@ export class AgentRuntime implements IAgentRuntime {
                 const oneHourBeforeLastMessage =
                     lastMessageTime - 60 * 60 * 1000; // 1 hour before last message
 
-                allAttachments = recentMessagesData
-                    .reverse()
-                    .flatMap((msg) => {
-                        const msgTime = msg.createdAt ?? Date.now();
-                        const isWithinTime =
-                            msgTime >= oneHourBeforeLastMessage;
-                        const attachments = msg.content.attachments || [];
-                        if (!isWithinTime) {
-                            attachments.forEach((attachment) => {
-                                attachment.text = "[Hidden]";
-                            });
-                        }
-                        return attachments;
-                    });
+                allAttachments = recentMessagesData.reverse().flatMap((msg) => {
+                    const msgTime = msg.createdAt ?? Date.now();
+                    const isWithinTime = msgTime >= oneHourBeforeLastMessage;
+                    const attachments = msg.content.attachments || [];
+                    if (!isWithinTime) {
+                        attachments.forEach((attachment) => {
+                            attachment.text = "[Hidden]";
+                        });
+                    }
+                    return attachments;
+                });
             }
         }
 
@@ -1375,8 +1396,9 @@ Text: ${attachment.text}
             return formattedInteractions.join("\n");
         };
 
-        const formattedMessageInteractions =
-            await getRecentMessageInteractions(recentInteractions);
+        const formattedMessageInteractions = await getRecentMessageInteractions(
+            recentInteractions
+        );
 
         const getRecentPostInteractions = async (
             recentInteractionsData: Memory[],

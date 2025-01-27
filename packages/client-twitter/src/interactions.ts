@@ -19,11 +19,15 @@ import {
 } from "@elizaos/core";
 import type { ClientBase } from "./base";
 import { buildConversationThread, sendTweet, wait } from "./utils.ts";
+import { agentKnowledgeBase } from "./knowledgebase";
 
 export const twitterMessageHandlerTemplate =
     `
 # Areas of Expertise
 {{knowledge}}
+
+# Agent Knowledge Context
+{{agentKnowledge}}
 
 # About {{agentName}} (@{{twitterUserName}}):
 {{bio}}
@@ -54,7 +58,7 @@ Here is the descriptions of images in the Current post.
 Thread of Tweets You Are Replying To:
 {{formattedConversation}}
 
-# INSTRUCTIONS: Generate a post in the voice, style and perspective of {{agentName}} (@{{twitterUserName}}). You MUST include an action if the current post text includes a prompt that is similar to one of the available actions mentioned here:
+# INSTRUCTIONS: Generate a post in the voice, style and perspective of {{agentName}} (@{{twitterUserName}}). Incorporate both agent knowledge and real-time context naturally in the response. You MUST include an action if the current post text includes a prompt that is similar to one of the available actions mentioned here:
 {{actionNames}}
 {{actions}}
 
@@ -676,56 +680,39 @@ export class TwitterInteractionClient {
     }
 }
 
-export async function handleTwitterInteraction(
-    runtime: IAgentRuntime,
-    message: Memory,
-    state: State,
-    callback: HandlerCallback
-): Promise<void> {
-    try {
-        // Check if message needs real-time data
-        if (needsRealTimeData(message.content.text)) {
-            // Use perplexityReply action from bootstrap plugin
-            const perplexityAction = runtime.actions.find(
-                (a) =>
-                    a.name === "PERPLEXITY_REPLY" ||
-                    a.similes?.includes("PERPLEXITY_REPLY")
-            );
+function getRelevantKnowledge(message: string): string {
+    const lowerMessage = message.toLowerCase();
+    let relevantInfo: string[] = [];
 
-            if (perplexityAction) {
-                const success = await perplexityAction.handler(
-                    runtime,
-                    message,
-                    state,
-                    {},
-                    callback
-                );
-
-                if (success) return;
-            }
-        }
-
-        // Fallback to regular Twitter interaction if needed
-        const context = composeContext({
-            state,
-            template: twitterMessageHandlerTemplate,
-        });
-
-        const response = await generateMessageResponse({
-            runtime,
-            context,
-            modelClass: ModelClass.LARGE,
-        });
-
-        await callback({
-            text: response.text,
-            inReplyTo: message.id,
-            action: "TWITTER_REPLY",
-        });
-    } catch (error) {
-        elizaLogger.error("Error handling Twitter interaction:", error);
-        throw error;
+    // Match message content with knowledge areas
+    if (lowerMessage.includes("defi") || lowerMessage.includes("protocol")) {
+        relevantInfo.push(agentKnowledgeBase.expertise.opinions.defi);
+        relevantInfo.push(
+            ...agentKnowledgeBase.expertise.technical_knowledge.filter((k) =>
+                k.toLowerCase().includes("defi")
+            )
+        );
     }
+
+    if (lowerMessage.includes("market") || lowerMessage.includes("price")) {
+        relevantInfo.push(agentKnowledgeBase.expertise.opinions.market_cycles);
+        relevantInfo.push(
+            ...agentKnowledgeBase.expertise.primary_domains.filter((d) =>
+                d.toLowerCase().includes("market")
+            )
+        );
+    }
+
+    // Add personality traits that match the context
+    relevantInfo.push(
+        ...agentKnowledgeBase.core_traits.personality.filter((trait) =>
+            lowerMessage
+                .split(" ")
+                .some((word) => trait.toLowerCase().includes(word))
+        )
+    );
+
+    return relevantInfo.join(". ");
 }
 
 function needsRealTimeData(text: string): boolean {
@@ -746,5 +733,80 @@ function needsRealTimeData(text: string): boolean {
         "statistics",
     ];
 
-    return triggers.some((trigger) => text.toLowerCase().includes(trigger));
+    const lowerText = text.toLowerCase();
+    return triggers.some((trigger) =>
+        lowerText.includes(trigger.toLowerCase())
+    );
+}
+
+export async function handleTwitterInteraction(
+    runtime: IAgentRuntime,
+    message: Memory,
+    state: State,
+    callback: HandlerCallback
+): Promise<void> {
+    try {
+        // Check if message needs real-time data
+        if (needsRealTimeData(message.content.text)) {
+            elizaLogger.info(
+                "Real-time data request detected:",
+                message.content.text
+            );
+
+            // Use perplexityReply action from bootstrap plugin
+            const perplexityAction = runtime.actions.find(
+                (a) =>
+                    a.name === "PERPLEXITY_REPLY" ||
+                    a.similes?.includes("PERPLEXITY_REPLY")
+            );
+
+            if (perplexityAction) {
+                elizaLogger.info(
+                    "Found perplexityReply action, attempting to handle"
+                );
+                const success = await perplexityAction.handler(
+                    runtime,
+                    message,
+                    state,
+                    {},
+                    callback
+                );
+
+                if (success) {
+                    elizaLogger.info(
+                        "Successfully handled with perplexityReply"
+                    );
+                    return;
+                }
+                elizaLogger.warn(
+                    "perplexityReply handler failed, falling back to regular interaction"
+                );
+            } else {
+                elizaLogger.warn(
+                    "perplexityReply action not found in runtime actions"
+                );
+            }
+        }
+
+        // Fallback to regular Twitter interaction
+        const context = composeContext({
+            state,
+            template: twitterMessageHandlerTemplate,
+        });
+
+        const response = await generateMessageResponse({
+            runtime,
+            context,
+            modelClass: ModelClass.LARGE,
+        });
+
+        await callback({
+            text: response.text,
+            inReplyTo: message.id,
+            action: "TWITTER_REPLY",
+        });
+    } catch (error) {
+        elizaLogger.error("Error handling Twitter interaction:", error);
+        throw error;
+    }
 }

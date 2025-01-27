@@ -10,6 +10,7 @@ import {
     generateMessageResponse,
     messageCompletionFooter,
 } from "@elizaos/core";
+import { agentKnowledgeBase } from "@elizaos/client-twitter/src/knowledgebase";
 
 const PERPLEXITY_API_URL = "https://api.perplexity.ai/chat/completions";
 
@@ -55,14 +56,62 @@ Thread of Tweets You Are Replying To:
 Here is the current post text again. Remember to include an action if the current post text includes a prompt that asks for one of the available actions mentioned above (does not need to be exact)
 {{currentPost}}` + messageCompletionFooter;
 
+async function getPerplexityData(
+    runtime: IAgentRuntime,
+    message: Memory
+): Promise<string> {
+    const apiKey = runtime.getSetting("PERPLEXITY_API_KEY");
+    if (!apiKey) {
+        throw new Error("Perplexity API key not found in runtime settings");
+    }
+
+    elizaLogger.info(
+        "Fetching perplexity data for message:",
+        message.content.text
+    );
+
+    const response = await fetch(PERPLEXITY_API_URL, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            modelClass: ModelClass.LARGE,
+            messages: [
+                {
+                    role: "user",
+                    content: `Get real-time information about: ${message.content.text}`,
+                },
+            ],
+        }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        elizaLogger.error("Perplexity API error:", error);
+        throw new Error(
+            `Perplexity API error: ${error.message || "Unknown error"}`
+        );
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+}
+
 export const perplexityReplyAction: Action = {
     name: "PERPLEXITY_REPLY",
     similes: ["REPLY_WITH_DATA", "ANSWER_WITH_FACTS", "REAL_TIME_REPLY"],
     description:
-        "ONLY use this action when the message necessitates a follow up. Do not use this action when the conversation is finished or the user does not wish to speak (use IGNORE instead). If the last message action was PERPLEXITY_REPLY, and the user has not responded. Use sparingly.",
+        "Use this action to get real-time information when users ask about current events, prices, or other time-sensitive data.",
+
     validate: async (runtime: IAgentRuntime, _message: Memory) => {
         const apiKey = runtime.getSetting("PERPLEXITY_API_KEY");
-        return Boolean(apiKey);
+        if (!apiKey) {
+            elizaLogger.error("Missing PERPLEXITY_API_KEY in runtime settings");
+            return false;
+        }
+        return true;
     },
 
     handler: async (
@@ -73,40 +122,23 @@ export const perplexityReplyAction: Action = {
         callback: HandlerCallback
     ): Promise<boolean> => {
         try {
-            const apiKey = runtime.getSetting("PERPLEXITY_API_KEY");
-            if (!apiKey) {
-                elizaLogger.error(
-                    "Perplexity API key not found in runtime settings"
-                );
-                return false;
-            }
+            elizaLogger.info("Starting perplexity reply handler");
 
-            // Get real-time data from Perplexity
-            const perplexityResponse = await fetch(PERPLEXITY_API_URL, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${apiKey}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    model: "pplx-7b-chat",
-                    messages: [
-                        {
-                            role: "user",
-                            content: message.content.text,
-                        },
-                    ],
-                }),
-            });
+            // Get real-time data
+            const perplexityData = await getPerplexityData(runtime, message);
+            elizaLogger.info("Got perplexity data");
 
-            const data = await perplexityResponse.json();
-            const perplexityData = data.choices[0].message.content;
+            // Get relevant knowledge
+            const relevantKnowledge = agentKnowledgeBase.getRelevant(
+                message.content.text
+            );
 
-            // Use Twitter's context composition with all required fields
+            // Use Twitter's context composition
             const context = composeContext({
                 state: {
                     ...state,
                     perplexityData,
+                    agentKnowledge: relevantKnowledge,
                     currentPost: message.content.text,
                     formattedConversation: message.content.thread || "",
                     imageDescriptions: message.content.imageDescriptions || "",
@@ -118,26 +150,23 @@ export const perplexityReplyAction: Action = {
                 template: perplexityTwitterTemplate,
             });
 
-            // Generate response using Twitter's formatting
             const response = await generateMessageResponse({
                 runtime,
                 context,
                 modelClass: ModelClass.LARGE,
             });
 
-            // Use Twitter's callback mechanism
             await callback({
                 text: response.text,
                 inReplyTo: message.id,
                 action: "PERPLEXITY_REPLY",
                 source: "twitter",
-                thread: message.content.thread,
-                imageDescriptions: message.content.imageDescriptions,
             });
 
+            elizaLogger.info("Successfully completed perplexity reply");
             return true;
         } catch (error) {
-            elizaLogger.error("Perplexity API error:", error);
+            elizaLogger.error("Perplexity handler error:", error);
             return false;
         }
     },

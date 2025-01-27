@@ -5,6 +5,68 @@ import { stringToUuid } from "./uuid.ts";
 import { splitChunks } from "./generation.ts";
 import elizaLogger from "./logger.ts";
 
+export interface KnowledgeBase {
+    getRelevant(message: string): string;
+    searchKnowledge(query: string): Promise<KnowledgeItem[]>;
+}
+
+export interface AgentKnowledge {
+    core_traits: {
+        personality: string[];
+        speaking_style: string[];
+        interests: string[];
+    };
+    background: {
+        origin: string;
+        experiences: string[];
+        relationships: string[];
+    };
+    expertise: {
+        primary_domains: string[];
+        technical_knowledge: string[];
+        opinions: Record<string, string>;
+    };
+    preferences: {
+        likes: string[];
+        dislikes: string[];
+        communication_style: string[];
+    };
+}
+
+export class CoreKnowledgeManager implements KnowledgeBase {
+    constructor(private runtime: AgentRuntime) {}
+
+    async searchKnowledge(query: string): Promise<KnowledgeItem[]> {
+        const processed = this.preprocess(query);
+        if (!processed) return [];
+
+        const embedding = await embed(this.runtime, processed);
+        const memories =
+            await this.runtime.knowledgeManager.searchMemoriesByEmbedding(
+                embedding,
+                {
+                    roomId: this.runtime.agentId,
+                    count: 5,
+                    match_threshold: 0.1,
+                }
+            );
+
+        return memories.map((memory) => ({
+            id: memory.id as UUID,
+            content: memory.content,
+        }));
+    }
+
+    getRelevant(message: string): string {
+        // Implement basic knowledge retrieval
+        return "";
+    }
+
+    private preprocess(text: string): string {
+        return text?.trim() || "";
+    }
+}
+
 async function get(
     runtime: AgentRuntime,
     message: Memory
@@ -60,8 +122,11 @@ async function get(
     );
 
     return knowledgeDocuments
-        .filter((memory) => memory !== null)
-        .map((memory) => ({ id: memory.id, content: memory.content }));
+        .filter((memory): memory is Memory => memory !== null)
+        .map((memory) => ({
+            id: memory.id as UUID,
+            content: memory.content,
+        }));
 }
 
 async function set(
