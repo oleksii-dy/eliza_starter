@@ -63,3 +63,4 @@ eliza.manifest.sgx
 eliza.sig
 
 docs/
+**/*.ipynb
