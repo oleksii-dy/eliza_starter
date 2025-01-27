@@ -40,29 +40,8 @@ COPY . .
 # Install dependencies
 RUN pnpm install --no-frozen-lockfile
 
-# Build core package first
-RUN cd packages/core && pnpm build
-
-# Build adapter-pglite specifically
-RUN cd packages/adapter-pglite && pnpm build
-
-# Build bootstrap plugin with debug output
-RUN cd packages/plugin-bootstrap && \
-    echo "=== Bootstrap Plugin Files ===" && \
-    ls -la && \
-    echo "=== Bootstrap Plugin package.json ===" && \
-    cat package.json && \
-    echo "=== Building Bootstrap Plugin ===" && \
-    NODE_DEBUG=* pnpm build || (echo "=== Build Error ===" && cat $(find . -name "*.log") && exit 1)
-
-# Build all packages with increased verbosity
-RUN pnpm run build --filter=!eliza-docs,!@elizaos/plugin-bootstrap --verbosity=2
-
-# Verify built files exist
-RUN ls -la packages/adapter-pglite/dist/index.js || echo "adapter-pglite build missing!"
-
-# Prune dependencies for production
-RUN pnpm prune --prod
+# Build the project
+RUN pnpm run build && pnpm prune --prod
 
 # Final runtime image
 FROM node:23.3.0-slim
@@ -95,6 +74,7 @@ COPY --from=builder /app/characters ./characters
 
 # Expose necessary ports
 EXPOSE $PORT
+# Set the command to run the application
 
 # Command to start the application
 CMD ["sh", "-c", "pnpm start & pnpm start:client"]
