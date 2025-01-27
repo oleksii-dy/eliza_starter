@@ -56,7 +56,6 @@ import {
 import { stringToUuid } from "./uuid.ts";
 import { glob } from "glob";
 import { existsSync } from "fs";
-import { embed } from "./embedding";
 /**
  * Represents the runtime environment for an agent, handling message processing,
  * action registration, and interaction with external services like OpenAI and Supabase.
@@ -69,11 +68,6 @@ function isDirectoryItem(item: any): item is DirectoryItem {
         "directory" in item &&
         typeof item.directory === "string"
     );
-}
-
-export interface AgentRuntime {
-    // ... existing properties
-    embed: (text: string, agentId?: UUID) => Promise<number[]>;
 }
 
 export class AgentRuntime implements IAgentRuntime {
@@ -179,10 +173,6 @@ export class AgentRuntime implements IAgentRuntime {
     clients: Record<string, any>;
 
     verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
-
-    embed = async (text: string, agentId?: UUID) => {
-        return embed(this, text);
-    };
 
     registerMemoryManager(manager: IMemoryManager): void {
         if (!manager.tableName) {
