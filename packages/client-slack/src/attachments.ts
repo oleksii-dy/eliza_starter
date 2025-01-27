@@ -4,22 +4,22 @@ import {
     parseJSONObjectFromText,
 } from "@elizaos/core";
 import {
-    IAgentRuntime,
-    IImageDescriptionService,
-    IPdfService,
-    ITranscriptionService,
-    IVideoService,
-    Media,
+    type IAgentRuntime,
+    type IImageDescriptionService,
+    type IPdfService,
+    type ITranscriptionService,
+    type IVideoService,
+    type Media,
     ModelClass,
     ServiceType,
 } from "@elizaos/core";
-import { WebClient } from "@slack/web-api";
+import type { WebClient } from "@slack/web-api";
 import ffmpeg from "fluent-ffmpeg";
 import fs from "fs";
 
 async function generateSummary(
     runtime: IAgentRuntime,
-    text: string
+    text: string,
 ): Promise<{ title: string; description: string }> {
     text = await trimTokens(text, 100000, runtime);
 
@@ -45,7 +45,7 @@ async function generateSummary(
 
     const parsedResponse = parseJSONObjectFromText(response);
 
-    if (parsedResponse) {
+    if (parsedResponse.title && parsedResponse.summary) {
         return {
             title: parsedResponse.title,
             description: parsedResponse.summary,
@@ -99,7 +99,7 @@ export class AttachmentManager {
 
         try {
             const videoService = this.runtime.getService<IVideoService>(
-                ServiceType.VIDEO
+                ServiceType.VIDEO,
             );
 
             if (file.mimetype.startsWith("application/pdf")) {
@@ -160,7 +160,7 @@ export class AttachmentManager {
 
             const transcriptionService =
                 this.runtime.getService<ITranscriptionService>(
-                    ServiceType.TRANSCRIPTION
+                    ServiceType.TRANSCRIPTION,
                 );
             if (!transcriptionService) {
                 throw new Error("Transcription service not found");
@@ -174,7 +174,7 @@ export class AttachmentManager {
 
             const { title, description } = await generateSummary(
                 this.runtime,
-                transcription
+                transcription,
             );
 
             return {
@@ -191,7 +191,7 @@ export class AttachmentManager {
             const errorMessage =
                 error instanceof Error ? error.message : "Unknown error";
             console.error(
-                `Error processing audio/video attachment: ${errorMessage}`
+                `Error processing audio/video attachment: ${errorMessage}`,
             );
             return {
                 id: file.id,
@@ -236,7 +236,7 @@ export class AttachmentManager {
         try {
             const pdfBuffer = await this.fetchFileContent(file);
             const pdfService = this.runtime.getService<IPdfService>(
-                ServiceType.PDF
+                ServiceType.PDF,
             );
 
             if (!pdfService) {
@@ -246,7 +246,7 @@ export class AttachmentManager {
             const text = await pdfService.convertPdfToText(pdfBuffer);
             const { title, description } = await generateSummary(
                 this.runtime,
-                text
+                text,
             );
 
             return {
@@ -279,7 +279,7 @@ export class AttachmentManager {
             const text = textBuffer.toString("utf-8");
             const { title, description } = await generateSummary(
                 this.runtime,
-                text
+                text,
             );
 
             return {
@@ -302,7 +302,7 @@ export class AttachmentManager {
         try {
             const imageService =
                 this.runtime.getService<IImageDescriptionService>(
-                    ServiceType.IMAGE_DESCRIPTION
+                    ServiceType.IMAGE_DESCRIPTION,
                 );
             if (!imageService) {
                 throw new Error("Image description service not found");
@@ -336,7 +336,7 @@ export class AttachmentManager {
     private async processVideoAttachment(file: SlackFile): Promise<Media> {
         try {
             const videoService = this.runtime.getService<IVideoService>(
-                ServiceType.VIDEO
+                ServiceType.VIDEO,
             );
             if (!videoService) {
                 throw new Error("Video service not found");
