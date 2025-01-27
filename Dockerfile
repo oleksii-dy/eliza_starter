@@ -46,8 +46,17 @@ RUN cd packages/core && pnpm build
 # Build adapter-pglite specifically
 RUN cd packages/adapter-pglite && pnpm build
 
+# Build bootstrap plugin with debug output
+RUN cd packages/plugin-bootstrap && \
+    echo "=== Bootstrap Plugin Files ===" && \
+    ls -la && \
+    echo "=== Bootstrap Plugin package.json ===" && \
+    cat package.json && \
+    echo "=== Building Bootstrap Plugin ===" && \
+    NODE_DEBUG=* pnpm build || (echo "=== Build Error ===" && cat $(find . -name "*.log") && exit 1)
+
 # Build all packages with increased verbosity
-RUN pnpm run build --filter=!eliza-docs --verbosity=2
+RUN pnpm run build --filter=!eliza-docs,!@elizaos/plugin-bootstrap --verbosity=2
 
 # Verify built files exist
 RUN ls -la packages/adapter-pglite/dist/index.js || echo "adapter-pglite build missing!"

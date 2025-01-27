@@ -22,8 +22,13 @@
         "@elizaos/core": "workspace:*",
         "tsup": "8.3.5"
     },
+    "devDependencies": {
+        "typescript": "5.6.3",
+        "tsup": "8.3.5",
+        "@types/node": "^20.0.0"
+    },
     "scripts": {
-        "build": "tsup --format esm --dts",
+        "build": "tsup src/index.ts --format esm --dts",
         "dev": "tsup --format esm --dts --watch"
     },
     "peerDependencies": {
