@@ -123,7 +123,7 @@ The memory system uses vector embeddings for semantic search:
 import { embed } from "@elizaos/core";
 
 async function storeMemory(runtime: IAgentRuntime, content: string) {
-    const embedding = await embed(content, message.content.text);
+    const embedding = await embed(runtime, message.content.text);
 
     await runtime.databaseAdapter.createMemory({
         type: "message",
