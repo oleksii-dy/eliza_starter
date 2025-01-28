@@ -1,4 +1,4 @@
-import { TruthPostClient } from './post';
+import { PostClient } from './post';
 import { TruthSearchClient } from './search';
 import { TruthInteractionClient } from './interactions';
 import { IAgentRuntime, Client, elizaLogger } from '@elizaos/core';
@@ -7,13 +7,13 @@ import { ClientBase } from './base';
 
 class TruthManager {
     client: ClientBase;
-    post: TruthPostClient;
+    post: PostClient;
     search: TruthSearchClient;
     interaction: TruthInteractionClient;
 
     constructor(runtime: IAgentRuntime, enableSearch: boolean) {
         this.client = new ClientBase(runtime);
-        this.post = new TruthPostClient(this.client, runtime);
+        this.post = new PostClient(runtime);
 
         if (enableSearch) {
             elizaLogger.warn('Truth Social client running in a mode that:');

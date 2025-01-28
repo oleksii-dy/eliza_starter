@@ -9,8 +9,8 @@ import {
   stringToUuid,
   Content,
   Memory,
-  generateTruthActions,
-  postActionResponseFooter
+  postActionResponseFooter,
+  truncateToCompleteSentence
 } from "@elizaos/core";
 
 const truthActionTemplate = `
@@ -257,10 +257,10 @@ export class PostClient extends TruthSocialApi {
       .trim();
 
     // Truncate to character limit if needed
-    if (cleaned.length > 280) {
-      cleaned = cleaned.slice(0, 277) + '...';
+    const maxLength = Number(this.runtime.getSetting("MAX_TRUTH_LENGTH")) || 280;
+    if (cleaned.length > maxLength) {
+      cleaned = truncateToCompleteSentence(cleaned, maxLength);
     }
-
     return cleaned;
   }
 
@@ -342,7 +342,7 @@ export class PostClient extends TruthSocialApi {
   }
 
   async processPostActions(post: TruthStatus) {
-    const actions = await generateTruthActions({
+    const actions = await this.createPost({
       runtime: this.runtime,
       context: composeContext({ 
         state: await this.runtime.composeState(/* ... */), 
@@ -354,5 +354,28 @@ export class PostClient extends TruthSocialApi {
     // Store the interaction as a memory
     await this.storePostMemory(post, actions.join(','));
     return actions;
+  }
+
+  // Add media handling and content validation
+  private async handlePostContent(content: string, mediaData?: MediaData[]): Promise<TruthStatus> {
+    const cleanedContent = this.cleanPostContent(content);
+    
+    try {
+      if (mediaData && mediaData.length > 0) {
+        // Handle media attachments
+        return await this.createPost(cleanedContent, {
+          media_ids: mediaData.map(m => m.id),
+          visibility: 'public'
+        });
+      } else {
+        // Text-only post
+        return await this.createPost(cleanedContent, {
+          visibility: 'public'
+        });
+      }
+    } catch (error) {
+      elizaLogger.error("Error posting content:", error);
+      throw error;
+    }
   }
 }
