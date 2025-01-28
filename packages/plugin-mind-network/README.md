@@ -15,7 +15,7 @@ The [Mind Network](https://www.mindnetwork.xyz/) plugin empowers users to partic
 
 ## Installation
 
-Depedency for the plugin:
+Dependency for the plugin:
 - [mind-randgen-sdk](https://github.com/mind-network/mind-sdk-randgen-ts)
 - [mind-sdk-hubs](https://github.com/mind-network/mind-sdk-hubs-ts)
 - [elizaos](https://github.com/elizaOS/eliza)
