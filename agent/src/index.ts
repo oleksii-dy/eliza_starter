@@ -19,6 +19,7 @@ import { DirectClient } from "@elizaos/client-direct";
 import { agentKitPlugin } from "@elizaos/plugin-agentkit";
 
 import { PrimusAdapter } from "@elizaos/plugin-primus";
+import { HashNetworkAdapter } from "@elizaos/plugin-hashnetwork";
 import { lightningPlugin } from "@elizaos/plugin-lightning";
 import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
 
@@ -925,6 +926,22 @@ export async function createAgent(
             token,
         });
         elizaLogger.log("Verifiable inference primus adapter initialized");
+    }
+
+    if (
+        process.env.HASH_NETWORK_PRIVATE_KEY &&
+        process.env.HASH_NETWORK_PROOF_CONTRACT_ADDRESS &&
+        process.env.VERIFIABLE_INFERENCE_ENABLED === "true"
+    ) {
+        verifiableInferenceAdapter = new HashNetworkAdapter({
+            privateKey: process.env.HASH_NETWORK_PRIVATE_KEY,
+            token,
+            contractAddress: process.env.HASH_NETWORK_PROOF_CONTRACT_ADDRESS,
+            modelProvider: character.modelProvider,
+        });
+        elizaLogger.log(
+            "Verifiable inference Hash Network adapter initialized",
+        );
     }
 
     return new AgentRuntime({
