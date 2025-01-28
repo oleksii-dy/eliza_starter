@@ -306,23 +306,20 @@ Generate only the tweet text, no commentary or markdown.`;
         return tx;
     }
 
-    private async calculateOverallPNL(ticker: string, amountReceived: number, initialInvestment: number): Promise<number> {
+    private async calculateOverallPNL(wallet: CoinbaseWallet, ticker: string, initialInvestment: number): Promise<number> {
         const token = new Token(1, ticker, 18); // Assuming the token has 18 decimals
         const provider = new JsonRpcProvider(process.env.ETHEREUM_RPC_URL);
-        const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-
-        const tokenContract = new ethers.Contract(token.address, [
-            'function balanceOf(address owner) view returns (uint256)',
-            'function decimals() view returns (uint8)'
-        ], wallet);
-
-        const balance = await tokenContract.balanceOf(wallet.address);
-        const decimals = await tokenContract.decimals();
+        const balance = Number(await wallet.wallet.getBalance(token.address));
+        const decimals = token.decimals;
         const currentPrice = await Fetcher.fetchTokenData(1, token.address, provider);
-
         const currentValue = balance / (10 ** decimals) * currentPrice;
         const pnl = (currentValue - initialInvestment) / initialInvestment * 100;
-
+        elizaLogger.info("currentValue", currentValue);
+        elizaLogger.info("pnl", pnl);
+        elizaLogger.info("initialInvestment", initialInvestment);
+        elizaLogger.info("balance", balance);
+        elizaLogger.info("decimals", decimals);
+        elizaLogger.info("currentPrice", currentPrice);
         return pnl;
     }
 
