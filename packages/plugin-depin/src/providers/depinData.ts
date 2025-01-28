@@ -118,6 +118,7 @@ export class DePINScanProvider {
             "project_name",
             "slug",
             "token",
+            "description",
             "layer_1",
             "categories",
             "market_cap",
@@ -136,6 +137,7 @@ export class DePINScanProvider {
                 project_name,
                 slug,
                 token,
+                description,
                 layer_1,
                 categories,
                 market_cap,
@@ -154,6 +156,7 @@ export class DePINScanProvider {
                 project_name,
                 slug,
                 token,
+                description,
                 layer_1 ? layer_1.join(", ") : "", // Flatten array for compact representation
                 categories ? categories.join(", ") : "", // Flatten array for compact representation
                 this.abbreviateNumber(market_cap?.toString()),
@@ -200,10 +203,19 @@ export const depinDataProvider: Provider = {
         try {
             const depinscan = new DePINScanProvider(runtime.cacheManager);
             const depinscanMetrics = await depinscan.getDailyMetrics();
+            const depinscanProjects = await depinscan.getProjects();
+            const randomProject = [
+                ...depinscanProjects[0],
+                ...depinscanProjects[
+                    Math.floor(Math.random() * depinscanProjects.length)
+                ],
+            ];
 
             return `
                 #### **DePINScan Daily Metrics**
-                ${depinscanMetrics}
+                ${JSON.stringify(depinscanMetrics)}
+                #### **Random DePINScan Project**
+                ${randomProject}
             `;
         } catch (error) {
             elizaLogger.error("Error in DePIN data provider:", error);

@@ -428,7 +428,7 @@ export class TwitterInteractionClient {
         const shouldRespond = await generateShouldRespond({
             runtime: this.runtime,
             context: shouldRespondContext,
-            modelClass: ModelClass.MEDIUM,
+            modelClass: ModelClass.SMALL,
         });
 
         // Promise<"RESPOND" | "IGNORE" | "STOP" | null> {
@@ -453,14 +453,9 @@ export class TwitterInteractionClient {
             modelClass: ModelClass.LARGE,
         });
 
-        const removeQuotes = (str: string) =>
-            str.replace(/^['"](.*)['"]$/, "$1");
-
         const stringId = stringToUuid(tweet.id + "-" + this.runtime.agentId);
 
         response.inReplyTo = stringId;
-
-        response.text = removeQuotes(response.text);
 
         if (response.text) {
             if (this.isDryRun) {
