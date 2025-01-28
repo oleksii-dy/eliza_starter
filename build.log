@@ -1,0 +1,9 @@
+
+> @elizaos/plugin-bootstrap@0.1.9-alpha.1 build /Users/dekker/Sites/nova_eliza_myth/packages/plugin-bootstrap
+> cross-env NODE_DEBUG='module,child_process,net,stream,timer' DEBUG='tsup:*,pnpm:*' TSUP_LOG_LEVEL=verbose tsup src/index.ts --format cjs,esm --dts --clean --onSuccess 'echo Build completed successfully' --onError 'echo Build failed with error code $?' "--verbose"
+
+sh: cross-env: command not found
+/Users/dekker/Sites/nova_eliza_myth/packages/plugin-bootstrap:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @elizaos/plugin-bootstrap@0.1.9-alpha.1 build: `cross-env NODE_DEBUG='module,child_process,net,stream,timer' DEBUG='tsup:*,pnpm:*' TSUP_LOG_LEVEL=verbose tsup src/index.ts --format cjs,esm --dts --clean --onSuccess 'echo Build completed successfully' --onError 'echo Build failed with error code $?' "--verbose"`
+spawn ENOENT
+ WARN   Local package.json exists, but node_modules missing, did you mean to install?

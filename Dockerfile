@@ -1,12 +1,15 @@
 # Use a specific Node.js version for better reproducibility
 FROM node:23.3.0-slim AS builder
 
-# Set debug environment variables
+# Enhanced debug configuration
 ENV LOG_LEVEL=debug \
-    NODE_DEBUG=* \
-    DEBUG=* \
+    NODE_DEBUG="module,child_process,net,stream,timer" \
+    DEBUG="*,-follow-redirects" \
     TSUP_LOG_LEVEL=verbose \
-    NODE_OPTIONS="--max-old-space-size=4096 --no-warnings"
+    NODE_OPTIONS="--trace-warnings --trace-uncaught --trace-exit --trace-events-enabled" \
+    DEBUG_COLORS=1 \
+    DEBUG_DEPTH=10 \
+    DEBUG_SHOW_HIDDEN=1
 
 # Clear npm cache and remove existing node_modules
 RUN npm cache clean --force && \
@@ -58,6 +61,7 @@ COPY . .
 RUN pnpm install --no-frozen-lockfile
 
 # Build the project
+RUN pnpm -F @elizaos/plugin-bootstrap build --verbose 2>&1 | tee build.log
 RUN pnpm run build && pnpm prune --prod
 
 # Final runtime image
