@@ -99,7 +99,7 @@ export const topNftInfos: Action = {
                     action:"TOP_NFT",
                         result: {
                         type: "top_nft",
-                        data:responseData,
+                        data:responseData.content,
                     },
                     action_hint:{
                         text: "Do you need any further assistance? Please let me know!",
