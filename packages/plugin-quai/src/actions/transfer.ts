@@ -8,6 +8,7 @@ import {
     type Action,
     composeContext,
     generateObject,
+    elizaLogger,
 } from "@elizaos/core";
 import {
     getQuaiAccount,
@@ -58,7 +59,7 @@ export default {
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
     ): Promise<boolean> => {
-        console.log("Starting TRANSFER_TOKEN handler...");
+        elizaLogger.log("Starting TRANSFER_TOKEN handler...");
 
         // Initialize or update state
         const currentState = !state 
@@ -78,11 +79,11 @@ export default {
             modelClass: ModelClass.MEDIUM,
         });
 
-        console.log("Transfer content:", content);
+        elizaLogger.debug("Transfer content:", content);
 
         // Validate transfer content
         if (!isTransferContent(content)) {
-            console.error("Invalid content for TRANSFER_TOKEN action.");
+            elizaLogger.error("Invalid content for TRANSFER_TOKEN action.");
             if (callback) {
                 callback({
                     text: "Not enough information to transfer tokens. Please respond with token address, recipient, and amount.",
@@ -105,7 +106,7 @@ export default {
                     from: account.address,
                 };
 
-            console.log(
+            elizaLogger.log(
                 "Transferring",
                 amount,
                 "QUAI",
@@ -115,7 +116,7 @@ export default {
 
             const tx = await account.sendTransaction(txObj);
 
-            console.log(`Transfer completed successfully! tx: ${tx.hash}`);
+            elizaLogger.success(`Transfer completed successfully! tx: ${tx.hash}`);
             if (callback) {
                 callback({
                     text: `Transfer completed successfully! tx: ${tx.hash}`,
@@ -125,7 +126,7 @@ export default {
 
             return true;
         } catch (error) {
-            console.error("Error during token transfer:", error);
+            elizaLogger.error("Error during token transfer:", error);
             if (callback) {
                 callback({
                     text: `Error transferring tokens: ${error.message}`,
