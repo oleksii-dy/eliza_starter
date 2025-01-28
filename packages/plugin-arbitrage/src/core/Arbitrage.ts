@@ -1,16 +1,14 @@
-import * as _ from "lodash";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Contract } from "@ethersproject/contracts";
+import { Provider, TransactionResponse } from "@ethersproject/providers";
 import { Wallet } from "@ethersproject/wallet";
-import { Provider } from "@ethersproject/providers";
 import { FlashbotsBundleProvider } from "@flashbots/ethers-provider-bundle";
+import { DEFAULT_THRESHOLDS, MarketThresholds } from '../config/thresholds';
 import { WETH_ADDRESS } from "./addresses";
 import { EthMarket } from "./EthMarket";
-import { ETHER, bigNumberToDecimal } from "./utils";
-import { EthMarket as EthMarketType, CrossedMarketDetails, MarketsByToken, MarketType, BuyCalls } from "./types";
-import { TransactionResponse } from "@ethersproject/providers";
-import { DEFAULT_THRESHOLDS, MarketThresholds } from '../config/thresholds';
-import { MarketsByToken as ImportedMarketsByToken, CrossedMarketDetails as ImportedCrossedMarketDetails } from "../type";
+import { CrossedMarketDetails, MarketsByToken, MarketType } from "./types";
+import { ETHER } from "./utils";
+import { elizaLogger } from "@elizaos/core";
 
 export interface BundleEntry {
   to: string;
@@ -36,7 +34,7 @@ export class Arbitrage {
     ) {}
 
     async evaluateMarkets(marketsByToken: MarketsByToken): Promise<CrossedMarketDetails[]> {
-        console.log("Starting market evaluation...");
+        elizaLogger.log("Starting market evaluation...");
         const opportunities: CrossedMarketDetails[] = [];
 
         for (const [tokenAddress, markets] of Object.entries(marketsByToken)) {
@@ -128,7 +126,7 @@ export class Arbitrage {
                 try {
                     const transaction = await this.executeArbitrageTrade(market, currentBlock);
                     if (transaction) {
-                        console.log(`Successful arbitrage execution: ${transaction.hash}`);
+                        elizaLogger.log(`Successful arbitrage execution: ${transaction.hash}`);
                         // Wait for confirmation
                         await transaction.wait(1);
                         break;
@@ -323,7 +321,7 @@ export class Arbitrage {
     }
 
     async submitBundleWithAdjustedGasPrice(bundle: BundleEntry[], blockNumber: number, blocksApi: any): Promise<void> {
-        console.log(`Submitting bundle with adjusted gas price for block ${blockNumber}`);
+        elizaLogger.log(`Submitting bundle with adjusted gas price for block ${blockNumber}`);
         
         try {
             // Get current gas prices
@@ -389,7 +387,7 @@ export class Arbitrage {
                 throw new Error(`Bundle submission failed: ${bundleSubmission.error.message}`);
             }
 
-            console.log("Bundle submitted successfully:", {
+            elizaLogger.log("Bundle submitted successfully:", {
                 blockNumber: targetBlockNumber,
                 adjustedGasPrice: adjustedGasPrice.toString(),
                 bundleHash: bundleSubmission.bundleHash
@@ -406,7 +404,7 @@ export class Arbitrage {
         avgGasPrice: BigNumber,
         competingBundleGasPrice: BigNumber
     ): Promise<BigNumber> {
-        console.log("Calculating adjusted gas price", {
+        elizaLogger.log("Calculating adjusted gas price", {
             current: currentGasPrice.toString(),
             average: avgGasPrice.toString(),
             competing: competingBundleGasPrice.toString()
@@ -425,7 +423,7 @@ export class Arbitrage {
         const premium = adjustedGasPrice.mul(10).div(100);
         adjustedGasPrice = adjustedGasPrice.add(premium);
 
-        console.log("Adjusted gas price:", adjustedGasPrice.toString());
+        elizaLogger.log("Adjusted gas price:", adjustedGasPrice.toString());
         return adjustedGasPrice;
     }
 
@@ -435,7 +433,7 @@ export class Arbitrage {
         tokenAddress: string,
         profit: BigNumber
     ): Promise<BigNumber> {
-        console.log("Entering calculateOptimalVolume");
+        elizaLogger.log("Entering calculateOptimalVolume");
 
         // Determine the available liquidity in both markets
         const availableLiquidityBuy = await buyFromMarket.getReserves(tokenAddress);
@@ -484,7 +482,7 @@ export class Arbitrage {
             availableLiquiditySell.toNumber()
         ));
 
-        console.log(`calculateOptimalVolume: optimalVolume = ${optimalVolume}`);
+        elizaLogger.log(`calculateOptimalVolume: optimalVolume = ${optimalVolume}`);
         return optimalVolume;
     }
 }
@@ -492,15 +490,15 @@ export class Arbitrage {
 // Helper functions
 async function checkBundleGas(bundleGas: BigNumber): Promise<boolean> {
     const isValid = bundleGas.gte(42000);
-    console.log(`checkBundleGas: bundleGas = ${bundleGas}, isValid = ${isValid}`);
+    elizaLogger.log(`checkBundleGas: bundleGas = ${bundleGas}, isValid = ${isValid}`);
     return isValid;
 }
 
 export async function monitorCompetingBundlesGasPrices(blocksApi: { getRecentBlocks: () => any; }): Promise<Array<BigNumber>> {
-    console.log("Entering monitorCompetingBundlesGasPrices");
+    elizaLogger.log("Entering monitorCompetingBundlesGasPrices");
     const recentBlocks = await blocksApi.getRecentBlocks();
     const competingBundlesGasPrices = recentBlocks.map((block: { bundleGasPrice: any; }) => block.bundleGasPrice);
-    console.log(`monitorCompetingBundlesGasPrices: competingBundlesGasPrices = ${competingBundlesGasPrices}`);
+    elizaLogger.log(`monitorCompetingBundlesGasPrices: competingBundlesGasPrices = ${competingBundlesGasPrices}`);
     return competingBundlesGasPrices;
 }
 
