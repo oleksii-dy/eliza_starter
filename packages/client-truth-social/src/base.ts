@@ -1,6 +1,6 @@
 import { TruthSocialApi } from './api';
 import { TruthApiConfig, TruthStatus } from './types';
-import { IAgentRuntime, elizaLogger } from '@ai16z/eliza';
+import { IAgentRuntime, elizaLogger } from '@elizaos/core';
 import { RequestQueue } from './utils';
 
 export class ClientBase {

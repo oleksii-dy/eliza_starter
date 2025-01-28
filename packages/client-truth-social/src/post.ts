@@ -1,12 +1,17 @@
 import { TruthSocialApi } from './api';
 import { TruthStatus, CreateStatusOptions } from './types';
-import { elizaLogger } from "@ai16z/eliza";
-import { composeContext, generateText, ModelClass } from "@ai16z/eliza";
-import { IAgentRuntime } from "@ai16z/eliza";
-import { stringToUuid } from "@ai16z/eliza";
-import { Content, Memory } from "@ai16z/eliza";
-import { generateTruthActions } from "@ai16z/eliza";
-import { postActionResponseFooter } from "@ai16z/eliza";
+import {
+  elizaLogger,
+  composeContext,
+  generateText,
+  ModelClass,
+  IAgentRuntime,
+  stringToUuid,
+  Content,
+  Memory,
+  generateTruthActions,
+  postActionResponseFooter
+} from "@elizaos/core";
 
 const truthActionTemplate = `
 # INSTRUCTIONS: Determine actions for {{agentName}} (@{{truthUserName}}) based on:

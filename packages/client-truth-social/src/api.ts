@@ -4,7 +4,7 @@ import {
   TruthApiConfig, TruthUserProfile, TruthStatus, TruthSearchResults,
   RateLimitInfo, TruthAuthResponse, TruthApiError, CreateStatusOptions
 } from './types';
-import { elizaLogger } from "@ai16z/eliza";
+import { elizaLogger } from "@elizaos/core";
 
 const DEFAULT_CONFIG = {
   baseUrl: 'https://truthsocial.com',

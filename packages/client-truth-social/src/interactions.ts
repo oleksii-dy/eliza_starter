@@ -13,7 +13,7 @@ import {
     stringToUuid,
     elizaLogger,
     getEmbeddingZeroVector,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 import { ClientBase } from "./base";
 import { buildConversationThread, sendTruth, wait } from "./utils";
 import { TruthStatus } from "./types";

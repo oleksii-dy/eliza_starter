@@ -1,12 +1,12 @@
 {
-    "name": "@ai16z/client-truth",
-    "version": "0.1.5-alpha.5",
-    "description": "Truth Social client integration for AI16Z agents",
+    "name": "@elizaos/client-truth",
+    "version": "0.1.9-alpha.1",
+    "description": "Truth Social client integration for eliza agents",
     "main": "dist/index.js",
     "type": "module",
     "types": "dist/index.d.ts",
     "dependencies": {
-        "@ai16z/eliza": "workspace:*",
+        "@elizaos/core": "workspace:*",
         "glob": "11.0.0",
         "zod": "3.23.8"
     },

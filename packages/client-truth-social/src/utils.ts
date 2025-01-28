@@ -1,4 +1,4 @@
-import { Content, Memory, stringToUuid, getEmbeddingZeroVector } from "@ai16z/eliza";
+import { Content, Memory, stringToUuid, getEmbeddingZeroVector } from "@elizaos/core";
 import { ClientBase } from "./base";
 import { TruthStatus } from "./types";
 

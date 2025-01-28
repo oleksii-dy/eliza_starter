@@ -1,7 +1,8 @@
-import { composeContext } from "@ai16z/eliza";
-import { generateMessageResponse, generateText } from "@ai16z/eliza";
-import { messageCompletionFooter } from "@ai16z/eliza";
 import {
+    composeContext,
+    generateMessageResponse,
+    generateText,
+    messageCompletionFooter,
     Content,
     HandlerCallback,
     IAgentRuntime,
@@ -9,12 +10,12 @@ import {
     ModelClass,
     ServiceType,
     State,
-} from "@ai16z/eliza";
-import { stringToUuid } from "@ai16z/eliza";
+    stringToUuid,
+    elizaLogger
+} from "@elizaos/core";
 import { ClientBase } from "./base";
 import { buildConversationThread, sendTruth, wait } from "./utils";
 import { TruthStatus, TruthUserProfile } from "./types";
-import { elizaLogger } from "@ai16z/eliza";
 
 const truthSearchTemplate = `
 {{timeline}}

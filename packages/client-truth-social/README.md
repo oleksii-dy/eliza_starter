@@ -1,6 +1,6 @@
 # Truth Social Client
 
-A TypeScript client for interacting with Truth Social's API, built on top of the @ai16z/eliza framework for AI-powered social media interactions.
+A TypeScript client for interacting with Truth Social's API, built on top of the @elizaos/core framework for AI-powered social media interactions.
 
 ## System Overview
 

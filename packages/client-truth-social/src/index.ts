@@ -1,7 +1,7 @@
 import { TruthPostClient } from './post';
 import { TruthSearchClient } from './search';
 import { TruthInteractionClient } from './interactions';
-import { IAgentRuntime, Client, elizaLogger } from '@ai16z/eliza';
+import { IAgentRuntime, Client, elizaLogger } from '@elizaos/core';
 import { validateTruthConfig } from './environment';
 import { ClientBase } from './base';
 

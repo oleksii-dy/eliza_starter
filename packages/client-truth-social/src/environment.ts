@@ -1,4 +1,4 @@
-import { IAgentRuntime } from "@ai16z/eliza";
+import { IAgentRuntime } from "@elizaos/core";
 import { z } from "zod";
 import type { ProcessEnv } from 'node';
 declare const process: { env: ProcessEnv };
