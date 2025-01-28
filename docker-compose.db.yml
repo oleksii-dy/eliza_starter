@@ -22,19 +22,19 @@ services:
         networks:
             - eliza_network
 
-    rabbitmq:
-        image: rabbitmq:management-alpine
-        restart: unless-stopped
-        ports:
-            - '15672:15672'  # RabbitMQ management UI (HTTP)
-            - '5672:5672'    # RabbitMQ AMQP protocol port
-        environment:
-            RABBITMQ_DEFAULT_USER: guest
-            RABBITMQ_DEFAULT_PASS: guest
-        volumes:
-            - ./rabbitmq_data:/var/lib/rabbitmq  # Volume lưu trữ dữ liệu RabbitMQ
-        networks:
-            - eliza_network
+    # rabbitmq:
+    #     image: rabbitmq:management-alpine
+    #     restart: unless-stopped
+    #     ports:
+    #         - '15672:15672'  # RabbitMQ management UI (HTTP)
+    #         - '5672:5672'    # RabbitMQ AMQP protocol port
+    #     environment:
+    #         RABBITMQ_DEFAULT_USER: guest
+    #         RABBITMQ_DEFAULT_PASS: guest
+    #     volumes:
+    #         - ./rabbitmq_data:/var/lib/rabbitmq  # Volume lưu trữ dữ liệu RabbitMQ
+    #     networks:
+    #         - eliza_network
 
 networks:
     eliza_network:
