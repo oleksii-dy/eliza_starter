@@ -71,6 +71,7 @@ PRIORITY RULE: ALWAYS RESPOND to these users regardless of topic or message cont
 For other users:
 - {{agentName}} should RESPOND to messages directed at them
 - {{agentName}} should RESPOND to conversations relevant to their background
+- {{agentName}} should RESPOND to any replies to their own tweets (even without explicit mentions)
 - {{agentName}} should IGNORE irrelevant messages
 - {{agentName}} should IGNORE very short messages unless directly addressed
 - {{agentName}} should STOP if asked to stop
@@ -80,6 +81,7 @@ For other users:
 IMPORTANT:
 - {{agentName}} (aka @{{twitterUserName}}) is particularly sensitive about being annoying, so if there is any doubt, it is better to IGNORE than to RESPOND.
 - For users not in the priority list, {{agentName}} (@{{twitterUserName}}) should err on the side of IGNORE rather than RESPOND if in doubt.
+- {{agentName}} must RESPOND to all replies to their own tweets, even if the user doesn't mention @{{twitterUserName}}.
 
 Recent Posts:
 {{recentPosts}}
@@ -92,7 +94,6 @@ Thread of Tweets You Are Replying To:
 
 # INSTRUCTIONS: Respond with [RESPOND] if {{agentName}} should respond, or [IGNORE] if {{agentName}} should not respond to the last message and [STOP] if {{agentName}} should stop participating in the conversation.
 ` + shouldRespondFooter;
-
 export class TwitterInteractionClient {
     client: ClientBase;
     runtime: IAgentRuntime;
@@ -120,148 +121,80 @@ export class TwitterInteractionClient {
 
         const twitterUsername = this.client.profile.username;
         try {
-            // Check for mentions
-            const mentionCandidates = (
-                await this.client.fetchSearchTweets(
+            // 1. Fetch potential interactions using two methods
+            const [mentionResults, replyResults] = await Promise.all([
+                // Get tweets mentioning the bot's handle
+                this.client.fetchSearchTweets(
                     `@${twitterUsername}`,
-                    20,
+                    50,
+                    SearchMode.Latest
+                ),
+                // Get replies to ANY of the bot's tweets (even without @ mention)
+                this.client.fetchSearchTweets(
+                    `in_reply_to_user_id:${this.client.profile.id}`,
+                    50,
                     SearchMode.Latest
                 )
-            ).tweets;
+            ]);
+
+            const mentionCandidates = mentionResults.tweets;
+            const replyCandidates = replyResults.tweets;
 
             elizaLogger.log(
-                "Completed checking mentioned tweets:",
-                mentionCandidates.length
+                `Found ${mentionCandidates.length} mentions and ${replyCandidates.length} replies`
             );
-            let uniqueTweetCandidates = [...mentionCandidates];
-            // Only process target users if configured
-            if (this.client.twitterConfig.TWITTER_TARGET_USERS.length) {
-                const TARGET_USERS =
-                    this.client.twitterConfig.TWITTER_TARGET_USERS;
 
-                elizaLogger.log("Processing target users:", TARGET_USERS);
+            // 2. Combine and deduplicate tweets
+            const allCandidates = [...mentionCandidates, ...replyCandidates];
+            const uniqueTweets = Array.from(
+                new Map(allCandidates.map(t => [t.id, t])).values()
+            );
 
-                if (TARGET_USERS.length > 0) {
-                    // Create a map to store tweets by user
-                    const tweetsByUser = new Map<string, Tweet[]>();
+            // 3. Filter and sort candidates
+            const validCandidates = uniqueTweets
+                .filter(tweet => {
+                    // Exclude bot's own tweets
+                    const isBotTweet = tweet.userId === this.client.profile.id;
+                    // Exclude tweets already processed
+                    const isNewTweet = !this.client.lastCheckedTweetId ||
+                        BigInt(tweet.id) > this.client.lastCheckedTweetId;
+                    return !isBotTweet && isNewTweet;
+                })
+                .sort((a, b) => a.id.localeCompare(b.id));
 
-                    // Fetch tweets from all target users
-                    for (const username of TARGET_USERS) {
-                        try {
-                            const userTweets = (
-                                await this.client.twitterClient.fetchSearchTweets(
-                                    `from:${username}`,
-                                    3,
-                                    SearchMode.Latest
-                                )
-                            ).tweets;
+            elizaLogger.log(`Processing ${validCandidates.length} new interactions`);
 
-                            // Filter for unprocessed, non-reply, recent tweets
-                            const validTweets = userTweets.filter((tweet) => {
-                                const isUnprocessed =
-                                    !this.client.lastCheckedTweetId ||
-                                    Number.parseInt(tweet.id) >
-                                        this.client.lastCheckedTweetId;
-                                const isRecent =
-                                    Date.now() - tweet.timestamp * 1000 <
-                                    2 * 60 * 60 * 1000;
+            // 4. Process each candidate
+            for (const tweet of validCandidates) {
+                try {
+                    elizaLogger.log(`Processing interaction ${tweet.id} from @${tweet.username}`);
 
-                                elizaLogger.log(`Tweet ${tweet.id} checks:`, {
-                                    isUnprocessed,
-                                    isRecent,
-                                    isReply: tweet.isReply,
-                                    isRetweet: tweet.isRetweet,
-                                });
-
-                                return (
-                                    isUnprocessed &&
-                                    !tweet.isReply &&
-                                    !tweet.isRetweet &&
-                                    isRecent
-                                );
-                            });
-
-                            if (validTweets.length > 0) {
-                                tweetsByUser.set(username, validTweets);
-                                elizaLogger.log(
-                                    `Found ${validTweets.length} valid tweets from ${username}`
-                                );
-                            }
-                        } catch (error) {
-                            elizaLogger.error(
-                                `Error fetching tweets for ${username}:`,
-                                error
-                            );
+                    // Verify parent tweet ownership for replies
+                    if (tweet.inReplyToStatusId) {
+                        const parentTweet = await this.client.twitterClient.getTweet(
+                            tweet.inReplyToStatusId
+                        );
+                        if (parentTweet?.userId !== this.client.profile.id) {
+                            elizaLogger.log(`Skipping reply to non-bot tweet ${tweet.id}`);
                             continue;
                         }
                     }
 
-                    // Select one tweet from each user that has tweets
-                    const selectedTweets: Tweet[] = [];
-                    for (const [username, tweets] of tweetsByUser) {
-                        if (tweets.length > 0) {
-                            // Randomly select one tweet from this user
-                            const randomTweet =
-                                tweets[
-                                    Math.floor(Math.random() * tweets.length)
-                                ];
-                            selectedTweets.push(randomTweet);
-                            elizaLogger.log(
-                                `Selected tweet from ${username}: ${randomTweet.text?.substring(0, 100)}`
-                            );
-                        }
-                    }
-
-                    // Add selected tweets to candidates
-                    uniqueTweetCandidates = [
-                        ...mentionCandidates,
-                        ...selectedTweets,
-                    ];
-                }
-            } else {
-                elizaLogger.log(
-                    "No target users configured, processing only mentions"
-                );
-            }
-
-            // Sort tweet candidates by ID in ascending order
-            uniqueTweetCandidates
-                .sort((a, b) => a.id.localeCompare(b.id))
-                .filter((tweet) => tweet.userId !== this.client.profile.id);
-
-            // for each tweet candidate, handle the tweet
-            for (const tweet of uniqueTweetCandidates) {
-                if (
-                    !this.client.lastCheckedTweetId ||
-                    BigInt(tweet.id) > this.client.lastCheckedTweetId
-                ) {
-                    // Generate the tweetId UUID the same way it's done in handleTweet
                     const tweetId = stringToUuid(
                         tweet.id + "-" + this.runtime.agentId
                     );
 
-                    // Check if we've already processed this tweet
-                    const existingResponse =
-                        await this.runtime.messageManager.getMemoryById(
-                            tweetId
-                        );
-
-                    if (existingResponse) {
-                        elizaLogger.log(
-                            `Already responded to tweet ${tweet.id}, skipping`
-                        );
+                    // Check for existing response
+                    if (await this.runtime.messageManager.getMemoryById(tweetId)) {
+                        elizaLogger.log(`Already responded to ${tweet.id}, skipping`);
                         continue;
                     }
-                    elizaLogger.log("New Tweet found", tweet.permanentUrl);
 
+                    // Create conversation context
                     const roomId = stringToUuid(
                         tweet.conversationId + "-" + this.runtime.agentId
                     );
-
-                    const userIdUUID =
-                        tweet.userId === this.client.profile.id
-                            ? this.runtime.agentId
-                            : stringToUuid(tweet.userId!);
+                    const userIdUUID = stringToUuid(tweet.userId!);
 
                     await this.runtime.ensureConnection(
                         userIdUUID,
@@ -271,38 +204,33 @@ export class TwitterInteractionClient {
                         "twitter"
                     );
 
-                    const thread = await buildConversationThread(
-                        tweet,
-                        this.client
-                    );
+                    // Build conversation thread
+                    const thread = await buildConversationThread(tweet, this.client);
 
+                    // Create message object
                     const message = {
-                        content: { 
-                            text: tweet.text,
-                            imageUrls: tweet.photos?.map(photo => photo.url) || []
-                        },
+                        content: { text: tweet.text },
                         agentId: this.runtime.agentId,
                         userId: userIdUUID,
                         roomId,
                     };
 
-                    await this.handleTweet({
-                        tweet,
-                        message,
-                        thread,
-                    });
+                    // Process the tweet
+                    await this.handleTweet({ tweet, message, thread });
 
-                    // Update the last checked tweet ID after processing each tweet
+                    // Update last processed ID
                     this.client.lastCheckedTweetId = BigInt(tweet.id);
+                } catch (error) {
+                    elizaLogger.error(`Failed processing tweet ${tweet.id}:`, error);
                 }
             }
 
-            // Save the latest checked tweet ID to the file
+            // Save progress
             await this.client.cacheLatestCheckedTweetId();
+            elizaLogger.log("Completed interaction check");
 
-            elizaLogger.log("Finished checking Twitter interactions");
         } catch (error) {
-            elizaLogger.error("Error handling Twitter interactions:", error);
+            elizaLogger.error("Twitter interaction error:", error);
         }
     }
 
@@ -349,7 +277,7 @@ export class TwitterInteractionClient {
             .join("\n\n");
 
         const imageDescriptionsArray = [];
-        try{
+        try {
             for (const photo of tweet.photos) {
                 const description = await this.runtime
                     .getService<IImageDescriptionService>(
@@ -359,9 +287,9 @@ export class TwitterInteractionClient {
                 imageDescriptionsArray.push(description);
             }
         } catch (error) {
-    // Handle the error
-    elizaLogger.error("Error Occured during describing image: ", error);
-}
+            // Handle the error
+            elizaLogger.error("Error Occured during describing image: ", error);
+        }
 
 
 
@@ -372,8 +300,8 @@ export class TwitterInteractionClient {
             currentPost,
             formattedConversation,
             imageDescriptions: imageDescriptionsArray.length > 0
-            ? `\nImages in Tweet:\n${imageDescriptionsArray.map((desc, i) =>
-              `Image ${i + 1}: Title: ${desc.title}\nDescription: ${desc.description}`).join("\n\n")}`:""
+                ? `\nImages in Tweet:\n${imageDescriptionsArray.map((desc, i) =>
+                    `Image ${i + 1}: Title: ${desc.title}\nDescription: ${desc.description}`).join("\n\n")}` : ""
         });
 
         // check if the tweet exists, save if it doesn't
@@ -395,10 +323,10 @@ export class TwitterInteractionClient {
                     imageUrls: tweet.photos?.map(photo => photo.url) || [],
                     inReplyTo: tweet.inReplyToStatusId
                         ? stringToUuid(
-                              tweet.inReplyToStatusId +
-                                  "-" +
-                                  this.runtime.agentId
-                          )
+                            tweet.inReplyToStatusId +
+                            "-" +
+                            this.runtime.agentId
+                        )
                         : undefined,
                 },
                 userId: userIdUUID,
@@ -590,10 +518,10 @@ export class TwitterInteractionClient {
                         imageUrls: currentTweet.photos?.map(photo => photo.url) || [],
                         inReplyTo: currentTweet.inReplyToStatusId
                             ? stringToUuid(
-                                  currentTweet.inReplyToStatusId +
-                                      "-" +
-                                      this.runtime.agentId
-                              )
+                                currentTweet.inReplyToStatusId +
+                                "-" +
+                                this.runtime.agentId
+                            )
                             : undefined,
                     },
                     createdAt: currentTweet.timestamp * 1000,
