@@ -18,6 +18,7 @@ const swapTemplate = `Please extract the following swap details for SUI network:
     "inputTokenAddress": string | null,     // Token being sold (e.g. "0xb6a9f896fd6c0f777699b9aa2b1bb745caa5eb1f3978173c1ddffd4bdd3994e9::uni::UNI")
     "outputTokenAddress": string | null,    // Token being bought
     "amount": number | 0,               // Amount to swap
+    "responseMessage": string,        // Flexible message to the user, translated into the user's language, e.g., "Please ensure all details are correct before proceeding with the swap to prevent any losses."
 }
 Recent messages: {{recentMessages}}
 \`\`\`
@@ -105,11 +106,32 @@ export const executeSwapByAddress: Action = {
         try {
 
             callback({
-               text:`Please double-check all details before swapping to avoid any loss`,
+               text: content.responseMessage,
                action:"SUI_EXECUTE_SWAP_BY_ADDRESS",
                result: {
                 type: "swap",
                 data:responseData,
+                action_hint:{
+                    text: "Do you need any further assistance? Please let me know!",
+                    actions:[
+                        {
+                            type:"button",
+                            text:"Buy ROCK",
+                            data:{
+                                type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
+                                icon_url:"https://rockee.ai/images/logo.png"
+                            }
+                        },
+                        {
+                            type:"button",
+                            text:"Buy SUI",
+                            data:{
+                                type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
+                                icon_url:"https://strapi-dev.scand.app/uploads/sui_c07df05f00.png"
+                            }
+                        },
+                    ]
+                }
 
             }
             })

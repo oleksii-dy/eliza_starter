@@ -73,7 +73,7 @@ export const topNewMemeToken: Action = {
         });
         elizaLogger.log("content: ",content);
         const coinGecko = new CoingeckoProvider();
-        let info = await coinGecko.topNewMeMeCoin();
+        const info = await coinGecko.topNewMeMeCoin();
         if (callback) {
             callback({
                 text: `Below are ${content.size} trending coins we have collected:`,
@@ -81,6 +81,27 @@ export const topNewMemeToken: Action = {
                 result: {
                     type: "sui_new_meme_coin",
                     data:info.slice(0,content.size)
+                },
+                action_hint:{
+                    text: "Do you need any further assistance? Please let me know!",
+                    actions:[
+                        {
+                            type:"button",
+                            text:"Buy ROCK",
+                            data:{
+                                type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
+                                icon_url:"https://rockee.ai/images/logo.png"
+                            }
+                        },
+                        {
+                            type:"button",
+                            text:"Buy Sui",
+                            data:{
+                                type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
+                                icon_url:"https://strapi-dev.scand.app/uploads/sui_c07df05f00.png"
+                            }
+                        },
+                    ]
                 }
             });
         }

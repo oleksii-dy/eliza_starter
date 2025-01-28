@@ -57,7 +57,7 @@ export const topMeme: Action = {
         const projectInfos = await searchCategoriesInFileJson("Meme");
         const projectType = await findTypesBySymbols(projectInfos);
         const GeckoTerminal = new GeckoTerminalProvider();
-      
+
         const tokenInfo = await GeckoTerminal.fetchMultipleTokenOnNetwork("sui-network",projectType);
 
         let dataResponse = tokenInfo.data.map((data) => ({
@@ -86,7 +86,27 @@ export const topMeme: Action = {
                result: {
                 type: "top_token",
                 data:dataResponse,
-
+                action_hint:{
+                    text: "Do you need any further assistance? Please let me know!",
+                    actions:[
+                        {
+                            type:"button",
+                            text:"Buy ROCK",
+                            data:{
+                                type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
+                                icon_url:"https://rockee.ai/images/logo.png"
+                            }
+                        },
+                        {
+                            type:"button",
+                            text:"Buy Sui",
+                            data:{
+                                type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
+                                icon_url:"https://strapi-dev.scand.app/uploads/sui_c07df05f00.png"
+                            }
+                        },
+                    ]
+                }
             }
             })
 
