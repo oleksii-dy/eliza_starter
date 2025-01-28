@@ -5,7 +5,12 @@ FROM node:23.3.0-slim AS builder
 ENV LOG_LEVEL=debug \
     NODE_DEBUG=* \
     DEBUG=* \
-    TSUP_LOG_LEVEL=verbose
+    TSUP_LOG_LEVEL=verbose \
+    NODE_OPTIONS="--max-old-space-size=4096 --no-warnings"
+
+# Clear npm cache and remove existing node_modules
+RUN npm cache clean --force && \
+    rm -rf node_modules
 
 # Set environment variables for detailed logging
 ENV NODE_ENV=development

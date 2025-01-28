@@ -23,7 +23,7 @@
         "tsup": "8.3.5"
     },
     "scripts": {
-        "build": "LOG_LEVEL=debug NODE_DEBUG=* DEBUG=* TSUP_LOG_LEVEL=verbose tsup src/index.ts --format cjs,esm --dts",
+        "build": "LOG_LEVEL=debug NODE_DEBUG=* DEBUG=* TSUP_LOG_LEVEL=verbose tsup src/index.ts --format cjs,esm --dts --clean",
         "dev": "LOG_LEVEL=debug NODE_DEBUG=* DEBUG=* TSUP_LOG_LEVEL=verbose tsup src/index.ts --format cjs,esm --dts --watch"
     },
     "peerDependencies": {
