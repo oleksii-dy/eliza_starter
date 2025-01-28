@@ -18,7 +18,7 @@ import { Coinbase, Wallet } from "@coinbase/coinbase-sdk";
 
 import { Token, CurrencyAmount, TradeType, Percent } from '@uniswap/sdk-core';
 import { ChainId, Fetcher, WETH, Route, Trade, TokenAmount, TradeType } from '@uniswap/sdk-core';
-import { ethers } from 'ethers';
+import { ethers, JsonRpcProvider } from 'ethers';
 import { initializeWallet } from "../../plugin-coinbase/src/utils";
 
 export type WalletType = 'short_term_trading' | 'long_term_trading' | 'dry_powder' | 'operational_capital';
@@ -278,14 +278,14 @@ Generate only the tweet text, no commentary or markdown.`;
         await this.initialize();
     }
 
-    private async swapUSDCForToken(ticker: string, amountIn: number) {
+    private async swap(fromTicker: string, toTicker: string, amountFrom: number) {
         const USDC = new Token(1, '0xA0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', 6, 'USDC', 'USD Coin');
-        const token = new Token(1, ticker, 18); // Assuming the token has 18 decimals
+        const token = new Token(1, toTicker, 18); // Assuming the token has 18 decimals
 
-        const provider = new ethers.JsonRpcProvider(process.env.ETHEREUM_RPC_URL);
+        const provider = new JsonRpcProvider(process.env.ETHEREUM_RPC_URL);
         const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
-        const amountInCurrency = CurrencyAmount.fromRawAmount(USDC, amountIn * 10 ** USDC.decimals);
+        const amountInCurrency = CurrencyAmount.fromRawAmount(USDC, amountFrom * 10 ** USDC.decimals);
 
         const route = new Route([USDC, token], USDC);
         const trade = new Trade(route, amountInCurrency, TradeType.EXACT_INPUT);
@@ -302,13 +302,28 @@ Generate only the tweet text, no commentary or markdown.`;
 
         const tx = await wallet.sendTransaction(transaction);
         await tx.wait();
-        elizaLogger.log("tx", JSON.stringify(tx));
+        elizaLogger.info("tx", JSON.stringify(tx));
         return tx;
     }
 
     private async calculateOverallPNL(ticker: string, amountReceived: number, initialInvestment: number): Promise<number> {
-       // TODO: implement
-       return 0;
+        const token = new Token(1, ticker, 18); // Assuming the token has 18 decimals
+        const provider = new JsonRpcProvider(process.env.ETHEREUM_RPC_URL);
+        const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+
+        const tokenContract = new ethers.Contract(token.address, [
+            'function balanceOf(address owner) view returns (uint256)',
+            'function decimals() view returns (uint8)'
+        ], wallet);
+
+        const balance = await tokenContract.balanceOf(wallet.address);
+        const decimals = await tokenContract.decimals();
+        const currentPrice = await Fetcher.fetchTokenData(1, token.address, provider);
+
+        const currentValue = balance / (10 ** decimals) * currentPrice;
+        const pnl = (currentValue - initialInvestment) / initialInvestment * 100;
+
+        return pnl;
     }
 
 }
