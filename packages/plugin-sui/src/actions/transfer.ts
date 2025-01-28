@@ -1,11 +1,11 @@
 import {
-    ActionExample,
-    Content,
-    HandlerCallback,
-    IAgentRuntime,
-    Memory,
+    type ActionExample,
+    type Content,
+    type HandlerCallback,
+    type IAgentRuntime,
+    type Memory,
     ModelClass,
-    State,
+    type State,
     composeContext,
     elizaLogger,
     generateObject,
@@ -14,11 +14,11 @@ import {
 import { z } from "zod";
 
 import { SuiClient, getFullnodeUrl } from "@mysten/sui/client";
-import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Transaction } from "@mysten/sui/transactions";
 import { SUI_DECIMALS } from "@mysten/sui/utils";
 
 import { walletProvider } from "../providers/wallet";
+import { parseAccount } from "../utils";
 
 type SuiNetwork = "mainnet" | "testnet" | "devnet" | "localnet";
 
@@ -63,7 +63,7 @@ export default {
         "SEND_SUI",
         "PAY",
     ],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (_runtime: IAgentRuntime, message: Memory) => {
         console.log("Validating sui transfer from user:", message.userId);
         //add custom validate logic here
         /*
@@ -98,10 +98,11 @@ export default {
         state.walletInfo = walletInfo;
 
         // Initialize or update state
-        if (!state) {
-            state = (await runtime.composeState(message)) as State;
+        let currentState = state;
+        if (!currentState) {
+            currentState = (await runtime.composeState(message)) as State;
         } else {
-            state = await runtime.updateRecentMessageState(state);
+            currentState = await runtime.updateRecentMessageState(currentState);
         }
 
         // Define the schema for the expected output
@@ -112,7 +113,7 @@ export default {
 
         // Compose transfer context
         const transferContext = composeContext({
-            state,
+            state: currentState,
             template: transferTemplate,
         });
 
@@ -139,15 +140,14 @@ export default {
         }
 
         try {
-            const privateKey = runtime.getSetting("SUI_PRIVATE_KEY");
-            const suiAccount = Ed25519Keypair.deriveKeypair(privateKey);
+            const suiAccount = parseAccount(runtime);
             const network = runtime.getSetting("SUI_NETWORK");
             const suiClient = new SuiClient({
                 url: getFullnodeUrl(network as SuiNetwork),
             });
 
             const adjustedAmount = BigInt(
-                Number(transferContent.amount) * Math.pow(10, SUI_DECIMALS)
+                Number(transferContent.amount) * (10 ** SUI_DECIMALS)
             );
             console.log(
                 `Transferring: ${transferContent.amount} tokens (${adjustedAmount} base units)`
