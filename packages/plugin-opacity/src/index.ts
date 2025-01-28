@@ -44,8 +44,6 @@ export class OpacityAdapter implements IVerifiableInferenceAdapter {
         let endpoint: string;
         let authHeader: string;
 
-        console.log("provider", provider);
-
         switch (provider) {
             case ModelProviderName.OPENAI:
                 endpoint = `${baseEndpoint}/openai/chat/completions`;
