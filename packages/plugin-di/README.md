@@ -72,9 +72,9 @@ class SampleClass {
 }
 ```
 
-### From di plugin
+### From di plugin (used for BaseInjectableAction)
 
-DI plugin provides abstract classes that you can extend to create Injectable actions or evaluators.
+DI plugin provides abstract classes that you can extend to create Injectable actions.
 And that provides the following decorators to improve the readability of the code.
 
 #### `@property`
@@ -96,9 +96,14 @@ class SampleActionContent {
 }
 ```
 
-## Abstract Classes for Injaectable Actions
+## Abstract Classes provided by this plugin
 
-This plugin provides abstract classes that you can extend to create Injectable actions or evaluators.
+This plugin provides the following abstract classes that you can extend to create Injectable classes:
+
+- `BaseInjectableAction`
+- `BaseInjectableEvaluator`
+
+Note: This is optional, you can create your own classes to create injectable actions.
 
 ### `BaseInjectableAction`
 
