@@ -24,7 +24,7 @@ Extract the swap parameters from the conversation and wallet context above, foll
             "inputTokenSymbol": string | null,     // Token being sold (e.g. "SUI")
             "outputTokenSymbol": string | null,    // Token being bought
             "amount": number | 0,               // Amount to swap
-            "responseMessage": string                // Translated message to the user (e.g., "Please double-check all details before swapping to avoid any loss" in the user's language)
+            "responseMessage": string        // Flexible message to the user, translated into the user's language, e.g., "Please ensure all details are correct before proceeding with the swap to prevent any losses."
         }
     - Use null for any values that cannot be determined.
     - All property names must use double quotes
