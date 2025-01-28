@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/chat/chat-bubble";
 import { ChatInput } from "@/components/ui/chat/chat-input";
 import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
-import { useTransition, animated, AnimatedProps } from "@react-spring/web";
+import { useTransition, animated, type AnimatedProps } from "@react-spring/web";
 import { Paperclip, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Content, UUID } from "@elizaos/core";
@@ -19,7 +19,7 @@ import ChatTtsButton from "./ui/chat/chat-tts-button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import AIWriter from "react-aiwriter";
-import { IAttachment } from "@/types";
+import type { IAttachment } from "@/types";
 import { AudioRecorder } from "./audio-recorder";
 import { Badge } from "./ui/badge";
 
@@ -159,6 +159,13 @@ export default function Page({ agentId }: { agentId: UUID }) {
         }
     };
 
+    const joinRoomQuery = useQuery({
+        queryKey: ["joinRoom", agentId],
+        queryFn: () => apiClient.joinRoom(agentId),
+        enabled: false,
+        staleTime: Infinity,
+    });
+
     const { data: latestMessage } = useQuery({
         queryKey: ["lastMessage", agentId],
         queryFn: () => apiClient.getMemories(agentId),
@@ -170,14 +177,18 @@ export default function Page({ agentId }: { agentId: UUID }) {
                     agentId,
                 ]) || [];
 
+            if (data.memories.length === 0 && !joinRoomQuery.isSuccess) {
+                joinRoomQuery.refetch();
+            }
+
             // Filter out messages that already exist in our cache
             const newMessages = data.memories
                 .reverse()
                 .filter(
                     (newMsg: any) =>
                         !existingMessages.some(
-                            (existingMsg: any) => existingMsg.id === newMsg.id
-                        )
+                            (existingMsg: any) => existingMsg.id === newMsg.id,
+                        ),
                 );
 
             // If we have new messages, add them to our messages
@@ -193,7 +204,7 @@ export default function Page({ agentId }: { agentId: UUID }) {
                 ];
                 queryClient.setQueryData(
                     ["messages", agentId],
-                    updatedMessages
+                    updatedMessages,
                 );
                 return updatedMessages;
             }

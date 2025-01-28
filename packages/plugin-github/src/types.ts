@@ -456,7 +456,7 @@ export const ImplementFeatureSchema = z.object({
     branch: z.string().min(1, "GitHub branch is required"),
     feature: z.string().nullable().optional(),
     issue: z.number().nullable().optional(),
-    base: z.string().default("develop"),
+    base: z.string().default("main"),
 });
 
 export interface ImplementFeatureContent {

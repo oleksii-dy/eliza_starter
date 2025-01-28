@@ -33,7 +33,7 @@ export const modifyIssueAction: Action = {
         options: any,
         callback: HandlerCallback
     ) => {
-        elizaLogger.log("[modifyIssue] Composing state for message:", message);
+        // elizaLogger.log("[modifyIssue] Composing state for message:", message);
 
         if (!state) {
             state = (await runtime.composeState(message)) as State;
@@ -85,14 +85,14 @@ export const modifyIssueAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 `Error modifying issue #${content.issue} in repository ${content.owner}/${content.repo}:`,
-                error
+                error,
             );
 
             callback(
                 {
                     text: `Error modifying issue #${content.issue}. Please try again.`,
                 },
-                []
+                [],
             );
         }
     },

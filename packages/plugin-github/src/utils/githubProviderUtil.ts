@@ -28,7 +28,7 @@ export async function fetchFiles(
     ) => Promise<any> = (service, item) => service.getFileContents(item)
 ) {
     try {
-        elizaLogger.log("[fetchFiles] Composing state for message:", message);
+        // elizaLogger.log("[fetchFiles] Composing state for message:", message);
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -59,12 +59,12 @@ export async function fetchFiles(
         const branch = content.branch;
 
         elizaLogger.info(
-            `Fetching ${description} from GitHub ${owner}/${repo} on branch ${branch}`
+            `Fetching ${description} from GitHub ${owner}/${repo} on branch ${branch}`,
         );
 
         if (!owner || !repo || !branch) {
             elizaLogger.warn(
-                `Missing repository details in state for ${description}`
+                `Missing repository details in state for ${description}`,
             );
             return { files: [], repository: null };
         }
@@ -85,11 +85,11 @@ export async function fetchFiles(
                 path = formatPath(path);
                 const content = await getContentFunction(githubService, path);
                 return { path, content };
-            })
+            }),
         );
 
         elizaLogger.info(
-            `Retrieved ${fileContents.length} files from ${owner}/${repo} for ${description}`
+            `Retrieved ${fileContents.length} files from ${owner}/${repo} for ${description}`,
         );
 
         return {

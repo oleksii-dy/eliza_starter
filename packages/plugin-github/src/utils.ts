@@ -38,38 +38,51 @@ export async function createReposDirectory(owner: string) {
     }
 }
 
+export async function initRepo(
+    token: string,
+    owner: string,
+    repo: string,
+    branch: string,
+) {
+    const repoPath = getRepoPath(owner, repo);
+    await createReposDirectory(owner);
+    await cloneOrPullRepository(token, owner, repo, repoPath, branch);
+    await checkoutBranch(repoPath, branch);
+}
+
 export async function cloneOrPullRepository(
+    token: string,
     owner: string,
     repo: string,
     repoPath: string,
-    branch: string = "main"
+    branch: string = "main",
 ) {
     try {
         elizaLogger.info(
-            `Cloning or pulling repository ${owner}/${repo}... @ branch: ${branch}`
+            `Cloning or pulling repository ${owner}/${repo}... @ branch: ${branch}`,
         );
         elizaLogger.info(
-            `URL: https://github.com/${owner}/${repo}.git @ branch: ${branch}`
+            `URL: https://github.com/${owner}/${repo}.git @ branch: ${branch}`,
         );
 
         // Clone or pull repository
         if (!existsSync(repoPath)) {
             const git = simpleGit();
             await git.clone(
-                `https://github.com/${owner}/${repo}.git`,
+                `https://${token}@github.com/${owner}/${repo}.git`,
                 repoPath,
                 {
                     "--branch": branch,
-                }
+                },
             );
         } else {
             const git = simpleGit(repoPath);
-            await git.pull();
+            await git.pull("origin", branch);
         }
     } catch (error) {
         elizaLogger.error(
             `Error cloning or pulling repository ${owner}/${repo}:`,
-            error
+            error,
         );
         throw new Error(`Error cloning or pulling repository: ${error}`);
     }
@@ -322,17 +335,18 @@ export const getPullRequestFromMemories = async (
 };
 
 export async function saveIssueToMemory(
+    userId: UUID,
     runtime: IAgentRuntime,
     message: Memory,
     issue: RestEndpointMethodTypes["issues"]["create"]["response"]["data"],
-    previousIssue: boolean = false
+    previousIssue: boolean = false,
 ): Promise<Memory> {
     const issueId = stringToUuid(
-        `${message.roomId}-${runtime.agentId}-issue-${issue.number}`
+        `${message.roomId}-${runtime.agentId}-issue-${issue.number}`,
     );
     const issueMemory: Memory = {
         id: issueId,
-        userId: runtime.agentId,
+        userId: userId,
         agentId: runtime.agentId,
         roomId: message.roomId,
         content: {
@@ -350,7 +364,7 @@ export async function saveIssueToMemory(
                 updated_at: issue.updated_at,
                 comments: issue.comments,
                 labels: issue.labels.map((label: any) =>
-                    typeof label === "string" ? label : label?.name
+                    typeof label === "string" ? label : label?.name,
                 ),
                 body: issue.body,
             },
@@ -363,6 +377,7 @@ export async function saveIssueToMemory(
 }
 
 export const saveIssuesToMemory = async (
+    userId: UUID,
     runtime: IAgentRuntime,
     message: Memory,
     owner: string,
@@ -370,7 +385,7 @@ export const saveIssuesToMemory = async (
     branch: string,
     apiToken: string,
     limit: number = 999999,
-    previousIssue: boolean = false
+    previousIssue: boolean = false,
 ): Promise<Memory[]> => {
     const githubService = new GitHubService({
         owner: owner,
@@ -394,10 +409,11 @@ export const saveIssuesToMemory = async (
         // );
         // if (!issueMemory) {
         const newIssueMemory = await saveIssueToMemory(
+            userId,
             runtime,
             message,
             issue,
-            previousIssue
+            previousIssue,
         );
 
         issuesMemories.push(newIssueMemory);
@@ -412,12 +428,12 @@ export const saveIssuesToMemory = async (
 export async function incorporateRepositoryState(
     state: State,
     runtime: IAgentRuntime,
-    relevantMemories: Memory[]
+    relevantMemories: Memory[],
 ) {
     state.messageExamples = JSON.stringify(
         runtime.character?.messageExamples,
         null,
-        2
+        2,
     );
     state.system = runtime.character?.system;
     state.topics = JSON.stringify(runtime.character?.topics, null, 2);
@@ -448,7 +464,7 @@ export async function incorporateRepositoryState(
 
 export async function getPullRequestsFromMemories(
     runtime: IAgentRuntime,
-    message: Memory
+    message: Memory,
 ): Promise<Memory[]> {
     const memories = await runtime.messageManager.getMemories({
         roomId: message.roomId,
@@ -456,7 +472,7 @@ export async function getPullRequestsFromMemories(
     });
     // Filter memories to only include those that are pull requests
     const prMemories = memories.filter(
-        (memory) => (memory.content.metadata as any)?.type === "pull_request"
+        (memory) => (memory.content.metadata as any)?.type === "pull_request",
     );
     return prMemories;
 }
@@ -476,7 +492,7 @@ function sanitizeMemories(memories: Memory[]): Partial<Memory>[] {
 export const createTemplate = (
     prompt: string,
     output: string,
-    examples: string
+    examples: string,
 ) => {
     return `
 ${prompt}
@@ -490,6 +506,7 @@ ${examples}
 };
 
 export async function savePullRequestToMemory(
+    userId: UUID,
     runtime: IAgentRuntime,
     message: Memory,
     pullRequest: RestEndpointMethodTypes["pulls"]["list"]["response"]["data"][number],
@@ -497,7 +514,7 @@ export async function savePullRequestToMemory(
     repo: string,
     branch: string,
     apiToken: string,
-    previousPullRequest: boolean = false
+    previousPullRequest: boolean = false,
 ): Promise<Memory> {
     const githubService = new GitHubService({
         owner,
@@ -505,11 +522,11 @@ export async function savePullRequestToMemory(
         auth: apiToken,
     });
     const prId = stringToUuid(
-        `${message.roomId}-${runtime.agentId}-pr-${pullRequest.number}`
+        `${message.roomId}-${runtime.agentId}-pr-${pullRequest.number}`,
     );
     const prMemory: Memory = {
         id: prId,
-        userId: runtime.agentId,
+        userId: userId,
         agentId: runtime.agentId,
         roomId: message.roomId,
         content: {
@@ -531,7 +548,7 @@ export async function saveCreatedPullRequestToMemory(
     owner: string,
     repository: string,
     branch: string,
-    apiToken: string
+    apiToken: string,
 ): Promise<Memory> {
     const githubService = new GitHubService({
         owner: owner,
@@ -539,7 +556,7 @@ export async function saveCreatedPullRequestToMemory(
         auth: apiToken,
     });
     const prId = stringToUuid(
-        `${message.roomId}-${runtime.agentId}-pr-${pullRequest.number}`
+        `${message.roomId}-${runtime.agentId}-pr-${pullRequest.number}`,
     );
     const prMemory: Memory = {
         id: prId,
@@ -547,11 +564,11 @@ export async function saveCreatedPullRequestToMemory(
         agentId: runtime.agentId,
         roomId: message.roomId,
         content: {
-            text: `Pull Request Created: ${pullRequest.title}`,
+            text: `Pull Request Created: ${pullRequest.title} (${pullRequest.html_url})`,
             action: "CREATE_PULL_REQUEST",
             metadata: await getCreatedPullRequestMetadata(
                 pullRequest,
-                githubService
+                githubService,
             ),
         },
     };
@@ -561,6 +578,7 @@ export async function saveCreatedPullRequestToMemory(
 }
 
 export const savePullRequestsToMemory = async (
+    userId: UUID,
     runtime: IAgentRuntime,
     message: Memory,
     owner: string,
@@ -568,7 +586,7 @@ export const savePullRequestsToMemory = async (
     branch: string,
     apiToken: string,
     limit: number = 999999,
-    previousPullRequest: boolean = false
+    previousPullRequest: boolean = false,
 ): Promise<Memory[]> => {
     const memories = await runtime.messageManager.getMemories({
         roomId: message.roomId,
@@ -588,11 +606,12 @@ export const savePullRequestsToMemory = async (
                 (memory) =>
                     memory.id ===
                     stringToUuid(
-                        `${message.roomId}-${runtime.agentId}-pr-${pr.number}`
-                    )
+                        `${message.roomId}-${runtime.agentId}-pr-${pr.number}`,
+                    ),
             ) ?? null;
         if (!prMemory) {
             const newPrMemory = await savePullRequestToMemory(
+                userId,
                 runtime,
                 message,
                 pr,
@@ -600,7 +619,7 @@ export const savePullRequestsToMemory = async (
                 repository,
                 branch,
                 apiToken,
-                previousPullRequest
+                previousPullRequest,
             );
             pullRequestsMemories.push(newPrMemory);
         } else {

@@ -9,49 +9,12 @@ import {
     ModelClass,
     generateObject,
 } from "@elizaos/core";
-import { z } from "zod";
-
-export const configGithubInfoTemplate = `
-Extract the details for configuring the GitHub repository:
-- **owner** (string): The owner of the GitHub repository (e.g., "octocat")
-- **repo** (string): The name of the GitHub repository (e.g., "hello-world")
-- **branch** (string): The branch of the GitHub repository (e.g., "main")
-
-Provide the repository details in the following JSON format:
-
-\`\`\`json
-{
-    "owner": "<owner>",
-    "repo": "<repo>",
-    "branch": "<branch>"
-}
-\`\`\`
-
-Here are the recent user messages for context:
-{{recentMessages}}
-`;
-
-export const ConfigGithubInfoSchema = z.object({
-    owner: z.string().min(1, "GitHub owner is required"),
-    repo: z.string().min(1, "GitHub repo is required"),
-    branch: z.string().min(1, "GitHub branch is required"),
-});
-
-export interface ConfigGithubInfoContent {
-    owner: string;
-    repo: string;
-    branch: string;
-}
-
-export const isConfigGithubInfoContent = (
-    object: any
-): object is ConfigGithubInfoContent => {
-    if (ConfigGithubInfoSchema.safeParse(object).success) {
-        return true;
-    }
-    elizaLogger.error("Invalid content: ", object);
-    return false;
-};
+import {
+    ConfigGithubInfoContent,
+    ConfigGithubInfoSchema,
+    isConfigGithubInfoContent,
+} from "../types";
+import { configGithubInfoTemplate } from "../templates";
 
 export const configGithubInfoAction: Action = {
     name: "CONFIG_GITHUB_INFO",
@@ -80,10 +43,10 @@ export const configGithubInfoAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log(
-            "[configGithubInfoAction] Composing state for message:",
-            message
-        );
+        // elizaLogger.log(
+        //     "[configGithubInfoAction] Composing state for message:",
+        //     message
+        // );
 
         if (!state) {
             state = (await runtime.composeState(message)) as State;
@@ -111,12 +74,12 @@ export const configGithubInfoAction: Action = {
         const content = details.object as ConfigGithubInfoContent;
 
         elizaLogger.info(
-            `Configuring GitHub repository ${content.owner}/${content.repo} on branch ${content.branch}...`
+            `Configuring GitHub repository ${content.owner}/${content.repo} on branch ${content.branch}...`,
         );
 
         try {
             elizaLogger.info(
-                `Repository configured successfully! URL: https://github.com/${content.owner}/${content.repo} @ branch: ${content.branch}`
+                `Repository configured successfully! URL: https://github.com/${content.owner}/${content.repo} @ branch: ${content.branch}`,
             );
 
             if (callback) {
@@ -128,14 +91,14 @@ export const configGithubInfoAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 `Error configuring repository ${content.owner}/${content.repo} branch ${content.branch}:`,
-                error
+                error,
             );
             if (callback) {
                 callback(
                     {
                         text: `Error configuring repository ${content.owner}/${content.repo} branch ${content.branch}. Please try again.`,
                     },
-                    []
+                    [],
                 );
             }
         }

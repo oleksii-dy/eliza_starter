@@ -35,6 +35,29 @@ const ERROR_RESULT: CodeResult = {
 // Initialize connection
 const connection = new Connection(NETWORK, "confirmed");
 
+async function convertTextToEmoji(text: string): Promise<string> {
+    return text.replace(/\/u([0-9A-Fa-f]{4,6})/g, (_, code) =>
+        String.fromCodePoint(Number.parseInt(code, 16))
+    );
+}
+
+async function fetchTransactionInfo(
+    txId: string
+): Promise<TransactionInfo["argData"] | null> {
+    try {
+        const response = await fetch(`${IQ_HOST}/get_transaction_info/${txId}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.argData || null;
+    } catch (error) {
+        elizaLogger.error("Error fetching transaction info:", error);
+        return null;
+    }
+}
+
 async function fetchDBPDA(): Promise<string | null> {
     if (!WALLET_ADDRESS) {
         elizaLogger.error("Wallet address not provided");
@@ -54,29 +77,6 @@ async function fetchDBPDA(): Promise<string | null> {
         return data.DBPDA || null;
     } catch (error) {
         elizaLogger.error("Error fetching PDA:", error);
-        return null;
-    }
-}
-
-async function convertTextToEmoji(text: string): Promise<string> {
-    return text.replace(/\/u([0-9A-Fa-f]{4,6})/g, (_, code) =>
-        String.fromCodePoint(parseInt(code, 16))
-    );
-}
-
-async function fetchTransactionInfo(
-    txId: string
-): Promise<TransactionInfo["argData"] | null> {
-    try {
-        const response = await fetch(`${IQ_HOST}/get_transaction_info/${txId}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        return data.argData || null;
-    } catch (error) {
-        elizaLogger.error("Error fetching transaction info:", error);
         return null;
     }
 }
@@ -119,7 +119,7 @@ async function bringCode(dataTxid: string): Promise<CodeResult> {
     const txInfo = await fetchTransactionInfo(dataTxid);
     if (!txInfo || !txInfo.tail_tx) return ERROR_RESULT;
 
-    let chunks: string[] = [];
+    const chunks: string[] = [];
     let before_tx = txInfo.tail_tx;
 
     if (before_tx === null) return ERROR_RESULT;

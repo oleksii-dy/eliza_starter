@@ -2,8 +2,8 @@ import { Coinbase } from "@coinbase/coinbase-sdk";
 import { z } from "zod";
 import {
     WebhookEventType,
-    WebhookEventFilter,
-    WebhookEventTypeFilter,
+    type WebhookEventFilter,
+    type WebhookEventTypeFilter,
 } from "@coinbase/coinbase-sdk/dist/client";
 
 export const ChargeSchema = z.object({
@@ -13,6 +13,7 @@ export const ChargeSchema = z.object({
     currency: z.string().min(3).max(3),
     name: z.string().min(1),
     description: z.string().min(1),
+    email: z.string().email().nullable(),
 });
 
 export interface ChargeContent {
@@ -22,6 +23,7 @@ export interface ChargeContent {
     currency: string; // Currency code (e.g., USD)
     name: string; // Name of the charge
     description: string; // Description of the charge
+    email: string | null;
 }
 
 export const isChargeContent = (object: any): object is ChargeContent => {
@@ -188,6 +190,7 @@ export const WebhookSchema = z.object({
     eventType: z.nativeEnum(WebhookEventType),
     eventTypeFilter: z.custom<WebhookEventTypeFilter>().optional(),
     eventFilters: z.array(z.custom<WebhookEventFilter>()).optional(),
+    webhookUrl: z.string().optional(),
 });
 
 export type WebhookContent = z.infer<typeof WebhookSchema>;

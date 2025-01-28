@@ -50,10 +50,10 @@ export const initializeRepositoryAction: Action = {
         options: any,
         callback?: HandlerCallback
     ) => {
-        elizaLogger.log(
-            "[initializeRepository] Composing state for message:",
-            message
-        );
+        // elizaLogger.log(
+        //     "[initializeRepository] Composing state for message:",
+        //     message
+        // );
         if (!state) {
             state = (await runtime.composeState(message)) as State;
         } else {
@@ -80,7 +80,7 @@ export const initializeRepositoryAction: Action = {
         const content = details.object as InitializeContent;
 
         elizaLogger.info(
-            `Initializing repository ${content.owner}/${content.repo} on branch ${content.branch}...`
+            `Initializing repository ${content.owner}/${content.repo} on branch ${content.branch}...`,
         );
 
         const repoPath = getRepoPath(content.owner, content.repo);
@@ -88,17 +88,23 @@ export const initializeRepositoryAction: Action = {
         elizaLogger.info(`Repository path: ${repoPath}`);
 
         try {
+            const token = runtime.getSetting("GITHUB_API_TOKEN");
+            if (!token) {
+                throw new Error("GITHUB_API_TOKEN is not set");
+            }
+
             await createReposDirectory(content.owner);
             await cloneOrPullRepository(
+                token,
                 content.owner,
                 content.repo,
                 repoPath,
-                content.branch
+                content.branch,
             );
             await checkoutBranch(repoPath, content.branch);
 
             elizaLogger.info(
-                `Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo} @ branch: ${content.branch}`
+                `Repository initialized successfully! URL: https://github.com/${content.owner}/${content.repo} @ branch: ${content.branch}`,
             );
             if (callback) {
                 callback({
@@ -111,7 +117,7 @@ export const initializeRepositoryAction: Action = {
         } catch (error) {
             elizaLogger.error(
                 `Error initializing repository ${content.owner}/${content.repo} branch ${content.branch}:`,
-                error
+                error,
             );
             if (callback) {
                 callback(
@@ -120,7 +126,7 @@ export const initializeRepositoryAction: Action = {
                         action: "INITIALIZE_REPOSITORY",
                         source: "github",
                     },
-                    []
+                    [],
                 );
             }
         }

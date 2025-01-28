@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { apiClient } from "@/lib/api";
 import { NavLink, useLocation } from "react-router";
-import { type UUID } from "@elizaos/core";
+import type { UUID } from "@elizaos/core";
 import { Book, Cog, User } from "lucide-react";
 import ConnectionStatus from "./connection-status";
 
@@ -37,7 +37,7 @@ export function AppSidebar() {
                         <SidebarMenuButton size="lg" asChild>
                             <NavLink to="/">
                                 <img
-                                    src="/elizaos-icon.png"
+                                    src="/favicon-32x32.png"
                                     width="100%"
                                     height="100%"
                                     className="size-7"
@@ -45,9 +45,8 @@ export function AppSidebar() {
 
                                 <div className="flex flex-col gap-0.5 leading-none">
                                     <span className="font-semibold">
-                                        ElizaOS
+                                        Reality Spiral
                                     </span>
-                                    <span className="">v{info?.version}</span>
                                 </div>
                             </NavLink>
                         </SidebarMenuButton>
@@ -66,7 +65,7 @@ export function AppSidebar() {
                                             <SidebarMenuItem key={index}>
                                                 <SidebarMenuSkeleton />
                                             </SidebarMenuItem>
-                                        )
+                                        ),
                                     )}
                                 </div>
                             ) : (
@@ -79,7 +78,7 @@ export function AppSidebar() {
                                                 >
                                                     <SidebarMenuButton
                                                         isActive={location.pathname.includes(
-                                                            agent.id
+                                                            agent.id,
                                                         )}
                                                     >
                                                         <User />
@@ -89,7 +88,7 @@ export function AppSidebar() {
                                                     </SidebarMenuButton>
                                                 </NavLink>
                                             </SidebarMenuItem>
-                                        )
+                                        ),
                                     )}
                                 </div>
                             )}
@@ -101,7 +100,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <NavLink
-                            to="https://elizaos.github.io/eliza/docs/intro/"
+                            to="https://github.com/Sifchain/sa-eliza/blob/sif-dev/docs/AI_Agents_UI_Interface_Documentation.md"
                             target="_blank"
                         >
                             <SidebarMenuButton>

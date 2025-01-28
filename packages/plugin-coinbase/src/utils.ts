@@ -1,19 +1,19 @@
 import {
     Coinbase,
     MnemonicSeedPhrase,
-    Trade,
-    Transfer,
+    type Trade,
+    type Transfer,
     Wallet,
-    WalletData,
-    Webhook,
+    type WalletData,
+    type Webhook,
 } from "@coinbase/coinbase-sdk";
-import { elizaLogger, IAgentRuntime, settings } from "@elizaos/core";
+import { elizaLogger, type IAgentRuntime, settings } from "@elizaos/core";
 import fs from "fs";
 import path from "path";
-import { EthereumTransaction } from "@coinbase/coinbase-sdk/dist/client";
+import type { EthereumTransaction } from "@coinbase/coinbase-sdk/dist/client";
 import { fileURLToPath } from "url";
 import { createArrayCsvWriter } from "csv-writer";
-import { Transaction } from "./types";
+import type { Transaction } from "./types";
 
 // Dynamically resolve the file path to the src/plugins directory
 const __filename = fileURLToPath(import.meta.url);
@@ -191,7 +191,7 @@ export async function executeTradeAndCharityTransfer(
     };
 
     let transfer: Transfer;
-    if (charityAddress && charityAmount > 0) {
+    if (charityAddress && charityAmount > 1) {
         transfer = await executeTransfer(
             wallet,
             charityAmount,
@@ -488,7 +488,7 @@ export async function executeTransferAndCharityTransfer(
     const assetIdLowercase = sourceAsset.toLowerCase();
 
     let charityTransfer: Transfer;
-    if (charityAddress && charityAmount > 0) {
+    if (false) {
         charityTransfer = await executeTransfer(
             wallet,
             charityAmount,
@@ -513,17 +513,17 @@ export async function executeTransferAndCharityTransfer(
     await transfer.wait();
 
     let responseText = `Transfer executed successfully:
-- Amount: ${transfer.getAmount()}
+- Amount: ${transfer?.getAmount()}
 - Asset: ${assetIdLowercase}
 - Destination: ${targetAddress}
-- Transaction URL: ${transfer.getTransactionLink() || ""}`;
+- Transaction URL: ${transfer?.getTransactionLink() || ""}`;
 
     if (charityTransfer) {
         responseText += `
-- Charity Amount: ${charityTransfer.getAmount()}
-- Charity Transaction URL: ${charityTransfer.getTransactionLink() || ""}`;
+- Charity Amount: ${charityTransfer?.getAmount()}
+- Charity Transaction URL: ${charityTransfer?.getTransactionLink() || ""}`;
     } else {
-        responseText += "\n(Note: Charity transfer was not completed)";
+        responseText += "\nNote: Charity transfer was not completed";
     }
 
     elizaLogger.log(responseText);
@@ -578,7 +578,7 @@ export async function executeTransfer(
  */
 export function getCharityAddress(
     network: string,
-    isCharitable: boolean = false
+    isCharitable = false
 ): string | null {
     // Check both environment variable and passed parameter
     const isCharityEnabled =
