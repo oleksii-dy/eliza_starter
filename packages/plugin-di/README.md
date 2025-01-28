@@ -14,11 +14,11 @@ Check the [example](../_examples/plugin-with-di/) folder for a simple example of
 
 You can use Dependency Injection in any part of your Eliza plugin, including actions, evaluators, providers, services, and clients.
 
-- Actions: Inject services or clients to interact with external APIs or services. [Example](../_examples/plugin-with-di/src/actions/sampleAction.ts)
-- Evaluators: Inject services or clients to evaluate conditions or perform calculations. [Example](../_examples/plugin-with-di/src/evaluators/sampleEvaluator.ts)
-- Providers: Inject services or clients to provide data or resources. [Example](../_examples/plugin-with-di/src/providers/sampleProvider.ts)
-- Services: Inject other services or clients to perform business logic. [Example](../_examples/plugin-with-di/src/services/sampleService.ts)
-- Clients: Inject services or clients to interact with external APIs or services. Lack of examples, but you can refer to the services example.
+- Actions: Inject services or providers to interact with external APIs or services. [Example](../_examples/plugin-with-di/src/actions/sampleAction.ts)
+- Evaluators: Inject services or providers to evaluate conditions or perform calculations. [Example](../_examples/plugin-with-di/src/evaluators/sampleEvaluator.ts)
+- Providers: Inject services or providers to provide data or resources. [Example](../_examples/plugin-with-di/src/providers/sampleProvider.ts)
+- Services: Inject other services to perform business logic. [Example](../_examples/plugin-with-di/src/services/sampleService.ts)
+- Clients: Inject services to interact with external APIs or services. Lack of examples, but you can refer to the services example.
 
 ## Decorators for Dependency Injection
 
