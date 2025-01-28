@@ -265,27 +265,29 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
         try {
             // Process main document
             const processedContent = this.preprocess(item.content.text);
-            const mainEmbeddingArray = await embed(
-                this.runtime,
-                processedContent
-            );
 
-            const mainEmbedding = new Float32Array(mainEmbeddingArray);
-
-            // Create main document
-            await this.runtime.databaseAdapter.createKnowledge({
-                id: item.id,
-                agentId: this.runtime.agentId,
-                content: {
-                    text: item.content.text,
-                    metadata: {
-                        ...item.content.metadata,
-                        isMain: true,
-                    },
-                },
-                embedding: mainEmbedding,
-                createdAt: Date.now(),
-            });
+            // Don't embed entire documents
+            // const mainEmbeddingArray = await embed(
+            //     this.runtime,
+            //     processedContent
+            // );
+            //
+            // const mainEmbedding = new Float32Array(mainEmbeddingArray);
+            //
+            // // Create main document
+            // await this.runtime.databaseAdapter.createKnowledge({
+            //     id: item.id,
+            //     agentId: this.runtime.agentId,
+            //     content: {
+            //         text: item.content.text,
+            //         metadata: {
+            //             ...item.content.metadata,
+            //             isMain: true,
+            //         },
+            //     },
+            //     embedding: mainEmbedding,
+            //     createdAt: Date.now(),
+            // });
 
             // Generate and store chunks
             const chunks = await splitChunks(processedContent, 512, 20);
@@ -381,29 +383,31 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
             timeMarker("Preprocessing");
 
             // Step 2: Main document embedding
-            const mainEmbeddingArray = await embed(
-                this.runtime,
-                processedContent
-            );
-            const mainEmbedding = new Float32Array(mainEmbeddingArray);
+            // const mainEmbeddingArray = await embed(
+            //     this.runtime,
+            //     processedContent
+            // );
+            // const mainEmbedding = new Float32Array(mainEmbeddingArray);
             timeMarker("Main embedding");
 
             // Step 3: Create main document
-            await this.runtime.databaseAdapter.createKnowledge({
-                id: stringToUuid(file.path),
-                agentId: this.runtime.agentId,
-                content: {
-                    text: content,
-                    metadata: {
-                        source: file.path,
-                        type: file.type,
-                        isShared: file.isShared || false,
-                    },
-                },
-                embedding: mainEmbedding,
-                createdAt: Date.now(),
-            });
+            // await this.runtime.databaseAdapter.createKnowledge({
+            //     id: stringToUuid(file.path),
+            //     agentId: this.runtime.agentId,
+            //     content: {
+            //         text: content,
+            //         metadata: {
+            //             source: file.path,
+            //             type: file.type,
+            //             isShared: file.isShared || false,
+            //         },
+            //     },
+            //     embedding: mainEmbedding,
+            //     createdAt: Date.now(),
+            // });
             timeMarker("Main document storage");
+
+            elizaLogger.info("SKIPPED MAIN DOCUMENT EMBEDDING");
 
             // Step 4: Generate chunks
             const chunks = await splitChunks(processedContent, 512, 20);
@@ -412,7 +416,7 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
             timeMarker("Chunk generation");
 
             // Step 5: Process chunks with larger batches
-            const BATCH_SIZE = 10; // Increased batch size
+            const BATCH_SIZE = 100; // Increased batch size
             let processedChunks = 0;
 
             for (let i = 0; i < chunks.length; i += BATCH_SIZE) {
