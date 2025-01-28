@@ -68,10 +68,11 @@ export const executeSwap: Action = {
             });
             await runtime.cacheManager.set(msgHash, content, {expires: Date.now() + 300000});
         }
-        await callback({
-            text:`Please double-check all details before swapping to avoid any loss`,
-            action:"SUI_EXECUTE_SWAP_BY_SYMBOL",
-        });
+            await callback({
+                text:`Please double-check all details before swapping to avoid any loss`,
+                action:"SUI_EXECUTE_SWAP_BY_SYMBOL",
+            });
+
         const inputTokenObject = await findByVerifiedAndSymbol(content.inputTokenSymbol);
         if(!inputTokenObject){
             callback({
