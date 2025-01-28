@@ -53,7 +53,7 @@ import {
     type Memory,
 } from "./types.ts";
 import { stringToUuid } from "./uuid.ts";
-
+import _ from "lodash";
 /**
  * Represents the runtime environment for an agent, handling message processing,
  * action registration, and interaction with external services like OpenAI and Supabase.
@@ -371,10 +371,12 @@ export class AgentRuntime implements IAgentRuntime {
 
         this.token = opts.token;
 
-        this.plugins = [
+        const allPlugins = [
             ...(opts.character?.plugins ?? []),
             ...(opts.plugins ?? []),
         ];
+
+        this.plugins = _.uniqBy(allPlugins, "name");
 
         this.plugins.forEach((plugin) => {
             plugin.actions?.forEach((action) => {
