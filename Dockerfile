@@ -1,6 +1,9 @@
 # Use a specific Node.js version for better reproducibility
 FROM node:23.3.0-slim AS builder
 
+# Set environment variables
+ENV LOG_LEVEL=debug
+
 # Install pnpm globally and necessary build tools
 RUN npm install -g pnpm@9.4.0 && \
     apt-get update && \
