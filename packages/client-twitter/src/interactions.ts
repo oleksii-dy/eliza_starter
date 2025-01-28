@@ -105,6 +105,7 @@ export class TwitterInteractionClient {
 
     async start() {
         const handleTwitterInteractionsLoop = () => {
+            this.handleMessageReply();
             this.handleTwitterInteractions();
             setTimeout(
                 handleTwitterInteractionsLoop,
@@ -654,5 +655,53 @@ export class TwitterInteractionClient {
         await processThread.bind(this)(tweet, 0);
 
         return thread;
+    }
+    async handleMessageReply() {
+        elizaLogger.log("Checking Twitter Conversations");
+        try {
+            const userId = (await this.client.twitterClient.me()).userId;
+            const conversations = (
+                await this.client.twitterClient.getDirectMessageConversations(
+                    userId
+                )
+            ).conversations;
+            elizaLogger.log("received Twitter Conversations", conversations);
+            for (const conversation of conversations) {
+                elizaLogger.log("processing Twitter Conversations", conversation);
+                const { conversationId, messages } = conversation;
+                const latestMsgIdx = messages.length - 1;
+                elizaLogger.info("latest message", messages[latestMsgIdx]);
+                if (messages[latestMsgIdx].senderId != userId) {
+                    try {
+                        // const response = await generateMessageResponse({
+                        //     runtime: this.runtime,
+                        //     context: messages[latestMsgIdx].text,
+                        //     modelClass: ModelClass.LARGE,
+                        // });
+                        // elizaLogger.log("message to send out", response.text);
+                        // var sendDMResult = await this.client.twitterClient.sendDirectMessage(
+                        //     conversationId,
+                        //     response.text
+                        // );
+                        // elizaLogger.log("message sent result", sendDMResult);
+                        
+                        var sendDMResult = await this.client.twitterClient.sendDirectMessage(
+                            conversationId,
+                            "i am copy cat: " + messages[latestMsgIdx].text
+                        );
+                        elizaLogger.log("message sent result", sendDMResult);
+                    } catch (error) {
+                        elizaLogger.log("Error response twitter message:", {
+                            conversationId,
+                            error,
+                        });
+                    }
+                }
+            }
+        } catch (error) {
+            elizaLogger.log("Error fetching twitter message history:", {
+                error,
+            });
+        }
     }
 }
