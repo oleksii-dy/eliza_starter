@@ -35,7 +35,7 @@ export class HashNetworkAdapter implements IVerifiableInferenceAdapter {
     async generateText(
         context: string,
         modelClass: string,
-        options?: VerifiableInferenceOptions,
+        options?: VerifiableInferenceOptions
     ): Promise<VerifiableInferenceResult> {
         const provider = this.options.modelProvider || ModelProviderName.OPENAI;
         const baseEndpoint = options?.endpoint || models[provider].endpoint;
@@ -44,7 +44,7 @@ export class HashNetworkAdapter implements IVerifiableInferenceAdapter {
 
         if (!apiKey) {
             throw new Error(
-                `API key (token) is required for provider: ${provider}`,
+                `API key (token) is required for provider: ${provider}`
             );
         }
 
@@ -101,14 +101,14 @@ export class HashNetworkAdapter implements IVerifiableInferenceAdapter {
                 },
             });
             const proof = transformProof(claim);
-            elizaLogger.info({ msg: "Proof created", proof });
+            elizaLogger.info("Proof created", { proof });
 
             const txHash = await addProofOnChain({
                 proof: transformForOnchain(proof),
                 contractAddress: this.options.contractAddress as Address,
                 account: this._account,
             });
-            elizaLogger.info({ msg: "Proof added on Hash Network 🔥", txHash });
+            elizaLogger.info(`Proof added on Hash Network 🔥: ${txHash}`);
             let { response } = proof.extractedParameterValues;
             // Fix the escape characters
             response = response.replace(/\\"/g, '"');
