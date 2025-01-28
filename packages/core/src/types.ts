@@ -646,17 +646,21 @@ export type Plugin = {
  * Available client platforms
  */
 export enum Clients {
+    ALEXA= "alexa",
     DISCORD = "discord",
     DIRECT = "direct",
     TWITTER = "twitter",
     TELEGRAM = "telegram",
+    TELEGRAM_ACCOUNT = "telegram-account",
     FARCASTER = "farcaster",
     LENS = "lens",
     AUTO = "auto",
     SLACK = "slack",
     GITHUB = "github",
     INSTAGRAM = "instagram",
-    SIMSAI = "simsai"
+    SIMSAI = "simsai",
+    XMTP = "xmtp",
+    DEVA = "deva",
 }
 
 export interface IAgentConfig {
@@ -769,6 +773,7 @@ export type Character = {
         jeeterInteractionTemplate?: string;
         jeeterMessageHandlerTemplate?: string;
         jeeterShouldRespondTemplate?: string;
+        devaPostTemplate?: string;
     };
 
     /** Character biography */
@@ -1641,7 +1646,6 @@ export enum ActionTimelineType {
     ForYou = "foryou",
     Following = "following",
 }
-
 export enum KnowledgeScope {
     SHARED = "shared",
     PRIVATE = "private",
