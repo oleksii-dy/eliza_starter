@@ -24,6 +24,7 @@ Extract the swap parameters from the conversation and wallet context above, foll
             "inputTokenSymbol": string | null,     // Token being sold (e.g. "SUI")
             "outputTokenSymbol": string | null,    // Token being bought
             "amount": number | 0,               // Amount to swap
+            "responseMessage": string                // Translated message to the user (e.g., "Please double-check all details before swapping to avoid any loss" in the user's language)
         }
     - Use null for any values that cannot be determined.
     - All property names must use double quotes
@@ -68,11 +69,7 @@ export const executeSwap: Action = {
             });
             await runtime.cacheManager.set(msgHash, content, {expires: Date.now() + 300000});
         }
-            await callback({
-                text:`Please double-check all details before swapping to avoid any loss`,
-                action:"SUI_EXECUTE_SWAP_BY_SYMBOL",
-            });
-
+        elizaLogger.success("content:", content)
         const inputTokenObject = await findByVerifiedAndSymbol(content.inputTokenSymbol);
         if(!inputTokenObject){
             callback({
@@ -95,7 +92,7 @@ export const executeSwap: Action = {
         }
         try {
             await callback({
-               text:`Please double-check all details before swapping to avoid any loss`,
+               text:content.responseMessage,
                action:"SUI_EXECUTE_SWAP_BY_SYMBOL",
                result: {
                     type: "swap",
