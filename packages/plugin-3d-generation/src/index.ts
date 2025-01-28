@@ -16,8 +16,13 @@ import * as path from "path";
 import * as process from "process";
 
 const generate3D = async (prompt: string, runtime: IAgentRuntime) => {
-    process.env["FAL_KEY"] =
-        FAL_CONSTANTS.API_KEY_SETTING || runtime.getSetting("FAL_API_KEY");
+    const falKey =
+        runtime.getSetting("FAL_API_KEY") || FAL_CONSTANTS.API_KEY_SETTING;
+
+    fal.config({
+        // Either a single FAL_KEY or a combination of FAL_KEY_ID and FAL_KEY_SECRET
+        credentials: falKey,
+    });
 
     try {
         elizaLogger.log("Starting 3D generation with prompt:", prompt);
