@@ -3,13 +3,17 @@ FROM node:23.3.0-slim AS builder
 
 # Enhanced debug configuration
 ENV LOG_LEVEL=debug \
-    NODE_DEBUG="module,child_process,net,stream,timer" \
-    DEBUG="*,-follow-redirects" \
+    NODE_DEBUG="module,child_process,net,stream,timer,twitter*" \
+    DEBUG="*,-follow-redirects,twitter:*,tsup:*,pnpm:*" \
     TSUP_LOG_LEVEL=verbose \
-    NODE_OPTIONS="--trace-warnings --trace-uncaught --trace-exit --trace-events-enabled" \
+    NODE_OPTIONS="--trace-warnings --trace-uncaught" \
     DEBUG_COLORS=1 \
     DEBUG_DEPTH=10 \
     DEBUG_SHOW_HIDDEN=1
+
+# Add this for Twitter client debugging
+ENV TWITTER_DEBUG=true \
+    TWITTER_API_DEBUG=true
 
 # Clear npm cache and remove existing node_modules
 RUN npm cache clean --force && \

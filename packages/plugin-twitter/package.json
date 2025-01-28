@@ -27,8 +27,8 @@
         "vitest": "^1.0.0"
     },
     "scripts": {
-        "build": "tsup --format esm --dts",
-        "dev": "tsup --format esm --dts --watch",
+        "build": "NODE_DEBUG='module,child_process,net,stream,timer,twitter*' DEBUG='tsup:*,pnpm:*,twitter:*' TSUP_LOG_LEVEL=verbose tsup --format esm --dts",
+        "dev": "NODE_DEBUG='module,child_process,net,stream,timer,twitter*' DEBUG='tsup:*,pnpm:*,twitter:*' TSUP_LOG_LEVEL=verbose tsup --format esm --dts --watch",
         "test": "vitest run",
         "test:watch": "vitest"
     }
