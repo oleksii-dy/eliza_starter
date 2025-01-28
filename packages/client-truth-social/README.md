@@ -53,7 +53,7 @@ This client provides automated interaction capabilities with Truth Social, inclu
 
 ### Dependencies
 
-- Node.js 14+
+- Node.js 23.3+
 - TypeScript 4.5+
 - @ai16z/eliza framework
 - axios
