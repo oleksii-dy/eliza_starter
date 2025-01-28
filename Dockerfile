@@ -1,8 +1,17 @@
 # Use a specific Node.js version for better reproducibility
 FROM node:23.3.0-slim AS builder
 
-# Set environment variables
-ENV LOG_LEVEL=debug
+# Set debug environment variables
+ENV LOG_LEVEL=debug \
+    NODE_DEBUG=* \
+    DEBUG=* \
+    TSUP_LOG_LEVEL=verbose
+
+# Set environment variables for detailed logging
+ENV NODE_ENV=development
+ENV NODE_OPTIONS="--trace-warnings"
+ENV DOCKER_BUILDKIT=1
+ENV BUILDKIT_PROGRESS=plain
 
 # Install pnpm globally and necessary build tools
 RUN npm install -g pnpm@9.4.0 && \

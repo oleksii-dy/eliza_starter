@@ -23,8 +23,8 @@
         "tsup": "8.3.5"
     },
     "scripts": {
-        "build": "tsup --format esm --dts",
-        "dev": "tsup --format esm --dts --watch"
+        "build": "LOG_LEVEL=debug NODE_DEBUG=* DEBUG=* TSUP_LOG_LEVEL=verbose tsup src/index.ts --format cjs,esm --dts",
+        "dev": "LOG_LEVEL=debug NODE_DEBUG=* DEBUG=* TSUP_LOG_LEVEL=verbose tsup src/index.ts --format cjs,esm --dts --watch"
     },
     "peerDependencies": {
         "whatwg-url": "7.1.0"
