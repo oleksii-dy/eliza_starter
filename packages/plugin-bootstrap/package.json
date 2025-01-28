@@ -23,10 +23,13 @@
         "tsup": "8.3.5"
     },
     "scripts": {
-        "build": "cross-env NODE_DEBUG='module,child_process,net,stream,timer' DEBUG='tsup:*,pnpm:*' TSUP_LOG_LEVEL=verbose tsup src/index.ts --format cjs,esm --dts --clean --onSuccess 'echo Build completed successfully' --onError 'echo Build failed with error code $?'",
-        "dev": "cross-env NODE_DEBUG='module,child_process,net,stream,timer' DEBUG='tsup:*,pnpm:*' TSUP_LOG_LEVEL=verbose tsup src/index.ts --format cjs,esm --dts --watch"
+        "build": "NODE_DEBUG='module,child_process,net,stream,timer' DEBUG='tsup:*,pnpm:*' TSUP_LOG_LEVEL=verbose tsup src/index.ts --format cjs,esm --dts --clean --onSuccess 'echo Build completed successfully' --onError 'echo Build failed with error code $?'",
+        "dev": "NODE_DEBUG='module,child_process,net,stream,timer' DEBUG='tsup:*,pnpm:*' TSUP_LOG_LEVEL=verbose tsup src/index.ts --format cjs,esm --dts --watch"
     },
     "peerDependencies": {
         "whatwg-url": "7.1.0"
+    },
+    "devDependencies": {
+        "cross-env": "^7.0.3"
     }
 }

@@ -59,6 +59,7 @@ COPY . .
 
 # Install dependencies
 RUN pnpm install --no-frozen-lockfile
+RUN pnpm add -D cross-env --filter @elizaos/plugin-bootstrap
 
 # Build the project
 RUN pnpm -F @elizaos/plugin-bootstrap build --verbose 2>&1 | tee build.log
