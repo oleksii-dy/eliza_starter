@@ -65,11 +65,11 @@ export class InstagramPostService {
 
             const lastPostTimestamp = lastPost?.timestamp ?? 0;
             const minMinutes = Number.parseInt(
-                this.runtime.getSetting("POST_INTERVAL_MIN") || "90",
+                this.runtime.getSetting("INSTAGRAM_POST_INTERVAL_MIN") || this.runtime.getSetting("POST_INTERVAL_MIN") || "90",
                 10
             );
             const maxMinutes = Number.parseInt(
-                this.runtime.getSetting("POST_INTERVAL_MAX") || "180",
+                this.runtime.getSetting("INSTAGRAM_POST_INTERVAL_MAX") || this.runtime.getSetting("POST_INTERVAL_MAX") || "180",
                 10
             );
             const randomMinutes =
