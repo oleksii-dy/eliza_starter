@@ -1,6 +1,5 @@
 {
     "name": "@elizaos/plugin-hashnetwork",
-    "version": "0.1.9-alpha.1",
     "description": "Hash Network adapter for ElizaOS",
     "main": "dist/index.js",
     "type": "module",
@@ -11,7 +10,7 @@
         "dev": "tsup src/index.ts --format esm --dts --watch"
     },
     "dependencies": {
-        "@elizaos/core": "workspace:0.1.9-alpha.1",
+        "@elizaos/core": "workspace:*",
         "@reclaimprotocol/attestor-core": "^3.1.1",
         "@reclaimprotocol/js-sdk": "^2.2.1"
     },
