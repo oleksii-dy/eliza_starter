@@ -62,7 +62,6 @@ RUN pnpm install --no-frozen-lockfile
 
 # Build the project
 RUN pnpm -F @elizaos/plugin-bootstrap build --verbose 2>&1 | tee build.log
-RUN pnpm run build && pnpm prune --prod
 
 # Final runtime image
 FROM node:23.3.0-slim
