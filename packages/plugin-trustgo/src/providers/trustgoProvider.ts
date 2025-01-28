@@ -229,7 +229,6 @@ export class TrustgoProvider {
 
         } catch (error) {
             throw new Error(`attest failed: ${error.message}`);
-            return null;
         }
     }
 
@@ -268,7 +267,6 @@ export class TrustgoProvider {
 
         } catch (error) {
             throw new Error(`attest failed: ${error.message}`);
-            return null;
         }
 
     }
