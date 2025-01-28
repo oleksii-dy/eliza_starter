@@ -46,7 +46,7 @@ export default {
         "PAY_ON_QUAI",
     ],
     // eslint-disable-next-line
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (runtime: IAgentRuntime, _message: Memory) => {
         return validateSettings(runtime);
     },
     description:
@@ -61,15 +61,13 @@ export default {
         console.log("Starting TRANSFER_TOKEN handler...");
 
         // Initialize or update state
-        if (!state) {
-            state = (await runtime.composeState(message)) as State;
-        } else {
-            state = await runtime.updateRecentMessageState(state);
-        }
+        const currentState = !state 
+            ? await runtime.composeState(message) 
+            : await runtime.updateRecentMessageState(state);
 
         // Compose transfer context
         const transferContext = composeContext({
-            state,
+            state: currentState,
             template: transferTemplate,
         });
 
@@ -96,37 +94,31 @@ export default {
 
         try {
             const account = getQuaiAccount(runtime);
-            const amount =  formatUnits(content.amount, "wei");
+            const amount = formatUnits(content.amount, "wei");
 
-            var txObj: TransactionRequest = {};
-            if (content.tokenAddress) {
-                // TODO: transfer QRC20s
-            } else {
-                txObj = {
-                    to:  content.recipient,
+            // Declare transaction object at function scope
+            const txObj: TransactionRequest = content.tokenAddress 
+                ? {} // TODO: transfer QRC20s
+                : {
+                    to: content.recipient,
                     value: amount,
                     from: account.address,
                 };
 
-                console.log(
-                    "Transferring",
-                    amount,
-                    "QUAI",
-                    "to",
-                    content.recipient
-                );
-            }
-
-            const tx = await account.sendTransaction(txObj)
-
             console.log(
-                "Transfer completed successfully! tx: " + tx.hash
+                "Transferring",
+                amount,
+                "QUAI",
+                "to",
+                content.recipient
             );
+
+            const tx = await account.sendTransaction(txObj);
+
+            console.log(`Transfer completed successfully! tx: ${tx.hash}`);
             if (callback) {
                 callback({
-                    text:
-                        "Transfer completed successfully! tx: " +
-                        tx.hash,
+                    text: `Transfer completed successfully! tx: ${tx.hash}`,
                     content: {},
                 });
             }
