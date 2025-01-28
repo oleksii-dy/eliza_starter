@@ -228,8 +228,10 @@ Generate only the tweet text, no commentary or markdown.`;
             timeZoneName: 'short'
         }).format(new Date(event.timestamp));
 
-        const tx = await this.swapUSDCForToken(event.ticker, amount);
-        const pnl = await this.calculateOverallPNL(event.ticker, amount, amount);
+        const tx = event.event.toUpperCase() === 'BUY'
+            ? await this.swap(event.ticker, 'USDC', amount)
+            : await this.swap('USDC', event.ticker, amount);
+        const pnl = await this.calculateOverallPNL(wallet, event.ticker, amount);
         const pnlText = `Overall PNL: $${pnl.toFixed(2)}`;
 
             try {
@@ -279,27 +281,37 @@ Generate only the tweet text, no commentary or markdown.`;
     }
 
     private async swap(fromTicker: string, toTicker: string, amountFrom: number) {
-        const USDC = new Token(1, '0xA0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', 6, 'USDC', 'USD Coin');
-        const token = new Token(1, toTicker, 18); // Assuming the token has 18 decimals
+        elizaLogger.log("Creating fromToken with ticker:", fromTicker);
+        const fromToken = new Token(1, fromTicker, 18); // Assuming the from token has 18 decimals
+        elizaLogger.log("Creating toToken with ticker:", toTicker);
+        const toToken = new Token(1, toTicker, 18); // Assuming the to token has 18 decimals
 
+        elizaLogger.log("Initializing provider with Ethereum RPC URL:", process.env.ETHEREUM_RPC_URL);
         const provider = new JsonRpcProvider(process.env.ETHEREUM_RPC_URL);
+        elizaLogger.log("Creating wallet with provided private key");
         const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
-        const amountInCurrency = CurrencyAmount.fromRawAmount(USDC, amountFrom * 10 ** USDC.decimals);
+        elizaLogger.log("Calculating amount in currency for fromToken:", amountFrom * 10 ** fromToken.decimals);
+        const amountInCurrency = CurrencyAmount.fromRawAmount(fromToken, amountFrom * 10 ** fromToken.decimals);
 
-        const route = new Route([USDC, token], USDC);
+        elizaLogger.log("Creating route for token swap from", fromToken.address, "to", toToken.address);
+        const route = new Route([fromToken, toToken], fromToken);
+        elizaLogger.log("Creating trade with exact input amount:", amountInCurrency.toExact());
         const trade = new Trade(route, amountInCurrency, TradeType.EXACT_INPUT);
 
+        elizaLogger.log("Setting slippage tolerance to 0.50%");
         const slippageTolerance = new Percent('50', '10000'); // 0.50%
+        elizaLogger.log("Calculating minimum amount out with slippage tolerance:", slippageTolerance.toSignificant());
         const amountOutMin = trade.minimumAmountOut(slippageTolerance).toExact();
 
+        elizaLogger.log("Preparing transaction object with to address:", route.path[1].address, "and value:", amountOutMin);
         const transaction = {
             to: route.path[1].address,
-            value: ethers.utils.parseUnits(amountOutMin, token.decimals),
+            value: ethers.utils.parseUnits(amountOutMin, toToken.decimals),
             gasLimit: ethers.utils.hexlify(100000),
             gasPrice: ethers.utils.parseUnits('20', 'gwei'),
         };
-
+        elizaLogger.info("transaction", JSON.stringify(transaction));
         const tx = await wallet.sendTransaction(transaction);
         await tx.wait();
         elizaLogger.info("tx", JSON.stringify(tx));
