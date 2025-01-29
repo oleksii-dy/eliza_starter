@@ -177,12 +177,12 @@ export default function Page({ agentId }: { agentId: UUID }) {
         <div className="flex flex-col w-full h-[calc(100dvh)] p-4">
             <div className="flex-1 overflow-y-auto">
                 <ChatMessageList ref={messagesContainerRef}>
-                    {transitions((styles, message) => {
+                    {transitions((style, message: ContentWithUser) => {
                         const variant = getMessageVariant(message?.user);
                         return (
                             <CustomAnimatedDiv
                                 style={{
-                                    ...styles,
+                                    ...style,
                                     display: "flex",
                                     flexDirection: "column",
                                     gap: "0.5rem",
@@ -212,16 +212,14 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                             {/* Attachments */}
                                             <div>
                                                 {message?.attachments?.map(
-                                                    (attachment: IAttachment, _idx: number) => (
+                                                    (attachment: IAttachment) => (
                                                         <div
                                                             className="flex flex-col gap-1 mt-2"
                                                             key={`${attachment.url}-${attachment.title}`}
                                                         >
                                                             <img
                                                                 alt="attachment"
-                                                                src={
-                                                                    attachment.url
-                                                                }
+                                                                src={attachment.url}
                                                                 width="100%"
                                                                 height="100%"
                                                                 className="w-64 rounded-md"

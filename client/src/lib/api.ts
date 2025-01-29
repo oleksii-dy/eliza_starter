@@ -39,25 +39,27 @@ const fetcher = async ({
     }
 
     return fetch(`${BASE_URL}${url}`, options).then(async (resp) => {
+        const contentType = resp.headers.get('Content-Type');
+        if (contentType === "audio/mpeg") {
+            return await resp.blob();
+        }
 
-            if (contentType === "audio/mpeg") {
-                return await resp.blob();
+        if (!resp.ok) {
+            const errorText = await resp.text();
+            console.error("Error: ", errorText);
+
+            let errorMessage = "An error occurred.";
+            try {
+                const errorObj = JSON.parse(errorText);
+                errorMessage = errorObj.message || errorMessage;
+            } catch {
+                errorMessage = errorText || errorMessage;
             }
-            return resp.json();
+
+            throw new Error(errorMessage);
         }
-
-        const errorText = await resp.text();
-        console.error("Error: ", errorText);
-
-        let errorMessage = "An error occurred.";
-        try {
-            const errorObj = JSON.parse(errorText);
-            errorMessage = errorObj.message || errorMessage;
-        } catch {
-            errorMessage = errorText || errorMessage;
-        }
-
-        throw new Error(errorMessage);
+            
+        return resp.json();
     });
 };
 
