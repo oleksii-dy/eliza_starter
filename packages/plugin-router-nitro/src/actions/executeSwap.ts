@@ -77,6 +77,10 @@ const handleTransaction = async (
     const tx = await wallet.sendTransaction(txResponse.txn);
     const receipt = await tx.wait();
     
+    if (!receipt?.status) {
+        throw new Error("Transaction failed");
+    }
+    
     const txExplorerUrl = blockExplorer ? `${blockExplorer}/tx/${tx.hash}` : tx.hash;
     const successMessage = `Swap completed successfully! Txn: ${txExplorerUrl}`;
     
@@ -100,7 +104,7 @@ export const executeSwapAction = {
             // State initialization
             const updatedState = state ? 
                 await runtime.updateRecentMessageState(state) : 
-                await runtime.composeState(message) as State;
+                await runtime.composeState(message);
 
             // Generate swap content
             const swapContext = composeContext({ state: updatedState, template: swapTemplate });
