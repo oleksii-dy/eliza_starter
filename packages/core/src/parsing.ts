@@ -15,7 +15,7 @@ If {{agentName}} is talking too much, you can choose [IGNORE]
 Your response must include one of the options.`;
 
 export const parseShouldRespondFromText = (
-    text: string,
+    text: string
 ): "RESPOND" | "IGNORE" | "STOP" | null => {
     const match = text
         .split("\n")[0]
@@ -27,12 +27,12 @@ export const parseShouldRespondFromText = (
     return match
         ? (match[0].toUpperCase() as "RESPOND" | "IGNORE" | "STOP")
         : text.includes("RESPOND")
-          ? "RESPOND"
-          : text.includes("IGNORE")
-            ? "IGNORE"
-            : text.includes("STOP")
-              ? "STOP"
-              : null;
+        ? "RESPOND"
+        : text.includes("IGNORE")
+        ? "IGNORE"
+        : text.includes("STOP")
+        ? "STOP"
+        : null;
 };
 
 export const booleanFooter = `Respond with only a YES or a NO.`;
@@ -90,28 +90,34 @@ export function parseJsonArrayFromText(text: string) {
 
     if (jsonBlockMatch) {
         try {
-            // Replace single quotes with double quotes before parsing
-            const normalizedJson = jsonBlockMatch[1].replace(/'/g, '"');
+            // Only replace quotes that are actually being used for string delimitation
+            const normalizedJson = jsonBlockMatch[1].replace(
+                /(?<!\\)'([^']*)'(?=\s*[,}\]])/g,
+                '"$1"'
+            );
             jsonData = JSON.parse(normalizedJson);
         } catch (e) {
             console.error("Error parsing JSON:", e);
-            console.error("Text is not JSON", text);
+            console.error("Failed parsing text:", jsonBlockMatch[1]);
         }
     }
 
     // If that fails, try to find an array pattern
     if (!jsonData) {
-        const arrayPattern = /\[\s*['"][^'"]*['"]\s*\]/;
+        const arrayPattern = /\[\s*(['"])(.*?)\1\s*\]/;
         const arrayMatch = text.match(arrayPattern);
 
         if (arrayMatch) {
             try {
-                // Replace single quotes with double quotes before parsing
-                const normalizedJson = arrayMatch[0].replace(/'/g, '"');
+                // Only replace quotes that are actually being used for string delimitation
+                const normalizedJson = arrayMatch[0].replace(
+                    /(?<!\\)'([^']*)'(?=\s*[,}\]])/g,
+                    '"$1"'
+                );
                 jsonData = JSON.parse(normalizedJson);
             } catch (e) {
-                console.error("Text is not JSON", text);
                 console.error("Error parsing JSON:", e);
+                console.error("Failed parsing text:", arrayMatch[0]);
             }
         }
     }
@@ -134,7 +140,7 @@ export function parseJsonArrayFromText(text: string) {
  * @returns An object parsed from the JSON string if successful; otherwise, null or the result of parsing an array.
  */
 export function parseJSONObjectFromText(
-    text: string,
+    text: string
 ): Record<string, any> | null {
     let jsonData = null;
 
@@ -146,7 +152,7 @@ export function parseJSONObjectFromText(
         } catch (e) {
             console.error("Error parsing JSON:", e);
             console.error("Text is not JSON", text);
-            return null;
+            return extractAttributes(jsonBlockMatch[1]);
         }
     } else {
         const objectPattern = /{[\s\S]*?}/;
@@ -158,7 +164,7 @@ export function parseJSONObjectFromText(
             } catch (e) {
                 console.error("Error parsing JSON:", e);
                 console.error("Text is not JSON", text);
-                return null;
+                return extractAttributes(objectMatch[0]);
             }
         }
     }
@@ -184,18 +190,27 @@ export function parseJSONObjectFromText(
  */
 export function extractAttributes(
     response: string,
-    attributesToExtract: string[],
+    attributesToExtract?: string[]
 ): { [key: string]: string | undefined } {
     const attributes: { [key: string]: string | undefined } = {};
 
-    attributesToExtract.forEach((attribute) => {
-        const match = response.match(
-            new RegExp(`"${attribute}"\\s*:\\s*"([^"]*)"`, "i"),
-        );
-        if (match) {
-            attributes[attribute] = match[1];
+    if (!attributesToExtract || attributesToExtract.length === 0) {
+        // Extract all attributes if no specific attributes are provided
+        const matches = response.matchAll(/"([^"]+)"\s*:\s*"([^"]*)"/g);
+        for (const match of matches) {
+            attributes[match[1]] = match[2];
         }
-    });
+    } else {
+        // Extract only specified attributes
+        attributesToExtract.forEach((attribute) => {
+            const match = response.match(
+                new RegExp(`"${attribute}"\\s*:\\s*"([^"]*)"`, "i")
+            );
+            if (match) {
+                attributes[attribute] = match[1];
+            }
+        });
+    }
 
     return attributes;
 }
@@ -219,7 +234,7 @@ export function cleanJsonResponse(response: string): string {
 export const postActionResponseFooter = `Choose any combination of [LIKE], [RETWEET], [QUOTE], and [REPLY] that are appropriate. Each action must be on its own line. Your response must only include the chosen actions.`;
 
 export const parseActionResponseFromText = (
-    text: string,
+    text: string
 ): { actions: ActionResponse } => {
     const actions: ActionResponse = {
         like: false,
@@ -258,7 +273,7 @@ export const parseActionResponseFromText = (
  */
 export function truncateToCompleteSentence(
     text: string,
-    maxLength: number,
+    maxLength: number
 ): string {
     if (text.length <= maxLength) {
         return text;
