@@ -35,7 +35,7 @@ interface Action {
 }
 ```
 
-Source: https://github.com/elizaos/eliza/packages/core/src/types.ts
+Source: https://github.com/elizaOS/eliza/blob/main/packages/plugin-solana/src/actions/takeOrder.ts
 
 ---
 
