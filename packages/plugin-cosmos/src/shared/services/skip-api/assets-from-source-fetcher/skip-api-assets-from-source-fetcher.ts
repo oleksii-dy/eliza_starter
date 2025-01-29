@@ -1,6 +1,6 @@
 import axios from "axios";
 import { skipApiAssetsFromSourceResponseSchema } from "./schema";
-import {
+import type {
     SkipApiAssetsFromSourceParams,
     SkipApiAssetsFromSourceResponse,
 } from "./interfaces";
@@ -58,6 +58,7 @@ export class SkipApiAssetsFromSourceFetcher {
                 headers: {
                     "Content-Type": "application/json",
                 },
+                timeout: 5000,
             });
 
             const validResponse = skipApiAssetsFromSourceResponseSchema.parse(

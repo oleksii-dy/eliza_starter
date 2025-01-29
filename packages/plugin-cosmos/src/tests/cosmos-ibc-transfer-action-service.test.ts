@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { IBCTransferAction } from "../actions/ibc-transfer/services/ibc-transfer-action-service"; // dostosuj ścieżkę do pliku
+import { IBCTransferAction } from "../actions/ibc-transfer/services/ibc-transfer-action-service";
 import { assets } from "chain-registry";
 import * as CosmosAssetsHelpers from "../shared/helpers/cosmos-assets";
 import { getAssetBySymbol } from "@chain-registry/utils";
@@ -140,6 +140,7 @@ describe("IBCTransferAction", () => {
         const senderAddress = "cosmos1senderaddress";
         const targetChainId = "target-chain-id";
         const sourceChainId = "source-chain-id";
+        const mockTxHash = "mock_tx_hash_123";
 
         mockWalletChains.getWalletAddress.mockResolvedValue(senderAddress);
         // @ts-expect-error --- ...
@@ -161,6 +162,10 @@ describe("IBCTransferAction", () => {
         mockSkipClient.route.mockResolvedValue({
             requiredChainAddresses: [sourceChainId, targetChainId],
         });
+        mockSkipClient.executeRoute.mockImplementation(async ({ onTransactionCompleted }) => {
+            await onTransactionCompleted(null, mockTxHash);
+        });
+
         // @ts-expect-error --- ...
         const ibcTransferAction = new IBCTransferAction(mockWalletChains);
 
@@ -173,7 +178,7 @@ describe("IBCTransferAction", () => {
         expect(result).toEqual({
             from: senderAddress,
             to: params.toAddress,
-            txHash: undefined,
+            txHash: mockTxHash,
         });
         expect(mockSkipClient.executeRoute).toHaveBeenCalled();
     });
