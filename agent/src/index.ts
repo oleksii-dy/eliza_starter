@@ -1226,7 +1226,6 @@ export async function createAgent(
                 ? createNFTCollectionsPlugin()
                 : null,
             getSecret(character, "FUSE_PRIVATE_KEY") ? fusePlugin : null,
-        ].filter(Boolean),
             getSecret(character, "ZERO_EX_API_KEY") ? zxPlugin : null,
             getSecret(character, "DKG_PRIVATE_KEY") ? dkgPlugin : null,
             getSecret(character, "PYTH_TESTNET_PROGRAM_KEY") ||
