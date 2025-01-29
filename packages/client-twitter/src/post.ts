@@ -9,6 +9,7 @@ import {
     TemplateType,
     UUID,
     truncateToCompleteSentence,
+    parseJSONObjectFromText,
 } from "@elizaos/core";
 import { elizaLogger } from "@elizaos/core";
 import { ClientBase } from "./base.ts";
@@ -412,7 +413,29 @@ export class TwitterPostClient {
             );
             const body = await standardTweetResult.json();
             if (!body?.data?.create_tweet?.tweet_results?.result) {
-                console.error("Error sending tweet; Bad response:", body);
+                elizaLogger.error("Error sending tweet; Bad response:", body);
+                if (body?.errors?.[0].message === 'Authorization: Denied by access control: Missing TwitterUserNotSuspended') {
+                  elizaLogger.error("Account suspended");
+                  //this.client is base
+                  //this.runtime needs a stop client
+                  // this is
+                  const manager = this.runtime.clients.twitter
+                  // stop post/search/interaction
+                  if (manager) {
+                      if (manager.client.twitterClient) {
+                          await manager.post.stop();
+                          await manager.interaction.stop();
+                          if (manager.search) {
+                              await manager.search.stop();
+                          }
+                      } else {
+                          // it's still starting up
+                      }
+                  } // already stoped
+
+                  // mark it offline
+                  delete runtime.clients.twitter;
+                }
                 return;
             }
             return body.data.create_tweet.tweet_results.result;
@@ -455,7 +478,7 @@ export class TwitterPostClient {
                 newTweetContent
             );
         } catch (error) {
-            elizaLogger.error("Error sending tweet:", error);
+            elizaLogger.error("postTweet - Error sending tweet:", error);
         }
     }
 
@@ -502,18 +525,24 @@ export class TwitterPostClient {
 
             elizaLogger.debug("generate post prompt:\n" + context);
 
-            const newTweetContent = await generateText({
+            const response = await generateText({
                 runtime: this.runtime,
                 context,
                 modelClass: ModelClass.SMALL,
             });
+
+             const newTweetContent = response
+                .replace(/```json\s*/g, "") // Remove ```json
+                .replace(/```\s*/g, "") // Remove any remaining ```
+                .replace(/(\r\n|\n|\r)/g, "") // Remove line break
+                .trim();
 
             // First attempt to clean content
             let cleanedContent = "";
 
             // Try parsing as JSON first
             try {
-                const parsedResponse = JSON.parse(newTweetContent);
+                const parsedResponse = parseJSONObjectFromText(newTweetContent);
                 if (parsedResponse.text) {
                     cleanedContent = parsedResponse.text;
                 } else if (typeof parsedResponse === "string") {
@@ -589,10 +618,10 @@ export class TwitterPostClient {
                     );
                 }
             } catch (error) {
-                elizaLogger.error("Error sending tweet:", error);
+                elizaLogger.error("generateNewTweet Error sending tweet:", error);
             }
         } catch (error) {
-            elizaLogger.error("Error generating new tweet:", error);
+            elizaLogger.error("generateNewTweet Error generating new tweet:", error);
         }
     }
 
@@ -622,12 +651,12 @@ export class TwitterPostClient {
         const cleanedResponse = response
             .replace(/```json\s*/g, "") // Remove ```json
             .replace(/```\s*/g, "") // Remove any remaining ```
-            .replaceAll(/\\n/g, "\n")
+            .replace(/(\r\n|\n|\r)/g, "") // Remove line break
             .trim();
 
         // Try to parse as JSON first
         try {
-            const jsonResponse = JSON.parse(cleanedResponse);
+            const jsonResponse = parseJSONObjectFromText(cleanedResponse);
             if (jsonResponse.text) {
                 return this.trimTweetLength(jsonResponse.text);
             }

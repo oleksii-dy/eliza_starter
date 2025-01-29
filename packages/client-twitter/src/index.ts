@@ -145,7 +145,7 @@ export const TwitterClientInterface: Client = {
         elizaLogger.log(`Twitter client stop for ${runtime.character.name} (${runtime.agentId})`);
 
         // get manager
-        const manager = runtime.clients.twitter
+        const manager = runtime.clients.twitter;
 
         // stop post/search/interaction
         if (manager) {

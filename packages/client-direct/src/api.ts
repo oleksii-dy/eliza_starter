@@ -178,7 +178,7 @@ export function createApiRouter(
         }
 
         // start it up (and register it)
-        agent = await directClient.startAgent(character);
+        const agent = await directClient.startAgent(character);
         elizaLogger.log(`${character.name} started`);
 
         res.json({
