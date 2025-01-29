@@ -88,7 +88,7 @@ const take_order: Action = {
 };
 ```
 
-Source: https://github.com/elizaOS/eliza/blob/main/packages/plugin-solana/src/actions/takeOrder.ts
+Source: https://github.com/elizaos/eliza/blob/main/packages/plugin-solana/src/actions/takeOrder.ts
 
 ---
 
