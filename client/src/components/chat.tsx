@@ -8,7 +8,7 @@ import { ChatInput } from "@/components/ui/chat/chat-input";
 import { ChatMessageList } from "@/components/ui/chat/chat-message-list";
 import { useTransition, animated, type AnimatedProps } from "@react-spring/web";
 import { Paperclip, Send, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import type { Content, UUID } from "@elizaos/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
@@ -49,12 +49,13 @@ export default function Page({ agentId }: { agentId: UUID }) {
     const getMessageVariant = (role: string) =>
         role !== "user" ? "received" : "sent";
 
-    const scrollToBottom = () => {
+    const scrollToBottom = useCallback(() => {
         if (messagesContainerRef.current) {
             messagesContainerRef.current.scrollTop =
                 messagesContainerRef.current.scrollHeight;
         }
-    };
+    }, []);
+
     useEffect(() => {
         scrollToBottom();
     }, [queryClient.getQueryData(["messages", agentId])]);
@@ -153,7 +154,7 @@ export default function Page({ agentId }: { agentId: UUID }) {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file && file.type.startsWith("image/")) {
+        if (file?.type.startsWith("image/")) {
             setSelectedFile(file);
         }
     };
@@ -211,12 +212,13 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                             {/* Attachments */}
                                             <div>
                                                 {message?.attachments?.map(
-                                                    (attachment, idx) => (
+                                                    (attachment: IAttachment, _idx: number) => (
                                                         <div
                                                             className="flex flex-col gap-1 mt-2"
-                                                            key={idx}
+                                                            key={`${attachment.url}-${attachment.title}`}
                                                         >
                                                             <img
+                                                                alt="attachment"
                                                                 src={
                                                                     attachment.url
                                                                 }
@@ -225,8 +227,8 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                                                 className="w-64 rounded-md"
                                                             />
                                                             <div className="flex items-center justify-between gap-4">
-                                                                <span></span>
-                                                                <span></span>
+                                                                <span />
+                                                                <span />
                                                             </div>
                                                         </div>
                                                     )
@@ -298,6 +300,7 @@ export default function Page({ agentId }: { agentId: UUID }) {
                                     <X />
                                 </Button>
                                 <img
+                                    alt="Selected file"
                                     src={URL.createObjectURL(selectedFile)}
                                     height="100%"
                                     width="100%"
