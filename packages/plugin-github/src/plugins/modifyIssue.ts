@@ -29,9 +29,9 @@ export const modifyIssueAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
-        options: any,
-        callback: HandlerCallback
+        state?: State,
+        options?: any,
+        callback?: HandlerCallback
     ) => {
         // elizaLogger.log("[modifyIssue] Composing state for message:", message);
 
@@ -62,10 +62,16 @@ export const modifyIssueAction: Action = {
 
         elizaLogger.info("Modifying issue in the repository...");
 
+        const token = runtime.getSetting("GITHUB_API_TOKEN");
+        if (!token) {
+            elizaLogger.error("GITHUB_API_TOKEN is not set");
+            throw new Error("GITHUB_API_TOKEN is not set");
+        }
+
         const githubService = new GitHubService({
             owner: content.owner,
             repo: content.repo,
-            auth: runtime.getSetting("GITHUB_API_TOKEN"),
+            auth: token,
         });
 
         try {
@@ -78,22 +84,26 @@ export const modifyIssueAction: Action = {
 
             elizaLogger.info(`Modified issue #${issue.number} successfully!`);
 
-            callback({
-                text: `Modified issue #${issue.number} successfully!`,
-                attachments: [],
-            });
+            if (callback) {
+                callback({
+                    text: `Modified issue #${issue.number} successfully!`,
+                    attachments: [],
+                });
+            }
         } catch (error) {
             elizaLogger.error(
                 `Error modifying issue #${content.issue} in repository ${content.owner}/${content.repo}:`,
                 error,
             );
 
-            callback(
-                {
-                    text: `Error modifying issue #${content.issue}. Please try again.`,
-                },
-                [],
-            );
+            if (callback) {
+                callback(
+                    {
+                        text: `Error modifying issue #${content.issue}. Please try again.`,
+                    },
+                    [],
+                );
+            }
         }
     },
     examples: [

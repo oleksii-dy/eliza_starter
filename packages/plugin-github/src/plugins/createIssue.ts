@@ -11,14 +11,16 @@ import {
     State,
 } from "@elizaos/core";
 import { GitHubService } from "../services/github";
-import { createIssueTemplate } from "../templates";
+import { createIssueTemplate, similarityIssueCheckTemplate } from "../templates";
 import {
     CreateIssueContent,
     CreateIssueSchema,
     isCreateIssueContent,
+    SimilarityIssueCheckContent,
+    SimilarityIssueCheckSchema,
 } from "../types";
 import { saveIssueToMemory } from "../utils";
-
+import fs from "fs/promises";
 export const createIssueAction: Action = {
     name: "CREATE_ISSUE",
     similes: ["CREATE_ISSUE", "GITHUB_CREATE_ISSUE", "OPEN_ISSUE"],
@@ -30,8 +32,8 @@ export const createIssueAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
-        options: any,
+        state?: State,
+        options?: any,
         callback?: HandlerCallback
     ) => {
         // elizaLogger.log("[createIssue] Composing state for message:", message);
@@ -47,6 +49,9 @@ export const createIssueAction: Action = {
             template: createIssueTemplate,
         });
 
+        // write context to file
+        await fs.writeFile("/tmp/context-create-issue.txt", context);
+
         const details = await generateObject({
             runtime,
             context,
@@ -61,6 +66,9 @@ export const createIssueAction: Action = {
 
         const content = details.object as CreateIssueContent;
 
+        // write content to file
+        await fs.writeFile("/tmp/content-create-issue.json", JSON.stringify(content, null, 2));
+
         elizaLogger.info("Creating issue in the repository...");
 
         const githubService = new GitHubService({
@@ -70,29 +78,84 @@ export const createIssueAction: Action = {
             auth: runtime.getSetting("GITHUB_API_TOKEN"),
         });
 
+        const issuesLimit =
+            Number(runtime.getSetting("GITHUB_ISSUES_LIMIT")) || 10;
+
+        const issues = await githubService.getIssues(issuesLimit);
+
+        state.existingIssues = issues
+            .map(
+                (issue) =>
+                    // `* #${issue.number} - ${issue.title}: \`\`\`${issue.body.replace(/\n/g, ' ')}\`\`\``,
+                    `* #${issue.number} - ${issue.title}`,
+            )
+            .join("\n");
+        state.title = content.title;
+        state.body = content.body.replace(/\n/g, '\\n').replace(/`/g, '\\`');
+
+        const similarityCheckContext = composeContext({
+            state,
+            template: similarityIssueCheckTemplate,
+        });
+
+        // write context to file
+        await fs.writeFile("/tmp/context-similarity-check.txt", similarityCheckContext);
+
+        const similarityCheckDetails = await generateObject({
+            runtime,
+            context: similarityCheckContext,
+            modelClass: ModelClass.SMALL,
+            schema: SimilarityIssueCheckSchema,
+        });
+
+        if (!isCreateIssueContent(details.object)) {
+            elizaLogger.error("Invalid content:", details.object);
+            throw new Error("Invalid content");
+        }
+
+        const similarityCheckContent = similarityCheckDetails.object as SimilarityIssueCheckContent;
+
+        // write content to file
+        await fs.writeFile("/tmp/content-similarity-check.json", JSON.stringify(similarityCheckContent, null, 2));
+
         try {
-            const issue = await githubService.createIssue(
-                content.title,
-                content.body,
-                content.labels,
-            );
+            if (similarityCheckContent.created) {
+                const issue = await githubService.createIssue(
+                    content.title,
+                    content.body,
+                    content.labels,
+                );
+
+                elizaLogger.info(
+                    `Created issue successfully! Issue number: ${issue.number}`,
+                );
+
+                const memory = await saveIssueToMemory(
+                    message.userId,
+                    runtime,
+                    message,
+                    issue,
+                );
+
+                if (callback) {
+                    await callback(memory.content);
+                }
+    
+                return issue;
+            }
 
             elizaLogger.info(
-                `Created issue successfully! Issue number: ${issue.number}`,
-            );
-
-            const memory = await saveIssueToMemory(
-                message.userId,
-                runtime,
-                message,
-                issue,
+                `Issue already exists! Issue number: ${similarityCheckContent.issue}`,
             );
 
             if (callback) {
-                await callback(memory.content);
+                await callback({
+                    text: `Issue already exists! Issue number: ${similarityCheckContent.issue}`,
+                    action: "CREATE_ISSUE",
+                    source: "github",
+                    attachments: [],
+                });
             }
-
-            return issue;
         } catch (error) {
             elizaLogger.error(
                 `Error creating issue in repository ${content.owner}/${content.repo}:`,
@@ -121,6 +184,22 @@ export const createIssueAction: Action = {
                 user: "{{agentName}}",
                 content: {
                     text: "Created issue #1 successfully!",
+                    action: "CREATE_ISSUE",
+                },
+            },
+        ],
+        // issue already exists
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Create an issue in repository user1/repo1 titled 'Feature: Add a clickable button to the UI'",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Issue already exists! Issue number: 1",
                     action: "CREATE_ISSUE",
                 },
             },

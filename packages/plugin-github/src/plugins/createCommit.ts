@@ -44,9 +44,9 @@ export const createCommitAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
-        options: any,
-        callback: HandlerCallback
+        state?: State,
+        options?: any,
+        callback?: HandlerCallback,
     ) => {
         // elizaLogger.log("[createCommit] Composing state for message:", message);
         if (!state) {
