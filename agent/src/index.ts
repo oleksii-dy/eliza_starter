@@ -158,6 +158,20 @@ import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
 
 import { trikonPlugin } from "@elizaos/plugin-trikon";
 import arbitragePlugin from "@elizaos/plugin-arbitrage";
+
+import {
+    githubInitializePlugin,
+    githubCreateCommitPlugin,
+    githubCreatePullRequestPlugin,
+    githubCreateMemorizeFromFilesPlugin,
+    githubCreateIssuePlugin,
+    githubModifyIssuePlugin,
+    githubIdeationPlugin,
+    githubInteractWithPRPlugin,
+    githubInteractWithIssuePlugin,
+} from "@elizaos/plugin-github";
+import { GitHubClientInterface } from "@elizaos/client-github";
+
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
@@ -866,6 +880,11 @@ export async function initializeClients(
         if (simsaiClient) clients.simsai = simsaiClient;
     }
 
+    if (clientTypes.includes("github")) {
+        const githubClient = await GitHubClientInterface.start(runtime);
+        if (githubClient) clients.github = githubClient;
+    }
+
     elizaLogger.log("client keys", Object.keys(clients));
 
     if (clientTypes.includes("deva")) {
@@ -1295,6 +1314,20 @@ export async function createAgent(
             getSecret(character, "ARBITRAGE_BUNDLE_EXECUTOR_ADDRESS")
                 ? arbitragePlugin
                 : null,
+            ...(getSecret(character, "GITHUB_PLUGIN_ENABLED") === "true" &&
+            getSecret(character, "GITHUB_API_TOKEN")
+                ? [
+                      githubInitializePlugin,
+                      githubCreateCommitPlugin,
+                      githubCreatePullRequestPlugin,
+                      githubCreateMemorizeFromFilesPlugin,
+                      githubCreateIssuePlugin,
+                      githubModifyIssuePlugin,
+                      githubIdeationPlugin,
+                      githubInteractWithIssuePlugin,
+                      githubInteractWithPRPlugin,
+                  ]
+                : []),
         ]
             .flat()
             .filter(Boolean),

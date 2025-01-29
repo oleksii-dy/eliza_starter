@@ -1,4 +1,5 @@
 import type { UUID, Character } from "@elizaos/core";
+import { getRoomId, getSessionId, getUserId } from "./utils";
 
 const BASE_URL = `http://localhost:${import.meta.env.VITE_SERVER_PORT}`;
 
@@ -59,14 +60,23 @@ const fetcher = async ({
 };
 
 export const apiClient = {
-    sendMessage: (
+    sendMessage: async (
         agentId: string,
         message: string,
-        selectedFile?: File | null
+        selectedFile?: File | null,
     ) => {
         const formData = new FormData();
         formData.append("text", message);
-        formData.append("user", "user");
+
+        const sessionId = getSessionId();
+
+        formData.append("user", sessionId ?? "user");
+        formData.append("userId", sessionId ?? "user");
+
+        const userId = await getUserId(sessionId ?? "user");
+        const roomId = getRoomId(agentId, userId);
+
+        formData.append("roomId", roomId);
 
         if (selectedFile) {
             formData.append("file", selectedFile);
@@ -98,6 +108,34 @@ export const apiClient = {
         formData.append("file", audioBlob, "recording.wav");
         return fetcher({
             url: `/${agentId}/whisper`,
+            method: "POST",
+            body: formData,
+        });
+    },
+    getMemories: async (agentId: string) => {
+        const sessionId = getSessionId();
+        if (!sessionId) {
+            throw new Error("Session ID not found");
+        }
+        const userId = await getUserId(sessionId);
+        const roomId = getRoomId(agentId, userId);
+        return fetcher({
+            url: `/agents/${agentId}/memories/${userId}?roomId=${roomId}`,
+            method: "GET",
+        });
+    },
+    joinRoom: (agentId: string) => {
+        const formData = new FormData();
+        const sessionId = getSessionId();
+        const defaultRoomId = `default-room-${agentId}`;
+
+        formData.append("text", "joined room");
+        formData.append("user", sessionId ?? "user");
+        formData.append("userId", sessionId ?? "user");
+        formData.append("roomId", defaultRoomId);
+
+        return fetcher({
+            url: `/${agentId}/message`,
             method: "POST",
             body: formData,
         });

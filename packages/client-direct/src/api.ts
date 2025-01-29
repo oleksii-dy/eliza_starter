@@ -11,6 +11,7 @@ import {
     type UUID,
     validateCharacterConfig,
     ServiceType,
+    stringToUuid,
     type Character,
 } from "@elizaos/core";
 
@@ -22,11 +23,16 @@ import { validateUuid } from "@elizaos/core";
 interface UUIDParams {
     agentId: UUID;
     roomId?: UUID;
+    userId?: UUID;
 }
 
 function validateUUIDParams(
-    params: { agentId: string; roomId?: string },
-    res: express.Response
+    params: {
+        agentId: string;
+        roomId?: string;
+        userId?: string;
+    },
+    res: express.Response,
 ): UUIDParams | null {
     const agentId = validateUuid(params.agentId);
     if (!agentId) {
@@ -45,6 +51,17 @@ function validateUUIDParams(
             return null;
         }
         return { agentId, roomId };
+    }
+
+    if (params.userId) {
+        const userId = validateUuid(params.userId);
+        if (!userId) {
+            res.status(400).json({
+                error: "Invalid SessionId format. Expected to be a UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+            });
+            return null;
+        }
+        return { agentId, userId };
     }
 
     return { agentId };
@@ -242,13 +259,13 @@ export function createApiRouter(
         }
     });
 
-    router.get("/agents/:agentId/:roomId/memories", async (req, res) => {
-        const { agentId, roomId } = validateUUIDParams(req.params, res) ?? {
-            agentId: null,
-            roomId: null,
-        };
-        if (!agentId || !roomId) return;
-
+    const getMemories = async (
+        agentId: UUID,
+        roomId: UUID,
+        userId: UUID | null,
+        req,
+        res,
+    ) => {
         let runtime = agents.get(agentId);
 
         // if runtime is null, look for runtime with the same name
@@ -266,11 +283,20 @@ export function createApiRouter(
         try {
             const memories = await runtime.messageManager.getMemories({
                 roomId,
+                count: 1000,
             });
+
+            const filteredMemories = memories.filter(
+                (memory) =>
+                    (memory.content.metadata as any)?.type !== "file" &&
+                    memory.content?.source !== "direct",
+            );
+
             const response = {
                 agentId,
                 roomId,
-                memories: memories.map((memory) => ({
+                userId,
+                memories: filteredMemories.map((memory) => ({
                     id: memory.id,
                     userId: memory.userId,
                     agentId: memory.agentId,
@@ -305,6 +331,30 @@ export function createApiRouter(
             console.error("Error fetching memories:", error);
             res.status(500).json({ error: "Failed to fetch memories" });
         }
+    };
+
+    router.get("/agents/:agentId/:roomId/memories", async (req, res) => {
+        const { agentId, roomId } = validateUUIDParams(req.params, res) ?? {
+            agentId: null,
+            roomId: null,
+        };
+        if (!agentId || !roomId) return;
+
+        await getMemories(agentId, roomId, null, req, res);
+    });
+
+    router.get("/agents/:agentId/memories/:userId", async (req, res) => {
+        const { agentId, userId } = validateUUIDParams(req.params, res) ?? {
+            agentId: null,
+            userId: null,
+        };
+        if (!agentId || !userId) return;
+
+        const roomId = stringToUuid(
+            (req.query.roomId as string) ?? "default-room-" + agentId,
+        );
+
+        await getMemories(agentId, roomId, userId, req, res);
     });
 
     router.get("/tee/agents", async (req, res) => {
