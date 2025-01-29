@@ -28,7 +28,7 @@ export type CoinbaseWallet = { wallet: Wallet, walletType: WalletType };
 
 export async function initializeWallet(
     runtime: IAgentRuntime,
-    networkId: string = Coinbase.networks.EthereumMainnet,
+    networkId: string = Coinbase.networks.BaseMainnet,
     walletType: WalletType = "short_term_trading"
 ): Promise<CoinbaseWallet> {
     let wallet: Wallet;
@@ -421,7 +421,7 @@ export const getAssetType = (transaction: EthereumTransaction) => {
  */
 export async function getWalletDetails(
     runtime: IAgentRuntime,
-    networkId: string = Coinbase.networks.EthereumMainnet
+    networkId: string = Coinbase.networks.BaseMainnet
 ): Promise<{
     balances: Array<{ asset: string; amount: string }>;
     transactions: Array<{
