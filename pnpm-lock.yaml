@@ -2864,7 +2864,7 @@ importers:
         version: link:../core
       '@goat-sdk/adapter-vercel-ai':
         specifier: 0.2.0
-        version: 0.2.0(@goat-sdk/core@0.4.6(zod@3.23.8))(ai@4.1.10(react@19.0.0)(zod@3.23.8))
+        version: 0.2.0(@goat-sdk/core@0.4.6(zod@3.23.8))(ai@4.1.11(react@19.0.0)(zod@3.23.8))
       '@goat-sdk/core':
         specifier: 0.4.6
         version: 0.4.6(zod@3.23.8)
@@ -4810,7 +4810,7 @@ importers:
         version: link:../core
       '@goat-sdk/adapter-vercel-ai':
         specifier: 0.2.7
-        version: 0.2.7(@goat-sdk/core@0.4.6(zod@3.23.8))(ai@4.1.10(react@19.0.0)(zod@3.23.8))(zod@3.23.8)
+        version: 0.2.7(@goat-sdk/core@0.4.6(zod@3.23.8))(ai@4.1.11(react@19.0.0)(zod@3.23.8))(zod@3.23.8)
       '@goat-sdk/core':
         specifier: 0.4.6
         version: 0.4.6(zod@3.23.8)
@@ -14665,8 +14665,8 @@ packages:
       zod:
         optional: true
 
-  ai@4.1.10:
-    resolution: {integrity: sha512-1YI/3hnuyOxwSS5yT3SALx9DYUUqtTvjUttahNj3RA5nZuUDCfS54zIWspnX0x2tU3mp7CIoJId5OWLYeTz7SA==}
+  ai@4.1.11:
+    resolution: {integrity: sha512-390dahvdwt/kKCq63dyi3M7pq6iWVk9MpfY9C5+RpyDWb50tohUwxntnUvB4Y/cOXGn4Miavdo1g8JbCxsd7wg==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ^19 || ^19.0.0-rc
@@ -18349,8 +18349,8 @@ packages:
   find@0.3.0:
     resolution: {integrity: sha512-iSd+O4OEYV/I36Zl8MdYJO0xD82wH528SaCieTVHhclgiYNe9y+yPKSwK+A7/WsmHL1EZ+pYUJBXWTL5qofksw==}
 
-  flash-sdk@2.26.2:
-    resolution: {integrity: sha512-VYyPyEqSN+pwEbhklZQF5snfEPBn6yz9BicH1wQD/xD/3tpU/bDkDwHQtiP4Z9V3df8JTh2UNPJ4E/AeWuefXg==}
+  flash-sdk@2.26.3:
+    resolution: {integrity: sha512-dd6oxfZ5tHP3XJwcyC01zSDXoL/I1fEbil7TQ/mL7qheuSnvdJHD5Z6rPldKuxHQAVdeLEqPFC2hpeivo6Sw4Q==}
 
   flat-cache@3.2.0:
     resolution: {integrity: sha512-CYcENa+FtcUKLmhhqyctpclsq7QF38pKjZHsGNiSQF5r4FtoKDWabFDl3hzaEQMvT1LHEysw5twgLvpYYb4vbw==}
@@ -34822,16 +34822,16 @@ snapshots:
       '@shikijs/types': 1.29.1
       '@shikijs/vscode-textmate': 10.0.1
 
-  '@goat-sdk/adapter-vercel-ai@0.2.0(@goat-sdk/core@0.4.6(zod@3.23.8))(ai@4.1.10(react@19.0.0)(zod@3.23.8))':
+  '@goat-sdk/adapter-vercel-ai@0.2.0(@goat-sdk/core@0.4.6(zod@3.23.8))(ai@4.1.11(react@19.0.0)(zod@3.23.8))':
     dependencies:
       '@goat-sdk/core': 0.4.6(zod@3.23.8)
-      ai: 4.1.10(react@19.0.0)(zod@3.23.8)
+      ai: 4.1.11(react@19.0.0)(zod@3.23.8)
       zod: 3.23.8
 
-  '@goat-sdk/adapter-vercel-ai@0.2.7(@goat-sdk/core@0.4.6(zod@3.23.8))(ai@4.1.10(react@19.0.0)(zod@3.23.8))(zod@3.23.8)':
+  '@goat-sdk/adapter-vercel-ai@0.2.7(@goat-sdk/core@0.4.6(zod@3.23.8))(ai@4.1.11(react@19.0.0)(zod@3.23.8))(zod@3.23.8)':
     dependencies:
       '@goat-sdk/core': 0.4.6(zod@3.23.8)
-      ai: 4.1.10(react@19.0.0)(zod@3.23.8)
+      ai: 4.1.11(react@19.0.0)(zod@3.23.8)
       zod: 3.23.8
 
   '@goat-sdk/core@0.3.8(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@5.0.10)':
@@ -48382,7 +48382,7 @@ snapshots:
       - solid-js
       - vue
 
-  ai@4.1.10(react@19.0.0)(zod@3.23.8):
+  ai@4.1.11(react@19.0.0)(zod@3.23.8):
     dependencies:
       '@ai-sdk/provider': 1.0.6
       '@ai-sdk/provider-utils': 2.1.2(zod@3.23.8)
@@ -48394,7 +48394,7 @@ snapshots:
       react: 19.0.0
       zod: 3.23.8
 
-  ai@4.1.10(react@19.0.0)(zod@3.24.1):
+  ai@4.1.11(react@19.0.0)(zod@3.24.1):
     dependencies:
       '@ai-sdk/provider': 1.0.6
       '@ai-sdk/provider-utils': 2.1.2(zod@3.24.1)
@@ -53400,7 +53400,7 @@ snapshots:
     dependencies:
       traverse-chain: 0.1.0
 
-  flash-sdk@2.26.2(@swc/core@1.10.11(@swc/helpers@0.5.15))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10):
+  flash-sdk@2.26.3(@swc/core@1.10.11(@swc/helpers@0.5.15))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10):
     dependencies:
       '@coral-xyz/anchor': 0.28.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/client': 2.22.0(@solana/web3.js@1.95.8(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -53428,7 +53428,7 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  flash-sdk@2.26.2(@swc/core@1.10.11(@swc/helpers@0.5.15))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)(utf-8-validate@5.0.10):
+  flash-sdk@2.26.3(@swc/core@1.10.11(@swc/helpers@0.5.15))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)(utf-8-validate@5.0.10):
     dependencies:
       '@coral-xyz/anchor': 0.28.0(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
       '@pythnetwork/client': 2.22.0(@solana/web3.js@1.95.8(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10))(bufferutil@4.0.9)(encoding@0.1.13)(utf-8-validate@5.0.10)
@@ -62902,13 +62902,13 @@ snapshots:
       '@tensor-oss/tensorswap-sdk': 4.5.0(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
       '@tiplink/api': 0.3.1(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(sodium-native@3.4.1)(utf-8-validate@5.0.10)
       '@voltr/vault-sdk': 0.1.4(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
-      ai: 4.1.10(react@19.0.0)(zod@3.24.1)
+      ai: 4.1.11(react@19.0.0)(zod@3.24.1)
       bn.js: 5.2.1
       bs58: 5.0.0
       chai: 5.1.2
       decimal.js: 10.5.0
       dotenv: 16.4.7
-      flash-sdk: 2.26.2(@swc/core@1.10.11(@swc/helpers@0.5.15))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
+      flash-sdk: 2.26.3(@swc/core@1.10.11(@swc/helpers@0.5.15))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
       form-data: 4.0.1
       langchain: 0.3.14(@langchain/core@0.3.36(openai@4.80.1(encoding@0.1.13)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(zod@3.24.1)))(@langchain/groq@0.1.3(@langchain/core@0.3.36(openai@4.80.1(encoding@0.1.13)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(zod@3.24.1)))(encoding@0.1.13)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(axios@1.7.9)(encoding@0.1.13)(handlebars@4.7.8)(openai@4.80.1(encoding@0.1.13)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(zod@3.24.1))(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))
       openai: 4.80.1(encoding@0.1.13)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(zod@3.24.1)
@@ -62985,13 +62985,13 @@ snapshots:
       '@tensor-oss/tensorswap-sdk': 4.5.0(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)(utf-8-validate@5.0.10)
       '@tiplink/api': 0.3.1(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(sodium-native@3.4.1)(utf-8-validate@5.0.10)
       '@voltr/vault-sdk': 0.1.4(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)(utf-8-validate@5.0.10)
-      ai: 4.1.10(react@19.0.0)(zod@3.24.1)
+      ai: 4.1.11(react@19.0.0)(zod@3.24.1)
       bn.js: 5.2.1
       bs58: 5.0.0
       chai: 5.1.2
       decimal.js: 10.5.0
       dotenv: 16.4.7
-      flash-sdk: 2.26.2(@swc/core@1.10.11(@swc/helpers@0.5.15))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)(utf-8-validate@5.0.10)
+      flash-sdk: 2.26.3(@swc/core@1.10.11(@swc/helpers@0.5.15))(bufferutil@4.0.9)(encoding@0.1.13)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.7.3)(utf-8-validate@5.0.10)
       form-data: 4.0.1
       langchain: 0.3.14(@langchain/core@0.3.36(openai@4.80.1(encoding@0.1.13)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(zod@3.24.1)))(@langchain/groq@0.1.3(@langchain/core@0.3.36(openai@4.80.1(encoding@0.1.13)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(zod@3.24.1)))(encoding@0.1.13)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)))(axios@1.7.9)(encoding@0.1.13)(handlebars@4.7.8)(openai@4.80.1(encoding@0.1.13)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(zod@3.24.1))(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))
       openai: 4.80.1(encoding@0.1.13)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(zod@3.24.1)
