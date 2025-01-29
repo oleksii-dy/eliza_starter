@@ -110,8 +110,8 @@ export const createMemoriesFromFilesAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
-        options: any,
+        state?: State,
+        options?: any,
         callback?: HandlerCallback
     ) => {
         // elizaLogger.log(

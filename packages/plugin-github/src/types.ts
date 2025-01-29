@@ -127,6 +127,22 @@ export const isFetchFilesContent = (
     return false;
 };
 
+export const SimilarityIssueCheckSchema = z.object({
+    issue: z.number().optional(),
+    created: z.boolean().optional(),
+});
+
+export interface SimilarityIssueCheckContent {
+    issue: number;
+    created: boolean;
+}
+
+export const isSimilarityIssueCheckContent = (
+    object: any
+): object is SimilarityIssueCheckContent => {
+    return SimilarityIssueCheckSchema.safeParse(object).success;
+};
+
 export const CreateIssueSchema = z.object({
     owner: z.string().min(1, "GitHub owner is required"),
     repo: z.string().min(1, "GitHub repo is required"),
