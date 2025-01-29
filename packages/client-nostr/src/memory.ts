@@ -24,7 +24,7 @@ export function createNostrEventMemory({
         agentId: runtime.agentId,
         userId: runtime.agentId,
         content: {
-            text: "content",
+            text: nostrEvent.content,
             source: "nostr",
             url: "",
             inReplyTo: undefined,
@@ -34,3 +34,4 @@ export function createNostrEventMemory({
         embedding: getEmbeddingZeroVector(),
     };
 }
+

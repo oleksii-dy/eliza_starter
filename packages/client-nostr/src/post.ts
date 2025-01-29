@@ -51,7 +51,7 @@ export class NostrPostManager {
                 await this.generateNewNostrEvent();
             }
 
-            setTimeout(() => {
+            this.timeout = setTimeout(() => {
                 generateNewNostrEventLoop(); // Set up next iteration
             }, delay);
 
@@ -187,3 +187,4 @@ export class NostrPostManager {
         }
     }
 }
+
