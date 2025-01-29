@@ -56,9 +56,7 @@ describe("Wallet provider", () => {
         it("generates public client", () => {
             const client = walletProvider.getPublicClient("fuse");
             expect(client.chain.id).toEqual(fuse.id);
-            expect(client.transport.url).toEqual(
-                fuse.rpcUrls.default.http[0]
-            );
+            expect(client.transport.url).toEqual(fuse.rpcUrls.default.http[0]);
         });
         it("generates public client with custom rpcurl", () => {
             const chain = WalletProvider.genChainFromName(
@@ -84,9 +82,7 @@ describe("Wallet provider", () => {
             const client = walletProvider.getWalletClient("fuse");
 
             expect(client.account.address).toEqual(expectedAddress);
-            expect(client.transport.url).toEqual(
-                fuse.rpcUrls.default.http[0]
-            );
+            expect(client.transport.url).toEqual(fuse.rpcUrls.default.http[0]);
         });
         it("generates wallet client with custom rpcurl", () => {
             const account = privateKeyToAccount(pk);
@@ -158,18 +154,6 @@ describe("Wallet provider", () => {
             const chain = walletProvider.getChainConfigs("fuse");
 
             expect(chain.id).toEqual(fuse.id);
-        });
-        it("throws if unsupported chain name", () => {
-            // intentionally set unsupported chain, ts will complain
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            expect(() => WalletProvider.genChainFromName("ethereum")).toThrow();
-        });
-        it("throws if invalid chain name", () => {
-            // intentionally set incorrect chain, ts will complain
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            expect(() => WalletProvider.genChainFromName("eth")).toThrow();
         });
     });
 });

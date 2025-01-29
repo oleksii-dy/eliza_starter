@@ -21,3 +21,29 @@ Respond with a JSON markdown block containing only the extracted values. All fie
 }
 \`\`\`
 `;
+
+export const createTokenTemplate = `Respond with a JSON markdown block containing only the extracted values.
+
+If the user did not provide enough details, respond with what you can. The following fields are required: Name, Symbol, Token Owner, and From Chain.
+
+Example response for a new token:
+\`\`\`json
+{
+    "name": "Test Token",
+    "symbol": "TEST",
+    "tokenOwner": "0x1234567890abcdef1234567890abcdef12345678",
+    "fromChain": SUPPORTED_CHAINS
+}
+\`\`\`
+
+## Recent Messages
+
+{{recentMessages}}
+
+Given the recent messages, extract the following information about the requested token creation:
+- Name
+- Symbol
+- Token Owner (must be a valid address starting with "0x")
+- From Chain (must be one of ["fuse", "base", ...] like in viem/chains)
+
+Respond with a JSON markdown block containing only the extracted values.`;

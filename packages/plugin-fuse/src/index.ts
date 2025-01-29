@@ -3,6 +3,7 @@ export * from "./providers/wallet";
 export * from "./types";
 
 import type { Plugin } from "@elizaos/core";
+import { createTokenAction } from "./actions/createToken";
 import { transferAction } from "./actions/transfer";
 import { fuseWalletProvider } from "./providers/wallet";
 
@@ -12,7 +13,7 @@ export const fusePlugin: Plugin = {
     providers: [fuseWalletProvider],
     evaluators: [],
     services: [],
-    actions: [transferAction],
+    actions: [createTokenAction, transferAction],
 };
 
 export default fusePlugin;
