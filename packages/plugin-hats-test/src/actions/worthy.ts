@@ -4,10 +4,6 @@ import {
     Memory,
     HandlerCallback,
     State,
-    composeContext,
-    generateObject,
-    ModelClass,
-    elizaLogger,
 } from "@elizaos/core";
 
 export const worthy: Action = {
@@ -24,13 +20,13 @@ export const worthy: Action = {
         _options: any,
         callback: HandlerCallback
     ) => {
-        try {} catch (error) {
-            elizaLogger.error("Error in password action:", error);
-            callback(
-                { text: "Failed to create resource. Please check the logs." },
-                []
-            );
-        }
+        await callback({
+            text: "Ah, the chosen one has arrived.\nThe password is: B00g1eKnights.",
+            action: "worthy",
+            final: true
+        });
+        
+        return true;
     },
     examples: [
         [
