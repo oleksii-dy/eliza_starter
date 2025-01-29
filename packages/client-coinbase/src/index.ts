@@ -15,8 +15,9 @@ import { postTweet } from "@elizaos/plugin-twitter";
 import express from "express";
 import { WebhookEvent } from "./types";
 import { Coinbase, Wallet } from "@coinbase/coinbase-sdk";
-import { initializeWallet } from "../../plugin-coinbase/src/utils";
-//  import { tokenSwap } from "@elizaos/plugin-0x";
+import { initializeWallet } from "@elizaos/plugin-coinbase";
+import { tokenSwap } from "@elizaos/plugin-0x";
+
 export type WalletType = 'short_term_trading' | 'long_term_trading' | 'dry_powder' | 'operational_capital';
 export type CoinbaseWallet = { wallet: Wallet, walletType: WalletType };
 
@@ -37,7 +38,7 @@ export class CoinbaseClient implements Client {
         elizaLogger.info("Initializing Coinbase client");
         try {
             elizaLogger.info("Coinbase client initialized successfully");
-            await this.initializeWallets();
+            // await this.initializeWallets();
             elizaLogger.info("Wallets initialized successfully");
             await this.setupWebhookEndpoint();
             elizaLogger.info("Webhook endpoint setup successfully");
@@ -181,11 +182,11 @@ Generate only the tweet text, no commentary or markdown.`;
         await this.runtime.ensureRoomExists(roomId);
         await this.runtime.ensureParticipantInRoom(this.runtime.agentId, roomId);
         // TODO: based off of the signal decide which wallet to use
-        const wallet = this.wallets.find(wallet => wallet.walletType === 'short_term_trading');
-        if (!wallet) {
-            elizaLogger.error("Short term trading wallet not found");
-            return;
-        }
+        // const wallet = this.wallets.find(wallet => wallet.walletType === 'short_term_trading');
+        // if (!wallet) {
+        //     elizaLogger.error("Short term trading wallet not found");
+        //     return;
+        // }
 
         const amount = Number(this.runtime.getSetting('COINBASE_TRADING_AMOUNT')) ?? 1;
         const memory: Memory = {
@@ -203,7 +204,7 @@ Generate only the tweet text, no commentary or markdown.`;
                     price: event.price,
                     amount: amount,
                     timestamp: event.timestamp,
-                    walletType: wallet.walletType,
+                    walletType: 'short_term_trading',
                 }
             },
             createdAt: Date.now()
@@ -223,10 +224,9 @@ Generate only the tweet text, no commentary or markdown.`;
             second: '2-digit',
             timeZoneName: 'short'
         }).format(new Date(event.timestamp));
-        const defaultAddress = wallet.wallet.getDefaultAddress();
+        // const defaultAddress = await wallet.wallet.getDefaultAddress();
         const buy =  event.event.toUpperCase() === 'BUY'
-        const tx = null;
-        // const tx = await tokenSwap(this.runtime, amount, buy ? event.ticker : 'USDC', buy ? event.ticker : 'USDC', (await defaultAddress).getWalletId(), '' , 8453);
+        const tx = await tokenSwap(this.runtime, amount, buy ? event.ticker : 'USDC', buy ? event.ticker : 'USDC', this.runtime.getSetting('WALLET_PUBLIC_KEY'), this.runtime.getSetting('WALLET_PRIVATE_KEY'), 8453);
         // const pnl = await this.calculateOverallPNL(wallet, event.ticker, amount);
         // const pnlText = `Overall PNL: $${pnl.toFixed(2)}`;
 
