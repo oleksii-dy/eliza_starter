@@ -15,12 +15,8 @@ import { postTweet } from "@elizaos/plugin-twitter";
 import express from "express";
 import { WebhookEvent } from "./types";
 import { Coinbase, Wallet } from "@coinbase/coinbase-sdk";
-
-import { Token, CurrencyAmount, TradeType, Percent } from '@uniswap/sdk-core';
-import { ChainId, Fetcher, WETH, Route, Trade, TokenAmount, TradeType } from '@uniswap/sdk-core';
-import { ethers, JsonRpcProvider } from 'ethers';
 import { initializeWallet } from "../../plugin-coinbase/src/utils";
-
+//  import { tokenSwap } from "@elizaos/plugin-0x";
 export type WalletType = 'short_term_trading' | 'long_term_trading' | 'dry_powder' | 'operational_capital';
 export type CoinbaseWallet = { wallet: Wallet, walletType: WalletType };
 
@@ -127,7 +123,7 @@ export class CoinbaseClient implements Client {
         }
     }
 
-    private async generateTweetContent(event: WebhookEvent, amountInCurrency: number, pnlText: string, formattedTimestamp: string, state: State, tx: ethers.Transaction): Promise<string> {
+    private async generateTweetContent(event: WebhookEvent, amountInCurrency: number, pnlText: string, formattedTimestamp: string, state: State, tx): Promise<string> {
         try {
             const tradeTweetTemplate = `
 # Task
@@ -227,15 +223,15 @@ Generate only the tweet text, no commentary or markdown.`;
             second: '2-digit',
             timeZoneName: 'short'
         }).format(new Date(event.timestamp));
-
-        const tx = event.event.toUpperCase() === 'BUY'
-            ? await this.swap(event.ticker, 'USDC', amount)
-            : await this.swap('USDC', event.ticker, amount);
-        const pnl = await this.calculateOverallPNL(wallet, event.ticker, amount);
-        const pnlText = `Overall PNL: $${pnl.toFixed(2)}`;
+        const defaultAddress = wallet.wallet.getDefaultAddress();
+        const buy =  event.event.toUpperCase() === 'BUY'
+        const tx = null;
+        // const tx = await tokenSwap(this.runtime, amount, buy ? event.ticker : 'USDC', buy ? event.ticker : 'USDC', (await defaultAddress).getWalletId(), '' , 8453);
+        // const pnl = await this.calculateOverallPNL(wallet, event.ticker, amount);
+        // const pnlText = `Overall PNL: $${pnl.toFixed(2)}`;
 
             try {
-                const tweetContent = await this.generateTweetContent(event, amount, pnlText, formattedTimestamp, state, tx);
+                const tweetContent = await this.generateTweetContent(event, amount, '', formattedTimestamp, state, tx);
                 elizaLogger.info("Generated tweet content:", tweetContent);
                 if (this.runtime.getSetting('TWITTER_DRY_RUN')) {
                     elizaLogger.info("Dry run mode enabled. Skipping tweet posting.",);
@@ -280,59 +276,42 @@ Generate only the tweet text, no commentary or markdown.`;
         await this.initialize();
     }
 
-    private async swap(fromTicker: string, toTicker: string, amountFrom: number) {
-        elizaLogger.log("Creating fromToken with ticker:", fromTicker);
-        const fromToken = new Token(1, fromTicker, 18); // Assuming the from token has 18 decimals
-        elizaLogger.log("Creating toToken with ticker:", toTicker);
-        const toToken = new Token(1, toTicker, 18); // Assuming the to token has 18 decimals
+    private async calculateOverallPNL(ticker: string, initialInvestment: number): Promise<number> {
+    //     // Initialize provider and wallet for the Base network
+    //     const provider = new ethers.providers.JsonRpcProvider('https://mainnet.base.org');
+    //     const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
-        elizaLogger.log("Initializing provider with Ethereum RPC URL:", process.env.ETHEREUM_RPC_URL);
-        const provider = new JsonRpcProvider(process.env.ETHEREUM_RPC_URL);
-        elizaLogger.log("Creating wallet with provided private key");
-        const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+    //     const tokenAddress = tokenAddresses[ticker];
+    //     const url = new URL(`${oneInchApiUrl}/quote`);
+    //     url.search = new URLSearchParams({
+    //       fromTokenAddress: tokenAddress,
+    //       toTokenAddress: tokenAddresses['USDC'],
+    //       amount: '1000000000000000000', // 1 token with 18 decimals
+    //     }).toString();
 
-        elizaLogger.log("Calculating amount in currency for fromToken:", amountFrom * 10 ** fromToken.decimals);
-        const amountInCurrency = CurrencyAmount.fromRawAmount(fromToken, amountFrom * 10 ** fromToken.decimals);
+    //     try {
+    //       const response = await fetch(url);
+    //       if (!response.ok) {
+    //         const errorText = await response.text();
+    //         throw new Error(`Error fetching price data: ${errorText}`);
+    //       }
+    //       const data = await response.json();
+    //       const currentPrice = data.toTokenAmount / 1e6; // Assuming USDC has 6 decimals
 
-        elizaLogger.log("Creating route for token swap from", fromToken.address, "to", toToken.address);
-        const route = new Route([fromToken, toToken], fromToken);
-        elizaLogger.log("Creating trade with exact input amount:", amountInCurrency.toExact());
-        const trade = new Trade(route, amountInCurrency, TradeType.EXACT_INPUT);
-
-        elizaLogger.log("Setting slippage tolerance to 0.50%");
-        const slippageTolerance = new Percent('50', '10000'); // 0.50%
-        elizaLogger.log("Calculating minimum amount out with slippage tolerance:", slippageTolerance.toSignificant());
-        const amountOutMin = trade.minimumAmountOut(slippageTolerance).toExact();
-
-        elizaLogger.log("Preparing transaction object with to address:", route.path[1].address, "and value:", amountOutMin);
-        const transaction = {
-            to: route.path[1].address,
-            value: ethers.utils.parseUnits(amountOutMin, toToken.decimals),
-            gasLimit: ethers.utils.hexlify(100000),
-            gasPrice: ethers.utils.parseUnits('20', 'gwei'),
-        };
-        elizaLogger.info("transaction", JSON.stringify(transaction));
-        const tx = await wallet.sendTransaction(transaction);
-        await tx.wait();
-        elizaLogger.info("tx", JSON.stringify(tx));
-        return tx;
-    }
-
-    private async calculateOverallPNL(wallet: CoinbaseWallet, ticker: string, initialInvestment: number): Promise<number> {
-        const token = new Token(1, ticker, 18); // Assuming the token has 18 decimals
-        const provider = new JsonRpcProvider(process.env.ETHEREUM_RPC_URL);
-        const balance = Number(await wallet.wallet.getBalance(token.address));
-        const decimals = token.decimals;
-        const currentPrice = await Fetcher.fetchTokenData(1, token.address, provider);
-        const currentValue = balance / (10 ** decimals) * currentPrice;
-        const pnl = (currentValue - initialInvestment) / initialInvestment * 100;
-        elizaLogger.info("currentValue", currentValue);
-        elizaLogger.info("pnl", pnl);
-        elizaLogger.info("initialInvestment", initialInvestment);
-        elizaLogger.info("balance", balance);
-        elizaLogger.info("decimals", decimals);
-        elizaLogger.info("currentPrice", currentPrice);
-        return pnl;
+    //       const balance = Number(await wallet.wallet.getBalance(tokenAddress));
+    //       const currentValue = balance / 1e18 * currentPrice;
+    //       const pnl = (currentValue - initialInvestment) / initialInvestment * 100;
+    //       elizaLogger.info("currentValue", currentValue);
+    //       elizaLogger.info("pnl", pnl);
+    //       elizaLogger.info("initialInvestment", initialInvestment);
+    //       elizaLogger.info("balance", balance);
+    //       elizaLogger.info("currentPrice", currentPrice);
+    //       return pnl;
+    //     } catch (error) {
+    //       console.error('Error calculating PNL:', error);
+    //       throw error;
+    //     }
+    return 0;
     }
 
 }
