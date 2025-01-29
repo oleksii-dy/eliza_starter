@@ -18,6 +18,7 @@ graph TD
     CI --> TC["Telegram Client"]
     CI --> TWC["Twitter Client"]
     CI --> AC["Auto Client"]
+    CI --> DEVA["Deva Client"]
     CI --> NC["Nostr Client"]
 
     %% Key Features - one per client for clarity
@@ -26,6 +27,7 @@ graph TD
     TC --> |"Bot API"| TC1["Commands & Media"]
     TWC --> |"Social"| TWC1["Posts & Interactions"]
     AC --> |"Trading"| AC1["Analysis & Execution"]
+    DEVA --> |"Social"| DEVA1["Messages & Execution"]
     NC --> |"Social"| NC1["Posts & Interactions"]
 
     %% Simple styling with better contrast and black text
@@ -37,12 +39,14 @@ graph TD
 
 ## Available Clients
 
-- **Discord** (`@elizaos/client-discord`) - Full Discord bot integration
-- **Twitter** (`@elizaos/client-twitter`) - Twitter bot and interaction handling
-- **Telegram** (`@elizaos/client-telegram`) - Telegram bot integration
-- **Direct** (`@elizaos/client-direct`) - Direct API interface for custom integrations
-- **Auto** (`@elizaos/client-auto`) - Automated trading and interaction client
-- **Nostr** (`@elizaos/client-nostr`) - Nostr bot integration
+-   **Discord** (`@elizaos/client-discord`) - Full Discord bot integration
+-   **Twitter** (`@elizaos/client-twitter`) - Twitter bot and interaction handling
+-   **Telegram** (`@elizaos/client-telegram`) - Telegram bot integration
+-   **Direct** (`@elizaos/client-direct`) - Direct API for custom integrations
+-   **Auto** (`@elizaos/client-auto`) - Automated trading and interaction client
+-   **Alexa skill** (`@elizaos/client-alexa`) - Alexa skill API integration
+-   **Deva** (`@elizaos/client-deva`) - Client for integrating with Deva.me
+-   **Nostr** (`@elizaos/client-nostr`) - Nostr bot integration
 
 ---
 
@@ -63,6 +67,9 @@ pnpm add @elizaos/client-direct
 
 # Auto Client
 pnpm add @elizaos/client-auto
+
+# Deva Client
+pnpm add @elizaos/client-deva
 
 # Nostr
 pnpm add @elizaos/client-nostr
@@ -89,11 +96,11 @@ DISCORD_API_TOKEN = your_bot_token;
 
 ### Features
 
-- Voice channel integration
-- Message attachments
-- Reactions handling
-- Media transcription
-- Room management
+-   Voice channel integration
+-   Message attachments
+-   Reactions handling
+-   Media transcription
+-   Room management
 
 ### Voice Integration
 
@@ -151,9 +158,9 @@ TWITTER_EMAIL = your_email;
 
 ### Components
 
-- **PostClient**: Handles creating and managing posts
-- **SearchClient**: Handles search functionality
-- **InteractionClient**: Manages user interactions
+-   **PostClient**: Handles creating and managing posts
+-   **SearchClient**: Handles search functionality
+-   **InteractionClient**: Manages user interactions
 
 ### Post Management
 
@@ -278,12 +285,9 @@ class AutoClient {
         this.runtime = runtime;
 
         // Start trading loop
-        this.interval = setInterval(
-            () => {
-                this.makeTrades();
-            },
-            60 * 60 * 1000,
-        ); // 1 hour interval
+        this.interval = setInterval(() => {
+            this.makeTrades();
+        }, 60 * 60 * 1000); // 1 hour interval
     }
 
     async makeTrades() {
@@ -345,9 +349,9 @@ All clients implement standard message handling:
 
 ```typescript
 interface ClientInterface {
-  async handleMessage(message: Message): Promise<void>;
-  async generateResponse(context: Context): Promise<Response>;
-  async sendMessage(destination: string, content: Content): Promise<void>;
+    handleMessage(message: Message): Promise<void>;
+    generateResponse(context: Context): Promise<Response>;
+    sendMessage(destination: string, content: Content): Promise<void>;
 }
 ```
 
@@ -355,9 +359,9 @@ interface ClientInterface {
 
 ```typescript
 interface MediaProcessor {
-  async processImage(image: Image): Promise<ProcessedImage>;
-  async processVideo(video: Video): Promise<ProcessedVideo>;
-  async processAudio(audio: Audio): Promise<ProcessedAudio>;
+    processImage(image: Image): Promise<ProcessedImage>;
+    processVideo(video: Video): Promise<ProcessedVideo>;
+    processAudio(audio: Audio): Promise<ProcessedAudio>;
 }
 ```
 
@@ -464,7 +468,7 @@ class RateLimiter {
     private calculateBackoff(error: RateLimitError): number {
         return Math.min(
             this.baseDelay * Math.pow(2, this.attempts),
-            this.maxDelay,
+            this.maxDelay
         );
     }
 }
@@ -506,8 +510,8 @@ class MessageQueue {
 ```typescript
 // Implement token refresh
 async refreshAuth() {
-  const newToken = await this.requestNewToken();
-  await this.updateToken(newToken);
+	const newToken = await this.requestNewToken();
+	await this.updateToken(newToken);
 }
 ```
 
@@ -516,9 +520,9 @@ async refreshAuth() {
 ```typescript
 // Handle rate limiting
 async handleRateLimit(error) {
-  const delay = this.calculateBackoff(error);
-  await wait(delay);
-  return this.retryRequest();
+	const delay = this.calculateBackoff(error);
+	await wait(delay);
+	return this.retryRequest();
 }
 ```
 
@@ -527,10 +531,10 @@ async handleRateLimit(error) {
 ```typescript
 // Implement reconnection logic
 async handleDisconnect() {
-  await this.reconnect({
-    maxAttempts: 5,
-    backoff: 'exponential'
-  });
+	await this.reconnect({
+		maxAttempts: 5,
+		backoff: "exponential",
+	});
 }
 ```
 
@@ -538,17 +542,17 @@ async handleDisconnect() {
 
 ```typescript
 async processMessage(message) {
-  try {
-    return await this.messageProcessor(message);
-  } catch (error) {
-    if (error.code === "INVALID_FORMAT") {
-      return this.handleInvalidFormat(message);
-    }
-    throw error;
-  }
+	try {
+		return await this.messageProcessor(message);
+	} catch (error) {
+		if (error.code === "INVALID_FORMAT") {
+			return this.handleInvalidFormat(message);
+		}
+		throw error;
+	}
 }
 ```
 
 ## Related Resources
 
-- [Error Handling](../../packages/core)
+-   [Error Handling](../../packages/core)
