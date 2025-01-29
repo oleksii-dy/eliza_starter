@@ -9,6 +9,7 @@ import {
 import { NostrClient } from "./client";
 import { parseBooleanFromText } from "@elizaos/core";
 import { postTemplate } from "./prompts";
+
 export class NostrPostManager {
     private timeout: NodeJS.Timeout | undefined;
 
@@ -187,4 +188,3 @@ export class NostrPostManager {
         }
     }
 }
-
