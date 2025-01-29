@@ -101,7 +101,7 @@ export class SttTtsPlugin implements Plugin {
         if (config?.chatContext) {
             this.chatContext = config.chatContext;
         }
-        elizaLogger.log("[SttTtsPlugin] Plugin config =>", config);
+        // elizaLogger.log("[SttTtsPlugin] Plugin config =>", config);
 
         // Listen for mute events
         this.space.on(
