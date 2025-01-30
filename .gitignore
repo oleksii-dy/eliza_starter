@@ -64,4 +64,4 @@ eliza.sig
 
 docs/
 **/*.ipynb*
-repositories/
+/repositories
