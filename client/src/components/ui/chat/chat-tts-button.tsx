@@ -81,13 +81,6 @@ export default function ChatTtsButton({
                         src={URL.createObjectURL(audioBlob)}
                         type="audio/mpeg"
                     />
-                      <track
-                        kind="captions"
-                        src=""
-                        label="English"
-                        srcLang="en"
-                        default
-                    />
                     Your browser does not support the audio element.
                 </audio>
             ) : null}
