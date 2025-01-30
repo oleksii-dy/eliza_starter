@@ -142,10 +142,6 @@
         "shared": true
     },
     {
-        "path": "agent/repositories/llm-prompt-library.txt",
-        "shared": true
-    },
-    {
         "path": "agent/blogs/prompt_caching.txt",
         "shared": true
     },
@@ -153,6 +149,59 @@
         "path": "books/jarg447.txt",
         "shared": true
     },
+    {
+        "path": "agent/repositories/anthropic-cookbook_markdown.md",
+        "shared": true
+    },
+    {
+        "path": "agent/repositories/Gymnasium_python.md",
+        "shared": true
+    },
+    {
+        "path": "agent/repositories/awesome-gaia_markdown.md",
+        "shared": true
+    },
+    {
+        "path": "agent/repositories/openai-cookbook_markdown.md",
+        "shared": true
+    },
+    {
+        "path": "agent/repositories/together-cookbook_python.md",
+        "shared": true
+    },
+    {
+        "path": "agent/repositories/courses_markdown.md",
+        "shared": true
+    },
+    {
+        "path": "agent/repositories/LLM-Prompt-Library_markdown.md",
+        "shared": true
+    },
+    {
+        "path": "agent/repositories/anthropic-cookbook_python.md",
+        "shared": true
+    },
+    {
+        "path": "agent/repositories/openai-cookbook_python.md",
+        "shared": true
+    },
+    {
+        "path": "agent/repositories/awesome-artificial-intelligence-research_markdown.md",
+        "shared": true
+    },
+    {
+        "path": "agent/repositories/together-cookbook_markdown.md",
+        "shared": true
+    },
+    {
+        "path": "agent/repositories/llm-prompt-library.txt",
+        "shared": true
+    },
+    {
+        "path": "agent/repositories/courses_python.md",
+        "shared": true
+    },
+
     "Agent Architecture & Optimization",
     "Gödel Agent recursive self-improvement framework",
     "Cocoa's co-planning and co-execution patterns",
