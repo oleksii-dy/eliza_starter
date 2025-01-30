@@ -4,14 +4,13 @@ import {
     generateObject,
     ModelClass,
     Provider,
-} from "@elizaos/core";
-import {
     Action,
     HandlerCallback,
     IAgentRuntime,
     Memory,
     Plugin,
     State,
+    Instrumentation,
 } from "@elizaos/core";
 import { ChargeContent, ChargeSchema, isChargeContent } from "../types";
 import { chargeTemplate, getChargeTemplate } from "../templates";
@@ -149,11 +148,13 @@ export const createCoinbaseChargeAction: Action = {
         } else {
             state = await runtime.updateRecentMessageState(state);
         }
+        Instrumentation.trace("plugin-coinbase/createCoinbaseChargeAction.state", state);
 
         const context = composeContext({
             state,
             template: chargeTemplate,
         });
+        Instrumentation.trace("plugin-coinbase/createCoinbaseChargeAction.context", context);
 
         const chargeDetails = await generateObject({
             runtime,
@@ -161,6 +162,8 @@ export const createCoinbaseChargeAction: Action = {
             modelClass: ModelClass.LARGE,
             schema: ChargeSchema,
         });
+        Instrumentation.trace("plugin-coinbase/createCoinbaseChargeAction.details", chargeDetails);
+
         if (!isChargeContent(chargeDetails.object)) {
             throw new Error("Invalid content");
         }
@@ -174,6 +177,7 @@ export const createCoinbaseChargeAction: Action = {
             );
             return;
         }
+        Instrumentation.trace("plugin-coinbase/createCoinbaseChargeAction.charge", charge);
 
         elizaLogger.info("Charge details received:", chargeDetails);
 
