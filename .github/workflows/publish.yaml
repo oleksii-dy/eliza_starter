@@ -1,0 +1,64 @@
+name: Publish Packages to GitHub Packages
+
+# Trigger automatically on push to 'main',
+# plus allow manual triggering with a custom 'build_ref' input.
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+    inputs:
+      build_ref:
+        description: "Git reference (tag, branch, or commit) to build/publish"
+        required: false
+        default: "develop"
+
+permissions:
+  contents: write       # needed to checkout code
+  packages: write       # required to publish packages to GH Packages
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          # If this workflow is triggered manually, use the 'build_ref' input.
+          # Otherwise, default to the current commit/branch of the push event.
+          ref: ${{ github.event.inputs.build_ref || github.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 23  # or whatever Node.js version you need
+          registry-url: "https://npm.pkg.github.com"
+
+      - name: Configure npm to use GitHub Packages
+        run: |
+          # Route the @elizaos scope to GitHub Packages
+          echo "@elizaos:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          # Use Actions' GITHUB_TOKEN for authentication
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
+
+      - name: Install dependencies
+        run: |
+          pnpm install
+
+      - name: Build packages
+        run: |
+          # If using Turborepo to build: 
+          pnpm build
+
+          # Or if using Lerna to run build scripts in each package:
+          # npx lerna run build
+
+      - name: Publish packages to GitHub Packages
+        if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+        run: |
+          # Option 1: Using Lerna
+          #npx lerna publish from-package --yes
+
+          # Option 2 (alternative): Using pnpm directly for all packages
+          # pnpm -r publish --access public --no-git-checks
