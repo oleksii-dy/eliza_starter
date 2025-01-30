@@ -85,5 +85,8 @@
   "packageManager": "pnpm@9.15.0",
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
 }
