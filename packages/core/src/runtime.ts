@@ -204,18 +204,23 @@ export class AgentRuntime implements IAgentRuntime {
 
     async registerService(service: Service): Promise<void> {
         const serviceType = service.serviceType;
-        elizaLogger.log("Registering service:", serviceType);
+        elizaLogger.log(
+            `${this.character.name}(${this.agentId}) - Registering service:`,
+            serviceType
+        );
 
         if (this.services.has(serviceType)) {
             elizaLogger.warn(
-                `Service ${serviceType} is already registered. Skipping registration.`
+                `${this.character.name}(${this.agentId}) - Service ${serviceType} is already registered. Skipping registration.`
             );
             return;
         }
 
         // Add the service to the services map
         this.services.set(serviceType, service);
-        elizaLogger.success(`Service ${serviceType} registered successfully`);
+        elizaLogger.success(
+            `${this.character.name}(${this.agentId}) - Service ${serviceType} registered successfully`
+        );
     }
 
     /**
@@ -257,11 +262,21 @@ export class AgentRuntime implements IAgentRuntime {
         logging?: boolean;
         verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
     }) {
-        elizaLogger.info("Initializing AgentRuntime with options:", {
-            character: opts.character?.name,
-            modelProvider: opts.modelProvider,
-            characterModelProvider: opts.character?.modelProvider,
-        });
+        // use the character id if it exists, otherwise use the agentId if it is passed in, otherwise use the character name
+        this.agentId =
+            opts.character?.id ??
+            opts?.agentId ??
+            stringToUuid(opts.character?.name ?? uuidv4());
+        this.character = opts.character || defaultCharacter;
+
+        elizaLogger.info(
+            `${this.character.name}(${this.agentId}) - Initializing AgentRuntime with options:`,
+            {
+                character: opts.character?.name,
+                modelProvider: opts.modelProvider,
+                characterModelProvider: opts.character?.modelProvider,
+            }
+        );
 
         elizaLogger.debug(
             `[AgentRuntime] Process working directory: ${process.cwd()}`
@@ -286,12 +301,6 @@ export class AgentRuntime implements IAgentRuntime {
             throw new Error("No database adapter provided");
         }
         this.databaseAdapter = opts.databaseAdapter;
-        // use the character id if it exists, otherwise use the agentId if it is passed in, otherwise use the character name
-        this.agentId =
-            opts.character?.id ??
-            opts?.agentId ??
-            stringToUuid(opts.character?.name ?? uuidv4());
-        this.character = opts.character || defaultCharacter;
 
         // By convention, we create a user and room using the agent id.
         // Memories related to it are considered global context for the agent.
@@ -352,16 +361,18 @@ export class AgentRuntime implements IAgentRuntime {
 
         this.serverUrl = opts.serverUrl ?? this.serverUrl;
 
-        elizaLogger.info("Setting model provider...");
-        elizaLogger.info("Model Provider Selection:", {
-            characterModelProvider: this.character.modelProvider,
-            optsModelProvider: opts.modelProvider,
-            currentModelProvider: this.modelProvider,
-            finalSelection:
-                this.character.modelProvider ??
-                opts.modelProvider ??
-                this.modelProvider,
-        });
+        elizaLogger.info(
+            `${this.character.name}(${this.agentId}) - Setting Model Provider:`,
+            {
+                characterModelProvider: this.character.modelProvider,
+                optsModelProvider: opts.modelProvider,
+                currentModelProvider: this.modelProvider,
+                finalSelection:
+                    this.character.modelProvider ??
+                    opts.modelProvider ??
+                    this.modelProvider,
+            }
+        );
 
         this.modelProvider =
             this.character.modelProvider ??
@@ -371,17 +382,13 @@ export class AgentRuntime implements IAgentRuntime {
         this.imageModelProvider =
             this.character.imageModelProvider ?? this.modelProvider;
 
-        elizaLogger.info(`Selected model provider: ${this.modelProvider}`);
-
         elizaLogger.info(
-            `Selected image model provider: ${this.imageModelProvider}`
+            `${this.character.name}(${this.agentId}) - Selected model provider:`,
+            this.modelProvider
         );
-
-        this.imageVisionModelProvider =
-            this.character.imageVisionModelProvider ?? this.modelProvider;
-
         elizaLogger.info(
-            `Selected image vision model provider: ${this.imageVisionModelProvider}`
+            `${this.character.name}(${this.agentId}) - Selected image model provider:`,
+            this.imageVisionModelProvider
         );
 
         // Validate model provider
@@ -444,23 +451,26 @@ export class AgentRuntime implements IAgentRuntime {
                 await service.initialize(this);
                 this.services.set(serviceType, service);
                 elizaLogger.success(
-                    `Service ${serviceType} initialized successfully`
+                    `${this.character.name}(${this.agentId}) - Service ${serviceType} initialized successfully`
                 );
             } catch (error) {
                 elizaLogger.error(
-                    `Failed to initialize service ${serviceType}:`,
+                    `${this.character.name}(${this.agentId}) - Failed to initialize service ${serviceType}:`,
                     error
                 );
                 throw error;
             }
         }
 
+        // should already be initiailized
+        /*
         for (const plugin of this.plugins) {
             if (plugin.services)
                 await Promise.all(
-                    plugin.services?.map((service) => service.initialize(this))
+                    plugin.services?.map((service) => service.initialize(this)),
                 );
         }
+        */
 
         if (
             this.character &&
@@ -566,7 +576,7 @@ export class AgentRuntime implements IAgentRuntime {
     }
 
     async stop() {
-        elizaLogger.debug("runtime::stop - character", this.character);
+        elizaLogger.debug("runtime::stop - character", this.character.name);
         // stop services, they don't have a stop function
         // just initialize
 
@@ -648,7 +658,11 @@ export class AgentRuntime implements IAgentRuntime {
                     contentItem = item;
                 }
 
-                const knowledgeId = stringToUuid(contentItem);
+                // const knowledgeId = stringToUuid(contentItem);
+                const knowledgeId = this.ragKnowledgeManager.generateScopedId(
+                    contentItem,
+                    isShared
+                );
                 const fileExtension = contentItem
                     .split(".")
                     .pop()
@@ -661,18 +675,47 @@ export class AgentRuntime implements IAgentRuntime {
                 ) {
                     try {
                         const filePath = join(this.knowledgeRoot, contentItem);
-                        elizaLogger.info(
-                            "Attempting to read file from:",
-                            filePath
-                        );
+                        // Get existing knowledge first with more detailed logging
+                        elizaLogger.debug("[RAG Query]", {
+                            knowledgeId,
+                            agentId: this.agentId,
+                            relativePath: contentItem,
+                            fullPath: filePath,
+                            isShared,
+                            knowledgeRoot: this.knowledgeRoot,
+                        });
 
                         // Get existing knowledge first
                         const existingKnowledge =
                             await this.ragKnowledgeManager.getKnowledge({
                                 id: knowledgeId,
-                                agentId: this.agentId,
+                                agentId: this.agentId, // Keep agentId as it's used in OR query
                             });
 
+                        elizaLogger.debug("[RAG Query Result]", {
+                            relativePath: contentItem,
+                            fullPath: filePath,
+                            knowledgeId,
+                            isShared,
+                            exists: existingKnowledge.length > 0,
+                            knowledgeCount: existingKnowledge.length,
+                            firstResult: existingKnowledge[0]
+                                ? {
+                                      id: existingKnowledge[0].id,
+                                      agentId: existingKnowledge[0].agentId,
+                                      contentLength:
+                                          existingKnowledge[0].content.text
+                                              .length,
+                                  }
+                                : null,
+                            results: existingKnowledge.map((k) => ({
+                                id: k.id,
+                                agentId: k.agentId,
+                                isBaseKnowledge: !k.id.includes("chunk"),
+                            })),
+                        });
+
+                        // Read file content
                         const content: string = await readFile(
                             filePath,
                             "utf8"
@@ -682,30 +725,51 @@ export class AgentRuntime implements IAgentRuntime {
                             continue;
                         }
 
-                        // If the file exists in DB, check if content has changed
                         if (existingKnowledge.length > 0) {
                             const existingContent =
                                 existingKnowledge[0].content.text;
+
+                            elizaLogger.debug("[RAG Compare]", {
+                                path: contentItem,
+                                knowledgeId,
+                                isShared,
+                                existingContentLength: existingContent.length,
+                                newContentLength: content.length,
+                                contentSample: content.slice(0, 100),
+                                existingContentSample: existingContent.slice(
+                                    0,
+                                    100
+                                ),
+                                matches: existingContent === content,
+                            });
+
                             if (existingContent === content) {
                                 elizaLogger.info(
-                                    `File ${contentItem} unchanged, skipping`
+                                    `${
+                                        isShared
+                                            ? "Shared knowledge"
+                                            : "Knowledge"
+                                    } ${contentItem} unchanged, skipping`
                                 );
                                 continue;
-                            } else {
-                                // If content changed, remove old knowledge before adding new
-                                await this.ragKnowledgeManager.removeKnowledge(
-                                    knowledgeId
-                                );
-                                // Also remove any associated chunks - this is needed for non-PostgreSQL adapters
-                                // PostgreSQL adapter handles chunks internally via foreign keys
-                                await this.ragKnowledgeManager.removeKnowledge(
-                                    `${knowledgeId}-chunk-*` as UUID
-                                );
                             }
+
+                            // Content changed, remove old knowledge before adding new
+                            elizaLogger.info(
+                                `${
+                                    isShared ? "Shared knowledge" : "Knowledge"
+                                } ${contentItem} changed, updating...`
+                            );
+                            await this.ragKnowledgeManager.removeKnowledge(
+                                knowledgeId
+                            );
+                            await this.ragKnowledgeManager.removeKnowledge(
+                                `${knowledgeId}-chunk-*` as UUID
+                            );
                         }
 
                         elizaLogger.info(
-                            `Successfully read ${fileExtension.toUpperCase()} file content for`,
+                            `Processing ${fileExtension.toUpperCase()} file content for`,
                             this.character.name,
                             "-",
                             contentItem
@@ -723,7 +787,7 @@ export class AgentRuntime implements IAgentRuntime {
                             `Failed to read knowledge file ${contentItem}. Error details:`,
                             error?.message || error || "Unknown error"
                         );
-                        continue; // Continue to next item even if this one fails
+                        continue;
                     }
                 } else {
                     // Handle direct knowledge string
@@ -764,7 +828,7 @@ export class AgentRuntime implements IAgentRuntime {
                     `Error processing knowledge item ${item}:`,
                     error?.message || error || "Unknown error"
                 );
-                continue; // Continue to next item even if this one fails
+                continue;
             }
         }
 
@@ -920,7 +984,9 @@ export class AgentRuntime implements IAgentRuntime {
      * @param action The action to register.
      */
     registerAction(action: Action) {
-        elizaLogger.success(`Registering action: ${action.name}`);
+        elizaLogger.success(
+            `${this.character.name}(${this.agentId}) - Registering action: ${action.name}`
+        );
         this.actions.push(action);
     }
 
@@ -1480,12 +1546,12 @@ Text: ${attachment.text}
                       this.character.topics
                           .sort(() => 0.5 - Math.random())
                           .slice(0, 5)
-                          .map((topic, index) => {
-                              if (index === this.character.topics.length - 2) {
+                          .map((topic, index, array) => {
+                              if (index === array.length - 2) {
                                   return topic + " and ";
                               }
                               // if last topic, don't add a comma
-                              if (index === this.character.topics.length - 1) {
+                              if (index === array.length - 1) {
                                   return topic;
                               }
                               return topic + ", ";
