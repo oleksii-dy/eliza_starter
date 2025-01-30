@@ -1,32 +1,35 @@
+// Core Node.js imports
+import fs from "node:fs";
+import net from "node:net";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+// Database Adapters
+import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb";
 import { PGLiteDatabaseAdapter } from "@elizaos/adapter-pglite";
 import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
 import { QdrantDatabaseAdapter } from "@elizaos/adapter-qdrant";
 import { RedisClient } from "@elizaos/adapter-redis";
 import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
 import { SupabaseDatabaseAdapter } from "@elizaos/adapter-supabase";
+
+// Client Interfaces
+import { AlexaClientInterface } from "@elizaos/client-alexa";
 import { AutoClientInterface } from "@elizaos/client-auto";
+import { DevaClientInterface } from "@elizaos/client-deva";
+import { DirectClient } from "@elizaos/client-direct";
 import { DiscordClientInterface } from "@elizaos/client-discord";
+import { FarcasterClientInterface } from "@elizaos/client-farcaster";
 import { InstagramClientInterface } from "@elizaos/client-instagram";
+import { JeeterClientInterface } from "@elizaos/client-simsai";
 import { LensAgentClient } from "@elizaos/client-lens";
 import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TelegramAccountClientInterface } from "@elizaos/client-telegram-account";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
-import { AlexaClientInterface } from "@elizaos/client-alexa";
-import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb";
-import { DevaClientInterface } from "@elizaos/client-deva";
-
-import { FarcasterClientInterface } from "@elizaos/client-farcaster";
-import { OmniflixPlugin } from "@elizaos/plugin-omniflix";
-import { JeeterClientInterface } from "@elizaos/client-simsai";
 import { XmtpClientInterface } from "@elizaos/client-xmtp";
-import { DirectClient } from "@elizaos/client-direct";
-import { agentKitPlugin } from "@elizaos/plugin-agentkit";
-import { gelatoPlugin } from "@elizaos/plugin-gelato";
-import { PrimusAdapter } from "@elizaos/plugin-primus";
-import { lightningPlugin } from "@elizaos/plugin-lightning";
-import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
-import { dcapPlugin } from "@elizaos/plugin-dcap";
+
+// Core Components
 import {
     AgentRuntime,
     CacheManager,
@@ -48,29 +51,56 @@ import {
     stringToUuid,
     validateCharacterConfig,
 } from "@elizaos/core";
-import { zgPlugin } from "@elizaos/plugin-0g";
-import { footballPlugin } from "@elizaos/plugin-football";
 
+// Basic Plugins
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import { normalizeCharacter } from "@elizaos/plugin-di";
 import createGoatPlugin from "@elizaos/plugin-goat";
-import createZilliqaPlugin from "@elizaos/plugin-zilliqa";
+import { zgPlugin } from "@elizaos/plugin-0g";
+import { agentKitPlugin } from "@elizaos/plugin-agentkit";
+import { dcapPlugin } from "@elizaos/plugin-dcap";
+import { footballPlugin } from "@elizaos/plugin-football";
+import { gelatoPlugin } from "@elizaos/plugin-gelato";
+import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
+import { lightningPlugin } from "@elizaos/plugin-lightning";
+import { OmniflixPlugin } from "@elizaos/plugin-omniflix";
+import { PrimusAdapter } from "@elizaos/plugin-primus";
 
-// import { intifacePlugin } from "@elizaos/plugin-intiface";
-import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
-import { abstractPlugin } from "@elizaos/plugin-abstract";
+// Blockchain & Crypto Plugins
+import { zxPlugin } from "@elizaos/plugin-0x";
 import { akashPlugin } from "@elizaos/plugin-akash";
 import { alloraPlugin } from "@elizaos/plugin-allora";
+import { ankrPlugin } from "@elizaos/plugin-ankr";
 import { aptosPlugin } from "@elizaos/plugin-aptos";
 import { artheraPlugin } from "@elizaos/plugin-arthera";
-import { autonomePlugin } from "@elizaos/plugin-autonome";
-import { availPlugin } from "@elizaos/plugin-avail";
 import { avalanchePlugin } from "@elizaos/plugin-avalanche";
-import { b2Plugin } from "@elizaos/plugin-b2";
 import { binancePlugin } from "@elizaos/plugin-binance";
-import { birdeyePlugin } from "@elizaos/plugin-birdeye";
-import { bittensorPlugin } from "@elizaos/plugin-bittensor";
 import { bnbPlugin } from "@elizaos/plugin-bnb";
+import { confluxPlugin } from "@elizaos/plugin-conflux";
+import { createCosmosPlugin } from "@elizaos/plugin-cosmos";
+import { cronosZkEVMPlugin } from "@elizaos/plugin-cronoszkevm";
+import { evmPlugin } from "@elizaos/plugin-evm";
+import { flowPlugin } from "@elizaos/plugin-flow";
+import { fuelPlugin } from "@elizaos/plugin-fuel";
+import { injectivePlugin } from "@elizaos/plugin-injective";
+import { solanaPlugin } from "@elizaos/plugin-solana";
+import { solanaAgentkitPlugin } from "@elizaos/plugin-solana-agent-kit";
+import { solanaPluginV2 } from "@elizaos/plugin-solana-v2";
+import { suiPlugin } from "@elizaos/plugin-sui";
+import { tonPlugin } from "@elizaos/plugin-ton";
+import createZilliqaPlugin from "@elizaos/plugin-zilliqa";
+import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
+
+// Data & Analytics Plugins
+import { birdeyePlugin } from "@elizaos/plugin-birdeye";
+import { chainbasePlugin } from "@elizaos/plugin-chainbase";
+import { coingeckoPlugin } from "@elizaos/plugin-coingecko";
+import { coinmarketcapPlugin } from "@elizaos/plugin-coinmarketcap";
+import { dexScreenerPlugin } from "@elizaos/plugin-dexscreener";
+import { moralisPlugin } from "@elizaos/plugin-moralis";
+import { pythDataPlugin } from "@elizaos/plugin-pyth-data";
+
+// Integration & Service Plugins
 import {
     advancedTradePlugin,
     coinbaseCommercePlugin,
@@ -79,86 +109,73 @@ import {
     tradePlugin,
     webhookPlugin,
 } from "@elizaos/plugin-coinbase";
-import { coingeckoPlugin } from "@elizaos/plugin-coingecko";
-import { coinmarketcapPlugin } from "@elizaos/plugin-coinmarketcap";
-import { confluxPlugin } from "@elizaos/plugin-conflux";
-import { createCosmosPlugin } from "@elizaos/plugin-cosmos";
-import { cronosZkEVMPlugin } from "@elizaos/plugin-cronoszkevm";
-import { evmPlugin } from "@elizaos/plugin-evm";
-import { flowPlugin } from "@elizaos/plugin-flow";
-import { fuelPlugin } from "@elizaos/plugin-fuel";
+import { emailPlugin } from "@elizaos/plugin-email";
+import { emailAutomationPlugin } from "@elizaos/plugin-email-automation";
+import { giphyPlugin } from "@elizaos/plugin-giphy";
+import { openWeatherPlugin } from "@elizaos/plugin-open-weather";
+import { openaiPlugin } from "@elizaos/plugin-openai";
+import { webSearchPlugin } from "@elizaos/plugin-web-search";
+
+// AI & Generation Plugins
+import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
+import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
+import { nftGenerationPlugin } from "@elizaos/plugin-nft-generation";
+import { sunoPlugin } from "@elizaos/plugin-suno";
+
+// Utility & Infrastructure Plugins
+import { abstractPlugin } from "@elizaos/plugin-abstract";
+import { autonomePlugin } from "@elizaos/plugin-autonome";
+import { availPlugin } from "@elizaos/plugin-avail";
+import { b2Plugin } from "@elizaos/plugin-b2";
+import { bittensorPlugin } from "@elizaos/plugin-bittensor";
+import { devinPlugin } from "@elizaos/plugin-devin";
+import { dkgPlugin } from "@elizaos/plugin-dkg";
+import { ethstoragePlugin } from "@elizaos/plugin-ethstorage";
+import { formPlugin } from "@elizaos/plugin-form";
 import { genLayerPlugin } from "@elizaos/plugin-genlayer";
 import { gitcoinPassportPlugin } from "@elizaos/plugin-gitcoin-passport";
+import { holdstationPlugin } from "@elizaos/plugin-holdstation";
+import { hyperbolicPlugin } from "@elizaos/plugin-hyperbolic";
+import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
+import { imgflipPlugin } from "@elizaos/plugin-imgflip";
 import { initiaPlugin } from "@elizaos/plugin-initia";
-import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
 import { lensPlugin } from "@elizaos/plugin-lens-network";
+import { letzAIPlugin } from "@elizaos/plugin-letzai";
 import { litPlugin } from "@elizaos/plugin-lit";
+import { minaPlugin } from "@elizaos/plugin-mina";
 import { mindNetworkPlugin } from "@elizaos/plugin-mind-network";
 import { multiversxPlugin } from "@elizaos/plugin-multiversx";
 import { nearPlugin } from "@elizaos/plugin-near";
 import createNFTCollectionsPlugin from "@elizaos/plugin-nft-collections";
-import { nftGenerationPlugin } from "@elizaos/plugin-nft-generation";
 import { createNodePlugin } from "@elizaos/plugin-node";
+import { nvidiaNimPlugin } from "@elizaos/plugin-nvidia-nim";
 import { obsidianPlugin } from "@elizaos/plugin-obsidian";
 import { OpacityAdapter } from "@elizaos/plugin-opacity";
-import { openWeatherPlugin } from "@elizaos/plugin-open-weather";
 import { quaiPlugin } from "@elizaos/plugin-quai";
+import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
+import nitroPlugin from "@elizaos/plugin-router-nitro";
+import { seiPlugin } from "@elizaos/plugin-sei";
 import { sgxPlugin } from "@elizaos/plugin-sgx";
-import { solanaPlugin } from "@elizaos/plugin-solana";
-import { solanaPluginV2 } from "@elizaos/plugin-solana-v2";
-import { solanaAgentkitPlugin } from "@elizaos/plugin-solana-agent-kit";
 import { squidRouterPlugin } from "@elizaos/plugin-squid-router";
 import { stargazePlugin } from "@elizaos/plugin-stargaze";
 import { storyPlugin } from "@elizaos/plugin-story";
-import { suiPlugin } from "@elizaos/plugin-sui";
 import { TEEMode, teePlugin } from "@elizaos/plugin-tee";
 import { teeLogPlugin } from "@elizaos/plugin-tee-log";
 import { teeMarlinPlugin } from "@elizaos/plugin-tee-marlin";
 import { verifiableLogPlugin } from "@elizaos/plugin-tee-verifiable-log";
-import { tonPlugin } from "@elizaos/plugin-ton";
-import { webSearchPlugin } from "@elizaos/plugin-web-search";
-import { dkgPlugin } from "@elizaos/plugin-dkg";
-import { injectivePlugin } from "@elizaos/plugin-injective";
-import { giphyPlugin } from "@elizaos/plugin-giphy";
-import { letzAIPlugin } from "@elizaos/plugin-letzai";
 import { thirdwebPlugin } from "@elizaos/plugin-thirdweb";
-import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
-import { moralisPlugin } from "@elizaos/plugin-moralis";
-import { echoChambersPlugin } from "@elizaos/plugin-echochambers";
-import { dexScreenerPlugin } from "@elizaos/plugin-dexscreener";
-import { pythDataPlugin } from "@elizaos/plugin-pyth-data";
-import { openaiPlugin } from "@elizaos/plugin-openai";
-import nitroPlugin from "@elizaos/plugin-router-nitro";
-import { devinPlugin } from "@elizaos/plugin-devin";
-import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
-import { chainbasePlugin } from "@elizaos/plugin-chainbase";
-import { holdstationPlugin } from "@elizaos/plugin-holdstation";
-import { nvidiaNimPlugin } from "@elizaos/plugin-nvidia-nim";
-import { zxPlugin } from "@elizaos/plugin-0x";
-import { hyperbolicPlugin } from "@elizaos/plugin-hyperbolic";
-import { litPlugin } from "@elizaos/plugin-lit";
-import Database from "better-sqlite3";
-import fs from "fs";
-import net from "net";
-import path from "path";
-import { fileURLToPath } from "url";
-import yargs from "yargs";
-import { emailPlugin } from "@elizaos/plugin-email";
-import { emailAutomationPlugin } from "@elizaos/plugin-email-automation";
-import { seiPlugin } from "@elizaos/plugin-sei";
-import { sunoPlugin } from "@elizaos/plugin-suno";
 import { udioPlugin } from "@elizaos/plugin-udio";
-import { imgflipPlugin } from "@elizaos/plugin-imgflip";
-import { ethstoragePlugin } from "@elizaos/plugin-ethstorage";
 import { zerionPlugin } from "@elizaos/plugin-zerion";
-import { minaPlugin } from "@elizaos/plugin-mina";
-import { ankrPlugin } from "@elizaos/plugin-ankr";
-import { formPlugin } from "@elizaos/plugin-form";
-import { MongoClient } from "mongodb";
-import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
+import { echoChambersPlugin } from "@elizaos/plugin-echochambers";
 
-import { trikonPlugin } from "@elizaos/plugin-trikon";
+// External Dependencies
+import Database from "better-sqlite3";
+import { MongoClient } from "mongodb";
+import yargs from "yargs";
+
+
 import arbitragePlugin from "@elizaos/plugin-arbitrage";
+import { trikonPlugin } from "@elizaos/plugin-trikon";
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
@@ -211,7 +228,7 @@ function mergeCharacters(base: Character, child: Character): Character {
             ...Object.keys(baseObj || {}),
             ...Object.keys(childObj || {}),
         ]);
-        keys.forEach((key) => {
+        for (const key of keys) {
             if (
                 typeof baseObj[key] === "object" &&
                 typeof childObj[key] === "object" &&
@@ -231,7 +248,7 @@ function mergeCharacters(base: Character, child: Character): Character {
                 result[key] =
                     childObj[key] !== undefined ? childObj[key] : baseObj[key];
             }
-        });
+        }
         return result;
     };
     return mergeObjects(base, child);
@@ -408,8 +425,9 @@ async function loadCharacterTryPath(characterPath: string): Promise<Character> {
         elizaLogger.error(
             `Error loading character from ${characterPath}: File not found in any of the expected locations`
         );
-        elizaLogger.error("Tried the following paths:");
-        pathsToTry.forEach((p) => elizaLogger.error(` - ${p}`));
+        for (const p of pathsToTry) {
+            elizaLogger.error(` - ${p}`);
+        }
         throw new Error(
             `Error loading character from ${characterPath}: File not found in any of the expected locations`
         );
@@ -435,9 +453,9 @@ async function readCharactersFromStorage(
         const uploadDir = path.join(process.cwd(), "data", "characters");
         await fs.promises.mkdir(uploadDir, { recursive: true });
         const fileNames = await fs.promises.readdir(uploadDir);
-        fileNames.forEach((fileName) => {
+        for (const fileName of fileNames) {
             characterPaths.push(path.join(uploadDir, fileName));
-        });
+        }
     } catch (err) {
         elizaLogger.error(`Error reading directory: ${err.message}`);
     }
@@ -672,240 +690,185 @@ export function getTokenForProvider(
                 character.settings?.secrets?.LIVEPEER_GATEWAY_URL ||
                 settings.LIVEPEER_GATEWAY_URL
             );
-        default:
+        default: {
             const errorMessage = `Failed to get token - unsupported model provider: ${provider}`;
             elizaLogger.error(errorMessage);
             throw new Error(errorMessage);
+        }
     }
 }
 
 function initializeDatabase(dataDir: string) {
-    if (process.env.MONGODB_CONNECTION_STRING) {
-        elizaLogger.log("Initializing database on MongoDB Atlas");
-        const client = new MongoClient(process.env.MONGODB_CONNECTION_STRING, {
-            maxPoolSize: 100,
-            minPoolSize: 5,
-            maxIdleTimeMS: 60000,
-            connectTimeoutMS: 10000,
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-            compressors: ["zlib"],
-            retryWrites: true,
-            retryReads: true,
-        });
-
-        const dbName = process.env.MONGODB_DATABASE || "elizaAgent";
-        const db = new MongoDBDatabaseAdapter(client, dbName);
-
-        // Test the connection
-        db.init()
-            .then(() => {
-                elizaLogger.success("Successfully connected to MongoDB Atlas");
-            })
-            .catch((error) => {
-                elizaLogger.error("Failed to connect to MongoDB Atlas:", error);
-                throw error; // Re-throw to handle it in the calling code
+    switch (true) {
+        case !!process.env.MONGODB_CONNECTION_STRING: {
+            elizaLogger.log("Initializing database on MongoDB Atlas");
+            const client = new MongoClient(process.env.MONGODB_CONNECTION_STRING, {
+                maxPoolSize: 100,
+                minPoolSize: 5,
+                maxIdleTimeMS: 60000,
+                connectTimeoutMS: 10000,
+                serverSelectionTimeoutMS: 5000,
+                socketTimeoutMS: 45000,
+                compressors: ["zlib"],
+                retryWrites: true,
+                retryReads: true,
             });
 
-        return db;
-    } else if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
-        elizaLogger.info("Initializing Supabase connection...");
-        const db = new SupabaseDatabaseAdapter(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_ANON_KEY
-        );
+            const dbName = process.env.MONGODB_DATABASE || "elizaAgent";
+            const db = new MongoDBDatabaseAdapter(client, dbName);
 
-        // Test the connection
-        db.init()
-            .then(() => {
-                elizaLogger.success(
-                    "Successfully connected to Supabase database"
-                );
-            })
-            .catch((error) => {
-                elizaLogger.error("Failed to connect to Supabase:", error);
+            db.init()
+                .then(() => {
+                    elizaLogger.success("Successfully connected to MongoDB Atlas");
+                })
+                .catch((error) => {
+                    elizaLogger.error("Failed to connect to MongoDB Atlas:", error);
+                    throw error; // Re-throw to handle it in the calling code
+                });
+
+            return db;
+        }
+
+        case !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY): {
+            elizaLogger.info("Initializing Supabase connection...");
+            const db = new SupabaseDatabaseAdapter(
+                process.env.SUPABASE_URL,
+                process.env.SUPABASE_ANON_KEY
+            );
+
+            db.init()
+                .then(() => {
+                    elizaLogger.success("Successfully connected to Supabase database");
+                })
+                .catch((error) => {
+                    elizaLogger.error("Failed to connect to Supabase:", error);
+                });
+
+            return db;
+        }
+
+        case !!process.env.POSTGRES_URL: {
+            elizaLogger.info("Initializing PostgreSQL connection...");
+            const db = new PostgresDatabaseAdapter({
+                connectionString: process.env.POSTGRES_URL,
+                parseInputs: true,
             });
 
-        return db;
-    } else if (process.env.POSTGRES_URL) {
-        elizaLogger.info("Initializing PostgreSQL connection...");
-        const db = new PostgresDatabaseAdapter({
-            connectionString: process.env.POSTGRES_URL,
-            parseInputs: true,
-        });
+            db.init()
+                .then(() => {
+                    elizaLogger.success("Successfully connected to PostgreSQL database");
+                })
+                .catch((error) => {
+                    elizaLogger.error("Failed to connect to PostgreSQL:", error);
+                });
 
-        // Test the connection
-        db.init()
-            .then(() => {
-                elizaLogger.success(
-                    "Successfully connected to PostgreSQL database"
-                );
-            })
-            .catch((error) => {
-                elizaLogger.error("Failed to connect to PostgreSQL:", error);
+            return db;
+        }
+
+        case !!process.env.PGLITE_DATA_DIR: {
+            elizaLogger.info("Initializing PgLite adapter...");
+            return new PGLiteDatabaseAdapter({
+                dataDir: process.env.PGLITE_DATA_DIR,
             });
+        }
 
-        return db;
-    } else if (process.env.PGLITE_DATA_DIR) {
-        elizaLogger.info("Initializing PgLite adapter...");
-        // `dataDir: memory://` for in memory pg
-        const db = new PGLiteDatabaseAdapter({
-            dataDir: process.env.PGLITE_DATA_DIR,
-        });
-        return db;
-    } else if (
-        process.env.QDRANT_URL &&
-        process.env.QDRANT_KEY &&
-        process.env.QDRANT_PORT &&
-        process.env.QDRANT_VECTOR_SIZE
-    ) {
-        elizaLogger.info("Initializing Qdrant adapter...");
-        const db = new QdrantDatabaseAdapter(
-            process.env.QDRANT_URL,
-            process.env.QDRANT_KEY,
-            Number(process.env.QDRANT_PORT),
-            Number(process.env.QDRANT_VECTOR_SIZE)
-        );
-        return db;
-    } else {
-        const filePath =
-            process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
-        elizaLogger.info(`Initializing SQLite database at ${filePath}...`);
-        const db = new SqliteDatabaseAdapter(new Database(filePath));
+        case !!(
+            process.env.QDRANT_URL &&
+            process.env.QDRANT_KEY &&
+            process.env.QDRANT_PORT &&
+            process.env.QDRANT_VECTOR_SIZE
+        ): {
+            elizaLogger.info("Initializing Qdrant adapter...");
+            return new QdrantDatabaseAdapter(
+                process.env.QDRANT_URL,
+                process.env.QDRANT_KEY,
+                Number(process.env.QDRANT_PORT),
+                Number(process.env.QDRANT_VECTOR_SIZE)
+            );
+        }
 
-        // Test the connection
-        db.init()
-            .then(() => {
-                elizaLogger.success(
-                    "Successfully connected to SQLite database"
-                );
-            })
-            .catch((error) => {
-                elizaLogger.error("Failed to connect to SQLite:", error);
-            });
+        default: {
+            const filePath = process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
+            elizaLogger.info(`Initializing SQLite database at ${filePath}...`);
+            const db = new SqliteDatabaseAdapter(new Database(filePath));
 
-        return db;
+            db.init()
+                .then(() => {
+                    elizaLogger.success("Successfully connected to SQLite database");
+                })
+                .catch((error) => {
+                    elizaLogger.error("Failed to connect to SQLite:", error);
+                });
+
+            return db;
+        }
     }
 }
+
 
 // also adds plugins from character file into the runtime
 export async function initializeClients(
     character: Character,
     runtime: IAgentRuntime
 ) {
-    // each client can only register once
-    // and if we want two we can explicitly support it
     const clients: Record<string, any> = {};
-    const clientTypes: string[] =
-        character.clients?.map((str) => str.toLowerCase()) || [];
+    const clientTypes: string[] = character.clients?.map(str => str.toLowerCase()) || [];
     elizaLogger.log("initializeClients", clientTypes, "for", character.name);
 
-    // Start Auto Client if "auto" detected as a configured client
-    if (clientTypes.includes(Clients.AUTO)) {
-        const autoClient = await AutoClientInterface.start(runtime);
-        if (autoClient) clients.auto = autoClient;
-    }
+    // Map of client types to their interface classes
+    const clientInterfaces = {
+        [Clients.AUTO]: AutoClientInterface,
+        [Clients.XMTP]: XmtpClientInterface,
+        [Clients.DISCORD]: DiscordClientInterface,
+        [Clients.TELEGRAM]: TelegramClientInterface,
+        [Clients.TELEGRAM_ACCOUNT]: TelegramAccountClientInterface,
+        [Clients.TWITTER]: TwitterClientInterface,
+        [Clients.ALEXA]: AlexaClientInterface,
+        [Clients.INSTAGRAM]: InstagramClientInterface,
+        [Clients.FARCASTER]: FarcasterClientInterface,
+        [Clients.SIMSAI]: JeeterClientInterface,
+        'deva': DevaClientInterface,
+        'slack': SlackClientInterface
+    };
 
-    if (clientTypes.includes(Clients.XMTP)) {
-        const xmtpClient = await XmtpClientInterface.start(runtime);
-        if (xmtpClient) clients.xmtp = xmtpClient;
-    }
-
-    if (clientTypes.includes(Clients.DISCORD)) {
-        const discordClient = await DiscordClientInterface.start(runtime);
-        if (discordClient) clients.discord = discordClient;
-    }
-
-    if (clientTypes.includes(Clients.TELEGRAM)) {
-        const telegramClient = await TelegramClientInterface.start(runtime);
-        if (telegramClient) clients.telegram = telegramClient;
-    }
-
-    if (clientTypes.includes(Clients.TELEGRAM_ACCOUNT)) {
-        const telegramAccountClient =
-            await TelegramAccountClientInterface.start(runtime);
-        if (telegramAccountClient)
-            clients.telegram_account = telegramAccountClient;
-    }
-
-    if (clientTypes.includes(Clients.TWITTER)) {
-        const twitterClient = await TwitterClientInterface.start(runtime);
-        if (twitterClient) {
-            clients.twitter = twitterClient;
+    // Initialize standard clients
+    for (const clientType of clientTypes) {
+        if (clientInterfaces[clientType]) {
+            const client = await clientInterfaces[clientType].start(runtime);
+            if (client) {
+                clients[clientType] = client;
+            }
         }
     }
 
-    if (clientTypes.includes(Clients.ALEXA)) {
-        const alexaClient = await AlexaClientInterface.start(runtime);
-        if (alexaClient) {
-            clients.alexa = alexaClient;
-        }
-    }
-
-    if (clientTypes.includes(Clients.INSTAGRAM)) {
-        const instagramClient = await InstagramClientInterface.start(runtime);
-        if (instagramClient) {
-            clients.instagram = instagramClient;
-        }
-    }
-
-    if (clientTypes.includes(Clients.FARCASTER)) {
-        const farcasterClient = await FarcasterClientInterface.start(runtime);
-        if (farcasterClient) {
-            clients.farcaster = farcasterClient;
-        }
-    }
-
+    // Handle special case for Lens client
     if (clientTypes.includes("lens")) {
         const lensClient = new LensAgentClient(runtime);
         lensClient.start();
         clients.lens = lensClient;
     }
 
-    if (clientTypes.includes(Clients.SIMSAI)) {
-        const simsaiClient = await JeeterClientInterface.start(runtime);
-        if (simsaiClient) clients.simsai = simsaiClient;
-    }
-
     elizaLogger.log("client keys", Object.keys(clients));
 
-    if (clientTypes.includes("deva")) {
-        if (clientTypes.includes("deva")) {
-            const devaClient = await DevaClientInterface.start(runtime);
-            if (devaClient) clients.deva = devaClient;
-        }
-    }
-
-    if (clientTypes.includes("slack")) {
-        const slackClient = await SlackClientInterface.start(runtime);
-        if (slackClient) clients.slack = slackClient; // Use object property instead of push
-    }
-
-    function determineClientType(client: Client): string {
-        // Check if client has a direct type identifier
-        if ("type" in client) {
-            return (client as any).type;
-        }
-
-        // Check constructor name
-        const constructorName = client.constructor?.name;
-        if (constructorName && !constructorName.includes("Object")) {
-            return constructorName.toLowerCase().replace("client", "");
-        }
-
-        // Fallback: Generate a unique identifier
-        return `client_${Date.now()}`;
-    }
-
+    // Initialize plugin clients
     if (character.plugins?.length > 0) {
+        const determineClientType = (client: Client): string => {
+            if ("type" in client) {
+                return (client as any).type;
+            }
+            const constructorName = client.constructor?.name;
+            if (constructorName && !constructorName.includes("Object")) {
+                return constructorName.toLowerCase().replace("client", "");
+            }
+            return `client_${Date.now()}`;
+        };
+
         for (const plugin of character.plugins) {
             if (plugin.clients) {
                 for (const client of plugin.clients) {
                     const startedClient = await client.start(runtime);
                     const clientType = determineClientType(client);
-                    elizaLogger.debug(
-                        `Initializing client of type: ${clientType}`
-                    );
+                    elizaLogger.debug(`Initializing client of type: ${clientType}`);
                     clients[clientType] = startedClient;
                 }
             }
@@ -914,6 +877,7 @@ export async function initializeClients(
 
     return clients;
 }
+
 
 function getSecret(character: Character, secret: string) {
     return character.settings?.secrets?.[secret] || process.env[secret];
@@ -1050,8 +1014,7 @@ export async function createAgent(
                 : null,
             getSecret(character, "TAVILY_API_KEY") ? webSearchPlugin : null,
             getSecret(character, "SOLANA_PUBLIC_KEY") ||
-            (getSecret(character, "WALLET_PUBLIC_KEY") &&
-                !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
+            getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x")
                 ? [solanaPlugin, solanaPluginV2]
                 : null,
             getSecret(character, "SOLANA_PRIVATE_KEY")
@@ -1064,8 +1027,7 @@ export async function createAgent(
                 ? nearPlugin
                 : null,
             getSecret(character, "EVM_PUBLIC_KEY") ||
-            (getSecret(character, "WALLET_PUBLIC_KEY") &&
-                getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
+            getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x")
                 ? evmPlugin
                 : null,
             (getSecret(character, "EVM_PUBLIC_KEY") ||
