@@ -80,7 +80,7 @@ describe('goalEvaluator', () => {
         it('should have valid examples', () => {
             goalEvaluator.examples.forEach(example => {
                 expect(example).toBeDefined();
-                // Add more specific example validations based on the example structure
+                // will add more specific example validations based on the example structure
             });
         });
     });
