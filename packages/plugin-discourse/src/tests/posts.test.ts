@@ -18,6 +18,7 @@ describe("Posts from Discourse using Uniswap governance", () => {
         it("should return posts", async () => {
             const posts = await client.getLatestPosts();
             expect(posts).toBeDefined();
+            expect(posts.length).toBeGreaterThanOrEqual(0);
         });
 
         it("should return formatted posts", async () => {
