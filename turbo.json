@@ -21,6 +21,13 @@
                 "@elizaos/plugin-tee-log#build"
             ]
         },
+        "@elizaos/client-pvpvai#build": {
+            "outputs": ["dist/**"],
+            "dependsOn": [
+                "@elizaos/plugin-image-generation#build",
+                "@elizaos/plugin-tee-log#build"
+            ]
+        },
         "@elizaos/plugin-solana#build": {
             "outputs": ["dist/**"],
             "dependsOn": [
@@ -45,9 +52,7 @@
         },
         "@elizaos/plugin-quai#build": {
             "outputs": ["dist/**"],
-            "dependsOn": [
-                "@elizaos/plugin-trustdb#build"
-            ]
+            "dependsOn": ["@elizaos/plugin-trustdb#build"]
         },
         "eliza-docs#build": {
             "outputs": ["build/**"]

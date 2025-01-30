@@ -249,6 +249,8 @@ export async function generateText({
         console.error("generateText context is empty");
         return "";
     }
+    console.log("generateText context:", context);
+    
 
     elizaLogger.log("Generating text...");
 
