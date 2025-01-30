@@ -52,7 +52,7 @@ jobs:
       - name: Build packages
         run: |
           # If using Turborepo to build: 
-          pnpm build
+          #pnpm build
 
           # Or if using Lerna to run build scripts in each package:
           # npx lerna run build
@@ -64,4 +64,4 @@ jobs:
           #npx lerna publish from-package --yes
 
           # Option 2 (alternative): Using pnpm directly for all packages
-          # pnpm -r publish --access public --no-git-checks
+          pnpm -r publish --access private --no-git-checks
