@@ -1,7 +1,7 @@
 import {
     composeContext,
     elizaLogger,
-    generateObjectDeprecated,
+    generateObject,
     type HandlerCallback,
     type IAgentRuntime,
     type Memory,
@@ -108,7 +108,7 @@ export const executeSwapAction = {
 
             // Generate swap content
             const swapContext = composeContext({ state: updatedState, template: swapTemplate });
-            const content = await generateObjectDeprecated({
+            const content = await generateObject({
                 runtime,
                 context: swapContext,
                 modelClass: ModelClass.LARGE,

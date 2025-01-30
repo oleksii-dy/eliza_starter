@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import {
   Action,
   composeContext,
-  generateObjectDeprecated,
+  generateObject,
   HandlerCallback,
   ModelClass,
   type IAgentRuntime,
@@ -36,7 +36,7 @@ const buildEcdsaSignDetails = async (
     template: ecdsaSignTemplate, // Use the ECDSA signing template
   });
 
-  const signDetails = (await generateObjectDeprecated({
+  const signDetails = (await generateObject({
     runtime,
     context,
     modelClass: ModelClass.SMALL,

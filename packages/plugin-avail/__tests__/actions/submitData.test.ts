@@ -1,11 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import submitData, { isDataContent } from '../../src/actions/submitData';
-import { generateObjectDeprecated } from '@elizaos/core';
+import { generateObject } from '@elizaos/core';
 import { composeContext } from '@elizaos/core';
 import * as availJsSdk from 'avail-js-sdk';
 
 vi.mock('@elizaos/core', () => ({
-    generateObjectDeprecated: vi.fn(),
+    generateObject: vi.fn(),
     composeContext: vi.fn(),
 }));
 
@@ -48,7 +48,7 @@ describe('submitData', () => {
         mockState = {};
         mockCallback = vi.fn();
 
-        vi.mocked(generateObjectDeprecated).mockReset();
+        vi.mocked(generateObject).mockReset();
         vi.mocked(composeContext).mockReset();
     });
 

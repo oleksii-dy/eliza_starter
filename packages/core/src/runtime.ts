@@ -1103,12 +1103,15 @@ export class AgentRuntime implements IAgentRuntime {
                 evaluationTemplate,
         });
 
-        const result = await generateText({
-            runtime: this,
-            context,
-            modelClass: ModelClass.SMALL,
-            verifiableInferenceAdapter: this.verifiableInferenceAdapter,
-        });
+        const result = await generateText(
+            this.modelProvider,
+            {
+                runtime: this,
+                context,
+                modelClass: ModelClass.SMALL,
+                verifiableInferenceAdapter: this.verifiableInferenceAdapter,
+            }
+        );
 
         const evaluators = parseJsonArrayFromText(
             result,

@@ -1246,6 +1246,9 @@ export interface ICacheManager {
 }
 
 export abstract class Service {
+    describeImage(imageUrl: string) {
+        throw new Error("Method not implemented.");
+    }
     private static instance: Service | null = null;
 
     static get serviceType(): ServiceType {

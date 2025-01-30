@@ -19,6 +19,7 @@
         "test": "vitest run"
     },
     "peerDependencies": {
-        "whatwg-url": "7.1.0"
+        "whatwg-url": "7.1.0",
+        "@elizaos/core": "workspace:*"
     }
 }

@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import {
     Action,
     composeContext,
-    generateObjectDeprecated,
+    generateObject,
     HandlerCallback,
     ModelClass,
     type IAgentRuntime,
@@ -37,7 +37,7 @@ const buildLitWalletTransferDetails = async (
         template: litWalletTransferTemplate,
     });
 
-    const transferDetails = (await generateObjectDeprecated({
+    const transferDetails = (await generateObject({
         runtime,
         context,
         modelClass: ModelClass.SMALL,

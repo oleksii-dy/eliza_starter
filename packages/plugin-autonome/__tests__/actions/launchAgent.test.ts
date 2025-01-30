@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import launchAgent from '../../src/actions/launchAgent';
 import axios from 'axios';
-import { ModelClass, elizaLogger, composeContext, generateObjectDeprecated } from '@elizaos/core';
+import { ModelClass, elizaLogger, composeContext, generateObject } from '@elizaos/core';
 
 vi.mock('axios');
 vi.mock('@elizaos/core', () => ({
@@ -10,7 +10,7 @@ vi.mock('@elizaos/core', () => ({
         error: vi.fn(),
     },
     composeContext: vi.fn().mockReturnValue('mock-context'),
-    generateObjectDeprecated: vi.fn(),
+    generateObject: vi.fn(),
     ModelClass: {
         LARGE: 'large',
     },
@@ -38,7 +38,7 @@ describe('launchAgent', () => {
         mockCallback = vi.fn();
 
         vi.mocked(axios.post).mockReset();
-        vi.mocked(generateObjectDeprecated).mockReset();
+        vi.mocked(generateObject).mockReset();
         vi.mocked(composeContext).mockReset().mockReturnValue('mock-context');
     });
 
@@ -69,7 +69,7 @@ describe('launchAgent', () => {
             },
         });
 
-        vi.mocked(generateObjectDeprecated).mockResolvedValueOnce(mockContent);
+        vi.mocked(generateObject).mockResolvedValueOnce(mockContent);
 
         const result = await launchAgent.handler(
             mockRuntime,
@@ -111,7 +111,7 @@ describe('launchAgent', () => {
             invalidField: 'test',
         };
 
-        vi.mocked(generateObjectDeprecated).mockResolvedValueOnce(mockInvalidContent);
+        vi.mocked(generateObject).mockResolvedValueOnce(mockInvalidContent);
 
         const result = await launchAgent.handler(
             mockRuntime,
@@ -134,7 +134,7 @@ describe('launchAgent', () => {
             config: '{"key": "value"}',
         };
 
-        vi.mocked(generateObjectDeprecated).mockResolvedValueOnce(mockContent);
+        vi.mocked(generateObject).mockResolvedValueOnce(mockContent);
         vi.mocked(axios.post).mockResolvedValueOnce(undefined);
 
         await launchAgent.handler(

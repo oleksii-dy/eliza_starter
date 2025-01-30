@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import {
   Action,
   composeContext,
-  generateObjectDeprecated,
+  generateObject,
   HandlerCallback,
   ModelClass,
   type IAgentRuntime,
@@ -36,7 +36,7 @@ const buildUniswapSwapDetails = async (
     template: uniswapSwapTemplate, // Use the Uniswap swap template
   });
 
-  const swapDetails = (await generateObjectDeprecated({
+  const swapDetails = (await generateObject({
     runtime,
     context,
     modelClass: ModelClass.SMALL,

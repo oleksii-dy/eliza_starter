@@ -2,7 +2,7 @@ import {
     Action,
     ActionExample,
     composeContext,
-    Content, elizaLogger, generateObjectDeprecated,
+    Content, elizaLogger, generateObject,
     HandlerCallback,
     IAgentRuntime,
     Memory, ModelClass,
@@ -80,7 +80,7 @@ export default {
             template: transferTemplate,
         });
 
-        const content = await generateObjectDeprecated({
+        const content = await generateObject({
             runtime,
             context: transferContext,
             modelClass: ModelClass.LARGE,

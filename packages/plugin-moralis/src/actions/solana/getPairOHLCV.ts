@@ -2,7 +2,7 @@ import {
     ActionExample,
     composeContext,
     elizaLogger,
-    generateObjectDeprecated,
+    generateObject,
     HandlerCallback,
     IAgentRuntime,
     Memory,
@@ -55,7 +55,7 @@ export default {
             });
 
             elizaLogger.log("Extracting OHLCV parameters...");
-            const content = (await generateObjectDeprecated({
+            const content = (await generateObject({
                 runtime,
                 context: ohlcvContext,
                 modelClass: ModelClass.LARGE,

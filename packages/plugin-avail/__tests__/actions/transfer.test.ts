@@ -1,11 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import transfer, { isTransferContent } from '../../src/actions/transfer';
-import { generateObjectDeprecated } from '@elizaos/core';
+import { generateObject } from '@elizaos/core';
 import { composeContext } from '@elizaos/core';
 import * as availJsSdk from 'avail-js-sdk';
 
 vi.mock('@elizaos/core', () => ({
-    generateObjectDeprecated: vi.fn(),
+    generateObject: vi.fn(),
     composeContext: vi.fn(),
 }));
 
