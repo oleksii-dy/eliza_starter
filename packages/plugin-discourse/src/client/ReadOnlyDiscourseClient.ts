@@ -32,7 +32,7 @@ export class ReadOnlyDiscourseClient {
             throw new Error("No post data found");
         }
 
-        return posts as Post[];
+        return posts.latest_posts as Post[];
     }
 
     formatLatestPostsData(posts: Post[]) {
