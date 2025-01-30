@@ -106,100 +106,72 @@
         "shared": true
     },
     {
-        "path": "agent/blogs/contextual_retrieval.txt",
-        "shared": true
-    },
-    {
         "path": "agent/papers/eliza_paper.txt",
         "shared": true
     },
     {
+        "path": "agent/blogs/contextual_retrieval.txt",
+        "shared": false
+    },
+    {
         "path": "agent/papers/godel_agent_paper.txt",
-        "shared": true
+        "shared": false
     },
     {
         "path": "agent/papers/cocoa_paper.txt",
-        "shared": true
+        "shared": false
     },
     {
         "path": "agent/papers/deepseekr1_paper.txt",
-        "shared": true
+        "shared": false
     },
     {
         "path": "gaia/code/gaia_code_agent.md",
-        "shared": true
+        "shared": false
     },
     {
         "path": "gaia/code/gaia_code_characters.md",
-        "shared": true
+        "shared": false
     },
     {
         "path": "gaia/code/gaia_code_packages.md",
-        "shared": true
+        "shared": false
     },
     {
         "path": "gaia/code/gaia_code_ddl.md",
-        "shared": true
+        "shared": false
     },
     {
         "path": "agent/papers/foundation_of_large_language_models.txt",
-        "shared": true
+        "shared": false
     },
     {
         "path": "agent/blogs/prompt_caching.txt",
-        "shared": true
-    },
-    {
-        "path": "books/jarg447.txt",
-        "shared": true
+        "shared": false
     },
     {
         "path": "agent/repositories/anthropic-cookbook_markdown.md",
-        "shared": true
-    },
-    {
-        "path": "agent/repositories/Gymnasium_python.md",
-        "shared": true
+        "shared": false
     },
     {
         "path": "agent/repositories/awesome-gaia_markdown.md",
-        "shared": true
-    },
-    {
-        "path": "agent/repositories/openai-cookbook_markdown.md",
-        "shared": true
-    },
-    {
-        "path": "agent/repositories/together-cookbook_python.md",
-        "shared": true
+        "shared": false
     },
     {
         "path": "agent/repositories/courses_markdown.md",
-        "shared": true
+        "shared": false
     },
     {
         "path": "agent/repositories/LLM-Prompt-Library_markdown.md",
-        "shared": true
+        "shared": false
     },
     {
         "path": "agent/repositories/anthropic-cookbook_python.md",
-        "shared": true
-    },
-    {
-        "path": "agent/repositories/openai-cookbook_python.md",
-        "shared": true
+        "shared": false
     },
     {
         "path": "agent/repositories/awesome-artificial-intelligence-research_markdown.md",
-        "shared": true
-    },
-    {
-        "path": "agent/repositories/together-cookbook_markdown.md",
-        "shared": true
-    },
-    {
-        "path": "agent/repositories/llm-prompt-library.txt",
-        "shared": true
+        "shared": false
     },
     {
         "path": "agent/repositories/courses_python.md",
