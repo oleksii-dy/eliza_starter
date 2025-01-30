@@ -61,35 +61,25 @@ Assistant: "I'll check the Discourse forum and provide a summary of the latest g
 
 ### Providers
 
--   `discourseProvider`: Manages interactions with the Discourse API, including post fetching.
+-   `discoursePostsProvider`: Manages interactions with the Discourse API, fetching the latest posts.
 
 ## Development
 
-### Building
-
-```bash
-npm run build
-```
 
 ### Testing
 
 ```bash
-npm run test
+pnpm run test
 ```
 
 ## Dependencies
 
-TODO
-
--   Other standard dependencies listed in package.json
+- axios: For making HTTP requests to the Discourse API.
+- Other standard dependencies listed in package.json
 
 ## Future Enhancements
 
-The following features and improvements are planned for future releases:
-
-TODO
-
-We welcome community feedback and contributions to help prioritize these enhancements.
+We welcome community feedback and contributions to help prioritize enhancements.
 
 ## Contributing
 
@@ -97,12 +87,7 @@ Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) fil
 
 ## Credits
 
-This plugin integrates with and builds upon several key technologies:
-TODO
-
 Special thanks to:
-TODO
-
 -   The Eliza community for their contributions and feedback
 
 For more information about Discourse capabilities:
