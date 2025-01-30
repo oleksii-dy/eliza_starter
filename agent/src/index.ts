@@ -101,7 +101,7 @@ import { teeMarlinPlugin } from "@elizaos/plugin-tee-marlin";
 import { verifiableLogPlugin } from "@elizaos/plugin-tee-verifiable-log";
 import { tonPlugin } from "@elizaos/plugin-ton";
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
-import { dkgPlugin } from "@elizaos/plugin-dkg";
+import { pvpvaiPlugin } from "@elizaos/plugin-pvpvai";import { dkgPlugin } from "@elizaos/plugin-dkg";
 import { injectivePlugin } from "@elizaos/plugin-injective";
 import { giphyPlugin } from "@elizaos/plugin-giphy";
 import { letzAIPlugin } from "@elizaos/plugin-letzai";
@@ -1094,6 +1094,7 @@ export async function createAgent(
             getSecret(character, "RESERVOIR_API_KEY")
                 ? createNFTCollectionsPlugin()
                 : null,
+            getSecret(character, "NEWS_API_KEY") ? pvpvaiPlugin : null,
             getSecret(character, "ZERO_EX_API_KEY") ? zxPlugin : null,
             getSecret(character, "DKG_PRIVATE_KEY") ? dkgPlugin : null,
             getSecret(character, "PYTH_TESTNET_PROGRAM_KEY") ||
