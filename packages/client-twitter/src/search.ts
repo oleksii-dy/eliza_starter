@@ -1,17 +1,19 @@
-import { SearchMode } from "agent-twitter-client";
-import { composeContext, elizaLogger } from "@elizaos/core";
-import { generateMessageResponse, generateText } from "@elizaos/core";
-import { messageCompletionFooter } from "@elizaos/core";
 import {
+    composeContext,
     type Content,
+    elizaLogger,
+    generateMessageResponse,
+    generateText,
     type HandlerCallback,
     type IAgentRuntime,
     type IImageDescriptionService,
+    messageCompletionFooter,
     ModelClass,
     ServiceType,
     type State,
+    stringToUuid,
 } from "@elizaos/core";
-import { stringToUuid } from "@elizaos/core";
+import { SearchMode } from "agent-twitter-client";
 import type { ClientBase } from "./base";
 import { buildConversationThread, sendTweet, wait } from "./utils.ts";
 
@@ -95,7 +97,13 @@ export class TwitterSearchClient {
                 `# ${this.runtime.character.name}'s Home Timeline\n\n` +
                 homeTimeline
                     .map((tweet) => {
-                        return `ID: ${tweet.id}\nFrom: ${tweet.name} (@${tweet.username})${tweet.inReplyToStatusId ? ` In reply to: ${tweet.inReplyToStatusId}` : ""}\nText: ${tweet.text}\n---\n`;
+                        return `ID: ${tweet.id}\nFrom: ${tweet.name} (@${
+                            tweet.username
+                        })${
+                            tweet.inReplyToStatusId
+                                ? ` In reply to: ${tweet.inReplyToStatusId}`
+                                : ""
+                        }\nText: ${tweet.text}\n---\n`;
                     })
                     .join("\n");
 
@@ -126,14 +134,18 @@ export class TwitterSearchClient {
       })
       .map(
           (tweet) => `
-    ID: ${tweet.id}${tweet.inReplyToStatusId ? ` In reply to: ${tweet.inReplyToStatusId}` : ""}
+    ID: ${tweet.id}${
+              tweet.inReplyToStatusId
+                  ? ` In reply to: ${tweet.inReplyToStatusId}`
+                  : ""
+          }
     From: ${tweet.name} (@${tweet.username})
     Text: ${tweet.text}
   `
       )
       .join("\n")}
 
-  Which tweet is the most interesting and relevant for Ruby to reply to? Please provide only the ID of the tweet in your response.
+  Which tweet is the most interesting and relevant for SUIRISE to reply to? Please provide only the ID of the tweet in your response.
   Notes:
     - Respond to English tweets only
     - Respond to tweets that don't have a lot of hashtags, links, URLs or images
@@ -244,9 +256,22 @@ export class TwitterSearchClient {
 
   Original Post:
   By @${selectedTweet.username}
-  ${selectedTweet.text}${replyContext.length > 0 && `\nReplies to original post:\n${replyContext}`}
+  ${selectedTweet.text}${
+                    replyContext.length > 0 &&
+                    `\nReplies to original post:\n${replyContext}`
+                }
   ${`Original post text: ${selectedTweet.text}`}
-  ${selectedTweet.urls.length > 0 ? `URLs: ${selectedTweet.urls.join(", ")}\n` : ""}${imageDescriptions.length > 0 ? `\nImages in Post (Described): ${imageDescriptions.join(", ")}\n` : ""}
+  ${
+      selectedTweet.urls.length > 0
+          ? `URLs: ${selectedTweet.urls.join(", ")}\n`
+          : ""
+  }${
+                    imageDescriptions.length > 0
+                        ? `\nImages in Post (Described): ${imageDescriptions.join(
+                              ", "
+                          )}\n`
+                        : ""
+                }
   `,
             });
 

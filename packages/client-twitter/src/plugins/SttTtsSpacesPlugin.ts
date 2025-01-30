@@ -318,10 +318,11 @@ export class SttTtsPlugin implements Plugin {
             // Get response
             const replyText = await this.handleUserMessage(sttText, userId);
             if (!replyText || !replyText.length || !replyText.trim()) {
-                elizaLogger.warn(
-                    "[SttTtsPlugin] No replyText for user =>",
-                    userId
-                );
+                elizaLogger.warn("[SttTtsPlugin] No replyText for user =>", {
+                    userId,
+                    sttText,
+                    replyText,
+                });
                 return;
             }
             elizaLogger.log(
@@ -382,7 +383,7 @@ export class SttTtsPlugin implements Plugin {
                     return;
                 }
             } catch (err) {
-                console.log("SttTtsplugin error",err);
+                console.log("SttTtsplugin error", err);
                 elizaLogger.error("[SttTtsPlugin] TTS streaming error =>", err);
             } finally {
                 // Clean up the AbortController
@@ -587,8 +588,14 @@ export class SttTtsPlugin implements Plugin {
         const response = await generateShouldRespond({
             runtime: this.runtime,
             context: shouldRespondContext,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE, // it was small
         });
+        if (response !== "RESPOND") {
+            console.log("STTTTS SHOULD RESPOND ? ", {
+                response,
+                shouldRespondContext,
+            });
+        }
 
         if (response === "RESPOND") {
             return true;

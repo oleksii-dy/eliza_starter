@@ -1390,10 +1390,11 @@ export class MessageManager {
 
                 // Execute callback to send messages and log memories
                 const responseMessages = await callback(responseContent);
-                // console.log({
-                //     responseMessages,
-                //     responseContent,
-                // });
+                console.log({
+                    memory,
+                    context,
+                    responseContent,
+                });
 
                 // Update state after response
                 state = await this.runtime.updateRecentMessageState(state);

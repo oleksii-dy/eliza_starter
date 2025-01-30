@@ -13,6 +13,7 @@ import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 import { agentKitPlugin } from "@elizaos/plugin-agentkit";
+import { neoCortexMarketPlugin } from "@srise/plugin-neocortex-market";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
 import {
     AgentRuntime,
@@ -918,6 +919,7 @@ export async function createAgent(
                 ? webSearchPlugin
                 : null,
             getSecret(character, "SERPER_API_KEY") ? cryptoNewsPlugin : null,
+
             getSecret(character, "SOLANA_PUBLIC_KEY") ||
             (getSecret(character, "WALLET_PUBLIC_KEY") &&
                 !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
@@ -1100,6 +1102,7 @@ export async function createAgent(
                 ? openaiPlugin
                 : null,
             getSecret(character, "DEVIN_API_TOKEN") ? devinPlugin : null,
+            getSecret(character, "INSIDEX_API_KEY") ? neoCortexMarketPlugin : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
