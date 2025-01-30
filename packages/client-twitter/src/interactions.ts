@@ -15,7 +15,7 @@ import {
     elizaLogger,
     getEmbeddingZeroVector,
     IImageDescriptionService,
-    ServiceType
+    ServiceType,
 } from "@elizaos/core";
 import { ClientBase } from "./base";
 import { buildConversationThread, sendTweet, wait } from "./utils.ts";
@@ -277,7 +277,18 @@ export class TwitterInteractionClient {
                     );
 
                     const message = {
-                        content: { text: tweet.text },
+                        content: {
+                            text: tweet.text,
+                            attachments: tweet.photos.map((photo) => ({
+                                id: photo.id,
+                                url: photo.url,
+                                title: "",
+                                source: "twitter",
+                                description: "",
+                                text: "",
+                                contentType: "image/jpeg",
+                            })),
+                        },
                         agentId: this.runtime.agentId,
                         userId: userIdUUID,
                         roomId,
@@ -349,8 +360,8 @@ export class TwitterInteractionClient {
         elizaLogger.debug("formattedConversation: ", formattedConversation);
 
         const imageDescriptionsArray = [];
-        try{
-            elizaLogger.debug('Getting images');
+        try {
+            elizaLogger.debug("Getting images");
             for (const photo of tweet.photos) {
                 elizaLogger.debug(photo.url);
                 const description = await this.runtime
@@ -361,21 +372,24 @@ export class TwitterInteractionClient {
                 imageDescriptionsArray.push(description);
             }
         } catch (error) {
-    // Handle the error
-    elizaLogger.error("Error Occured during describing image: ", error);
-}
-
-
-
+            // Handle the error
+            elizaLogger.error("Error Occured during describing image: ", error);
+        }
 
         let state = await this.runtime.composeState(message, {
             twitterClient: this.client.twitterClient,
             twitterUserName: this.client.twitterConfig.TWITTER_USERNAME,
             currentPost,
             formattedConversation,
-            imageDescriptions: imageDescriptionsArray.length > 0
-            ? `\nImages in Tweet:\n${imageDescriptionsArray.map((desc, i) =>
-              `Image ${i + 1}: Title: ${desc.title}\nDescription: ${desc.description}`).join("\n\n")}`:""
+            imageDescriptions:
+                imageDescriptionsArray.length > 0
+                    ? `\nImages in Tweet:\n${imageDescriptionsArray
+                          .map(
+                              (desc, i) =>
+                                  `Image ${i + 1}: Title: ${desc.title}\nDescription: ${desc.description}`
+                          )
+                          .join("\n\n")}`
+                    : "",
         });
 
         // check if the tweet exists, save if it doesn't
