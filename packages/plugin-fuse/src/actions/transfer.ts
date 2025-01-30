@@ -40,7 +40,7 @@ export class TransferAction {
                 value: parseEther(params.amount),
                 data: params.data as Hex,
                 kzg: undefined,
-                chain: undefined,
+                chain: this.walletProvider.getChainConfigs(params.fromChain),
             });
 
             return {
