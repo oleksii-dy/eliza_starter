@@ -45,10 +45,8 @@ export class NewsPullerService extends Service {
         if (NewsPullerService.isInitialized) {
             return;
         }
-        this.DEFAULT_INTERVAL =
-            (Number(runtime.getSetting("NEWS_PULLER_INTERVAL")) || 60) *
-            60 *
-            1000;
+        const intv = Number(runtime.getSetting("NEWS_PULLER_INTERVAL"));
+        this.DEFAULT_INTERVAL = (intv ? intv : 60) * 60 * 1000;
         this.runtime = runtime;
         // init twitter
         await this.twitterLogin();
