@@ -125,6 +125,15 @@ export class GmailClient extends EventEmitter {
         );
         const messageId = stringToUuid(emailId);
 
+        // Ensure both the sender and agent are properly set up in the room
+        await this.runtime.ensureConnection(
+            userId,
+            roomId,
+            emailFromName,
+            emailFromAddress,
+            "gmail"
+        );
+
         // Create initial memory
         console.log("💾 Step 5: Creating initial memory");
         const content: Content = {
@@ -158,15 +167,6 @@ export class GmailClient extends EventEmitter {
             console.log("💾 Step 6: Saving initial memory: ", messageId);
             await this.runtime.messageManager.createMemory(memory);
         }
-
-        // Ensure both the sender and agent are properly set up in the room
-        await this.runtime.ensureConnection(
-            userId,
-            roomId,
-            emailFromName,
-            emailFromAddress,
-            "gmail"
-        );
 
         // Initial state composition
         console.log("🔄 Step 7: Composing initial state");
