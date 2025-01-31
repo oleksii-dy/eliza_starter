@@ -51,7 +51,7 @@ export class NewsPullerService extends Service {
         // init twitter
         await this.twitterLogin();
         // Start the periodic task
-        this.startPeriodicTask();
+        await this.startPeriodicTask();
         NewsPullerService.isInitialized = true;
         console.log(
             `NewsPullerService : initialized and started periodic task (interval: ${this.DEFAULT_INTERVAL} ms || ${intv})`
@@ -60,7 +60,7 @@ export class NewsPullerService extends Service {
 
     private static activeTaskCount = 0;
 
-    private startPeriodicTask(): void {
+    private async startPeriodicTask(): Promise<void> {
         // Verify if a task is already active
         if (NewsPullerService.activeTaskCount > 0) {
             console.log(
@@ -80,11 +80,11 @@ export class NewsPullerService extends Service {
         );
 
         // Initial call immediately
-        this.fetchSample();
+        await this.fetchSample();
 
         // Set up periodic calls
-        this.intervalId = setInterval(() => {
-            this.fetchSample();
+        this.intervalId = setInterval(async () => {
+            await this.fetchSample();
         }, this.DEFAULT_INTERVAL);
     }
 
