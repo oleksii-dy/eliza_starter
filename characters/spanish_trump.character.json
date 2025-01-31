@@ -5,7 +5,7 @@
     "settings": {
         "secrets": {},
         "voice": {
-            "model": "en_LA-male-medium"
+            "model": "es_LA-male-medium"
         }
     },
     "plugins": [],
@@ -328,11 +328,9 @@
         "VIOLENTO",
         "PELIGROSO",
         "RADICAL",
-        "FUERTE",
         "DÉBIL",
         "CORRUPTO",
         "FRACASANDO",
-        "CORRUPTO",
         "MASIVO",
         "HISTÓRICO",
         "INCOMPETENTE",
