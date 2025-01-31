@@ -13,7 +13,7 @@ import {
 } from "@elizaos/core";
 import { postTweet } from "@elizaos/plugin-twitter";
 import express from "express";
-import { WebhookEvent } from "./types";
+import { blockExplorerBaseAddressUrl, blockExplorerBaseTxUrl, WebhookEvent } from "./types";
 import { Coinbase, Wallet } from "@coinbase/coinbase-sdk";
 import { initializeWallet } from "@elizaos/plugin-coinbase";
 import { tokenSwap } from "@elizaos/plugin-0x";
@@ -124,35 +124,36 @@ export class CoinbaseClient implements Client {
         }
     }
 
-    private async generateTweetContent(event: WebhookEvent, amountInCurrency: number, pnlText: string, formattedTimestamp: string, state: State, tx): Promise<string> {
+    private async generateTweetContent(event: WebhookEvent, amountInCurrency: number, pnlText: string, formattedTimestamp: string, state: State, address:string, hash: string | null): Promise<string> {
         try {
             const tradeTweetTemplate = `
 # Task
-Create an engaging and unique tweet announcing a Coinbase trade. Be creative but professional.
+Craft a compelling and concise tweet to announce a Coinbase trade. Aim for creativity and professionalism.
 
-Trade details:
+Trade specifics:
 - ${event.event.toUpperCase()} order for ${event.ticker}
-- Trading amount: $${amountInCurrency.toFixed(2)}
-- Current price: $${Number(event.price).toFixed(2)}
-- Overall Unrealized PNL: $${pnlText}
-- Time: ${formattedTimestamp}
-- Transaction: ${tx.hash}
-Requirements:
-1. Must be under 180 characters
-2. Use 1-2 relevant emojis
-3. No hashtags
-4. Vary the wording each time to keep it fresh and engaging
-5. Can mention market conditions, timing, or strategy when relevant
-6. Keep it professional but conversational
-7. Include the key information: action, amount, ticker, and price
+- Amount traded: $${amountInCurrency.toFixed(2)}
+- Price at trade: $${Number(event.price).toFixed(2)}
+- Unrealized PNL: $${pnlText}
+- Timestamp: ${formattedTimestamp}
+- Txn: ${blockExplorerBaseTxUrl(hash)}
+- Address: ${blockExplorerBaseAddressUrl(address)}
+Guidelines:
+1. Keep it under 180 characters
+2. Include 1-2 relevant emojis
+3. Avoid hashtags
+4. Use varied wording for freshness
+5. Mention market conditions, timing, or strategy if applicable
+6. Maintain a professional yet conversational tone
+7. Ensure key details are present: action, amount, ticker, and price
 
-Example variations for buys:
-"📈 Just added $1,000 of BTC to the portfolio at $50,000.00. Overall Unrealized PNL: $${pnlText}"
-"🎯 Strategic BTC purchase: $1,000 at $50,000.00. Overall Unrealized PNL: $${pnlText}"
+Sample buy tweets:
+"📈 Added $1,000 of BTC at $50,000.00. Unrealized PNL: $${pnlText} Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
+"🎯 Strategic BTC buy: $1,000 at $50,000.00. Unrealized PNL: $${pnlText} Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
 
-Example variations for sells:
-"💫 Executed BTC position: Sold $1,000 at $52,000.00. Overall Unrealized PNL: $${pnlText}. See transaction: ${tx.hash}"
-"📊 Strategic exit: Released $1,000 of BTC at $52,000.00. Overall Unrealized PNL: $${pnlText}. See transaction: ${tx.hash}"
+Sample sell tweets:
+"💫 Sold BTC: $1,000 at $52,000.00. Unrealized PNL: $${pnlText}. Txn: ${blockExplorerBaseTxUrl(hash)}"
+"📊 Sold $1,000 of BTC at $52,000.00. Unrealized PNL: $${pnlText}. Txn: ${blockExplorerBaseTxUrl(hash)}"
 
 Generate only the tweet text, no commentary or markdown.`;
             const context = composeContext({
@@ -196,7 +197,7 @@ Generate only the tweet text, no commentary or markdown.`;
             roomId,
             content: {
                 text: `Place an advanced trade market order to ${event.event.toLowerCase()} $${amount} worth of ${event.ticker}`,
-                action: "EXECUTE_ADVANCED_TRADE",
+                action: "TRADE",
                 source: "coinbase",
                 metadata: {
                     ticker: event.ticker,
@@ -210,7 +211,6 @@ Generate only the tweet text, no commentary or markdown.`;
             createdAt: Date.now()
         };
         // get short term trading wallet
-        // call dex on short term trading wallet
         await this.runtime.messageManager.createMemory(memory);
         const state = await this.runtime.composeState(memory);
         const callback: HandlerCallback = async (content: Content) => {
@@ -226,12 +226,12 @@ Generate only the tweet text, no commentary or markdown.`;
         }).format(new Date(event.timestamp));
         // const defaultAddress = await wallet.wallet.getDefaultAddress();
         const buy =  event.event.toUpperCase() === 'BUY'
-        const tx = await tokenSwap(this.runtime, amount, buy ? event.ticker : 'USDC', buy ? event.ticker : 'USDC', this.runtime.getSetting('WALLET_PUBLIC_KEY'), this.runtime.getSetting('WALLET_PRIVATE_KEY'), 8453);
+        const txHash = await tokenSwap(this.runtime, amount, buy ? event.ticker : 'USDC', buy ? event.ticker : 'USDC', this.runtime.getSetting('WALLET_PUBLIC_KEY'), this.runtime.getSetting('WALLET_PRIVATE_KEY'), 8453);
         // const pnl = await this.calculateOverallPNL(wallet, event.ticker, amount);
         // const pnlText = `Overall PNL: $${pnl.toFixed(2)}`;
 
             try {
-                const tweetContent = await this.generateTweetContent(event, amount, '', formattedTimestamp, state, tx);
+                const tweetContent = await this.generateTweetContent(event, amount, '', formattedTimestamp, state, this.runtime.getSetting('WALLET_PUBLIC_KEY'), txHash);
                 elizaLogger.info("Generated tweet content:", tweetContent);
                 if (this.runtime.getSetting('TWITTER_DRY_RUN')) {
                     elizaLogger.info("Dry run mode enabled. Skipping tweet posting.",);

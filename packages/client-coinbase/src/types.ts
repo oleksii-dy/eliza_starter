@@ -12,3 +12,6 @@ export interface TradeAction {
     amount: number;
     price?: number;
 }
+
+export const blockExplorerBaseTxUrl = (txHash: string) => `https://basescan.org/tx/${txHash}`
+export const blockExplorerBaseAddressUrl = (address: string) => `https://basescan.org/address/${address}`

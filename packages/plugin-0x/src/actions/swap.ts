@@ -11,8 +11,8 @@ import { Hex, numberToHex, concat } from "viem";
 import { CHAIN_EXPLORERS, ZX_MEMORY } from "../constants";
 import { getWalletClient } from "../hooks.ts/useGetWalletClient";
 import { Chains, Quote } from "../types";
-import { getIndicativePrice, getPriceInquiry } from "./getIndicativePrice";
-import { getQuote, getQuoteObj } from "./getQuote";
+import { getPriceInquiry } from "./getIndicativePrice";
+import { getQuoteObj } from "./getQuote";
 
 export const swap: Action = {
     name: "EXECUTE_SWAP_0X",
@@ -192,7 +192,9 @@ export const tokenSwap = async (runtime: IAgentRuntime, quantity: number, fromCu
     // get indicative price
     const priceInquiry = await getPriceInquiry(runtime, fromCurrency, quantity, toCurrency, chainId);
     // get latest quote
+    elizaLogger.log("Getting quote for swap", JSON.stringify(priceInquiry));
     const quote = await getQuoteObj(runtime, priceInquiry, address);
+    elizaLogger.log("quotes ", JSON.stringify(quote))
     try {
         const client = getWalletClient(privateKey, chainId);
 
@@ -219,7 +221,7 @@ export const tokenSwap = async (runtime: IAgentRuntime, quantity: number, fromCu
         const nonce = await client.getTransactionCount({
             address: (client.account as { address: `0x${string}` }).address,
         });
-
+        elizaLogger.log("nonce ", nonce)
         const txHash = await client.sendTransaction({
             account: client.account,
             chain: client.chain,
@@ -235,19 +237,19 @@ export const tokenSwap = async (runtime: IAgentRuntime, quantity: number, fromCu
             nonce: nonce,
             kzg: undefined,
         });
-
+        elizaLogger.log("txHash", txHash)
         // Wait for transaction confirmation
         const receipt = await client.waitForTransactionReceipt({
             hash: txHash,
         });
-
+        elizaLogger.log("receipt ", receipt)
         if (receipt.status === "success") {
-            return true;
+            return txHash;
         } else {
-            return false;
+            return null;
         }
     } catch (error) {
         elizaLogger.error("Swap execution failed:", error);
-        return false;
+        return null;
     }
 }
