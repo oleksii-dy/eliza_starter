@@ -1,16 +1,16 @@
-import { composeContext } from "@ai16z/eliza";
-import { generateText } from "@ai16z/eliza";
-import { getGoals } from "@ai16z/eliza";
-import { parseJsonArrayFromText } from "@ai16z/eliza";
+import { composeContext } from "@elizaos/core";
+import { generateText } from "@elizaos/core";
+import { getGoals } from "@elizaos/core";
+import { parseJsonArrayFromText } from "@elizaos/core";
 import {
-    IAgentRuntime,
-    Memory,
+    type IAgentRuntime,
+    type Memory,
     ModelClass,
-    Objective,
+    type Objective,
     type Goal,
     type State,
-    Evaluator,
-} from "@ai16z/eliza";
+    type Evaluator,
+} from "@elizaos/core";
 
 const goalsTemplate = `TASK: Update Goal
 Analyze the conversation and update the status of the goals based on the new information provided.
@@ -55,13 +55,6 @@ async function handler(
     state: State | undefined,
     options: { [key: string]: unknown } = { onlyInProgress: true }
 ): Promise<Goal[]> {
-    // get goals
-    let goalsData = await getGoals({
-        runtime,
-        roomId: message.roomId,
-        onlyInProgress: options.onlyInProgress as boolean,
-    });
-
     state = (await runtime.composeState(message)) as State;
     const context = composeContext({
         state,
@@ -79,42 +72,26 @@ async function handler(
     const updates = parseJsonArrayFromText(response);
 
     // get goals
-    goalsData = await getGoals({
+    const goalsData = await getGoals({
         runtime,
         roomId: message.roomId,
-        onlyInProgress: true,
+        onlyInProgress: options.onlyInProgress as boolean,
     });
 
     // Apply the updates to the goals
     const updatedGoals = goalsData
-        .map((goal: Goal) => {
+        .map((goal: Goal): Goal => {
             const update = updates?.find((u) => u.id === goal.id);
             if (update) {
-                const objectives = goal.objectives;
-
-                // for each objective in update.objectives, find the objective with the same description in 'objectives' and set the 'completed' value to the update.objectives value
-                if (update.objectives) {
-                    for (const objective of objectives) {
-                        const updatedObjective = update.objectives.find(
-                            (o: Objective) =>
-                                o.description === objective.description
-                        );
-                        if (updatedObjective) {
-                            objective.completed = updatedObjective.completed;
-                        }
-                    }
-                }
-
+                // Merge the update into the existing goal
                 return {
                     ...goal,
                     ...update,
-                    objectives: [
-                        ...goal.objectives,
-                        ...(update?.objectives || []),
-                    ],
-                }; // Merging the update into the existing goal
-            } else {
-                console.warn("**** ID NOT FOUND");
+                    objectives: goal.objectives.map((objective) => {
+                        const updatedObjective = update.objectives?.find(uo => uo.description === objective.description);
+                        return updatedObjective ? { ...objective, ...updatedObjective } : objective;
+                    }),
+                };
             }
             return null; // No update for this goal
         })

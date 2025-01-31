@@ -1,13 +1,13 @@
-import { elizaLogger } from "@ai16z/eliza";
-import {
+import { elizaLogger } from "@elizaos/core";
+import type {
     Action,
     HandlerCallback,
     IAgentRuntime,
     Memory,
     Plugin,
     State,
-} from "@ai16z/eliza";
-import fs from "fs";
+} from "@elizaos/core";
+import fs from "node:fs"; 
 import { LUMA_CONSTANTS } from "./constants";
 
 const generateVideo = async (prompt: string, runtime: IAgentRuntime) => {
@@ -71,7 +71,7 @@ const generateVideo = async (prompt: string, runtime: IAgentRuntime) => {
                     error: errorText,
                 });
                 throw new Error(
-                    "Failed to check generation status: " + errorText
+                    `Failed to check generation status: ${errorText}`
                 );
             }
 
@@ -129,7 +129,7 @@ const videoGeneration: Action = {
         runtime: IAgentRuntime,
         message: Memory,
         _state: State,
-        _options: any,
+        _options: Record<string, unknown>,
         callback: HandlerCallback
     ) => {
         elizaLogger.log("Video generation request:", message);

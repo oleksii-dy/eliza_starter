@@ -1,16 +1,15 @@
-import {
+import type {
     Action,
     IAgentRuntime,
     Memory,
     State,
     HandlerCallback,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 import {
     generateObject,
     composeContext,
     ModelClass,
-    Content,
-} from "@ai16z/eliza";
+} from "@elizaos/core";
 import { createPublicClient, createWalletClient, http, parseCFX } from "cive";
 import { privateKeyToAccount } from "cive/accounts";
 import { testnet } from "cive/chains";
@@ -72,7 +71,8 @@ export const transfer: Action = {
             },
         ],
     ],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    // eslint-disable-next-line
+    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
         // no extra validation needed
         return true;
     },
@@ -80,17 +80,18 @@ export const transfer: Action = {
         runtime: IAgentRuntime,
         message: Memory,
         state?: State,
-        options?: { [key: string]: unknown },
+        _options?: { [key: string]: unknown },
         callback?: HandlerCallback
     ) => {
-        if (!state) {
-            state = (await runtime.composeState(message)) as State;
+        let currentState = state;
+        if (!currentState) {
+            currentState = (await runtime.composeState(message)) as State;
         } else {
-            state = await runtime.updateRecentMessageState(state);
+            currentState = await runtime.updateRecentMessageState(currentState);
         }
 
         const context = composeContext({
-            state,
+            state: currentState,
             template: confluxTransferTemplate,
         });
 

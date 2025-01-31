@@ -1,20 +1,20 @@
 import {
+    elizaLogger,
     IAgentRuntime,
     ICacheManager,
     Memory,
     Provider,
     State,
-} from "@ai16z/eliza";
-
+} from "@elizaos/core";
 
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
-import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 
 import { MIST_PER_SUI } from "@mysten/sui/utils";
 import BigNumber from "bignumber.js";
 import NodeCache from "node-cache";
 import * as path from "path";
-
+import { parseAccount, SuiNetwork } from "../utils";
+import axios from "axios";
 // Provider configuration
 const PROVIDER_CONFIG = {
     MAX_RETRIES: 3,
@@ -30,7 +30,7 @@ interface Prices {
     sui: { usd: string };
 }
 
-type SuiNetwork = "mainnet" | "testnet" | "devnet" | "localnet";
+const cacheTimeSeconds = 30;
 
 export class WalletProvider {
     private cache: NodeCache;
@@ -41,7 +41,7 @@ export class WalletProvider {
         private address: string,
         private cacheManager: ICacheManager
     ) {
-        this.cache = new NodeCache({ stdTTL: 300 }); // Cache TTL set to 5 minutes
+        this.cache = new NodeCache({ stdTTL: cacheTimeSeconds }); // Cache TTL set to 5 minutes
     }
 
     private async readFromCache<T>(key: string): Promise<T | null> {
@@ -53,10 +53,9 @@ export class WalletProvider {
 
     private async writeToCache<T>(key: string, data: T): Promise<void> {
         await this.cacheManager.set(path.join(this.cacheKey, key), data, {
-            expires: Date.now() + 5 * 60 * 1000,
+            expires: Date.now() + cacheTimeSeconds * 1000,
         });
     }
-
 
     private async getCachedData<T>(key: string): Promise<T | null> {
         // Check in-memory cache first
@@ -91,19 +90,10 @@ export class WalletProvider {
             try {
                 const cetusSuiUsdcPoolAddr =
                     "0x51e883ba7c0b566a26cbc8a94cd33eb0abd418a77cc1e60ad22fd9b1f29cd2ab";
-                const response = await fetch(
-                    `https://api.dexscreener.com/latest/dex/pairs/sui/${cetusSuiUsdcPoolAddr}`
-                );
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(
-                        `HTTP error! status: ${response.status}, message: ${errorText}`
-                    );
-                }
-
-                const data = await response.json();
-                return data;
+                const url = `https://api.dexscreener.com/latest/dex/pairs/sui/${cetusSuiUsdcPoolAddr}`;
+                elizaLogger.info(`Fetching SUI price from ${url}`);
+                const response = await axios.get(url);
+                return response.data;
             } catch (error) {
                 console.error(`Attempt ${i + 1} failed:`, error);
                 lastError = error;
@@ -183,7 +173,7 @@ export class WalletProvider {
                 }
             );
             const prices: Prices = {
-                sui: { usd: suiPriceData.pair.priceUsd },
+                sui: { usd: (1 / suiPriceData.pair.priceNative).toString() },
             };
             this.setCachedData(cacheKey, prices);
             return prices;
@@ -222,12 +212,13 @@ const walletProvider: Provider = {
         _message: Memory,
         _state?: State
     ): Promise<string | null> => {
-        const privateKey = runtime.getSetting("SUI_PRIVATE_KEY");
-        const suiAccount = Ed25519Keypair.deriveKeypair(privateKey);
+        const suiAccount = parseAccount(runtime);
 
         try {
             const suiClient = new SuiClient({
-                url: getFullnodeUrl(runtime.getSetting("SUI_NETWORK") as SuiNetwork),
+                url: getFullnodeUrl(
+                    runtime.getSetting("SUI_NETWORK") as SuiNetwork
+                ),
             });
             const provider = new WalletProvider(
                 suiClient,
