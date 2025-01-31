@@ -132,7 +132,7 @@ export const TwitterClientInterface: Client = {
                     elizaLogger.info(
                         "Validation: successfully logged in, caching cookies"
                     );
-                    await TwitterClientInterface.runtime?.cacheManager.set(
+                    await TwitterClientInterface.runtime?.cacheManager?.set(
                         `twitter/${secrets.username}/cookies`,
                         await twClient.getCookies()
                     );
