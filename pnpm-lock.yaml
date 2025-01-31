@@ -5158,9 +5158,12 @@ importers:
       '@goat-sdk/core':
         specifier: 0.4.6
         version: 0.4.6(zod@3.23.8)
+      '@goat-sdk/plugin-plunderswap':
+        specifier: 1.0.0
+        version: 1.0.0(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-zilliqa@0.3.0(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-viem@0.2.6(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)))(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)
       '@goat-sdk/plugin-zilliqa':
         specifier: 0.1.3
-        version: 0.1.3(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-zilliqa@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-viem@0.2.6(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)))(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5))(encoding@0.1.13)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8))
+        version: 0.1.3(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-zilliqa@0.3.0(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-viem@0.2.6(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)))(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5))(encoding@0.1.13)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8))
       '@goat-sdk/wallet-evm':
         specifier: 0.2.6
         version: 0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)
@@ -5168,8 +5171,8 @@ importers:
         specifier: 0.2.6
         version: 0.2.6(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8))
       '@goat-sdk/wallet-zilliqa':
-        specifier: 0.2.6
-        version: 0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-viem@0.2.6(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)))(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5)
+        specifier: 0.3.0
+        version: 0.3.0(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-viem@0.2.6(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)))(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5)
       '@zilliqa-js/account':
         specifier: ^3.5.0
         version: 3.5.0(encoding@0.1.13)
@@ -8832,6 +8835,12 @@ packages:
       '@goat-sdk/core': 0.4.0
       viem: 2.21.58
 
+  '@goat-sdk/plugin-plunderswap@1.0.0':
+    resolution: {integrity: sha512-EzypPVHQFRYCkj6n/xMLM+rHumrMrFZM12IQ5d2dek3zBvtzaSo7Lz2eYIMWo780Qd6JbGGTM0T7cvmE1BebNA==}
+    peerDependencies:
+      '@goat-sdk/core': 0.4.7
+      '@goat-sdk/wallet-zilliqa': 0.3.0
+
   '@goat-sdk/plugin-zilliqa@0.1.3':
     resolution: {integrity: sha512-O2JRtvB4uhflMWniO2K5FhYJW4fBICyOeC5TKXqkybk/pwBUZ8w3v4nnIrveA7BZPbd1XXqD3Hoif+ZXRPaNng==}
     peerDependencies:
@@ -8869,12 +8878,12 @@ packages:
       '@goat-sdk/wallet-evm': 0.2.6
       viem: 2.21.58
 
-  '@goat-sdk/wallet-zilliqa@0.2.6':
-    resolution: {integrity: sha512-tzdZaNxOPi9x6XcVyus28HLcI57vu8MKuzUHHs4E3oz3l5vIwlmdtMhHvDnxvMhPLvQ08p8ynDAbZcC1JeVMzQ==}
+  '@goat-sdk/wallet-zilliqa@0.3.0':
+    resolution: {integrity: sha512-PiZfW7ThMvcVMcGKQ4dhh9uH5gJTHu5JAjdZF1sXwAf570dVkqQAPdhfP8eVUvJNjCEaDnfew/ZFnTb3e83H6w==}
     peerDependencies:
-      '@goat-sdk/core': 0.4.6
-      '@goat-sdk/wallet-evm': 0.2.6
-      '@goat-sdk/wallet-viem': 0.2.6
+      '@goat-sdk/core': 0.4.7
+      '@goat-sdk/wallet-evm': 0.2.8
+      '@goat-sdk/wallet-viem': 0.2.8
 
   '@google-cloud/vertexai@1.9.2':
     resolution: {integrity: sha512-pJSUG3r5QIvCFNfkz7/y7kEqvEJaVAk0jZbZoKbcPCRUnXaUeAq7p8I0oklqetGyxbUcZ2FOGpt+Y+4uIltVPg==}
@@ -35175,11 +35184,22 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@goat-sdk/plugin-zilliqa@0.1.3(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-zilliqa@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-viem@0.2.6(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)))(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5))(encoding@0.1.13)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8))':
+  '@goat-sdk/plugin-plunderswap@1.0.0(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-zilliqa@0.3.0(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-viem@0.2.6(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)))(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)':
+    dependencies:
+      '@goat-sdk/core': 0.4.6(zod@3.23.8)
+      '@goat-sdk/wallet-zilliqa': 0.3.0(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-viem@0.2.6(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)))(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5)
+      viem: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)
+      zod: 3.23.8
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+
+  '@goat-sdk/plugin-zilliqa@0.1.3(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-zilliqa@0.3.0(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-viem@0.2.6(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)))(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5))(encoding@0.1.13)(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8))':
     dependencies:
       '@goat-sdk/core': 0.4.6(zod@3.23.8)
       '@goat-sdk/wallet-evm': 0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)
-      '@goat-sdk/wallet-zilliqa': 0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-viem@0.2.6(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)))(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5)
+      '@goat-sdk/wallet-zilliqa': 0.3.0(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-viem@0.2.6(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)))(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5)
       '@zilliqa-js/crypto': 3.5.0
       '@zilliqa-js/util': 3.5.0
       '@zilliqa-js/zilliqa': 3.5.0(encoding@0.1.13)
@@ -35226,7 +35246,7 @@ snapshots:
       '@goat-sdk/wallet-evm': 0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)
       viem: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)
 
-  '@goat-sdk/wallet-zilliqa@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-viem@0.2.6(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)))(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5)':
+  '@goat-sdk/wallet-zilliqa@0.3.0(@goat-sdk/core@0.4.6(zod@3.23.8))(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(@goat-sdk/wallet-viem@0.2.6(@goat-sdk/wallet-evm@0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5))(viem@2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.23.8)))(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.7.3)(utf-8-validate@6.0.5)':
     dependencies:
       '@goat-sdk/core': 0.4.6(zod@3.23.8)
       '@goat-sdk/wallet-evm': 0.2.6(@goat-sdk/core@0.4.6(zod@3.23.8))(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)

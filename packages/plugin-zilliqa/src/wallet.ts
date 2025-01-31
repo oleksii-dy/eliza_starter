@@ -1,12 +1,17 @@
 import { WalletClientBase } from "@goat-sdk/core";
-import { viem, type Chain } from "@goat-sdk/wallet-viem";
-import { createWalletClient, http } from "viem";
+import { publicActions, PublicClient, type Chain } from "viem";
+import {
+    type PublicClient as ViemPublicClient,
+    type WalletClient as ViemWalletClient,
+    createWalletClient,
+    http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { mode } from "viem/chains";
 import {
     zilliqaChainId,
     zilliqaJSViemWalletClient,
-    ZilliqaWalletClient
+    ZilliqaWalletClient,
+    ZilliqaWalletClientViemOnly
 } from "@goat-sdk/wallet-zilliqa";
 import { Account } from "@zilliqa-js/zilliqa";
 
@@ -14,42 +19,67 @@ import { Account } from "@zilliqa-js/zilliqa";
 // the ZILLIQA_PROVIDER_URL to the correct one for the chain
 export const chain = mode;
 
-function getViemChain(provider: string, id: number, decimals: number): Chain {
-    return {
-        id: id | 0x8000,
+type Settings = {
+    provider: string,
+    privateKey: `0x${string}` | null
+};
+
+function ensureHexPrefix(hex: string): `0x${string}` {
+    return hex.startsWith("0x") ? hex as `0x${string}` : `0x${hex}`;
+}
+
+function readSettings(getSetting: (key: string) => string | undefined): Settings {
+    const provider = getSetting("ZILLIQA_PROVIDER_URL");
+    const privateKey = getSetting("ZILLIQA_PRIVATE_KEY");
+
+    if (!provider) throw new Error("ZILLIQA_PROVIDER_URL not configured");
+
+    return { provider, privateKey: privateKey ? ensureHexPrefix(privateKey) : null };
+}
+
+function getViemWalletClient(settings: Settings, chainId: number): ViemWalletClient {
+    const account = privateKeyToAccount(settings.privateKey);
+    const chain = {
+        id: chainId | 0x8000,
         name: "zilliqa",
         nativeCurrency: {
-            decimals: decimals,
+            decimals: 18,
             name: "Zil",
             symbol: "ZIL",
         },
         rpcUrls: {
             default: {
-                https: [provider],
+                http: [settings.provider],
             },
         },
-    };
+    }
+    return createWalletClient({ account, chain, transport: http() });
 }
 
 export async function getZilliqaWalletClient(
     getSetting: (key: string) => string | undefined
-) {
-    const privateKey = getSetting("ZILLIQA_PRIVATE_KEY");
-    if (!privateKey) return null;
+): Promise<ZilliqaWalletClient | null> {
+    const settings = readSettings(getSetting);
+    if (!settings.privateKey) return null;
+    const chainId = await zilliqaChainId(settings.provider);
+    const account = new Account(settings.privateKey);
 
-    const provider = getSetting("ZILLIQA_PROVIDER_URL");
-    if (!provider) throw new Error("ZILLIQA_PROVIDER_URL not configured");
+    const viemWalletClient = getViemWalletClient(settings, chainId);
 
-    const chainId = await zilliqaChainId(provider);
-    const account = new Account(privateKey);
-    const viemChain = getViemChain(provider, chainId, 18);
-    const viemWallet = createWalletClient({
-        account: privateKeyToAccount(privateKey as `0x${string}`),
-        chain: viemChain,
-        transport: http(provider),
-    });
+    return zilliqaJSViemWalletClient(viemWalletClient, settings.provider, account, chainId);
+}
 
-    return zilliqaJSViemWalletClient(viemWallet, provider, account, chainId);
+export async function getZilliqaViemWalletClient(
+    getSetting: (key: string) => string | undefined
+): Promise<ZilliqaWalletClientViemOnly | null> {
+    const settings = readSettings(getSetting);
+    if (!settings.privateKey) return null;
+    const chainId = await zilliqaChainId(settings.provider);
+
+    const viemWalletClient = getViemWalletClient(settings, chainId);
+    const viemPublicClient = viemWalletClient.extend(publicActions) as unknown as ViemPublicClient;
+
+    return await ZilliqaWalletClientViemOnly.createClient(viemPublicClient, viemWalletClient);
 }
 
 export function getWalletProviders(

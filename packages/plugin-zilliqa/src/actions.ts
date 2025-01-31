@@ -1,9 +1,9 @@
 import { getOnChainTools } from "@goat-sdk/adapter-vercel-ai";
-import { MODE, USDC, erc20 } from "@goat-sdk/plugin-erc20";
-import { kim } from "@goat-sdk/plugin-kim";
 import { sendETH } from "@goat-sdk/wallet-evm";
 import { WalletClientBase } from "@goat-sdk/core";
+import { plunderswap } from "@goat-sdk/plugin-plunderswap";
 import { zilliqa } from "@goat-sdk/plugin-zilliqa";
+import { ZilliqaWalletClientViemOnly } from "@goat-sdk/wallet-zilliqa";
 
 import {
     generateText,
@@ -15,11 +15,11 @@ import {
     composeContext,
     elizaLogger,
 } from "@elizaos/core";
-import { Zilliqa } from "@zilliqa-js/zilliqa";
 
 export async function getOnChainActions(
     evmWallet: WalletClientBase,
-    zilliqaWallet: WalletClientBase
+    zilliqaWallet: WalletClientBase,
+    zilliqaEvmWallet: ZilliqaWalletClientViemOnly
 ) {
     const actionsWithoutHandler = [
         {
@@ -34,7 +34,6 @@ export async function getOnChainActions(
                         user: "{{user1}}",
                         content: {
                             text: "Tell me the balance of account 0xf0cb24ac66ba7375bf9b9c4fa91e208d9eaabd2e",
-                            action: "GET_BALANCE",
                         },
                     },
                     {
@@ -131,6 +130,258 @@ export async function getOnChainActions(
         // 1. Add your actions here
     ];
 
+    const actionsEvmWithoutHandler = [
+        {
+            name: "GET_SWAP_TOKENS",
+            description:
+                "Find out which tokens can be swapped using the GET_SWAP_QUOTE action.",
+            similes: [],
+            validate: async () => true,
+            examples: [
+                [
+                    {
+                        user: "{{user1}}",
+                        content: {
+                            text: "Which tokens can I swap for other tokens?",
+                        },
+                    },
+                    {
+                        user: "{{agentName}}",
+                        content: {
+                            text: "You can ask for quotes on swapping WZIL, zETH, FPS, HRSE, SEED, kUSD, stZIL, WZIL, and gZIL.",
+                            action: "GET_SWAP_TOKENS",
+                        },
+                    },
+                ],
+                [
+                    {
+                        user: "{{user1}}",
+                        content: {
+                            text: "Which tokens can I trade using PlunderSwap?",
+                        },
+                    },
+                    {
+                        user: "{{agentName}}",
+                        content: {
+                            text: "Liquidity may be available for exchanging WZIL, zETH, FPS, HRSE, SEED, kUSD, stZIL, WZIL, and gZIL.",
+                            action: "GET_SWAP_TOKENS",
+                        },
+                    },
+                ],
+            ],
+        },
+        {
+            name: "GET_SWAP_BALANCE",
+            description:
+                "Find out how much I have of a token that I can swap using the GET_SWAP_QUOTE action.",
+            similes: [],
+            validate: async () => true,
+            examples: [
+                [
+                    {
+                        user: "{{user1}}",
+                        content: {
+                            text: "How much SEED do I have for swapping?",
+                        },
+                    },
+                    {
+                        user: "{{agentName}}",
+                        content: {
+                            text: "You have 350.25 SEED that you could swap.",
+                            action: "GET_SWAP_BALANCE",
+                        },
+                    },
+                ],
+                [
+                    {
+                        user: "{{user1}}",
+                        content: {
+                            text: "What is all the tradable WZIL in my wallet?",
+                        },
+                    },
+                    {
+                        user: "{{agentName}}",
+                        content: {
+                            text: "You have 2,800 WZIL available for trading for another kind of coin.",
+                            action: "GET_SWAP_BALANCE",
+                        },
+                    },
+                ],
+            ],
+        },
+         {
+            name: "GET_SWAP_QUOTE",
+            description:
+                "Get a quote for swapping one token for another using the GET_SWAP_QUOTE action. Tokens must be as provided from the GET_SWAP_TOKENS tool and a quantity of the from token must be provided.",
+            similes: [],
+            validate: async () => true,
+            examples: [
+                [
+                    {
+                        user: "{{user1}}",
+                        content: {
+                            text: "Tell me how many SEED I would get in exchange for 240 WZIL.",
+                        },
+                    },
+                    {
+                        user: "{{agentName}}",
+                        content: {
+                            text: "If you exchange 240 WZIL at the moment then you would expect to receive around 18.77584 SEED if you convert WZIL directly to SEED",
+                            action: "GET_SWAP_QUOTE",
+                        },
+                    },
+                ],
+                [
+                    {
+                        user: "{{user1}}",
+                        content: {
+                            text: "I want to swap 1500 HRSE for FPS. How many would I get?",
+                        },
+                    },
+                    {
+                        user: "{{agentName}}",
+                        content: {
+                            text: "At this time, you should get around 320.9 FPS for your HRSE if you convert FPS to WZIL to HRSE.",
+                            action: "GET_SWAP_QUOTE",
+                        },
+                    },
+                ],
+            ],
+        },
+        {
+            name: "PERFORM_SWAP",
+            description:
+                "Swapping one token for another using the PERFORM_SWAP action. Specify a minimum number of tokens to receive and where to deposit them to.",
+            similes: [],
+            validate: async () => true,
+            examples: [
+                [
+                    {
+                        user: "{{user1}}",
+                        content: {
+                            text: "Please make the trade.",
+                        },
+                    },
+                    {
+                        user: "{{agentName}}",
+                        content: {
+                            text: "Your zUSDT has been swapped in exchange for 117.25 gZIL which are now in your wallet.",
+                            action: "GET_SWAP_QUOTE",
+                        },
+                    },
+                ],
+                [
+                    {
+                        user: "{{user1}}",
+                        content: {
+                            text: "Within the next ten minutes, please swap 200 of my WZIL directly in exchange for at least 15 SEED.",
+                        },
+                    },
+                    {
+                        user: "{{agentName}}",
+                        content: {
+                            text: "Your WZIL has been swapped in exchange for 17.25 SEED which are now in your wallet.",
+                            action: "GET_SWAP_QUOTE",
+                        },
+                    },
+                ],
+                [
+                    {
+                        user: "{{user1}}",
+                        content: {
+                            text: "Trade 1500 of my HRSE via WZIL for a minimum of 300 FPS in the next five minutes.",
+                        },
+                    },
+                    {
+                        user: "{{agentName}}",
+                        content: {
+                            text: "Your HRSE was swapped to WZIL then to 318.5 FPS which you have now received.",
+                            action: "GET_SWAP_QUOTE",
+                        },
+                    },
+                ],
+            ],
+        },
+        {
+            name: "WRAP_ZIL",
+            description:
+                "Wrap native ZIL in the WZIL ERC-20 contract so that it may be traded on PlunderSwap.",
+            similes: [],
+            validate: async () => true,
+            examples: [
+                [
+                    {
+                        user: "{{user1}}",
+                        content: {
+                            text: "Please wrap 200 of my native ZIL so I can trade it.",
+                        },
+                    },
+                    {
+                        user: "{{agentName}}",
+                        content: {
+                            text: "You have now used 200 ZIL to give you 200 more WZIL.",
+                            action: "WRAP_ZIL",
+                        },
+                    },
+                ],
+                [
+                    {
+                        user: "{{user1}}",
+                        content: {
+                            text: "Please convert 500 ZIL to WZIL ready for swapping.",
+                        },
+                    },
+                    {
+                        user: "{{agentName}}",
+                        content: {
+                            text: "You have now spent 500 of your native ZIL to buy 500 WZIL.",
+                            action: "WRAP_ZIL",
+                        },
+                    },
+                ],
+            ],
+        },
+        {
+            name: "UNWRAP_ZIL",
+            description:
+                "Unwrap WZIL from its ERC-20 contract to obtain native ZIL back.",
+            similes: [],
+            validate: async () => true,
+            examples: [
+                [
+                    {
+                        user: "{{user1}}",
+                        content: {
+                            text: "Please unwrap 250 of my ZIL, I don't need to trade it any more.",
+                        },
+                    },
+                    {
+                        user: "{{agentName}}",
+                        content: {
+                            text: "250 of your WZIL has been converted and received in your wallet as native ZIL.",
+                            action: "UNWRAP_ZIL",
+                        },
+                    },
+                ],
+                [
+                    {
+                        user: "{{user1}}",
+                        content: {
+                            text: "Please turn 100 of my WZIL back to native ZIL.",
+                        },
+                    },
+                    {
+                        user: "{{agentName}}",
+                        content: {
+                            text: "You have now exchanged 100 WZIL for the same amount of native ZIL.",
+                            action: "UNWRAP_ZIL",
+                        },
+                    },
+                ],
+            ],
+        },
+    ];
+
     const tools = await getOnChainTools({
         wallet: evmWallet,
         // 2. Configure the plugins you need to perform those actions
@@ -142,12 +393,23 @@ export async function getOnChainActions(
         plugins: [zilliqa()],
     });
 
+    const zilEvmTools = await getOnChainTools({
+        wallet: zilliqaEvmWallet,
+        plugins: [plunderswap()],
+    });
+
     const allTools = { ...zilTools, ...tools };
+    const allEvmTools = { ...zilEvmTools };
     // 3. Let GOAT handle all the actions
-    return actionsWithoutHandler.map((action) => ({
-        ...action,
-        handler: getActionHandler(action.name, action.description, allTools),
-    }));
+    return [
+        ... actionsWithoutHandler.map((action) => ({
+            ...action,
+            handler: getActionHandler(action.name, action.description, allTools),
+        })),
+        ...actionsEvmWithoutHandler.map((action) => ({
+            ...action,
+            handler: getActionHandler(action.name, action.description, allEvmTools),
+        }))];
 }
 
 function getActionHandler(

@@ -55,6 +55,7 @@ import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import { normalizeCharacter } from "@elizaos/plugin-di";
 import createGoatPlugin from "@elizaos/plugin-goat";
 import createZilliqaPlugin from "@elizaos/plugin-zilliqa";
+import createZilliqaEvmPlugin from "@elizaos/plugin-zilliqa";
 
 // import { intifacePlugin } from "@elizaos/plugin-intiface";
 import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
@@ -952,8 +953,12 @@ export async function createAgent(
     }
 
     let zilliqaPlugin: any | undefined;
+    let zilliqaEvmPlugin: any | undefined;
     if (getSecret(character, "ZILLIQA_PRIVATE_KEY")) {
         zilliqaPlugin = await createZilliqaPlugin((secret) =>
+            getSecret(character, secret)
+        );
+        zilliqaEvmPlugin = await createZilliqaEvmPlugin((secret) =>
             getSecret(character, secret)
         );
     }
@@ -1141,6 +1146,7 @@ export async function createAgent(
                 : null,
             goatPlugin,
             zilliqaPlugin,
+            zilliqaEvmPlugin,
             getSecret(character, "COINGECKO_API_KEY") ||
             getSecret(character, "COINGECKO_PRO_API_KEY")
                 ? coingeckoPlugin
