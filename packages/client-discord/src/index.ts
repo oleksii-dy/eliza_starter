@@ -417,14 +417,14 @@ export const DiscordClientInterface: ElizaClient = {
           });
 
           if (response.ok) {
-              return true;
+              return { success: true, message: ""};
           } else {
               elizaLogger.error(`Invalid discord token: ${response.status} ${response.statusText}`);
-              return false;
+              return { success: false, message: response.statusText };
           }
       } catch (error) {
           elizaLogger.error('Error validating discord token:', error);
-          return false;
+          return { success: false, message: error };
       }
     },
     stop: async (runtime: IAgentRuntime) => {

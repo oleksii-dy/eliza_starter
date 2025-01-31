@@ -25,20 +25,20 @@ export const TelegramClientInterface: Client = {
         const response = await fetch(`https://api.telegram.org/bot${token}/getMe`);
         if (!response.ok) {
             elizaLogger.error('Invalid telegram token1:', response.statusText);
-            return false;
+            return { success: false, message: response.statusText };
         }
         const data = await response.json();
         elizaLogger.log('data', data)
         if (data["ok"]) {
-            return true;
+            return { success: true, message: '' };
         } else {
             elizaLogger.error('Invalid telegram token2:', data["description"]);
-            return false;
+            return { success: false, message: data["description"] };
         }
       } catch (error) {
           // maybe don't log error.message as it may have secret in it
           elizaLogger.error('Error verifying telegram token:', error.message);
-          return false;
+          return { success: false, message: error.message };
       }
     },
     stop: async (runtime: IAgentRuntime) => {
