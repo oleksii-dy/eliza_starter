@@ -18,6 +18,7 @@ export interface LaunchAgentContent extends Content {
     config: string;
 }
 
+// Rafactoring
 function isLaunchAgentContent(content: unknown): content is LaunchAgentContent {
     elizaLogger.log("Content for launchAgent", content);
     return (
@@ -62,7 +63,7 @@ export default {
     ): Promise<boolean> => {
         elizaLogger.log("Starting LAUNCH_AGENT handler...");
         
-        // Initialize or update state
+        // Initialize or update state also in lanuchContext
         let currentState = state;
         if (!currentState) {
             currentState = (await runtime.composeState(message)) as State;
