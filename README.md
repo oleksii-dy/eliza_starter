@@ -1,192 +1,233 @@
-# Eliza 🤖
+# LRU Cache - TypeScript Implementation
 
-<div align="center">
-  <img src="./docs/static/img/eliza_banner.jpg" alt="Eliza Banner" width="100%" />
-</div>
+[![npm version](https://badge.fury.io/js/adev-lru.svg)](https://badge.fury.io/js/adev-lru)
 
-<div align="center">
+A simple, efficient, and customizable **LRU Cache** (Least Recently Used Cache) implementation in TypeScript. This package offers O(1) access for retrieving and inserting data, and it automatically evicts the least recently used items when the cache exceeds its set capacity.
 
-📑 [Technical Report](https://arxiv.org/pdf/2501.06781) |  📖 [Documentation](https://elizaos.github.io/eliza/) | 🎯 [Examples](https://github.com/thejoven/awesome-eliza)
+This package is suitable for use in caching data in client-side applications, backend services, or any application where frequently accessed data should be kept in memory.
 
-</div>
+- [NPM Package](https://www.npmjs.com/package/adev-lru)
+- [How to Create an In-Memory Cache](https://dev.to/armando284/how-to-create-an-in-memory-cache-3ihe)
+- [Enhancing Cache with Configurable Data Persistence](https://dev.to/armando284/enhancing-lru-cache-with-configurable-data-persistence-37am)
 
-## 🌍 README Translations
+## Features
 
-[中文说明](i18n/readme/README_CN.md) | [日本語の説明](i18n/readme/README_JA.md) | [한국어 설명](i18n/readme/README_KOR.md) | [Persian](i18n/readme/README_FA.md) | [Français](i18n/readme/README_FR.md) | [Português](i18n/readme/README_PTBR.md) | [Türkçe](i18n/readme/README_TR.md) | [Русский](i18n/readme/README_RU.md) | [Español](i18n/readme/README_ES.md) | [Italiano](i18n/readme/README_IT.md) | [ไทย](i18n/readme/README_TH.md) | [Deutsch](i18n/readme/README_DE.md) | [Tiếng Việt](i18n/readme/README_VI.md) | [עִברִית](i18n/readme/README_HE.md) | [Tagalog](i18n/readme/README_TG.md) | [Polski](i18n/readme/README_PL.md) | [Arabic](i18n/readme/README_AR.md) | [Hungarian](i18n/readme/README_HU.md) | [Srpski](i18n/readme/README_RS.md) | [Română](i18n/readme/README_RO.md) | [Nederlands](i18n/readme/README_NL.md) | [Ελληνικά](i18n/readme/README_GR.md)
+- **O(1) Access Time** for retrieving and inserting cache entries.
+- **LRU Eviction**: Automatically evicts the least recently used items when the cache exceeds its capacity.
+- **TTL (Time-To-Live)**: Supports time-based expiration for cache entries.
+- **Customizable Capacity**: Set the cache size and eviction strategy.
 
-## 🚩 Overview
+## Table of Contents
 
-<div align="center">
-  <img src="./docs/static/img/eliza_diagram.png" alt="Eliza Diagram" width="100%" />
-</div>
+- [Installation](#installation)
+- [Usage](#usage)
+- [API](#api)
+  - [LRUCache.getInstance](#lrucachegetinstance)
+  - [LRUCache.put](#lrucacheput)
+  - [LRUCache.get](#lrucacheget)
+  - [LRUCache.clear](#lrucacheclear)
+  - [LRUCache.clearMetrics](#lrucacheclearmetrics)
+- [How It Works](#how-it-works)
+- [Contributing](#contributing)
+- [License](#license)
+- [Guide](#guide)
 
-## ✨ Features
+---
 
-- 🛠️ Full-featured Discord, Twitter and Telegram connectors
-- 🔗 Support for every model (Llama, Grok, OpenAI, Anthropic, Gemini, etc.)
-- 👥 Multi-agent and room support
-- 📚 Easily ingest and interact with your documents
-- 💾 Retrievable memory and document store
-- 🚀 Highly extensible - create your own actions and clients
-- 📦 Just works!
+## Installation
 
-## Video Tutorials
-
-[AI Agent Dev School](https://www.youtube.com/watch?v=ArptLpQiKfI&list=PLx5pnFXdPTRzWla0RaOxALTSTnVq53fKL)
-
-## 🎯 Use Cases
-
-- 🤖 Chatbots
-- 🕵️ Autonomous Agents
-- 📈 Business Process Handling
-- 🎮 Video Game NPCs
-- 🧠 Trading
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- [Python 2.7+](https://www.python.org/downloads/)
-- [Node.js 23+](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
-- [pnpm](https://pnpm.io/installation)
-
-> **Note for Windows Users:** [WSL 2](https://learn.microsoft.com/en-us/windows/wsl/install-manual) is required.
-
-### Use the Starter (Recommended)
+You can install the package via npm or yarn:
 
 ```bash
-git clone https://github.com/elizaos/eliza-starter.git
-cd eliza-starter
-cp .env.example .env
-pnpm i && pnpm build && pnpm start
+npm install adev-lru
+# or
+yarn add adev-lru
 ```
 
-### Manually Start Eliza (Only recommended if you know what you are doing)
+## Usage
 
-#### Checkout the latest release
+After installation, you can use the LRU Cache in your application like so:
 
-```bash
-# Clone the repository
-git clone https://github.com/elizaos/eliza.git
+```typescript
+import LRUCache from 'adev-lru';
 
-# This project iterates fast, so we recommend checking out the latest release
-git checkout $(git describe --tags --abbrev=0)
-# If the above doesn't checkout the latest release, this should work:
-# git checkout $(git describe --tags `git rev-list --tags --max-count=1`)
+const cache = LRUCache.getInstance<number>(3);
+
+// Add data to the cache
+cache.put('a', 1);
+cache.put('b', 2);
+cache.put('c', 3);
+
+// Access data from the cache
+console.log(cache.get('a')); // Output: 1
+
+// Adding another entry will evict the least recently used item
+cache.put('d', 4);
+console.log(cache.get('b')); // Output: undefined (evicted)
 ```
 
-#### Edit the .env file
+For a more in-depth explanation of how the LRU Cache works, refer to the [Guide](GUIDE.md).
 
-Copy .env.example to .env and fill in the appropriate values.
+## Using Persistence Systems
 
+The `LRUCache` library supports optional data persistence to ensure cached data remains available between sessions or system restarts. This can be achieved using one of the following adapters:
+
+1. **LocalStorageAdapter**
+   - Stores cache data in the browser's `localStorage`. Suitable for lightweight use cases with limited storage requirements.
+
+2. **IndexedDBAdapter**
+   - Uses the browser's `IndexedDB` for more robust and scalable data persistence, handling larger datasets effectively.
+
+### Behavior with Persistence
+When a persistence adapter is configured, the cache:
+- **Reloads Data in Memory**: On initialization, cached data is loaded into memory for fast access.
+- **Maintains Consistency**: Updates to the cache are mirrored in the persistence layer in real-time.
+
+### Example: Configuring Persistence Adapters
+
+Here’s how to set up the cache with persistence:
+
+```typescript
+import {LRUCache, LocalStorageAdapter, IndexedDBAdapter} from 'adev-lru';
+
+// Example 1: Using LocalStorageAdapter
+const localStorageAdapter = new LocalStorageAdapter('my-cache');
+const cacheWithLocalStorage = LRUCache.getInstance<number>({
+  capacity: 5,
+  adapter: localStorageAdapter,
+});
+
+// Example 2: Using IndexedDBAdapter
+const indexedDBAdapter = new IndexedDBAdapter('myDatabase', 'myStore');
+const cacheWithIndexedDB = LRUCache.getInstance<number>({
+  capacity: 5,
+  adapter: indexedDBAdapter,
+});
+
+// Usage remains the same
+cacheWithLocalStorage.put('a', 1);
+cacheWithIndexedDB.put('b', 2);
+console.log(cacheWithLocalStorage.get('a')); // Output: 1
+console.log(cacheWithIndexedDB.get('b')); // Output: 2
 ```
-cp .env.example .env
+
+### Handling Concurrency in Multithreaded Environments
+
+When using the cache in parallel systems like web workers or threads, it is critical to:
+- **Create a Single Cache Instance**: Export a single shared instance of the cache for all threads to use. 
+- **Avoid Independent Instantiations**: This prevents concurrency issues, ensuring consistent access to the same underlying data.
+
+#### Example: Correct Multithreaded Setup
+
+In your main thread or a shared module:
+
+```typescript
+import LRUCache from 'adev-lru';
+
+const sharedCache = LRUCache.getInstance<number>(3);
+
+export default sharedCache;
 ```
 
-Note: .env is optional. If you're planning to run multiple distinct agents, you can pass secrets through the character JSON
+In worker threads or other parallel systems:
 
-#### Start Eliza
+```typescript
+import sharedCache from './sharedCache';
 
-```bash
-pnpm i
-pnpm build
-pnpm start
-
-# The project iterates fast, sometimes you need to clean the project if you are coming back to the project
-pnpm clean
+sharedCache.put('a', 42);
+console.log(sharedCache.get('a')); // Output: 42
 ```
 
-### Interact via Browser
+### Notes
 
-Once the agent is running, you should see the message to run "pnpm start:client" at the end.
+- **Performance**: By keeping data in memory, the cache ensures rapid access times, even when using persistence adapters.
+- **Concurrency Safety**: Following the shared instance model minimizes the risk of race conditions or data inconsistency.
 
-Open another terminal, move to the same directory, run the command below, then follow the URL to chat with your agent.
+## API
 
-```bash
-pnpm start:client
-```
+### `LRUCache.getInstance<T>(capacity: number): LRUCache<T>`
 
-Then read the [Documentation](https://elizaos.github.io/eliza/) to learn how to customize your Eliza.
+- **Parameters**: 
+  - `capacity` (number): The maximum number of items the cache will store.
+- **Returns**: 
+  - An instance of the `LRUCache`.
+
+### `LRUCache.put(key: string, value: T, ttl: number): LRUCache<T>`
+
+- **Parameters**:
+  - `key` (string): The unique key for the cache entry.
+  - `value` (T): The value to store in the cache.
+  - `ttl` (number, optional): Time to live for the entry in milliseconds. Defaults to 60,000 (1 minute).
+- **Returns**:
+  - The updated `LRUCache` instance.
+
+### `LRUCache.get(key: string): T | undefined`
+
+- **Parameters**:
+  - `key` (string): The key of the cache entry to retrieve.
+- **Returns**:
+  - The cached value if it exists and is not expired. Otherwise, `undefined`.
+
+### `LRUCache.getOption(key: string): Option<T>`
+
+- **Parameters**:
+  - key (string): The key of the cache entry to retrieve.
+- **Returns**:
+  - An Option<T> instance:
+    - Option.some(value) if the key exists in the cache and has not expired.
+    - Option.none() if the key does not exist or has expired.
+
+### `LRUCache.clear(): void`
+
+- Clears the cache.
+
+### `LRUCache.clearMetrics(): void`
+
+- Clears the internal metrics (`hitCount`, `missCount`, `evictionCount`).
 
 ---
 
-### Automatically Start Eliza
+## How It Works
 
-The start script provides an automated way to set up and run Eliza:
+The cache uses two core data structures:
+1. **Hash Map**: Provides O(1) access to cache entries.
+2. **Doubly Linked List**: Ensures the most recently used items are always at the front and the least recently used items are at the back.
 
-```bash
-sh scripts/start.sh
-```
+This allows us to evict the least recently used items efficiently when the cache exceeds its capacity.
 
-For detailed instructions on using the start script, including character management and troubleshooting, see our [Start Script Guide](./docs/docs/guides/start-script.md).
-
-> **Note**: The start script handles all dependencies, environment setup, and character management automatically.
+For a detailed breakdown of how the cache is implemented, please refer to the [Guide](GUIDE.md).
 
 ---
 
-### Modify Character
+## Contributing
 
-1. Open `packages/core/src/defaultCharacter.ts` to modify the default character. Uncomment and edit.
+We welcome contributions to improve this project! To contribute:
 
-2. To load custom characters:
-    - Use `pnpm start --characters="path/to/your/character.json"`
-    - Multiple character files can be loaded simultaneously
-3. Connect with X (Twitter)
-    - change `"clients": []` to `"clients": ["twitter"]` in the character file to connect with X
+1. Fork the repository.
+2. Clone your fork to your local machine.
+3. Create a new branch: `git checkout -b feature-name`.
+4. Make your changes and ensure the code passes all tests.
+5. Submit a pull request with a clear description of the changes.
 
----
-
-#### Additional Requirements
-
-You may need to install Sharp. If you see an error when starting up, try installing it with the following command:
-
-```
-pnpm install --include=optional sharp
-```
+Please follow the coding style used in the project and write tests for any new features or fixes.
 
 ---
 
-### Start Eliza with Gitpod
+## License
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/elizaos/eliza/tree/main)
-
----
-
-### Deploy Eliza in one click 
-
-Use [Fleek](https://fleek.xyz/eliza/) to deploy Eliza in one click. This opens Eliza to non-developers and provides the following options to build your agent:
-1. Start with a template
-2. Build characterfile from scratch
-3. Upload pre-made characterfile
-
-Click [here](https://fleek.xyz/eliza/) to get started!
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 
 ---
 
-### Community & contact
+## Guide
 
-- [GitHub Issues](https://github.com/elizaos/eliza/issues). Best for: bugs you encounter using Eliza, and feature proposals.
-- [Discord](https://discord.gg/ai16z). Best for: sharing your applications and hanging out with the community.
+For a detailed step-by-step guide to building your own LRU Cache from scratch, including the design decisions, code explanations, and the reasoning behind the implementation, check out the [GUIDE.md](GUIDE.md).
 
-## Citation
+---
 
-We now have a [paper](https://arxiv.org/pdf/2501.06781) you can cite for the Eliza OS:
-```bibtex
-@article{walters2025eliza,
-  title={Eliza: A Web3 friendly AI Agent Operating System},
-  author={Walters, Shaw and Gao, Sam and Nerd, Shakker and Da, Feng and Williams, Warren and Meng, Ting-Chien and Han, Hunter and He, Frank and Zhang, Allen and Wu, Ming and others},
-  journal={arXiv preprint arXiv:2501.06781},
-  year={2025}
-}
-```
+### Notes
 
-## Contributors
+- This `README.md` is structured for a published npm package. It focuses on providing installation, usage, and API documentation, which are the most important for npm package users.
+- The **Guide.md** is referenced as a separate document, providing deeper insights into the design and implementation for users interested in learning how the LRU Cache works under the hood.
 
-<a href="https://github.com/elizaos/eliza/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=elizaos/eliza" alt="Eliza project contributors" />
-</a>
-
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=elizaos/eliza&type=Date)](https://star-history.com/#elizaos/eliza&Date)
+This structure balances usability and learning, ensuring users can integrate the package with minimal effort while also offering a path for those who want to understand or contribute to the implementation.
