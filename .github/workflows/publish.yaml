@@ -55,6 +55,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          node scripts/scope-transform.js rewrite
           pnpm install --frozen-lockfile
 
       - name: Build packages
@@ -68,4 +69,4 @@ jobs:
       - name: Publish packages to GitHub Packages
         if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
         run: |
-          node scripts/publish-fork.js
+          pnpm publish --access private --registry=https://npm.pkg.github.com
