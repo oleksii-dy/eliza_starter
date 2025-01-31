@@ -17,7 +17,9 @@ const sendTokenTemplate = `Please extract the following swap details for SUI net
 {
     "amount": number | 0,               // Amount of tokens to transfer
     "tokenSymbol": string | SUI,          // Token symbol on the SUI network (e.g., "SUI", "UNI")
-    "destinationAddress": string | null    // Recipient's wallet address
+    "destinationAddress": string | null,    // Recipient's wallet address
+    "responseMessage": string,        // Flexible message to the user, translated into the user's language, e.g., "Please ensure all details are correct before proceeding with the swap to prevent any losses."
+    "actionHintText": string          // Flexible message to the user, translated into the user's language, e.g., "Do you need any further assistance? Please let me know!"
 }
 Recent messages: {{recentMessages}}
 Extract the token transfer parameters from the conversation and wallet context above. Return only a JSON object with the specified fields. Use null for any values that cannot be determined.
@@ -112,16 +114,16 @@ export const sendTokenBySymbol: Action = {
         try {
 
             callback({
-               text:`Please double-check all details before swapping to avoid any loss`,
+               text:`${content.responseMessage}`,
                action:"SUI_SEND_TOKEN_BY_SYMBOL",
                result: {
                 type: "send_sui_chain",
                 data:responseData,
                 action_hint:{
-                    text: "Do you need any further assistance? Please let me know!",
+                    text: content.actionHintText,
                     actions:[
                         {
-                            type:"button",
+                            type:"button_buy",
                             text:"Buy ROCK",
                             data:{
                                 type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
@@ -129,7 +131,7 @@ export const sendTokenBySymbol: Action = {
                             }
                         },
                         {
-                            type:"button",
+                            type:"button_buy",
                             text:"Buy SUI",
                             data:{
                                 type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",

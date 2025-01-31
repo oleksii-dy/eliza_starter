@@ -1,11 +1,11 @@
 import {
     // ActionExample,
-    // composeContext,
-    // generateObjectDeprecated,
+    composeContext,
+    generateObjectDeprecated,
     HandlerCallback,
     IAgentRuntime,
     Memory,
-    // ModelClass,
+    ModelClass,
     // settings,
     State,
     type Action,
@@ -16,21 +16,26 @@ import { searchCategoriesInFileJson } from "../providers/searchProjectInFileJson
 import { findTypesBySymbols } from "../providers/searchCoinInAggre";
 import { GeckoTerminalProvider } from "../providers/coingeckoTerminalProvider";
 // import { RedisClient } from "@elizaos/adapter-redis";
-// const topMemeTemplate = `Please extract the following swap details for SUI network:
-// {
-//     "inputTokenAddress": string | null,     // Token being sold (e.g. "0xb6a9f896fd6c0f777699b9aa2b1bb745caa5eb1f3978173c1ddffd4bdd3994e9::uni::UNI")
-//     "outputTokenAddress": string | null,    // Token being bought
-//     "amount": number | 0,               // Amount to swap
-// }
-// Recent messages: {{recentMessages}}
-// \`\`\`
-// VALIDATION RULES:
-//             All property names must use double quotes
-//             All string values must use double quotes
-//             null values should not use quotes
-//             No trailing commas allowed
-//             No single quotes anywhere in the JSON
-// `;
+const topMemeTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
+Example response:
+\`\`\`json
+{
+    size:5,
+    "responseMessage": string,        // Flexible message to the user, translated into the user's language, e.g., "Here are the top Meme tokens:"
+    "actionHintText": string          // Flexible message to the user, translated into the user's language, e.g., "Do you need any further assistance? Please let me know!"
+}
+\`\`\`
+{{recentMessages}}
+Extract ONLY from the current message (ignore any previous context or messages):
+    Given the recent messages, extract the following information:
+    size: Number of news items to return: Must be a positive integer Default is 5 if not specified Maximum value is 100 Minimum value is 1 If mentioned in message, use that number If not mentioned, use default value 5
+VALIDATION RULES:
+    All property names must use double quotes
+    All string values must use double quotes
+    null values should not use quotes
+    No trailing commas allowed
+    No single quotes anywhere in the JSON
+Respond with a JSON markdown block containing only the extracted values.`;
 
 
 
@@ -54,6 +59,21 @@ export const topMeme: Action = {
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
     ): Promise<boolean> => {
+
+        if (!state) {
+            state = (await runtime.composeState(message)) as State;
+        } else {
+            state = await runtime.updateRecentMessageState(state);
+        }
+        const topDefiContext = composeContext({
+            state,
+            template: topMemeTemplate,
+        });
+        const content = await generateObjectDeprecated({
+            runtime,
+            context: topDefiContext,
+            modelClass: ModelClass.SMALL,
+        });
         const projectInfos = await searchCategoriesInFileJson("Meme");
         const projectType = await findTypesBySymbols(projectInfos);
         const GeckoTerminal = new GeckoTerminalProvider();
@@ -81,16 +101,16 @@ export const topMeme: Action = {
         try {
 
             callback({
-               text:``,
+               text:content.responseMessage,
                action:"TOP_MEME",
                result: {
                 type: "top_token",
                 data:dataResponse,
                 action_hint:{
-                    text: "Do you need any further assistance? Please let me know!",
+                    text: content.actionHintText,
                     actions:[
                         {
-                            type:"button",
+                            type:"button_buy",
                             text:"Buy ROCK",
                             data:{
                                 type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
@@ -98,7 +118,7 @@ export const topMeme: Action = {
                             }
                         },
                         {
-                            type:"button",
+                            type:"button_buy",
                             text:"Buy Sui",
                             data:{
                                 type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",

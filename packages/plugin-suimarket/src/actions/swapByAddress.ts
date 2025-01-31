@@ -19,6 +19,7 @@ const swapTemplate = `Please extract the following swap details for SUI network:
     "outputTokenAddress": string | null,    // Token being bought
     "amount": number | 0,               // Amount to swap
     "responseMessage": string,        // Flexible message to the user, translated into the user's language, e.g., "Please ensure all details are correct before proceeding with the swap to prevent any losses."
+    "actionHintText": string          // Flexible message to the user, translated into the user's language, e.g., "Do you need any further assistance? Please let me know!"
 }
 Recent messages: {{recentMessages}}
 \`\`\`
@@ -112,10 +113,10 @@ export const executeSwapByAddress: Action = {
                 type: "swap",
                 data:responseData,
                 action_hint:{
-                    text: "Do you need any further assistance? Please let me know!",
+                    text: content.actionHintText,
                     actions:[
                         {
-                            type:"button",
+                            type:"button_buy",
                             text:"Buy ROCK",
                             data:{
                                 type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
@@ -123,7 +124,7 @@ export const executeSwapByAddress: Action = {
                             }
                         },
                         {
-                            type:"button",
+                            type:"button_buy",
                             text:"Buy SUI",
                             data:{
                                 type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",

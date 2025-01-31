@@ -141,7 +141,7 @@ export const topDexInfo: Action = {
                         text: "Do you need any further assistance? Please let me know!",
                         actions:[
                             {
-                                type:"button",
+                                type:"button_buy",
                                 text:"Buy ROCK",
                                 data:{
                                     type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
@@ -149,7 +149,7 @@ export const topDexInfo: Action = {
                                 }
                             },
                             {
-                                type:"button",
+                                type:"button_buy",
                                 text:"Buy Sui",
                                 data:{
                                     type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",

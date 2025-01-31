@@ -23,7 +23,9 @@ const promptSuiTokenInfoTemplate = `Respond with a JSON markdown block containin
 Example response:
     \`\`\`json
     {
-        "token_symbol": "CRAFT"
+        "token_symbol": "CRAFT",
+        "responseMessage": string,        // Flexible message to the user, translated into the user's language, e.g., "Here are the token prices:"
+        "actionHintText": string          // Flexible message to the user, translated into the user's language, e.g., "Do you need any further assistance? Please let me know!"
     }
     \`\`\`
 {{recentMessages}}
@@ -104,7 +106,7 @@ export const suiTokenPriceBySymbol: Action = {
         console.log(info)
         if (callback) {
             callback({
-                text: ``,
+                text: content.responseMessage,
                 action: 'TOKEN_PRICE_INFO_BY_SYMBOL',
                 result: {
                     type: "token_price",
@@ -116,19 +118,19 @@ export const suiTokenPriceBySymbol: Action = {
                         icon_url: info.iconUrl,
                     },
                     action_hint:{
-                        text: "Do you need any further assistance? Please let me know!",
+                        text: content.actionHintText,
                         actions:[
                             {
-                                type:"button",
-                                text:"Buy ROCK",
+                                type:"button_buy",
+                                text:"ROCK",
                                 data:{
                                     type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
                                     icon_url:"https://rockee.ai/images/logo.png"
                                 }
                             },
                             {
-                                type:"button",
-                                text:"Buy Sui",
+                                type:"button_buy",
+                                text:"SUI",
                                 data:{
                                     type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
                                     icon_url:"https://strapi-dev.scand.app/uploads/sui_c07df05f00.png"

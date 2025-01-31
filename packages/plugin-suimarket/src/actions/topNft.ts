@@ -25,7 +25,9 @@ const topNftPromptTemplate = `Respond with a JSON markdown block containing only
 Example response:
 \`\`\`json
 {
-    size:5
+    size:5,
+    "actionHintText": string,          // Flexible message to the user, translated into the user's language, e.g., "Do you need any further assistance? Please let me know!"
+    "responseMessage": string,        // Flexible message to the user, translated into the user's language, e.g., "The top DEX on"
 }
 \`\`\`
 {{recentMessages}}
@@ -105,7 +107,7 @@ export const topNftInfos: Action = {
                         text: "Do you need any further assistance? Please let me know!",
                         actions:[
                             {
-                                type:"button",
+                                type:"button_buy",
                                 text:"Buy ROCK",
                                 data:{
                                     type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
@@ -113,7 +115,7 @@ export const topNftInfos: Action = {
                                 }
                             },
                             {
-                                type:"button",
+                                type:"button_buy",
                                 text:"Buy Sui",
                                 data:{
                                     type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",

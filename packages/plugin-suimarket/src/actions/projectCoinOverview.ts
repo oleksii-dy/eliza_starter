@@ -23,8 +23,10 @@ const projectInfoTemplate = `Respond with a JSON markdown block containing only 
 Example response:
     \`\`\`json
     {
-    "project_name": "Cetus" | nul, // Project crypto  currency name
-    "token_symbol": "cetus" | null // token symbol of crypto currency
+    "project_name": "Cetus" | null, // Project crypto  currency name
+    "token_symbol": "cetus" | null, // token symbol of crypto currency
+    "responseMessage": string,        // Flexible message to the user, translated into the user's language, e.g., "Here are the token prices:"
+    "actionHintText": string          // Flexible message to the user, translated into the user's language, e.g., "Do you need any further assistance? Please let me know!"
 }
     \`\`\`
 Recent messages:  {{recentMessages}}
@@ -191,19 +193,19 @@ export const projectInfo: Action = {
                     ...infoPrice
                 },
                 action_hint:{
-                    text: "Do you need any further assistance? Please let me know!",
+                    text: content.actionHintText,
                     actions:[
                         {
-                            type:"button",
-                            text:"Buy ROCK",
+                            type:"button_buy",
+                            text:"ROCK",
                             data:{
                                 type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
                                 icon_url:"https://rockee.ai/images/logo.png"
                             }
                         },
                         {
-                            type:"button",
-                            text:"Buy Sui",
+                            type:"button_buy",
+                            text:"SUI",
                             data:{
                                 type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
                                 icon_url:"https://strapi-dev.scand.app/uploads/sui_c07df05f00.png"

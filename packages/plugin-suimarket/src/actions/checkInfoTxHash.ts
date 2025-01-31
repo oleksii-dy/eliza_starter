@@ -14,7 +14,9 @@ import getTransactionInfo from "../providers/checkTxHash";
 const checkTxHashTemplate = `Please extract the following swap details for SUI network:
 
 {
-    "txHash": string  | null                // txHash is transaction block on sui network
+    "txHash": string  | null,                // txHash is transaction block on sui network
+    "responseMessage": string,        // Flexible message to the user, translated into the user's language, e.g., "Your transaction status for txhash {txHash} is {status}."
+    "actionHintText": string          // Flexible message to the user, translated into the user's language, e.g., "Do you need any further assistance? Please let me know!"
 }
 
 Recent messages: {{recentMessages}}
@@ -84,29 +86,71 @@ export const checkTxhashOnSui: Action = {
         });
         console.log("content:", content);
 
-        const checkInfoTxHash = await getTransactionInfo(content.txHash);
+
 
         try {
-
+            const checkInfoTxHash = await getTransactionInfo(content.txHash);
             callback({
                text:`Your transaction status for txhash ${content.txHash} is ${checkInfoTxHash.effects.status.status}.`,
                action:"CHECK_TXHASH_SUI_NETWORK",
                result: {
                 type: "info_txhash",
                 data: checkInfoTxHash,
+                action_hint:{
+                    text: content.actionHintText,
+                    action_hint:{
+                        text: "Do you need any further assistance? Please let me know!",
+                        actions:[
+                            {
+                                type:"button_buy",
+                                text:"Buy ROCK",
+                                data:{
+                                    type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
+                                    icon_url:"https://rockee.ai/images/logo.png"
+                                }
+                            },
+                            {
+                                type:"button_buy",
+                                text:"Buy Sui",
+                                data:{
+                                    type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
+                                    icon_url:"https://strapi-dev.scand.app/uploads/sui_c07df05f00.png"
+                                }
+                            },
+                        ]
+                    },
+                    actions:[
+                        {
+                            type:"button_buy",
+                            text:"ROCK",
+                            data:{
+                                type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
+                                icon_url:"https://rockee.ai/images/logo.png"
+                            }
+                        },
+                        {
+                            type:"button_buy",
+                            text:"SUI",
+                            data:{
+                                type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
+                                icon_url:"https://strapi-dev.scand.app/uploads/sui_c07df05f00.png"
+                            }
+                        },
+                    ]
+                }
 
             }
             })
             return true;
         } catch (error) {
             callback({
-                text:`Your transaction for txhash ${content.txHash} is not available.`,
+                text: content.responseMessage,
                 action:"CHECK_TXHASH_SUI_NETWORK",
                 action_hint:{
-                    text: "Do you need any further assistance? Please let me know!",
+                    text: content.actionHintText,
                     actions:[
                         {
-                            type:"button",
+                            type:"button_buy",
                             text:"Buy ROCK",
                             data:{
                                 type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
@@ -114,7 +158,7 @@ export const checkTxhashOnSui: Action = {
                             }
                         },
                         {
-                            type:"button",
+                            type:"button_buy",
                             text:"Buy Sui",
                             data:{
                                 type:"0xb4bc93ad1a07fe47943fc4d776fed31ce31923acb5bc9f92d2cab14d01fc06a4::ROCK::ROCK",
