@@ -39,6 +39,12 @@ jobs:
         uses: pnpm/action-setup@v4
 
 
+      - name: Configure npm for GitHub Packages
+        run: |
+          # Write to the HOME-level .npmrc
+          echo "@elizaos:registry=https://npm.pkg.github.com" >> ~/.npmrc
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmr
+
       - name: Configure npm to use GitHub Packages
         run: |
           # Add explicit scope mapping (critical for organizations)
