@@ -54,7 +54,7 @@ export class NewsPullerService extends Service {
         this.startPeriodicTask();
         NewsPullerService.isInitialized = true;
         console.log(
-            "NewsPullerService : initialized and started periodic task"
+            `NewsPullerService : initialized and started periodic task (interval: ${this.DEFAULT_INTERVAL} ms || ${intv})`
         );
     }
 
