@@ -70,11 +70,11 @@ export class GmailClient extends EventEmitter {
         });
         const messages = res.data.messages;
         if (messages == undefined) {
-            elizaLogger.log("No messages found");
+            elizaLogger.debug("Gmail: No messages found");
             return;
         }
 
-        elizaLogger.success("Found " + messages.length + " email(s)");
+        elizaLogger.success("Gmail: Found " + messages.length + " email(s)");
 
         // For each email, process email
         for (const message of messages) {

@@ -27,6 +27,7 @@ export async function handleGoogleCallback(googleClient: GoogleClient, config: G
         await storeTokens(googleClient.runtime, tokens);
 
         // Set the authenticated flag to true
+        googleClient.oAuth2Client.setCredentials(tokens);
         googleClient.authenticated = true;
 
         elizaLogger.success("Successfully authenticated with Google");

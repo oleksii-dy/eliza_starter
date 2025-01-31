@@ -31,7 +31,13 @@ GMAIL_OAUTH2_PORT=            # Use any available port (3002 for example)
 GMAIL_OAUTH2_CALLBACK_URL=    # Use http://localhost:<GMAIL_OAUTH2_PORT> for local development and configure it on the OAuth 2.0 Client IDs
 ```
 
-### Step 3: Run Eliza
+### Step 3: Configure your character to use the Gmail client
+
+In your character file, add `"clients": ["gmail"]` to the character definition.
+
+You can also define `emailExamples` in a similar format to `messageExamples` to help the client understand your communication style.
+
+### Step 4: Run Eliza
 
 You should see in the logs a message like this:
 
