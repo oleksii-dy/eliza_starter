@@ -26,12 +26,14 @@ export class CoinbaseClient implements Client {
     private server: express.Application;
     private port: number;
     private wallets: CoinbaseWallet[];
+    private initialBalanceETH: number;
 
     constructor(runtime: IAgentRuntime) {
         this.runtime = runtime;
         this.server = express();
         this.port = Number(runtime.getSetting("COINBASE_WEBHOOK_PORT")) || 3001;
         this.wallets = [];
+        this.initialBalanceETH = 1
     }
 
     async initialize(): Promise<void> {
@@ -227,7 +229,7 @@ Generate only the tweet text, no commentary or markdown.`;
         // const defaultAddress = await wallet.wallet.getDefaultAddress();
         const buy =  event.event.toUpperCase() === 'BUY'
         const txHash = await tokenSwap(this.runtime, amount, buy ? event.ticker : 'USDC', buy ? event.ticker : 'USDC', this.runtime.getSetting('WALLET_PUBLIC_KEY'), this.runtime.getSetting('WALLET_PRIVATE_KEY'), 8453);
-        const pnl = await calculateOverallPNL(this.runtime, this.runtime.getSetting('WALLET_PRIVATE_KEY'), this.runtime.getSetting('WALLET_PUBLIC_KEY'), 8453, amount);
+        const pnl = await calculateOverallPNL(this.runtime, this.runtime.getSetting('WALLET_PRIVATE_KEY'), this.runtime.getSetting('WALLET_PUBLIC_KEY'), 8453, this.initialBalanceETH);
         const pnlText = `Overall PNL: ${pnl}`;
         elizaLogger.log('pnlText ', pnlText)
 
