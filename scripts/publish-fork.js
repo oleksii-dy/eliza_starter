@@ -12,7 +12,7 @@ const { execSync } = require('child_process');
 // Customize these
 const PACKAGES_DIR = path.join(__dirname, '..', 'packages'); 
 const OLD_SCOPE = '@elizaos';
-const NEW_SCOPE = '@5d-labs'; // The scope you control on GitHub or npm
+const NEW_SCOPE = '@5D-labs-ai'; // The scope you control on GitHub or npm
 
 // 1) Recursively collect all package.json files under /packages (or wherever your packages live)
 function getAllPackageJsons(dir) {
