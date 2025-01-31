@@ -3,8 +3,9 @@ import { google } from 'googleapis';
 import { elizaLogger } from "@elizaos/core";
 import { GmailConfig } from "./environment";
 import { IAgentRuntime } from "@elizaos/core";
+import { GoogleClient } from "./google_client";
 
-export async function handleGoogleCallback(runtime: IAgentRuntime, config: GmailConfig, req: Request, res: Response) {
+export async function handleGoogleCallback(googleClient: GoogleClient, config: GmailConfig, req: Request, res: Response) {
     const { code } = req.query;
 
     if (!code) {
@@ -23,7 +24,10 @@ export async function handleGoogleCallback(runtime: IAgentRuntime, config: Gmail
         const { tokens } = await oAuth2Client.getToken(code as string);
 
         // Store tokens securely (you'll need to implement your storage solution)
-        await storeTokens(runtime, tokens);
+        await storeTokens(googleClient.runtime, tokens);
+
+        // Set the authenticated flag to true
+        googleClient.authenticated = true;
 
         elizaLogger.success("Successfully authenticated with Google");
         res.send('Authentication successful! You can close this window.');

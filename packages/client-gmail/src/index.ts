@@ -16,7 +16,6 @@ import {
 import { EventEmitter } from "events";
 import { GoogleClient } from "./google_client";
 import { google } from "googleapis";
-import { gmail } from "googleapis/build/src/apis/gmail";
 import { cleanEmailText, extractEmailText, isCalendarInvite } from "./mail";
 
 import {
@@ -24,7 +23,7 @@ import {
     gmailShouldRespondTemplate,
 } from "./templates";
 
-const POOLING_INTERVAL = 10; // Check for emails every 10 seconds
+const POOLING_INTERVAL = 30; // Check for emails every 30 seconds
 
 export class GmailClient extends EventEmitter {
     private googleClient: GoogleClient;
@@ -217,7 +216,7 @@ export class GmailClient extends EventEmitter {
         }
 
         if (responseContent.action) {
-            console.log("⚡ Step 12: Processing actions");
+            // console.log("⚡ Step 12: Processing actions");
             // await this.runtime.processActions(
             //     memory,
             //     responseMessages,
@@ -288,19 +287,6 @@ export class GmailClient extends EventEmitter {
                 source: "gmail",
             };
         }
-
-        // // If response includes a CONTINUE action but there's no direct mention or thread,
-        // // remove the action to prevent automatic continuation
-        // if (
-        //     response.action === "CONTINUE" &&
-        //     !memory.content.text?.includes(`<@${this.botUserId}>`) &&
-        //     !state.recentMessages?.includes(memory.id)
-        // ) {
-        //     console.log(
-        //         "⚠️ Step 4: Removing CONTINUE action - not a direct interaction"
-        //     );
-        //     delete response.action;
-        // }
 
         console.log("✅ Step 5: Returning generated response");
         return response;

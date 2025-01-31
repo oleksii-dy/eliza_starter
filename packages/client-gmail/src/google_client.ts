@@ -14,13 +14,14 @@ import express, { Request } from "express";
 import { handleGoogleCallback } from "./oauth2Callback";
 
 export class GoogleClient {
-  private runtime: IAgentRuntime;
+  runtime: IAgentRuntime;
   gmailClientId: string;
   gmailClientSecret: string;
-  private server: express.Application;
-  private httpServer: ReturnType<express.Application['listen']>;
   oAuth2Client: Auth.OAuth2Client;
   authenticated: boolean;
+
+  private server: express.Application;
+  private httpServer: ReturnType<express.Application['listen']>;
 
   constructor(runtime: IAgentRuntime) {
     this.runtime = runtime;
@@ -76,7 +77,7 @@ export class GoogleClient {
 
     // Start server
     this.server = express();
-    this.server.get('/oauth2/callback', (req, res) => handleGoogleCallback(this.runtime, config, req, res));
+    this.server.get('/oauth2/callback', (req, res) => handleGoogleCallback(this, config, req, res));
     this.httpServer = this.server.listen(config.GMAIL_OAUTH2_PORT, () => {
       elizaLogger.success("Gmail server listening on port ", config.GMAIL_OAUTH2_PORT);
     });
