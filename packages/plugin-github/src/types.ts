@@ -127,8 +127,6 @@ export const isFetchFilesContent = (
     return false;
 };
 
-<<<<<<< HEAD
-=======
 export const SimilarityIssueCheckSchema = z.object({
     issue: z.number().optional(),
     created: z.boolean().optional(),
@@ -145,7 +143,6 @@ export const isSimilarityIssueCheckContent = (
     return SimilarityIssueCheckSchema.safeParse(object).success;
 };
 
->>>>>>> f61a1fec729f8afd7f7d5ed60a21c3c5a68b7a98
 export const CreateIssueSchema = z.object({
     owner: z.string().min(1, "GitHub owner is required"),
     repo: z.string().min(1, "GitHub repo is required"),

@@ -375,7 +375,7 @@ export function createApiRouter(
             console.error("Error fetching memories:", error);
             res.status(500).json({ error: "Failed to fetch memories" });
         }
-
+    };
 
     router.get("/agents/:agentId/:roomId/memories", async (req, res) => {
         const { agentId, roomId } = validateUUIDParams(req.params, res) ?? {
@@ -593,5 +593,3 @@ export function createApiRouter(
 
     return router;
 }
-}
-
