@@ -4,6 +4,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createGroq } from "@ai-sdk/groq";
 import { createMistral } from "@ai-sdk/mistral";
 import { createOpenAI } from "@ai-sdk/openai";
+import { AutoTokenizer } from "@huggingface/transformers";
 import {
     generateObject as aiGenerateObject,
     generateText as aiGenerateText,
@@ -52,6 +53,7 @@ import {
     type VerifiableInferenceResult,
 } from "./types.ts";
 
+import { fal } from "@fal-ai/client";
 import BigNumber from "bignumber.js";
 import { createPublicClient, http } from "viem";
 

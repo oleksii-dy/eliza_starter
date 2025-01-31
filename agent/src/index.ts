@@ -23,6 +23,7 @@ import { XmtpClientInterface } from "@elizaos/client-xmtp";
 import { agentKitPlugin } from "@elizaos/plugin-agentkit";
 import { dcapPlugin } from "@elizaos/plugin-dcap";
 import { gelatoPlugin } from "@elizaos/plugin-gelato";
+import { goplusPlugin } from "@elizaos/plugin-goplus";
 import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
 import { lightningPlugin } from "@elizaos/plugin-lightning";
 import { OmniflixPlugin } from "@elizaos/plugin-omniflix";
@@ -948,13 +949,6 @@ export async function createAgent(
 
     if (getSecret(character, "EVM_PRIVATE_KEY")) {
         goatPlugin = await createGoatPlugin((secret) =>
-            getSecret(character, secret)
-        );
-    }
-
-    let zilliqaPlugin: any | undefined;
-    if (getSecret(character, "ZILLIQA_PRIVATE_KEY")) {
-        zilliqaPlugin = await createZilliqaPlugin((secret) =>
             getSecret(character, secret)
         );
     }

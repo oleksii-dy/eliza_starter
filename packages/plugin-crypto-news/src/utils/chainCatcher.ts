@@ -34,7 +34,7 @@ export async function fetchChainCatcher(): Promise<ChainCatcherResponse> {
             body: JSON.stringify({
                 type: 2,
                 page: 1,
-                limit: 5,
+                limit: 10,
             }),
         };
         const response = await fetch(
