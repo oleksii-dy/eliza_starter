@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import info from "@/lib/info.json";
 import {
     Sidebar,
     SidebarContent,
@@ -45,7 +44,7 @@ export function AppSidebar() {
 
                                 <div className="flex flex-col gap-0.5 leading-none">
                                     <span className="font-semibold">
-                                        Reality Spiral
+                                    Reality Spiral
                                     </span>
                                 </div>
                             </NavLink>
@@ -61,8 +60,8 @@ export function AppSidebar() {
                             {query?.isPending ? (
                                 <div>
                                     {Array.from({ length: 5 }).map(
-                                        (_, index) => (
-                                            <SidebarMenuItem key={index}>
+                                        (_, _index) => (
+                                            <SidebarMenuItem key={"skeleton-item"}>
                                                 <SidebarMenuSkeleton />
                                             </SidebarMenuItem>
                                         ),

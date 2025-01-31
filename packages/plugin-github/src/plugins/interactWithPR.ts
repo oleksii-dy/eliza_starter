@@ -244,8 +244,8 @@ export const addCommentToPRAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
-        options: any,
+        state?: State,
+        options?: any,
         callback?: HandlerCallback,
     ) => {
         // elizaLogger.log(
@@ -547,8 +547,8 @@ export const closePRAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
-        options: any,
+        state?: State,
+        options?: any,
         callback?: HandlerCallback,
     ) => {
         // elizaLogger.log("[closePR] Composing state for message:", message);
@@ -659,8 +659,8 @@ export const mergePRAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
-        options: any,
+        state?: State,
+        options?: any,
         callback?: HandlerCallback,
     ) => {
         // elizaLogger.log("[mergePR] Composing state for message:", message);
@@ -811,8 +811,8 @@ export const replyToPRCommentAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
-        options: any,
+        state?: State,
+        options?: any,
         callback?: HandlerCallback,
     ) => {
         // elizaLogger.log(
@@ -1002,8 +1002,8 @@ export const implementFeatureAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
-        options: any,
+        state?: State,
+        options?: any,
         callback?: HandlerCallback,
     ) => {
         // elizaLogger.log(

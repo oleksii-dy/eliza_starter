@@ -50,8 +50,8 @@ export const addCommentToIssueAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
-        options: any,
+        state?: State,
+        options?: any,
         callback?: HandlerCallback,
     ) => {
         // elizaLogger.log(
@@ -83,10 +83,16 @@ export const addCommentToIssueAction: Action = {
 
         const content = details.object as AddCommentToIssueContent;
 
+        const token = runtime.getSetting("GITHUB_API_TOKEN");
+        if (!token) {
+            elizaLogger.error("GITHUB_API_TOKEN is not set");
+            throw new Error("GITHUB_API_TOKEN is not set");
+        }
+
         const githubService = new GitHubService({
             owner: content.owner,
             repo: content.repo,
-            auth: runtime.getSetting("GITHUB_API_TOKEN"),
+            auth: token,
         });
 
         let issue = await getIssueFromMemories(runtime, message, content.issue);
@@ -262,8 +268,8 @@ export const reactToIssueAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
-        options: any,
+        state?: State,
+        options?: any,
         callback?: HandlerCallback,
     ) => {
         // elizaLogger.log("[reactToIssue] Composing state for message:", message);
@@ -288,12 +294,19 @@ export const reactToIssueAction: Action = {
             elizaLogger.error("Invalid content:", details.object);
             throw new Error("Invalid content");
         }
-
+        
         const content = details.object as ReactToIssueContent;
+
+        const token = runtime.getSetting("GITHUB_API_TOKEN");
+        if (!token) {
+            elizaLogger.error("GITHUB_API_TOKEN is not set");
+            throw new Error("GITHUB_API_TOKEN is not set");
+        }
+
         const githubService = new GitHubService({
             owner: content.owner,
             repo: content.repo,
-            auth: runtime.getSetting("GITHUB_API_TOKEN"),
+            auth: token,
         });
 
         elizaLogger.info("Adding reaction to issue comment...");
@@ -408,8 +421,8 @@ export const closeIssueAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
-        options: any,
+        state?: State,
+        options?: any,
         callback?: HandlerCallback
     ) => {
         // elizaLogger.log("[closeIssue] Composing state for message:", message);
@@ -436,10 +449,17 @@ export const closeIssueAction: Action = {
         }
 
         const content = details.object as CloseIssueActionContent;
+
+        const token = runtime.getSetting("GITHUB_API_TOKEN");
+        if (!token) {
+            elizaLogger.error("GITHUB_API_TOKEN is not set");
+            throw new Error("GITHUB_API_TOKEN is not set");
+        }
+
         const githubService = new GitHubService({
             owner: content.owner,
             repo: content.repo,
-            auth: runtime.getSetting("GITHUB_API_TOKEN"),
+            auth: token,
         });
         elizaLogger.info("Closing issue...");
 

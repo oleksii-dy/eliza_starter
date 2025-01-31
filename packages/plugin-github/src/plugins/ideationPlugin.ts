@@ -37,8 +37,8 @@ export const ideationAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
-        options: any,
+        state?: State,
+        options?: any,
         callback?: HandlerCallback
     ) => {
         // elizaLogger.log("[ideation] Composing state for message:", message);

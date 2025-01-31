@@ -1,4 +1,4 @@
-# Guide to Using the GitHub Client&#x20;
+# Guide to Using the GitHub Client
 
 This guide provides detailed instructions for setting up and using the GitHub client with a specific pull request (PR) branch in the \`sa-eliza\` repository. Follow these steps to configure and test the system before the PR is merged into the `sif-dev` branch.
 

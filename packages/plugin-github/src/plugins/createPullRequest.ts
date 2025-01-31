@@ -48,9 +48,9 @@ export const createPullRequestAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
-        options: any,
-        callback: HandlerCallback
+        state?: State,
+        options?: any,
+        callback?: HandlerCallback
     ) => {
         // elizaLogger.log(
         //     "[createPullRequest] Composing state for message:",
