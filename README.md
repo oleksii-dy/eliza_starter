@@ -1,7 +1,3 @@
-Eliza is amazing out of the box. However, we are finding ways to contribute a simple way of adding domain-specific dynamic knowledge (via a Rest-API) to agent memory so that we can provide users with real-time answers to domain-specific questions.
-We will be adding this soon, please.
-
-
 # Eliza 🤖
 
 <div align="center">
