@@ -47,35 +47,36 @@ class TwitterManager {
         }
     }
     async stop() {
-      if (this.client.twitterClient) {
-          await this.post.stop();
-          await this.interaction.stop();
-          if (this.search) {
-              await this.search.stop();
-          }
-      } else {
-          // it's still starting up
-      }
+        if (this.client.twitterClient) {
+            await this.post.stop();
+            await this.interaction.stop();
+            if (this.search) {
+                await this.search.stop();
+            }
+        } else {
+            // it's still starting up
+        }
     }
 }
 
 export const TwitterClientInterface: Client = {
     runtime: false,
     async start(runtime: IAgentRuntime) {
-
-        let twitterConfig: TwitterConfig
+        let twitterConfig: TwitterConfig;
         try {
             twitterConfig = await validateTwitterConfig(runtime);
-        } catch(e) {
-            elizaLogger.error("TwitterConfig validation failed for",
-              runtime.getSetting("TWITTER_USERNAME") || process.env.TWITTER_USERNAME,
-              "email",
-              runtime.getSetting("TWITTER_EMAIL") || process.env.TWITTER_EMAIL,
+        } catch (e) {
+            elizaLogger.error(
+                "TwitterConfig validation failed for",
+                runtime.getSetting("TWITTER_USERNAME") ||
+                    process.env.TWITTER_USERNAME,
+                "email",
+                runtime.getSetting("TWITTER_EMAIL") || process.env.TWITTER_EMAIL
             );
             return;
         }
         if (!twitterConfig.TWITTER_USERNAME) {
-            elizaLogger.error('Twitter failed to validate config, no username');
+            elizaLogger.error("Twitter failed to validate config, no username");
             return false;
         }
 
@@ -104,11 +105,11 @@ export const TwitterClientInterface: Client = {
                     manager.space.startPeriodicSpaceCheck();
                 }
             } else {
-              setTimeout(checkStart, 1000)
+                setTimeout(checkStart, 1000);
             }
         }
         // not waiting until they're started
-        checkStart()
+        checkStart();
 
         return manager;
     },
@@ -116,17 +117,21 @@ export const TwitterClientInterface: Client = {
         try {
             const twClient = await getScrapper(secrets.username);
             // try logging in
+            console.log("trying to log in");
             await twClient.login(
                 secrets.username,
                 secrets.password,
                 secrets.email,
                 secrets.twitter2faSecret
             );
-            const success = await twClient.isLoggedIn()
+            console.log("checking is logged in");
+            const success = await twClient.isLoggedIn();
             if (success) {
                 // fresh login, store new cookies
                 if (TwitterClientInterface.runtime !== undefined) {
-                    elizaLogger.info("Validation: successfully logged in, caching cookies");
+                    elizaLogger.info(
+                        "Validation: successfully logged in, caching cookies"
+                    );
                     await TwitterClientInterface.runtime?.cacheManager.set(
                         `twitter/${secrets.username}/cookies`,
                         await twClient.getCookies()
@@ -134,15 +139,21 @@ export const TwitterClientInterface: Client = {
                 }
             }
 
-            return success
+            return { success: success, message: "" };
         } catch (error) {
-            console.error(error)
-            elizaLogger.error('Error validating twitter login for twitter', secrets.username, error);
-            return false;
+            console.error(error);
+            elizaLogger.error(
+                "Error validating twitter login for twitter",
+                secrets.username,
+                error.message || error
+            );
+            return { success: false, message: error.message || error };
         }
     },
     async stop(runtime: IAgentRuntime) {
-        elizaLogger.log(`Twitter client stop for ${runtime.character.name} (${runtime.agentId})`);
+        elizaLogger.log(
+            `Twitter client stop for ${runtime.character.name} (${runtime.agentId})`
+        );
 
         // get manager
         const manager = runtime.clients.twitter;
