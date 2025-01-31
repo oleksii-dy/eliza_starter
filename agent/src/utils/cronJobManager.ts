@@ -9,11 +9,16 @@ export const startCronJobs = () => {
     const redisClient = new RedisClient(process.env.REDIS_URL);
     const cronTopDexProvider = suimarketPlugin.providers[0];
     cron.schedule('*/5 * * * *', async () => {
-    let runtime:IAgentRuntime;
-    let message:Memory;
-    let result = await cronTopDexProvider.get(runtime, message)
-    redisClient.setValue({ key: "TOP_DEX", value: JSON.stringify(result) })
-    // console.log(await redisClient.getValue({ key: "Top_Dex" }))
+        try {
+            let runtime:IAgentRuntime;
+            let message:Memory;
+            let result = await cronTopDexProvider.get(runtime, message)
+            redisClient.setValue({ key: "TOP_DEX", value: JSON.stringify(result) })
+            console.log("Top_dex_cronjob_5min");
+        } catch (error) {
+            console.log("Fail_Top_dex:", error);
+        }
+
     });
     // cron.schedule('* * * * *', () => {
     //     elizaLogger.success("Cron job chạy mỗi 1 phút");

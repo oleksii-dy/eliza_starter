@@ -129,6 +129,46 @@ CREATE TABLE IF NOT EXISTS  cache (
     "expiresAt" TIMESTAMP,
     PRIMARY KEY ("key", "agentId")
 );
+-- Table for Page
+CREATE TABLE IF NOT EXISTS  pages (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR NOT NULL,
+  is_parent BOOLEAN NOT NULL,
+  type VARCHAR NOT NULL,
+  icon VARCHAR NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  fields JSONB,
+  actions JSONB,
+  apis JSONB,
+  api_list JSONB,
+  sub_pages_id INTEGER[], -- Array of integers
+  model VARCHAR NOT NULL,
+  note VARCHAR NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table for Role
+CREATE TABLE IF NOT EXISTS  roles (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR NOT NULL UNIQUE,
+  is_active BOOLEAN DEFAULT FALSE,
+  pages INTEGER[], -- Array of integers
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table for User
+CCREATE TABLE IF NOT EXISTS  users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR NOT NULL UNIQUE,
+  password VARCHAR NOT NULL,
+  roleId INTEGER NOT NULL,
+  name VARCHAR NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (roleId) REFERENCES roles(id)
+);
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_memories_embedding ON memories USING hnsw ("embedding" vector_cosine_ops);
