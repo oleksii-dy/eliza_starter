@@ -68,5 +68,4 @@ jobs:
       - name: Publish packages to GitHub Packages
         if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
         run: |
-          # Add explicit registry flag to be safe
-          pnpm -r publish --access private --no-git-checks --registry https://npm.pkg.github.com
+          node scripts/publish-fork.js
