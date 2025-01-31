@@ -290,7 +290,7 @@ export class DirectClient {
                         state,
                         template: messageHandlerTemplate,
                     });
-                    console.log("context: ",context)
+                    // console.log("context: ",context)
                     response = await generateMessageResponse({
                         runtime: runtime,
                         context,
