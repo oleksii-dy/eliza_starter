@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import type { Account, Chain } from "viem";
+import type { Account } from "viem";
 
-import { TransferAction } from "../actions/transfer";
 import { WalletProvider } from "../providers/wallet";
 import { seiDevnet } from "viem/chains";
 import { StakeAction } from "../actions/stake";
@@ -53,7 +52,7 @@ describe("Stake Action", () => {
                     amount: "1",
                 })
             ).rejects.toThrow(
-                "Staking failed: The total cost (gas * gas fee + value) of executing this transaction exceeds the balance of the account."
+                "Staking delegation failed: The total cost (gas * gas fee + value) of executing this transaction exceeds the balance of the account."
             );
         });
     });

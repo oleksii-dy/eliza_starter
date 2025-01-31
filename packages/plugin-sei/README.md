@@ -71,7 +71,7 @@ Stake tokens on a specified validator:
 ```typescript
 // Example conversation
 User: "Please stake 10.1 SEI on the validator seivaloper17mwrc289lhdupvjr097ynxsv9wvxhtqw4cwvv5";
-Assistant: "I will now proceed to stake 0.015 SEI on the validator seivaloper17mwrc289lhdupvjr097ynxsv9wvxhtqw4cwvv5.";
+Assistant: "I will now proceed to stake 10.1 SEI on the validator seivaloper17mwrc289lhdupvjr097ynxsv9wvxhtqw4cwvv5.";
 ```
 
 ## API Reference

@@ -35,7 +35,7 @@ Before providing the final JSON output, show your reasoning process inside <anal
 
 2. Validate each piece of information:
    - Amount: Attempt to convert the amount to a number to verify it's valid.
-   - Address: Check that it either starts with "sei1", and ensure that the address contains 42 characters,
+   - Address: Check that it starts with "seivaloper".
 
 3. If any information is missing or invalid, prepare an appropriate error message.
 
