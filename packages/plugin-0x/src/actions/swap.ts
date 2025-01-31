@@ -7,7 +7,7 @@ import {
     elizaLogger,
     MemoryManager,
 } from "@elizaos/core";
-import { Hex, numberToHex, concat } from "viem";
+import { Hex, numberToHex, concat, formatEther } from "viem";
 import { CHAIN_EXPLORERS, ZX_MEMORY } from "../constants";
 import { getWalletClient } from "../hooks.ts/useGetWalletClient";
 import { Chains, Quote } from "../types";
@@ -253,3 +253,26 @@ export const tokenSwap = async (runtime: IAgentRuntime, quantity: number, fromCu
         return null;
     }
 }
+
+export const calculateOverallPNL = async (runtime: IAgentRuntime, privateKey: string, publicKey: string, chainId: number, initialBalanceInEther: number): Promise<string> => {
+    const client = getWalletClient(privateKey, chainId);
+    const balance = await client.getBalance({
+        address: publicKey as `0x${string}`,
+    });
+    const formattedBalanceInEther = formatEther(balance)
+    const pnlInEther = Number(formattedBalanceInEther) - initialBalanceInEther
+    const absoluteValuePNL = Math.abs(pnlInEther)
+    const priceInquiry = await getPriceInquiry(runtime, 'ETH', absoluteValuePNL, "USDC", chainId);
+    // get latest quote
+    elizaLogger.log("Getting quote for swap", JSON.stringify(priceInquiry));
+    const quote = await getQuoteObj(runtime, priceInquiry, publicKey);
+    const pnlUSD = Number(quote.buyAmount) 
+    const formattedPNL = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(pnlUSD);
+    return `${pnlInEther < 0 ? '-' : ''}${formattedPNL}`
+    }
+

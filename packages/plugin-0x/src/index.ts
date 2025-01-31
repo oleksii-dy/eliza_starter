@@ -15,5 +15,5 @@ export const zxPlugin: Plugin = {
     providers: [],
 };
 
-export { tokenSwap } from "./actions/swap";
+export { tokenSwap, calculateOverallPNL } from "./actions/swap";
 export default zxPlugin;

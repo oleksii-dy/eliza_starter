@@ -16,7 +16,7 @@ import express from "express";
 import { blockExplorerBaseAddressUrl, blockExplorerBaseTxUrl, WebhookEvent } from "./types";
 import { Coinbase, Wallet } from "@coinbase/coinbase-sdk";
 import { initializeWallet } from "@elizaos/plugin-coinbase";
-import { tokenSwap } from "@elizaos/plugin-0x";
+import { calculateOverallPNL, tokenSwap } from "@elizaos/plugin-0x";
 
 export type WalletType = 'short_term_trading' | 'long_term_trading' | 'dry_powder' | 'operational_capital';
 export type CoinbaseWallet = { wallet: Wallet, walletType: WalletType };
@@ -227,11 +227,12 @@ Generate only the tweet text, no commentary or markdown.`;
         // const defaultAddress = await wallet.wallet.getDefaultAddress();
         const buy =  event.event.toUpperCase() === 'BUY'
         const txHash = await tokenSwap(this.runtime, amount, buy ? event.ticker : 'USDC', buy ? event.ticker : 'USDC', this.runtime.getSetting('WALLET_PUBLIC_KEY'), this.runtime.getSetting('WALLET_PRIVATE_KEY'), 8453);
-        // const pnl = await this.calculateOverallPNL(wallet, event.ticker, amount);
-        // const pnlText = `Overall PNL: $${pnl.toFixed(2)}`;
+        const pnl = await calculateOverallPNL(this.runtime, this.runtime.getSetting('WALLET_PRIVATE_KEY'), this.runtime.getSetting('WALLET_PUBLIC_KEY'), 8453, amount);
+        const pnlText = `Overall PNL: ${pnl}`;
+        elizaLogger.log('pnlText ', pnlText)
 
             try {
-                const tweetContent = await this.generateTweetContent(event, amount, '', formattedTimestamp, state, this.runtime.getSetting('WALLET_PUBLIC_KEY'), txHash);
+                const tweetContent = await this.generateTweetContent(event, amount, pnlText, formattedTimestamp, state, this.runtime.getSetting('WALLET_PUBLIC_KEY'), txHash);
                 elizaLogger.info("Generated tweet content:", tweetContent);
                 if (this.runtime.getSetting('TWITTER_DRY_RUN')) {
                     elizaLogger.info("Dry run mode enabled. Skipping tweet posting.",);
@@ -274,44 +275,6 @@ Generate only the tweet text, no commentary or markdown.`;
 
     async start(): Promise<void> {
         await this.initialize();
-    }
-
-    private async calculateOverallPNL(ticker: string, initialInvestment: number): Promise<number> {
-    //     // Initialize provider and wallet for the Base network
-    //     const provider = new ethers.providers.JsonRpcProvider('https://mainnet.base.org');
-    //     const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-
-    //     const tokenAddress = tokenAddresses[ticker];
-    //     const url = new URL(`${oneInchApiUrl}/quote`);
-    //     url.search = new URLSearchParams({
-    //       fromTokenAddress: tokenAddress,
-    //       toTokenAddress: tokenAddresses['USDC'],
-    //       amount: '1000000000000000000', // 1 token with 18 decimals
-    //     }).toString();
-
-    //     try {
-    //       const response = await fetch(url);
-    //       if (!response.ok) {
-    //         const errorText = await response.text();
-    //         throw new Error(`Error fetching price data: ${errorText}`);
-    //       }
-    //       const data = await response.json();
-    //       const currentPrice = data.toTokenAmount / 1e6; // Assuming USDC has 6 decimals
-
-    //       const balance = Number(await wallet.wallet.getBalance(tokenAddress));
-    //       const currentValue = balance / 1e18 * currentPrice;
-    //       const pnl = (currentValue - initialInvestment) / initialInvestment * 100;
-    //       elizaLogger.info("currentValue", currentValue);
-    //       elizaLogger.info("pnl", pnl);
-    //       elizaLogger.info("initialInvestment", initialInvestment);
-    //       elizaLogger.info("balance", balance);
-    //       elizaLogger.info("currentPrice", currentPrice);
-    //       return pnl;
-    //     } catch (error) {
-    //       console.error('Error calculating PNL:', error);
-    //       throw error;
-    //     }
-    return 0;
     }
 
 }
