@@ -196,8 +196,8 @@ Generate only the tweet text, no commentary or markdown.`;
             agentId: this.runtime.agentId,
             roomId,
             content: {
-                text: `Place an advanced trade market order to ${event.event.toLowerCase()} $${amount} worth of ${event.ticker}`,
-                action: "TRADE",
+                text: `${event.event.toUpperCase()} $${amount} worth of ${event.ticker}`,
+                action: "SWAP",
                 source: "coinbase",
                 metadata: {
                     ticker: event.ticker,
@@ -244,8 +244,6 @@ Generate only the tweet text, no commentary or markdown.`;
                 elizaLogger.error("Failed to post tweet:", error);
             }
         };
-
-        await this.runtime.processActions(memory, [memory], state, callback);
     }
 
     async stop(): Promise<void> {
