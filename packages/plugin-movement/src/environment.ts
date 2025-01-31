@@ -1,9 +1,10 @@
 import type { IAgentRuntime } from "@elizaos/core";
 import { z } from "zod";
+import { DEFAULT_NETWORK } from "./constants";
 
 export const movementEnvSchema = z.object({
     MOVEMENT_PRIVATE_KEY: z.string().min(1, "Movement private key is required"),
-    MOVEMENT_NETWORK: z.enum(["mainnet", "bardock"]).default("bardock"),
+    MOVEMENT_NETWORK: z.enum(["mainnet", "bardock", "porto"]).default(DEFAULT_NETWORK),
 });
 
 export type MovementConfig = z.infer<typeof movementEnvSchema>;
@@ -19,7 +20,7 @@ export async function validateMovementConfig(
             MOVEMENT_NETWORK:
                 runtime.getSetting("MOVEMENT_NETWORK") ||
                 process.env.MOVEMENT_NETWORK ||
-                "bardock",
+                DEFAULT_NETWORK,
         };
 
         return movementEnvSchema.parse(config);
