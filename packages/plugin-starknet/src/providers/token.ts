@@ -13,7 +13,7 @@ import type {
     Prices,
 } from "../types/trustDB.ts";
 import { WalletProvider, type TokenBalances } from "./portfolioProvider.ts";
-import { num } from "starknet";
+import { Contract, Provider as StarknetProvider, num } from "starknet";
 import {
     analyzeHighSupplyHolders,
     evaluateTokenTrading,
@@ -80,59 +80,41 @@ export const PORTFOLIO_TOKENS = {
 
 export class TokenProvider {
     private cache: Cache;
+    private provider: StarknetProvider;
 
     constructor(
         private tokenAddress: string,
         private walletProvider: WalletProvider
     ) {
         this.cache = new Cache();
+        this.provider = new StarknetProvider({
+            sequencer: { network: "mainnet-alpha" },
+        });
     }
 
-    // TODO: remove this
-    private async fetchWithRetry<T>(
-        url: string,
-        options: RequestInit = {}
-    ): Promise<T> {
-        let lastError: Error;
-
-        for (let i = 0; i < PROVIDER_CONFIG.MAX_RETRIES; i++) {
-            try {
-                const response = await fetch(url, {
-                    ...options,
-                    headers: {
-                        "Content-Type": "application/json",
-                        ...options.headers,
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error(
-                        `HTTP error! status: ${
-                            response.status
-                        }, message: ${await response.text()}`
-                    );
-                }
-
-                return await response.json();
-            } catch (error) {
-                console.error(`Request attempt ${i + 1} failed:`, error);
-                lastError = error as Error;
-
-                if (i < PROVIDER_CONFIG.MAX_RETRIES - 1) {
-                    const delay = PROVIDER_CONFIG.RETRY_DELAY * Math.pow(2, i);
-                    await new Promise((resolve) => setTimeout(resolve, delay));
-                }
-            }
-        }
-
-        throw lastError;
-    }
-
-    // TODO: Update to Starknet
     async getTokensInWallet(): Promise<TokenBalances> {
-        const tokenBalances =
-             await this.walletProvider.getWalletPortfolio();
-        return tokenBalances;
+        try {
+            // Get token balances from the wallet provider with caching
+            const cacheKey = `wallet_tokens_${this.tokenAddress}`;
+            const cachedBalances =
+                this.cache.getCachedData<TokenBalances>(cacheKey);
+
+            if (cachedBalances) {
+                return cachedBalances;
+            }
+
+            // Fetch fresh balances from the wallet provider
+            const tokenBalances =
+                await this.walletProvider.getWalletPortfolio();
+
+            // Cache the results for better performance
+            this.cache.setCachedData(cacheKey, tokenBalances);
+
+            return tokenBalances;
+        } catch (error) {
+            console.error("Error fetching token balances:", error);
+            throw new Error("Failed to fetch token balances from wallet");
+        }
     }
 
     // check if the token symbol is in the wallet
@@ -144,7 +126,9 @@ export class TokenProvider {
             );
 
             if (!portfolioToken) {
-                console.warn(`Token with symbol ${tokenSymbol} not found in PORTFOLIO_TOKENS`);
+                console.warn(
+                    `Token with symbol ${tokenSymbol} not found in PORTFOLIO_TOKENS`
+                );
                 return null;
             }
 
@@ -157,7 +141,9 @@ export class TokenProvider {
             if (items[tokenAddress]) {
                 return tokenAddress;
             } else {
-                console.warn(`Token with address ${tokenAddress} not found in wallet`);
+                console.warn(
+                    `Token with address ${tokenAddress} not found in wallet`
+                );
                 return null;
             }
         } catch (error) {
@@ -205,8 +191,8 @@ export class TokenProvider {
                     token === STRK
                         ? "starknet"
                         : token === BTC
-                          ? "bitcoin"
-                          : "ethereum";
+                        ? "bitcoin"
+                        : "ethereum";
 
                 prices[priceKey].usd = tokenInfo.market.currentPrice.toString();
             });
@@ -682,8 +668,9 @@ export class TokenProvider {
             console.log(
                 `Filtering high-value holders for token: ${this.tokenAddress}`
             );
-            const highValueHolders =
-                await this.filterHighValueHolders(tradeData);
+            const highValueHolders = await this.filterHighValueHolders(
+                tradeData
+            );
 
             console.log(
                 `Checking recent trades for token: ${this.tokenAddress}`
@@ -695,8 +682,9 @@ export class TokenProvider {
             console.log(
                 `Counting high-supply holders for token: ${this.tokenAddress}`
             );
-            const highSupplyHoldersCount =
-                await this.countHighSupplyHolders(security);
+            const highSupplyHoldersCount = await this.countHighSupplyHolders(
+                security
+            );
 
             console.log(
                 `Determining DexScreener listing status for token: ${this.tokenAddress}`
