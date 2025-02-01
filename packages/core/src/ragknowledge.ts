@@ -1,3 +1,5 @@
+import { existsSync } from "fs";
+import { join } from "path";
 import { embed } from "./embedding.ts";
 import { splitChunks } from "./generation.ts";
 import elizaLogger from "./logger.ts";
@@ -9,8 +11,6 @@ import {
     KnowledgeScope,
 } from "./types.ts";
 import { stringToUuid } from "./uuid.ts";
-import { existsSync } from "fs";
-import { join } from "path";
 
 /**
  * Manage knowledge in the database.
@@ -47,7 +47,7 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
         this.knowledgeRoot = opts.knowledgeRoot;
     }
 
-    private readonly defaultRAGMatchThreshold = 0.85;
+    private readonly defaultRAGMatchThreshold = 0.75;
     private readonly defaultRAGMatchCount = 5;
 
     /**
@@ -507,7 +507,9 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
         try {
             const fileSizeKB = new TextEncoder().encode(content).length / 1024;
             elizaLogger.info(
-                `[File Progress] Starting ${file.path} (${fileSizeKB.toFixed(2)} KB)`
+                `[File Progress] Starting ${file.path} (${fileSizeKB.toFixed(
+                    2
+                )} KB)`
             );
 
             // Generate scoped ID for the file
@@ -571,8 +573,9 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
                 // Batch database operations
                 await Promise.all(
                     embeddings.map(async (embeddingArray, index) => {
-                        const chunkId =
-                            `${scopedId}-chunk-${i + index}` as UUID;
+                        const chunkId = `${scopedId}-chunk-${
+                            i + index
+                        }` as UUID;
                         const chunkEmbedding = new Float32Array(embeddingArray);
 
                         await this.runtime.databaseAdapter.createKnowledge({
@@ -599,7 +602,11 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
                 processedChunks += batch.length;
                 const batchTime = (Date.now() - batchStart) / 1000;
                 elizaLogger.info(
-                    `[Batch Progress] ${file.path}: Processed ${processedChunks}/${totalChunks} chunks (${batchTime.toFixed(2)}s for batch)`
+                    `[Batch Progress] ${
+                        file.path
+                    }: Processed ${processedChunks}/${totalChunks} chunks (${batchTime.toFixed(
+                        2
+                    )}s for batch)`
                 );
             }
 
