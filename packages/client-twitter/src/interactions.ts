@@ -71,14 +71,13 @@ PRIORITY RULE: ALWAYS RESPOND to these users regardless of topic or message cont
 For other users:
 - {{agentName}} should RESPOND to messages directed at them
 - {{agentName}} should RESPOND to conversations relevant to their background
-- {{agentName}} should IGNORE irrelevant messages
 - {{agentName}} should IGNORE very short messages unless directly addressed
+- {{agentName}} should IGNORE to any marketing messages, shilling messages, promotion messages, or controversial topics
 - {{agentName}} should STOP if asked to stop
 - {{agentName}} should STOP if conversation is concluded
 - {{agentName}} is in a room with other users and wants to be conversational, but not annoying.
 
 IMPORTANT:
-- {{agentName}} (aka @{{twitterUserName}}) is particularly sensitive about being annoying, so if there is any doubt, it is better to IGNORE than to RESPOND.
 - For users not in the priority list, {{agentName}} (@{{twitterUserName}}) should err on the side of IGNORE rather than RESPOND if in doubt.
 
 Recent Posts:
@@ -280,9 +279,10 @@ export class TwitterInteractionClient {
                     );
 
                     const message = {
-                        content: { 
+                        content: {
                             text: tweet.text,
-                            imageUrls: tweet.photos?.map(photo => photo.url) || []
+                            imageUrls:
+                                tweet.photos?.map((photo) => photo.url) || [],
                         },
                         agentId: this.runtime.agentId,
                         userId: userIdUUID,
@@ -410,7 +410,7 @@ export class TwitterInteractionClient {
                 content: {
                     text: tweet.text,
                     url: tweet.permanentUrl,
-                    imageUrls: tweet.photos?.map(photo => photo.url) || [],
+                    imageUrls: tweet.photos?.map((photo) => photo.url) || [],
                     inReplyTo: tweet.inReplyToStatusId
                         ? stringToUuid(
                               tweet.inReplyToStatusId +
@@ -543,8 +543,8 @@ export class TwitterInteractionClient {
                         );
                     }
                     const responseTweetId =
-                    responseMessages[responseMessages.length - 1]?.content
-                        ?.tweetId;
+                        responseMessages[responseMessages.length - 1]?.content
+                            ?.tweetId;
                     await this.runtime.processActions(
                         message,
                         responseMessages,
@@ -619,7 +619,9 @@ export class TwitterInteractionClient {
                         text: currentTweet.text,
                         source: "twitter",
                         url: currentTweet.permanentUrl,
-                        imageUrls: currentTweet.photos?.map(photo => photo.url) || [],
+                        imageUrls:
+                            currentTweet.photos?.map((photo) => photo.url) ||
+                            [],
                         inReplyTo: currentTweet.inReplyToStatusId
                             ? stringToUuid(
                                   currentTweet.inReplyToStatusId +
