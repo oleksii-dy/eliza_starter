@@ -220,7 +220,6 @@ export class NewsPullerService extends Service {
                             metadata: {
                                 isMain: true,
                                 isShared: true,
-                                source: "articles",
                             },
                         },
                         embedding: new Float32Array(embedding),
