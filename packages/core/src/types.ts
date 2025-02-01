@@ -231,6 +231,7 @@ export type Models = {
     [ModelProviderName.LIVEPEER]: Model;
     [ModelProviderName.DEEPSEEK]: Model;
     [ModelProviderName.INFERA]: Model;
+    [ModelProviderName.GOOGLE_VERTEX]: Model;
     [ModelProviderName.BEDROCK]: Model;
     [ModelProviderName.ATOMA]: Model;
 };
@@ -272,6 +273,7 @@ export enum ModelProviderName {
     INFERA = "infera",
     BEDROCK = "bedrock",
     ATOMA = "atoma",
+    GOOGLE_VERTEX = "google_vertex_api"
 }
 
 /**
