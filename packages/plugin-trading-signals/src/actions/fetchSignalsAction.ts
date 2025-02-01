@@ -16,17 +16,12 @@ export const fetchSignalsAction: Action = {
     name: "FETCH_SIGNALS",
     similes: ["GET_SIGNALS", "TRADING_SIGNALS"],
     description: "Fetch trading signals for a specific symbol",
-    validate: async (
-        runtime: IAgentRuntime,
-        _message: Memory,
-        _state?: State
-    ) => {
+    validate: async (runtime: IAgentRuntime) => {
         const apiKey = runtime.getSetting("ALPHAX_API_KEY");
         return !!apiKey;
     },
     handler: async (
         runtime: IAgentRuntime,
-        message: Memory,
         _state?: State,
         options?: { symbol?: string },
         callback?: HandlerCallback
