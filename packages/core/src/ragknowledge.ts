@@ -47,7 +47,7 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
         this.knowledgeRoot = opts.knowledgeRoot;
     }
 
-    private readonly defaultRAGMatchThreshold = 0.75;
+    private readonly defaultRAGMatchThreshold = 0.85; // default 0.85
     private readonly defaultRAGMatchCount = 5;
 
     /**
