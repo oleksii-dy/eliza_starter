@@ -1502,6 +1502,15 @@ Text: ${attachment.text}
             });
 
             formattedKnowledge = formatKnowledge(knowledgeData);
+            console.log("[FEEETCHING KNOWLEDGE]");
+            console.dir(
+                {
+                    knowledgeData: knowledgeData,
+                    query: message.content.text,
+                    formattedKnowledge,
+                },
+                { depth: null, colors: true }
+            );
         } else {
             knowledgeData = await knowledge.get(this, message);
 
