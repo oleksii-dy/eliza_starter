@@ -56,3 +56,5 @@ coverage
 
 agent/content
 .vscode/
+rabbitmq_data/
+db_data/
