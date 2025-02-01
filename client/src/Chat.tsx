@@ -72,8 +72,11 @@ export default function Chat() {
                                             : "bg-muted"
                                     }`}
                                 >
-                                    {message.text}
-                                    {message.attachments?.map((attachment, i) => (
+                                    <div>{message.text}</div>
+				    <div>{`\n ---TRACE--- \n`}</div>
+                                    <div>{JSON.stringify(message.result, null, 2)}</div>
+				    <div>{`\n ---END TRACE ---\n`}</div>
+                                    <div>{message.attachments?.map((attachment, i) => (
                                         attachment.contentType.startsWith('image/') && (
                                             <img
                                                 key={i}
@@ -87,7 +90,7 @@ export default function Chat() {
                                                 className="mt-2 max-w-full rounded-lg"
                                             />
                                         )
-                                    ))}
+                                    ))}</div>
                                  </pre>
                             </div>
                         ))

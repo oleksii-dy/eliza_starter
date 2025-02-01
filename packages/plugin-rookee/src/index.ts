@@ -1,19 +1,17 @@
 import { Plugin } from "@elizaos/core";
-import { sampleAction } from "./actions/sampleAction.ts";
-import { sampleEvaluator } from "./evaluators/sampleEvalutor.ts";
-import { sampleProvider } from "./providers/sampleProvider.ts";
 
+import { getNewsCryptoPanic } from "./actions/getNewsCryptoPanic.ts";
 export const rookeePlugin: Plugin = {
     name: "rookee-plugin",
     description: "Adds custom functionality",
     actions: [
-        sampleAction
+        getNewsCryptoPanic,
     ],
     evaluators: [
         // sampleEvaluator
     ],
     providers: [
-        sampleProvider
+        // sampleProvider
     ],
     services: [
         /* custom services */

@@ -72,6 +72,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
 import net from "net";
+import {startCronJobs} from "./utils/cronJobManager"
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -379,8 +380,7 @@ function initializeDatabase(dataDir: string) {
 
         return db;
     } else {
-        const filePath =
-            process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
+        const filePath = process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
         // ":memory:";
         const db = new SqliteDatabaseAdapter(new Database(filePath));
         return db;
@@ -787,7 +787,7 @@ const startAgents = async () => {
     };
 
     directClient.start(serverPort);
-
+    // startCronJobs()
     if (serverPort !== parseInt(settings.SERVER_PORT || "3000")) {
         elizaLogger.log(`Server started on alternate port ${serverPort}`);
     }

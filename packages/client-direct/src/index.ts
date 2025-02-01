@@ -9,7 +9,8 @@ import {
     // generateCaption,
     // generateImage,
     Media,
-    getEmbeddingZeroVector
+    getEmbeddingZeroVector,
+    CacheOptions
 } from "@elizaos/core";
 import { composeContext } from "@elizaos/core";
 import { generateMessageResponse } from "@elizaos/core";
@@ -27,6 +28,26 @@ import { settings } from "@elizaos/core";
 import  createApiRouter from "./routes/index";
 import * as fs from "fs";
 import * as path from "path";
+import crypto from 'crypto';
+import { hashUserMsg } from "./utilities/format";
+
+function normalizeText(text: string): string {
+    return text
+        .toLowerCase()           // Convert to lowercase
+        .replace(/\s+/g, ' ')   // Replace multiple spaces/newlines with a single space
+        .trim();                 // Trim leading and trailing spaces
+}
+
+function hashText(text: string): string {
+    return crypto.createHash('sha256')
+                 .update(text, 'utf8')
+                 .digest('hex');
+}
+
+function normalizeUserMsg(userMsg: any): string {
+    const text = normalizeText(userMsg.content.text);
+    return hashText("direct_client:" + userMsg.agentId + userMsg.roomId + userMsg.userId + text);
+}
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -73,6 +94,7 @@ Note that {{agentName}} is capable of reading/seeing/hearing various forms of me
 {{actions}}
 
 # Instructions: Write the next message for {{agentName}}.
+
 ` + messageCompletionFooter;
 
 export class DirectClient {
@@ -90,14 +112,14 @@ export class DirectClient {
         this.app.use(bodyParser.urlencoded({ extended: true }));
 
         // Serve both uploads and generated images
-        // this.app.use(
-        //     "/media/uploads",
-        //     express.static(path.join(process.cwd(), "/data/uploads"))
-        // );
-        // this.app.use(
-        //     "/media/generated",
-        //     express.static(path.join(process.cwd(), "/generatedImages"))
-        // );
+        this.app.use(
+            "/media/uploads",
+            express.static(path.join(process.cwd(), "/data/uploads"))
+        );
+        this.app.use(
+            "/media/generated",
+            express.static(path.join(process.cwd(), "/generatedImages"))
+        );
 
         const apiRouter = createApiRouter(this.agents, this);
         this.app.use(apiRouter);
@@ -163,6 +185,7 @@ export class DirectClient {
             "/:agentId/message",
             upload.single("file"),
             async (req: express.Request, res: express.Response) => {
+                elizaLogger.log("Validate ...");
                 const agentId = req.params.agentId;
                 const roomId = stringToUuid(
                     req.body.roomId ?? "default-room-" + agentId
@@ -238,33 +261,57 @@ export class DirectClient {
                     content,
                     createdAt: Date.now(),
                 };
+                elizaLogger.log("---msg sniffer start ----");
+                elizaLogger.log(JSON.stringify(memory));
+                elizaLogger.log("---msg sniffer end ----");
 
+                elizaLogger.log("Validate ... done!");
+
+                elizaLogger.log("addEmbeddingToMemory...");
                 await runtime.messageManager.addEmbeddingToMemory(memory);
-                await runtime.messageManager.createMemory(memory);
+                elizaLogger.log("addEmbeddingToMemory ...done!");
 
+                elizaLogger.log("createMemory ...");
+                await runtime.messageManager.createMemory(memory);
+                elizaLogger.log("createMemory ...done!");
+
+                elizaLogger.log("ai compose state ...");
                 let state = await runtime.composeState(userMessage, {
                     agentName: runtime.character.name,
                 });
+                elizaLogger.log("ai compose state ...done!");
 
-                const context = composeContext({
-                    state,
-                    template: messageHandlerTemplate,
-                });
+                let msgHash = hashUserMsg(userMessage, "direct_client:");
+                let response: Content = await runtime.cacheManager.get(msgHash);
 
-                const response = await generateMessageResponse({
-                    runtime: runtime,
-                    context,
-                    modelClass: ModelClass.LARGE,
-                });
+                if(!response){
+                    elizaLogger.log("ai compose response ...");
+                    const context = composeContext({
+                        state,
+                        template: messageHandlerTemplate,
+                    });
+                    // console.log("context: ",context)
+                    response = await generateMessageResponse({
+                        runtime: runtime,
+                        context,
+                        modelClass: ModelClass.SMALL,
+                    });
+                    elizaLogger.log("ai compose response ...done!");
 
-                if (!response) {
-                    res.status(500).send(
-                        "No response from generateMessageResponse"
-                    );
-                    return;
+                    if (!response) {
+                        res.status(500).send(
+                            "No response from generateMessageResponse"
+                        );
+                        return;
+                    }
+
+                    elizaLogger.log("set cache >>>>", msgHash, response);
+                    await runtime.cacheManager.set(msgHash, response, {expires: Date.now() + 300000});
+                }
+                else{
+                    elizaLogger.log("[direct-client] use cache: ", msgHash, response);
                 }
 
-                // save response to memory
                 const responseMessage: Memory = {
                     id: stringToUuid(messageId + "-" + runtime.agentId),
                     ...userMessage,
@@ -273,13 +320,12 @@ export class DirectClient {
                     embedding: getEmbeddingZeroVector(),
                     createdAt: Date.now(),
                 };
-
                 await runtime.messageManager.createMemory(responseMessage);
 
                 state = await runtime.updateRecentMessageState(state);
 
+                elizaLogger.log("process actions...");
                 let message = null as Content | null;
-
                 await runtime.processActions(
                     memory,
                     [responseMessage],
@@ -289,8 +335,11 @@ export class DirectClient {
                         return [memory];
                     }
                 );
+                elizaLogger.log("process actions...done!");
 
+                elizaLogger.log("evaluate...");
                 await runtime.evaluate(memory, state);
+                elizaLogger.log("evaluate...done!");
 
                 // Check if we should suppress the initial message
                 const action = runtime.actions.find(
@@ -379,13 +428,13 @@ export class DirectClient {
         //             assetId
         //         );
 
-        //         console.log("Download directory:", downloadDir);
+        //         elizaLogger.log("Download directory:", downloadDir);
 
         //         try {
-        //             console.log("Creating directory...");
+        //             elizaLogger.log("Creating directory...");
         //             await fs.promises.mkdir(downloadDir, { recursive: true });
 
-        //             console.log("Fetching file...");
+        //             elizaLogger.log("Fetching file...");
         //             const fileResponse = await fetch(
         //                 `https://api.bageldb.ai/api/v1/asset/${assetId}/download`,
         //                 {
@@ -401,7 +450,7 @@ export class DirectClient {
         //                 );
         //             }
 
-        //             console.log("Response headers:", fileResponse.headers);
+        //             elizaLogger.log("Response headers:", fileResponse.headers);
 
         //             const fileName =
         //                 fileResponse.headers
@@ -409,19 +458,19 @@ export class DirectClient {
         //                     ?.split("filename=")[1]
         //                     ?.replace(/"/g, /* " */ "") || "default_name.txt";
 
-        //             console.log("Saving as:", fileName);
+        //             elizaLogger.log("Saving as:", fileName);
 
         //             const arrayBuffer = await fileResponse.arrayBuffer();
         //             const buffer = Buffer.from(arrayBuffer);
 
         //             const filePath = path.join(downloadDir, fileName);
-        //             console.log("Full file path:", filePath);
+        //             elizaLogger.log("Full file path:", filePath);
 
         //             await fs.promises.writeFile(filePath, buffer);
 
         //             // Verify file was written
         //             const stats = await fs.promises.stat(filePath);
-        //             console.log(
+        //             elizaLogger.log(
         //                 "File written successfully. Size:",
         //                 stats.size,
         //                 "bytes"
@@ -611,7 +660,7 @@ export class DirectClient {
     }
 
     public start(port: number) {
-        this.server = this.app.listen(port, () => {
+        this.server = this.app.listen(port, '0.0.0.0', () => {
             elizaLogger.success(
                 `REST API bound to 0.0.0.0:${port}. If running locally, access it at http://localhost:${port}.`
             );

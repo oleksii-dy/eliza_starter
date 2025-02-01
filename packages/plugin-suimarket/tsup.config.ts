@@ -24,6 +24,8 @@ export default defineConfig({
         "buffer",
         "querystring",
         "amqplib",
+        "axios",
+        "@mysten/sui.js"
         // Add other modules you want to externalize
     ],
 });

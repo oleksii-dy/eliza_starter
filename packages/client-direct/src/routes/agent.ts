@@ -28,14 +28,6 @@ export default function createAgentRouter(
         })
     );
 
-    // router.get("/", (req, res) => {
-    //     res.send("Welcome, this is the REST API!");
-    // });
-
-    // router.get("/hello", (req, res) => {
-    //     res.json({ message: "Hello World!" });
-    // });
-
     router.get("/", (req, res) => {
         const agentsList = Array.from(agents.values()).map((agent) => ({
             id: agent.agentId,
@@ -61,6 +53,7 @@ export default function createAgentRouter(
     });
 
     router.post("/:agentId/set", async (req, res) => {
+
         const agentId = req.params.agentId;
         console.log("agentId", agentId);
         let agent: AgentRuntime = agents.get(agentId);
@@ -95,6 +88,33 @@ export default function createAgentRouter(
             character: character,
         });
     });
+
+    router.get("/:agentId/stop", async (req, res) => {
+        const agentId = req.params.agentId;
+        console.log("agentId", agentId);
+        const agent: AgentRuntime = agents.get(agentId);
+        try {
+            if (agent) {
+                agent.stop();
+                directClient.unregisterAgent(agent);
+            }
+            res.json({
+                code: 200,
+                status: "success",
+                message: "Agent stopped",
+            });
+        } catch (error) {
+            console.log("/:agentId/stop", error)
+            res.json({
+                code: 400,
+                status: "success",
+                message: "Agent stopped",
+            });
+        }
+        // update character
+
+
+    })
 
     router.post("/new", async (req, res) => {
         // load character from body
@@ -206,9 +226,8 @@ export default function createAgentRouter(
             res.status(500).json({ error: "Failed to fetch memories" });
         }
     });
-    // router.get("/agents/:agentId/:userId", async (req, res) => {
 
-
-    // })
+    router.get("/agents/:agentId/:userId", async (req, res) => {
+    })
     return router;
 }

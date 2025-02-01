@@ -436,9 +436,9 @@ export class AgentRuntime implements IAgentRuntime {
 
       // client have a start
       for(const cStr in this.clients) {
-        const c = this.clients[cStr]
+        // const c = this.clients[cStr]
         elizaLogger.log('runtime::stop - requesting', cStr, 'client stop for', this.character.name)
-        c.stop()
+        // c.stop()
       }
       // we don't need to unregister with directClient
       // don't need to worry about knowledge
@@ -646,6 +646,8 @@ export class AgentRuntime implements IAgentRuntime {
             return [];
         }
 
+        elizaLogger.log("mapping evaluators...");
+
         const context = composeContext({
             state: {
                 ...state,
@@ -666,6 +668,9 @@ export class AgentRuntime implements IAgentRuntime {
         const evaluators = parseJsonArrayFromText(
             result
         ) as unknown as string[];
+
+        elizaLogger.log("mapping evaluators...done -->", JSON.stringify(evaluators));
+
 
         for (const evaluator of this.evaluators) {
             if (!evaluators.includes(evaluator.name)) continue;
@@ -790,7 +795,7 @@ export class AgentRuntime implements IAgentRuntime {
     ) {
         const { userId, roomId } = message;
 
-        const conversationLength = this.getConversationLength();
+        // const conversationLength = this.getConversationLength();
 
         const [actorsData, recentMessagesData, goalsData]: [
             Actor[],
@@ -800,7 +805,8 @@ export class AgentRuntime implements IAgentRuntime {
             getActorDetails({ runtime: this, roomId }),
             this.messageManager.getMemories({
                 roomId,
-                count: conversationLength,
+                // count: conversationLength,
+                count:3,
                 unique: false,
             }),
             getGoals({
@@ -810,7 +816,6 @@ export class AgentRuntime implements IAgentRuntime {
                 roomId,
             }),
         ]);
-
         const goals = formatGoalsAsString({ goals: goalsData });
 
         const actors = formatActors({ actors: actorsData ?? [] });
@@ -873,12 +878,12 @@ export class AgentRuntime implements IAgentRuntime {
             .map(
                 (attachment) =>
                     `ID: ${attachment.id}
-Name: ${attachment.title}
-URL: ${attachment.url}
-Type: ${attachment.source}
-Description: ${attachment.description}
-Text: ${attachment.text}
-  `
+                    Name: ${attachment.title}
+                    URL: ${attachment.url}
+                    Type: ${attachment.source}
+                    Description: ${attachment.description}
+                    Text: ${attachment.text}
+                    `
             )
             .join("\n");
 
@@ -1231,10 +1236,11 @@ Text: ${attachment.text}
     }
 
     async updateRecentMessageState(state: State): Promise<State> {
-        const conversationLength = this.getConversationLength();
+        // const conversationLength = this.getConversationLength();
         const recentMessagesData = await this.messageManager.getMemories({
             roomId: state.roomId,
-            count: conversationLength,
+            // count: conversationLength,
+            count:3,
             unique: false,
         });
 

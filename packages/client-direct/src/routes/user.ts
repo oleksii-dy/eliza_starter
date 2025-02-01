@@ -5,7 +5,6 @@ import cors from "cors";
 import { bcs } from "@mysten/sui/bcs"
 import { verifyPersonalMessageSignature } from "@mysten/sui/verify"
 import {
-
     getEnvVariable,
 } from "@elizaos/core";
 
@@ -42,28 +41,28 @@ export default function createAgentRouter() {
         });
      })
 
-     router.post("/login",async (req,res)=>{
-        const {address,signature} = req.body;
-        const redisClient = new RedisClient(process.env.REDIS_URL)
-        const msg = await redisClient.getValue({key:`login_signature_${address}`})
-        if(!msg){
-            res.status(401).json({error:"Invalid signature"})
-            return;
-        }
-        const nonce = await verifyLoginSignature(signature,msg);
-        if(!nonce){
-            res.status(401).json({error:"Invalid signature"})
-            return;
-        }
-        
+    router.post("/login",async (req,res)=>{
+    const {address,signature} = req.body;
+    const redisClient = new RedisClient(process.env.REDIS_URL)
+    const msg = await redisClient.getValue({key:`login_signature_${address}`})
+    if(!msg){
+        res.status(401).json({error:"Invalid signature"})
+        return;
+    }
+    const nonce = await verifyLoginSignature(signature,msg);
+    if(!nonce){
+        res.status(401).json({error:"Invalid signature"})
+        return;
+    }
+    })
 
-
-     })
     return router;
 }
+
 function randomValue(seed: string) {
     return toHex(crypto.getRandomValues(fromHex(seed)))
 }
+
 async function verifyLoginSignature(signature:string,msg:string){
     try {
         const message = new Uint8Array(Buffer.from(msg,'hex'))
@@ -74,7 +73,6 @@ async function verifyLoginSignature(signature:string,msg:string){
         console.error("Error verifying signature:",error)
         return false;
     }
-
 }
 const LOGIN_STRUCT = bcs.struct("RefreshSignature", {
     nonce: bcs.u64(),
