@@ -5,11 +5,11 @@ import {suimarketPlugin} from "@elizaos/plugin-suimarket"
 import { elizaLogger, IAgentRuntime, Memory, Provider, State } from '@elizaos/core';
 import {RedisClient} from '@elizaos/adapter-redis'
 let cronTask;
+const redisClient = new RedisClient(process.env.REDIS_URL);
 
 export const startCronJobs = () => {
     if (cronTask) cronTask.stop(); // Dừng job cũ nếu có
 
-    const redisClient = new RedisClient(process.env.REDIS_URL);
     const cronTopDexProvider = suimarketPlugin.providers[0];
 
     cronTask = cron.schedule('*/5 * * * *', async () => {
