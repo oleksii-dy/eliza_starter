@@ -2247,6 +2247,8 @@ export async function handleProvider(
             return await handleDeepSeek(options);
         case ModelProviderName.LIVEPEER:
             return await handleLivepeer(options);
+        case ModelProviderName.BEDROCK:
+            return await handleBedrock(options);
         case ModelProviderName.GOOGLE_VERTEX:
             return await handleGoogleVertexApi(options);
         default: {
