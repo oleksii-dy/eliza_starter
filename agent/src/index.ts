@@ -666,6 +666,11 @@ export function getTokenForProvider(
                 character.settings?.secrets?.DEEPSEEK_API_KEY ||
                 settings.DEEPSEEK_API_KEY
             );
+        case ModelProviderName.GOOGLE_VERTEX:
+            return (
+                character.settings?.secrets?.GOOGLE_VERTEX_API_KEY ||
+                settings.GOOGLE_VERTEX_API_KEY
+            );
         case ModelProviderName.LIVEPEER:
             return (
                 character.settings?.secrets?.LIVEPEER_GATEWAY_URL ||

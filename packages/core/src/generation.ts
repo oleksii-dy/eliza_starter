@@ -4,6 +4,7 @@ import { createMistral } from "@ai-sdk/mistral";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
 import { bedrock } from "@ai-sdk/amazon-bedrock";
+import { createVertex } from "@ai-sdk/google-vertex";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import {
     generateObject as aiGenerateObject,
@@ -1283,6 +1284,40 @@ export async function generateText({
                 break;
             }
 
+            case ModelProviderName.GOOGLE_VERTEX: {
+                elizaLogger.debug("Initializing Google Vertex API model.");
+
+                const vertex = createVertex({
+                    location: settings.GOOGLE_VERTEX_LOCATION,
+                    project: settings. GOOGLE_VERTEX_PROJECT,
+                    googleAuthOptions: {
+                      credentials: {
+                        client_email: settings.GOOGLE_VERTEX_EMAIL,
+                        private_key: settings.GOOGLE_VERTEX_KEY || runtime.token
+                      },
+                    },
+                  });
+
+                const { text: openaiResponse } = await aiGenerateText({
+                    // model: vertex.languageModel(model),
+                    model: vertex(model),
+                    prompt: context,
+                    system: runtime.character.system ?? settings.SYSTEM_PROMPT ?? undefined,
+                    tools: tools,
+                    onStepFinish: onStepFinish,
+                    maxSteps: maxSteps,
+                    temperature: temperature,
+                    maxTokens: max_response_length,
+                    frequencyPenalty: frequency_penalty,
+                    presencePenalty: presence_penalty,
+                    experimental_telemetry: experimental_telemetry,
+                });
+
+                response = openaiResponse;
+                elizaLogger.debug("Received response from Google Vertex API model.");
+                break;
+            }
+
             default: {
                 const errorMessage = `Unsupported provider: ${provider}`;
                 elizaLogger.error(errorMessage);
@@ -2212,6 +2247,8 @@ export async function handleProvider(
             return await handleDeepSeek(options);
         case ModelProviderName.LIVEPEER:
             return await handleLivepeer(options);
+        case ModelProviderName.GOOGLE_VERTEX:
+            return await handleGoogleVertexApi(options);
         default: {
             const errorMessage = `Unsupported provider: ${provider}`;
             elizaLogger.error(errorMessage);
@@ -2559,6 +2596,35 @@ async function handleLivepeer({
     });
 }
 
+async function handleGoogleVertexApi({
+    model,
+    apiKey,
+    schema,
+    schemaName,
+    schemaDescription,
+    mode,
+    modelOptions,
+}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+    const vertex = createVertex({
+        location: settings.GOOGLE_VERTEX_LOCATION,
+        project: settings.GOOGLE_VERTEX_PROJECT,
+        googleAuthOptions: {
+            credentials: {
+                client_email: settings.GOOGLE_VERTEX_EMAIL,
+                private_key: settings.GOOGLE_VERTEX_KEY || apiKey,
+            },
+        },
+    });
+
+    return await aiGenerateObject({
+        model: vertex(model),
+        schema,
+        schemaName,
+        schemaDescription,
+        mode,
+        ...modelOptions,
+    });
+}
 // Add type definition for Together AI response
 interface TogetherAIImageResponse {
     data: Array<{

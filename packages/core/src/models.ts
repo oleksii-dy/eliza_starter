@@ -1080,6 +1080,41 @@ export const models: Models = {
             },
         },
     },
+    [ModelProviderName.GOOGLE_VERTEX]: {
+        model: {
+            [ModelClass.SMALL]: {
+                name: settings.SMALL_GOOGLE_VERTEX_MODEL || "text-bison@002",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                frequency_penalty: 0.0,
+                presence_penalty: 0.0,
+                temperature: 0.6,
+            },
+            [ModelClass.MEDIUM]: {
+                name: settings.MEDIUM_GOOGLE_VERTEX_MODEL || "text-bison@002",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                frequency_penalty: 0.0,
+                presence_penalty: 0.0,
+                temperature: 0.6,
+            },
+            [ModelClass.LARGE]: {
+                name: settings.LARGE_GOOGLE_VERTEX_MODEL || "text-bison@002",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                frequency_penalty: 0.0,
+                presence_penalty: 0.0,
+                temperature: 0.6,
+            },
+            [ModelClass.EMBEDDING]: {
+                name: settings.GOOGLE_VERTEX_EMBEDDING_MODEL || "textembedding-gecko@003",
+                dimensions: 768,
+            },
+        },
+    },
     [ModelProviderName.BEDROCK]: {
         model: {
             [ModelClass.SMALL]: {
