@@ -1,4 +1,5 @@
 import {
+    ActionExample,
     composeContext,
     elizaLogger,
     generateObjectDeprecated,
@@ -91,9 +92,9 @@ const buildCreateTokenDetails = async (
     if (!existingChain) {
         throw new Error(
             "The chain " +
-                createTokenDetails.fromChain +
-                " not configured yet. Add the chain or choose one from configured: " +
-                chains.toString()
+            createTokenDetails.fromChain +
+            " not configured yet. Add the chain or choose one from configured: " +
+            chains.toString()
         );
     }
 
@@ -154,13 +155,47 @@ export const createTokenAction = {
     examples: [
         [
             {
-                user: "user",
+                user: "{{user1}}",
                 content: {
-                    text: "Create a token named 'MyToken' with symbol 'MTK' on Fuse.",
-                    action: "CREATE_TOKEN",
+                    text: "Deploy a new token called MyToken with symbol MTK and owner 0x1234567890abcdef1234567890abcdef12345678",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "I'll deploy your new token now.",
+                    action: "DEPLOY_TOKEN",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Successfully deployed MyToken (MTK) with 100000000 total supply.\nTransaction hash: 0xdde850f9257365fffffc11324726ebdcf5b90b01c6eec9b3e7ab3e81fde6f14b",
                 },
             },
         ],
-    ],
-    similes: ["CREATE_TOKEN", "DEPLOY_ERC20"],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Create a new token with name TestCoin, symbol TEST, and owner 0x1234567890abcdef1234567890abcdef12345678",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "I'll deploy your token.",
+                    action: "DEPLOY_TOKEN",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Successfully deployed TestCoin (TEST) with 100000000 total supply.\nTransaction: 0x4fed598033f0added272c3ddefd4d83a521634a738474400b27378db462a76ec",
+                },
+            },
+        ],
+    ] as ActionExample[][],
+
+    similes: ["CREATE_TOKEN", "DEPLOY_TOKEN"],
 };
