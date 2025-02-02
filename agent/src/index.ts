@@ -14,7 +14,6 @@ import { TwitterClientInterface } from "@elizaos/client-twitter";
 import { AlexaClientInterface } from "@elizaos/client-alexa";
 import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb";
 import { DevaClientInterface } from "@elizaos/client-deva";
-
 import { FarcasterClientInterface } from "@elizaos/client-farcaster";
 import { OmniflixPlugin } from "@elizaos/plugin-omniflix";
 import { JeeterClientInterface } from "@elizaos/client-simsai";
@@ -112,6 +111,7 @@ import { suiPlugin } from "@elizaos/plugin-sui";
 import { TEEMode, teePlugin } from "@elizaos/plugin-tee";
 import { teeMarlinPlugin } from "@elizaos/plugin-tee-marlin";
 import { tonPlugin } from "@elizaos/plugin-ton";
+import { twasPlugin } from "@elizaos/plugin-twas";
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
 import { dkgPlugin } from "@elizaos/plugin-dkg";
 import { injectivePlugin } from "@elizaos/plugin-injective";
@@ -1120,6 +1120,7 @@ export async function createAgent(
                 : null,
             getSecret(character, "TEE_MARLIN") ? teeMarlinPlugin : null,
             getSecret(character, "TON_PRIVATE_KEY") ? tonPlugin : null,
+            getSecret(character, "TWAS_PRIVATE_KEY") ? twasPlugin : null,
             getSecret(character, "THIRDWEB_SECRET_KEY") ? thirdwebPlugin : null,
             getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
             getSecret(character, "STORY_PRIVATE_KEY") ? storyPlugin : null,

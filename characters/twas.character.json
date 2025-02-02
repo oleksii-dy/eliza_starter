@@ -1,11 +1,9 @@
 {
   "name": "Twas",
   "plugins": [
-    "@elizaos/plugin-lit"
+    "@elizaos/plugin-twas"
   ],
-  "clients": [
-    "twitter"
-  ],
+  "clients": [],
   "modelProvider": "openai",
   "settings": {
     "secrets": {},
