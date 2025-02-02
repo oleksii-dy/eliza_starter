@@ -136,7 +136,6 @@ import { holdstationPlugin } from "@elizaos/plugin-holdstation";
 import { nvidiaNimPlugin } from "@elizaos/plugin-nvidia-nim";
 import { zxPlugin } from "@elizaos/plugin-0x";
 import { hyperbolicPlugin } from "@elizaos/plugin-hyperbolic";
-import { litPlugin } from "@elizaos/plugin-lit";
 import Database from "better-sqlite3";
 import fs from "fs";
 import net from "net";
@@ -156,10 +155,8 @@ import { ankrPlugin } from "@elizaos/plugin-ankr";
 import { formPlugin } from "@elizaos/plugin-form";
 import { MongoClient } from "mongodb";
 import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
-
 import { trikonPlugin } from "@elizaos/plugin-trikon";
 import arbitragePlugin from "@elizaos/plugin-arbitrage";
-
 import {
     githubInitializePlugin,
     githubCreateCommitPlugin,
