@@ -172,6 +172,7 @@ import {
     githubInteractWithIssuePlugin,
 } from "@elizaos/plugin-github";
 import { GitHubClientInterface } from "@elizaos/client-github";
+import { CoinbaseClientInterface } from "@elizaos/client-coinbase";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -886,8 +887,6 @@ export async function initializeClients(
         if (githubClient) clients.github = githubClient;
     }
 
-    elizaLogger.log("client keys", Object.keys(clients));
-
     if (clientTypes.includes("deva")) {
         if (clientTypes.includes("deva")) {
             const devaClient = await DevaClientInterface.start(runtime);
@@ -899,6 +898,13 @@ export async function initializeClients(
         const slackClient = await SlackClientInterface.start(runtime);
         if (slackClient) clients.slack = slackClient; // Use object property instead of push
     }
+
+    if (clientTypes.includes("coinbase")) {
+        const coinbaseClient = await CoinbaseClient.start(runtime);
+        if (coinbaseClient) clients.coinbase = coinbaseClient;
+    }
+
+    elizaLogger.log("client keys", Object.keys(clients));
 
     function determineClientType(client: Client): string {
         // Check if client has a direct type identifier
