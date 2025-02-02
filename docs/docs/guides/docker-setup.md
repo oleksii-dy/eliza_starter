@@ -54,7 +54,7 @@ This guide provides instructions for installing and running the Eliza chatbot us
 2. **Clone the Repository**:
 
     ```bash
-    git clone https://github.com/YOUR_USERNAME/eliza.git
+    git clone https://github.com/elizaos/eliza.git
     cd eliza
     ```
 
