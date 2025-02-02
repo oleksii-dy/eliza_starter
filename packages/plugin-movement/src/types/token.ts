@@ -22,7 +22,7 @@ function getTokenTypeArgument(token: Token): string {
 }
 
 function formatTokenAmount(amount: number | string, decimals: number): string {
-    const parsedAmount = typeof amount === 'string' ? parseInt(amount) : amount;
+    const parsedAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
     return (parsedAmount * Math.pow(10, decimals)).toString();
 }
 

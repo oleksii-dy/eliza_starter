@@ -16,6 +16,7 @@ import {
     Aptos,
     AptosConfig,
     Ed25519PrivateKey,
+    InputViewFunctionData,
     Network,
     PrivateKey,
     PrivateKeyVariants,
@@ -27,7 +28,8 @@ import {
     MOVEMENT_EXPLORER_URL,
     SWAP_ADDRESS,
     SWAP_ADDRESS_MODULE,
-    SWAP_ADDRESS_FUNCTION
+    SWAP_ADDRESS_FUNCTION,
+    DEFAULT_NETWORK
 } from "../constants";
 import { formatTokenAmount } from "../types/token";
 
@@ -36,7 +38,6 @@ export interface SwapContent extends Content {
     inputToken: string;
     outputToken: string;
     inputAmount: string | number;
-    outputAmount: string | number;
 }
 
 // Validate Swap content
@@ -46,23 +47,20 @@ function isSwapContent(content: unknown): content is SwapContent {
         typeof (content as SwapContent).inputToken === "string" &&
         typeof (content as SwapContent).outputToken === "string" &&
         (typeof (content as SwapContent).inputAmount === "string" ||
-            typeof (content as SwapContent).inputAmount === "number") &&
-        (typeof (content as SwapContent).outputAmount === "string" ||
-            typeof (content as SwapContent).outputAmount === "number")
+            typeof (content as SwapContent).inputAmount === "number")
     );
 }
 
 // Swap template
-const swapTemplate = `You are processing a token swap request. Extract the input token, output token, and amounts from the message.
+const swapTemplate = `You are processing a token swap request. Extract the input token, output token, and input amount from the message.
 
-Example request: "swap 1 move to yuzu"
+Example request: "swap 0.1 move to yuzu"
 Example response:
 \`\`\`json
 {
     "inputToken": "0x1::aptos_coin::AptosCoin",
     "outputToken": "0xbd9162ee6441fcf49652f0a50706279187e744aa4622a7c30bfeeaa18b7e4147::porto::YUZU",
-    "inputAmount": "1",
-    "outputAmount": "1"
+    "inputAmount": "0.1"
 }
 \`\`\`
 
@@ -78,7 +76,6 @@ Extract and return ONLY the following in a JSON block:
 - inputToken: The input token address
 - outputToken: The output token address
 - inputAmount: The amount of input tokens
-- outputAmount: The amount of output tokens
 
 Return ONLY the JSON block with these fields.`;
 
@@ -95,10 +92,6 @@ export default {
         "please swap",
         "swap",
     ],
-    shouldHandle: (message: Memory) => {
-        const text = message.content?.text?.toLowerCase() || "";
-        return text.includes("swap") && text.includes("move");
-    },
     validate: async (_runtime: IAgentRuntime, message: Memory) => {
         elizaLogger.debug(
             "Starting swap validation for user:",
@@ -130,7 +123,7 @@ export default {
                 privateKey ? "Present" : "Missing"
             );
 
-            const network = runtime.getSetting("MOVEMENT_NETWORK");
+            const network = runtime.getSetting("MOVEMENT_NETWORK") ?? DEFAULT_NETWORK;
             elizaLogger.debug("Network config:", network);
 
             const movementAccount = Account.fromPrivateKey({
@@ -163,20 +156,17 @@ export default {
             } else {
                 currentState = await runtime.updateRecentMessageState(state);
             }
-
             // Compose swap context
             const swapContext = composeContext({
                 state: currentState,
                 template: swapTemplate,
             });
-
             // Generate swap content
             const content = await generateObjectDeprecated({
                 runtime,
                 context: swapContext,
                 modelClass: ModelClass.SMALL,
             });
-
             // Validate swap content
             if (!isSwapContent(content)) {
                 console.error("Invalid content for SWAP_MOVE action.");
@@ -189,7 +179,28 @@ export default {
                 return false;
             }
 
-            // Build transaction
+            // // Get output amount using get_amount_out view function
+            // const viewPayload: InputViewFunctionData = {
+            //     function: `${SWAP_ADDRESS[network]}::${SWAP_ADDRESS_MODULE}::get_amount_out`,
+            //     typeArguments: [content.inputToken, content.outputToken],
+            //     functionArguments: [formatTokenAmount(content.inputAmount, MOVE_DECIMALS)],
+            // };
+            // console.log("viewPayload", viewPayload);
+            // const outputAmount = await aptosClient.view({payload: viewPayload});
+
+            // Check if outputAmount is valid
+            // if (!outputAmount || outputAmount.length === 0 || parseInt(outputAmount[0].toString()) <= 0) {
+            //     console.error("Invalid output amount received from view function.");
+            //     if (callback) {
+            //         callback({
+            //             text: "Unable to process swap request. The target token lacks sufficient liquidity.",
+            //             content: { error: "Insufficient liquidity for target token" },
+            //         });
+            //     }
+            //     return false;
+            // }
+
+            // Build swap transaction
             const tx = await aptosClient.transaction.build.simple({
                 sender: movementAccount.accountAddress.toStringLong(),
                 data: {
@@ -197,7 +208,7 @@ export default {
                     typeArguments: [content.inputToken, content.outputToken],
                     functionArguments: [
                         formatTokenAmount(content.inputAmount, MOVE_DECIMALS),
-                        formatTokenAmount(content.outputAmount, MOVE_DECIMALS)
+                        BigInt("0")
                     ],
                 },
             });
@@ -212,23 +223,20 @@ export default {
             const executedTransaction = await aptosClient.waitForTransaction({
                 transactionHash: committedTransaction.hash,
             });
-
             const explorerUrl = `${MOVEMENT_EXPLORER_URL}/${executedTransaction.hash}?network=${MOVEMENT_NETWORK_CONFIG[network].explorerNetwork}`;
             elizaLogger.debug("Swap successful:", {
                 hash: executedTransaction.hash,
                 inputAmount: content.inputAmount,
-                outputAmount: content.outputAmount,
                 explorerUrl,
             });
 
             if (callback) {
                 callback({
-                    text: `Successfully swapped ${content.inputAmount} ${content.inputToken} for ${content.outputAmount} ${content.outputToken}\nTransaction: ${executedTransaction.hash}\nView on Explorer: ${explorerUrl}`,
+                    text: `Successfully swapped ${content.inputAmount} ${content.inputToken} } ${content.outputToken}\nTransaction: ${executedTransaction.hash}\nView on Explorer: ${explorerUrl}`,
                     content: {
                         success: true,
                         hash: executedTransaction.hash,
                         inputAmount: content.inputAmount,
-                        outputAmount: content.outputAmount,
                         inputToken: content.inputToken,
                         outputToken: content.outputToken,
                         explorerUrl,
