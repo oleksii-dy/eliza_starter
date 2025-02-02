@@ -1313,30 +1313,35 @@ export class MessageManager {
             // Create memory
             await this.runtime.messageManager.createMemory(memory);
             
-            // Get actors and recent messages for perplexity search
-            const [actorsData, recentMessagesData]: [
-                Actor[],
-                Memory[],
-            ] = await Promise.all([
-                getActorDetails({ runtime: this.runtime, roomId }),
-                this.runtime.messageManager.getMemories({
-                    roomId,
-                    count: this.runtime.getConversationLength(),
-                    unique: false,
-                })
-            ]);
-            // Get perplexity search result
-            const searchResult = await this.runtime.getService<IPerplexicaSearchService>(ServiceType.PERPLEXICA_SEARCH).search(
-                `${messageText} (says to ${this.runtime.character.name}, please reply in a short paragraph)`,
-                recentMessagesData,
-                actorsData,
-                this.runtime.character
-            );
+            // Create additional state keys
+            let stateAdditionalKeys: { [key: string]: string } = {};
+
+            // Perplexica search
+            if (this.runtime.getService<IPerplexicaSearchService>(ServiceType.PERPLEXICA_SEARCH)) {
+                // Get actors and recent messages for perplexity search
+                const [actorsData, recentMessagesData]: [
+                    Actor[],
+                    Memory[],
+                ] = await Promise.all([
+                    getActorDetails({ runtime: this.runtime, roomId }),
+                    this.runtime.messageManager.getMemories({
+                        roomId,
+                        count: this.runtime.getConversationLength(),
+                        unique: false,
+                    })
+                ]);
+                // Get perplexity search result
+                const searchResult = await this.runtime.getService<IPerplexicaSearchService>(ServiceType.PERPLEXICA_SEARCH).search(
+                    `${messageText} (says to ${this.runtime.character.name}, please reply in a short paragraph)`,
+                    recentMessagesData,
+                    actorsData,
+                    this.runtime.character
+                );
+                stateAdditionalKeys["searchResult"] = `# Web Search Results (ignore if irrelevant)\n${searchResult.message}`;
+            }
 
             // Update state with the new memory
-            let state = await this.runtime.composeState(memory, {
-                "searchResult": `# Web Search Results (ignore if irrelevant)\n${searchResult.message}`,
-            });
+            let state = await this.runtime.composeState(memory, stateAdditionalKeys);
             state = await this.runtime.updateRecentMessageState(state);
 
             // Decide whether to respond
