@@ -12,6 +12,7 @@ import {
     type HandlerCallback,
     type IAgentRuntime,
     type IImageDescriptionService,
+    type Actor,
     type Memory,
     ModelClass,
     type State,
@@ -19,6 +20,7 @@ import {
     type Media,
 } from "@elizaos/core";
 import { stringToUuid } from "@elizaos/core";
+import { getActorDetails } from "@elizaos/core";
 import { generateMessageResponse, generateShouldRespond } from "@elizaos/core";
 import {
     telegramMessageHandlerTemplate,
@@ -33,7 +35,7 @@ import {
     RESPONSE_CHANCES,
     TEAM_COORDINATION,
 } from "./constants";
-
+import { IPerplexicaSearchService } from "@elizaos/plugin-perplexica";
 import fs from "fs";
 
 enum MediaType {
@@ -1310,9 +1312,31 @@ export class MessageManager {
 
             // Create memory
             await this.runtime.messageManager.createMemory(memory);
+            
+            // Get actors and recent messages for perplexity search
+            const [actorsData, recentMessagesData]: [
+                Actor[],
+                Memory[],
+            ] = await Promise.all([
+                getActorDetails({ runtime: this.runtime, roomId }),
+                this.runtime.messageManager.getMemories({
+                    roomId,
+                    count: this.runtime.getConversationLength(),
+                    unique: false,
+                })
+            ]);
+            // Get perplexity search result
+            const searchResult = await this.runtime.getService<IPerplexicaSearchService>(ServiceType.PERPLEXICA_SEARCH).search(
+                `${messageText} (says to ${this.runtime.character.name}, please reply in a short paragraph)`,
+                recentMessagesData,
+                actorsData,
+                this.runtime.character
+            );
 
             // Update state with the new memory
-            let state = await this.runtime.composeState(memory);
+            let state = await this.runtime.composeState(memory, {
+                "searchResult": `# Web Search Results (ignore if irrelevant)\n${searchResult.message}`,
+            });
             state = await this.runtime.updateRecentMessageState(state);
 
             // Decide whether to respond
