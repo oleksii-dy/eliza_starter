@@ -1474,9 +1474,8 @@ Text: ${attachment.text}
 
             formattedKnowledge = formatKnowledge(knowledgeData);
         } else {
-            if (!message || !message.content || !message.content.text || typeof message.content.text !== "string" || message.content.text.trim().length === 0) {
-                elizaLogger.warn("Cannot search knowledge: message.content.text is empty");
-                return;
+            if (!message || !message.content || !message.content.text || typeof message.content.text !== "string" || message.content.text.trim().length === 0) {                
+                throw new Error("Cannot search knowledge: message.content.text is empty");
             } else {
                 knowledgeData = await knowledge.get(this, message);
                 formattedKnowledge = formatKnowledge(knowledgeData);
