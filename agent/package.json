@@ -1,13 +1,15 @@
 {
     "name": "@elizaos/agent",
     "version": "0.1.9",
-    "main": "src/index.ts",
+    "main": "dist/index.js",
     "type": "module",
     "scripts": {
         "start": "node --loader ts-node/esm src/index.ts",
         "dev": "node --loader ts-node/esm src/index.ts",
         "check-types": "tsc --noEmit",
-        "test": "jest"
+        "test": "jest",
+        "build": "tsup src/index.ts --format esm --dts",
+        "docker": "docker build -t elizaos-agent ."
     },
     "nodemonConfig": {
         "watch": [
@@ -66,9 +68,7 @@
         "@elizaos/plugin-icp": "workspace:*",
         "@elizaos/plugin-initia": "workspace:*",
         "@elizaos/plugin-image-generation": "workspace:*",
-        "@elizaos/plugin-intiface": "workspace:*",
         "@elizaos/plugin-lens-network": "workspace:*",
-        "@elizaos/plugin-letzai": "workspace:*",
         "@elizaos/plugin-lit": "workspace:*",
         "@elizaos/plugin-massa": "workspace:*",
         "@elizaos/plugin-mind-network": "workspace:*",
@@ -90,7 +90,6 @@
         "@elizaos/plugin-sgx": "workspace:*",
         "@elizaos/plugin-iq6900": "workspace:*",
         "@elizaos/plugin-tee": "workspace:*",
-        "@elizaos/plugin-tee-log": "workspace:*",
         "@elizaos/plugin-tee-marlin": "workspace:*",
         "@elizaos/plugin-ton": "workspace:*",
         "@elizaos/plugin-twitter": "workspace:*",
@@ -106,7 +105,6 @@
         "@elizaos/plugin-letzai": "workspace:*",
         "@elizaos/plugin-thirdweb": "workspace:*",
         "@elizaos/plugin-genlayer": "workspace:*",
-        "@elizaos/plugin-tee-verifiable-log": "workspace:*",
         "@elizaos/plugin-depin": "workspace:*",
         "@elizaos/plugin-open-weather": "workspace:*",
         "@elizaos/plugin-obsidian": "workspace:*",
@@ -115,7 +113,6 @@
         "@elizaos/plugin-opacity": "workspace:*",
         "@elizaos/plugin-hyperliquid": "workspace:*",
         "@elizaos/plugin-akash": "workspace:*",
-        "@elizaos/plugin-quai": "workspace:*",
         "@elizaos/plugin-lightning": "workspace:*",
         "@elizaos/plugin-b2": "workspace:*",
         "@elizaos/plugin-nft-collections": "workspace:*",
@@ -133,7 +130,6 @@
         "@elizaos/plugin-sei": "workspace:*",
         "@elizaos/plugin-omniflix": "workspace:*",
         "@elizaos/plugin-suno": "workspace:*",
-        "@elizaos/plugin-udio": "workspace:*",
         "@elizaos/plugin-hyperbolic": "workspace:*",
         "@elizaos/plugin-football": "workspace:*",
         "@elizaos/plugin-imgflip": "workspace:*",
