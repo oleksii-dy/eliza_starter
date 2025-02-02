@@ -56,12 +56,15 @@ export class ReputationDB {
         if (!this.adapters.has(provider)) {
             throw new Error(`Provider ${provider} not registered`);
         }
-
         if (!refresh) {
+            console.log('getScore step 3')
+
             const result = await this.query(
                 `SELECT score FROM scores WHERE identifier = $1 AND provider = $2`,
                 [identifier, provider]
             );
+
+            console.log('getScore step 4',result)
 
             if (result.rows.length > 0) {
                 return result.rows[0].score; // ✅ Use cached score if available
@@ -71,6 +74,7 @@ export class ReputationDB {
         // If refresh is true or score is not found, fetch from adapter
         const adapter = this.adapters.get(provider)!;
         const score = await adapter.getScore(identifier, refresh);
+
         const id = require("uuid").v4();
 
 
@@ -82,8 +86,6 @@ export class ReputationDB {
                     SET score = EXCLUDED.score, last_updated = CURRENT_TIMESTAMP`,
             [identifier, provider, score]
         );
-
-
         return score;
     }
 

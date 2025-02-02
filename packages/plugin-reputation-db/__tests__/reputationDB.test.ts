@@ -48,12 +48,18 @@ describe("ReputationDB", () => {
 
     test("Should refresh Twitter score when requested", async () => {
         const spyAdapter = jest.spyOn(twitterAdapter, "getScore").mockResolvedValueOnce(95);
-        const spyQuery = jest.spyOn(db as any, "query").mockResolvedValueOnce({ rows: [] });
+        const spyQuery = jest.spyOn(db, "query");
 
-        const score = await db.getScore("twitter", "example_handle", true);
+        // random twitter handle
+        const handle = new Date().getDate().toString()
+        const score = await db.getScore("twitter", handle, true);
+        await new Promise((resolve) => setImmediate(resolve)); // Wait for all async tasks
+
+        console.log("Spy Query Call Count:", spyQuery.mock.calls.length);
+
         expect(score).toBe(95);
         expect(spyAdapter).toHaveBeenCalled();
-        expect(spyQuery).toHaveBeenCalledTimes(2); // 1 for select, 1 for insert/update
+        expect(spyQuery).toHaveBeenCalledTimes(1); // 1 for insert/update
         spyAdapter.mockRestore();
         spyQuery.mockRestore();
     });
@@ -76,7 +82,7 @@ describe("ReputationDB", () => {
         const score = await db.getScore("givPower", "0xExampleWalletAddress", true);
         expect(score).toBe(88);
         expect(spyAdapter).toHaveBeenCalled();
-        expect(spyQuery).toHaveBeenCalledTimes(2); // 1 for select, 1 for insert/update
+        expect(spyQuery).toHaveBeenCalledTimes(1); //1 for insert/update
         spyAdapter.mockRestore();
         spyQuery.mockRestore();
     });
@@ -98,7 +104,7 @@ describe("ReputationDB", () => {
         const spyInsert = jest.spyOn(db as any, "query").mockResolvedValueOnce({ rows: [] });
 
         await db.getScore("twitter", "example_handle", true);
-        expect(spyInsert).toHaveBeenCalledTimes(2);
+        expect(spyInsert).toHaveBeenCalledTimes(1);
 
         spyAdapter.mockRestore();
         spyInsert.mockRestore();
@@ -143,14 +149,14 @@ describe("ReputationDB", () => {
 
         expect(spyTwitter).toHaveBeenCalled();
         expect(spyGivPower).toHaveBeenCalled();
-        expect(spyQuery).toHaveBeenCalledTimes(4); // 2 selects + 2 inserts/updates
+        expect(spyQuery).toHaveBeenCalledTimes(2); //2 inserts/updates
 
         spyTwitter.mockRestore();
         spyGivPower.mockRestore();
         spyQuery.mockRestore();
     });
 
-    test("Should refresh Twitter score when requested", async () => {
+    test("Should refresh Twitter score when requested #2", async () => {
         const spyAdapter = jest.spyOn(db.adapters.get("twitter")!, "getScore");
         const spyQuery = jest.spyOn(db, "query");
 
@@ -158,7 +164,7 @@ describe("ReputationDB", () => {
 
         expect(score).toBeGreaterThanOrEqual(0); // ✅ Ensure score is a valid number
         expect(spyAdapter).toHaveBeenCalled(); // ✅ Adapter must be called for refresh
-        expect(spyQuery).toHaveBeenCalledTimes(2); // ✅ 1 for select, 1 for insert/update
+        expect(spyQuery).toHaveBeenCalledTimes(1); // ✅ 1 for insert/update
 
         spyAdapter.mockRestore();
         spyQuery.mockRestore();
@@ -177,7 +183,7 @@ describe("ReputationDB", () => {
 
         expect(spyTwitter).toHaveBeenCalled();
         expect(spyGivPower).toHaveBeenCalled();
-        expect(spyQuery).toHaveBeenCalledTimes(4); // ✅ 2 selects + 2 updates
+        expect(spyQuery).toHaveBeenCalledTimes(2); // ✅ 2 updates
 
         spyTwitter.mockRestore();
         spyGivPower.mockRestore();
