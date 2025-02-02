@@ -181,6 +181,7 @@ Generate only the tweet text, no commentary or markdown.`;
     }
 
     private async handleWebhookEvent(event: WebhookEvent) {
+        elizaLogger.log('event ', event)
         const roomId = stringToUuid("coinbase-trading");
         await this.runtime.ensureRoomExists(roomId);
         await this.runtime.ensureParticipantInRoom(this.runtime.agentId, roomId);
@@ -192,6 +193,7 @@ Generate only the tweet text, no commentary or markdown.`;
         // }
 
         const amount = Number(this.runtime.getSetting('COINBASE_TRADING_AMOUNT')) ?? 1;
+        elizaLogger.log('amount ', amount)
         const memory: Memory = {
             id: stringToUuid(`coinbase-${event.timestamp}`),
             userId: this.runtime.agentId,
@@ -212,13 +214,11 @@ Generate only the tweet text, no commentary or markdown.`;
             },
             createdAt: Date.now()
         };
+        elizaLogger.log('memory ', memory)
         // get short term trading wallet
         await this.runtime.messageManager.createMemory(memory);
         const state = await this.runtime.composeState(memory);
-        const callback: HandlerCallback = async (content: Content) => {
-            if (!content.text.includes("Trade executed successfully")) {
-                return [];
-            }
+        elizaLogger.log('state ', state)
         // Generate tweet content
         const formattedTimestamp = new Intl.DateTimeFormat('en-US', {
             hour: '2-digit',
@@ -226,9 +226,11 @@ Generate only the tweet text, no commentary or markdown.`;
             second: '2-digit',
             timeZoneName: 'short'
         }).format(new Date(event.timestamp));
+        elizaLogger.log('formattedTimestamp ', formattedTimestamp)
         // const defaultAddress = await wallet.wallet.getDefaultAddress();
         const buy =  event.event.toUpperCase() === 'BUY'
         const txHash = await tokenSwap(this.runtime, amount, buy ? event.ticker : 'USDC', buy ? event.ticker : 'USDC', this.runtime.getSetting('WALLET_PUBLIC_KEY'), this.runtime.getSetting('WALLET_PRIVATE_KEY'), 8453);
+        elizaLogger.log('txHash ', txHash)
         const pnl = await calculateOverallPNL(this.runtime, this.runtime.getSetting('WALLET_PRIVATE_KEY'), this.runtime.getSetting('WALLET_PUBLIC_KEY'), 8453, this.initialBalanceETH);
         const pnlText = `Overall PNL: ${pnl}`;
         elizaLogger.log('pnlText ', pnlText)
@@ -245,7 +247,6 @@ Generate only the tweet text, no commentary or markdown.`;
             } catch (error) {
                 elizaLogger.error("Failed to post tweet:", error);
             }
-        };
     }
 
     async stop(): Promise<void> {
