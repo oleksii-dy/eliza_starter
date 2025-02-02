@@ -496,26 +496,24 @@ async function handlePluginImporting(plugins: string[]) {
                 try {
                     const importedPlugin = await import(plugin);
                     const functionName =
-                        plugin
+                        `${plugin
                             .replace("@elizaos/plugin-", "")
-                            .replace(/-./g, (x) => x[1].toUpperCase()) +
-                        "Plugin"; // Assumes plugin function is camelCased with Plugin suffix
+                            .replace(/-./g, (x) => x[1].toUpperCase())}Plugin`; // Assumes plugin function is camelCased with Plugin suffix
                     return (
                         importedPlugin.default || importedPlugin[functionName]
                     );
-                } catch (importError) {
+                } catch (_importError) {
                     elizaLogger.error(
                         `Failed to import plugin: ${plugin}`,
-                        importError
+                        _importError
                     );
                     return []; // Return null for failed imports
                 }
             })
         );
         return importedPlugins;
-    } else {
-        return [];
     }
+        return [];
 }
 
 export function getTokenForProvider(
