@@ -1055,7 +1055,7 @@ export async function createAgent(
             getSecret(character, "SERPER_API_KEY")
                 ? webSearchPlugin
                 : null,
-            getSecret(character, "SERPER_API_KEY") ? cryptoNewsPlugin : null,
+            cryptoNewsPlugin,
 
             getSecret(character, "SOLANA_PUBLIC_KEY") ||
             (getSecret(character, "WALLET_PUBLIC_KEY") &&
