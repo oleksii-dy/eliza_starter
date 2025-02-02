@@ -7,7 +7,6 @@ import { SupabaseDatabaseAdapter } from "@elizaos/adapter-supabase";
 import { AutoClientInterface } from "@elizaos/client-auto";
 import { DiscordClientInterface } from "@elizaos/client-discord";
 import { InstagramClientInterface } from "@elizaos/client-instagram";
-import { LensAgentClient } from "@elizaos/client-lens";
 import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TelegramAccountClientInterface } from "@elizaos/client-telegram-account";
@@ -102,7 +101,6 @@ import { createNodePlugin } from "@elizaos/plugin-node";
 import { obsidianPlugin } from "@elizaos/plugin-obsidian";
 import { OpacityAdapter } from "@elizaos/plugin-opacity";
 import { openWeatherPlugin } from "@elizaos/plugin-open-weather";
-import { quaiPlugin } from "@elizaos/plugin-quai";
 import { sgxPlugin } from "@elizaos/plugin-sgx";
 import { solanaPlugin } from "@elizaos/plugin-solana";
 import { solanaPluginV2 } from "@elizaos/plugin-solana-v2";
@@ -112,9 +110,7 @@ import { stargazePlugin } from "@elizaos/plugin-stargaze";
 import { storyPlugin } from "@elizaos/plugin-story";
 import { suiPlugin } from "@elizaos/plugin-sui";
 import { TEEMode, teePlugin } from "@elizaos/plugin-tee";
-import { teeLogPlugin } from "@elizaos/plugin-tee-log";
 import { teeMarlinPlugin } from "@elizaos/plugin-tee-marlin";
-import { verifiableLogPlugin } from "@elizaos/plugin-tee-verifiable-log";
 import { tonPlugin } from "@elizaos/plugin-ton";
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
 import { dkgPlugin } from "@elizaos/plugin-dkg";
@@ -152,7 +148,6 @@ import { zerionPlugin } from "@elizaos/plugin-zerion";
 import { minaPlugin } from "@elizaos/plugin-mina";
 import { ankrPlugin } from "@elizaos/plugin-ankr";
 import { formPlugin } from "@elizaos/plugin-form";
-import { MongoClient } from "mongodb";
 import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
 
 import { trikonPlugin } from "@elizaos/plugin-trikon";
@@ -491,6 +486,7 @@ async function handlePluginImporting(plugins: string[]) {
         elizaLogger.info("Plugins are: ", plugins);
         const importedPlugins = await Promise.all(
             plugins.map(async (plugin) => {
+                console.log("plugin", plugin);
                 try {
                     const importedPlugin = await import(plugin);
                     const functionName =
@@ -498,6 +494,9 @@ async function handlePluginImporting(plugins: string[]) {
                             .replace("@elizaos/plugin-", "")
                             .replace(/-./g, (x) => x[1].toUpperCase()) +
                         "Plugin"; // Assumes plugin function is camelCased with Plugin suffix
+
+                    console.log("importedPlugin", importedPlugin);
+                    console.log("functionName", functionName);
                     return (
                         importedPlugin.default || importedPlugin[functionName]
                     );
@@ -678,35 +677,7 @@ export function getTokenForProvider(
 }
 
 function initializeDatabase(dataDir: string) {
-    if (process.env.MONGODB_CONNECTION_STRING) {
-        elizaLogger.log("Initializing database on MongoDB Atlas");
-        const client = new MongoClient(process.env.MONGODB_CONNECTION_STRING, {
-            maxPoolSize: 100,
-            minPoolSize: 5,
-            maxIdleTimeMS: 60000,
-            connectTimeoutMS: 10000,
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-            compressors: ["zlib"],
-            retryWrites: true,
-            retryReads: true,
-        });
-
-        const dbName = process.env.MONGODB_DATABASE || "elizaAgent";
-        const db = new MongoDBDatabaseAdapter(client, dbName);
-
-        // Test the connection
-        db.init()
-            .then(() => {
-                elizaLogger.success("Successfully connected to MongoDB Atlas");
-            })
-            .catch((error) => {
-                elizaLogger.error("Failed to connect to MongoDB Atlas:", error);
-                throw error; // Re-throw to handle it in the calling code
-            });
-
-        return db;
-    } else if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
         elizaLogger.info("Initializing Supabase connection...");
         const db = new SupabaseDatabaseAdapter(
             process.env.SUPABASE_URL,
@@ -852,12 +823,6 @@ export async function initializeClients(
         if (farcasterClient) {
             clients.farcaster = farcasterClient;
         }
-    }
-
-    if (clientTypes.includes("lens")) {
-        const lensClient = new LensAgentClient(runtime);
-        lensClient.start();
-        clients.lens = lensClient;
     }
 
     if (clientTypes.includes(Clients.SIMSAI)) {
@@ -1111,18 +1076,6 @@ export async function createAgent(
                     advancedTradePlugin,
                 ]
                 : []),
-            ...(teeMode !== TEEMode.OFF && walletSecretSalt ? [teePlugin] : []),
-            teeMode !== TEEMode.OFF &&
-                walletSecretSalt &&
-                getSecret(character, "VLOG")
-                ? verifiableLogPlugin
-                : null,
-            getSecret(character, "SGX") ? sgxPlugin : null,
-            getSecret(character, "ENABLE_TEE_LOG") &&
-                ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
-                    getSecret(character, "SGX"))
-                ? teeLogPlugin
-                : null,
             getSecret(character, "OMNIFLIX_API_URL") &&
                 getSecret(character, "OMNIFLIX_MNEMONIC")
                 ? OmniflixPlugin
@@ -1218,7 +1171,6 @@ export async function createAgent(
                 ? akashPlugin
                 : null,
             getSecret(character, "CHAINBASE_API_KEY") ? chainbasePlugin : null,
-            getSecret(character, "QUAI_PRIVATE_KEY") ? quaiPlugin : null,
             getSecret(character, "RESERVOIR_API_KEY")
                 ? createNFTCollectionsPlugin()
                 : null,

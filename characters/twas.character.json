@@ -1,6 +1,8 @@
 {
-  "name": "TrollDetective.Exe",
-  "plugins": [],
+  "name": "Twas",
+  "plugins": [
+    "@elizaos/plugin-lit"
+  ],
   "clients": [
     "twitter"
   ],
