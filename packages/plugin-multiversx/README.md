@@ -2,9 +2,11 @@
 
 MultiversX blockchain integration plugin for Eliza OS that enables token management and transfers.
 
+This plugin is under development and 
 ## Overview
 
-This plugin aims to be the basis of all interactions with the MultiversX ecosystem.
+This plugin serves as the foundation for interacting with the MultiversX ecosystem, enabling secure and efficient blockchain transactions and token management within Eliza OS.
+
 
 ## Features
 
@@ -17,31 +19,71 @@ This plugin aims to be the basis of all interactions with the MultiversX ecosyst
 - Built-in denomination handling
 - Comprehensive error handling
 
-## Adding a new action
+---
 
-Reuse providers and utilities from the existing actions where possible. Add more utilities if you think they will be useful for other actions.
+## User Guide
 
-1. Add the action to the `actions` directory. Try to follow the naming convention of the other actions.
-2. Export the action in the `index.ts` file.
+### Installation
 
-## Installation
+To install the plugin, run:
 
 ```bash
 pnpm install @elizaos/plugin-multiversx
 ```
 
-## Configuration
+### Configuration
 
-The plugin requires environment variables or runtime settings:
+Before using the plugin, configure the necessary environment variables at ElizaOS level:
 
-```env
+```.env
 MVX_PRIVATE_KEY=your-wallet-private-key
 MVX_NETWORK=devnet  # mainnet, devnet, or testnet
 ```
 
-## Usage
+#### Private key
+The MVX_PRIVATE_KEY variable need to be generate using `mxpy wallet convert` as it use the specific hex format. 
 
-### Token Transfer
+You will need to have at least the mxpy version **9.11.0** install on your machine as it have been added in this [release](https://github.com/multiversx/mx-sdk-py-cli/releases/tag/v9.11.0). 
+
+You can check the documentation to install or update to a specific version [here](https://docs.multiversx.com/sdk-and-tools/sdk-py/installing-mxpy).
+
+Example:
+
+``` shell 
+# You can check the help command to see the options
+~$ mxpy wallet convert -h
+usage: mxpy wallet convert [-h] ...
+
+Convert a wallet from one format to another
+
+options:
+  -h, --help                                      show this help message and exit
+  --infile INFILE                                 path to the input file
+  --outfile OUTFILE                               path to the output file
+  --in-format {raw-mnemonic,keystore-mnemonic,keystore-secret-key,pem}
+                                                  the format of the input file
+  --out-format {raw-mnemonic,keystore-mnemonic,keystore-secret-key,pem,address-bech32,address-hex,secret-key}
+                                                  the format of the output file
+# To transform a pem file into an hex secret key:
+~$ mxpy wallet convert --infile wallet.pem --in-format pem --out-format secret-key
+Output:
+
+po8ed118werc69c9be506df87f76d6e919f61d3559ed8g68bb78b39fcddc8t9y
+```
+
+#### Environment
+
+The plugin supports the following networks:
+
+- Mainnet
+- Devnet
+- Testnet
+
+
+
+### Usage
+
+#### Sending Tokens
 
 ```typescript
 import { multiversxPlugin } from "@elizaos/plugin-multiversx";
@@ -67,7 +109,7 @@ const result = await eliza.execute({
 });
 ```
 
-### Token Creation
+#### Creating a Token
 
 ```typescript
 const result = await eliza.execute({
@@ -81,102 +123,114 @@ const result = await eliza.execute({
 });
 ```
 
-## Troubleshooting
+### Troubleshooting
 
-### Common Issues
+#### Common Issues
 
 1. **Transaction Failures**
-
-    - Verify wallet has sufficient balance
-    - Check network configuration matches intended network
-    - Ensure correct token identifiers
-    - Verify recipient address format
+    - Ensure the wallet has sufficient balance.
+    - Verify that network configuration matches the intended network.
+    - Double-check token identifiers.
+    - Validate recipient address format.
 
 2. **Configuration Problems**
-
-    - Validate private key format
-    - Check network selection is valid
-    - Ensure environment variables are properly set
-    - Verify wallet permissions for token operations
+    - Confirm the private key format.
+    - Check that the network selection is valid.
+    - Ensure environment variables are correctly set.
+    - Verify wallet permissions for token operations.
 
 3. **Token Creation Issues**
-
-    - Check token name and ticker format
-    - Verify EGLD balance for issuance fee
-    - Ensure unique token identifiers
-    - Monitor transaction status
+    - Validate the token name and ticker format.
+    - Ensure enough EGLD is available for issuance fees.
+    - Check that token identifiers are unique.
 
 4. **Network Connectivity**
-    - Verify network endpoint availability
-    - Check API rate limits
-    - Monitor network status
-    - Ensure proper network selection
+    - Verify network endpoint availability.
+    - Check API rate limits.
+    - Monitor network status.
+    - Confirm proper network selection.
 
-## Security Best Practices
+### Security Best Practices
 
 1. **Key Management**
-
-    - Never expose private keys in code
-    - Use environment variables for sensitive data
-    - Implement key rotation policies
-    - Monitor wallet activity
+    - Never expose private keys in code.
+    - Store sensitive data in environment variables.
+    - Implement key rotation policies.
+    - Regularly monitor wallet activity.
 
 2. **Transaction Safety**
-
-    - Validate all transaction parameters
-    - Implement transaction limits
-    - Use proper denomination handling
-    - Double-check recipient addresses
+    - Validate all transaction parameters.
+    - Implement transaction limits.
+    - Use proper denomination handling.
+    - Double-check recipient addresses.
 
 3. **Network Security**
-
-    - Use secure network connections
-    - Implement retry mechanisms
-    - Monitor for suspicious activity
-    - Keep dependencies updated
+    - Use secure network connections.
+    - Implement retry mechanisms.
+    - Monitor for suspicious activity.
+    - Keep dependencies updated.
 
 4. **Error Handling**
-    - Implement comprehensive error logging
-    - Handle network timeouts gracefully
-    - Validate all user inputs
-    - Provide clear error messages
+    - Implement comprehensive error logging.
+    - Handle network timeouts gracefully.
+    - Validate all user inputs.
+    - Provide clear error messages.
 
-## Testing
+---
 
-Run the test suite:
+## Contributor Guide
+
+### Adding a New Action
+
+When adding a new action, reuse providers and utilities from existing actions where possible. If necessary, add more utilities to benefit other actions.
+
+1. Add the action to the `actions` directory following the existing naming conventions.
+2. Export the action in the `index.ts` file.
+
+### Setting Up a Development Environment
+
+To set up your development environment:
+
+```bash
+git clone https://github.com/elizaOS/plugin-multiversx.git
+cd plugin-multiversx
+pnpm install
+```
+
+To run tests:
 
 ```bash
 pnpm test
 ```
 
-Watch mode for development:
+For watch mode during development:
 
 ```bash
 pnpm test:watch
 ```
 
-## Dependencies
+### Dependencies
 
 - @multiversx/sdk-core: ^13.15.0
 - bignumber.js: ^9.1.2
 - tsup: ^8.3.5
 - vitest: ^2.1.5
 
-## Contributing
+### Contributing Guidelines
 
-Contributions are welcome! Please see the [CONTRIBUTING.md](../../CONTRIBUTING.md) file for more information.
+Contributions are welcome! Please see the [CONTRIBUTING.md](../../CONTRIBUTING.md) file for details on how to contribute.
 
-## Credits
+---
+
+## Credits & Additional Resources
 
 This plugin integrates with the [MultiversX blockchain](https://multiversx.com/) using their official SDK.
 
 Special thanks to:
-
-- The MultiversX team for developing the MultiversX blockchain
+- The MultiversX team for developing the MultiversX blockchain.
 - The Eliza community for their contributions and feedback.
 
 For more information about MultiversX blockchain capabilities:
-
 - [MultiversX Documentation](https://docs.multiversx.com/)
 - [MultiversX Developer Portal](https://docs.multiversx.com/developers/getting-started/introduction)
 - [MultiversX GitHub Repository](https://github.com/multiversx/mx-sdk-js)
@@ -184,3 +238,4 @@ For more information about MultiversX blockchain capabilities:
 ## License
 
 This plugin is part of the Eliza project. See the main project repository for license information.
+
