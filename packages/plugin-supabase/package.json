@@ -1,0 +1,49 @@
+{
+    "name": "@elizaos/plugin-supabase",
+    "version": "0.1.0",
+    "type": "module",
+    "main": "dist/index.js",
+    "module": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "dependencies": {
+        "@elizaos/core": "workspace:*",
+        "@supabase/supabase-js": "^2.39.0",
+        "dotenv": "^16.3.1",
+        "tsup": "8.3.5",
+        "uuid": "^11.0.5"
+    },
+    "devDependencies": {
+        "@types/node": "^20.10.5",
+        "@types/uuid": "^10.0.0",
+        "@typescript-eslint/eslint-plugin": "^6.15.0",
+        "@typescript-eslint/parser": "^6.15.0",
+        "eslint": "^8.56.0",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-prettier": "^5.1.2",
+        "prettier": "^3.1.1",
+        "typescript": "^5.3.3",
+        "vitest": "^1.0.0"
+    },
+    "scripts": {
+        "build": "tsup --format esm --dts",
+        "dev": "tsup --format esm --dts --watch",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "lint": "eslint --fix --cache .",
+        "format": "prettier --write .",
+        "prepare": "npm run build"
+    },
+    "peerDependencies": {
+        "@elizaos/core": "workspace:*"
+    }
+}
