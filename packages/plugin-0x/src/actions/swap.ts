@@ -188,70 +188,99 @@ export const retrieveLatestQuote = async (
     }
 };
 
-export const tokenSwap = async (runtime: IAgentRuntime, quantity: number, fromCurrency: string, toCurrency: string, address: string, privateKey: string, chainId: number = Chains.base) => {
-    // get indicative price
-    const priceInquiry = await getPriceInquiry(runtime, fromCurrency, quantity, toCurrency, chainId);
-    // get latest quote
-    elizaLogger.log("Getting quote for swap", JSON.stringify(priceInquiry));
-    const quote = await getQuoteObj(runtime, priceInquiry, address);
-    elizaLogger.log("quotes ", JSON.stringify(quote))
+export const tokenSwap = async (runtime: IAgentRuntime, quantity: number, fromCurrency: string, toCurrency: string, address: string, privateKey: string, chain: string) => {
+    let priceInquiry = null;
     try {
-        const client = getWalletClient(privateKey, chainId);
-
-        // 1. Handle Permit2 signature
-        let signature: Hex | undefined;
-        if (quote.permit2?.eip712) {
-            signature = await client.signTypedData({
-                account: client.account,
-                ...quote.permit2.eip712,
-            });
-
-            if (signature && quote.transaction?.data) {
-                const sigLengthHex = numberToHex(signature.length, {
-                    size: 32,
-                }) as Hex;
-                quote.transaction.data = concat([
-                    quote.transaction.data as Hex,
-                    sigLengthHex,
-                    signature,
-                ]);
-            }
-        }
-
-        const nonce = await client.getTransactionCount({
-            address: (client.account as { address: `0x${string}` }).address,
-        });
-        elizaLogger.log("nonce ", nonce)
-        const txHash = await client.sendTransaction({
-            account: client.account,
-            chain: client.chain,
-            gas: !!quote?.transaction.gas
-                ? BigInt(quote?.transaction.gas)
-                : undefined,
-            to: quote?.transaction.to as `0x${string}`,
-            data: quote.transaction.data as `0x${string}`,
-            value: BigInt(quote.transaction.value),
-            gasPrice: !!quote?.transaction.gasPrice
-                ? BigInt(quote?.transaction.gasPrice)
-                : undefined,
-            nonce: nonce,
-            kzg: undefined,
-        });
-        elizaLogger.log("txHash", txHash)
-        // Wait for transaction confirmation
-        const receipt = await client.waitForTransactionReceipt({
-            hash: txHash,
-        });
-        elizaLogger.log("receipt ", receipt)
-        if (receipt.status === "success") {
-            return txHash;
-        } else {
-            return null;
-        }
+        // get indicative price
+        priceInquiry = await getPriceInquiry(runtime, fromCurrency, quantity, toCurrency, chain);
+        elizaLogger.info("priceInquiry ", JSON.stringify(priceInquiry))
     } catch (error) {
-        elizaLogger.error("Swap execution failed:", error);
+        elizaLogger.error("Error during price inquiry", error.message);
         return null;
     }
+    if (!priceInquiry) {
+        elizaLogger.error("Price inquiry is null");
+        return null;
+    }
+        const chainId = Chains.base;
+        elizaLogger.info("chainId ", chainId)
+        let quote = null;
+        try {
+            // get latest quote
+            elizaLogger.info("Getting quote for swap", JSON.stringify(priceInquiry));
+            quote = await getQuoteObj(runtime, priceInquiry, address);
+            elizaLogger.info("quotes ", JSON.stringify(quote))
+        } catch (error) {
+            elizaLogger.error("Error during quote retrieval", error.message);
+            return null;
+        }
+        if (!quote) {
+            elizaLogger.error("Quote is null");
+            return null;
+        }
+        try {
+            const client = getWalletClient(privateKey, chainId);
+            // add a balance check for gas and sell token 
+            const enoughGasBalance = true 
+            const enoughSellTokenBalance = true 
+            if (!enoughGasBalance || !enoughSellTokenBalance) {
+                elizaLogger.error("Not enough balance for gas or sell token");
+                return null;
+            }
+            // 1. Handle Permit2 signature
+            let signature: Hex | undefined;
+            if (quote.permit2?.eip712) {
+                signature = await client.signTypedData({
+                    account: client.account,
+                    ...quote.permit2.eip712,
+                });
+
+                if (signature && quote.transaction?.data) {
+                    const sigLengthHex = numberToHex(signature.length, {
+                        size: 32,
+                    }) as Hex;
+                    quote.transaction.data = concat([
+                        quote.transaction.data as Hex,
+                        sigLengthHex,
+                        signature,
+                    ]);
+                }
+            }
+
+            const nonce = await client.getTransactionCount({
+                address: (client.account as { address: `0x${string}` }).address,
+            });
+            elizaLogger.info("nonce ", nonce)
+            const txHash = await client.sendTransaction({
+                account: client.account,
+                chain: client.chain,
+                gas: !!quote?.transaction.gas
+                    ? BigInt(quote?.transaction.gas)
+                    : undefined,
+                to: quote?.transaction.to as `0x${string}`,
+                data: quote.transaction.data as `0x${string}`,
+                value: BigInt(quote.transaction.value),
+                gasPrice: !!quote?.transaction.gasPrice
+                    ? BigInt(quote?.transaction.gasPrice)
+                    : undefined,
+                nonce: nonce,
+                kzg: undefined,
+            });
+            elizaLogger.info("txHash", txHash)
+            // Wait for transaction confirmation
+            const receipt = await client.waitForTransactionReceipt({
+                hash: txHash,
+            });
+            elizaLogger.info("receipt ", receipt)
+            if (receipt.status === "success") {
+                return txHash;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            elizaLogger.error("Error during transaction process:", error.message);
+            return null;
+        }
 }
 
 export const calculateOverallPNL = async (runtime: IAgentRuntime, privateKey: string, publicKey: string, chainId: number, initialBalanceInEther: number): Promise<string> => {
@@ -262,9 +291,9 @@ export const calculateOverallPNL = async (runtime: IAgentRuntime, privateKey: st
     const formattedBalanceInEther = formatEther(balance)
     const pnlInEther = Number(formattedBalanceInEther) - initialBalanceInEther
     const absoluteValuePNL = Math.abs(pnlInEther)
-    const priceInquiry = await getPriceInquiry(runtime, 'ETH', absoluteValuePNL, "USDC", chainId);
+    const priceInquiry = await getPriceInquiry(runtime, 'ETH', absoluteValuePNL, "USDC", "base");
     // get latest quote
-    elizaLogger.log("Getting quote for swap", JSON.stringify(priceInquiry));
+    elizaLogger.info("Getting quote for swap", JSON.stringify(priceInquiry));
     const quote = await getQuoteObj(runtime, priceInquiry, publicKey);
     const pnlUSD = Number(quote.buyAmount) 
     const formattedPNL = new Intl.NumberFormat('en-US', {

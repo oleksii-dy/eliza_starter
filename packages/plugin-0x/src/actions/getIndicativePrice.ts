@@ -293,74 +293,128 @@ export const storePriceInquiryToMemory = async (
     await memoryManager.createMemory(memory);
 };
 
+const TOKENS = {
+    ETH: {
+        chainId: 8453,
+        name: "Ethereum",
+        symbol: "ETH",
+        decimals: 18,
+        address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+        type: "NATIVE",
+        logoURI: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png"
+    },
+    USDC: {
+        chainId: 8453,
+        name: "USD coin",
+        symbol: "USDC",
+        decimals: 6,
+        address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        type: "ERC20",
+        logoURI: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png"
+    },
+    cbBTC: {
+        chainId: 8453,
+        name: "Coinbase Wrapped BTC",
+        symbol: "cbBTC",
+        decimals: 8,
+        address: "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+        type: "ERC20",
+        logoURI: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png"
+    }
+};
 
-export const  getPriceInquiry = async (runtime: IAgentRuntime, sellTokenSymbol, sellAmount, buyTokenSymbol, chain): Promise<PriceInquiry | null> => {
-// Convert chain string to chainId
-const chainId = Chains[chain.toLowerCase() as keyof typeof Chains];
-if (!chainId) {
-    return null;
-}
+const getTokenMetadata = (tokenSymbol: string) => {
+    switch (tokenSymbol) {
+        case 'ETH':
+            return TOKENS.ETH;
+        case 'USDC':
+            return TOKENS.USDC;
+        case 'CBBTC':
+        case 'BTC':
+            return TOKENS.cbBTC;
+        default:
+            elizaLogger.error(`${tokenSymbol} is not supported`);
+            return null;
+    }
+};
 
-const evmTokenRegistry = EVMTokenRegistry.getInstance();
-if (evmTokenRegistry.isChainSupported(chainId)) {
-    await evmTokenRegistry.initializeChain(chainId);
-} else {
-    return;
-}
+export const getPriceInquiry = async (
+    runtime: IAgentRuntime,
+    sellTokenSymbol: string,
+    sellAmount: number,
+    buyTokenSymbol: string,
+    chain: string
+): Promise<PriceInquiry | null> => {
+    try {
+        // Convert chain string to chainId
+        elizaLogger.info('inside of getPriceInquiry')
+        elizaLogger.info('sellTokenSymbol ', sellTokenSymbol);
+        elizaLogger.info('sellAmount ', sellAmount);
+        elizaLogger.info('buyTokenSymbol ', buyTokenSymbol);
+        elizaLogger.info('chain ', chain);
+        const chainId = 8453;
+        elizaLogger.info('chainId ', chainId);
+        if (!chainId) {
+            elizaLogger.error('chainId is null');
+            return null;
+        }
 
-const sellTokenMetadata = evmTokenRegistry.getTokenBySymbol(
-    sellTokenSymbol,
-    chainId
-);
-const buyTokenMetadata = evmTokenRegistry.getTokenBySymbol(
-    buyTokenSymbol,
-    chainId
-);
+       const buyTokenMetadata = getTokenMetadata(buyTokenSymbol);
+       const sellTokenMetadata = getTokenMetadata(sellTokenSymbol);
+       elizaLogger.info('sellTokenMetadata ', JSON.stringify(sellTokenMetadata));
+       elizaLogger.info('buyTokenMetadata ', JSON.stringify(buyTokenMetadata));
+        if (!sellTokenMetadata || !buyTokenMetadata) {
+            elizaLogger.error('sellTokenMetadata or buyTokenMetadata is null');
+            return null;
+        }
 
-if (!sellTokenMetadata || !buyTokenMetadata) {
-    return;
-}
+        elizaLogger.info("Getting indicative price for:", {
+            sellToken: sellTokenMetadata,
+            buyToken: buyTokenMetadata,
+            amount: sellAmount,
+        });
 
-elizaLogger.info("Getting indicative price for:", {
-    sellToken: sellTokenMetadata,
-    buyToken: buyTokenMetadata,
-    amount: sellAmount,
-});
+        const zxClient = createClientV2({
+            apiKey: runtime.getSetting("ZERO_EX_API_KEY"),
+        });
+    
+        const sellAmountBaseUnits = parseUnits(
+            sellAmount.toString(),
+            sellTokenMetadata.decimals
+        ).toString();
 
-const zxClient = createClientV2({
-    apiKey: runtime.getSetting("ZERO_EX_API_KEY"),
-});
+        try {
+            const price = (await zxClient.swap.permit2.getPrice.query({
+                sellAmount: sellAmountBaseUnits,
+                sellToken: sellTokenMetadata.address,
+                buyToken: buyTokenMetadata.address,
+                chainId,
+            })) as GetIndicativePriceResponse;
 
-const sellAmountBaseUnits = parseUnits(
-    sellAmount.toString(),
-    sellTokenMetadata.decimals
-).toString();
+            // Format amounts to human-readable numbers
+            const buyAmount =
+                Number(price.buyAmount) /
+                Math.pow(10, buyTokenMetadata.decimals);
+            const sellAmount =
+                Number(price.sellAmount) /
+                Math.pow(10, sellTokenMetadata.decimals);
+            elizaLogger.info('price ', price)
+            elizaLogger.info('buyAmount ', buyAmount)
+            elizaLogger.info('sellAmount ', sellAmount)
 
-try {
-    const price = (await zxClient.swap.permit2.getPrice.query({
-        sellAmount: sellAmountBaseUnits,
-        sellToken: sellTokenMetadata.address,
-        buyToken: buyTokenMetadata.address,
-        chainId,
-    })) as GetIndicativePriceResponse;
-
-    // Format amounts to human-readable numbers
-    const buyAmount =
-        Number(price.buyAmount) /
-        Math.pow(10, buyTokenMetadata.decimals);
-    const sellAmount =
-        Number(price.sellAmount) /
-        Math.pow(10, sellTokenMetadata.decimals);
-
-    return {
-        sellTokenObject: sellTokenMetadata,
-        buyTokenObject: buyTokenMetadata,
-        sellAmountBaseUnits,
-        chainId,
-        timestamp: new Date().toISOString(),
-    };
-} catch (error) {
-    elizaLogger.error("Error getting price:", error);
-    return null;
-}
+            return {
+                sellTokenObject: sellTokenMetadata,
+                buyTokenObject: buyTokenMetadata,
+                sellAmountBaseUnits,
+                chainId,
+                timestamp: new Date().toISOString(),
+            };
+        } catch (error) {
+            elizaLogger.error("Error getting price:", error.message);
+            return null;
+        }
+    } catch (error) {
+        elizaLogger.error("Error in getPriceInquiry:", error.message);
+        return null;
+    }
 }

@@ -339,6 +339,8 @@ export const formatRouteInfo = (quote: GetQuoteResponse): string[] => {
 };
 
 export const getQuoteObj = async (runtime: IAgentRuntime, priceInquiry: PriceInquiry, address: string) => {
+    elizaLogger.info('inside of getQuoteObj')
+    elizaLogger.info('priceInquiry ', JSON.stringify(priceInquiry))
     const {
         sellTokenObject,
         sellAmountBaseUnits,
@@ -361,7 +363,7 @@ export const getQuoteObj = async (runtime: IAgentRuntime, priceInquiry: PriceInq
         elizaLogger.info("Quote:", quote);
         return quote;
     } catch (error) {
-        elizaLogger.error("Error getting quote:", error);
+        elizaLogger.error("Error getting quote:", error.message);
         return null;
     }
 }
