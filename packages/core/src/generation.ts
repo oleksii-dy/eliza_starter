@@ -55,6 +55,8 @@ import { fal } from "@fal-ai/client";
 import BigNumber from "bignumber.js";
 import { createPublicClient, http } from "viem";
 
+// @ts-ignore - Temporarily disable type checking to resolve deep recursion error
+
 type Tool = CoreTool<any, any>;
 type StepResult = AIStepResult<any>;
 
