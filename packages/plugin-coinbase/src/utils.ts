@@ -420,7 +420,7 @@ export const getAssetType = (transaction: EthereumTransaction) => {
  */
 export async function getWalletDetails(
     runtime: IAgentRuntime,
-    networkId: string = Coinbase.networks.Base
+    networkId: string = Coinbase.networks.BaseMainnet
 ): Promise<{
     balances: Array<{ asset: string; amount: string }>;
     transactions: Array<{
