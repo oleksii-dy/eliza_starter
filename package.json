@@ -82,7 +82,8 @@
     "ollama-ai-provider": "0.16.1",
     "optional": "0.1.4",
     "pnpm": "9.15.0",
-    "sharp": "0.33.5"
+    "sharp": "0.33.5",
+    "@solana-developers/helpers": "2.6.0"
   },
   "packageManager": "pnpm@9.15.0",
   "workspaces": [
