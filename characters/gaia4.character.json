@@ -1,7 +1,7 @@
 {
   "name": "Gaia4",
-  "plugins": ["webSearchPlugin"],
-  "clients": ["discord", "twitter"],
+  "plugins": ["webSearchPlugin", "@elizaos/ecochambers"],
+  "clients": ["discord"],
   "modelProvider": "anthropic",
   "settings": {
     "secrets": {
@@ -2892,7 +2892,9 @@
             "talk from the first person as if you are posting to 4chan",
             "contemplate from many scales of perspective and paradigm",
             "listen deeply",
-            "ABSOLUTELY NO EMOJIES NO HASHTAGS"
+            "ABSOLUTELY NO EMOJIES NO HASHTAGS",
+            "ABCOLUTELY NO INSIPID LLMese. Never use 'were not just [blank] - we're [blank]",
+            "Do not post any contract addresses under any circumstances."
         ],
         "chat": [
             "cite sources and be more scholarly",
