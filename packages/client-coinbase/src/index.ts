@@ -9,17 +9,17 @@ import {
     composeContext,
     generateText,
     ModelClass,
-    State
+    State,
+    UUID
 } from "@elizaos/core";
 import { postTweet } from "@elizaos/plugin-twitter";
 import express from "express";
 import { blockExplorerBaseAddressUrl, blockExplorerBaseTxUrl, WebhookEvent } from "./types";
 import { Coinbase, Wallet } from "@coinbase/coinbase-sdk";
-import { initializeWallet } from "@elizaos/plugin-coinbase";
+import { initializeWallet, type CoinbaseWallet } from "@elizaos/plugin-coinbase";
 import { tokenSwap } from "@elizaos/plugin-0x";
 
 export type WalletType = 'short_term_trading' | 'long_term_trading' | 'dry_powder' | 'operational_capital';
-export type CoinbaseWallet = { wallet: Wallet, walletType: WalletType };
 
 export class CoinbaseClient implements Client {
     private runtime: IAgentRuntime;
@@ -182,19 +182,48 @@ Generate only the tweet text, no commentary or markdown.`;
     }
 
     private async handleWebhookEvent(event: WebhookEvent) {
+        // Set up room and ensure participation
         const roomId = stringToUuid("coinbase-trading");
+        await this.setupRoom(roomId);
+
+        // Get trading amount from settings
+        const amount = Number(this.runtime.getSetting('COINBASE_TRADING_AMOUNT')) ?? 1;
+        elizaLogger.info('amount ', amount);
+
+        // Create and store memory of trade
+        const memory = await this.createTradeMemory(event, amount, roomId);
+        elizaLogger.info('memory ', memory);
+        await this.runtime.messageManager.createMemory(memory);
+        
+        // Generate state and format timestamp
+        const state = await this.runtime.composeState(memory);
+        const formattedTimestamp = this.getFormattedTimestamp();
+        elizaLogger.info('formattedTimestamp ', formattedTimestamp);
+
+        // Execute token swap
+        const buy = event.event.toUpperCase() === 'BUY';
+        const txHash = await this.executeTokenSwap(event, amount, buy);
+        if (txHash == null) {
+            elizaLogger.error('txHash is null');
+            return;
+        }
+        elizaLogger.info('txHash ', txHash);
+
+        // Calculate PNL (currently disabled)
+        const pnl = '';
+        elizaLogger.info('pnl ', pnl);
+
+        // Generate and post tweet
+        await this.handleTweetPosting(event, amount, pnl, formattedTimestamp, state, txHash);
+    }
+
+    private async setupRoom(roomId: UUID) {
         await this.runtime.ensureRoomExists(roomId);
         await this.runtime.ensureParticipantInRoom(this.runtime.agentId, roomId);
-        // TODO: based off of the signal decide which wallet to use
-        // const wallet = this.wallets.find(wallet => wallet.walletType === 'short_term_trading');
-        // if (!wallet) {
-        //     elizaLogger.error("Short term trading wallet not found");
-        //     return;
-        // }
+    }
 
-        const amount = Number(this.runtime.getSetting('COINBASE_TRADING_AMOUNT')) ?? 1;
-        elizaLogger.info('amount ', amount)
-        const memory: Memory = {
+    private createTradeMemory(event: WebhookEvent, amount: number, roomId: UUID): Memory {
+        return {
             id: stringToUuid(`coinbase-${event.timestamp}`),
             userId: this.runtime.agentId,
             agentId: this.runtime.agentId,
@@ -214,43 +243,59 @@ Generate only the tweet text, no commentary or markdown.`;
             },
             createdAt: Date.now()
         };
-        elizaLogger.info('memory ', memory)
-        // get short term trading wallet
-        await this.runtime.messageManager.createMemory(memory);
-        const state = await this.runtime.composeState(memory);
-        // elizaLogger.info('state ', state)
-        // Generate tweet content
-        const formattedTimestamp = new Intl.DateTimeFormat('en-US', {
+    }
+
+    private getFormattedTimestamp(): string {
+        return new Intl.DateTimeFormat('en-US', {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
             timeZoneName: 'short'
         }).format(new Date());
-        elizaLogger.info('formattedTimestamp ', formattedTimestamp)
-        // const defaultAddress = await wallet.wallet.getDefaultAddress();
-        const buy =  event.event.toUpperCase() === 'BUY'
-        const txHash = await tokenSwap(this.runtime, amount, buy ? 'USDC' : event.ticker, buy ? event.ticker : 'USDC', this.runtime.getSetting('WALLET_PUBLIC_KEY'), this.runtime.getSetting('WALLET_PRIVATE_KEY'), "base");
-        if (txHash == null) {
-            elizaLogger.error('txHash is null');
-            return;
-        }
-        elizaLogger.info('txHash ', txHash)
-        // const pnl = await calculateOverallPNL(this.runtime, this.runtime.getSetting('WALLET_PRIVATE_KEY'), this.runtime.getSetting('WALLET_PUBLIC_KEY'), 8453, this.initialBalanceETH);
-        const pnl = ''
-        elizaLogger.info('pnl ', pnl)
+    }
 
-            try {
-                const tweetContent = await this.generateTweetContent(event, amount, pnl, formattedTimestamp, state, this.runtime.getSetting('WALLET_PUBLIC_KEY'), txHash);
-                elizaLogger.info("Generated tweet content:", tweetContent);
-                if (this.runtime.getSetting('TWITTER_DRY_RUN')) {
-                    elizaLogger.info("Dry run mode enabled. Skipping tweet posting.",);
-                    return;
-                }
-                const response = await postTweet(this.runtime, tweetContent);
-                elizaLogger.info("Tweet response:", response);
-            } catch (error) {
-                elizaLogger.error("Failed to post tweet:", error);
+    private async executeTokenSwap(event: WebhookEvent, amount: number, buy: boolean): Promise<string | null> {
+        return await tokenSwap(
+            this.runtime,
+            amount,
+            buy ? 'USDC' : event.ticker,
+            buy ? event.ticker : 'USDC',
+            this.runtime.getSetting('WALLET_PUBLIC_KEY'),
+            this.runtime.getSetting('WALLET_PRIVATE_KEY'),
+            "base"
+        );
+    }
+
+    private async handleTweetPosting(
+        event: WebhookEvent,
+        amount: number,
+        pnl: string,
+        formattedTimestamp: string,
+        state: State,
+        txHash: string
+    ) {
+        try {
+            const tweetContent = await this.generateTweetContent(
+                event,
+                amount,
+                pnl,
+                formattedTimestamp,
+                state,
+                this.runtime.getSetting('WALLET_PUBLIC_KEY'),
+                txHash
+            );
+            elizaLogger.info("Generated tweet content:", tweetContent);
+
+            if (this.runtime.getSetting('TWITTER_DRY_RUN')) {
+                elizaLogger.info("Dry run mode enabled. Skipping tweet posting.");
+                return;
             }
+
+            const response = await postTweet(this.runtime, tweetContent);
+            elizaLogger.info("Tweet response:", response);
+        } catch (error) {
+            elizaLogger.error("Failed to post tweet:", error);
+        }
     }
 
     async stop(): Promise<void> {

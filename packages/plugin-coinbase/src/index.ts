@@ -20,4 +20,4 @@ export * from "./plugins/trade";
 export * from "./plugins/tokenContract";
 export * from "./plugins/webhooks";
 export * from "./plugins/advancedTrade";
-export { initializeWallet } from "./utils";
+export { initializeWallet, type CoinbaseWallet } from "./utils";
