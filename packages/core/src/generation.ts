@@ -1292,7 +1292,7 @@ export async function generateText({
 
         return response;
     } catch (error) {
-        elizaLogger.error("Error in generateText:", error);
+        elizaLogger.error("Error in generateText 1:", JSON.stringify(error));
         throw error;
     }
 }
@@ -1483,7 +1483,10 @@ export async function generateTextArray({
                 return parsedResponse;
             }
         } catch (error) {
-            elizaLogger.error("Error in generateTextArray:", error);
+            elizaLogger.error(
+                "Error in generateTextArray 2:",
+                JSON.stringify(error)
+            );
         }
 
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
@@ -1555,7 +1558,10 @@ export async function generateObjectArray({
                 return parsedResponse;
             }
         } catch (error) {
-            elizaLogger.error("Error in generateTextArray:", error);
+            elizaLogger.error(
+                "Error in generateTextArray 3:",
+                JSON.stringify(error)
+            );
         }
 
         await new Promise((resolve) => setTimeout(resolve, retryDelay));
@@ -1643,7 +1649,9 @@ export const generateImage = async (
 }> => {
     const modelSettings = getImageModelSettings(runtime.imageModelProvider);
     if (!modelSettings) {
-        elizaLogger.warn("No model settings found for the image model provider.");
+        elizaLogger.warn(
+            "No model settings found for the image model provider."
+        );
         return { success: false, error: "No model settings available" };
     }
     const model = modelSettings.name;
