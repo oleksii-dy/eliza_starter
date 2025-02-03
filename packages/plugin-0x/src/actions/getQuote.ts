@@ -341,7 +341,7 @@ export const formatRouteInfo = (quote: GetQuoteResponse): string[] => {
 
 export const getQuoteObj = async (runtime: IAgentRuntime, priceInquiry: PriceInquiry, address: string) => {
     elizaLogger.info('inside of getQuoteObj')
-    elizaLogger.info('priceInquiry ', JSON.stringify(priceInquiry))
+    // elizaLogger.info('priceInquiry ', JSON.stringify(priceInquiry))
     const {
         sellTokenObject,
         sellAmountBaseUnits,
@@ -468,14 +468,15 @@ export function formatTokenAmountManual(
     address: string,
     ticker: string,
 ): string {
+    // elizaLogger.info('formatTokenAmountManual', amount, address, ticker)
     if (!amount) return "0";
     // check if in TOKENS 
     const token = TOKENS[ticker];
     if (!token) throw new Error(`Token not found for address: ${ticker}`);
-    if (token.address.toLowerCase() !== address.toLowerCase()) {
-        throw new Error(`Token address does not match: ${token.address} !== ${address}`);
-    }
+    // if (token.address.toLowerCase() !== address.toLowerCase()) {
+    //     throw new Error(`Token address does not match: ${token.address} !== ${address}`);
+    // }
 
     const parsedAmount = formatUnits(BigInt(amount), token.decimals);
-    return `${Number(parsedAmount).toFixed(4)} ${token.symbol}`;
+    return `${Number(parsedAmount).toFixed(token.decimals)} ${token.symbol}`;
 }

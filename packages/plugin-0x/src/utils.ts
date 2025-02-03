@@ -44,6 +44,17 @@ export const TOKENS = {
         type: "ERC20",
         logoURI: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png"
     },
+    axlUSDC: {
+        chainId: 8453,
+        asset: "c8453_t0xEB466342C4d449BC9f53A865D5Cb90586f405215",
+        type: "BASE",
+        address: "0xEB466342C4d449BC9f53A865D5Cb90586f405215",
+        name: "Axelar Wrapped USDC",
+        symbol: "axlUSDC",
+        decimals: 6,
+        logoURI: "https://assets-cdn.trustwallet.com/blockchains/base/assets/0xEB466342C4d449BC9f53A865D5Cb90586f405215/logo.png",
+        pairs: []
+    },
     cbBTC: {
         chainId: 8453,
         name: "Coinbase Wrapped BTC",
@@ -52,6 +63,17 @@ export const TOKENS = {
         address: "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
         type: "ERC20",
         logoURI: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png"
-    }
+    },
+    DAI: {
+        chainId: 8453,
+        asset: "c8453_t0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
+        type: "BASE",
+        address: "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb",
+        name: "Dai",
+        symbol: "DAI",
+        decimals: 18,
+        logoURI: "https://assets-cdn.trustwallet.com/blockchains/base/assets/0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb/logo.png",
+        pairs: []
+    },
 };
 

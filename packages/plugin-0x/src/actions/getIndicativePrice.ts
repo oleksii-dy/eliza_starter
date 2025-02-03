@@ -303,7 +303,10 @@ const getTokenMetadata = (tokenSymbol: string) => {
             return TOKENS.USDC;
         case 'CBBTC':
         case 'BTC':
+        case 'WBTC':
             return TOKENS.cbBTC;
+        case 'DAI':
+            return TOKENS.DAI;
         default:
             elizaLogger.error(`${tokenSymbol} is not supported`);
             return null;
@@ -340,11 +343,11 @@ export const getPriceInquiry = async (
             return null;
         }
 
-        elizaLogger.info("Getting indicative price for:", {
-            sellToken: sellTokenMetadata,
-            buyToken: buyTokenMetadata,
-            amount: sellAmount,
-        });
+        // elizaLogger.info("Getting indicative price for:", {
+        //     sellToken: sellTokenMetadata,
+        //     buyToken: buyTokenMetadata,
+        //     amount: sellAmount,
+        // });
 
         const zxClient = createClientV2({
             apiKey: runtime.getSetting("ZERO_EX_API_KEY"),

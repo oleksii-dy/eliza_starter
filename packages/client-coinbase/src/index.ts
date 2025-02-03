@@ -301,12 +301,9 @@ export const CoinbaseClientInterface: Client = {
     },
 };
 
-// export const calculateOverallPNL = async (runtime: IAgentRuntime, privateKey: string, publicKey: string, chainId: number, initialBalanceInEther: number): Promise<string> => {
+// export const calculateOverallPNL = async (runtime: IAgentRuntime, privateKey: string, publicKey: string, chainId: number, initialBalance: number): Promise<string> => {
+//USDC ETH and CBBTC 
 //     const result = await readContractWrapper(runtime, contractAddress, method, args, networkId, abi);
-//     // update to use coinbase
-//     // const balance = await client.getBalance({
-//     //     address: publicKey as `0x${string}`,
-//     // });
 
 //     // const formattedBalanceInEther = formatEther(balance)
 //     const pnlInEther = Number(formattedBalanceInEther) - initialBalanceInEther
