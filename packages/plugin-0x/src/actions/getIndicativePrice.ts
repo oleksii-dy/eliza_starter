@@ -381,7 +381,7 @@ export const getPriceInquiry = async (
         if (!price) return null;
 
         // Handle token approvals
-        const approved = await handleTokenApprovals(client, price);
+        const approved = await handleTokenApprovals(client, price, sellTokenMetadata.address);
         if (!approved) return null;
 
         // Format response
@@ -414,10 +414,10 @@ const getPrice = async (zxClient: any, params: any): Promise<GetIndicativePriceR
     }
 };
 
-const handleTokenApprovals = async (client: any, price: GetIndicativePriceResponse): Promise<boolean> => {
+const handleTokenApprovals = async (client: any, price: GetIndicativePriceResponse, sellTokenAddress: string = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'): Promise<boolean> => {
     try {
         const sellTokenContract = getContract({
-            address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+            address: sellTokenAddress,
             abi: erc20Abi,
             client: client as any,
         });
