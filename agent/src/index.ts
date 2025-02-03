@@ -155,7 +155,7 @@ import { ankrPlugin } from "@elizaos/plugin-ankr";
 import { formPlugin } from "@elizaos/plugin-form";
 import { MongoClient } from "mongodb";
 import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
-
+import { victionPlugin } from "@elizaos/plugin-viction";
 import { trikonPlugin } from "@elizaos/plugin-trikon";
 import arbitragePlugin from "@elizaos/plugin-arbitrage";
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
@@ -1048,6 +1048,10 @@ export async function createAgent(
                 ? nitroPlugin
                 : null,
             getSecret(character, "TAVILY_API_KEY") ? webSearchPlugin : null,
+            (getSecret(character, "VICTION_ADDRESS") &&
+                getSecret(character, "VICTION_ADDRESS")?.startsWith("0x"))
+                ? victionPlugin
+                : null,
             getSecret(character, "SOLANA_PUBLIC_KEY") ||
             (getSecret(character, "WALLET_PUBLIC_KEY") &&
                 !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))

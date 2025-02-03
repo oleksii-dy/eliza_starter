@@ -39,7 +39,7 @@ Extract the following information about the requested VIC transfer:
 function isVicTransferContent(content: any): content is VicTransferContent {
     return (
         typeof content.recipient === "string" &&
-        typeof content.amount === "number"
+        typeof content.amount === "string"
     );
 }
 
