@@ -2,7 +2,7 @@
 
 MultiversX blockchain integration plugin for Eliza OS that enables token management and transfers.
 
-This plugin is under development.
+This plugin is under development and
 
 ## Overview
 
@@ -16,7 +16,7 @@ This plugin serves as the foundation for interacting with the MultiversX ecosyst
 
 ### Actions
 - EGLD and ESDT token transfers
-- ESDT creation and management
+- ESDT creation and management 
 - ESDT Swap
 - Token Swap
 
@@ -31,7 +31,7 @@ To install the plugin, run:
 pnpm install @elizaos/plugin-multiversx
 ```
 
-### Configuration
+### ElizaOs .env Configuration
 
 Before using the plugin, configure the necessary environment variables in the **.env** file at the ElizaOS level:
 
@@ -54,19 +54,6 @@ Refer to the [documentation](https://docs.multiversx.com/sdk-and-tools/sdk-py/in
 # Check available options for the convert command
 ~$ mxpy wallet convert -h
 
-usage: mxpy wallet convert [-h] ...
-
-Convert a wallet from one format to another
-
-options:
-  -h, --help                                      show this help message and exit
-  --infile INFILE                                 path to the input file
-  --outfile OUTFILE                               path to the output file
-  --in-format {raw-mnemonic,keystore-mnemonic,keystore-secret-key,pem}
-                                                  the format of the input file
-  --out-format {raw-mnemonic,keystore-mnemonic,keystore-secret-key,pem,address-bech32,address-hex,secret-key}
-                                                  the format of the output file
-
 # Convert a PEM file into a hex secret key:
 ~$ mxpy wallet convert --infile wallet.pem --in-format pem --out-format secret-key
 Output:
@@ -78,11 +65,21 @@ po8ed118werc69c9be506df87f76d6e919f61d3559ed8g68bb78b39fcddc8t9y
 
 The plugin supports the following networks:
 
-- Mainnet
-- Devnet
-- Testnet
+- Mainnet: `mainnet`
+- Devnet: `devnet`
+- Testnet: `testnet`
 
----
+### Trigger Agent actions in chat bot
+
+#### Create New ESDT
+ ```
+ Can you create a token on multiversx called MULTIVERS with a ticker MUL, an amount of 10000 and 18 decimals?
+ ```
+#### Transfer EGLD
+ ```
+ Can you transfer 10 EGLD to erd1tjygwhw5ylmv3v52ucvhmz0q7r0hafz4cfndjaskss5ahz28l3hqdvxqct ?
+ ```
+
 
 ## Contributor Guide
 
