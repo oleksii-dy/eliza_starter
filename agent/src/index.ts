@@ -155,7 +155,7 @@ import { ankrPlugin } from "@elizaos/plugin-ankr";
 import { formPlugin } from "@elizaos/plugin-form";
 import { MongoClient } from "mongodb";
 import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
-
+import { elfaAiPlugin } from "@elizaos/plugin-elfa-ai";
 import { trikonPlugin } from "@elizaos/plugin-trikon";
 import arbitragePlugin from "@elizaos/plugin-arbitrage";
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
@@ -1295,6 +1295,8 @@ export async function createAgent(
             getSecret(character, "ARBITRAGE_BUNDLE_EXECUTOR_ADDRESS")
                 ? arbitragePlugin
                 : null,
+            getSecret(character, "ELFA_AI_BASE_URL") ? elfaAiPlugin : null,
+            getSecret(character, "ELFA_AI_API_KEY") ? solanaPlugin : null,
         ]
             .flat()
             .filter(Boolean),
