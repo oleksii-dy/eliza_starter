@@ -308,6 +308,8 @@ const getTokenMetadata = (tokenSymbol: string) => {
     switch (tokenSymbol) {
         case 'ETH':
             return TOKENS.ETH;
+        case 'WETH':
+            return TOKENS.WETH;
         case 'USDC':
             return TOKENS.USDC;
         case 'CBBTC':
