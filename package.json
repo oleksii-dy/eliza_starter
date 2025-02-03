@@ -59,8 +59,8 @@
       "cookie": "0.7.0",
       "bs58": "5.0.0",
       "@coral-xyz/anchor": "0.28.0",
-      "@solana/web3.js": "1.95.5",
-      "@solana/spl-token": "0.3.11"
+      "@solana/web3.js": "1.87.6",
+      "@solana/spl-token": "0.3.8"
     },
     "patchedDependencies": {
       "@solana-developers/helpers@2.6.0": "patches/@solana-developers__helpers@2.6.0.patch"
