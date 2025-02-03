@@ -330,121 +330,137 @@ export const getPriceInquiry = async (
     chain: string
 ): Promise<PriceInquiry | null> => {
     try {
-        // Convert chain string to chainId
-        elizaLogger.info('inside of getPriceInquiry')
-        elizaLogger.info('sellTokenSymbol ', sellTokenSymbol);
-        elizaLogger.info('sellAmount ', sellAmount);
-        elizaLogger.info('buyTokenSymbol ', buyTokenSymbol);
-        elizaLogger.info('chain ', chain);
+        // Log input parameters
+        elizaLogger.info('Getting price inquiry', {
+            sellTokenSymbol,
+            sellAmount, 
+            buyTokenSymbol,
+            chain
+        });
+
+        // Hardcoded chainId for Base network
         const chainId = 8453;
-        elizaLogger.info('chainId ', chainId);
-        if (!chainId) {
-            elizaLogger.error('chainId is null');
-            return null;
-        }
+        
+        // Get token metadata
+        const buyTokenMetadata = getTokenMetadata(buyTokenSymbol);
+        const sellTokenMetadata = getTokenMetadata(sellTokenSymbol);
 
-       const buyTokenMetadata = getTokenMetadata(buyTokenSymbol);
-       const sellTokenMetadata = getTokenMetadata(sellTokenSymbol);
-       elizaLogger.info('sellTokenMetadata ', JSON.stringify(sellTokenMetadata));
-       elizaLogger.info('buyTokenMetadata ', JSON.stringify(buyTokenMetadata));
         if (!sellTokenMetadata || !buyTokenMetadata) {
-            elizaLogger.error('sellTokenMetadata or buyTokenMetadata is null');
+            elizaLogger.error('Invalid token metadata');
             return null;
         }
 
-        // elizaLogger.info("Getting indicative price for:", {
-        //     sellToken: sellTokenMetadata,
-        //     buyToken: buyTokenMetadata,
-        //     amount: sellAmount,
-        // });
-
+        // Initialize 0x client
         const zxClient = createClientV2({
             apiKey: runtime.getSetting("ZERO_EX_API_KEY"),
         });
-    
+
+        // Convert sell amount to base units
         const sellAmountBaseUnits = parseUnits(
             sellAmount.toString(),
             sellTokenMetadata.decimals
         ).toString();
 
-// setup wallet client
-    const client = createWalletClient({
-        account: privateKeyToAccount(("0x" + runtime.getSetting("WALLET_PRIVATE_KEY")) as `0x${string}`),
-        chain: base,
-        transport: http(runtime.getSetting("ALCHEMY_HTTP_TRANSPORT_URL")),
-    }).extend(publicActions); // extend wallet client with publicActions for public client
-    elizaLogger.info('client ', JSON.stringify(client))
-        try {
-            const price = (await zxClient.swap.allowanceHolder.getPrice.query({
-                sellAmount: sellAmountBaseUnits,
-                sellToken: sellTokenMetadata.address,
-                buyToken: buyTokenMetadata.address,
-                chainId,
-            })) as GetIndicativePriceResponse;
-            elizaLogger.info('price ', JSON.stringify(price))
-            let sellTokenContract;
-            try {
-                sellTokenContract = getContract({
-                    address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-                    abi: erc20Abi,
-                    client: client as any,
-                  });
-              elizaLogger.info('sellTokenContract ', JSON.stringify(sellTokenContract))
-            } catch (error) {
-                elizaLogger.info('error getting sellTokenContract ', JSON.stringify(error))
-                return null;
-            }
-            if (price.issues.allowance !== null) {
-                try {
-                  const { request } = await (sellTokenContract as any).simulate.approve([
-                    (price as any).issues.allowance.spender,
-                    maxUint256,
-                  ]);
-                  elizaLogger.info("Approving AllowanceHolder to spend sellTokenContract...", request);
-                  // set approval
-                  const hash = await (sellTokenContract as any).write.approve(request.args);
-                  elizaLogger.info(
-                    "Approved AllowanceHolder to spend sellTokenContract.",
-                    await client.waitForTransactionReceipt({ hash })
-                  );
-                } catch (error) {
-                  elizaLogger.info("Error approving AllowanceHolder:", error);
-                }
-              } else {
-                elizaLogger.info("sellTokenContract already approved for AllowanceHolder");
-              }
+        // Setup wallet client
+        const client = createWalletClient({
+            account: privateKeyToAccount(("0x" + runtime.getSetting("WALLET_PRIVATE_KEY")) as `0x${string}`),
+            chain: base,
+            transport: http(runtime.getSetting("ALCHEMY_HTTP_TRANSPORT_URL")),
+        }).extend(publicActions);
 
-            // Format amounts to human-readable numbers
-            const buyAmount =
-                Number(price.buyAmount) /
-                Math.pow(10, buyTokenMetadata.decimals);
-            const sellAmount =
-                Number(price.sellAmount) /
-                Math.pow(10, sellTokenMetadata.decimals);
-                const formattedResponse = [
-                    `💱 Swap Details:`,
-                    `────────────────`,
-                    `📤 Sell: ${sellAmount.toFixed(4)} ${sellTokenMetadata.symbol}`,
-                    `📥 Buy: ${buyAmount.toFixed(4)} ${buyTokenMetadata.symbol}`,
-                    `📊 Rate: 1 ${sellTokenMetadata.symbol} = ${(buyAmount / sellAmount).toFixed(4)} ${buyTokenMetadata.symbol}`,
-                    `🔗 Chain: ${CHAIN_NAMES[chainId]}`,
-                    `────────────────`,
-                ].join("\n");
-            elizaLogger.info('formattedResponse ', formattedResponse)
+        // Get price quote
+        const price = await getPrice(zxClient, {
+            sellAmount: sellAmountBaseUnits,
+            sellToken: sellTokenMetadata.address,
+            buyToken: buyTokenMetadata.address,
+            chainId,
+        });
 
-            return {
-                sellTokenObject: sellTokenMetadata,
-                buyTokenObject: buyTokenMetadata,
-                sellAmountBaseUnits,
-                chainId,
-                timestamp: new Date().toISOString(),
-            };
-        } catch (error) {
-            elizaLogger.error("Error getting price:", error.message);
-            return null;
-        }
+        if (!price) return null;
+
+        // Handle token approvals
+        const approved = await handleTokenApprovals(client, price);
+        if (!approved) return null;
+
+        // Format response
+        const formattedAmounts = formatAmounts(price, buyTokenMetadata, sellTokenMetadata);
+        logFormattedResponse(formattedAmounts, chainId);
+
+        return {
+            sellTokenObject: sellTokenMetadata,
+            buyTokenObject: buyTokenMetadata,
+            sellAmountBaseUnits,
+            chainId,
+            timestamp: new Date().toISOString(),
+        };
+
     } catch (error) {
         elizaLogger.error("Error in getPriceInquiry:", error.message);
         return null;
     }
-}
+};
+
+// Helper functions
+const getPrice = async (zxClient: any, params: any): Promise<GetIndicativePriceResponse | null> => {
+    try {
+        const price = await zxClient.swap.allowanceHolder.getPrice.query(params) as GetIndicativePriceResponse;
+        elizaLogger.info('Received price quote', price);
+        return price;
+    } catch (error) {
+        elizaLogger.error("Error getting price:", error.message);
+        return null;
+    }
+};
+
+const handleTokenApprovals = async (client: any, price: GetIndicativePriceResponse): Promise<boolean> => {
+    try {
+        const sellTokenContract = getContract({
+            address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+            abi: erc20Abi,
+            client: client as any,
+        });
+
+        if (price.issues.allowance !== null) {
+            const { request } = await (sellTokenContract as any).simulate.approve([
+                (price as any).issues.allowance.spender,
+                maxUint256,
+            ]);
+
+            const hash = await (sellTokenContract as any).write.approve(request.args);
+            await client.waitForTransactionReceipt({ hash });
+            elizaLogger.info("Token approval successful");
+        }
+
+        return true;
+    } catch (error) {
+        elizaLogger.error("Error handling token approvals:", error);
+        return false;
+    }
+};
+
+const formatAmounts = (price: GetIndicativePriceResponse, buyTokenMetadata: any, sellTokenMetadata: any) => {
+    const buyAmount = Number(price.buyAmount) / Math.pow(10, buyTokenMetadata.decimals);
+    const sellAmount = Number(price.sellAmount) / Math.pow(10, sellTokenMetadata.decimals);
+    
+    return {
+        buyAmount,
+        sellAmount,
+        rate: buyAmount / sellAmount,
+        buySymbol: buyTokenMetadata.symbol,
+        sellSymbol: sellTokenMetadata.symbol
+    };
+};
+
+const logFormattedResponse = (amounts: any, chainId: number) => {
+    const response = [
+        `💱 Swap Details:`,
+        `────────────────`,
+        `📤 Sell: ${amounts.sellAmount.toFixed(4)} ${amounts.sellSymbol}`,
+        `📥 Buy: ${amounts.buyAmount.toFixed(4)} ${amounts.buySymbol}`,
+        `📊 Rate: 1 ${amounts.sellSymbol} = ${amounts.rate.toFixed(4)} ${amounts.buySymbol}`,
+        `🔗 Chain: ${CHAIN_NAMES[chainId]}`,
+        `────────────────`,
+    ].join("\n");
+    
+    elizaLogger.info('Formatted response:', response);
+};

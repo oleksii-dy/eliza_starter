@@ -35,6 +35,15 @@ export const TOKENS = {
         type: "NATIVE",
         logoURI: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png"
     },
+    WETH: {
+        chainId: 8453,
+        name: "Wrapped Ether",
+        symbol: "WETH",
+        decimals: 18,
+        address: "0x4200000000000000000000000000000000000006",
+        type: "ERC20",
+        logoURI: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png"
+    },
     USDC: {
         chainId: 8453,
         name: "USD coin",
