@@ -349,12 +349,11 @@ export async function updateCharacterSecrets(
     value: string
 ): Promise<boolean> {
     try {
-        // const characterFilePath = path.resolve(
-        //     '/Users/a/Desktop/eliza/',
-        //     characterfilePath
-        // );
-        // elizaLogger.log("Character file path:", characterFilePath);
-        const characterFilePath = '/Users/a/Desktop/eliza/characters/prosper.character.json'
+        const characterFilePath = path.resolve(
+            '/Users/a/Desktop/eliza/',
+            characterfilePath
+        );
+        elizaLogger.log("Character file path:", characterFilePath);
         // Check if the character file exists
         if (!fs.existsSync(characterFilePath)) {
             elizaLogger.error("Character file not found:", characterFilePath);
@@ -421,7 +420,7 @@ export const getAssetType = (transaction: EthereumTransaction) => {
  */
 export async function getWalletDetails(
     runtime: IAgentRuntime,
-    networkId: string = Coinbase.networks.BaseMainnet
+    networkId: string = Coinbase.networks.Base
 ): Promise<{
     balances: Array<{ asset: string; amount: string }>;
     transactions: Array<{

@@ -201,7 +201,6 @@ async function getPrice(client: RESTClient, productId: string) {
     }
 }
 
-
 export const executeAdvancedTradeAction: Action = {
     name: "EXECUTE_ADVANCED_TRADE",
     description: "Execute a trade using Coinbase Advanced Trading API",

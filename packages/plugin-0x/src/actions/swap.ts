@@ -26,7 +26,8 @@ export const swap: Action = {
     description: "Execute a token swap using 0x protocol",
     validate: async (runtime: IAgentRuntime) => {
         return (
-            !!runtime.getSetting("ZERO_EX_API_KEY")
+            !!runtime.getSetting("ZERO_EX_API_KEY") &&
+            !!runtime.getSetting("WALLET_PRIVATE_KEY")
         );
     },
     handler: async (
@@ -47,7 +48,7 @@ export const swap: Action = {
         const { quote, chainId } = latestQuote;
 
         try {
-            const client = getWalletClient('', chainId); // 1 for mainnet, or pass chainId
+            const client = getWalletClient(runtime.getSetting("WALLET_PRIVATE_KEY"), chainId); // 1 for mainnet, or pass chainId
 
             // 1. Handle Permit2 signature
             let signature: Hex | undefined;
