@@ -22,6 +22,7 @@ import AIWriter from "react-aiwriter";
 import type { IAttachment } from "@/types";
 import { AudioRecorder } from "./audio-recorder";
 import { Badge } from "./ui/badge";
+import { useAutoScroll } from "./ui/chat/hooks/useAutoScroll";
 
 interface ExtraContentFields {
     id?: string;
@@ -40,7 +41,6 @@ export default function Page({ agentId }: { agentId: UUID }) {
     const { toast } = useToast();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [input, setInput] = useState("");
-    const messagesContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const formRef = useRef<HTMLFormElement>(null);
@@ -50,13 +50,10 @@ export default function Page({ agentId }: { agentId: UUID }) {
     const getMessageVariant = (role: string) =>
         role !== "user" ? "received" : "sent";
 
-    const scrollToBottom = useCallback(() => {
-        if (messagesContainerRef.current) {
-            messagesContainerRef.current.scrollTop =
-                messagesContainerRef.current.scrollHeight;
-        }
-    }, []);
-
+    const { scrollRef, isAtBottom, scrollToBottom, disableAutoScroll } = useAutoScroll({
+        smooth: true,
+    });
+   
     useEffect(() => {
         scrollToBottom();
     }, [queryClient.getQueryData(["messages", agentId])]);
@@ -229,7 +226,12 @@ export default function Page({ agentId }: { agentId: UUID }) {
     return (
         <div className="flex flex-col w-full h-[calc(100dvh)] p-4">
             <div className="flex-1 overflow-y-auto">
-                <ChatMessageList ref={messagesContainerRef}>
+                <ChatMessageList 
+                    scrollRef={scrollRef}
+                    isAtBottom={isAtBottom}
+                    scrollToBottom={scrollToBottom}
+                    disableAutoScroll={disableAutoScroll}
+                >
                     {transitions((style, message: ContentWithUser) => {
                         const variant = getMessageVariant(message?.user);
                         return (

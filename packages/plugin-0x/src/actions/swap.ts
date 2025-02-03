@@ -1,13 +1,13 @@
 import {
-    Action,
-    IAgentRuntime,
-    Memory,
-    State,
-    HandlerCallback,
+    type Action,
+    type IAgentRuntime,
+    type Memory,
+    type State,
+    type HandlerCallback,
     elizaLogger,
     MemoryManager,
 } from "@elizaos/core";
-import { Hex, numberToHex, concat } from "viem";
+import { type Hex, numberToHex, concat } from "viem";
 import { CHAIN_EXPLORERS, ZX_MEMORY } from "../constants";
 import { getWalletClient } from "../hooks.ts/useGetWalletClient";
 import { Chains, Quote } from "../types";
@@ -33,8 +33,8 @@ export const swap: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state: State,
-        options: Record<string, unknown>,
+        _state: State,
+        _options: Record<string, unknown>,
         callback: HandlerCallback
     ) => {
         const latestQuote = await retrieveLatestQuote(runtime, message);
@@ -101,13 +101,12 @@ export const swap: Action = {
                     content: { hash: txHash, status: "success" },
                 });
                 return true;
-            } else {
-                callback({
-                    text: `❌ Swap failed! Check transaction: ${CHAIN_EXPLORERS[chainId]}/tx/${txHash}`,
-                    content: { hash: txHash, status: "failed" },
-                });
-                return false;
             }
+            callback({
+                text: `❌ Swap failed! Check transaction: ${CHAIN_EXPLORERS[chainId]}/tx/${txHash}`,
+                content: { hash: txHash, status: "failed" },
+            });
+            return false;
         } catch (error) {
             elizaLogger.error("Swap execution failed:", error);
             callback({
