@@ -67,6 +67,7 @@ export class CoinbaseClient implements Client {
         // Add webhook validation middleware
         const validateWebhook = (req: express.Request, res: express.Response, next: express.NextFunction) => {
             const event = req.body as WebhookEvent;
+            elizaLogger.info('event ', JSON.stringify(event))
             if (!event.event || !event.ticker || !event.timestamp || !event.price) {
                 res.status(400).json({ error: "Invalid webhook payload" });
                 return;
@@ -126,7 +127,7 @@ export class CoinbaseClient implements Client {
         }
     }
 
-    private async generateTweetContent(event: WebhookEvent, amountInCurrency: number, pnlText: string, formattedTimestamp: string, state: State, address:string, hash: string | null): Promise<string> {
+    private async generateTweetContent(event: WebhookEvent, amountInCurrency: number, pnl: string, formattedTimestamp: string, state: State, address:string, hash: string | null): Promise<string> {
         try {
             const tradeTweetTemplate = `
 # Task
@@ -136,7 +137,7 @@ Trade specifics:
 - ${event.event.toUpperCase()} order for ${event.ticker}
 - Amount traded: $${amountInCurrency.toFixed(2)}
 - Price at trade: $${Number(event.price).toFixed(2)}
-- Unrealized PNL: $${pnlText}
+- Unrealized PNL: $${pnl}
 - Timestamp: ${formattedTimestamp}
 - Txn: ${blockExplorerBaseTxUrl(hash)}
 - Address: ${blockExplorerBaseAddressUrl(address)}
@@ -150,12 +151,12 @@ Guidelines:
 7. Ensure key details are present: action, amount, ticker, and price
 
 Sample buy tweets:
-"📈 Added $1,000 of BTC at $50,000.00. Unrealized PNL: $${pnlText} Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
-"🎯 Strategic BTC buy: $1,000 at $50,000.00. Unrealized PNL: $${pnlText} Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
+"📈 Added $${amountInCurrency.toFixed(2)} of ${event.ticker} at $${Number(event.price).toFixed(2)}. Unrealized PNL: $${pnl} Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
+"🎯 Strategic ${event.ticker} buy: $${amountInCurrency.toFixed(2)} at $${Number(event.price).toFixed(2)}. Unrealized PNL: $${pnl} Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
 
 Sample sell tweets:
-"💫 Sold BTC: $1,000 at $52,000.00. Unrealized PNL: $${pnlText}. Txn: ${blockExplorerBaseTxUrl(hash)}"
-"📊 Sold $1,000 of BTC at $52,000.00. Unrealized PNL: $${pnlText}. Txn: ${blockExplorerBaseTxUrl(hash)}"
+"💫 Sold ${event.ticker}: $${amountInCurrency.toFixed(2)} at $${Number(event.price).toFixed(2)}. Unrealized PNL: $${pnl}. Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
+"📊 Sold $${amountInCurrency.toFixed(2)} of ${event.ticker} at $${Number(event.price).toFixed(2)}. Unrealized PNL: $${pnl}. Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
 
 Generate only the tweet text, no commentary or markdown.`;
             const context = composeContext({
@@ -230,13 +231,16 @@ Generate only the tweet text, no commentary or markdown.`;
         // const defaultAddress = await wallet.wallet.getDefaultAddress();
         const buy =  event.event.toUpperCase() === 'BUY'
         const txHash = await tokenSwap(this.runtime, amount, buy ? 'USDC' : event.ticker, buy ? event.ticker : 'USDC', this.runtime.getSetting('WALLET_PUBLIC_KEY'), this.runtime.getSetting('WALLET_PRIVATE_KEY'), "base");
-         elizaLogger.info('txHash ', txHash)
+        if (txHash == null) {
+            elizaLogger.error('txHash is null');
+            return;
+        }
+        elizaLogger.info('txHash ', txHash)
         const pnl = await calculateOverallPNL(this.runtime, this.runtime.getSetting('WALLET_PRIVATE_KEY'), this.runtime.getSetting('WALLET_PUBLIC_KEY'), 8453, this.initialBalanceETH);
-        const pnlText = `Overall PNL: ${pnl}`;
-         elizaLogger.info('pnlText ', pnlText)
+        elizaLogger.info('pnl ', pnl)
 
             try {
-                const tweetContent = await this.generateTweetContent(event, amount, pnlText, formattedTimestamp, state, this.runtime.getSetting('WALLET_PUBLIC_KEY'), txHash);
+                const tweetContent = await this.generateTweetContent(event, amount, pnl, formattedTimestamp, state, this.runtime.getSetting('WALLET_PUBLIC_KEY'), txHash);
                 elizaLogger.info("Generated tweet content:", tweetContent);
                 if (this.runtime.getSetting('TWITTER_DRY_RUN')) {
                     elizaLogger.info("Dry run mode enabled. Skipping tweet posting.",);
