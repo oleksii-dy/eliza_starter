@@ -23,7 +23,7 @@ import { runPreflightChecksForChains, stubMerkleTreeConfig } from "./utils";
 
 import { addressToBytes32, timeout } from "@hyperlane-xyz/utils";
 import { Account, Chain, Client, Transport } from "viem";
-import { clientToSigner } from "../../utils/ethersMigration";
+import { clientToSigner } from "../../utils/ethersAdapter";
 import { MINIMUM_TEST_SEND_GAS } from "./consts";
 
 export async function sendMessage({
