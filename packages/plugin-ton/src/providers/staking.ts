@@ -4,6 +4,8 @@ import { internal } from "@ton/ton";
 import { initWalletProvider, WalletProvider } from "./wallet";
 import { mnemonicToPrivateKey } from "@ton/crypto";
 import { StakeContent } from "../actions/stake";
+import { PlatformFactory } from "../services/staking/platformFactory.ts";
+import { TonWhalesStrategy } from "../services/staking/strategies/tonWhales.ts";
 
 // Define types for pool info and transaction results.
 // export interface PoolInfo {
@@ -41,6 +43,7 @@ export class StakingProvider implements IStakingProvider {
 
         this.contract = this.client.open(walletProvider.wallet);
 
+        PlatformFactory.register("TON_WHALES", new TonWhalesStrategy());
     }
 
     // Private helper method to get the contract handle from the TON client.
@@ -103,7 +106,8 @@ export class StakingProvider implements IStakingProvider {
     async getPoolInfo(poolAddress: string): Promise<any> {
         try {
             // Call a contract method that queries pool information.
-            const info = await this.client.runMethod(Address.parse(poolAddress), "get_pool_status");
+            const strategy = PlatformFactory.getStrategy(poolAddress);
+            const info = await strategy.getPoolInfo(this.client, poolAddress);
             console.log(info);
             return info;
         } catch (error: any) {

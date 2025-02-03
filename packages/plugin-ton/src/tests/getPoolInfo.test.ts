@@ -59,7 +59,7 @@ describe("Get Pool Info Action", () => {
         vi.clearAllTimers();
     });
 
-    it("should successfully fetch pool info", async () => {
+    it("should successfully fetch TON Whales pool info", async () => {
 
         const poolInfo = await stakingProvider.getPoolInfo("kQDV1LTU0sWojmDUV4HulrlYPpxLWSUjM6F3lUurMbwhales"); // very first pool
         console.log(poolInfo);
