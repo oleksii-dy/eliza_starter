@@ -273,8 +273,10 @@ export const tokenSwap = async (runtime: IAgentRuntime, quantity: number, fromCu
             });
             elizaLogger.info("receipt ", receipt)
             if (receipt.status === "success") {
+                elizaLogger.info(`✅ Swap executed successfully!\nView on Explorer: ${CHAIN_EXPLORERS[chainId]}/tx/${txHash}`, { hash: txHash, status: "success" });
                 return txHash;
             } else {
+                elizaLogger.error(`❌ Swap failed! Check transaction: ${CHAIN_EXPLORERS[chainId]}/tx/${txHash}`, { hash: txHash, status: "failed" });
                 return null;
             }
         } catch (error) {

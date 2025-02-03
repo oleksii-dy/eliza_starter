@@ -182,7 +182,6 @@ Generate only the tweet text, no commentary or markdown.`;
     }
 
     private async handleWebhookEvent(event: WebhookEvent) {
-         elizaLogger.info('event ', event)
         const roomId = stringToUuid("coinbase-trading");
         await this.runtime.ensureRoomExists(roomId);
         await this.runtime.ensureParticipantInRoom(this.runtime.agentId, roomId);
@@ -194,7 +193,7 @@ Generate only the tweet text, no commentary or markdown.`;
         // }
 
         const amount = Number(this.runtime.getSetting('COINBASE_TRADING_AMOUNT')) ?? 1;
-         elizaLogger.info('amount ', amount)
+        elizaLogger.info('amount ', amount)
         const memory: Memory = {
             id: stringToUuid(`coinbase-${event.timestamp}`),
             userId: this.runtime.agentId,
@@ -215,19 +214,19 @@ Generate only the tweet text, no commentary or markdown.`;
             },
             createdAt: Date.now()
         };
-         elizaLogger.info('memory ', memory)
+        elizaLogger.info('memory ', memory)
         // get short term trading wallet
         await this.runtime.messageManager.createMemory(memory);
         const state = await this.runtime.composeState(memory);
-         elizaLogger.info('state ', state)
+        // elizaLogger.info('state ', state)
         // Generate tweet content
         const formattedTimestamp = new Intl.DateTimeFormat('en-US', {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
             timeZoneName: 'short'
-        }).format(new Date(event.timestamp));
-         elizaLogger.info('formattedTimestamp ', formattedTimestamp)
+        }).format(new Date());
+        elizaLogger.info('formattedTimestamp ', formattedTimestamp)
         // const defaultAddress = await wallet.wallet.getDefaultAddress();
         const buy =  event.event.toUpperCase() === 'BUY'
         const txHash = await tokenSwap(this.runtime, amount, buy ? 'USDC' : event.ticker, buy ? event.ticker : 'USDC', this.runtime.getSetting('WALLET_PUBLIC_KEY'), this.runtime.getSetting('WALLET_PRIVATE_KEY'), "base");

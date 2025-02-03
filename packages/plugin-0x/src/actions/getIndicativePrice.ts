@@ -17,6 +17,7 @@ import { Chains, GetIndicativePriceResponse, PriceInquiry } from "../types";
 import { parseUnits } from "viem";
 import { CHAIN_NAMES, ZX_MEMORY } from "../constants";
 import { EVMTokenRegistry } from "../EVMtokenRegistry";
+import { TOKENS } from "../utils";
 
 export const IndicativePriceSchema = z.object({
     sellTokenSymbol: z.string().nullable(),
@@ -293,35 +294,6 @@ export const storePriceInquiryToMemory = async (
     await memoryManager.createMemory(memory);
 };
 
-const TOKENS = {
-    ETH: {
-        chainId: 8453,
-        name: "Ethereum",
-        symbol: "ETH",
-        decimals: 18,
-        address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-        type: "NATIVE",
-        logoURI: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png"
-    },
-    USDC: {
-        chainId: 8453,
-        name: "USD coin",
-        symbol: "USDC",
-        decimals: 6,
-        address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-        type: "ERC20",
-        logoURI: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png"
-    },
-    cbBTC: {
-        chainId: 8453,
-        name: "Coinbase Wrapped BTC",
-        symbol: "cbBTC",
-        decimals: 8,
-        address: "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
-        type: "ERC20",
-        logoURI: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png"
-    }
-};
 
 const getTokenMetadata = (tokenSymbol: string) => {
     switch (tokenSymbol) {
@@ -398,9 +370,16 @@ export const getPriceInquiry = async (
             const sellAmount =
                 Number(price.sellAmount) /
                 Math.pow(10, sellTokenMetadata.decimals);
-            elizaLogger.info('price ', price)
-            elizaLogger.info('buyAmount ', buyAmount)
-            elizaLogger.info('sellAmount ', sellAmount)
+                const formattedResponse = [
+                    `💱 Swap Details:`,
+                    `────────────────`,
+                    `📤 Sell: ${sellAmount.toFixed(4)} ${sellTokenMetadata.symbol}`,
+                    `📥 Buy: ${buyAmount.toFixed(4)} ${buyTokenMetadata.symbol}`,
+                    `📊 Rate: 1 ${sellTokenMetadata.symbol} = ${(buyAmount / sellAmount).toFixed(4)} ${buyTokenMetadata.symbol}`,
+                    `🔗 Chain: ${CHAIN_NAMES[chainId]}`,
+                    `────────────────`,
+                ].join("\n");
+            elizaLogger.info('formattedResponse ', formattedResponse)
 
             return {
                 sellTokenObject: sellTokenMetadata,

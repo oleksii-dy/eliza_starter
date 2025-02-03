@@ -24,3 +24,34 @@ export function formatTokenAmount(
     const parsedAmount = formatUnits(BigInt(amount), token.decimals);
     return `${Number(parsedAmount).toFixed(4)} ${token.symbol}`;
 }
+
+export const TOKENS = {
+    ETH: {
+        chainId: 8453,
+        name: "Ethereum",
+        symbol: "ETH",
+        decimals: 18,
+        address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+        type: "NATIVE",
+        logoURI: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png"
+    },
+    USDC: {
+        chainId: 8453,
+        name: "USD coin",
+        symbol: "USDC",
+        decimals: 6,
+        address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        type: "ERC20",
+        logoURI: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png"
+    },
+    cbBTC: {
+        chainId: 8453,
+        name: "Coinbase Wrapped BTC",
+        symbol: "cbBTC",
+        decimals: 8,
+        address: "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf",
+        type: "ERC20",
+        logoURI: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png"
+    }
+};
+
