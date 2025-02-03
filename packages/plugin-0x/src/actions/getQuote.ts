@@ -354,7 +354,7 @@ export const getQuoteObj = async (runtime: IAgentRuntime, priceInquiry: PriceInq
     });
 
     try {
-        const quote = (await zxClient.swap.permit2.getQuote.query({
+        const quote = (await zxClient.swap.allowanceHolder.getQuote.query({
             sellAmount: sellAmountBaseUnits,
             sellToken: sellTokenObject.address,
             buyToken: buyTokenObject.address,
