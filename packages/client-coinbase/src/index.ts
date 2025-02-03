@@ -16,7 +16,7 @@ import express from "express";
 import { blockExplorerBaseAddressUrl, blockExplorerBaseTxUrl, WebhookEvent } from "./types";
 import { Coinbase, Wallet } from "@coinbase/coinbase-sdk";
 import { initializeWallet } from "@elizaos/plugin-coinbase";
-import { calculateOverallPNL, tokenSwap } from "@elizaos/plugin-0x";
+import { tokenSwap } from "@elizaos/plugin-0x";
 
 export type WalletType = 'short_term_trading' | 'long_term_trading' | 'dry_powder' | 'operational_capital';
 export type CoinbaseWallet = { wallet: Wallet, walletType: WalletType };
@@ -236,7 +236,8 @@ Generate only the tweet text, no commentary or markdown.`;
             return;
         }
         elizaLogger.info('txHash ', txHash)
-        const pnl = await calculateOverallPNL(this.runtime, this.runtime.getSetting('WALLET_PRIVATE_KEY'), this.runtime.getSetting('WALLET_PUBLIC_KEY'), 8453, this.initialBalanceETH);
+        // const pnl = await calculateOverallPNL(this.runtime, this.runtime.getSetting('WALLET_PRIVATE_KEY'), this.runtime.getSetting('WALLET_PUBLIC_KEY'), 8453, this.initialBalanceETH);
+        const pnl = ''
         elizaLogger.info('pnl ', pnl)
 
             try {
