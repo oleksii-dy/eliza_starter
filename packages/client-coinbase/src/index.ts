@@ -90,7 +90,7 @@ export class CoinbaseClient implements Client {
                 await this.handleWebhookEvent(event);
                 res.status(200).json({ status: "success" });
             } catch (error) {
-                elizaLogger.error("Error processing webhook:", error);
+                elizaLogger.error("Error processing webhook:", error.message);
                 res.status(500).json({ error: "Internal Server Error" });
             }
         });
@@ -119,9 +119,9 @@ export class CoinbaseClient implements Client {
         const walletTypes: WalletType[] = ['short_term_trading', 'long_term_trading', 'dry_powder', 'operational_capital'];
         const networkId = Coinbase.networks.BaseMainnet;
         for (const walletType of walletTypes) {
-            elizaLogger.log('walletType ', walletType);
+             elizaLogger.info('walletType ', walletType);
             const wallet = await initializeWallet(this.runtime, networkId, walletType);
-            elizaLogger.log('Successfully loaded wallet ', wallet.wallet.getId());
+             elizaLogger.info('Successfully loaded wallet ', wallet.wallet.getId());
             this.wallets.push(wallet);
         }
     }
@@ -181,7 +181,7 @@ Generate only the tweet text, no commentary or markdown.`;
     }
 
     private async handleWebhookEvent(event: WebhookEvent) {
-        elizaLogger.log('event ', event)
+         elizaLogger.info('event ', event)
         const roomId = stringToUuid("coinbase-trading");
         await this.runtime.ensureRoomExists(roomId);
         await this.runtime.ensureParticipantInRoom(this.runtime.agentId, roomId);
@@ -193,7 +193,7 @@ Generate only the tweet text, no commentary or markdown.`;
         // }
 
         const amount = Number(this.runtime.getSetting('COINBASE_TRADING_AMOUNT')) ?? 1;
-        elizaLogger.log('amount ', amount)
+         elizaLogger.info('amount ', amount)
         const memory: Memory = {
             id: stringToUuid(`coinbase-${event.timestamp}`),
             userId: this.runtime.agentId,
@@ -214,11 +214,11 @@ Generate only the tweet text, no commentary or markdown.`;
             },
             createdAt: Date.now()
         };
-        elizaLogger.log('memory ', memory)
+         elizaLogger.info('memory ', memory)
         // get short term trading wallet
         await this.runtime.messageManager.createMemory(memory);
         const state = await this.runtime.composeState(memory);
-        elizaLogger.log('state ', state)
+         elizaLogger.info('state ', state)
         // Generate tweet content
         const formattedTimestamp = new Intl.DateTimeFormat('en-US', {
             hour: '2-digit',
@@ -226,14 +226,14 @@ Generate only the tweet text, no commentary or markdown.`;
             second: '2-digit',
             timeZoneName: 'short'
         }).format(new Date(event.timestamp));
-        elizaLogger.log('formattedTimestamp ', formattedTimestamp)
+         elizaLogger.info('formattedTimestamp ', formattedTimestamp)
         // const defaultAddress = await wallet.wallet.getDefaultAddress();
         const buy =  event.event.toUpperCase() === 'BUY'
-        const txHash = await tokenSwap(this.runtime, amount, buy ? event.ticker : 'USDC', buy ? event.ticker : 'USDC', this.runtime.getSetting('WALLET_PUBLIC_KEY'), this.runtime.getSetting('WALLET_PRIVATE_KEY'), 8453);
-        elizaLogger.log('txHash ', txHash)
+        const txHash = await tokenSwap(this.runtime, amount, buy ? 'USDC' : event.ticker, buy ? event.ticker : 'USDC', this.runtime.getSetting('WALLET_PUBLIC_KEY'), this.runtime.getSetting('WALLET_PRIVATE_KEY'), "base");
+         elizaLogger.info('txHash ', txHash)
         const pnl = await calculateOverallPNL(this.runtime, this.runtime.getSetting('WALLET_PRIVATE_KEY'), this.runtime.getSetting('WALLET_PUBLIC_KEY'), 8453, this.initialBalanceETH);
         const pnlText = `Overall PNL: ${pnl}`;
-        elizaLogger.log('pnlText ', pnlText)
+         elizaLogger.info('pnlText ', pnlText)
 
             try {
                 const tweetContent = await this.generateTweetContent(event, amount, pnlText, formattedTimestamp, state, this.runtime.getSetting('WALLET_PUBLIC_KEY'), txHash);
@@ -282,14 +282,14 @@ Generate only the tweet text, no commentary or markdown.`;
 
 export const CoinbaseClientInterface: Client = {
     start: async (runtime: IAgentRuntime) => {
-        elizaLogger.log("Starting Coinbase client with agent ID:", runtime.agentId);
+         elizaLogger.info("Starting Coinbase client with agent ID:", runtime.agentId);
         const client = new CoinbaseClient(runtime);
         await client.start();
         return client;
     },
     stop: async (runtime: IAgentRuntime) => {
         try {
-            elizaLogger.log("Stopping Coinbase client");
+             elizaLogger.info("Stopping Coinbase client");
             await runtime.clients.coinbase.stop();
         } catch (e) {
             elizaLogger.error("Coinbase client stop error:", e);
