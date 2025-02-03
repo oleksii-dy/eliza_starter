@@ -13,8 +13,6 @@ import { evmWalletProvider, initWalletProvider } from "@elizaos/plugin-evm";
 import { GithubRegistry } from "@hyperlane-xyz/registry";
 
 import {
-    ChainMap,
-    ChainMetadata,
     ChainName,
     HyperlaneCore,
     HyperlaneRelayer,
@@ -24,6 +22,8 @@ import { CommandContext, WriteCommandContext } from "./context";
 import { runPreflightChecksForChains, stubMerkleTreeConfig } from "./utils";
 
 import { addressToBytes32, timeout } from "@hyperlane-xyz/utils";
+import { Account, Chain, Client, Transport } from "viem";
+import { clientToSigner } from "../../utils/ethersMigration";
 import { MINIMUM_TEST_SEND_GAS } from "./consts";
 
 export async function sendMessage({
@@ -173,8 +173,6 @@ export const sendCrossChainMessage: Action = {
                 state = await runtime.updateRecentMessageState(state);
             }
 
-            const walletProvider = await initWalletProvider(runtime);
-
             // Compose swap context
             const sendContext = composeContext({
                 state,
@@ -186,20 +184,36 @@ export const sendCrossChainMessage: Action = {
                 modelClass: ModelClass.LARGE,
             });
 
+            const walletProvider = await initWalletProvider(runtime);
+            const sourceClient = walletProvider.getPublicClient(
+                content.sourceChain
+            ) as Client<Transport, Chain, Account>;
+            const targetClient = walletProvider.getPublicClient(
+                content.sourceChain
+            ) as Client<Transport, Chain, Account>;
+
+            const sourceSigner = clientToSigner(sourceClient);
+            const targetSigner = clientToSigner(targetClient);
+
             const registry = new GithubRegistry();
             const chainMetadata = await registry.getMetadata();
+            const multiProvider = new MultiProvider(chainMetadata, {
+                [content.sourceChain]: sourceSigner,
+                [content.targetChain]: targetSigner,
+            });
 
-            const context: CommandContext = {
+            const context: WriteCommandContext = {
                 registry: registry, // Initialize with Hyperlane registry instance
-                multiProvider: new MultiProvider(chainMetadata), // Initialize with multi-provider instance
+                multiProvider: multiProvider, // Initialize with multi-provider instance
                 skipConfirmation: true, // Set based on requirements
                 key: "your-key", // Optional key if needed
                 signerAddress: "signer-address", // Optional EVM signer address
-                strategyPath: "path/to/strategy", // Optional strategy path
+                strategyPath: "path/to/strategy",
+                signer: sourceSigner,
             };
 
             const sendOptions = {
-                context: context as WriteCommandContext,
+                context: context,
                 origin: content.sourceChain,
                 destination: content.targetChain,
                 recipient: content.recipientAddress,
