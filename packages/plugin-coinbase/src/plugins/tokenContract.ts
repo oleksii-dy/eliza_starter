@@ -502,28 +502,9 @@ export const readContractAction: Action = {
                 return;
             }
 
-            const { contractAddress, method, args, networkId, abi } =
+            const { contractAddress, method, args, networkId} =
                 readDetails.object;
-            elizaLogger.info("Reading contract:", {
-                contractAddress,
-                method,
-                args,
-                networkId,
-                abi,
-            });
-
-            const result = await readContract({
-                networkId,
-                contractAddress,
-                method,
-                args,
-                abi: ABI as any,
-            });
-
-            // Serialize the result before using it
-            const serializedResult = serializeBigInt(result);
-
-            elizaLogger.info("Contract read result:", serializedResult);
+            const result = await readContractWrapper(runtime, contractAddress, method, args, networkId, ABI as any);
 
             callback(
                 {
@@ -531,7 +512,7 @@ export const readContractAction: Action = {
 - Contract Address: ${contractAddress}
 - Method: ${method}
 - Network: ${networkId}
-- Result: ${JSON.stringify(serializedResult, null, 2)}`,
+- Result: ${JSON.stringify(result, null, 2)}`,
                 },
                 []
             );
@@ -577,4 +558,33 @@ export const tokenContractPlugin: Plugin = {
       //  invokeContractAction,
         readContractAction,
     ],
+};
+
+export const readContractWrapper = async (runtime: IAgentRuntime, contractAddress: `0x${string}`, method: string, args: any, networkId: string, abi: any) => {
+    Coinbase.configure({
+        apiKeyName:
+            runtime.getSetting("COINBASE_API_KEY") ??
+            process.env.COINBASE_API_KEY,
+        privateKey:
+            runtime.getSetting("COINBASE_PRIVATE_KEY") ??
+            process.env.COINBASE_PRIVATE_KEY,
+    });
+    elizaLogger.info("Reading contract:", {
+        contractAddress,
+        method,
+        args,
+        networkId,
+        abi,
+    });
+
+    const result = await readContract({
+        networkId,
+        contractAddress,
+        method,
+        args,
+        abi,
+    });
+    const serializedResult = serializeBigInt(result);
+    elizaLogger.info("Contract read result:", serializedResult);
+    return serializedResult;
 };

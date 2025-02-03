@@ -301,4 +301,28 @@ export const CoinbaseClientInterface: Client = {
     },
 };
 
+// export const calculateOverallPNL = async (runtime: IAgentRuntime, privateKey: string, publicKey: string, chainId: number, initialBalanceInEther: number): Promise<string> => {
+//     const result = await readContractWrapper(runtime, contractAddress, method, args, networkId, abi);
+//     // update to use coinbase
+//     // const balance = await client.getBalance({
+//     //     address: publicKey as `0x${string}`,
+//     // });
+
+//     // const formattedBalanceInEther = formatEther(balance)
+//     const pnlInEther = Number(formattedBalanceInEther) - initialBalanceInEther
+//     const absoluteValuePNL = Math.abs(pnlInEther)
+//     const priceInquiry = await getPriceInquiry(runtime, 'ETH', absoluteValuePNL, "USDC", "base");
+//     // get latest quote
+//     elizaLogger.info("Getting quote for swap", JSON.stringify(priceInquiry));
+//     const quote = await getQuoteObj(runtime, priceInquiry, publicKey);
+//     const pnlUSD = Number(quote.buyAmount) 
+//     const formattedPNL = new Intl.NumberFormat('en-US', {
+//         style: 'currency',
+//         currency: 'USD',
+//         minimumFractionDigits: 2,
+//         maximumFractionDigits: 2,
+//     }).format(pnlUSD);
+//     return `${pnlInEther < 0 ? '-' : ''}${formattedPNL}`
+//     }
+
 export default CoinbaseClientInterface;
