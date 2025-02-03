@@ -103,7 +103,7 @@ export class StakingProvider implements IStakingProvider {
     async getPoolInfo(poolAddress: string): Promise<any> {
         try {
             // Call a contract method that queries pool information.
-            const info = await this.client.runMethod(Address.parse(poolAddress), "get_pool_data");
+            const info = await this.client.runMethod(Address.parse(poolAddress), "get_pool_status");
             console.log(info);
             return info;
         } catch (error: any) {

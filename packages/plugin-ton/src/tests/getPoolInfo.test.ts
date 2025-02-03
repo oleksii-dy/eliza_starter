@@ -61,7 +61,7 @@ describe("Get Pool Info Action", () => {
 
     it("should successfully fetch pool info", async () => {
 
-        const poolInfo = await stakingProvider.getPoolInfo("EQDH6brNVlhFfiQFeJjQHohBivAA66lQHhTbNqjgelHM2hb9"); // very first pool
+        const poolInfo = await stakingProvider.getPoolInfo("kQDV1LTU0sWojmDUV4HulrlYPpxLWSUjM6F3lUurMbwhales"); // very first pool
         console.log(poolInfo);
     });
 });
