@@ -5,13 +5,28 @@ import {
     type State,
     elizaLogger,
 } from "@elizaos/core";
-import { Keypair } from "@solana/web3.js";
+import { generateKeyPair } from "@solana/keys";
 import crypto from "crypto";
 import { type DeriveKeyResponse, TappdClient } from "@phala/dstack-sdk";
 import { privateKeyToAccount } from "viem/accounts";
 import { type PrivateKeyAccount, keccak256 } from "viem";
 import { RemoteAttestationProvider } from "./remoteAttestationProvider";
 import { TEEMode, type RemoteAttestationQuote, type DeriveKeyAttestationData } from "../types/tee";
+
+interface SolanaKeypair {
+    publicKey: CryptoKey;
+    privateKey: CryptoKey;
+}
+
+interface EcdsaKeypair {
+    address: `0x${string}`;
+    sign: (parameters: { hash: `0x${string}` }) => Promise<`0x${string}`>;
+    signMessage: (parameters: { message: string }) => Promise<`0x${string}`>;
+    signTransaction: (parameters: { transaction: any }) => Promise<`0x${string}`>;
+    signTypedData: (parameters: { typedData: any }) => Promise<`0x${string}`>;
+    experimental_signAuthorization: (parameters: any) => Promise<`0x${string}`>;
+    type: "local";
+}
 
 class DeriveKeyProvider {
     private client: TappdClient;
@@ -108,7 +123,7 @@ class DeriveKeyProvider {
         path: string,
         subject: string,
         agentId: string
-    ): Promise<{ keypair: Keypair; attestation: RemoteAttestationQuote }> {
+    ): Promise<{ keypair: SolanaKeypair; attestation: RemoteAttestationQuote }> {
         try {
             if (!path || !subject) {
                 elizaLogger.error(
@@ -124,12 +139,16 @@ class DeriveKeyProvider {
             hash.update(uint8ArrayDerivedKey);
             const seed = hash.digest();
             const seedArray = new Uint8Array(seed);
-            const keypair = Keypair.fromSeed(seedArray.slice(0, 32));
+            const keypairPromise = generateKeyPair();
+            const keypair: SolanaKeypair = {
+                publicKey: (await keypairPromise).publicKey,
+                privateKey: (await keypairPromise).privateKey
+            };
 
             // Generate an attestation for the derived key data for public to verify
             const attestation = await this.generateDeriveKeyAttestation(
                 agentId,
-                keypair.publicKey.toBase58()
+                (await keypairPromise).publicKey.toString()
             );
             elizaLogger.log("Key Derived Successfully!");
 
@@ -151,10 +170,7 @@ class DeriveKeyProvider {
         path: string,
         subject: string,
         agentId: string
-    ): Promise<{
-        keypair: PrivateKeyAccount;
-        attestation: RemoteAttestationQuote;
-    }> {
+    ): Promise<{ keypair: PrivateKeyAccount; attestation: RemoteAttestationQuote }> {
         try {
             if (!path || !subject) {
                 elizaLogger.error(

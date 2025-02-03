@@ -22,7 +22,7 @@ import NodeCache from "node-cache";
 import * as path from "path";
 import { toBN } from "../bignumber.ts";
 import { WalletProvider, type Item } from "./wallet.ts";
-import { Connection } from "@solana/web3.js";
+import { createSolanaRpc } from "@solana/rpc";
 import { getWalletKey } from "../keypairUtils.ts";
 
 const PROVIDER_CONFIG = {
@@ -1107,7 +1107,7 @@ export class TokenProvider {
 
 const tokenAddress = PROVIDER_CONFIG.TOKEN_ADDRESSES.Example;
 
-const connection = new Connection(PROVIDER_CONFIG.DEFAULT_RPC);
+const connection = createSolanaRpc(PROVIDER_CONFIG.DEFAULT_RPC);
 const tokenProvider: Provider = {
     get: async (
         runtime: IAgentRuntime,

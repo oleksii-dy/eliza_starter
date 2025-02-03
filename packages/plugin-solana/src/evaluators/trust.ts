@@ -13,7 +13,7 @@ import {
     ModelClass,
 } from "@elizaos/core";
 import { TrustScoreDatabase } from "@elizaos/plugin-trustdb";
-import { Connection } from "@solana/web3.js";
+import { createSolanaRpc } from "@solana/rpc";
 import { getWalletKey } from "../keypairUtils.ts";
 import { TokenProvider } from "../providers/token.ts";
 import { TrustScoreManager } from "../providers/trustScoreProvider.ts";
@@ -157,11 +157,11 @@ async function handler(runtime: IAgentRuntime, message: Memory) {
     for (const rec of filteredRecommendations) {
         // create the wallet provider and token provider
         const walletProvider = new WalletProvider(
-            new Connection(
+            createSolanaRpc(
                 runtime.getSetting("SOLANA_RPC_URL") ||
                     "https://api.mainnet-beta.solana.com"
             ),
-            publicKey
+            publicKey as any
         );
         const tokenProvider = new TokenProvider(
             rec.contractAddress,

@@ -31,9 +31,12 @@ import {
 } from "./wallet";
 import type { ProcessedTokenData } from "./types";
 import { analyzeTradeAction } from "./actions/analyzeTrade";
-import { createSolanaRpc } from "@solana/rpc";
-import { Address } from "@solana/addresses";
-import type { SolanaRpcApi, Rpc } from "@solana/rpc";
+import { createSolanaRpc } from '@solana/rpc';
+import type { Rpc, SolanaRpcApi, RpcApi } from '@solana/rpc';
+import type { Address } from '@solana/web3.js';
+import { address } from '@solana/addresses';
+import { createDefaultRpcTransport } from '@solana/rpc';
+import { getAssociatedTokenAddress } from "@solana/spl-token";
 
 // Update Balance interface to include formatted
 interface ExtendedBalance extends Balance {
@@ -418,18 +421,30 @@ async function getChainBalance(
     walletAddress: Address,
     tokenAddress: string
 ): Promise<number> {
-    // Use existing Solana balance fetching logic
-    return await getTokenBalance(
-        connection,
-        walletAddress,
-        tokenAddress
-    );
+    try {
+        const tokenAccountAddress = await getAssociatedTokenAddress(
+            address(tokenAddress),
+            walletAddress
+        );
+        const tokenAccount = await connection.getTokenAccountBalance(tokenAccountAddress).send();
+        return Number(tokenAccount.value.amount);
+    } catch (error) {
+        elizaLogger.error(`Error getting token balance: ${error}`);
+        return 0;
+    }
 }
 
 async function createRabbiTraderPlugin(
     getSetting: (key: string) => string | undefined,
     runtime?: IAgentRuntime
 ): Promise<Plugin> {
+    // Create connection inside the function
+    const connection = createSolanaRpc(
+        runtime?.getSetting("SOLANA_RPC_URL") || "https://api.mainnet-beta.solana.com"
+    );
+
+    const keypair = getWalletKeypair(runtime);
+
     // Define resumeTrading at the start of the function
     const resumeTrading = async () => {
         // Load and analyze tokens
@@ -453,30 +468,6 @@ async function createRabbiTraderPlugin(
     };
 
     elizaLogger.log("Starting GOAT plugin initialization");
-
-    // Move connection initialization to the top
-    const connection = createSolanaRpc(
-        runtime?.getSetting("SOLANA_RPC_URL") ||
-            "https://api.mainnet-beta.solana.com"
-    );
-
-    const keypair = getWalletKeypair(runtime);
-
-    // Validate required settings
-    const missingSettings: string[] = [];
-    for (const [key, description] of Object.entries(REQUIRED_SETTINGS)) {
-        if (!getSetting(key)) {
-            missingSettings.push(`${key} (${description})`);
-        }
-    }
-
-    if (missingSettings.length > 0) {
-        const errorMsg = `Missing required settings: ${missingSettings.join(
-            ", "
-        )}`;
-        elizaLogger.error(errorMsg);
-        throw new Error(errorMsg);
-    }
 
     elizaLogger.log("Initializing Solana connection...");
     const walletProvider: ExtendedWalletProvider = {

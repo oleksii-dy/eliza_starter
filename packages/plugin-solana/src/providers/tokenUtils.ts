@@ -1,5 +1,6 @@
 import { getAccount, getAssociatedTokenAddress } from "@solana/spl-token";
-import { type Connection, PublicKey } from "@solana/web3.js";
+import { createSolanaRpc } from '@solana/rpc';
+import { Rpc, SolanaRpcApi, Address, address } from '@solana/web3.js';
 import { elizaLogger } from "@elizaos/core";
 
 export async function getTokenPriceInSol(tokenSymbol: string): Promise<number> {
@@ -11,22 +12,24 @@ export async function getTokenPriceInSol(tokenSymbol: string): Promise<number> {
 }
 
 async function getTokenBalance(
-    connection: Connection,
-    walletPublicKey: PublicKey,
-    tokenMintAddress: PublicKey
+    rpc: Rpc<SolanaRpcApi>,
+    walletAddress: Address,
+    tokenMintAddress: Address
 ): Promise<number> {
     const tokenAccountAddress = await getAssociatedTokenAddress(
         tokenMintAddress,
-        walletPublicKey
+        walletAddress
     );
 
     try {
-        const tokenAccount = await getAccount(connection, tokenAccountAddress);
-        const tokenAmount = tokenAccount.amount as unknown as number;
+        const tokenAccount = await getAccount(rpc, tokenAccountAddress);
+        const decimals = tokenAccount.mint.decimals;
+        const rawAmount = Number(tokenAccount.amount);
+        const tokenAmount = rawAmount / Math.pow(10, decimals);
         return tokenAmount;
     } catch (error) {
         elizaLogger.error(
-            `Error retrieving balance for token: ${tokenMintAddress.toBase58()}`,
+            `Error retrieving balance for token: ${tokenMintAddress}`,
             error
         );
         return 0;
@@ -34,40 +37,34 @@ async function getTokenBalance(
 }
 
 async function getTokenBalances(
-    connection: Connection,
-    walletPublicKey: PublicKey
+    rpc: Rpc<SolanaRpcApi>,
+    walletAddress: Address
 ): Promise<{ [tokenName: string]: number }> {
     const tokenBalances: { [tokenName: string]: number } = {};
 
     // Add the token mint addresses you want to retrieve balances for
     const tokenMintAddresses = [
-        new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), // USDC
-        new PublicKey("So11111111111111111111111111111111111111112"), // SOL
-        // Add more token mint addresses as needed
+        address("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), // USDC
+        address("So11111111111111111111111111111111111111112"), // SOL
     ];
 
     for (const mintAddress of tokenMintAddresses) {
         const tokenName = getTokenName(mintAddress);
-        const balance = await getTokenBalance(
-            connection,
-            walletPublicKey,
-            mintAddress
-        );
+        const balance = await getTokenBalance(rpc, walletAddress, mintAddress);
         tokenBalances[tokenName] = balance;
     }
 
     return tokenBalances;
 }
 
-function getTokenName(mintAddress: PublicKey): string {
+function getTokenName(mintAddress: Address): string {
     // Implement a mapping of mint addresses to token names
     const tokenNameMap: { [mintAddress: string]: string } = {
         EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v: "USDC",
         So11111111111111111111111111111111111111112: "SOL",
-        // Add more token mint addresses and their corresponding names
     };
 
-    return tokenNameMap[mintAddress.toBase58()] || "Unknown Token";
+    return tokenNameMap[mintAddress] || "Unknown Token";
 }
 
 export { getTokenBalance, getTokenBalances };

@@ -5,10 +5,11 @@ import {
     type State,
     elizaLogger,
 } from "@elizaos/core";
-import { Connection, PublicKey } from "@solana/web3.js";
 import BigNumber from "bignumber.js";
 import NodeCache from "node-cache";
 import { getWalletKey } from "../keypairUtils";
+import { createSolanaRpc, type SolanaRpcApi, type Rpc } from "@solana/rpc";
+import { address } from "@solana/addresses";
 
 // Provider configuration
 const PROVIDER_CONFIG = {
@@ -61,8 +62,8 @@ export class WalletProvider {
     private cache: NodeCache;
 
     constructor(
-        private connection: Connection,
-        private walletPublicKey: PublicKey
+        private connection: Rpc<SolanaRpcApi>,
+        private walletPublicKey: string
     ) {
         this.cache = new NodeCache({ stdTTL: 300 }); // Cache TTL set to 5 minutes
     }
@@ -116,7 +117,7 @@ export class WalletProvider {
 
     async fetchPortfolioValue(runtime): Promise<WalletPortfolio> {
         try {
-            const cacheKey = `portfolio-${this.walletPublicKey.toBase58()}`;
+            const cacheKey = `portfolio-${this.walletPublicKey}`;
             const cachedValue = this.cache.get<WalletPortfolio>(cacheKey);
 
             if (cachedValue) {
@@ -132,7 +133,7 @@ export class WalletProvider {
                 // Existing Birdeye API logic
                 const walletData = await this.fetchWithRetry(
                     runtime,
-                    `${PROVIDER_CONFIG.BIRDEYE_API}/v1/wallet/token_list?wallet=${this.walletPublicKey.toBase58()}`
+                    `${PROVIDER_CONFIG.BIRDEYE_API}/v1/wallet/token_list?wallet=${this.walletPublicKey}`
                 );
 
                 if (walletData?.success && walletData?.data) {
@@ -170,9 +171,7 @@ export class WalletProvider {
             }
 
             // Fallback to basic token account info if no Birdeye API key or API call fails
-            const accounts = await this.getTokenAccounts(
-                this.walletPublicKey.toBase58()
-            );
+            const accounts = await this.getTokenAccounts(this.walletPublicKey);
 
             const items = accounts.map((acc) => ({
                 name: "Unknown",
@@ -203,7 +202,7 @@ export class WalletProvider {
 
     async fetchPortfolioValueCodex(runtime): Promise<WalletPortfolio> {
         try {
-            const cacheKey = `portfolio-${this.walletPublicKey.toBase58()}`;
+            const cacheKey = `portfolio-${this.walletPublicKey}`;
             const cachedValue = await this.cache.get<WalletPortfolio>(cacheKey);
 
             if (cachedValue) {
@@ -227,7 +226,7 @@ export class WalletProvider {
             `;
 
             const variables = {
-                walletId: `${this.walletPublicKey.toBase58()}:${1399811149}`,
+                walletId: `${this.walletPublicKey}:${1399811149}`,
                 cursor: null,
             };
 
@@ -358,7 +357,7 @@ export class WalletProvider {
         prices: Prices
     ): string {
         let output = `${runtime.character.description}\n`;
-        output += `Wallet Address: ${this.walletPublicKey.toBase58()}\n\n`;
+        output += `Wallet Address: ${this.walletPublicKey}\n\n`;
 
         const totalUsdFormatted = new BigNumber(portfolio.totalUsd).toFixed(2);
         const totalSolFormatted = portfolio.totalSol;
@@ -405,16 +404,33 @@ export class WalletProvider {
 
     private async getTokenAccounts(walletAddress: string) {
         try {
-            const accounts =
-                await this.connection.getParsedTokenAccountsByOwner(
-                    new PublicKey(walletAddress),
-                    {
-                        programId: new PublicKey(
-                            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-                        ),
+            const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+            
+            const response = await this.connection.getTokenAccountsByOwner(
+                address(walletAddress) as any,
+                {
+                    programId: address(TOKEN_PROGRAM_ID) as any,
+                },
+                { commitment: "confirmed" }
+            ).send();
+            
+            const accounts = response.value || [];
+            return accounts.map(acc => ({
+                account: {
+                    data: {
+                        parsed: {
+                            info: {
+                                mint: acc.account.data.toString(),
+                                tokenAmount: {
+                                    amount: acc.account.lamports.toString(),
+                                    decimals: 9,
+                                    uiAmount: (Number(acc.account.lamports) / Math.pow(10, 9)).toString()
+                                }
+                            }
+                        }
                     }
-                );
-            return accounts.value;
+                }
+            }));
         } catch (error) {
             elizaLogger.error("Error fetching token accounts:", error);
             return [];
@@ -431,12 +447,12 @@ const walletProvider: Provider = {
         try {
             const { publicKey } = await getWalletKey(runtime, false);
 
-            const connection = new Connection(
+            const connection = createSolanaRpc(
                 runtime.getSetting("SOLANA_RPC_URL") ||
                     PROVIDER_CONFIG.DEFAULT_RPC
             );
 
-            const provider = new WalletProvider(connection, publicKey);
+            const provider = new WalletProvider(connection, publicKey as string);
 
             return await provider.getFormattedPortfolio(runtime);
         } catch (error) {

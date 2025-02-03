@@ -7,16 +7,16 @@ import {
   appendTransactionMessageInstructions,
   createTransactionMessage,
   getBase64EncodedWireTransaction,
-  getComputeUnitEstimateForTransactionMessageFactory,
-  IInstruction,
-  KeyPairSigner,
   pipe,
   prependTransactionMessageInstructions,
   Rpc,
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
   signTransactionMessageWithSigners,
-  SolanaRpcApi
+  SolanaRpcApi,
+  IInstruction,
+  KeyPairSigner,
+  partiallySignTransactionMessageWithSigners
 } from '@solana/web3.js';
 
 // For more information: https://orca-so.github.io/whirlpools/Whirlpools%20SDKs/Whirlpools/Send%20Transaction
@@ -28,11 +28,20 @@ export async function sendTransaction(rpc: Rpc<SolanaRpcApi>, instructions: IIns
     tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockHash.value, tx),
     tx => appendTransactionMessageInstructions(instructions, tx)
   )
-  const getComputeUnitEstimateForTransactionMessage =
-    getComputeUnitEstimateForTransactionMessageFactory({
-      rpc: rpc
-    });
-  const computeUnitEstimate = await getComputeUnitEstimateForTransactionMessage(transactionMessage)
+
+  // Simulate transaction to get compute units
+  const signedTransactionForSim = await partiallySignTransactionMessageWithSigners(
+    transactionMessage
+  );
+  const simulation = await rpc.simulateTransaction(
+    getBase64EncodedWireTransaction(signedTransactionForSim),
+    {
+      replaceRecentBlockhash: true,
+      encoding: 'base64'
+    }
+  ).send();
+  
+  const computeUnitEstimate = Number(simulation.value.unitsConsumed) || 200_000; // Convert to number
   const safeComputeUnitEstimate = Math.max(computeUnitEstimate * 1.3, computeUnitEstimate + 100_000);
   const prioritizationFee = await rpc.getRecentPrioritizationFees()
     .send()
@@ -46,7 +55,11 @@ export async function sendTransaction(rpc: Rpc<SolanaRpcApi>, instructions: IIns
     getSetComputeUnitLimitInstruction({ units: safeComputeUnitEstimate }),
     getSetComputeUnitPriceInstruction({ microLamports: prioritizationFee })
   ], transactionMessage);
-  const signedTransaction = await signTransactionMessageWithSigners(transactionMessageWithComputeUnitInstructions)
+  
+  // Sign the transaction with the wallet signer
+  const signedTransaction = await partiallySignTransactionMessageWithSigners(
+    transactionMessageWithComputeUnitInstructions
+  );
   const base64EncodedWireTransaction = getBase64EncodedWireTransaction(signedTransaction);
 
   const timeoutMs = 90000;

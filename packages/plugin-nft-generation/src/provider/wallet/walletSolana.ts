@@ -1,12 +1,5 @@
 import NodeCache from "node-cache";
 import {
-    type Cluster,
-    clusterApiUrl,
-    Connection,
-    LAMPORTS_PER_SOL,
-    type PublicKey,
-} from "@solana/web3.js";
-import {
     createNft,
     findMetadataPda,
     mplTokenMetadata,
@@ -28,26 +21,25 @@ import { getExplorerLink } from "@solana-developers/helpers";
 // import { transferSol } from "@metaplex-foundation/mpl-toolbox";
 import bs58 from "bs58";
 import { elizaLogger } from "@elizaos/core";
+import { createSolanaRpc, type SolanaRpcApi, type Rpc } from "@solana/rpc";
+import { address } from "@solana/addresses";
+
+const LAMPORTS_PER_SOL = 1_000_000_000;
+type Cluster = "mainnet-beta" | "testnet" | "devnet";
 
 export class WalletSolana {
     private cache: NodeCache;
     private umi: Umi;
+    private connection: Rpc<SolanaRpcApi>;
+    private walletPrivateKeyKey: string;
     private cluster: Cluster;
 
-    constructor(
-        private walletPublicKey: PublicKey,
-        private walletPrivateKeyKey: string,
-        private connection?: Connection
-    ) {
-        this.cache = new NodeCache({ stdTTL: 300 }); // Cache TTL set to 5 minutes
-
-        if (!connection) {
-            this.cluster = (process.env.SOLANA_CLUSTER as Cluster) || "devnet";
-            this.connection = new Connection(clusterApiUrl(this.cluster), {
-                commitment: "finalized",
-            });
-        }
-        const umi = createUmi(this.connection.rpcEndpoint);
+    constructor(endpoint: string, privateKey: string) {
+        this.cache = new NodeCache({ stdTTL: 300 });
+        this.connection = createSolanaRpc(endpoint);
+        this.walletPrivateKeyKey = privateKey;
+        
+        const umi = createUmi(endpoint);
         umi.use(mplTokenMetadata());
         const umiUser = umi.eddsa.createKeypairFromSecretKey(
             this.privateKeyUint8Array
@@ -59,12 +51,19 @@ export class WalletSolana {
     async fetchDigitalAsset (address: string) {
         return fetchDigitalAsset(this.umi, publicKey(address))
     }
-    async getBalance() {
-        const balance = await this.connection.getBalance(this.walletPublicKey);
-        return {
-            value: balance,
-            formater: `${balance / LAMPORTS_PER_SOL} SOL`,
-        };
+
+    async getBalance(walletAddress: string): Promise<number> {
+        try {
+            const response = await this.connection.getBalance(
+                address(walletAddress) as any,
+                { commitment: "confirmed" }
+            ).send();
+            
+            return Number(response.value);
+        } catch (error) {
+            console.error("Error getting balance:", error);
+            return 0;
+        }
     }
 
     get privateKeyUint8Array() {

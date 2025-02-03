@@ -14,7 +14,9 @@ import {
     TrustScoreDatabase,
 } from "@elizaos/plugin-trustdb";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { createSolanaRpc, type SolanaRpcApi, type Rpc } from "@solana/rpc";
+import type { Address } from "@solana/web3.js";
+import { address } from "@solana/addresses";
 import { v4 as uuidv4 } from "uuid";
 import type { ProcessedTokenData, TokenSecurityData } from "../types/token.ts";
 import { SimulationSellingService } from "./simulationSellingService.ts";
@@ -54,8 +56,8 @@ export class TrustScoreManager {
     private tokenProvider: TokenProvider;
     private trustScoreDb: TrustScoreDatabase;
     private simulationSellingService: SimulationSellingService;
-    private connection: Connection;
-    private baseMint: PublicKey;
+    private connection: Rpc<SolanaRpcApi>;
+    private baseMintStr: string;
     private DECAY_RATE = 0.95;
     private MAX_DECAY_DAYS = 30;
     private backend;
@@ -67,11 +69,9 @@ export class TrustScoreManager {
     ) {
         this.tokenProvider = tokenProvider;
         this.trustScoreDb = trustScoreDb;
-        this.connection = new Connection(runtime.getSetting("SOLANA_RPC_URL"));
-        this.baseMint = new PublicKey(
-            runtime.getSetting("BASE_MINT") ||
-                "So11111111111111111111111111111111111111112"
-        );
+        this.connection = createSolanaRpc(runtime.getSetting("SOLANA_RPC_URL"));
+        this.baseMintStr = runtime.getSetting("BASE_MINT") ||
+                "So11111111111111111111111111111111111111112";
         this.backend = runtime.getSetting("BACKEND_URL");
         this.backendToken = runtime.getSetting("BACKEND_TOKEN");
         this.simulationSellingService = new SimulationSellingService(
@@ -84,11 +84,10 @@ export class TrustScoreManager {
     async getRecommenederBalance(recommenderWallet: string): Promise<number> {
         try {
             const tokenAta = await getAssociatedTokenAddress(
-                new PublicKey(recommenderWallet),
-                this.baseMint
+                address(recommenderWallet),
+                address(this.baseMintStr)
             );
-            const tokenBalInfo =
-                await this.connection.getTokenAccountBalance(tokenAta);
+            const tokenBalInfo = await this.connection.getTokenAccountBalance(tokenAta).send();
             const tokenBalance = tokenBalInfo.value.amount;
             const balance = Number.parseFloat(tokenBalance);
             return balance;
@@ -368,7 +367,7 @@ export class TrustScoreManager {
             await this.tokenProvider.getProcessedTokenData();
         const wallet = new WalletProvider(
             this.connection,
-            new PublicKey(Wallet!)
+            address(Wallet!)
         );
 
         let tokensBalance = 0;
@@ -543,7 +542,7 @@ export class TrustScoreManager {
             await this.tokenProvider.getProcessedTokenData();
         const wallet = new WalletProvider(
             this.connection,
-            new PublicKey(Wallet!)
+            address(Wallet!)
         );
         const prices = await wallet.fetchPrices(runtime);
         const solPrice = prices.solana.usd;
