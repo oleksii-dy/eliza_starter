@@ -54,6 +54,5 @@
         "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb,pnpm-workspace.yaml",
         "README.md": "*.md",
         "Dockerfile": "docker-compose-docs.yaml,docker-compose.yaml,Dockerfile.docs"
-    },
-    "typescript.tsdk": "node_modules/typescript/lib"
+    }
 }
