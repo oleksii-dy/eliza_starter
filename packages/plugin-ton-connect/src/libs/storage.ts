@@ -14,7 +14,7 @@ export interface IStorage {
 
     deleteFromCache(address: string): Promise<void>;
 
-    getCachedAddressList(): Promise<string[]>;
+    getCachedAddressList(): Promise<{ [key: string]: string }>;
 }
 
 /**
@@ -93,7 +93,7 @@ export class Storg implements IStorage {
     /**
      * Get all connected wallets by its address
      */
-    public async getCachedAddressList(): Promise<string[]> {
+    public async getCachedAddressList(): Promise<{ [key: string]: string }> {
         const list = JSON.parse(await this.cacheManager.get(this.listKey) ?? '{}')
         return list ?? {}
     }

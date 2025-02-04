@@ -17,7 +17,7 @@ export class WalletProvider {
      */
     async getWalletClient(address: string = null): Promise<ITonConnect> {
         const storage: IStorage = new Storg(this.cacheManager)
-        const connected: string[] = await storage.getCachedAddressList()
+        const connected: { [key: string]: string } = await storage.getCachedAddressList()
         let selected: string = Object.keys(connected)?.[0] ?? null;
         if (address && connected?.[address]) {
             selected = address
