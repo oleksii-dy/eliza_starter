@@ -19,12 +19,13 @@
 		"dist"
 	],
 	"dependencies": {
+		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
 		"tsup": "8.3.5",
-		"vitest": "^2.1.5",
-		"@biomejs/biome": "1.9.4"
+		"vitest": "^2.1.5"
 	},
 	"scripts": {
 		"build": "tsup src/index.ts --format esm --no-dts",

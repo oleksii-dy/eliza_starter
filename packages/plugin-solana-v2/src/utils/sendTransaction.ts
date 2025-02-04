@@ -4,45 +4,42 @@ import {
   getSetComputeUnitPriceInstruction
 } from '@solana-program/compute-budget';
 import {
-  appendTransactionMessageInstructions,
-  createTransactionMessage,
-  getBase64EncodedWireTransaction,
-  pipe,
-  prependTransactionMessageInstructions,
-  Rpc,
-  setTransactionMessageFeePayer,
-  setTransactionMessageLifetimeUsingBlockhash,
-  signTransactionMessageWithSigners,
-  SolanaRpcApi,
-  IInstruction,
-  KeyPairSigner,
-  partiallySignTransactionMessageWithSigners
-} from '@solana/web3.js';
+  Transaction,
+  PublicKey,
+  Connection,
+  TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
+  Keypair
+} from "@solana/web3.js";
+import { Rpc, SolanaRpcApi, SendTransactionApi } from '@solana/rpc';
 
-// For more information: https://orca-so.github.io/whirlpools/Whirlpools%20SDKs/Whirlpools/Send%20Transaction
-export async function sendTransaction(rpc: Rpc<SolanaRpcApi>, instructions: IInstruction[], wallet: KeyPairSigner): Promise<string> {
+type SendTransactionParams = Parameters<SendTransactionApi['sendTransaction']>[0];
+
+export async function sendTransaction(rpc: Rpc<SolanaRpcApi>, instructions: TransactionInstruction[], wallet: Keypair): Promise<string> {
   const latestBlockHash = await rpc.getLatestBlockhash().send();
-  const transactionMessage = await pipe(
-    createTransactionMessage({ version: 0 }),
-    tx => setTransactionMessageFeePayer(wallet.address, tx),
-    tx => setTransactionMessageLifetimeUsingBlockhash(latestBlockHash.value, tx),
-    tx => appendTransactionMessageInstructions(instructions, tx)
-  )
+  
+  // Create a new transaction message
+  const messageV0 = new TransactionMessage({
+    payerKey: wallet.publicKey,
+    recentBlockhash: latestBlockHash.value.blockhash,
+    instructions
+  }).compileToV0Message();
+
+  // Create a versioned transaction
+  let transaction = new VersionedTransaction(messageV0);
 
   // Simulate transaction to get compute units
-  const signedTransactionForSim = await partiallySignTransactionMessageWithSigners(
-    transactionMessage
-  );
-  const simulation = await rpc.simulateTransaction(
-    getBase64EncodedWireTransaction(signedTransactionForSim),
-    {
-      replaceRecentBlockhash: true,
-      encoding: 'base64'
-    }
-  ).send();
-  
-  const computeUnitEstimate = Number(simulation.value.unitsConsumed) || 200_000; // Convert to number
+  const serializedForSim = Buffer.from(transaction.serialize()).toString('base64');
+  const simulation = await rpc.simulateTransaction(serializedForSim as SendTransactionParams, {
+    replaceRecentBlockhash: true,
+    encoding: 'base64'
+  }).send();
+
+  const computeUnitEstimate = Number(simulation.value.unitsConsumed) || 200_000;
   const safeComputeUnitEstimate = Math.max(computeUnitEstimate * 1.3, computeUnitEstimate + 100_000);
+  
+  // Get prioritization fee
   const prioritizationFee = await rpc.getRecentPrioritizationFees()
     .send()
     .then(fees =>
@@ -51,26 +48,39 @@ export async function sendTransaction(rpc: Rpc<SolanaRpcApi>, instructions: IIns
         .sort((a, b) => a - b)
         [Math.ceil(0.95 * fees.length) - 1]
     );
-  const transactionMessageWithComputeUnitInstructions = await prependTransactionMessageInstructions([
+
+  // Create compute budget instructions
+  const computeBudgetInstructions = [
     getSetComputeUnitLimitInstruction({ units: safeComputeUnitEstimate }),
     getSetComputeUnitPriceInstruction({ microLamports: prioritizationFee })
-  ], transactionMessage);
+  ];
+
+  // Create new message with compute budget instructions
+  const messageWithBudget = new TransactionMessage({
+    payerKey: wallet.publicKey,
+    recentBlockhash: latestBlockHash.value.blockhash,
+    instructions: [...computeBudgetInstructions, ...instructions]
+  }).compileToV0Message();
+
+  // Create final transaction
+  transaction = new VersionedTransaction(messageWithBudget);
   
-  // Sign the transaction with the wallet signer
-  const signedTransaction = await partiallySignTransactionMessageWithSigners(
-    transactionMessageWithComputeUnitInstructions
-  );
-  const base64EncodedWireTransaction = getBase64EncodedWireTransaction(signedTransaction);
+  // Sign the transaction
+  transaction.sign([wallet]);
 
   const timeoutMs = 90000;
   const startTime = Date.now();
+  // In the transaction sending loop:
   while (Date.now() - startTime < timeoutMs) {
     const transactionStartTime = Date.now();
-    const signature = await rpc.sendTransaction(base64EncodedWireTransaction, {
+    const serializedTransaction = Buffer.from(transaction.serialize()).toString('base64');
+    
+    const signature = await rpc.sendTransaction(serializedTransaction as SendTransactionParams, {
       maxRetries: 0n,
       skipPreflight: true,
       encoding: 'base64'
     }).send();
+
     const statuses = await rpc.getSignatureStatuses([signature]).send();
     if (statuses.value[0]) {
       if (!statuses.value[0].err) {

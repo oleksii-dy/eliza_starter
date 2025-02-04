@@ -6,6 +6,7 @@
 	"types": "dist/index.d.ts",
 	"dependencies": {
 		"@avnu/avnu-sdk": "^2.1.1",
+		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"@elizaos/plugin-trustdb": "workspace:*",
 		"quais": "1.0.0-alpha.25",

@@ -19,6 +19,7 @@
 		"dist"
 	],
 	"dependencies": {
+		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"@octokit/rest": "20.1.1",
 		"@octokit/types": "12.6.0",

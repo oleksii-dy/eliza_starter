@@ -33,8 +33,8 @@ import type { ProcessedTokenData } from "./types";
 import { analyzeTradeAction } from "./actions/analyzeTrade";
 import { createSolanaRpc } from '@solana/rpc';
 import type { Rpc, SolanaRpcApi, RpcApi } from '@solana/rpc';
-import type { Address } from '@solana/web3.js';
-import { address } from '@solana/addresses';
+import { PublicKey } from '@solana/web3.js';
+import * as web3 from '@solana/web3.js';
 import { createDefaultRpcTransport } from '@solana/rpc';
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 
@@ -418,15 +418,15 @@ declare module "@elizaos/plugin-trustdb" {
 
 async function getChainBalance(
     connection: Rpc<SolanaRpcApi>,
-    walletAddress: Address,
+    walletAddress: web3.PublicKey,
     tokenAddress: string
 ): Promise<number> {
     try {
-        const tokenAccountAddress = await getAssociatedTokenAddress(
-            address(tokenAddress),
+        const tokenAccountAddress = new PublicKey(await getAssociatedTokenAddress(
+            new PublicKey(tokenAddress),
             walletAddress
-        );
-        const tokenAccount = await connection.getTokenAccountBalance(tokenAccountAddress).send();
+        ));
+        const tokenAccount = await connection.getTokenAccountBalance(tokenAccountAddress as any).send();
         return Number(tokenAccount.value.amount);
     } catch (error) {
         elizaLogger.error(`Error getting token balance: ${error}`);
@@ -443,7 +443,8 @@ async function createRabbiTraderPlugin(
         runtime?.getSetting("SOLANA_RPC_URL") || "https://api.mainnet-beta.solana.com"
     );
 
-    const keypair = getWalletKeypair(runtime);
+    // Resolve keypair immediately and store it
+    const resolvedKeypair = await getWalletKeypair(runtime);
 
     // Define resumeTrading at the start of the function
     const resumeTrading = async () => {
@@ -473,7 +474,14 @@ async function createRabbiTraderPlugin(
     const walletProvider: ExtendedWalletProvider = {
         connection,
         getChain: () => ({ type: "solana" }),
-        getAddress: () => keypair.publicKey.toBase58(),
+        getAddress: () => {
+            try {
+                return resolvedKeypair.publicKey.toBase58();
+            } catch (error) {
+                elizaLogger.error("Failed to get wallet address:", error);
+                return "";
+            }
+        },
         signMessage: async (_message: string): Promise<Signature> => {
             throw new Error(
                 "Message signing not implemented for Solana wallet"
@@ -485,7 +493,7 @@ async function createRabbiTraderPlugin(
                     // Handle Base token balance
                     const baseBalance = await getChainBalance(
                         connection,
-                        keypair.publicKey,
+                        resolvedKeypair.publicKey,
                         tokenAddress
                     );
                     return {
@@ -496,10 +504,10 @@ async function createRabbiTraderPlugin(
                         name: "Base",
                     };
                 } else {
-                    // Existing Solana logic
-                    const balanceResponse = await connection.getBalance(
-                        keypair.publicKey
-                    );
+                   // Existing Solana logic
+                   const balanceResponse = connection.getBalance(
+                        resolvedKeypair.publicKey.toBase58() as any
+                    ).send();
                     const balance = typeof balanceResponse === 'bigint' ?
                         Number(balanceResponse) :
                         balanceResponse;
@@ -526,17 +534,17 @@ async function createRabbiTraderPlugin(
         getMaxBuyAmount: async (tokenAddress: string) => {
             try {
                 if (tokenAddress.startsWith("0x")) {
-                    // Handle Base chain balance
+                    // Handle Base token balance
                     const baseBalance = await getChainBalance(
                         connection,
-                        keypair.publicKey,
+                        resolvedKeypair.publicKey,
                         tokenAddress
                     );
                     return (baseBalance * 0.9) / 1e18; // Base uses 18 decimals
                 } else {
                     // Handle Solana balance
                     const balanceResponse = await connection.getBalance(
-                        keypair.publicKey
+                        resolvedKeypair.publicKey.toBase58() as any
                     );
                     const balance = typeof balanceResponse === 'bigint' ?
                         Number(balanceResponse) :

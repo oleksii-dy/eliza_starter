@@ -15,13 +15,13 @@ import {
 } from "@elizaos/plugin-trustdb";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { createSolanaRpc, type SolanaRpcApi, type Rpc } from "@solana/rpc";
-import type { Address } from "@solana/web3.js";
 import { address } from "@solana/addresses";
 import { v4 as uuidv4 } from "uuid";
 import type { ProcessedTokenData, TokenSecurityData } from "../types/token.ts";
 import { SimulationSellingService } from "./simulationSellingService.ts";
 import type { TokenProvider } from "./token.ts";
 import { WalletProvider } from "./wallet.ts";
+import { PublicKey } from "@solana/web3.js";
 
 const Wallet = settings.MAIN_WALLET_ADDRESS;
 interface TradeData {
@@ -84,10 +84,13 @@ export class TrustScoreManager {
     async getRecommenederBalance(recommenderWallet: string): Promise<number> {
         try {
             const tokenAta = await getAssociatedTokenAddress(
-                address(recommenderWallet),
-                address(this.baseMintStr)
+                new PublicKey(recommenderWallet),
+                new PublicKey(this.baseMintStr)
             );
-            const tokenBalInfo = await this.connection.getTokenAccountBalance(tokenAta).send();
+            // Use the send() method with getTokenAccountBalance
+            const tokenBalInfo = await this.connection.getTokenAccountBalance(
+                tokenAta as any
+            ).send();
             const tokenBalance = tokenBalInfo.value.amount;
             const balance = Number.parseFloat(tokenBalance);
             return balance;

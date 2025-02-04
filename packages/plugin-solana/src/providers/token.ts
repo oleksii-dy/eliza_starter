@@ -24,6 +24,7 @@ import { toBN } from "../bignumber.ts";
 import { WalletProvider, type Item } from "./wallet.ts";
 import { createSolanaRpc } from "@solana/rpc";
 import { getWalletKey } from "../keypairUtils.ts";
+import { Base58EncodedAddress } from "@solana/addresses";
 
 const PROVIDER_CONFIG = {
     BIRDEYE_API: "https://public-api.birdeye.so",
@@ -1117,7 +1118,10 @@ const tokenProvider: Provider = {
         try {
             const { publicKey } = await getWalletKey(runtime, false);
 
-            const walletProvider = new WalletProvider(connection, publicKey);
+            // Convert PublicKey to Base58EncodedAddress
+            const walletAddress = publicKey.toBase58() as Base58EncodedAddress<string>;
+
+            const walletProvider = new WalletProvider(connection, walletAddress);
 
             const provider = new TokenProvider(
                 tokenAddress,

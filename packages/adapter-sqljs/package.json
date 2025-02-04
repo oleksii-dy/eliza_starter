@@ -19,6 +19,7 @@
 		"dist"
 	],
 	"dependencies": {
+		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"@types/sql.js": "1.4.9",
 		"sql.js": "1.12.0",

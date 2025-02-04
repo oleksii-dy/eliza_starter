@@ -1,7 +1,8 @@
 import { getAccount, getAssociatedTokenAddress } from "@solana/spl-token";
-import { createSolanaRpc } from '@solana/rpc';
-import { Rpc, SolanaRpcApi, Address, address } from '@solana/web3.js';
+import { createSolanaRpc, type SolanaRpcApi, type Rpc } from "@solana/rpc";
+import { address } from "@solana/addresses";
 import { elizaLogger } from "@elizaos/core";
+import { PublicKey } from '@solana/web3.js'
 
 export async function getTokenPriceInSol(tokenSymbol: string): Promise<number> {
     const response = await fetch(
@@ -13,20 +14,31 @@ export async function getTokenPriceInSol(tokenSymbol: string): Promise<number> {
 
 async function getTokenBalance(
     rpc: Rpc<SolanaRpcApi>,
-    walletAddress: Address,
-    tokenMintAddress: Address
+    walletAddress: string,
+    tokenMintAddress: string
 ): Promise<number> {
-    const tokenAccountAddress = await getAssociatedTokenAddress(
-        tokenMintAddress,
-        walletAddress
-    );
-
     try {
-        const tokenAccount = await getAccount(rpc, tokenAccountAddress);
-        const decimals = tokenAccount.mint.decimals;
-        const rawAmount = Number(tokenAccount.amount);
-        const tokenAmount = rawAmount / Math.pow(10, decimals);
-        return tokenAmount;
+        // Convert addresses to proper format
+        const mintPubkey = new PublicKey(tokenMintAddress);
+        const walletPubkey = new PublicKey(walletAddress);
+        
+        // Get the associated token account address
+        const tokenAccountAddress = await getAssociatedTokenAddress(
+            mintPubkey,
+            walletPubkey
+        );
+
+        // Get the token account info
+        const tokenAccount = await rpc.getTokenAccountBalance(
+            tokenAccountAddress.toString() as any
+        ).send();
+
+        if (!tokenAccount.value) {
+            return 0;
+        }
+
+        // Return the UI amount which is already adjusted for decimals
+        return Number(tokenAccount.value.uiAmount || 0);
     } catch (error) {
         elizaLogger.error(
             `Error retrieving balance for token: ${tokenMintAddress}`,
@@ -36,9 +48,10 @@ async function getTokenBalance(
     }
 }
 
+// Update the type definitions in getTokenBalances as well
 async function getTokenBalances(
     rpc: Rpc<SolanaRpcApi>,
-    walletAddress: Address
+    walletAddress: string
 ): Promise<{ [tokenName: string]: number }> {
     const tokenBalances: { [tokenName: string]: number } = {};
 
@@ -57,7 +70,7 @@ async function getTokenBalances(
     return tokenBalances;
 }
 
-function getTokenName(mintAddress: Address): string {
+function getTokenName(mintAddress: string): string {
     // Implement a mapping of mint addresses to token names
     const tokenNameMap: { [mintAddress: string]: string } = {
         EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v: "USDC",

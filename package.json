@@ -59,11 +59,12 @@
       "cookie": "0.7.0",
       "bs58": "5.0.0",
       "@coral-xyz/anchor": "0.28.0",
-      "@solana/web3.js": "2.0.0-preview.3",
+      "@solana/web3.js": "npm:@solana/web3.js@1.95.5",
       "@solana/spl-token": "0.3.8"
     },
     "patchedDependencies": {
-      "@solana-developers/helpers@2.6.0": "patches/@solana-developers__helpers@2.6.0.patch"
+      "@solana-developers/helpers@2.6.0": "patches/@solana-developers__helpers@2.6.0.patch",
+      "@orca-so/whirlpools-client@1.0.2": "patches/@orca-so/whirlpools-client@1.0.2/fix-imports.patch"
     }
   },
   "engines": {
@@ -75,6 +76,9 @@
     "@coinbase/coinbase-sdk": "0.10.0",
     "@deepgram/sdk": "^3.9.0",
     "@injectivelabs/sdk-ts": "^1.14.33",
+    "@solana-developers/helpers": "2.6.0",
+    "@solana/spl-token": "0.3.8",
+    "@solana/web3.js": "1.95.5",
     "@vitest/eslint-plugin": "1.0.1",
     "ai": "2.2.31",
     "amqplib": "0.10.5",
@@ -84,8 +88,7 @@
     "ollama-ai-provider": "0.16.1",
     "optional": "0.1.4",
     "pnpm": "9.15.0",
-    "sharp": "0.33.5",
-    "@solana-developers/helpers": "2.6.0"
+    "sharp": "0.33.5"
   },
   "packageManager": "pnpm@9.15.0",
   "workspaces": [

@@ -19,6 +19,7 @@
 		"dist"
 	],
 	"dependencies": {
+		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"@ton/crypto": "3.3.0",
 		"@ton/ton": "15.1.0",

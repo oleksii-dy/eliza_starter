@@ -1,15 +1,15 @@
 import { elizaLogger, IAgentRuntime, Memory, Provider, settings, State } from "@elizaos/core";
-import { createSolanaRpc } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { loadWallet } from "../../utils/loadWallet";
-import { Address, Rpc, SolanaRpcApi } from "@solana/web3.js";
+import { Rpc, SolanaRpcApi, createSolanaRpc } from "@solana/rpc";
 import { fetchPositionsForOwner, HydratedPosition } from "@orca-so/whirlpools"
 import { fetchWhirlpool, Whirlpool } from "@orca-so/whirlpools-client";
 import { sqrtPriceToPrice, tickIndexToPrice } from "@orca-so/whirlpools-core";
 import { fetchMint, Mint } from "@solana-program/token-2022"
 
 export interface FetchedPositionStatistics {
-    whirlpoolAddress: Address;
-    positionMint: Address;
+    whirlpoolAddress: PublicKey;
+    positionMint: PublicKey;
     inRange: boolean;
     distanceCenterPositionFromPoolPriceBps: number;
     positionWidthBps: number;
@@ -31,10 +31,10 @@ export const positionProvider: Provider = {
                 runtime,
                 false
             );
-            const rpc = createSolanaRpc(settings.SOLANA_RPC_URL!);
+            const rpc = createSolanaRpc('https://api.mainnet-beta.solana.com');
             const positions = await fetchPositions(rpc, ownerAddress);
             const positionsString = JSON.stringify(positions);
-            return positionsString
+            return positionsString;
         } catch (error) {
             elizaLogger.error("Error in wallet provider:", error);
             return null;
@@ -42,7 +42,10 @@ export const positionProvider: Provider = {
     },
 };
 
-const fetchPositions = async (rpc: Rpc<SolanaRpcApi>, ownerAddress: Address): Promise<FetchedPositionStatistics[]> => {
+const fetchPositions = async (
+    rpc: Rpc<SolanaRpcApi>, 
+    ownerAddress: PublicKey
+): Promise<FetchedPositionStatistics[]> => {
     try {
         const positions = await fetchPositionsForOwner(rpc, ownerAddress);
         const fetchedWhirlpools: Map<string, Whirlpool> = new Map();

@@ -12,6 +12,7 @@
         "format": "prettier --write src/**/*.ts"
     },
     "dependencies": {
+        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-evm": "workspace:*",
         "axios": "^1.6.7",

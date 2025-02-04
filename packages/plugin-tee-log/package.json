@@ -5,9 +5,10 @@
 	"type": "module",
 	"types": "dist/index.d.ts",
 	"dependencies": {
+		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
-		"@elizaos/plugin-tee": "workspace:*",
 		"@elizaos/plugin-sgx": "workspace:*",
+		"@elizaos/plugin-tee": "workspace:*",
 		"better-sqlite3": "11.6.0",
 		"elliptic": "6.6.1"
 	},

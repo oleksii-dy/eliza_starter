@@ -10,13 +10,8 @@ import {
     settings,
     State,
 } from "@elizaos/core";
-import {
-    address,
-    createSolanaRpc,
-    KeyPairSigner,
-    Rpc,
-    SolanaRpcApi
-} from "@solana/web3.js";
+import { PublicKey, Keypair } from "@solana/web3.js";
+import { Rpc, SolanaRpcApi, createSolanaRpc } from "@solana/rpc";
 import { fetchMint } from "@solana-program/token-2022";
 import {
     fetchPosition,
@@ -189,13 +184,13 @@ async function handleRepositioning(
     fetchedPositions: FetchedPosition[],
     repositionThresholdBps: number,
     rpc: Rpc<SolanaRpcApi>,
-    wallet: KeyPairSigner
+    wallet: Keypair
 ) {
     return await Promise.all(
         fetchedPositions.map(async (position) => {
             const { inRange, distanceCenterPositionFromPoolPriceBps } = position;
             if (!inRange || distanceCenterPositionFromPoolPriceBps > repositionThresholdBps) {
-                const positionMintAddress = address(position.positionMint);
+                const positionMintAddress = new PublicKey(position.positionMint);
                 const positionAddress = (await getPositionAddress(positionMintAddress))[0];
                 let positionData = await fetchPosition(rpc, positionAddress);
                 const whirlpoolAddress = positionData.data.whirlpool;
@@ -284,7 +279,7 @@ async function handleRepositioning(
                     }
                 }
             } else {
-                elizaLogger.log(`Position ${address(position.positionMint)} is in range, skipping.`);
+                elizaLogger.log(`Position ${new PublicKey(position.positionMint)} is in range, skipping.`);
                 return null;
             }
         })

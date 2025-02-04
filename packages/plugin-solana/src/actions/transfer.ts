@@ -3,12 +3,7 @@ import {
     createTransferInstruction,
 } from "@solana/spl-token";
 import { elizaLogger, settings } from "@elizaos/core";
-import {
-    Connection,
-    PublicKey,
-    TransactionMessage,
-    VersionedTransaction,
-} from "@solana/web3.js";
+import { Connection, PublicKey, VersionedTransaction, TransactionMessage } from "@solana/web3.js";
 import {
     type ActionExample,
     type Content,
@@ -109,7 +104,7 @@ export default {
         }
 
         try {
-            const { keypair: senderKeypair } = await getWalletKey(runtime, true);
+            const { keypair } = await getWalletKey(runtime, true);
             const connection = new Connection(settings.SOLANA_RPC_URL!);
             const mintPubkey = new PublicKey(content.tokenAddress);
             const recipientPubkey = new PublicKey(content.recipient);
@@ -118,7 +113,7 @@ export default {
             const decimals = (mintInfo.value?.data as any)?.parsed?.info?.decimals ?? 9;
             const adjustedAmount = BigInt(Number(content.amount) * Math.pow(10, decimals));
 
-            const senderATA = getAssociatedTokenAddressSync(mintPubkey, senderKeypair.publicKey);
+            const senderATA = getAssociatedTokenAddressSync(mintPubkey, keypair.publicKey);
             const recipientATA = getAssociatedTokenAddressSync(mintPubkey, recipientPubkey);
 
             const instructions = [];
@@ -128,7 +123,7 @@ export default {
                 const { createAssociatedTokenAccountInstruction } = await import("@solana/spl-token");
                 instructions.push(
                     createAssociatedTokenAccountInstruction(
-                        senderKeypair.publicKey,
+                        keypair.publicKey,
                         recipientATA,
                         recipientPubkey,
                         mintPubkey
@@ -140,19 +135,18 @@ export default {
                 createTransferInstruction(
                     senderATA,
                     recipientATA,
-                    senderKeypair.publicKey,
+                    keypair.publicKey,
                     adjustedAmount
                 )
             );
 
-            const messageV0 = new TransactionMessage({
-                payerKey: senderKeypair.publicKey,
+            const message = new TransactionMessage({
+                payerKey: keypair.publicKey,
                 recentBlockhash: (await connection.getLatestBlockhash()).blockhash,
                 instructions,
             }).compileToV0Message();
-
-            const transaction = new VersionedTransaction(messageV0);
-            transaction.sign([senderKeypair]);
+            const transaction = new VersionedTransaction(message);
+            transaction.sign([keypair]);
 
             const signature = await connection.sendTransaction(transaction);
 

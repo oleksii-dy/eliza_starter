@@ -35,9 +35,11 @@ export async function getWalletKey(
             runtime.agentId
         );
 
-        return requirePrivateKey
-            ? { keypair: deriveKeyResult.keypair }
-            : { publicKey: deriveKeyResult.keypair.publicKey };
+        if (requirePrivateKey) {
+            return { keypair: Keypair.fromSecretKey((deriveKeyResult.keypair as any).secretKey) };
+        } else {
+            return { publicKey: new PublicKey(deriveKeyResult.keypair.publicKey) };
+        }
     }
 
     // TEE mode is OFF

@@ -20,6 +20,7 @@
 	],
 	"dependencies": {
 		"@aptos-labs/ts-sdk": "^1.26.0",
+		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"bignumber.js": "9.1.2",
 		"node-cache": "5.1.2",

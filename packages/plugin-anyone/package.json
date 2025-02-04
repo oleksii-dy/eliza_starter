@@ -6,13 +6,14 @@
 	"types": "dist/index.d.ts",
 	"dependencies": {
 		"@anyone-protocol/anyone-client": "^0.4.3",
+		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"axios": "^1.7.9",
 		"tsup": "8.3.5"
 	},
 	"devDependencies": {
-		"vitest": "^1.2.1",
-		"@vitest/coverage-v8": "^1.2.1"
+		"@vitest/coverage-v8": "^1.2.1",
+		"vitest": "^1.2.1"
 	},
 	"scripts": {
 		"build": "tsup --format esm --dts",

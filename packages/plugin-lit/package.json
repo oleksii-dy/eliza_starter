@@ -19,19 +19,19 @@
         "dist"
     ],
     "dependencies": {
+        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-tee": "workspace:*",
+        "@ethersproject/abstract-provider": "^5.0.0",
         "@lifi/data-types": "5.15.5",
         "@lifi/sdk": "3.4.1",
         "@lifi/types": "16.3.0",
-        "tsup": "8.3.5",
-        "@lit-protocol/lit-node-client": "^7.0.4",
-        "@lit-protocol/constants": "^7.0.4",
         "@lit-protocol/auth-helpers": "^7.0.4",
         "@lit-protocol/aw-tool": "*",
-        "@ethersproject/abstract-provider": "^5.0.0",
+        "@lit-protocol/constants": "^7.0.4",
         "@lit-protocol/contracts-sdk": "^7.0.2",
         "@lit-protocol/lit-auth-client": "^7.0.2",
+        "@lit-protocol/lit-node-client": "^7.0.4",
         "@lit-protocol/pkp-client": "6.11.3",
         "@lit-protocol/pkp-ethers": "^7.0.2",
         "@lit-protocol/types": "^6.11.3",
@@ -39,6 +39,7 @@
         "@solana/web3.js": "^1.95.8",
         "ethers": "^5.7.2",
         "siwe": "^2.0.0",
+        "tsup": "8.3.5",
         "zod": "3.22.4"
     },
     "devDependencies": {

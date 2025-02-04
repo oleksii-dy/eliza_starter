@@ -19,6 +19,7 @@
         "dist"
     ],
     "dependencies": {
+        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-tee": "workspace:*",
         "astra-lightning": "^1.1.0"

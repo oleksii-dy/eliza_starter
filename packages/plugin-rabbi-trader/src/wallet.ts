@@ -2,6 +2,7 @@ import { elizaLogger, type IAgentRuntime } from "@elizaos/core";
 import { Connection, Keypair, VersionedTransaction } from "@solana/web3.js";
 import { decodeBase58 } from "./utils";
 import { SAFETY_LIMITS } from "./constants";
+import { walletProvider } from "./providers/wallet";
 
 /**
  * Gets wallet keypair from runtime settings
@@ -9,21 +10,8 @@ import { SAFETY_LIMITS } from "./constants";
  * @returns Solana keypair for transactions
  * @throws Error if private key is missing or invalid
  */
-export function getWalletKeypair(runtime?: IAgentRuntime): Keypair {
-    // Check chain type from token address or configuration
-
-    const privateKeyString = runtime?.getSetting("WALLET_PRIVATE_KEY");
-    if (!privateKeyString) {
-        throw new Error("No wallet private key configured");
-    }
-
-    try {
-        const privateKeyBytes = decodeBase58(privateKeyString);
-        return Keypair.fromSecretKey(privateKeyBytes);
-    } catch (error) {
-        elizaLogger.error("Failed to create wallet keypair:", error);
-        throw error;
-    }
+export async function getWalletKeypair(runtime?: IAgentRuntime): Promise<Keypair> {
+    return await walletProvider.get(runtime);
 }
 
 /**
@@ -35,13 +23,9 @@ export async function getWalletBalance(
     runtime: IAgentRuntime
 ): Promise<number> {
     try {
-        // Existing Solana balance logic
-        const walletKeypair = getWalletKeypair(runtime);
+        const walletKeypair = await walletProvider.get(runtime);
         const walletPubKey = walletKeypair.publicKey;
-        const connection = new Connection(
-            runtime.getSetting("SOLANA_RPC_URL") ||
-                "https://api.mainnet-beta.solana.com"
-        );
+        const connection = await walletProvider.getConnection(runtime);
 
         const balance = await connection.getBalance(walletPubKey);
         const solBalance = balance / 1e9;
@@ -61,9 +45,7 @@ export async function getWalletBalance(
 
 // Add helper function to get connection
 async function getConnection(runtime: IAgentRuntime): Promise<Connection> {
-    return new Connection(
-        runtime.getSetting("SOLANA_RPC_URL") || "https://api.mainnet-beta.solana.com"
-    );
+    return walletProvider.getConnection(runtime);
 }
 
 // Add executeTrade function
@@ -151,7 +133,7 @@ export async function executeTrade(
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 quoteResponse: quoteData,
-                userPublicKey: walletKeypair.publicKey.toString(),
+                userPublicKey: (await walletKeypair).publicKey.toString(),
                 wrapAndUnwrapSol: true,
                 computeUnitPriceMicroLamports: 2000000,
                 dynamicComputeUnitLimit: true,
@@ -173,7 +155,7 @@ export async function executeTrade(
         const { blockhash, lastValidBlockHeight } =
             await connection.getLatestBlockhash("finalized");
         tx.message.recentBlockhash = blockhash;
-        tx.sign([walletKeypair]);
+        tx.sign([(await walletKeypair) as Keypair]);
 
         // Send with confirmation using more lenient settings
         const signature = await connection.sendTransaction(tx, {

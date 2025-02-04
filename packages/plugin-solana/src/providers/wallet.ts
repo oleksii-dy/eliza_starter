@@ -10,6 +10,8 @@ import NodeCache from "node-cache";
 import { getWalletKey } from "../keypairUtils";
 import { createSolanaRpc, type SolanaRpcApi, type Rpc } from "@solana/rpc";
 import { address } from "@solana/addresses";
+import pkg from '@solana/web3.js';
+const { PublicKey } = pkg;
 
 // Provider configuration
 const PROVIDER_CONFIG = {
@@ -61,12 +63,12 @@ interface Prices {
 export class WalletProvider {
     private cache: NodeCache;
 
-    constructor(
-        private connection: Rpc<SolanaRpcApi>,
-        private walletPublicKey: string
-    ) {
-        this.cache = new NodeCache({ stdTTL: 300 }); // Cache TTL set to 5 minutes
-    }
+constructor(
+    private connection: Rpc<SolanaRpcApi>,
+    private walletPublicKey: ReturnType<typeof address>
+) {
+    this.cache = new NodeCache({ stdTTL: 300 }); // Cache TTL set to 5 minutes
+}
 
     private async fetchWithRetry(
         runtime,
@@ -171,7 +173,7 @@ export class WalletProvider {
             }
 
             // Fallback to basic token account info if no Birdeye API key or API call fails
-            const accounts = await this.getTokenAccounts(this.walletPublicKey);
+            const accounts = await this.getTokenAccounts(this.walletPublicKey.toString());
 
             const items = accounts.map((acc) => ({
                 name: "Unknown",
@@ -402,43 +404,46 @@ export class WalletProvider {
         }
     }
 
-    private async getTokenAccounts(walletAddress: string) {
-        try {
-            const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
-            
-            const response = await this.connection.getTokenAccountsByOwner(
-                address(walletAddress) as any,
-                {
-                    programId: address(TOKEN_PROGRAM_ID) as any,
-                },
-                { commitment: "confirmed" }
-            ).send();
-            
-            const accounts = response.value || [];
-            return accounts.map(acc => ({
-                account: {
-                    data: {
-                        parsed: {
-                            info: {
-                                mint: acc.account.data.toString(),
-                                tokenAmount: {
-                                    amount: acc.account.lamports.toString(),
-                                    decimals: 9,
-                                    uiAmount: (Number(acc.account.lamports) / Math.pow(10, 9)).toString()
-                                }
-                            }
+private async getTokenAccounts(walletAddress: string) {
+    try {
+        const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+
+        // Use PublicKey directly
+        const walletPubKey = new PublicKey(walletAddress);
+        const programPubKey = new PublicKey(TOKEN_PROGRAM_ID);
+        
+        const response = await this.connection.getTokenAccountsByOwner(
+            walletPubKey as any,
+            { programId: programPubKey as any},
+            { commitment: "confirmed" }
+        ).send();
+
+
+       const accounts = response.value || [];
+       return accounts.map(acc => ({
+        account: {
+            data: {
+                parsed: {
+                    info: {
+                        mint: acc.account.data.toString(),
+                        tokenAmount: {
+                            amount: acc.account.lamports.toString(),
+                            decimals: 9,
+                            uiAmount: (Number(acc.account.lamports) / Math.pow(10, 9)).toString()
                         }
                     }
                 }
-            }));
-        } catch (error) {
-            elizaLogger.error("Error fetching token accounts:", error);
-            return [];
+            }
         }
+    }));
+    } catch (error) {
+        elizaLogger.error("Error fetching token accounts:", error);
+        return [];
     }
 }
+}
 
-const walletProvider: Provider = {
+export const walletProvider: Provider = {
     get: async (
         runtime: IAgentRuntime,
         _message: Memory,
@@ -452,7 +457,12 @@ const walletProvider: Provider = {
                     PROVIDER_CONFIG.DEFAULT_RPC
             );
 
-            const provider = new WalletProvider(connection, publicKey as string);
+            // Create PublicKey instance first, then convert to Address type
+            const pubKey = new PublicKey(publicKey.toString());
+            const provider = new WalletProvider(
+                connection,
+                address(pubKey.toBase58())
+            );
 
             return await provider.getFormattedPortfolio(runtime);
         } catch (error) {
@@ -463,4 +473,5 @@ const walletProvider: Provider = {
 };
 
 // Module exports
-export { walletProvider };
+export default walletProvider;
+

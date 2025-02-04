@@ -16,6 +16,7 @@
         }
     },
     "dependencies": {
+        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "workspace:*",
         "@qdrant/js-client-rest": "^1.12.0"
     },

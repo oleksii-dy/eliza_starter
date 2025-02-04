@@ -5,15 +5,17 @@
     "type": "module",
     "types": "dist/index.d.ts",
     "dependencies": {
+        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-tee": "workspace:*",
         "@orca-so/whirlpools": "^1.0.2",
-        "@orca-so/whirlpools-core": "^1.0.2",
         "@orca-so/whirlpools-client": "1.0.2",
+        "@orca-so/whirlpools-core": "^1.0.2",
         "@solana-program/compute-budget": "^0.6.1",
         "@solana-program/system": "^0.6.2",
         "@solana-program/token-2022": "^0.3.1",
         "@solana/codecs": "^2.0.0",
+        "@solana/rpc-transport": "0.0.0-experimental.0",
         "@solana/web3.js": "^2.0.0",
         "@types/bs58": "^4.0.4",
         "bs58": "^6.0.0"

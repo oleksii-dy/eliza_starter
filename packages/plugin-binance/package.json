@@ -20,7 +20,7 @@
 	],
 	"dependencies": {
 		"@binance/connector": "^3.6.0",
-		"@binance/connector": "^3.6.0",
+		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"zod": "^3.22.4"
 	},

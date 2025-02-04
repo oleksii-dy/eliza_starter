@@ -5,6 +5,7 @@
     "type": "module",
     "types": "dist/index.d.ts",
     "dependencies": {
+        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-tee": "workspace:*",
         "dompurify": "3.2.2",

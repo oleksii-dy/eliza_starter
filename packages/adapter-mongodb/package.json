@@ -6,6 +6,7 @@
     "type": "module",
     "types": "dist/index.d.ts",
     "dependencies": {
+        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "workspace:*",
         "mongodb": "^6.3.0",
         "uuid": "^9.0.1"

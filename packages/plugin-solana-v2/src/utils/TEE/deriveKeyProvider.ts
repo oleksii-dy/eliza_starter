@@ -1,5 +1,5 @@
 import { IAgentRuntime, Memory, Provider, State } from "@elizaos/core";
-import { createKeyPairSignerFromBytes, createKeyPairSignerFromPrivateKeyBytes, KeyPairSigner } from "@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
 import crypto from "crypto";
 import { TappdClient } from "@phala/dstack-sdk";
 import { RemoteAttestationProvider } from "./remoteAttestationProvider";
@@ -8,6 +8,11 @@ import { TEEMode, RemoteAttestationQuote } from "./types";
 interface DeriveKeyAttestationData {
     agentId: string;
     publicKey: string;
+}
+
+interface DeriveKeyResult {
+    keypair: Uint8Array;  // Raw bytes from key derivation
+    attestation: RemoteAttestationQuote;
 }
 
 class DeriveKeyProvider {
@@ -66,7 +71,7 @@ class DeriveKeyProvider {
         path: string,
         subject: string,
         agentId: string
-    ): Promise<{ keypair: KeyPairSigner; attestation: RemoteAttestationQuote }> {
+    ): Promise<DeriveKeyResult> {
         try {
             if (!path || !subject) {
                 console.error(
@@ -76,22 +81,24 @@ class DeriveKeyProvider {
 
             console.log("Deriving Key in TEE...");
             const derivedKey = await this.client.deriveKey(path, subject);
-            const uint8ArrayDerivedKey = derivedKey.asUint8Array();
+            const uint8ArrayDerivedKey = new Uint8Array(derivedKey.asUint8Array());
 
             const hash = crypto.createHash("sha256");
             hash.update(uint8ArrayDerivedKey);
             const seed = hash.digest();
             const seedArray = new Uint8Array(seed);
-            const keypair = await createKeyPairSignerFromPrivateKeyBytes(seedArray.slice(0, 32));
+            const keypairBytes = seedArray.slice(0, 32);
 
-            // Generate an attestation for the derived key data for public to verify
-            const attestation = await this.generateDeriveKeyAttestation(
-                agentId,
-                keypair.address
-            );
-            console.log("Key Derived Successfully!");
+            // Create temporary keypair to get public key for attestation
+            const tempKeypair = Keypair.fromSecretKey(keypairBytes);
 
-            return { keypair, attestation };
+            return { 
+                keypair: keypairBytes,  // Return the raw bytes
+                attestation: await this.generateDeriveKeyAttestation(
+                    agentId,
+                    tempKeypair.publicKey.toBase58()
+                )
+            };
         } catch (error) {
             console.error("Error deriving key:", error);
             throw error;
@@ -121,8 +128,9 @@ const deriveKeyProvider: Provider = {
                     secretSalt,
                     agentId
                 );
+                const keypair = await Keypair.fromSecretKey(solanaKeypair.keypair);
                 return JSON.stringify({
-                    solana: solanaKeypair.keypair.address,
+                    solana: keypair.publicKey.toBase58(),
                 });
             } catch (error) {
                 console.error("Error creating PublicKey:", error);

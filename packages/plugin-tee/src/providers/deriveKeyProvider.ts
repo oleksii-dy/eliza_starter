@@ -14,7 +14,7 @@ import { RemoteAttestationProvider } from "./remoteAttestationProvider";
 import { TEEMode, type RemoteAttestationQuote, type DeriveKeyAttestationData } from "../types/tee";
 
 interface SolanaKeypair {
-    publicKey: CryptoKey;
+    publicKey: string;
     privateKey: CryptoKey;
 }
 
@@ -140,9 +140,10 @@ class DeriveKeyProvider {
             const seed = hash.digest();
             const seedArray = new Uint8Array(seed);
             const keypairPromise = generateKeyPair();
+            const generatedKeypair = await keypairPromise;
             const keypair: SolanaKeypair = {
-                publicKey: (await keypairPromise).publicKey,
-                privateKey: (await keypairPromise).privateKey
+                publicKey: generatedKeypair.publicKey.toString(),
+                privateKey: generatedKeypair.privateKey
             };
 
             // Generate an attestation for the derived key data for public to verify

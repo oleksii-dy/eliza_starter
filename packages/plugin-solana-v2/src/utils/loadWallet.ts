@@ -1,12 +1,12 @@
-import { KeyPairSigner, Address, createKeyPairSignerFromBytes, address } from "@solana/web3.js";
+import { Keypair, PublicKey, Connection } from "@solana/web3.js";
 import bs58 from "bs58";
 import { IAgentRuntime } from "@elizaos/core";
 import { TEEMode } from "./TEE/types"
 import { DeriveKeyProvider } from "./TEE/deriveKeyProvider";
 
 export interface WalletResult {
-    signer?: KeyPairSigner;
-    address?: Address;
+    signer?: Keypair;
+    address?: PublicKey;
 }
 
 /**
@@ -36,9 +36,10 @@ export async function loadWallet(
             runtime.agentId
         );
 
+        const keypair = Keypair.fromSecretKey(deriveKeyResult.keypair);
         return requirePrivateKey
-            ? { signer: deriveKeyResult.keypair }
-            : { address: deriveKeyResult.keypair.address };
+            ? { signer: keypair }
+            : { address: keypair.publicKey };
     }
 
     // TEE mode is OFF
@@ -54,7 +55,8 @@ export async function loadWallet(
         try {
             // First try base58
             const secretKey = bs58.decode(privateKeyString);
-            return { signer: await createKeyPairSignerFromBytes(secretKey) };
+            const keypair = Keypair.fromSecretKey(secretKey);
+            return { signer: keypair }
         } catch (e) {
             console.log("Error decoding base58 private key:", e);
             try {
@@ -63,7 +65,8 @@ export async function loadWallet(
                 const secretKey = Uint8Array.from(
                     Buffer.from(privateKeyString, "base64")
                 );
-                return { signer: await createKeyPairSignerFromBytes(secretKey) };
+                const keypair = Keypair.fromSecretKey(secretKey);
+                return { signer: keypair };
             } catch (e2) {
                 console.error("Error decoding private key: ", e2);
                 throw new Error("Invalid private key format");
@@ -78,6 +81,6 @@ export async function loadWallet(
             throw new Error("Public key not found in settings");
         }
 
-        return { address: address(publicKeyString) };
+        return { address: new PublicKey(publicKeyString) };
     }
 }

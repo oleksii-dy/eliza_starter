@@ -5,11 +5,12 @@
     "type": "module",
     "types": "dist/index.d.ts",
     "dependencies": {
+        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "workspace:*"
     },
     "devDependencies": {
-        "vitest": "^2.1.5",
-        "@biomejs/biome": "1.9.4"
+        "@biomejs/biome": "1.9.4",
+        "vitest": "^2.1.5"
     },
     "scripts": {
         "build": "tsup --format esm --dts",
