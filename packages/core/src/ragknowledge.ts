@@ -35,9 +35,9 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
     }
 
     private readonly defaultRAGMatchThreshold =
-        process.env.DEFAULT_RAG_MATCH_THRESHOLD || 0.85;
+        Number(process.env.DEFAULT_RAG_MATCH_THRESHOLD || "0.85");
     private readonly defaultRAGMatchCount =
-        process.env.DEFAULT_RAG_MATCH_COUNT || 5;
+        Number(process.env.DEFAULT_RAG_MATCH_COUNT || "5");
 
     /**
      * Common English stop words to filter out from query analysis
