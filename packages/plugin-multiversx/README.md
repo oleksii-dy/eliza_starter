@@ -2,7 +2,7 @@
 
 MultiversX blockchain integration plugin for Eliza OS that enables token management and transfers.
 
-This plugin is under development and
+This plugin is under development and will soon include additional features and improvements.
 
 ## Overview
 
