@@ -1,13 +1,17 @@
 # elizaos-okto-plugin
 
-A comprehensive integration plugin for ElizaOS that provides access to Okto's various APIs and services.
+A comprehensive integration plugin for ElizaOS that provides access to Okto's various APIs and services, enabling seamless Web3 interactions.
 
 ## Features
 
-- **Token Transfer**: Transfer tokens to other users
-- **Wallet Management**: Get user's wallets
-- **Portfolio Management**: Get user's portfolio
-- **Order History**: Get user's order history
+- **Portfolio Management**: Retrieve user portfolio data and NFT balances.
+- **Wallet Management**: Access user's wallets.
+- **Token Information**: Get tokens list and details.
+- **Chain Support**: Fetch supported blockchain networks.
+- **NFT Collections & Order History**: Retrieve NFT collections and user order history.
+- **Token Transfer**: Initiate token transfers.
+- **NFT Transfer**: Initiate NFT transfers.
+- **EVM Raw Transaction**: Execute raw Ethereum Virtual Machine (EVM) transactions.
 
 ## Installation
 
@@ -20,19 +24,23 @@ npm install elizaos-okto-plugin
 The plugin requires several environment variables to be set:
 
 ```env
-OKTO_API_KEY=                   # Get from https://dashboard.okto.tech/home
-OKTO_BUILD_TYPE=SANDBOX         # SANDBOX, STAGING, PRODUCTION
-GOOGLE_CLIENT_SECRET=           # Get from https://console.cloud.google.com/
-GOOGLE_CLIENT_ID=               # Get from https://console.cloud.google.com/
+# Okto specific settings
+OKTO_ENVIRONMENT=                # Optional. Defaults to "sandbox". Options: sandbox, staging, production.
+OKTO_VENDOR_PRIVATE_KEY=         # Required. Your vendor private key provided by Okto.
+OKTO_VENDOR_SWA=                 # Required. Your vendor SWA provided by Okto.
+
+# Google OAuth settings
+GOOGLE_CLIENT_ID=                # Required. Get from https://console.cloud.google.com/
+GOOGLE_CLIENT_SECRET=            # Required. Get from https://console.cloud.google.com/
 ```
 
 ## Setup Google OAuth
 
 1. Go to https://console.cloud.google.com/
-2. Create a new project
-3. Create Oauth credentials
-4. Get the client id and secret
-5. Set the redirect url to http://localhost:5000
+2. Create a new project.
+3. Create OAuth credentials.
+4. Retrieve the client ID and secret.
+5. Set the redirect URL to http://localhost:5000 (or your desired endpoint).
 
 ## Usage
 
@@ -40,13 +48,11 @@ GOOGLE_CLIENT_ID=               # Get from https://console.cloud.google.com/
 import OktoPlugin from "elizaos-okto-plugin";
 
 runtime.registerPlugin(OktoPlugin);
-// etc...
 ```
 
 ## Contributing
 
 Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
-
 
 ## License
 
