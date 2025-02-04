@@ -38,7 +38,7 @@ Before using the plugin, configure the necessary environment variables in the **
 ```.env
 MVX_PRIVATE_KEY=your-wallet-private-key
 MVX_NETWORK=devnet  # mainnet, devnet, or testnet
-ACCESS_TOKEN_MANAGEMENT_TO=everyone  # you can put an userid to limit token managament to one user only (use same id as in the database)
+ACCESS_TOKEN_MANAGEMENT_TO=everyone  # you can put an userid to limit token management to one user only (use same id as in the database)
 ```
 
 #### Private Key
