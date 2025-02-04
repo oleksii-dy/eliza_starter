@@ -162,7 +162,6 @@ Trade specifics:
 - Price at trade: $${Number(event.price).toFixed(2)}
 - Timestamp: ${formattedTimestamp}
 - Txn: ${blockExplorerBaseTxUrl(hash)}
-- Address: ${blockExplorerBaseAddressUrl(address)}
 Guidelines:
 1. Keep it under 180 characters
 2. Include 1-2 relevant emojis
@@ -173,12 +172,12 @@ Guidelines:
 7. Ensure key details are present: action, amount, ticker, and price
 
 Sample buy tweets:
-"📈 Added $${amountInCurrency.toFixed(2)} of ${event.ticker} at $${Number(event.price).toFixed(2)}. Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
-"🎯 Strategic ${event.ticker} buy: $${amountInCurrency.toFixed(2)} at $${Number(event.price).toFixed(2)}. Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
+"📈 Added $${amountInCurrency.toFixed(2)} of ${event.ticker} at $${Number(event.price).toFixed(2)}. Txn: ${blockExplorerBaseTxUrl(hash)}"
+"🎯 Strategic ${event.ticker} buy: $${amountInCurrency.toFixed(2)} at $${Number(event.price).toFixed(2)}. Txn: ${blockExplorerBaseTxUrl(hash)}"
 
 Sample sell tweets:
-"💫 Sold ${event.ticker}: $${amountInCurrency.toFixed(2)} at $${Number(event.price).toFixed(2)}. Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
-"📊 Sold $${amountInCurrency.toFixed(2)} of ${event.ticker} at $${Number(event.price).toFixed(2)}. Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
+"💫 Sold ${event.ticker}: $${amountInCurrency.toFixed(2)} at $${Number(event.price).toFixed(2)}. Txn: ${blockExplorerBaseTxUrl(hash)}"
+"📊 Sold $${amountInCurrency.toFixed(2)} of ${event.ticker} at $${Number(event.price).toFixed(2)}. Txn: ${blockExplorerBaseTxUrl(hash)}"
 
 Generate only the tweet text, no commentary or markdown.`;
             const context = composeContext({
