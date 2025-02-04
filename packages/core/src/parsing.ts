@@ -152,7 +152,7 @@ export function parseJSONObjectFromText(
         } catch (e) {
             console.error("Error parsing JSON:", e);
             console.error("Text is not JSON", text);
-            return extractAttributes(parsingText);
+            return extractAttributes(text);
         }
     } else {
         const objectPattern = /{[\s\S]*?}/;
@@ -165,7 +165,7 @@ export function parseJSONObjectFromText(
             } catch (e) {
                 console.error("Error parsing JSON:", e);
                 console.error("Text is not JSON", text);
-                return extractAttributes(parsingText);
+                return extractAttributes(text);
             }
         }
     }
@@ -222,7 +222,6 @@ export function extractAttributes(
  * - Wraps unquoted values in double quotes.
  * - Converts single-quoted values to double-quoted.
  * - Ensures consistency in key-value formatting.
- * - Collapses multiple double quotes into a single one.
  * - Normalizes mixed adjacent quote pairs.
  *
  * This is useful for cleaning up improperly formatted JSON strings
@@ -238,7 +237,7 @@ export const normalizeJsonString = (str: string) => {
 
     // "key": unquotedValue → "key": "unquotedValue"
     str = str.replace(
-      /("[\w\d_-]+")\s*: \s*(?!")([\s\S]+?)(?=(,\s*"|\}$))/g,
+      /("[\w\d_-]+")\s*: \s*(?!"|\[)([\s\S]+?)(?=(,\s*"|\}$))/g,
       '$1: "$2"',
     );
 
@@ -251,11 +250,8 @@ export const normalizeJsonString = (str: string) => {
     // "key": someWord → "key": "someWord"
     str = str.replace(/("[\w\d_-]+")\s*:\s*([A-Za-z_]+)(?!["\w])/g, '$1: "$2"');
 
-    // Collapse multiple double quotes ("") into one
-    str = str.replace(/"+/g, '"');
-
     // Replace adjacent quote pairs with a single double quote
-    str = str.replace(/(["'])(['"])/g, '"');
+    str = str.replace(/(?:"')|(?:'")/g, '"');
     return str;
 };
 

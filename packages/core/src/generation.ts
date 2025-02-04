@@ -1162,7 +1162,14 @@ export async function generateText({
                     maxTokens: max_response_length,
                 });
 
-                response = veniceResponse;
+                // console.warn("veniceResponse:")
+                // console.warn(veniceResponse)
+                //rferrari: remove all text from <think> to </think>\n\n
+                response = veniceResponse
+                    .replace(/<think>[\s\S]*?<\/think>\s*\n*/g, '');
+                // console.warn(response)
+
+                // response = veniceResponse;
                 elizaLogger.debug("Received response from Venice model.");
                 break;
             }
@@ -1642,6 +1649,10 @@ export const generateImage = async (
     error?: any;
 }> => {
     const modelSettings = getImageModelSettings(runtime.imageModelProvider);
+    if (!modelSettings) {
+        elizaLogger.warn("No model settings found for the image model provider.");
+        return { success: false, error: "No model settings available" };
+    }
     const model = modelSettings.name;
     elizaLogger.info("Generating image with options:", {
         imageModelProvider: model,
