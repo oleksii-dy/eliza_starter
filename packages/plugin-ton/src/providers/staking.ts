@@ -1,4 +1,4 @@
-import { Address, OpenedContract, TonClient } from "@ton/ton";
+import { Address, OpenedContract, SendMode, TonClient } from "@ton/ton";
 import { IAgentRuntime, Provider, Memory, State } from "@elizaos/core";
 import { internal } from "@ton/ton";
 import { initWalletProvider, WalletProvider } from "./wallet";
@@ -62,18 +62,20 @@ export class StakingProvider implements IStakingProvider {
             // Construct the staking message.
             // The 'internal' helper formats the message for proper on-chain transfers.
             // Here we send the specified amount with a "STAKE" instruction in the body.
-            const stakeMessage = internal({
-                to: poolId,
-                value: amount.toString(),
-                body: "d", // Adjust this message if your staking contract requires a different format.
-            });
+            const strategy = PlatformFactory.getStrategy(poolId);
+
+            const stakeMessage = await strategy.createStakeMessage(this.client, poolId, amount);
+
             // Create and sign the staking transaction using the wallet's secret key.
             const transfer = await this.contract.createTransfer({
                 seqno,
                 secretKey: this.walletProvider.keypair.secretKey,
+                sendMode: SendMode.IGNORE_ERRORS | SendMode.PAY_GAS_SEPARATELY,
                 messages: [stakeMessage],
+                validUntil: Math.floor(Date.now() / 1000) + 300
             });
 
+            await this.client.sendExternalMessage(this.walletProvider.wallet, transfer);
             return transfer.hash;
         } catch (error: any) {
             console.error("Error staking TON:", error);
@@ -85,17 +87,19 @@ export class StakingProvider implements IStakingProvider {
         try {
             // Call the contract method to unstake TON.
             const seqno: number = await this.contract.getSeqno();
-            const unstakeMessage = internal({
-                to: poolId,
-                value: amount.toString(),
-                // value: 0n,
-                body: "w",
-            });
+
+            const strategy = PlatformFactory.getStrategy(poolId);
+            const unstakeMessage = strategy.createUnstakeMessage(this.client, poolId, amount);
+
             const transfer = await this.contract.createTransfer({
                 seqno,
                 secretKey: this.walletProvider.keypair.secretKey,
+                sendMode: SendMode.IGNORE_ERRORS | SendMode.PAY_GAS_SEPARATELY,
                 messages: [unstakeMessage],
+                validUntil: Math.floor(Date.now() / 1000) + 300
             });
+
+            await this.client.sendExternalMessage(this.walletProvider.wallet, transfer);
             return transfer.hash;
         } catch (error: any) {
             console.error("Error unstaking TON:", error);
