@@ -204,6 +204,11 @@ Generate only the tweet text, no commentary or markdown.`;
     }
 
     private async handleWebhookEvent(event: WebhookEvent) {
+        // for now just support ETH 
+        if (event.ticker !== 'ETH'&& event.ticker !== 'WETH') {
+            elizaLogger.info('Unsupported ticker:', event.ticker);
+            return;
+        }
         // Set up room and ensure participation
         const roomId = stringToUuid("coinbase-trading");
         await this.setupRoom(roomId);
@@ -213,7 +218,7 @@ Generate only the tweet text, no commentary or markdown.`;
         elizaLogger.info('amount ', amount);
 
         // Create and store memory of trade
-        const memory = await this.createTradeMemory(event, amount, roomId);
+        const memory = this.createTradeMemory(event, amount, roomId);
         elizaLogger.info('memory ', memory);
         await this.runtime.messageManager.createMemory(memory);
         
@@ -224,7 +229,8 @@ Generate only the tweet text, no commentary or markdown.`;
 
         // Execute token swap
         const buy = event.event.toUpperCase() === 'BUY';
-        const txHash = await this.executeTokenSwap(event, amount, buy);
+        const amountInUSD = buy ? amount : amount / Number(event.price);
+        const txHash = await this.executeTokenSwap(event, amountInUSD, buy);
         if (txHash == null) {
             elizaLogger.error('txHash is null');
             return;
@@ -236,7 +242,7 @@ Generate only the tweet text, no commentary or markdown.`;
         elizaLogger.info('pnl ', pnl);
 
         // Generate and post tweet
-        await this.handleTweetPosting(event, amount, pnl, formattedTimestamp, state, txHash);
+        await this.handleTweetPosting(event, amountInUSD, pnl, formattedTimestamp, state, txHash);
     }
 
     private async setupRoom(roomId: UUID) {
