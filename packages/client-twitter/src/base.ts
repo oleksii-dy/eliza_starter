@@ -18,6 +18,7 @@ import {
 } from "agent-twitter-client";
 import { EventEmitter } from "events";
 import { TwitterConfig } from "./environment.ts";
+import { fetch, ProxyAgent, setGlobalDispatcher } from "undici";
 
 export function extractAnswer(text: string): string {
     const startIndex = text.indexOf("Answer: ") + 8;
@@ -60,8 +61,8 @@ class RequestQueue {
         while (this.queue.length > 0) {
             const request = this.queue.shift()!;
             try {
-                await request().catch(e => {
-                  console.error('client.twitter.base - request err', e)
+                await request().catch((e) => {
+                    console.error("client.twitter.base - request err", e);
                 });
             } catch (error) {
                 console.error("Error processing request:", error);
@@ -85,35 +86,80 @@ class RequestQueue {
     }
 }
 
-let lastStart = Date.now()
+let lastStart = Date.now();
 
-function doLogin(username, cb) {
-    const ts = Date.now()
-    const since = ts - lastStart
-    elizaLogger.log('last twitter scrapper created', since, 'ms ago')
-    const delay = 5 * 1000
+function doLogin(username, cb, proxyUrl?: string) {
+    const ts = Date.now();
+    const since = ts - lastStart;
+    elizaLogger.log("last twitter scrapper created", since, "ms ago");
+    const delay = 5 * 1000;
     if (since > delay) {
-        const twitterClient = new Scraper();
+        let agent;
+
+        // Add proxy configuration if TWITTER_PROXY_URL exists
+        if (proxyUrl) {
+            elizaLogger.log("Using proxy", proxyUrl);
+            const url = new URL(proxyUrl);
+            const username = url.username;
+            const password = url.password;
+
+            // Strip auth from URL if present
+            url.username = "";
+            url.password = "";
+
+            const agentOptions: any = {
+                uri: url.toString(),
+                requestTls: {
+                    rejectUnauthorized: false,
+                },
+            };
+
+            // Add Basic auth if credentials exist
+            if (username && password) {
+                agentOptions.token = `Basic ${Buffer.from(
+                    `${username}:${password}`
+                ).toString("base64")}`;
+            }
+
+            agent = new ProxyAgent(agentOptions);
+            setGlobalDispatcher(agent);
+        }
+
+        const twitterClient = new Scraper({
+            fetch: fetch,
+            transform: {
+                request: (input: any, init: any) => {
+                    if (agent) {
+                        return [input, { ...init, dispatcher: agent }];
+                    }
+                    return [input, init];
+                },
+            },
+        });
+
         ClientBase._twitterClients[username] = twitterClient;
-        lastStart = ts
-        cb(twitterClient)
+        lastStart = ts;
+        cb(twitterClient);
     } else {
-        elizaLogger.log('Delaying twitter scrapper creation for', username)
+        elizaLogger.log("Delaying twitter scrapper creation for", username);
         setTimeout(() => {
-          doLogin(username, cb)
-        }, delay)
+            doLogin(username, cb);
+        }, delay);
     }
 }
 
-export function getScrapper(username:string):twitterClient {
-    return new Promise(resolve => {
+export function getScraper(
+    username: string,
+    proxyUrl?: string
+): Promise<Scraper> {
+    return new Promise((resolve) => {
         if (ClientBase._twitterClients[username]) {
             const twitterClient = ClientBase._twitterClients[username];
-            resolve(twitterClient)
+            resolve(twitterClient);
         } else {
-            doLogin(username, resolve)
+            doLogin(username, resolve, proxyUrl);
         }
-    })
+    });
 }
 
 export class ClientBase extends EventEmitter {
@@ -174,10 +220,13 @@ export class ClientBase extends EventEmitter {
         super();
         this.runtime = runtime;
         this.twitterConfig = twitterConfig;
+
+        // Store proxy URL statically so it's available to doLogin
+        const proxyUrl = twitterConfig.TWITTER_PROXY_URL;
         const username = twitterConfig.TWITTER_USERNAME;
-        getScrapper(username).then(tc => {
-          this.twitterClient = tc;
-        })
+        getScraper(username, proxyUrl).then((tc) => {
+            this.twitterClient = tc;
+        });
 
         this.directions =
             "- " +
@@ -193,7 +242,7 @@ export class ClientBase extends EventEmitter {
         let retries = this.twitterConfig.TWITTER_RETRY_LIMIT;
         const twitter2faSecret = this.twitterConfig.TWITTER_2FA_SECRET;
         // if twitter says its bad, trust twitter
-        retries = 1 // mee.fun, lets no hammer this, it should work or not
+        retries = 1; // mee.fun, lets no hammer this, it should work or not
 
         if (!username) {
             throw new Error("Twitter username not configured");
@@ -221,7 +270,7 @@ export class ClientBase extends EventEmitter {
                         twitter2faSecret
                     );
                     if (await this.twitterClient.isLoggedIn()) {
-                        lastStart = Date.now()
+                        lastStart = Date.now();
                         // fresh login, store new cookies
                         elizaLogger.info("Successfully logged in.");
                         elizaLogger.info("Caching cookies");
@@ -233,7 +282,9 @@ export class ClientBase extends EventEmitter {
                     }
                 }
             } catch (error) {
-                elizaLogger.error(`${this.runtime.character.name}(${this.runtime.agentId}): Login attempt failed: ${error.message} for twitter @${username}`);
+                elizaLogger.error(
+                    `${this.runtime.character.name}(${this.runtime.agentId}): Login attempt failed: ${error.message} for twitter @${username}`
+                );
             }
 
             retries--;
@@ -255,7 +306,7 @@ export class ClientBase extends EventEmitter {
         this.profile = await this.fetchProfile(username);
 
         if (!this.profile) {
-            elizaLogger.error('cl-tw::init - profile did not load')
+            elizaLogger.error("cl-tw::init - profile did not load");
             return false;
         }
         elizaLogger.log("Twitter user ID:", this.profile.id);
@@ -724,8 +775,8 @@ export class ClientBase extends EventEmitter {
             if (latestCheckedTweetId) {
                 this.lastCheckedTweetId = BigInt(latestCheckedTweetId);
             }
-        } catch(e) {
-            elizaLogger.error('cl-tw::loadLatestCheckedTweetId - err', e)
+        } catch (e) {
+            elizaLogger.error("cl-tw::loadLatestCheckedTweetId - err", e);
         }
     }
 

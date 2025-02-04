@@ -76,6 +76,7 @@ export const twitterEnvSchema = z.object({
     ACTION_TIMELINE_TYPE: z
         .nativeEnum(ActionTimelineType)
         .default(ActionTimelineType.ForYou),
+    TWITTER_PROXY_URL: z.string().optional(),
 });
 
 export type TwitterConfig = z.infer<typeof twitterEnvSchema>;
@@ -224,6 +225,11 @@ export async function validateTwitterConfig(
             ACTION_TIMELINE_TYPE:
                 runtime.getSetting("ACTION_TIMELINE_TYPE") ||
                 process.env.ACTION_TIMELINE_TYPE,
+
+            TWITTER_PROXY_URL:
+                (runtime.getSetting("TWITTER_PROXY_URL") ||
+                    process.env.TWITTER_PROXY_URL) ??
+                "",
         };
 
         return twitterEnvSchema.parse(twitterConfig);
@@ -232,7 +238,9 @@ export async function validateTwitterConfig(
             const errorMessages = error.errors
                 .map((err) => `${err.path.join(".")}: ${err.message}`)
                 .join("\n");
-            elizaLogger.error(`Twitter configuration validation failed:\n${errorMessages}`)
+            elizaLogger.error(
+                `Twitter configuration validation failed:\n${errorMessages}`
+            );
             /*
             throw new Error(
                 `X/Twitter configuration validation failed:\n${errorMessages}`

@@ -1458,6 +1458,7 @@ export enum ServiceType {
     IRYS = "irys",
     TEE_LOG = "tee_log",
     GOPLUS_SECURITY = "goplus_security",
+    EMAIL_AUTOMATION = "email_automation",
 }
 
 export enum LoggingLevel {
