@@ -19,8 +19,6 @@ import {
 import { EventEmitter } from "events";
 import { TwitterConfig } from "./environment.ts";
 import { fetch, ProxyAgent, setGlobalDispatcher } from "undici";
-// import fetch, { RequestInfo, RequestInit, Response } from "node-fetch";
-// import { HttpsProxyAgent } from "https-proxy-agent";
 
 export function extractAnswer(text: string): string {
     const startIndex = text.indexOf("Answer: ") + 8;
