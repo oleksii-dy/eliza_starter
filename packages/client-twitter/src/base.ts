@@ -18,7 +18,7 @@ import {
 } from "agent-twitter-client";
 import { EventEmitter } from "events";
 import { TwitterConfig } from "./environment.ts";
-import { Agent } from "node:https";
+import { ProxyAgent, setGlobalDispatcher } from "undici";
 
 export function extractAnswer(text: string): string {
     const startIndex = text.indexOf("Answer: ") + 8;
@@ -88,31 +88,54 @@ class RequestQueue {
 
 let lastStart = Date.now();
 
-function doLogin(username, cb) {
+function doLogin(username, cb, proxyUrl?: string) {
     const ts = Date.now();
     const since = ts - lastStart;
     elizaLogger.log("last twitter scrapper created", since, "ms ago");
     const delay = 5 * 1000;
     if (since > delay) {
-        let scraperOptions = {};
+        let agent;
 
         // Add proxy configuration if TWITTER_PROXY_URL exists
-        if (ClientBase._proxyUrl) {
-            const url = new URL(ClientBase._proxyUrl);
+        if (proxyUrl) {
+            elizaLogger.log("Using proxy", proxyUrl);
+            const url = new URL(proxyUrl);
+            const username = url.username;
+            const password = url.password;
 
-            const agent = new Agent({
-                localAddress: url.toString(),
-            });
-            scraperOptions = {
-                transform: {
-                    request: (input: any, init: any) => {
-                        return [input, { ...init, agent }];
-                    },
+            // Strip auth from URL if present
+            url.username = "";
+            url.password = "";
+
+            const agentOptions: any = {
+                uri: url.toString(),
+                requestTls: {
+                    rejectUnauthorized: false,
                 },
             };
+
+            // Add Basic auth if credentials exist
+            if (username && password) {
+                agentOptions.token = `Basic ${Buffer.from(
+                    `${username}:${password}`
+                ).toString("base64")}`;
+            }
+
+            agent = new ProxyAgent(agentOptions);
+            setGlobalDispatcher(agent);
         }
 
-        const twitterClient = new Scraper(scraperOptions);
+        const twitterClient = new Scraper({
+            transform: {
+                request: (input: any, init: any) => {
+                    if (agent) {
+                        return [input, { ...init, dispatcher: agent }];
+                    }
+                    return [input, init];
+                },
+            },
+        });
+
         ClientBase._twitterClients[username] = twitterClient;
         lastStart = ts;
         cb(twitterClient);
@@ -124,20 +147,22 @@ function doLogin(username, cb) {
     }
 }
 
-export function getScraper(username: string): Promise<Scraper> {
+export function getScraper(
+    username: string,
+    proxyUrl?: string
+): Promise<Scraper> {
     return new Promise((resolve) => {
         if (ClientBase._twitterClients[username]) {
             const twitterClient = ClientBase._twitterClients[username];
             resolve(twitterClient);
         } else {
-            doLogin(username, resolve);
+            doLogin(username, resolve, proxyUrl);
         }
     });
 }
 
 export class ClientBase extends EventEmitter {
     static _twitterClients: { [accountIdentifier: string]: Scraper } = {};
-    static _proxyUrl: string | undefined;
     twitterClient: Scraper;
     runtime: IAgentRuntime;
     twitterConfig: TwitterConfig;
@@ -196,10 +221,9 @@ export class ClientBase extends EventEmitter {
         this.twitterConfig = twitterConfig;
 
         // Store proxy URL statically so it's available to doLogin
-        ClientBase._proxyUrl = twitterConfig.TWITTER_PROXY_URL;
-
+        const proxyUrl = twitterConfig.TWITTER_PROXY_URL;
         const username = twitterConfig.TWITTER_USERNAME;
-        getScraper(username).then((tc) => {
+        getScraper(username, proxyUrl).then((tc) => {
             this.twitterClient = tc;
         });
 

@@ -117,7 +117,10 @@ export const TwitterClientInterface: Client = {
     },
     validate: async (secrets) => {
         try {
-            const twClient = await getScraper(secrets.username);
+            const twClient = await getScraper(
+                secrets.username,
+                secrets.proxyUrl
+            );
             // try logging in
             console.log("trying to log in");
             await twClient.login(

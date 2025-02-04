@@ -620,6 +620,7 @@ export async function initializeClients(
             password: getSecret(character, "TWITTER_PASSWORD"),
             email: getSecret(character, "TWITTER_EMAIL"),
             twitter2faSecret: getSecret(character, "TWITTER_2FA_SECRET"),
+            proxyUrl: getSecret(character, "TWITTER_PROXY_URL"),
         });
         if (isValidKey.success) {
             const twitterClient = await TwitterClientInterface.start(runtime);

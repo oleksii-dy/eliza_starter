@@ -130,6 +130,9 @@ export class TwitterPostClient {
         elizaLogger.log(
             `- Search Enabled: ${this.client.twitterConfig.TWITTER_SEARCH_ENABLE ? "enabled" : "disabled"}`
         );
+        elizaLogger.log(
+            `- Proxy URL: ${this.client.twitterConfig.TWITTER_PROXY_URL}`
+        );
 
         const targetUsers = this.client.twitterConfig.TWITTER_TARGET_USERS;
         if (targetUsers) {
@@ -251,7 +254,11 @@ export class TwitterPostClient {
             const actionInterval = this.client.twitterConfig.ACTION_INTERVAL; // Defaults to 5 minutes
 
             while (!this.stopProcessingActions) {
-                elizaLogger.log('ACTION_INTERVAL', actionInterval, this.client.twitterConfig.TWITTER_USERNAME)
+                elizaLogger.log(
+                    "ACTION_INTERVAL",
+                    actionInterval,
+                    this.client.twitterConfig.TWITTER_USERNAME
+                );
                 try {
                     const results = await this.processTweetActions();
                     if (results) {
@@ -414,27 +421,30 @@ export class TwitterPostClient {
             const body = await standardTweetResult.json();
             if (!body?.data?.create_tweet?.tweet_results?.result) {
                 elizaLogger.error("Error sending tweet; Bad response:", body);
-                if (body?.errors?.[0].message === 'Authorization: Denied by access control: Missing TwitterUserNotSuspended') {
-                  elizaLogger.error("Account suspended");
-                  //this.client is base
-                  //this.runtime needs a stop client
-                  // this is
-                  const manager = this.runtime.clients.twitter
-                  // stop post/search/interaction
-                  if (manager) {
-                      if (manager.client.twitterClient) {
-                          await manager.post.stop();
-                          await manager.interaction.stop();
-                          if (manager.search) {
-                              await manager.search.stop();
-                          }
-                      } else {
-                          // it's still starting up
-                      }
-                  } // already stoped
+                if (
+                    body?.errors?.[0].message ===
+                    "Authorization: Denied by access control: Missing TwitterUserNotSuspended"
+                ) {
+                    elizaLogger.error("Account suspended");
+                    //this.client is base
+                    //this.runtime needs a stop client
+                    // this is
+                    const manager = this.runtime.clients.twitter;
+                    // stop post/search/interaction
+                    if (manager) {
+                        if (manager.client.twitterClient) {
+                            await manager.post.stop();
+                            await manager.interaction.stop();
+                            if (manager.search) {
+                                await manager.search.stop();
+                            }
+                        } else {
+                            // it's still starting up
+                        }
+                    } // already stoped
 
-                  // mark it offline
-                  delete runtime.clients.twitter;
+                    // mark it offline
+                    delete runtime.clients.twitter;
                 }
                 return;
             }
@@ -531,7 +541,7 @@ export class TwitterPostClient {
                 modelClass: ModelClass.SMALL,
             });
 
-             const newTweetContent = response
+            const newTweetContent = response
                 .replace(/```json\s*/g, "") // Remove ```json
                 .replace(/```\s*/g, "") // Remove any remaining ```
                 .replace(/(\r\n|\n|\r)/g, "") // Remove line break
@@ -618,10 +628,16 @@ export class TwitterPostClient {
                     );
                 }
             } catch (error) {
-                elizaLogger.error("generateNewTweet Error sending tweet:", error);
+                elizaLogger.error(
+                    "generateNewTweet Error sending tweet:",
+                    error
+                );
             }
         } catch (error) {
-            elizaLogger.error("generateNewTweet Error generating new tweet:", error);
+            elizaLogger.error(
+                "generateNewTweet Error generating new tweet:",
+                error
+            );
         }
     }
 
