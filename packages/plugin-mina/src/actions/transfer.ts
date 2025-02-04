@@ -34,6 +34,11 @@ function isTransferContent(content: Content): content is TransferContent {
     );
 }
 
+function retainFirstConsecutiveNumbers(input: string): string {
+    const match = input.match(/^\d+/);
+    return match ? match[0] : "";
+}
+
 const transferTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
 
 Example response:
@@ -162,7 +167,8 @@ export default {
                 throw new Error(`network issue when fetchAccount: ${recipientAddress}, please check your network connection!`);
             }
 
-            const sendAmount = Number(transferContent.amount) * Math.pow(10, MINA_DECIMALS);
+            const amountNumber = retainFirstConsecutiveNumbers(transferContent.amount.toString()).trim();
+            const sendAmount = Number(amountNumber) * Math.pow(10, MINA_DECIMALS);
 
             const tx = await Mina.transaction({
                 sender: publicKey,
@@ -185,7 +191,7 @@ export default {
             const txUrl = path.join(await provider.getBaseTXUrl(runtime), hashTx.hash);
             if (callback) {
                 callback({
-                    text: `Successfully transferred ${transferContent.amount} MINA to ${recipientAddress}, Click to view Transactions: ${txUrl}`,
+                    text: `Successfully transferred ${transferContent.amount} to ${recipientAddress}, Click to view Transactions: ${txUrl}`,
                     content: {
                         success: true,
                         hash: hashTx.hash,
