@@ -1,7 +1,4 @@
 import {
-    ActionExample,
-    Content,
-    HandlerCallback,
     IAgentRuntime,
     Memory,
     State,
