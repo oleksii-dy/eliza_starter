@@ -1,5 +1,5 @@
 import { Client, elizaLogger, IAgentRuntime } from "@elizaos/core";
-import { ClientBase, getScrapper } from "./base.ts";
+import { ClientBase, getScraper } from "./base.ts";
 import { validateTwitterConfig, TwitterConfig } from "./environment.ts";
 import { TwitterInteractionClient } from "./interactions.ts";
 import { TwitterPostClient } from "./post.ts";
@@ -65,13 +65,15 @@ export const TwitterClientInterface: Client = {
         let twitterConfig: TwitterConfig;
         try {
             twitterConfig = await validateTwitterConfig(runtime);
-        } catch (e) {
+        } catch (error) {
             elizaLogger.error(
                 "TwitterConfig validation failed for",
                 runtime.getSetting("TWITTER_USERNAME") ||
                     process.env.TWITTER_USERNAME,
                 "email",
-                runtime.getSetting("TWITTER_EMAIL") || process.env.TWITTER_EMAIL
+                runtime.getSetting("TWITTER_EMAIL") ||
+                    process.env.TWITTER_EMAIL,
+                error
             );
             return;
         }
@@ -115,7 +117,7 @@ export const TwitterClientInterface: Client = {
     },
     validate: async (secrets) => {
         try {
-            const twClient = await getScrapper(secrets.username);
+            const twClient = await getScraper(secrets.username);
             // try logging in
             console.log("trying to log in");
             await twClient.login(
