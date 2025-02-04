@@ -227,24 +227,6 @@ export const tokenSwap = async (runtime: IAgentRuntime, quantity: number, fromCu
                 elizaLogger.error("Not enough balance for gas or sell token");
                 return null;
             }
-            // 1. Handle Permit2 signature
-            // let signature: Hex | undefined;
-            // if (quote.permit2?.eip712) {
-            //     signature = await client.signTypedData({
-            //         account: client.account,
-            //         ...quote.permit2.eip712,
-            //     });
-
-            //     if (signature && quote.transaction?.data) {
-            //         const byteLength = (signature.length - 2) / 2;
-            //         const sigLengthHex: Hex = numberToHex(byteLength, { size: 32 }) as Hex;                
-            //         quote.transaction.data = concat([
-            //             quote.transaction.data as Hex,
-            //             sigLengthHex,
-            //             signature,
-            //         ]);
-            //     }
-            // }
 
             const nonce = await client.getTransactionCount({
                 address: (client.account as { address: `0x${string}` }).address,

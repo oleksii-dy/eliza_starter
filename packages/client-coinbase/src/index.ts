@@ -84,14 +84,37 @@ export class CoinbaseClient implements Client {
             res.status(200).json({ status: 'ok' });
         });
 
-        // Main webhook endpoint
-        this.server.post("/webhook", validateWebhook, async (req, res) => {
+        this.server.get("/webhook/coinbase/health", (req, res) => {
+            elizaLogger.info("Health check received");
+            res.status(200).json({ status: "ok" });
+        });
+    
+        this.server.post("/webhook/coinbase/:agentId", async (req, res) => {
+            elizaLogger.info("Webhook received for agent:", req.params.agentId);
+            const runtime = this.runtime;
+    
+            if (!runtime) {
+                res.status(404).json({ error: "Agent not found" });
+                return;
+            }
+    
+            // Validate the webhook payload
+            const event = req.body as WebhookEvent;
+            if (!event.event || !event.ticker || !event.timestamp || !event.price) {
+                res.status(400).json({ error: "Invalid webhook payload" });
+                return;
+            }
+            if (event.event !== 'buy' && event.event !== 'sell') {
+                res.status(400).json({ error: "Invalid event type" });
+                return;
+            }
+    
             try {
-                const event = req.body as WebhookEvent;
+                // Forward the webhook event to the client's handleWebhookEvent method
                 await this.handleWebhookEvent(event);
                 res.status(200).json({ status: "success" });
             } catch (error) {
-                elizaLogger.error("Error processing webhook:", error.message);
+                elizaLogger.error("Error processing Coinbase webhook:", error.message);
                 res.status(500).json({ error: "Internal Server Error" });
             }
         });
@@ -137,7 +160,6 @@ Trade specifics:
 - ${event.event.toUpperCase()} order for ${event.ticker}
 - Amount traded: $${amountInCurrency.toFixed(2)}
 - Price at trade: $${Number(event.price).toFixed(2)}
-- Unrealized PNL: $${pnl}
 - Timestamp: ${formattedTimestamp}
 - Txn: ${blockExplorerBaseTxUrl(hash)}
 - Address: ${blockExplorerBaseAddressUrl(address)}
@@ -151,12 +173,12 @@ Guidelines:
 7. Ensure key details are present: action, amount, ticker, and price
 
 Sample buy tweets:
-"📈 Added $${amountInCurrency.toFixed(2)} of ${event.ticker} at $${Number(event.price).toFixed(2)}. Unrealized PNL: $${pnl} Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
-"🎯 Strategic ${event.ticker} buy: $${amountInCurrency.toFixed(2)} at $${Number(event.price).toFixed(2)}. Unrealized PNL: $${pnl} Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
+"📈 Added $${amountInCurrency.toFixed(2)} of ${event.ticker} at $${Number(event.price).toFixed(2)}. Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
+"🎯 Strategic ${event.ticker} buy: $${amountInCurrency.toFixed(2)} at $${Number(event.price).toFixed(2)}. Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
 
 Sample sell tweets:
-"💫 Sold ${event.ticker}: $${amountInCurrency.toFixed(2)} at $${Number(event.price).toFixed(2)}. Unrealized PNL: $${pnl}. Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
-"📊 Sold $${amountInCurrency.toFixed(2)} of ${event.ticker} at $${Number(event.price).toFixed(2)}. Unrealized PNL: $${pnl}. Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
+"💫 Sold ${event.ticker}: $${amountInCurrency.toFixed(2)} at $${Number(event.price).toFixed(2)}. Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
+"📊 Sold $${amountInCurrency.toFixed(2)} of ${event.ticker} at $${Number(event.price).toFixed(2)}. Txn: ${blockExplorerBaseTxUrl(hash)} Address: ${blockExplorerBaseAddressUrl(address)}"
 
 Generate only the tweet text, no commentary or markdown.`;
             const context = composeContext({
