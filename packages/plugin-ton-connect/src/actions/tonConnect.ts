@@ -53,8 +53,8 @@ export const tonConnect: Action = {
             const tonKeeper = wallets.find(wallet => wallet.name.toLowerCase() === 'tonkeeper') as WalletInfoRemote;
 
             let walletConnectionSources: { universalLink: string, bridgeUrl: string } | { jsBridgeKey: string } = {
-                universalLink: tonKeeper.universalLink,
-                bridgeUrl: tonKeeper.bridgeUrl
+                universalLink: tonKeeper.universalLink ?? 'https://app.tonkeeper.com/ton-connect',
+                bridgeUrl: tonKeeper.bridgeUrl ?? 'https://bridge.tonapi.io/bridge'
             }
             if (mentionedWallet) {
                 const wallet: WalletInfoRemote = wallets.find(wallet => wallet.name.toLowerCase() === mentionedWallet) as WalletInfoRemote;
