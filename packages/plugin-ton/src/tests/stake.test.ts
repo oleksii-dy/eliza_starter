@@ -61,7 +61,7 @@ describe("Stake Action", () => {
 
     it("should successfully stake TON and invoke callback with success", async () => {
 
-        const txHash = await stakingProvider.stake("EQDH6brNVlhFfiQFeJjQHohBivAA66lQHhTbNqjgelHM2hb9", 1);
+        const txHash = await stakingProvider.stake("kQDV1LTU0sWojmDUV4HulrlYPpxLWSUjM6F3lUurMbwhales", 1);
         console.log(txHash);
 
     });

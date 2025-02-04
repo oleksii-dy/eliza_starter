@@ -1,7 +1,7 @@
 import { StakingPlatform } from './interfaces/stakingPlatform.ts';
 import platformAddresses from './stakingPoolAddresses.json';
 
-type PlatformType = 'TON_POOLS' | 'TON_WHALES';
+type PlatformType = 'TON_POOLS' | 'TON_WHALES' | 'HIPO';
 
 export class PlatformFactory {
   private static strategies = new Map<PlatformType, StakingPlatform>();

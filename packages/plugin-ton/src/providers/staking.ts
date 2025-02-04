@@ -6,6 +6,7 @@ import { mnemonicToPrivateKey } from "@ton/crypto";
 import { StakeContent } from "../actions/stake";
 import { PlatformFactory } from "../services/staking/platformFactory.ts";
 import { TonWhalesStrategy } from "../services/staking/strategies/tonWhales.ts";
+import { HipoStrategy } from "../services/staking/strategies/hipo.ts";
 
 // Define types for pool info and transaction results.
 // export interface PoolInfo {
@@ -44,6 +45,7 @@ export class StakingProvider implements IStakingProvider {
         this.contract = this.client.open(walletProvider.wallet);
 
         PlatformFactory.register("TON_WHALES", new TonWhalesStrategy());
+        PlatformFactory.register("HIPO", new HipoStrategy());
     }
 
     // Private helper method to get the contract handle from the TON client.

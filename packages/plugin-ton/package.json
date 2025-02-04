@@ -20,6 +20,7 @@
 	],
 	"dependencies": {
 		"@elizaos/core": "workspace:*",
+		"@hipo-finance/sdk": "^2.0.1",
 		"@ton/crypto": "3.3.0",
 		"@ton/ton": "15.1.0",
 		"bignumber.js": "9.1.2",
