@@ -7,7 +7,8 @@ import { Address, ProtocolType } from "@hyperlane-xyz/utils";
 import pino from "pino";
 import { chainData } from "./chainMetadata";
 import { ChainConfig, HyperlaneContractAddresses } from "./types";
-
+import { CoreConfig , CoreConfigSchema } from "@hyperlane-xyz/sdk";
+import { readYamlOrJson } from "./utils/configOps";
 // Create logger instance
 export const logger = pino({
     level: "info",
@@ -159,3 +160,7 @@ export async function handleActionError(
 
     return false;
 }
+export function readCoreDeployConfigs(filePath: string): CoreConfig {
+    const config = readYamlOrJson(filePath);
+    return CoreConfigSchema.parse(config);
+  }
