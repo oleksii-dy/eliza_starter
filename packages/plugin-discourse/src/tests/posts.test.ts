@@ -21,9 +21,24 @@ describe("Posts from Discourse using Uniswap governance", () => {
             expect(posts.length).toBeGreaterThanOrEqual(0);
         });
 
-        it("should return formatted posts", async () => {
+        it("should return formatted posts correctly", async () => {
             const posts = await client.getLatestPosts();
-            expect(client.formatLatestPostsData(posts)).toBeDefined();
+            if (posts.length === 0) {
+                return;
+            }
+
+            expect(
+                client.formatLatestPostsData([posts[0]])
+            ).toEqual(
+                `Post ID: ${posts[0].id}\nCreated At: ${posts[0].created_at}\nUsername: ${posts[0].username}\nRaw: ${posts[0].raw}\n\n`
+            );
         })
+
+        it("should throw an error for a bad url", async () => {
+            const badClient = new ReadOnlyDiscourseClient('https://govs.uniswap.org/');
+            await expect(badClient.getLatestPosts()).rejects.toThrow(
+                "getaddrinfo ENOTFOUND govs.uniswap.org"
+            );
+        });
     });
 });

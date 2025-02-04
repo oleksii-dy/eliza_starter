@@ -35,7 +35,7 @@ export class ReadOnlyDiscourseClient {
         return posts.latest_posts as Post[];
     }
 
-    formatLatestPostsData(posts: Post[]) {
+    formatLatestPostsData(posts: Post[]): string {
         return posts
             .map((post) => {
                 return `Post ID: ${post.id}\nCreated At: ${post.created_at}\nUsername: ${post.username}\nRaw: ${post.raw}\n\n`;
