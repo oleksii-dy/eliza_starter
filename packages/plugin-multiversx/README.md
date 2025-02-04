@@ -151,7 +151,7 @@ const result = await eliza.execute({
 ```
 ## Contributor Guide
 
-There are multiple contributors within the ecosystem working on the MultiversX ElizaOS plugin. It is recommended to check the [Telegram group](https://t.me/@MultiversXDevelopers) to see if someone is already working on a similar feature before starting your contribution.
+There are multiple contributors within the ecosystem working on the MultiversX ElizaOS plugin. It is recommended to check the [Telegram group](https://t.me/MultiversXDevelopers) to see if someone is already working on a similar feature before starting your contribution.
 
 The MultiversX plugin is part of the ElizaOS project, and all contributions must adhere to its guidelines.
 Please refer to the root [CONTRIBUTING.md](../../CONTRIBUTING.md) file for details on how to contribute.
