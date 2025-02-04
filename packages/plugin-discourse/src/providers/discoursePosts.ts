@@ -1,6 +1,6 @@
 import type { IAgentRuntime, Memory, Provider, State } from "@elizaos/core";
 
-import { validateDiscourseConfig } from "../enviroment";
+import { validateDiscourseConfig } from "../environment";
 import { ReadOnlyDiscourseClient } from "../client/ReadOnlyDiscourseClient";
 
 // Provider that focuses on getting the latest posts from a Discourse instance and formatting them for the agent
