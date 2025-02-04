@@ -1,37 +1,11 @@
-// src/index.ts
 import { Plugin } from "@elizaos/core";
-import { sendCrossChainMessage, transferTokens, deployWarpRoute } from './actions';
+import { sendCrossChainMessage } from "./plugins/crossChainMessaging";
+
 export const hyperlanePlugin: Plugin = {
-    name: 'hyperlane-plugin',
-    description: 'Provides cross-chain messaging and token transfer capabilities using Hyperlane',
-
-
-    // Register all actions
-    actions: [
-        sendCrossChainMessage,
-        transferTokens,
-        deployWarpRoute
-    ],
-
-    // Register providers
-    providers: [
-
-    ],
-
-    // Register evaluators
-    evaluators: [
-
-    ],
-
-    // Register services
-    services: [
-
-    ],
-
-    // Plugin initialization
-
+    name: "hyperlane plugin",
+    description: "Provides core Hyperlane functionalities like sending cross-chain messaging, asset transfers, warp route deployments, permissionless hyperlane deployment to new chains.",
+    actions: [sendCrossChainMessage],
+    providers: [],
+    evaluators: [],
+    services: [],
 };
-
-export default hyperlanePlugin;
-
-// Export all components for external use
