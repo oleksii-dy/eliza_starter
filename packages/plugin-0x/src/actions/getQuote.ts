@@ -12,6 +12,7 @@ import { formatTokenAmount } from "../utils";
 import { CHAIN_NAMES, NATIVE_TOKENS, ZX_MEMORY } from "../constants";
 import { createClientV2 } from "@0x/swap-ts-sdk";
 import { formatUnits } from "viem";
+import { TOKENS } from "../utils";
 
 export const getQuote: Action = {
     name: "GET_QUOTE_0X",
@@ -57,7 +58,7 @@ export const getQuote: Action = {
                 sellToken: sellTokenObject.address,
                 buyToken: buyTokenObject.address,
                 chainId: chainId,
-                taker: runtime.getSetting("WALLET_PUBLIC_ADDRESS"),
+                taker: '0x0000000000000000000000000000000000000000',
             })) as GetQuoteResponse;
 
             await storeQuoteToMemory(runtime, message, {
@@ -337,3 +338,145 @@ export const formatRouteInfo = (quote: GetQuoteResponse): string[] => {
 
     return ["🛣️ Route:", routePath, ...routeDetails];
 };
+
+export const getQuoteObj = async (runtime: IAgentRuntime, priceInquiry: PriceInquiry, address: string) => {
+    elizaLogger.info('inside of getQuoteObj')
+    // elizaLogger.info('priceInquiry ', JSON.stringify(priceInquiry))
+    const {
+        sellTokenObject,
+        sellAmountBaseUnits,
+        buyTokenObject,
+        chainId,
+    } = priceInquiry;
+
+    const zxClient = createClientV2({
+        apiKey: runtime.getSetting("ZERO_EX_API_KEY"),
+    });
+
+    try {
+        const quote = (await zxClient.swap.allowanceHolder.getQuote.query({
+            sellAmount: sellAmountBaseUnits,
+            sellToken: sellTokenObject.address,
+            buyToken: buyTokenObject.address,
+            chainId: chainId,
+            taker: address,
+        })) as GetQuoteResponse;
+        elizaLogger.info("Quote:", quote);
+        if (!quote.liquidityAvailable) {
+            elizaLogger.info("No liquidity available for this swap. Please try again with a different token or amount.");
+            return;
+        }
+
+        const buyAmountBaseUnitsQuoted = formatUnits(
+            BigInt(quote.buyAmount),
+            buyTokenObject.decimals
+        );
+
+        const sellAmountBaseUnitsQuoted = formatUnits(
+            BigInt(quote.sellAmount),
+            sellTokenObject.decimals
+        );
+
+        const warnings = [];
+        if (quote.issues?.balance) {
+            warnings.push(
+                `⚠️ Warnings:`,
+                `  • Insufficient balance (Have ${formatTokenAmountManual(
+                    quote.issues.balance.actual,
+                    quote.issues.balance.token,
+                    sellTokenObject.symbol
+                )})`
+            );
+        }
+
+        const formattedResponse = [
+            `🎯 Firm Quote Details:`,
+            `────────────────`,
+            // Basic swap details (same as price)
+            `📤 Sell: ${formatTokenAmountManual(
+                quote.sellAmount,
+                sellTokenObject.address,
+                sellTokenObject.symbol
+            )}`,
+            `📥 Buy: ${formatTokenAmountManual(
+                quote.buyAmount,
+                buyTokenObject.address,
+                buyTokenObject.symbol
+            )}`,
+            `📊 Rate: 1 ${sellTokenObject.symbol} = ${(
+                Number(buyAmountBaseUnitsQuoted) /
+                Number(sellAmountBaseUnitsQuoted)
+            ).toFixed(4)} ${buyTokenObject.symbol}`,
+
+            // New information specific to quote
+            `💱 Minimum Buy Amount: ${formatTokenAmountManual(
+                quote.minBuyAmount,
+                quote.buyToken,
+                buyTokenObject.symbol
+            )}`,
+
+            // Fee breakdown
+            `💰 Fees Breakdown:`,
+            `  • 0x Protocol Fee: ${formatTokenAmountManual(
+                quote.fees.zeroExFee?.amount,
+                quote.fees.zeroExFee?.token,
+                sellTokenObject.symbol
+            )}`,
+            `  • Integrator Fee: ${formatTokenAmountManual(
+                quote.fees.integratorFee?.amount,
+                quote.fees.integratorFee?.token,
+                sellTokenObject.symbol
+            )}`,
+            `  • Network Gas Fee: ${
+                quote.totalNetworkFee
+                    ? formatTokenAmountManual(
+                          quote.totalNetworkFee,
+                          NATIVE_TOKENS[chainId].address,
+                          NATIVE_TOKENS[chainId].symbol
+                      )
+                    : "Will be estimated at execution"
+            }`,
+
+            ...formatRouteInfo(quote),
+
+            // Chain
+            `🔗 Chain: ${CHAIN_NAMES[chainId]}`,
+
+            ...(warnings.length > 0 ? warnings : []),
+
+            `────────────────`,
+        ]
+            .filter(Boolean)
+            .join("\n");
+        elizaLogger.info('formattedResponse ', formattedResponse)
+        return quote;
+    } catch (error) {
+        elizaLogger.error("Error getting quote:", error.message);
+        return null;
+    }
+}
+
+/**
+ * Formats a token amount with its symbol
+ * @param amount The amount in base units (e.g., wei)
+ * @param address The token address
+ * @param chainId The chain ID (defaults to 1 for Ethereum mainnet)
+ * @returns Formatted string like "1.234567 USDC"
+ */
+export function formatTokenAmountManual(
+    amount: string,
+    address: string,
+    ticker: string,
+): string {
+    // elizaLogger.info('formatTokenAmountManual', amount, address, ticker)
+    if (!amount) return "0";
+    // check if in TOKENS 
+    const token = TOKENS[ticker];
+    if (!token) throw new Error(`Token not found for address: ${ticker}`);
+    // if (token.address.toLowerCase() !== address.toLowerCase()) {
+    //     throw new Error(`Token address does not match: ${token.address} !== ${address}`);
+    // }
+
+    const parsedAmount = formatUnits(BigInt(amount), token.decimals);
+    return `${Number(parsedAmount).toFixed(token.decimals)} ${token.symbol}`;
+}

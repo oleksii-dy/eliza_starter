@@ -10,7 +10,9 @@ import {
 import { type Hex, numberToHex, concat } from "viem";
 import { CHAIN_EXPLORERS, ZX_MEMORY } from "../constants";
 import { getWalletClient } from "../hooks.ts/useGetWalletClient";
-import type { Quote } from "../types";
+import { Chains, Quote } from "../types";
+import { getPriceInquiry } from "./getIndicativePrice";
+import { getQuoteObj } from "./getQuote";
 
 export const swap: Action = {
     name: "EXECUTE_SWAP_0X",
@@ -46,7 +48,7 @@ export const swap: Action = {
         const { quote, chainId } = latestQuote;
 
         try {
-            const client = getWalletClient(chainId); // 1 for mainnet, or pass chainId
+            const client = getWalletClient(runtime.getSetting("WALLET_PRIVATE_KEY"), chainId); // 1 for mainnet, or pass chainId
 
             // 1. Handle Permit2 signature
             let signature: Hex | undefined;
@@ -185,3 +187,81 @@ export const retrieveLatestQuote = async (
         return null;
     }
 };
+
+export const tokenSwap = async (runtime: IAgentRuntime, quantity: number, fromCurrency: string, toCurrency: string, address: string, privateKey: string, chain: string) => {
+    let priceInquiry = null;
+    try {
+        // get indicative price
+        priceInquiry = await getPriceInquiry(runtime, fromCurrency, quantity, toCurrency, chain);
+        elizaLogger.info("priceInquiry ", JSON.stringify(priceInquiry))
+    } catch (error) {
+        elizaLogger.error("Error during price inquiry", error.message);
+        return null;
+    }
+    if (!priceInquiry) {
+        elizaLogger.error("Price inquiry is null");
+        return null;
+    }
+        const chainId = Chains.base;
+        elizaLogger.info("chainId ", chainId)
+        let quote = null;
+        try {
+            // get latest quote
+            elizaLogger.info("Getting quote for swap", JSON.stringify(priceInquiry));
+            quote = await getQuoteObj(runtime, priceInquiry, address);
+            elizaLogger.info("quotes ", JSON.stringify(quote))
+        } catch (error) {
+            elizaLogger.error("Error during quote retrieval", error.message);
+            return null;
+        }
+        if (!quote) {
+            elizaLogger.error("Quote is null");
+            return null;
+        }
+        try {
+            const client = getWalletClient(privateKey, chainId);
+            // add a balance check for gas and sell token 
+            const enoughGasBalance = true 
+            const enoughSellTokenBalance = true 
+            if (!enoughGasBalance || !enoughSellTokenBalance) {
+                elizaLogger.error("Not enough balance for gas or sell token");
+                return null;
+            }
+
+            const nonce = await client.getTransactionCount({
+                address: (client.account as { address: `0x${string}` }).address,
+            });
+            elizaLogger.info("nonce ", nonce)
+            const txHash = await client.sendTransaction({
+                account: client.account,
+                chain: client.chain,
+                gas: !!quote?.transaction.gas
+                    ? BigInt(quote?.transaction.gas)
+                    : undefined,
+                to: quote?.transaction.to as `0x${string}`,
+                data: quote.transaction.data as `0x${string}`,
+                value: BigInt(quote.transaction.value),
+                gasPrice: !!quote?.transaction.gasPrice
+                    ? BigInt(quote?.transaction.gasPrice)
+                    : undefined,
+                nonce: nonce,
+                kzg: undefined,
+            });
+            elizaLogger.info("txHash", txHash)
+            // Wait for transaction confirmation
+            const receipt = await client.waitForTransactionReceipt({
+                hash: txHash,
+            });
+            elizaLogger.info("receipt ", receipt)
+            if (receipt.status === "success") {
+                elizaLogger.info(`✅ Swap executed successfully!\nView on Explorer: ${CHAIN_EXPLORERS[chainId]}/tx/${txHash}`, { hash: txHash, status: "success" });
+                return txHash;
+            } else {
+                elizaLogger.error(`❌ Swap failed! Check transaction: ${CHAIN_EXPLORERS[chainId]}/tx/${txHash}`, { hash: txHash, status: "failed" });
+                return null;
+            }
+        } catch (error) {
+            elizaLogger.error("Error during transaction process:", error.message);
+            return null;
+        }
+}
