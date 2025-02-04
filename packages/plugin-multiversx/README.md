@@ -38,6 +38,7 @@ Before using the plugin, configure the necessary environment variables in the **
 ```.env
 MVX_PRIVATE_KEY=your-wallet-private-key
 MVX_NETWORK=devnet  # mainnet, devnet, or testnet
+ACCESS_TOKEN_MANAGEMENT_TO=everyone  # you can put an userid to limit token managament to one user only (use same id as in the database)
 ```
 
 #### Private Key
@@ -80,7 +81,74 @@ The plugin supports the following networks:
  Can you transfer 10 EGLD to erd1tjygwhw5ylmv3v52ucvhmz0q7r0hafz4cfndjaskss5ahz28l3hqdvxqct ?
  ```
 
+## Usage
 
+### Token Transfer
+
+```typescript
+import { multiversxPlugin } from "@elizaos/plugin-multiversx";
+
+// Send EGLD
+const result = await eliza.execute({
+    action: "SEND_TOKEN",
+    content: {
+        tokenAddress: "erd1...",
+        amount: "1",
+        tokenIdentifier: "EGLD",
+    },
+});
+
+// Send ESDT
+const result = await eliza.execute({
+    action: "SEND_TOKEN",
+    content: {
+        tokenAddress: "erd1...",
+        amount: "100",
+        tokenIdentifier: "TEST-a1b2c3",
+    },
+});
+```
+
+### Token Creation
+
+```typescript
+const result = await eliza.execute({
+    action: "CREATE_TOKEN",
+    content: {
+        tokenName: "TestToken",
+        tokenTicker: "TEST",
+        decimals: "18",
+        amount: "1000000",
+    },
+});
+```
+
+### Token Swap
+
+```typescript
+const result = await eliza.execute({
+    action: "SWAP",
+    content: {
+        tokenIn: "EGLD",
+        amountIn: "1",
+        tokenOut: "MEX"
+    },
+});
+```
+
+### Pool Creation
+
+```typescript
+const result = await eliza.execute({
+    action: "CREATE_POOL",
+    content: {
+        baseTokenID: "KWAK",
+        quoteTokenID: "EGLD",
+        baseAmount: "1000000",
+        quoteAmount: "20"
+    },
+});
+```
 ## Contributor Guide
 
 There are multiple contributors within the ecosystem working on the MultiversX ElizaOS plugin. It is recommended to check the [Telegram group](https://t.me/@MultiversXDevelopers) to see if someone is already working on a similar feature before starting your contribution.
