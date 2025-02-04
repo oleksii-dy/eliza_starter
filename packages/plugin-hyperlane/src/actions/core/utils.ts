@@ -12,7 +12,7 @@ import { WriteCommandContext } from "./context";
  * Verifies the specified signer is valid.
  * @param signer the signer to verify
  */
-function assertSigner(signer: ethers.Signer) {
+export function assertSigner(signer: ethers.Signer) {
     if (!signer || !ethers.Signer.isSigner(signer))
         throw new Error("Signer is invalid");
 }

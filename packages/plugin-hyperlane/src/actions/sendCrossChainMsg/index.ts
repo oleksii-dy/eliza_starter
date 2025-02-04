@@ -18,13 +18,16 @@ import {
     HyperlaneRelayer,
     MultiProvider,
 } from "@hyperlane-xyz/sdk";
-import { CommandContext, WriteCommandContext } from "./context";
-import { runPreflightChecksForChains, stubMerkleTreeConfig } from "./utils";
+import { CommandContext, WriteCommandContext } from "../core/context";
+import {
+    runPreflightChecksForChains,
+    stubMerkleTreeConfig,
+} from "../core/utils";
 
 import { addressToBytes32, timeout } from "@hyperlane-xyz/utils";
 import { Account, Chain, Client, Transport } from "viem";
 import { clientToSigner } from "../../utils/ethersAdapter";
-import { MINIMUM_TEST_SEND_GAS } from "./consts";
+import { MINIMUM_TEST_SEND_GAS } from "../core/consts";
 
 export async function sendMessage({
     context,
@@ -210,6 +213,7 @@ export const sendCrossChainMessage: Action = {
                 signerAddress: "signer-address", // Optional EVM signer address
                 strategyPath: "path/to/strategy",
                 signer: sourceSigner,
+                chainMetadata: chainMetadata,
             };
 
             const sendOptions = {
