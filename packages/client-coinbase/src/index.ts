@@ -314,7 +314,7 @@ Generate only the tweet text, no commentary or markdown.`;
             );
             elizaLogger.info("Generated tweet content:", tweetContent);
 
-            if (this.runtime.getSetting('TWITTER_DRY_RUN')) {
+            if (this.runtime.getSetting('TWITTER_DRY_RUN').toLowerCase() === 'true') {
                 elizaLogger.info("Dry run mode enabled. Skipping tweet posting.");
                 return;
             }
