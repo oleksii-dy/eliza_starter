@@ -18,7 +18,7 @@ import * as path from "node:path";  // Changed to use node: protocol
 import BigNumber from "bignumber.js";
 import { CONFIG_KEYS } from "../enviroment";
 
-const PROVIDER_CONFIG = {
+export const PROVIDER_CONFIG = {
     MAINNET_RPC: "https://toncenter.com/api/v2/jsonRPC",
     RPC_API_KEY: "",
     STONFI_TON_USD_POOL: "EQCGScrZe1xbyWqWDvdI6mzP-GAcAWFv6ZXuaJOuSqemxku4",
