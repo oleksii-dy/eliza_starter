@@ -266,7 +266,7 @@ export async function getOnChainActions(
                         user: "{{agentName}}",
                         content: {
                             text: "Your zUSDT has been swapped in exchange for 117.25 gZIL which are now in your wallet.",
-                            action: "GET_SWAP_QUOTE",
+                            action: "PERFORM_SWAP",
                         },
                     },
                 ],
@@ -281,7 +281,7 @@ export async function getOnChainActions(
                         user: "{{agentName}}",
                         content: {
                             text: "Your WZIL has been swapped in exchange for 17.25 SEED which are now in your wallet.",
-                            action: "GET_SWAP_QUOTE",
+                            action: "PERFORM_SWAP",
                         },
                     },
                 ],
@@ -296,7 +296,7 @@ export async function getOnChainActions(
                         user: "{{agentName}}",
                         content: {
                             text: "Your HRSE was swapped to WZIL then to 318.5 FPS which you have now received.",
-                            action: "GET_SWAP_QUOTE",
+                            action: "PERFORM_SWAP",
                         },
                     },
                 ],
