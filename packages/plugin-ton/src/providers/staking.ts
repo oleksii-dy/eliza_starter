@@ -7,6 +7,7 @@ import { StakeContent } from "../actions/stake";
 import { PlatformFactory } from "../services/staking/platformFactory.ts";
 import { TonWhalesStrategy } from "../services/staking/strategies/tonWhales.ts";
 import { HipoStrategy } from "../services/staking/strategies/hipo.ts";
+import platformAddresses from '../services/staking/stakingPoolAddresses.json';
 
 // Define types for pool info and transaction results.
 // export interface PoolInfo {
@@ -45,8 +46,8 @@ export class StakingProvider implements IStakingProvider {
 
         this.contract = this.client.open(walletProvider.wallet);
 
-        PlatformFactory.register("TON_WHALES", new TonWhalesStrategy());
-        PlatformFactory.register("HIPO", new HipoStrategy());
+        PlatformFactory.register("TON_WHALES", new TonWhalesStrategy(this.client, this.walletProvider));
+        PlatformFactory.register("HIPO", new HipoStrategy(this.client, this.walletProvider));
     }
 
     // Private helper method to get the contract handle from the TON client.
@@ -57,8 +58,6 @@ export class StakingProvider implements IStakingProvider {
     }
 
     async stake(poolId: string, amount: number): Promise<string | null> {
-        elizaLogger.info("STAKING")
-
         try {
             // Create a transfer
             // Retrieve the wallet's current sequence number.
@@ -69,7 +68,7 @@ export class StakingProvider implements IStakingProvider {
             // Here we send the specified amount with a "STAKE" instruction in the body.
             const strategy = PlatformFactory.getStrategy(poolId);
 
-            const stakeMessage = await strategy.createStakeMessage(this.client, poolId, amount);
+            const stakeMessage = await strategy.createStakeMessage(poolId, amount);
 
             // Create and sign the staking transaction using the wallet's secret key.
             const transfer = await this.contract.createTransfer({
@@ -79,8 +78,6 @@ export class StakingProvider implements IStakingProvider {
                 messages: [stakeMessage],
                 validUntil: Math.floor(Date.now() / 1000) + 300
             });
-
-            elizaLogger.info("SENDING EXTERNAL MESSAGE:", transfer)
 
             await this.client.sendExternalMessage(this.walletProvider.wallet, transfer);
             return transfer.hash;
@@ -96,7 +93,7 @@ export class StakingProvider implements IStakingProvider {
             const seqno: number = await this.contract.getSeqno();
 
             const strategy = PlatformFactory.getStrategy(poolId);
-            const unstakeMessage = strategy.createUnstakeMessage(this.client, poolId, amount);
+            const unstakeMessage = await strategy.createUnstakeMessage(poolId, amount);
 
             const transfer = await this.contract.createTransfer({
                 seqno,
@@ -118,7 +115,7 @@ export class StakingProvider implements IStakingProvider {
         try {
             // Call a contract method that queries pool information.
             const strategy = PlatformFactory.getStrategy(poolAddress);
-            const info = await strategy.getPoolInfo(this.client, poolAddress);
+            const info = await strategy.getPoolInfo(poolAddress);
             console.log(info);
             return info;
         } catch (error: any) {
@@ -128,7 +125,19 @@ export class StakingProvider implements IStakingProvider {
     }
 
     async getPortfolio(): Promise<string> {
-        return `TON Staking Portfolio: \n`
+        let portfolioString = ``
+
+        const stakingPools = Object.values(platformAddresses).flat();
+        await Promise.all(stakingPools.map(async e=>{
+            const strategy = PlatformFactory.getStrategy(e)
+            if(!strategy) return;
+            const tonStaked = await strategy.getStakedTon(this.walletProvider.getAddress(), e);
+
+            if(tonStaked == 0) return;
+            portfolioString += `TON staked on ${e}: ${tonStaked}\n`
+        }))
+
+        return `TON Staking Portfolio: ${portfolioString}\n`
     }
 }
 

@@ -1,6 +1,7 @@
 import { Address, beginCell, MessageRelaxed, toNano, TonClient } from "@ton/ton";
 import { StakingPlatform } from "../interfaces/stakingPlatform.ts";
 import { internal } from "@ton/ton";
+import { WalletProvider } from "../../../providers/wallet.ts";
 
 function generateQueryId() {
     // Generate a query ID that's unique for this transaction
@@ -9,9 +10,16 @@ function generateQueryId() {
 
 
 export class TonPoolsStrategy implements StakingPlatform {
-    async getPoolInfo(client: TonClient, poolAddress: string): Promise<any> {
+    constructor(readonly tonClient: TonClient, readonly walletProvider: WalletProvider) {}
+
+
+    async getStakedTon(poolAddress: string): Promise<Number> {
+        return 0
+    }
+
+    async getPoolInfo(poolAddress: string): Promise<any> {
         try {
-            const result = await client.runMethod(
+            const result = await this.tonClient.runMethod(
                 Address.parse(poolAddress), 
                 "get_pool_type"
             );
@@ -33,7 +41,7 @@ export class TonPoolsStrategy implements StakingPlatform {
         }
     }
 
-    async createStakeMessage(client: TonClient, poolAddress: string, amount: number): Promise<MessageRelaxed> {
+    async createStakeMessage(poolAddress: string, amount: number): Promise<MessageRelaxed> {
         const queryId = generateQueryId();
 
         const payload = beginCell()
@@ -53,7 +61,7 @@ export class TonPoolsStrategy implements StakingPlatform {
         return intMessage;
     }
 
-    async createUnstakeMessage(client: TonClient, poolAddress: string, amount: number): Promise<MessageRelaxed> {
+    async createUnstakeMessage(poolAddress: string, amount: number): Promise<MessageRelaxed> {
         const queryId = generateQueryId();
 
         const payload = beginCell()
