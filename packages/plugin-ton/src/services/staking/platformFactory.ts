@@ -1,3 +1,4 @@
+import { elizaLogger } from '@elizaos/core';
 import { StakingPlatform } from './interfaces/stakingPlatform.ts';
 import platformAddresses from './stakingPoolAddresses.json';
 
@@ -10,15 +11,17 @@ export class PlatformFactory {
     this.strategies.set(type, strategy);
   }
 
-  static getStrategy(address: string): StakingPlatform {
+  static getStrategy(address: string): StakingPlatform | null {
     const type = this.getPlatformType(address);
     if (!type) {
-      throw new Error(`Unknown platform address: ${address}`);
+      elizaLogger.info(`Unknown platform address: ${address}`);
+      return null;
     }
 
     const strategy = this.strategies.get(type);
     if (!strategy) {
-      throw new Error(`No strategy implemented for platform: ${type}`);
+      elizaLogger.info(`No strategy implemented for platform: ${type}`);
+      return null
     }
 
     return strategy;
