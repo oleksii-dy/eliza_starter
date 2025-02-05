@@ -2074,7 +2074,6 @@ async function handleAnthropic({
     schema,
     schemaName,
     schemaDescription,
-    mode = "json",
     modelOptions,
     runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
@@ -2088,7 +2087,6 @@ async function handleAnthropic({
         schema,
         schemaName,
         schemaDescription,
-        mode,
         ...modelOptions,
     });
 }
