@@ -155,6 +155,7 @@ import { ankrPlugin } from "@elizaos/plugin-ankr";
 import { formPlugin } from "@elizaos/plugin-form";
 import { MongoClient } from "mongodb";
 import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
+import { dataEnrichPlugin } from "@elizaos/plugin-data-enrich";
 
 import { trikonPlugin } from "@elizaos/plugin-trikon";
 import arbitragePlugin from "@elizaos/plugin-arbitrage";
@@ -1016,6 +1017,7 @@ export async function createAgent(
         character,
         // character.plugins are handled when clients are added
         plugins: [
+            dataEnrichPlugin,
             parseBooleanFromText(getSecret(character, "BITMIND")) &&
             getSecret(character, "BITMIND_API_TOKEN")
                 ? bittensorPlugin

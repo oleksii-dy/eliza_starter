@@ -5,6 +5,8 @@ import { TwitterInteractionClient } from "./interactions.ts";
 import { TwitterPostClient } from "./post.ts";
 import { TwitterSearchClient } from "./search.ts";
 import { TwitterSpaceClient } from "./spaces.ts";
+import { TwitterWatchClient } from "./watcher.ts";
+import { EventEmitter } from 'events';
 
 /**
  * A manager that orchestrates all specialized Twitter logic:
@@ -20,6 +22,7 @@ class TwitterManager {
     search: TwitterSearchClient;
     interaction: TwitterInteractionClient;
     space?: TwitterSpaceClient;
+    watcher: TwitterWatchClient;
 
     constructor(runtime: IAgentRuntime, twitterConfig: TwitterConfig) {
         // Pass twitterConfig to the base client
@@ -48,6 +51,8 @@ class TwitterManager {
     }
 }
 
+export const twEventCenter = new EventEmitter();
+
 export const TwitterClientInterface: Client = {
     async start(runtime: IAgentRuntime) {
         const twitterConfig: TwitterConfig =
@@ -61,7 +66,7 @@ export const TwitterClientInterface: Client = {
         await manager.client.init();
 
         // Start the posting loop
-        await manager.post.start();
+        //await manager.post.start();
 
         // Start the search logic if it exists
         if (manager.search) {
@@ -69,12 +74,18 @@ export const TwitterClientInterface: Client = {
         }
 
         // Start interactions (mentions, replies)
-        await manager.interaction.start();
+        //await manager.interaction.start();
 
         // If Spaces are enabled, start the periodic check
         if (manager.space) {
-            manager.space.startPeriodicSpaceCheck();
+            //manager.space.startPeriodicSpaceCheck();
         }
+
+        await manager.watcher.start();
+        twEventCenter.on('MSG_RE_TWITTER', (text, userId) => {
+            console.log('MSG_RE_TWITTER userId: ' + userId + " text: " + text);
+            manager.watcher.sendReTweet(text, userId);
+        });
 
         return manager;
     },

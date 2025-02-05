@@ -23,6 +23,8 @@ import {
     type IAgentRuntime,
 } from "@elizaos/core";
 import { createApiRouter } from "./api.ts";
+import { Routes } from "./routes.ts";
+import { exceptionHandler, parseToken } from "./auth.ts";
 import * as fs from "fs";
 import * as path from "path";
 import { createVerifiableLogApiRouter } from "./verifiable-log-api.ts";
@@ -119,11 +121,16 @@ export class DirectClient {
     constructor() {
         elizaLogger.log("DirectClient constructor");
         this.app = express();
+        this.app.use(exceptionHandler);
         this.app.use(cors());
+        this.app.use(parseToken);
         this.agents = new Map();
 
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({ extended: true }));
+
+        const routes = new Routes(this);
+        routes.setupRoutes(this.app);
 
         // Serve both uploads and generated images
         this.app.use(
