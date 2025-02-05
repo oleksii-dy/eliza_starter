@@ -13,10 +13,10 @@ import {
     initWalletProvider,
     nativeWalletProvider,
     WalletProvider,
-} from "../providers/wallet";
-import { base64ToHex, sleep } from "../utils/util";
+} from "../../providers/wallet";
+import { base64ToHex, sleep } from "../../utils/util";
 import { z } from "zod";
-import { SUPPORTED_DEXES } from "./pools";
+import { SUPPORTED_DEXES } from "../../providers/pools";
 
 interface ActionOptions {
     [key: string]: unknown;
