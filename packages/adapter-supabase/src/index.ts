@@ -732,7 +732,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             .select("value")
             .eq("key", params.key)
             .eq("agentId", params.agentId)
-            .single();
+            .maybeSingle();
 
         if (error) {
             elizaLogger.error("Error fetching cache:", error);
