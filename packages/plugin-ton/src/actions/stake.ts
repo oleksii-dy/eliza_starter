@@ -102,8 +102,8 @@ const buildStakeDetails = async (
 
 export default {
     name: "STAKE_TON",
-    similes: ["STAKE_TOKENS", "DEPOSIT_TON", "TON_STAKE"],
-    description: "Stake TON tokens in a specified pool",
+    similes: ["STAKE_TOKENS", "DEPOSIT_TON", "DEPOSIT_TOKEN"],
+    description: "Stake TON tokens in a specified pool. Make sure the message is not asking to unstake or withdraw.",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,

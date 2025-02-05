@@ -85,7 +85,7 @@ const buildPoolInfoDetails = async (
 export default {
     name: "GET_POOL_INFO",
     similes: ["FETCH_POOL_INFO", "POOL_DATA", "GET_STAKING_INFO"],
-    description: "Fetch detailed staking pool information",
+    description: "Fetch detailed global staking pool information. Dont perform this action if the message is asking specifically for staked TON.",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,

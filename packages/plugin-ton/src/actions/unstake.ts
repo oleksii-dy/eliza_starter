@@ -87,7 +87,7 @@ const buildUnstakeDetails = async (
 export default {
     name: "UNSTAKE_TON",
     similes: ["UNSTAKE_TOKENS", "WITHDRAW_TON", "TON_UNSTAKE"],
-    description: "Unstake TON tokens from a specified pool",
+    description: "Unstake TON tokens from a specified pool. {Pay special attention to the request, and make sure the message is not asking to stake.",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -159,6 +159,28 @@ export default {
                 user: "{{user2}}",
                 content: {
                     text: "Successfully unstaked 1 TON from pool pool123, Transaction: efgh5678abcd1234",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "withdraw 12 TON from pool eqw237595asd432",
+                    action: "UNSTAKE_TON",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Withdrawing 12 TON right now...",
+                    action: "UNSTAKE_TON",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Successfully unstaked 12 TON from pool eqw237595asd432, Transaction: efgesdrf234h5678abcd1234",
                 },
             },
         ],
