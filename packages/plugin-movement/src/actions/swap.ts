@@ -232,7 +232,7 @@ export default {
 
             if (callback) {
                 callback({
-                    text: `Successfully swapped ${content.inputAmount} ${content.inputToken} } ${content.outputToken}\nTransaction: ${executedTransaction.hash}\nView on Explorer: ${explorerUrl}`,
+                    text: `Successfully swapped ${content.inputAmount} ${content.inputToken} to ${content.outputToken}\nTransaction: ${executedTransaction.hash}\nView on Explorer: ${explorerUrl}`,
                     content: {
                         success: true,
                         hash: executedTransaction.hash,
