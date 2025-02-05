@@ -296,16 +296,23 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         end?: number;
     }): Promise<Memory[]> {
         const query = this.supabase
-            .from(params.tableName)
+            // .from(params.tableName) error here trying to get messages table. tableName is the filter field
+            .from("memories")
             .select("*")
             .eq("roomId", params.roomId);
 
         if (params.start) {
-            query.gte("createdAt", params.start);
+                // Convert milliseconds to seconds and create a Date object
+                const startDate = new Date(params.start);
+                query.gte("createdAt", startDate.toISOString());
+                // query.gte("createdAt", params.start);
         }
 
         if (params.end) {
-            query.lte("createdAt", params.end);
+                // Convert milliseconds to seconds and create a Date object
+                const endDate = new Date(params.end);
+                query.lte("createdAt", endDate.toISOString());
+                // query.lte("createdAt", params.end);
         }
 
         if (params.unique) {
