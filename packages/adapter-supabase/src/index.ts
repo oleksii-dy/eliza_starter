@@ -494,7 +494,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         }
         const query = {
             query_table_name: tableName,
-            query_roomId: roomId,
+            query_roomid: roomId,
             query_unique: !!unique,
         };
         const result = await this.supabase.rpc("count_memories", query);
@@ -513,8 +513,8 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         count?: number;
     }): Promise<Goal[]> {
         const opts = {
-            query_roomId: params.roomId,
-            query_userId: params.userId,
+            query_roomid: params.roomId,
+            query_userid: params.userId,
             only_in_progress: params.onlyInProgress,
             row_count: params.count,
         };
