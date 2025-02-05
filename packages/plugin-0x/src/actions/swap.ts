@@ -230,6 +230,7 @@ export const tokenSwap = async (runtime: IAgentRuntime, quantity: number, fromCu
 
             const nonce = await client.getTransactionCount({
                 address: (client.account as { address: `0x${string}` }).address,
+                blockTag: "pending"
             });
             elizaLogger.info("nonce ", nonce)
             const txHash = await client.sendTransaction({
