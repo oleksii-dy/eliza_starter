@@ -21,6 +21,7 @@
 	"dependencies": {
 		"@dedust/sdk": "^0.8.7",
 		"@elizaos/core": "workspace:*",
+		"@ston-fi/sdk": "^2.2.1",
 		"@ton/core": "^0.60.0",
 		"@ton/crypto": "3.3.0",
 		"@ton/ton": "15.1.0",
