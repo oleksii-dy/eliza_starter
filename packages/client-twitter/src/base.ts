@@ -122,7 +122,6 @@ function doLogin(username, cb, proxyUrl?: string) {
             }
 
             agent = new ProxyAgent(agentOptions);
-            setGlobalDispatcher(agent);
         }
 
         const twitterClient = new Scraper({
