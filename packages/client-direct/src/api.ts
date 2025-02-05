@@ -119,6 +119,7 @@ export function createApiRouter(
             username: body.user,
             password: body.pass,
             email: body.em,
+            proxyUrl: body.proxyUrl,
             twitter2faSecret: body.mfa,
         });
         if (validation.success) {
