@@ -146,21 +146,19 @@ class LocalImageProvider implements ImageProvider {
 }
 
 class AnthropicImageProvider implements ImageProvider {
-    constructor(private runtime: IAgentRuntime) {
-    }
+    constructor(private runtime: IAgentRuntime) {}
 
-    async initialize(): Promise<void> {
-    }
+    async initialize(): Promise<void> {}
 
     async describeImage(
         imageData: Buffer,
-        mimeType: string,
+        mimeType: string
     ): Promise<{ title: string; description: string }> {
         const endpoint = getEndpoint(ModelProviderName.ANTHROPIC);
         const apiKey = this.runtime.getSetting("ANTHROPIC_API_KEY");
 
         const content = [
-            {type: "text", text: IMAGE_DESCRIPTION_PROMPT},
+            { type: "text", text: IMAGE_DESCRIPTION_PROMPT },
             {
                 type: "image",
                 source: {
@@ -178,12 +176,11 @@ class AnthropicImageProvider implements ImageProvider {
                 "x-api-key": apiKey,
                 "anthropic-version": "2023-06-01",
             },
-            body: JSON.stringify(
-                {
-                    model: "claude-3-haiku-20240307",
-                    max_tokens: 1024,
-                    messages: [{role: "user", content}],
-                }),
+            body: JSON.stringify({
+                model: "claude-3-haiku-20240307",
+                max_tokens: 1024,
+                messages: [{ role: "user", content }],
+            }),
         });
 
         if (!response.ok) {
@@ -364,9 +361,9 @@ export class ImageDescriptionService
         if (this.runtime.imageVisionModelProvider) {
             if (
                 this.runtime.imageVisionModelProvider ===
-                ModelProviderName.LLAMALOCAL ||
+                    ModelProviderName.LLAMALOCAL ||
                 this.runtime.imageVisionModelProvider ===
-                ModelProviderName.OLLAMA
+                    ModelProviderName.OLLAMA
             ) {
                 this.provider = new LocalImageProvider();
                 elizaLogger.debug("Using local provider for vision model");
@@ -396,8 +393,8 @@ export class ImageDescriptionService
             } else {
                 elizaLogger.warn(
                     `Unsupported image vision model provider: ${this.runtime.imageVisionModelProvider}. ` +
-                    `Please use one of the following: ${availableModels}. ` +
-                    `Update the 'imageVisionModelProvider' field in the character file.`
+                        `Please use one of the following: ${availableModels}. ` +
+                        `Update the 'imageVisionModelProvider' field in the character file.`
                 );
                 return false;
             }
@@ -484,21 +481,38 @@ export class ImageDescriptionService
     ): Promise<{ imageData: Buffer; mimeType: string }> {
         let imageData: Buffer;
         let mimeType: string;
-        if (fs.existsSync(imageUrlOrPath)) {
-            imageData = fs.readFileSync(imageUrlOrPath);
-            const ext = path.extname(imageUrlOrPath).slice(1).toLowerCase();
-            mimeType = ext ? `image/${ext}` : "image/jpeg";
-        } else {
-            const response = await fetch(imageUrlOrPath);
-            if (!response.ok) {
-                throw new Error(
-                    `Failed to fetch image: ${response.statusText}`
-                );
+
+        try {
+            if (fs.existsSync(imageUrlOrPath)) {
+                imageData = fs.readFileSync(imageUrlOrPath);
+                const ext = path.extname(imageUrlOrPath).slice(1).toLowerCase();
+                mimeType = ext ? `image/${ext}` : "image/jpeg";
+            } else {
+                const response = await fetch(imageUrlOrPath, {
+                    headers: {
+                        Accept: "image/*",
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(
+                        `Failed to fetch image (${response.status}): ${response.statusText}`
+                    );
+                }
+
+                const contentType = response.headers.get("content-type");
+                if (!contentType?.startsWith("image/")) {
+                    throw new Error(`Invalid content type: ${contentType}`);
+                }
+
+                imageData = Buffer.from(await response.arrayBuffer());
+                mimeType = contentType || "image/jpeg";
             }
-            imageData = Buffer.from(await response.arrayBuffer());
-            mimeType = response.headers.get("content-type") || "image/jpeg";
+
+            return { imageData, mimeType };
+        } catch (error) {
+            throw new Error(`Image fetch failed: ${error.message}`);
         }
-        return { imageData, mimeType };
     }
 
     async describeImage(
