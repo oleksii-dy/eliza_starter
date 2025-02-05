@@ -113,12 +113,19 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     async getMemoriesByRoomIds(params: {
         roomIds: UUID[];
         agentId?: UUID;
-        tableName: string;
+        tableName: string; // Used to filter "type" field, not the table name
         limit?: number;
     }): Promise<Memory[]> {
+        if (!params.roomIds || params.roomIds.length === 0) {
+            // Avoid querying with an empty roomIds array
+            return [];
+        }
+
+        // Query the "memories" table with filters
         let query = this.supabase
-            .from(params.tableName)
+            .from("memories") // Always querying the "memories" table
             .select("*")
+            .eq("type", params.tableName) // Filter by type = tableName
             .in("roomId", params.roomIds)
             .order("createdAt", { ascending: false });
 
@@ -140,10 +147,11 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         // map createdAt to Date
         const memories = data.map((memory) => ({
             ...memory,
-        }));
+        }))
 
         return memories as Memory[];
     }
+
 
     async getAccountById(userId: UUID): Promise<Account | null> {
         const { data, error } = await this.supabase
