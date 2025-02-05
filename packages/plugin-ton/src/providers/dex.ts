@@ -66,10 +66,26 @@ export class DexProvider implements DexProvider {
     }
 
     async withdrawLiquidity(params: {
+        dex: (typeof SUPPORTED_DEXES)[number];
         isTon: boolean;
         tonAmount?: string;
-        jettonWithdraws: JettonWithdaw[];
-    }) {}
+        jettonWithdrawals: JettonWithdaw[];
+    }) {
+        const { isTon, tonAmount, dex } = params;
+        if (!isTon && tonAmount) {
+            throw new Error("Wrong input");
+        }
+
+        if (!isPoolSupported(dex)) {
+            throw new Error("DEX not supported");
+        }
+
+        try {
+            return this.megaDex[dex.toUpperCase()].withdraw(params);
+        } catch (error) {
+            console.log("Error depositting");
+        }
+    }
 
     async claimFees(params: {
         jettonAddress: string;
