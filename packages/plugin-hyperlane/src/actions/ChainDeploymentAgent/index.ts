@@ -14,8 +14,8 @@ import { CommandContext } from "../core/context";
 import { evmWalletProvider, initWalletProvider } from "@elizaos/plugin-evm";
 import { ethers } from "ethers";
 import {  ProtocolType } from "@hyperlane-xyz/utils";
-import { ChainMetadata , ChainMetadataSchema, HookConfig, IsmConfig, IsmType, OwnableConfig } from "@hyperlane-xyz/sdk";
-import { completeDeploy, createMerkleTreeConfig, createMultisignConfig, filterAddresses, handleMissingInterchainGasPaymaster, prepareDeploy , requestAndSaveApiKeys, runDeployPlanStep, runPreflightChecksForChains, validateAgentConfig  } from "../core/utils";
+import { ChainMetadata , ChainMetadataSchema, ChainTechnicalStack, HookConfig, IsmConfig, IsmType, OwnableConfig } from "@hyperlane-xyz/sdk";
+import { addBlockExplorerConfig, addBlockOrGasConfig, addNativeTokenConfig, completeDeploy, createMerkleTreeConfig, createMultisignConfig, filterAddresses, handleMissingInterchainGasPaymaster, prepareDeploy , requestAndSaveApiKeys, runDeployPlanStep, runPreflightChecksForChains, validateAgentConfig  } from "../core/utils";
 import type {DeployParams} from "../deployWarpRoute/types"
 import { chainAddresses, chainMetadata  , GithubRegistry} from "@hyperlane-xyz/registry";
 import { buildAgentConfig, ChainMap, ContractVerifier, EvmCoreModule, ExplorerLicenseType, HyperlaneCore, HyperlaneDeploymentArtifacts, MultiProvider  } from "@hyperlane-xyz/sdk";
@@ -26,22 +26,22 @@ import { writeYamlOrJson } from "../../utils/configOps";
 import { stringify as yamlStringify } from 'yaml';
 import { CoreConfigSchema } from "@hyperlane-xyz/sdk";
 
+
 const registry = new GithubRegistry();
 
 
 //Initialize the chain congig
 export async function createChainConfig({
-    rpcUrl,
-    chainName,
-    chainId,
-    isTestnet,
+    runtime
 } :  {
-    rpcUrl : string,
-    chainName : string,
-    chainId : number,
-    isTestnet : boolean
+    runtime : IAgentRuntime,
+
 }) {
     elizaLogger.log("Creating chain config...")
+    const chainName : any = runtime.getSetting("CHAIN_NAME");
+    const chainId:any = runtime.getSetting("CHAIN_ID");
+    const rpcUrl:any = runtime.getSetting("RPC_URL");
+    const isTestnet = runtime.getSetting("IS_TESTNET") === "true";
     const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
 
     const metadata: ChainMetadata = {
@@ -54,6 +54,11 @@ export async function createChainConfig({
         isTestnet
     }
 
+    await addBlockExplorerConfig(runtime , metadata)
+    await addBlockOrGasConfig(runtime , metadata)
+    await addNativeTokenConfig(runtime , metadata)
+
+
     const parseResult = ChainMetadataSchema.safeParse(metadata);
 
     if (parseResult.success){
@@ -63,6 +68,9 @@ export async function createChainConfig({
           });
 
           await registry.updateChain({chainName : metadata.name , metadata})
+    }else {
+        elizaLogger.error("Error in creating chain metadata")
+        throw new Error('Error in creating chain metadata')
     }
 }
 
@@ -70,11 +78,9 @@ export async function createChainConfig({
 //initialize the chain
 async function InitializeDeployment(
     {
-        owner,
         context ,
         configFilePath,
     } : {
-        owner : string,
         context : CommandContext,
         configFilePath : string
     }
@@ -84,6 +90,7 @@ async function InitializeDeployment(
     const defaultIsm = createMultisignConfig(IsmType.MERKLE_ROOT_MULTISIG);
     const defaultHook = await createMerkleTreeConfig();
     const requiredHook = await createMerkleTreeConfig();
+    const owner = context.signerAddress;
 
     const proxyAdmin: OwnableConfig = {
         owner
@@ -212,15 +219,98 @@ async function createAgentConfigs( {
 export const setUpAgentOnHyperlane: Action = {
     name : "DEPLOY_CHAIN",
     similes : ["DEPLOY_CHAIN_ON_HYPERLANE" , "SETUP_AGENT_ON_HYPERLANE" , "SETUP_AGENT"],
-
     description : "This action is used to deploy a chain on Hyperlane",
 
 
-    handler : async () => {
+    handler : async (
+        runtime : IAgentRuntime,
+        message : Memory,
+        state? : State,
+        options? : {
+            [key : string] : unknown
+        },
+        callback? : HandlerCallback
+    ) => {
+        try {
+            if(!state){
+                state = (await runtime.composeState(message)) as State;
+            }
 
+            const sendContext = composeContext({
+                state,
+                template: "", // TODO: Add template
+            });
+            const content = await generateObjectDeprecated({
+                runtime,
+                context: sendContext,
+                modelClass: ModelClass.LARGE,
+            });
+
+
+            const context : CommandContext = {
+                registry : registry ,
+                multiProvider : new MultiProvider(chainMetadata) ,
+                skipConfirmation : true,
+                key: runtime.getSetting("HYPERLANE_PRIVATE_KEY"),
+                signerAddress : runtime.getSetting("HYPERLANE_ADDRESS")
+
+            }
+
+            const walletProvider = initWalletProvider(runtime)
+
+            const registry = new GithubRegistry();
+
+            await createChainConfig({runtime})
+            await InitializeDeployment({
+                context,
+                configFilePath : runtime.getSetting("CORE_CONFIG_FILE")
+            })
+
+
+
+
+        }catch(error) {
+            elizaLogger.log("Error in sendCrossChainMessage handler" , error.message)
+
+            if (callback){
+                callback({
+                    text : "Error in sendCrossChainMessage handler",
+                })
+            }
+
+
+
+            return Promise.resolve(false);
+        }
     },
-
-    examples : []   as ActionExample[]
-
+    examples: [
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Send a message from Ethereum to Polygon",
+                    options: {
+                        sourceChain: "ethereum",
+                        targetChain: "polygon",
+                        recipientAddress: "0x1234...",
+                        message: "Hello Cross Chain!",
+                    },
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "I'll send your message across chains.",
+                    action: "SEND_CROSS_CHAIN_MESSAGE",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "Successfully sent message across chains. Transaction hash: 0xabcd...",
+                },
+            },
+        ],
+    ] as ActionExample[][]
 
 }
