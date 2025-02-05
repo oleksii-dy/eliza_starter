@@ -127,7 +127,7 @@ describe('attpsPriceQuery', () => {
             );
 
             expect(mockCallback).toHaveBeenCalledWith({
-                text: 'Error fetching price data, error: API Error'
+                text: 'Error fetching price data: API Error'
             });
         });
 
@@ -149,7 +149,7 @@ describe('attpsPriceQuery', () => {
             );
 
             expect(mockCallback).toHaveBeenCalledWith({
-                text: 'Error fetching price data, error: Network error'
+                text: 'Error fetching price data: Network error'
             });
         });
     });

@@ -1,11 +1,11 @@
 
-# @elizaos/plugin-apro
+# @elizaos/plugin-attps
 
 Foundation plugin that enables advanced agent interactions, data verification, and price queries on the Eliza OS platform. It streamlines agent creation, verification processes, and provides a flexible framework for building robust agent-based solutions.
 
 ## Overview
 
-The Apro plugin bridges agent-based logic with the Eliza ecosystem. It handles agent registration, data verification, and price queries, empowering both automated and user-driven workflows.
+The ATTPs plugin bridges agent-based logic with the Eliza ecosystem. It handles agent registration, data verification, and price queries, empowering both automated and user-driven workflows.
 
 ## Features
 
@@ -40,27 +40,27 @@ The Apro plugin bridges agent-based logic with the Eliza ecosystem. It handles a
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-apro
+npm install @elizaos/plugin-attps
 ```
 
 ## Configuration
 
 Configure the plugin by setting environment variables or runtime settings:
-- APRO_RPC_URL
-- APRO_PROXY_ADDRESS
-- APRO_PRIVATE_KEY
-- APRO_CONVERTER_ADDRESS
-- APRO_AUTO_HASH_DATA
+- ATTPS_RPC_URL
+- ATTPS_PROXY_ADDRESS
+- ATTPS_PRIVATE_KEY
+- ATTPS_CONVERTER_ADDRESS
+- ATTPS_AUTO_HASH_DATA
 
 ## Usage
 
 ### Basic Setup
 ```typescript
-import { aproPlugin } from "@elizaos/plugin-apro";
+import { attpsPlugin } from "@elizaos/plugin-attps";
 
 // Initialize the plugin
 const runtime = await initializeRuntime({
-    plugins: [aproPlugin],
+    plugins: [attpsPlugin],
 });
 ```
 

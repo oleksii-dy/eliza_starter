@@ -9,7 +9,7 @@ export const verifyData: Action = {
   similes: [
     'VERIFY_DATA',
   ],
-  description: "Verify data with APRO. User must provide data to verify.",
+  description: "Verify data with ATTPs. User must provide data to verify.",
   validate: async (_runtime: IAgentRuntime, _message: Memory) => {
     return true;
   },
@@ -68,11 +68,11 @@ export const verifyData: Action = {
     let agent: AgentSDK
     try {
         agent = new AgentSDK({
-            proxyAddress: runtime.getSetting('APRO_PROXY_ADDRESS') ?? process.env.APRO_PROXY_ADDRESS,
-            rpcUrl: runtime.getSetting('APRO_RPC_URL') ?? process.env.APRO_RPC_URL,
-            privateKey: runtime.getSetting('APRO_PRIVATE_KEY') ?? process.env.APRO_PRIVATE_KEY,
-            autoHashData: (runtime.getSetting('APRO_AUTO_HASH_DATA') ?? process.env.APRO_AUTO_HASH_DATA) === 'true',
-            converterAddress: runtime.getSetting('APRO_CONVERTER_ADDRESS') ?? process.env.APRO_CONVERTER_ADDRESS,
+            proxyAddress: runtime.getSetting('ATTPS_PROXY_ADDRESS') ?? process.env.ATTPS_PROXY_ADDRESS,
+            rpcUrl: runtime.getSetting('ATTPS_RPC_URL') ?? process.env.ATTPS_RPC_URL,
+            privateKey: runtime.getSetting('ATTPS_PRIVATE_KEY') ?? process.env.ATTPS_PRIVATE_KEY,
+            autoHashData: (runtime.getSetting('ATTPS_AUTO_HASH_DATA') ?? process.env.ATTPS_AUTO_HASH_DATA) === 'true',
+            converterAddress: runtime.getSetting('ATTPS_CONVERTER_ADDRESS') ?? process.env.ATTPS_CONVERTER_ADDRESS,
         });
     } catch (error: unknown) {
         if (error instanceof Error) {
@@ -81,7 +81,7 @@ export const verifyData: Action = {
             elizaLogger.error('Failed to create Agent SDK:', String(error));
         }
         callback({
-            text: 'Failed to create Agent SDK. Please check the apro plugin configuration.',
+            text: 'Failed to create Agent SDK. Please check the ATTPs plugin configuration.',
         });
         return;
     }

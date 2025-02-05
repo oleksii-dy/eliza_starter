@@ -138,7 +138,7 @@ describe('createAndRegisterAgent', () => {
     describe('metadata', () => {
         it('should have correct name and description', () => {
             expect(createAndRegisterAgent.name).toBe('CREATE_AND_REGISTER_AGENT');
-            expect(createAndRegisterAgent.description).toContain('Create and register an agent with APRO');
+            expect(createAndRegisterAgent.description).toContain('Create and register an agent with ATTPs');
         });
 
         it('should have valid examples', () => {

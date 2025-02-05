@@ -12,7 +12,7 @@ export const createAndRegisterAgent: Action = {
     'CREATE_AGENT',
     'REGISTER_AGENT',
   ],
-  description: "Create and register an agent with APRO. User must provide agent settings.",
+  description: "Create and register an agent with ATTPs. User must provide agent settings.",
   validate: async (_runtime: IAgentRuntime, _message: Memory) => {
     return true;
   },
@@ -71,16 +71,16 @@ export const createAndRegisterAgent: Action = {
     let agent: AgentSDK;
     try {
         agent = new AgentSDK({
-            proxyAddress: runtime.getSetting('APRO_PROXY_ADDRESS') ?? process.env.APRO_PROXY_ADDRESS,
-            rpcUrl: runtime.getSetting('APRO_RPC_URL') ?? process.env.APRO_RPC_URL,
-            privateKey: runtime.getSetting('APRO_PRIVATE_KEY') ?? process.env.APRO_PRIVATE_KEY,
+            proxyAddress: runtime.getSetting('ATTPS_PROXY_ADDRESS') ?? process.env.ATTPS_PROXY_ADDRESS,
+            rpcUrl: runtime.getSetting('ATTPS_RPC_URL') ?? process.env.ATTPS_RPC_URL,
+            privateKey: runtime.getSetting('ATTPS_PRIVATE_KEY') ?? process.env.ATTPS_PRIVATE_KEY,
         });
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         elizaLogger.error('Failed to create Agent SDK:', errorMessage);
         if (callback) {
             callback({
-                text: 'Failed to create Agent SDK. Please check the apro plugin configuration.',
+                text: 'Failed to create Agent SDK. Please check the ATTPs plugin configuration.',
             });
         }
         return;
@@ -115,7 +115,7 @@ export const createAndRegisterAgent: Action = {
       {
         user: "{{user1}}",
         content: {
-          text: `I want to Create and register apro ai-agent with the following settings:
+          text: `I want to Create and register ATTPs ai-agent with the following settings:
             {
                 signers: [
                     '0x003CD3bD8Ac5b045be8E49d4dfd9928E1765E471',

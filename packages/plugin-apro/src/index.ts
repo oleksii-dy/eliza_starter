@@ -3,9 +3,9 @@ import { createAndRegisterAgent } from "./actions/createAndRegisterAgent";
 import { verifyData } from "./actions/verifyData";
 import { attpsPriceQuery } from "./actions/attpsPriceQuery";
 
-export const aproPlugin: Plugin = {
-    name: "apro",
-    description: "Apro Plugin for Eliza",
+export const attpsPlugin: Plugin = {
+    name: "ATTPs",
+    description: "ATTPs Plugin for Eliza",
     actions: [
         createAndRegisterAgent,
         verifyData,
@@ -15,4 +15,4 @@ export const aproPlugin: Plugin = {
     providers: [],
 };
 
-export default aproPlugin;
+export default attpsPlugin;

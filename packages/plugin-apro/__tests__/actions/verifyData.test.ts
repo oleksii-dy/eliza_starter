@@ -152,7 +152,7 @@ describe('verifyData', () => {
     describe('metadata', () => {
         it('should have correct name and description', () => {
             expect(verifyData.name).toBe('VERIFY');
-            expect(verifyData.description).toContain('Verify data with APRO');
+            expect(verifyData.description).toContain('Verify data with ATTPs');
         });
 
         it('should have valid examples', () => {
