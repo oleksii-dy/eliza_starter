@@ -24,29 +24,29 @@ export function bufferToChunks(buff: Buffer, chunkSize: number) {
 
  export  function makeSnakeCell(data: Buffer): Cell {
     const chunks = bufferToChunks(data, 127);
-  
+
     if (chunks.length === 0) {
       return beginCell().endCell();
     }
-  
+
     if (chunks.length === 1) {
       return beginCell().storeBuffer(chunks[0]).endCell();
     }
-  
+
     let curCell = beginCell();
-  
+
     for (let i = chunks.length - 1; i >= 0; i--) {
       const chunk = chunks[i];
-  
+
       curCell.storeBuffer(chunk);
-  
+
       if (i - 1 >= 0) {
         const nextCell = beginCell();
         nextCell.storeRef(curCell);
         curCell = nextCell;
       }
     }
-  
+
     return curCell.endCell();
   }
 
@@ -64,7 +64,7 @@ export function bufferToChunks(buff: Buffer, chunkSize: number) {
       if (seqnoAfter == seqno + 1) break;
     }
   }
-  
+
   export async function uploadFolderToIPFS(folderPath: string): Promise<string> {
   const pinata = new pinataSDK({
     pinataApiKey: process.env.PINATA_API_KEY,
@@ -81,13 +81,13 @@ export async function updateMetadataFiles(metadataFolderPath: string, imagesIpfs
   files.forEach(async (filename, index) => {
     const filePath = path.join(metadataFolderPath, filename)
     const file = await readFile(filePath);
-    
+
     const metadata = JSON.parse(file.toString());
     metadata.image =
       index != files.length - 1
         ? `ipfs://${imagesIpfsHash}/${index}.jpg`
         : `ipfs://${imagesIpfsHash}/logo.jpg`;
-    
+
     await writeFile(filePath, JSON.stringify(metadata));
   });
 }
@@ -102,12 +102,12 @@ export async function uploadJSONToIPFS(json: any): Promise<string> {
   return response.IpfsHash;
 }
 
-export async function topUpBalance(  
+export async function topUpBalance(
     wallet,
     nftAmount: number,
     collectionAddress: string
   ): Promise<number> {
-    const feeAmount = 0.026 // approximate value of fees for 1 transaction in our case 
+    const feeAmount = 0.026 // approximate value of fees for 1 transaction in our case
     const seqno = await wallet.contract.getSeqno();
     const amount = nftAmount * feeAmount;
 
@@ -126,3 +126,18 @@ export async function topUpBalance(
 
     return seqno;
   }
+
+  /**
+* Converts an input (string or number) to a BigInt.
+*
+* The input may contain underscore separators (e.g. "50_000") which are removed.
+* The returned value is a BigInt (e.g. 50_000n).
+*
+* @param input - The input string or number.
+* @returns The corresponding BigInt.
+*/
+export function convertToBigInt(input: string | number): bigint {
+    // If the input is a string, remove underscores; otherwise, just convert the number.
+    const cleanedInput = typeof input === "string" ? input.replace(/_/g, "") : input;
+    return BigInt(cleanedInput);
+}
