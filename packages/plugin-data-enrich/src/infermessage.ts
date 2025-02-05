@@ -1,5 +1,5 @@
 // The define of AI Infer Message
-import { ICacheManager, settings } from "@elizaos/eliza";
+import { ICacheManager, settings } from "@elizaos/core";
 import { TOP_TOKENS } from "./tokendata.ts";
 import { TW_KOL_1 } from "./social.ts";
 import * as path from "path";

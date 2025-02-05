@@ -10,7 +10,7 @@ import {
     IAgentRuntime,
     ModelClass,
     settings,
-} from "@elizaos/eliza";
+} from "@elizaos/core";
 import { ClientBase } from "./base";
 import {
     ApiV2Includes,

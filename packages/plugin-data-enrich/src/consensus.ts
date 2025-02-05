@@ -1,6 +1,6 @@
 // The message collaboration/cooperative utils.
 
-import { IAgentRuntime } from "@elizaos/eliza";
+import { IAgentRuntime } from "@elizaos/core";
 /*
 import { createLibp2p } from 'libp2p';
 import { tcp } from '@libp2p/tcp';

@@ -1,4 +1,4 @@
-import { ICacheManager } from "@elizaos/eliza";
+import { ICacheManager } from "@elizaos/core";
 import { TW_KOL_1 } from "./social";
 
 interface WatchItem {

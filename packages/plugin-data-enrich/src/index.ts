@@ -1,12 +1,12 @@
-import { elizaLogger } from "@elizaos/eliza";
 import {
+    elizaLogger,
     Action,
     HandlerCallback,
     IAgentRuntime,
     Memory,
     Plugin,
     State,
-} from "@elizaos/eliza";
+} from "@elizaos/core";
 
 import { socialProvider, QUOTES_LIST, STYLE_LIST, TW_KOL_1, TW_KOL_2, TW_KOL_3 } from "./social.ts";
 import {

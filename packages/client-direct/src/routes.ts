@@ -8,7 +8,7 @@ import {
     generateText,
     ModelClass,
     stringToUuid,
-} from "@elizaos/eliza";
+} from "@elizaos/core";
 import { twEventCenter } from "@elizaos/client-twitter";
 import { AgentConfig } from "../../../agent/src";
 import {

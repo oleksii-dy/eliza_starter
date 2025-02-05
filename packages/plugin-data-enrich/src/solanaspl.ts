@@ -12,7 +12,7 @@ import {
     getOrCreateAssociatedTokenAccount,
     createTransferInstruction,
 } from "@solana/spl-token";
-import { settings } from "@elizaos/eliza";
+import { settings } from "@elizaos/core";
 
 
 export class InvalidPublicKeyError extends Error {

@@ -1,4 +1,4 @@
-import { settings } from "@elizaos/eliza";
+import { settings } from "@elizaos/core";
 import {
     clusterApiUrl,
     PublicKey,

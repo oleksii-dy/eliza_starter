@@ -1,6 +1,6 @@
 import { PrivyClient } from "@privy-io/server-auth";
 import { RequestHandler } from "express";
-import { settings } from "@elizaos/eliza";
+import { settings } from "@elizaos/core";
 
 const privy = new PrivyClient(settings.PRIVY_APP_ID, settings.PRIVY_APP_SECRET);
 
