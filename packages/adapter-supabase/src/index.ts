@@ -335,7 +335,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     ): Promise<Memory[]> {
         const queryParams = {
             query_table_name: params.tableName,
-            query_roomId: params.roomId,
+                query_roomid: params.roomId,
             query_embedding: embedding,
             query_match_threshold: params.match_threshold,
             query_match_count: params.count,
@@ -355,18 +355,28 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     }
 
     async getMemoryById(memoryId: UUID): Promise<Memory | null> {
+        try {
         const { data, error } = await this.supabase
             .from("memories")
             .select("*")
             .eq("id", memoryId)
-            .single();
+                .maybeSingle(); // Use maybeSingle() instead of single()
 
-        if (error) {
-            elizaLogger.error("Error retrieving memory by ID:", error);
+            if (!data) {
+                elizaLogger.debug(`Memory ${memoryId} not found`);
             return null;
         }
 
+            // if (error && error.code !== 'PGRST116') {
+            //     elizaLogger.error(`Database error retrieving memory ${memoryId}:`, error);
+            //     throw new Error(`Database error: ${error.message}`);
+            // }
+
         return data as Memory;
+        } catch (e) {
+            elizaLogger.error(`Unexpected error retrieving memory ${memoryId}:`, e);
+            return null;
+        }
     }
 
     async getMemoriesByIds(
