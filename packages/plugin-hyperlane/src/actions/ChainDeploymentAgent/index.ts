@@ -22,9 +22,12 @@ import { buildAgentConfig, ChainMap, ContractVerifier, EvmCoreModule, ExplorerLi
 import {getStartBlocks} from "../core/utils";
 import { MINIMUM_CORE_DEPLOY_GAS } from "../../utils/consts";
 import { buildArtifact as coreBuildArtifact } from '@hyperlane-xyz/core/buildArtifact.js';
-import { writeYamlOrJson } from "../../utils/configOps";
+import { readYamlOrJson, writeYamlOrJson } from "../../utils/configOps";
 import { stringify as yamlStringify } from 'yaml';
 import { CoreConfigSchema } from "@hyperlane-xyz/sdk";
+import { AGENT_CONFIG_FILE, CORE_CONFIG_FILE, createConfigFilePath } from "../core/consts";
+import { ValidatorRunner } from "./RunValidator";
+import { RelayerRunner } from "./RunRelayer";
 
 
 const registry = new GithubRegistry();
@@ -105,8 +108,8 @@ async function InitializeDeployment(
             proxyAdmin
         })
 
-        writeYamlOrJson(configFilePath, coreConfig)
-        console.log('Core config created')
+        writeYamlOrJson(configFilePath, coreConfig , "yaml")
+        elizaLogger.log('Core config created')
     }catch(e) {
         console.log(e)
         throw new Error('Error in creating core config')
@@ -172,6 +175,8 @@ async function  runCoreDeploy ( params : DeployParams ) {
 
 
 }
+
+
 
 //create Agent Configs
 async function createAgentConfigs( {
@@ -256,31 +261,55 @@ export const setUpAgentOnHyperlane: Action = {
                 signerAddress : runtime.getSetting("HYPERLANE_ADDRESS") ,
                 signer : runtime.getSetting("HYPERLANE_PRIVATE_KEY"),
                 key: runtime.getSetting("HYPERLANE_PRIVATE_KEY"),
-                signerAddress : runtime.getSetting("HYPERLANE_ADDRESS"),
                 chainMetadata
             }
 
             const walletProvider = initWalletProvider(runtime)
 
+            //@ts-ignore
+            createConfigFilePath(runtime.getSetting("CHAIN_NAME"))
+            //@ts-ignore
+            createAgentConfigFilePath(runtime.getSetting("CHAIN_NAME"))
 
             await createChainConfig({runtime})
             await InitializeDeployment({
                 context,
-                configFilePath : runtime.getSetting("CORE_CONFIG_FILE")
+                configFilePath : CORE_CONFIG_FILE
             })
 
 
             await runCoreDeploy({
                 context,
-                config : runtime.getSetting("CORE_CONFIG_FILE"),
+                config : readYamlOrJson(CORE_CONFIG_FILE),
                 chain : runtime.getSetting("CHAIN_NAME")
             })
 
 
             await createAgentConfigs({
                 context,
-                out : runtime.getSetting("AGENT_CONFIG_FILE")
+                out : AGENT_CONFIG_FILE
             })
+
+            const validator = new ValidatorRunner(
+                //@ts-ignore
+                runtime.getSetting("CHAIN_NAME"),
+                runtime.getSetting("HYPERLANE_PRIVATE_KEY"),
+                AGENT_CONFIG_FILE
+            )
+
+
+            await validator.run()
+
+
+            const relayer = new RelayerRunner(
+                [] ,
+                //@ts-ignore
+                runtime.getSetting("HYPERLANE_PRIVATE_KEY"),
+                AGENT_CONFIG_FILE,
+                runtime.getSetting("CHAIN_NAME")
+            )
+
+            relayer.run()
 
 
             if (callback){
@@ -288,8 +317,6 @@ export const setUpAgentOnHyperlane: Action = {
                     text : "Successfully deployed chain on Hyperlane"
                 })
             }
-
-
 
         }catch(error) {
             elizaLogger.log("Error in sendCrossChainMessage handler" , error.message)

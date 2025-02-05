@@ -1,6 +1,7 @@
 import Docker from "dockerode";
 import path from "path";
 import fs from "fs";
+import { elizaLogger } from "@elizaos/core";
 
 const docker = new Docker();
 
@@ -12,7 +13,7 @@ const createDirectory = (directoryPath: string): void => {
 };
 
 
-class RelayerRunner {
+export class RelayerRunner {
     private relayChains: string[];
     private relayerKey: string;
     private configFilePath: string;
@@ -77,13 +78,13 @@ class RelayerRunner {
           Tty: true,
         });
 
-        console.log(`Starting relayer for chains: ${this.relayChains.join(", ")}...`);
+        elizaLogger.log(`Starting relayer for chains: ${this.relayChains.join(", ")}...`);
         await container.start();
-        console.log(
+        elizaLogger.log(
           `Relayer for chains: ${this.relayChains.join(", ")} started successfully.`
         );
       } catch (error) {
-        console.error(
+        elizaLogger.error(
           `Error starting relayer for chains: ${this.relayChains.join(", ")}`,
           error
         );

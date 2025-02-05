@@ -1,6 +1,7 @@
 import Docker from "dockerode";
 import path from "path";
 import fs from "fs";
+import { elizaLogger } from "@elizaos/core";
 
 const docker = new Docker();
 
@@ -13,7 +14,7 @@ const createDirectory = (directoryPath: string): void => {
 };
 
 // Class for running a Validator
-class ValidatorRunner {
+export class ValidatorRunner {
   private chainName: string;
   private validatorKey: string;
   private configFilePath: string;
@@ -75,11 +76,11 @@ class ValidatorRunner {
         Tty: true,
       });
 
-      console.log(`Starting validator for chain: ${this.chainName}...`);
+      elizaLogger.log(`Starting validator for chain: ${this.chainName}...`);
       await container.start();
-      console.log(`Validator for chain: ${this.chainName} started successfully.`);
+    elizaLogger.log(`Validator for chain: ${this.chainName} started successfully.`);
     } catch (error) {
-      console.error(`Error starting validator for chain: ${this.chainName}`, error);
+      elizaLogger.error(`Error starting validator for chain: ${this.chainName}`, error);
     }
   }
 }
