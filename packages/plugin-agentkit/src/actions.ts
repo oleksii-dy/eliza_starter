@@ -9,11 +9,12 @@ import {
     composeContext,
     generateObject,
 } from "@elizaos/core";
-import type { CdpAgentkit } from "@coinbase/cdp-agentkit-core";
-import { CdpToolkit, type Tool } from "@coinbase/cdp-langchain";
+import { AgentKit } from "@coinbase/agentkit";
+import { getLangChainTools } from "@coinbase/agentkit-langchain";
+import { Tool } from "@langchain/core/tools";
 
 type GetAgentKitActionsParams = {
-    getClient: () => Promise<CdpAgentkit>;
+    getClient: () => Promise<AgentKit>;
     config?: {
         networkId?: string;
     };
@@ -26,9 +27,9 @@ export async function getAgentKitActions({
     getClient,
 }: GetAgentKitActionsParams): Promise<Action[]> {
     const agentkit = await getClient();
-    const cdpToolkit = new CdpToolkit(agentkit);
-    const tools = cdpToolkit.getTools();
-    const actions = tools.map((tool: Tool) => ({
+    const tools = await getLangChainTools(agentkit);
+    
+    const actions = tools.map((tool) => ({
         name: tool.name.toUpperCase(),
         description: tool.description,
         similes: [],
@@ -58,11 +59,7 @@ export async function getAgentKitActions({
                     tool
                 );
 
-                const result = await executeToolAction(
-                    tool,
-                    parameters,
-                    client
-                );
+                const result = await tool.call(parameters);
 
                 const responseContext = composeResponseContext(
                     tool,
@@ -89,22 +86,6 @@ export async function getAgentKitActions({
         examples: [],
     }));
     return actions;
-}
-
-async function executeToolAction(
-    tool: Tool,
-    parameters: unknown,
-    client: CdpAgentkit
-): Promise<unknown> {
-    const toolkit = new CdpToolkit(client);
-    const tools = toolkit.getTools();
-    const selectedTool = tools.find((t) => t.name === tool.name);
-
-    if (!selectedTool) {
-        throw new Error(`Tool ${tool.name} not found`);
-    }
-
-    return await selectedTool.call(parameters);
 }
 
 function composeParameterContext(tool: Tool, state: State): string {
