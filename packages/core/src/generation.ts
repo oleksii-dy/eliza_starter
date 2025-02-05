@@ -1086,7 +1086,7 @@ export async function generateShouldRespond({
                 runtime,
                 context,
                 modelClass,
-                messages
+                messages,
             });
 
             const extractedResponse = parseTagContent(response, "response");
@@ -2340,10 +2340,7 @@ export async function generateTweetActions({
                 context,
                 modelClass,
             });
-            console.debug(
-                "Received response from generateText for tweet actions:",
-                response
-            );
+
             const parsedResponse = parseTagContent(response, "response");
             const { actions } = parseActionResponseFromText(parsedResponse);
             if (actions) {
