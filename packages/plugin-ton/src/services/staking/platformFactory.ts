@@ -31,6 +31,9 @@ export class PlatformFactory {
     if (platformAddresses.TON_WHALES.includes(address)) {
       return 'TON_WHALES';
     }
+    if (platformAddresses.HIPO.includes(address)) {
+      return 'HIPO';
+    }
     return null;
   }
 }

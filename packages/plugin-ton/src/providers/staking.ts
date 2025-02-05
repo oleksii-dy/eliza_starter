@@ -1,5 +1,5 @@
 import { Address, OpenedContract, SendMode, TonClient } from "@ton/ton";
-import { IAgentRuntime, Provider, Memory, State } from "@elizaos/core";
+import { IAgentRuntime, Provider, Memory, State, elizaLogger } from "@elizaos/core";
 import { internal } from "@ton/ton";
 import { initWalletProvider, WalletProvider } from "./wallet";
 import { mnemonicToPrivateKey } from "@ton/crypto";
@@ -27,6 +27,7 @@ export interface IStakingProvider {
     stake(poolId: string, amount: number): Promise<string | null>;
     unstake(poolId: string, amount: number): Promise<string | null>;
     getPoolInfo(poolId: string): Promise<any>;
+    getPortfolio(): Promise<string>;
 }
 
 // A full implementation of the staking provider that calls the TON RPC.
@@ -56,6 +57,8 @@ export class StakingProvider implements IStakingProvider {
     }
 
     async stake(poolId: string, amount: number): Promise<string | null> {
+        elizaLogger.info("STAKING")
+
         try {
             // Create a transfer
             // Retrieve the wallet's current sequence number.
@@ -76,6 +79,8 @@ export class StakingProvider implements IStakingProvider {
                 messages: [stakeMessage],
                 validUntil: Math.floor(Date.now() / 1000) + 300
             });
+
+            elizaLogger.info("SENDING EXTERNAL MESSAGE:", transfer)
 
             await this.client.sendExternalMessage(this.walletProvider.wallet, transfer);
             return transfer.hash;
@@ -122,6 +127,9 @@ export class StakingProvider implements IStakingProvider {
         }
     }
 
+    async getPortfolio(): Promise<string> {
+        return `TON Staking Portfolio: \n`
+    }
 }
 
 // Initializes the staking provider using settings from the runtime.
@@ -169,51 +177,14 @@ export const nativeStakingProvider: Provider = {
         state?: State,
     ): Promise<string | null> {
         try {
-            // Retrieve the staking contract address from runtime settings.
-            const stakingContractAddress = runtime.getSetting(
-                "TON_STAKING_CONTRACT_ADDRESS",
-            );
-            if (!stakingContractAddress) {
-                throw new Error("TON_STAKING_CONTRACT_ADDRESS is missing");
-            }
+            const stakingProvider = await initStakingProvider(runtime);
 
-            // Extract the amount to stake from the message.
-            const amountToStake = (message as any).amount as string;
-            if (!amountToStake) {
-                throw new Error("Amount to stake is missing in the message");
-            }
-
-            // Initialize the wallet provider (which uses TON_PRIVATE_KEY and TON_RPC_URL)
-            const walletProvider = await initWalletProvider(runtime);
-
-            // Get the TON client instance from the wallet provider.
-            const client = walletProvider.getWalletClient();
-            // Open the wallet contract that's been created inside the wallet provider.
-            const contract = client.open(walletProvider.wallet);
-
-            // Retrieve the wallet's current sequence number.
-            const seqno: number = await contract.getSeqno();
-
-            // Construct the staking message.
-            // The 'internal' helper formats the message for proper on-chain transfers.
-            // Here we send the specified amount with a "STAKE" instruction in the body.
-            const stakeMessage = internal({
-                to: stakingContractAddress,
-                value: amountToStake,
-                body: "d", // Adjust this message if your staking contract requires a different format.
-            });
-
-            // Create and sign the staking transaction using the wallet's secret key.
-            const transfer = await contract.createTransfer({
-                seqno,
-                secretKey: walletProvider.keypair.secretKey,
-                messages: [stakeMessage],
-            });
-
-            console.log("Staking transaction sent with hash:", transfer.hash);
-            return `Staking transaction sent: ${transfer.hash}`;
+            const stakingPortfolio = await stakingProvider.getPortfolio();
+            
+            console.log(stakingPortfolio);
+            return stakingPortfolio;
         } catch (error) {
-            console.error("Error sending staking transaction:", error);
+            console.error("Error in staking provider:", error);
             return null;
         }
     },

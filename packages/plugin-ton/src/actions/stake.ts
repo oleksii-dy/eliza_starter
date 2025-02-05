@@ -10,7 +10,7 @@ import {
     type State,
 } from "@elizaos/core";
 import { z } from "zod";
-import { IStakingProvider, StakingProvider } from "../providers/staking";
+import { IStakingProvider, StakingProvider, initStakingProvider } from "../providers/staking";
 import { initWalletProvider } from "../providers/wallet";
 
 export interface StakeContent extends Content {
@@ -128,7 +128,7 @@ export default {
         try {
 
             const walletProvider = await initWalletProvider(runtime);
-            const stakingProvider = new StakingProvider(walletProvider);
+            const stakingProvider = await initStakingProvider(runtime);
             // Instantiate StakeAction with the native staking provider.
             const action = new StakeAction(stakingProvider);
             const txHash = await action.stake(stakeDetails);
@@ -158,6 +158,7 @@ export default {
     },
     template: stakeTemplate,
     validate: async (runtime: IAgentRuntime) => {
+        elizaLogger.info("VALIDATING TON STAKING ACTION")
         return true;
     },
     examples: [
