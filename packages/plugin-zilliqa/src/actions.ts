@@ -241,7 +241,7 @@ export async function getOnChainActions(
                     {
                         user: "{{agentName}}",
                         content: {
-                            text: "At this time, you should get around 320.9 FPS for your HRSE if you convert FPS to WZIL to HRSE.",
+                            text: "At this time, you should get around 320.9 FPS for your HRSE if you convert HRSE to WZIL to FPS.",
                             action: "GET_SWAP_QUOTE",
                         },
                     },
