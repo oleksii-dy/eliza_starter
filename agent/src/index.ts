@@ -104,8 +104,8 @@ import { OpacityAdapter } from "@elizaos/plugin-opacity";
 import { openWeatherPlugin } from "@elizaos/plugin-open-weather";
 import { quaiPlugin } from "@elizaos/plugin-quai";
 import { sgxPlugin } from "@elizaos/plugin-sgx";
-import { solanaPlugin } from "@elizaos/plugin-solana";
-import { solanaPluginV2 } from "@elizaos/plugin-solana-v2";
+//import { solanaPlugin } from "@elizaos/plugin-solana";
+//import { solanaPluginV2 } from "@elizaos/plugin-solana-v2";
 import { solanaAgentkitPlugin } from "@elizaos/plugin-solana-agent-kit";
 import { squidRouterPlugin } from "@elizaos/plugin-squid-router";
 import { stargazePlugin } from "@elizaos/plugin-stargaze";
@@ -1051,10 +1051,10 @@ export async function createAgent(
                 : null,
             getSecret(character, "TAVILY_API_KEY") ? webSearchPlugin : null,
             getSecret(character, "SOLANA_PUBLIC_KEY") ||
-            (getSecret(character, "WALLET_PUBLIC_KEY") &&
-                !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
-                ? [solanaPlugin, solanaPluginV2]
-                : null,
+            //(getSecret(character, "WALLET_PUBLIC_KEY") &&
+            //    !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
+            //    ? [solanaPlugin, solanaPluginV2]
+            //    : null,
             getSecret(character, "SOLANA_PRIVATE_KEY")
                 ? solanaAgentkitPlugin
                 : null,
