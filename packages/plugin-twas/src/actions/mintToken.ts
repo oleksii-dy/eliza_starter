@@ -11,35 +11,8 @@ import {
     elizaLogger,
 } from "@elizaos/core";
 import { ethers } from "ethers";
-
-// OpenZeppelin ERC721 contract template with fixed supply
-const CONTRACT_TEMPLATE = `
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-
-contract TwasNFT is ERC721, Ownable {
-    uint256 public constant TOTAL_SUPPLY = 10000000;
-    bool private _hasBeenMinted;
-
-    constructor(string memory name, string memory symbol) ERC721(name, symbol) {
-        require(!_hasBeenMinted, "Tokens have already been minted");
-        _hasBeenMinted = true;
-        
-        // Mint all tokens to the contract creator
-        for(uint256 i = 1; i <= TOTAL_SUPPLY; i++) {
-            _mint(msg.sender, i);
-        }
-    }
-
-    // Prevent any additional minting
-    function _mint(address to, uint256 tokenId) internal virtual override {
-        require(!_hasBeenMinted || msg.sender == address(this), "Minting is locked");
-        super._mint(to, tokenId);
-    }
-}`;
+// Import the compiled contract artifacts
+import { abi, bytecode } from '../TwasNFT.json';
 
 export const MintTokenAction: Action = {
     name: "MINT_TWAS_NFT",
@@ -59,36 +32,10 @@ export const MintTokenAction: Action = {
             const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
             const wallet = new ethers.Wallet(privateKey, provider);
 
-            // Compile contract
-            const solc = require('solc');
-            const input = {
-                language: 'Solidity',
-                sources: {
-                    'TwasNFT.sol': {
-                        content: CONTRACT_TEMPLATE
-                    }
-                },
-                settings: {
-                    outputSelection: {
-                        '*': {
-                            '*': ['*']
-                        }
-                    }
-                }
-            };
-
-            elizaLogger.debug("Compiling contract...");
-            const output = JSON.parse(solc.compile(JSON.stringify(input)));
-            const contract = output.contracts['TwasNFT.sol'].TwasNFT;
-
-            if (!contract) {
-                throw new Error("Contract compilation failed");
-            }
-
-            // Estimate gas with buffer
+            // Create contract factory using local artifacts
             const factory = new ethers.ContractFactory(
-                contract.abi,
-                contract.evm.bytecode.object,
+                abi,
+                bytecode,
                 wallet
             );
 
