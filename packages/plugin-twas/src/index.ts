@@ -8,7 +8,7 @@ import { MintTokenAction } from "./actions/mintToken";
 export const twasPlugin: Plugin = {
     name: "twas",
     description: "Twas Protocol Plugin for Eliza",
-    actions: [GenerateListingAction, ProposeListing, MintTokenAction, EchoAction],
+    actions: [MintTokenAction],
     evaluators: [],
     providers: []
 };
