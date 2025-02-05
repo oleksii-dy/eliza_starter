@@ -220,14 +220,93 @@ export class SupplyAction {
 
             if (borrower.data?.type != 'active') {
                 elizaLogger.log('Borrower User is inactive');
-                if (callback) {
+                /*if (callback) {
                     callback({
                         text: `You need provide collateral funds before you can borrow`,
                         content: { error: "No collateral funds provided." }
                     });
 
                     return false;
+                }*/
+                // Calculate estimated interest
+                const borrowAmount = typeof params.amount !== "string" ? new BigNumber(String(params.amount)) : new BigNumber(params.amount);
+                const tonAsset = params.asset === "TON" ? this.TON : params.asset === "USDT" ? this.USDT : params.asset === "USDC" ? this.USDC : this.TON;
+                if (!tonAsset) {
+                    throw new Error("TON asset not found in master data");
                 }
+
+                // get supply message body
+                const supplyMessage = this.evaa.createSupplyMessage({
+                    queryID: 0n,
+                    // we can set always to true, if we don't want to check user code version
+                    includeUserCode: true,
+                    amount: tonAsset.name === "TON" ? toNano(params.amount) : convertToBigInt(Number(params.amount)*1e6),
+                    userAddress: wallet.address,
+                    asset: tonAsset.asset,
+                    payload: Cell.EMPTY,
+                    amountToTransfer: toNano(0),
+                });
+
+                // create signed transfer for out wallet with internal message to EVAA Master Contract
+                const signedSupplyMessage = wallet.createTransfer({
+                    seqno: await wallet.getSeqno(),
+                    secretKey: this.walletProvider.keypair.secretKey,
+                    messages: [
+                        internal({
+                            to: this.evaa.address,
+                            value: toNano(params.amount) + FEES.SUPPLY,
+                            body: supplyMessage,
+                        }),
+                    ],
+                    sendMode: SendMode.PAY_GAS_SEPARATELY,
+                    timeout: Math.floor(Date.now() / 1000) + 60,
+                });
+                // send this message. send() method creates external and send it, so
+                // we need to create external message manually for getting its hash
+                await wallet.send(signedSupplyMessage);
+
+                // create external message manually
+                const externalSupplyMessage = beginCell()
+                    .store(
+                        storeMessage(
+                            external({
+                                to: wallet.address,
+                                body: signedSupplyMessage,
+                            }),
+                        ),
+                    )
+                    .endCell();
+
+                await this.evaa.getSync();
+                /*try {
+                    await this.waitForPrincipalChange(wallet.address, this.TON.asset, async () => {
+                        elizaLogger.log("Waiting for principal change...");
+                        await sleep(10000);
+                        return true;
+                    });
+                } catch (error) {
+                    elizaLogger.error(error);
+                }*/
+                await sleep(30000);
+
+                // Get transaction hash and explorer URL
+                const txHash = externalSupplyMessage.hash().toString('hex');
+                const explorerUrl = `https://testnet.tonscan.org/tx/${txHash}`;
+
+                //let amountToRepay = data.balances.get(tonAsset.asset.assetId)!.amount;
+                //elizaLogger.debug('Amount to repay', amountToRepay.toString());
+
+                return {
+                    txHash: txHash,
+                    explorerUrl: explorerUrl,
+                    asset: tonAsset.name,
+                    amount: borrowAmount.toString(),
+                    amountToRepay: 0,
+                    dailyInterest: 0,
+                    annualInterestRate: 0
+                };
+
+
             } else {
 
                 this.withdrawalLimits = borrower.data.withdrawalLimits;
