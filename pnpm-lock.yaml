@@ -334,6 +334,9 @@ importers:
       '@elizaos/plugin-goat':
         specifier: workspace:*
         version: link:../packages/plugin-goat
+      '@elizaos/plugin-hats-test':
+        specifier: workspace:*
+        version: link:../packages/plugin-hats-test
       '@elizaos/plugin-holdstation':
         specifier: workspace:*
         version: link:../packages/plugin-holdstation
@@ -3063,6 +3066,18 @@ importers:
       tsx:
         specifier: ^4.19.2
         version: 4.19.2
+
+  packages/plugin-hats-test:
+    dependencies:
+      '@elizaos/core':
+        specifier: workspace:*
+        version: link:../core
+      tsup:
+        specifier: 8.3.5
+        version: 8.3.5(@swc/core@1.10.12(@swc/helpers@0.5.15))(jiti@2.4.2)(postcss@8.5.1)(tsx@4.19.2)(typescript@5.7.3)(yaml@2.7.0)
+      whatwg-url:
+        specifier: 7.1.0
+        version: 7.1.0
 
   packages/plugin-holdstation:
     dependencies:
