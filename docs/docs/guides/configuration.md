@@ -146,7 +146,7 @@ Example usage:
 ```typescript
 const result = await generateImage(
     {
-        prompt: 'A cute anime girl with big breasts and straight long black hair wearing orange T-shirt. The T-shirt has "ai16z" texts in the front. The girl is looking at the viewer',
+        prompt: 'Anime-style character wearing an orange t-shirt with "ai16z". Character has long black hair  and is facing forward.',
         width: 1024,
         height: 1024,
         numIterations: 20, // optional
