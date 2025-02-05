@@ -246,19 +246,22 @@ export const setUpAgentOnHyperlane: Action = {
                 modelClass: ModelClass.LARGE,
             });
 
+            const registry = new GithubRegistry();
+
 
             const context : CommandContext = {
                 registry : registry ,
                 multiProvider : new MultiProvider(chainMetadata) ,
                 skipConfirmation : true,
+                signerAddress : runtime.getSetting("HYPERLANE_ADDRESS") ,
+                signer : runtime.getSetting("HYPERLANE_PRIVATE_KEY"),
                 key: runtime.getSetting("HYPERLANE_PRIVATE_KEY"),
-                signerAddress : runtime.getSetting("HYPERLANE_ADDRESS")
-
+                signerAddress : runtime.getSetting("HYPERLANE_ADDRESS"),
+                chainMetadata
             }
 
             const walletProvider = initWalletProvider(runtime)
 
-            const registry = new GithubRegistry();
 
             await createChainConfig({runtime})
             await InitializeDeployment({
@@ -266,6 +269,25 @@ export const setUpAgentOnHyperlane: Action = {
                 configFilePath : runtime.getSetting("CORE_CONFIG_FILE")
             })
 
+
+            await runCoreDeploy({
+                context,
+                config : runtime.getSetting("CORE_CONFIG_FILE"),
+                chain : runtime.getSetting("CHAIN_NAME")
+            })
+
+
+            await createAgentConfigs({
+                context,
+                out : runtime.getSetting("AGENT_CONFIG_FILE")
+            })
+
+
+            if (callback){
+                callback({
+                    text : "Successfully deployed chain on Hyperlane"
+                })
+            }
 
 
 
