@@ -1,4 +1,5 @@
 import { elizaLogger, Evaluator, generateObject, IAgentRuntime, Memory, ModelClass } from "@elizaos/core";
+import { z } from "zod";
 
 export interface UserData {
     name: string | undefined;
@@ -20,7 +21,7 @@ const getCacheKey = (runtime: IAgentRuntime, userId: string): string => {
 
 const getMissingFields = (data: UserData): Array<keyof Omit<UserData, "lastUpdated">> => {
     const fields: Array<keyof Omit<UserData, "lastUpdated">> = ['name', 'location', 'occupation'];
-    return fields.filter(field => !data[field]);
+    return fields.filter(field => !data[field] || data[field] === undefined);
 };
 
 const isDataComplete = (data: UserData): boolean => {
@@ -36,7 +37,8 @@ export const userDataEvaluator: Evaluator = {
     validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
         try {
             const cacheKey = getCacheKey(runtime, message.userId);
-            const cachedData = (await runtime.cacheManager.get<UserData>(cacheKey)) || { ...emptyUserData };
+            const cachedData = await runtime.cacheManager.get<UserData>(cacheKey) || { ...emptyUserData };
+
             return !isDataComplete(cachedData);
         } catch (error) {
             elizaLogger.error("Error in userDataEvaluator:", error);
@@ -47,8 +49,8 @@ export const userDataEvaluator: Evaluator = {
     handler: async (runtime: IAgentRuntime, message: Memory): Promise<void> => {
         try {
             const cacheKey = getCacheKey(runtime, message.userId);
-            const cachedData = (await runtime.cacheManager.get<UserData>(cacheKey)) || { ...emptyUserData };
-
+            const cachedData = await runtime.cacheManager.get<UserData>(cacheKey) || { ...emptyUserData };
+            
             const extractionTemplate = `
             Analyze the following conversation to extract personal information.
             Only extract information when it is clearly and explicitly state by the user about themselves.
@@ -67,17 +69,28 @@ export const userDataEvaluator: Evaluator = {
             Omit fields if information is unclear, hypothetical or about others.
             `;
 
+            const userDataSchema = z.object({
+                name: z.string().optional().nullable(),
+                location: z.string().optional().nullable(),
+                occupation: z.string().optional().nullable()
+            });
+            
             const extractedInfo = await generateObject({
                 runtime,
                 context: extractionTemplate,
                 modelClass: ModelClass.SMALL,
+                mode: "json",
+                schema: userDataSchema,
+                schemaName: "UserData",
+                schemaDescription: "Information about a user including their name, location, and occupation"
             });
 
             let dataUpdated = false;
             
             for (const field of ['name', 'location', 'occupation'] as const) {
-                if (extractedInfo[field] && cachedData[field] === undefined) {
-                    cachedData[field] = extractedInfo[field];
+                const value = extractedInfo.object[field];
+                if (value && (!cachedData[field] || cachedData[field] === undefined)) {
+                    cachedData[field] = value;
                     dataUpdated = true;
                 }
             }
@@ -85,18 +98,17 @@ export const userDataEvaluator: Evaluator = {
             if (dataUpdated) {
                 cachedData.lastUpdated = Date.now();
                 await runtime.cacheManager.set(cacheKey, cachedData, {
-                    expires: Date.now() +7 * 24 * 60 * 60 * 1000, // 1 week cache
+                    expires: Date.now() + (7 * 24 * 60 * 60 * 1000), // 1 week cache
                 });
 
-                if (isDataComplete(cachedData)) {
-                    elizaLogger.success(
-                        "User data collection completed:",
-                        cachedData
-                    );
+                const complete = isDataComplete(cachedData);
+
+                if (complete) {
+                    elizaLogger.success({ userData: cachedData }, "User data collection completed");
                 }
             }   
         } catch (error) {
-            elizaLogger.error("Error in userDataEvaluator handler:", error);
+            elizaLogger.error({ error }, "Error in userDataEvaluator handler");
         }
     },
 

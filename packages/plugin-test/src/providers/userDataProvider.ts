@@ -40,7 +40,9 @@ export const userDataProvider: Provider = {
                 cacheKey
             )) || { ...emptyUserData };
 
-            let response = "User Information Status:\n\n";
+            let response = `
+            ${runtime.character.name} has the goal of finding out your name, place of residence, and occupation.\n\n
+            User Information Status:\n\n`;
 
             const knownFields = Object.entries(cachedData)
                 .filter(
