@@ -148,7 +148,7 @@ export async function getOnChainActions(
                     {
                         user: "{{agentName}}",
                         content: {
-                            text: "You can ask for quotes on swapping WZIL, zETH, FPS, HRSE, SEED, kUSD, stZIL, WZIL, and gZIL.",
+                            text: "You can ask for quotes on swapping zETH, FPS, HRSE, SEED, kUSD, stZIL, WZIL, and gZIL.",
                             action: "GET_SWAP_TOKENS",
                         },
                     },
@@ -163,7 +163,7 @@ export async function getOnChainActions(
                     {
                         user: "{{agentName}}",
                         content: {
-                            text: "Liquidity may be available for exchanging WZIL, zETH, FPS, HRSE, SEED, kUSD, stZIL, WZIL, and gZIL.",
+                            text: "Liquidity may be available for exchanging zETH, FPS, HRSE, SEED, kUSD, stZIL, WZIL, and gZIL.",
                             action: "GET_SWAP_TOKENS",
                         },
                     },
