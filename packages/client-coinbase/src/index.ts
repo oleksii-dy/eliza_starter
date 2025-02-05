@@ -16,8 +16,13 @@ import { postTweet } from "@elizaos/plugin-twitter";
 import express from "express";
 import { blockExplorerBaseAddressUrl, blockExplorerBaseTxUrl, WebhookEvent } from "./types";
 import { Coinbase, Wallet } from "@coinbase/coinbase-sdk";
-import { initializeWallet, type CoinbaseWallet } from "@elizaos/plugin-coinbase";
+import { initializeWallet, readContractWrapper, type CoinbaseWallet } from "@elizaos/plugin-coinbase";
 import { tokenSwap } from "@elizaos/plugin-0x";
+import { createWalletClient, erc20Abi, http, publicActions } from "viem";
+import { getPriceInquiry } from "../../plugin-0x/src/actions/getIndicativePrice";
+import { getQuoteObj } from "../../plugin-0x/src/actions/getQuote";
+import { privateKeyToAccount } from "viem/accounts";
+import { base } from "viem/chains";
 
 export type WalletType = 'short_term_trading' | 'long_term_trading' | 'dry_powder' | 'operational_capital';
 
@@ -237,7 +242,7 @@ Generate only the tweet text, no commentary or markdown.`;
         elizaLogger.info('txHash ', txHash);
 
         // Calculate PNL (currently disabled)
-        const pnl = '';
+        const pnl = await calculateOverallPNL(this.runtime, this.runtime.getSetting('WALLET_PUBLIC_KEY') as `0x${string}`, 1000)
         elizaLogger.info('pnl ', pnl);
 
         // Generate and post tweet
@@ -373,25 +378,42 @@ export const CoinbaseClientInterface: Client = {
     },
 };
 
-// export const calculateOverallPNL = async (runtime: IAgentRuntime, privateKey: string, publicKey: string, chainId: number, initialBalance: number): Promise<string> => {
-//USDC ETH and CBBTC 
-//     const result = await readContractWrapper(runtime, contractAddress, method, args, networkId, abi);
-
-//     // const formattedBalanceInEther = formatEther(balance)
-//     const pnlInEther = Number(formattedBalanceInEther) - initialBalanceInEther
-//     const absoluteValuePNL = Math.abs(pnlInEther)
-//     const priceInquiry = await getPriceInquiry(runtime, 'ETH', absoluteValuePNL, "USDC", "base");
-//     // get latest quote
-//     elizaLogger.info("Getting quote for swap", JSON.stringify(priceInquiry));
-//     const quote = await getQuoteObj(runtime, priceInquiry, publicKey);
-//     const pnlUSD = Number(quote.buyAmount) 
-//     const formattedPNL = new Intl.NumberFormat('en-US', {
-//         style: 'currency',
-//         currency: 'USD',
-//         minimumFractionDigits: 2,
-//         maximumFractionDigits: 2,
-//     }).format(pnlUSD);
-//     return `${pnlInEther < 0 ? '-' : ''}${formattedPNL}`
-//     }
+export const calculateOverallPNL = async (runtime: IAgentRuntime, publicKey: `0x${string}`, initialBalance: number): Promise<string> => {
+    const client = createWalletClient({
+        account: privateKeyToAccount(("0x" + runtime.getSetting("WALLET_PRIVATE_KEY")) as `0x${string}`),
+        chain: base,
+        transport: http(runtime.getSetting("ALCHEMY_HTTP_TRANSPORT_URL")),
+    }).extend(publicActions);
+    const ethBalanceBaseUnits = await client.getBalance({
+        address: publicKey
+    })
+    const ethBalance = Number(ethBalanceBaseUnits / BigInt(1e18))
+    elizaLogger.info("ethBalance ", ethBalance);
+    const priceInquiry = await getPriceInquiry(runtime, 'ETH',ethBalance, "USDC", "base");
+    // get latest quote
+    elizaLogger.info("Getting quote for swap", JSON.stringify(priceInquiry));
+    const quote = await getQuoteObj(runtime, priceInquiry, publicKey);
+    elizaLogger.info("quote ", JSON.stringify(quote));
+    const ethBalanceUSD = Number(quote.buyAmount) 
+    const usdcBalanceBaseUnits = await readContractWrapper(runtime, '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913', "balanceOf", {
+        account: publicKey
+    }, "base-mainnet", erc20Abi);
+    const usdcBalance = Number(usdcBalanceBaseUnits / BigInt(1e6))
+    elizaLogger.info("usdcBalance ", usdcBalance);
+    const pnlUSD = ethBalanceUSD + usdcBalance - initialBalance
+    elizaLogger.info("pnlUSD ", pnlUSD);
+    const absoluteValuePNL = Math.abs(pnlUSD)
+    elizaLogger.info("absoluteValuePNL ", absoluteValuePNL);
+    const formattedPNL = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(absoluteValuePNL);
+    elizaLogger.info("formattedPNL ", formattedPNL);
+    const formattedPNLUSD = `${pnlUSD < 0 ? '-' : ''}${formattedPNL}`
+    elizaLogger.info("formattedPNLUSD ", formattedPNLUSD);
+    return formattedPNLUSD
+    }
 
 export default CoinbaseClientInterface;
