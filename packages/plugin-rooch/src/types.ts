@@ -16,4 +16,11 @@ export interface RoochCoin {
     symbol: string;
     name: string;
     balance: number;
+    coinType?: string;
+    decimals?: number;
+}
+
+export class Assets {
+    utxos: Array<BTCUTXO>
+    coins: Array<RoochCoin>
 }

@@ -18,17 +18,13 @@ import {
 } from '@roochnetwork/rooch-sdk/dist/esm';
 import {
     BTCUTXO,
-    RoochCoin
+    RoochCoin,
+    Assets
 } from "../types";
 import {
     parseBitcoinAddress,
     shortAddress
 } from "../utils";
-
-export class Assets {
-    utxos: Array<BTCUTXO>
-    coins: Array<RoochCoin>
-}
 
 export class AssetsProvider {
     private roochClient: RoochClient
@@ -92,7 +88,9 @@ export class AssetsProvider {
                     allCoins.push({
                         symbol: coin.symbol,
                         name: coin.name,
-                        balance: coin.fixedBalance
+                        coinType: coin.coin_type,
+                        balance: coin.fixedBalance,
+                        decimals: coin.decimals
                     })
                 }
 
