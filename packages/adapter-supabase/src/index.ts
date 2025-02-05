@@ -53,7 +53,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             .select("userState")
             .eq("roomId", roomId)
             .eq("userId", userId)
-            .single();
+            .maybeSingle();
 
         if (error) {
             elizaLogger.error("Error getting participant user state:", error);
