@@ -19,6 +19,7 @@
 		"dist"
 	],
 	"dependencies": {
+		"@dedust/sdk": "^0.8.7",
 		"@elizaos/core": "workspace:*",
 		"@ton/core": "^0.60.0",
 		"@ton/crypto": "3.3.0",
