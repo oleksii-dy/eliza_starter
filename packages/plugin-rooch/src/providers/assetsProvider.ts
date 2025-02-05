@@ -22,6 +22,7 @@ import {
 } from "../types";
 import {
     parseBitcoinAddress,
+    shortAddress
 } from "../utils";
 
 export class Assets {
@@ -55,7 +56,7 @@ export class AssetsProvider {
 
                 for (const utxo of response.data) {
                     allUTXOs.push({
-                        utxo: utxo.id,
+                        id: utxo.id,
                         sats: utxo.value.value
                     })
                 }
@@ -123,7 +124,7 @@ export class AssetsProvider {
 
     formatAssets(runtime, assets: Assets): string {
         let output = `${runtime.character.name}\n`;
-        output += `Assets(${this.address}): \n`;
+        output += `Assets(${this.address.toStr()}): \n`;
 
         output += "Rooch network coin assets:\n"
         for (const coin of assets.coins) {
@@ -134,7 +135,7 @@ export class AssetsProvider {
         output += "BTC assets:"
         for (const utxo of assets.utxos) {
             const satsFormatted = new BigNumber(utxo.sats).toFixed(2);
-            output += `UTXO(${utxo.utxo}) ${satsFormatted} Sats\n`
+            output += `UTXO(${shortAddress(utxo.id, 6, 4)}) ${satsFormatted} Sats\n`
         }
 
         return output;
