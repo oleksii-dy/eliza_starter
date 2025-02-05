@@ -425,14 +425,19 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         tableName: string,
         unique = false
     ): Promise<void> {
-        const createdAt = memory.createdAt ?? Date.now();
+        // const createdAt = memory.createdAt ?? Date.now();
+        // Convert milliseconds timestamp to ISO string
+        const createdAt = memory.createdAt ?
+            new Date(memory.createdAt).toISOString() :
+            new Date().toISOString();
+
         if (unique) {
             const opts = {
                 // TODO: Add ID option, optionally
                 query_table_name: tableName,
-                query_userId: memory.userId,
+                query_userid: memory.userId,
                 query_content: memory.content.text,
-                query_roomId: memory.roomId,
+                query_roomid: memory.roomId,
                 query_embedding: memory.embedding,
                 query_createdAt: createdAt,
                 similarity_threshold: 0.95,
@@ -471,7 +476,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     async removeAllMemories(roomId: UUID, tableName: string): Promise<void> {
         const result = await this.supabase.rpc("remove_memories", {
             query_table_name: tableName,
-            query_roomId: roomId,
+            query_roomid: roomId,
         });
 
         if (result.error) {
