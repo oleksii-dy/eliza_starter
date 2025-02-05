@@ -12,12 +12,12 @@ import {
 } from "@elizaos/core";
 import { ethers } from "ethers";
 // Import the compiled contract artifacts
-import { abi, bytecode } from '../TwasNFT.json';
+import { abi, bytecode } from '../TwasToken.json';
 
 export const MintTokenAction: Action = {
-    name: "MINT_TWAS_NFT",
-    similes: ["CREATE_TWAS_NFT"],
-    description: "Creates a new NFT token with fixed supply of 10M tokens",
+    name: "MINT_TWAS_TOKEN",
+    similes: ["CREATE_TWAS_TOKEN"],
+    description: "Creates a new token with fixed supply of 10M tokens",
     handler: async (runtime: IAgentRuntime, message: Memory, state: State, options: object, callback: HandlerCallback) => {
         try {
             // Get private key and RPC URL from environment
@@ -39,31 +39,32 @@ export const MintTokenAction: Action = {
                 wallet
             );
 
-            const name = message.content.name || "TwasNFT";
+            const name = message.content.name || "TwasToken";
             const symbol = message.content.symbol || "TWAS";
 
-            // Estimate deployment gas
-            const deploymentGas = await factory.signer.estimateGas(
-                factory.getDeployTransaction(name, symbol)
-            );
-            const gasLimit = Math.floor(deploymentGas.toNumber() * 1.2); // 20% buffer
+            // Set a high manual gas limit since estimation fails
+            const gasLimit = 5_000_000; // 5 million gas
+            const gasPrice = await provider.getGasPrice();
 
             elizaLogger.debug("Deploying contract...");
-            const deployTx = await factory.deploy(name, symbol, { gasLimit });
+            const deployTx = await factory.deploy(name, symbol, {
+                gasLimit,
+                gasPrice
+            });
             await deployTx.deployed();
 
             elizaLogger.info("Contract deployed to:", deployTx.address);
 
             callback(
                 {
-                    text: `Successfully deployed NFT contract at ${deployTx.address} with 10,000,000 tokens minted to ${wallet.address}`,
+                    text: `Successfully deployed token contract at ${deployTx.address} with 10,000,000 tokens minted to ${wallet.address}`,
                     contractAddress: deployTx.address,
                     totalSupply: 10000000
                 },
                 []
             );
         } catch (error) {
-            elizaLogger.error("Error deploying NFT contract:", error);
+            elizaLogger.error("Error deploying token contract:", error);
             elizaLogger.error("Error details:", {
                 message: error.message,
                 stack: error.stack,
@@ -73,7 +74,7 @@ export const MintTokenAction: Action = {
             });
             callback(
                 {
-                    text: `Failed to deploy NFT contract: ${error.message}`,
+                    text: `Failed to deploy token contract: ${error.message}`,
                 },
                 []
             );
@@ -84,14 +85,14 @@ export const MintTokenAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Create a new NFT token",
-                    name: "MyTwasNFT",
+                    text: "Create a new token",
+                    name: "MyTwasToken",
                     symbol: "TWAS"
                 },
             },
             {
                 user: "{{user2}}",
-                content: { text: "Successfully deployed NFT contract at 0x... with 10,000,000 tokens minted to 0x..." },
+                content: { text: "Successfully deployed token contract at 0x... with 10,000,000 tokens minted to 0x..." },
             },
         ],
     ],

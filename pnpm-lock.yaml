@@ -2398,7 +2398,7 @@ importers:
     dependencies:
       '@chain-registry/utils':
         specifier: ^1.51.41
-        version: 1.51.63
+        version: 1.51.64
       '@cosmjs/cosmwasm-stargate':
         specifier: ^0.32.4
         version: 0.32.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -2422,7 +2422,7 @@ importers:
         version: 9.1.2
       chain-registry:
         specifier: ^1.69.68
-        version: 1.69.114
+        version: 1.69.115
       interchain:
         specifier: ^1.10.4
         version: 1.10.4(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -2438,7 +2438,7 @@ importers:
         version: 1.9.4
       '@chain-registry/types':
         specifier: ^0.50.44
-        version: 0.50.63
+        version: 0.50.64
 
   packages/plugin-cronos:
     dependencies:
@@ -6415,11 +6415,11 @@ packages:
   '@cfworker/json-schema@4.1.1':
     resolution: {integrity: sha512-gAmrUZSGtKc3AiBL71iNWxDsyUC5uMaKKGdvzYsBoTW/xi42JQHl7eKV2OYzCUqvc+D2RCcf7EXY2iCyFIk6og==}
 
-  '@chain-registry/types@0.50.63':
-    resolution: {integrity: sha512-jdVn0A8VHc/G/bY6mSWRNHfNDKYSF0V9ClBDcdKl0cSpqMe9Zevqm7ZQ+r2wHYk2RY0u/jxBSGc3byr0FPxJ8A==}
+  '@chain-registry/types@0.50.64':
+    resolution: {integrity: sha512-LqO1is7Dsq9b0kRh7h+TsC9DlzV51RyB3ft5Oy5E3w7ZainmAi8hC0/XdRoz656N5QjdNrvtkZcAiqZXFCeyiA==}
 
-  '@chain-registry/utils@1.51.63':
-    resolution: {integrity: sha512-99iE1sPSeOf6WcMvvl4/fd6jL2nwDR3Ymsb7298yJjKRAObmF2y28RMvex8elYvuZna8PDN1/eVWzIUcjbhT9g==}
+  '@chain-registry/utils@1.51.64':
+    resolution: {integrity: sha512-MfPzsLaFIL0qjt3GYMxOGkeSAI7LQQ0qoQzCNypEfuzl6WQT5IkD2mcY+VuW6W0Z8CrwnCTA5juEg0R5yTcNCw==}
 
   '@changesets/apply-release-plan@7.0.8':
     resolution: {integrity: sha512-qjMUj4DYQ1Z6qHawsn7S71SujrExJ+nceyKKyI9iB+M5p9lCL55afuEd6uLBPRpLGWQwkwvWegDHtwHJb1UjpA==}
@@ -15964,8 +15964,8 @@ packages:
     resolution: {integrity: sha512-aGtmf24DW6MLHHG5gCx4zaI3uBq3KRtxeVs0DjFH6Z0rDNbsvTxFASFvdj79pxjxZ8/5u3PIiN3IwEIQkiiuPw==}
     engines: {node: '>=12'}
 
-  chain-registry@1.69.114:
-    resolution: {integrity: sha512-CSM8zYNxKZzzsQkoe/SsiQ2ePs3SyewvosrJzkjnLtiGXaHIFFxXl07DaLlo7R/8EwioB6u7SANyiI8SqUmV/g==}
+  chain-registry@1.69.115:
+    resolution: {integrity: sha512-5ThDOmkZQlzmKTbFTlhrYAGmFd+2mRU3OIsEmG/WwABG08CKYZk0Mbc5BPVLYpfYkgQ2Iv562EJdvLgnZuwu2w==}
 
   chalk@1.1.3:
     resolution: {integrity: sha512-U3lRVLMSlsCfjqYPbLyVv11M9CPW4I728d6TCKMAOJueEeB9/8o+eSsMnxPJD+Q+K909sdESg7C+tIkoH6on1A==}
@@ -17623,8 +17623,8 @@ packages:
     engines: {node: '>=0.10.0'}
     hasBin: true
 
-  electron-to-chromium@1.5.91:
-    resolution: {integrity: sha512-sNSHHyq048PFmZY4S90ax61q+gLCs0X0YmcOII9wG9S2XwbVr+h4VW2wWhnbp/Eys3cCwTxVF292W3qPaxIapQ==}
+  electron-to-chromium@1.5.92:
+    resolution: {integrity: sha512-BeHgmNobs05N1HMmMZ7YIuHfYBGlq/UmvlsTgg+fsbFs9xVMj+xJHFg19GN04+9Q+r8Xnh9LXqaYIyEWElnNgQ==}
 
   elliptic@6.5.4:
     resolution: {integrity: sha512-iLhC6ULemrljPZb+QutR5TQGB+pdW6KGD5RSegS+8sorOZT+rdQFbsQFJgvN3eRqNALqJer4oQ16YvJHlU8hzQ==}
@@ -19711,8 +19711,8 @@ packages:
     resolution: {integrity: sha512-ZMERYes6pDydyuGidse7OsHxtbI7WVeUEozgR/g7rd0xUimYNlvZRE/K2MgZTjWy725IfelLeVcEM97mmtRGXw==}
     engines: {node: '>=8'}
 
-  is-boolean-object@1.2.1:
-    resolution: {integrity: sha512-l9qO6eFlUETHtuihLcYOaLKByJ1f+N4kthcU9YjHy3N+B3hWv0y/2Nd0mu/7lTFnRQHTrSdXF50HQ3bl5fEnng==}
+  is-boolean-object@1.2.2:
+    resolution: {integrity: sha512-wa56o2/ElJMYqjCjGkXri7it5FbebW5usLw/nPmCMs5DeZ7eziSYZhSmPRn0txqeW4LnAmQQU7FgqLpsEFKM4A==}
     engines: {node: '>= 0.4'}
 
   is-buffer@1.1.6:
@@ -30770,11 +30770,11 @@ snapshots:
 
   '@cfworker/json-schema@4.1.1': {}
 
-  '@chain-registry/types@0.50.63': {}
+  '@chain-registry/types@0.50.64': {}
 
-  '@chain-registry/utils@1.51.63':
+  '@chain-registry/utils@1.51.64':
     dependencies:
-      '@chain-registry/types': 0.50.63
+      '@chain-registry/types': 0.50.64
       bignumber.js: 9.1.2
       sha.js: 2.4.11
 
@@ -47258,7 +47258,7 @@ snapshots:
     dependencies:
       '@walletconnect/jsonrpc-utils': 1.0.8
       '@walletconnect/safe-json': 1.0.2
-      cross-fetch: 3.2.0(encoding@0.1.13)
+      cross-fetch: 3.1.8(encoding@0.1.13)
       events: 3.3.0
     transitivePeerDependencies:
       - encoding
@@ -49620,7 +49620,7 @@ snapshots:
   browserslist@4.24.4:
     dependencies:
       caniuse-lite: 1.0.30001697
-      electron-to-chromium: 1.5.91
+      electron-to-chromium: 1.5.92
       node-releases: 2.0.19
       update-browserslist-db: 1.1.2(browserslist@4.24.4)
 
@@ -49918,9 +49918,9 @@ snapshots:
       loupe: 3.1.3
       pathval: 2.0.0
 
-  chain-registry@1.69.114:
+  chain-registry@1.69.115:
     dependencies:
-      '@chain-registry/types': 0.50.63
+      '@chain-registry/types': 0.50.64
 
   chalk@1.1.3:
     dependencies:
@@ -51862,7 +51862,7 @@ snapshots:
     dependencies:
       jake: 10.9.2
 
-  electron-to-chromium@1.5.91: {}
+  electron-to-chromium@1.5.92: {}
 
   elliptic@6.5.4:
     dependencies:
@@ -53102,7 +53102,7 @@ snapshots:
 
   extract-zip@2.0.1:
     dependencies:
-      debug: 4.4.0(supports-color@8.1.1)
+      debug: 4.3.4
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
@@ -55091,7 +55091,7 @@ snapshots:
     dependencies:
       binary-extensions: 2.3.0
 
-  is-boolean-object@1.2.1:
+  is-boolean-object@1.2.2:
     dependencies:
       call-bound: 1.0.3
       has-tostringtag: 1.0.2
@@ -67176,7 +67176,7 @@ snapshots:
   which-boxed-primitive@1.1.1:
     dependencies:
       is-bigint: 1.1.0
-      is-boolean-object: 1.2.1
+      is-boolean-object: 1.2.2
       is-number-object: 1.1.1
       is-string: 1.1.1
       is-symbol: 1.1.1
