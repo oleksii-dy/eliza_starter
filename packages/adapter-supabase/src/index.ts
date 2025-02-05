@@ -220,14 +220,15 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         match_count: number;
         unique: boolean;
     }): Promise<Memory[]> {
-        const result = await this.supabase.rpc("search_memories", {
+        const opts = {
             query_table_name: params.tableName,
-            query_roomId: params.roomId,
+            query_roomid: params.roomId,
             query_embedding: params.embedding,
             query_match_threshold: params.match_threshold,
             query_match_count: params.match_count,
             query_unique: params.unique,
-        });
+        };
+        const result = await this.supabase.rpc("search_memories", opts);
         if (result.error) {
             throw new Error(JSON.stringify(result.error));
         }
