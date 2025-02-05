@@ -1,6 +1,6 @@
 {
     "name": "dev",
-    "clients": [],
+    "clients": ["discord"],
     "modelProvider": "anthropic",
     "settings": {
         "voice": {
@@ -22,6 +22,10 @@
         "EVM Plugin Knowledge",
         "Safe SDK Documentation",
         {
+            "path": "eliza-paper.txt",
+            "shared": false
+        },
+        {
             "path": "ai_agent_plugin_tutorial.md",
             "shared": false
         },
@@ -39,6 +43,10 @@
             "shared": false
         },
 
+        {
+            "path": "plugin-zerion.md",
+            "shared": false
+        },
         {
             "path": "safe-agent-home.md",
             "shared": false
