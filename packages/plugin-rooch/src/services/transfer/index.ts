@@ -59,7 +59,7 @@ export class TransferService implements IRoochTransferService {
           : undefined
       };
     } catch (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: `Transfer failed: ${error.message}` };
     }
   }
 

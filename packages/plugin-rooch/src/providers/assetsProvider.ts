@@ -89,7 +89,7 @@ export class AssetsProvider {
                         symbol: coin.symbol,
                         name: coin.name,
                         coinType: coin.coin_type,
-                        balance: coin.fixedBalance,
+                        balance: coin.balance,
                         decimals: coin.decimals
                     })
                 }
@@ -126,7 +126,7 @@ export class AssetsProvider {
 
         output += "Rooch network coin assets:\n"
         for (const coin of assets.coins) {
-            const coinBalanceFormatted = new BigNumber(coin.balance).toFixed(2);
+            const coinBalanceFormatted = new BigNumber(coin.balance).dividedBy(new BigNumber(10).pow(coin.decimals)).toFixed(2);
             output += `${coin.symbol}(${coin.name}) Balance:${coinBalanceFormatted}\n`
         }
 

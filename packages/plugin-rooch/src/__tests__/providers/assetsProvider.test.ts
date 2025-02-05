@@ -84,15 +84,16 @@ describe('AssetsProvider', () => {
     describe('fetchRoochCoins', () => {
         it('should fetch all Rooch coins without pagination', async () => {
             const mockCoins: RoochCoin[] = [
-                { symbol: 'ROOCH', name: 'Rooch Coin', balance: 1000 },
-                { symbol: 'BTC', name: 'Bitcoin', balance: 2000 },
+                { symbol: 'ROOCH', name: 'Rooch Coin', balance: '100000000000', decimals: 8 },
+                { symbol: 'BTC', name: 'Bitcoin', balance: '200000000000', decimals: 8 },
             ];
 
             mockRoochClient.getBalances.mockResolvedValueOnce({
                 data: mockCoins.map(coin => ({
                     symbol: coin.symbol,
                     name: coin.name,
-                    fixedBalance: coin.balance,
+                    balance: coin.balance,
+                    decimals: coin.decimals
                 })),
                 has_next_page: false,
                 next_cursor: null,
@@ -120,7 +121,8 @@ describe('AssetsProvider', () => {
             const mockCoins = [{
                 symbol: 'ETH',
                 name: 'Ethereum',
-                fixedBalance: 3.14159,
+                balance: '3141590000',
+                decimals: 9,
             }];
 
             mockRoochClient.getBalances.mockResolvedValueOnce({
@@ -130,8 +132,8 @@ describe('AssetsProvider', () => {
             });
 
             const result = await assetsProvider.fetchRoochCoins();
-            expect(result[0].balance).toBeTypeOf('number');
-            expect(result[0].balance).toEqual(3.14159);
+            expect(result[0].balance).toBeTypeOf('string');
+            expect(result[0].balance).toEqual('3141590000');
         });
     });
 
@@ -141,7 +143,7 @@ describe('AssetsProvider', () => {
                 { id: 'utxo1', sats: '1000' },
             ];
             const mockCoins: RoochCoin[] = [
-                { symbol: 'ROOCH', name: 'Rooch Coin', balance: 1000 },
+                { symbol: 'ROOCH', name: 'Rooch Coin', balance: '100000000000', decimals: 8 },
             ];
 
             vi.spyOn(assetsProvider, 'fetchBTCUTXOs').mockResolvedValueOnce(mockUTXOs);
@@ -165,7 +167,7 @@ describe('AssetsProvider', () => {
     describe('formatAssets and getFormattedAssets', () => {
         const mockAssets = {
             utxos: [{ id: 'utxo1', sats: '1000' }] as BTCUTXO[],
-            coins: [{ symbol: 'ROOCH', name: 'Rooch Coin', balance: 1000 }] as RoochCoin[],
+            coins: [{ symbol: 'ROOCH', name: 'Rooch Coin', balance: '100000000000', decimals: 8 }] as RoochCoin[],
         };
 
         it('should format assets with correct number formatting', () => {
@@ -190,7 +192,7 @@ describe('AssetsProvider', () => {
         it('should handle missing optional fields in formatting', () => {
             const assetsWithMissingFields = {
                 utxos: [] as BTCUTXO[],
-                coins: [{ symbol: 'TEST', name: '', balance: 0 }] as RoochCoin[],
+                coins: [{ symbol: 'TEST', name: '', balance: '0', decimals: 6 }] as RoochCoin[],
             };
 
             const result = assetsProvider.formatAssets(mockRuntime, assetsWithMissingFields);

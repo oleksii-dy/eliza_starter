@@ -6,25 +6,7 @@ import {
   RoochTransport,
   RoochTransportRequestOptions
 } from '@roochnetwork/rooch-sdk/dist/esm';
-import { isValidAddress, Secp256k1Keypair } from '@roochnetwork/rooch-sdk/dist/esm';
-import { parseKeypair } from '../../utils';
 import { Assets } from '../../types';
-
-// Mock external dependencies
-vi.mock('@roochnetwork/rooch-sdk/dist/esm', async () => {
-  const actual = await vi.importActual('@roochnetwork/rooch-sdk/dist/esm');
-  return {
-    ...actual,
-    isValidAddress: vi.fn(),
-    Secp256k1Keypair: {
-      fromSecretKey: vi.fn()
-    }
-  };
-});
-
-vi.mock('../../utils', () => ({
-  parseKeypair: vi.fn()
-}));
 
 describe('TransferService', () => {
   let service: TransferService;
@@ -43,19 +25,37 @@ describe('TransferService', () => {
     };
 
     mockRuntime = {
-      getSetting: vi.fn()
+        getSetting: vi.fn().mockImplementation((key: string) => {
+            if (key === "BITCOIN_PRIVATE_KEY") {
+                return "KzJhi6kxdDjxeUecy16s4nppDUpzLDGdtWqZCyDKezFqJ9YJgphv";
+            }
+            return null;
+        })
     } as any;
 
     // Create mock transport with type-safe request method
     mockTransport = {
       request: vi.fn().mockImplementation(async (input: RoochTransportRequestOptions) => {
-        if (input.method === 'rooch_transfer') {
+        if (input.method === 'rooch_getChainID'){
+            return 2;
+        } else if (input.method === 'rooch_executeViewFunction'){
+            if (input.params.length > 0 && (input.params[0] as any).function_id == "0x0000000000000000000000000000000000000000000000000000000000000002::account::sequence_number") {
+                return {
+                    return_values: [{
+                        decoded_value: 1
+                    }]
+                }
+            }
+
+            throw new Error(`Unexpected method: ${input.method}, params: ${JSON.stringify(input.params)}`);
+        } else if (input.method === 'rooch_executeRawTransaction') {
           return {
             execution_info: { status: { type: 'executed' } },
             sequence_info: { tx_order: '1' }
           };
         }
-        throw new Error(`Unexpected method: ${input.method}`);
+
+        throw new Error(`Unexpected method: ${input.method}, params: ${JSON.stringify(input.params)}`);
       })
     };
 
@@ -66,7 +66,7 @@ describe('TransferService', () => {
     );
   });
 
-  /*
+
   it('should successfully transfer coins', async () => {
     // Arrange
     const params = {
@@ -75,35 +75,24 @@ describe('TransferService', () => {
       symbol: 'RGAS'
     };
 
-    (isValidAddress as any).mockReturnValue(true);
     mockAssetsProvider.get.mockResolvedValue({
       coins: [{
         symbol: 'RGAS',
-        name: 'RGAS',
-        balance: 1000,
+        name: 'Rooch Gas Coin',
+        balance: '100000000000',
         decimals: 8,
-        coinType: 'test'
+        coinType: '0x3::gas::RGas'
       }],
       utxos: []
     });
-
-    const mockKeypair = { publicKey: new Uint8Array(), secretKey: new Uint8Array() };
-    (parseKeypair as any).mockReturnValue(mockKeypair);
-    (Secp256k1Keypair.fromSecretKey as any).mockReturnValue(mockKeypair);
 
     // Act
     const result = await service.transfer(params);
 
     // Assert
+    expect(result.error).toBeUndefined();
     expect(result.success).toBe(true);
     expect(result.txOrder).toBe('1');
-    expect(mockTransport.request).toHaveBeenCalledWith({
-      method: 'rooch_transfer',
-      params: [expect.objectContaining({
-        recipient: '0x123',
-        coinType: { target: 'test' }
-      })]
-    });
   });
 
 
@@ -115,26 +104,40 @@ describe('TransferService', () => {
       symbol: 'RGAS'
     };
 
-    (isValidAddress as any).mockReturnValue(true);
     mockAssetsProvider.get.mockResolvedValue({
       coins: [{
         symbol: 'RGAS',
         name: 'RGAS',
-        balance: 1000,
+        balance: '100000000000',
         decimals: 8,
-        coinType: 'test'
+        coinType: '0x3::gas::RGas'
       }],
       utxos: [],
     });
 
-    const mockKeypair = { publicKey: new Uint8Array(), secretKey: new Uint8Array() };
-    (parseKeypair as any).mockReturnValue(mockKeypair);
-    (Secp256k1Keypair.fromSecretKey as any).mockReturnValue(mockKeypair);
-
     // Mock transport to return failed status
-    mockTransport.request.mockResolvedValue({
-      execution_info: { status: { type: 'failed' } }
-    });
+    mockTransport.request = vi.fn().mockImplementation(async (input: RoochTransportRequestOptions) => {
+        if (input.method === 'rooch_getChainID'){
+            return 2;
+        } else if (input.method === 'rooch_executeViewFunction'){
+            if (input.params.length > 0 && (input.params[0] as any).function_id == "0x0000000000000000000000000000000000000000000000000000000000000002::account::sequence_number") {
+                return {
+                    return_values: [{
+                        decoded_value: 1
+                    }]
+                }
+            }
+
+            throw new Error(`Unexpected method: ${input.method}, params: ${JSON.stringify(input.params)}`);
+        } else if (input.method === 'rooch_executeRawTransaction') {
+          return {
+            sequence_info: { tx_order: 1 },
+            execution_info: { status: { type: 'failed' } }
+          };
+        }
+
+        throw new Error(`Unexpected method: ${input.method}, params: ${JSON.stringify(input.params)}`);
+    })
 
     // Act
     const result = await service.transfer(params);
@@ -142,14 +145,8 @@ describe('TransferService', () => {
     // Assert
     expect(result.success).toBe(false);
     expect(result.error).toBe('Transfer failed: failed');
-    expect(mockTransport.request).toHaveBeenCalledWith({
-      method: 'rooch_transfer',
-      params: [expect.objectContaining({
-        recipient: '0x123',
-        coinType: { target: 'test' }
-      })]
-    });
   });
+
 
   it('should handle transport request error', async () => {
     // Arrange
@@ -159,31 +156,28 @@ describe('TransferService', () => {
       symbol: 'RGAS'
     };
 
-    (isValidAddress as any).mockReturnValue(true);
     mockAssetsProvider.get.mockResolvedValue({
-      coins: [{
-        symbol: 'RGAS',
-        balance: '1000',
-        decimals: 8,
-        coinType: 'test'
-      }]
+        coins: [{
+          symbol: 'RGAS',
+          name: 'RGAS',
+          balance: '100000000000',
+          decimals: 8,
+          coinType: '0x3::gas::RGas'
+        }],
+        utxos: [],
     });
 
-    const mockKeypair = { publicKey: new Uint8Array(), secretKey: new Uint8Array() };
-    (parseKeypair as any).mockReturnValue(mockKeypair);
-    (Secp256k1Keypair.fromSecretKey as any).mockReturnValue(mockKeypair);
-
-    // Mock transport to throw error
-    mockTransport.request.mockRejectedValueOnce(new Error('Network error'));
+     // Mock transport to throw error
+    mockTransport.request = vi.fn().mockImplementation(async (input: RoochTransportRequestOptions) => {
+        throw new Error('Network error');
+    })
 
     // Act
     const result = await service.transfer(params);
 
     // Assert
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Network error');
+    expect(result.error).toBe('Transfer failed: Network error');
   });
-  */
 
-  // ... other test cases remain the same ...
 });
