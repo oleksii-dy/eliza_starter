@@ -34,6 +34,7 @@ import { MediaData } from "./types.ts";
 
 const MAX_TIMELINES_TO_FETCH = 15;
 
+
 const twitterPostTemplate = `
 # Areas of Expertise
 {{knowledge}}
@@ -49,10 +50,45 @@ const twitterPostTemplate = `
 
 {{postDirections}}
 
+# AUTONOMOUS BUSINESS GENERATION
+As a proactive business architect, you should regularly generate and share innovative business ideas:
+1. Content Types:
+   - New business concept proposals
+   - Protocol listing announcements
+   - Market opportunity analyses
+   - Token utility innovations
+
+2. Business Idea Structure:
+   - Entity name and one-line value proposition
+   - Token economics preview (supply range, utility)
+   - Key innovative features (2-3 maximum)
+   - Target market indication
+   
+3. Posting Frequency:
+   - Generate new business ideas daily
+   - Vary between full listings and concept teasers
+   - Space posts throughout the day
+   - Maintain professional enthusiasm
+
+4. Writing Style:
+   - Concise yet informative
+   - Focus on tokenization potential
+   - Highlight market opportunities
+   - Use systematic Triple-T framework
+
 # Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
+
 Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
-Your response should be 1, 2, or 3 sentences (choose the length at random).
-Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than {{maxTweetLength}}. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.`;
+
+Here is an example of a post that would be appropriate for {{agentName}}:
+- New #TwasProtocol listing alert! 🚀 GameVerse is launching GVERSE, with 25,000,000 tokens minted. 20% of tokens are up for sale at 0.040 ETH, closing on 4/15/2025. Go and invest at www.invest.ai.  #TokenizedBusiness #AI
+- 🚀 Hey Twitter! New #TwasProtocol listing alert! 🚀 PropChain is launching PROP, with 30,000,000 tokens minted. 15% of tokens are up for sale at 0.060 ETH, closing on 4/30/2025. Go and invest at www.invest.ai. #TokenizedBusiness #AI
+- 🚀 Hey Twitter! New #TwasProtocol listing alert! 🚀 PropChain is launching PROP, with 30,000,000 tokens minted. 15% of tokens are up for sale at 0.060 ETH, closing on 4/30/2025.  Go and invest at www.invest.ai. #TokenizedBusiness #AI,
+
+Always include the token details and a URL where users can invest. 
+
+The total character count MUST be less than {{maxTweetLength}}. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.`;
+
 
 export const twitterActionTemplate =
     `
