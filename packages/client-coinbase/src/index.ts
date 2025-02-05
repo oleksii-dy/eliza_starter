@@ -242,7 +242,6 @@ Generate only the tweet text, no commentary or markdown.`;
         }
         elizaLogger.info('txHash ', txHash);
 
-        // Calculate PNL (currently disabled)
         const pnl = await calculateOverallPNL(this.runtime, this.runtime.getSetting('WALLET_PUBLIC_KEY') as `0x${string}`, 1000)
         elizaLogger.info('pnl ', pnl);
 
