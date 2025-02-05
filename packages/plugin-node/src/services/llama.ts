@@ -287,7 +287,7 @@ export class LlamaService extends Service {
 
                 const downloadModel = (url: string) => {
                     https
-                        .get(url, (response) => {
+                        .get(url, { timeout: 3600 * 1000 }, (response) => {
                             if (
                                 response.statusCode >= 300 &&
                                 response.statusCode < 400 &&
