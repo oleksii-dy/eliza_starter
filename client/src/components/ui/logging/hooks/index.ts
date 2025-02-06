@@ -28,14 +28,14 @@ export const use = () => {
 
     // Fetch traces for a selected RUN ID with filters
     const fetchTraceData = async (
-        runId: string | null,
+        Id: string | null,
         filters: any,
         page = 1
     ) => {
-        if (!runId) return;
+        if (!Id) return;
 
         setLoading(true);
-        setSelectedRun(runId);
+        setSelectedRun(Id);
         try {
             const queryParams = new URLSearchParams({
                 page: page.toString(),
@@ -45,7 +45,7 @@ export const use = () => {
             });
 
             const response = await fetch(
-                `http://localhost:4000/api/traces/by-run/${runId}?${queryParams.toString()}`
+                `http://localhost:4000/api/traces/by-run/${Id}?${queryParams.toString()}`
             );
             if (!response.ok)
                 throw new Error(`HTTP error! Status: ${response.status}`);

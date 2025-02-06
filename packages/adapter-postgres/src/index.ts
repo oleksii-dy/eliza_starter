@@ -1811,13 +1811,31 @@ export class PostgresDatabaseAdapter
         );
     }
 
-    async createTrace(run: string, time: Date, name: string, data: any): Promise<void> {
+    async createTrace(
+        run: string,
+        time: Date,
+        name: string,
+        data: any
+    ): Promise<void> {
         return this.withDatabase(async () => {
             const client = await this.pool.connect();
+
             try {
+                const data1 =
+                    typeof data === "string" ? JSON.parse(data) : data;
+
+                // Extract optional roomId and agentId safely
+                const roomId = data1.roomId ?? null;
+                const agentId = data1.result?.[0]?.agentId ?? null;
+
+                console.log("roomId:", roomId, "agentId:", agentId);
+
                 await client.query("BEGIN");
-                await client.query(`INSERT INTO traces ("run", "time", "name", "data") VALUES ($1, $2, $3, $4)`,
-                    [run, time.toISOString(), name, data]);
+                await client.query(
+                    `INSERT INTO traces ("run", "time", "name", "data", "roomId", "agentId")
+                     VALUES ($1, $2, $3, $4, $5, $6)`,
+                    [run, time.toISOString(), name, data, roomId, agentId]
+                );
                 await client.query("COMMIT");
             } catch (error) {
                 await client.query("ROLLBACK");

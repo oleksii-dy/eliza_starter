@@ -134,7 +134,7 @@ const logFetch = async (url: string, options: any) => {
     elizaLogger.debug(`Fetching ${url}`);
     // Disabled to avoid disclosure of sensitive information such as API keys
     // elizaLogger.debug(JSON.stringify(options, null, 2));
-    Instrumentation.trace("fetch", {url, options});
+    Instrumentation.trace("fetch", { url, options });
     return fetch(url, options);
 };
 
@@ -1049,7 +1049,7 @@ async function startAgent(
     directClient: DirectClient
 ): Promise<AgentRuntime> {
     let db: IDatabaseAdapter & IDatabaseCacheAdapter;
-    Instrumentation.trace("startAgent", {character});
+    Instrumentation.trace("startAgent", { character });
     try {
         character.id ??= stringToUuid(character.name);
         character.username ??= character.name;
@@ -1171,11 +1171,16 @@ const startAgents = async () => {
     );
 };
 
-const db = new PostgresDatabaseAdapter({connectionString: process.env.POSTGRES_URL, parseInputs: true});
+const db = new PostgresDatabaseAdapter({
+    connectionString: process.env.POSTGRES_URL,
+    parseInputs: true,
+});
 await db.init();
-Instrumentation.init((run, time, name, data) => {db.createTrace(run, time, name, data)});
+Instrumentation.init((run, time, name, data) => {
+    db.createTrace(run, time, name, data);
+});
 Instrumentation.run(() => {
-    Instrumentation.trace("TEST", {a: 123});
+    Instrumentation.trace("TEST", { a: 123 });
     startAgents().catch((error) => {
         elizaLogger.error("Unhandled error in startAgents:", error);
         process.exit(1);
