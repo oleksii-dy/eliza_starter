@@ -97,7 +97,7 @@ export const GetMarketsSchema = z.object({
 
 export type GetMarketsContent = z.infer<typeof GetMarketsSchema> & Content;
 
-export const isGetMarketsContent = (obj: any): obj is GetMarketsContent => {
+export const isGetMarketsContent = (obj: unknown): obj is GetMarketsContent => {
     return GetMarketsSchema.safeParse(obj).success;
 };
 
@@ -111,7 +111,8 @@ export default {
         "BEST_PERFORMING_COINS",
         "TOP_MARKET_CAPS"
     ],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    // eslint-disable-next-line
+    validate: async (runtime: IAgentRuntime, _message: Memory) => {
         await validateCoingeckoConfig(runtime);
         return true;
     },
@@ -126,11 +127,14 @@ export default {
     ): Promise<boolean> => {
         elizaLogger.log("Starting CoinGecko GET_MARKETS handler...");
 
-        if (!state) {
-            state = (await runtime.composeState(message)) as State;
+        // Initialize or update state
+        let currentState = state;
+        if (!currentState) {
+            currentState = (await runtime.composeState(message)) as State;
         } else {
-            state = await runtime.updateRecentMessageState(state);
+            currentState = await runtime.updateRecentMessageState(currentState);
         }
+
 
         try {
             const config = await validateCoingeckoConfig(runtime);
@@ -141,7 +145,7 @@ export default {
 
             // Compose markets context with categories
             const marketsContext = composeContext({
-                state,
+                state: currentState,
                 template: getMarketsTemplate.replace('{{categories}}',
                     categories.map(c => `- ${c.name} (ID: ${c.category_id})`).join('\n')
                 ),
@@ -256,7 +260,7 @@ export default {
         } catch (error) {
             elizaLogger.error("Error in GET_MARKETS handler:", error);
 
-            let errorMessage;
+            let errorMessage: string;
             if (error.response?.status === 429) {
                 errorMessage = "Rate limit exceeded. Please try again later.";
             } else if (error.response?.status === 403) {

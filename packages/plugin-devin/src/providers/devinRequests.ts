@@ -1,4 +1,4 @@
-import { IAgentRuntime, elizaLogger } from "@elizaos/core";
+import { type IAgentRuntime, elizaLogger } from "@elizaos/core";
 import fetch from "node-fetch";
 
 const API_BASE = "https://api.devin.ai/v1";
@@ -21,11 +21,12 @@ export interface DevinSession {
 /**
  * Interface representing an error response from the Devin API
  */
-interface DevinError {
-    error: string;
-    message: string;
-    status: number;
-}
+
+// interface DevinError {
+//     error: string;
+//     message: string;
+//     status: number;
+// }
 
 /**
  * Rate limiting function to prevent API abuse
