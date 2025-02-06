@@ -427,12 +427,14 @@ export class AgentRuntime implements IAgentRuntime {
             }
         }
 
+        /*
         for (const plugin of this.plugins) {
             if (plugin.services)
                 await Promise.all(
                     plugin.services?.map((service) => service.initialize(this))
                 );
         }
+        */
 
         if (
             this.character &&
