@@ -109,6 +109,7 @@ import { sgxPlugin } from "@elizaos/plugin-sgx";
 import { solanaPlugin } from "@elizaos/plugin-solana";
 import { solanaPluginV2 } from "@elizaos/plugin-solana-v2";
 import { solanaAgentkitPlugin } from "@elizaos/plugin-solana-agent-kit";
+import { somPlugin } from "@elizaos/plugin-som";
 import { squidRouterPlugin } from "@elizaos/plugin-squid-router";
 import { stargazePlugin } from "@elizaos/plugin-stargaze";
 import { storyPlugin } from "@elizaos/plugin-story";
@@ -1058,6 +1059,7 @@ export async function createAgent(
             getSecret(character, "SOLANA_PRIVATE_KEY")
                 ? solanaAgentkitPlugin
                 : null,
+            getSecret(character, "SOM_API_KEY") ? somPlugin : null,
             getSecret(character, "AUTONOME_JWT_TOKEN") ? autonomePlugin : null,
             (getSecret(character, "NEAR_ADDRESS") ||
                 getSecret(character, "NEAR_WALLET_PUBLIC_KEY")) &&
@@ -1071,6 +1073,8 @@ export async function createAgent(
                 : null,
             (getSecret(character, "EVM_PRIVATE_KEY") ||
                 getSecret(character, "SOLANA_PRIVATE_KEY"))
+            getSecret(character, "EVM_PRIVATE_KEY") ||
+            getSecret(character, "SOLANA_PRIVATE_KEY")
                 ? edwinPlugin
                 : null,
             (getSecret(character, "EVM_PUBLIC_KEY") ||

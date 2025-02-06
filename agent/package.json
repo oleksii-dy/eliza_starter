@@ -82,6 +82,7 @@
         "@elizaos/plugin-solana-v2": "workspace:*",
         "@elizaos/plugin-injective": "workspace:*",
         "@elizaos/plugin-solana-agent-kit": "workspace:*",
+        "@elizaos/plugin-som": "workspace:*",
         "@elizaos/plugin-squid-router": "workspace:*",
         "@elizaos/plugin-autonome": "workspace:*",
         "@elizaos/plugin-starknet": "workspace:*",
