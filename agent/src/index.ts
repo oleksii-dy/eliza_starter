@@ -1,4 +1,3 @@
-import { hideBin } from 'yargs/helpers';
 import { PGLiteDatabaseAdapter } from "@elizaos/adapter-pglite";
 import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
 import { QdrantDatabaseAdapter } from "@elizaos/adapter-qdrant";
@@ -43,7 +42,6 @@ import {
     type ICacheManager,
     type IDatabaseAdapter,
     type IDatabaseCacheAdapter,
-    type ICharacterConfigLoader,
     ModelProviderName,
     parseBooleanFromText,
     settings,
@@ -165,10 +163,6 @@ import arbitragePlugin from "@elizaos/plugin-arbitrage";
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
-const charactorConfigLoaders = new Array<ICharacterConfigLoader>(
-    roochCharacterConfigLoader,
-);
-
 export const wait = (minTime = 1000, maxTime = 3000) => {
     const waitTime =
         Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
@@ -187,7 +181,7 @@ export function parseArguments(): {
     characters?: string;
 } {
     try {
-        return yargs(hideBin(process.argv))
+        return yargs(process.argv.slice(3))
             .option("character", {
                 type: "string",
                 description: "Path to the character JSON file",
