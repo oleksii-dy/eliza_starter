@@ -160,6 +160,7 @@ import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
 
 import { trikonPlugin } from "@elizaos/plugin-trikon";
 import arbitragePlugin from "@elizaos/plugin-arbitrage";
+import { bonsaiPlugin } from "@elizaos/plugin-bonsai";
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
@@ -1304,6 +1305,11 @@ export async function createAgent(
             getSecret(character, "DESK_EXCHANGE_PRIVATE_KEY") ||
             getSecret(character, "DESK_EXCHANGE_NETWORK")
                 ? deskExchangePlugin
+                : null,
+            (getSecret(character, "EVM_PRIVATE_KEY") &&
+                getSecret(character, "BASE_RPC_URL") &&
+                getSecret(character, "SUBGRAPH_API_KEY"))
+                ? bonsaiPlugin
                 : null,
         ]
             .flat()
