@@ -6,6 +6,7 @@ import { TwitterPostClient } from "./post.ts";
 import { TwitterSearchClient } from "./search.ts";
 import { TwitterSpaceClient } from "./spaces.ts";
 import { TwitterWatchClient } from "./watcher.ts";
+import { FungBnbClient, KEY_BNB_CACHE_STR } from "./fungbnb.ts";
 import { EventEmitter } from 'events';
 
 /**
@@ -23,6 +24,7 @@ class TwitterManager {
     interaction: TwitterInteractionClient;
     space?: TwitterSpaceClient;
     watcher: TwitterWatchClient;
+    bnb: FungBnbClient;
 
     constructor(runtime: IAgentRuntime, twitterConfig: TwitterConfig) {
         // Pass twitterConfig to the base client
@@ -43,6 +45,8 @@ class TwitterManager {
 
         // Mentions and interactions
         this.interaction = new TwitterInteractionClient(this.client, runtime);
+
+        this.bnb = new FungBnbClient(this.client, runtime);
 
         // Optional Spaces logic (enabled if TWITTER_SPACES_ENABLE is true)
         if (twitterConfig.TWITTER_SPACES_ENABLE) {
@@ -88,6 +92,10 @@ export const TwitterClientInterface: Client = {
         twEventCenter.on('MSG_RE_TWITTER', (text, userId) => {
             console.log('MSG_RE_TWITTER userId: ' + userId + " text: " + text);
             manager.watcher.sendReTweet(text, userId);
+        });
+        twEventCenter.on("MSG_BNB_QUERY", (coinsymbol, userId) => {
+            // console.log('MSG_RE_TWITTER userId: ' + userId + " text: " + text);
+            manager.bnb.bnbQuery(coinsymbol, userId);
         });
 
         return manager;
