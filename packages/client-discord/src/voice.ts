@@ -264,8 +264,15 @@ export class VoiceManager extends EventEmitter {
                         elizaLogger.log(
                             "Disconnection confirmed - cleaning up..." + e
                         );
-                        connection.destroy();
-                        this.connections.delete(channel.id);
+                        try {
+                          connection.destroy();
+                          this.connections.delete(channel.id);
+                        } catch (e2) {
+                            // Seems to be a real disconnect, destroy and cleanup
+                            elizaLogger.log(
+                                "Clean up failed - already closed...", e2
+                            );
+                        }
                     }
                 } else if (
                     newState.status === VoiceConnectionStatus.Destroyed
@@ -326,9 +333,13 @@ export class VoiceManager extends EventEmitter {
             });
         } catch (error) {
             elizaLogger.log("Failed to establish voice connection:", error);
-            connection.destroy();
-            this.connections.delete(channel.id);
-            throw error;
+            try {
+              connection.destroy();
+              this.connections.delete(channel.id);
+            } catch (e) {
+              elizaLogger.log("error cleaning up connect:", e);
+            }
+            //throw error;
         }
     }
 
@@ -439,8 +450,12 @@ export class VoiceManager extends EventEmitter {
     leaveChannel(channel: BaseGuildVoiceChannel) {
         const connection = this.connections.get(channel.id);
         if (connection) {
-            connection.destroy();
-            this.connections.delete(channel.id);
+            try {
+              connection.destroy();
+              this.connections.delete(channel.id);
+            } catch(e) {
+              elizaLogger.log("Failed to destroy voice connection:", error);
+            }
         }
 
         // Stop monitoring all members in this channel
