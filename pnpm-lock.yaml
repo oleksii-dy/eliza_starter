@@ -511,6 +511,9 @@ importers:
       '@elizaos/plugin-udio':
         specifier: workspace:*
         version: link:../packages/plugin-udio
+      '@elizaos/plugin-vana':
+        specifier: workspace:*
+        version: link:../packages/plugin-vana
       '@elizaos/plugin-video-generation':
         specifier: workspace:*
         version: link:../packages/plugin-video-generation

@@ -3,17 +3,17 @@ export * from "./providers/wallet";
 export * from "./types";
 
 import type { Plugin } from "@elizaos/core";
-// import { transferAction } from "./actions/transfer";
-// import { vanaWalletProvider } from "./providers/wallet";
+import { transferAction } from "./actions/transfer";
+import { vanaWalletProvider } from "./providers/wallet";
 
 export const vanaPlugin: Plugin = {
     name: "vana",
     description:
         "It's Vana!",
-    providers: [],//vanaWalletProvider
+    providers: [vanaWalletProvider],//vanaWalletProvider
     evaluators: [],
     services: [],
-    actions: [],//transferAction
+    actions: [transferAction],//transferAction
 };
 
 export default vanaPlugin;
