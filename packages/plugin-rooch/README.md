@@ -20,7 +20,7 @@ npm install @elizaos/plugin-rooch
 The plugin requires the following environment variables:
 
 ```env
-ROOCH_PRIVATE_KEY=bitcoin_wip_private_key
+BITCOIN_PRIVATE_KEY=bitcoin_wip_private_key
 ROOCH_NETWORK=mainnet|testnet|devnet|localnet
 ```
 
