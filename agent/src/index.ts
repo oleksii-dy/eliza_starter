@@ -157,6 +157,7 @@ import { ankrPlugin } from "@elizaos/plugin-ankr";
 import { formPlugin } from "@elizaos/plugin-form";
 import { MongoClient } from "mongodb";
 import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
+import { OKXPlugin } from "@elizaos/plugin-okx";
 
 import { trikonPlugin } from "@elizaos/plugin-trikon";
 import arbitragePlugin from "@elizaos/plugin-arbitrage";
@@ -1304,6 +1305,9 @@ export async function createAgent(
             getSecret(character, "DESK_EXCHANGE_PRIVATE_KEY") ||
             getSecret(character, "DESK_EXCHANGE_NETWORK")
                 ? deskExchangePlugin
+                : null,
+            getSecret(character, "OKX_API_KEY") && getSecret(character, "OKX_SECRET_KEY") && getSecret(character, "OKX_API_PASSPHRASE") && getSecret(character, "OKX_PROJECT_ID") && getSecret(character, "OKX_SOLANA_RPC_URL") && getSecret(character, "OKX_WALLET_ADDRESS") && getSecret(character, "OKX_WALLET_PRIVATE_KEY")
+                ? await OKXPlugin(character)
                 : null,
         ]
             .flat()
