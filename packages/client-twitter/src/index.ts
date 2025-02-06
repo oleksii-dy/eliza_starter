@@ -48,6 +48,9 @@ class TwitterManager {
         if (twitterConfig.TWITTER_SPACES_ENABLE) {
             this.space = new TwitterSpaceClient(this.client, runtime);
         }
+
+        // Watcher
+        this.watcher = new TwitterWatchClient(this.client, runtime);
     }
 }
 
