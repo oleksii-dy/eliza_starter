@@ -1168,10 +1168,10 @@ export class AgentRuntime implements IAgentRuntime {
                 name: name || this.character.name || "Unknown User",
                 username: userName || this.character.username || "Unknown",
                 email: email || this.character.email || userId, // Temporary
-                details: Object.assign({}, this.character, {
+                details: this.character ? Object.assign({}, this.character, {
                     source,
                     plugins: this.character?.plugins?.map((plugin) => plugin.name),
-                }),
+                }) : { summary: "" },
             });
             elizaLogger.success(`User ${userName} created successfully.`);
         }
@@ -1779,12 +1779,12 @@ const formatKnowledge = (knowledge: KnowledgeItem[]) => {
     return knowledge.map(item => {
         // Get the main content text
         const text = item.content.text;
-        
+
         // Clean up formatting but maintain natural text flow
         const cleanedText = text
             .trim()
             .replace(/\n{3,}/g, '\n\n'); // Replace excessive newlines
-            
+
         return cleanedText;
     }).join('\n\n'); // Separate distinct pieces with double newlines
 };
