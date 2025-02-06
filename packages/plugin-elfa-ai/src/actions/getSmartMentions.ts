@@ -5,7 +5,6 @@ import {
     type State,
     type Action,
     type Content,
-    elizaLogger,
     ModelClass,
     composeContext,
     generateObject,
@@ -97,14 +96,10 @@ export const elfaGetSmartMentions: Action = {
             updatedState = await runtime.updateRecentMessageState(state);
         }
 
-        elizaLogger.log("Updated state:", updatedState);
-
         const context = composeContext({
             state: updatedState,
             template: getSmartMentionsTemplate,
         });
-
-        elizaLogger.log("Context:", context);
 
         const content = (
             await generateObject({
