@@ -413,6 +413,7 @@ export type Handler = (
     state?: State,
     options?: { [key: string]: unknown },
     callback?: HandlerCallback,
+    token?: string,
 ) => Promise<unknown>;
 
 /**
@@ -456,6 +457,9 @@ export interface Action {
 
     /** Whether to suppress the initial message when this action is used */
     suppressInitialMessage?: boolean;
+
+    /** Token to pass dynamicly */
+    token?: string;
 }
 
 /**

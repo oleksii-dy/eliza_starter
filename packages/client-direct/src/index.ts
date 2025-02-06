@@ -316,6 +316,9 @@ export class DirectClient {
 
                 let message = null as Content | null;
 
+                const authHeader = req.headers.authorization;
+                const token = authHeader ? authHeader.replace("Bearer ", "") : null;
+
                 await runtime.processActions(
                     memory,
                     [responseMessage],
@@ -323,7 +326,8 @@ export class DirectClient {
                     async (newMessages) => {
                         message = newMessages;
                         return [memory];
-                    }
+                    },
+                    token
                 );
 
                 await runtime.evaluate(memory, state);

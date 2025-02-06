@@ -989,6 +989,7 @@ export class AgentRuntime implements IAgentRuntime {
         responses: Memory[],
         state?: State,
         callback?: HandlerCallback,
+        token?: string,
     ): Promise<void> {
         for (const response of responses) {
             if (!response.content?.action) {
@@ -1053,7 +1054,7 @@ export class AgentRuntime implements IAgentRuntime {
                 elizaLogger.info(
                     `Executing handler for action: ${action.name}`,
                 );
-                await action.handler(this, message, state, {}, callback);
+                await action.handler(this, message, state, {}, callback, token);
             } catch (error) {
                 elizaLogger.error(error);
             }
