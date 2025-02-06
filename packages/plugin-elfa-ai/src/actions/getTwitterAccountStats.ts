@@ -14,61 +14,60 @@ import { validateElfaAiConfig } from "../environment";
 import axios from "axios";
 import { z } from "zod";
 
-export const getSmartMentionsSchema = z.object({
-    limit: z.number().optional(),
-    offset: z.number().optional(),
+export const getTwitterAccountStatsSchema = z.object({
+    username: z.string().min(1),
 });
 
-export interface GetSmartMentionsContent extends Content {
-    limit: number;
-    offset: number;
+export interface getTwitterAccountStatsContent extends Content {
+    username: string;
 }
 
-const getSmartMentionsTemplate = `Respond with a JSON object containing only the extracted information:
+const getTwitterAccountStatsTemplate = `Respond with a JSON object containing only the extracted information:
 
 Example response:
 \`\`\`json
 {
-    "limit": 100,
-    "offset": 0
+    "username": "elonmusk",
 }
 \`\`\`
 
 {{recentMessages}}
 
-Given the recent messages, extract the following information about the requested smart mentions:
-- Limit: The number of smart mentions to retrieve.
-- Offset: The offset to start retrieving smart mentions from.
+Given the recent messages, extract the following information for the requested Twitter account smart stats:
+- username: Twitter username to retrieve smart account stats for.
 
 Respond with a JSON object containing only the extracted information
 `;
 
-export function isGetSmartMentionsContent(
-    content: GetSmartMentionsContent
-): content is GetSmartMentionsContent {
-    return (
-        typeof content.limit === "number" && typeof content.offset === "number"
-    );
+export function isGetTwitterAccountStatsContent(
+    content: getTwitterAccountStatsContent
+): content is getTwitterAccountStatsContent {
+    return typeof content.username === "string";
 }
 
-export const elfaGetSmartMentions: Action = {
-    name: "ELFA_GET_SMART_MENTIONS",
-    similes: ["get mentions", "smart mentions", "fetch mentions"],
+export const elfaGetTwitterAccountStatsAction: Action = {
+    name: "ELFA_TWITTER_ACCOUNT_STATS",
+    similes: [
+        "account smart stats",
+        "smart stats",
+        "twitter account stats",
+        "smart twitter stats",
+    ],
     description:
-        "Retrieves tweets by smart accounts with smart engagement from the Elfa AI API.",
+        "Retrieves smart stats and social metrics for a specified Twitter account from the Elfa AI API.",
     examples: [
         [
             {
                 user: "{{user}}",
                 content: {
-                    text: "get smart mentions",
+                    text: "get smart stats for Twitter account",
                 },
             },
             {
                 user: "{{agent}}",
                 content: {
-                    text: "Smart mentions retrieved successfully",
-                    action: "ELFA_GET_SMART_MENTIONS",
+                    text: "Retrieved twitter account data completed successfully",
+                    action: "ELFA_TWITTER_ACCOUNT_STATS",
                 },
             },
         ],
@@ -99,7 +98,7 @@ export const elfaGetSmartMentions: Action = {
 
             const context = composeContext({
                 state: updatedState,
-                template: getSmartMentionsTemplate,
+                template: getTwitterAccountStatsTemplate,
             });
 
             const content = (
@@ -107,28 +106,35 @@ export const elfaGetSmartMentions: Action = {
                     runtime,
                     context: context,
                     modelClass: ModelClass.LARGE,
-                    schema: getSmartMentionsSchema,
-                    schemaName: "GetSmartMentionsSchema",
+                    schema: getTwitterAccountStatsSchema,
+                    schemaName: "getTwitterAccountStatsSchema",
                     schemaDescription:
-                        "Schema for getting smart mentions from Elfa AI API",
+                        "Schema for retrieving smart twitter account stats for a specific username using the Elfa AI API",
                 })
-            ).object as GetSmartMentionsContent;
+            ).object as getTwitterAccountStatsContent;
 
-            if (!isGetSmartMentionsContent(content)) {
+            if (!isGetTwitterAccountStatsContent(content)) {
                 callback?.({
-                    text: "Unable to process get smart mentions request. Invalid content provided.",
-                    content: { error: "Invalid get smart mentions content" },
+                    text: "Unable to retieve twitter account stats for the provided username. Invalid content provided.",
+                    content: {
+                        error: "Invalid get twitter account stats content",
+                    },
                 });
                 return false;
             }
-            const { limit = 100, offset = 0 } = content;
-            const response = await axios.get(`${baseUrl}/v1/mentions`, {
-                headers,
-                params: { limit, offset },
-            });
+            const { username } = content;
+            const response = await axios.get(
+                `${baseUrl}/v1/account/smart-stats`,
+                {
+                    headers,
+                    params: {
+                        username,
+                    },
+                }
+            );
             const responseData = response.data;
 
-            const prompt = `Extracted information and summarize the smart mentions from the Elfa AI API.:
+            const prompt = `Extracted information and summarize the smart account stats for provided username ${username}:
             ${JSON.stringify(responseData, null, 2)}`;
 
             const callbackMessage = await generateText({
@@ -137,20 +143,20 @@ export const elfaGetSmartMentions: Action = {
                 modelClass: ModelClass.LARGE,
             });
             callback?.({
-                text: `Retrieves tweets by smart accounts with smart engagement from the Elfa AI API:
+                text: `Retrieved twitter account data for ${username} from the Elfa AI API:
 ${callbackMessage}
 ------------------------------------------------
 Raw Response: 
 ${JSON.stringify(responseData, null, 2)}`,
-                action: "ELFA_GET_SMART_MENTIONS",
+                action: "ELFA_TWITTER_ACCOUNT_STATS",
             });
             return true;
         } catch (error) {
             callback?.({
-                text: `Failed to get smart mentions from Elfa AI API.
+                text: `Failed to get twitter account data for the mentioned username from Elfa AI API.
 Error:
 ${error.message}`,
-                action: "ELFA_GET_SMART_MENTIONS",
+                action: "ELFA_TWITTER_ACCOUNT_STATS",
             });
             return false;
         }

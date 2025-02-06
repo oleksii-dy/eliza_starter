@@ -3,6 +3,10 @@ import { elfaPingAction } from "./actions/ping";
 import { elfaApiKeyStatusAction } from "./actions/apiKeyStatus";
 import { elfaGetSmartMentions } from "./actions/getSmartMentions";
 import { elfaGetTopMentionsAction } from "./actions/getTopMentions";
+import { elfaGetSearchMentionsByKeywordsAction } from "./actions/getSearchMentionsByKeywords";
+import { elfaGetTrendingTokens } from "./actions/getTrendingTokens";
+import { elfaGetTwitterAccountStatsAction } from "./actions/getTwitterAccountStats";
+
 export const elfaAiPlugin: Plugin = {
     name: "elfa-ai",
     description:
@@ -12,6 +16,9 @@ export const elfaAiPlugin: Plugin = {
         elfaApiKeyStatusAction,
         elfaGetSmartMentions,
         elfaGetTopMentionsAction,
+        elfaGetSearchMentionsByKeywordsAction,
+        elfaGetTrendingTokens,
+        elfaGetTwitterAccountStatsAction,
     ],
 };
 

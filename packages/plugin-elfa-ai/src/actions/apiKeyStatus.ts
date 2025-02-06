@@ -66,7 +66,9 @@ export const elfaApiKeyStatusAction: Action = {
                 error
             );
             callback?.({
-                text: `Failed to get api key status from Elfa AI. Please check the your API key.`,
+                text: `Failed to get api key status from Elfa AI. Please check the your API key.
+Error:
+${error.message}`,
                 action: "ELFA_API_KEY_STATUS",
             });
             return false;

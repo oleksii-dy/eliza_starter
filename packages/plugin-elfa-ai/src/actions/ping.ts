@@ -60,7 +60,9 @@ export const elfaPingAction: Action = {
         } catch (error) {
             elizaLogger.error("Failed to ping Elfa AI API", error);
             callback?.({
-                text: `Elfa AI API is down. Please check the API status.`,
+                text: `Elfa AI API is down. Please check the API status.
+Error:
+${error.message}`,
                 action: "ELFA_PING",
             });
             return false;

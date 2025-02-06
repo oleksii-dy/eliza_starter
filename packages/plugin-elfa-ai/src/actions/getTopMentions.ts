@@ -108,43 +108,43 @@ export const elfaGetTopMentionsAction: Action = {
         _options: { [key: string]: unknown } = {},
         callback?: HandlerCallback
     ): Promise<boolean> => {
-        const baseUrl = runtime.getSetting("ELFA_AI_BASE_URL");
-        const headers = {
-            "Content-Type": "application/json",
-            "x-elfa-api-key": runtime.getSetting("ELFA_AI_API_KEY"),
-        };
-        let updatedState: State;
-        if (!state) {
-            updatedState = (await runtime.composeState(message)) as State;
-        } else {
-            updatedState = await runtime.updateRecentMessageState(state);
-        }
-
-        const context = composeContext({
-            state: updatedState,
-            template: getTopMentionsTemplate,
-        });
-
-        const content = (
-            await generateObject({
-                runtime,
-                context: context,
-                modelClass: ModelClass.LARGE,
-                schema: getTopMentionsSchema,
-                schemaName: "GetTopMentionsSchema",
-                schemaDescription:
-                    "Schema for getting top mentions for a specific ticker from Elfa AI API",
-            })
-        ).object as GetTopMentionsContent;
-
-        if (!isGetTopMentionsContent(content)) {
-            callback?.({
-                text: "Unable to process get top mentions for the requested ticker. Invalid content provided.",
-                content: { error: "Invalid get top mentions content" },
-            });
-            return false;
-        }
         try {
+            const baseUrl = runtime.getSetting("ELFA_AI_BASE_URL");
+            const headers = {
+                "Content-Type": "application/json",
+                "x-elfa-api-key": runtime.getSetting("ELFA_AI_API_KEY"),
+            };
+            let updatedState: State;
+            if (!state) {
+                updatedState = (await runtime.composeState(message)) as State;
+            } else {
+                updatedState = await runtime.updateRecentMessageState(state);
+            }
+
+            const context = composeContext({
+                state: updatedState,
+                template: getTopMentionsTemplate,
+            });
+
+            const content = (
+                await generateObject({
+                    runtime,
+                    context: context,
+                    modelClass: ModelClass.LARGE,
+                    schema: getTopMentionsSchema,
+                    schemaName: "GetTopMentionsSchema",
+                    schemaDescription:
+                        "Schema for getting top mentions for a specific ticker from Elfa AI API",
+                })
+            ).object as GetTopMentionsContent;
+
+            if (!isGetTopMentionsContent(content)) {
+                callback?.({
+                    text: "Unable to process get top mentions for the requested ticker. Invalid content provided.",
+                    content: { error: "Invalid get top mentions content" },
+                });
+                return false;
+            }
             const {
                 ticker,
                 timeWindow = "1h",
@@ -183,7 +183,9 @@ ${JSON.stringify(responseData, null, 2)}`,
             return true;
         } catch (error) {
             callback?.({
-                text: `Failed to get top mentions for provided ticker from Elfa AI API.`,
+                text: `Failed to get top mentions for provided ticker from Elfa AI API.
+Error:
+${error.message}`,
                 action: "ELFA_GET_TOP_MENTIONS",
             });
             return false;
