@@ -19,7 +19,7 @@
     },
     "dependencies": {
         "@elizaos/adapter-supabase": "workspace:*",
-        "@elizaos/adapter-pglite": "workspace:*",
+        "@elizaos/adapter-pglite": "0.1.9",
         "@elizaos/adapter-postgres": "workspace:*",
         "@elizaos/adapter-redis": "workspace:*",
         "@elizaos/adapter-sqlite": "workspace:*",
