@@ -14,7 +14,7 @@ import {
 } from "@elizaos/core";
 import { postTweet } from "@elizaos/plugin-twitter";
 import express from "express";
-import { blockExplorerBaseAddressUrl, blockExplorerBaseTxUrl, WebhookEvent } from "./types";
+import { blockExplorerBaseAddressUrl, blockExplorerBaseTxUrl, supportedTickers, WebhookEvent } from "./types";
 import { Coinbase, Wallet } from "@coinbase/coinbase-sdk";
 import { initializeWallet, readContractWrapper, type CoinbaseWallet } from "@elizaos/plugin-coinbase";
 import { tokenSwap } from "@elizaos/plugin-0x";
@@ -31,14 +31,14 @@ export class CoinbaseClient implements Client {
     private server: express.Application;
     private port: number;
     private wallets: CoinbaseWallet[];
-    private initialBalanceETH: number;
+    private initialBuyAmountInCurrency: number | null;
 
     constructor(runtime: IAgentRuntime) {
         this.runtime = runtime;
         this.server = express();
         this.port = Number(runtime.getSetting("COINBASE_WEBHOOK_PORT")) || 3001;
         this.wallets = [];
-        this.initialBalanceETH = 1;
+        this.initialBuyAmountInCurrency = null;
     }
 
     async initialize(): Promise<void> {
@@ -260,7 +260,7 @@ Generate only the tweet text, no commentary or markdown.`;
 
     private async handleWebhookEvent(event: WebhookEvent) {
         // for now just support ETH
-        if (event.ticker !== "ETH" && event.ticker !== "WETH") {
+        if (!supportedTickers.includes(event.ticker)) {
             elizaLogger.info("Unsupported ticker:", event.ticker);
             return;
         }
@@ -284,8 +284,21 @@ Generate only the tweet text, no commentary or markdown.`;
         elizaLogger.info("formattedTimestamp ", formattedTimestamp);
 
         // Execute token swap
-        const buy = event.event.toUpperCase() === "BUY";
-        const amountInCurrency = buy ? amount : amount / Number(event.price);
+        const buy = event.event.toUpperCase() === "BUY";        
+       if (buy) {
+        this.initialBuyAmountInCurrency = amount / Number(event.price)
+       }
+       // if sell, use the initial buy amount in currency instead of the current price
+       let amountInCurrency;
+       if (buy) {
+           amountInCurrency = amount;
+       } else if (this.initialBuyAmountInCurrency != null) {
+           amountInCurrency = this.initialBuyAmountInCurrency;
+       } else {
+           // if not set, use the current price
+           amountInCurrency = amount / Number(event.price);
+       }
+
         const txHash = await this.executeTokenSwap(
             event,
             amountInCurrency,
