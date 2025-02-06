@@ -1071,8 +1071,6 @@ export async function createAgent(
                 getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
                 ? evmPlugin
                 : null,
-            (getSecret(character, "EVM_PRIVATE_KEY") ||
-                getSecret(character, "SOLANA_PRIVATE_KEY"))
             getSecret(character, "EVM_PRIVATE_KEY") ||
             getSecret(character, "SOLANA_PRIVATE_KEY")
                 ? edwinPlugin
