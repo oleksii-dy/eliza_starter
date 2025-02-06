@@ -28,7 +28,7 @@
         "@lit-protocol/lit-node-client": "^7.0.4",
         "@lit-protocol/constants": "^7.0.4",
         "@lit-protocol/auth-helpers": "^7.0.4",
-        "@lit-protocol/aw-tool": "*",
+        "@lit-protocol/aw-tool": "latest",
         "@ethersproject/abstract-provider": "^5.0.0",
         "@lit-protocol/contracts-sdk": "^7.0.2",
         "@lit-protocol/lit-auth-client": "^7.0.2",
