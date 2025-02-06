@@ -1,7 +1,7 @@
 import {
     elizaLogger,
-    IAgentRuntime,
-    ITranscriptionService,
+    type IAgentRuntime,
+    type ITranscriptionService,
     settings,
     TranscriptionProvider,
 } from "@elizaos/core";
@@ -15,7 +15,7 @@ import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 import { promisify } from "util";
-import { createClient, DeepgramClient } from "@deepgram/sdk";
+import { createClient, type DeepgramClient } from "@deepgram/sdk";
 
 // const __dirname = path.dirname(new URL(import.meta.url).pathname); #compatibility issues with windows
 const __filename = fileURLToPath(import.meta.url);
@@ -32,7 +32,7 @@ export class TranscriptionService
     private CONTENT_CACHE_DIR: string;
     private DEBUG_AUDIO_DIR: string;
     private TARGET_SAMPLE_RATE = 16000; // Common sample rate for speech recognition
-    private isCudaAvailable: boolean = false;
+    private isCudaAvailable = false;
 
     /**
      * CHANGED: We now use TranscriptionProvider instead of separate flags/strings.
@@ -47,7 +47,7 @@ export class TranscriptionService
      * We keep the queue and processing logic as is.
      */
     private queue: { audioBuffer: ArrayBuffer; resolve: Function }[] = [];
-    private processing: boolean = false;
+    private processing = false;
 
     /**
      * CHANGED: initialize() now checks:
@@ -334,7 +334,6 @@ export class TranscriptionService
         audioBuffer: ArrayBuffer
     ): Promise<string | null> {
         const buffer = Buffer.from(audioBuffer);
-        // @ts-expect-error todo
         const response = await this.deepgram.listen.prerecorded.transcribeFile(
             buffer,
             {
@@ -344,8 +343,7 @@ export class TranscriptionService
             }
         );
         const result =
-            // @ts-expect-error todo
-            response.result.results.channels[0].alternatives[0].transcript;
+            response?.result?.results?.channels[0]?.alternatives[0]?.transcript;
         return result;
     }
 
@@ -357,7 +355,8 @@ export class TranscriptionService
         try {
             await this.saveDebugAudio(audioBuffer, "openai_input_original");
 
-            const convertedBuffer = await this.convertAudio(audioBuffer);
+            const arrayBuffer = new Uint8Array(audioBuffer).buffer;
+            const convertedBuffer = Buffer.from(await this.convertAudio(arrayBuffer)).buffer;
 
             await this.saveDebugAudio(
                 convertedBuffer,
@@ -409,7 +408,8 @@ export class TranscriptionService
 
             await this.saveDebugAudio(audioBuffer, "local_input_original");
 
-            const convertedBuffer = await this.convertAudio(audioBuffer);
+            const arrayBuffer = new Uint8Array(audioBuffer).buffer;
+            const convertedBuffer = Buffer.from(await this.convertAudio(arrayBuffer)).buffer;
 
             await this.saveDebugAudio(convertedBuffer, "local_input_converted");
 
@@ -417,7 +417,10 @@ export class TranscriptionService
                 this.CONTENT_CACHE_DIR,
                 `temp_${Date.now()}.wav`
             );
-            fs.writeFileSync(tempWavFile, convertedBuffer);
+
+            // Convert the ArrayBuffer to a Uint8Array which fs.writeFileSync can handle
+            const uint8Array = new Uint8Array(convertedBuffer);
+            fs.writeFileSync(tempWavFile, uint8Array);
 
             elizaLogger.debug(`Temporary WAV file created: ${tempWavFile}`);
 

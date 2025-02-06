@@ -1,33 +1,29 @@
 import {
-    ActionExample,
-    Content,
-    HandlerCallback,
-    IAgentRuntime,
-    Memory,
+    type ActionExample,
+    type Content,
+    type HandlerCallback,
+    type IAgentRuntime,
+    type Memory,
     ModelClass,
-    State,
+    type State,
     type Action,
     elizaLogger,
     composeContext,
-    generateObject,
     generateObjectDeprecated,
 } from "@elizaos/core";
 import { validateAvailConfig } from "../environment";
 import {
-    getDecimals,
+    //getDecimals,
     initialize,
-    formatNumberToBalance,
     getKeyringFromSeed,
-    isValidAddress,
 } from "avail-js-sdk";
-import { ISubmittableResult } from "@polkadot/types/types/extrinsic";
-import { H256 } from "@polkadot/types/interfaces/runtime";
+import type { H256 } from "@polkadot/types/interfaces/runtime";
+import type { ISubmittableResult } from "@polkadot/types/types";
 
 export interface DataContent extends Content {
     data: string;
 }
 
-// @ts-expect-error todo
 export function isDataContent(content: DataContent): content is DataContent {
     // Validate types
     const validTypes = typeof content.data === "string";
@@ -68,7 +64,7 @@ export default {
         "SUBMIT_DATA_ON_AVAIL_NETWORK",
         "SUBMIT_DATA_TO_AVAIL_NETWORK",
     ],
-    validate: async (runtime: IAgentRuntime, message: Memory) => {
+    validate: async (runtime: IAgentRuntime, _message: Memory) => {
         await validateAvailConfig(runtime);
         return true;
     },
@@ -79,20 +75,20 @@ export default {
         state: State,
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
-    // @ts-expect-error todo
     ): Promise<boolean> => {
         elizaLogger.log("Starting SUBMIT_DATA handler...");
 
         // Initialize or update state
-        if (!state) {
-            state = (await runtime.composeState(message)) as State;
+        let currentState = state;
+        if (!currentState) {
+            currentState = (await runtime.composeState(message)) as State;
         } else {
-            state = await runtime.updateRecentMessageState(state);
+            currentState = await runtime.updateRecentMessageState(currentState);
         }
 
         // Compose transfer context
         const submitDataContext = composeContext({
-            state,
+            state: currentState,
             template: submitDataTemplate,
         });
 
@@ -117,16 +113,16 @@ export default {
         // }
         if (content.data != null) {
             try {
-                const SEED = runtime.getSetting("AVAIL_SEED")!;
-                const ACCOUNT = runtime.getSetting("AVAIL_ADDRESS")!;
+                const SEED = runtime.getSetting("AVAIL_SEED");
+                if (!SEED) throw new Error("AVAIL_SEED not set");
+                //const ACCOUNT = runtime.getSetting("AVAIL_ADDRESS")!;
                 const ENDPOINT = runtime.getSetting("AVAIL_RPC_URL");
                 const APP_ID = runtime.getSetting("AVAIL_APP_ID");
 
-                // @ts-expect-error todo
                 const api = await initialize(ENDPOINT);
                 const keyring = getKeyringFromSeed(SEED);
                 const options = { app_id: APP_ID, nonce: -1 };
-                const decimals = getDecimals(api);
+                //const decimals = getDecimals(api);
                 const data = content.data;
 
                 const submitDataInfo = await api.tx.dataAvailability
@@ -140,14 +136,14 @@ export default {
           `);
 
                 //submit data
-                const txResult = await new Promise<ISubmittableResult>(
+                const txResult:ISubmittableResult = await new Promise<ISubmittableResult>(
                     (res) => {
                         api.tx.dataAvailability
                             .submitData(data)
                             .signAndSend(
                                 keyring,
                                 options,
-                                (result: ISubmittableResult) => {
+                                (result) => {
                                     elizaLogger.log(
                                         `Tx status: ${result.status}`
                                     );
@@ -161,12 +157,12 @@ export default {
 
                 // Rejected Transaction handling
                 if (txResult.isError) {
-                    console.log(`Transaction was not executed`);
+                    console.log('Transaction was not executed');
                 }
 
                 // Failed Transaction handling
                 const error = txResult.dispatchError;
-                if (error != undefined) {
+                if (error !== undefined) {
                     if (error.isModule) {
                         const decoded = api.registry.findMetaError(
                             error.asModule
@@ -179,8 +175,7 @@ export default {
                 }
 
                 elizaLogger.success(
-                    "Data submitted successfully! tx: \n " +
-                        `Tx Hash: ${txResult.txHash as H256}, Block Hash: ${txResult.status.asFinalized as H256}`
+                    `Data submitted successfully! tx: \nTx Hash: ${txResult.txHash as H256}, Block Hash: ${txResult.status.asFinalized as H256}`
                 );
                 if (callback) {
                     callback({

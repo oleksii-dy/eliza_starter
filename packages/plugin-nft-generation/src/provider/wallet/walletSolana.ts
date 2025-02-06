@@ -1,15 +1,16 @@
 import NodeCache from "node-cache";
 import {
-    Cluster,
+    type Cluster,
     clusterApiUrl,
     Connection,
     LAMPORTS_PER_SOL,
-    PublicKey,
+    type PublicKey,
 } from "@solana/web3.js";
 import {
     createNft,
     findMetadataPda,
     mplTokenMetadata,
+    fetchDigitalAsset,
     updateV1,
     verifyCollectionV1,
 } from "@metaplex-foundation/mpl-token-metadata";
@@ -21,7 +22,7 @@ import {
     publicKey,
     // sol,
     TransactionBuilder,
-    Umi,
+    type Umi,
 } from "@metaplex-foundation/umi";
 import { getExplorerLink } from "@solana-developers/helpers";
 // import { transferSol } from "@metaplex-foundation/mpl-toolbox";
@@ -46,7 +47,6 @@ export class WalletSolana {
                 commitment: "finalized",
             });
         }
-        // @ts-expect-error todo
         const umi = createUmi(this.connection.rpcEndpoint);
         umi.use(mplTokenMetadata());
         const umiUser = umi.eddsa.createKeypairFromSecretKey(
@@ -56,8 +56,10 @@ export class WalletSolana {
         this.umi = umi;
     }
 
+    async fetchDigitalAsset (address: string) {
+        return fetchDigitalAsset(this.umi, publicKey(address))
+    }
     async getBalance() {
-        // @ts-expect-error todo
         const balance = await this.connection.getBalance(this.walletPublicKey);
         return {
             value: balance,

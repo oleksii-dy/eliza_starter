@@ -1,6 +1,6 @@
-import { AgentRuntime } from "./runtime.ts";
+import type { AgentRuntime } from "./runtime.ts";
 import { embed, getEmbeddingZeroVector } from "./embedding.ts";
-import { KnowledgeItem, UUID, type Memory } from "./types.ts";
+import type { KnowledgeItem, UUID, Memory } from "./types.ts";
 import { stringToUuid } from "./uuid.ts";
 import { splitChunks } from "./generation.ts";
 import elizaLogger from "./logger.ts";
@@ -32,7 +32,6 @@ async function get(
         return [];
     }
 
-    // @ts-expect-error todo
     const embedding = await embed(runtime, processed);
     const fragments = await runtime.knowledgeManager.searchMemoriesByEmbedding(
         embedding,
@@ -60,7 +59,6 @@ async function get(
         )
     );
 
-    // @ts-expect-error todo
     return knowledgeDocuments
         .filter((memory) => memory !== null)
         .map((memory) => ({ id: memory.id, content: memory.content }));
@@ -69,8 +67,8 @@ async function get(
 async function set(
     runtime: AgentRuntime,
     item: KnowledgeItem,
-    chunkSize: number = 512,
-    bleed: number = 20
+    chunkSize = 512,
+    bleed = 20
 ) {
     await runtime.documentsManager.createMemory({
         id: item.id,
@@ -86,7 +84,6 @@ async function set(
     const fragments = await splitChunks(preprocessed, chunkSize, bleed);
 
     for (const fragment of fragments) {
-        // @ts-expect-error todo
         const embedding = await embed(runtime, fragment);
         await runtime.knowledgeManager.createMemory({
             // We namespace the knowledge base uuid to avoid id

@@ -1,7 +1,7 @@
-import { Character, Client as ElizaClient, IAgentRuntime } from "@elizaos/core";
+import type { Character, Client as ElizaClient, IAgentRuntime } from "@elizaos/core";
 import { elizaLogger } from "@elizaos/core";
 import { WebClient } from "@slack/web-api";
-import express, { Request } from "express";
+import express, { type Request } from "express";
 import { EventEmitter } from "events";
 import { MessageManager } from "./messages";
 import { validateSlackConfig } from "./environment";
@@ -31,7 +31,6 @@ export class SlackClient extends EventEmitter {
         this.character = runtime.character;
 
         const token = runtime.getSetting("SLACK_BOT_TOKEN");
-        // @ts-expect-error todo
         this.signingSecret = runtime.getSetting("SLACK_SIGNING_SECRET");
 
         if (!token) throw new Error("SLACK_BOT_TOKEN is required");

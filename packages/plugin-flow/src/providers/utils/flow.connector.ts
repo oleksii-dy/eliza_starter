@@ -1,6 +1,6 @@
 import * as fcl from "@onflow/fcl";
 import type { Account, TransactionStatus } from "@onflow/typedefs";
-import { IFlowScriptExecutor } from "../../types";
+import type { IFlowScriptExecutor } from "../../types";
 import Exception from "../../types/exception";
 
 export type NetworkType = "mainnet" | "testnet" | "emulator";
@@ -15,7 +15,6 @@ export class FlowConnector implements IFlowScriptExecutor {
     constructor(
         private readonly flowJSON: object,
         public readonly network: NetworkType = "mainnet",
-        // @ts-expect-error todo
         private readonly defaultRpcEndpoint: string = undefined
     ) {}
 
@@ -63,7 +62,6 @@ export class FlowConnector implements IFlowScriptExecutor {
     private async ensureInited() {
         if (isGloballyInited) return;
         if (!globallyPromise) {
-            // @ts-expect-error todo
             globallyPromise = this.onModuleInit();
         }
         return await globallyPromise;
@@ -96,7 +94,6 @@ export class FlowConnector implements IFlowScriptExecutor {
                 authorizations:
                     (extraAuthz?.length ?? 0) === 0
                         ? [mainAuthz]
-                        // @ts-expect-error todo
                         : [mainAuthz, ...extraAuthz],
             });
         } else {

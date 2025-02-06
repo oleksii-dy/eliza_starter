@@ -1,6 +1,6 @@
 import * as fs from "fs";
-import { parse, ParserOptions } from "@typescript-eslint/parser";
-import { ActionBounds, ActionMetadata } from "./types";
+import { parse, type ParserOptions } from "@typescript-eslint/parser";
+import { type ActionBounds, ActionMetadata } from "./types";
 
 /**
  * A class for parsing TypeScript files.
@@ -86,6 +86,9 @@ export class TypeScriptParser {
         let startLine: number | null = null;
         let endLine: number | null = null;
         let actionNameStartLine: number | null = null;
+
+        // write ast to json file
+        // fs.writeFileSync("ast.json", JSON.stringify(ast, null, 2));
 
         const findActionTypeAnnotation = (node: any) => {
             // Look for Action type annotation

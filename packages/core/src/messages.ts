@@ -1,9 +1,9 @@
-import {
+import type {
     IAgentRuntime,
-    type Actor,
-    type Content,
-    type Memory,
-    type UUID,
+    Actor,
+    Content,
+    Memory,
+    UUID,
 } from "./types.ts";
 
 /**
@@ -81,7 +81,6 @@ export const formatMessages = ({
                     ? ` (Attachments: ${attachments.map((media) => `[${media.id} - ${media.title} (${media.url})]`).join(", ")})`
                     : "";
 
-            // @ts-expect-error todo
             const timestamp = formatTimestamp(message.createdAt);
 
             const shortId = message.userId.slice(-5);

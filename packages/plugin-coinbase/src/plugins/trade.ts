@@ -1,20 +1,20 @@
 import { Coinbase } from "@coinbase/coinbase-sdk";
 import {
-    Action,
-    Plugin,
+    type Action,
+    type Plugin,
     elizaLogger,
-    IAgentRuntime,
-    Memory,
-    HandlerCallback,
-    State,
+    type IAgentRuntime,
+    type Memory,
+    type HandlerCallback,
+    type State,
     composeContext,
     generateObject,
     ModelClass,
-    Provider,
+    type Provider,
 } from "@elizaos/core";
 import { executeTradeAndCharityTransfer, getWalletDetails } from "../utils";
 import { tradeTemplate } from "../templates";
-import { isTradeContent, TradeContent, TradeSchema } from "../types";
+import { isTradeContent, type TradeContent, TradeSchema } from "../types";
 import { readFile } from "fs/promises";
 import { parse } from "csv-parse/sync";
 import path from "path";
@@ -33,11 +33,9 @@ export const tradeProvider: Provider = {
         elizaLogger.debug("Starting tradeProvider.get function");
         try {
             Coinbase.configure({
-                // @ts-expect-error todo
                 apiKeyName:
                     runtime.getSetting("COINBASE_API_KEY") ??
                     process.env.COINBASE_API_KEY,
-                // @ts-expect-error todo
                 privateKey:
                     runtime.getSetting("COINBASE_PRIVATE_KEY") ??
                     process.env.COINBASE_PRIVATE_KEY,
@@ -77,9 +75,9 @@ export const tradeProvider: Provider = {
             return {
                 currentTrades: records.map((record: any) => ({
                     network: record["Network"] || undefined,
-                    amount: parseFloat(record["From Amount"]) || undefined,
+                    amount: Number.parseFloat(record["From Amount"]) || undefined,
                     sourceAsset: record["Source Asset"] || undefined,
-                    toAmount: parseFloat(record["To Amount"]) || undefined,
+                    toAmount: Number.parseFloat(record["To Amount"]) || undefined,
                     targetAsset: record["Target Asset"] || undefined,
                     status: record["Status"] || undefined,
                     transactionUrl: record["Transaction URL"] || "",
@@ -102,12 +100,10 @@ export const executeTradeAction: Action = {
         elizaLogger.info("Validating runtime for EXECUTE_TRADE...");
         return (
             !!(
-                // @ts-expect-error todo
                 runtime.character.settings.secrets?.COINBASE_API_KEY ||
                 process.env.COINBASE_API_KEY
             ) &&
             !!(
-                // @ts-expect-error todo
                 runtime.character.settings.secrets?.COINBASE_PRIVATE_KEY ||
                 process.env.COINBASE_PRIVATE_KEY
             )
@@ -124,11 +120,9 @@ export const executeTradeAction: Action = {
 
         try {
             Coinbase.configure({
-                // @ts-expect-error todo
                 apiKeyName:
                     runtime.getSetting("COINBASE_API_KEY") ??
                     process.env.COINBASE_API_KEY,
-                // @ts-expect-error todo
                 privateKey:
                     runtime.getSetting("COINBASE_PRIVATE_KEY") ??
                     process.env.COINBASE_PRIVATE_KEY,

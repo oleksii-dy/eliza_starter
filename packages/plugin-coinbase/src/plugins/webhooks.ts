@@ -1,18 +1,18 @@
 import { Coinbase, Webhook } from "@coinbase/coinbase-sdk";
 import {
-    Action,
-    Plugin,
+    type Action,
+    type Plugin,
     elizaLogger,
-    IAgentRuntime,
-    Memory,
-    HandlerCallback,
-    State,
+    type IAgentRuntime,
+    type Memory,
+    type HandlerCallback,
+    type State,
     composeContext,
     generateObject,
     ModelClass,
-    Provider,
+    type Provider,
 } from "@elizaos/core";
-import { WebhookSchema, isWebhookContent, WebhookContent } from "../types";
+import { WebhookSchema, isWebhookContent, type WebhookContent } from "../types";
 import { webhookTemplate } from "../templates";
 import { appendWebhooksToCsv } from "../utils";
 
@@ -21,11 +21,9 @@ export const webhookProvider: Provider = {
         elizaLogger.debug("Starting webhookProvider.get function");
         try {
             Coinbase.configure({
-                // @ts-expect-error todo
                 apiKeyName:
                     runtime.getSetting("COINBASE_API_KEY") ??
                     process.env.COINBASE_API_KEY,
-                // @ts-expect-error todo
                 privateKey:
                     runtime.getSetting("COINBASE_PRIVATE_KEY") ??
                     process.env.COINBASE_PRIVATE_KEY,
@@ -59,17 +57,14 @@ export const createWebhookAction: Action = {
         elizaLogger.info("Validating runtime for CREATE_WEBHOOK...");
         return (
             !!(
-                // @ts-expect-error todo
                 runtime.character.settings.secrets?.COINBASE_API_KEY ||
                 process.env.COINBASE_API_KEY
             ) &&
             !!(
-                // @ts-expect-error todo
                 runtime.character.settings.secrets?.COINBASE_PRIVATE_KEY ||
                 process.env.COINBASE_PRIVATE_KEY
             ) &&
             !!(
-                // @ts-expect-error todo
                 runtime.character.settings.secrets?.COINBASE_NOTIFICATION_URI ||
                 process.env.COINBASE_NOTIFICATION_URI
             )
@@ -86,11 +81,9 @@ export const createWebhookAction: Action = {
 
         try {
             Coinbase.configure({
-                // @ts-expect-error todo
                 apiKeyName:
                     runtime.getSetting("COINBASE_API_KEY") ??
                     process.env.COINBASE_API_KEY,
-                // @ts-expect-error todo
                 privateKey:
                     runtime.getSetting("COINBASE_PRIVATE_KEY") ??
                     process.env.COINBASE_PRIVATE_KEY,

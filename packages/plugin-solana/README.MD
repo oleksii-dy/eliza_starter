@@ -69,7 +69,7 @@ const solanaEnvSchema = {
     WALLET_PUBLIC_KEY: string,
     SOL_ADDRESS: string,
     SLIPPAGE: string,
-    RPC_URL: string,
+    SOLANA_RPC_URL: string,
     HELIUS_API_KEY: string,
     BIRDEYE_API_KEY: string,
 };
@@ -141,8 +141,20 @@ Transfers tokens between wallets.
 
 ```typescript
 // Example usage
-const result = await runtime.executeAction("TRANSFER_TOKEN", {
+const result = await runtime.executeAction("SEND_TOKEN", {
     tokenAddress: "TokenAddressHere",
+    recipient: "RecipientAddressHere",
+    amount: "1000",
+});
+```
+
+### transferSol
+
+Transfers SOL between wallets.
+
+```typescript
+// Example usage
+const result = await runtime.executeAction("SEND_SOL", {
     recipient: "RecipientAddressHere",
     amount: "1000",
 });

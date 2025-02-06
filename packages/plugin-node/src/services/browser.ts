@@ -1,12 +1,17 @@
-import { generateText, IBrowserService, trimTokens } from "@elizaos/core";
+import { generateText, type IBrowserService, trimTokens } from "@elizaos/core";
 import { parseJSONObjectFromText } from "@elizaos/core";
 import { Service } from "@elizaos/core";
 import { settings } from "@elizaos/core";
-import { IAgentRuntime, ModelClass, ServiceType } from "@elizaos/core";
+import { type IAgentRuntime, ModelClass, ServiceType } from "@elizaos/core";
 import { stringToUuid } from "@elizaos/core";
 import { PlaywrightBlocker } from "@cliqz/adblocker-playwright";
 import CaptchaSolver from "capsolver-npm";
-import { Browser, BrowserContext, chromium, Page } from "playwright";
+import {
+    type Browser,
+    type BrowserContext,
+    chromium,
+    type Page,
+} from "playwright";
 import { elizaLogger } from "@elizaos/core";
 
 async function generateSummary(
@@ -38,7 +43,7 @@ async function generateSummary(
 
     const parsedResponse = parseJSONObjectFromText(response);
 
-    if (parsedResponse) {
+    if (parsedResponse?.title && parsedResponse?.summary) {
         return {
             title: parsedResponse.title,
             description: parsedResponse.summary,
@@ -124,8 +129,9 @@ export class BrowserService extends Service implements IBrowserService {
                 acceptDownloads: false,
             });
 
-            this.blocker =
-                await PlaywrightBlocker.fromPrebuiltAdsAndTracking(fetch);
+            this.blocker = await PlaywrightBlocker.fromPrebuiltAdsAndTracking(
+                fetch
+            );
         }
     }
 
@@ -175,7 +181,6 @@ export class BrowserService extends Service implements IBrowserService {
                 );
             }
 
-            // @ts-expect-error todo
             page = await this.context.newPage();
 
             // Enable stealth mode
@@ -194,7 +199,6 @@ export class BrowserService extends Service implements IBrowserService {
                 elizaLogger.error("Failed to load the page");
             }
 
-            // @ts-expect-error todo
             if (response.status() === 403 || response.status() === 404) {
                 return await this.tryAlternativeSources(url, runtime);
             }
@@ -319,7 +323,9 @@ export class BrowserService extends Service implements IBrowserService {
         }
 
         // Try Google Search as a last resort
-        const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(url)}`;
+        const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(
+            url
+        )}`;
         try {
             return await this.fetchPageContent(googleSearchUrl, runtime);
         } catch (error) {

@@ -263,7 +263,7 @@ runtime.character.settings.secrets = {
 **Example Call**
 
 ```typescript
-const response = await runtime.triggerAction("SEND_MASS_PAYOUT", {
+const response = await runtime.processAction("SEND_MASS_PAYOUT", {
     receivingAddresses: [
         "0xA0ba2ACB5846A54834173fB0DD9444F756810f06",
         "0xF14F2c49aa90BaFA223EE074C1C33b59891826bF",
@@ -388,7 +388,7 @@ All contract deployments and interactions are logged to a CSV file for record-ke
 1. **ERC20 Token**
 
     ```typescript
-    const response = await runtime.triggerAction("DEPLOY_TOKEN_CONTRACT", {
+    const response = await runtime.processAction("DEPLOY_TOKEN_CONTRACT", {
         contractType: "ERC20",
         name: "MyToken",
         symbol: "MTK",
@@ -400,7 +400,7 @@ All contract deployments and interactions are logged to a CSV file for record-ke
 2. **NFT Collection**
 
     ```typescript
-    const response = await runtime.triggerAction("DEPLOY_TOKEN_CONTRACT", {
+    const response = await runtime.processAction("DEPLOY_TOKEN_CONTRACT", {
         contractType: "ERC721",
         name: "MyNFT",
         symbol: "MNFT",
@@ -411,7 +411,7 @@ All contract deployments and interactions are logged to a CSV file for record-ke
 
 3. **Multi-token Collection**
     ```typescript
-    const response = await runtime.triggerAction("DEPLOY_TOKEN_CONTRACT", {
+    const response = await runtime.processAction("DEPLOY_TOKEN_CONTRACT", {
         contractType: "ERC1155",
         name: "MyMultiToken",
         symbol: "MMT",
@@ -423,7 +423,7 @@ All contract deployments and interactions are logged to a CSV file for record-ke
 **Contract Interaction Example:**
 
 ```typescript
-const response = await runtime.triggerAction("INVOKE_CONTRACT", {
+const response = await runtime.processAction("INVOKE_CONTRACT", {
   contractAddress: "0x123...",
   method: "transfer",
   abi: [...],
@@ -469,7 +469,7 @@ const provider = new DeriveKeyProvider();
 // Derive a raw key
 try {
     const rawKey = await provider.rawDeriveKey(
-        "/path/to/derive",
+        "/path/to/derive", // This is what the WALLET_SECRET_SALT is used for
         "subject-identifier",
     );
     // rawKey is a DeriveKeyResponse that can be used for further processing
@@ -482,7 +482,7 @@ try {
 // Derive a Solana keypair (Ed25519)
 try {
     const solanaKeypair = await provider.deriveEd25519Keypair(
-        "/path/to/derive",
+        "/path/to/derive", // This is what the WALLET_SECRET_SALT is used for
         "subject-identifier",
     );
     // solanaKeypair can now be used for Solana operations
@@ -493,7 +493,7 @@ try {
 // Derive an Ethereum keypair (ECDSA)
 try {
     const evmKeypair = await provider.deriveEcdsaKeypair(
-        "/path/to/derive",
+        "/path/to/derive", // This is what the WALLET_SECRET_SALT is used for
         "subject-identifier",
     );
     // evmKeypair can now be used for Ethereum operations
@@ -597,7 +597,7 @@ The Webhook Plugin enables Eliza to interact with the Coinbase SDK to create and
 To create a webhook:
 
 ```typescript
-const response = await runtime.triggerAction("CREATE_WEBHOOK", {
+const response = await runtime.processAction("CREATE_WEBHOOK", {
     networkId: "base",
     eventType: "transfers",
     notificationUri: "https://your-notification-uri.com",
@@ -740,6 +740,158 @@ cargo run --ip-addr <ip>:<port>
 ```
 # The server runs on 1350 inside Docker, can remap to any interface and port
 docker run --init -p 127.0.0.1:1350:1350 marlinorg/attestation-server-custom-mock
+```
+
+### 12. Allora Plugin (`@elizaos/allora-plugin`)
+
+The [Allora Network](https://allora.network) plugin seamlessly empowers Eliza agents with real-time, advanced, self-improving AI inferences, delivering high-performance insights without introducing any additional complexity.
+
+#### Setup and Configuration
+
+1. Add the plugin to your character's configuration
+
+    ```typescript
+    import { alloraPlugin } from "@eliza/plugin-allora";
+
+    const character = {
+        plugins: [alloraPlugin],
+    };
+    ```
+
+2. Set the following environment variables:
+    - `ALLORA_API_KEY`: Create an API key by [creating an account](https://developer.upshot.xyz/signup).
+
+#### Actions
+
+- `GET_INFERENCE`: Retrieves predictions for a specific topic.
+
+Example interactions:
+
+```
+User: "What is the predicted ETH price in 5 minutes?"
+Agent: "I'll get the inference now..."
+Agent: "Inference provided by Allora Network on topic ETH 5min Prediction (ID: 13): 3393.364326646801085508"
+```
+
+For detailed information and additional implementation examples, please refer to the [Allora-Eliza integration docs](https://docs.allora.network/marketplace/integrations/eliza-os/implementation).
+
+### 13. Form Plugin (`@elizaos/plugin-form`)
+
+The Form chain plugin enables interaction with Form blockchain's unique SocialFi token economics including but not limited to the Bonding Curves tokens. It provides functionality for buying, selling, withdrawing, depositing, and managing curves tokens.
+
+**Actions:**
+
+1. `BUY_CURVES_TOKEN` - Buy curves tokens for a subject address
+   - **Inputs**:
+     - `subject`: Address to buy curves for
+     - `amount`: Number of curves tokens to buy (defaults to 1)
+     - `formula`: Curves formula type ("QUADRATIC" or "LOGRITHMIC")
+   - **Example**:
+     ```json
+     {
+       "subject": "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+       "amount": 1,
+       "formula": "QUADRATIC"
+     }
+     ```
+
+2. `SELL_CURVES_TOKEN` - Sell curves tokens for a subject address
+   - **Inputs**:
+     - `subject`: Address whose curves to sell
+     - `amount`: Number of curves tokens to sell (defaults to 1)
+     - `formula`: Curves formula type ("QUADRATIC" or "LOGRITHMIC")
+
+3. `WITHDRAW_CURVES_TOKEN` - Convert curves tokens to their ERC20 equivalent
+   - **Inputs**:
+     - `subject`: Address whose curves to withdraw
+     - `amount`: Number of curves tokens to withdraw (integer values only)
+     - `formula`: Curves formula type ("QUADRATIC" or "LOGRITHMIC")
+
+4. `DEPOSIT_CURVES_TOKEN` - Convert ERC20 tokens back to curves tokens
+   - **Inputs**:
+     - `subject`: Address whose ERC20 to convert
+     - `amount`: Amount in ERC20 decimals (18 decimals precision)
+     - `formula`: Curves formula type ("QUADRATIC" or "LOGRITHMIC")
+
+5. `MINT_CURVES_ERC20` - Mint new ERC20 token for curves holdings
+   - **Inputs**:
+     - `name`: Token name (1-32 characters)
+     - `symbol`: Token symbol (1-8 characters, uppercase)
+     - `formula`: Curves formula type ("QUADRATIC" or "LOGRITHMIC")
+
+6. `GET_CURVES_BALANCE` - Check curves token balance
+   - **Inputs**:
+     - `subject`: Address to check balance for
+     - `owner`: Optional owner address (defaults to connected wallet)
+     - `formula`: Curves formula type ("QUADRATIC" or "LOGRITHMIC")
+
+7. `GET_CURVES_BUY_PRICE` - Get price quote for buying curves
+   - **Inputs**:
+     - `subject`: Address to check price for
+     - `amount`: Number of curves tokens (defaults to 1)
+     - `formula`: Curves formula type ("QUADRATIC" or "LOGRITHMIC")
+
+8. `GET_CURVES_SELL_PRICE` - Get price quote for selling curves
+   - **Inputs**:
+     - `subject`: Address to check price for
+     - `amount`: Number of curves tokens (defaults to 1)
+     - `formula`: Curves formula type ("QUADRATIC" or "LOGRITHMIC")
+
+8. `GET_CURVES_ERC20_DETAILS` - Get curves token respective ERC20 details
+   - **Inputs**:
+     - `subject`: Address to check ERC20 token for
+     - `formula`: Curves formula type ("QUADRATIC" or "LOGRITHMIC")
+
+**Providers:**
+- `curvesFormulaProvider` - Provides context about available curves formulas and their use cases
+- `formWalletProvider` - Provides a wallet for accessing Form blockchain and performing common operations
+
+**Setup and Configuration:**
+
+1. **Configure the Plugin**
+   Add the plugin to your character's configuration:
+   ```typescript
+   import { formPlugin } from "@elizaos/plugin-form";
+
+   const character = {
+       plugins: [formPlugin],
+   };
+2. **Required Configurations**
+  Set the following environment variables:
+  ```bash
+  FORM_PRIVATE_KEY=your_private_key
+  FORM_TESTNET=true  # Optional, defaults to false
+  ```
+
+**Formula Types:**
+
+- `QUADRATIC`: Standard bonding curve for regular use cases
+- `LOGRITHMIC`: Optimized for high-volume trading and price stability
+
+**Best Practices:**
+
+- Always check token balances before selling or withdrawing
+- Use price quotes before executing trades
+- For large-scale operations, use the LOGRITHMIC formula
+- Keep track of ERC20 token addresses after minting
+- Validate token names and symbols before minting
+- Consider gas costs when executing transactions
+
+**Examples:**
+```typescript
+// Buying curves tokens
+await runtime.processAction("BUY_CURVES_TOKEN", {
+    subject: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+    amount: 1,
+    formula: "QUADRATIC"
+});
+
+// Converting to ERC20
+await runtime.processAction("WITHDRAW_CURVES_TOKEN", {
+    subject: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+    amount: 1,
+    formula: "QUADRATIC"
+});
 ```
 
 ### Writing Custom Plugins

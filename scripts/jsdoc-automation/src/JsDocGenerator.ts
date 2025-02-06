@@ -1,5 +1,5 @@
-import { AIService } from "./AIService.js";
-import { ASTQueueItem } from "./types/index.js";
+import type { AIService } from "./AIService/AIService.js";
+import type { ASTQueueItem } from "./types/index.js";
 
 /**
  * A class that generates JSDoc comments for code snippets and classes.
@@ -50,7 +50,7 @@ export class JsDocGenerator {
         \`\`\`typescript
         ${queueItem.code}
         \`\`\`
-        
+
         Only return the JSDoc comment, not the code itself.
         `;
     }
@@ -61,7 +61,7 @@ export class JsDocGenerator {
         Class name: ${queueItem.code.match(/class (\w+)/)?.[1]}
 
         Only return the JSDoc for the Class itself, not the methods or anything in the class.
-        
+
         Only return the JSDoc comment for the class, no other text or code.
 
         Example:

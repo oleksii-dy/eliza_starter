@@ -1,5 +1,5 @@
 import { elizaLogger } from "@elizaos/core";
-import {
+import type {
     Action,
     HandlerCallback,
     IAgentRuntime,
@@ -7,7 +7,7 @@ import {
     Plugin,
     State,
 } from "@elizaos/core";
-import fs from "fs";
+import fs from "node:fs"; 
 import { LUMA_CONSTANTS } from "./constants";
 
 const generateVideo = async (prompt: string, runtime: IAgentRuntime) => {
@@ -71,7 +71,7 @@ const generateVideo = async (prompt: string, runtime: IAgentRuntime) => {
                     error: errorText,
                 });
                 throw new Error(
-                    "Failed to check generation status: " + errorText
+                    `Failed to check generation status: ${errorText}`
                 );
             }
 
@@ -129,7 +129,7 @@ const videoGeneration: Action = {
         runtime: IAgentRuntime,
         message: Memory,
         _state: State,
-        _options: any,
+        _options: Record<string, unknown>,
         callback: HandlerCallback
     ) => {
         elizaLogger.log("Video generation request:", message);
@@ -161,7 +161,6 @@ const videoGeneration: Action = {
 
             if (result.success && result.data) {
                 // Download the video file
-                // @ts-expect-error todo
                 const response = await fetch(result.data);
                 const arrayBuffer = await response.arrayBuffer();
                 const videoFileName = `content_cache/generated_video_${Date.now()}.mp4`;
@@ -175,7 +174,6 @@ const videoGeneration: Action = {
                         attachments: [
                             {
                                 id: crypto.randomUUID(),
-                                // @ts-expect-error todo
                                 url: result.data,
                                 title: "Generated Video",
                                 source: "videoGeneration",

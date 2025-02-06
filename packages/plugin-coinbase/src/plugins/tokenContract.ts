@@ -1,12 +1,12 @@
-import { Coinbase, readContract, SmartContract } from "@coinbase/coinbase-sdk";
+import { Coinbase, readContract, type SmartContract } from "@coinbase/coinbase-sdk";
 import {
-    Action,
-    Plugin,
+    type Action,
+    type Plugin,
     elizaLogger,
-    IAgentRuntime,
-    Memory,
-    HandlerCallback,
-    State,
+    type IAgentRuntime,
+    type Memory,
+    type HandlerCallback,
+    type State,
     composeContext,
     generateObject,
     ModelClass,
@@ -61,12 +61,10 @@ export const deployTokenContractAction: Action = {
         elizaLogger.info("Validating runtime for DEPLOY_TOKEN_CONTRACT...");
         return (
             !!(
-                // @ts-expect-error todo
                 runtime.character.settings.secrets?.COINBASE_API_KEY ||
                 process.env.COINBASE_API_KEY
             ) &&
             !!(
-                // @ts-expect-error todo
                 runtime.character.settings.secrets?.COINBASE_PRIVATE_KEY ||
                 process.env.COINBASE_PRIVATE_KEY
             )
@@ -83,11 +81,9 @@ export const deployTokenContractAction: Action = {
 
         try {
             Coinbase.configure({
-                // @ts-expect-error todo
                 apiKeyName:
                     runtime.getSetting("COINBASE_API_KEY") ??
                     process.env.COINBASE_API_KEY,
-                // @ts-expect-error todo
                 privateKey:
                     runtime.getSetting("COINBASE_PRIVATE_KEY") ??
                     process.env.COINBASE_PRIVATE_KEY,
@@ -294,12 +290,10 @@ export const invokeContractAction: Action = {
         elizaLogger.info("Validating runtime for INVOKE_CONTRACT...");
         return (
             !!(
-                // @ts-expect-error todo
                 runtime.character.settings.secrets?.COINBASE_API_KEY ||
                 process.env.COINBASE_API_KEY
             ) &&
             !!(
-                // @ts-expect-error todo
                 runtime.character.settings.secrets?.COINBASE_PRIVATE_KEY ||
                 process.env.COINBASE_PRIVATE_KEY
             )
@@ -316,11 +310,9 @@ export const invokeContractAction: Action = {
 
         try {
             Coinbase.configure({
-                // @ts-expect-error todo
                 apiKeyName:
                     runtime.getSetting("COINBASE_API_KEY") ??
                     process.env.COINBASE_API_KEY,
-                // @ts-expect-error todo
                 privateKey:
                     runtime.getSetting("COINBASE_PRIVATE_KEY") ??
                     process.env.COINBASE_PRIVATE_KEY,
@@ -365,7 +357,6 @@ export const invokeContractAction: Action = {
                 abi: ABI,
                 args: {
                     ...args,
-                    // @ts-expect-error todo
                     amount: args.amount || amount, // Ensure amount is passed in args
                 },
                 networkId,
@@ -435,7 +426,7 @@ Contract invocation has been logged to the CSV file.`,
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Call the 'transfer' method on my ERC20 token contract at 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 with amount 100 to recepient 0xbcF7C64B880FA89a015970dC104E848d485f99A3",
+                    text: "Call the 'transfer' method on my ERC20 token contract at 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 with amount 100 to recipient 0xbcF7C64B880FA89a015970dC104E848d485f99A3",
                 },
             },
             {
@@ -466,12 +457,10 @@ export const readContractAction: Action = {
         elizaLogger.info("Validating runtime for READ_CONTRACT...");
         return (
             !!(
-                // @ts-expect-error todo
                 runtime.character.settings.secrets?.COINBASE_API_KEY ||
                 process.env.COINBASE_API_KEY
             ) &&
             !!(
-                // @ts-expect-error todo
                 runtime.character.settings.secrets?.COINBASE_PRIVATE_KEY ||
                 process.env.COINBASE_PRIVATE_KEY
             )
@@ -488,11 +477,9 @@ export const readContractAction: Action = {
 
         try {
             Coinbase.configure({
-                // @ts-expect-error todo
                 apiKeyName:
                     runtime.getSetting("COINBASE_API_KEY") ??
                     process.env.COINBASE_API_KEY,
-                // @ts-expect-error todo
                 privateKey:
                     runtime.getSetting("COINBASE_PRIVATE_KEY") ??
                     process.env.COINBASE_PRIVATE_KEY,

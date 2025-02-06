@@ -2,18 +2,18 @@ import {
     getEmbeddingZeroVector,
     stringToUuid,
     elizaLogger,
-    Character,
-    Client as ElizaClient,
-    IAgentRuntime,
+    type Character,
+    type Client as ElizaClient,
+    type IAgentRuntime,
 } from "@elizaos/core";
 import {
     Client,
     Events,
     GatewayIntentBits,
-    Guild,
-    MessageReaction,
+    type Guild,
+    type MessageReaction,
     Partials,
-    User,
+    type User,
 } from "discord.js";
 import { EventEmitter } from "events";
 import chat_with_attachments from "./actions/chat_with_attachments.ts";
@@ -320,9 +320,7 @@ export class DiscordClient extends EventEmitter {
 
         const messageContent = reaction.message.content;
         const truncatedContent =
-            // @ts-expect-error todo
             messageContent.length > 50
-                // @ts-expect-error todo
                 ? messageContent.substring(0, 50) + "..."
                 : messageContent;
 
@@ -338,9 +336,7 @@ export class DiscordClient extends EventEmitter {
             `${reaction.message.id}-${user.id}-${emoji}-removed-${this.runtime.agentId}`
         );
 
-        // @ts-expect-error todo
         const userName = reaction.message.author.username;
-        // @ts-expect-error todo
         const name = reaction.message.author.displayName;
 
         await this.runtime.ensureConnection(

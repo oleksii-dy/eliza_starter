@@ -1,5 +1,5 @@
 import { elizaLogger } from "@elizaos/core";
-import {
+import type {
     Action,
     HandlerCallback,
     IAgentRuntime,
@@ -10,13 +10,12 @@ import {
 import { fal } from "@fal-ai/client";
 import { FAL_CONSTANTS } from "./constants";
 
-import * as fs from "fs";
-import { Buffer } from "buffer";
-import * as path from "path";
-import * as process from "process";
+import * as fs from "node:fs";
+import { Buffer } from "node:buffer";
+import * as path from "node:path";
+import * as process from "node:process";
 
 const generate3D = async (prompt: string, runtime: IAgentRuntime) => {
-    // @ts-expect-error todo
     process.env["FAL_KEY"] =
         FAL_CONSTANTS.API_KEY_SETTING || runtime.getSetting("FAL_API_KEY");
 
@@ -85,7 +84,7 @@ const ThreeDGeneration: Action = {
         runtime: IAgentRuntime,
         message: Memory,
         _state: State,
-        _options: any,
+        _options: Record<string, unknown>,
         callback: HandlerCallback
     ) => {
         elizaLogger.log("3D generation request:", message);

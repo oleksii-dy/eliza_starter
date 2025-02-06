@@ -1,7 +1,7 @@
 import { PassThrough } from "stream";
 import { Readable } from "node:stream";
 import { ReadableStream } from "node:stream/web";
-import { IAgentRuntime, ISpeechService, ServiceType } from "@elizaos/core";
+import { type IAgentRuntime, type ISpeechService, ServiceType } from "@elizaos/core";
 import { getWavHeader } from "./audioUtils.ts";
 import { Service } from "@elizaos/core";
 import { validateNodeConfig } from "../environment.ts";
@@ -12,8 +12,8 @@ function prependWavHeader(
     readable: Readable,
     audioLength: number,
     sampleRate: number,
-    channelCount: number = 1,
-    bitsPerSample: number = 16
+    channelCount = 1,
+    bitsPerSample = 16
 ): Readable {
     const wavHeader = getWavHeader(
         audioLength,
@@ -23,14 +23,14 @@ function prependWavHeader(
     );
     let pushedHeader = false;
     const passThrough = new PassThrough();
-    readable.on("data", function (data) {
+    readable.on("data", (data) => {
         if (!pushedHeader) {
             passThrough.push(wavHeader);
             pushedHeader = true;
         }
         passThrough.push(data);
     });
-    readable.on("end", function () {
+    readable.on("end", () => {
         passThrough.end();
     });
     return passThrough;
@@ -82,7 +82,6 @@ async function textToSpeech(runtime: IAgentRuntime, text: string) {
             `https://api.elevenlabs.io/v1/text-to-speech/${elevenlabsVoiceId}/stream?optimize_streaming_latency=${runtime.getSetting("ELEVENLABS_OPTIMIZE_STREAMING_LATENCY")}&output_format=${runtime.getSetting("ELEVENLABS_OUTPUT_FORMAT")}`,
             {
                 method: "POST",
-                // @ts-expect-error todo
                 headers: {
                     "Content-Type": "application/json",
                     "xi-api-key": runtime.getSetting("ELEVENLABS_XI_API_KEY"),
@@ -146,13 +145,11 @@ async function textToSpeech(runtime: IAgentRuntime, text: string) {
             });
 
             if (
-                // @ts-expect-error todo
                 runtime
                     .getSetting("ELEVENLABS_OUTPUT_FORMAT")
                     .startsWith("pcm_")
             ) {
-                const sampleRate = parseInt(
-                    // @ts-expect-error todo
+                const sampleRate = Number.parseInt(
                     runtime.getSetting("ELEVENLABS_OUTPUT_FORMAT").substring(4)
                 );
                 const withHeader = prependWavHeader(

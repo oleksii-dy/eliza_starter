@@ -3,13 +3,13 @@ import { generateText } from "@elizaos/core";
 import { getGoals } from "@elizaos/core";
 import { parseJsonArrayFromText } from "@elizaos/core";
 import {
-    IAgentRuntime,
-    Memory,
+    type IAgentRuntime,
+    type Memory,
     ModelClass,
-    Objective,
+    type Objective,
     type Goal,
     type State,
-    Evaluator,
+    type Evaluator,
 } from "@elizaos/core";
 
 const goalsTemplate = `TASK: Update Goal
@@ -69,7 +69,7 @@ async function handler(
     });
 
     // Parse the JSON response to extract goal updates
-    const updates = parseJsonArrayFromText<Goal>(response);
+    const updates = parseJsonArrayFromText(response);
 
     // get goals
     const goalsData = await getGoals({
@@ -80,34 +80,18 @@ async function handler(
 
     // Apply the updates to the goals
     const updatedGoals = goalsData
-        .map((goal: Goal) => {
+        .map((goal: Goal): Goal => {
             const update = updates?.find((u) => u.id === goal.id);
             if (update) {
-                const objectives = goal.objectives;
-
-                // for each objective in update.objectives, find the objective with the same description in 'objectives' and set the 'completed' value to the update.objectives value
-                if (update.objectives) {
-                    for (const objective of objectives) {
-                        const updatedObjective = update.objectives.find(
-                            (o: Objective) =>
-                                o.description === objective.description
-                        );
-                        if (updatedObjective) {
-                            objective.completed = updatedObjective.completed;
-                        }
-                    }
-                }
-
+                // Merge the update into the existing goal
                 return {
                     ...goal,
                     ...update,
-                    objectives: [
-                        ...goal.objectives,
-                        ...(update?.objectives || []),
-                    ],
-                }; // Merging the update into the existing goal
-            } else {
-                console.warn("**** ID NOT FOUND");
+                    objectives: goal.objectives.map((objective) => {
+                        const updatedObjective = update.objectives?.find(uo => uo.description === objective.description);
+                        return updatedObjective ? { ...objective, ...updatedObjective } : objective;
+                    }),
+                };
             }
             return null; // No update for this goal
         })
@@ -115,16 +99,12 @@ async function handler(
 
     // Update goals in the database
     for (const goal of updatedGoals) {
-        // @ts-expect-error todo
         const id = goal.id;
         // delete id from goal
-        // @ts-expect-error todo
         if (goal.id) delete goal.id;
-        // @ts-expect-error todo
         await runtime.databaseAdapter.updateGoal({ ...goal, id });
     }
 
-    // @ts-expect-error todo
     return updatedGoals; // Return updated goals for further processing or logging
 }
 

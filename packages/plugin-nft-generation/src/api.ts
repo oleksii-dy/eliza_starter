@@ -1,7 +1,7 @@
 import express from "express";
 
-import { AgentRuntime } from "@elizaos/core";
-import { createCollection } from "./handlers/createCollection.ts";
+import type { AgentRuntime } from "@elizaos/core";
+import { createSolanaCollection } from "./handlers/createSolanaCollection.ts";
 import { createNFT, createNFTMetadata } from "./handlers/createNFT.ts";
 import { verifyNFT } from "./handlers/verifyNFT.ts";
 
@@ -21,8 +21,7 @@ export function createNFTApiRouter(
                 return;
             }
             try {
-                const collectionAddressRes = await createCollection({
-                    // @ts-expect-error todo
+                const collectionAddressRes = await createSolanaCollection({
                     runtime,
                     collectionName: runtime.character.name,
                     fee,
@@ -59,7 +58,6 @@ export function createNFTApiRouter(
 
             try {
                 const nftInfo = await createNFTMetadata({
-                    // @ts-expect-error todo
                     runtime,
                     collectionName,
                     collectionAdminPublicKey,
@@ -101,7 +99,6 @@ export function createNFTApiRouter(
 
             try {
                 const nftRes = await createNFT({
-                    // @ts-expect-error todo
                     runtime,
                     collectionName,
                     collectionAddress,
@@ -144,7 +141,6 @@ export function createNFTApiRouter(
             }
             try {
                 const { success } = await verifyNFT({
-                    // @ts-expect-error todo
                     runtime,
                     collectionAddress,
                     NFTAddress,

@@ -2,14 +2,14 @@ import { composeContext, elizaLogger } from "@elizaos/core";
 import { generateMessageResponse, generateTrueOrFalse } from "@elizaos/core";
 import { booleanFooter, messageCompletionFooter } from "@elizaos/core";
 import {
-    Action,
-    ActionExample,
-    Content,
-    HandlerCallback,
-    IAgentRuntime,
-    Memory,
+    type Action,
+    type ActionExample,
+    type Content,
+    type HandlerCallback,
+    type IAgentRuntime,
+    type Memory,
     ModelClass,
-    State,
+    type State,
 } from "@elizaos/core";
 
 const maxContinuesInARow = 3;
@@ -216,7 +216,6 @@ export const continueAction: Action = {
 
             if (continueCount >= maxContinuesInARow - 1) {
                 // -1 because we're about to add another
-                // @ts-expect-error todo
                 response.action = null;
             }
         }

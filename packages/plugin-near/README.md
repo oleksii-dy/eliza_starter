@@ -34,8 +34,8 @@ NEAR_WALLET_SECRET_KEY=your-wallet-private-key
 NEAR_WALLET_PUBLIC_KEY=your-wallet-public-key
 NEAR_ADDRESS=your-account.near
 NEAR_NETWORK=testnet  # mainnet or testnet
-RPC_URL=https://rpc.testnet.near.org
-SLIPPAGE=0.01  # 1% slippage tolerance
+NEAR_RPC_URL=https://rpc.testnet.near.org
+NEAR_SLIPPAGE=0.01  # 1% slippage tolerance
 ```
 
 ## Usage
@@ -213,7 +213,7 @@ Special thanks to:
 For more information about NEAR blockchain capabilities:
 
 - [NEAR Documentation](https://docs.near.org/)
-- [NEAR Developer Portal](https://near.org/developers)
+- [NEAR Developer Portal](https://dev.near.org)
 - [NEAR Network Dashboard](https://nearscan.io/)
 - [NEAR GitHub Repository](https://github.com/nearprotocol/near-api-js)
 

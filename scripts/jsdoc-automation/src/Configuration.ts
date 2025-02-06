@@ -4,7 +4,7 @@ import * as yaml from "yaml";
 import * as path from "path";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import { Repository } from "./types/index.js";
+import type { Repository } from "./types/index.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -29,7 +29,6 @@ interface ConfigurationData {
     excludedFiles: string[];
     generateJsDoc: boolean;
     generateReadme: boolean;
-    language: string;
 }
 
 /**
@@ -39,10 +38,9 @@ interface ConfigurationData {
 export class Configuration implements Omit<ConfigurationData, "rootDirectory"> {
     private _rootDirectory!: ConfigurationData["rootDirectory"];
     private readonly repoRoot: string;
-    private _branch: string = "develop";
-    private _language: string = "English";
-    private _generateJsDoc: boolean = true;
-    private _generateReadme: boolean = true;
+    private _branch = "develop";
+    private _generateJsDoc = true;
+    private _generateReadme = false;
 
     public excludedDirectories: string[] = [];
     public repository: Repository = {
@@ -50,9 +48,9 @@ export class Configuration implements Omit<ConfigurationData, "rootDirectory"> {
         name: "eliza",
         pullNumber: undefined,
     };
-    public commitMessage: string = "Generated JSDoc comments";
-    public pullRequestTitle: string = "JSDoc Generation";
-    public pullRequestDescription: string =
+    public commitMessage = "Generated JSDoc comments";
+    public pullRequestTitle = "JSDoc Generation";
+    public pullRequestDescription =
         "Automated JSDoc generation for the codebase";
     public pullRequestLabels: string[] = ["documentation", "automated-pr"];
     public pullRequestReviewers: string[] = [];
@@ -61,14 +59,6 @@ export class Configuration implements Omit<ConfigurationData, "rootDirectory"> {
     constructor() {
         this.repoRoot = getRepoRoot();
         this.loadConfiguration();
-    }
-
-    get language(): string {
-        return this._language;
-    }
-
-    set language(value: string) {
-        this._language = value;
     }
 
     get generateJsDoc(): boolean {
@@ -109,8 +99,6 @@ export class Configuration implements Omit<ConfigurationData, "rootDirectory"> {
 
     private loadConfiguration(): void {
         // First try to get from environment variables
-        this._language = process.env.INPUT_LANGUAGE || "English";
-        console.log("Using language:", this._language);
         const rootDirectory = process.env.INPUT_ROOT_DIRECTORY;
         this._generateJsDoc = process.env.INPUT_JSDOC
             ? process.env.INPUT_JSDOC.toUpperCase() === "T"
@@ -183,7 +171,7 @@ export class Configuration implements Omit<ConfigurationData, "rootDirectory"> {
                 "Setting pull number from env:",
                 process.env.INPUT_PULL_NUMBER
             );
-            this.repository.pullNumber = parseInt(
+            this.repository.pullNumber = Number.parseInt(
                 process.env.INPUT_PULL_NUMBER
             );
         }

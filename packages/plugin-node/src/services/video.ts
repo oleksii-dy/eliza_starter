@@ -1,8 +1,8 @@
 import {
-    IAgentRuntime,
-    ITranscriptionService,
-    IVideoService,
-    Media,
+    type IAgentRuntime,
+    type ITranscriptionService,
+    type IVideoService,
+    type Media,
     Service,
     ServiceType,
     stringToUuid,
@@ -20,7 +20,7 @@ export class VideoService extends Service implements IVideoService {
     private dataDir = "./content_cache";
 
     private queue: string[] = [];
-    private processing: boolean = false;
+    private processing = false;
 
     constructor() {
         super();
@@ -347,7 +347,8 @@ export class VideoService extends Service implements IVideoService {
             throw new Error("Transcription service not found");
         }
 
-        const transcript = await transcriptionService.transcribe(audioBuffer);
+        const uintBuffer = new Uint8Array(audioBuffer).buffer;
+        const transcript = await transcriptionService.transcribe(uintBuffer);
 
         const endTime = Date.now();
         elizaLogger.log(
