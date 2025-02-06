@@ -1,5 +1,6 @@
 import type { BinanceConfig } from "../types/internal/config";
 import { AccountService } from "./account";
+import { KlineService } from "./kline";
 import { PriceService } from "./price";
 import { TradeService } from "./trade";
 
@@ -10,11 +11,13 @@ export class BinanceService {
     private priceService: PriceService;
     private tradeService: TradeService;
     private accountService: AccountService;
+    private klineService: KlineService;
 
     constructor(config?: BinanceConfig) {
         this.priceService = new PriceService(config);
         this.tradeService = new TradeService(config);
         this.accountService = new AccountService(config);
+        this.klineService = new KlineService(config);
     }
 
     /**
@@ -47,6 +50,13 @@ export class BinanceService {
     async checkBalance(...args: Parameters<AccountService["checkBalance"]>) {
         return this.accountService.checkBalance(...args);
     }
+
+    /**
+     * Kline-related operations
+     */
+    async getKline(...args: Parameters<KlineService["getKlines"]>) {
+        return this.klineService.getKlines(...args);
+    }
 }
 
-export { AccountService, PriceService, TradeService };
+export { AccountService, KlineService, PriceService, TradeService };

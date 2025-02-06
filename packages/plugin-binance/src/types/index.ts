@@ -1,5 +1,6 @@
 // API Types
 export * from "./api/account";
+export * from "./api/kline";
 export * from "./api/price";
 export * from "./api/trade";
 

@@ -12,6 +12,7 @@ export const API_ENDPOINTS = {
     ACCOUNT: "/api/v3/account",
     ORDER: "/api/v3/order",
     EXCHANGE_INFO: "/api/v3/exchangeInfo",
+    KLINE: "/api/v3/klines",
 };
 
 export const ORDER_TYPES = {
