@@ -1,4 +1,4 @@
-import { IAgentRuntime, Memory, Provider, State } from "@elizaos/core";
+import { IAgentRuntime, Memory, Provider, State, settings } from "@elizaos/core";
 import { Scraper } from "agent-twitter-client";
 
 // Pre Defined Twitter KOL
@@ -91,10 +91,10 @@ export class twitterDataProvider {
             if (!await scraper.isLoggedIn()) {
                 // Log in to Twitter using the configured environment variables
                 await scraper.login(
-                    process.env.TWITTER_USERNAME,
-                    process.env.TWITTER_PASSWORD,
-                    process.env.TWITTER_EMAIL,
-                    process.env.TWITTER_2FA_SECRET || undefined
+                    settings.TWITTER_USERNAME,
+                    settings.TWITTER_PASSWORD,
+                    settings.TWITTER_EMAIL,
+                    settings.TWITTER_2FA_SECRET || undefined
                 );
 
                 console.log("Logged in successfully!");

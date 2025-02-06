@@ -108,7 +108,7 @@ class AuthUtils {
         }
     }
 
-    async verifyTwitterCredentials(
+    /*async verifyTwitterCredentials(
         credentials: TwitterCredentials
     ): Promise<any> {
         const scraper = new Scraper();
@@ -128,7 +128,7 @@ class AuthUtils {
         } finally {
             await scraper.logout();
         }
-    }
+    }*/
 
     async getRuntime(agentId: string) {
         let runtime = this.client.agents.get(agentId);
