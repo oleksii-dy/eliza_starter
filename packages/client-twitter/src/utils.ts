@@ -256,10 +256,15 @@ export async function sendTweet(
             sentTweets.push(finalTweet);
             previousTweetId = finalTweet.id;
         } else {
-            elizaLogger.error("Error sending tweet chunk:", {
+            //
+            elizaLogger.error("Error sending tweet chunk for ", twitterUsername, ":", {
                 chunk,
                 response: body,
             });
+            // body is json, parse it
+            // body.errors[0].message==="Authorization: User is over daily status update limit. (185)"
+            // stop it now
+            // set timer for 24 hours to restart it
         }
 
         // Wait a bit between tweets to avoid rate limiting issues

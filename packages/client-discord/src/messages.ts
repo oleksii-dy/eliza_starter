@@ -1304,9 +1304,12 @@ export class MessageManager {
         });
 
         if (!response.ok) {
+            console.error(`Error fetching bot details: ${response.statusText}`)
+            /*
             throw new Error(
                 `Error fetching bot details: ${response.statusText}`
             );
+            */
         }
 
         const data = await response.json();
@@ -1321,16 +1324,20 @@ export class MessageManager {
      */
     private simulateTyping(message: DiscordMessage) {
         let typing = true;
+        try {
+            const typingLoop = async () => {
+                while (typing) {
+                    await message.channel.sendTyping().catch(e => {
+                      console.error('sendTyping', e)
+                    });
+                    await new Promise((resolve) => setTimeout(resolve, 3000));
+                }
+            };
 
-        const typingLoop = async () => {
-            while (typing) {
-                await message.channel.sendTyping();
-                await new Promise((resolve) => setTimeout(resolve, 3000));
-            }
-        };
-
-        typingLoop();
-
+            typingLoop();
+        } catch(e) {
+            elizaLogger.error('discord::messages:simulateTyping error', e)
+        }
         return function stopTyping() {
             typing = false;
         };
