@@ -1128,10 +1128,13 @@ importers:
         version: 1.4.5-lts.1
       openai:
         specifier: 4.73.0
-        version: 4.73.0(encoding@0.1.13)(zod@3.24.1)
+        version: 4.73.0(encoding@0.1.13)(zod@3.23.8)
       whatwg-url:
         specifier: 7.1.0
         version: 7.1.0
+      zod:
+        specifier: ^3.23.8
+        version: 3.23.8
     devDependencies:
       '@types/multer':
         specifier: ^1.4.12
@@ -60623,20 +60626,6 @@ snapshots:
       node-fetch: 2.7.0(encoding@0.1.13)
     optionalDependencies:
       zod: 3.23.8
-    transitivePeerDependencies:
-      - encoding
-
-  openai@4.73.0(encoding@0.1.13)(zod@3.24.1):
-    dependencies:
-      '@types/node': 18.19.74
-      '@types/node-fetch': 2.6.12
-      abort-controller: 3.0.0
-      agentkeepalive: 4.6.0
-      form-data-encoder: 1.7.2
-      formdata-node: 4.4.1
-      node-fetch: 2.7.0(encoding@0.1.13)
-    optionalDependencies:
-      zod: 3.24.1
     transitivePeerDependencies:
       - encoding
 
