@@ -3,6 +3,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createMistral } from "@ai-sdk/mistral";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
+import { bedrock } from "@ai-sdk/amazon-bedrock";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import {
     generateObject as aiGenerateObject,
@@ -533,7 +534,8 @@ export async function generateText({
             case ModelProviderName.HYPERBOLIC:
             case ModelProviderName.TOGETHER:
             case ModelProviderName.NINETEEN_AI:
-            case ModelProviderName.AKASH_CHAT_API: {
+            case ModelProviderName.AKASH_CHAT_API:
+            case ModelProviderName.LMSTUDIO: {
                 elizaLogger.debug(
                     "Initializing OpenAI model with Cloudflare check"
                 );
@@ -574,8 +576,14 @@ export async function generateText({
                 const openai = createOpenAI({
                     apiKey,
                     baseURL: endpoint,
-                    fetch: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-                        const url = typeof input === 'string' ? input : input.toString();
+                    fetch: async (
+                        input: RequestInfo | URL,
+                        init?: RequestInit
+                    ): Promise<Response> => {
+                        const url =
+                            typeof input === "string"
+                                ? input
+                                : input.toString();
                         const chain_id =
                             runtime.getSetting("ETERNALAI_CHAIN_ID") || "45762";
 
@@ -588,9 +596,11 @@ export async function generateText({
 
                         const fetching = await runtime.fetch(url, options);
 
-                        if (parseBooleanFromText(
-                            runtime.getSetting("ETERNALAI_LOG")
-                        )) {
+                        if (
+                            parseBooleanFromText(
+                                runtime.getSetting("ETERNALAI_LOG")
+                            )
+                        ) {
                             elizaLogger.info(
                                 "Request data: ",
                                 JSON.stringify(options, null, 2)
@@ -1152,8 +1162,41 @@ export async function generateText({
                     maxTokens: max_response_length,
                 });
 
-                response = veniceResponse;
+                // console.warn("veniceResponse:")
+                // console.warn(veniceResponse)
+                //rferrari: remove all text from <think> to </think>\n\n
+                response = veniceResponse
+                    .replace(/<think>[\s\S]*?<\/think>\s*\n*/g, '');
+                // console.warn(response)
+
+                // response = veniceResponse;
                 elizaLogger.debug("Received response from Venice model.");
+                break;
+            }
+
+            case ModelProviderName.NVIDIA: {
+                elizaLogger.debug("Initializing NVIDIA model.");
+                const nvidia = createOpenAI({
+                    apiKey: apiKey,
+                    baseURL: endpoint,
+                });
+
+                const { text: nvidiaResponse } = await aiGenerateText({
+                    model: nvidia.languageModel(model),
+                    prompt: context,
+                    system:
+                        runtime.character.system ??
+                        settings.SYSTEM_PROMPT ??
+                        undefined,
+                    tools: tools,
+                    onStepFinish: onStepFinish,
+                    temperature: temperature,
+                    maxSteps: maxSteps,
+                    maxTokens: max_response_length,
+                });
+
+                response = nvidiaResponse;
+                elizaLogger.debug("Received response from NVIDIA model.");
                 break;
             }
 
@@ -1200,30 +1243,35 @@ export async function generateText({
                     messages: [
                         {
                             role: "system",
-                            content: runtime.character.system ?? settings.SYSTEM_PROMPT ?? "You are a helpful assistant"
+                            content:
+                                runtime.character.system ??
+                                settings.SYSTEM_PROMPT ??
+                                "You are a helpful assistant",
                         },
                         {
                             role: "user",
-                            content: context
-                        }
+                            content: context,
+                        },
                     ],
                     max_tokens: max_response_length,
-                    stream: false
+                    stream: false,
                 };
 
-                const fetchResponse = await runtime.fetch(endpoint+'/llm', {
+                const fetchResponse = await runtime.fetch(endpoint + "/llm", {
                     method: "POST",
                     headers: {
-                        "accept": "text/event-stream",
+                        accept: "text/event-stream",
                         "Content-Type": "application/json",
-                        "Authorization": "Bearer eliza-app-llm"
+                        Authorization: "Bearer eliza-app-llm",
                     },
-                    body: JSON.stringify(requestBody)
+                    body: JSON.stringify(requestBody),
                 });
 
                 if (!fetchResponse.ok) {
                     const errorText = await fetchResponse.text();
-                    throw new Error(`Livepeer request failed (${fetchResponse.status}): ${errorText}`);
+                    throw new Error(
+                        `Livepeer request failed (${fetchResponse.status}): ${errorText}`
+                    );
                 }
 
                 const json = await fetchResponse.json();
@@ -1232,8 +1280,13 @@ export async function generateText({
                     throw new Error("Invalid response format from Livepeer");
                 }
 
-                response = json.choices[0].message.content.replace(/<\|start_header_id\|>assistant<\|end_header_id\|>\n\n/, '');
-                elizaLogger.debug("Successfully received response from Livepeer model");
+                response = json.choices[0].message.content.replace(
+                    /<\|start_header_id\|>assistant<\|end_header_id\|>\n\n/,
+                    ""
+                );
+                elizaLogger.debug(
+                    "Successfully received response from Livepeer model"
+                );
                 break;
             }
 
@@ -1596,6 +1649,10 @@ export const generateImage = async (
     error?: any;
 }> => {
     const modelSettings = getImageModelSettings(runtime.imageModelProvider);
+    if (!modelSettings) {
+        elizaLogger.warn("No model settings found for the image model provider.");
+        return { success: false, error: "No model settings available" };
+    }
     const model = modelSettings.name;
     elizaLogger.info("Generating image with options:", {
         imageModelProvider: model,
@@ -2133,6 +2190,7 @@ export async function handleProvider(
         case ModelProviderName.TOGETHER:
         case ModelProviderName.NANOGPT:
         case ModelProviderName.AKASH_CHAT_API:
+        case ModelProviderName.LMSTUDIO:
             return await handleOpenAI(options);
         case ModelProviderName.ANTHROPIC:
         case ModelProviderName.CLAUDE_VERTEX:
@@ -2211,11 +2269,15 @@ async function handleAnthropic({
     schema,
     schemaName,
     schemaDescription,
-    mode = "json",
+    mode = "auto",
     modelOptions,
     runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     elizaLogger.debug("Handling Anthropic request with Cloudflare check");
+    if (mode === "json") {
+        elizaLogger.warn("Anthropic mode is set to json, changing to auto");
+        mode = "auto";
+    }
     const baseURL = getCloudflareGatewayBaseURL(runtime, "anthropic");
     elizaLogger.debug("Anthropic handleAnthropic baseURL:", { baseURL });
 
@@ -2448,6 +2510,31 @@ async function handleDeepSeek({
     });
 }
 
+/**
+ * Handles object generation for Amazon Bedrock models.
+ *
+ * @param {ProviderOptions} options - Options specific to Amazon Bedrock.
+ * @returns {Promise<GenerateObjectResult<unknown>>} - A promise that resolves to generated objects.
+ */
+async function handleBedrock({
+    model,
+    schema,
+    schemaName,
+    schemaDescription,
+    mode,
+    modelOptions,
+    provider,
+}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+    return await aiGenerateObject({
+        model: bedrock(model),
+        schema,
+        schemaName,
+        schemaDescription,
+        mode,
+        ...modelOptions,
+    });
+}
+
 async function handleLivepeer({
     model,
     apiKey,
@@ -2459,12 +2546,14 @@ async function handleLivepeer({
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     console.log("Livepeer provider api key:", apiKey);
     if (!apiKey) {
-        throw new Error("Livepeer provider requires LIVEPEER_GATEWAY_URL to be configured");
+        throw new Error(
+            "Livepeer provider requires LIVEPEER_GATEWAY_URL to be configured"
+        );
     }
 
     const livepeerClient = createOpenAI({
         apiKey,
-        baseURL: apiKey // Use the apiKey as the baseURL since it contains the gateway URL
+        baseURL: apiKey, // Use the apiKey as the baseURL since it contains the gateway URL
     });
 
     return await aiGenerateObject({
@@ -2476,7 +2565,6 @@ async function handleLivepeer({
         ...modelOptions,
     });
 }
-
 
 // Add type definition for Together AI response
 interface TogetherAIImageResponse {
@@ -2504,13 +2592,13 @@ export async function generateTweetActions({
                 context,
                 modelClass,
             });
-            console.debug(
+            elizaLogger.debug(
                 "Received response from generateText for tweet actions:",
                 response
             );
             const { actions } = parseActionResponseFromText(response.trim());
             if (actions) {
-                console.debug("Parsed tweet actions:", actions);
+                elizaLogger.debug("Parsed tweet actions:", actions);
                 return actions;
             } else {
                 elizaLogger.debug("generateTweetActions no valid response");
