@@ -21,7 +21,7 @@ export class StorjProvider implements StorageProvider {
         this.STORJ_API_PASSWORD = runtime.getSetting("STORJ_API_PASSWORD")!;
         if (!this.STORJ_API_USERNAME || !this.STORJ_API_PASSWORD) {
             elizaLogger.warn(
-                "To use Storj ipfs pinning service you need to set STORJ_API_USERNAME or STORJ_API_PASSWORD in envornment variables. Get your keys at https://storj.io"
+                "To use Storj ipfs pinning service you need to set STORJ_API_USERNAME or STORJ_API_PASSWORD in environment variables. Get your keys at https://storj.io"
             );
         }
         this.baseURL = `${this.STORJ_API_URL}/api/v0`;
