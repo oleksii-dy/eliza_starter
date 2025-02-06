@@ -10,7 +10,8 @@ import {
     generateText,
     ModelClass,
     State,
-    UUID
+    UUID,
+    Provider
 } from "@elizaos/core";
 import { postTweet } from "@elizaos/plugin-twitter";
 import express from "express";
@@ -35,6 +36,10 @@ export class CoinbaseClient implements Client {
 
     constructor(runtime: IAgentRuntime) {
         this.runtime = runtime;
+        // add providers to runtime
+        this.runtime.providers.push(pnlProvider);
+        this.runtime.providers.push(balanceProvider);
+        this.runtime.providers.push(addressProvider);
         this.server = express();
         this.port = Number(runtime.getSetting("COINBASE_WEBHOOK_PORT")) || 3001;
         this.wallets = [];
@@ -259,7 +264,6 @@ Generate only the tweet text, no commentary or markdown.`;
     }
 
     private async handleWebhookEvent(event: WebhookEvent) {
-        // for now just support ETH
         if (!supportedTickers.includes(event.ticker)) {
             elizaLogger.info("Unsupported ticker:", event.ticker);
             return;
@@ -482,6 +486,25 @@ export const calculateOverallPNL = async (
     initialBalance: number
 ): Promise<string> => {
     elizaLogger.info(`initialBalance ${initialBalance}`);
+    const totalBalanceUSD = await getTotalBalanceUSD(runtime, publicKey);
+    elizaLogger.info(`totalBalanceUSD ${totalBalanceUSD}`);
+    const pnlUSD = totalBalanceUSD - initialBalance;
+    elizaLogger.info(`pnlUSD ${pnlUSD}`);
+    const absoluteValuePNL = Math.abs(pnlUSD);
+    elizaLogger.info(`absoluteValuePNL ${absoluteValuePNL}`);
+    const formattedPNL = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(absoluteValuePNL);
+    elizaLogger.info("formattedPNL ", formattedPNL);
+    const formattedPNLUSD = `${pnlUSD < 0 ? "-" : ""}${formattedPNL}`;
+    elizaLogger.info("formattedPNLUSD ", formattedPNLUSD);
+    return formattedPNLUSD;
+};
+
+export async function getTotalBalanceUSD(runtime: IAgentRuntime, publicKey: `0x${string}`): Promise<number> {
     const client = createWalletClient({
         account: privateKeyToAccount(
             ("0x" + runtime.getSetting("WALLET_PRIVATE_KEY")) as `0x${string}`
@@ -519,20 +542,39 @@ export const calculateOverallPNL = async (
     );
     const usdcBalance = Number(usdcBalanceBaseUnits) / 1e6;
     elizaLogger.info(`usdcBalance ${usdcBalance}`);
-    const pnlUSD = ethBalanceUSD + usdcBalance - initialBalance;
-    elizaLogger.info(`pnlUSD ${pnlUSD}`);
-    const absoluteValuePNL = Math.abs(pnlUSD);
-    elizaLogger.info(`absoluteValuePNL ${absoluteValuePNL}`);
-    const formattedPNL = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    }).format(absoluteValuePNL);
-    elizaLogger.info("formattedPNL ", formattedPNL);
-    const formattedPNLUSD = `${pnlUSD < 0 ? "-" : ""}${formattedPNL}`;
-    elizaLogger.info("formattedPNLUSD ", formattedPNLUSD);
-    return formattedPNLUSD;
+    return ethBalanceUSD + usdcBalance;
+}
+
+export const pnlProvider: Provider = {
+    get: async (runtime: IAgentRuntime, _message: Memory) => {
+        elizaLogger.debug("Starting pnlProvider.get function");
+        try {
+            const pnl = await calculateOverallPNL(
+                runtime,
+                runtime.getSetting("WALLET_PUBLIC_KEY") as `0x${string}`,
+                1000
+            );
+            elizaLogger.info("pnl ", pnl);
+            return `PNL: ${pnl}`;
+           
+        } catch (error) {
+            elizaLogger.error("Error in pnlProvider: ", error.message);
+            return [];
+        }
+    },
+};
+
+export const balanceProvider: Provider = {
+    get: async (runtime: IAgentRuntime, _message: Memory) => {
+        const totalBalanceUSD = await getTotalBalanceUSD(runtime, runtime.getSetting("WALLET_PUBLIC_KEY") as `0x${string}`);
+        return `Total balance: $${totalBalanceUSD.toFixed(2)}`;
+    },
+};
+
+export const addressProvider: Provider = {
+    get: async (runtime: IAgentRuntime, _message: Memory) => {
+        return `Address: ${runtime.getSetting("WALLET_PUBLIC_KEY")}`;
+    },
 };
 
 export default CoinbaseClientInterface;
