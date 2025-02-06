@@ -12,8 +12,11 @@ function generateQueryId() {
 export class TonPoolsStrategy implements StakingPlatform {
     constructor(readonly tonClient: TonClient, readonly walletProvider: WalletProvider) {}
 
+    async getPendingWithdrawal(walletAddress: string, poolAddress: string): Promise<Number> {
+        return 0;
+    }
 
-    async getStakedTon(poolAddress: string): Promise<Number> {
+    async getStakedTon(walletAddress: string, poolAddress: string): Promise<Number> {
         return 0
     }
 

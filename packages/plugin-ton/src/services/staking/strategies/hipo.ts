@@ -23,7 +23,7 @@ async function getHipoWallet(tonClient: TonClient, address: Address, treasuryAdd
     // Get wallet contract
     const hipoWalletInstance = Wallet;
     const hipoWallet = tonClient.open(hipoWalletInstance.createFromAddress(walletAddress))
-    
+
     return hipoWallet
 }
 
@@ -34,26 +34,31 @@ async function getExchangeRate(tonClient: TonClient, treasuryAddress: Address) :
 
 }
 
-function parseJettonWalletData(data: TupleReader) : bigint {
-    return data.readBigNumber()
+function calculateJettonsToTon(jettons: bigint, rate: Number) : Number {
+    const tonPerJetton = 1 / (rate as number);
+    const tonAmount =  parseFloat(fromNano(jettons)) * tonPerJetton;
+
+    return tonAmount;
 }
 
 
 export class HipoStrategy implements StakingPlatform {
     constructor(readonly tonClient: TonClient, readonly walletProvider: WalletProvider) {}
 
+    async getPendingWithdrawal(address: string, poolAddress: string): Promise<Number> {
+        const hipoWallet = await getHipoWallet(this.tonClient, Address.parse(address), Address.parse(poolAddress));
+        const walletState = await hipoWallet.getWalletState();
+
+        const rate = await getExchangeRate(this.tonClient, Address.parse(poolAddress));
+        return calculateJettonsToTon(walletState.unstaking, rate);
+    }
+
     async getStakedTon(address: string, poolAddress: string): Promise<Number> {
         const hipoWallet = await getHipoWallet(this.tonClient, Address.parse(address), Address.parse(poolAddress));
-        const res = await this.tonClient.runMethod(
-            hipoWallet.address as Address, 
-            "get_wallet_data"
-        );
+        const walletState = await hipoWallet.getWalletState();
 
-        const jettonAmount : bigint = parseJettonWalletData(res.stack);
-        const tonPerJetton = 1 / (await getExchangeRate(this.tonClient, Address.parse(poolAddress)) as number);
-        const tonAmount =  parseFloat(fromNano(jettonAmount)) * tonPerJetton;
-
-        return tonAmount
+        const rate = await getExchangeRate(this.tonClient, Address.parse(poolAddress));
+        return calculateJettonsToTon(walletState.tokens, rate);
     }
 
     async getPoolInfo(poolAddress: string): Promise<any> {
