@@ -2,7 +2,7 @@ import { IAgentRuntime } from "@elizaos/core";
 import { z } from "zod";
 
 export const roochEnvSchema = z.object({
-    BITCOIN_PRIVATE_KEY: z.string().min(1, "Bitcoin private key is required"),
+    BITCOIN_PRIVATE_KEY: z.string().min(1, "Bitcoin WIP private key is required"),
     ROOCH_NETWORK: z.enum(["mainnet", "testnet"]),
 });
 

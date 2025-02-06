@@ -20,7 +20,7 @@ npm install @elizaos/plugin-rooch
 The plugin requires the following environment variables:
 
 ```env
-ROOCH_PRIVATE_KEY=your_private_key
+ROOCH_PRIVATE_KEY=bitcoin_wip_private_key
 ROOCH_NETWORK=mainnet|testnet|devnet|localnet
 ```
 
@@ -63,14 +63,14 @@ Assistant: "Your wallet contains 100 RGas..."
 
 ### Actions
 
-- `SEND_TOKEN`: Transfer RGas to another address
-- `TRANSFER_TOKEN`: Alias for SEND_TOKEN
-- `SEND_RGAS`: Alias for SEND_TOKEN
-- `PAY`: Alias for SEND_TOKEN
+- `SEND_COIN`: Transfer RGas to another address
+- `TRANSFER_COIN`: Alias for SEND_COIN
+- `SEND_RGAS`: Alias for SEND_COIN
+- `PAY`: Alias for SEND_COIN
 
 ### Providers
 
-- `walletProvider`: Manages wallet interactions with the Rooch network, including balance queries and portfolio tracking
+- `assetsProvider`: Manages wallet interactions with the Rooch network, including balance queries and portfolio tracking
 
 ## Development
 

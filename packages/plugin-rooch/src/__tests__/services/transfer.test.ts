@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi, MockedFunction  } from 'vitest';
 import { TransferService } from '../../services/transfer';
-import { IAssetsProvider } from '../../services/transfer/interfaces';
 import { IAgentRuntime, Memory, State } from '@elizaos/core';
 import {
   RoochTransport,

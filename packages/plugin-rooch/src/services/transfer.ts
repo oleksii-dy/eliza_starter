@@ -1,17 +1,14 @@
 import { IAgentRuntime } from "@elizaos/core";
 import {
-    NetworkType,
     RoochClient,
     RoochTransport,
     isValidAddress,
     Secp256k1Keypair,
-    getRoochNodeUrl
 } from "@roochnetwork/rooch-sdk/dist/esm";
 import BigNumber from "bignumber.js";
 import { IAssetsProvider, IRoochTransferService } from './interfaces';
-import { parseKeypair } from "../../utils";
-import { TransferParams, TransferResult } from '../../actions/transfer/types';
-import { Assets, RoochCoin } from '../../types';
+import { parseKeypair } from "../utils";
+import { Assets, RoochCoin, TransferParams, TransferResult } from '../types';
 
 export class TransferService implements IRoochTransferService {
   private assets: Assets;

@@ -1,5 +1,4 @@
-import { Assets, RoochCoin } from '../../types';
-import { TransferParams, TransferResult } from '../../actions/transfer/types';
+import { Assets, RoochCoin, TransferParams, TransferResult } from '../types';
 import { IAgentRuntime, Memory, State } from "@elizaos/core";
 
 export interface IAssetsProvider {
