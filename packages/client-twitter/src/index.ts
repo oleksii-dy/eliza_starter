@@ -5,6 +5,7 @@ import { TwitterInteractionClient } from "./interactions.ts";
 import { TwitterPostClient } from "./post.ts";
 import { TwitterSearchClient } from "./search.ts";
 import { TwitterSpaceClient } from "./spaces.ts";
+import './polyfills.ts';
 
 /**
  * A manager that orchestrates all specialized Twitter logic:

@@ -31,28 +31,80 @@ import {
 import type { State } from "@elizaos/core";
 import type { ActionResponse } from "@elizaos/core";
 import { MediaData } from "./types.ts";
+import { z as zod } from 'zod';
 
 const MAX_TIMELINES_TO_FETCH = 15;
 
 const twitterPostTemplate = `
 # Areas of Expertise
 {{knowledge}}
-
 # About {{agentName}} (@{{twitterUserName}}):
 {{bio}}
 {{lore}}
 {{topics}}
-
 {{providers}}
-
 {{characterPostExamples}}
-
 {{postDirections}}
-
 # Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
-Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
-Your response should be 1, 2, or 3 sentences (choose the length at random).
-Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than {{maxTweetLength}}. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.`;
+IMPORTANT RULES:
+1. ONLY discuss markets and chains listed in knowledge: {{knowledge}}
+2. ONLY mention assets and protocols that exist in knowledge URLs
+3. ALL claims must be based on actual data from knowledge URLs
+4. NO generic statements about "DeFi" or "yield" without specifics
+5. NEVER mention integrations or features not in knowledge base
+6. ALWAYS reference specific chains and pools from knowledge URLs
+7. Keep it under 280 characters
+8. NO hypotheticals or "what if" scenarios
+9. FOCUS on actual protocol features and markets from knowledge
+10. NEVER use markdown formatting (**, *, _, etc.) - Twitter does not support text formatting
+11. NEVER start tweets with "Just" or "Watching" or similar common starters
+12. Keep language natural and conversational
+13. Focus on valuable insights rather than hashtags
+14. NEVER post about past events or old news
+15. ONLY share current or forward-looking content
+16. Focus on fresh insights and upcoming developments
+17. NEVER include URLs or links unless explicitly provided
+18. ONLY mention officially supported platforms and chains
+19. NO mentions of unauthorized integrations or deployments
+20. NEVER use markdown formatting
+21. NEVER use hashtags - convert any hashtag references to plain text (e.g. "DeFi" not "#DeFi")
+22. NEVER start tweets with "Just" or "Watching"
+23. Keep language natural and conversational
+Style Guidelines:
+- Use at most 1 emoji if needed for emphasis
+- Include line breaks (\\n\\n) between key points
+- Keep it under 280 characters
+- Mix these content types:
+  * Market analysis
+  * Technical insights
+  * Future predictions
+  * Community observations (e.g. "Ionic Protocol is the best")
+  * Protocol updates
+  * Yield strategies
+  * Security insights
+  * Innovation trends
+- Focus on CURRENT content types:
+  * Active market opportunities
+  * New protocol features
+  * Ongoing or upcoming developments
+  * Fresh market analysis
+  * Current yield strategies
+  * Real-time protocol metrics
+  * New security insights
+  * Emerging trends  
+Time Relevance:
+- YES: Current market conditions
+- YES: Active opportunities
+- YES: Upcoming features
+- YES: Real-time protocol stats
+- NO: Past events
+- NO: Old announcements
+- NO: Historical data unless comparing to current state
+Instead of using bold or italic, use these formats:
+INCORRECT: "**Here's what most miss:** DeFi isn't just about yield"
+CORRECT: "Here's what most miss: DeFi isn't just about yield"
+CORRECT: "Breaking: DeFi isn't just about yield"
+CORRECT: "Deep dive: DeFi isn't just about yield"`;
 
 export const twitterActionTemplate =
     `
