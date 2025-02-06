@@ -18,7 +18,7 @@ import {
 } from "agent-twitter-client";
 import { EventEmitter } from "events";
 import { TwitterConfig } from "./environment.ts";
-import { fetch, ProxyAgent, setGlobalDispatcher } from "undici";
+import { Agent, fetch, ProxyAgent, setGlobalDispatcher } from "undici";
 
 export function extractAnswer(text: string): string {
     const startIndex = text.indexOf("Answer: ") + 8;
@@ -88,13 +88,13 @@ class RequestQueue {
 
 let lastStart = Date.now();
 
-function doLogin(username, cb, proxyUrl?: string) {
+function doLogin(username, cb, proxyUrl?: string, localAddress?: string) {
     const ts = Date.now();
     const since = ts - lastStart;
     elizaLogger.log("last twitter scrapper created", since, "ms ago");
     const delay = 5 * 1000;
     if (since > delay) {
-        let agent;
+        let agent, proxyAgent;
 
         // Add proxy configuration if TWITTER_PROXY_URL exists
         if (proxyUrl) {
@@ -121,24 +121,36 @@ function doLogin(username, cb, proxyUrl?: string) {
                 ).toString("base64")}`;
             }
 
-            agent = new ProxyAgent(agentOptions);
+            proxyAgent = new ProxyAgent(agentOptions);
         }
-
-        const twitterClient = new Scraper({
-            fetch: fetch,
-            transform: {
-                request: (input: any, init: any) => {
-                    if (agent) {
-                        return [input, { ...init, dispatcher: agent }];
-                    }
-                    return [input, init];
+        if (localAddress) {
+            elizaLogger.log("Using local address", localAddress);
+            agent = new Agent({
+                localAddress,
+            });
+        }
+        try {
+            const twitterClient = new Scraper({
+                fetch: fetch,
+                transform: {
+                    request: (input: any, init: any) => {
+                        if (agent) {
+                            return [
+                                input,
+                                { ...init, dispatcher: proxyAgent ?? agent },
+                            ];
+                        }
+                        return [input, init];
+                    },
                 },
-            },
-        });
+            });
 
-        ClientBase._twitterClients[username] = twitterClient;
-        lastStart = ts;
-        cb(twitterClient);
+            ClientBase._twitterClients[username] = twitterClient;
+            lastStart = ts;
+            cb(twitterClient);
+        } catch (e) {
+            elizaLogger.error("Error creating twitter client", e);
+        }
     } else {
         elizaLogger.log("Delaying twitter scrapper creation for", username);
         setTimeout(() => {
@@ -149,14 +161,16 @@ function doLogin(username, cb, proxyUrl?: string) {
 
 export function getScraper(
     username: string,
-    proxyUrl?: string
+    proxyUrl?: string,
+    localAddress?: string,
+    reload: boolean = false
 ): Promise<Scraper> {
     return new Promise((resolve) => {
-        if (ClientBase._twitterClients[username]) {
+        if (ClientBase._twitterClients[username] && !reload) {
             const twitterClient = ClientBase._twitterClients[username];
             resolve(twitterClient);
         } else {
-            doLogin(username, resolve, proxyUrl);
+            doLogin(username, resolve, proxyUrl, localAddress);
         }
     });
 }
@@ -222,8 +236,9 @@ export class ClientBase extends EventEmitter {
 
         // Store proxy URL statically so it's available to doLogin
         const proxyUrl = twitterConfig.TWITTER_PROXY_URL;
+        const localAddress = twitterConfig.TWITTER_LOCAL_ADDRESS;
         const username = twitterConfig.TWITTER_USERNAME;
-        getScraper(username, proxyUrl).then((tc) => {
+        getScraper(username, proxyUrl, localAddress).then((tc) => {
             this.twitterClient = tc;
         });
 

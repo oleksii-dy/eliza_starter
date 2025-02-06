@@ -77,6 +77,7 @@ export const twitterEnvSchema = z.object({
         .nativeEnum(ActionTimelineType)
         .default(ActionTimelineType.ForYou),
     TWITTER_PROXY_URL: z.string().optional(),
+    TWITTER_LOCAL_ADDRESS: z.string().optional(),
 });
 
 export type TwitterConfig = z.infer<typeof twitterEnvSchema>;
@@ -230,6 +231,10 @@ export async function validateTwitterConfig(
                 (runtime.getSetting("TWITTER_PROXY_URL") ||
                     process.env.TWITTER_PROXY_URL) ??
                 "",
+
+            TWITTER_LOCAL_ADDRESS:
+                runtime.getSetting("TWITTER_LOCAL_ADDRESS") ||
+                process.env.TWITTER_LOCAL_ADDRESS,
         };
 
         return twitterEnvSchema.parse(twitterConfig);

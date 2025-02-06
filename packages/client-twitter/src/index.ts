@@ -119,7 +119,9 @@ export const TwitterClientInterface: Client = {
         try {
             const twClient = await getScraper(
                 secrets.username,
-                secrets.proxyUrl
+                secrets.proxyUrl,
+                secrets.localAddress,
+                true
             );
             // try logging in
             console.log("trying to log in");

@@ -40,7 +40,6 @@ import { zgPlugin } from "@elizaos/plugin-0g";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import createGoatPlugin from "@elizaos/plugin-goat";
 // import { intifacePlugin } from "@elizaos/plugin-intiface";
-import { DirectClient } from "@elizaos/client-direct";
 import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
 import { abstractPlugin } from "@elizaos/plugin-abstract";
 import { alloraPlugin } from "@elizaos/plugin-allora";
@@ -622,6 +621,7 @@ export async function initializeClients(
             email: getSecret(character, "TWITTER_EMAIL"),
             twitter2faSecret: getSecret(character, "TWITTER_2FA_SECRET"),
             proxyUrl: getSecret(character, "TWITTER_PROXY_URL"),
+            localAddress: getSecret(character, "TWITTER_LOCAL_ADDRESS"),
         });
         if (isValidKey.success) {
             const twitterClient = await TwitterClientInterface.start(runtime);
@@ -788,7 +788,9 @@ export async function createAgent(
         character,
         // character.plugins are handled when clients are added
         plugins: [
-            getSecret(character, "EMAIL_AUTOMATION_ENABLED") ? emailPlugin : null,
+            getSecret(character, "EMAIL_AUTOMATION_ENABLED")
+                ? emailPlugin
+                : null,
             bootstrapPlugin,
             getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
                 ? confluxPlugin

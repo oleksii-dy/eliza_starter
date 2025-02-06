@@ -133,7 +133,9 @@ export class TwitterPostClient {
         elizaLogger.log(
             `- Proxy URL: ${this.client.twitterConfig.TWITTER_PROXY_URL}`
         );
-
+        elizaLogger.log(
+            `- Local Address: ${this.client.twitterConfig.TWITTER_LOCAL_ADDRESS}`
+        );
         const targetUsers = this.client.twitterConfig.TWITTER_TARGET_USERS;
         if (targetUsers) {
             elizaLogger.log(`- Target Users: ${targetUsers}`);
