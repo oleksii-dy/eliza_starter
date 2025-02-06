@@ -39,8 +39,8 @@ export const postTemplate =
     headerTemplate +
     `
 # Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
-Write a single sentence post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}.
-Try to write something totally different than previous posts. Do not add commentary or ackwowledge this request, just write the post.
+Write a single sentence or two post that either a) is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) or b) directly replies something from your timeline, from the perspective of {{agentName}}.
+Try to write something totally different than previous posts. Do not add commentary or ackwowledge this request, and do not include the 'think' part of your response, just write the post.
 
 Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
 
@@ -53,7 +53,9 @@ Recent interactions between {{agentName}} and other users:
 Thread of casts You Are Replying To:
 {{formattedConversation}}
 
-# Task: Generate a post in the voice, style and perspective of {{agentName}} (@{{farcasterUsername}}):
+Available actions:
+{{actions}}
+# Task: Generate a response and actions for the character {{agentName}} (@{{farcasterUsername}}):
 {{currentPost}}` +
     messageCompletionFooter;
 
@@ -63,6 +65,9 @@ export const shouldRespondTemplate =
     About {{agentName}}:
     {{bio}}
 
+    Available actions:
+    {{actions}}
+
     # INSTRUCTIONS: Determine if {{agentName}} (@{{farcasterUsername}}) should respond to the message and participate in the conversation. Do not comment. Just respond with "RESPOND" or "IGNORE" or "STOP".
 
 Response options are RESPOND, IGNORE and STOP.
@@ -71,6 +76,7 @@ Response options are RESPOND, IGNORE and STOP.
 
 {{agentName}} is in a room with other users and wants to be conversational, but not annoying.
 {{agentName}} should RESPOND to messages that are directed at them, or participate in conversations that are interesting or relevant to their background.
+{{agentName}} should RESPOND to messages that trigger one of the avaiable actions.
 If a message is not interesting or relevant, {{agentName}} should IGNORE.
 If a message thread has become repetitive, {{agentName}} should IGNORE.
 Unless directly RESPONDing to a user, {{agentName}} should IGNORE messages that are very short or do not contain much information.

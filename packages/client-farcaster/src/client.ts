@@ -1,5 +1,6 @@
 import { type IAgentRuntime, elizaLogger } from "@elizaos/core";
-import { type NeynarAPIClient, isApiErrorResponse } from "@neynar/nodejs-sdk";
+import { type NeynarAPIClient, isApiErrorResponse,  } from "@neynar/nodejs-sdk";
+import { PostCastReqBodyEmbeds } from "@neynar/nodejs-sdk/build/api";
 import type { NeynarCastResponse, Cast, Profile, FidRequest, CastId } from "./types";
 import type { FarcasterConfig } from "./environment";
 
@@ -50,6 +51,7 @@ export class FarcasterClient {
     async publishCast(
         cast: string,
         parentCastId: CastId | undefined,
+        embeds?: [PostCastReqBodyEmbeds],
         // eslint-disable-next-line
         retryTimes?: number
     ): Promise<NeynarCastResponse | undefined> {
@@ -57,6 +59,7 @@ export class FarcasterClient {
             const result = await this.neynar.publishCast({
                 signerUuid: this.signerUuid,
                 text: cast,
+                embeds,
                 parent: parentCastId?.hash,
             });
             if (result.success) {
@@ -104,6 +107,7 @@ export class FarcasterClient {
                   }
                 : {}),
             timestamp: new Date(response.cast.timestamp),
+            embeds: response.cast.embeds,
         };
 
         this.cache.set(`farcaster/cast/${castHash}`, cast);
@@ -207,6 +211,9 @@ export class FarcasterClient {
         profile.username = neynarUserProfile.username;
         profile.bio = neynarUserProfile.profile.bio.text;
         profile.pfp = neynarUserProfile.pfp_url;
+        profile.ethAddress = neynarUserProfile.verified_addresses?.eth_addresses?.length
+            ? neynarUserProfile.verified_addresses?.eth_addresses[0]
+            : neynarUserProfile.custody_address;
 
         this.cache.set(`farcaster/profile/${fid}`, profile);
 

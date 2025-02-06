@@ -9,6 +9,7 @@ import {
     type HandlerCallback,
     type Content,
     type IAgentRuntime,
+    Clients,
 } from "@elizaos/core";
 import type { FarcasterClient } from "./client";
 import { toHex } from "viem";
@@ -56,6 +57,8 @@ export class FarcasterInteractionManager {
     }
 
     private async handleInteractions() {
+        elizaLogger.info("Handle Farcaster interactions");
+
         const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
         if (!agentFid) {
             elizaLogger.info("No FID found, skipping interactions");
@@ -280,6 +283,15 @@ export class FarcasterInteractionManager {
         const responseMessages = await callback(responseContent);
 
         const newState = await this.runtime.updateRecentMessageState(state);
+
+        // payload for actions
+        newState.payload = {
+            client: Clients.FARCASTER,
+            replyTo: {
+                fid: cast.authorFid,
+                farcasterCastHash: cast.hash,
+            },
+        };
 
         await this.runtime.processActions(
             { ...memory, content: { ...memory.content, cast } },

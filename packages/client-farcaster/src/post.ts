@@ -5,12 +5,15 @@ import {
     ModelClass,
     stringToUuid,
     elizaLogger,
+    ModelProviderName,
 } from "@elizaos/core";
 import type { FarcasterClient } from "./client";
 import { formatTimeline, postTemplate } from "./prompts";
 import { castUuid, MAX_CAST_LENGTH } from "./utils";
 import { createCastMemory } from "./memory";
-import { sendCast } from "./actions";
+import { sendCast as sendCastAction } from "./actions";
+import { UUID } from "@elizaos/core";
+import { Cast, CastId, Profile } from "./types";
 
 export class FarcasterPostManager {
     client: FarcasterClient;
@@ -105,6 +108,35 @@ export class FarcasterPostManager {
         if (this.timeout) clearTimeout(this.timeout);
     }
 
+    public async sendCast({
+        content,
+        roomId,
+        profile,
+        inReplyTo,
+        embeds,
+    }: {
+        content: string;
+        profile: Profile;
+        roomId?: UUID;
+        inReplyTo?: CastId;
+        embeds?: [{ url: string }];
+    }): Promise<Cast | undefined> {
+        const [{ cast }] = await sendCastAction({
+            client: this.client,
+            runtime: this.runtime,
+            signerUuid: this.signerUuid,
+            roomId: roomId ?? stringToUuid("farcaster_generate_room"),
+            content: { text: content },
+            embeds,
+            profile,
+            inReplyTo,
+        });
+
+        console.log(cast);
+
+        return cast;
+    }
+
     private async generateNewCast() {
         elizaLogger.info("Generating new cast");
         try {
@@ -155,6 +187,7 @@ export class FarcasterPostManager {
                 runtime: this.runtime,
                 context,
                 modelClass: ModelClass.SMALL,
+                modelProvider: ModelProviderName.VENICE, // using venice for post generation
             });
 
             const slice = newContent.replaceAll(/\\n/g, "\n").trim();
@@ -182,14 +215,11 @@ export class FarcasterPostManager {
             }
 
             try {
-                const [{ cast }] = await sendCast({
-                    client: this.client,
-                    runtime: this.runtime,
-                    signerUuid: this.signerUuid,
+                const cast = (await this.sendCast({
+                    content,
                     roomId: generateRoomId,
-                    content: { text: content },
                     profile,
-                });
+                })) as Cast;
 
                 await this.runtime.cacheManager.set(
                     `farcaster/${this.fid}/lastCast`,
