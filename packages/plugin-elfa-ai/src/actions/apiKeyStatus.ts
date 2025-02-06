@@ -1,45 +1,75 @@
-// import { Action } from "../../types/action";
-// import { z } from "zod";
-// import { ElfaApi } from "./elfaAiApi";
+import {
+    type HandlerCallback,
+    type IAgentRuntime,
+    type Memory,
+    type State,
+    type Action,
+    elizaLogger,
+} from "@elizaos/core";
+import { validateElfaAiConfig } from "../environment";
+import axios from "axios";
 
-// export const elfaApiKeyStatusAction: Action = {
-//     name: "ELFA_API_KEY_STATUS",
-//     similes: ["elfa api key status", "check api key", "api key info"],
-//     description:
-//         "Retrieves the status and usage details of the Elfa AI API key.",
-//     examples: [
-//         [
-//             {
-//                 input: {},
-//                 output: {
-//                     status: "success",
-//                     data: {
-//                         success: true,
-//                         data: {
-//                             id: 160,
-//                             name: "My API Key",
-//                             status: "active",
-//                             dailyRequestLimit: 1000,
-//                             monthlyRequestLimit: 10000,
-//                             expiresAt: "2026-01-12T13:57:12.884Z",
-//                             createdAt: "2025-01-12T13:57:12.885Z",
-//                             usage: { daily: 100, monthly: 500 },
-//                             remainingRequests: { daily: 900, monthly: 9500 },
-//                         },
-//                     },
-//                 },
-//                 explanation:
-//                     "Returns details such as remaining requests and API key status.",
-//             },
-//         ],
-//     ],
-//     schema: z.object({}),
-//     handler: async (agent: any, input: Record<string, any>) => {
-//         const data = await ElfaApi.getApiKeyStatus();
-//         return {
-//             status: "success",
-//             data,
-//             message: "Elfa AI API key status retrieved successfully",
-//         };
-//     },
-// };
+export const elfaApiKeyStatusAction: Action = {
+    name: "ELFA_API_KEY_STATUS",
+    similes: ["elfa api key status", "check api key", "api key info"],
+    description:
+        "Retrieves the status and usage details of the Elfa AI API key.",
+    examples: [
+        [
+            {
+                user: "{{user}}",
+                content: {
+                    text: "elfa api key status",
+                },
+            },
+            {
+                user: "{{agent}}",
+                content: {
+                    text: "Elfa AI API key status retrieved successfully",
+                    action: "ELFA_API_KEY_STATUS",
+                },
+            },
+        ],
+    ],
+    validate: async (runtime: IAgentRuntime) => {
+        await validateElfaAiConfig(runtime);
+        return true;
+    },
+    handler: async (
+        runtime: IAgentRuntime,
+        message: Memory,
+        state: State | undefined,
+        _options: { [key: string]: unknown } = {},
+        callback?: HandlerCallback
+    ) => {
+        try {
+            const baseUrl = runtime.getSetting("ELFA_AI_BASE_URL");
+            const headers = {
+                "Content-Type": "application/json",
+                "x-elfa-api-key": runtime.getSetting("ELFA_AI_API_KEY"),
+            };
+            const response = await axios.get(`${baseUrl}/v1/key-status`, {
+                headers,
+            });
+            const responseData = response.data;
+            callback?.({
+                text: `Elfa AI API key status. Response: ${JSON.stringify(
+                    responseData
+                )}`,
+                action: "ELFA_API_KEY_STATUS",
+            });
+            elizaLogger.info("Elfa AI API key status", responseData);
+            return true;
+        } catch (error) {
+            elizaLogger.error(
+                "Failed to get api key status from Elfa AI API",
+                error
+            );
+            callback?.({
+                text: `Failed to get api key status from Elfa AI. Please check the your API key.`,
+                action: "ELFA_API_KEY_STATUS",
+            });
+            return false;
+        }
+    },
+};
