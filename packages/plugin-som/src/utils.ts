@@ -59,8 +59,8 @@ export async function callSomApi<T extends SOMResponseData>(
         const config: AxiosRequestConfig = {
             headers: {
                 "X-API-Key": apiKey,
-                timeout: DEFAULT_TIMEOUT,
             },
+            timeout: DEFAULT_TIMEOUT,
         };
         const response = await axios.post<T>(url, data, config);
         return response.data;
