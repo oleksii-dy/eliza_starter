@@ -149,19 +149,14 @@ export const createTokenAction: Action = {
 
         // if no imageURL is parsed from the post / cast
         if (!imageURL) {
-            // try to use the titles model
-            const useTitles = !!runtime.getSetting("TITLES_API_KEY");
-            const imageModelProvider = useTitles ? ModelProviderName.TITLES : undefined;
             elizaLogger.info(
-                `No image provided, generating one using ${imageModelProvider ? ModelProviderName.TITLES : runtime.imageModelProvider}...`
+                `No image provided, generating one using ${runtime.imageModelProvider}...`
             );
             const imageResponse = await generateImage(
                 {
                     prompt: `generate an image that can accompany this project: Name: ${name}, Description: ${description}`,
                     width: 1024,
                     height: 1024,
-                    imageModelProvider,
-                    returnRawResponse: useTitles ? true : undefined,
                 },
                 runtime
             );
