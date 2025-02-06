@@ -25,7 +25,7 @@ export type EVMRawTransaction = {
 };
 
 export type RawTransactionIntentParams = {
-    networkId: string;
+    caip2Id: string;
     transaction: Omit<PartialBy<EVMRawTransaction, 'data' | 'value'>, 'value'> & {
         value?: number | bigint;
     };
@@ -41,7 +41,7 @@ export type Token = {
     id: string;
     groupId: string;
     isPrimary: boolean;
-    networkId: string;
+    caip2Id: string;
     networkName: string;
     isOnrampEnabled: boolean;
 };
@@ -50,6 +50,6 @@ export type Wallet = {
     caipId: string;
     networkName: string;
     address: string;
-    networkId: string;
+    caip2Id: string;
     networkSymbol: string;
 };

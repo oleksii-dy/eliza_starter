@@ -57,3 +57,32 @@ Only provide the details in the following JSON format, focusing exclusively on t
 Here are the recent user messages for context (focus on the last message):
 {{recentMessages}}
 `;
+
+export const swapTemplate = `
+Extract the following details from the most recent message for processing token swap using the Okto SDK:
+- **fromAddress** (string): The wallet address initiating the swap.
+- **router** (string): The DEX contract address for executing the swap.
+- **tokenIn** (string): The token address you want to swap from.
+- **tokenOut** (string): The token address you want to swap to.
+- **amountIn** (number): The amount of tokenIn to swap (in smallest unit).
+- **minAmountOut** (number): The minimum amount of tokenOut expected (in smallest unit).
+- **network** (string): The blockchain network for the transaction. Allowed values are:
+    static networks: {
+       ${getAllowedNetworks()}
+    };
+
+Only Provide the details in the following JSON format, focusing exclusively on the most recent message:
+
+{
+  "fromAddress": "<from_address>",
+  "router": "<router_address>",
+  "tokenIn": "<token_in_address>",
+  "tokenOut": "<token_out_address>",
+  "amountIn": <amount_in>,
+  "minAmountOut": <min_amount_out>,
+  "network": "<network>"
+}
+
+Here are the recent user messages for context (focus on the last message):
+{{recentMessages}}
+`;
