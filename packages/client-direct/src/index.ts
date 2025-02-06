@@ -3,6 +3,7 @@ import cors from "cors";
 import express, { type Request as ExpressRequest } from "express";
 import multer from "multer";
 import { z } from "zod";
+import { WebSocket, WebSocketServer } from 'ws';
 import {
     type AgentRuntime,
     elizaLogger,
@@ -115,15 +116,69 @@ export class DirectClient {
     public startAgent: Function; // Store startAgent functor
     public loadCharacterTryPath: Function; // Store loadCharacterTryPath functor
     public jsonToCharacter: Function; // Store jsonToCharacter functor
+    private logs: Array<{ timestamp: number, level: string, message: string, data?: any }> = [];
+    private readonly MAX_LOGS = 1000; // Keep last 1000 logs in memory
+    private wss: WebSocketServer;
+    private wsClients: Set<WebSocket> = new Set();
 
     constructor() {
         elizaLogger.log("DirectClient constructor");
         this.app = express();
         this.app.use(cors());
         this.agents = new Map();
+        // Intercept elizaLogger logs
+        const originalLog = elizaLogger.log;
+        const originalError = elizaLogger.error;
+        const originalDebug = elizaLogger.debug;
+        const originalSuccess = elizaLogger.success;
+        const originalWarn = elizaLogger.warn;
+
+        elizaLogger.log = (...args) => {
+            this.addLog('info', args[0], args.slice(1));
+            originalLog.apply(elizaLogger, args);
+        };
+        elizaLogger.error = (...args) => {
+            this.addLog('error', args[0], args.slice(1));
+            originalError.apply(elizaLogger, args);
+        };
+        elizaLogger.debug = (...args) => {
+            this.addLog('debug', args[0], args.slice(1));
+            originalDebug.apply(elizaLogger, args);
+        };
+        elizaLogger.success = (...args) => {
+            this.addLog('success', args[0], args.slice(1));
+            originalSuccess.apply(elizaLogger, args);
+        };
+        elizaLogger.warn = (...args) => {
+            this.addLog('warn', args[0], args.slice(1));
+            originalWarn.apply(elizaLogger, args);
+        };
 
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({ extended: true }));
+        // Keep REST endpoint for fetching historical logs
+
+        this.app.get('/logs', (req: express.Request, res: express.Response) => {
+            const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+            const level = req.query.level as string;
+            const since = req.query.since ? parseInt(req.query.since as string) : undefined;
+
+            let filteredLogs = [...this.logs];
+
+            if (level) {
+                filteredLogs = filteredLogs.filter(log => log.level === level);
+            }
+
+            if (since) {
+                filteredLogs = filteredLogs.filter(log => log.timestamp > since);
+            }
+
+            if (limit) {
+                filteredLogs = filteredLogs.slice(-limit);
+            }
+
+            res.json(filteredLogs);
+        });
 
         // Serve both uploads and generated images
         this.app.use(
@@ -455,34 +510,34 @@ export class DirectClient {
                     const lookAtSchema =
                         nearby.length > 1
                             ? z
-                                  .union(
-                                      nearby.map((item) => z.literal(item)) as [
-                                          z.ZodLiteral<string>,
-                                          z.ZodLiteral<string>,
-                                          ...z.ZodLiteral<string>[],
-                                      ]
-                                  )
-                                  .nullable()
+                                .union(
+                                    nearby.map((item) => z.literal(item)) as [
+                                        z.ZodLiteral<string>,
+                                        z.ZodLiteral<string>,
+                                        ...z.ZodLiteral<string>[],
+                                    ]
+                                )
+                                .nullable()
                             : nearby.length === 1
-                              ? z.literal(nearby[0]).nullable()
-                              : z.null(); // Fallback for empty array
+                                ? z.literal(nearby[0]).nullable()
+                                : z.null(); // Fallback for empty array
 
                     const emoteSchema =
                         availableEmotes.length > 1
                             ? z
-                                  .union(
-                                      availableEmotes.map((item) =>
-                                          z.literal(item)
-                                      ) as [
-                                          z.ZodLiteral<string>,
-                                          z.ZodLiteral<string>,
-                                          ...z.ZodLiteral<string>[],
-                                      ]
-                                  )
-                                  .nullable()
+                                .union(
+                                    availableEmotes.map((item) =>
+                                        z.literal(item)
+                                    ) as [
+                                        z.ZodLiteral<string>,
+                                        z.ZodLiteral<string>,
+                                        ...z.ZodLiteral<string>[],
+                                    ]
+                                )
+                                .nullable()
                             : availableEmotes.length === 1
-                              ? z.literal(availableEmotes[0]).nullable()
-                              : z.null(); // Fallback for empty array
+                                ? z.literal(availableEmotes[0]).nullable()
+                                : z.null(); // Fallback for empty array
 
                     return z.object({
                         lookAt: lookAtSchema,
@@ -863,7 +918,7 @@ export class DirectClient {
                             ),
                             similarity_boost: Number.parseFloat(
                                 process.env.ELEVENLABS_VOICE_SIMILARITY_BOOST ||
-                                    "0.9"
+                                "0.9"
                             ),
                             style: Number.parseFloat(
                                 process.env.ELEVENLABS_VOICE_STYLE || "0.66"
@@ -937,7 +992,7 @@ export class DirectClient {
                             ),
                             similarity_boost: Number.parseFloat(
                                 process.env.ELEVENLABS_VOICE_SIMILARITY_BOOST ||
-                                    "0.9"
+                                "0.9"
                             ),
                             style: Number.parseFloat(
                                 process.env.ELEVENLABS_VOICE_STYLE || "0.66"
@@ -975,6 +1030,35 @@ export class DirectClient {
                 });
             }
         });
+
+        // Create and initialize a new agent
+        this.app.post("/agents", async (req: express.Request, res: express.Response) => {
+            try {
+                const character = req.body;
+
+                // Validate required character fields
+                if (!character.name || !character.modelProvider) {
+                    res.status(400).json({ error: "Missing required character fields" });
+                    return;
+                }
+
+                // Create runtime for the new agent
+                const runtime = await this.startAgent(character, this);
+
+                res.json({
+                    success: true,
+                    agentId: runtime.agentId,
+                    name: character.name
+                });
+
+            } catch (error) {
+                elizaLogger.error("Error creating new agent:", error);
+                res.status(500).json({
+                    error: "Failed to create agent",
+                    details: error.message
+                });
+            }
+        });
     }
 
     // agent/src/index.ts:startAgent calls this
@@ -994,10 +1078,62 @@ export class DirectClient {
                 `REST API bound to 0.0.0.0:${port}. If running locally, access it at http://localhost:${port}.`
             );
         });
+        // Initialize WebSocket server with a specific path
+        this.wss = new WebSocketServer({
+            server: this.server,
+            path: '/wslogs'  // Add this line to specify the path
+        });
+
+        this.wss.on('connection', (ws: WebSocket) => {
+            elizaLogger.debug('New WebSocket client connected to /wslogs');
+
+            // Add client to set of connected clients
+            this.wsClients.add(ws);
+
+            // Send existing logs on connection
+            ws.send(JSON.stringify({
+                type: 'initial',
+                logs: this.logs
+            }));
+
+            // Handle client disconnect
+            ws.on('close', () => {
+                elizaLogger.debug('WebSocket client disconnected');
+                this.wsClients.delete(ws);
+            });
+
+            // Handle client messages (e.g., for filtering)
+            ws.on('message', (message: string) => {
+                try {
+                    const data = JSON.parse(message);
+                    if (data.type === 'filter') {
+                        // Handle filter requests if needed
+                        const filteredLogs = this.filterLogs(data.level, data.since, data.limit);
+                        ws.send(JSON.stringify({
+                            type: 'filtered',
+                            logs: filteredLogs
+                        }));
+                    }
+                } catch (error) {
+                    elizaLogger.error('Error processing WebSocket message:', error);
+                }
+            });
+        });
 
         // Handle graceful shutdown
         const gracefulShutdown = () => {
             elizaLogger.log("Received shutdown signal, closing server...");
+            // Close all WebSocket connections
+            for (const client of this.wsClients) {
+                client.close();
+            }
+            this.wsClients.clear();
+
+            // Close WebSocket server
+            this.wss.close(() => {
+                elizaLogger.debug('WebSocket server closed');
+            });
+
             this.server.close(() => {
                 elizaLogger.success("Server closed successfully");
                 process.exit(0);
@@ -1018,12 +1154,70 @@ export class DirectClient {
     }
 
     public stop() {
+        if (this.wss) {
+            // Close all WebSocket connections
+            for (const client of this.wsClients) {
+                client.close();
+            }
+            this.wsClients.clear();
+
+            // Close WebSocket server
+            this.wss.close(() => {
+                elizaLogger.debug('WebSocket server closed');
+            });
+        }
         if (this.server) {
             this.server.close(() => {
                 elizaLogger.success("Server stopped");
             });
         }
     }
+
+    private filterLogs(level?: string, since?: number, limit?: number) {
+        let filteredLogs = [...this.logs];
+
+        if (level) {
+            filteredLogs = filteredLogs.filter(log => log.level === level);
+        }
+
+        if (since) {
+            filteredLogs = filteredLogs.filter(log => log.timestamp > since);
+        }
+
+        if (limit) {
+            filteredLogs = filteredLogs.slice(-limit);
+        }
+
+        return filteredLogs;
+    }
+
+    private addLog(level: string, message: string, data?: any) {
+        const logEntry = {
+            timestamp: Date.now(),
+            level,
+            message,
+            data
+        };
+
+        this.logs.push(logEntry);
+
+        // Keep only the last MAX_LOGS entries
+        if (this.logs.length > this.MAX_LOGS) {
+            this.logs = this.logs.slice(-this.MAX_LOGS);
+        }
+
+        // Broadcast to all connected WebSocket clients
+        const wsMessage = JSON.stringify({
+            type: 'log',
+            log: logEntry
+        });
+
+        for (const client of this.wsClients) {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(wsMessage);
+            }
+        }
+    } k
 }
 
 export const DirectClientInterface: Client = {
