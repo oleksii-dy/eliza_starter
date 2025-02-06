@@ -20,18 +20,19 @@
     ],
     "dependencies": {
         "@elizaos/core": "workspace:*",
-        "@okto_web3/core-js-sdk": "0.0.0-dev.37",
+        "@okto_web3/core-js-sdk": "0.0.0-dev.41",
         "axios": "^1.7.9",
+        "ethers": "5.7.2",
         "google-auth-library": "^9.15.0",
         "open": "^10.1.0",
         "zod": "3.23.8"
     },
     "devDependencies": {
-        "tsup": "8.3.5",
         "@types/node": "^20.0.0",
-        "vitest": "^1.0.0",
         "ts-node": "10.9.2",
-        "typescript": "5.6.3"
+        "tsup": "8.3.5",
+        "typescript": "5.6.3",
+        "vitest": "^1.0.0"
     },
     "scripts": {
         "build": "tsup --format esm --dts",
