@@ -30,15 +30,6 @@ const parseBitcoinAddress = (runtime: IAgentRuntime): BitcoinAddress => {
     return keypair.getBitcoinAddress()
 }
 
-const parseAccessPath = (uri: string): string => {
-    // Adjust the regex to ensure correct matching
-    const match = uri.match(/^rooch:\/\/object\/(0x[a-fA-F0-9]+)$/);
-    if (match) {
-        return `/object/${match[1]}`;
-    }
-    throw new Error("Invalid URI format");
-};
-
 function shortAddress(address: string | null | undefined, start = 6, end = 4): string {
     try {
       if (!address) {
@@ -56,4 +47,4 @@ function shortAddress(address: string | null | undefined, start = 6, end = 4): s
     }
 }
 
-export { parseKeypair, parseBitcoinAddress, parseAccessPath, shortAddress };
+export { parseKeypair, parseBitcoinAddress, shortAddress };

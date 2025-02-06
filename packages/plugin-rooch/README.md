@@ -90,7 +90,6 @@ npm run test
 
 - `@roochnetwork/rooch-sdk`: Core Rooch blockchain interaction library
 - `bignumber.js`: Precise number handling
-- `node-cache`: Caching implementation
 - Other standard dependencies listed in package.json
 
 ## Future Enhancements
@@ -144,7 +143,6 @@ This plugin integrates with and builds upon several key technologies:
 - [Rooch Network](https://rooch.network): The Bitcoin Application Layer features MoveVM and Bitcoin staking.
 - [@roochnetwork/rooch-sdk](https://www.npmjs.com/package/@roochnetwork/rooch-sdk): Official Rooch SDK
 - [bignumber.js](https://github.com/MikeMcl/bignumber.js/): Precise number handling
-- [node-cache](https://www.npmjs.com/package/node-cache): Caching implementation
 
 Special thanks to:
 - The Rooch team for developing the Rooch network
