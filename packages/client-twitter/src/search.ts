@@ -226,28 +226,52 @@ export class TwitterSearchClient {
             }
 
             // Generate image descriptions using GPT-4 vision API
-            const imageDescriptions = [];
-            for (const photo of selectedTweet.photos) {
-                const description = await this.runtime
-                    .getService<IImageDescriptionService>(
+            const imageDescriptions: { title: string; description: string }[] = [];
+            try {
+                for (const photo of selectedTweet.photos) {
+                    const imageDescriptionService = await this.runtime.getService<IImageDescriptionService>(
                         ServiceType.IMAGE_DESCRIPTION
-                    )
-                    .describeImage(photo.url);
-                imageDescriptions.push(description);
+                    );
+                    const description = await imageDescriptionService.describeImage(photo.url);
+                    imageDescriptions.push(description);
+                }
+            } catch (error) {
+                // Handle the error
+                elizaLogger.error("Error occurred during describing image: ", error);
             }
+
+            // Format additional pieces for the current post text
+            const additionalReplies = replyContext.length > 0
+                ? `\nReplies to original post:\n${replyContext}`
+                : "";
+
+            const additionalUrls = selectedTweet.urls.length > 0
+                ? `URLs: ${selectedTweet.urls.join(", ")}\n`
+                : "";
+
+            const imagesText = imageDescriptions.length > 0
+                ? `\nImages in Post (Described):\n${imageDescriptions
+                      .map((desc, i) => `Image ${i + 1}: Title: ${desc.title}\nDescription: ${desc.description}`)
+                      .join("\n\n")}`
+                : "";
+
+            // Build the full current post content with the data
+            const currentPostContent = `${tweetBackground}
+
+Original Post:
+By @${selectedTweet.username}
+${selectedTweet.text}
+${additionalReplies}
+Original post text: ${selectedTweet.text}
+${additionalUrls}
+${imagesText}
+`;
 
             let state = await this.runtime.composeState(message, {
                 twitterClient: this.client.twitterClient,
                 twitterUserName: this.twitterUsername,
                 timeline: formattedHomeTimeline,
-                tweetContext: `${tweetBackground}
-
-  Original Post:
-  By @${selectedTweet.username}
-  ${selectedTweet.text}${replyContext.length > 0 && `\nReplies to original post:\n${replyContext}`}
-  ${`Original post text: ${selectedTweet.text}`}
-  ${selectedTweet.urls.length > 0 ? `URLs: ${selectedTweet.urls.join(", ")}\n` : ""}${imageDescriptions.length > 0 ? `\nImages in Post (Described): ${imageDescriptions.join(", ")}\n` : ""}
-  `,
+                currentPost: currentPostContent,
             });
 
             await this.client.saveRequestMessage(message, state as State);
