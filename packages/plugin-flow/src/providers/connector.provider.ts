@@ -49,16 +49,16 @@ async function _createFlowConnector(
  */
 export async function getFlowConnectorInstance(
     runtime: IAgentRuntime,
-    inputedFlowJSON: { [key: string]: unknown } = undefined
+    inputtedFlowJSON: { [key: string]: unknown } = undefined
 ): Promise<FlowConnector> {
     let connector: FlowConnector;
     if (
-        inputedFlowJSON &&
-        typeof inputedFlowJSON === "object" &&
-        typeof inputedFlowJSON?.networks === "object" &&
-        typeof inputedFlowJSON?.dependencies === "object"
+        inputtedFlowJSON &&
+        typeof inputtedFlowJSON === "object" &&
+        typeof inputtedFlowJSON?.networks === "object" &&
+        typeof inputtedFlowJSON?.dependencies === "object"
     ) {
-        connector = await _createFlowConnector(runtime, inputedFlowJSON);
+        connector = await _createFlowConnector(runtime, inputtedFlowJSON);
     } else {
         connector = await _getDefaultConnectorInstance(runtime);
     }
