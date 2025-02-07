@@ -27,7 +27,7 @@ describe("Utility Functions Tests", () => {
         it("should return an error message for ambiguous assets", () => {
             const result = prepareAmbiguityErrorMessage("ATOM", "test-chain");
 
-            expect(result).toContain("Error occured. Swap was not performed.");
+            expect(result).toContain("Error occurred. Swap was not performed.");
             expect(result).toContain("ATOM");
             expect(result).toContain("test-chain");
             expect(result).toContain(
