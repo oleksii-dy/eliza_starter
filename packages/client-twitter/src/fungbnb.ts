@@ -1,5 +1,8 @@
 import { UserManager, ConsensusProvider } from "@elizaos/plugin-data-enrich";
 import {
+    binancePlugin
+} from "@elizaos/plugin-binance";
+import {
     elizaLogger,
     generateText,
     IAgentRuntime,
@@ -62,33 +65,42 @@ export class FungBnbClient {
     async bnbQuery(coinsymbol: string, userId: any) {
         console.log("handleBnbQuery 1, in fungbnb.");
         // 1. get param. 2 get prompt. 3. get tweet info. 4. get bnb info. 5. get ai answer.
-        const prompt = "Suppose you are a cryptocurrency expert with rich cryptocurrency trading experience and are frequently active in various cryptocurrency communities. Regarding the following cryptocurrency: " +
-        coinsymbol +", please use 100 - word English texts respectively to analyze the reasons for the current price trend and make predictions. The response format should be formatted as a JSON block as follows: { \"token\": \"{token}\", \"coin_analysis\": \"{coin_analysis}\", \"coin_prediction\": \"{coin_prediction}\" }. No other text should be provided, No need to use markdown syntax, just return JSON directly.";
-        // todo: query the bnb.
-        console.log("handleBnbQuery 2, in fungbnb. prompt[" + prompt + "]");
+        // const prompt = "Suppose you are a cryptocurrency expert with rich cryptocurrency trading experience and are frequently active in various cryptocurrency communities. Regarding the following cryptocurrency: " +
+        // coinsymbol +", please use 100 - word English texts respectively to analyze the reasons for the current price trend and make predictions. The response format should be formatted as a JSON block as follows: { \"token\": \"{token}\", \"coin_analysis\": \"{coin_analysis}\", \"coin_prediction\": \"{coin_prediction}\" }. No other text should be provided, No need to use markdown syntax, just return JSON directly.";
+        // // todo: query the bnb.
+        // console.log("handleBnbQuery 2, in fungbnb. prompt[" + prompt + "]");
 
-        let responseStr = await generateText({
-            runtime: this.runtime,
-            context: prompt,
-            modelClass: ModelClass.LARGE,
+        // let responseStr = await generateText({
+        //     runtime: this.runtime,
+        //     context: prompt,
+        //     modelClass: ModelClass.LARGE,
+        // });
+        // console.log("handleBnbQuery 3, in fungbnb. responseStr: ", responseStr);
+
+        // let responseObj = null;
+
+        // try {
+        //     //const trimstr = await this.extractBraceContent(responseStr);
+        //     //console.log("handleBnbQuery 3.3, in fungbnb. trimstr: ", trimstr);
+
+        //     responseObj = JSON.parse(responseStr);
+        //     console.log("handleBnbQuery 4, in fungbnb. responseObj string: ", JSON.stringify(responseObj));
+        // } catch (error) {
+        //     responseObj = null;
+        //     console.error('JSON parse error: ', error.message);
+        // }
+        // if (responseObj) {
+        //     const anaobj = new CoinAnaObj(coinsymbol, responseObj?.coin_analysis, responseObj?.coin_prediction);
+        //     await this.runtime.cacheManager.set(KEY_BNB_CACHE_STR + coinsymbol, JSON.stringify(anaobj));
+        // }
+
+        const { actions } = binancePlugin;
+        actions.forEach(action => {
+            console.log(`handleBnbQuery 6, in fungbnb. Action: ${action.name}`);
+            if(action.name === 'GET_KLINE') {
+                console.log("handleBnbQuery 7, in fungbnb. action.handler");
+                action.handler(this.runtime, null, null, null, null);
+            }
         });
-        console.log("handleBnbQuery 3, in fungbnb. responseStr: ", responseStr);
-
-        let responseObj = null;
-
-        try {
-            //const trimstr = await this.extractBraceContent(responseStr);
-            //console.log("handleBnbQuery 3.3, in fungbnb. trimstr: ", trimstr);
-
-            responseObj = JSON.parse(responseStr);
-            console.log("handleBnbQuery 4, in fungbnb. responseObj string: ", JSON.stringify(responseObj));
-        } catch (error) {
-            responseObj = null;
-            console.error('JSON parse error: ', error.message);
-        }
-        if (responseObj) {
-            const anaobj = new CoinAnaObj(coinsymbol, responseObj?.coin_analysis, responseObj?.coin_prediction);
-            await this.runtime.cacheManager.set(KEY_BNB_CACHE_STR + coinsymbol, JSON.stringify(anaobj));
-        }
     }
 }
