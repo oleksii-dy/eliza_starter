@@ -34,7 +34,7 @@ Please find the following data according to the text provided in the following f
  (4) Token Key Event Description by json name "event".
 The detail information of each item as following:
  The (1) item is the token/coin/meme name involved in the text provided.
- The (2) item include the interactions(mention/like/comment/repost/post/reply) between each token/coin/meme and the twitter account, the output is "@somebody mention/like/comment/repost/post/reply @token, @someone post @token, etc."; providing at most 2 interactions is enough.
+ The (2) item include the interactions(mention/like/comment/repost/post/reply) between each token/coin/meme and the twitter account, the output is "@somebody mention/like/comment/repost/post/reply @token"; providing at most 1 interactions is enough.
  The (3) item is the data of the count of interactions between each token and the twitter account.
  The (4) item is the about 30 words description of the involved event for each token/coin/meme. If the description is too short, please attach the tweets.
 Please skip the top token, such as btc, eth, sol, base, bnb.
@@ -272,12 +272,6 @@ export class TwitterWatchClient {
         }
         this.consensus.startNode();
 
-        /*twEventCenter.on('MSG_SEARCH_TWITTER_PROFILE', async (data) => {
-            console.log('Received message:', data);
-            const profiles = await this.searchProfile(data.username, data.count);
-            // Send back
-            twEventCenter.emit('MSG_SEARCH_TWITTER_PROFILE_RESP', profiles);
-        });*/
         this.intervalId = setInterval(
             () => this.runTask(),
             (this.sendingTwitterDebug ? 120000 : SEND_TWITTER_INTERNAL)
@@ -313,25 +307,6 @@ export class TwitterWatchClient {
         //return JSON.parse(settings.TW_KOL_LIST) || TW_KOL_1;
         // const userManager = new UserManager(this.runtime.cacheManager);
         return await this.userManager.getAllWatchList();
-    }
-
-    async searchProfile(username: string, count: number) {
-        let profiles = [];
-
-        try {
-            const response = await this.client.twitterClient.searchProfiles(
-                username,
-                count
-            );
-            if (response) {
-                for await (const profile of response) {
-                    profiles.push(profile);
-                }
-            }
-        } catch (error) {
-            console.error("searchProfile error:", error);
-        }
-        return profiles;
     }
 
     // get the following list
