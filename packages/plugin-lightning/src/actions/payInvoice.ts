@@ -23,7 +23,7 @@ export class PayInvoiceAction {
         this.lightningProvider = lightningProvider;
     }
 
-    async getAvalibleChannelId(): Promise<string> {
+    async getAvailableChannelId(): Promise<string> {
         const { channels } = await this.lightningProvider.getLndChannel();
         const filteredActiveChannels = channels.filter(
             (channel) => channel.is_active === true
@@ -37,9 +37,9 @@ export class PayInvoiceAction {
         return "";
     }
     async payInvoice(params: PayArgs): Promise<ExtendedPayResult> {
-        const outgoing_channel = await this.getAvalibleChannelId();
+        const outgoing_channel = await this.getAvailableChannelId();
         if (!outgoing_channel) {
-            throw new Error("no avalible channel");
+            throw new Error("no Available channel");
         }
         const requestArgs = {
             outgoing_channel: outgoing_channel,
