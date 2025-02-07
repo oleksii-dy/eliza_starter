@@ -32,6 +32,7 @@ import { getPriceInquiry } from "../../plugin-0x/src/actions/getIndicativePrice"
 import { getQuoteObj } from "../../plugin-0x/src/actions/getQuote";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
+import axios from 'axios';
 
 export type WalletType =
     | "short_term_trading"
@@ -52,6 +53,7 @@ export class CoinbaseClient implements Client {
         this.runtime.providers.push(pnlProvider);
         this.runtime.providers.push(balanceProvider);
         this.runtime.providers.push(addressProvider);
+        this.runtime.providers.push(tradingSignalBackTestProvider)
         this.server = express();
         this.port = Number(runtime.getSetting("COINBASE_WEBHOOK_PORT")) || 3001;
         this.wallets = [];
@@ -579,6 +581,19 @@ export const balanceProvider: Provider = {
 export const addressProvider: Provider = {
     get: async (runtime: IAgentRuntime, _message: Memory) => {
         return `Address: ${runtime.getSetting("WALLET_PUBLIC_KEY")}`;
+    },
+};
+
+export const tradingSignalBackTestProvider: Provider = {
+    get: async (runtime: IAgentRuntime, _message: Memory) => {
+        const url = 'https://api.tradingview.com/alerts'; // Hypothetical endpoint
+    try {
+        const response = await axios.get(url);
+        return `Net Profit: ${response.data.netProfit}, Total Trades Closed: ${response.data.totalTradesClosed}, Percentage Profitable: ${response.data.percentageProfitable}, Profit Factor: ${response.data.profitFactor}, Max Drawdown: ${response.data.maxDrawdown}, Average Trade: ${response.data.averageTrade}, Number of Bars per Trade: ${response.data.numberOfBarsPerTrade}, Win Rate: ${response.data.winRate}, Time Period: ${response.data.timePeriod}`;
+    } catch (error) {
+        elizaLogger.error('Error fetching TradingView alerts:', error);
+        throw error;
+    }
     },
 };
 
