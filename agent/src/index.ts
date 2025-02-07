@@ -112,6 +112,7 @@ import { stargazePlugin } from "@elizaos/plugin-stargaze";
 import { storyPlugin } from "@elizaos/plugin-story";
 import { suiPlugin } from "@elizaos/plugin-sui";
 import { TEEMode, teePlugin } from "@elizaos/plugin-tee";
+import { nutrifiPlugin } from "@elizaos/plugin-nutrifi";
 import { teeLogPlugin } from "@elizaos/plugin-tee-log";
 import { teeMarlinPlugin } from "@elizaos/plugin-tee-marlin";
 import { verifiableLogPlugin } from "@elizaos/plugin-tee-verifiable-log";
@@ -1016,6 +1017,7 @@ export async function createAgent(
         character,
         // character.plugins are handled when clients are added
         plugins: [
+            nutrifiPlugin,
             parseBooleanFromText(getSecret(character, "BITMIND")) &&
             getSecret(character, "BITMIND_API_TOKEN")
                 ? bittensorPlugin
