@@ -1075,7 +1075,7 @@ export class PGLiteDatabaseAdapter
                 console.log("Error adding participant", error);
                 return false;
             }
-        }, "addParticpant");
+        }, "addParticipant");
     }
 
     async removeParticipant(userId: UUID, roomId: UUID): Promise<boolean> {
