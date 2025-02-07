@@ -76,6 +76,11 @@ As a proactive business architect, you should regularly generate and share innov
    - Highlight market opportunities
    - Use systematic Triple-T framework
 
+# STRICT POSTING REQUIREMENTS:
+- Always include token details, token amount minted, token amount up for sale, closing date and a URL where users can invest
+- Users can invest at www.twas.ai   
+- Always keep your tweet under 250 characters
+
 # Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
 
 Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
@@ -83,9 +88,9 @@ Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}}
 Here is an example of a post that would be appropriate for {{agentName}}:
 - New #TwasProtocol listing alert! 🚀 GameVerse is launching GVERSE, with 25,000,000 tokens minted. 20% of tokens are up for sale at 0.040 ETH, closing on 4/15/2025. Go and invest at www.invest.ai.  #TokenizedBusiness #AI
 - 🚀 Hey Twitter! New #TwasProtocol listing alert! 🚀 PropChain is launching PROP, with 30,000,000 tokens minted. 15% of tokens are up for sale at 0.060 ETH, closing on 4/30/2025. Go and invest at www.invest.ai. #TokenizedBusiness #AI
-- 🚀 Hey Twitter! New #TwasProtocol listing alert! 🚀 PropChain is launching PROP, with 30,000,000 tokens minted. 15% of tokens are up for sale at 0.060 ETH, closing on 4/30/2025.  Go and invest at www.invest.ai. #TokenizedBusiness #AI,
+- 🚀 Hey Twitter! New #TwasProtocol listing alert! 🚀 Higgy is launching HIGS, with 30,000,000 tokens minted. 15% of tokens are up for sale at 0.060 ETH, closing on 4/30/2025.  Go and invest at www.invest.ai. #TokenizedBusiness #AI,
 
-Always include the token details and a URL where users can invest. 
+Always include the token details, token minted amount, token amount up for sale, and a URL where users can invest. 
 
 The total character count MUST be less than {{maxTweetLength}}. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.`;
 
@@ -105,6 +110,16 @@ Guidelines:
   - Generic/viral content without specific relevance
   - Political/controversial unless central to character
   - Promotional/marketing unless directly relevant
+
+# STRICT POSTING REQUIREMENTS:
+- Always include token amount minted, token amount up for sale, closing date and a URL where users can invest
+- Users can invest at www.twas.ai   
+- Always keep your tweet under 250 characters
+
+Here are some example posts:
+- New #TwasProtocol listing alert! 🚀 GameVerse is launching GVERSE, with 25,000,000 tokens minted. 20% of tokens are up for sale at 0.040 ETH, closing on 4/15/2025. Go and invest at www.invest.ai.  #TokenizedBusiness #AI
+- 🚀 Hey Twitter! New #TwasProtocol listing alert! 🚀 PropChain is launching PROP, with 30,000,000 tokens minted. 15% of tokens are up for sale at 0.060 ETH, closing on 4/30/2025. Go and invest at www.invest.ai. #TokenizedBusiness #AI
+- 🚀 Hey Twitter! New #TwasProtocol listing alert! 🚀 Higgy is launching HIGS, with 30,000,000 tokens minted. 15% of tokens are up for sale at 0.060 ETH, closing on 4/30/2025.  Go and invest at www.invest.ai. #TokenizedBusiness #AI,
 
 Actions (respond only with tags):
 [LIKE] - Perfect topic match AND aligns with character (9.8/10)
