@@ -177,7 +177,6 @@ class AuthUtils {
 
 export class Routes {
     private authUtils: AuthUtils;
-    // private KEY_BNB_CACHE_STR: string = "key_bnb_res_cache";
 
     constructor(
         private client: DirectClient,
@@ -585,6 +584,9 @@ export class Routes {
     }
     async handleBnbQuery(req: express.Request, res: express.Response) {
         const { coinsymbol } = req.query;
+        if (!coinsymbol) {
+            throw new ApiError(533, "coinsymbol is blank");
+        }
         console.log("handleBnbQuery 0 symbol: " + coinsymbol);
         const runtime = await this.authUtils.getRuntime(req.params.agentId);
         let userId = "blank";
@@ -595,7 +597,7 @@ export class Routes {
         for (let i = 0; i < 10; i++) {
             console.log("handleBnbQuery 2, wait: " + i);
             await this.sleep(1000);
-            const cached = await runtime.cacheManager.get(KEY_BNB_CACHE_STR);
+            const cached = await runtime.cacheManager.get(KEY_BNB_CACHE_STR + coinsymbol);
             console.log("handleBnbQuery 2.3, cached: " + cached);
             if (cached && typeof cached === 'string') {
                 try {

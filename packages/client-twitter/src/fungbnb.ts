@@ -7,13 +7,15 @@ import {
 } from "@elizaos/core";
 import { ClientBase } from "./base";
 
-export const KEY_BNB_CACHE_STR = "key_bnb_res_cache";
+export const KEY_BNB_CACHE_STR = "key_bnb_res_cache_";
 
 export class CoinAnaObj {
     public coin_analysis: string;
     public coin_prediction: string;
     public timestamp: number;
-    constructor(analysis: string, prediction: string) {
+    public token: string;
+    constructor(token: string, analysis: string, prediction: string) {
+        this.token = token;
         this.coin_analysis = analysis;
         this.coin_prediction = prediction;
         this.timestamp = Date.now();
@@ -51,33 +53,42 @@ export class FungBnbClient {
     async sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
-    async bnbQuery(tweed: string, userId: any) {
+    async extractBraceContent(input: string): Promise<string> {
+        const regex = /\{.*\}/;
+        const match = input.match(regex);
+        return match ? match[0] : '';
+    }
+
+    async bnbQuery(coinsymbol: string, userId: any) {
         console.log("handleBnbQuery 1, in fungbnb.");
-        // 1. get prama. 2 get prompt. 3. get tweet info.
-        const prompt = "predict coin price." + tweed;
+        // 1. get param. 2 get prompt. 3. get tweet info. 4. get bnb info. 5. get ai answer.
+        const prompt = "Suppose you are a cryptocurrency expert with rich cryptocurrency trading experience and are frequently active in various cryptocurrency communities. Regarding the following cryptocurrency: " +
+        coinsymbol +", please use 100 - word English texts respectively to analyze the reasons for the current price trend and make predictions. The response format should be formatted as a JSON block as follows: { \"token\": \"{token}\", \"coin_analysis\": \"{coin_analysis}\", \"coin_prediction\": \"{coin_prediction}\" }. No other text should be provided, No need to use markdown syntax, just return JSON directly.";
         // todo: query the bnb.
-        console.log("handleBnbQuery 2, in fungbnb. prompt: ", prompt);
-        await this.sleep(3000);
+        console.log("handleBnbQuery 2, in fungbnb. prompt[" + prompt + "]");
 
-        // let responseStr = await generateText({
-        //     // ai .
-        //     runtime: this.runtime,
-        //     context: prompt,
-        //     modelClass: ModelClass.LARGE,
-        // });
+        let responseStr = await generateText({
+            runtime: this.runtime,
+            context: prompt,
+            modelClass: ModelClass.LARGE,
+        });
+        console.log("handleBnbQuery 3, in fungbnb. responseStr: ", responseStr);
 
-        // console.log("handleBnbQuery 3, in fungbnb. responseStr: ", responseStr);
+        let responseObj = null;
 
-        // let responseObj = JSON.parse(responseStr);
+        try {
+            //const trimstr = await this.extractBraceContent(responseStr);
+            //console.log("handleBnbQuery 3.3, in fungbnb. trimstr: ", trimstr);
 
-        // const { resultText } = responseObj;
-        // console.log("handleBnbQuery 4, in fungbnb. resultText: ", resultText);
-
-        // cache the resultText to ring buffer.
-        const anaobj = new CoinAnaObj("External factors such as the Czech Republic’s proposal to allocate a portion of its national reserves to Bitcoin could be a significant bullish catalyst. This, alongside institutional interest and growing acceptance of Bitcoin in official reserves, could drive more upward momentum"
-            , "If Bitcoin can stabilize above $97000 and break through the current technical resistance level (around $101000 to $105000), it may see a price increase in the next month, challenging new historical highs.");
-        await this.runtime.cacheManager.set(KEY_BNB_CACHE_STR, JSON.stringify(anaobj));
-        const cached = await this.runtime.cacheManager.get(KEY_BNB_CACHE_STR);
-        console.log("handleBnbQuery 3, in fungbnb. cached: " + cached);
+            responseObj = JSON.parse(responseStr);
+            console.log("handleBnbQuery 4, in fungbnb. responseObj string: ", JSON.stringify(responseObj));
+        } catch (error) {
+            responseObj = null;
+            console.error('JSON parse error: ', error.message);
+        }
+        if (responseObj) {
+            const anaobj = new CoinAnaObj(coinsymbol, responseObj?.coin_analysis, responseObj?.coin_prediction);
+            await this.runtime.cacheManager.set(KEY_BNB_CACHE_STR + coinsymbol, JSON.stringify(anaobj));
+        }
     }
 }
