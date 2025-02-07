@@ -360,7 +360,7 @@ export class TwitterInteractionClient {
             }
         } catch (error) {
     // Handle the error
-    elizaLogger.error("Error Occured during describing image: ", error);
+    elizaLogger.error("Error Occurred during describing image: ", error);
 }
 
 
