@@ -175,7 +175,6 @@ import {
 } from "fs";
 import { resolve, dirname } from "path";
 
-
 // Synchronous version
 function mkdirpSync(targetPath) {
     // Convert to absolute path and normalize
@@ -212,7 +211,7 @@ function mkdirpSync(targetPath) {
 
 function logGenerate(
     type: "text" | "image",
-    runtime: IAgentRuntime,
+    agentId: string,
     provider: string,
     model: string,
     modelClass: string | ModelClass, // has to be a string for image gen
@@ -220,54 +219,106 @@ function logGenerate(
     response: string,
     error: string
 ) {
-    if (runtime?.agentId) {
-        console.log("generate " + type + " - agent", runtime.agentId);
-        const dir = `logs/generate`;
-        const dirJson = `${dir}/${runtime.agentId}`;
+    elizaLogger.debug("logGenerate called with:", {
+        type,
+        agentId,
+        provider,
+        model,
+        modelClass,
+        contextLength: context?.length,
+        responseLength: response?.length,
+        error,
+    });
+
+    if (!agentId) {
+        elizaLogger.warn("No agentId provided for logGenerate");
+        return;
+    }
+
+    console.log("generate " + type + " - agent", agentId);
+    const dir = `logs/generate`;
+    const dirJson = `${dir}/${agentId}`;
+
+    // Log directory creation attempt
+    elizaLogger.debug(`Attempting to create directory: ${dirJson}`);
+    try {
         mkdirpSync(dirJson);
+        elizaLogger.debug(
+            `Successfully created/verified directory: ${dirJson}`
+        );
+    } catch (e) {
+        elizaLogger.error("Error creating directory:", {
+            dir: dirJson,
+            error: e,
+        });
+        return; // Exit if we can't create the directory
+    }
 
-        const logData = {
-            agentId: runtime.agentId,
-            type,
-            provider,
-            model,
-            modelClass,
-            context,
-            response,
-            error,
-        };
+    const logData = {
+        agentId,
+        type,
+        provider,
+        model,
+        modelClass,
+        context,
+        response,
+        error,
+        timestamp: new Date().toISOString(),
+    };
 
-        const ts = Date.now();
-        const jsonLogFilePath = `${dirJson}/${ts}.json`;
+    const ts = Date.now();
+    const jsonLogFilePath = `${dirJson}/${ts}.json`;
 
-        // Append to the running log file
-        try {
-            appendFileSync(
-                `${dir}/${runtime.agentId}.log`,
-                JSON.stringify(logData) + "\n"
-            );
-            writeFileSync(jsonLogFilePath, JSON.stringify(logData));
-        } catch (err) {
-            console.error("Error writing log file:", err);
-        }
+    // Log file writing attempt
+    elizaLogger.debug(`Attempting to write log file: ${jsonLogFilePath}`);
+    try {
+        writeFileSync(jsonLogFilePath, JSON.stringify(logData));
+        elizaLogger.debug(`Successfully wrote log file: ${jsonLogFilePath}`);
+    } catch (err) {
+        elizaLogger.error("Error writing log file:", {
+            path: jsonLogFilePath,
+            error: err,
+        });
+        return; // Exit if we can't write the log file
+    }
 
-        // Remove old log files if there are more than 10
+    // Clean up old log files
+    elizaLogger.debug("Checking for old log files to clean up");
+    try {
         const files = readdirSync(dirJson).filter((file) =>
             file.endsWith(".json")
         );
+        elizaLogger.debug(`Found ${files.length} log files`);
+
         if (files.length > 10) {
             const oldFiles = files
                 .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
                 .slice(0, files.length - 10);
+
+            elizaLogger.debug(
+                `Attempting to delete ${oldFiles.length} old files`
+            );
+
             oldFiles.forEach((file) => {
+                const filePath = `${dirJson}/${file}`;
                 try {
-                    unlinkSync(`${dirJson}/${file}`);
+                    unlinkSync(filePath);
+                    elizaLogger.debug(
+                        `Successfully deleted old log file: ${filePath}`
+                    );
                 } catch (err) {
-                    console.error("Error deleting old log file:", err);
+                    elizaLogger.error("Error deleting old log file:", {
+                        path: filePath,
+                        error: err,
+                    });
                 }
             });
         }
+    } catch (err) {
+        elizaLogger.error("Error during log file cleanup:", err);
     }
+
+    elizaLogger.debug("logGenerate completed successfully");
 }
 
 /**
@@ -276,8 +327,12 @@ function logGenerate(
  * @param provider The model provider name
  * @returns The Cloudflare Gateway base URL if enabled, undefined otherwise
  */
-function getCloudflareGatewayBaseURL(runtime: IAgentRuntime, provider: string): string | undefined {
-    const isCloudflareEnabled = runtime.getSetting("CLOUDFLARE_GW_ENABLED") === "true";
+function getCloudflareGatewayBaseURL(
+    runtime: IAgentRuntime,
+    provider: string
+): string | undefined {
+    const isCloudflareEnabled =
+        runtime.getSetting("CLOUDFLARE_GW_ENABLED") === "true";
     const cloudflareAccountId = runtime.getSetting("CLOUDFLARE_AI_ACCOUNT_ID");
     const cloudflareGatewayId = runtime.getSetting("CLOUDFLARE_AI_GATEWAY_ID");
 
@@ -285,7 +340,7 @@ function getCloudflareGatewayBaseURL(runtime: IAgentRuntime, provider: string): 
         isEnabled: isCloudflareEnabled,
         hasAccountId: !!cloudflareAccountId,
         hasGatewayId: !!cloudflareGatewayId,
-        provider: provider
+        provider: provider,
     });
 
     if (!isCloudflareEnabled) {
@@ -294,12 +349,16 @@ function getCloudflareGatewayBaseURL(runtime: IAgentRuntime, provider: string): 
     }
 
     if (!cloudflareAccountId) {
-        elizaLogger.warn("Cloudflare Gateway is enabled but CLOUDFLARE_AI_ACCOUNT_ID is not set");
+        elizaLogger.warn(
+            "Cloudflare Gateway is enabled but CLOUDFLARE_AI_ACCOUNT_ID is not set"
+        );
         return undefined;
     }
 
     if (!cloudflareGatewayId) {
-        elizaLogger.warn("Cloudflare Gateway is enabled but CLOUDFLARE_AI_GATEWAY_ID is not set");
+        elizaLogger.warn(
+            "Cloudflare Gateway is enabled but CLOUDFLARE_AI_GATEWAY_ID is not set"
+        );
         return undefined;
     }
 
@@ -308,7 +367,7 @@ function getCloudflareGatewayBaseURL(runtime: IAgentRuntime, provider: string): 
         provider,
         baseURL,
         accountId: cloudflareAccountId,
-        gatewayId: cloudflareGatewayId
+        gatewayId: cloudflareGatewayId,
     });
 
     return baseURL;
@@ -473,9 +532,13 @@ export async function generateText({
         hasRuntime: !!runtime,
         runtimeSettings: {
             CLOUDFLARE_GW_ENABLED: runtime.getSetting("CLOUDFLARE_GW_ENABLED"),
-            CLOUDFLARE_AI_ACCOUNT_ID: runtime.getSetting("CLOUDFLARE_AI_ACCOUNT_ID"),
-            CLOUDFLARE_AI_GATEWAY_ID: runtime.getSetting("CLOUDFLARE_AI_GATEWAY_ID")
-        }
+            CLOUDFLARE_AI_ACCOUNT_ID: runtime.getSetting(
+                "CLOUDFLARE_AI_ACCOUNT_ID"
+            ),
+            CLOUDFLARE_AI_GATEWAY_ID: runtime.getSetting(
+                "CLOUDFLARE_AI_GATEWAY_ID"
+            ),
+        },
     });
 
     const endpoint =
@@ -485,7 +548,7 @@ export async function generateText({
     const model = getSizeModel(runtime, modelClass); // returns modelName
     // does it return an obj or string
     // I think  it should be a string
-    console.log('modelClass', modelClass, 'getSizeModel gave', model)
+    console.log("modelClass", modelClass, "getSizeModel gave", model);
 
     elizaLogger.info("Selected model:", model);
 
@@ -525,7 +588,6 @@ export async function generateText({
         switch (provider) {
             // OPENAI & LLAMACLOUD shared same structure.
             case ModelProviderName.OPENAI:
-            case ModelProviderName.ETERNALAI:
             case ModelProviderName.ALI_BAILIAN:
             case ModelProviderName.VOLENGINE:
             case ModelProviderName.LLAMACLOUD:
@@ -534,8 +596,11 @@ export async function generateText({
             case ModelProviderName.TOGETHER:
             case ModelProviderName.NINETEEN_AI:
             case ModelProviderName.AKASH_CHAT_API: {
-                elizaLogger.debug("Initializing OpenAI model with Cloudflare check");
-                const baseURL = getCloudflareGatewayBaseURL(runtime, 'openai') || endpoint;
+                elizaLogger.debug(
+                    "Initializing OpenAI model with Cloudflare check"
+                );
+                const baseURL =
+                    getCloudflareGatewayBaseURL(runtime, "openai") || endpoint;
 
                 //elizaLogger.debug("OpenAI baseURL result:", { baseURL });
                 const openai = createOpenAI({
@@ -608,7 +673,10 @@ export async function generateText({
                 const { text: openaiResponse } = await aiGenerateText({
                     model: openai.languageModel(model),
                     prompt: context,
-                    system: runtime.character.system ?? settings.SYSTEM_PROMPT ?? undefined,
+                    system:
+                        runtime.character.system ??
+                        settings.SYSTEM_PROMPT ??
+                        undefined,
                     temperature: temperature,
                     maxTokens: max_response_length,
                     frequencyPenalty: frequency_penalty,
@@ -670,12 +738,20 @@ export async function generateText({
             }
 
             case ModelProviderName.ANTHROPIC: {
-                elizaLogger.debug("Initializing Anthropic model with Cloudflare check");
-                const baseURL = getCloudflareGatewayBaseURL(runtime, 'anthropic') || "https://api.anthropic.com/v1";
+                elizaLogger.debug(
+                    "Initializing Anthropic model with Cloudflare check"
+                );
+                const baseURL =
+                    getCloudflareGatewayBaseURL(runtime, "anthropic") ||
+                    "https://api.anthropic.com/v1";
                 elizaLogger.log("Anthropic baseURL result:", { baseURL });
 
-                const anthropic = createAnthropic({ apiKey, baseURL, fetch: runtime.fetch });
-                console.log('model', model)
+                const anthropic = createAnthropic({
+                    apiKey,
+                    baseURL,
+                    fetch: runtime.fetch,
+                });
+                console.log("model", model);
 
                 const { text: anthropicResponse } = await aiGenerateText({
                     model: anthropic.languageModel(model),
@@ -764,10 +840,16 @@ export async function generateText({
             }
 
             case ModelProviderName.GROQ: {
-                elizaLogger.debug("Initializing Groq model with Cloudflare check");
-                const baseURL = getCloudflareGatewayBaseURL(runtime, 'groq');
+                elizaLogger.debug(
+                    "Initializing Groq model with Cloudflare check"
+                );
+                const baseURL = getCloudflareGatewayBaseURL(runtime, "groq");
                 elizaLogger.debug("Groq baseURL result:", { baseURL });
-                const groq = createGroq({ apiKey, fetch: runtime.fetch, baseURL });
+                const groq = createGroq({
+                    apiKey,
+                    fetch: runtime.fetch,
+                    baseURL,
+                });
 
                 const { text: groqResponse } = await aiGenerateText({
                     model: groq.languageModel(model),
@@ -1126,7 +1208,7 @@ export async function generateText({
         }
         logGenerate(
             "text",
-            runtime,
+            runtime.agentId,
             provider,
             model,
             modelClass,
@@ -1138,7 +1220,7 @@ export async function generateText({
     } catch (error) {
         logGenerate(
             "text",
-            runtime,
+            runtime.agentId,
             provider,
             model,
             modelClass,
@@ -1560,7 +1642,7 @@ export const generateImage = async (
             const imageURL = await response.json();
             logGenerate(
                 "image",
-                runtime,
+                runtime.agentId,
                 runtime.imageModelProvider,
                 model,
                 data.modelId,
@@ -1628,7 +1710,7 @@ export const generateImage = async (
             elizaLogger.debug(`Generated ${base64s.length} images`);
             logGenerate(
                 "image",
-                runtime,
+                runtime.agentId,
                 runtime.imageModelProvider,
                 model,
                 data.modelId,
@@ -1692,7 +1774,7 @@ export const generateImage = async (
             const base64s = await Promise.all(base64Promises);
             logGenerate(
                 "image",
-                runtime,
+                runtime.agentId,
                 runtime.imageModelProvider,
                 model,
                 data.modelId,
@@ -1740,7 +1822,7 @@ export const generateImage = async (
             });
             logGenerate(
                 "image",
-                runtime,
+                runtime.agentId,
                 runtime.imageModelProvider,
                 model,
                 data.modelId,
@@ -1788,7 +1870,7 @@ export const generateImage = async (
             });
             logGenerate(
                 "image",
-                runtime,
+                runtime.agentId,
                 runtime.imageModelProvider,
                 model,
                 data.modelId,
@@ -1849,7 +1931,7 @@ export const generateImage = async (
                 );
                 logGenerate(
                     "image",
-                    runtime,
+                    runtime.agentId,
                     runtime.imageModelProvider,
                     model,
                     data.modelId,
@@ -1893,7 +1975,7 @@ export const generateImage = async (
             );
             logGenerate(
                 "image",
-                runtime,
+                runtime.agentId,
                 runtime.imageModelProvider,
                 model,
                 data.modelId,
@@ -1906,7 +1988,7 @@ export const generateImage = async (
     } catch (error) {
         logGenerate(
             "image",
-            runtime,
+            runtime.agentId,
             runtime.imageModelProvider,
             model,
             data.modelId,
@@ -2168,7 +2250,9 @@ async function handleOpenAI({
     provider: _provider,
     runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const baseURL = getCloudflareGatewayBaseURL(runtime, 'openai') || models.openai.endpoint;
+    const baseURL =
+        getCloudflareGatewayBaseURL(runtime, "openai") ||
+        models.openai.endpoint;
     const openai = createOpenAI({ apiKey, baseURL });
     return await aiGenerateObject({
         model: openai.languageModel(model),
@@ -2197,7 +2281,7 @@ async function handleAnthropic({
     runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     elizaLogger.debug("Handling Anthropic request with Cloudflare check");
-    const baseURL = getCloudflareGatewayBaseURL(runtime, 'anthropic');
+    const baseURL = getCloudflareGatewayBaseURL(runtime, "anthropic");
     elizaLogger.debug("Anthropic handleAnthropic baseURL:", { baseURL });
 
     const anthropic = createAnthropic({ apiKey, baseURL });
@@ -2254,7 +2338,7 @@ async function handleGroq({
     runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     elizaLogger.debug("Handling Groq request with Cloudflare check");
-    const baseURL = getCloudflareGatewayBaseURL(runtime, 'groq');
+    const baseURL = getCloudflareGatewayBaseURL(runtime, "groq");
     elizaLogger.debug("Groq handleGroq baseURL:", { baseURL });
 
     const groq = createGroq({ apiKey, baseURL });
@@ -2482,4 +2566,3 @@ export async function generateTweetActions({
         retryDelay *= 2;
     }
 }
-
