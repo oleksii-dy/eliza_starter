@@ -340,8 +340,6 @@ export const formatRouteInfo = (quote: GetQuoteResponse): string[] => {
 };
 
 export const getQuoteObj = async (runtime: IAgentRuntime, priceInquiry: PriceInquiry, address: string) => {
-    elizaLogger.info('inside of getQuoteObj')
-    // elizaLogger.info('priceInquiry ', JSON.stringify(priceInquiry))
     const {
         sellTokenObject,
         sellAmountBaseUnits,
@@ -361,7 +359,6 @@ export const getQuoteObj = async (runtime: IAgentRuntime, priceInquiry: PriceInq
             chainId: chainId,
             taker: address,
         })) as GetQuoteResponse;
-        elizaLogger.info("Quote:", quote);
         if (!quote.liquidityAvailable) {
             elizaLogger.info("No liquidity available for this swap. Please try again with a different token or amount.");
             return;
