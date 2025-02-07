@@ -94,7 +94,7 @@ export class TwitterWatchClient {
         this.runtime = runtime;
         this.consensus = new ConsensusProvider(this.runtime);
         this.inferMsgProvider = new InferMessageProvider(
-            this.runtime.cacheManager
+            this.runtime, this.client.twitterClient
         );
         this.userManager = new UserManager(this.runtime.cacheManager);
         this.sendingTwitterInLooping = false;

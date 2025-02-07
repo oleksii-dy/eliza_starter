@@ -642,8 +642,8 @@ export class Routes {
             console.log(userId);
 
             try {
-                const profilesOutput = [];
-                const scraper = new Scraper();
+                let profilesOutput = [];
+                /*const scraper = new Scraper();
                 try {
                     await scraper.login(
                         settings.TWITTER_USERNAME,
@@ -692,25 +692,24 @@ export class Routes {
                     }
                 } finally {
                     await scraper.logout();
-                }
-                /*const promise = new Promise((resolve, reject) => {
+                }*/
+                const promise = new Promise((resolve, reject) => {
                     // Listen
                     twEventCenter.on('MSG_SEARCH_TWITTER_PROFILE_RESP', (data) => {
-                        console.log('Received Resp message:', data);
-                        profiles = data;
+                        //console.log('Received Resp message:', data);
 
                         // get result
-                        resolve(profiles);
+                        resolve(data);
                     });
 
                     // set request
                     twEventCenter.emit('MSG_SEARCH_TWITTER_PROFILE',
                         { username, count: fetchCount, userId });
-                    console.log("Send search request");
+                    //console.log("Send search request");
                 });
 
                 // wait for result
-                profilesOutput = await promise;*/
+                profilesOutput = await promise;
                 return profilesOutput;
             } catch (error) {
                 console.error("Profile search error:", error);
