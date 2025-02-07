@@ -63,7 +63,7 @@ export class TwitterFinderClient {
 
         try {
             // Search from cache firstly
-            let cachedProfile = this.getCachedData(username);
+            let cachedProfile = await this.getCachedData(username.toLowerCase());
             if (cachedProfile) {
                 searchResult.push(cachedProfile);
             }
@@ -76,7 +76,7 @@ export class TwitterFinderClient {
                     if (response) {
                         for await (const profile of response) {
                             searchResult.push(profile);
-                            this.setCachedData(profile.userId, profile);
+                            this.setCachedData(profile.username.toLowerCase(), profile);
                         }
                     }
                 } catch (error) {
