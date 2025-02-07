@@ -7,6 +7,7 @@ import { TwitterSearchClient } from "./search.ts";
 import { TwitterSpaceClient } from "./spaces.ts";
 import { TwitterWatchClient } from "./watcher.ts";
 import { FungBnbClient, KEY_BNB_CACHE_STR } from "./fungbnb.ts";
+import { TwitterFinderClient } from "./finder.ts";
 import { EventEmitter } from 'events';
 
 /**
@@ -25,6 +26,7 @@ class TwitterManager {
     space?: TwitterSpaceClient;
     watcher: TwitterWatchClient;
     bnb: FungBnbClient;
+    finder: TwitterFinderClient;
 
     constructor(runtime: IAgentRuntime, twitterConfig: TwitterConfig) {
         // Pass twitterConfig to the base client
@@ -55,6 +57,9 @@ class TwitterManager {
 
         // Watcher
         this.watcher = new TwitterWatchClient(this.client, runtime);
+
+        // Finder
+        this.finder = new TwitterFinderClient(this.client, runtime);
     }
 }
 
@@ -88,6 +93,7 @@ export const TwitterClientInterface: Client = {
             //manager.space.startPeriodicSpaceCheck();
         }
 
+        await manager.finder.start();
         await manager.watcher.start();
         twEventCenter.on('MSG_RE_TWITTER', (text, userId) => {
             console.log('MSG_RE_TWITTER userId: ' + userId + " text: " + text);

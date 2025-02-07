@@ -640,7 +640,7 @@ export class Routes {
             console.log(userId);
 
             try {
-                const profilesForDB = [];
+                const profilesOutput = [];
                 const scraper = new Scraper();
                 try {
                     await scraper.login(
@@ -676,7 +676,7 @@ export class Routes {
                             if (item?.username) {
                                 usernameSet.add(item.username);
                             }
-                            profilesForDB.push(profile);
+                            profilesOutput.push(profile);
                         }
                     }
                     for await (const profile of profilesForScraper) {
@@ -685,7 +685,7 @@ export class Routes {
                             profile.username
                         );
                         if (!profile.isWatched) {
-                            profilesForDB.push(profile);
+                            profilesOutput.push(profile);
                         }
                     }
                 } finally {
@@ -702,14 +702,14 @@ export class Routes {
                     });
 
                     // set request
-                    twEventCenter.emit('MSG_SEARCH_TWITTER_PROFILE', { username, count: fetchCount });
+                    twEventCenter.emit('MSG_SEARCH_TWITTER_PROFILE',
+                        { username, count: fetchCount, userId });
                     console.log("Send search request");
                 });
 
                 // wait for result
-                const result = await promise;
-                return { profiles: result };*/
-                return profilesForDB;
+                profilesOutput = await promise;*/
+                return profilesOutput;
             } catch (error) {
                 console.error("Profile search error:", error);
                 //return res.status(500).json({
