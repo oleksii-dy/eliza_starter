@@ -9,6 +9,7 @@ interface TwasListing {
     entity: {
         name: string;
         description: string;
+        websiteUrl: string;
     };
     token: {
         name: string;
@@ -34,7 +35,8 @@ export const GenerateListingAction: Action = {
             const listing: TwasListing = {
                 entity: {
                     name: "Innovation Venture",
-                    description: "AI-powered solution with integrated blockchain technology"
+                    description: "AI-powered solution with integrated blockchain technology",
+                    websiteUrl: "www.invest.ai"
                 },
                 token: {
                     name: "Innovation Token",
@@ -60,7 +62,8 @@ export const GenerateListingAction: Action = {
                 text: `Based on our brainstorming, I'll create a Twas Protocol listing with this structure:\n\n` +
                       `1. Entity:\n` +
                       `   - Name: ${listing.entity.name}\n` +
-                      `   - Description: ${listing.entity.description}\n\n` +
+                      `   - Description: ${listing.entity.description}\n` +
+                      `   - Website: ${listing.entity.websiteUrl}\n\n` +
                       `2. Token:\n` +
                       `   - Name: ${listing.token.name}\n` +
                       `   - Symbol: ${listing.token.symbol}\n` +
@@ -72,8 +75,7 @@ export const GenerateListingAction: Action = {
                       `   - Price per token: ${listing.fundingRound.pricePerToken} ETH\n` +
                       `   - Closing date: ${listing.fundingRound.closingDate}\n` +
                       `   - Terms/Deliverables:\n` +
-                      listing.fundingRound.deliverables.map(d => `     * ${d}`).join('\n') +
-                      `\n\nShall I proceed with creating the full listing?`,
+                      listing.fundingRound.deliverables.map(d => `     * ${d}`).join('\n'),
                 action: "POST_LISTING",
             };
 
@@ -90,12 +92,38 @@ export const GenerateListingAction: Action = {
         [
             {
                 user: "{{user1}}",
-                content: { text: "Let's generate the listing for our enhanced fitness app" }
+                content: { text: "Generate the listing" }
             },
             {
                 user: "Harambito",
                 content: {
-                    text: "🚀 Excited to unveil our Twas Protocol listing for Bottled Foreign Policy: \n\n1. Entity:\n   - Name: PropChain\n   - Description: Decentralized real estate platform with fractional ownership\n\n2. Token:\n   - Name: PropChain Token\n   - Symbol: PROP\n   - Minted: 30,000,000\n   - Mint limit: 30,000,000\n\n3. Funding Round:\n   - Tokens: 30,000,000\n   - % of tokens up for sale: 15\n   - Price per token: 0.060 ETH\n   - Closing date: 4/30/2025\n   - Terms/Deliverables:\n     * Smart contract framework (90 days)\n     * Property tokenization system (120 days)\n     * Virtual tour platform (150 days)\n     * First property listing and sale\n\nThe listing is now complete and ready for review.",
+                    text: "Here is the Twas Protocol Listing: \n\n1. Entity:\n   - Name: PropChain\n   - Description: Decentralized real estate platform with fractional ownership\n   - Website: www.invest.ai\n\n2. Token:\n   - Name: PropChain Token\n   - Symbol: PROP\n   - Minted: 30,000,000\n   - Mint limit: 30,000,000\n\n3. Funding Round:\n   - Tokens: 30,000,000\n   - % of tokens up for sale: 15\n   - Price per token: 0.060 ETH\n   - Closing date: 4/30/2025\n   - Terms/Deliverables:\n     * Smart contract framework (90 days)\n     * Property tokenization system (120 days)\n     * Virtual tour platform (150 days)\n     * First property listing and sale\n\nThe listing is now complete and ready for review.",
+                    action: "POST_LISTING",
+                }
+            }
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: { text: "Create the listing for the NFT marketplace" }
+            },
+            {
+                user: "Harambito",
+                content: {
+                    text: "Here is the Twas Protocol Listing: \n\n1. Entity:\n   - Name: ArtVerse\n   - Description: AI-curated NFT marketplace with creator royalties\n   - Website: www.invest.ai\n\n2. Token:\n   - Name: ArtVerse Token\n   - Symbol: ARTV\n   - Minted: 25,000,000\n   - Mint limit: 25,000,000\n\n3. Funding Round:\n   - Tokens: 25,000,000\n   - % of tokens up for sale: 12\n   - Price per token: 0.055 ETH\n   - Closing date: 5/15/2025\n   - Terms/Deliverables:\n     * Marketplace smart contracts (45 days)\n     * Creator tools suite (75 days)\n     * AI curation engine (90 days)\n     * Beta launch with selected artists\n\nThe listing is now complete and ready for review.",
+                    action: "POST_LISTING",
+                }
+            }
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: { text: "Please generate a listing for the DeFi lending platform" }
+            },
+            {
+                user: "Harambito",
+                content: {
+                    text: "Here is the Twas Protocol Listing: \n\n1. Entity:\n   - Name: LendFlow\n   - Description: Decentralized lending platform with AI-powered risk assessment\n   - Website: www.invest.ai\n\n2. Token:\n   - Name: LendFlow Token\n   - Symbol: LEND\n   - Minted: 35,000,000\n   - Mint limit: 35,000,000\n\n3. Funding Round:\n   - Tokens: 35,000,000\n   - % of tokens up for sale: 18\n   - Price per token: 0.065 ETH\n   - Closing date: 4/1/2025\n   - Terms/Deliverables:\n     * Risk assessment AI development (60 days)\n     * Smart contract auditing (90 days)\n     * Lending pool implementation (120 days)\n     * Initial liquidity partnerships\n\nThe listing is now complete and ready for review.",
                     action: "POST_LISTING",
                 }
             }
