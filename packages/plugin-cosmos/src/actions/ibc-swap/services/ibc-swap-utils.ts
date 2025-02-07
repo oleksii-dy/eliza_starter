@@ -19,5 +19,5 @@ export const prepareAmbiguityErrorMessage = (
 
     const assetsText = `${ambiguousAssets.map((a) => `Symbol: ${a.symbol} Desc: ${a.description} Denom: ${a.base}`).join(",\n")}`;
 
-    return `Error occured. Swap was not performed. Please provide denom for coin: ${coinSymbol}, on Chain Name: ${chainName}. It is necessary as the symbol ${coinSymbol} is not unique among coins on chain ${chainName}. \n Select one from found assets:\n${assetsText}`;
+    return `Error occurred. Swap was not performed. Please provide denom for coin: ${coinSymbol}, on Chain Name: ${chainName}. It is necessary as the symbol ${coinSymbol} is not unique among coins on chain ${chainName}. \n Select one from found assets:\n${assetsText}`;
 };
