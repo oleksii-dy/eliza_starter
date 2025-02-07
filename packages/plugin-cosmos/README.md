@@ -190,7 +190,7 @@ confirming / yes
 ```
 I will now initiate the swap of 10 OSMO on the Osmosis chain to USDC on the Axelar chain. Please wait for the transaction to complete. If you need to swap more assets, feel free to let me know.
 
-Error occured. Swap was not performed. Please provide denom for coin: USDC, on Chain Name: axelar. It is necessary as the symbol USDC is not unique among coins on chain axelar. 
+Error occurred. Swap was not performed. Please provide denom for coin: USDC, on Chain Name: axelar. It is necessary as the symbol USDC is not unique among coins on chain axelar. 
 Select one from found assets:
 Symbol: USDC Desc: Circle's stablecoin on Axelar Denom: uusdc,
 Symbol: USDC Desc: Circle's stablecoin from Polygon on Axelar Denom: polygon-uusdc,
