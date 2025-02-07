@@ -8,6 +8,7 @@ import {
     type Action,
 } from "@elizaos/core";
 import { BinanceService } from "../services";
+import { KlineResponse } from "../types/internal/config";
 
 export const getKlineAction: Action = {
     name: "GET_KLINE",
@@ -22,16 +23,16 @@ export const getKlineAction: Action = {
         state: State,
         _options: Record<string, unknown>,
         callback?: HandlerCallback
-    ): Promise<boolean> => {
+    ): Promise<KlineResponse> => {
         try {
-          
+            const coinsymbol = _options['symbol'] as string;
             console.log("handleBnbQuery 8, in fungbnb. action.handler");
             const binanceService = new BinanceService({
                 apiKey: runtime.getSetting("BINANCE_API_KEY"),
                 secretKey: runtime.getSetting("BINANCE_SECRET_KEY"),
                 });
             // const binanceService = new BinanceService();
-            const klineData = await binanceService.getKline({symbol: "BTCUSDT", interval: "1m"});
+            const klineData = await binanceService.getKline({symbol: coinsymbol + "USDT", interval: "1d"});
 
             console.log("handleBnbQuery 9, in fungbnb. action.handler kilneData: ", JSON.stringify(klineData));
 
@@ -42,7 +43,7 @@ export const getKlineAction: Action = {
                 });
             }
 
-            return true;
+            return klineData;
         } catch (error) {
             elizaLogger.error("Error in price check:", error);
             if (callback) {
@@ -57,7 +58,7 @@ export const getKlineAction: Action = {
                     content: { error: error.message },
                 });
             }
-            return false;
+            return null;
         }
     },
     examples: [

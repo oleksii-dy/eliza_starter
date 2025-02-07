@@ -10,6 +10,7 @@ import {
 } from "@elizaos/core";
 import { ClientBase } from "./base";
 import { SearchMode } from "agent-twitter-client";
+import { KlineResponse } from "../../plugin-binance/src/types/internal/config";
 
 export const KEY_BNB_CACHE_STR = "key_bnb_res_cache_";
 
@@ -79,7 +80,7 @@ export class FungBnbClient {
         );
         const promptTweet =
             `
-Please combine the data on Twitter when analyzing and predicting,Here are some tweets/replied:
+Please combine the data on Twitter and cryptocurrency kline when analyzing and predicting, Below, I will provide Twitter and Kline data separately, Here are some tweets/replied:
 ${[...tweetsres?.tweets]
                 .filter((tweet) => {
                     // ignore tweets where any of the thread tweets contain a tweet by the bot
@@ -102,10 +103,60 @@ Likes: ${tweet.likes}, Replies: ${tweet.replies}, Retweets: ${tweet.retweets},
 `;
         // console.log("handleBnbQuery 2.5, in fungbnb. action.handler: ", promptTweet);
 
+                /**
+         *
+    export interface KlineResponse {
+    symbol: string; // Symbol
+    klines: Array<{
+        openTime: number;      // Kline open time
+        openPrice: string;     // Open price
+        highPrice: string;     // High price
+        lowPrice: string;      // Low price
+        closePrice: string;    // Close price
+        volume: string;        // Volume
+        closeTime: number;     // Kline Close time
+        quoteVolume: string;   // Quote asset volume
+        trades: number;        // Number of trades
+        buyVolume: string;     // Taker buy base asset volume
+        buyQuoteVolume: string;// Taker buy quote asset volume
+    }>;
+    }
+        */
+       let promptKline = `Here are some Kline data, and Kline's data structure is: Array<{
+        openTime: number;      // Kline open time
+        openPrice: string;     // Open price
+        highPrice: string;     // High price
+        lowPrice: string;      // Low price
+        closePrice: string;    // Close price
+        volume: string;        // Volume
+        closeTime: number;     // Kline Close time
+        quoteVolume: string;   // Quote asset volume
+        trades: number;        // Number of trades
+        buyVolume: string;     // Taker buy base asset volume
+        buyQuoteVolume: string;// Taker buy quote asset volume
+    }>;
+    `;
+        const { actions } = binancePlugin;
+        actions.forEach(async action => {
+            console.log(`handleBnbQuery 6, in fungbnb. Action: ${action.name}`);
+            if(action.name === 'GET_KLINE') {
+                console.log("handleBnbQuery 7, in fungbnb. action.handler");
+                // const getKlineActionInstance = action as getKlineAction;
+                const coinOptions: Record<string, unknown> = {
+                    symbol: coinsymbol,
+                };
+                const klineres  = await action.handler(this.runtime, null, null, coinOptions, null);
+                const res = klineres as KlineResponse;
+                if(res.klines.length > 0) {
+                    promptKline += JSON.stringify(res.klines)
+                }
+            }
+        });
+        console.log("handleBnbQuery 3, in fungbnb. kline: ", promptKline);
         //------------
         let responseStr = await generateText({
             runtime: this.runtime,
-            context: promptHeader + promptTweet,
+            context: promptHeader + promptTweet + promptKline,
             modelClass: ModelClass.LARGE,
         });
         console.log("handleBnbQuery 3, in fungbnb. responseStr: ", responseStr);
@@ -124,13 +175,5 @@ Likes: ${tweet.likes}, Replies: ${tweet.replies}, Retweets: ${tweet.retweets},
             await this.runtime.cacheManager.set(KEY_BNB_CACHE_STR + coinsymbol, JSON.stringify(anaobj));
         }
 
-        const { actions } = binancePlugin;
-        actions.forEach(action => {
-            console.log(`handleBnbQuery 6, in fungbnb. Action: ${action.name}`);
-            if(action.name === 'GET_KLINE') {
-                console.log("handleBnbQuery 7, in fungbnb. action.handler");
-                action.handler(this.runtime, null, null, null, null);
-            }
-        });
     }
 }
