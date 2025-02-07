@@ -11,13 +11,21 @@ import {
     ModelClass,
     State,
     UUID,
-    Provider
+    Provider,
 } from "@elizaos/core";
 import { postTweet } from "@elizaos/plugin-twitter";
 import express from "express";
-import { blockExplorerBaseAddressUrl, blockExplorerBaseTxUrl, supportedTickers, WebhookEvent } from "./types";
+import {
+    blockExplorerBaseAddressUrl,
+    blockExplorerBaseTxUrl,
+    WebhookEvent,
+} from "./types";
 import { Coinbase, Wallet } from "@coinbase/coinbase-sdk";
-import { initializeWallet, readContractWrapper, type CoinbaseWallet } from "@elizaos/plugin-coinbase";
+import {
+    initializeWallet,
+    readContractWrapper,
+    type CoinbaseWallet,
+} from "@elizaos/plugin-coinbase";
 import { tokenSwap } from "@elizaos/plugin-0x";
 import { createWalletClient, erc20Abi, http, publicActions } from "viem";
 import { getPriceInquiry } from "../../plugin-0x/src/actions/getIndicativePrice";
@@ -25,14 +33,18 @@ import { getQuoteObj } from "../../plugin-0x/src/actions/getQuote";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
 
-export type WalletType = 'short_term_trading' | 'long_term_trading' | 'dry_powder' | 'operational_capital';
+export type WalletType =
+    | "short_term_trading"
+    | "long_term_trading"
+    | "dry_powder"
+    | "operational_capital";
 
 export class CoinbaseClient implements Client {
     private runtime: IAgentRuntime;
     private server: express.Application;
     private port: number;
     private wallets: CoinbaseWallet[];
-    private initialBuyAmountInCurrency: number | null;
+    private initialBalanceETH: number;
 
     constructor(runtime: IAgentRuntime) {
         this.runtime = runtime;
@@ -43,7 +55,7 @@ export class CoinbaseClient implements Client {
         this.server = express();
         this.port = Number(runtime.getSetting("COINBASE_WEBHOOK_PORT")) || 3001;
         this.wallets = [];
-        this.initialBuyAmountInCurrency = null;
+        this.initialBalanceETH = 1;
     }
 
     async initialize(): Promise<void> {
@@ -264,7 +276,8 @@ Generate only the tweet text, no commentary or markdown.`;
     }
 
     private async handleWebhookEvent(event: WebhookEvent) {
-        if (!supportedTickers.includes(event.ticker)) {
+        // for now just support ETH
+        if (event.ticker !== "ETH" && event.ticker !== "WETH") {
             elizaLogger.info("Unsupported ticker:", event.ticker);
             return;
         }
@@ -288,21 +301,8 @@ Generate only the tweet text, no commentary or markdown.`;
         elizaLogger.info("formattedTimestamp ", formattedTimestamp);
 
         // Execute token swap
-        const buy = event.event.toUpperCase() === "BUY";        
-       if (buy) {
-        this.initialBuyAmountInCurrency = amount / Number(event.price)
-       }
-       // if sell, use the initial buy amount in currency instead of the current price
-       let amountInCurrency;
-       if (buy) {
-           amountInCurrency = amount;
-       } else if (this.initialBuyAmountInCurrency != null) {
-           amountInCurrency = this.initialBuyAmountInCurrency;
-       } else {
-           // if not set, use the current price
-           amountInCurrency = amount / Number(event.price);
-       }
-
+        const buy = event.event.toUpperCase() === "BUY";
+        const amountInCurrency = buy ? amount : amount / Number(event.price);
         const txHash = await this.executeTokenSwap(
             event,
             amountInCurrency,
@@ -504,7 +504,10 @@ export const calculateOverallPNL = async (
     return formattedPNLUSD;
 };
 
-export async function getTotalBalanceUSD(runtime: IAgentRuntime, publicKey: `0x${string}`): Promise<number> {
+export async function getTotalBalanceUSD(
+    runtime: IAgentRuntime,
+    publicKey: `0x${string}`
+): Promise<number> {
     const client = createWalletClient({
         account: privateKeyToAccount(
             ("0x" + runtime.getSetting("WALLET_PRIVATE_KEY")) as `0x${string}`
@@ -556,7 +559,6 @@ export const pnlProvider: Provider = {
             );
             elizaLogger.info("pnl ", pnl);
             return `PNL: ${pnl}`;
-           
         } catch (error) {
             elizaLogger.error("Error in pnlProvider: ", error.message);
             return [];
@@ -566,7 +568,10 @@ export const pnlProvider: Provider = {
 
 export const balanceProvider: Provider = {
     get: async (runtime: IAgentRuntime, _message: Memory) => {
-        const totalBalanceUSD = await getTotalBalanceUSD(runtime, runtime.getSetting("WALLET_PUBLIC_KEY") as `0x${string}`);
+        const totalBalanceUSD = await getTotalBalanceUSD(
+            runtime,
+            runtime.getSetting("WALLET_PUBLIC_KEY") as `0x${string}`
+        );
         return `Total balance: $${totalBalanceUSD.toFixed(2)}`;
     },
 };
