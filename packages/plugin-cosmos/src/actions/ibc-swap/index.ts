@@ -76,7 +76,7 @@ export const createIBCSwapAction = (pluginOptions: ICosmosPluginOptions) => ({
                 const text =
                     swapResp.status === "STATE_COMPLETED_SUCCESS"
                         ? `Successfully swapped ${swapResp.fromTokenAmount} ${swapResp.fromTokenSymbol} tokens to ${swapResp.toTokenSymbol} on chain ${swapResp.toChainName}.\nTransaction Hash: ${swapResp.txHash}`
-                        : `Error occured swapping ${swapResp.fromTokenAmount} ${swapResp.fromTokenSymbol} tokens to ${swapResp.toTokenSymbol} on chain ${swapResp.toChainName}.\nTransaction Hash: ${swapResp.txHash}, try again`;
+                        : `Error occurred swapping ${swapResp.fromTokenAmount} ${swapResp.fromTokenSymbol} tokens to ${swapResp.toTokenSymbol} on chain ${swapResp.toChainName}.\nTransaction Hash: ${swapResp.txHash}, try again`;
                 await _callback({
                     text: text,
                     content: {
