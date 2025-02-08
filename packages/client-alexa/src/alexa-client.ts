@@ -102,7 +102,7 @@ export class AlexaClient {
                     break;
                 case 400:
                     elizaLogger.error(
-                        `${response.data.code} - ${response.data.message}}`
+                        `${response.data.code} - ${response.data.message}`
                     );
                     break;
                 case 401:
