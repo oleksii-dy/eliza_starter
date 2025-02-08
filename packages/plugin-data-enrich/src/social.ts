@@ -89,7 +89,9 @@ export const socialProvider: Provider = {
 }
 
 const ABSTRACTOR_INSTRUCTION = `
-    Please summary the user information by the provided biography and post tweets. The total words count should be between 20 and 30.`;
+    Please summary the user information by the provided biography and post tweets.
+    The total words count should be between 20 and 30.
+    If the user is not related to web3 or crypto, just return "The user is not related to Web3".`;
 
 const TW_ABSTRACTOR_PREFIX: string = "ABSTRACTOR_KEY_TW_PROFILE_PREFIX_";
 
