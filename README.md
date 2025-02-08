@@ -1,5 +1,26 @@
 # Eliza 🤖
 
+
+Build for Autonome:
+
+```
+# Create the builder
+docker buildx create --use --bootstrap \
+  --name testbuilder6 \
+  --driver docker-container \
+  --driver-opt cpuset-cpus="0-12" \
+  --driver-opt memory=25g \
+  --config ./buildkitd.toml
+
+# Build the image
+DOCKER_BUILDKIT=1 docker buildx build --cpu-quota=1200000 --memory=25g --platform=linux/amd64 --load -t geekyrocks/twas .
+
+
+docker run --env-file .env --memory=20g --cpus="10" --memory-swap=20g geekyrocks/twas:0.0.5
+docker run --env-file .env c658bb0ac996
+```
+
+
 <div align="center">
   <img src="./docs/static/img/eliza_banner.jpg" alt="Eliza Banner" width="100%" />
 </div>

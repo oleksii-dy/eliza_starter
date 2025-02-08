@@ -1,0 +1,12 @@
+debug = true
+
+[worker.oci]
+  platforms = [ "linux/amd64"]
+  max-parallelism = 14
+  reservedSpace = "50%"
+  maxUsedSpace = "98%"
+  enabled = true
+
+[worker.containerd]
+  enabled = false
+
