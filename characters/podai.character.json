@@ -1,7 +1,7 @@
 {
     "name": "pod",
     "clients": ["twitter"],
-    "modelProvider": "deepseek",
+    "modelProvider": "redpill",
     "settings": {
         "secrets": {},
         "voice": {
