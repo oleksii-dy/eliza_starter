@@ -1,39 +1,31 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { cookieToInitialState } from "wagmi";
-import { config } from "@/config";
-import { headers } from "next/headers";
-import Web3ModalProvider from "@/context";
-import "./globals.css";
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ['latin'] })
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { headers } from 'next/headers' // added
+import ContextProvider from '@/context'
 
 export const metadata: Metadata = {
-  title: "Twas",
-  description: "Get an AI to start a company for you and execute from fundraise to finish.",
-};
+  title: 'twas',
+  description: 'Twas Launched'
+}
 
-export default function RootLayout({
-  children,
+export default async function RootLayout({
+  children
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
-  const initialState = cookieToInitialState(config, headers().get("cookie"));
+
+  const headersObj = await headers();
+  const cookies = headersObj.get('cookie')
+
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Web3ModalProvider initialState={initialState}>{children}</Web3ModalProvider>
+      <body className={inter.className}>
+        <ContextProvider cookies={cookies}>{children}</ContextProvider>
       </body>
     </html>
-  );
+  )
 }
