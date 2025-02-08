@@ -96,6 +96,16 @@ export const continueAction: Action = {
         }
         state = await runtime.updateRecentMessageState(state);
 
+                // Check if this message has already been responded to
+        const existingResponse = state.recentMessagesData.find(m => 
+            m.content.inReplyTo === message.id && 
+            m.userId === runtime.agentId
+        );
+
+        if (existingResponse) {
+            return;
+        }
+
         // Get the agent's recent messages
         const agentMessages = state.recentMessagesData
             .filter((m: { userId: any }) => m.userId === runtime.agentId)
