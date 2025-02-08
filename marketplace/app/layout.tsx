@@ -6,6 +6,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 import { headers } from 'next/headers' // added
 import ContextProvider from '@/context'
+import { TwasProvider } from '@/context/twas'
 
 export const metadata: Metadata = {
   title: 'twas',
@@ -24,7 +25,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ContextProvider cookies={cookies}>{children}</ContextProvider>
+        <ContextProvider cookies={cookies}><TwasProvider>{children}</TwasProvider></ContextProvider>
       </body>
     </html>
   )
