@@ -10,7 +10,7 @@ import {
 import { BinanceService } from "../services";
 import { KlineResponse } from "../types/internal/config";
 
-export const getKlineAction: Action = {
+export const KlineCheck: Action = {
     name: "GET_KLINE",
     similes: [
         "GET_KLINE",
@@ -31,9 +31,9 @@ export const getKlineAction: Action = {
                 secretKey: runtime.getSetting("BINANCE_SECRET_KEY"),
                 });
             const klineData = await binanceService.getKline({symbol: coinsymbol + "USDT", interval: "1d"});
-            // console.log("handleBnbQuery 9, in fungbnb. action.handler kilneData: ", JSON.stringify(klineData));
+            // console.log("handleBnbQuery, in fungbnb. action.handler kilneData: ", JSON.stringify(klineData));
             if (!(klineData?.klines.length > 0)) {
-                console.error("handleBnbQuery 3, in fungbnb. KlineResponse: " + JSON.stringify(klineData));
+                console.error("handleBnbQuery, in fungbnb. KlineResponse: " + JSON.stringify(klineData));
             }
             if (callback) {
                 callback({

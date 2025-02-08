@@ -30,7 +30,7 @@ import { createSolSplTransferTransaction } from "../../plugin-data-enrich/src/so
 import { callSolanaAgentTransfer } from "../../plugin-data-enrich/src/solanaagentkit";
 import { MemoController } from "./memo";
 import { requireAuth } from "./auth";
-import { CoinAnaObj, KEY_BNB_CACHE_STR } from "../../client-twitter/src/sighter";
+import { CoinAnalysisObj, KEY_BNB_CACHE_STR } from "../../client-twitter/src/sighter";
 //import { ethers } from 'ethers';
 //import { requireAuth } from "./auth";
 
@@ -583,20 +583,21 @@ export class Routes {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
     async handleBnbQuery(req: express.Request, res: express.Response) {
-        const { coinsymbol } = req.query;
+        const symbol = typeof req.query.coinsymbol === 'string' ? req.query.coinsymbol : '';
+        const coinsymbol = symbol.trim();
         if (!coinsymbol) {
             throw new ApiError(533, "coinsymbol is blank");
         }
-        console.log("handleBnbQuery 0 symbol: " + coinsymbol);
+        console.log("handleBnbQuery symbol: " + coinsymbol);
         const runtime = await this.authUtils.getRuntime(req.params.agentId);
         let userId = "blank";
         twEventCenter.emit("MSG_BNB_QUERY", coinsymbol, userId);
-        let coinAnaObj: CoinAnaObj = null;
+        let coinAnaObj: CoinAnalysisObj = null;
 
         for (let i = 0; i < 10; i++) {
             await this.sleep(1000);
             const cached = await runtime.cacheManager.get(KEY_BNB_CACHE_STR + coinsymbol);
-            // console.log("handleBnbQuery 2.3, cached: " + cached);
+            // console.log("handleBnbQuery, cached: " + cached);
             if (cached && typeof cached === 'string') {
                 try {
                     coinAnaObj = JSON.parse(cached);

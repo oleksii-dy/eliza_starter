@@ -14,7 +14,7 @@ import { KlineResponse } from "../../plugin-binance/src/types/internal/config";
 
 export const KEY_BNB_CACHE_STR = "key_bnb_res_cache_";
 
-export class CoinAnaObj {
+export class CoinAnalysisObj {
     public coin_analysis: string;
     public coin_prediction: string;
     public timestamp: number;
@@ -30,17 +30,11 @@ export class CoinAnaObj {
 export class SighterClient {
     client: ClientBase;
     runtime: IAgentRuntime;
-    consensus: ConsensusProvider;
-    // inferMsgProvider: InferMessageProvider;
     userManager: UserManager;
 
     constructor(client: ClientBase, runtime: IAgentRuntime) {
         this.client = client;
         this.runtime = runtime;
-        this.consensus = new ConsensusProvider(this.runtime);
-        // this.inferMsgProvider = new InferMessageProvider(
-        //     this.runtime.cacheManager
-        // );
         this.userManager = new UserManager(this.runtime.cacheManager);
         this.sendingTwitterDebug = false;
     }
@@ -53,7 +47,6 @@ export class SighterClient {
         if (!this.client.profile) {
             await this.client.init();
         }
-        this.consensus.startNode();
     }
     async sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
@@ -67,7 +60,7 @@ export class SighterClient {
     async bnbQuery(coinsymbol: string, userId: any) {
         // 1. get param. 2 get prompt. 3. get tweet info. 4. get bnb info. 5. get ai answer.
 
-        console.log("handleBnbQuery 1, in fungbnb. coinsymbol: " + coinsymbol);
+        console.log("handleBnbQuery, in fungbnb. coinsymbol: " + coinsymbol);
         const promptHeader = "You as a cryptocurrency expert with rich cryptocurrency trading experience and are frequently active in various cryptocurrency communities. Regarding the following cryptocurrency: " +
         coinsymbol +", please use 100 - word English texts respectively to analyze the reasons for the current price trend and make predictions. The response format should be formatted as a JSON block as follows: { \"token\": \"{token}\", \"coin_analysis\": \"{coin_analysis}\", \"coin_prediction\": \"{coin_prediction}\" }. No other text should be provided, No need to use markdown syntax, just return JSON directly.";
 
@@ -145,7 +138,7 @@ Likes: ${tweet.likes}, Replies: ${tweet.replies}, Retweets: ${tweet.retweets},
                 }
             }
         });
-        // console.log("handleBnbQuery 3, in fungbnb.  promptHeader"
+        // console.log("handleBnbQuery, in fungbnb.  promptHeader"
         //     + promptHeader + " promptTweet  "
         //     + promptTweet + " promptKline: " + promptKline);
 
@@ -154,7 +147,7 @@ Likes: ${tweet.likes}, Replies: ${tweet.replies}, Retweets: ${tweet.retweets},
             context: promptHeader + promptTweet + promptKline,
             modelClass: ModelClass.LARGE,
         });
-        // console.log("handleBnbQuery 3, in fungbnb. responseStr: ", responseStr);
+        // console.log("handleBnbQuery, in fungbnb. responseStr: ", responseStr);
 
         let responseObj = null;
 
@@ -165,7 +158,7 @@ Likes: ${tweet.likes}, Replies: ${tweet.replies}, Retweets: ${tweet.retweets},
             console.error('JSON parse error: ', error.message);
         }
         if (responseObj) {
-            const anaobj = new CoinAnaObj(coinsymbol, responseObj?.coin_analysis, responseObj?.coin_prediction);
+            const anaobj = new CoinAnalysisObj(coinsymbol, responseObj?.coin_analysis, responseObj?.coin_prediction);
             await this.runtime.cacheManager.set(KEY_BNB_CACHE_STR + coinsymbol, JSON.stringify(anaobj));
         }
 
