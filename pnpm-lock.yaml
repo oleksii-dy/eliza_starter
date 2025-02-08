@@ -758,6 +758,9 @@ importers:
       '@web3modal/wagmi':
         specifier: ^5.1.11
         version: 5.1.11(zo5kyn22nlxqliwlvmk5oergbq)
+      alkahest-ts:
+        specifier: ^0.1.3
+        version: 0.1.3(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.1)
       next:
         specifier: 15.1.6
         version: 15.1.6(@babel/core@7.26.7)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -15198,6 +15201,11 @@ packages:
   algosdk@1.24.1:
     resolution: {integrity: sha512-9moZxdqeJ6GdE4N6fA/GlUP4LrbLZMYcYkt141J4Ss68OfEgH9qW0wBuZ3ZOKEx/xjc5bg7mLP2Gjg7nwrkmww==}
     engines: {node: '>=14.0.0'}
+
+  alkahest-ts@0.1.3:
+    resolution: {integrity: sha512-kDp/I5ubZ6iSUnTJ4iDM9B0ZNG5mKWwPbFzyRsvXKUZZzOX1MYPj7h8iqlwp+8gbiitSAZ7H1y+FH5J/KLKO4g==}
+    peerDependencies:
+      typescript: ^5.0.0
 
   amp-message@0.1.2:
     resolution: {integrity: sha512-JqutcFwoU1+jhv7ArgW38bqrE+LQdcRv4NxNw0mp0JHQyB6tXesWRjtYKlDgHRY2o3JE5UTaBGUK8kSWUdxWUg==}
@@ -49807,6 +49815,15 @@ snapshots:
       vlq: 2.0.4
     transitivePeerDependencies:
       - encoding
+
+  alkahest-ts@0.1.3(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.1):
+    dependencies:
+      typescript: 5.7.3
+      viem: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@5.0.10)(zod@3.24.1)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+      - zod
 
   amp-message@0.1.2:
     dependencies:
