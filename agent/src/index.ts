@@ -873,7 +873,10 @@ export async function createAgent(
         character,
         // character.plugins are handled when clients are added
         plugins: [
-            nutrifiPlugin,
+            getSecret(character, "NUTRIFI_ENABLED") ? (() => {
+                elizaLogger.log('Initializing NutriFi plugin...');
+                return nutrifiPlugin;
+            })() : null,
             parseBooleanFromText(getSecret(character, "BITMIND")) &&
             getSecret(character, "BITMIND_API_TOKEN")
                 ? bittensorPlugin
@@ -1109,7 +1112,7 @@ async function startAgent(
         );
 
         // start services/plugins/process knowledge
-        await runtime.initialize();
+        await runtime.initialize(); 
 
         // start assigned clients
         runtime.clients = await initializeClients(character, runtime);
