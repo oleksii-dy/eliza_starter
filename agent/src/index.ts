@@ -121,6 +121,7 @@ import { tonPlugin } from "@elizaos/plugin-ton";
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
 import { dkgPlugin } from "@elizaos/plugin-dkg";
 import { injectivePlugin } from "@elizaos/plugin-injective";
+import { pixocracyPlugin } from "@elizaos/plugin-pixocracy";
 import { giphyPlugin } from "@elizaos/plugin-giphy";
 import { letzAIPlugin } from "@elizaos/plugin-letzai";
 import { thirdwebPlugin } from "@elizaos/plugin-thirdweb";
@@ -160,6 +161,7 @@ import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
 
 import { trikonPlugin } from "@elizaos/plugin-trikon";
 import arbitragePlugin from "@elizaos/plugin-arbitrage";
+
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
@@ -506,8 +508,7 @@ async function handlePluginImporting(plugins: string[]) {
                     );
                 } catch (importError) {
                     elizaLogger.error(
-                        `Failed to import plugin: ${plugin}`,
-                        importError
+                        `Failed to import plugin: ${plugin} ${importError}`
                     );
                     return []; // Return null for failed imports
                 }
@@ -1141,6 +1142,7 @@ export async function createAgent(
                 : null,
             goatPlugin,
             zilliqaPlugin,
+            pixocracyPlugin,
             getSecret(character, "COINGECKO_API_KEY") ||
             getSecret(character, "COINGECKO_PRO_API_KEY")
                 ? coingeckoPlugin
