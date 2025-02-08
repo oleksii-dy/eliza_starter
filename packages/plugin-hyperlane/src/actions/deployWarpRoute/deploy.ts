@@ -16,11 +16,11 @@ import {
 } from "@hyperlane-xyz/sdk";
 import { WriteCommandContext } from "../core/context";
 import { fullyConnectTokens, generateTokenConfigs } from "./config";
-import { DeployParams } from "./types";
 import { resolveWarpIsmAndHook } from "./ism";
+import { WarpRouteDeployParams } from "./types";
 
 export async function executeDeploy(
-    params: DeployParams,
+    params: WarpRouteDeployParams,
     apiKeys: ChainMap<string>
 ): Promise<HyperlaneContractsMap<HypERC20Factories | HypERC721Factories>> {
     console.log("🚀 All systems ready, captain! Beginning deployment...");
@@ -81,7 +81,7 @@ export async function writeDeploymentArtifacts(
 }
 
 export async function getWarpCoreConfig(
-    { warpDeployConfig, context }: DeployParams,
+    { warpDeployConfig, context }: WarpRouteDeployParams,
     contracts: HyperlaneContractsMap<TokenFactories>
 ): Promise<{
     warpCoreConfig: WarpCoreConfig;
