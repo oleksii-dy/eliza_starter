@@ -37,12 +37,22 @@ WORKDIR /app
 # Create .turbo directory and set correct permissions
 RUN mkdir -p .turbo
 
-# Copy application code
-COPY . .
+# Copy only necessary files
+COPY agent ./agent
+COPY characters ./characters
+COPY packages ./packages
+COPY patches ./patches
+COPY .dockerignore .
+COPY Dockerfile .
+COPY .npmrc .
+COPY package.json .
+COPY tsconfig.json .
+COPY turbo.json .
+COPY pnpm-workspace-docker.yaml ./pnpm-workspace.yaml
 
 # Install dependencies and build
 RUN pnpm install --no-frozen-lockfile && \
-    pnpm run build
+    pnpm run build-docker
 
 # Final runtime image
 FROM node:23.3.0-slim
@@ -67,14 +77,11 @@ COPY --from=builder /app/.npmrc ./
 COPY --from=builder /app/turbo.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/agent ./agent
-COPY --from=builder /app/client ./client
-COPY --from=builder /app/lerna.json ./
 COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/scripts ./scripts
 COPY --from=builder /app/characters ./characters
 
 # Expose necessary ports
-EXPOSE 3000 5173
+EXPOSE 3000
 
 # Command to start the application
-CMD ["sh", "-c", "pnpm start & pnpm start:client"]
+CMD ["sh", "-c", "pnpm start --characters ./characters/twas.character.json"]
