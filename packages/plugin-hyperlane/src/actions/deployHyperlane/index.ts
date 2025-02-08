@@ -139,7 +139,6 @@ async function InitializeDeployment({
         coreConfig.defaultIsm.validators = [validator];
 
 
-
         writeYamlOrJson(configFilePath, coreConfig, "yaml");
         elizaLogger.log("Core config created");
     } catch (e) {
