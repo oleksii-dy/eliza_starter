@@ -1,7 +1,7 @@
 import express from "express";
 
-import { elizaLogger, IAgentRuntime } from "@elizaos/core";
-import { createPixocracyDialogue } from "./handlers/createPixocracyDialogue.ts";;
+import { IAgentRuntime } from "@elizaos/core";
+import { createPixocracyDialogue } from "./handlers/createPixocracyDialogue.ts";
 
 export function createPixocracyApiRouter(
     runtime: IAgentRuntime

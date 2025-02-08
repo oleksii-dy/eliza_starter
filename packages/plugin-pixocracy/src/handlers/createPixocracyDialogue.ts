@@ -110,8 +110,6 @@ export async function createPixocracyDialogue({
     const roomId = stringToUuid("pixocracy-" + agentName);
 
     const pixocracyRequest = req.body as PixocracyRequest;
-    elizaLogger.log(pixocracyRequest);
-    elizaLogger.log(JSON.stringify(pixocracyRequest));
     const isInitiator = pixocracyRequest.role === 'initiator';
 
     const content: Content = {
@@ -131,7 +129,7 @@ export async function createPixocracyDialogue({
         embedding: getEmbeddingZeroVector(),
     };
 
-    elizaLogger.log('Composing state...', {
+    elizaLogger.debug('Composing state...', {
         agentName,
         role: pixocracyRequest.role,
         isInitiator,
@@ -159,7 +157,7 @@ export async function createPixocracyDialogue({
         templatingEngine: "handlebars",
     });
 
-    let elizaResponse = await generateText({
+    const elizaResponse = await generateText({
         runtime,
         context,
         modelClass: ModelClass.MEDIUM,
