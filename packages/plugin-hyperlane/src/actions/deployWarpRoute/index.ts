@@ -1,6 +1,4 @@
 import type {
-    ChainMap,
-    ChainMetadata,
     DeployedOwnableConfig,
     IsmConfig,
     WarpCoreConfig,
@@ -8,23 +6,21 @@ import type {
 } from "@hyperlane-xyz/sdk";
 import { TokenFactories } from "@hyperlane-xyz/sdk";
 
-import type { IRegistry } from "@hyperlane-xyz/registry";
 import { AddWarpRouteOptions } from "@hyperlane-xyz/registry";
-import type { ChainName } from "@hyperlane-xyz/sdk";
-import { prepareDeploy } from "../core/utils";
 import {
     HypERC20Deployer,
     HyperlaneContractsMap,
-    MultiProvider,
     TokenType,
     WarpRouteDeployConfigSchema,
 } from "@hyperlane-xyz/sdk";
-import type { Address } from "@hyperlane-xyz/utils";
 import { ProtocolType } from "@hyperlane-xyz/utils";
-import { BigNumber, ethers } from "ethers";
 import { writeYamlOrJson } from "../../utils/configOps";
 import { CommandContext, WriteCommandContext } from "../core/context";
-import { runPreflightChecksForChains , requestAndSaveApiKeys , nativeBalancesAreSufficient } from "../core/utils";
+import {
+    prepareDeploy,
+    requestAndSaveApiKeys,
+    runPreflightChecksForChains,
+} from "../core/utils";
 import {
     createDefaultWarpIsmConfig,
     fullyConnectTokens,
@@ -33,10 +29,10 @@ import {
     setProxyAdminConfig,
 } from "./config";
 import { executeDeploy, writeDeploymentArtifacts } from "./deploy";
-import { DeployParams, MINIMUM_WARP_DEPLOY_GAS } from "./types";
+import { MINIMUM_WARP_DEPLOY_GAS, WarpRouteDeployParams } from "./types";
 
 async function getWarpCoreConfig(
-    { warpDeployConfig, context }: DeployParams,
+    { warpDeployConfig, context }: WarpRouteDeployParams,
     contracts: HyperlaneContractsMap<TokenFactories>
 ): Promise<{
     warpCoreConfig: WarpCoreConfig;
@@ -66,8 +62,6 @@ async function getWarpCoreConfig(
 
     return { warpCoreConfig, addWarpRouteOptions: { symbol } };
 }
-
-
 
 export class WarpDeployerClass {
     private tokenAddress: string;
@@ -215,7 +209,7 @@ export class WarpDeployerClass {
             registry
         );
 
-        const deploymentParams: DeployParams = {
+        const deploymentParams: WarpRouteDeployParams = {
             context,
             warpDeployConfig: warpRouteConfig,
         };

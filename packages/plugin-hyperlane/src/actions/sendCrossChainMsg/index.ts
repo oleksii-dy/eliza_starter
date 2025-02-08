@@ -19,10 +19,7 @@ import {
     MultiProvider,
 } from "@hyperlane-xyz/sdk";
 import { CommandContext, WriteCommandContext } from "../core/context";
-import {
-    runPreflightChecksForChains,
-    stubMerkleTreeConfig,
-} from "../core/utils";
+import { runPreflightChecksForChains, stubMerkleTreeConfig } from "../core/utils";
 
 import { addressToBytes32, timeout } from "@hyperlane-xyz/utils";
 import { Account, Chain, Client, Transport } from "viem";
@@ -205,15 +202,21 @@ export const sendCrossChainMessage: Action = {
                 [content.targetChain]: targetSigner,
             });
 
+            const privateKey = runtime.getSetting(
+                "EVM_PRIVATE_KEY"
+            ) as `0x${string}`;
+            if (!privateKey) {
+                throw new Error("EVM_PRIVATE_KEY is missing");
+            }
+
             const context: WriteCommandContext = {
                 registry: registry, // Initialize with Hyperlane registry instance
+                chainMetadata: chainMetadata, // Initialize with chain metadata
                 multiProvider: multiProvider, // Initialize with multi-provider instance
                 skipConfirmation: true, // Set based on requirements
-                key: "your-key", // Optional key if needed
-                signerAddress: "signer-address", // Optional EVM signer address
-                strategyPath: "path/to/strategy",
+                key: privateKey,
+                signerAddress: await sourceSigner.getAddress(),
                 signer: sourceSigner,
-                chainMetadata: chainMetadata,
             };
 
             const sendOptions = {

@@ -16,7 +16,7 @@ export interface CommandContext {
     skipConfirmation: boolean;
     key?: string;
     // just for evm chains backward compatibility
-    signerAddress?: string;
+    signerAddress: string;
     warpCoreConfig?: WarpCoreConfig;
     strategyPath?: string;
 }
