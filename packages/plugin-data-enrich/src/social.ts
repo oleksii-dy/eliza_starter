@@ -94,6 +94,7 @@ const ABSTRACTOR_INSTRUCTION = `
     If the user is not related to web3 or crypto, just return "The user is not related to Web3".`;
 
 const TW_ABSTRACTOR_PREFIX: string = "ABSTRACTOR_KEY_TW_PROFILE_PREFIX_";
+const TW_ABSTRACTOR_POST_COUNT = 20;
 
 export class twitterDataProvider {
     constructor(
@@ -133,7 +134,7 @@ export class twitterDataProvider {
             if (profile) {
                 userBio += profile.biography + ", joined on " + profile.joined;
             }
-            const tweets = await this.scraper.getTweets(username, 10);
+            const tweets = await this.scraper.getTweets(username, TW_ABSTRACTOR_POST_COUNT);
             const posts = [];
             for await (const tweet of tweets) {
                 posts.push(tweet);
@@ -156,8 +157,11 @@ export class twitterDataProvider {
                 context: prompt,
                 modelClass: ModelClass.LARGE,
             });
-            console.log(response);
+            //console.log(response);
             summary = response;
+            if (response && response.contains("The user is not related to Web3")) {
+                summary = "";
+            }
         } catch (error) {
             console.error("getAISummary error:", error);
         }
