@@ -21,10 +21,6 @@ export function createPixocracyApiRouter(
         "/api/pixocracy/converse",
         async (req: express.Request, res: express.Response) => {
             try {
-                elizaLogger.log("Raw request received:", {
-                    headers: req.headers,
-                    body: req.body
-                });
                 const pixocracyRes = await createPixocracyDialogue({
                     runtime,
                     req,
