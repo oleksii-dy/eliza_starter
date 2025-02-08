@@ -30,7 +30,7 @@ import { createSolSplTransferTransaction } from "../../plugin-data-enrich/src/so
 import { callSolanaAgentTransfer } from "../../plugin-data-enrich/src/solanaagentkit";
 import { MemoController } from "./memo";
 import { requireAuth } from "./auth";
-import { CoinAnaObj, KEY_BNB_CACHE_STR } from "../../client-twitter/src/fungbnb";
+import { CoinAnaObj, KEY_BNB_CACHE_STR } from "../../client-twitter/src/sighter";
 //import { ethers } from 'ethers';
 //import { requireAuth } from "./auth";
 
@@ -591,20 +591,17 @@ export class Routes {
         const runtime = await this.authUtils.getRuntime(req.params.agentId);
         let userId = "blank";
         twEventCenter.emit("MSG_BNB_QUERY", coinsymbol, userId);
-        console.log("handleBnbQuery 1");
         let coinAnaObj: CoinAnaObj = null;
 
         for (let i = 0; i < 10; i++) {
-            console.log("handleBnbQuery 2, wait: " + i);
             await this.sleep(1000);
             const cached = await runtime.cacheManager.get(KEY_BNB_CACHE_STR + coinsymbol);
-            console.log("handleBnbQuery 2.3, cached: " + cached);
+            // console.log("handleBnbQuery 2.3, cached: " + cached);
             if (cached && typeof cached === 'string') {
                 try {
                     coinAnaObj = JSON.parse(cached);
                     if (coinAnaObj) {
                         if (Date.now() - coinAnaObj.timestamp > 3000) {
-                            console.log("handleBnbQuery 2.5, cache too old.");
                             continue;
                         } else {
                             break;
@@ -615,7 +612,6 @@ export class Routes {
                 }
             }
         }
-        console.log("handleBnbQuery 2");
 
         if (coinAnaObj && coinAnaObj.coin_analysis && coinAnaObj.coin_prediction) {
             res.json({

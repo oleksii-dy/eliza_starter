@@ -26,23 +26,21 @@ export const getKlineAction: Action = {
     ): Promise<KlineResponse> => {
         try {
             const coinsymbol = _options['symbol'] as string;
-            console.log("handleBnbQuery 8, in fungbnb. action.handler");
             const binanceService = new BinanceService({
                 apiKey: runtime.getSetting("BINANCE_API_KEY"),
                 secretKey: runtime.getSetting("BINANCE_SECRET_KEY"),
                 });
-            // const binanceService = new BinanceService();
             const klineData = await binanceService.getKline({symbol: coinsymbol + "USDT", interval: "1d"});
-
-            console.log("handleBnbQuery 9, in fungbnb. action.handler kilneData: ", JSON.stringify(klineData));
-
+            // console.log("handleBnbQuery 9, in fungbnb. action.handler kilneData: ", JSON.stringify(klineData));
+            if (!(klineData?.klines.length > 0)) {
+                console.error("handleBnbQuery 3, in fungbnb. KlineResponse: " + JSON.stringify(klineData));
+            }
             if (callback) {
                 callback({
                     text: `The current`,
                     content: klineData,
                 });
             }
-
             return klineData;
         } catch (error) {
             elizaLogger.error("Error in price check:", error);

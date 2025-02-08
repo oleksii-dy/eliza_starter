@@ -27,7 +27,7 @@ export class CoinAnaObj {
     }
 }
 
-export class FungBnbClient {
+export class SighterClient {
     client: ClientBase;
     runtime: IAgentRuntime;
     consensus: ConsensusProvider;
@@ -65,14 +65,11 @@ export class FungBnbClient {
     }
 
     async bnbQuery(coinsymbol: string, userId: any) {
-        console.log("handleBnbQuery 1, in fungbnb.");
         // 1. get param. 2 get prompt. 3. get tweet info. 4. get bnb info. 5. get ai answer.
-        const promptHeader = "Suppose you are a cryptocurrency expert with rich cryptocurrency trading experience and are frequently active in various cryptocurrency communities. Regarding the following cryptocurrency: " +
+
+        console.log("handleBnbQuery 1, in fungbnb. coinsymbol: " + coinsymbol);
+        const promptHeader = "You as a cryptocurrency expert with rich cryptocurrency trading experience and are frequently active in various cryptocurrency communities. Regarding the following cryptocurrency: " +
         coinsymbol +", please use 100 - word English texts respectively to analyze the reasons for the current price trend and make predictions. The response format should be formatted as a JSON block as follows: { \"token\": \"{token}\", \"coin_analysis\": \"{coin_analysis}\", \"coin_prediction\": \"{coin_prediction}\" }. No other text should be provided, No need to use markdown syntax, just return JSON directly.";
-        // console.log("handleBnbQuery 2, in fungbnb. promptHeader[" + promptHeader + "]");
-
-
-        //-----------
 
         const tweetsres = await this.client.fetchSearchTweets(
             coinsymbol,
@@ -101,7 +98,6 @@ Likes: ${tweet.likes}, Replies: ${tweet.replies}, Retweets: ${tweet.retweets},
                 )
                 .join("\n")}
 `;
-        // console.log("handleBnbQuery 2.5, in fungbnb. action.handler: ", promptTweet);
 
                 /**
          *
@@ -138,34 +134,32 @@ Likes: ${tweet.likes}, Replies: ${tweet.replies}, Retweets: ${tweet.retweets},
     `;
         const { actions } = binancePlugin;
         actions.forEach(async action => {
-            console.log(`handleBnbQuery 6, in fungbnb. Action: ${action.name}`);
             if(action.name === 'GET_KLINE') {
-                console.log("handleBnbQuery 7, in fungbnb. action.handler");
-                // const getKlineActionInstance = action as getKlineAction;
                 const coinOptions: Record<string, unknown> = {
                     symbol: coinsymbol,
                 };
                 const klineres  = await action.handler(this.runtime, null, null, coinOptions, null);
                 const res = klineres as KlineResponse;
-                if(res.klines.length > 0) {
+                if(res?.klines.length > 0) {
                     promptKline += JSON.stringify(res.klines)
                 }
             }
         });
-        console.log("handleBnbQuery 3, in fungbnb. kline: ", promptKline);
-        //------------
+        // console.log("handleBnbQuery 3, in fungbnb.  promptHeader"
+        //     + promptHeader + " promptTweet  "
+        //     + promptTweet + " promptKline: " + promptKline);
+
         let responseStr = await generateText({
             runtime: this.runtime,
             context: promptHeader + promptTweet + promptKline,
             modelClass: ModelClass.LARGE,
         });
-        console.log("handleBnbQuery 3, in fungbnb. responseStr: ", responseStr);
+        // console.log("handleBnbQuery 3, in fungbnb. responseStr: ", responseStr);
 
         let responseObj = null;
 
         try {
             responseObj = JSON.parse(responseStr);
-            // console.log("handleBnbQuery 4, in fungbnb. responseObj string: ", JSON.stringify(responseObj));
         } catch (error) {
             responseObj = null;
             console.error('JSON parse error: ', error.message);
