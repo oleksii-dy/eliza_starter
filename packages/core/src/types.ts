@@ -129,11 +129,13 @@ export interface Goal {
  * Model size/type classification
  */
 export enum ModelClass {
+    DEFAULT = "default",
     SMALL = "small",
     MEDIUM = "medium",
     LARGE = "large",
     EMBEDDING = "embedding",
     IMAGE = "image",
+    IMAGE_VISION = "image_vision",
 }
 
 /**
@@ -729,13 +731,16 @@ export type Character = {
     system?: string;
 
     /** Model provider to use */
-    modelProvider: ModelProviderName;
+    modelProvider: string;
 
     /** Image model provider to use, if different from modelProvider */
-    imageModelProvider?: ModelProviderName;
+    imageModelProvider?: string;
 
     /** Image Vision model provider to use, if different from modelProvider */
-    imageVisionModelProvider?: ModelProviderName;
+    imageVisionModelProvider?: string;
+
+    /** Embedding model provider to use, if different from modelProvider */
+    embeddingModelProvider?: string;
 
     /** Optional model endpoint override */
     modelEndpointOverride?: string;
@@ -1274,9 +1279,15 @@ export interface IAgentRuntime {
     serverUrl: string;
     databaseAdapter: IDatabaseAdapter;
     token: string | null;
-    modelProvider: ModelProviderName;
-    imageModelProvider: ModelProviderName;
-    imageVisionModelProvider: ModelProviderName;
+
+    // TODO: remove these three
+    modelProvider: string;
+    imageModelProvider: string;
+    imageVisionModelProvider: string;
+    embeddingModelProvider: string;
+    //////////////////////////////
+
+    
     character: Character;
     providers: Provider[];
     actions: Action[];
@@ -1297,7 +1308,6 @@ export interface IAgentRuntime {
     services: Map<ServiceType, Service>;
     clients: ClientInstance[];
 
-    // verifiableInferenceAdapter?: IVerifiableInferenceAdapter | null;
 
     initialize(): Promise<void>;
 
@@ -1310,6 +1320,8 @@ export interface IAgentRuntime {
     registerService(service: Service): void;
 
     getSetting(key: string): string | null;
+
+    getModelProvider(): IModelProvider;
 
     // Methods
     getConversationLength(): number;
@@ -1569,69 +1581,6 @@ export interface ISlackService extends Service {
     client: any;
 }
 
-// /**
-//  * Available verifiable inference providers
-//  */
-// export enum VerifiableInferenceProvider {
-//     RECLAIM = "reclaim",
-//     OPACITY = "opacity",
-//     PRIMUS = "primus",
-// }
-
-// /**
-//  * Options for verifiable inference
-//  */
-// export interface VerifiableInferenceOptions {
-//     /** Custom endpoint URL */
-//     endpoint?: string;
-//     /** Custom headers */
-//     headers?: Record<string, string>;
-//     /** Provider-specific options */
-//     providerOptions?: Record<string, unknown>;
-// }
-
-// /**
-//  * Result of a verifiable inference request
-//  */
-// export interface VerifiableInferenceResult {
-//     /** Generated text */
-//     text: string;
-//     /** Proof */
-//     proof: any;
-//     /** Proof id */
-//     id?: string;
-//     /** Provider information */
-//     provider: VerifiableInferenceProvider;
-//     /** Timestamp */
-//     timestamp: number;
-// }
-
-// /**
-//  * Interface for verifiable inference adapters
-//  */
-// export interface IVerifiableInferenceAdapter {
-//     options: any;
-//     /**
-//      * Generate text with verifiable proof
-//      * @param context The input text/prompt
-//      * @param modelClass The model class/name to use
-//      * @param options Additional provider-specific options
-//      * @returns Promise containing the generated text and proof data
-//      */
-//     generateText(
-//         context: string,
-//         modelClass: string,
-//         options?: VerifiableInferenceOptions,
-//     ): Promise<VerifiableInferenceResult>;
-
-//     /**
-//      * Verify the proof of a generated response
-//      * @param result The result containing response and proof to verify
-//      * @returns Promise indicating if the proof is valid
-//      */
-//     verifyProof(result: VerifiableInferenceResult): Promise<boolean>;
-// }
-
 export enum TokenizerType {
     Auto = "auto",
     TikToken = "tiktoken",
@@ -1665,3 +1614,33 @@ export interface ChunkRow {
     id: string;
     // Add other properties if needed
 }
+
+
+export interface IModelProvider {
+    // Core provider configuration 
+    apiKey: string;
+    endpoint: string;
+    provider: string;
+    
+    // Models configuration
+    models: {
+        // Required default model
+        default: ModelSettings;
+        
+        // Optional models
+        [ModelClass.SMALL]?: ModelSettings;
+        [ModelClass.MEDIUM]?: ModelSettings;
+        [ModelClass.LARGE]?: ModelSettings;
+        [ModelClass.EMBEDDING]?: EmbeddingModelSettings;
+        [ModelClass.IMAGE]?: ImageModelSettings;
+        [ModelClass.IMAGE_VISION]?: ImageModelSettings;
+    };
+
+    // Optional configuration
+    config?: {
+        maxRetries?: number;
+        timeout?: number;
+        headers?: Record<string, string>;  // For additional auth headers if needed
+    };
+}
+
