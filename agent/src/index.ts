@@ -1,3 +1,4 @@
+import { mainCharacter } from './../mainCharacter';
 import { PGLiteDatabaseAdapter } from "@elizaos/adapter-pglite";
 import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
 import { QdrantDatabaseAdapter } from "@elizaos/adapter-qdrant";
@@ -482,7 +483,7 @@ export async function loadCharacters(
 
     if (loadedCharacters.length === 0) {
         elizaLogger.info("No characters found, using default character");
-        loadedCharacters.push(defaultCharacter);
+        loadedCharacters.push(mainCharacter);
     }
 
     return loadedCharacters;
@@ -1470,7 +1471,7 @@ const startAgents = async () => {
     let serverPort = Number.parseInt(settings.SERVER_PORT || "3000");
     const args = parseArguments();
     const charactersArg = args.characters || args.character;
-    let characters = [defaultCharacter];
+    let characters = [mainCharacter];
 
     if (process.env.IQ_WALLET_ADDRESS && process.env.IQSOlRPC) {
         characters = await loadCharacterFromOnchain();
