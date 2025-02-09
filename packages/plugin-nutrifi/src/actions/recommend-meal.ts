@@ -64,6 +64,7 @@ export const recommendMealAction: Action = {
         options: any,
         callback?: HandlerCallback
     ): Promise<Content | null> => {
+        elizaLogger.debug("[RECOMMEND_MEAL] Handler started");
         if (!callback) {
             elizaLogger.error("[RECOMMEND_MEAL] No callback provided");
             return null;
@@ -72,36 +73,56 @@ export const recommendMealAction: Action = {
         try {
             // Initialize state if undefined
             if (!state) {
+                elizaLogger.debug("[RECOMMEND_MEAL] Initializing state");
                 state = await runtime.composeState(message);
             }
 
             // Get user preferences from memories
+            elizaLogger.debug("[RECOMMEND_MEAL] Fetching user preferences");
             const userPrefs = await runtime.databaseAdapter.getMemories({
                 roomId: message.roomId,
                 tableName: USER_PREFS_TABLE,
                 agentId: runtime.agentId,
                 count: 1
             });
+            elizaLogger.debug("[RECOMMEND_MEAL] User preferences found:", userPrefs);
+
+            // Handle missing preferences
+        if (!userPrefs || userPrefs.length === 0) {
+            const responseContent: Content = {
+                text: "I don't have your dietary preferences yet. Could you tell me about your fitness goals and any dietary restrictions you have?",
+                action: "RECOMMEND_MEAL",
+                inReplyTo: message.id
+            };
+            await callback(responseContent);
+            return responseContent;
+        }
 
             // Update state with user preferences
             state = {
                 ...state,
                 userPreferences: userPrefs[0]?.content || {}
             };
+            elizaLogger.debug("[RECOMMEND_MEAL] Updated state:", state);
 
             // Generate recommendation using the template
+            elizaLogger.debug("[RECOMMEND_MEAL] Composing context");
             const context = composeContext({
                 state,
                 template: recommendMealTemplate
             });
+            elizaLogger.debug("[RECOMMEND_MEAL] Context composed:", context);
 
+            elizaLogger.debug("[RECOMMEND_MEAL] Generating response");
             const response = await generateMessageResponse({
                 runtime,
                 context,
                 modelClass: ModelClass.LARGE
             });
+            elizaLogger.debug("[RECOMMEND_MEAL] Response generated:", response);
 
             // Log the recommendation
+            elizaLogger.debug("[RECOMMEND_MEAL] Logging to database");
             await runtime.databaseAdapter.log({
                 body: { message, context, response },
                 userId: message.userId,
@@ -115,7 +136,8 @@ export const recommendMealAction: Action = {
                 action: "RECOMMEND_MEAL",
                 inReplyTo: message.id
             };
-
+            
+            elizaLogger.debug("[RECOMMEND_MEAL] Sending response");
             await callback(responseContent);
             return responseContent;
 

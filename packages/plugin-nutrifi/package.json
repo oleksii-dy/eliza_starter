@@ -20,7 +20,9 @@
 	],
 	"dependencies": {
 		"@elizaos/core": "workspace:*",
-		"tsup": "8.3.5"
+		"tsup": "8.3.5", 
+		"@elizaos/adapter-mongodb": "latest",
+    "mongodb": "^5.0.0"
 	},
 	"scripts": {
 		"build": "tsup --format esm --dts",
@@ -28,6 +30,7 @@
 		"test": "vitest run"
 	},
 	"peerDependencies": {
-		"whatwg-url": "7.1.0"
+		"whatwg-url": "7.1.0", 
+		"@elizaos/core": "*"
 	}
 }
