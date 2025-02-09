@@ -1,4 +1,4 @@
-# Eliza 🤖
+# InHouse Custom Eliza Inspired by AI16Z Eliza 🤖
 
 <div align="center">
   <img src="./docs/static/img/eliza_banner.jpg" alt="Eliza Banner" width="100%" />
@@ -22,13 +22,16 @@
 
 ## ✨ Features
 
-- 🛠️ Full-featured Discord, X (Twitter) and Telegram connectors
-- 🔗 Support for every model (Llama, Grok, OpenAI, Anthropic, Gemini, etc.)
-- 👥 Multi-agent and room support
-- 📚 Easily ingest and interact with your documents
-- 💾 Retrievable memory and document store
-- 🚀 Highly extensible - create your own actions and clients
-- 📦 Just works!
+-   🚝 In-built training pipeline for agents
+-   ➕ Farcaster additional functionalities like create account etc
+-   🛠️ Full-featured Discord, Twitter and Telegram connectors
+-   🔗 Support for every model (Llama, Grok, OpenAI, Anthropic, etc.)
+-   👥 Multi-agent and room support
+-   📚 Easily ingest and interact with your documents
+-   💾 Retrievable memory and document store
+-   🚀 Highly extensible - create your own actions and clients
+-   ☁️ Supports many models (local Llama, OpenAI, Anthropic, Groq, etc.)
+-   📦 Just works!
 
 ## Video Tutorials
 
@@ -70,12 +73,15 @@ pnpm i && pnpm build && pnpm start
 git clone https://github.com/elizaos/eliza.git
 
 # This project iterates fast, so we recommend checking out the latest release
-git checkout $(git describe --tags --abbrev=0)
-# If the above doesn't checkout the latest release, this should work:
-# git checkout $(git describe --tags `git rev-list --tags --max-count=1`)
+# git checkout $(git describe --tags --abbrev=0)
+git checkout feature/multi-farcaster-agents
 ```
 
-#### Edit the .env file
+### Start Eliza with Gitpod
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/elizaos/eliza/tree/main)
+
+### Edit the .env file
 
 Copy .env.example to .env and fill in the appropriate values.
 
