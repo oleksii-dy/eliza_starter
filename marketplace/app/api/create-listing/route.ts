@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { v4 as uuidv4 } from 'uuid';
 import { ICreateListingRequest, ICreateListingResponse } from '@/lib/api';
-import { createEscrow } from '@/lib/coophive';
+import { createEscrow } from '@/lib/createEscrow';
 
 export async function POST(request: Request) {
     console.log('create-listing');
@@ -9,16 +8,7 @@ export async function POST(request: Request) {
         const data: ICreateListingRequest = await request.json();
 
         // Create escrow and get escrow ID
-        const attestedEscrowId = await createEscrow(data);
-
-        // Create listing with generated IDs and escrow ID
-        const listing = {
-            ...data,
-            id: uuidv4(),
-            createdAt: Date.now(),
-            attestedEscrowId,
-        };
-
+        const listing = await createEscrow(data);
         // TODO: Save listing to database
 
         const response: ICreateListingResponse = {

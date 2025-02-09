@@ -17,9 +17,9 @@ export const CreateListing = () => {
     const { createListing, isLoading, error } = useTwasApi();
     const { setListing } = useTwas();
     const [formData, setFormData] = useState<ICreateListingRequest>({
-        tokenAddress: '',
-        numberOfTokens: '',
-        pricePerToken: '',
+        sellTokenAddress: '' as `0x${string}`,
+        sellTokenAmount: '',
+        sellTokenPrice: '',
         offerExpiresAt: 0,
         termsDeliverables: '',
     });
@@ -27,8 +27,8 @@ export const CreateListing = () => {
 
     // Add display values state for the form
     const [displayValues, setDisplayValues] = useState({
-        numberOfTokens: '',
-        pricePerToken: '',
+        sellTokenAmount: '',
+        sellTokenPrice: '',
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -38,8 +38,8 @@ export const CreateListing = () => {
         // Convert display values to blockchain values
         const submissionData = {
             ...formData,
-            numberOfTokens: shiftDecimals(displayValues.numberOfTokens, TOKEN_DECIMALS),
-            pricePerToken: shiftDecimals(displayValues.pricePerToken, USDC_DECIMALS),
+            sellTokenAmount: shiftDecimals(displayValues.sellTokenAmount, TOKEN_DECIMALS),
+            sellTokenPrice: shiftDecimals(displayValues.sellTokenPrice, USDC_DECIMALS),
         };
 
         const result = await createListing(submissionData);
@@ -47,15 +47,15 @@ export const CreateListing = () => {
             setSuccessMessage('Listing created successfully!');
             setListing(result.listing);
             setFormData({
-                tokenAddress: '',
-                numberOfTokens: '',
-                pricePerToken: '',
+                sellTokenAddress: '' as `0x${string}`,
+                sellTokenAmount: '',
+                sellTokenPrice: '',
                 offerExpiresAt: 0,
                 termsDeliverables: '',
             });
             setDisplayValues({
-                numberOfTokens: '',
-                pricePerToken: '',
+                sellTokenAmount: '',
+                sellTokenPrice: '',
             });
         }
     };
@@ -63,7 +63,7 @@ export const CreateListing = () => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
 
-        if (name === 'numberOfTokens' || name === 'pricePerToken') {
+        if (name === 'sellTokenAmount' || name === 'sellTokenPrice') {
             // Update display values for numeric fields
             setDisplayValues(prev => ({
                 ...prev,
@@ -73,7 +73,7 @@ export const CreateListing = () => {
             // Update other form fields normally
             setFormData(prev => ({
                 ...prev,
-                [name]: value,
+                [name]: name === 'sellTokenAddress' ? value as `0x${string}` : value,
             }));
         }
     };
@@ -104,14 +104,14 @@ export const CreateListing = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                    <label htmlFor="tokenAddress" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="sellTokenAddress" className="block text-sm font-medium text-gray-700 mb-1">
                         Token Address
                     </label>
                     <input
                         type="text"
-                        id="tokenAddress"
-                        name="tokenAddress"
-                        value={formData.tokenAddress}
+                        id="sellTokenAddress"
+                        name="sellTokenAddress"
+                        value={formData.sellTokenAddress}
                         onChange={handleChange}
                         className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-400"
                         required
@@ -120,14 +120,14 @@ export const CreateListing = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="numberOfTokens" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="sellTokenAmount" className="block text-sm font-medium text-gray-700 mb-1">
                             Number of Tokens
                         </label>
                         <input
                             type="text"
-                            id="numberOfTokens"
-                            name="numberOfTokens"
-                            value={displayValues.numberOfTokens}
+                            id="sellTokenAmount"
+                            name="sellTokenAmount"
+                            value={displayValues.sellTokenAmount}
                             onChange={handleChange}
                             pattern="^\d*\.?\d*$"
                             placeholder="0.00"
@@ -137,14 +137,14 @@ export const CreateListing = () => {
                     </div>
 
                     <div>
-                        <label htmlFor="pricePerToken" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="sellTokenPrice" className="block text-sm font-medium text-gray-700 mb-1">
                             Price per Token (USDC)
                         </label>
                         <input
                             type="text"
-                            id="pricePerToken"
-                            name="pricePerToken"
-                            value={displayValues.pricePerToken}
+                            id="sellTokenPrice"
+                            name="sellTokenPrice"
+                            value={displayValues.sellTokenPrice}
                             onChange={handleChange}
                             pattern="^\d*\.?\d*$"
                             placeholder="0.00"
