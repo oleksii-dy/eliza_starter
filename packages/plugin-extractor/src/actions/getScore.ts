@@ -28,7 +28,7 @@ export const getExtractorScore: Action = {
         callback: HandlerCallback
     ) => {
         try {
-            console.log(message);
+            elizaLogger.info('Meggage: ' + message);
 
             const ExtractorScoreData: IExtractorScore =
                 await fetchExtractorScore();
