@@ -10,7 +10,7 @@ export const mainCharacter: Character = {
     ...defaultCharacter,
     clients: [Clients.DISCORD],
     modelProvider: ModelProviderName.GROQ,
-    name: "EthanGuildOfficer",
+    name: "ETHan",
     plugins: [etherguildPlugin],
     settings: {
         // model: "gpt-40-mini",

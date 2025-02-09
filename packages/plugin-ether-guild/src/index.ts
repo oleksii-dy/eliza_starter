@@ -12,10 +12,10 @@ export * as actions from "./actions/index.ts";
 export * from "./providers/wallet";
 export * from "./types";
 
-export const ethereumGuildPlugin: Plugin = {
-    name: "ethereumGuildPlugin",
+export const etherGuildPlugin: Plugin = {
+    name: "etherGuildPlugin",
     description:
-        "A plugin to deal with quests, facilitated by the Ethereum Guild.",
+        "A plugin to deal with quests, facilitated by the Ether Guild https://etherguild.xyz.",
     actions: [
         createQuestAction,
         noneAction,
@@ -26,4 +26,4 @@ export const ethereumGuildPlugin: Plugin = {
     evaluators: [],
     providers: [evmWalletProvider],
 };
-export default ethereumGuildPlugin;
+export default etherGuildPlugin;

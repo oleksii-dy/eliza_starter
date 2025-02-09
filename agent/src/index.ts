@@ -85,7 +85,6 @@ import { coinmarketcapPlugin } from "@elizaos/plugin-coinmarketcap";
 import { confluxPlugin } from "@elizaos/plugin-conflux";
 import { createCosmosPlugin } from "@elizaos/plugin-cosmos";
 import { cronosZkEVMPlugin } from "@elizaos/plugin-cronoszkevm";
-import { etherguildOnchainPlugin } from '@elizaos/plugin-etherguild-onchain';
 import { etherGuildPlugin } from "@elizaos/plugin-ether-guild";
 import { evmPlugin } from "@elizaos/plugin-evm";
 import { flowPlugin } from "@elizaos/plugin-flow";
@@ -1070,7 +1069,7 @@ export async function createAgent(
                 : null,
             getSecret(character, "BNB_PRIVATE_KEY") ||
             getSecret(character, "BNB_PUBLIC_KEY")?.startsWith("0x")
-                ? etherguildOnchainPlugin
+                ? etherGuildPlugin
                 : null,
             getSecret(character, "EVM_PUBLIC_KEY") ||
             (getSecret(character, "WALLET_PUBLIC_KEY") &&
