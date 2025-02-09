@@ -3,4 +3,3 @@ packages:
     - "packages/*"
     - "client"
     - "agent"
-    - "marketplace"
