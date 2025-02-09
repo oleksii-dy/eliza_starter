@@ -35,6 +35,16 @@ export const MintTokenAction: Action = {
             return false;
         }
 
+        const fundingMessage = recentMessages.find(msg =>
+            msg.content?.text?.includes("3. Funding Round")
+        );
+
+        if (!fundingMessage || !fundingMessage.content?.text) {
+            console.log("TWAS: No funding round message found");
+            return false;
+        }
+
+
         try {
             // Get private key and RPC URL from environment
             const privateKey = process.env.TWAS_PRIVATE_KEY;
@@ -63,6 +73,9 @@ export const MintTokenAction: Action = {
             const symbolMatch = text.match(/Symbol: (.*)/i);
             const symbol = symbolMatch ? symbolMatch[1] : "TWAS";
 
+            const amountMatch = text.match(/Amount for Sale: (.*)/i);
+            const amount = amountMatch ? amountMatch[1] : "1000000";
+
             // Set a high manual gas limit since estimation fails
             const gasLimit = 5_000_000; // 5 million gas
             const gasPrice = await provider.getGasPrice();
@@ -78,7 +91,7 @@ export const MintTokenAction: Action = {
 
             callback(
                 {
-                    text: `Successfully deployed token contract at ${deployTx.address} with 10,000,000 tokens minted to ${wallet.address}`,
+                    text: `Successfully deployed token contract at ${deployTx.address} with 10,000,000 tokens minted to ${wallet.address}. Be the first investor and buy ${amount} tokens at ${process.env.TWAS_URL}/${"TODO"}`,
                     contractAddress: deployTx.address,
                     totalSupply: 10000000
                 },
