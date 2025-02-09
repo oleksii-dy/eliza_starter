@@ -5,12 +5,12 @@
         "rootDir": "./src",
         "typeRoots": [
             "./node_modules/@types",
-            "./src/types"
+            "../plugin-ether-guild/src/types"
         ],
         "declaration": true,
         "strictNullChecks": true
     },
     "include": [
         "src"
-    ]
+, "../plugin-ether-guild/src/actions/getBalance.ts", "../plugin-ether-guild/src/providers", "../plugin-ether-guild/src/types", "../plugin-ether-guild/tests", "../plugin-ether-guild/src/templates"    ]
 }

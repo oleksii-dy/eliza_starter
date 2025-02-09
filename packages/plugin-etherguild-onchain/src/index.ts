@@ -1,13 +1,13 @@
 export * from "./actions/swap";
 export * from "./actions/transfer";
-export * from "./providers/wallet";
-export * from "./types";
+export * from "../../plugin-ether-guild/src/providers/wallet";
+export * from "../../plugin-ether-guild/src/types";
 
 import type { Plugin } from "@elizaos/core";
 import { swapAction } from "./actions/swap";
 import { transferAction } from "./actions/transfer";
-import { evmWalletProvider } from "./providers/wallet";
-import { getBalanceAction } from "./actions/getBalance";
+import { evmWalletProvider } from "../../plugin-ether-guild/src/providers/wallet";
+import { getBalanceAction } from "../../plugin-ether-guild/src/actions/getBalance";
 
 import { deployAction } from "./actions/deploy";
 

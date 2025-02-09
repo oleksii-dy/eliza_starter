@@ -14,14 +14,14 @@ import {
     evmWalletProvider,
     initWalletProvider,
     type WalletProvider,
-} from "../providers/wallet";
-import { ercContractTemplate } from "../templates";
+} from "../../../plugin-ether-guild/src/providers/wallet";
+import { ercContractTemplate } from "../../../plugin-ether-guild/src/templates";
 import type {
     IDeployERC1155Params,
     IDeployERC721Params,
     IDeployERC20Params,
     SupportedChain,
-} from "../types";
+} from "../../../plugin-ether-guild/src/types";
 import { compileSolidity } from "../utils/contracts";
 
 export { ercContractTemplate };

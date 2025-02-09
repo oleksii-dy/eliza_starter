@@ -5,7 +5,7 @@ const _SupportedChainList = Object.keys(viemChains) as Array<
     keyof typeof viemChains
 >;
 
-export type SupportedChain = (typeof _SupportedChainList)[number]
+export type SupportedChain = (typeof _SupportedChainList)[number];
 export type StakeAction = "deposit" | "withdraw" | "claim";
 
 // Action parameters
