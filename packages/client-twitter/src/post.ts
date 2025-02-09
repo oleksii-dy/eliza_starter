@@ -78,7 +78,9 @@ As a proactive business architect, you should regularly generate and share innov
 
 # STRICT POSTING REQUIREMENTS:
 - Always include token details, token amount minted, token amount up for sale, closing date and a URL where users can invest
-- Users can invest at www.twas.ai   
+- Users can invest at twas-launched.vercel.app
+
+   
 - Always keep your tweet under 250 characters
 
 # Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
@@ -113,7 +115,9 @@ Guidelines:
 
 # STRICT POSTING REQUIREMENTS:
 - Always include token amount minted, token amount up for sale, closing date and a URL where users can invest
-- Users can invest at www.twas.ai   
+- Users can invest at twas-launched.vercel.app
+
+   
 - Always keep your tweet under 250 characters
 
 Here are some example posts:
@@ -173,27 +177,24 @@ export class TwitterPostClient {
             `- Post Interval: ${this.client.twitterConfig.POST_INTERVAL_MIN}-${this.client.twitterConfig.POST_INTERVAL_MAX} minutes`
         );
         elizaLogger.log(
-            `- Action Processing: ${
-                this.client.twitterConfig.ENABLE_ACTION_PROCESSING
-                    ? "enabled"
-                    : "disabled"
+            `- Action Processing: ${this.client.twitterConfig.ENABLE_ACTION_PROCESSING
+                ? "enabled"
+                : "disabled"
             }`
         );
         elizaLogger.log(
             `- Action Interval: ${this.client.twitterConfig.ACTION_INTERVAL} minutes`
         );
         elizaLogger.log(
-            `- Post Immediately: ${
-                this.client.twitterConfig.POST_IMMEDIATELY
-                    ? "enabled"
-                    : "disabled"
+            `- Post Immediately: ${this.client.twitterConfig.POST_IMMEDIATELY
+                ? "enabled"
+                : "disabled"
             }`
         );
         elizaLogger.log(
-            `- Search Enabled: ${
-                this.client.twitterConfig.TWITTER_SEARCH_ENABLE
-                    ? "enabled"
-                    : "disabled"
+            `- Search Enabled: ${this.client.twitterConfig.TWITTER_SEARCH_ENABLE
+                ? "enabled"
+                : "disabled"
             }`
         );
 
@@ -1013,8 +1014,8 @@ export class TwitterPostClient {
                                 userId: this.runtime.agentId,
                                 roomId: stringToUuid(
                                     tweet.conversationId +
-                                        "-" +
-                                        this.runtime.agentId
+                                    "-" +
+                                    this.runtime.agentId
                                 ),
                                 agentId: this.runtime.agentId,
                                 content: {
@@ -1029,11 +1030,11 @@ export class TwitterPostClient {
                                 imageContext:
                                     imageDescriptions.length > 0
                                         ? `\nImages in Tweet:\n${imageDescriptions
-                                              .map(
-                                                  (desc, i) =>
-                                                      `Image ${i + 1}: ${desc}`
-                                              )
-                                              .join("\n")}`
+                                            .map(
+                                                (desc, i) =>
+                                                    `Image ${i + 1}: ${desc}`
+                                            )
+                                            .join("\n")}`
                                         : "",
                                 quotedContent,
                             }
@@ -1234,8 +1235,8 @@ export class TwitterPostClient {
                     imageContext:
                         imageDescriptions.length > 0
                             ? `\nImages in Tweet:\n${imageDescriptions
-                                  .map((desc, i) => `Image ${i + 1}: ${desc}`)
-                                  .join("\n")}`
+                                .map((desc, i) => `Image ${i + 1}: ${desc}`)
+                                .join("\n")}`
                             : "",
                     quotedContent,
                 }

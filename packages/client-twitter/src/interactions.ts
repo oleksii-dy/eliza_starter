@@ -61,7 +61,9 @@ These four stages are required:
     - Tweet must include highlights from the listing, such as token name and price
     - Post the details of the new Twas Protocol listing to Twitter
     - Promotion Tweet MUST include token details and sale parameters
-    - Include the URL that users should go to for more information and to invest. The URL is www.twas.ai
+    - Include the URL that users should go to for more information and to invest. The URL is twas-launched.vercel.app
+
+
 
 4. Tweet
 
@@ -81,8 +83,8 @@ Every listing MUST contain:
 
 3. Funding Round Section:
    - Available Tokens: Must match total supply
-   - Sale Percentage: Between 10-25%
-   - Token Price: Specific ETH value
+   - Amount for Sale: Between 10-25% of total supply
+   - Token Price: Specific USDC value
    - Closing Date: 30-90 days from listing
    - Deliverables: 3-4 specific milestones with timeframes
 
@@ -102,15 +104,23 @@ Every listing MUST contain:
    - Start with "🚀 New #TwasLaunched listing!"
    - Include token symbol and supply
    - State sale percentage and price
-   - Include the text "Invest at www.twas.ai"
+   - Include the text "Invest at twas-launched.vercel.app
+
+"
    - End with #TokenizedBusiness #AI
 
 <example_tweets>
-Exciting news! Introducing FrostGlass: innovative frozen glasses with smart indicators! 🌟 Token: FG, Price: 0.035 ETH. closing on 2/1/2020. Invest at www.twas.ai. Join us in this cool venture!
+Exciting news! Introducing FrostGlass: innovative frozen glasses with smart indicators! 🌟 Token: FG, Price: 0.035 USDC. closing on 2/1/2020. Invest at twas-launched.vercel.app
 
-Hey Twitter! New #TwasLaunched listing alert! 🚀 AgriAI is launching AAI, with 40,000,000 tokens minted. 10% of tokens are up for sale at 0.050 ETH, closing on 5/31/2025. Invest at www.twas.ai Join us in this cool venture!
+. Join us in this cool venture!
 
-🚀 Hey Twitter! New #TwasLaunched listing alert! 🚀 PropChain is launching PROP, with 30,000,000 tokens minted. 15% of tokens are up for sale at 0.060 ETH, closing on 4/30/2025. Invest at www.twas.ai. Join us in this cool venture!
+Hey Twitter! New #TwasLaunched listing alert! 🚀 AgriAI is launching AAI, with 40,000,000 tokens minted. 10% of tokens are up for sale at 0.050 USDC, closing on 5/31/2025. Invest at twas-launched.vercel.app
+
+ Join us in this cool venture!
+
+🚀 Hey Twitter! New #TwasLaunched listing alert! 🚀 PropChain is launching PROP, with 30,000,000 tokens minted. 15% of tokens are up for sale at 0.060 USDC, closing on 4/30/2025. Invest at twas-launched.vercel.app
+
+. Join us in this cool venture!
 </example_tweets>
 
 
