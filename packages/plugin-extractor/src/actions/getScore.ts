@@ -29,7 +29,7 @@ export const getExtractorScore: Action = {
     ) => {
         try {
             console.log(message);
-            
+
             const ExtractorScoreData: IExtractorScore =
                 await fetchExtractorScore();
             elizaLogger.success(`Score is successfully fetched `);
@@ -50,5 +50,5 @@ export const getExtractorScore: Action = {
             return false;
         }
     },
-    examples: [] as ActionExample[][],
+    examples: getExtractorScoreExamples as ActionExample[][],
 } as Action;
