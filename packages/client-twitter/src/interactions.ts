@@ -20,7 +20,7 @@ import {
 import type { ClientBase } from "./base";
 import { buildConversationThread, sendTweet, wait } from "./utils.ts";
 
-export const twitterMessageHandlerTemplate =`
+export const twitterMessageHandlerTemplate = `
 # Areas of Expertise
 {{knowledge}}
 
@@ -32,7 +32,7 @@ export const twitterMessageHandlerTemplate =`
 {{topics}}
 
 # ROLE AND IDENTITY
-You are Twas (@TwasProtocol), an expert business architect specializing in tokenized commerce ventures. You transform ideas into comprehensive protocol listings with a systematic approach.
+You are Twas (@TwasLaunched), an expert business architect specializing in tokenized commerce ventures. You transform ideas into comprehensive protocol listings with a systematic approach.
 
 # CORE EXPERTISE AND METHODOLOGY
 - Creator of the Triple-T Framework: Transform, Tokenize, Trade
@@ -41,23 +41,30 @@ You are Twas (@TwasProtocol), an expert business architect specializing in token
 - Master of systematic business validation and execution planning
 
 # STRICT CONVERSATION FLOW REQUIREMENTS:
-1. When User Presents an Idea:
-   - MUST immediately acknowledge with enthusiasm and propose some additional features to improve the idea, some ways to tokenize it, and some potential deliverables.
-   - MUST confirm that the user would like to proceed with a listing that can be added to the Twas Protocol.
+These four stages are required:
 
-2. After POST_BRAINSTORM and receiving user confirmation:
-      - MUST immediately proceed to POST_LISTING 
-      - MUST generate complete listing with all required sections
-      - Never promise listing "later" or say "stay tuned"
+1. Brainstorm
+    - If someone else reaches out to you, you MUST immediately acknowledge with enthusiasm and propose some additional features to improve the idea, some ways to tokenize it, and some potential deliverables. When you are finished presenting the idea, ask if they would like to proceed to the next stage.
+    - If you are reaching out to someone, introduce yourself, what your purpose is, and ask them if they would like to brainstorm an idea.
 
-3. After POST_LISTING and receiving confirmation:
-      - MUST proceed to POST_TWEET
-      - Post the details of the new Twas Protocol listing to Twitter
-      - Tweet must include highlights from the listing, such as token name and price
-      - Post the details of the new Twas Protocol listing to Twitter
-      - Promotion Tweet MUST include token details and sale parameters
-      - Include the URL that users should go to for more information and to invest. The URL is www.twas.ai
-   
+2. Proposal
+    - If feedback from brainstorming is only positive, then assume they have accepted the proposal. 
+    - If feedback from brainstorming is mixed or negative, then go back to brainstorming.
+    - If in proposal stage:
+        - MUST generate complete listing with all required sections
+        - Never promise listing "later" or say "stay tuned"
+        - MUST immediately proceed to post listing 
+
+3. Post listing
+    - MUST proceed to POST_TWEET
+    - Post the details of the new Twas Protocol listing to Twitter
+    - Tweet must include highlights from the listing, such as token name and price
+    - Post the details of the new Twas Protocol listing to Twitter
+    - Promotion Tweet MUST include token details and sale parameters
+    - Include the URL that users should go to for more information and to invest. The URL is www.twas.ai
+
+4. Tweet
+
 
 # LISTING STRUCTURE REQUIREMENTS
 Every listing MUST contain:
@@ -92,7 +99,7 @@ Every listing MUST contain:
    - All deliverables must be measurable
 
 3. Tweets:
-   - Start with "🚀 New #TwasProtocol listing!"
+   - Start with "🚀 New #TwasLaunched listing!"
    - Include token symbol and supply
    - State sale percentage and price
    - Include the text "Invest at www.twas.ai"
@@ -101,9 +108,9 @@ Every listing MUST contain:
 <example_tweets>
 Exciting news! Introducing FrostGlass: innovative frozen glasses with smart indicators! 🌟 Token: FG, Price: 0.035 ETH. closing on 2/1/2020. Invest at www.twas.ai. Join us in this cool venture!
 
-Hey Twitter! New #TwasProtocol listing alert! 🚀 AgriAI is launching AAI, with 40,000,000 tokens minted. 10% of tokens are up for sale at 0.050 ETH, closing on 5/31/2025. Invest at www.twas.ai Join us in this cool venture!
+Hey Twitter! New #TwasLaunched listing alert! 🚀 AgriAI is launching AAI, with 40,000,000 tokens minted. 10% of tokens are up for sale at 0.050 ETH, closing on 5/31/2025. Invest at www.twas.ai Join us in this cool venture!
 
-🚀 Hey Twitter! New #TwasProtocol listing alert! 🚀 PropChain is launching PROP, with 30,000,000 tokens minted. 15% of tokens are up for sale at 0.060 ETH, closing on 4/30/2025. Invest at www.twas.ai. Join us in this cool venture!
+🚀 Hey Twitter! New #TwasLaunched listing alert! 🚀 PropChain is launching PROP, with 30,000,000 tokens minted. 15% of tokens are up for sale at 0.060 ETH, closing on 4/30/2025. Invest at www.twas.ai. Join us in this cool venture!
 </example_tweets>
 
 
@@ -224,7 +231,7 @@ export class TwitterInteractionClient {
 
     async handleTwitterInteractions() {
         elizaLogger.log("Starting Twitter interactions check");
-    
+
         const twitterUsername = this.client.profile.username;
         try {
             // First get our mentions
@@ -236,10 +243,10 @@ export class TwitterInteractionClient {
                     SearchMode.Latest
                 )
             ).tweets;
-            
+
             // Log mention details
             elizaLogger.log(`Found ${mentionCandidates.length} mentions`);
-    
+
             // Get recent tweets from the agent
             elizaLogger.log("Fetching agent's recent tweets...");
             const agentTweets = (
@@ -249,7 +256,7 @@ export class TwitterInteractionClient {
                     SearchMode.Latest
                 )
             ).tweets;
-    
+
             // Get replies to agent's tweets using search
             elizaLogger.log("Fetching replies to agent tweets...");
             const replyPromises = agentTweets.map(async tweet => {
@@ -257,7 +264,7 @@ export class TwitterInteractionClient {
                     elizaLogger.warn("Invalid agent tweet found", tweet);
                     return [];
                 }
-    
+
                 try {
                     elizaLogger.log(`Searching for replies to tweet ${tweet.id}...`);
                     const replies = await this.client.fetchSearchTweets(
@@ -265,37 +272,37 @@ export class TwitterInteractionClient {
                         20,
                         SearchMode.Latest
                     );
-    
+
                     // Filter to get replies to this specific tweet
                     const validReplies = replies.tweets.filter(reply => {
                         const isDirectReply = reply.inReplyToStatusId === tweet.id;
                         const isInConversation = reply.conversationId === tweet.conversationId;
-                        
+
                         elizaLogger.log(`Evaluating reply candidate ${reply.id} for tweet ${tweet.id}:`, {
                             isDirectReply,
                             isInConversation,
                             replyToStatusId: reply.inReplyToStatusId,
                             conversationId: reply.conversationId
                         });
-    
+
                         return isDirectReply || (reply.isReply && isInConversation);
                     });
-    
+
                     return validReplies;
                 } catch (error) {
                     elizaLogger.error(`Error fetching replies for tweet ${tweet.id}:`, error);
                     return [];
                 }
             });
-    
+
             const allReplies = (await Promise.all(replyPromises)).flat();
-    
+
             // Process target users if configured
             let targetUserTweets: any[] = [];
             if (this.client.twitterConfig.TWITTER_TARGET_USERS.length) {
                 const TARGET_USERS = this.client.twitterConfig.TWITTER_TARGET_USERS;
                 elizaLogger.log("Processing target users:", TARGET_USERS);
-    
+
                 for (const username of TARGET_USERS) {
                     try {
                         const userTweets = (
@@ -311,14 +318,14 @@ export class TwitterInteractionClient {
                     }
                 }
             }
-    
+
             // Combine all interactions and remove duplicates
             let uniqueTweetCandidates = [...new Map(
                 [...mentionCandidates, ...allReplies, ...targetUserTweets]
-                .filter(tweet => tweet && tweet.id && tweet.text)
-                .map(tweet => [tweet.id, tweet])
+                    .filter(tweet => tweet && tweet.id && tweet.text)
+                    .map(tweet => [tweet.id, tweet])
             ).values()];
-    
+
             // Sort and filter tweets
             uniqueTweetCandidates = uniqueTweetCandidates
                 .sort((a, b) => a.id.localeCompare(b.id))
@@ -327,38 +334,38 @@ export class TwitterInteractionClient {
                     // 1. It's not from the agent, or
                     // 2. It's from a target user, or
                     // 3. It's a reply to any tweet (including the agent's tweets)
-                    return tweet.userId !== this.client.profile.id || 
-                           this.client.twitterConfig.TWITTER_TARGET_USERS.includes(tweet.username) ||
-                           tweet.isReply;
+                    return tweet.userId !== this.client.profile.id ||
+                        this.client.twitterConfig.TWITTER_TARGET_USERS.includes(tweet.username) ||
+                        tweet.isReply;
                 });
-    
+
             // Process each tweet
             for (const tweet of uniqueTweetCandidates) {
                 if (!this.client.lastCheckedTweetId ||
                     BigInt(tweet.id) > this.client.lastCheckedTweetId) {
-    
+
                     if (!tweet.text || tweet.text.trim().length === 0) {
                         elizaLogger.log("Skipping empty tweet:", tweet.id);
                         continue;
                     }
-    
+
                     // Generate the tweet ID UUID
                     const tweetId = stringToUuid(tweet.id + "-" + this.runtime.agentId);
-    
+
                     // Check if we've already processed this tweet
                     const existingResponse = await this.runtime.messageManager.getMemoryById(tweetId);
                     if (existingResponse) {
                         elizaLogger.log(`Already processed tweet ${tweet.id}, skipping`);
                         continue;
                     }
-    
+
                     elizaLogger.log("Processing new tweet:", tweet.id);
-                    
+
                     const roomId = stringToUuid(tweet.conversationId + "-" + this.runtime.agentId);
                     const userIdUUID = tweet.userId === this.client.profile.id
                         ? this.runtime.agentId
                         : stringToUuid(tweet.userId);
-    
+
                     await this.runtime.ensureConnection(
                         userIdUUID,
                         roomId,
@@ -366,9 +373,9 @@ export class TwitterInteractionClient {
                         tweet.name,
                         "twitter"
                     );
-    
+
                     const thread = await buildConversationThread(tweet, this.client);
-    
+
                     const message = {
                         content: {
                             text: tweet.text,
@@ -378,21 +385,21 @@ export class TwitterInteractionClient {
                         userId: userIdUUID,
                         roomId,
                     };
-    
+
                     await this.handleTweet({
                         tweet,
                         message,
                         thread,
                     });
-    
+
                     // Update last checked tweet ID
                     this.client.lastCheckedTweetId = BigInt(tweet.id);
                 }
             }
-    
+
             await this.client.cacheLatestCheckedTweetId();
             elizaLogger.log("Finished Twitter interactions check");
-            
+
         } catch (error) {
             elizaLogger.error("Error in handleTwitterInteractions:", {
                 error,
@@ -444,7 +451,7 @@ export class TwitterInteractionClient {
             .join("\n\n");
 
         const imageDescriptionsArray = [];
-        try{
+        try {
             for (const photo of tweet.photos) {
                 const description = await this.runtime
                     .getService<IImageDescriptionService>(
@@ -454,9 +461,9 @@ export class TwitterInteractionClient {
                 imageDescriptionsArray.push(description);
             }
         } catch (error) {
-    // Handle the error
-    elizaLogger.error("Error Occured during describing image: ", error);
-}
+            // Handle the error
+            elizaLogger.error("Error Occured during describing image: ", error);
+        }
 
         let state = await this.runtime.composeState(message, {
             twitterClient: this.client.twitterClient,
@@ -464,8 +471,8 @@ export class TwitterInteractionClient {
             currentPost,
             formattedConversation,
             imageDescriptions: imageDescriptionsArray.length > 0
-            ? `\nImages in Tweet:\n${imageDescriptionsArray.map((desc, i) =>
-              `Image ${i + 1}: Title: ${desc.title}\nDescription: ${desc.description}`).join("\n\n")}`:""
+                ? `\nImages in Tweet:\n${imageDescriptionsArray.map((desc, i) =>
+                    `Image ${i + 1}: Title: ${desc.title}\nDescription: ${desc.description}`).join("\n\n")}` : ""
         });
 
         // check if the tweet exists, save if it doesn't
@@ -487,10 +494,10 @@ export class TwitterInteractionClient {
                     imageUrls: tweet.photos?.map(photo => photo.url) || [],
                     inReplyTo: tweet.inReplyToStatusId
                         ? stringToUuid(
-                              tweet.inReplyToStatusId +
-                                  "-" +
-                                  this.runtime.agentId
-                          )
+                            tweet.inReplyToStatusId +
+                            "-" +
+                            this.runtime.agentId
+                        )
                         : undefined,
                 },
                 userId: userIdUUID,
@@ -608,8 +615,8 @@ export class TwitterInteractionClient {
                         );
                     }
                     const responseTweetId =
-                    responseMessages[responseMessages.length - 1]?.content
-                        ?.tweetId;
+                        responseMessages[responseMessages.length - 1]?.content
+                            ?.tweetId;
                     await this.runtime.processActions(
                         message,
                         responseMessages,
@@ -687,10 +694,10 @@ export class TwitterInteractionClient {
                         imageUrls: currentTweet.photos?.map(photo => photo.url) || [],
                         inReplyTo: currentTweet.inReplyToStatusId
                             ? stringToUuid(
-                                  currentTweet.inReplyToStatusId +
-                                      "-" +
-                                      this.runtime.agentId
-                              )
+                                currentTweet.inReplyToStatusId +
+                                "-" +
+                                this.runtime.agentId
+                            )
                             : undefined,
                     },
                     createdAt: currentTweet.timestamp * 1000,

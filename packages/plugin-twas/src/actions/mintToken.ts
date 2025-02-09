@@ -19,6 +19,22 @@ export const MintTokenAction: Action = {
     similes: ["CREATE_TWAS_TOKEN"],
     description: "Creates a new token with fixed supply of 10M tokens",
     handler: async (runtime: IAgentRuntime, message: Memory, state: State, options: object, callback: HandlerCallback) => {
+
+        const recentMessages = state?.recentMessagesData;
+
+        if (!recentMessages || recentMessages.length === 0) {
+            return false;
+        }
+
+        const tokenMessage = recentMessages.find(msg =>
+            msg.content?.text?.includes("2. Token")
+        );
+
+        if (!tokenMessage || !tokenMessage.content?.text) {
+            console.log("TWAS: No token message found");
+            return false;
+        }
+
         try {
             // Get private key and RPC URL from environment
             const privateKey = process.env.TWAS_PRIVATE_KEY;
@@ -39,8 +55,13 @@ export const MintTokenAction: Action = {
                 wallet
             );
 
-            const name = message.content.name || "TwasToken";
-            const symbol = message.content.symbol || "TWAS";
+            const text = tokenMessage.content.text;
+
+            const nameMatch = text.match(/Token Name: (.*)/i);
+            const name = nameMatch ? nameMatch[1] : "TwasToken";
+
+            const symbolMatch = text.match(/Symbol: (.*)/i);
+            const symbol = symbolMatch ? symbolMatch[1] : "TWAS";
 
             // Set a high manual gas limit since estimation fails
             const gasLimit = 5_000_000; // 5 million gas
