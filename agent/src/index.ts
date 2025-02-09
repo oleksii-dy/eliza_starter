@@ -1,3 +1,4 @@
+import { mainCharacter } from './../mainCharacter';
 import { PGLiteDatabaseAdapter } from "@elizaos/adapter-pglite";
 import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
 import { QdrantDatabaseAdapter } from "@elizaos/adapter-qdrant";
@@ -84,6 +85,7 @@ import { coinmarketcapPlugin } from "@elizaos/plugin-coinmarketcap";
 import { confluxPlugin } from "@elizaos/plugin-conflux";
 import { createCosmosPlugin } from "@elizaos/plugin-cosmos";
 import { cronosZkEVMPlugin } from "@elizaos/plugin-cronoszkevm";
+import { etherguildOnchainPlugin } from '@elizaos/plugin-etherguild-onchain';
 import { etherGuildPlugin } from "@elizaos/plugin-ether-guild";
 import { evmPlugin } from "@elizaos/plugin-evm";
 import { flowPlugin } from "@elizaos/plugin-flow";
@@ -482,7 +484,7 @@ export async function loadCharacters(
 
     if (loadedCharacters.length === 0) {
         elizaLogger.info("No characters found, using default character");
-        loadedCharacters.push(defaultCharacter);
+        loadedCharacters.push(mainCharacter);
     }
 
     return loadedCharacters;
@@ -1066,6 +1068,10 @@ export async function createAgent(
             getSecret(character, "ETHEREUM_GUILD_BACKEND_URL")
                 ? etherGuildPlugin
                 : null,
+            getSecret(character, "BNB_PRIVATE_KEY") ||
+            getSecret(character, "BNB_PUBLIC_KEY")?.startsWith("0x")
+                ? etherguildOnchainPlugin
+                : null,
             getSecret(character, "EVM_PUBLIC_KEY") ||
             (getSecret(character, "WALLET_PUBLIC_KEY") &&
                 getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
@@ -1470,7 +1476,7 @@ const startAgents = async () => {
     let serverPort = Number.parseInt(settings.SERVER_PORT || "3000");
     const args = parseArguments();
     const charactersArg = args.characters || args.character;
-    let characters = [defaultCharacter];
+    let characters = [mainCharacter];
 
     if (process.env.IQ_WALLET_ADDRESS && process.env.IQSOlRPC) {
         characters = await loadCharacterFromOnchain();
