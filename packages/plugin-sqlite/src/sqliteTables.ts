@@ -6,7 +6,7 @@ BEGIN TRANSACTION;
 CREATE TABLE IF NOT EXISTS "characters" (
     "id" TEXT PRIMARY KEY,
     "name" TEXT,
-    "json" TEXT DEFAULT '{}' CHECK(json_valid("json")) -- Ensuring json is a valid JSON object
+    "json" TEXT DEFAULT '{}' CHECK(json_valid("json")),
     "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
