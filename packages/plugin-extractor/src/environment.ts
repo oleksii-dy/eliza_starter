@@ -1,8 +1,10 @@
-import { IAgentRuntime } from "@elizaos/core";
+import { IAgentRuntime, Memory } from "@elizaos/core";
 import { z } from "zod";
 
 export const extractorEnvSchema = z.object({
-    FIREWALL_RISKS_THRESHOLD: z.string().min(1, "Firewall threshold is required"),
+    FIREWALL_RISKS_THRESHOLD: z
+        .string()
+        .min(1, "Firewall threshold is required"),
     FIREWALL_RISKS_API: z.string().min(1, "Firewall api url is required"),
     FIREWALL_API_KEY: z.string().min(1, "Firewall api url is required"),
 });
@@ -10,7 +12,8 @@ export const extractorEnvSchema = z.object({
 export type extractorConfig = z.infer<typeof extractorEnvSchema>;
 
 export async function validateExtractorConfig(
-    runtime: IAgentRuntime
+    runtime: IAgentRuntime,
+    message: Memory
 ): Promise<extractorConfig> {
     try {
         const config = {
@@ -20,7 +23,7 @@ export async function validateExtractorConfig(
             FIREWALL_RISKS_API: runtime.getSetting("FIREWALL_RISKS_API"),
             FIREWALL_API_KEY: runtime.getSetting("FIREWALL_API_KEY"),
         };
-        console.log("config: ", config);
+        console.log("config: ", config, console.log(message.content), runtime.character);
         return extractorEnvSchema.parse(config);
     } catch (error) {
         console.log("error::::", error);
