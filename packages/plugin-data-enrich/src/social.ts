@@ -159,7 +159,7 @@ export class twitterDataProvider {
             });
             //console.log(response);
             summary = response;
-            if (response && response.contains("The user is not related to Web3")) {
+            if (response && response.includes("The user is not related to Web3")) {
                 summary = "";
             }
         } catch (error) {
