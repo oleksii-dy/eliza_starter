@@ -2,6 +2,15 @@ export const sqliteTables = `
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 
+-- Table: characters
+CREATE TABLE IF NOT EXISTS "characters" (
+    "id" TEXT PRIMARY KEY,
+    "name" TEXT,
+    "json" TEXT DEFAULT '{}' CHECK(json_valid("json")) -- Ensuring json is a valid JSON object
+    "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Table: accounts
 CREATE TABLE IF NOT EXISTS "accounts" (
     "id" TEXT PRIMARY KEY,
