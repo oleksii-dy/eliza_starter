@@ -30,7 +30,6 @@ import {
     participantTable,
     relationshipTable,
     roomTable,
-    knowledgeTable,
     cacheTable,
 } from "./schema";
 import { drizzle, NodePgDatabase } from "drizzle-orm/node-postgres";
@@ -1333,81 +1332,6 @@ export class DrizzleDatabaseAdapter
                 throw error;
             }
         }, "getRelationships");
-    }
-
-    private async createKnowledgeChunk(
-        params: {
-            id: UUID;
-            originalId: UUID;
-            agentId: UUID | null;
-            content: any;
-            embedding: Float32Array | undefined | null;
-            chunkIndex: number;
-            isShared: boolean;
-            createdAt: number;
-        },
-        tx: NodePgDatabase
-    ): Promise<void> {
-        const embedding = params.embedding
-            ? Array.from(params.embedding)
-            : null;
-
-        const patternId = `${params.originalId}-chunk-${params.chunkIndex}`;
-        const contentWithPatternId = {
-            ...params.content,
-            metadata: {
-                ...params.content.metadata,
-                patternId,
-            },
-        };
-
-        await tx.insert(knowledgeTable).values({
-            id: params.id,
-            agentId: params.agentId,
-            content: sql`${contentWithPatternId}::jsonb`,
-            embedding: embedding,
-            isMain: false,
-            originalId: params.originalId,
-            chunkIndex: params.chunkIndex,
-            isShared: params.isShared,
-            createdAt: params.createdAt,
-        });
-    }
-
-    async removeKnowledge(id: UUID): Promise<void> {
-        return this.withDatabase(async () => {
-            try {
-                await this.db
-                    .delete(knowledgeTable)
-                    .where(eq(knowledgeTable.id, id));
-            } catch (error) {
-                elizaLogger.error("Failed to remove knowledge:", {
-                    error:
-                        error instanceof Error ? error.message : String(error),
-                    id,
-                });
-                throw error;
-            }
-        }, "removeKnowledge");
-    }
-
-    async clearKnowledge(agentId: UUID, shared?: boolean): Promise<void> {
-        return this.withDatabase(async () => {
-            if (shared) {
-                await this.db
-                    .delete(knowledgeTable)
-                    .where(
-                        or(
-                            eq(knowledgeTable.agentId, agentId),
-                            eq(knowledgeTable.isShared, true)
-                        )
-                    );
-            } else {
-                await this.db
-                    .delete(knowledgeTable)
-                    .where(eq(knowledgeTable.agentId, agentId));
-            }
-        }, "clearKnowledge");
     }
 
     async getCache(params: {
