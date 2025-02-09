@@ -13,7 +13,7 @@ export const mainCharacter: Character = {
     name: "ETHan",
     plugins: [etherguildPlugin],
     settings: {
-        // model: "gpt-40-mini",
+        model: "llama-3.1-8b-instant",
         chains: {
             evm: ["sepolia", "base", "arbitrum"],
         },
