@@ -40,7 +40,7 @@
             "outputs": ["dist/**"],
             "dependsOn": ["@elizaos/core#build", "@elizaos/plugin-tee#build"]
         },
-        "@elizaos/plugin-ethereum-guild#build": {
+        "@elizaos/plugin-ether-guild#build": {
             "outputs": ["dist/**"],
             "dependsOn": ["@elizaos/core#build"]
         },
