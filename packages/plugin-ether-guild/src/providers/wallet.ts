@@ -1,9 +1,4 @@
-import type {
-     IAgentRuntime,
-     Provider,
-     Memory,
-     State,
-} from "@elizaos/core";
+import type { IAgentRuntime, Provider, Memory, State } from "@elizaos/core";
 import { EVM, createConfig, getToken } from "@lifi/sdk";
 import type {
     Address,
@@ -96,8 +91,10 @@ export class WalletProvider {
             integrator: "eliza",
             providers: [
                 EVM({
+                    // @ts-expect-error
                     getWalletClient: async () => walletClient,
                     switchChain: async (chainId) =>
+                        // @ts-expect-error
                         createWalletClient({
                             account: this.account,
                             chain: chains.find(
@@ -135,7 +132,7 @@ export class WalletProvider {
         chain: SupportedChain,
         token: Address,
         owner: Address,
-        spender: Address,
+        spender: Address
     ): Promise<bigint> {
         const publicClient = this.getPublicClient(chain);
         return await publicClient.readContract({
@@ -176,6 +173,7 @@ export class WalletProvider {
         }
     ): Promise<Hex> {
         const walletClient = this.getWalletClient(chain);
+        // @ts-expect-error
         return await walletClient.sendTransaction({
             account: this.account,
             to: toAddress,
@@ -298,7 +296,8 @@ export class WalletProvider {
 const genChainsFromRuntime = (
     runtime: IAgentRuntime
 ): Record<string, Chain> => {
-    const chainNames = (runtime.character?.settings?.chains?.evm as SupportedChain[]) || [];
+    const chainNames =
+        (runtime.character?.settings?.chains?.evm as SupportedChain[]) || [];
     const chains = {};
 
     for (const chainName of chainNames) {

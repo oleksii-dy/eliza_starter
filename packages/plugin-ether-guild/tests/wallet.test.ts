@@ -6,7 +6,7 @@ import {
 } from "viem/accounts";
 import { bsc, opBNB } from "viem/chains";
 
-import { WalletProvider } from "../providers/wallet";
+import { WalletProvider } from "../src/providers/wallet";
 
 const customRpcUrls = {
     bsc: "custom-rpc.bsc.io",

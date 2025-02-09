@@ -5,9 +5,9 @@ import {
     privateKeyToAccount,
 } from "viem/accounts";
 
-import { GetBalanceAction } from "../actions/getBalance";
-import { WalletProvider } from "../providers/wallet";
-import { GetBalanceParams } from "../types";
+import { GetBalanceAction } from "../src/actions/getBalance";
+import { WalletProvider } from "../src/providers/wallet";
+import { GetBalanceParams } from "../src/types";
 
 describe("GetBalance Action", () => {
     let account: Account;

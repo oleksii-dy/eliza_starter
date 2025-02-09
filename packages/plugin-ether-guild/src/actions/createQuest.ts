@@ -39,7 +39,19 @@ export const createQuestAction: Action = {
         _options: { [key: string]: unknown },
         _callback: HandlerCallback
     ): Promise<boolean> => {
-        const context = `What are the specific project details the user wants to create a quest for? Extract ONLY the project details term from this message: "${_message.content.text}". Return just the project details by summarizing why the user wants to create the quest with no additional text, punctuation, or explanation.`;
+        const context = `What are the specific project details the user wants to create a quest for? 
+        Extract ONLY the project details from this message: "${_message.content.text}". 
+        
+        Now extract a project title and project summary (single sentence) from the message.
+
+        The only output should follow this json format with following properties, no additional text, punctuation, or explanation, only the json. 
+        Summary and description should be the same, example:
+        {{
+            "title": "Dashboard that illustrates ETH is money"
+            "summary": "Create a quest to fund a project to build a dashboard illustrating ETH is money",
+            "description": "Create a quest to fund a project to build a dashboard illustrating ETH is money"
+        }}
+        `;
 
         const projectDetails = await generateText({
             runtime: _runtime,
@@ -49,7 +61,8 @@ export const createQuestAction: Action = {
         });
 
         // For debugging
-        console.log("Project details extracted:", projectDetails);
+        console.log("Project details:", projectDetails);
+        console.log("extracted:", JSON.parse(projectDetails));
 
         const questResult = await createQuest(projectDetails);
         console.log(`Api quest result '${questResult}'`);
@@ -186,7 +199,7 @@ async function createQuest(questDetails: string) {
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ questDetails }),
+                body: questDetails,
             }
         );
 
