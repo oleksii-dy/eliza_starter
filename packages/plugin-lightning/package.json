@@ -21,7 +21,8 @@
     "dependencies": {
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-tee": "workspace:*",
-        "astra-lightning": "^1.1.0"
+        "astra-lightning": "^1.1.0",
+        "zod": "3.24.1"
     },
     "devDependencies": {
         "tsup": "8.3.5"
