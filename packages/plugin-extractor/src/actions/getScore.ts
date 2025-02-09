@@ -14,7 +14,7 @@ import { validateExtractorConfig } from "../environment";
 
 export const getExtractorScore: Action = {
     name: "EXTRACTOR_GET_SCORE",
-    similes: [],
+    similes: ["NONE"],
     description: "Get Extractor score",
     validate: async (runtime: IAgentRuntime) => {
         await validateExtractorConfig(runtime);
