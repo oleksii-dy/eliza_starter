@@ -1,7 +1,7 @@
 import { Plugin } from "@elizaos/core";
 import { getExtractorScore } from "./actions/getScore";
 
-export const nasaPlugin: Plugin = {
+export const extractorPlugin: Plugin = {
     name: "extractor",
     description: "Extractor plugin for Eliza",
     actions: [getExtractorScore],
@@ -11,4 +11,4 @@ export const nasaPlugin: Plugin = {
     // providers supply information and state to the agent's context, help agent access necessary data
     providers: [],
 };
-export default nasaPlugin;
+export default extractorPlugin;

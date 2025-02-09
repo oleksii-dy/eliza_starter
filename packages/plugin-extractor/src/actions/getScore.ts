@@ -17,7 +17,7 @@ export const getExtractorScore: Action = {
     description: "Get Extractor score",
     validate: async (runtime: IAgentRuntime) => {
         // add custom validator if needed
-        return true;
+        return false;
     },
     handler: async (
         runtime: IAgentRuntime,
@@ -26,6 +26,7 @@ export const getExtractorScore: Action = {
         _options: { [key: string]: unknown },
         callback: HandlerCallback
     ) => {
+
         try {
             const ExtractorScoreData: IExtractorScore =
                 await fetchExtractorScore();
