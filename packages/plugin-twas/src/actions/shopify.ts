@@ -8,9 +8,33 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Get and validate environment variables
 const SHOPIFY_DOMAIN = process.env.SHOPIFY_DOMAIN || 'twas-launched.myshopify.com';
 const SHOPIFY_ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
+
+interface ListingMetadata {
+    name: string;
+    pricePerToken: number;
+}
+
+function parseMetadata(content: string[]): ListingMetadata {
+    const fullText = content.join('\n');
+    
+    // Helper function to extract value after a label
+    const extractValue = (text: string, label: string): string => {
+        const regex = new RegExp(`${label}:\\s*([^\\n]+)`, 'i');
+        const match = text.match(regex);
+        return match ? match[1].trim() : '';
+    };
+
+    // Extract name and price
+    const name = extractValue(fullText, 'Name');
+    
+    // Extract price (USDC)
+    const priceMatch = fullText.match(/Price per token:\s*([\d.]+)\s*USDC/);
+    const pricePerToken = priceMatch ? parseFloat(priceMatch[1]) : 0;
+
+    return { name, pricePerToken };
+}
 
 async function createShopifyProduct(content: string[]): Promise<boolean> {
     try {
@@ -18,19 +42,18 @@ async function createShopifyProduct(content: string[]): Promise<boolean> {
             throw new Error("Missing Shopify access token");
         }
 
-        // Join the content array into a description, preserving line breaks
-        const description = content.join('\n');
+        const metadata = parseMetadata(content);
 
         const productData = {
-            title: "New Listing", // You might want to extract a title from the content
-            body_html: `<p>${description}</p>`,
+            title: `${metadata.name}`,
+            body_html: `<p>Price per Token: ${metadata.pricePerToken} USDC</p>`,
             vendor: "TWAS Protocol",
             product_type: "Listing",
             status: "active",
-            tags: "blockchain, listing, twas",
             variants: [
                 {
-                    price: "0.00", // You might want to extract price from content
+                    title: `${metadata.name} Token`,
+                    price: metadata.pricePerToken,
                     inventory_quantity: 1,
                     requires_shipping: false,
                     taxable: false,
@@ -72,18 +95,9 @@ export const ShopifyAction: Action = {
         _state?: State
     ) => {
         try {
-            if (!runtime) {
-                return false;
-            }
-
-            if (!message?.content?.text) {
-                return false;
-            }
-
-            if (!SHOPIFY_ACCESS_TOKEN) {
-                return false;
-            }
-
+            if (!runtime) return false;
+            if (!message?.content?.text) return false;
+            if (!SHOPIFY_ACCESS_TOKEN) return false;
             return true;
         } catch (error) {
             return false;
@@ -95,21 +109,12 @@ export const ShopifyAction: Action = {
         state?: State
     ): Promise<boolean> => {
         try {
-            if (!runtime) {
-                return false;
-            }
-
+            if (!runtime) return false;
             const recentMessages = state?.recentMessagesData;
-            
-            if (!recentMessages || recentMessages.length === 0) {
-                return false;
-            }
+            if (!recentMessages?.length) return false;
 
             const listingContent = recentMessages.map(msg => msg.content.text);
-
-            if (process.env.SHOPIFY_DRY_RUN?.toLowerCase() === "true") {
-                return true;
-            }
+            if (process.env.SHOPIFY_DRY_RUN?.toLowerCase() === "true") return true;
 
             return await createShopifyProduct(listingContent);
         } catch (error) {
