@@ -19,7 +19,7 @@ export default defineConfig({
       '@phala/dstack-sdk'
     ],
     noExternal: [
-      '@solana/web3.js'
+      ''
     ],
     platform: 'node',
     target: 'node18'
