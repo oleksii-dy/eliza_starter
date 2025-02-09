@@ -18,7 +18,6 @@ export type ICreateListingRequest = {
     // USDC price for each whole 1.0 token (not for 0.000000000000001 tokens)
     sellTokenPrice: string;
     offerExpiresAt: number;
-    termsDeliverables: string;
 }
 
 export interface IListing extends ICreateListingRequest {
@@ -29,9 +28,6 @@ export interface IListing extends ICreateListingRequest {
     receiveTokenAmount: string;
     receiveTokenAddress: `0x${string}`;
     attestedEscrowId: `0x${string}`;
-    purchaseTxHash?: `0x${string}`;
-    purchaserAddress?: `0x${string}`;
-    purchasedAt?: number;
 }
 
 export type ICreateListingResponse = {

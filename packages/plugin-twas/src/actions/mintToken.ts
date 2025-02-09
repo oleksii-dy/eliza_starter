@@ -13,6 +13,8 @@ import {
 import { ethers } from "ethers";
 // Import the compiled contract artifacts
 import { abi, bytecode } from '../TwasToken.json';
+import { ICreateListingRequest } from "../lib/api";
+import { createEscrow } from "../lib/createEscrow";
 
 export const MintTokenAction: Action = {
     name: "MINT_TWAS_TOKEN",
@@ -30,18 +32,32 @@ export const MintTokenAction: Action = {
             msg.content?.text?.includes("2. Token")
         );
 
-        if (!tokenMessage || !tokenMessage.content?.text) {
-            console.log("TWAS: No token message found");
-            return false;
+        let name = "TwasToken";
+        let symbol = "TWAS";
+        if (!!tokenMessage && tokenMessage.content?.text) {
+            const text = tokenMessage.content.text;
+
+            const nameMatch = text.match(/Token Name: (.*)/i);
+            name = nameMatch ? nameMatch[1] : "TwasToken";
+
+            const symbolMatch = text.match(/Symbol: (.*)/i);
+            symbol = symbolMatch ? symbolMatch[1] : "TWAS";
+
+        } else {
+            console.log("TWAS: No token message found, using default name and symbol");
         }
 
         const fundingMessage = recentMessages.find(msg =>
             msg.content?.text?.includes("3. Funding Round")
         );
 
-        if (!fundingMessage || !fundingMessage.content?.text) {
-            console.log("TWAS: No funding round message found");
-            return false;
+        let amount = "1000000"
+        if (!!fundingMessage && fundingMessage.content?.text) {
+            const text = fundingMessage.content.text;
+            const amountMatch = text.match(/Amount for Sale: (.*)/i);
+            amount = amountMatch ? amountMatch[1] : "1000000";
+        } else {
+            console.log("TWAS: No funding round message found, using default amount of 1000000");
         }
 
 
@@ -65,16 +81,6 @@ export const MintTokenAction: Action = {
                 wallet
             );
 
-            const text = tokenMessage.content.text;
-
-            const nameMatch = text.match(/Token Name: (.*)/i);
-            const name = nameMatch ? nameMatch[1] : "TwasToken";
-
-            const symbolMatch = text.match(/Symbol: (.*)/i);
-            const symbol = symbolMatch ? symbolMatch[1] : "TWAS";
-
-            const amountMatch = text.match(/Amount for Sale: (.*)/i);
-            const amount = amountMatch ? amountMatch[1] : "1000000";
 
             // Set a high manual gas limit since estimation fails
             const gasLimit = 5_000_000; // 5 million gas
@@ -89,9 +95,19 @@ export const MintTokenAction: Action = {
 
             elizaLogger.info("Contract deployed to:", deployTx.address);
 
+            const createEscrowRequest: ICreateListingRequest = {
+                sellTokenAddress: deployTx.address as `0x${string}`,
+                sellTokenAmount: amount,
+                sellTokenPrice: "1",
+                offerExpiresAt: 0,
+            }
+
+            const createEscrowResponse = await createEscrow(createEscrowRequest);
+            const { attestedEscrowId } = createEscrowResponse
+
             callback(
                 {
-                    text: `Successfully deployed token contract at ${deployTx.address} with 10,000,000 tokens minted to ${wallet.address}. Be the first investor and buy ${amount} tokens at ${process.env.TWAS_URL}/${"TODO"}`,
+                    text: `Successfully deployed token contract at ${deployTx.address} with 10,000,000 tokens minted to ${wallet.address}. Be the first to invest ${process.env.TWAS_URL}/${attestedEscrowId}`,
                     contractAddress: deployTx.address,
                     totalSupply: 10000000
                 },
