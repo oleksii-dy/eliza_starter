@@ -1,7 +1,7 @@
 {
     "name": "ETHan",
     "username": "ETHan",
-    "plugins": ["@elizaos/plugin-ethereum-guild"],
+    "plugins": ["@elizaos/plugin-ether-guild"],
     "clients": ["discord"],
     "modelProvider": "groq",
     "settings": {
