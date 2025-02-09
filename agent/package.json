@@ -55,7 +55,7 @@
         "@elizaos/plugin-conflux": "workspace:*",
         "@elizaos/plugin-cosmos": "workspace:*",
         "@elizaos/plugin-echochambers": "workspace:*",
-        "@elizaos/plugin-ethereum-guild": "workspace:*",
+        "@elizaos/plugin-ether-guild": "workspace:*",
         "@elizaos/plugin-evm": "workspace:*",
         "@elizaos/plugin-flow": "workspace:*",
         "@elizaos/plugin-gelato": "workspace:*",

@@ -1,5 +1,5 @@
 {
-	"name": "@elizaos/plugin-ethereum-guild",
+	"name": "@elizaos/plugin-ether-guild",
 	"version": "0.1.9",
 	"type": "module",
 	"main": "dist/index.js",
