@@ -2,13 +2,11 @@ import {
     type Action,
     type IAgentRuntime,
     type Memory,
-    type State,
-    elizaLogger,
+    type State
 } from "@elizaos/core";
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';  
-
 
 dotenv.config();
 
@@ -16,25 +14,48 @@ dotenv.config();
 const SUPABASE_URL = process.env.SUPABASE_PLUGIN_URL;
 const SUPABASE_KEY = process.env.SUPABASE_PLUGIN_ANON_KEY;
 
-// Validate environment variables on load
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-    elizaLogger.error("Missing required Supabase environment variables", {
-        hasUrl: !!SUPABASE_URL,
-        hasKey: !!SUPABASE_KEY
-    });
+interface TwasProtocolData {
+    listingContent: string[];
+    contractAddress?: string;
+    deployerAddress?: string;
+    totalSupply?: string;
 }
 
-async function saveToSupabase(content: string): Promise<boolean> {
+function extractDeploymentDetails(messages: Memory[]): Partial<TwasProtocolData> {
+    const details: Partial<TwasProtocolData> = {};
+    
+    const deploymentMessage = messages.find(msg => 
+        msg.content?.text?.includes("Token contract") && 
+        msg.content?.text?.includes("deployed at")
+    );
+
+    if (deploymentMessage?.content?.text) {
+        const text = deploymentMessage.content.text;
+        
+        const contractMatch = text.match(/deployed at (0x[a-fA-F0-9]{40})/i);
+        if (contractMatch) {
+            details.contractAddress = contractMatch[1];
+        }
+        
+        const deployerMatch = text.match(/Deployer: (0x[a-fA-F0-9]{40})/i);
+        if (deployerMatch) {
+            details.deployerAddress = deployerMatch[1];
+        }
+        
+        const supplyMatch = text.match(/Total supply: ([\d,]+)/i);
+        if (supplyMatch) {
+            details.totalSupply = supplyMatch[1];
+        }
+    }
+    
+    return details;
+}
+
+async function saveToSupabase(data: TwasProtocolData): Promise<boolean> {
     try {
-        if (!content) {
-            elizaLogger.error("Empty content provided to saveToSupabase");
+        if (!data.listingContent.length) {
             return false;
         }
-
-        elizaLogger.log("Initializing Supabase client", {
-            hasUrl: !!SUPABASE_URL,
-            hasKey: !!SUPABASE_KEY
-        });
 
         if (!SUPABASE_URL || !SUPABASE_KEY) {
             throw new Error("Missing Supabase credentials");
@@ -42,44 +63,30 @@ async function saveToSupabase(content: string): Promise<boolean> {
 
         const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
         
-        // Test connection
         const { error: testError } = await supabase.from('listings').select('count');
         if (testError) {
-            elizaLogger.error("Supabase connection test failed:", testError);
             return false;
         }
 
-        const data = {
-            listing_id: uuidv4(),  // Generate UUID for each new listing
-            content,
+        const data_to_insert = {
+            listing_id: uuidv4(),
+            content: data.listingContent,
+            contract_address: data.contractAddress,
+            deployer_address: data.deployerAddress,
+            total_supply: data.totalSupply,
+            saved_at: new Date().toISOString()
         };
 
-        const { error, data: result } = await supabase
+        const { error } = await supabase
             .from('listings')
-            .insert([data]);
+            .insert([data_to_insert]);
 
         if (error) {
-            elizaLogger.error("Supabase insertion error:", {
-                code: error.code,
-                message: error.message,
-                details: error.details,
-                hint: error.hint,
-                data: data
-            });
             return false;
         }
 
-        elizaLogger.log("Save successful:", result);
         return true;
     } catch (error) {
-        elizaLogger.error("Critical error in saveToSupabase:", {
-            errorType: typeof error,
-            errorMessage: error.message,
-            errorStack: error.stack,
-            errorName: error.name,
-            supabaseUrl: SUPABASE_URL ? 'present' : 'missing',
-            supabaseKey: SUPABASE_KEY ? 'present' : 'missing'
-        });
         return false;
     }
 }
@@ -94,34 +101,20 @@ export const saveAction: Action = {
         _state?: State
     ) => {
         try {
-            // Validate runtime
             if (!runtime) {
-                elizaLogger.error("Runtime is not defined");
                 return false;
             }
 
-            // Validate message structure
             if (!message?.content?.text) {
-                elizaLogger.error("Invalid message format", {
-                    hasMessage: !!message,
-                    hasContent: !!message?.content,
-                    hasText: !!message?.content?.text
-                });
                 return false;
             }
 
-            // Validate Supabase credentials
             if (!SUPABASE_URL || !SUPABASE_KEY) {
-                elizaLogger.error("Missing Supabase credentials");
                 return false;
             }
 
             return true;
         } catch (error) {
-            elizaLogger.error("Error in validate function:", {
-                errorMessage: error.message,
-                errorStack: error.stack
-            });
             return false;
         }
     },
@@ -131,53 +124,29 @@ export const saveAction: Action = {
         state?: State
     ): Promise<boolean> => {
         try {
-            // Add runtime validation
             if (!runtime) {
-                elizaLogger.error("Runtime is not defined");
                 return false;
             }
 
-            // Add detailed message validation logging
-            elizaLogger.log("Message received:", {
-                hasMessage: !!message,
-                messageType: typeof message,
-                contentExists: !!message?.content,
-                textExists: !!message?.content?.text,
-                fullMessage: JSON.stringify(message, null, 2)
-            });
-
-            // Validate Supabase credentials
-            if (!SUPABASE_URL || !SUPABASE_KEY) {
-                elizaLogger.error("Supabase credentials missing", {
-                    hasUrl: !!SUPABASE_URL,
-                    hasKey: !!SUPABASE_KEY
-                });
+            const recentMessages = state?.recentMessagesData;
+            
+            if (!recentMessages || recentMessages.length === 0) {
                 return false;
             }
 
-            const content = message?.content?.text;
-            if (!content) {
-                elizaLogger.error("No content to save");
-                return false;
-            }
+            const protocolData: TwasProtocolData = {
+                listingContent: recentMessages.map(msg => msg.content.text)
+            };
 
-            // Check for dry run mode
+            const deploymentDetails = extractDeploymentDetails(recentMessages);
+            Object.assign(protocolData, deploymentDetails);
+
             if (process.env.SUPABASE_DRY_RUN?.toLowerCase() === "true") {
-                elizaLogger.info("Dry run mode detected. Would have saved content:", content);
                 return true;
             }
 
-            return await saveToSupabase(content);
+            return await saveToSupabase(protocolData);
         } catch (error) {
-            elizaLogger.error("Detailed handler error:", {
-                errorMessage: error.message,
-                errorName: error.name,
-                errorStack: error.stack,
-                errorDetails: error,
-                runtime: !!runtime,
-                message: message,
-                state: state
-            });
             return false;
         }
     },
