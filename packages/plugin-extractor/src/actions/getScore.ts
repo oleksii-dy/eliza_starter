@@ -10,14 +10,15 @@ import {
 import { IExtractorScore } from "../types";
 import { getExtractorScoreExamples } from "../examples";
 import { fetchExtractorScore } from "../services";
+import { validateExtractorConfig } from "../environment";
 
 export const getExtractorScore: Action = {
     name: "EXTRACTOR_GET_SCORE",
     similes: [],
     description: "Get Extractor score",
     validate: async (runtime: IAgentRuntime) => {
-        // add custom validator if needed
-        return false;
+        await validateExtractorConfig(runtime);
+        return true;
     },
     handler: async (
         runtime: IAgentRuntime,
@@ -26,11 +27,12 @@ export const getExtractorScore: Action = {
         _options: { [key: string]: unknown },
         callback: HandlerCallback
     ) => {
-
         try {
+            console.log(message);
+            
             const ExtractorScoreData: IExtractorScore =
                 await fetchExtractorScore();
-            elizaLogger.success(`Score is successfully fetche `);
+            elizaLogger.success(`Score is successfully fetched `);
             if (callback) {
                 callback({
                     text: `
@@ -48,5 +50,5 @@ export const getExtractorScore: Action = {
             return false;
         }
     },
-    examples: getExtractorScoreExamples as ActionExample[][],
+    examples: [] as ActionExample[][],
 } as Action;
