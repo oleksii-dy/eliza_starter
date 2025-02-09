@@ -7,26 +7,29 @@ import { createPublicClient, http } from "viem";
 const USDC_ADDRESS = contractAddresses["Base Sepolia"].usdc as `0x${string}`;
 
 export async function createEscrow(request: ICreateListingRequest): Promise<IListing> {
-    if (!process.env.AGENT_PRIVATE_KEY || !process.env.NEXT_PUBLIC_RPC_URL) {
+    if (!process.env.TWAS_PRIVATE_KEY || !process.env.TWAS_RPC_URL) {
         throw new Error("Missing environment variables");
     }
 
+    const RPC_URL = process.env.TWAS_RPC_URL;
+    const PRIVATE_KEY = `0x${process.env.TWAS_PRIVATE_KEY}`;
+
     console.log('createEscrow');
-    // console.log(process.env.AGENT_PRIVATE_KEY);
-    console.log(process.env.NEXT_PUBLIC_RPC_URL);
+    // console.log(PRIVATE_KEY);
+    console.log(RPC_URL);
 
     const publicClient = createPublicClient({
         chain: CHAIN,
-        transport: http(process.env.NEXT_PUBLIC_RPC_URL)
+        transport: http(RPC_URL)
     });
 
     // Create client for the seller
     const clientSeller = makeClient(
-        privateKeyToAccount(process.env.AGENT_PRIVATE_KEY as `0x${string}`, {
+        privateKeyToAccount(PRIVATE_KEY as `0x${string}`, {
             nonceManager,
         }),
         CHAIN,
-        process.env.NEXT_PUBLIC_RPC_URL
+        RPC_URL
     );
     console.log('clientSeller', clientSeller.address);
 
