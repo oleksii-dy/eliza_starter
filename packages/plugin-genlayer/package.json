@@ -16,7 +16,8 @@
     "dependencies": {
         "@elizaos/core": "workspace:*",
         "genlayer-js": "0.4.7",
-        "tsup": "8.3.5"
+        "tsup": "8.3.5",
+        "viem": "2.21.58"
     },
     "devDependencies": {
         "@biomejs/biome": "1.9.4"

@@ -20,7 +20,8 @@
     ],
     "dependencies": {
         "@elizaos/core": "workspace:*",
-        "mind-randgen-sdk": "^1.0.0"
+        "mind-randgen-sdk": "^1.0.0",
+        "zod": "3.24.1"
     },
     "scripts": {
         "build": "tsup --format esm --dts"

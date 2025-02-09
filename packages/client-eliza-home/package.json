@@ -5,12 +5,14 @@
     "type": "module",
     "types": "dist/index.d.ts",
     "dependencies": {
-        "@elizaos/core": "workspace:*"
+        "@elizaos/core": "workspace:*",
+        "viem": "2.21.58",
+        "zod": "3.24.1"
     },
     "devDependencies": {
+        "@vitest/coverage-v8": "^1.2.1",
         "tsup": "8.3.5",
-        "vitest": "^3.0.0",
-        "@vitest/coverage-v8": "^1.2.1"
+        "vitest": "^3.0.0"
     },
     "scripts": {
         "build": "tsup --format esm --dts",

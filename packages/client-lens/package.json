@@ -30,12 +30,13 @@
         "@elizaos/core": "workspace:*",
         "@lens-protocol/client": "2.2.0",
         "@lens-protocol/metadata": "1.2.0",
-        "axios": "^1.7.9"
+        "axios": "^1.7.9",
+        "viem": "2.21.58"
     },
     "devDependencies": {
+        "@vitest/coverage-v8": "^1.2.1",
         "tsup": "^8.3.5",
-        "vitest": "^3.0.0",
-        "@vitest/coverage-v8": "^1.2.1"
+        "vitest": "^3.0.0"
     },
     "peerDependencies": {
         "@elizaos/core": "workspace:*"

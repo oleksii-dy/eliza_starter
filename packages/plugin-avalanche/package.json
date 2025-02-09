@@ -19,12 +19,14 @@
         "dist"
     ],
     "dependencies": {
-        "@elizaos/core": "workspace:*"
+        "@elizaos/core": "workspace:*",
+        "viem": "2.21.58",
+        "zod": "3.24.1"
     },
     "devDependencies": {
+        "@biomejs/biome": "1.9.4",
         "tsup": "8.3.5",
-        "vitest": "^3.0.0",
-        "@biomejs/biome": "1.9.4"
+        "vitest": "^3.0.0"
     },
     "scripts": {
         "build": "tsup src/index.ts --format esm --no-dts",

@@ -6,5 +6,5 @@ export default defineConfig({
     dts: true,
     clean: true,
     skipNodeModulesBundle: true,
-    noExternal: ["viem"],
+    noExternal: [],
 });

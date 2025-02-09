@@ -24,9 +24,11 @@
         "@mysten/sui": "^1.16.0",
         "axios": "^1.7.9",
         "bignumber.js": "9.1.2",
+        "bn.js": "^5.2.1",
         "node-cache": "5.1.2",
         "tsup": "8.3.5",
-        "vitest": "2.1.9"
+        "vitest": "2.1.9",
+        "zod": "3.24.1"
     },
     "devDependencies": {
         "@biomejs/biome": "1.5.3",
