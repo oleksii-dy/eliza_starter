@@ -15,6 +15,7 @@ import { ethers } from "ethers";
 import { abi, bytecode } from '../TwasToken.json';
 import { ICreateListingRequest } from "../lib/api";
 import { createEscrow } from "../lib/createEscrow";
+import { createListing } from "../lib/supabase";
 
 export const MintTokenAction: Action = {
     name: "MINT_TWAS_TOKEN",
@@ -51,7 +52,7 @@ export const MintTokenAction: Action = {
             msg.content?.text?.includes("3. Funding Round")
         );
 
-        let amount = "1000000"
+        let amount = "1000000000000000000"
         if (!!fundingMessage && fundingMessage.content?.text) {
             const text = fundingMessage.content.text;
             const amountMatch = text.match(/Amount for Sale: (.*)/i);
@@ -81,7 +82,6 @@ export const MintTokenAction: Action = {
                 wallet
             );
 
-
             // Set a high manual gas limit since estimation fails
             const gasLimit = 5_000_000; // 5 million gas
             const gasPrice = await provider.getGasPrice();
@@ -96,18 +96,23 @@ export const MintTokenAction: Action = {
             elizaLogger.info("Contract deployed to:", deployTx.address);
 
             const createEscrowRequest: ICreateListingRequest = {
+                content: recentMessages.map(msg => msg.content?.text).join(" | "),
                 sellTokenAddress: deployTx.address as `0x${string}`,
                 sellTokenAmount: amount,
                 sellTokenPrice: "1",
                 offerExpiresAt: 0,
             }
 
-            const createEscrowResponse = await createEscrow(createEscrowRequest);
-            const { attestedEscrowId } = createEscrowResponse
+            console.log('createEscrowRequest', createEscrowRequest)
+
+            const draftListing = await createEscrow(createEscrowRequest);
+
+            console.log('draftListing', draftListing)
+            const listing = await createListing(draftListing);
 
             callback(
                 {
-                    text: `Successfully deployed token contract at ${deployTx.address} with 10,000,000 tokens minted to ${wallet.address}. Be the first to invest ${process.env.TWAS_URL}/${attestedEscrowId}`,
+                    text: `Successfully deployed token contract at ${listing.sellTokenAddress} with 10,000,000 tokens minted. Be the first to invest ${process.env.TWAS_URL}/${listing.id}`,
                     contractAddress: deployTx.address,
                     totalSupply: 10000000
                 },

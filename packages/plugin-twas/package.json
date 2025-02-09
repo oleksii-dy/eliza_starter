@@ -7,6 +7,7 @@
   "dependencies": {
     "@elizaos/core": "workspace:*",
     "@geekyrocks/alkahest-ts": "0.1.3-m1",
+    "@supabase/supabase-js": "^2.48.1",
     "axios": "^1.7.9",
     "ethers": "^5.7.2"
   },
