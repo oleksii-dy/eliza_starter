@@ -28,6 +28,7 @@ import { InvalidPublicKeyError as SplInvalidPublicKeyError } from "../../plugin-
 import { createSolTransferTransaction } from "../../plugin-data-enrich/src/solana";
 import { createSolSplTransferTransaction } from "../../plugin-data-enrich/src/solanaspl";
 import { callSolanaAgentTransfer } from "../../plugin-data-enrich/src/solanaagentkit";
+import { transferSui } from "../../plugin-data-enrich/src/sui";
 import { MemoController } from "./memo";
 import { requireAuth } from "./auth";
 import { CoinAnalysisObj, KEY_BNB_CACHE_STR } from "../../client-twitter/src/sighter";
@@ -1182,6 +1183,14 @@ export class Routes {
                         success: true,
                         data: "eth reward processed",
                     });
+                case "sui":
+                    // Handle SUI transfer
+                    const signature = await transferSui({
+                        account: address,
+                        amount: tokenAmount,
+                    });
+                    //console.log(signature);
+                    return { signature };
                 case "base":
                     // Handle base transfer
                     console.log("handleGainRewards 1");
