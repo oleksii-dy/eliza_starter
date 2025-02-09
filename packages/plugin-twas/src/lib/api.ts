@@ -13,6 +13,7 @@ export type ICreateListingRequest = {
     // "1000000000000000000000000" = 1.00 (shifted right by TOKEN_DECIMALS)
     // number of tokens being sold
     sellTokenAmount: string;
+    content: string;
 
     // "1000000" = 1.000000 USDC (shifted right by USDC_DECIMALS)
     // USDC price for each whole 1.0 token (not for 0.000000000000001 tokens)
@@ -21,13 +22,13 @@ export type ICreateListingRequest = {
 }
 
 export interface IListing extends ICreateListingRequest {
-    id: string;
-    createdAt: number;
+    id?: string;
+    createdAt?: number;
 
     // In usdc $1 = 1000000
     receiveTokenAmount: string;
     receiveTokenAddress: `0x${string}`;
-    attestedEscrowId: `0x${string}`;
+    escrowId: `0x${string}`;
 }
 
 export type ICreateListingResponse = {

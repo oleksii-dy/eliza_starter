@@ -74,9 +74,7 @@ export async function createEscrow(request: ICreateListingRequest): Promise<ILis
         // Return the escrow ID
         return {
             ...request,
-            attestedEscrowId: escrow.attested.uid,
-            id: uuidv4(),
-            createdAt: Date.now(),
+            escrowId: escrow.attested.uid,
             receiveTokenAmount: receiveAmount.toString(),
             receiveTokenAddress: USDC_ADDRESS,
         };
