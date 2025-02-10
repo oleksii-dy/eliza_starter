@@ -1,0 +1,33 @@
+{
+    "name": "plugin-bluefin",
+    "version": "1.0.0",
+    "description": "Extended Bluefin plugin for ElizaOS implementing Bluefin Spot API, Trade API, Rewards API, and more.",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "test": "jest --verbose",
+        "lint": "eslint . --ext .ts"
+    },
+    "keywords": [
+        "elizaos",
+        "bluefin",
+        "plugin",
+        "trading",
+        "typescript"
+    ],
+    "author": "Uncle Tom",
+    "license": "MIT",
+    "dependencies": {
+        "@api/bluefin-exchange": "file:.api/apis/bluefin-exchange",
+        "@bluefin-exchange/bluefin-v2-client": "^6.1.29",
+        "@elizaos/core": "^0.25.6-alpha.1"
+    },
+    "devDependencies": {
+        "@types/jest": "^29.0.0",
+        "@types/node": "^18.0.0",
+        "eslint": "^8.0.0",
+        "jest": "^29.0.0",
+        "ts-node": "^10.9.1",
+        "typescript": "^4.9.0"
+    }
+}
