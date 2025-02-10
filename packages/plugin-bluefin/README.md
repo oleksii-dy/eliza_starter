@@ -4,7 +4,7 @@
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/KiwiProtocol/bluefin-plugin-eliza)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-The **Bluefin ElizaOS Plugin** is a production-grade plugin for ElizaOS that integrates Bluefin’s trading infrastructure with the ElizaOS agent framework. This plugin exposes a complete set of endpoints from the Bluefin Spot API, Trade API, Rewards API, and Affiliate endpoints, allowing commercial customers to manually execute trades, manage their Sui wallet, and analyze real-time market data via popular client interfaces like Twitter and Telegram.
+The **Bluefin ElizaOS Plugin** is a plugin for ElizaOS that integrates Bluefin’s trading infrastructure with the ElizaOS agent framework. This plugin exposes a complete set of endpoints from the Bluefin Spot API, Trade API, Rewards API, and Affiliate endpoints, allowing users to manually execute trades, manage their Sui wallet, and analyze real-time market data via popular client interfaces like Twitter and Telegram.
 
 ---
 
