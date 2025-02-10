@@ -65,7 +65,7 @@
     },
     "patchedDependencies": {
       "@orca-so/whirlpools-client@1.0.2": "patches/@orca-so__whirlpools-client@1.0.2.patch",
-      "@solana-developers/helpers": "patches/@solana-developers__helpers.patch"
+      "@solana-developers@2.6.0/helpers": "patches/@solana-developers__helpers.patch"
     }
   },
   "engines": {
