@@ -6,7 +6,7 @@ import type {
     State,
 } from "@elizaos/core";
 
-import { NAVISDKClient } from "navi-sdk";
+import { NAVISDKClient, NAVX, Sui, USDT, WETH, vSui, haSui, CETUS, WBTC, AUSD, wUSDC, nUSDC, ETH, USDY, NS, LorenzoBTC, DEEP, FDUSD, BLUE, BUCK, suiUSDT } from "navi-sdk";
 import NodeCache from "node-cache";
 import * as path from "node:path";
 import { parseAccount } from "../utils";
@@ -31,6 +31,54 @@ export class WalletProvider {
 
     get address(): string {
         return this.client.account.address;
+    }
+
+    async depositToNavi(token: string, amount: number): Promise<any> {
+        let coinType = this.token2coinType(token);
+        return this.client.account.depositToNavi(coinType, amount)
+    }
+
+    async borrow(token: string, amount: number): Promise<any> {
+        let coinType = this.token2coinType(token);
+        return this.client.account.borrow(coinType, amount)
+    }
+
+    async repay(token: string, amount: number): Promise<any> {
+        let coinType = this.token2coinType(token);
+        return this.client.account.repay(coinType, amount)
+    }
+
+    async withdraw(token: string, amount: number): Promise<any> {
+        let coinType = this.token2coinType(token);
+        return this.client.account.withdraw(coinType, amount)
+    }
+
+    token2coinType(token: string) {
+        let coinType;
+        switch (token) {
+            case 'NAVX': coinType = NAVX; break;
+            case 'Sui': coinType = Sui; break;
+            case 'USDT': coinType = USDT; break;
+            case 'ETH': coinType = ETH; break;
+            case 'WETH': coinType = WETH; break;
+            case 'vSUI': coinType = vSui; break;
+            case 'haSUI': coinType = haSui; break;
+            case 'CETUS': coinType = CETUS; break;
+            case 'WBTC': coinType = WBTC; break;
+            case 'AUSD': coinType = AUSD; break;
+            case 'wUSDC': coinType = wUSDC; break;
+            case 'nUSDC': coinType = nUSDC; break;
+            case 'USDY': coinType = USDY; break;
+            case 'NS': coinType = NS; break;
+            case 'LorenzoBTC': coinType = LorenzoBTC; break;
+            case 'DEEP': coinType = DEEP; break;
+            case 'FDUSD': coinType = FDUSD; break;
+            case 'BLUE': coinType = BLUE; break;
+            case 'BUCK': coinType = BUCK; break;
+            case 'suiUSDT': coinType = suiUSDT; break;
+            default: throw new Error(`Unsupported token: ${token}`);
+        }
+        return coinType;
     }
 
     private async readFromCache<T>(key: string): Promise<T | null> {

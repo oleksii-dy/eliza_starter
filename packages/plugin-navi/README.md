@@ -7,6 +7,10 @@ Core NAVI Liquidity Protocol plugin for Eliza OS that provides essential service
 This plugin provides functionality to:
 
 - Check Wallet Balance
+- Supply Token to NAVI
+- Borrow Token from NAVI
+- Repay Debt to NAVI
+- Withdraw Token from NAVI
 
 ## Installation
 

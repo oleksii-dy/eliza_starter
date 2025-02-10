@@ -49,7 +49,7 @@ export default {
         console.log("Validating sui Balance from user:", message.userId);
         return true;
     },
-    description: "Check Wallet Balance",
+    description: "Balance Token of NAVI",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
