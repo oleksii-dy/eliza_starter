@@ -37,8 +37,7 @@ import {
     IRAGKnowledgeManager,
     IVerifiableInferenceAdapter,
     KnowledgeItem,
-    //RAGKnowledgeItem,
-    //Media,
+    Media,
     ModelClass,
     ModelProviderName,
     Plugin,
@@ -54,6 +53,9 @@ import {
 } from "./types.ts";
 import { stringToUuid } from "./uuid.ts";
 
+const POST_EXAMPLES_COUNT = 20;
+const MESSAGE_EXAMPLES_COUNT = 5;
+const TOPICS_COUNT = 5;
 /**
  * Represents the runtime environment for an agent, handling message processing,
  * action registration, and interaction with external services like OpenAI and Supabase.
@@ -1066,61 +1068,20 @@ export class AgentRuntime implements IAgentRuntime {
             }
         }
 
-        const formattedAttachments = allAttachments
-            .map(
-                (attachment) =>
-                    `ID: ${attachment.id}
-Name: ${attachment.title}
-URL: ${attachment.url}
-Type: ${attachment.source}
-Description: ${attachment.description}
-Text: ${attachment.text}
-  `
-            )
-            .join("\n");
+        const formattedAttachments = formatAttachments(allAttachments);
 
         // randomly get 3 bits of lore and join them into a paragraph, divided by \n
         let lore = "";
         if (this.character.lore && this.character.lore.length > 0) {
-            const shuffledLore = [...this.character.lore].sort(
-                () => Math.random() - 0.5
-            );
-            const selectedLore = shuffledLore.slice(0, 3);
-            lore = selectedLore.join("\n");
+            const shuffledLore = shuffleAndSlice<string>(this.character.lore);
+            lore = joinLines(shuffledLore);
         }
 
-        const formattedCharacterPostExamples = this.character.postExamples
-            .sort(() => 0.5 - Math.random())
-            .map((post) => {
-                const messageString = `${post}`;
-                return messageString;
-            })
-            .slice(0, 50)
-            .join("\n");
-
-        const formattedCharacterMessageExamples = this.character.messageExamples
-            .sort(() => 0.5 - Math.random())
-            .slice(0, 5)
-            .map((example) => {
-                const exampleNames = Array.from({ length: 5 }, () =>
-                    uniqueNamesGenerator({ dictionaries: [names] })
-                );
-
-                return example
-                    .map((message) => {
-                        let messageString = `${message.user}: ${message.content.text}`;
-                        exampleNames.forEach((name, index) => {
-                            const placeholder = `{{user${index + 1}}}`;
-                            messageString = messageString.replaceAll(
-                                placeholder,
-                                name
-                            );
-                        });
-                        return messageString;
-                    })
-                    .join("\n");
-            })
-            .join("\n\n");
+        const formattedCharacterPostExamples = formatCharacterPostExamples(
+            this.character.postExamples
+        );
+        const formattedCharacterMessageExamples =
+            formatCharacterMessageExamples(this.character.messageExamples);
 
         const getRecentInteractions = async (
             userA: UUID,
@@ -1193,7 +1154,7 @@ Text: ${attachment.text}
         // if bio is a string, use it. if its an array, shuffle array and return all items
         let bio = this.character.bio || "";
         if (Array.isArray(bio)) {
-            bio = bio.sort(() => 0.5 - Math.random()).join(" ");
+            bio = shuffleAndSlice<string>(bio);
         }
 
         let knowledgeData = [];
@@ -1225,13 +1186,8 @@ Text: ${attachment.text}
             system: this.character.system,
             lore,
             adjective:
-                this.character.adjectives &&
-                this.character.adjectives.length > 0
-                    ? this.character.adjectives[
-                          Math.floor(
-                              Math.random() * this.character.adjectives.length
-                          )
-                      ]
+                this.character.adjectives?.length > 0
+                    ? getRandomElementFromArray(this.character.adjectives)
                     : "",
             knowledge: formattedKnowledge,
             knowledgeData: knowledgeData,
@@ -1244,43 +1200,24 @@ Text: ${attachment.text}
             recentInteractionsData: recentInteractions,
             // randomly pick one topic
             topic:
-                this.character.topics && this.character.topics.length > 0
-                    ? this.character.topics[
-                          Math.floor(
-                              Math.random() * this.character.topics.length
-                          )
-                      ]
+                this.character.topics?.length > 0
+                    ? getRandomElementFromArray(this.character.topics)
                     : null,
             topics:
-                this.character.topics && this.character.topics.length > 0
+                this.character.topics?.length > 0
                     ? `${this.character.name} is interested in ` +
-                      this.character.topics
-                          .sort(() => 0.5 - Math.random())
-                          .slice(0, 5)
-                          .map((topic, index, array) => {
-                              if (index === array.length - 2) {
-                                  return topic + " and ";
-                              }
-                              // if last topic, don't add a comma
-                              if (index === array.length - 1) {
-                                  return topic;
-                              }
-                              return topic + ", ";
-                          })
-                          .join("")
+                      getTopics(this.character.topics)
                     : "",
             characterPostExamples:
-                formattedCharacterPostExamples &&
-                formattedCharacterPostExamples.replaceAll("\n", "").length > 0
+                formattedCharacterPostExamples?.replaceAll("\n", "").length > 0
                     ? addHeader(
                           `# Example Posts for ${this.character.name}`,
                           formattedCharacterPostExamples
                       )
                     : "",
             characterMessageExamples:
-                formattedCharacterMessageExamples &&
-                formattedCharacterMessageExamples.replaceAll("\n", "").length >
-                    0
+                formattedCharacterMessageExamples?.replaceAll("\n", "").length >
+                0
                     ? addHeader(
                           `# Example Conversations for ${this.character.name}`,
                           formattedCharacterMessageExamples
@@ -1299,21 +1236,6 @@ Text: ${attachment.text}
                       )
                     : "",
 
-            // postDirections:
-            //     this.character?.style?.all?.length > 0 ||
-            //     this.character?.style?.post.length > 0
-            //         ? addHeader(
-            //               "# Post Directions for " + this.character.name,
-            //               (() => {
-            //                   const all = this.character?.style?.all || [];
-            //                   const post = this.character?.style?.post || [];
-            //                   return [...all, ...post].join("\n");
-            //               })()
-            //           )
-            //         : "",
-
-            //old logic left in for reference
-            //food for thought. how could we dynamically decide what parts of the character to add to the prompt other than random? rag? prompt the llm to decide?
             postDirections:
                 this.character?.style?.all?.length > 0 ||
                 this.character?.style?.post.length > 0
@@ -1322,12 +1244,10 @@ Text: ${attachment.text}
                           (() => {
                               const all = this.character?.style?.all || [];
                               const post = this.character?.style?.post || [];
-                              const shuffled = [...all, ...post].sort(
-                                  () => 0.5 - Math.random()
+                              return formatPostDirections(
+                                  [...all, ...post],
+                                  conversationLength / 2
                               );
-                              return shuffled
-                                  .slice(0, conversationLength / 2)
-                                  .join("\n");
                           })()
                       )
                     : "",
@@ -1513,3 +1433,86 @@ const formatKnowledge = (knowledge: KnowledgeItem[]) => {
         .map((knowledge) => `- ${knowledge.content.text}`)
         .join("\n");
 };
+
+const formatCharacterPostExamples = (postExamples: string[]) => {
+    const examples = shuffleAndSlice<string>(postExamples, POST_EXAMPLES_COUNT);
+    return joinLines(examples);
+};
+
+type MessagesExample = {
+    user: string;
+    content: {
+        text?: string;
+        action?: string;
+    };
+}[];
+
+const formatCharacterMessageExamples = (messageExamples: MessagesExample[]) => {
+    const examples = shuffleAndSlice<MessagesExample>(
+        messageExamples,
+        MESSAGE_EXAMPLES_COUNT
+    );
+    const withNames = examples.map((example) => buildExample(example));
+    return joinLines(withNames, "\n\n");
+};
+
+const formatAttachments = (attachments: Media[]) => {
+    const formattedAttachments = attachments.map(
+        (attachment) =>
+            `ID: ${attachment.id}
+Name: ${attachment.title}
+URL: ${attachment.url}
+Type: ${attachment.source}
+Description: ${attachment.description}
+Text: ${attachment.text}
+`
+    );
+    return joinLines(formattedAttachments);
+};
+
+const formatPostDirections = (postDirections: string[], count: number) => {
+    const shuffled = shuffleAndSlice(postDirections, count);
+    return joinLines(shuffled);
+};
+
+function getTopics(topics: string[]): string {
+    const shuffled = shuffleAndSlice(topics, TOPICS_COUNT);
+    return joinLines(shuffled, ", ");
+}
+
+function buildExample(example: MessagesExample): string {
+    const exampleNames = genNames(MESSAGE_EXAMPLES_COUNT);
+
+    return example
+        .map((message) => {
+            let messageString = `${message.user}: ${message.content.text}`;
+            exampleNames.forEach((name, index) => {
+                const placeholder = `{{user${index + 1}}}`;
+                messageString = messageString.replaceAll(placeholder, name);
+            });
+            return messageString;
+        })
+        .join("\n");
+}
+
+const genNames = (count: number) => {
+    return Array.from({ length: count }, () =>
+        uniqueNamesGenerator({ dictionaries: [names] })
+    );
+};
+
+const shuffleAndSlice = <T>(array: T[], count?: number) => {
+    const shuffled = array.sort(() => 0.5 - Math.random());
+    if (count) {
+        return shuffled.slice(0, count);
+    }
+    return shuffled;
+};
+
+const joinLines = (array: string[], separator: string = "\n") => {
+    return array.join(separator);
+};
+
+function getRandomElementFromArray<T>(array: T[]): T {
+    return array[Math.floor(Math.random() * array.length)];
+}
