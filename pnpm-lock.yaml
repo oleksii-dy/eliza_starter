@@ -1365,9 +1365,6 @@ importers:
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
-      '@xmtp/agent-starter':
-        specifier: ^0.0.6
-        version: 0.0.6(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)
       '@xmtp/node-sdk':
         specifier: 0.0.40
         version: 0.0.40
@@ -14798,28 +14795,11 @@ packages:
     resolution: {integrity: sha512-FNoYzHawTMk/6KMQoEG5O4PuioX19UbwdQKF44yw0nLfOypfQdjtfZzo/UIJWAJ23sNIFbD1Ug9lbaDGMwbqQA==}
     engines: {node: '>=8'}
 
-  '@xmtp/agent-starter@0.0.6':
-    resolution: {integrity: sha512-QHC1wWnTGX8YDMjrnB/EJT9RZk3GquVYiHCW8Jq9AKGpwxod0Gj6iiCxyKDS9MjCllZ19jlJnc6s0SSqTYCcIg==}
-    engines: {node: '>=22'}
-    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
-
   '@xmtp/content-type-group-updated@2.0.0':
     resolution: {integrity: sha512-gxYM4gM2IuKXpOwDcu6+RS7tkUMX6VStgdzFq8ruo3GVLZ03mwb9zjMNVhFwyRcdx6mNSDOTV01y+5P8aslkRg==}
 
   '@xmtp/content-type-primitives@2.0.0':
     resolution: {integrity: sha512-ZutFl+dv9jZgGdRDuZZuJj9XNhq1RfSiCryX25HGs/3rVS3FYfVc3y26iV4jdSN2UALCkznXFuD/GXv5eZSN/w==}
-
-  '@xmtp/content-type-reaction@2.0.0':
-    resolution: {integrity: sha512-Qx5LVHiQeHSN/sl7A705vOjo2qwmAd2qR+2wMZd81bDMmXzeMLLeHzxUlWDxVQBP6ZSAO5C7tLZWaonnr0tvPA==}
-
-  '@xmtp/content-type-read-receipt@2.0.0':
-    resolution: {integrity: sha512-16KG2U5ys2L3quqIZ7fyP1qdqoXvzA0dsy5nl8UWVaGYfysGyOUqtRSHlfTmeLKr/qEXkUEgNi2HVlvUsCq1lA==}
-
-  '@xmtp/content-type-remote-attachment@2.0.0':
-    resolution: {integrity: sha512-DRMQHLp4+9cJIxA25Ey1uNzNVdBK2v8gpB+OZUGnSPrpQo9gdBpfXIi6z7eO9Z04P6KX/zSdjLRR4zUoN42qTg==}
-
-  '@xmtp/content-type-reply@2.0.0':
-    resolution: {integrity: sha512-AY3REqxxFi/jRLNMkqVXmd+BWN6ztBF+ToUcyXGl8FFFiG0W5ZsvooHCVEysUw+33QAkhpKWkMofEyyD9cYgsA==}
 
   '@xmtp/content-type-text@2.0.0':
     resolution: {integrity: sha512-WcFMhjubA6E8j42L6XIsLipDo5AP70TdS2taEH2Ry6V1NeZf8+cjHVrwh60fZeGnrcLWy/tDV4QyXUsD3j045w==}
@@ -48590,22 +48570,6 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@xmtp/agent-starter@0.0.6(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)':
-    dependencies:
-      '@xmtp/content-type-primitives': 2.0.0
-      '@xmtp/content-type-reaction': 2.0.0
-      '@xmtp/content-type-read-receipt': 2.0.0
-      '@xmtp/content-type-remote-attachment': 2.0.0
-      '@xmtp/content-type-reply': 2.0.0
-      '@xmtp/content-type-text': 2.0.0
-      '@xmtp/node-sdk': 0.0.40
-      viem: 2.21.58(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)
-    transitivePeerDependencies:
-      - bufferutil
-      - typescript
-      - utf-8-validate
-      - zod
-
   '@xmtp/content-type-group-updated@2.0.0':
     dependencies:
       '@xmtp/content-type-primitives': 2.0.0
@@ -48613,25 +48577,6 @@ snapshots:
 
   '@xmtp/content-type-primitives@2.0.0':
     dependencies:
-      '@xmtp/proto': 3.73.0
-
-  '@xmtp/content-type-reaction@2.0.0':
-    dependencies:
-      '@xmtp/content-type-primitives': 2.0.0
-
-  '@xmtp/content-type-read-receipt@2.0.0':
-    dependencies:
-      '@xmtp/content-type-primitives': 2.0.0
-
-  '@xmtp/content-type-remote-attachment@2.0.0':
-    dependencies:
-      '@noble/secp256k1': 1.7.1
-      '@xmtp/content-type-primitives': 2.0.0
-      '@xmtp/proto': 3.73.0
-
-  '@xmtp/content-type-reply@2.0.0':
-    dependencies:
-      '@xmtp/content-type-primitives': 2.0.0
       '@xmtp/proto': 3.73.0
 
   '@xmtp/content-type-text@2.0.0':

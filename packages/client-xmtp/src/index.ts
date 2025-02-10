@@ -19,7 +19,7 @@ import {
     IAgentRuntime,
 } from "@elizaos/core";
 
-let xmtp: XmtpClient = null;
+let client: XmtpClient = null;
 let elizaRuntime: IAgentRuntime = null;
 
 export const messageHandlerTemplate =
@@ -54,7 +54,7 @@ Note that {{agentName}} is capable of reading/seeing/hearing various forms of me
 
 export const XmtpClientInterface: Client = {
     start: async (runtime: IAgentRuntime) => {
-        if (!xmtp) {
+        if (!client) {
             elizaRuntime = runtime;
 
             const signer = createSigner(
@@ -66,7 +66,7 @@ export const XmtpClientInterface: Client = {
             const env: XmtpEnv = "production";
 
             elizaLogger.success(`Creating client on the '${env}' network...`);
-            const client = await XmtpClient.create(signer, encryptionKey, {
+            client = await XmtpClient.create(signer, encryptionKey, {
                 env,
             });
 

@@ -6,7 +6,6 @@
     "types": "dist/index.d.ts",
     "dependencies": {
         "@elizaos/core": "workspace:*",
-        "@xmtp/agent-starter": "^0.0.6",
         "@xmtp/node-sdk": "0.0.40"
     },
     "devDependencies": {
