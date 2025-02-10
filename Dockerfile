@@ -29,6 +29,7 @@ RUN npm install -g pnpm@9.4.0 && \
     rm -rf /var/lib/apt/lists/*
 
 # Set up PNPM environment
+ENV SHELL=/bin/sh
 ENV PNPM_HOME="/root/.local/share/pnpm"
 ENV PATH="${PNPM_HOME}:${PATH}"
 RUN pnpm setup
