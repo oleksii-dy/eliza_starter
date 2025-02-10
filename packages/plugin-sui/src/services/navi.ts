@@ -1,4 +1,5 @@
-import { NAVISDKClient, NetworkType, CoinInfo, PoolConfig, OptionType } from "@navi-labs/sdk";
+import { NAVISDKClient } from "navi-sdk";
+import type { NetworkType, CoinInfo } from "navi-sdk/dist/types";
 import { elizaLogger, Service, ServiceType } from "@elizaos/core";
 
 export class NaviService implements Service {
@@ -23,6 +24,10 @@ export class NaviService implements Service {
 
     public getAddress(): string {
         return this.client.accounts[0].getPublicKey();
+    }
+
+    public getAccount() {
+        return this.client.accounts[0];
     }
 
     async getPoolInfo(coinType?: CoinInfo) {
@@ -91,9 +96,9 @@ export class NaviService implements Service {
         }
     }
 
-    async getAvailableRewards(address?: string, option: OptionType = OptionType.OptionSupply) {
+    async getAvailableRewards(address?: string) {
         try {
-            return await this.client.getAddressAvailableRewards(address, option);
+            return await this.client.getAddressAvailableRewards(address);
         } catch (error) {
             elizaLogger.error("Error getting available rewards:", error);
             throw error;
@@ -105,6 +110,64 @@ export class NaviService implements Service {
             return await this.client.getClaimedRewardsHistory(userAddress, page, size);
         } catch (error) {
             elizaLogger.error("Error getting claimed rewards history:", error);
+            throw error;
+        }
+    }
+
+    async executeOperation(operation: string, tokenSymbol: string, amount: string | number) {
+        try {
+            const tokenInfo = {
+                symbol: tokenSymbol.toUpperCase(),
+                address: "", // This will be filled by the SDK
+                decimal: 9,
+            };
+
+            const account = this.client.accounts[0];
+            const amountNum = Number(amount);
+
+            switch (operation) {
+                case "supply":
+                    return await account.depositToNavi(tokenInfo, amountNum);
+                case "withdraw":
+                    return await account.withdraw(tokenInfo, amountNum);
+                case "borrow":
+                    return await account.borrow(tokenInfo, amountNum);
+                case "repay":
+                    return await account.repay(tokenInfo, amountNum);
+                default:
+                    throw new Error(`Unsupported operation: ${operation}`);
+            }
+        } catch (error) {
+            elizaLogger.error(`Error executing ${operation}:`, error);
+            throw error;
+        }
+    }
+
+    async swap(fromToken: string, toToken: string, amount: string | number) {
+        try {
+            const account = this.client.accounts[0];
+            const amountNum = Number(amount);
+
+            // Perform a dry run first to get the expected output
+            const dryRunResult = await account.dryRunSwap(
+                fromToken,
+                toToken,
+                amountNum,
+                0 // We'll calculate minAmountOut from the dry run
+            );
+
+            // Set minAmountOut to 98% of the expected output (2% slippage)
+            const minAmountOut = Math.floor(Number(dryRunResult.amount_out) * 0.98);
+
+            // Execute the actual swap
+            return await account.swap(
+                fromToken,
+                toToken,
+                amountNum,
+                minAmountOut
+            );
+        } catch (error) {
+            elizaLogger.error("Error swapping tokens:", error);
             throw error;
         }
     }

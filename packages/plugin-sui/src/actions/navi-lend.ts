@@ -14,10 +14,9 @@ import {
 } from "@elizaos/core";
 import { NaviService } from "../services/navi";
 import { z } from "zod";
-import { OptionType } from "@navi-labs/sdk";
 
 export interface LendPayload extends Content {
-    operation: "supply" | "withdraw";
+    operation: "supply" | "withdraw" | "borrow" | "repay";
     token_symbol: string;
     amount: string | number;
 }
@@ -36,20 +35,20 @@ Example response:
 {{recentMessages}}
 
 Given the recent messages, extract the following information about the lending operation:
-- Operation type (supply or withdraw)
+- Operation type (supply, withdraw, borrow, or repay)
 - Token symbol
-- Amount to supply/withdraw
+- Amount to supply/withdraw/borrow/repay
 
 Respond with a JSON markdown block containing only the extracted values.`;
 
 export default {
     name: "NAVI_LEND",
-    similes: ["NAVI_SUPPLY", "NAVI_WITHDRAW"],
+    similes: ["NAVI_SUPPLY", "NAVI_WITHDRAW", "NAVI_BORROW", "NAVI_REPAY"],
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         console.log("Validating navi lending operation from user:", message.userId);
         return true;
     },
-    description: "Supply or withdraw tokens from Navi protocol",
+    description: "Supply, withdraw, borrow, or repay tokens from Navi protocol",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -68,7 +67,7 @@ export default {
         }
 
         const lendSchema = z.object({
-            operation: z.enum(["supply", "withdraw"]),
+            operation: z.enum(["supply", "withdraw", "borrow", "repay"]),
             token_symbol: z.string(),
             amount: z.union([z.string(), z.number()]),
         });
@@ -105,28 +104,25 @@ export default {
                 service.getAddress(),
                 tokenInfo,
                 lendContent.operation === "supply" ? Number(lendContent.amount) : 0,
-                0,
-                lendContent.operation === "supply"
+                lendContent.operation === "borrow" ? Number(lendContent.amount) : 0,
+                lendContent.operation === "supply" || lendContent.operation === "borrow"
             );
             elizaLogger.info("Dynamic health factor:", dynamicHealthFactor);
 
-            // Get available rewards
-            const rewards = await service.getAvailableRewards(
-                undefined,
-                lendContent.operation === "supply"
-                    ? OptionType.OptionSupply
-                    : OptionType.OptionWithdraw
+            // Execute the operation
+            const result = await service.executeOperation(
+                lendContent.operation,
+                lendContent.token_symbol,
+                lendContent.amount
             );
-            elizaLogger.info("Available rewards:", rewards);
 
             callback({
-                text: `Operation details:
-                - Operation: ${lendContent.operation}
+                text: `Successfully executed ${lendContent.operation} operation:
                 - Token: ${lendContent.token_symbol}
                 - Amount: ${lendContent.amount}
                 - Current Health Factor: ${healthFactor}
                 - Projected Health Factor: ${dynamicHealthFactor}
-                - Available Rewards: ${JSON.stringify(rewards)}`,
+                - Transaction: ${JSON.stringify(result)}`,
                 content: lendContent,
             });
 
@@ -181,6 +177,48 @@ export default {
                 user: "{{user2}}",
                 content: {
                     text: "Successfully withdrew 0.5 SUI from Navi protocol",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Borrow 100 USDC from Navi",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "I'll help you borrow 100 USDC from Navi protocol...",
+                    action: "NAVI_LEND",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Successfully borrowed 100 USDC from Navi protocol",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Repay 50 USDC to Navi",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "I'll help you repay 50 USDC to Navi protocol...",
+                    action: "NAVI_LEND",
+                },
+            },
+            {
+                user: "{{user2}}",
+                content: {
+                    text: "Successfully repaid 50 USDC to Navi protocol",
                 },
             },
         ],
