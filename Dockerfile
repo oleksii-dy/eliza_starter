@@ -29,10 +29,9 @@ RUN npm install -g pnpm@9.4.0 && \
     rm -rf /var/lib/apt/lists/*
 
 # Set up PNPM environment
-ENV SHELL=/bin/sh
-ENV PNPM_HOME="/root/.local/share/pnpm"
+ENV PNPM_HOME="/usr/local/share/pnpm"
 ENV PATH="${PNPM_HOME}:${PATH}"
-RUN pnpm setup
+RUN mkdir -p "$PNPM_HOME"
 
 # Set Python 3 as the default python
 RUN ln -sf /usr/bin/python3 /usr/bin/python
