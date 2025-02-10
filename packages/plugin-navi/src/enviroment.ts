@@ -3,7 +3,7 @@ import { z } from "zod";
 
 export const naviEnvSchema = z.object({
     NAVI_PRIVATE_KEY: z.string().min(1, "NAVI private key is required"),
-    NAVI_NETWORK: z.enum(["mainnet", "devnet", "localnet"]) || z.string().min(1, "NAVI NETWORK is required") // rpc url,
+    NAVI_NETWORK: z.enum(["mainnet", "devnet", "localnet"]).or(z.string().min(1, "NAVI NETWORK is required")) // rpc url,
 });
 
 export type NaviConfig = z.infer<typeof naviEnvSchema>;
