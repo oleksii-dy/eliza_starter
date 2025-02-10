@@ -19,7 +19,6 @@
         "dist"
     ],
     "dependencies": {
-        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "workspace:*",
         "glob": "11.0.0",
         "instagram-private-api": "^1.45.3",

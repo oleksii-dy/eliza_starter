@@ -19,7 +19,6 @@
 		"dist"
 	],
 	"dependencies": {
-		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"@types/better-sqlite3": "7.6.12",
 		"better-sqlite3": "11.6.0",

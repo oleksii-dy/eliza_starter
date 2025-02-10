@@ -19,7 +19,6 @@
         "dist"
     ],
     "dependencies": {
-        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-tee": "^0.1.8",
         "@gelatonetwork/relay-sdk-viem": "^1.2.0",

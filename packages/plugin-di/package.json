@@ -19,7 +19,6 @@
         "dist"
     ],
     "dependencies": {
-        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "workspace:*",
         "inversify": "^6.2.1",
         "reflect-metadata": "^0.2.2",

@@ -43,7 +43,6 @@
         "typescript": "^5.7.2"
     },
     "dependencies": {
-        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/adapter-sqlite": "0.1.7-alpha.2",
         "@elizaos/core": "workspace:*",
         "injective-sdk-client-ts": "file:../../packages/plugin-injective/injective-sdk-client-ts"

@@ -20,7 +20,6 @@
         "dist"
     ],
     "dependencies": {
-        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "workspace:*",
         "axios": "^1.0.0"
     },

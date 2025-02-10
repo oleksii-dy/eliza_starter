@@ -27,7 +27,6 @@
     "license": "ISC",
     "description": "",
     "dependencies": {
-        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-tee": "workspace:*",
         "@elizaos/plugin-trustdb": "workspace:*",

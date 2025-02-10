@@ -23,7 +23,6 @@
 		"@dfinity/candid": "2.1.3",
 		"@dfinity/identity": "2.1.3",
 		"@dfinity/principal": "2.1.3",
-		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*"
 	},
 	"scripts": {

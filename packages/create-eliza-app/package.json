@@ -19,7 +19,6 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"@elizaos/adapter-postgres": "^0.1.9",
 		"citty": "0.1.6",
 		"giget": "1.2.3"
 	},

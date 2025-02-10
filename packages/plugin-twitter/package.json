@@ -19,7 +19,6 @@
 		"dist"
 	],
 	"dependencies": {
-		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"agent-twitter-client": "0.0.18",
 		"tsup": "8.3.5"

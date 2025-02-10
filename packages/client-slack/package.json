@@ -31,7 +31,6 @@
 		"example:transcribe": "ts-node src/examples/standalone-transcribe.ts"
 	},
 	"dependencies": {
-		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"@ffmpeg-installer/ffmpeg": "^1.1.0",
 		"@slack/events-api": "^3.0.1",

@@ -19,7 +19,6 @@
 		"dist"
 	],
 	"dependencies": {
-		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"@supabase/supabase-js": "2.46.2"
 	},

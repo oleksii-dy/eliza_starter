@@ -19,7 +19,6 @@
 		"dist"
 	],
 	"dependencies": {
-		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"@lens-network/sdk": "^0.0.0-canary-20241203140504",
 		"dotenv": "^16.0.3",

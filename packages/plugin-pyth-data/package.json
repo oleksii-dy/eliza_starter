@@ -14,7 +14,6 @@
         "prebuild": "pnpm run pull:schema && pnpm run build:schemas"
     },
     "dependencies": {
-        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "^0.1.7",
         "@pythnetwork/client": "^2.22.0",
         "@pythnetwork/hermes-client": "^1.3.0",

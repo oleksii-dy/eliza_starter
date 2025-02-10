@@ -19,7 +19,6 @@
 		"dist"
 	],
 	"dependencies": {
-		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"@primuslabs/zktls-core-sdk": "^0.1.0",
 		"agent-twitter-client": "0.0.18",

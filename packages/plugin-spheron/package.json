@@ -9,7 +9,6 @@
 		"test": "jest"
 	},
 	"dependencies": {
-		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"@spheron/protocol-sdk": "^1.0.0",
 		"zod": "^3.22.4"

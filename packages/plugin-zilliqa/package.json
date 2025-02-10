@@ -5,7 +5,6 @@
     "type": "module",
     "types": "dist/index.d.ts",
     "dependencies": {
-        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "workspace:*",
         "@goat-sdk/adapter-vercel-ai": "0.2.7",
         "@goat-sdk/core": "0.4.6",

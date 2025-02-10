@@ -19,7 +19,6 @@
 		"dist"
 	],
 	"dependencies": {
-		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"@pinata/sdk": "^2.1.0",
 		"@story-protocol/core-sdk": "1.2.0-rc.3",

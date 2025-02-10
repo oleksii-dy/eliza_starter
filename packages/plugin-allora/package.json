@@ -6,7 +6,6 @@
 	"types": "dist/index.d.ts",
 	"dependencies": {
 		"@alloralabs/allora-sdk": "^0.1.0",
-		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"node-cache": "5.1.2",
 		"vitest": "2.1.8"

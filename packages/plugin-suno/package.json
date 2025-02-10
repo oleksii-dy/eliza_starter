@@ -9,7 +9,6 @@
         "test": "jest"
     },
     "dependencies": {
-        "@elizaos/adapter-postgres": "^0.1.9",
         "@elizaos/core": "^0.1.0"
     },
     "devDependencies": {

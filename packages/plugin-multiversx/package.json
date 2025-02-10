@@ -19,7 +19,6 @@
 		"dist"
 	],
 	"dependencies": {
-		"@elizaos/adapter-postgres": "^0.1.9",
 		"@elizaos/core": "workspace:*",
 		"@multiversx/sdk-core": "13.15.0",
 		"@multiversx/sdk-native-auth-client": "1.0.9",
