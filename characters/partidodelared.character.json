@@ -4,11 +4,6 @@
     "modelProvider": "anthropic",
     "settings": {
         "secrets": {
-            "TWITTER_USERNAME": "partidodelared",
-            "TWITTER_PASSWORD": "vamosaabrirlaparticipacionatodos",
-            "TWITTER_EMAIL": "hola@partidodelared.org",
-            "TELEGRAM_BOT_TOKEN": "7763052402:AAEy8s0Ym0uKhxzo1Y_KRfheyE0I5BGZ76o",
-            "NEWS_API_KEY": "31e8b618f59c4f8fb60bc729db0614f5"
         },
         "voice": {
             "model": "es_AR-male-medium"
