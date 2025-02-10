@@ -5,9 +5,7 @@
             "dependsOn": ["build"]
         },
         "@elizaos/agent#check-types": {
-            "dependsOn": [
-                "@elizaos/plugin-direct#build"
-            ]
+            "dependsOn": ["@elizaos/plugin-direct#build", "@elizaos/core#build"]
         },
         "build": {
             "outputs": ["dist/**"],
@@ -15,9 +13,7 @@
         },
         "@elizaos/client-direct#build": {
             "outputs": ["dist/**"],
-            "dependsOn": [
-                "@elizaos/plugin-image-generation#build"
-            ]
+            "dependsOn": ["@elizaos/plugin-image-generation#build"]
         },
         "@elizaos/plugin-evm#build": {
             "outputs": ["dist/**"],
