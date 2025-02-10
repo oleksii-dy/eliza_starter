@@ -316,7 +316,7 @@ export class DirectClient {
 
                 let message = null as Content | null;
 
-                await runtime.processActions(
+                const result = await runtime.processActions(
                     memory,
                     [responseMessage],
                     state,
@@ -326,26 +326,43 @@ export class DirectClient {
                     }
                 );
 
-                await runtime.evaluate(memory, state);
+                console.log("processActions(): >>>>>>>> result=", result);
 
-                // Check if we should suppress the initial message
-                const action = runtime.actions.find(
-                    (a) => a.name === response.action
-                );
-                const shouldSuppressInitialMessage =
-                    action?.suppressInitialMessage;
+                if (!result) {
+                    console.log(`processActions(): REJECT: ${message?.content}`);
+                    
+                    // let rejectMessage: Content = {
+                    //     text: "Response forbidden by firewall",
+                    //     action: "FIREWALL",                        
+                    // };
+                    let rejectMessage = message;
 
-                if (!shouldSuppressInitialMessage) {
-                    if (message) {
-                        res.json([response, message]);
-                    } else {
-                        res.json([response]);
-                    }
+                    //res.json([rejectMessage, message]);
+                    res.json([rejectMessage]);
+                    
                 } else {
-                    if (message) {
-                        res.json([message]);
+
+                    await runtime.evaluate(memory, state);
+
+                    // Check if we should suppress the initial message
+                    const action = runtime.actions.find(
+                        (a) => a.name === response.action
+                    );
+                    const shouldSuppressInitialMessage =
+                        action?.suppressInitialMessage;
+
+                    if (!shouldSuppressInitialMessage) {
+                        if (message) {
+                            res.json([response, message]);
+                        } else {
+                            res.json([response]);
+                        }
                     } else {
-                        res.json([]);
+                        if (message) {
+                            res.json([message]);
+                        } else {
+                            res.json([]);
+                        }
                     }
                 }
             }

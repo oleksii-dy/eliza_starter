@@ -413,7 +413,7 @@ export type Handler = (
     state?: State,
     options?: { [key: string]: unknown },
     callback?: HandlerCallback,
-) => Promise<unknown>;
+) => Promise<boolean>;
 
 /**
  * Callback function type for handlers
@@ -1320,7 +1320,7 @@ export interface IAgentRuntime {
         responses: Memory[],
         state?: State,
         callback?: HandlerCallback,
-    ): Promise<void>;
+    ): Promise<boolean>;
 
     evaluate(
         message: Memory,

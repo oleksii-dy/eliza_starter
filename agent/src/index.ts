@@ -28,12 +28,14 @@ import { lightningPlugin } from "@elizaos/plugin-lightning";
 import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
 import { dcapPlugin } from "@elizaos/plugin-dcap";
 import {
+    Action,
     AgentRuntime,
     CacheManager,
     CacheStore,
     type Character,
     type Client,
     Clients,
+    Content,
     DbCacheAdapter,
     defaultCharacter,
     elizaLogger,
@@ -932,83 +934,83 @@ export async function createAgent(
 
     nodePlugin ??= createNodePlugin();
 
-    const teeMode = getSecret(character, "TEE_MODE") || "OFF";
-    const walletSecretSalt = getSecret(character, "WALLET_SECRET_SALT");
+    // const teeMode = getSecret(character, "TEE_MODE") || "OFF";
+    // const walletSecretSalt = getSecret(character, "WALLET_SECRET_SALT");
 
-    // Validate TEE configuration
-    if (teeMode !== TEEMode.OFF && !walletSecretSalt) {
-        elizaLogger.error(
-            "A WALLET_SECRET_SALT required when TEE_MODE is enabled"
-        );
-        throw new Error("Invalid TEE configuration");
-    }
+    // // Validate TEE configuration
+    // if (teeMode !== TEEMode.OFF && !walletSecretSalt) {
+    //     elizaLogger.error(
+    //         "A WALLET_SECRET_SALT required when TEE_MODE is enabled"
+    //     );
+    //     throw new Error("Invalid TEE configuration");
+    // }
 
-    let goatPlugin: any | undefined;
+    // let goatPlugin: any | undefined;
 
-    if (getSecret(character, "EVM_PRIVATE_KEY")) {
-        goatPlugin = await createGoatPlugin((secret) =>
-            getSecret(character, secret)
-        );
-    }
+    // if (getSecret(character, "EVM_PRIVATE_KEY")) {
+    //     goatPlugin = await createGoatPlugin((secret) =>
+    //         getSecret(character, secret)
+    //     );
+    // }
 
-    let zilliqaPlugin: any | undefined;
-    if (getSecret(character, "ZILLIQA_PRIVATE_KEY")) {
-        zilliqaPlugin = await createZilliqaPlugin((secret) =>
-            getSecret(character, secret)
-        );
-    }
+    // let zilliqaPlugin: any | undefined;
+    // if (getSecret(character, "ZILLIQA_PRIVATE_KEY")) {
+    //     zilliqaPlugin = await createZilliqaPlugin((secret) =>
+    //         getSecret(character, secret)
+    //     );
+    // }
 
-    // Initialize Reclaim adapter if environment variables are present
+    // // Initialize Reclaim adapter if environment variables are present
+    // // let verifiableInferenceAdapter;
+    // // if (
+    // //     process.env.RECLAIM_APP_ID &&
+    // //     process.env.RECLAIM_APP_SECRET &&
+    // //     process.env.VERIFIABLE_INFERENCE_ENABLED === "true"
+    // // ) {
+    // //     verifiableInferenceAdapter = new ReclaimAdapter({
+    // //         appId: process.env.RECLAIM_APP_ID,
+    // //         appSecret: process.env.RECLAIM_APP_SECRET,
+    // //         modelProvider: character.modelProvider,
+    // //         token,
+    // //     });
+    // //     elizaLogger.log("Verifiable inference adapter initialized");
+    // // }
+    // // Initialize Opacity adapter if environment variables are present
     // let verifiableInferenceAdapter;
     // if (
-    //     process.env.RECLAIM_APP_ID &&
-    //     process.env.RECLAIM_APP_SECRET &&
+    //     process.env.OPACITY_TEAM_ID &&
+    //     process.env.OPACITY_CLOUDFLARE_NAME &&
+    //     process.env.OPACITY_PROVER_URL &&
     //     process.env.VERIFIABLE_INFERENCE_ENABLED === "true"
     // ) {
-    //     verifiableInferenceAdapter = new ReclaimAdapter({
-    //         appId: process.env.RECLAIM_APP_ID,
-    //         appSecret: process.env.RECLAIM_APP_SECRET,
+    //     verifiableInferenceAdapter = new OpacityAdapter({
+    //         teamId: process.env.OPACITY_TEAM_ID,
+    //         teamName: process.env.OPACITY_CLOUDFLARE_NAME,
+    //         opacityProverUrl: process.env.OPACITY_PROVER_URL,
+    //         modelProvider: character.modelProvider,
+    //         token: token,
+    //     });
+    //     elizaLogger.log("Verifiable inference adapter initialized");
+    //     elizaLogger.log("teamId", process.env.OPACITY_TEAM_ID);
+    //     elizaLogger.log("teamName", process.env.OPACITY_CLOUDFLARE_NAME);
+    //     elizaLogger.log("opacityProverUrl", process.env.OPACITY_PROVER_URL);
+    //     elizaLogger.log("modelProvider", character.modelProvider);
+    //     elizaLogger.log("token", token);
+    // }
+    // if (
+    //     process.env.PRIMUS_APP_ID &&
+    //     process.env.PRIMUS_APP_SECRET &&
+    //     process.env.VERIFIABLE_INFERENCE_ENABLED === "true"
+    // ) {
+    //     verifiableInferenceAdapter = new PrimusAdapter({
+    //         appId: process.env.PRIMUS_APP_ID,
+    //         appSecret: process.env.PRIMUS_APP_SECRET,
+    //         attMode: "proxytls",
     //         modelProvider: character.modelProvider,
     //         token,
     //     });
-    //     elizaLogger.log("Verifiable inference adapter initialized");
+    //     elizaLogger.log("Verifiable inference primus adapter initialized");
     // }
-    // Initialize Opacity adapter if environment variables are present
-    let verifiableInferenceAdapter;
-    if (
-        process.env.OPACITY_TEAM_ID &&
-        process.env.OPACITY_CLOUDFLARE_NAME &&
-        process.env.OPACITY_PROVER_URL &&
-        process.env.VERIFIABLE_INFERENCE_ENABLED === "true"
-    ) {
-        verifiableInferenceAdapter = new OpacityAdapter({
-            teamId: process.env.OPACITY_TEAM_ID,
-            teamName: process.env.OPACITY_CLOUDFLARE_NAME,
-            opacityProverUrl: process.env.OPACITY_PROVER_URL,
-            modelProvider: character.modelProvider,
-            token: token,
-        });
-        elizaLogger.log("Verifiable inference adapter initialized");
-        elizaLogger.log("teamId", process.env.OPACITY_TEAM_ID);
-        elizaLogger.log("teamName", process.env.OPACITY_CLOUDFLARE_NAME);
-        elizaLogger.log("opacityProverUrl", process.env.OPACITY_PROVER_URL);
-        elizaLogger.log("modelProvider", character.modelProvider);
-        elizaLogger.log("token", token);
-    }
-    if (
-        process.env.PRIMUS_APP_ID &&
-        process.env.PRIMUS_APP_SECRET &&
-        process.env.VERIFIABLE_INFERENCE_ENABLED === "true"
-    ) {
-        verifiableInferenceAdapter = new PrimusAdapter({
-            appId: process.env.PRIMUS_APP_ID,
-            appSecret: process.env.PRIMUS_APP_SECRET,
-            attMode: "proxytls",
-            modelProvider: character.modelProvider,
-            token,
-        });
-        elizaLogger.log("Verifiable inference primus adapter initialized");
-    }
 
     return new AgentRuntime({
         databaseAdapter: db,
@@ -1017,294 +1019,299 @@ export async function createAgent(
         evaluators: [],
         character,
         // character.plugins are handled when clients are added
-        plugins: [
-            parseBooleanFromText(getSecret(character, "BITMIND")) &&
-            getSecret(character, "BITMIND_API_TOKEN")
-                ? bittensorPlugin
-                : null,
-            parseBooleanFromText(
-                getSecret(character, "EMAIL_AUTOMATION_ENABLED")
-            )
-                ? emailAutomationPlugin
-                : null,
-            getSecret(character, "IQ_WALLET_ADDRESS") &&
-            getSecret(character, "IQSOlRPC")
-                ? elizaCodeinPlugin
-                : null,
-            bootstrapPlugin,
-            getSecret(character, "CDP_API_KEY_NAME") &&
-            getSecret(character, "CDP_API_KEY_PRIVATE_KEY") &&
-            getSecret(character, "CDP_AGENT_KIT_NETWORK")
-                ? agentKitPlugin
-                : null,
-            getSecret(character, "DEXSCREENER_API_KEY")
-                ? dexScreenerPlugin
-                : null,
-            getSecret(character, "FOOTBALL_API_KEY") ? footballPlugin : null,
-            getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
-                ? confluxPlugin
-                : null,
+        actions: [
+            firewallAction,
+        ],
+        plugins: [            
             nodePlugin,
-            getSecret(character, "ROUTER_NITRO_EVM_PRIVATE_KEY") &&
-            getSecret(character, "ROUTER_NITRO_EVM_ADDRESS")
-                ? nitroPlugin
-                : null,
-            getSecret(character, "TAVILY_API_KEY") ? webSearchPlugin : null,
-            getSecret(character, "SOLANA_PUBLIC_KEY") ||
-            (getSecret(character, "WALLET_PUBLIC_KEY") &&
-                !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
-                ? [solanaPlugin, solanaPluginV2]
-                : null,
-            getSecret(character, "SOLANA_PRIVATE_KEY")
-                ? solanaAgentkitPlugin
-                : null,
-            getSecret(character, "AUTONOME_JWT_TOKEN") ? autonomePlugin : null,
-            (getSecret(character, "NEAR_ADDRESS") ||
-                getSecret(character, "NEAR_WALLET_PUBLIC_KEY")) &&
-            getSecret(character, "NEAR_WALLET_SECRET_KEY")
-                ? nearPlugin
-                : null,
-            getSecret(character, "EVM_PUBLIC_KEY") ||
-            (getSecret(character, "WALLET_PUBLIC_KEY") &&
-                getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
-                ? evmPlugin
-                : null,
-            (getSecret(character, "EVM_PRIVATE_KEY") ||
-                getSecret(character, "SOLANA_PRIVATE_KEY"))
-                ? edwinPlugin
-                : null,
-            (getSecret(character, "EVM_PUBLIC_KEY") ||
-                getSecret(character, "INJECTIVE_PUBLIC_KEY")) &&
-            getSecret(character, "INJECTIVE_PRIVATE_KEY")
-                ? injectivePlugin
-                : null,
-            getSecret(character, "COSMOS_RECOVERY_PHRASE") &&
-                getSecret(character, "COSMOS_AVAILABLE_CHAINS") &&
-                createCosmosPlugin(),
-            (getSecret(character, "SOLANA_PUBLIC_KEY") ||
-                (getSecret(character, "WALLET_PUBLIC_KEY") &&
-                    !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith(
-                        "0x"
-                    ))) &&
-            getSecret(character, "SOLANA_ADMIN_PUBLIC_KEY") &&
-            getSecret(character, "SOLANA_PRIVATE_KEY") &&
-            getSecret(character, "SOLANA_ADMIN_PRIVATE_KEY")
-                ? nftGenerationPlugin
-                : null,
-            getSecret(character, "ZEROG_PRIVATE_KEY") ? zgPlugin : null,
-            getSecret(character, "COINMARKETCAP_API_KEY")
-                ? coinmarketcapPlugin
-                : null,
-            getSecret(character, "ZERION_API_KEY") ? zerionPlugin : null,
-            getSecret(character, "COINBASE_COMMERCE_KEY")
-                ? coinbaseCommercePlugin
-                : null,
-            getSecret(character, "FAL_API_KEY") ||
-            getSecret(character, "OPENAI_API_KEY") ||
-            getSecret(character, "VENICE_API_KEY") ||
-            getSecret(character, "NVIDIA_API_KEY") ||
-            getSecret(character, "NINETEEN_AI_API_KEY") ||
-            getSecret(character, "HEURIST_API_KEY") ||
-            getSecret(character, "LIVEPEER_GATEWAY_URL")
-                ? imageGenerationPlugin
-                : null,
-            getSecret(character, "FAL_API_KEY") ? ThreeDGenerationPlugin : null,
-            ...(getSecret(character, "COINBASE_API_KEY") &&
-            getSecret(character, "COINBASE_PRIVATE_KEY")
-                ? [
-                      coinbaseMassPaymentsPlugin,
-                      tradePlugin,
-                      tokenContractPlugin,
-                      advancedTradePlugin,
-                  ]
-                : []),
-            ...(teeMode !== TEEMode.OFF && walletSecretSalt ? [teePlugin] : []),
-            teeMode !== TEEMode.OFF &&
-            walletSecretSalt &&
-            getSecret(character, "VLOG")
-                ? verifiableLogPlugin
-                : null,
-            getSecret(character, "SGX") ? sgxPlugin : null,
-            getSecret(character, "ENABLE_TEE_LOG") &&
-            ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
-                getSecret(character, "SGX"))
-                ? teeLogPlugin
-                : null,
-            getSecret(character, "OMNIFLIX_API_URL") &&
-            getSecret(character, "OMNIFLIX_MNEMONIC")
-                ? OmniflixPlugin
-                : null,
-            getSecret(character, "COINBASE_API_KEY") &&
-            getSecret(character, "COINBASE_PRIVATE_KEY") &&
-            getSecret(character, "COINBASE_NOTIFICATION_URI")
-                ? webhookPlugin
-                : null,
-            goatPlugin,
-            zilliqaPlugin,
-            getSecret(character, "COINGECKO_API_KEY") ||
-            getSecret(character, "COINGECKO_PRO_API_KEY")
-                ? coingeckoPlugin
-                : null,
-            getSecret(character, "MORALIS_API_KEY") ? moralisPlugin : null,
-            getSecret(character, "EVM_PROVIDER_URL") ? goatPlugin : null,
-            getSecret(character, "ABSTRACT_PRIVATE_KEY")
-                ? abstractPlugin
-                : null,
-            getSecret(character, "B2_PRIVATE_KEY") ? b2Plugin : null,
-            getSecret(character, "BINANCE_API_KEY") &&
-            getSecret(character, "BINANCE_SECRET_KEY")
-                ? binancePlugin
-                : null,
-            getSecret(character, "FLOW_ADDRESS") &&
-            getSecret(character, "FLOW_PRIVATE_KEY")
-                ? flowPlugin
-                : null,
-            getSecret(character, "LENS_ADDRESS") &&
-            getSecret(character, "LENS_PRIVATE_KEY")
-                ? lensPlugin
-                : null,
-            getSecret(character, "APTOS_PRIVATE_KEY") ? aptosPlugin : null,
-            getSecret(character, "MIND_COLD_WALLET_ADDRESS")
-                ? mindNetworkPlugin
-                : null,
-            getSecret(character, "MVX_PRIVATE_KEY") ? multiversxPlugin : null,
-            getSecret(character, "ZKSYNC_PRIVATE_KEY") ? zksyncEraPlugin : null,
-            getSecret(character, "CRONOSZKEVM_PRIVATE_KEY")
-                ? cronosZkEVMPlugin
-                : null,
-            getSecret(character, "TEE_MARLIN") ? teeMarlinPlugin : null,
-            getSecret(character, "TON_PRIVATE_KEY") ? tonPlugin : null,
-            getSecret(character, "THIRDWEB_SECRET_KEY") ? thirdwebPlugin : null,
-            getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
-            getSecret(character, "STORY_PRIVATE_KEY") ? storyPlugin : null,
-            getSecret(character, "SQUID_SDK_URL") &&
-            getSecret(character, "SQUID_INTEGRATOR_ID") &&
-            getSecret(character, "SQUID_EVM_ADDRESS") &&
-            getSecret(character, "SQUID_EVM_PRIVATE_KEY") &&
-            getSecret(character, "SQUID_API_THROTTLE_INTERVAL")
-                ? squidRouterPlugin
-                : null,
-            getSecret(character, "FUEL_PRIVATE_KEY") ? fuelPlugin : null,
-            getSecret(character, "AVALANCHE_PRIVATE_KEY")
-                ? avalanchePlugin
-                : null,
-            getSecret(character, "BIRDEYE_API_KEY") ? birdeyePlugin : null,
-            getSecret(character, "ECHOCHAMBERS_API_URL") &&
-            getSecret(character, "ECHOCHAMBERS_API_KEY")
-                ? echoChambersPlugin
-                : null,
-            getSecret(character, "LETZAI_API_KEY") ? letzAIPlugin : null,
-            getSecret(character, "STARGAZE_ENDPOINT") ? stargazePlugin : null,
-            getSecret(character, "GIPHY_API_KEY") ? giphyPlugin : null,
-            getSecret(character, "PASSPORT_API_KEY")
-                ? gitcoinPassportPlugin
-                : null,
-            getSecret(character, "GENLAYER_PRIVATE_KEY")
-                ? genLayerPlugin
-                : null,
-            getSecret(character, "AVAIL_SEED") &&
-            getSecret(character, "AVAIL_APP_ID")
-                ? availPlugin
-                : null,
-            getSecret(character, "OPEN_WEATHER_API_KEY")
-                ? openWeatherPlugin
-                : null,
-            getSecret(character, "OBSIDIAN_API_TOKEN") ? obsidianPlugin : null,
-            getSecret(character, "ARTHERA_PRIVATE_KEY")?.startsWith("0x")
-                ? artheraPlugin
-                : null,
-            getSecret(character, "ALLORA_API_KEY") ? alloraPlugin : null,
-            getSecret(character, "HYPERLIQUID_PRIVATE_KEY")
-                ? hyperliquidPlugin
-                : null,
-            getSecret(character, "HYPERLIQUID_TESTNET")
-                ? hyperliquidPlugin
-                : null,
-            getSecret(character, "AKASH_MNEMONIC") &&
-            getSecret(character, "AKASH_WALLET_ADDRESS")
-                ? akashPlugin
-                : null,
-            getSecret(character, "CHAINBASE_API_KEY") ? chainbasePlugin : null,
-            getSecret(character, "QUAI_PRIVATE_KEY") ? quaiPlugin : null,
-            getSecret(character, "RESERVOIR_API_KEY")
-                ? createNFTCollectionsPlugin()
-                : null,
-            getSecret(character, "ZERO_EX_API_KEY") ? zxPlugin : null,
-            getSecret(character, "DKG_PRIVATE_KEY") ? dkgPlugin : null,
-            getSecret(character, "PYTH_TESTNET_PROGRAM_KEY") ||
-            getSecret(character, "PYTH_MAINNET_PROGRAM_KEY")
-                ? pythDataPlugin
-                : null,
-            getSecret(character, "LND_TLS_CERT") &&
-            getSecret(character, "LND_MACAROON") &&
-            getSecret(character, "LND_SOCKET")
-                ? lightningPlugin
-                : null,
-            getSecret(character, "OPENAI_API_KEY") &&
-            parseBooleanFromText(
-                getSecret(character, "ENABLE_OPEN_AI_COMMUNITY_PLUGIN")
-            )
-                ? openaiPlugin
-                : null,
-            getSecret(character, "DEVIN_API_TOKEN") ? devinPlugin : null,
-            getSecret(character, "INITIA_PRIVATE_KEY") ? initiaPlugin : null,
-            getSecret(character, "HOLDSTATION_PRIVATE_KEY")
-                ? holdstationPlugin
-                : null,
-            getSecret(character, "NVIDIA_NIM_API_KEY") ||
-            getSecret(character, "NVIDIA_NGC_API_KEY")
-                ? nvidiaNimPlugin
-                : null,
-            getSecret(character, "BNB_PRIVATE_KEY") ||
-            getSecret(character, "BNB_PUBLIC_KEY")?.startsWith("0x")
-                ? bnbPlugin
-                : null,
-            (getSecret(character, "EMAIL_INCOMING_USER") &&
-                getSecret(character, "EMAIL_INCOMING_PASS")) ||
-            (getSecret(character, "EMAIL_OUTGOING_USER") &&
-                getSecret(character, "EMAIL_OUTGOING_PASS"))
-                ? emailPlugin
-                : null,
-            getSecret(character, "SEI_PRIVATE_KEY") ? seiPlugin : null,
-            getSecret(character, "HYPERBOLIC_API_KEY")
-                ? hyperbolicPlugin
-                : null,
-            getSecret(character, "SUNO_API_KEY") ? sunoPlugin : null,
-            getSecret(character, "UDIO_AUTH_TOKEN") ? udioPlugin : null,
-            getSecret(character, "IMGFLIP_USERNAME") &&
-            getSecret(character, "IMGFLIP_PASSWORD")
-                ? imgflipPlugin
-                : null,
-            getSecret(character, "FUNDING_PRIVATE_KEY") &&
-            getSecret(character, "EVM_RPC_URL")
-                ? litPlugin
-                : null,
-            getSecret(character, "ETHSTORAGE_PRIVATE_KEY")
-                ? ethstoragePlugin
-                : null,
-            getSecret(character, "MINA_PRIVATE_KEY") ? minaPlugin : null,
-            getSecret(character, "FORM_PRIVATE_KEY") ? formPlugin : null,
-            getSecret(character, "ANKR_WALLET") ? ankrPlugin : null,
-            getSecret(character, "DCAP_EVM_PRIVATE_KEY") &&
-            getSecret(character, "DCAP_MODE")
-                ? dcapPlugin
-                : null,
-            getSecret(character, "QUICKINTEL_API_KEY")
-                ? quickIntelPlugin
-                : null,
-            getSecret(character, "GELATO_RELAY_API_KEY") ? gelatoPlugin : null,
-            getSecret(character, "TRIKON_WALLET_ADDRESS") ? trikonPlugin : null,
-            getSecret(character, "ARBITRAGE_EVM_PRIVATE_KEY") &&
-            (getSecret(character, "ARBITRAGE_EVM_PROVIDER_URL") ||
-                getSecret(character, "ARBITRAGE_ETHEREUM_WS_URL")) &&
-            getSecret(character, "ARBITRAGE_FLASHBOTS_RELAY_SIGNING_KEY") &&
-            getSecret(character, "ARBITRAGE_BUNDLE_EXECUTOR_ADDRESS")
-                ? arbitragePlugin
-                : null,
-            getSecret(character, "DESK_EXCHANGE_PRIVATE_KEY") ||
-            getSecret(character, "DESK_EXCHANGE_NETWORK")
-                ? deskExchangePlugin
-                : null,
+            bootstrapPlugin,
+
+            // parseBooleanFromText(getSecret(character, "BITMIND")) &&
+            // getSecret(character, "BITMIND_API_TOKEN")
+            //     ? bittensorPlugin
+            //     : null,
+            // parseBooleanFromText(
+            //     getSecret(character, "EMAIL_AUTOMATION_ENABLED")
+            // )
+            //     ? emailAutomationPlugin
+            //     : null,
+            // getSecret(character, "IQ_WALLET_ADDRESS") &&
+            // getSecret(character, "IQSOlRPC")
+            //     ? elizaCodeinPlugin
+            //     : null,
+            
+            // getSecret(character, "CDP_API_KEY_NAME") &&
+            // getSecret(character, "CDP_API_KEY_PRIVATE_KEY") &&
+            // getSecret(character, "CDP_AGENT_KIT_NETWORK")
+            //     ? agentKitPlugin
+            //     : null,
+            // getSecret(character, "DEXSCREENER_API_KEY")
+            //     ? dexScreenerPlugin
+            //     : null,
+            // getSecret(character, "FOOTBALL_API_KEY") ? footballPlugin : null,
+            // getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
+            //     ? confluxPlugin
+            //     : null,            
+            // getSecret(character, "ROUTER_NITRO_EVM_PRIVATE_KEY") &&
+            // getSecret(character, "ROUTER_NITRO_EVM_ADDRESS")
+            //     ? nitroPlugin
+            //     : null,
+            // getSecret(character, "TAVILY_API_KEY") ? webSearchPlugin : null,
+            // getSecret(character, "SOLANA_PUBLIC_KEY") ||
+            // (getSecret(character, "WALLET_PUBLIC_KEY") &&
+            //     !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
+            //     ? [solanaPlugin, solanaPluginV2]
+            //     : null,
+            // getSecret(character, "SOLANA_PRIVATE_KEY")
+            //     ? solanaAgentkitPlugin
+            //     : null,
+            // getSecret(character, "AUTONOME_JWT_TOKEN") ? autonomePlugin : null,
+            // (getSecret(character, "NEAR_ADDRESS") ||
+            //     getSecret(character, "NEAR_WALLET_PUBLIC_KEY")) &&
+            // getSecret(character, "NEAR_WALLET_SECRET_KEY")
+            //     ? nearPlugin
+            //     : null,
+            // getSecret(character, "EVM_PUBLIC_KEY") ||
+            // (getSecret(character, "WALLET_PUBLIC_KEY") &&
+            //     getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
+            //     ? evmPlugin
+            //     : null,
+            // (getSecret(character, "EVM_PRIVATE_KEY") ||
+            //     getSecret(character, "SOLANA_PRIVATE_KEY"))
+            //     ? edwinPlugin
+            //     : null,
+            // (getSecret(character, "EVM_PUBLIC_KEY") ||
+            //     getSecret(character, "INJECTIVE_PUBLIC_KEY")) &&
+            // getSecret(character, "INJECTIVE_PRIVATE_KEY")
+            //     ? injectivePlugin
+            //     : null,
+            // getSecret(character, "COSMOS_RECOVERY_PHRASE") &&
+            //     getSecret(character, "COSMOS_AVAILABLE_CHAINS") &&
+            //     createCosmosPlugin(),
+            // (getSecret(character, "SOLANA_PUBLIC_KEY") ||
+            //     (getSecret(character, "WALLET_PUBLIC_KEY") &&
+            //         !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith(
+            //             "0x"
+            //         ))) &&
+            // getSecret(character, "SOLANA_ADMIN_PUBLIC_KEY") &&
+            // getSecret(character, "SOLANA_PRIVATE_KEY") &&
+            // getSecret(character, "SOLANA_ADMIN_PRIVATE_KEY")
+            //     ? nftGenerationPlugin
+            //     : null,
+            // getSecret(character, "ZEROG_PRIVATE_KEY") ? zgPlugin : null,
+            // getSecret(character, "COINMARKETCAP_API_KEY")
+            //     ? coinmarketcapPlugin
+            //     : null,
+            // getSecret(character, "ZERION_API_KEY") ? zerionPlugin : null,
+            // getSecret(character, "COINBASE_COMMERCE_KEY")
+            //     ? coinbaseCommercePlugin
+            //     : null,
+            // getSecret(character, "FAL_API_KEY") ||
+            // getSecret(character, "OPENAI_API_KEY") ||
+            // getSecret(character, "VENICE_API_KEY") ||
+            // getSecret(character, "NVIDIA_API_KEY") ||
+            // getSecret(character, "NINETEEN_AI_API_KEY") ||
+            // getSecret(character, "HEURIST_API_KEY") ||
+            // getSecret(character, "LIVEPEER_GATEWAY_URL")
+            //     ? imageGenerationPlugin
+            //     : null,
+            // getSecret(character, "FAL_API_KEY") ? ThreeDGenerationPlugin : null,
+            // ...(getSecret(character, "COINBASE_API_KEY") &&
+            // getSecret(character, "COINBASE_PRIVATE_KEY")
+            //     ? [
+            //           coinbaseMassPaymentsPlugin,
+            //           tradePlugin,
+            //           tokenContractPlugin,
+            //           advancedTradePlugin,
+            //       ]
+            //     : []),
+            // ...(teeMode !== TEEMode.OFF && walletSecretSalt ? [teePlugin] : []),
+            // teeMode !== TEEMode.OFF &&
+            // walletSecretSalt &&
+            // getSecret(character, "VLOG")
+            //     ? verifiableLogPlugin
+            //     : null,
+            // getSecret(character, "SGX") ? sgxPlugin : null,
+            // getSecret(character, "ENABLE_TEE_LOG") &&
+            // ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
+            //     getSecret(character, "SGX"))
+            //     ? teeLogPlugin
+            //     : null,
+            // getSecret(character, "OMNIFLIX_API_URL") &&
+            // getSecret(character, "OMNIFLIX_MNEMONIC")
+            //     ? OmniflixPlugin
+            //     : null,
+            // getSecret(character, "COINBASE_API_KEY") &&
+            // getSecret(character, "COINBASE_PRIVATE_KEY") &&
+            // getSecret(character, "COINBASE_NOTIFICATION_URI")
+            //     ? webhookPlugin
+            //     : null,
+            // goatPlugin,
+            // zilliqaPlugin,
+            // getSecret(character, "COINGECKO_API_KEY") ||
+            // getSecret(character, "COINGECKO_PRO_API_KEY")
+            //     ? coingeckoPlugin
+            //     : null,
+            // getSecret(character, "MORALIS_API_KEY") ? moralisPlugin : null,
+            // getSecret(character, "EVM_PROVIDER_URL") ? goatPlugin : null,
+            // getSecret(character, "ABSTRACT_PRIVATE_KEY")
+            //     ? abstractPlugin
+            //     : null,
+            // getSecret(character, "B2_PRIVATE_KEY") ? b2Plugin : null,
+            // getSecret(character, "BINANCE_API_KEY") &&
+            // getSecret(character, "BINANCE_SECRET_KEY")
+            //     ? binancePlugin
+            //     : null,
+            // getSecret(character, "FLOW_ADDRESS") &&
+            // getSecret(character, "FLOW_PRIVATE_KEY")
+            //     ? flowPlugin
+            //     : null,
+            // getSecret(character, "LENS_ADDRESS") &&
+            // getSecret(character, "LENS_PRIVATE_KEY")
+            //     ? lensPlugin
+            //     : null,
+            // getSecret(character, "APTOS_PRIVATE_KEY") ? aptosPlugin : null,
+            // getSecret(character, "MIND_COLD_WALLET_ADDRESS")
+            //     ? mindNetworkPlugin
+            //     : null,
+            // getSecret(character, "MVX_PRIVATE_KEY") ? multiversxPlugin : null,
+            // getSecret(character, "ZKSYNC_PRIVATE_KEY") ? zksyncEraPlugin : null,
+            // getSecret(character, "CRONOSZKEVM_PRIVATE_KEY")
+            //     ? cronosZkEVMPlugin
+            //     : null,
+            // getSecret(character, "TEE_MARLIN") ? teeMarlinPlugin : null,
+            // getSecret(character, "TON_PRIVATE_KEY") ? tonPlugin : null,
+            // getSecret(character, "THIRDWEB_SECRET_KEY") ? thirdwebPlugin : null,
+            // getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
+            // getSecret(character, "STORY_PRIVATE_KEY") ? storyPlugin : null,
+            // getSecret(character, "SQUID_SDK_URL") &&
+            // getSecret(character, "SQUID_INTEGRATOR_ID") &&
+            // getSecret(character, "SQUID_EVM_ADDRESS") &&
+            // getSecret(character, "SQUID_EVM_PRIVATE_KEY") &&
+            // getSecret(character, "SQUID_API_THROTTLE_INTERVAL")
+            //     ? squidRouterPlugin
+            //     : null,
+            // getSecret(character, "FUEL_PRIVATE_KEY") ? fuelPlugin : null,
+            // getSecret(character, "AVALANCHE_PRIVATE_KEY")
+            //     ? avalanchePlugin
+            //     : null,
+            // getSecret(character, "BIRDEYE_API_KEY") ? birdeyePlugin : null,
+            // getSecret(character, "ECHOCHAMBERS_API_URL") &&
+            // getSecret(character, "ECHOCHAMBERS_API_KEY")
+            //     ? echoChambersPlugin
+            //     : null,
+            // getSecret(character, "LETZAI_API_KEY") ? letzAIPlugin : null,
+            // getSecret(character, "STARGAZE_ENDPOINT") ? stargazePlugin : null,
+            // getSecret(character, "GIPHY_API_KEY") ? giphyPlugin : null,
+            // getSecret(character, "PASSPORT_API_KEY")
+            //     ? gitcoinPassportPlugin
+            //     : null,
+            // getSecret(character, "GENLAYER_PRIVATE_KEY")
+            //     ? genLayerPlugin
+            //     : null,
+            // getSecret(character, "AVAIL_SEED") &&
+            // getSecret(character, "AVAIL_APP_ID")
+            //     ? availPlugin
+            //     : null,
+            // getSecret(character, "OPEN_WEATHER_API_KEY")
+            //     ? openWeatherPlugin
+            //     : null,
+            // getSecret(character, "OBSIDIAN_API_TOKEN") ? obsidianPlugin : null,
+            // getSecret(character, "ARTHERA_PRIVATE_KEY")?.startsWith("0x")
+            //     ? artheraPlugin
+            //     : null,
+            // getSecret(character, "ALLORA_API_KEY") ? alloraPlugin : null,
+            // getSecret(character, "HYPERLIQUID_PRIVATE_KEY")
+            //     ? hyperliquidPlugin
+            //     : null,
+            // getSecret(character, "HYPERLIQUID_TESTNET")
+            //     ? hyperliquidPlugin
+            //     : null,
+            // getSecret(character, "AKASH_MNEMONIC") &&
+            // getSecret(character, "AKASH_WALLET_ADDRESS")
+            //     ? akashPlugin
+            //     : null,
+            // getSecret(character, "CHAINBASE_API_KEY") ? chainbasePlugin : null,
+            // getSecret(character, "QUAI_PRIVATE_KEY") ? quaiPlugin : null,
+            // getSecret(character, "RESERVOIR_API_KEY")
+            //     ? createNFTCollectionsPlugin()
+            //     : null,
+            // getSecret(character, "ZERO_EX_API_KEY") ? zxPlugin : null,
+            // getSecret(character, "DKG_PRIVATE_KEY") ? dkgPlugin : null,
+            // getSecret(character, "PYTH_TESTNET_PROGRAM_KEY") ||
+            // getSecret(character, "PYTH_MAINNET_PROGRAM_KEY")
+            //     ? pythDataPlugin
+            //     : null,
+            // getSecret(character, "LND_TLS_CERT") &&
+            // getSecret(character, "LND_MACAROON") &&
+            // getSecret(character, "LND_SOCKET")
+            //     ? lightningPlugin
+            //     : null,
+            // getSecret(character, "OPENAI_API_KEY") &&
+            // parseBooleanFromText(
+            //     getSecret(character, "ENABLE_OPEN_AI_COMMUNITY_PLUGIN")
+            // )
+            //     ? openaiPlugin
+            //     : null,
+            // getSecret(character, "DEVIN_API_TOKEN") ? devinPlugin : null,
+            // getSecret(character, "INITIA_PRIVATE_KEY") ? initiaPlugin : null,
+            // getSecret(character, "HOLDSTATION_PRIVATE_KEY")
+            //     ? holdstationPlugin
+            //     : null,
+            // getSecret(character, "NVIDIA_NIM_API_KEY") ||
+            // getSecret(character, "NVIDIA_NGC_API_KEY")
+            //     ? nvidiaNimPlugin
+            //     : null,
+            // getSecret(character, "BNB_PRIVATE_KEY") ||
+            // getSecret(character, "BNB_PUBLIC_KEY")?.startsWith("0x")
+            //     ? bnbPlugin
+            //     : null,
+            // (getSecret(character, "EMAIL_INCOMING_USER") &&
+            //     getSecret(character, "EMAIL_INCOMING_PASS")) ||
+            // (getSecret(character, "EMAIL_OUTGOING_USER") &&
+            //     getSecret(character, "EMAIL_OUTGOING_PASS"))
+            //     ? emailPlugin
+            //     : null,
+            // getSecret(character, "SEI_PRIVATE_KEY") ? seiPlugin : null,
+            // getSecret(character, "HYPERBOLIC_API_KEY")
+            //     ? hyperbolicPlugin
+            //     : null,
+            // getSecret(character, "SUNO_API_KEY") ? sunoPlugin : null,
+            // getSecret(character, "UDIO_AUTH_TOKEN") ? udioPlugin : null,
+            // getSecret(character, "IMGFLIP_USERNAME") &&
+            // getSecret(character, "IMGFLIP_PASSWORD")
+            //     ? imgflipPlugin
+            //     : null,
+            // getSecret(character, "FUNDING_PRIVATE_KEY") &&
+            // getSecret(character, "EVM_RPC_URL")
+            //     ? litPlugin
+            //     : null,
+            // getSecret(character, "ETHSTORAGE_PRIVATE_KEY")
+            //     ? ethstoragePlugin
+            //     : null,
+            // getSecret(character, "MINA_PRIVATE_KEY") ? minaPlugin : null,
+            // getSecret(character, "FORM_PRIVATE_KEY") ? formPlugin : null,
+            // getSecret(character, "ANKR_WALLET") ? ankrPlugin : null,
+            // getSecret(character, "DCAP_EVM_PRIVATE_KEY") &&
+            // getSecret(character, "DCAP_MODE")
+            //     ? dcapPlugin
+            //     : null,
+            // getSecret(character, "QUICKINTEL_API_KEY")
+            //     ? quickIntelPlugin
+            //     : null,
+            // getSecret(character, "GELATO_RELAY_API_KEY") ? gelatoPlugin : null,
+            // getSecret(character, "TRIKON_WALLET_ADDRESS") ? trikonPlugin : null,
+            // getSecret(character, "ARBITRAGE_EVM_PRIVATE_KEY") &&
+            // (getSecret(character, "ARBITRAGE_EVM_PROVIDER_URL") ||
+            //     getSecret(character, "ARBITRAGE_ETHEREUM_WS_URL")) &&
+            // getSecret(character, "ARBITRAGE_FLASHBOTS_RELAY_SIGNING_KEY") &&
+            // getSecret(character, "ARBITRAGE_BUNDLE_EXECUTOR_ADDRESS")
+            //     ? arbitragePlugin
+            //     : null,
+            // getSecret(character, "DESK_EXCHANGE_PRIVATE_KEY") ||
+            // getSecret(character, "DESK_EXCHANGE_NETWORK")
+            //     ? deskExchangePlugin
+            //     : null,
         ]
             .flat()
             .filter(Boolean),
@@ -1312,7 +1319,7 @@ export async function createAgent(
         managers: [],
         cacheManager: cache,
         fetch: logFetch,
-        verifiableInferenceAdapter,
+        // verifiableInferenceAdapter,
     });
 }
 
@@ -1528,10 +1535,14 @@ const startAgents = async () => {
     elizaLogger.info(
         "Run `pnpm start:client` to start the client and visit the outputted URL (http://localhost:5173) to chat with your agents. When running multiple agents, use client with different port `SERVER_PORT=3001 pnpm start:client`"
     );
+
+    const chat = startChat(characters);
+    chat();
 };
 
+
 startAgents().catch((error) => {
-    elizaLogger.error("Unhandled error in startAgents:", error);
+    elizaLogger.error("Unhandled error in startAgents:", error);    
     process.exit(1);
 });
 
@@ -1550,3 +1561,90 @@ if (
         console.error("unhandledRejection", err);
     });
 }
+
+// ============================================================================================================================
+import readline from "readline";
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  
+  rl.on("SIGINT", () => {
+    rl.close();
+    process.exit(0);
+  });
+  
+  async function handleUserInput(input, agentId) {
+    if (input.toLowerCase() === "exit") {
+      rl.close();
+      process.exit(0);
+    }
+  
+    try {
+      const serverPort = parseInt(settings.SERVER_PORT || "3000");
+  
+      const response = await fetch(
+        `http://localhost:${serverPort}/${agentId}/message`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: input,
+            userId: "user",
+            userName: "User",
+          }),
+        }
+      );
+  
+      const data = await response.json();
+      data.forEach((message) => console.log(`${"Agent"}: ${message.text}`));
+    } catch (error) {
+      console.error("Error fetching response:", error);
+    }
+  }
+  
+  export function startChat(characters) {
+    function chat() {
+      const agentId = characters[0].name ?? "Agent";
+      rl.question("You: ", async (input) => {
+        await handleUserInput(input, agentId);
+        if (input.toLowerCase() !== "exit") {
+          chat(); // Loop back to ask another question
+        }
+      });
+    }
+  
+    return chat;
+  }
+  
+  const firewallAction: Action = {
+    name: "FIREWALL",
+    similes: ["FIREWALL", "*"],
+    description:
+        "Firewll the user",
+    handler: async (runtime, message, state, options, callback) => {
+      console.log(`Firewall: Action: handler >>>>>> text='${message.content.text}'`);
+      
+      if(message.content.text.toLowerCase().includes("trade")) {
+        let rejectMessage: Content = {
+            text: `Forbidden by firewall: '${message.content.text}'`,
+            action: "FIREWALL",
+        };
+
+        callback(rejectMessage, state);
+        return false;
+
+      } else {
+        return true;
+      }
+
+      
+    },
+    validate: async (runtime, message) => {
+      console.log("Firewall: Action: validate >>>>>>>",message.content.text);    
+      return true;
+    },
+    examples: [],
+    //suppressInitialMessage: true
+  };
+  
