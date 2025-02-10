@@ -1640,9 +1640,21 @@ const rl = readline.createInterface({
 
       
     },
-    validate: async (runtime, message) => {
-      console.log("Firewall: Action: validate >>>>>>>",message.content.text);    
-      return true;
+    validate: async (runtime, message, state, callback) => {
+      console.log(`Firewall: Action: validate >>>>>>> '${message.content.text}': ${callback}}`);
+      
+      if(callback && message.content.text.toLowerCase().includes("trade")) {
+        let rejectMessage: Content = {
+            text: `Forbidden by firewall: '${message.content.text}'`,
+            action: "FIREWALL",
+        };
+
+        callback(rejectMessage, state);
+        return false;
+
+      } else {
+        return true;
+      }
     },
     examples: [],
     //suppressInitialMessage: true

@@ -430,6 +430,7 @@ export type Validator = (
     runtime: IAgentRuntime,
     message: Memory,
     state?: State,
+    callback?: HandlerCallback,
 ) => Promise<boolean>;
 
 /**

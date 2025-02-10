@@ -287,6 +287,24 @@ export class DirectClient {
                     template: messageHandlerTemplate,
                 });
 
+                // prevalidate ========================================================
+                let messagePreprocess = null as Content | null;
+                const resultPreprocess = await runtime.preprocess(
+                    memory,                    
+                    state,
+                    async (newMessages) => {
+                        messagePreprocess = newMessages;
+                        return [memory];
+                    }
+                );
+
+                if (!resultPreprocess) {
+                    console.log(`preprocess(): REJECT: ${messagePreprocess?.content}`);
+                    res.json([messagePreprocess]);
+                    return;
+                }
+                // prevalidate ========================================================
+
                 const response = await generateMessageResponse({
                     runtime: runtime,
                     context,

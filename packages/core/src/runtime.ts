@@ -1079,6 +1079,47 @@ export class AgentRuntime implements IAgentRuntime {
         return result;
     }
 
+    async preprocess(
+        message: Memory,
+        state?: State,
+        callback?: HandlerCallback,
+    ): Promise<boolean> {
+
+        console.log("preprocess(): >>>>>>>> message=", message);
+        console.log("preprocess(): >>>>>>>> actions=", this.actions.map(a => a.name));
+
+        let result = true;
+
+        {
+            let action = [...this.actions].reverse().find(
+                (a: Action) =>                    
+                    a.similes.includes('FIREWALL')
+
+            );
+
+            console.log("preprocess(): action=", action);
+            
+            if (!action.handler) {
+                elizaLogger.error(`Action ${action.name} has no handler.`);
+                return false;
+            }
+
+            try {
+                elizaLogger.info(
+                    `Executing handler for action: ${action.name}`,
+                );
+                
+                console.log(`preprocess(): ---> '${action.name}'`);
+
+                result = await action.validate(this, message, state, callback);
+            } catch (error) {
+                elizaLogger.error(error);
+            }
+        }
+
+        return result;
+    }
+
     /**
      * Evaluate the message and state using the registered evaluators.
      * @param message The message to evaluate.
