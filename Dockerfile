@@ -38,8 +38,12 @@ WORKDIR /app
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY patches ./patches/
 
-# Install dependencies
-RUN pnpm install --no-frozen-lockfile
+# Enable patch-package postinstall script
+ENV PATCH_PACKAGE_ENABLE_POSTINSTALL=true
+
+# Install dependencies with patches
+RUN pnpm install --no-frozen-lockfile && \
+    pnpm patch-package
 
 # Copy remaining application code
 COPY . .
