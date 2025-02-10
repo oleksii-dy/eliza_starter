@@ -6,11 +6,11 @@ import { tokenInfoProvider } from "./providers/token/tokenInfo";
 import { twitterBalanceAction } from "./actions/carv/twitterBalance";
 import { twitterBalanceProvider } from "./providers/carv/twitterBalance";
 
-export const onchainDataPlugin: Plugin = {
-    name: "onchain data plugin",
-    description: "Enables onchain data fetching",
-    actions: [],
-    providers: [ethereumDataProvider],
+export const dataPlugin: Plugin = {
+    name: "CARV D.A.T.A plugin",
+    description: "Enables onchain data / offchain data fetching",
+    actions: [fetchTransactionAction, fetchTokenInfoAction, twitterBalanceAction],
+    providers: [ethereumDataProvider, tokenInfoProvider, twitterBalanceProvider],
     evaluators: [],
     services: [],
     clients: [],

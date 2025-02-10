@@ -59,7 +59,7 @@ export class TwitterBalanceProvider {
     private readonly AUTH_TOKEN: string;
 
     constructor(runtime: IAgentRuntime) {
-        this.API_URL = runtime.getSetting("DATA_API_KEY");
+        this.API_URL = runtime.getSetting("DATA_API_URL");
         this.AUTH_TOKEN = runtime.getSetting("DATA_AUTH_TOKEN");
     }
 
