@@ -1081,12 +1081,11 @@ Text: ${attachment.text}
 
         // randomly get 3 bits of lore and join them into a paragraph, divided by \n
         let lore = "";
-        // Assuming this.lore is an array of lore bits
         if (this.character.lore && this.character.lore.length > 0) {
             const shuffledLore = [...this.character.lore].sort(
                 () => Math.random() - 0.5
             );
-            const selectedLore = shuffledLore.slice(0, 10);
+            const selectedLore = shuffledLore.slice(0, 3);
             lore = selectedLore.join("\n");
         }
 
@@ -1191,14 +1190,10 @@ Text: ${attachment.text}
             actorsData
         );
 
-        // if bio is a string, use it. if its an array, pick one at random
+        // if bio is a string, use it. if its an array, shuffle array and return all items
         let bio = this.character.bio || "";
         if (Array.isArray(bio)) {
-            // get three random bio strings and join them with " "
-            bio = bio
-                .sort(() => 0.5 - Math.random())
-                .slice(0, 3)
-                .join(" ");
+            bio = bio.sort(() => 0.5 - Math.random()).join(" ");
         }
 
         let knowledgeData = [];
