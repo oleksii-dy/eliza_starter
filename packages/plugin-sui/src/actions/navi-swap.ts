@@ -88,26 +88,11 @@ export default {
         elizaLogger.info("Swap content:", swapContent);
 
         try {
-            const account = service.client.accounts[0];
-            const amountNum = Number(swapContent.amount);
-
-            // Perform a dry run first to get the expected output
-            const dryRunResult = await account.dryRunSwap(
+            // Execute the swap
+            const result = await service.swap(
                 swapContent.from_token,
                 swapContent.to_token,
-                amountNum,
-                0 // We'll calculate minAmountOut from the dry run
-            );
-
-            // Set minAmountOut to 98% of the expected output (2% slippage)
-            const minAmountOut = Math.floor(Number(dryRunResult.amount_out) * 0.98);
-
-            // Execute the actual swap
-            const result = await account.swap(
-                swapContent.from_token,
-                swapContent.to_token,
-                amountNum,
-                minAmountOut
+                swapContent.amount
             );
 
             callback({
@@ -115,8 +100,6 @@ export default {
                 - From: ${swapContent.from_token}
                 - To: ${swapContent.to_token}
                 - Amount: ${swapContent.amount}
-                - Expected Output: ${dryRunResult.amount_out}
-                - Minimum Output: ${minAmountOut}
                 - Transaction: ${JSON.stringify(result)}`,
                 content: swapContent,
             });
