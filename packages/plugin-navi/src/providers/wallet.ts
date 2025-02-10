@@ -34,7 +34,7 @@ export class WalletProvider {
     }
 
     async depositToNavi(token: string, amount: number): Promise<any> {
-        let coinType = this.token2coinType(token);
+        const coinType = this.token2coinType(token);
         return this.client.account.depositToNavi(coinType, amount)
     }
 
