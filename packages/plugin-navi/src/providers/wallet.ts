@@ -39,17 +39,17 @@ export class WalletProvider {
     }
 
     async borrow(token: string, amount: number): Promise<any> {
-        let coinType = this.token2coinType(token);
+        const coinType = this.token2coinType(token);
         return this.client.account.borrow(coinType, amount)
     }
 
     async repay(token: string, amount: number): Promise<any> {
-        let coinType = this.token2coinType(token);
+        const coinType = this.token2coinType(token);
         return this.client.account.repay(coinType, amount)
     }
 
     async withdraw(token: string, amount: number): Promise<any> {
-        let coinType = this.token2coinType(token);
+        const coinType = this.token2coinType(token);
         return this.client.account.withdraw(coinType, amount)
     }
 
