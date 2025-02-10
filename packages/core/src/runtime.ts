@@ -56,6 +56,8 @@ import { stringToUuid } from "./uuid.ts";
 const POST_EXAMPLES_COUNT = 20;
 const MESSAGE_EXAMPLES_COUNT = 5;
 const TOPICS_COUNT = 5;
+const LORE_COUNT = 3;
+
 /**
  * Represents the runtime environment for an agent, handling message processing,
  * action registration, and interaction with external services like OpenAI and Supabase.
@@ -1072,16 +1074,24 @@ export class AgentRuntime implements IAgentRuntime {
 
         // randomly get 3 bits of lore and join them into a paragraph, divided by \n
         let lore = "";
-        if (this.character.lore && this.character.lore.length > 0) {
-            const shuffledLore = shuffleAndSlice<string>(this.character.lore);
+        if (this.character.lore?.length > 0) {
+            const count = this.getSetting("LORE_COUNT") || LORE_COUNT;
+            const shuffledLore = shuffleAndSlice<string>(
+                this.character.lore,
+                Number(count)
+            );
             lore = joinLines(shuffledLore);
         }
 
         const formattedCharacterPostExamples = formatCharacterPostExamples(
+            this,
             this.character.postExamples
         );
         const formattedCharacterMessageExamples =
-            formatCharacterMessageExamples(this.character.messageExamples);
+            formatCharacterMessageExamples(
+                this,
+                this.character.messageExamples
+            );
 
         const getRecentInteractions = async (
             userA: UUID,
@@ -1206,7 +1216,7 @@ export class AgentRuntime implements IAgentRuntime {
             topics:
                 this.character.topics?.length > 0
                     ? `${this.character.name} is interested in ` +
-                      getTopics(this.character.topics)
+                      getTopics(this, this.character.topics)
                     : "",
             characterPostExamples:
                 formattedCharacterPostExamples?.replaceAll("\n", "").length > 0
@@ -1434,8 +1444,13 @@ const formatKnowledge = (knowledge: KnowledgeItem[]) => {
         .join("\n");
 };
 
-const formatCharacterPostExamples = (postExamples: string[]) => {
-    const examples = shuffleAndSlice<string>(postExamples, POST_EXAMPLES_COUNT);
+const formatCharacterPostExamples = (
+    runtime: AgentRuntime,
+    postExamples: string[]
+) => {
+    const count =
+        runtime.getSetting("POST_EXAMPLES_COUNT") || POST_EXAMPLES_COUNT;
+    const examples = shuffleAndSlice<string>(postExamples, Number(count));
     return joinLines(examples);
 };
 
@@ -1447,10 +1462,15 @@ type MessagesExample = {
     };
 }[];
 
-const formatCharacterMessageExamples = (messageExamples: MessagesExample[]) => {
+const formatCharacterMessageExamples = (
+    runtime: AgentRuntime,
+    messageExamples: MessagesExample[]
+) => {
+    const count =
+        runtime.getSetting("MESSAGE_EXAMPLES_COUNT") || MESSAGE_EXAMPLES_COUNT;
     const examples = shuffleAndSlice<MessagesExample>(
         messageExamples,
-        MESSAGE_EXAMPLES_COUNT
+        Number(count)
     );
     const withNames = examples.map((example) => buildExample(example));
     return joinLines(withNames, "\n\n");
@@ -1475,8 +1495,9 @@ const formatPostDirections = (postDirections: string[], count: number) => {
     return joinLines(shuffled);
 };
 
-function getTopics(topics: string[]): string {
-    const shuffled = shuffleAndSlice(topics, TOPICS_COUNT);
+function getTopics(runtime: AgentRuntime, topics: string[]): string {
+    const count = runtime.getSetting("TOPICS_COUNT") || TOPICS_COUNT;
+    const shuffled = shuffleAndSlice(topics, Number(count));
     return joinLines(shuffled, ", ");
 }
 
