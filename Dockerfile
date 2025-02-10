@@ -38,12 +38,14 @@ WORKDIR /app
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY patches ./patches/
 
-# Enable patch-package postinstall script
-ENV PATCH_PACKAGE_ENABLE_POSTINSTALL=true
+# First install dependencies without patches
+RUN pnpm install --no-frozen-lockfile
 
-# Install dependencies with patches
-RUN pnpm install --no-frozen-lockfile && \
-    pnpm patch-package
+# Apply patches manually
+RUN cd node_modules/@solana-developers/helpers && \
+    patch -p1 < ../../patches/@solana-developers__helpers.patch && \
+    cd ../../@orca-so/whirlpools-client && \
+    patch -p1 < ../../patches/@orca-so__whirlpools-client@1.0.2.patch
 
 # Copy remaining application code
 COPY . .
