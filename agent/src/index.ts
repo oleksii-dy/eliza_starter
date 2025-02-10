@@ -153,6 +153,7 @@ import { imgflipPlugin } from "@elizaos/plugin-imgflip";
 import { ethstoragePlugin } from "@elizaos/plugin-ethstorage";
 import { zerionPlugin } from "@elizaos/plugin-zerion";
 import { minaPlugin } from "@elizaos/plugin-mina";
+import { naviPlugin } from "@elizaos/plugin-navi";
 import { ankrPlugin } from "@elizaos/plugin-ankr";
 import { formPlugin } from "@elizaos/plugin-form";
 import { MongoClient } from "mongodb";
@@ -1283,6 +1284,7 @@ export async function createAgent(
                 ? ethstoragePlugin
                 : null,
             getSecret(character, "MINA_PRIVATE_KEY") ? minaPlugin : null,
+            getSecret(character, "NAVI_PRIVATE_KEY")? naviPlugin : null,
             getSecret(character, "FORM_PRIVATE_KEY") ? formPlugin : null,
             getSecret(character, "ANKR_WALLET") ? ankrPlugin : null,
             getSecret(character, "DCAP_EVM_PRIVATE_KEY") &&
