@@ -1,30 +1,16 @@
-export interface Plugin {
-  initialize(agentId: string): Promise<void>;
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      TEE_PUBLIC_KEY: string;
+    }
+  }
 }
 
-export interface VerifiableState {
-  id: string;
-  agentId: string;
-  namespace: string;
-  key: string;
-  value: any;
-  timestamp: number;
-  signature: string;
+export interface StateCallback<T = unknown> {
+  (key: string): T | Promise<T>;
 }
 
-export interface StateCallback {
-  (key: string): Promise<any>;
-}
-
-export interface VerifiableStatePluginOptions {
-  teePlugin: Plugin;
-}
-
-export interface NamespaceRegistry {
-  [namespace: string]: StateCallback;
-}
-
-export interface SignedState {
-  state: VerifiableState;
-  verify(publicKey: string): boolean;
+export interface VerifiableStatePlugin {
+  registerState<T>(namespace: string, callback: StateCallback<T>): void;
+  getState<T>(namespace: string, key: string): Promise<T | undefined>;
 }
