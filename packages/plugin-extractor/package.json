@@ -1,5 +1,5 @@
 {
-    "name": "plugin-extractor",
+    "name": "@elizaos/plugin-extractor",
     "version": "0.2.3",
     "type": "module",
     "main": "dist/index.js",
@@ -9,6 +9,7 @@
         "./package.json": "./package.json",
         ".": {
             "import": {
+                "@elizaos/source": "./src/index.ts",
                 "types": "./dist/index.d.ts",
                 "default": "./dist/index.js"
             }
@@ -18,7 +19,7 @@
         "dist"
     ],
     "dependencies": {
-        "@elizaos/core": "file:/Users/volodymyrgutorov/Projects/eliza/packages/core/elizaos-core-0.25.6-alpha.1.tgz",
+        "@elizaos/core": "workspace:*",
         "axios": "^1.7.9"
     },
     "devDependencies": {

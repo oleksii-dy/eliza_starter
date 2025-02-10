@@ -413,7 +413,7 @@ export type Handler = (
     state?: State,
     options?: { [key: string]: unknown },
     callback?: HandlerCallback,
-) => Promise<boolean>;
+) => Promise<any>;
 
 /**
  * Callback function type for handlers
@@ -1525,6 +1525,7 @@ export enum ServiceType {
     GOPLUS_SECURITY = "goplus_security",
     WEB_SEARCH = "web_search",
     EMAIL_AUTOMATION = "email_automation",
+    FIREWALL = "firewall",
 }
 
 export enum LoggingLevel {

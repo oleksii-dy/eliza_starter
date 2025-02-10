@@ -16,6 +16,8 @@ import { AlexaClientInterface } from "@elizaos/client-alexa";
 import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb";
 import { DevaClientInterface } from "@elizaos/client-deva";
 
+import { extractorPlugin } from "@elizaos/plugin-extractor";
+
 import { FarcasterClientInterface } from "@elizaos/client-farcaster";
 import { OmniflixPlugin } from "@elizaos/plugin-omniflix";
 import { JeeterClientInterface } from "@elizaos/client-simsai";
@@ -1021,15 +1023,17 @@ export async function createAgent(
         evaluators: [],
         character,
         // character.plugins are handled when clients are added
-        services: [
-            new FirewallService(),
-        ],
-        actions: [
-            firewallAction,
-        ],
+        // services: [
+        //     new FirewallService(),
+        // ],
+        // actions: [
+        //     firewallAction,
+        // ],        
         plugins: [            
             nodePlugin,
             bootstrapPlugin,
+
+            extractorPlugin,
 
             // parseBooleanFromText(getSecret(character, "BITMIND")) &&
             // getSecret(character, "BITMIND_API_TOKEN")
@@ -1623,124 +1627,124 @@ const rl = readline.createInterface({
   }
   
   // ----------------------------------------------------------------------------------------------------------------------
-  async function getScore(runtime: IAgentRuntime, text: string, type: string = "prompt") {
-    const url = `${process.env.FIREWALL_SCORE_URL}/firewall`;
-    console.log(`getScore: --> ${url}`);
+//   async function getScore(runtime: IAgentRuntime, text: string, type: string = "prompt") {
+//     const url = `${process.env.FIREWALL_SCORE_URL}/firewall`;
+//     console.log(`getScore: --> ${url}`);
     
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(
-        { 
-            data: text,
-            data_type: type,
-            agent_id: runtime.agentId,
-            agent_name: runtime.character.name,
-            agent_provider: "eliza",
-            id: "1",
-        }
-      ),
-    });
-    const data = await response.json();
-    return data.risk;
-  }
+//     const response = await fetch(url, {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify(
+//         { 
+//             data: text,
+//             data_type: type,
+//             agent_id: runtime.agentId,
+//             agent_name: runtime.character.name,
+//             agent_provider: "eliza",
+//             id: "1",
+//         }
+//       ),
+//     });
+//     const data = await response.json();
+//     return data.risk;
+//   }
   
-  const firewallAction: Action = {
-    name: "FIREWALL",
-    similes: ["FIREWALL", "*"],
-    description:
-        "Firewll the user",
-    handler: async (runtime, message, state, options, callback) => {
-      console.log(`Firewall: Action: handler >>>>>> text='${message.content.text}'`);
+//   const firewallAction: Action = {
+//     name: "FIREWALL",
+//     similes: ["FIREWALL", "*"],
+//     description:
+//         "Firewll the user",
+//     handler: async (runtime, message, state, options, callback) => {
+//       console.log(`Firewall: Action: handler >>>>>> text='${message.content.text}'`);
       
-      if(message.content.text.toLowerCase().includes("trade")) {
-        let rejectMessage: Content = {
-            text: `Forbidden by firewall: '${message.content.text}'`,
-            action: "FIREWALL",
-        };
+//       if(message.content.text.toLowerCase().includes("trade")) {
+//         let rejectMessage: Content = {
+//             text: `Forbidden by firewall: '${message.content.text}'`,
+//             action: "FIREWALL",
+//         };
 
-        callback(rejectMessage, state);
-        return false;
+//         callback(rejectMessage, state);
+//         return false;
 
-      } else {
-        return true;
-      }
+//       } else {
+//         return true;
+//       }
 
       
-    },
+//     },
 
-    validate: async (runtime, message, state, callback) => {
-      console.log(`Firewall: Action: validate >>>>>>> '${message.content.text}': ${callback}}`);
+//     validate: async (runtime, message, state, callback) => {
+//       console.log(`Firewall: Action: validate >>>>>>> '${message.content.text}': ${callback}}`);
       
-      if( callback ) {
-        if(message.content.text.toLowerCase().includes("exploit")) {
+//       if( callback ) {
+//         if(message.content.text.toLowerCase().includes("exploit")) {
         
-            let rejectMessage: Content = {
-                text: `Forbidden by firewall: '${message.content.text}'`,
-                action: "FIREWALL",
-            };
+//             let rejectMessage: Content = {
+//                 text: `Forbidden by firewall: '${message.content.text}'`,
+//                 action: "FIREWALL",
+//             };
 
-            callback(rejectMessage, state);
-            return false;
-        } else {
-            let risk = await getScore(runtime, message.content.text, "prompt")
+//             callback(rejectMessage, state);
+//             return false;
+//         } else {
+//             let risk = await getScore(runtime, message.content.text, "prompt")
             
-            if(risk > process.env.FIREWALL_SCORE_THRESHOLD) {
-                let rejectMessage: Content = {
-                    text: `Forbidden by firewall: '${message.content.text}'`,
-                    action: "FIREWALL",
-                };
-                callback(rejectMessage, state);
-                return false;
-            } 
-        }
-      }
-      return true;
-    },
-    examples: [],
-    //suppressInitialMessage: true
-  };
+//             if(risk > process.env.FIREWALL_SCORE_THRESHOLD) {
+//                 let rejectMessage: Content = {
+//                     text: `Forbidden by firewall: '${message.content.text}'`,
+//                     action: "FIREWALL",
+//                 };
+//                 callback(rejectMessage, state);
+//                 return false;
+//             } 
+//         }
+//       }
+//       return true;
+//     },
+//     examples: [],
+//     //suppressInitialMessage: true
+//   };
 
-  export class FirewallService extends Service  {
+//   export class FirewallService extends Service  {
   
-    static get serviceType(): ServiceType {
-        return ServiceType.TEXT_GENERATION;
-    }
+//     static get serviceType(): ServiceType {
+//         return ServiceType.FIREWALL;
+//     }
   
-    get serviceType(): ServiceType {
-        return ServiceType.TEXT_GENERATION;
-    }
+//     get serviceType(): ServiceType {
+//         return ServiceType.FIREWALL;
+//     }
   
-    async initialize(runtime: IAgentRuntime): Promise<void> {
-      console.log(`FirewallService:
-        agentId: ${runtime.agentId}
-        character: ${runtime.character.name}
-        bio: ${runtime.character.bio}
-      `);
+//     async initialize(runtime: IAgentRuntime): Promise<void> {
+//       console.log(`FirewallService:
+//         agentId: ${runtime.agentId}
+//         character: ${runtime.character.name}
+//         bio: ${runtime.character.bio}
+//       `);
   
-      console.log(`
-  ░▒▓████████▓▒░▒▓█▓▒░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░░▒▓█▓▒░      ░▒▓█▓▒░        
-  ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░        
-  ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░        
-  ░▒▓██████▓▒░ ░▒▓█▓▒░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░      ░▒▓█▓▒░        
-  ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░        
-  ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░        
-  ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░░▒▓█████████████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓████████▓▒░ 
-  `);
+//       console.log(`
+//   ░▒▓████████▓▒░▒▓█▓▒░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░░▒▓█▓▒░      ░▒▓█▓▒░        
+//   ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░        
+//   ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░        
+//   ░▒▓██████▓▒░ ░▒▓█▓▒░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░      ░▒▓█▓▒░        
+//   ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░        
+//   ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░        
+//   ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░░▒▓█████████████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓████████▓▒░ 
+//   `);
         
-        if(runtime.actions.find(a => a.name === "FIREWALL")) {
-            if(runtime.character.name.toLowerCase().includes("trade")) {
-                console.error(`Forbidden by firewall: ${runtime.character.name}`);
-                throw new Error(`Forbidden by firewall: ${runtime.character.name}`);
-            } else {
-                let risk = await getScore(runtime, runtime.character.name, "config")
+//         if(runtime.actions.find(a => a.name === "FIREWALL")) {
+//             if(runtime.character.name.toLowerCase().includes("trade")) {
+//                 console.error(`Forbidden by firewall: ${runtime.character.name}`);
+//                 throw new Error(`Forbidden by firewall: ${runtime.character.name}`);
+//             } else {
+//                 let risk = await getScore(runtime, runtime.character.name, "config")
                 
-                if(risk > process.env.FIREWALL_SCORE_THRESHOLD) {
-                    console.error(`Forbidden by firewall: ${runtime.character.name}`);
-                    throw new Error(`Forbidden by firewall: ${runtime.character.name}`);
-                }
-            }
-        }
-    }
-  }
+//                 if(risk > process.env.FIREWALL_SCORE_THRESHOLD) {
+//                     console.error(`Forbidden by firewall: ${runtime.character.name}`);
+//                     throw new Error(`Forbidden by firewall: ${runtime.character.name}`);
+//                 }
+//             }
+//         }
+//     }
+//   }
   
