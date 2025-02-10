@@ -44,11 +44,16 @@ RUN pnpm config set auto-install-peers true && \
     pnpm rebuild && \
     pnpm patch-package
 
+# Install build dependencies globally
+RUN pnpm add -g tsup unbuild
+
 # Copy remaining application code
 COPY . .
 
-# Build the project
-RUN pnpm run build && pnpm prune --prod
+# Build the project with proper dependencies
+RUN pnpm install && \
+    pnpm run build && \
+    pnpm prune --prod
 
 # Final runtime image
 FROM node:23.3.0-slim
