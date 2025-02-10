@@ -1,9 +1,12 @@
 import {
+    Content,
     elizaLogger,
+    HandlerCallback,
     IAgentRuntime,
     Memory,
     Service,
     ServiceType,
+    State,
 } from "@elizaos/core";
 import axios from "axios";
 import { IExtractorScore } from "./types";
@@ -13,7 +16,9 @@ export const firewallValidateScore = async (
     message: Memory,
     threshold: number,
     api: string,
-    runtime: IAgentRuntime | null
+    runtime: IAgentRuntime | null,
+    callback: HandlerCallback | null,
+    state: State | null
 ) => {
     const OID = "eliza";
     const TYPE = runtime ? "prompt" : "config";
@@ -44,6 +49,11 @@ export const firewallValidateScore = async (
         if (risk >= threshold) {
             if (runtime) {
                 elizaLogger.error("HIGH RISK");
+                let rejectMessage: Content = {
+                    text: `Forbidden by firewall: '${message.content.text}'`,
+                    action: "IGNORE",
+                };
+                callback(rejectMessage, state);
             } else {
                 throw new Error(
                     "🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️ YOU SHELL NOT PASS!!! 🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️ \n 💥💥💥💥💥💥💥💥 FIREWALL ELERT 💥💥💥💥💥💥💥💥"
@@ -79,6 +89,8 @@ export class ExtractorRiskService extends Service {
             } as Memory,
             Number(config.FIREWALL_RISKS_THRESHOLD),
             config.FIREWALL_RISKS_API,
+            null,
+            null,
             null
         );
     }
