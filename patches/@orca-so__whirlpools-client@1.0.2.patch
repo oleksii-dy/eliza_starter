@@ -1,14 +1,17 @@
 diff --git a/dist/index.js b/dist/index.js
-index xxxx..xxxx 100644
+index 3592fc8ae..c075e8ca8 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -1695,7 +1695,8 @@
+@@ -1695,11 +1695,11 @@ import {
+ 
  // src/generated/shared/index.ts
  import {
 -  AccountRole,
-+  PublicKey,
    isProgramDerivedAddress,
    isTransactionSigner as web3JsIsTransactionSigner,
    upgradeRoleToSigner
  } from "@solana/web3.js";
 +const AccountRole = { READONLY: 'readonly', WRITABLE: 'writable', SIGNER: 'signer' };
+ function expectAddress(value) {
+   if (!value) {
+     throw new Error("Expected a Address.");

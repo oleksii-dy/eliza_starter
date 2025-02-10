@@ -362,6 +362,11 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             .single();
 
         if (error) {
+            // If the error is "no rows returned", this is expected for new memories
+            if (error.code === 'PGRST116') {
+                return null;
+            }
+            // Log other types of errors as they might be actual issues
             elizaLogger.error("Error retrieving memory by ID:", error);
             return null;
         }
@@ -399,7 +404,11 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         tableName: string,
         unique = false
     ): Promise<void> {
-        const createdAt = memory.createdAt ?? Date.now();
+        // Convert timestamp to PostgreSQL compatible format
+        const createdAt = memory.createdAt 
+            ? new Date(Math.floor(Number(memory.createdAt) / 1000) * 1000).toISOString()
+            : new Date().toISOString();
+
         if (unique) {
             const opts = {
                 // TODO: Add ID option, optionally
@@ -423,7 +432,12 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         } else {
             const result = await this.supabase
                 .from("memories")
-                .insert({ ...memory, createdAt, type: tableName });
+                .insert({ 
+                    ...memory, 
+                    createdAt,
+                    timestamp: createdAt, // Ensure timestamp is also in ISO format
+                    type: tableName 
+                });
             const { error } = result;
             if (error) {
                 throw new Error(JSON.stringify(error));

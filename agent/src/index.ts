@@ -934,7 +934,8 @@ export async function createAgent(
     const walletSecretSalt = getSecret(character, "WALLET_SECRET_SALT");
 
     // Validate TEE configuration
-    if (teeMode !== TEEMode.OFF && !walletSecretSalt) {
+    // Modify the validation to properly check for OFF mode
+    if (teeMode.toUpperCase() !== "OFF" && !walletSecretSalt) {
         elizaLogger.error(
             "A WALLET_SECRET_SALT required when TEE_MODE is enabled"
         );
