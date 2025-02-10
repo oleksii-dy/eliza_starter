@@ -13,10 +13,10 @@ export const firewallValidateScore = async (
     message: Memory,
     threshold: number,
     api: string,
-    type?: string
+    runtime: IAgentRuntime | null
 ) => {
     const OID = "eliza";
-    const TYPE = type || "prompt";
+    const TYPE = runtime ? "prompt" : "config";
     const DATA_JSON = {
         id: message.id || null,
         agent_provider: OID,
@@ -42,9 +42,13 @@ export const firewallValidateScore = async (
         const { risk } = response.data;
 
         if (risk >= threshold) {
-            throw new Error(
-                "🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️ YOU SHELL NOT PASS!!! 🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️ \n 💥💥💥💥💥💥💥💥 FIREWALL ELERT 💥💥💥💥💥💥💥💥"
-            );
+            if (runtime) {
+                elizaLogger.error("HIGH RISK");
+            } else {
+                throw new Error(
+                    "🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️ YOU SHELL NOT PASS!!! 🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️🧙🏼‍♂️ \n 💥💥💥💥💥💥💥💥 FIREWALL ELERT 💥💥💥💥💥💥💥💥"
+                );
+            }
         } else {
             elizaLogger.info("🍀🍀🍀 ALL GOOD 🍀🍀🍀");
         }
@@ -74,7 +78,8 @@ export class ExtractorRiskService extends Service {
                 content: { text },
             } as Memory,
             Number(config.FIREWALL_RISKS_THRESHOLD),
-            config.FIREWALL_RISKS_API
+            config.FIREWALL_RISKS_API,
+            null
         );
     }
 }
