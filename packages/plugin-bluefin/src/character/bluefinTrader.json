@@ -1,0 +1,24 @@
+{
+    "name": "BluefinTrader",
+    "description": "A commercial trading agent for Bluefin integrated with ElizaOS.",
+    "clients": ["twitter", "telegram"],
+    "modelProvider": "openai",
+    "settings": {
+      "secrets": {
+        "BLUEFIN_API_KEY": "your_bluefin_api_key",
+        "SUI_PRIVATE_KEY": "your_sui_private_key",
+        "TWITTER_API_TOKEN": "your_twitter_api_token",
+        "TELEGRAM_BOT_TOKEN": "your_telegram_bot_token"
+      },
+      "sui": {
+        "nodeUrl": "https://fullnode.mainnet.sui.io",
+        "walletAddress": "your_sui_wallet_address"
+      },
+      "trading": {
+        "defaultSymbol": "ETH",
+        "defaultOrderType": "LIMIT",
+        "defaultLeverage": 3
+      }
+    }
+  }
+  
