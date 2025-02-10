@@ -6,7 +6,6 @@
         },
         "@elizaos/agent#check-types": {
             "dependsOn": [
-                "@elizaos/plugin-solana#build",
                 "@elizaos/plugin-direct#build"
             ]
         },
@@ -19,10 +18,6 @@
             "dependsOn": [
                 "@elizaos/plugin-image-generation#build"
             ]
-        },
-        "@elizaos/plugin-nft-generation#build": {
-            "outputs": ["dist/**"],
-            "dependsOn": ["@elizaos/plugin-node#build"]
         },
         "@elizaos/plugin-evm#build": {
             "outputs": ["dist/**"],
