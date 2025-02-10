@@ -1,6 +1,6 @@
 {
     "name": "plugin-extractor",
-    "version": "0.0.4",
+    "version": "0.1.5",
     "type": "module",
     "main": "dist/index.js",
     "module": "dist/index.js",
@@ -18,7 +18,8 @@
         "dist"
     ],
     "dependencies": {
-        "@elizaos/core": "0.25.6-alpha.1"
+        "@elizaos/core": "0.25.6-alpha.1",
+        "axios": "^1.7.9"
     },
     "devDependencies": {
         "@biomejs/biome": "1.9.4",
@@ -29,7 +30,7 @@
         "build": "tsup --format esm --dts",
         "dev": "tsup --format esm --dts --watch",
         "lint": "eslint --fix  --cache .",
-        "packit": "pnpm build && npm pack && git add . && git commit -m'Update' && git push"
+        "packit": "pnpm build && npm pack"
     },
     "publishConfig": {
         "access": "public"

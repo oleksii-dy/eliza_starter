@@ -1,4 +1,4 @@
-import { IAgentRuntime, Memory } from "@elizaos/core";
+import { IAgentRuntime } from "@elizaos/core";
 import { z } from "zod";
 
 export const extractorEnvSchema = z.object({
@@ -12,8 +12,7 @@ export const extractorEnvSchema = z.object({
 export type extractorConfig = z.infer<typeof extractorEnvSchema>;
 
 export async function validateExtractorConfig(
-    runtime: IAgentRuntime,
-    message: Memory
+    runtime: IAgentRuntime
 ): Promise<extractorConfig> {
     try {
         const config = {
@@ -23,7 +22,7 @@ export async function validateExtractorConfig(
             FIREWALL_RISKS_API: runtime.getSetting("FIREWALL_RISKS_API"),
             FIREWALL_API_KEY: runtime.getSetting("FIREWALL_API_KEY"),
         };
-        console.log("config: ", config, console.log(message.content), runtime.character);
+
         return extractorEnvSchema.parse(config);
     } catch (error) {
         console.log("error::::", error);

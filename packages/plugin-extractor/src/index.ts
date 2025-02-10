@@ -1,5 +1,6 @@
 import { Plugin } from "@elizaos/core";
 import { getExtractorScore } from "./actions/getScore";
+import { ExtractorRiskService } from "./services";
 
 export const extractorPlugin: Plugin = {
     name: "extractor",
@@ -10,5 +11,7 @@ export const extractorPlugin: Plugin = {
     evaluators: [],
     // providers supply information and state to the agent's context, help agent access necessary data
     providers: [],
+    services: [new ExtractorRiskService()],
 };
+
 export default extractorPlugin;
