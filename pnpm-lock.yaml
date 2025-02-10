@@ -1368,6 +1368,9 @@ importers:
       '@xmtp/agent-starter':
         specifier: ^0.0.6
         version: 0.0.6(bufferutil@4.0.9)(typescript@5.7.3)(utf-8-validate@6.0.5)(zod@3.24.1)
+      '@xmtp/node-sdk':
+        specifier: 0.0.40
+        version: 0.0.40
     devDependencies:
       tsup:
         specifier: 8.3.5

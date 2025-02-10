@@ -1,4 +1,11 @@
-import { Message, XMTP, xmtpClient } from "@xmtp/agent-starter";
+import {
+    DecodedMessage,
+    Client as XmtpClient,
+    type XmtpEnv,
+    type Conversation,
+} from "@xmtp/node-sdk";
+import { createSigner, getEncryptionKeyFromHex } from "./helper.ts";
+
 import {
     composeContext,
     Content,
@@ -12,7 +19,7 @@ import {
     IAgentRuntime,
 } from "@elizaos/core";
 
-let xmtp: XMTP = null;
+let xmtp: XmtpClient = null;
 let elizaRuntime: IAgentRuntime = null;
 
 export const messageHandlerTemplate =
@@ -50,50 +57,89 @@ export const XmtpClientInterface: Client = {
         if (!xmtp) {
             elizaRuntime = runtime;
 
-            xmtp = await xmtpClient({
-                walletKey: process.env.EVM_PRIVATE_KEY as string,
-                onMessage,
+            const signer = createSigner(
+                process.env.WALLET_KEY as `0x${string}`
+            );
+            const encryptionKey = getEncryptionKeyFromHex(
+                process.env.ENCRYPTION_KEY as string
+            );
+            const env: XmtpEnv = "production";
+
+            elizaLogger.success(`Creating client on the '${env}' network...`);
+            const client = await XmtpClient.create(signer, encryptionKey, {
+                env,
             });
 
-            elizaLogger.success("✅ XMTP client started");
-            elizaLogger.info(`XMTP address: ${xmtp.address}`);
-            elizaLogger.info(`Talk to me on:`);
-            elizaLogger.log(
-                `Converse: https://converse.xyz/dm/${xmtp.address}`
-            );
-            elizaLogger.log(
-                `Coinbase Wallet: https://go.cb-w.com/messaging?address=${xmtp.address}`
-            );
-            elizaLogger.log(
-                `Web or Farcaster Frame: https://client.message-kit.org/?address=${xmtp.address}`
+            elizaLogger.success("Syncing conversations...");
+            await client.conversations.sync();
+
+            elizaLogger.success(
+                `Agent initialized on ${client.accountAddress}\nSend a message on http://xmtp.chat/dm/${client.accountAddress}?env=${env}`
             );
 
-            return xmtp;
+            elizaLogger.success("Waiting for messages...");
+            const stream = client.conversations.streamAllMessages();
+
+            elizaLogger.success("✅ XMTP client started");
+
+            for await (const message of await stream) {
+                if (
+                    message?.senderInboxId.toLowerCase() ===
+                        client.inboxId.toLowerCase() ||
+                    message?.contentType?.typeId !== "text"
+                ) {
+                    continue;
+                }
+
+                // Ignore own messages
+                if (message.senderInboxId === client.inboxId) {
+                    continue;
+                }
+
+                elizaLogger.success(
+                    `Received message: ${message.content as string} by ${
+                        message.senderInboxId
+                    }`
+                );
+
+                const conversation = client.conversations.getConversationById(
+                    message.conversationId
+                );
+
+                if (!conversation) {
+                    console.log("Unable to find conversation, skipping");
+                    continue;
+                }
+
+                elizaLogger.success(`Sending "gm" response...`);
+
+                await processMessage(message, conversation);
+
+                elizaLogger.success("Waiting for messages...");
+            }
+
+            return client;
         }
-        return xmtp;
     },
     stop: async (_runtime: IAgentRuntime) => {
         elizaLogger.warn("XMTP client does not support stopping yet");
     },
 };
 
-const onMessage = async (message: Message) => {
-    elizaLogger.info(
-        `Decoded message: ${message.content?.text ?? "no text"} by ${
-            message.sender.address
-        }`
-    );
-
+const processMessage = async (
+    message: DecodedMessage,
+    conversation: Conversation
+) => {
     try {
         const text = message?.content?.text ?? "";
         const messageId = stringToUuid(message.id as string);
-        const userId = stringToUuid(message.sender.address as string);
-        const roomId = stringToUuid(message.group.id as string);
+        const userId = stringToUuid(message.senderInboxId as string);
+        const roomId = stringToUuid(message.conversationId as string);
         await elizaRuntime.ensureConnection(
             userId,
             roomId,
-            message.sender.address,
-            message.sender.address,
+            message.senderInboxId,
+            message.senderInboxId,
             "xmtp"
         );
 
@@ -174,11 +220,7 @@ const onMessage = async (message: Message) => {
             }
         );
         for (const newMsg of _newMessage) {
-            await xmtp.send({
-                message: newMsg.text,
-                originalMessage: message,
-                metadata: {},
-            });
+            await conversation?.send(newMsg.text);
         }
     } catch (error) {
         elizaLogger.error("Error in onMessage", error);
