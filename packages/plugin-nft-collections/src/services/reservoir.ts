@@ -77,7 +77,7 @@ export class ReservoirService {
             const result = await pRetry(
                 async () => {
                     const response = await fetch(
-                        `https://api.reservoir.tools${endpoint}?${new URLSearchParams(
+                        `https://nft.reservoir.tools/reference/what-is-reservoir${endpoint}?${new URLSearchParams(
                             params
                         ).toString()}`,
                         {
