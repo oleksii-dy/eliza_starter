@@ -9,8 +9,8 @@ export const testPlugin: Plugin = {
     name: "test",
     description: "Test plugin with basic actions and evaluators",
     actions: [zapperAction],
-    providers: [addressDataProvider],
-    evaluators: [addressDataEvaluator],
+    providers: [],
+    evaluators: [],
 };
 
 export default testPlugin;

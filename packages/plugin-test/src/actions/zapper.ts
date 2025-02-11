@@ -10,11 +10,12 @@ import {
     type Memory,
     type State,
 } from "@elizaos/core";
-import { db, AddressRecord, ADDRESS_TYPES } from "../evaluators/addressDataEvaluator";
+import { db, AddressRecord } from "../evaluators/addressDataEvaluator";
+import { isValidAddress } from "../evaluators/addressDataEvaluator";
 
 export const zapperAction: Action = {
     name: "ZAPPER",
-    description: "Get the top five held assets by an address",
+    description: "Get the top five held assets by an address or addresses",
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         return true;
     },
@@ -95,49 +96,40 @@ export const zapperAction: Action = {
 
         try {
             let addresses: string[];
-            let description: string;
 
-            if (_message.content.text.toLowerCase().includes("watchlist")) {
-                // Extract name from message
-                const name = await generateText({
-                    runtime: _runtime,
-                    context: "Extract the name from the user message. The message is:",
-                    modelClass: ModelClass.SMALL,
-                    stop: ["\n"],
-                });
-                
-                const getWatchlistStmt = db.db.prepare(
-                    `SELECT * FROM addresses WHERE userId = ? AND type = ? AND LOWER(name) = LOWER(?)`
-                );
-                const watchlistAddresses = getWatchlistStmt
-                    .bind(_message.userId, ADDRESS_TYPES.WATCHLIST, name)
-                    .all() as AddressRecord[];
-                
-                if (watchlistAddresses.length === 0) {
-                    throw new Error(`Could not find addresses for ${name} in watchlist`);
-                }
-                
-                addresses = watchlistAddresses.map(entry => entry.address);
-                description = `${name}'s wallets`;
-            } else {
-                const getPrimaryStmt = db.db.prepare(
-                    `SELECT * FROM addresses WHERE userId = ? AND type = ?`
-                );
-                const primaryAddresses = getPrimaryStmt
-                    .bind(_message.userId, ADDRESS_TYPES.PRIMARY)
-                    .all() as AddressRecord[];
+            const extractionTemplate = `Extract only the wallet addresses from this text, nothing else. Return them in a simple JSON array:
+            ${_message.content.text}`;
 
-                if (primaryAddresses.length === 0) {
-                    throw new Error("Please add your wallet addresses first");
-                }
-                addresses = primaryAddresses.map(entry => entry.address);
-                description = "your wallets";
+            const extractedAddresses = await generateText({
+                runtime: _runtime,
+                context: extractionTemplate,
+                modelClass: ModelClass.SMALL,
+                stop: ["\n"]
+            });
+
+            // Clean and parse the response - remove markdown formatting
+            const cleanedResponse = extractedAddresses
+                .replace(/```json\n?/g, '')  // Remove opening ```json
+                .replace(/```\n?/g, '')      // Remove closing ```
+                .trim();
+
+            elizaLogger.info({ cleanedResponse }, "Cleaned response");
+            const providedAddresses = JSON.parse(cleanedResponse) as string[];
+
+            if (providedAddresses.length > 0) {
+                addresses = providedAddresses;
+            }
+
+            // Validate all addresses
+            const invalidAddresses = addresses.filter(addr => !isValidAddress(addr));
+            if (invalidAddresses.length > 0) {
+                throw new Error(`Invalid address format for: ${invalidAddresses.join(', ')}`);
             }
 
             const assetsInfo = await getZapperAssets(addresses);
 
             const responseText = 
-                `The top 5 assets held across ${description} are:\n\n${assetsInfo}`;
+                `The top 5 assets held across the provided wallets are:\n\n${assetsInfo}`;
 
             const newMemory: Memory = {
                 userId: _message.agentId,
@@ -151,7 +143,6 @@ export const zapperAction: Action = {
             };
 
             await _runtime.messageManager.createMemory(newMemory);
-
             _callback(newMemory.content);
 
             return true;
@@ -165,7 +156,7 @@ export const zapperAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "What assets does 0x3d280fde2ddb59323c891cf30995e1862510342f hold?",
+                    text: "Show me the holdings for 0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
                 },
             },
             {
@@ -177,19 +168,7 @@ export const zapperAction: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "Show me the top holdings for 0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
-                },
-            },
-            {
-                user: "{{user2}}",
-                content: { text: "", action: "ZAPPER" },
-            },
-        ],
-        [
-            {
-                user: "{{user1}}",
-                content: {
-                    text: "What's in the wallet 0x1234567890abcdef1234567890abcdef12345678?",
+                    text: "Check these wallets: 0xd8da6bf26964af9d7eed9e03e53415d37aa96045, 0xd8da6bf26964af9d7eed9e03e53415d37aa96048",
                 },
             },
             {
