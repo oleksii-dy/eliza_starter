@@ -55,6 +55,13 @@ export async function resolveDatabasePath(options?: { requiredConfig?: boolean }
       message: "Enter path to create a database:",
     });
 
+    // check if path was provided
+    if (!dbInput.value) {
+      logger.error("No path provided. Please provide a path to create a database.");
+      process.exit(1);
+    }
+
+    // check if the path is valid
     if (!fs.existsSync(dbInput.value)) {
       logger.error("Invalid path. Please provide a valid path or directory.");
       process.exit(1);
