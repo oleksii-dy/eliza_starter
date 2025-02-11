@@ -663,6 +663,7 @@ export enum Clients {
     SIMSAI = "simsai",
     XMTP = "xmtp",
     DEVA = "deva",
+    TAKO = "tako",
 }
 
 export interface IAgentConfig {
@@ -776,6 +777,9 @@ export type Character = {
         jeeterMessageHandlerTemplate?: string;
         jeeterShouldRespondTemplate?: string;
         devaPostTemplate?: string;
+        takoMessageHandlerTemplate?: TemplateType;
+        takoShouldRespondTemplate?: TemplateType;
+        takoPostTemplate?: TemplateType;
     };
 
     /** Character biography */
