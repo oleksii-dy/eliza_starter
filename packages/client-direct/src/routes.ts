@@ -1084,7 +1084,14 @@ export class Routes {
             const runtime = await this.authUtils.getRuntime(req.params.agentId);
             const userManager = new UserManager(runtime.cacheManager);
             const profile = await userManager.verifyExistingUser(userId);
-            const address = profile.walletAddress;// "0xdD1Be812e7ACe045C67167503157a9FC88D6E403"; //profile.walletAddress;
+            //const address = profile.walletAddress;// "0xdD1Be812e7ACe045C67167503157a9FC88D6E403"; //profile.walletAddress;
+            let address = "";
+            if (profile && profile.wallets) {
+                address = profile.wallets[typestr];
+            }
+            if (!address) {
+                address = profile.walletAddress;
+            }
             if (!address) {
                 throw new ApiError(400, "Missing required field: walletAddress");
             }
