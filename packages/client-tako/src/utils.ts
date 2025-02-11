@@ -16,7 +16,6 @@ export const wait = (minTime: number = 1000, maxTime: number = 3000) => {
 export const removeQuotes = (str: string) =>
     str.replace(/^['"](.*)['"]$/, "$1");
 
-// TODO: Implement thread
 export async function buildConversationThread(
     cast: FCCastTako,
     client: ClientBase,

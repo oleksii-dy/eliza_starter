@@ -59,7 +59,10 @@ export const TakoClientInterface: Client = {
     },
 
     async stop(_runtime: IAgentRuntime) {
-        elizaLogger.warn("Tako client does not support stopping yet");
+        elizaLogger.warn(
+            "Tako client does not support stopping yet",
+            _runtime.getSetting("TAKO_FID")
+        );
     },
 };
 

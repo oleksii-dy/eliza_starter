@@ -18,7 +18,7 @@ import { wait } from "./utils.ts";
 import { getCleanedContent } from "./utils/text.ts";
 
 class RequestQueue {
-    private queue: (() => Promise<any>)[] = [];
+    private queue: (() => Promise<void>)[] = [];
     private processing: boolean = false;
 
     async add<T>(request: () => Promise<T>): Promise<T> {
@@ -80,8 +80,6 @@ export class ClientBase extends EventEmitter {
 
     profile: FCProfileTako | null;
 
-    callback: (self: ClientBase) => any = null;
-
     onReady() {
         throw new Error(
             "Not implemented in base class, please call from subclass"
@@ -123,8 +121,6 @@ export class ClientBase extends EventEmitter {
             throw new Error("Failed to load profile");
         }
 
-        // TODO: load latest checked cast hash
-        // await this.loadLatestCheckedCastHash();
         await this.populateTimeline();
     }
 
@@ -276,14 +272,6 @@ export class ClientBase extends EventEmitter {
         if (cachedCast) {
             return cachedCast;
         }
-
-        // TODO: implement
-        // const cast = await this.requestQueue.add(() =>
-        //     // this.takoApiClient.getCast(castHash)
-        // );
-
-        // await this.cacheCast(cast);
-        // return cast;
     }
     // #endregion
 
@@ -382,7 +370,6 @@ export class ClientBase extends EventEmitter {
             }
 
             // sent cast
-            // TODO: add asset urls
             const sentResult = await this.requestQueue.add(async () =>
                 this.takoApiClient.sendCast({
                     text: cleanedText,
