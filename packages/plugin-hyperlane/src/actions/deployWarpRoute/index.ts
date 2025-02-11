@@ -1,247 +1,189 @@
-import type {
-    DeployedOwnableConfig,
-    IsmConfig,
-    WarpCoreConfig,
-    WarpRouteDeployConfig,
-} from "@hyperlane-xyz/sdk";
-import { TokenFactories } from "@hyperlane-xyz/sdk";
-
-import { AddWarpRouteOptions } from "@hyperlane-xyz/registry";
 import {
-    HypERC20Deployer,
-    HyperlaneContractsMap,
-    TokenType,
-    WarpRouteDeployConfigSchema,
-} from "@hyperlane-xyz/sdk";
-import { ProtocolType } from "@hyperlane-xyz/utils";
-import { writeYamlOrJson } from "../../utils/configOps";
-import { CommandContext, WriteCommandContext } from "../core/context";
-import {
-    prepareDeploy,
-    requestAndSaveApiKeys,
-    runPreflightChecksForChains,
-} from "../core/utils";
-import {
-    createDefaultWarpIsmConfig,
-    fullyConnectTokens,
-    generateTokenConfigs,
-    readWarpRouteDeployConfig,
-    setProxyAdminConfig,
-} from "./config";
-import { executeDeploy, writeDeploymentArtifacts } from "./deploy";
-import { MINIMUM_WARP_DEPLOY_GAS, WarpRouteDeployParams } from "./types";
+    Action,
+    ActionExample,
+    composeContext,
+    elizaLogger,
+    generateObjectDeprecated,
+    HandlerCallback,
+    IAgentRuntime,
+    Memory,
+    ModelClass,
+    State,
+} from "@elizaos/core";
+import { TokenType } from "@hyperlane-xyz/sdk";
+import { evmWalletProvider, initWalletProvider } from "@elizaos/plugin-evm";
+import { WarpDeployerClass } from "./warpRouteDeployerClass";
+import { privateKeyToSigner } from "../core/utils";
+import { GithubRegistry , chainMetadata } from "@hyperlane-xyz/registry";
+import { MultiProvider } from "@hyperlane-xyz/sdk";
+import { WriteCommandContext } from "../core/context";
 
-async function getWarpCoreConfig(
-    { warpDeployConfig, context }: WarpRouteDeployParams,
-    contracts: HyperlaneContractsMap<TokenFactories>
-): Promise<{
-    warpCoreConfig: WarpCoreConfig;
-    addWarpRouteOptions?: AddWarpRouteOptions;
-}> {
-    const warpCoreConfig: WarpCoreConfig = { tokens: [] };
+export const deployWarpRoute:  Action = {
+    name : "DEPLOY_WARP_ROUTE",
+    similes: [
+        "SETUP_WARP_ROUTE"
+    ] ,
+    description : "Action for deploying Warp Route for enabling token transfer between chains ",
+    validate: async (
+            runtime: IAgentRuntime,
+            message: Memory,
+            state?: State
+        ): Promise<boolean> => {
+            const signerPrivateKey = runtime.getSetting("HYPERLANE_PRIVATE_KEY");
+            if (!signerPrivateKey) {
+                return Promise.resolve(false);
+            }
 
-    // TODO: replace with warp read
-    const tokenMetadata = await HypERC20Deployer.deriveTokenMetadata(
-        context.multiProvider,
-        warpDeployConfig
-    );
-    //@ts-ignore
+            const signer = privateKeyToSigner(signerPrivateKey);
 
-    const { decimals, symbol, name } = tokenMetadata;
+            const signerAddress = runtime.getSetting(
+                "HYPERLANE_ADDRESS"
+            ) as `0x${string}`;
+            if (!signerAddress || (await signer.getAddress()) !== signerAddress) {
+                return Promise.resolve(false);
+            }
 
-    generateTokenConfigs(
-        warpCoreConfig,
-        warpDeployConfig,
-        contracts,
-        symbol,
-        name,
-        decimals
-    );
+            const chainName = runtime.getSetting("CHAIN_NAME");
+            if (!chainName) {
+                Promise.resolve(false);
+            }
 
-    fullyConnectTokens(warpCoreConfig);
+            return Promise.resolve(true);
+        },
+        handler : async(
+            runtime : IAgentRuntime ,
+            message : Memory ,
+            state?: State ,
+            options?: {
+                [key: string] : unknown;
+            },
+            callback?: HandlerCallback
+        ) => {
 
-    return { warpCoreConfig, addWarpRouteOptions: { symbol } };
-}
+            try{
 
-export class WarpDeployerClass {
-    private tokenAddress: string;
-    private type: TokenType;
-    private outPath: string;
-
-    constructor(tokenAddress: string, type: TokenType, outPath: string) {
-        this.tokenAddress = tokenAddress;
-        this.type = type;
-        this.outPath = outPath;
-    }
-
-    private async createWarpRouteDeployConfig({
-        context,
-    }: {
-        context: CommandContext;
-        outPath: string;
-    }) {
-        const result: WarpRouteDeployConfig = {};
-
-        const chain = context.chainMetadata[0].name;
-
-        if (!context.signerAddress) {
-            throw new Error("Signer address is required");
-        }
-        const owner = context.signerAddress;
-
-        const chainAddress = await context.registry.getChainAddresses(chain);
-
-        const mailbox = chainAddress?.mailbox;
-        if (!mailbox) {
-            throw new Error(`Mailbox address not found for chain ${chain}`);
-        }
-
-        const proxyAdmin: DeployedOwnableConfig = await setProxyAdminConfig(
-            context,
-            chain,
-            owner,
-            owner
-        );
-
-        const interchainSecurityModule: IsmConfig =
-            createDefaultWarpIsmConfig(owner);
-
-        const isNft =
-            this.type === TokenType.syntheticUri ||
-            this.type === TokenType.collateralUri;
-
-        switch (this.type) {
-            case TokenType.collateral:
-            case TokenType.XERC20:
-            case TokenType.XERC20Lockbox:
-            case TokenType.collateralFiat:
-            case TokenType.collateralUri:
-            case TokenType.fastCollateral:
-                result[chain] = {
-                    mailbox,
-                    type: this.type,
-                    owner,
-                    proxyAdmin,
-                    isNft,
-                    interchainSecurityModule,
-                    token: this.tokenAddress,
-                };
-                break;
-            case TokenType.syntheticRebase:
-                result[chain] = {
-                    mailbox,
-                    type: this.type,
-                    owner,
-                    isNft,
-                    proxyAdmin,
-                    collateralChainName: "", // This will be derived correctly by zod.parse() below
-                    interchainSecurityModule,
-                };
-                break;
-            case TokenType.collateralVaultRebase:
-                result[chain] = {
-                    mailbox,
-                    type: this.type,
-                    owner,
-                    proxyAdmin,
-                    isNft,
-                    interchainSecurityModule,
-                    token: this.tokenAddress,
-                };
-                break;
-            case TokenType.collateralVault:
-                result[chain] = {
-                    mailbox,
-                    type: this.type,
-                    owner,
-                    proxyAdmin,
-                    isNft,
-                    interchainSecurityModule,
-                    token: this.tokenAddress,
-                };
-                break;
-            default:
-                result[chain] = {
-                    mailbox,
-                    type: this.type,
-                    owner,
-                    proxyAdmin,
-                    isNft,
-                    interchainSecurityModule,
-                };
-
-                try {
-                    const warpRouteDeployConfig =
-                        WarpRouteDeployConfigSchema.parse(result);
-                    writeYamlOrJson(
-                        this.outPath,
-                        warpRouteDeployConfig,
-                        "yaml"
-                    );
-                } catch (e) {
-                    console.log(
-                        `Warp route deployment config is invalid, please see https://github.com/hyperlane-xyz/hyperlane-monorepo/blob/main/typescript/cli/examples/warp-route-deployment.yaml for an example.`
-                    );
-                    throw e;
+                if (!state){
+                    state = (await runtime.composeState(message)) as State;
+                }else{
+                    state = await runtime.updateRecentMessageState(state);
                 }
-        }
-    }
 
-    public async runWarpRouteDeploy({
-        context,
-        warpRouteDeployConfigPath,
-    }: {
-        context: WriteCommandContext;
-        warpRouteDeployConfigPath: string;
-    }) {
-        const { chainMetadata, registry } = context;
+                 const hyperlaneContext = composeContext({
+                                state,
+                                template: "", // TODO: Add template
+                            });
+                            const content = await generateObjectDeprecated({
+                                runtime,
+                                context: hyperlaneContext,
+                                modelClass: ModelClass.LARGE,
+                            });
 
-        const warpRouteConfig = await readWarpRouteDeployConfig(
-            warpRouteDeployConfigPath,
-            context
-        );
+                            const registry = new GithubRegistry();
 
-        const chains = Object.keys(warpRouteConfig);
+                            const signerPrivateKey = runtime.getSetting(
+                                "HYPERLANE_PRIVATE_KEY"
+                            )as `0x${string}`;
+                            if (!signerPrivateKey) {
+                                elizaLogger.error("No signer private key found");
+                            }
 
-        const apiKeys = await requestAndSaveApiKeys(
-            chains,
-            chainMetadata,
-            registry
-        );
+                            const signer = privateKeyToSigner(signerPrivateKey);
 
-        const deploymentParams: WarpRouteDeployParams = {
-            context,
-            warpDeployConfig: warpRouteConfig,
-        };
+                            const signerAddress = runtime.getSetting(
+                                "HYPERLANE_ADDRESS"
+                            ) as `0x${string}`;
+                            if (
+                                !signerAddress ||
+                                (await signer.getAddress()) !== signerAddress
+                            ) {
+                                throw new Error("Signer address not found");
+                            }
 
-        const ethereumChains = chains.filter(
-            (chain) => chainMetadata[chain].protocol === ProtocolType.Ethereum
-        );
-        await runPreflightChecksForChains({
-            context,
-            chains: ethereumChains,
-            minGas: MINIMUM_WARP_DEPLOY_GAS,
-        });
+                            const context: WriteCommandContext = {
+                                            registry: registry,
+                                            multiProvider: new MultiProvider(chainMetadata),
+                                            skipConfirmation: true,
+                                            signerAddress: signerAddress,
+                                            key: signerPrivateKey,
+                                            chainMetadata,
+                                            signer,
+                                        };
 
-        const initialBalances = await prepareDeploy(
-            context,
-            null,
-            ethereumChains
-        );
-        const deployedContracts = await executeDeploy(
-            deploymentParams,
-            apiKeys
-        );
+                //TODO  :Add the folder path for the Warp Route deployment
+                const warpDeployer = new WarpDeployerClass(
+                    runtime.getSetting("HYPERLANE_TOKEN_ADDRESS") as string,
+                    runtime.getSetting("HYPERLANE_TOKEN_TYPE") as TokenType,
+                    ""
+                );
 
-        const { warpCoreConfig, addWarpRouteOptions } = await getWarpCoreConfig(
-            deploymentParams,
-            deployedContracts
-        );
+                const chains = runtime.getSetting("HYPERLANE_CHAINS") ? runtime.getSetting("HYPERLANE_CHAINS")?.split(",") : [];
 
-        await writeDeploymentArtifacts(
-            warpCoreConfig,
-            context,
-            addWarpRouteOptions
-        );
-    }
+                if (!chains) {
+                    elizaLogger.error("No chains found for Warp Route deployment");
+                    throw new Error("No chains found for Warp Route deployment");
+                }
+
+                //TODO: Add validation if the config is available
+                warpDeployer.createWarpRouteDeployConfig({
+                    context,
+                    chains,
+                })
+
+
+                warpDeployer.runWarpRouteDeploy({
+                    context : context ,
+                    warpRouteDeployConfigPath : "" //TODO : Add the path for the Warp Route deployment
+                })
+
+                if (callback){
+                    callback({
+                        text: "Successfully deployed Warp Route",
+                    });
+                }
+
+                return Promise.resolve(true);
+            }catch(error){
+                elizaLogger.log(
+                    "Error in deploying Warp Route",
+                    error.message
+                )
+
+                if (callback){
+                    callback({
+                        text : "Error in deploying Warp Route",
+                    })
+                }
+
+                return Promise.resolve(false)
+            }
+        } ,
+        examples: [
+            [
+                {
+                    user: "{{user1}}",
+                    content: {
+                        text: "Send a message from Ethereum to Polygon",
+                        options: {
+                            sourceChain: "ethereum",
+                            targetChain: "polygon",
+                            recipientAddress: "0x1234...",
+                            message: "Hello Cross Chain!",
+                        },
+                    },
+                },
+                {
+                    user: "{{agent}}",
+                    content: {
+                        text: "I'll send your message across chains.",
+                        action: "SEND_CROSS_CHAIN_MESSAGE",
+                    },
+                },
+                {
+                    user: "{{agent}}",
+                    content: {
+                        text: "Successfully sent message across chains. Transaction hash: 0xabcd...",
+                    },
+                },
+            ],
+        ] as ActionExample[][],
 }

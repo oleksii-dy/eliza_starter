@@ -17,3 +17,8 @@ export interface WarpRouteDeployParams {
 }
 
 export const MINIMUM_WARP_DEPLOY_GAS = (3e7).toString();
+
+export interface DeployParams {
+    context: WriteCommandContext;
+    warpDeployConfig: WarpRouteDeployConfig;
+  }
