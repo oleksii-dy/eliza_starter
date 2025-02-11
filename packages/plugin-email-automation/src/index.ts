@@ -1,7 +1,7 @@
-import { Plugin } from "@elizaos/core";
+import type { Plugin } from "@elizaos/core";
 import { EmailAutomationService } from "./services/emailAutomationService";
 
-export const emailPlugin: Plugin = {
+export const emailAutomationPlugin: Plugin = {
     name: "email-automation",
     description: "AI-powered email automation plugin for Eliza",
     services: [new EmailAutomationService()],
@@ -10,4 +10,4 @@ export const emailPlugin: Plugin = {
     providers: [],
 };
 
-export default emailPlugin;
+export default emailAutomationPlugin;

@@ -84,7 +84,11 @@ export class EmailAutomationService extends Service {
         return {
             memory,
             state,
+<<<<<<< HEAD
             metadata: state?.metadata || {},
+=======
+            metadata: state?.metadata as Record<string, unknown>,
+>>>>>>> 81a35281b93d5e8ca0745e9d13a1943e9a90681b
             timestamp: new Date(),
             conversationId: memory.id || ''
         };
@@ -390,4 +394,8 @@ export class EmailAutomationService extends Service {
         // Default platform
         return 'unknown';
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 81a35281b93d5e8ca0745e9d13a1943e9a90681b
