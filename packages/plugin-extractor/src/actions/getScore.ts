@@ -1,5 +1,6 @@
 import {
     Action,
+    elizaLogger,
     HandlerCallback,
     IAgentRuntime,
     Memory,
@@ -14,15 +15,38 @@ export const firewallAction: Action = {
     similes: ["FIREWALL", "*"],
     description: "Firewll the user",
     handler: async (
-        _,
+        runtime: IAgentRuntime,
         message: Memory,
         state: State,
         __,
         callback: HandlerCallback
     ) => {
+        if (state?.recentMessagesData?.length) {
+            const latestAgentReply = state?.recentMessagesData?.map(
+                (item) => item?.content?.text
+            )[0];
+            const config = await validateExtractorConfig(runtime);
+
+            const risk = await getPromptRiskScore(
+                runtime,
+                latestAgentReply,
+                "prompt"
+            );
+
+            if (risk > config.FIREWALL_SCORE_THRESHOLD) {
+                const rejectMessage: Content = {
+                    text: `Forbidden by firewall: '${message.content.text}'`,
+                    action: "FIREWALL",
+                };
+
+                callback(rejectMessage, state);
+                return false;
+            }
+        }
+
         if (message.content.text.toLowerCase().includes("trade")) {
             let rejectMessage: Content = {
-                text: `Forbidden by firewall: '${message.content.text}'`,
+                text: `Forbidden by firewall: '${message.content?.text}'`,
                 action: "FIREWALL",
             };
 
@@ -55,7 +79,7 @@ export const firewallAction: Action = {
                 callback(rejectMessage, state);
                 return false;
             } else {
-                let risk = await getPromptRiskScore(
+                const risk = await getPromptRiskScore(
                     runtime,
                     message.content.text,
                     "prompt"
