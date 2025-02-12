@@ -96,17 +96,17 @@ export const getTracesByRoom = async (req: Request, res: Response) => {
     }
 };
 
-// export const getUniqueRuns = async (req: Request, res: Response) => {
-//     try {
-//         const result = await db.query("SELECT DISTINCT RUN FROM traces");
-//         res.status(200).json({
-//             unique_runs: result.rows.map((row) => row.run),
-//         });
-//     } catch (error: any) {
-//         console.error("❌ Error fetching unique RUN values:", error);
-//         res.status(500).json({ message: "Server Error", error: error.message });
-//     }
-// };
+export const getUniqueRuns = async (req: Request, res: Response) => {
+    try {
+        const result = await db.query("SELECT DISTINCT RUN FROM traces");
+        res.status(200).json({
+            unique_runs: result.rows.map((row) => row.run),
+        });
+    } catch (error: any) {
+        console.error("❌ Error fetching unique RUN values:", error);
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
+};
 
 export const getTracesByAgentId = async (req: Request, res: Response) => {
     try {
