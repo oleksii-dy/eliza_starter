@@ -138,8 +138,8 @@ export const continueAction: Action = {
                 lastAgentMessage.content.text &&
                 (lastAgentMessage.content.text.endsWith("?") ||
                     lastAgentMessage.content.text.endsWith("!"))) ||
-            message.content.text.endsWith("?") ||
-            message.content.text.endsWith("!")
+            message.content?.text?.endsWith("?") ||
+            message.content?.text?.endsWith("!")
         ) {
             elizaLogger.log(
                 `[CONTINUE] Last message had question/exclamation. Not proceeding.`
@@ -151,7 +151,7 @@ export const continueAction: Action = {
         const messageExists = agentMessages
             .slice(0, maxContinuesInARow + 1)
             .some(
-                (m: { content: any }) => m.content.text === message.content.text
+                (m: { content: any }) => m.content?.text === message.content?.text
             );
 
         if (messageExists) {
