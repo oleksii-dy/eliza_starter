@@ -1,0 +1,19 @@
+{
+  "name": "crypto-monitor",
+  "version": "1.0.0",
+  "description": "Plugin for monitoring cryptocurrency prices",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@eliza/core": "^1.0.0",
+    "axios": "^1.5.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.0",
+    "jest": "^26.0.0"
+  }
+}
