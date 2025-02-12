@@ -7,7 +7,7 @@ import {
     type Memory,
     type UUID,
 } from "../src/types";
-import { mockCharacter } from "./mockCharacter.ts";
+import { defaultCharacter } from "../src/defaultCharacter";
 
 // Mock dependencies with minimal implementations
 const mockDatabaseAdapter: IDatabaseAdapter = {
@@ -73,7 +73,7 @@ describe("AgentRuntime", () => {
         vi.clearAllMocks();
         runtime = new AgentRuntime({
             token: "test-token",
-            character: mockCharacter,
+            character: defaultCharacter,
             databaseAdapter: mockDatabaseAdapter,
             cacheManager: mockCacheManager,
             modelProvider: ModelProviderName.OPENAI,
