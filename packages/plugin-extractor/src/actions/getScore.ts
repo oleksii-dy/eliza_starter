@@ -21,11 +21,12 @@ export const firewallAction: Action = {
         __,
         callback: HandlerCallback
     ) => {
+        const config = await validateExtractorConfig(runtime);
+
         if (state?.recentMessagesData?.length) {
             const latestAgentReply = state?.recentMessagesData?.map(
                 (item) => item?.content?.text
             )[0];
-            const config = await validateExtractorConfig(runtime);
 
             const risk = await getPromptRiskScore(
                 runtime,
@@ -44,7 +45,11 @@ export const firewallAction: Action = {
             }
         }
 
-        if (message.content.text.toLowerCase().includes("trade")) {
+        if (
+            config.FIREWALL_STOP_LIST.some((word) =>
+                message.content.text.toLowerCase().includes(word)
+            )
+        ) {
             let rejectMessage: Content = {
                 text: `Forbidden by firewall: '${message.content?.text}'`,
                 action: "FIREWALL",
