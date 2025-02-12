@@ -99,13 +99,11 @@ export const portfolioAction: Action = {
                         currency: 'USD'
                     });
 
-                    return `
-${balance.token.baseToken.name} (${balance.token.baseToken.symbol})
-                    Network: ${balance.network}
-                    Balance: ${formattedBalance}
-                    Value: ${formattedUSD}`;
-                })
-                .join("\n");
+                    return `${balance.token.baseToken.name} (${balance.token.baseToken.symbol})
+Network: ${balance.network}
+Balance: ${formattedBalance}
+Value: ${formattedUSD}`;
+                });
 
             const nftSection = portfolio.nftBalances
                 .map(nft => {
@@ -113,11 +111,9 @@ ${balance.token.baseToken.name} (${balance.token.baseToken.symbol})
                         style: 'currency',
                         currency: 'USD'
                     });
-                    return `
-${nft.network}
-                    NFT Value: ${formattedUSD}`;
-                })
-                .join("\n");
+                    return `${nft.network}
+NFT Value: ${formattedUSD}`
+                ;});
 
             const totalUSD = portfolio.totals.total.toLocaleString(undefined, {
                 style: 'currency',
@@ -136,16 +132,15 @@ ${nft.network}
                         style: 'currency',
                         currency: 'USD'
                     });
-                    return `
-                    ${net.network}: ${formattedUSD}`;
+                    return `${net.network}: ${formattedUSD}`;
                 });
 
-            return `💰 Portfolio Summary:\n
-                    Total Value (excluding NFTs): ${totalUSD}
-                    Total Value (including NFTs): ${totalWithNFTUSD}
+            return `💰 Portfolio Summary:
+Total Value (excluding NFTs): ${totalUSD}
+Total Value (including NFTs): ${totalWithNFTUSD}
             
 🌐 Network Breakdown:
-                    ${networkTotals}
+${networkTotals}
             
 🪙 Top Token Holdings:
 ${tokenSection}
