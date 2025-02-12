@@ -4,8 +4,8 @@ import {
     getUniqueAgentId,
     getUniqueRuns,
     getAllTraces,
-    getTracesByRun,
-    getUniqueRunsByAgent,
+    getTracesByRoom,
+    getUniqueRoomIdByAgent,
 } from "../controllers/tracesController";
 
 const router = express.Router();
@@ -37,63 +37,6 @@ router.get("/", getAllTraces);
 
 /**
  * @swagger
- * /api/traces/unique-runs:
- *   get:
- *     summary: Fetch all unique RUN values
- *     description: Retrieves a list of all unique RUN values from the traces table.
- *     responses:
- *       200:
- *         description: A JSON array of unique RUN values.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 unique_runs:
- *                   type: array
- *                   items:
- *                     type: string
- *       500:
- *         description: Server error
- */
-router.get("/unique-runs", getUniqueRuns);
-
-/**
- * @swagger
- * /api/traces/unique-runs/by-agent/{agentId}:
- *   get:
- *     summary: Fetch unique RUN values for a specific Agent ID
- *     description: Retrieves a list of distinct RUN values where the given agentId exists in the traces table.
- *     parameters:
- *       - in: path
- *         name: agentId
- *         required: true
- *         schema:
- *           type: string
- *         description: The Agent ID to filter unique runs.
- *     responses:
- *       200:
- *         description: A JSON array of unique RUN values linked to the given agentId.
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 agent_id:
- *                   type: string
- *                 unique_runs:
- *                   type: array
- *                   items:
- *                     type: string
- *       400:
- *         description: Missing or invalid Agent ID
- *       500:
- *         description: Server error
- */
-router.get("/unique-runs/by-agent/:agentId", getUniqueRunsByAgent);
-
-/**
- * @swagger
  * /api/traces/unique-agent-ids:
  *   get:
  *     summary: Fetch all unique AgentId values
@@ -117,43 +60,77 @@ router.get("/unique-agent-ids", getUniqueAgentId);
 
 /**
  * @swagger
- * /api/traces/by-run/{runId}:
+ * /api/traces/unique-room_id/by-agent/{agent_id}:
  *   get:
- *     summary: Fetch traces by RUN value
- *     description: Retrieves traces filtered by a specific RUN ID.
+ *     summary: Fetch unique RoomId values for a specific Agent ID
+ *     description: Retrieves a list of distinct RoomId values where the given agent_id exists in the traces table.
  *     parameters:
  *       - in: path
- *         name: runId
+ *         name: agent_id
  *         required: true
  *         schema:
  *           type: string
- *         description: The RUN value to filter traces.
- *       - in: query
- *         name: name
- *         schema:
- *           type: string
- *         description: Filter by name field (optional)
- *       - in: query
- *         name: start_date
- *         schema:
- *           type: string
- *           format: date-time
- *         description: Filter by start timestamp (YYYY-MM-DD HH:MM:SS) (optional)
- *       - in: query
- *         name: end_date
- *         schema:
- *           type: string
- *           format: date-time
- *         description: Filter by end timestamp (YYYY-MM-DD HH:MM:SS) (optional)
+ *         description: The Agent ID to filter unique room_id.
  *     responses:
  *       200:
- *         description: A JSON array of traces for the specified RUN ID.
+ *         description: A JSON array of unique RUN values linked to the given agent_id.
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 run_id:
+ *                 agent_id:
+ *                   type: string
+ *                 unique_room_id:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       400:
+ *         description: Missing or invalid Agent ID
+ *       500:
+ *         description: Server error
+ */
+router.get("/unique-room_id/by-agent/:agent_id", getUniqueRoomIdByAgent);
+
+/**
+ * @swagger
+ * /api/traces/by-room/{roomId}:
+ *   get:
+ *     summary: Fetch traces by ROOM ID
+ *     description: Retrieves traces filtered by a specific ROOM ID.
+ *     parameters:
+ *       - in: path
+ *         name: roomId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ROOM ID to filter traces.
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Filter by name field (optional).
+ *       - in: query
+ *         name: start_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter by start date (YYYY-MM-DD) (optional).
+ *       - in: query
+ *         name: end_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter by end date (YYYY-MM-DD) (optional).
+ *     responses:
+ *       200:
+ *         description: A JSON array of traces for the specified ROOM ID.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 room_id:
  *                   type: string
  *                 total_records:
  *                   type: integer
@@ -164,26 +141,53 @@ router.get("/unique-agent-ids", getUniqueAgentId);
  *                     properties:
  *                       id:
  *                         type: integer
- *                         description: Unique ID of the trace
- *                       run:
+ *                         description: Unique ID of the trace.
+ *                       room_id:
  *                         type: string
- *                         description: UUID of the RUN
- *                       time:
+ *                         description: UUID of the ROOM.
+ *                       start_time:
  *                         type: string
  *                         format: date-time
- *                         description: Timestamp of the trace event
+ *                         description: Start time of the trace event (YYYY-MM-DD HH:MM:SS).
+ *                       end_time:
+ *                         type: string
+ *                         format: date-time
+ *                         description: End time of the trace event (YYYY-MM-DD HH:MM:SS).
  *                       name:
  *                         type: string
- *                         description: Name of the trace event
+ *                         description: Name of the trace event.
  *                       data:
  *                         type: object
- *                         description: JSON data associated with the trace event
+ *                         description: JSON data associated with the trace event.
  *       400:
- *         description: Missing or invalid RUN ID
+ *         description: Missing or invalid ROOM ID.
+ *       500:
+ *         description: Server error.
+ */
+router.get("/by-room/:roomId", getTracesByRoom);
+
+/**
+ * @swagger
+ * /api/traces/unique-runs:
+ *   get:
+ *     summary: Fetch all unique RUN values
+ *     description: Retrieves a list of all unique RUN values from the traces table.
+ *     responses:
+ *       200:
+ *         description: A JSON array of unique RUN values.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 unique_room_ids:
+ *                   type: array
+ *                   items:
+ *                     type: string
  *       500:
  *         description: Server error
  */
-router.get("/by-run/:runId", getTracesByRun);
+router.get("/unique-runs", getUniqueRuns);
 
 /**
  * @swagger
