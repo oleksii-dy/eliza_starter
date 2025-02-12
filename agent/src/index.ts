@@ -11,7 +11,6 @@ import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
-import { DirectClient } from "@elizaos/client-direct";
 import { PrimusAdapter } from "@elizaos/plugin-primus";
 import { Plugin } from "@elizaos/core";
 import {
@@ -383,7 +382,10 @@ export function getTokenForProvider(
         case ModelProviderName.OLLAMA:
             return "";
         case ModelProviderName.GAIANET:
-            return "";
+            return (
+                character.settings?.secrets?.GAIANET_API_KEY ||
+                settings.GAIANET_API_KEY
+            );
         case ModelProviderName.OPENAI:
             return (
                 character.settings?.secrets?.OPENAI_API_KEY ||
@@ -514,11 +516,14 @@ export function getTokenForProvider(
 }
 
 function initializeDatabase(dataDir: string, characterConfig: Character) {
-    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+    if (
+        getSecret(characterConfig, "SUPABASE_URL") &&
+        getSecret(characterConfig, "SUPABASE_ANON_KEY")
+    ) {
         elizaLogger.info("Initializing Supabase connection...");
         const db = new SupabaseDatabaseAdapter(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_ANON_KEY
+            getSecret(characterConfig, "SUPABASE_URL"),
+            getSecret(characterConfig, "SUPABASE_ANON_KEY")
         );
 
         // Test the connection
@@ -533,11 +538,11 @@ function initializeDatabase(dataDir: string, characterConfig: Character) {
             });
 
         return db;
-    } else if (process.env.POSTGRES_URL) {
+    } else if (getSecret(characterConfig, "POSTGRES_URL")) {
         elizaLogger.info("Initializing PostgreSQL connection...");
         const db = new PostgresDatabaseAdapter(
             {
-                connectionString: process.env.POSTGRES_URL,
+                connectionString: getSecret(characterConfig, "POSTGRES_URL"),
                 parseInputs: true,
             },
             characterConfig
@@ -555,19 +560,20 @@ function initializeDatabase(dataDir: string, characterConfig: Character) {
             });
 
         return db;
-    } else if (process.env.PGLITE_DATA_DIR) {
+    } else if (getSecret(characterConfig, "PGLITE_DATA_DIR")) {
         elizaLogger.info("Initializing PgLite adapter...");
         // `dataDir: memory://` for in memory pg
         const db = new PGLiteDatabaseAdapter(
             {
-                dataDir: process.env.PGLITE_DATA_DIR,
+                dataDir: getSecret(characterConfig, "PGLITE_DATA_DIR"),
             },
             characterConfig
         );
         return db;
     } else {
         const filePath =
-            process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
+            getSecret(characterConfig, "SQLITE_FILE") ||
+            path.resolve(dataDir, "db.sqlite");
         elizaLogger.info(`Initializing SQLite database at ${filePath}...`);
         const db = new SqliteDatabaseAdapter(new Database(filePath));
 
@@ -732,37 +738,49 @@ export async function createAgent(
     // Initialize Opacity adapter if environment variables are present
     let verifiableInferenceAdapter;
     if (
-        process.env.OPACITY_TEAM_ID &&
-        process.env.OPACITY_CLOUDFLARE_NAME &&
-        process.env.OPACITY_PROVER_URL &&
-        process.env.VERIFIABLE_INFERENCE_ENABLED === "true"
+        getSecret(character, "OPACITY_TEAM_ID") &&
+        getSecret(character, "OPACITY_CLOUDFLARE_NAME") &&
+        getSecret(character, "OPACITY_PROVER_URL") &&
+        getSecret(character, "VERIFIABLE_INFERENCE_ENABLED") === "true"
     ) {
-        verifiableInferenceAdapter = new OpacityAdapter({
-            teamId: process.env.OPACITY_TEAM_ID,
-            teamName: process.env.OPACITY_CLOUDFLARE_NAME,
-            opacityProverUrl: process.env.OPACITY_PROVER_URL,
-            modelProvider: character.modelProvider,
-            token: token,
-        });
+        verifiableInferenceAdapter = new OpacityAdapter(
+            {
+                teamId: getSecret(character, "OPACITY_TEAM_ID"),
+                teamName: getSecret(character, "OPACITY_CLOUDFLARE_NAME"),
+                opacityProverUrl: getSecret(character, "OPACITY_PROVER_URL"),
+                modelProvider: character.modelProvider,
+                token: token,
+            },
+            character
+        );
         elizaLogger.log("Verifiable inference adapter initialized");
-        elizaLogger.log("teamId", process.env.OPACITY_TEAM_ID);
-        elizaLogger.log("teamName", process.env.OPACITY_CLOUDFLARE_NAME);
-        elizaLogger.log("opacityProverUrl", process.env.OPACITY_PROVER_URL);
+        elizaLogger.log("teamId", getSecret(character, "OPACITY_TEAM_ID"));
+        elizaLogger.log(
+            "teamName",
+            getSecret(character, "OPACITY_CLOUDFLARE_NAME")
+        );
+        elizaLogger.log(
+            "opacityProverUrl",
+            getSecret(character, "OPACITY_PROVER_URL")
+        );
         elizaLogger.log("modelProvider", character.modelProvider);
         elizaLogger.log("token", token);
     }
     if (
-        process.env.PRIMUS_APP_ID &&
-        process.env.PRIMUS_APP_SECRET &&
-        process.env.VERIFIABLE_INFERENCE_ENABLED === "true"
+        getSecret(character, "PRIMUS_APP_ID") &&
+        getSecret(character, "PRIMUS_APP_SECRET") &&
+        getSecret(character, "VERIFIABLE_INFERENCE_ENABLED") === "true"
     ) {
-        verifiableInferenceAdapter = new PrimusAdapter({
-            appId: process.env.PRIMUS_APP_ID,
-            appSecret: process.env.PRIMUS_APP_SECRET,
-            attMode: "proxytls",
-            modelProvider: character.modelProvider,
-            token,
-        });
+        verifiableInferenceAdapter = new PrimusAdapter(
+            {
+                appId: getSecret(character, "PRIMUS_APP_ID"),
+                appSecret: getSecret(character, "PRIMUS_APP_SECRET"),
+                attMode: "proxytls",
+                modelProvider: character.modelProvider,
+                token,
+            },
+            character
+        );
         elizaLogger.log("Verifiable inference primus adapter initialized");
     }
 
@@ -959,9 +977,11 @@ function initializeCache(
 ) {
     switch (cacheStore) {
         case CacheStore.REDIS:
-            if (process.env.REDIS_URL) {
+            if (getSecret(character, "REDIS_URL")) {
                 elizaLogger.info("Connecting to Redis...");
-                const redisClient = new RedisClient(process.env.REDIS_URL);
+                const redisClient = new RedisClient(
+                    getSecret(character, "REDIS_URL")
+                );
                 if (!character?.id) {
                     throw new Error(
                         "CacheStore.REDIS requires id to be set in character definition"
@@ -1022,7 +1042,7 @@ async function startAgent(
         await db.init();
 
         const cache = initializeCache(
-            process.env.CACHE_STORE ?? CacheStore.DATABASE,
+            getSecret(character, "CACHE_STORE") ?? CacheStore.DATABASE,
             character,
             "",
             db
