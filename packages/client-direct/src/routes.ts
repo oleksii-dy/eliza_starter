@@ -1216,7 +1216,7 @@ export class Routes {
                         signature: snHash,
                         data: "Starknet reward processed",
                     });
-                case "base":
+                case "base-test":
                     // Handle base transfer
                     console.log("handleGainRewards 1");
                     // Connect to Ethereum node

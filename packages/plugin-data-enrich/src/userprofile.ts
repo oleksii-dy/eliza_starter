@@ -14,7 +14,7 @@ export interface UserProfile {
     agentname: string;
     bio?: string | string[];
     walletAddress?: string;
-    wallets: Record<string, string>;
+    wallets?: Record<string, string>;
     level: number;
     experience: number;
     nextLevelExp: number;
