@@ -7,7 +7,7 @@ export const extractorEnvSchema = z.object({
         .min(1, "Firewall threshold is required"),
     FIREWALL_RISKS_API: z.string().min(1, "Firewall api url is required"),
     FIREWALL_API_KEY: z.string().min(1, "Firewall api url is required"),
-    FIREWALL_STOP_LIST: z.array(null, z.string()),
+    FIREWALL_STOP_LIST: z.array(z.string()),
 });
 
 export type extractorConfig = z.infer<typeof extractorEnvSchema>;
@@ -22,10 +22,12 @@ export async function validateExtractorConfig(
             ),
             FIREWALL_RISKS_API: runtime.getSetting("FIREWALL_RISKS_API"),
             FIREWALL_API_KEY: runtime.getSetting("FIREWALL_API_KEY"),
-            FIREWALL_STOP_LIST: runtime.getSetting("FIREWALL_STOP_LIST") || [],
-        };
+            FIREWALL_STOP_LIST: runtime.getSetting("FIREWALL_STOP_LIST")
+                ? JSON.parse(runtime.getSetting("FIREWALL_STOP_LIST"))
+                : [],
+        } as extractorConfig;
 
-        return extractorEnvSchema.parse(config);
+        return extractorEnvSchema.parse(config) as extractorConfig;
     } catch (error) {
         elizaLogger.log("EXTRACTOR FIREWALL CONFIG::::", error);
         if (error instanceof z.ZodError) {
