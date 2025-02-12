@@ -34,6 +34,7 @@ import { transferStarknetToken } from "../../plugin-data-enrich/src/starknet";
 import { MemoController } from "./memo";
 import { requireAuth } from "./auth";
 import { CoinAnalysisObj, KEY_BNB_CACHE_STR } from "../../client-twitter/src/sighter";
+import { ArenaAnalysisObj, KEY_ARENA_CACHE_STR } from "../../client-twitter/src/arena";
 //import { ethers } from 'ethers';
 //import { requireAuth } from "./auth";
 
@@ -209,6 +210,10 @@ export class Routes {
         app.get(
             "/:agentId/bnb_query",
             this.handleBnbQuery.bind(this)
+        );
+        app.get(
+            "/:agentId/arena_query",
+            this.handleArenaQuery.bind(this)
         );
         app.post(
             "/:agentId/twitter_profile_search",
@@ -621,6 +626,52 @@ export class Routes {
             res.json({
                 coin_analysis: coinAnaObj.coin_analysis,
                 coin_prediction: coinAnaObj.coin_prediction,
+            });
+        }
+        else {
+            res.json({
+                res: false,
+                reason: "try again",
+            });
+        }
+    }
+    
+    async handleArenaQuery(req: express.Request, res: express.Response) {
+        const kol = typeof req.query.username === 'string' ? req.query.username : '';
+        const kolname = kol.trim();
+        if (!kolname) {
+            throw new ApiError(533, "kolname is blank");
+        }
+        console.log("handleArenaQuery, kolname: " + kolname);
+        const runtime = await this.authUtils.getRuntime(req.params.agentId);
+        let userId = "blank";
+        twEventCenter.emit("MSG_ARENA_QUERY", kolname, userId);
+        let anaObj: ArenaAnalysisObj = null;
+
+        for (let i = 0; i < 10; i++) {
+            await this.sleep(1000);
+            const cached = await runtime.cacheManager.get(KEY_ARENA_CACHE_STR + kolname);
+            // console.log("handleArenaQuery, cached: " + cached);
+            if (cached && typeof cached === 'string') {
+                try {
+                    anaObj = JSON.parse(cached);
+                    if (anaObj) {
+                        if (Date.now() - anaObj.timestamp > 3000) {
+                            continue;
+                        } else {
+                            break;
+                        }
+                    }
+                } catch (error) {
+                    console.error('JSON parse failed: ', error);
+                }
+            }
+        }
+
+        if (anaObj && anaObj.coin_analysis && anaObj.coin_prediction) {
+            res.json({
+                coin_analysis: anaObj.coin_analysis,
+                coin_prediction: anaObj.coin_prediction,
             });
         }
         else {
