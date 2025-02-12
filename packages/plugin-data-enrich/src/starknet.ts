@@ -1,5 +1,5 @@
 import { Account, Contract, Provider, constants } from 'starknet';
-import { uint256 } from 'starknet/dist/utils/uint256';
+import { uint256 } from 'starknet';
 import { settings } from "@elizaos/core";
 
 /**
@@ -33,7 +33,8 @@ export async function transferStarknetToken(toAddress: string, amount: string): 
                     type: 'function',
                     inputs: [
                         { name: 'recipient', type: 'felt' },
-                        { name: 'amount', type: 'Uint256' }
+                        { name: "amount_low", type: "felt" },
+                        { name: "amount_high", type: "felt" }
                     ],
                     outputs: []
                 }
@@ -50,7 +51,8 @@ export async function transferStarknetToken(toAddress: string, amount: string): 
         // transfer
         const { transaction_hash } = await contract.transfer(
             toAddress,
-            amountUint256
+            amountUint256.low,
+            amountUint256.high
         );
 
         // wait
