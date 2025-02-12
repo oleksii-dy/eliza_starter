@@ -489,8 +489,6 @@ export async function generateText({
             break;
     }
 
-    elizaLogger.info("Selected model: >>>", model);
-
     const modelConfiguration = runtime.character?.settings?.modelConfig;
     const temperature =
         modelConfiguration?.temperature || modelSettings.temperature;

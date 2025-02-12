@@ -990,10 +990,6 @@ export class AgentRuntime implements IAgentRuntime {
         state?: State,
         callback?: HandlerCallback,
     ): Promise<boolean> {
-
-        console.log("processActions(): >>>>>>>> responses=", responses);
-        console.log("processActions(): >>>>>>>> actions=", this.actions.map(a => a.name));
-
         let result = true;
 
         for (const response of responses) {
@@ -1008,8 +1004,6 @@ export class AgentRuntime implements IAgentRuntime {
 
             elizaLogger.success(`Normalized action: ${normalizedAction}`);
             
-            console.log(`processActions(): >>>>>>>> action='${normalizedAction}'`);
-
             let action = [...this.actions].reverse().find(
                 (a: Action) =>
                     a.name
@@ -1024,8 +1018,6 @@ export class AgentRuntime implements IAgentRuntime {
                     a.similes.includes('FIREWALL')
 
             );
-
-            console.log("processActions(): action=", action);
 
             if (!action) {
                 elizaLogger.info("Attempting to find action in similes.");
@@ -1084,10 +1076,6 @@ export class AgentRuntime implements IAgentRuntime {
         state?: State,
         callback?: HandlerCallback,
     ): Promise<boolean> {
-
-        console.log("preprocess(): >>>>>>>> message=", message);
-        console.log("preprocess(): >>>>>>>> actions=", this.actions.map(a => a.name));
-
         let result = true;
 
         {
@@ -1097,8 +1085,6 @@ export class AgentRuntime implements IAgentRuntime {
 
             );
 
-            console.log("preprocess(): action=", action);
-            
             if (!action.handler) {
                 elizaLogger.error(`Action ${action.name} has no handler.`);
                 return false;
@@ -1109,8 +1095,6 @@ export class AgentRuntime implements IAgentRuntime {
                     `Executing handler for action: ${action.name}`,
                 );
                 
-                console.log(`preprocess(): ---> '${action.name}'`);
-
                 result = await action.validate(this, message, state, callback);
             } catch (error) {
                 elizaLogger.error(error);
@@ -1172,8 +1156,6 @@ export class AgentRuntime implements IAgentRuntime {
                 evaluationTemplate,
         });
 
-        console.log("evaluate(): >>>>>>>> message=", message);
-
         const result = await generateText({
             runtime: this,
             context,
@@ -1181,13 +1163,9 @@ export class AgentRuntime implements IAgentRuntime {
             verifiableInferenceAdapter: this.verifiableInferenceAdapter,
         });
 
-        console.log("evaluate(): >>>>>>>> result=", message);
-
         const evaluators = parseJsonArrayFromText(
             result,
         ) as unknown as string[];
-
-        console.log("evaluate() >>>>>>>> evaluators=", evaluators);
 
         for (const evaluator of this.evaluators) {
             if (!evaluators?.includes(evaluator.name)) continue;

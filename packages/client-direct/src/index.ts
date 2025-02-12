@@ -344,20 +344,10 @@ export class DirectClient {
                     }
                 );
 
-                console.log("processActions(): >>>>>>>> result=", result);
-
                 if (!result) {
-                    console.log(`processActions(): REJECT: ${message?.content}`);
-                    
-                    // let rejectMessage: Content = {
-                    //     text: "Response forbidden by firewall",
-                    //     action: "FIREWALL",                        
-                    // };
                     let rejectMessage = message;
 
-                    //res.json([rejectMessage, message]);
                     res.json([rejectMessage]);
-                    
                 } else {
 
                     await runtime.evaluate(memory, state);
