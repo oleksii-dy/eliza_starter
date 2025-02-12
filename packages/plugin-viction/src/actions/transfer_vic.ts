@@ -96,7 +96,6 @@ export default {
             const client = new Web3(new Web3.providers.HttpProvider(rpcUrl))
 
             const nonce = await client.eth.getTransactionCount(sender)
-            console.log("🚀 ~ nonce:", nonce)
 
             const transaction = {
                 from : sender,

@@ -146,7 +146,6 @@ export default {
             const { transactionHash }  = await client.eth.sendSignedTransaction(signedTransaction as string)
 
             if (callback) {
-                console.log(1111)
                 callback({
                     text: `Sent ${content.amount} ${name}. Transaction hash: ${transactionHash}`,
                     content: {
