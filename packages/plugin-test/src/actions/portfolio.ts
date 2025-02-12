@@ -1,11 +1,3 @@
-// TODO: Implement portfolio action
-// 1. call the zapper api with address input taken from user
-// 2. format data from the api:
-// 3. Token names, balances, USD values
-// 4. NFT balances in USD
-// 5. portfolio totals organised by network
-
-
 import {
     Content,
     elizaLogger,
@@ -95,7 +87,6 @@ export const portfolioAction: Action = {
 
             const portfolio = data.data.portfolio;
 
-            // Format token balances
             const tokenSection = portfolio.tokenBalances
                 .sort((a, b) => b.token.balanceUSD - a.token.balanceUSD)
                 .slice(0, 5)
@@ -116,7 +107,6 @@ ${balance.token.baseToken.name} (${balance.token.baseToken.symbol})
                 })
                 .join("\n");
 
-            // Format NFT balances
             const nftSection = portfolio.nftBalances
                 .map(nft => {
                     const formattedUSD = nft.balanceUSD.toLocaleString(undefined, {
@@ -129,7 +119,6 @@ ${nft.network}
                 })
                 .join("\n");
 
-            // Format portfolio totals
             const totalUSD = portfolio.totals.total.toLocaleString(undefined, {
                 style: 'currency',
                 currency: 'USD'
