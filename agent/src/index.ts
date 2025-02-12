@@ -1017,7 +1017,7 @@ export async function createAgent(
         character,
         plugins: [
             nodePlugin,
-            bootstrapPlugin,
+            // bootstrapPlugin,
             parseBooleanFromText(getSecret(character, "BITMIND")) &&
             getSecret(character, "BITMIND_API_TOKEN")
                 ? bittensorPlugin
