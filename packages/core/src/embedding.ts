@@ -271,7 +271,8 @@ export function getEmbeddingType(runtime: IAgentRuntime): "local" | "remote" {
         runtime.character.modelProvider !== ModelProviderName.OPENAI &&
         runtime.character.modelProvider !== ModelProviderName.GAIANET &&
         runtime.character.modelProvider !== ModelProviderName.HEURIST &&
-        !settings.USE_OPENAI_EMBEDDING;
+        (!settings.USE_OPENAI_EMBEDDING ||
+            runtime.getSetting("USE_OPENAI_EMBEDDING") !== "true");
 
     return isLocal ? "local" : "remote";
 }
@@ -322,7 +323,7 @@ export function getEmbeddingZeroVector(runtime: IAgentRuntime): number[] {
 export async function embed(runtime: IAgentRuntime, input: string) {
     elizaLogger.debug("Embedding request:", {
         modelProvider: runtime.character.modelProvider,
-        useOpenAI: process.env.USE_OPENAI_EMBEDDING,
+        useOpenAI: runtime.getSetting("USE_OPENAI_EMBEDDING"),
         input: input?.slice(0, 50) + "...",
         inputType: typeof input,
         inputLength: input?.length,
@@ -354,8 +355,13 @@ export async function embed(runtime: IAgentRuntime, input: string) {
             {
                 model: config.model,
                 endpoint:
-                    settings.OPENAI_API_URL || "https://api.openai.com/v1",
-                apiKey: settings.OPENAI_API_KEY,
+                    settings.OPENAI_API_URL ||
+                    runtime.getSetting("OPENAI_API_URL") ||
+                    "https://api.openai.com/v1",
+                apiKey:
+                    settings.OPENAI_API_KEY ||
+                    runtime.getSetting("OPENAI_API_KEY") ||
+                    runtime.token,
                 dimensions: config.dimensions,
             },
             runtime
@@ -387,8 +393,14 @@ export async function embed(runtime: IAgentRuntime, input: string) {
                     getEndpoint(runtime, ModelProviderName.GAIANET) ||
                     settings.SMALL_GAIANET_SERVER_URL ||
                     settings.MEDIUM_GAIANET_SERVER_URL ||
-                    settings.LARGE_GAIANET_SERVER_URL,
-                apiKey: settings.GAIANET_API_KEY || runtime.token,
+                    settings.LARGE_GAIANET_SERVER_URL ||
+                    runtime.getSetting("SMALL_GAIANET_SERVER_URL") ||
+                    runtime.getSetting("MEDIUM_GAIANET_SERVER_URL") ||
+                    runtime.getSetting("LARGE_GAIANET_SERVER_URL"),
+                apiKey:
+                    settings.GAIANET_API_KEY ||
+                    runtime.getSetting("GAIANET_API_KEY") ||
+                    runtime.token,
                 dimensions: config.dimensions,
             },
             runtime
@@ -401,7 +413,10 @@ export async function embed(runtime: IAgentRuntime, input: string) {
             {
                 model: config.model,
                 endpoint: getEndpoint(runtime, ModelProviderName.HEURIST),
-                apiKey: runtime.token,
+                apiKey:
+                    settings.HEURIST_API_KEY ||
+                    runtime.getSetting("HEURIST_API_KEY") ||
+                    runtime.token,
                 dimensions: config.dimensions,
             },
             runtime

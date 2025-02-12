@@ -7,9 +7,10 @@ import {
     elizaLogger,
     getModelSettings,
     ModelClass,
+    getModelSettingsFromCharacterConfig,
 } from "@elizaos/core";
 import { verifyProof } from "./utils/api";
-import { IAgentRuntime } from "@elizaos/core";
+import { Character } from "@elizaos/core";
 interface OpacityOptions {
     modelProvider?: ModelProviderName;
     token?: string;
@@ -20,11 +21,11 @@ interface OpacityOptions {
 
 export class OpacityAdapter implements IVerifiableInferenceAdapter {
     public options: OpacityOptions;
-    private runtime: IAgentRuntime;
+    private character: Character;
 
-    constructor(options: OpacityOptions, runtime: IAgentRuntime) {
+    constructor(options: OpacityOptions, character: Character) {
         this.options = options;
-        this.runtime = runtime;
+        this.character = character;
     }
 
     async generateText(
@@ -36,8 +37,8 @@ export class OpacityAdapter implements IVerifiableInferenceAdapter {
         const baseEndpoint =
             options?.endpoint ||
             `https://gateway.ai.cloudflare.com/v1/${this.options.teamId}/${this.options.teamName}`;
-        const model = getModelSettings(
-            this.runtime,
+        const model = getModelSettingsFromCharacterConfig(
+            this.character,
             provider,
             modelClass as ModelClass
         );

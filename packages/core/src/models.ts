@@ -18,7 +18,7 @@ function getSetting(
     defaultValue?: string
 ): string | undefined {
     return (
-        runtime?.getSetting(key) ||
+        (runtime && runtime?.getSetting(key)) ||
         (characterConfig &&
             getSettingFromCharacterConfig(key, characterConfig)) ||
         settings[key] ||
