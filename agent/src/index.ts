@@ -513,7 +513,7 @@ export function getTokenForProvider(
     }
 }
 
-function initializeDatabase(dataDir: string) {
+function initializeDatabase(dataDir: string, characterConfig: Character) {
     if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
         elizaLogger.info("Initializing Supabase connection...");
         const db = new SupabaseDatabaseAdapter(
@@ -535,10 +535,13 @@ function initializeDatabase(dataDir: string) {
         return db;
     } else if (process.env.POSTGRES_URL) {
         elizaLogger.info("Initializing PostgreSQL connection...");
-        const db = new PostgresDatabaseAdapter({
-            connectionString: process.env.POSTGRES_URL,
-            parseInputs: true,
-        });
+        const db = new PostgresDatabaseAdapter(
+            {
+                connectionString: process.env.POSTGRES_URL,
+                parseInputs: true,
+            },
+            characterConfig
+        );
 
         // Test the connection
         db.init()
@@ -555,9 +558,12 @@ function initializeDatabase(dataDir: string) {
     } else if (process.env.PGLITE_DATA_DIR) {
         elizaLogger.info("Initializing PgLite adapter...");
         // `dataDir: memory://` for in memory pg
-        const db = new PGLiteDatabaseAdapter({
-            dataDir: process.env.PGLITE_DATA_DIR,
-        });
+        const db = new PGLiteDatabaseAdapter(
+            {
+                dataDir: process.env.PGLITE_DATA_DIR,
+            },
+            characterConfig
+        );
         return db;
     } else {
         const filePath =
@@ -1010,7 +1016,7 @@ async function startAgent(
             fs.mkdirSync(dataDir, { recursive: true });
         }
 
-        db = initializeDatabase(dataDir) as IDatabaseAdapter &
+        db = initializeDatabase(dataDir, character) as IDatabaseAdapter &
             IDatabaseCacheAdapter;
 
         await db.init();
