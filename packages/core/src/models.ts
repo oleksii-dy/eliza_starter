@@ -1510,12 +1510,54 @@ function getProviderModels(
             },
         },
         [ModelProviderName.LIVEPEER]: {
+            endpoint: getSetting(
+                runtime,
+                characterConfig,
+                "LIVEPEER_GATEWAY_URL",
+                "http://gateway.test-gateway"
+            ),
             model: {
-                [ModelClass.IMAGE]: {
+                [ModelClass.SMALL]: {
                     name: getSetting(
                         runtime,
                         characterConfig,
-                        "LIVEPEER_IMAGE_MODEL",
+                        "SMALL_LIVEPEER_MODEL",
+                        "meta-llama/Meta-Llama-3.1-8B-Instruct"
+                    ),
+                    stop: [],
+                maxInputTokens: 8000,
+                maxOutputTokens: 8192,
+                temperature: 0,
+            },
+            [ModelClass.MEDIUM]: {
+                    name: getSetting(
+                        runtime,
+                        characterConfig,
+                        "MEDIUM_LIVEPEER_MODEL",
+                        "meta-llama/Meta-Llama-3.1-8B-Instruct"
+                    ),
+                    stop: [],
+                    maxInputTokens: 8000,
+                    maxOutputTokens: 8192,
+                    temperature: 0,
+            },
+            [ModelClass.LARGE]: {
+                    name: getSetting(
+                        runtime,
+                        characterConfig,
+                        "LARGE_LIVEPEER_MODEL",
+                        "meta-llama/Meta-Llama-3.1-8B-Instruct"
+                    ),
+                    stop: [],
+                    maxInputTokens: 8000,
+                    maxOutputTokens: 8192,
+                    temperature: 0,
+            },
+            [ModelClass.IMAGE]: {
+                    name: getSetting(
+                        runtime,
+                        characterConfig,
+                        "IMAGE_LIVEPEER_MODEL",
                         "ByteDance/SDXL-Lightning"
                     ),
                 },
@@ -1619,6 +1661,164 @@ function getProviderModels(
                 },
             },
         },
+
+        [ModelProviderName.NVIDIA]: {
+            endpoint: getSetting(
+                runtime,
+                characterConfig,
+                "NVIDIA_API_URL",
+                "https://integrate.api.nvidia.com/v1"
+            ),
+            model: {
+                [ModelClass.SMALL]: {
+                    name: getSetting(
+                        runtime,
+                        characterConfig,
+                        "SMALL_NVIDIA_MODEL",
+                        "meta/llama-3.2-3b-instruct"
+                    ),
+                    stop: [],
+                    maxInputTokens: 128000,
+                    maxOutputTokens: 8192,
+                    temperature: 0.6,
+                },
+                [ModelClass.MEDIUM]: {
+                    name: getSetting(
+                        runtime,
+                        characterConfig,
+                        "MEDIUM_NVIDIA_MODEL",
+                        "meta/llama-3.3-70b-instruct"
+                    ),
+                    stop: [],
+                    maxInputTokens: 128000,
+                    maxOutputTokens: 8192,
+                    temperature: 0.6,
+                },
+                [ModelClass.LARGE]: {
+                    name: getSetting(
+                        runtime,
+                        characterConfig,
+                        "LARGE_NVIDIA_MODEL",
+                        "meta/llama-3.1-405b-instruct"
+                    ),
+                    stop: [],
+                    maxInputTokens: 128000,
+                    maxOutputTokens: 8192,
+                    temperature: 0.6,
+                },
+            },
+        },
+
+        [ModelProviderName.BEDROCK]: {
+            model: {
+                [ModelClass.SMALL]: {
+                    name: getSetting(
+                        runtime,
+                        characterConfig,
+                        "SMALL_BEDROCK_MODEL",
+                        "amazon.nova-micro-v1:0"
+                    ),
+                    maxInputTokens: 128000,
+                    maxOutputTokens: 5120,
+                    frequency_penalty: 0.0,
+                    presence_penalty: 0.0,
+                    temperature: 0.6,
+                    stop: [],
+                },
+                [ModelClass.MEDIUM]: {
+                    name: getSetting(
+                        runtime,
+                        characterConfig,
+                        "MEDIUM_BEDROCK_MODEL",
+                        "amazon.nova-lite-v1:0"
+                    ),
+                    maxInputTokens: 128000,
+                    maxOutputTokens: 5120,
+                    frequency_penalty: 0.0,
+                    presence_penalty: 0.0,
+                    temperature: 0.6,
+                    stop: [],
+                },
+                [ModelClass.LARGE]: {
+                    name: getSetting(
+                        runtime,
+                        characterConfig,
+                        "LARGE_BEDROCK_MODEL",
+                        "amazon.nova-pro-v1:0"
+                    ),
+                    maxInputTokens: 128000,
+                    maxOutputTokens: 5120,
+                    frequency_penalty: 0.0,
+                    presence_penalty: 0.0,
+                    temperature: 0.6,
+                    stop: [],
+                },
+                [ModelClass.EMBEDDING]: {
+                    name: getSetting(
+                        runtime,
+                        characterConfig,
+                        "EMBEDDING_BEDROCK_MODEL",
+                        "amazon.titan-embed-text-v1"
+                    ),
+                },
+                [ModelClass.IMAGE]: {
+                    name: getSetting(
+                        runtime,
+                        characterConfig,
+                        "IMAGE_BEDROCK_MODEL",
+                        "amazon.nova-canvas-v1:0"
+                    ),
+                },
+            },
+        },
+
+        [ModelProviderName.ATOMA]: {
+            endpoint: getSetting(
+                runtime,
+                characterConfig,
+                "ATOMA_API_URL",
+                "https://api.atoma.network/v1"
+            ),
+            model: {
+                [ModelClass.SMALL]: {
+                    name: getSetting(
+                        runtime,
+                        characterConfig,
+                        "SMALL_ATOMA_MODEL",
+                        "meta-llama/Llama-3.3-70B-Instruct"
+                    ),
+                    stop: [],
+                    maxInputTokens: 128000,
+                    maxOutputTokens: 8192,
+                    temperature: 0.7,
+                },
+                [ModelClass.MEDIUM]: {
+                    name: getSetting(
+                        runtime,
+                        characterConfig,
+                        "MEDIUM_ATOMA_MODEL",
+                        "meta-llama/Llama-3.3-70B-Instruct"
+                    ),
+                    stop: [],
+                    maxInputTokens: 128000,
+                    maxOutputTokens: 8192,
+                    temperature: 0.7,
+                },
+                [ModelClass.LARGE]: {
+                    name: getSetting(
+                        runtime,
+                        characterConfig,
+                        "LARGE_ATOMA_MODEL",
+                        "meta-llama/Llama-3.3-70B-Instruct"
+                    ),
+                    stop: [],
+                    maxInputTokens: 128000,
+                    maxOutputTokens: 8192,
+                    temperature: 0.7,
+                },
+            },
+        },
+
     };
 
     return providerConfigs[provider] || providerConfigs[provider.toUpperCase()];
