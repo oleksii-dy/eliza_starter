@@ -53,8 +53,5 @@
         "price-feed"
     ],
     "author": "Eliza Team",
-    "license": "MIT",
-    "publishConfig": {
-        "access": "public"
-    }
+    "license": "MIT"
 }

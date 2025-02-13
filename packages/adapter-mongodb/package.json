@@ -35,8 +35,5 @@
         "testMatch": [
             "<rootDir>/src/__tests__/**/*.test.ts"
         ]
-    },
-    "publishConfig": {
-        "access": "public"
     }
 }

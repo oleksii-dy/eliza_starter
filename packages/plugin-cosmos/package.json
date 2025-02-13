@@ -30,8 +30,5 @@
     "devDependencies": {
         "@biomejs/biome": "1.9.4",
         "@chain-registry/types": "^0.50.44"
-    },
-    "publishConfig": {
-        "access": "public"
     }
 }
