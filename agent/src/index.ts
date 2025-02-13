@@ -1,9 +1,9 @@
-import { PGLiteDatabaseAdapter } from "@elizaos/adapter-pglite";
+//import { PGLiteDatabaseAdapter } from "@elizaos/adapter-pglite";
 import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
-import { QdrantDatabaseAdapter } from "@elizaos/adapter-qdrant";
-import { RedisClient } from "@elizaos/adapter-redis";
-import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
-import { SupabaseDatabaseAdapter } from "@elizaos/adapter-supabase";
+//import { QdrantDatabaseAdapter } from "@elizaos/adapter-qdrant";
+//import { RedisClient } from "@elizaos/adapter-redis";
+//import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
+//import { SupabaseDatabaseAdapter } from "@elizaos/adapter-supabase";
 import { AutoClientInterface } from "@elizaos/client-auto";
 import { DiscordClientInterface } from "@elizaos/client-discord";
 import { InstagramClientInterface } from "@elizaos/client-instagram";
@@ -13,20 +13,20 @@ import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TelegramAccountClientInterface } from "@elizaos/client-telegram-account";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 import { AlexaClientInterface } from "@elizaos/client-alexa";
-import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb";
+//import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb";
 import { DevaClientInterface } from "@elizaos/client-deva";
 
 import { FarcasterClientInterface } from "@elizaos/client-farcaster";
-import { OmniflixPlugin } from "@elizaos/plugin-omniflix";
-import { JeeterClientInterface } from "@elizaos/client-simsai";
+//import { OmniflixPlugin } from "@elizaos/plugin-omniflix";
+//import { JeeterClientInterface } from "@elizaos/client-simsai";
 import { XmtpClientInterface } from "@elizaos/client-xmtp";
 import { DirectClient } from "@elizaos/client-direct";
-import { agentKitPlugin } from "@elizaos/plugin-agentkit";
-import { gelatoPlugin } from "@elizaos/plugin-gelato";
-import { PrimusAdapter } from "@elizaos/plugin-primus";
-import { lightningPlugin } from "@elizaos/plugin-lightning";
-import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
-import { dcapPlugin } from "@elizaos/plugin-dcap";
+//import { agentKitPlugin } from "@elizaos/plugin-agentkit";
+//import { gelatoPlugin } from "@elizaos/plugin-gelato";
+//import { PrimusAdapter } from "@elizaos/plugin-primus";
+//import { lightningPlugin } from "@elizaos/plugin-lightning";
+//import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
+//import { dcapPlugin } from "@elizaos/plugin-dcap";
 import {
     AgentRuntime,
     CacheManager,
@@ -49,29 +49,30 @@ import {
     validateCharacterConfig,
     parseBooleanFromText,
 } from "@elizaos/core";
-import { zgPlugin } from "@elizaos/plugin-0g";
-import { footballPlugin } from "@elizaos/plugin-football";
+//import { zgPlugin } from "@elizaos/plugin-0g";
+//import { footballPlugin } from "@elizaos/plugin-football";
 
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import { normalizeCharacter } from "@elizaos/plugin-di";
-import createGoatPlugin from "@elizaos/plugin-goat";
-import createZilliqaPlugin from "@elizaos/plugin-zilliqa";
+//import createGoatPlugin from "@elizaos/plugin-goat";
+//import createZilliqaPlugin from "@elizaos/plugin-zilliqa";
 
 // import { intifacePlugin } from "@elizaos/plugin-intiface";
-import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
-import { abstractPlugin } from "@elizaos/plugin-abstract";
-import { akashPlugin } from "@elizaos/plugin-akash";
-import { alloraPlugin } from "@elizaos/plugin-allora";
-import { aptosPlugin } from "@elizaos/plugin-aptos";
-import { artheraPlugin } from "@elizaos/plugin-arthera";
-import { autonomePlugin } from "@elizaos/plugin-autonome";
-import { availPlugin } from "@elizaos/plugin-avail";
-import { avalanchePlugin } from "@elizaos/plugin-avalanche";
-import { b2Plugin } from "@elizaos/plugin-b2";
-import { binancePlugin } from "@elizaos/plugin-binance";
-import { birdeyePlugin } from "@elizaos/plugin-birdeye";
-import { bittensorPlugin } from "@elizaos/plugin-bittensor";
-import { bnbPlugin } from "@elizaos/plugin-bnb";
+//import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
+//import { abstractPlugin } from "@elizaos/plugin-abstract";
+//import { akashPlugin } from "@elizaos/plugin-akash";
+//import { alloraPlugin } from "@elizaos/plugin-allora";
+//import { aptosPlugin } from "@elizaos/plugin-aptos";
+//import { artheraPlugin } from "@elizaos/plugin-arthera";
+//import { autonomePlugin } from "@elizaos/plugin-autonome";
+//import { availPlugin } from "@elizaos/plugin-avail";
+//import { avalanchePlugin } from "@elizaos/plugin-avalanche";
+//import { b2Plugin } from "@elizaos/plugin-b2";
+//import { binancePlugin } from "@elizaos/plugin-binance";
+//import { birdeyePlugin } from "@elizaos/plugin-birdeye";
+//import { bittensorPlugin } from "@elizaos/plugin-bittensor";
+//import { bnbPlugin } from "@elizaos/plugin-bnb";
+/*
 import {
     advancedTradePlugin,
     coinbaseCommercePlugin,
@@ -93,7 +94,11 @@ import { fuelPlugin } from "@elizaos/plugin-fuel";
 import { genLayerPlugin } from "@elizaos/plugin-genlayer";
 import { gitcoinPassportPlugin } from "@elizaos/plugin-gitcoin-passport";
 import { initiaPlugin } from "@elizaos/plugin-initia";
+*/
 import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
+import { videoGenerationPlugin } from "@elizaos/plugin-video-generation";
+import { createNodePlugin } from "@elizaos/plugin-node";
+/*
 import { lensPlugin } from "@elizaos/plugin-lens-network";
 import { litPlugin } from "@elizaos/plugin-lit";
 import { mindNetworkPlugin } from "@elizaos/plugin-mind-network";
@@ -101,7 +106,6 @@ import { multiversxPlugin } from "@elizaos/plugin-multiversx";
 import { nearPlugin } from "@elizaos/plugin-near";
 import createNFTCollectionsPlugin from "@elizaos/plugin-nft-collections";
 import { nftGenerationPlugin } from "@elizaos/plugin-nft-generation";
-import { createNodePlugin } from "@elizaos/plugin-node";
 import { obsidianPlugin } from "@elizaos/plugin-obsidian";
 import { OpacityAdapter } from "@elizaos/plugin-opacity";
 import { openWeatherPlugin } from "@elizaos/plugin-open-weather";
@@ -119,8 +123,10 @@ import { teeLogPlugin } from "@elizaos/plugin-tee-log";
 import { teeMarlinPlugin } from "@elizaos/plugin-tee-marlin";
 import { verifiableLogPlugin } from "@elizaos/plugin-tee-verifiable-log";
 import { tonPlugin } from "@elizaos/plugin-ton";
+*/
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
 
+/*
 import { dkgPlugin } from "@elizaos/plugin-dkg";
 import { injectivePlugin } from "@elizaos/plugin-injective";
 import { giphyPlugin } from "@elizaos/plugin-giphy";
@@ -140,15 +146,17 @@ import { holdstationPlugin } from "@elizaos/plugin-holdstation";
 import { nvidiaNimPlugin } from "@elizaos/plugin-nvidia-nim";
 import { zxPlugin } from "@elizaos/plugin-0x";
 import { hyperbolicPlugin } from "@elizaos/plugin-hyperbolic";
+*/
 import Database from "better-sqlite3";
 import fs from "fs";
 import net from "net";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
-import { dominosPlugin } from "@elizaos/plugin-dominos";
+//import { dominosPlugin } from "@elizaos/plugin-dominos";
 import { emailPlugin } from "@elizaos/plugin-email";
 import { emailAutomationPlugin } from "@elizaos/plugin-email-automation";
+/*
 import { seiPlugin } from "@elizaos/plugin-sei";
 import { sunoPlugin } from "@elizaos/plugin-suno";
 import { udioPlugin } from "@elizaos/plugin-udio";
@@ -160,9 +168,10 @@ import { ankrPlugin } from "@elizaos/plugin-ankr";
 import { formPlugin } from "@elizaos/plugin-form";
 import { MongoClient } from "mongodb";
 import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
-
 import { trikonPlugin } from "@elizaos/plugin-trikon";
 import arbitragePlugin from "@elizaos/plugin-arbitrage";
+*/
+
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
@@ -243,6 +252,8 @@ function mergeCharacters(base: Character, child: Character): Character {
 function isAllStrings(arr: unknown[]): boolean {
     return Array.isArray(arr) && arr.every((item) => typeof item === "string");
 }
+
+/*
 export async function loadCharacterFromOnchain(): Promise<Character[]> {
     const jsonText = onchainJson;
 
@@ -299,6 +310,7 @@ export async function loadCharacterFromOnchain(): Promise<Character[]> {
         process.exit(1);
     }
 }
+*/
 
 async function loadCharactersFromUrl(url: string): Promise<Character[]> {
     try {
@@ -988,16 +1000,19 @@ export async function createAgent(
 
     nodePlugin ??= createNodePlugin();
 
-    const teeMode = getSecret(character, "TEE_MODE") || "OFF";
+    //const teeMode = getSecret(character, "TEE_MODE") || "OFF";
+    const teeMode = "OFF"
     const walletSecretSalt = getSecret(character, "WALLET_SECRET_SALT");
 
     // Validate TEE configuration
+    /*
     if (teeMode !== TEEMode.OFF && !walletSecretSalt) {
         elizaLogger.error(
             "A WALLET_SECRET_SALT required when TEE_MODE is enabled"
         );
         throw new Error("Invalid TEE configuration");
     }
+    */
 
     let goatPlugin: any | undefined;
 
@@ -1180,6 +1195,7 @@ export async function createAgent(
                       advancedTradePlugin,
                   ]
                 : []),
+            /*
             ...(teeMode !== TEEMode.OFF && walletSecretSalt ? [teePlugin] : []),
             teeMode !== TEEMode.OFF &&
             walletSecretSalt &&
@@ -1192,6 +1208,7 @@ export async function createAgent(
                 getSecret(character, "SGX"))
                 ? teeLogPlugin
                 : null,
+            */
             getSecret(character, "OMNIFLIX_API_URL") &&
             getSecret(character, "OMNIFLIX_MNEMONIC")
                 ? OmniflixPlugin
@@ -1535,11 +1552,13 @@ const startAgents = async () => {
     const charactersArg = args.characters || args.character;
     let characters = [defaultCharacter];
 
+    /*
     if (process.env.IQ_WALLET_ADDRESS && process.env.IQSOlRPC) {
         characters = await loadCharacterFromOnchain();
     }
+    */
 
-    const notOnchainJson = !onchainJson || onchainJson == "null";
+    const notOnchainJson = true; //!onchainJson || onchainJson == "null";
 
     if ((notOnchainJson && charactersArg) || hasValidRemoteUrls()) {
         characters = await loadCharacters(charactersArg);
@@ -1588,6 +1607,7 @@ const startAgents = async () => {
 };
 
 startAgents().catch((error) => {
+    console.log('startAgents - error', error)
     elizaLogger.error("Unhandled error in startAgents:", error);
     process.exit(1);
 });
