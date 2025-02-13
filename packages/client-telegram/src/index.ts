@@ -44,7 +44,13 @@ export const TelegramClientInterface: Client = {
     stop: async (runtime: IAgentRuntime) => {
         const telegram = runtime.clients.telegram
         if (telegram) {
-            await telegram.stop();
+            try {
+                await telegram.stop().catch(e => {
+                  console.error('failed to stop telegram', e)
+                });
+            } catch(e) {
+                console.error('failed to stop telegram', e)
+            }
         }
     },
 };
