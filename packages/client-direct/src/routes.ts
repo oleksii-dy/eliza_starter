@@ -721,9 +721,6 @@ export class Routes {
                                 username: item?.username,
                                 name: item?.name,
                                 avatar: item?.avatar,
-                                //avatar: "https://pbs.twimg.com/profile_images/898967039301349377/bLmMDwtf.jpg",
-                                //avatar: "https://abs.twimg.com/sticky/default_profile_images/default_profile.png",
-                                //avatar: "https://pbs.twimg.com/profile_images/1809130917350494209/Q_WjcqLz.jpg";
                             };
 
                             if (item?.username) {
@@ -1249,7 +1246,7 @@ export class Routes {
                     return res.json({
                         success: true,
                         signature,
-                        data: "ETH reward processed",
+                        data: "ETH eco reward processed",
                     });
                 case "sui":
                     // Handle SUI transfer
