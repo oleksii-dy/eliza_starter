@@ -62,7 +62,7 @@ describe("Embedding Module", () => {
 
     describe("getEmbeddingConfig", () => {
         test("should return BGE config by default", () => {
-            const config = getEmbeddingConfig();
+            const config = getEmbeddingConfig(mockRuntime);
             expect(config.dimensions).toBe(384);
             expect(config.model).toBe("BGE-small-en-v1.5");
             expect(config.provider).toBe("BGE");
@@ -70,7 +70,7 @@ describe("Embedding Module", () => {
 
         test("should return OpenAI config when USE_OPENAI_EMBEDDING is true", () => {
             vi.mocked(settings).USE_OPENAI_EMBEDDING = "true";
-            const config = getEmbeddingConfig();
+            const config = getEmbeddingConfig(mockRuntime);
             expect(config.dimensions).toBe(1536);
             expect(config.model).toBe("text-embedding-3-small");
             expect(config.provider).toBe("OpenAI");
@@ -98,14 +98,14 @@ describe("Embedding Module", () => {
         });
 
         test("should return 384-length zero vector by default (BGE)", () => {
-            const vector = getEmbeddingZeroVector();
+            const vector = getEmbeddingZeroVector(mockRuntime);
             expect(vector).toHaveLength(384);
             expect(vector.every((val) => val === 0)).toBe(true);
         });
 
         test("should return 1536-length zero vector for OpenAI if enabled", () => {
             vi.mocked(settings).USE_OPENAI_EMBEDDING = "true";
-            const vector = getEmbeddingZeroVector();
+            const vector = getEmbeddingZeroVector(mockRuntime);
             expect(vector).toHaveLength(1536);
             expect(vector.every((val) => val === 0)).toBe(true);
         });

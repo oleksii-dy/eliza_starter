@@ -400,12 +400,20 @@ export class AgentRuntime implements IAgentRuntime {
 
         this.token = opts.token;
 
-        const allPlugins = [
+        const combinedPlugins = [
             ...(opts.character?.plugins ?? []),
             ...(opts.plugins ?? []),
         ];
 
-        this.plugins = _.uniqBy(allPlugins, "name");
+        const seen = new Set();
+        
+        this.plugins = combinedPlugins.filter((plugin) => {
+            if (seen.has(plugin.name)) {
+                return false;
+            }
+            seen.add(plugin.name);
+            return true;
+        });
 
         this.plugins.forEach((plugin) => {
             plugin.actions?.forEach((action) => {
