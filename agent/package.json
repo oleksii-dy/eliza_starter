@@ -65,6 +65,7 @@
         "@elizaos/plugin-gitbook": "workspace:*",
         "@elizaos/plugin-gitcoin-passport": "workspace:*",
         "@elizaos/plugin-goat": "workspace:*",
+        "@elizaos/plugin-hyperfeeder": "workspace:*",
         "@elizaos/plugin-icp": "workspace:*",
         "@elizaos/plugin-initia": "workspace:*",
         "@elizaos/plugin-image-generation": "workspace:*",
