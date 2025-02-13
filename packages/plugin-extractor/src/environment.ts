@@ -6,7 +6,7 @@ export const extractorEnvSchema = z.object({
         .string()
         .min(1, "Firewall threshold is required"),
     FIREWALL_RISKS_API: z.string().min(1, "Firewall api url is required"),
-    FIREWALL_API_KEY: z.string().min(1, "Firewall api url is required"),
+    FIREWALL_API_KEY: z.string().min(1, "Firewall api key is required"),
     FIREWALL_STOP_LIST: z.array(z.string()),
 });
 

@@ -14,7 +14,10 @@ export async function getPromptRiskScore(
     const url = `${process.env.FIREWALL_RISKS_API}/firewall`;
     const response = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization:": `Bearer ${process.env.FIREWALL_API_KEY}`,
+        },
         body: JSON.stringify({
             data: text,
             data_type: type,
@@ -25,7 +28,7 @@ export async function getPromptRiskScore(
         }),
     });
     const data = await response.json();
-    
+
     return data?.risk || 0;
 }
 
