@@ -4,12 +4,12 @@ import {
     generateText,
     ModelClass,
     type Action,
-    type ActionExample,
     type HandlerCallback,
     type IAgentRuntime,
     type Memory,
     type State,
 } from "@elizaos/core";
+import examples from "./examples";
 
 interface FarcasterProfile {
     username: string;
@@ -24,9 +24,11 @@ interface FarcasterProfile {
     custodyAddress: string;
 }
 
-export const farcasterPortfolioAction: Action = {
+export const farcasterPortfolio: Action = {
     name: "FARCASTER_PORTFOLIO",
     description: "Get the portfolio for one or more Farcaster usernames",
+    similes: ["GET_FARCASTER_PORTFOLIO"],
+    examples: examples,
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         return true;
     },
@@ -38,7 +40,6 @@ export const farcasterPortfolioAction: Action = {
         _options: { [key: string]: unknown },
         _callback: HandlerCallback
     ): Promise<boolean> => {
-
         async function getFarcasterAddresses(usernames: string[]): Promise<{
             addresses: string[],
             profiles: FarcasterProfile[]
@@ -154,34 +155,8 @@ ${profile.metadata.description}`)
 
             return true;
         } catch (error) {
-            elizaLogger.error("Error in farcasterPortfolioAction:", error);
+            elizaLogger.error("Error in farcasterPortfolio:", error);
             throw error;
         }
     },
-    examples: [
-        [
-            {
-                user: "{{user1}}",
-                content: {
-                    text: "Show me the holdings for Farcaster users @vitalik and @jessepollak",
-                },
-            },
-            {
-                user: "{{user2}}",
-                content: { text: "", action: "FARCASTER_PORTFOLIO" },
-            },
-        ],
-        [
-            {
-                user: "{{user1}}",
-                content: {
-                    text: "What's the portfolio for @dwr?",
-                },
-            },
-            {
-                user: "{{user2}}",
-                content: { text: "", action: "FARCASTER_PORTFOLIO" },
-            },
-        ],
-    ] as ActionExample[][],
-} as Action;
+};

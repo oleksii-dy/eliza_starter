@@ -4,16 +4,18 @@ import {
     generateText,
     ModelClass,
     type Action,
-    type ActionExample,
     type HandlerCallback,
     type IAgentRuntime,
     type Memory,
     type State,
 } from "@elizaos/core";
+import examples from "./examples";
 
 export const portfolioAction: Action = {
     name: "ZAPPER_PORTFOLIO",
     description: "Get the portfolio from given address or addresses",
+    similes: ["GET_PORTFOLIO"],
+    examples: examples,
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         return true;
     },
@@ -196,30 +198,4 @@ ${nftSection}`;
             throw error;
         }
     },
-    examples: [
-        [
-            {
-                user: "{{user1}}",
-                content: {
-                    text: "Show me the holdings for 0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
-                },
-            },
-            {
-                user: "{{user2}}",
-                content: { text: "", action: "ZAPPER_PORTFOLIO" },
-            },
-        ],
-        [
-            {
-                user: "{{user1}}",
-                content: {
-                    text: "Check these wallets: 0xd8da6bf26964af9d7eed9e03e53415d37aa96045, 0xd8da6bf26964af9d7eed9e03e53415d37aa96048",
-                },
-            },
-            {
-                user: "{{user2}}",
-                content: { text: "", action: "ZAPPER_PORTFOLIO" },
-            },
-        ],
-    ] as ActionExample[][],
-} as Action;
+};
