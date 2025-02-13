@@ -1,12 +1,12 @@
 import settings from "./settings.ts";
 import { Character, IAgentRuntime, Model } from "./types.ts";
 import {
-    EmbeddingModelSettings,
-    ImageModelSettings,
+    type EmbeddingModelSettings,
+    type ImageModelSettings,
     ModelClass,
     ModelProviderName,
-    Models,
-    ModelSettings,
+    type Models,
+    type ModelSettings,
 } from "./types.ts";
 import { getSettingFromCharacterConfig } from "./utils.ts";
 

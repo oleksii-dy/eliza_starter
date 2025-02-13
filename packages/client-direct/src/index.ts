@@ -1,30 +1,32 @@
 import bodyParser from "body-parser";
 import cors from "cors";
-import express, { Request as ExpressRequest } from "express";
+import express, { type Request as ExpressRequest } from "express";
 import multer from "multer";
 import { z } from "zod";
 import {
-    AgentRuntime,
+    type AgentRuntime,
     elizaLogger,
     messageCompletionFooter,
     generateCaption,
     generateImage,
-    Media,
+    type Media,
     getEmbeddingZeroVector,
     composeContext,
     generateMessageResponse,
     generateObject,
-    Content,
-    Memory,
+    type Content,
+    type Memory,
     ModelClass,
-    Client,
+    type Client,
     stringToUuid,
     settings,
-    IAgentRuntime,
+    type IAgentRuntime,
+    type Plugin,
 } from "@elizaos/core";
 import { createApiRouter } from "./api.ts";
 import * as fs from "fs";
 import * as path from "path";
+import { createVerifiableLogApiRouter } from "./verifiable-log-api.ts";
 import OpenAI from "openai";
 
 const storage = multer.diskStorage({
@@ -112,6 +114,8 @@ export class DirectClient {
     private agents: Map<string, AgentRuntime>; // container management
     private server: any; // Store server instance
     public startAgent: Function; // Store startAgent functor
+    public loadCharacterTryPath: Function; // Store loadCharacterTryPath functor
+    public jsonToCharacter: Function; // Store jsonToCharacter functor
 
     constructor() {
         elizaLogger.log("DirectClient constructor");
@@ -134,6 +138,9 @@ export class DirectClient {
 
         const apiRouter = createApiRouter(this.agents, this);
         this.app.use(apiRouter);
+
+        const apiLogRouter = createVerifiableLogApiRouter(this.agents);
+        this.app.use(apiLogRouter);
 
         // Define an interface that extends the Express Request interface
         interface CustomRequest extends ExpressRequest {
@@ -855,14 +862,14 @@ export class DirectClient {
                             process.env.ELEVENLABS_MODEL_ID ||
                             "eleven_multilingual_v2",
                         voice_settings: {
-                            stability: parseFloat(
+                            stability: Number.parseFloat(
                                 process.env.ELEVENLABS_VOICE_STABILITY || "0.5"
                             ),
-                            similarity_boost: parseFloat(
+                            similarity_boost: Number.parseFloat(
                                 process.env.ELEVENLABS_VOICE_SIMILARITY_BOOST ||
                                     "0.9"
                             ),
-                            style: parseFloat(
+                            style: Number.parseFloat(
                                 process.env.ELEVENLABS_VOICE_STYLE || "0.66"
                             ),
                             use_speaker_boost:
@@ -929,14 +936,14 @@ export class DirectClient {
                             process.env.ELEVENLABS_MODEL_ID ||
                             "eleven_multilingual_v2",
                         voice_settings: {
-                            stability: parseFloat(
+                            stability: Number.parseFloat(
                                 process.env.ELEVENLABS_VOICE_STABILITY || "0.5"
                             ),
-                            similarity_boost: parseFloat(
+                            similarity_boost: Number.parseFloat(
                                 process.env.ELEVENLABS_VOICE_SIMILARITY_BOOST ||
                                     "0.9"
                             ),
-                            style: parseFloat(
+                            style: Number.parseFloat(
                                 process.env.ELEVENLABS_VOICE_STYLE || "0.66"
                             ),
                             use_speaker_boost:
@@ -1014,7 +1021,7 @@ export class DirectClient {
         process.on("SIGINT", gracefulShutdown);
     }
 
-    public stop() {
+    public async stop() {
         if (this.server) {
             this.server.close(() => {
                 elizaLogger.success("Server stopped");
@@ -1024,18 +1031,25 @@ export class DirectClient {
 }
 
 export const DirectClientInterface: Client = {
+    name: 'direct',
+    config: {},
     start: async (_runtime: IAgentRuntime) => {
         elizaLogger.log("DirectClientInterface start");
         const client = new DirectClient();
-        const serverPort = parseInt(settings.SERVER_PORT || "3000");
+        const serverPort = Number.parseInt(settings.SERVER_PORT || "3000");
         client.start(serverPort);
         return client;
     },
-    stop: async (_runtime: IAgentRuntime, client?: Client) => {
-        if (client instanceof DirectClient) {
-            client.stop();
-        }
-    },
+    // stop: async (_runtime: IAgentRuntime, client?: Client) => {
+    //     if (client instanceof DirectClient) {
+    //         client.stop();
+    //     }
+    // },
 };
 
-export default DirectClientInterface;
+const directPlugin: Plugin = {
+    name: "direct",
+    description: "Direct client",
+    clients: [DirectClientInterface],
+};
+export default directPlugin;
