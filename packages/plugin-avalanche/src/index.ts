@@ -3,7 +3,7 @@ import tokenMillCreate from "./actions/tokenMillCreate";
 import transfer from "./actions/transfer";
 import yakSwap from "./actions/yakSwap";
 import yakStrategy from "./actions/yakStrategy";
-import profileCheck from "./actions/profileCheck";
+import arena from "./actions/arena";
 import { tokensProvider } from "./providers/tokens";
 import { strategiesProvider } from "./providers/strategies";
 import { walletProvider } from "./providers/wallet";
@@ -24,9 +24,9 @@ export const PROVIDER_CONFIG = {
 export const avalanchePlugin: Plugin = {
     name: "avalanche",
     description: "Avalanche Plugin for Eliza",
-    actions: [transfer, yakSwap, yakStrategy, tokenMillCreate],
+    actions: [transfer, yakSwap, yakStrategy, tokenMillCreate, arena],
     evaluators: [],
-    providers: [tokensProvider, strategiesProvider, walletProvider, profileCheck],
+    providers: [tokensProvider, strategiesProvider, walletProvider ],
 };
 
 export default avalanchePlugin;
