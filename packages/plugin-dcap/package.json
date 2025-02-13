@@ -24,8 +24,5 @@
         "lint:fix": "biome check --apply .",
         "format": "biome format .",
         "format:fix": "biome format --write ."
-    },
-    "publishConfig": {
-        "access": "public"
     }
 }

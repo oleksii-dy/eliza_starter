@@ -46,8 +46,5 @@
         "ai"
     ],
     "author": "Eliza Team",
-    "license": "MIT",
-    "publishConfig": {
-        "access": "public"
-    }
+    "license": "MIT"
 }

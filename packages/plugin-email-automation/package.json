@@ -57,8 +57,5 @@
             "json",
             "node"
         ]
-    },
-    "publishConfig": {
-        "access": "public"
     }
 }

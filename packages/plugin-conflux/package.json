@@ -35,8 +35,5 @@
         "format": "biome format .",
         "format:fix": "biome format --write .",
         "test": "vitest run"
-    },
-    "publishConfig": {
-        "access": "public"
     }
 }

@@ -38,8 +38,5 @@
         "format": "biome format src/",
         "format:fix": "biome format --write src/",
         "test": "vitest run"
-    },
-    "publishConfig": {
-        "access": "public"
     }
 }

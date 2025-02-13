@@ -22,8 +22,5 @@
         "typescript": "^5.0.0",
         "@biomejs/biome": "1.5.3",
         "tsup": "^8.3.5"
-    },
-    "publishConfig": {
-        "access": "public"
     }
 }

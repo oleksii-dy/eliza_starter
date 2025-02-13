@@ -16,8 +16,5 @@
     "devDependencies": {
         "@types/ws": "^8.5.13",
         "tsx": "^4.19.2"
-    },
-    "publishConfig": {
-        "access": "public"
     }
 }

@@ -34,8 +34,5 @@
     },
     "devDependencies": {
         "@types/node": "^22.10.1"
-    },
-    "publishConfig": {
-        "access": "public"
     }
 }
