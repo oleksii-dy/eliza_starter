@@ -606,6 +606,7 @@ export class ClientBase extends EventEmitter {
                             "twitter"
                         );
                     } else {
+                        // ensure connection to this agent runtime in this room
                         await this.runtime.ensureConnection(
                             userId,
                             roomId,
@@ -642,6 +643,12 @@ export class ClientBase extends EventEmitter {
                         );
                         break;
                     }
+                    // handled by ensureConnection
+                    //await this.runtime.ensureRoomExists(roomId)
+                    // shouldn't need this
+                    //await this.runtime.ensureUserExists(userId, tweet.username)
+                    // postgres needs the user to exist before you can add a participant
+                    //await this.ensureParticipantExists(this.runtime.agentId, this.runtime.agentId);
 
                     await this.runtime.messageManager.createMemory({
                         id: stringToUuid(tweet.id + "-" + this.runtime.agentId),

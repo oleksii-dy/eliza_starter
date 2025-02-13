@@ -8,6 +8,7 @@ import fs from "fs";
 import {
     type AgentRuntime,
     elizaLogger,
+    parseBooleanFromText,
     getEnvVariable,
     type UUID,
     validateCharacterConfig,
@@ -177,12 +178,42 @@ export function createApiRouter(
             // if it has a different name, the agentId will change
         }
 
-        // stores the json data before it is modified with added data
-        const characterJson = { ...req.body };
-
         // load character from body
         const character = req.body;
         console.log("character", character);
+        if (character.clientConfig?.telegram) {
+          if (character.clientConfig?.telegram?.shouldIgnoreDirectMessages && typeof character.clientConfig?.telegram?.shouldIgnoreDirectMessages === 'string') {
+            // is it a string
+            // we want bool
+            character.clientConfig.telegram.shouldIgnoreDirectMessages = parseBooleanFromText(character.clientConfig.telegram.shouldIgnoreDirectMessages)
+          }
+          if (character.clientConfig?.telegram?.shouldIgnoreBotMessages && typeof character.clientConfig?.telegram?.shouldIgnoreBotMessages === 'string') {
+            // is it a string
+            // we want bool
+            character.clientConfig.telegram.shouldIgnoreBotMessages = parseBooleanFromText(character.clientConfig.telegram.shouldIgnoreBotMessages)
+          }
+        }
+        if (character.clientConfig?.discord) {
+          if (character.clientConfig?.discord?.shouldIgnoreDirectMessages && typeof character.clientConfig?.discord?.shouldIgnoreDirectMessages === 'string') {
+            // is it a string
+            // we want bool
+            character.clientConfig.discord.shouldIgnoreDirectMessages = parseBooleanFromText(character.clientConfig.discord.shouldIgnoreDirectMessages)
+          }
+          if (character.clientConfig?.discord?.shouldIgnoreBotMessages && typeof character.clientConfig?.discord?.shouldIgnoreBotMessages === 'string') {
+            // is it a string
+            // we want bool
+            character.clientConfig.discord.shouldIgnoreBotMessages = parseBooleanFromText(character.clientConfig.discord.shouldIgnoreBotMessages)
+          }
+        }
+        // ENABLE_ACTION_PROCESSING
+        if (character.settings?.secrets?.ENABLE_ACTION_PROCESSING !== undefined && typeof character.settings.secrets.ENABLE_ACTION_PROCESSING === 'boolean') {
+          character.settings.secrets.ENABLE_ACTION_PROCESSING = "" + character.settings.secrets.ENABLE_ACTION_PROCESSING
+          console.log('making ENABLE_ACTION_PROCESSING a string', typeof character.settings.secrets.ENABLE_ACTION_PROCESSING, character.settings.secrets.ENABLE_ACTION_PROCESSING)
+        }
+        if (character.settings?.secrets?.ELEVENLABS_VOICE_USE_SPEAKER_BOOST !== undefined && typeof character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST === 'boolean') {
+          character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST = "" + character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST
+          console.log('making settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST a string', typeof character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST, character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST)
+        }
         try {
             validateCharacterConfig(character);
         } catch (e) {
@@ -217,6 +248,8 @@ export function createApiRouter(
                 );
                 const filepath = path.join(uploadDir, filename);
                 await fs.promises.mkdir(uploadDir, { recursive: true });
+                // stores the json data before it is modified with added data
+                const characterJson = { ...req.body };
                 await fs.promises.writeFile(
                     filepath,
                     JSON.stringify(

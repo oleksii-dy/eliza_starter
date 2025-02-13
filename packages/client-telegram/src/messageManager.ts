@@ -639,7 +639,7 @@ export class MessageManager {
         try {
             let imageUrl: string | null = null;
 
-            elizaLogger.info('Telegram Message:', message);
+            //elizaLogger.info('Telegram Message:', message);
 
             if ("photo" in message && message.photo?.length > 0) {
                 const photo = message.photo[message.photo.length - 1];
