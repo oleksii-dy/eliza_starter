@@ -1,160 +1,108 @@
-# @elizaos/plugin-bootstrap
+# @elizaos/plugin-messari-copilot
 
-A plugin providing core functionality and basic actions for ElizaOS agents.
+A plugin that integrates Messari's AI Copilot capabilities into ElizaOS agents, providing market research and crypto data analysis functionality.
 
 ## Description
-The Bootstrap plugin enables fundamental agent behaviors including conversation management, room interactions, and fact tracking. It provides essential actions and evaluators that form the foundation of agent interactions.
+
+The Messari Copilot plugin enables agents to answer questions about cryptocurrency markets, protocols, and on-chain data by leveraging Messari's AI-powered API. It automatically detects research questions in conversations and provides detailed, data-driven responses.
 
 ## Installation
 
 ```bash
-pnpm install @elizaos/plugin-bootstrap
+pnpm install @elizaos/plugin-messari-copilot
+```
+
+## Configuration
+
+The plugin requires a Messari API key to function. Set it in your environment variables:
+
+```bash
+export MESSARI_API_KEY=your_api_key_here
+```
+
+Or add it to your `.env` file:
+
+```
+MESSARI_API_KEY=your_api_key_here
 ```
 
 ## Features
 
-### 1. Conversation Management
-- NONE action for basic responses
-- CONTINUE action for follow-ups
-- IGNORE action for appropriate disengagement
-- Built-in conversation flow control
+### Research Question Detection
 
-### 2. Room Control
-- Follow/Unfollow room functionality
-- Mute/Unmute capabilities
-- Automatic engagement level tracking
-- Smart participation management
+- Automatically identifies questions about:
+    - Market data and statistics
+    - Rankings and comparisons
+    - Historical data and trends
+    - Protocol and token analysis
+    - Financial performance metrics
 
-### 3. Fact Management
-- Automatic fact extraction
-- Categorization of claims
-- Deduplication of known information
-- Support for multiple fact types:
-  - Permanent facts
-  - Status updates
-  - Opinions
-  - Biographical information
+### Intelligent Response Generation
 
-### 4. Goal Tracking
-- Track objective progress
-- Update goal statuses
-- Monitor completion states
-- Automatic progress evaluation
+- Processes natural language queries
+- Provides data-driven answers
+- Handles multiple question types
+- Maintains conversation context
 
-## Providers
+## Usage
 
-### 1. Boredom Provider
-- Tracks engagement levels
-- Provides status messages
-- Monitors conversation quality
-- Adjusts participation accordingly
+The plugin works automatically once installed and configured. It will:
 
-### 2. Facts Provider
-- Manages fact database
-- Retrieves relevant information
-- Formats fact summaries
-- Maintains fact context
+1. Monitor conversations for research questions
+2. Process relevant messages through Messari's AI
+3. Return detailed, data-backed responses
 
-### 3. Time Provider
-- Provides UTC timestamps
-- Human-readable formatting
-- Time-based operation support
+Example questions it can handle:
+
+- "What are the top 10 L2s by fees?"
+- "Show me ETH price"
+- "What's the TVL of Arbitrum?"
 
 ## Development
 
 1. Clone the repository
 2. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 3. Build the plugin:
+
 ```bash
 pnpm run build
 ```
 
 4. Run linting:
+
 ```bash
 pnpm run lint
 ```
 
 ## Dependencies
-- @elizaos/core: workspace:*
 
-## Future Enhancements
+- @elizaos/core: workspace:\*
 
-1. **Enhanced Conversation Management**
-   - Advanced context tracking
-   - Multi-thread conversation support
-   - Conversation state persistence
-   - Improved conversation flow control
-   - Natural language understanding improvements
+## Error Handling
 
-2. **Advanced Room Control**
-   - Dynamic room creation and management
-   - Room permission system
-   - Advanced moderation tools
-   - Room analytics and insights
-   - Cross-room communication features
+The plugin includes robust error handling for:
 
-3. **Expanded Fact Management**
-   - Enhanced fact verification system
-   - Fact relationship mapping
-   - Automated fact updating
-   - Fact confidence scoring
-   - Cross-reference system
-   - Fact expiration management
+- Missing API keys
+- API rate limits
+- Network failures
+- Invalid responses
 
-4. **Goal System Improvements**
-   - Multi-step goal planning
-   - Goal dependency tracking
-   - Progress visualization
-   - Goal priority management
-   - Automated milestone tracking
-   - Goal optimization suggestions
-
-5. **Provider Enhancements**
-   - Improved boredom detection
-   - Advanced engagement metrics
-   - Enhanced fact retrieval algorithms
-   - Real-time status updates
-   - Provider performance analytics
-
-6. **Memory Management**
-   - Enhanced memory prioritization
-   - Memory compression techniques
-   - Long-term memory storage
-   - Memory relationship mapping
-   - Context-aware recall
-
-7. **Developer Tools**
-   - Enhanced debugging capabilities
-   - Testing framework improvements
-   - Plugin development templates
-   - Documentation generator
-   - Performance profiling tools
-
-8. **Integration Features**
-   - Enhanced plugin interoperability
-   - External service connectors
-   - API gateway integration
-   - Webhook system improvements
-   - Third-party platform support
-
-We welcome community feedback and contributions to help prioritize these enhancements.
+All errors are properly logged for debugging.
 
 ## Contributing
 
-Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
+Contributions are welcome! Please ensure your pull requests:
 
-## Credits
-
-Special thanks to:
-- The Eliza Core development team
-- The Eliza community for their contributions and feedback
-
+1. Include appropriate tests
+2. Update documentation
+3. Follow the existing code style
+4. Handle errors appropriately
 
 ## License
 
 This plugin is part of the Eliza project. See the main project repository for license information.
-
