@@ -12,7 +12,7 @@ import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
 import { DirectClient } from "@elizaos/client-direct";
-// import { PrimusAdapter } from "@elizaos/plugin-primus";
+import { PrimusAdapter } from "@elizaos/plugin-primus";
 
 import {
     AgentRuntime,
@@ -39,7 +39,7 @@ import {
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import createGoatPlugin from "@elizaos/plugin-goat";
 // import { intifacePlugin } from "@elizaos/plugin-intiface";
-import { DirectClient } from "@elizaos/client-direct";
+// import { DirectClient } from "@elizaos/client-direct";
 // import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
 // import { abstractPlugin } from "@elizaos/plugin-abstract";
 // import { alloraPlugin } from "@elizaos/plugin-allora";
@@ -91,10 +91,10 @@ import { giphyPlugin } from "@elizaos/plugin-giphy";
 // import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
 // import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
 
-// import { OpacityAdapter } from "@elizaos/plugin-opacity";
+import { OpacityAdapter } from "@elizaos/plugin-opacity";
 // import { openWeatherPlugin } from "@elizaos/plugin-open-weather";
 // import { stargazePlugin } from "@elizaos/plugin-stargaze";
-// import { akashPlugin } from "@elizaos/plugin-akash";
+import { akashPlugin } from "@elizaos/plugin-akash";
 // import { quaiPlugin } from "@elizaos/plugin-quai";
 import Database from "better-sqlite3";
 import fs from "fs";
@@ -709,25 +709,25 @@ export async function createAgent(
         // character.plugins are handled when clients are added
         plugins: [
             bootstrapPlugin,
-            getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
-                ? confluxPlugin
-                : null,
+            // getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
+            //     ? confluxPlugin
+            //     : null,
             nodePlugin,
             getSecret(character, "TAVILY_API_KEY") ? webSearchPlugin : null,
             getSecret(character, "SOLANA_PUBLIC_KEY") ||
-            (getSecret(character, "WALLET_PUBLIC_KEY") &&
-                !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
-                ? solanaPlugin
-                : null,
-            getSecret(character, "SOLANA_PRIVATE_KEY")
-                ? solanaAgentkitPlguin
-                : null,
-            getSecret(character, "AUTONOME_JWT_TOKEN") ? autonomePlugin : null,
+            // (getSecret(character, "WALLET_PUBLIC_KEY") &&
+            //     !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
+            //     ? solanaPlugin
+            //     : null,
+            // getSecret(character, "SOLANA_PRIVATE_KEY")
+            //     ? solanaAgentkitPlguin
+            //     : null,
+            // getSecret(character, "AUTONOME_JWT_TOKEN") ? autonomePlugin : null,
             (getSecret(character, "NEAR_ADDRESS") ||
                 getSecret(character, "NEAR_WALLET_PUBLIC_KEY")) &&
-            getSecret(character, "NEAR_WALLET_SECRET_KEY")
-                ? nearPlugin
-                : null,
+            // getSecret(character, "NEAR_WALLET_SECRET_KEY")
+            //     ? nearPlugin
+            //     : null,
             getSecret(character, "EVM_PUBLIC_KEY") ||
             (getSecret(character, "WALLET_PUBLIC_KEY") &&
                 getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
@@ -743,10 +743,10 @@ export async function createAgent(
                     ))) &&
             getSecret(character, "SOLANA_ADMIN_PUBLIC_KEY") &&
             getSecret(character, "SOLANA_PRIVATE_KEY") &&
-            getSecret(character, "SOLANA_ADMIN_PRIVATE_KEY")
-                ? nftGenerationPlugin
-                : null,
-            getSecret(character, "ZEROG_PRIVATE_KEY") ? zgPlugin : null,
+            // getSecret(character, "SOLANA_ADMIN_PRIVATE_KEY")
+            //     ? nftGenerationPlugin
+            //     : null,
+            // getSecret(character, "ZEROG_PRIVATE_KEY") ? zgPlugin : null,
             getSecret(character, "COINMARKETCAP_API_KEY")
                 ? coinmarketcapPlugin
                 : null,
@@ -761,7 +761,7 @@ export async function createAgent(
             getSecret(character, "LIVEPEER_GATEWAY_URL")
                 ? imageGenerationPlugin
                 : null,
-            getSecret(character, "FAL_API_KEY") ? ThreeDGenerationPlugin : null,
+            // getSecret(character, "FAL_API_KEY") ? ThreeDGenerationPlugin : null,
             ...(getSecret(character, "COINBASE_API_KEY") &&
             getSecret(character, "COINBASE_PRIVATE_KEY")
                 ? [
@@ -772,7 +772,7 @@ export async function createAgent(
                   ]
                 : []),
             ...(teeMode !== TEEMode.OFF && walletSecretSalt ? [teePlugin] : []),
-            getSecret(character, "SGX") ? sgxPlugin : null,
+            // getSecret(character, "SGX") ? sgxPlugin : null,
             getSecret(character, "ENABLE_TEE_LOG") &&
             ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
                 getSecret(character, "SGX"))
@@ -789,71 +789,71 @@ export async function createAgent(
                 ? coingeckoPlugin
                 : null,
             getSecret(character, "EVM_PROVIDER_URL") ? goatPlugin : null,
-            getSecret(character, "ABSTRACT_PRIVATE_KEY")
-                ? abstractPlugin
-                : null,
+            // getSecret(character, "ABSTRACT_PRIVATE_KEY")
+            //     ? abstractPlugin
+            //     : null,
             getSecret(character, "BINANCE_API_KEY") &&
             getSecret(character, "BINANCE_SECRET_KEY")
                 ? binancePlugin
                 : null,
             getSecret(character, "FLOW_ADDRESS") &&
-            getSecret(character, "FLOW_PRIVATE_KEY")
-                ? flowPlugin
-                : null,
+            // getSecret(character, "FLOW_PRIVATE_KEY")
+            //     ? flowPlugin
+            //     : null,
             getSecret(character, "LENS_ADDRESS") &&
-            getSecret(character, "LENS_PRIVATE_KEY")
-                ? lensPlugin
-                : null,
-            getSecret(character, "APTOS_PRIVATE_KEY") ? aptosPlugin : null,
-            getSecret(character, "MVX_PRIVATE_KEY") ? multiversxPlugin : null,
-            getSecret(character, "ZKSYNC_PRIVATE_KEY") ? zksyncEraPlugin : null,
-            getSecret(character, "CRONOSZKEVM_PRIVATE_KEY")
-                ? cronosZkEVMPlugin
-                : null,
+            // getSecret(character, "LENS_PRIVATE_KEY")
+            //     ? lensPlugin
+            //     : null,
+            // getSecret(character, "APTOS_PRIVATE_KEY") ? aptosPlugin : null,
+            // getSecret(character, "MVX_PRIVATE_KEY") ? multiversxPlugin : null,
+            // getSecret(character, "ZKSYNC_PRIVATE_KEY") ? zksyncEraPlugin : null,
+            // getSecret(character, "CRONOSZKEVM_PRIVATE_KEY")
+            //     ? cronosZkEVMPlugin
+            //     : null,
             getSecret(character, "TEE_MARLIN") ? teeMarlinPlugin : null,
-            getSecret(character, "TON_PRIVATE_KEY") ? tonPlugin : null,
-            getSecret(character, "THIRDWEB_SECRET_KEY") ? thirdwebPlugin : null,
-            getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
-            getSecret(character, "STORY_PRIVATE_KEY") ? storyPlugin : null,
-            getSecret(character, "FUEL_PRIVATE_KEY") ? fuelPlugin : null,
-            getSecret(character, "AVALANCHE_PRIVATE_KEY")
-                ? avalanchePlugin
-                : null,
+            // getSecret(character, "TON_PRIVATE_KEY") ? tonPlugin : null,
+            // getSecret(character, "THIRDWEB_SECRET_KEY") ? thirdwebPlugin : null,
+            // getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
+            // getSecret(character, "STORY_PRIVATE_KEY") ? storyPlugin : null,
+            // getSecret(character, "FUEL_PRIVATE_KEY") ? fuelPlugin : null,
+            // getSecret(character, "AVALANCHE_PRIVATE_KEY")
+            //     ? avalanchePlugin
+            //     : null,
             getSecret(character, "ECHOCHAMBERS_API_URL") &&
             getSecret(character, "ECHOCHAMBERS_API_KEY")
                 ? echoChambersPlugin
                 : null,
-            getSecret(character, "LETZAI_API_KEY") ? letzAIPlugin : null,
-            getSecret(character, "STARGAZE_ENDPOINT") ? stargazePlugin : null,
+            // getSecret(character, "LETZAI_API_KEY") ? letzAIPlugin : null,
+            // getSecret(character, "STARGAZE_ENDPOINT") ? stargazePlugin : null,
             getSecret(character, "GIPHY_API_KEY") ? giphyPlugin : null,
-            getSecret(character, "GENLAYER_PRIVATE_KEY")
-                ? genLayerPlugin
-                : null,
+            // getSecret(character, "GENLAYER_PRIVATE_KEY")
+            //     ? genLayerPlugin
+            //     : null,
             getSecret(character, "AVAIL_SEED") &&
-            getSecret(character, "AVAIL_APP_ID")
-                ? availPlugin
-                : null,
-            getSecret(character, "OPEN_WEATHER_API_KEY")
-                ? openWeatherPlugin
-                : null,
-            getSecret(character, "OBSIDIAN_API_TOKEN") ? obsidianPlugin : null,
-            getSecret(character, "ARTHERA_PRIVATE_KEY")?.startsWith("0x")
-                ? artheraPlugin
-                : null,
-            getSecret(character, "ALLORA_API_KEY") ? alloraPlugin : null,
-            getSecret(character, "HYPERLIQUID_PRIVATE_KEY")
-                ? hyperliquidPlugin
-                : null,
-            getSecret(character, "HYPERLIQUID_TESTNET")
-                ? hyperliquidPlugin
-                : null,
+            // getSecret(character, "AVAIL_APP_ID")
+            //     ? availPlugin
+            //     : null,
+            // getSecret(character, "OPEN_WEATHER_API_KEY")
+                // ? openWeatherPlugin
+                // : null,
+            // getSecret(character, "OBSIDIAN_API_TOKEN") ? obsidianPlugin : null,
+            // getSecret(character, "ARTHERA_PRIVATE_KEY")?.startsWith("0x")
+            //     ? artheraPlugin
+            //     : null,
+            // getSecret(character, "ALLORA_API_KEY") ? alloraPlugin : null,
+            // getSecret(character, "HYPERLIQUID_PRIVATE_KEY")
+            //     ? hyperliquidPlugin
+            //     : null,
+            // getSecret(character, "HYPERLIQUID_TESTNET")
+            //     ? hyperliquidPlugin
+            //     : null,
             getSecret(character, "AKASH_MNEMONIC") &&
             getSecret(character, "AKASH_WALLET_ADDRESS")
                 ? akashPlugin
                 : null,
-            getSecret(character, "QUAI_PRIVATE_KEY")
-                ? quaiPlugin
-                : null,
+            // getSecret(character, "QUAI_PRIVATE_KEY")
+            //     ? quaiPlugin
+            //     : null,
         ].filter(Boolean),
         providers: [],
         actions: [],
