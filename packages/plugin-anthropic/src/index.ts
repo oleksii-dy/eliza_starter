@@ -152,9 +152,9 @@ export const anthropicPlugin: Plugin = {
               if (text.length === 0) {
                 throw new Error("Failed to generate text");
               }
-              console.log("generated with test_text_small:", text);
+              console.log("generated with test_text_large:", text);
             } catch (error) {
-              console.error("Error in test_text_small:", error);
+              console.error("Error in test_text_large:", error);
               throw error;
             }
           }
