@@ -89,23 +89,39 @@ export const anthropicPlugin: Plugin = {
       name: "anthropic_plugin_tests",
       tests: [
         {
-          name: 'test_text_large',  
+          name: 'anthropic_test_text_small',  
           fn: async (runtime) => {
-            const { text } = await runtime.generateText({
-              model: runtime.models[ModelClass.TEXT_SMALL],
-              prompt: "What is the nature of reality?",
-            });
-            console.log(text, ModelClass.TEXT_SMALL);
+            try {
+              const text = await runtime.useModel(ModelClass.TEXT_SMALL, {
+                context: "Debug Mode:",
+                prompt: "What is the nature of reality in 10 words?",
+              });
+              if (text.length === 0) {
+                throw new Error("Failed to generate text");
+              }
+              console.log("generated with test_text_small:", text);
+            } catch (error) {
+              console.error("Error in test_text_small:", error);
+              throw error;
+            }
           }
         },
         {
-          name: 'test_text_large',
+          name: 'anthropic_test_text_large',
           fn: async (runtime) => {
-            const { text } = await runtime.generateText({
-              model: runtime.models[ModelClass.TEXT_LARGE],
-              prompt: "What is the nature of reality in 10 words?",
-            });
-            console.log(text, ModelClass.TEXT_LARGE);
+            try {
+              const text = await runtime.useModel(ModelClass.TEXT_LARGE, {
+                context: "Debug Mode:",
+                prompt: "What is the nature of reality in 10 words?",
+              });
+              if (text.length === 0) {
+                throw new Error("Failed to generate text");
+              }
+              console.log("generated with test_text_small:", text);
+            } catch (error) {
+              console.error("Error in test_text_small:", error);
+              throw error;
+            }
           }
         }
       ]
