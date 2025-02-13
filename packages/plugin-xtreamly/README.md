@@ -15,6 +15,7 @@ Read more about our volatility prediction model here: [AI Volatility by Xtreamly
 ## Supported Networks
 
 - Ethereum
+- Arbitrum
 
 ## Usage Examples
 
