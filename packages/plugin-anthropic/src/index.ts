@@ -84,6 +84,34 @@ export const anthropicPlugin: Plugin = {
       return text;
     }
   },
+  tests: [
+    {
+      name: "anthropic_plugin_tests",
+      tests: [
+        {
+          name: 'test_text_large',  
+          fn: async (runtime) => {
+            const { text } = await runtime.generateText({
+              model: runtime.models[ModelClass.TEXT_SMALL],
+              prompt: "What is the nature of reality?",
+            });
+            console.log(text, ModelClass.TEXT_SMALL);
+          }
+        },
+        {
+          name: 'test_text_large',
+          fn: async (runtime) => {
+            const { text } = await runtime.generateText({
+              model: runtime.models[ModelClass.TEXT_LARGE],
+              prompt: "What is the nature of reality in 10 words?",
+            });
+            console.log(text, ModelClass.TEXT_LARGE);
+          }
+        }
+      ]
+    }
+  ]
+
 };
 
 export default anthropicPlugin;
