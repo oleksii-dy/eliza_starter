@@ -41,7 +41,6 @@ import {
 import { RedisClient } from "@elizaos/adapter-redis";
 import { zgPlugin } from "@elizaos/plugin-0g";
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
-import { messariCopilotPlugin } from "@elizaos/plugin-messari-copilot";
 import createGoatPlugin from "@elizaos/plugin-goat";
 // import { intifacePlugin } from "@elizaos/plugin-intiface";
 import { DirectClient } from "@elizaos/client-direct";
@@ -199,7 +198,9 @@ export async function loadCharacters(
 
                 // .id isn't really valid
                 const characterId = character.id || character.name;
-                const characterPrefix = `CHARACTER.${characterId.toUpperCase().replace(/ /g, "_")}.`;
+                const characterPrefix = `CHARACTER.${characterId
+                    .toUpperCase()
+                    .replace(/ /g, "_")}.`;
 
                 const characterSettings = Object.entries(process.env)
                     .filter(([key]) => key.startsWith(characterPrefix))
@@ -535,7 +536,6 @@ export async function createAgent(
         character,
         // character.plugins are handled when clients are added
         plugins: [
-            messariCopilotPlugin,
             bootstrapPlugin,
             getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
                 ? confluxPlugin
