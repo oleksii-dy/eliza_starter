@@ -40,6 +40,8 @@
         "@elizaos/plugin-node": "workspace:*",
         "@elizaos/client-xmtp": "workspace:*",
         "@elizaos/client-deva": "workspace:*",
+        "@elizaos/plugin-email": "workspace:*",
+        "@elizaos/plugin-email-automation": "workspace:*",
         "readline": "1.3.0",
         "ws": "8.18.0",
         "yargs": "17.7.2"
