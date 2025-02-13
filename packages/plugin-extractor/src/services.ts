@@ -16,7 +16,9 @@ export async function getPromptRiskScore(
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            "Authorization:": `Bearer ${process.env.FIREWALL_API_KEY}`,
+            ...(process.env.FIREWALL_API_KEY?.length
+                ? { "Authorization:": `Bearer ${process.env.FIREWALL_API_KEY}` }
+                : {}),
         },
         body: JSON.stringify({
             data: text,
