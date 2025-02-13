@@ -55,7 +55,10 @@ export async function transferEthToken(
         const amount = ethers.parseUnits(amountString, 18);
 
         console.log("Starting transfer...");
-        const tx = await contract.transfer(toAddress, amount);
+        const tx = await contract.transfer(toAddress, amount/*, {
+            gasLimit: 100000, // Set Gas Limit
+            gasPrice: ethers.parseUnits("20", "gwei"), //Gas Price
+        }*/);
         console.log(`Transaction hash: ${tx.hash}`);
 
         // Wait for the transaction to be confirmed
