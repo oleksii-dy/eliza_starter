@@ -98,7 +98,7 @@ export const currentNewsAction: Action = {
         console.log("Search term extracted:", searchTerm);
 
         const currentNews = await getCurrentNews(searchTerm);
-        const responseText = ` *sonidos de droide de protocolo*\n\n${currentNews}`;
+        const responseText = ` *Ultimas novedades*\n\n${currentNews}`;
 
 
         const newMemory: Memory = {
