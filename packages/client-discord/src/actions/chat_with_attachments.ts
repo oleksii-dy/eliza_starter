@@ -77,7 +77,7 @@ const summarizeAction = {
         "CHAT_WITH_ATTACHMENT",
         "SUMMARIZE_FILES",
         "SUMMARIZE_FILE",
-        "SUMMARIZE_ATACHMENT",
+        "SUMMARIZE_ATTACHMENT",
         "CHAT_WITH_PDF",
         "ATTACHMENT_SUMMARY",
         "RECAP_ATTACHMENTS",
