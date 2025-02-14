@@ -55,7 +55,7 @@ import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import { normalizeCharacter } from "@elizaos/plugin-di";
 import createGoatPlugin from "@elizaos/plugin-goat";
 import createZilliqaPlugin from "@elizaos/plugin-zilliqa";
-import createPerplexityPlugin from "@elizaos/plugin-perplexity";
+
 // import { intifacePlugin } from "@elizaos/plugin-intiface";
 import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
 import { abstractPlugin } from "@elizaos/plugin-abstract";
@@ -955,13 +955,6 @@ export async function createAgent(
     let zilliqaPlugin: any | undefined;
     if (getSecret(character, "ZILLIQA_PRIVATE_KEY")) {
         zilliqaPlugin = await createZilliqaPlugin((secret) =>
-            getSecret(character, secret),
-        );
-    }
-
-    let perpPlugin: any | undefined;
-    if (getSecret(character, "PERPLEXITY_API_KEY")) {
-        perpPlugin = await createPerplexityPlugin((secret) =>
             getSecret(character, secret),
         );
     }
