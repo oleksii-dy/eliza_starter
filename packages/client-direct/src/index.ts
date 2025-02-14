@@ -994,6 +994,8 @@ export class DirectClient {
                 `REST API bound to 0.0.0.0:${port}. If running locally, access it at http://localhost:${port}.`
             );
         });
+        
+        this.server.setTimeout(180000);
 
         // Handle graceful shutdown
         const gracefulShutdown = () => {
