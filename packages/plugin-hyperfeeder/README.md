@@ -161,3 +161,4 @@ This plugin is part of the Eliza project. Please refer to the main repository fo
 This plugin integrates with various research tools and AI models to provide high-quality content generation.
 
 Inspired by the Eliza coding tutorial [Agent Dev School Part 2](https://www.youtube.com/watch?v=XenGeAcPAQo).
+
