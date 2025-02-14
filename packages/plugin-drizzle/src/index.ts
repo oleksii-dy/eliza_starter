@@ -1,42 +1,46 @@
 import {
+    DatabaseAdapter,
+    logger,
     type Account,
     type Actor,
-    DatabaseAdapter,
-    type GoalStatus,
-    type Participant,
-    logger,
     type Goal,
+    type GoalStatus,
     type IDatabaseCacheAdapter,
     type Memory,
+    type Participant,
     type Relationship,
     type UUID,
+    Plugin,
+    IAgentRuntime,
+    Adapter,
 } from "@elizaos/core";
 import {
     and,
+    desc,
     eq,
     gte,
-    lte,
-    sql,
-    desc,
     inArray,
+    lte,
     or,
+    sql,
     cosineDistance,
 } from "drizzle-orm";
 import {
     accountTable,
+    cacheTable,
+    embeddingTable,
     goalTable,
     logTable,
     memoryTable,
     participantTable,
     relationshipTable,
     roomTable,
-    knowledgeTable,
-    cacheTable,
-} from "./schema";
-import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
+} from "./schema/index";
+import { drizzle, NodePgDatabase } from "drizzle-orm/node-postgres";
 import { v4 } from "uuid";
 import { runMigrations } from "./migrations";
-import pg, { type ConnectionConfig, type PoolConfig } from "pg";
+import pg, { ConnectionConfig, PoolConfig } from "pg";
+import { DIMENSION_MAP, EmbeddingDimensionColumn } from "./schema/embedding";
 type Pool = pg.Pool;
 
 export class DrizzleDatabaseAdapter
@@ -49,6 +53,7 @@ export class DrizzleDatabaseAdapter
     private readonly maxDelay: number = 10000; // 10 seconds
     private readonly jitterMax: number = 1000; // 1 second
     private readonly connectionTimeout: number = 5000; // 5 seconds
+    protected embeddingDimension: EmbeddingDimensionColumn = DIMENSION_MAP[1536]; // TODO handle this on init.
 
     constructor(
         connectionConfig: any,
@@ -97,10 +102,8 @@ export class DrizzleDatabaseAdapter
         });
 
         try {
-            // Close existing pool
             await this.pool.end();
 
-            // Create new pool
             this.pool = new pg.Pool({
                 ...this.pool.options,
                 connectionTimeoutMillis: this.connectionTimeout,
@@ -127,7 +130,7 @@ export class DrizzleDatabaseAdapter
     }
 
     private async withRetry<T>(operation: () => Promise<T>): Promise<T> {
-        let lastError: Error = new Error("Unknown error"); // Initialize with default
+        let lastError: Error = new Error("Unknown error");
 
         for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
             try {
@@ -136,13 +139,11 @@ export class DrizzleDatabaseAdapter
                 lastError = error as Error;
 
                 if (attempt < this.maxRetries) {
-                    // Calculate delay with exponential backoff
                     const backoffDelay = Math.min(
                         this.baseDelay * (2 ** (attempt - 1)),
                         this.maxDelay
                     );
 
-                    // Add jitter to prevent thundering herd
                     const jitter = Math.random() * this.jitterMax;
                     const delay = backoffDelay + jitter;
 
@@ -233,9 +234,12 @@ export class DrizzleDatabaseAdapter
     }
 
     async init(): Promise<void> {
+        logger.info("Initializing Drizzle Database Adapter");
         try {
             // TODO: Get the null embedding from provider, if no provider is set for embeddings, throw an error
             // Store the embedding dimension on this class so we can use elsewhere
+
+            
 
             const { rows } = await this.db.execute(sql`
                 SELECT EXISTS (
@@ -371,8 +375,24 @@ export class DrizzleDatabaseAdapter
             }
 
             const query = this.db
-                .select()
+                .select({
+                    memory: {
+                        id: memoryTable.id,
+                        type: memoryTable.type,
+                        createdAt: memoryTable.createdAt,
+                        content: memoryTable.content,
+                        userId: memoryTable.userId,
+                        agentId: memoryTable.agentId,
+                        roomId: memoryTable.roomId,
+                        unique: memoryTable.unique,
+                    },
+                    embedding: embeddingTable[this.embeddingDimension],
+                })
                 .from(memoryTable)
+                .leftJoin(
+                    embeddingTable,
+                    eq(embeddingTable.memoryId, memoryTable.id)
+                )
                 .where(and(...conditions))
                 .orderBy(desc(memoryTable.createdAt));
 
@@ -381,18 +401,20 @@ export class DrizzleDatabaseAdapter
                 : await query;
 
             return rows.map((row) => ({
-                id: row.id as UUID,
-                type: row.type,
-                createdAt: row.createdAt,
+                id: row.memory.id as UUID,
+                type: row.memory.type,
+                createdAt: row.memory.createdAt,
                 content:
-                    typeof row.content === "string"
-                        ? JSON.parse(row.content)
-                        : row.content,
-                embedding: row.embedding ?? undefined,
-                userId: row.userId as UUID,
-                agentId: row.agentId as UUID,
-                roomId: row.roomId as UUID,
-                unique: row.unique,
+                    typeof row.memory.content === "string"
+                        ? JSON.parse(row.memory.content)
+                        : row.memory.content,
+                userId: row.memory.userId as UUID,
+                agentId: row.memory.agentId as UUID,
+                roomId: row.memory.roomId as UUID,
+                unique: row.memory.unique,
+                embedding: row.embedding
+                    ? Array.from(row.embedding)
+                    : undefined,
             }));
         }, "getMemories");
     }
@@ -416,7 +438,16 @@ export class DrizzleDatabaseAdapter
             }
 
             const query = this.db
-                .select()
+                .select({
+                    id: memoryTable.id,
+                    type: memoryTable.type,
+                    createdAt: memoryTable.createdAt,
+                    content: memoryTable.content,
+                    userId: memoryTable.userId,
+                    agentId: memoryTable.agentId,
+                    roomId: memoryTable.roomId,
+                    unique: memoryTable.unique,
+                })
                 .from(memoryTable)
                 .where(and(...conditions))
                 .orderBy(desc(memoryTable.createdAt));
@@ -432,7 +463,6 @@ export class DrizzleDatabaseAdapter
                     typeof row.content === "string"
                         ? JSON.parse(row.content)
                         : row.content,
-                embedding: row.embedding,
                 userId: row.userId as UUID,
                 agentId: row.agentId as UUID,
                 roomId: row.roomId as UUID,
@@ -444,8 +474,22 @@ export class DrizzleDatabaseAdapter
     async getMemoryById(id: UUID): Promise<Memory | null> {
         return this.withDatabase(async () => {
             const result = await this.db
-                .select()
+                .select({
+                    id: memoryTable.id,
+                    type: memoryTable.type,
+                    createdAt: memoryTable.createdAt,
+                    content: memoryTable.content,
+                    userId: memoryTable.userId,
+                    agentId: memoryTable.agentId,
+                    roomId: memoryTable.roomId,
+                    unique: memoryTable.unique,
+                    embedding: embeddingTable[this.embeddingDimension],
+                })
                 .from(memoryTable)
+                .leftJoin(
+                    embeddingTable,
+                    eq(memoryTable.id, embeddingTable.memoryId)
+                )
                 .where(eq(memoryTable.id, id))
                 .limit(1);
 
@@ -459,11 +503,11 @@ export class DrizzleDatabaseAdapter
                     typeof row.content === "string"
                         ? JSON.parse(row.content)
                         : row.content,
-                embedding: row.embedding ?? undefined,
                 userId: row.userId as UUID,
                 agentId: row.agentId as UUID,
                 roomId: row.roomId as UUID,
                 unique: row.unique,
+                embedding: row.embedding ?? undefined,
             };
         }, "getMemoryById");
     }
@@ -474,6 +518,7 @@ export class DrizzleDatabaseAdapter
     ): Promise<Memory[]> {
         return this.withDatabase(async () => {
             if (memoryIds.length === 0) return [];
+
             const conditions = [inArray(memoryTable.id, memoryIds)];
 
             if (tableName) {
@@ -481,23 +526,39 @@ export class DrizzleDatabaseAdapter
             }
 
             const rows = await this.db
-                .select()
+                .select({
+                    memory: {
+                        id: memoryTable.id,
+                        type: memoryTable.type,
+                        createdAt: memoryTable.createdAt,
+                        content: memoryTable.content,
+                        userId: memoryTable.userId,
+                        agentId: memoryTable.agentId,
+                        roomId: memoryTable.roomId,
+                        unique: memoryTable.unique,
+                    },
+                    embedding: embeddingTable[this.embeddingDimension],
+                })
                 .from(memoryTable)
+                .leftJoin(
+                    embeddingTable,
+                    eq(embeddingTable.memoryId, memoryTable.id)
+                )
                 .where(and(...conditions))
                 .orderBy(desc(memoryTable.createdAt));
 
             return rows.map((row) => ({
-                id: row.id as UUID,
-                createdAt: row.createdAt,
+                id: row.memory.id as UUID,
+                createdAt: row.memory.createdAt,
                 content:
-                    typeof row.content === "string"
-                        ? JSON.parse(row.content)
-                        : row.content,
+                    typeof row.memory.content === "string"
+                        ? JSON.parse(row.memory.content)
+                        : row.memory.content,
+                userId: row.memory.userId as UUID,
+                agentId: row.memory.agentId as UUID,
+                roomId: row.memory.roomId as UUID,
+                unique: row.memory.unique,
                 embedding: row.embedding ?? undefined,
-                userId: row.userId as UUID,
-                agentId: row.agentId as UUID,
-                roomId: row.roomId as UUID,
-                unique: row.unique,
             }));
         }, "getMemoriesByIds");
     }
@@ -518,19 +579,34 @@ export class DrizzleDatabaseAdapter
                 }>(sql`
                     WITH content_text AS (
                         SELECT
-                            embedding,
+                            m.id,
                             COALESCE(
-                                content->>${opts.query_field_sub_name},
+                                m.content->>${opts.query_field_sub_name},
                                 ''
                             ) as content_text
-                        FROM memories
-                        WHERE type = ${opts.query_table_name}
-                            AND content->>${opts.query_field_sub_name} IS NOT NULL
+                        FROM memories m
+                        WHERE m.type = ${opts.query_table_name}
+                            AND m.content->>${opts.query_field_sub_name} IS NOT NULL
+                    ),
+                    embedded_text AS (
+                        SELECT 
+                            ct.content_text,
+                            COALESCE(
+                                e.dim_384,
+                                e.dim_512,
+                                e.dim_768,
+                                e.dim_1024,
+                                e.dim_1536,
+                                e.dim_3072
+                            ) as embedding
+                        FROM content_text ct
+                        LEFT JOIN embeddings e ON e.memory_id = ct.id
+                        WHERE e.memory_id IS NOT NULL
                     )
                     SELECT
                         embedding,
                         levenshtein(${opts.query_input}, content_text) as levenshtein_score
-                    FROM content_text
+                    FROM embedded_text
                     WHERE levenshtein(${opts.query_input}, content_text) <= ${opts.query_threshold}
                     ORDER BY levenshtein_score
                     LIMIT ${opts.query_match_count}
@@ -698,7 +774,9 @@ export class DrizzleDatabaseAdapter
         return this.withDatabase(async () => {
             await this.db
                 .update(goalTable)
-                .set({ status: params.status })
+                .set({ 
+                    status: params.status as string
+                })
                 .where(eq(goalTable.id, params.goalId));
         }, "updateGoalStatus");
     }
@@ -720,7 +798,7 @@ export class DrizzleDatabaseAdapter
             );
 
             const similarity = sql<number>`1 - (${cosineDistance(
-                memoryTable.embedding,
+                embeddingTable[this.embeddingDimension],
                 cleanVector
             )})`;
 
@@ -742,74 +820,72 @@ export class DrizzleDatabaseAdapter
 
             const results = await this.db
                 .select({
-                    id: memoryTable.id,
-                    type: memoryTable.type,
-                    createdAt: memoryTable.createdAt,
-                    content: memoryTable.content,
-                    embedding: memoryTable.embedding,
-                    userId: memoryTable.userId,
-                    agentId: memoryTable.agentId,
-                    roomId: memoryTable.roomId,
-                    unique: memoryTable.unique,
-                    similarity: similarity,
+                    memory: memoryTable,
+                    similarity,
+                    embedding: embeddingTable[this.embeddingDimension],
                 })
-                .from(memoryTable)
+                .from(embeddingTable)
+                .innerJoin(
+                    memoryTable,
+                    eq(memoryTable.id, embeddingTable.memoryId)
+                )
                 .where(and(...conditions))
                 .orderBy(desc(similarity))
                 .limit(params.count ?? 10);
 
             return results.map((row) => ({
-                id: row.id as UUID,
-                type: row.type,
-                createdAt: row.createdAt,
+                id: row.memory.id as UUID,
+                type: row.memory.type,
+                createdAt: row.memory.createdAt,
                 content:
-                    typeof row.content === "string"
-                        ? JSON.parse(row.content)
-                        : row.content,
+                    typeof row.memory.content === "string"
+                        ? JSON.parse(row.memory.content)
+                        : row.memory.content,
+                userId: row.memory.userId as UUID,
+                agentId: row.memory.agentId as UUID,
+                roomId: row.memory.roomId as UUID,
+                unique: row.memory.unique,
                 embedding: row.embedding ?? undefined,
-                userId: row.userId as UUID,
-                agentId: row.agentId as UUID,
-                roomId: row.roomId as UUID,
-                unique: row.unique,
                 similarity: row.similarity,
             }));
         }, "searchMemoriesByEmbedding");
     }
 
     async createMemory(memory: Memory, tableName: string): Promise<void> {
-        return this.withDatabase(async () => {
-            logger.debug("DrizzleAdapter createMemory:", {
-                memoryId: memory.id,
-                embeddingLength: memory.embedding?.length,
-                contentLength: memory.content?.text?.length,
-            });
+        logger.debug("DrizzleAdapter createMemory:", {
+            memoryId: memory.id,
+            embeddingLength: memory.embedding?.length,
+            contentLength: memory.content?.text?.length,
+        });
 
-            let isUnique = true;
-            if (memory.embedding) {
-                logger.info("Searching for similar memories:");
-                const similarMemories = await this.searchMemoriesByEmbedding(
-                    memory.embedding,
-                    {
-                        tableName,
-                        roomId: memory.roomId,
-                        match_threshold: 0.95,
-                        count: 1,
-                    }
-                );
-                isUnique = similarMemories.length === 0;
-            }
-
-            const contentToInsert =
-                typeof memory.content === "string"
-                    ? JSON.parse(memory.content)
-                    : memory.content;
-
-            await this.db.insert(memoryTable).values([
+        let isUnique = true;
+        if (memory.embedding && Array.isArray(memory.embedding)) {
+            logger.info("Searching for similar memories:");
+            const similarMemories = await this.searchMemoriesByEmbedding(
+                memory.embedding,
                 {
-                    id: memory.id ?? v4(),
+                    tableName,
+                    roomId: memory.roomId,
+                    match_threshold: 0.95,
+                    count: 1,
+                }
+            );
+            isUnique = similarMemories.length === 0;
+        }
+
+        const contentToInsert =
+            typeof memory.content === "string"
+                ? JSON.parse(memory.content)
+                : memory.content;
+
+        const memoryId = memory.id ?? v4();
+
+        await this.db.transaction(async (tx) => {
+            await tx.insert(memoryTable).values([
+                {
+                    id: memoryId,
                     type: tableName,
                     content: sql`${contentToInsert}::jsonb`,
-                    embedding: memory.embedding,
                     userId: memory.userId,
                     roomId: memory.roomId,
                     agentId: memory.agentId,
@@ -817,32 +893,85 @@ export class DrizzleDatabaseAdapter
                     createdAt: memory.createdAt,
                 },
             ]);
-        }, "createMemory");
+
+            if (memory.embedding && Array.isArray(memory.embedding)) {
+                const embeddingValues: Record<string, unknown> = {
+                    id: v4(),
+                    memoryId: memoryId,
+                    createdAt: memory.createdAt,
+                };
+
+                const cleanVector = memory.embedding.map((n) =>
+                    Number.isFinite(n) ? Number(n.toFixed(6)) : 0
+                );
+
+                embeddingValues[this.embeddingDimension] = cleanVector;
+
+                await tx.insert(embeddingTable).values([embeddingValues]);
+            }
+        });
+
+        logger.debug("Memory created successfully:", {
+            memoryId,
+            hasEmbedding: !!memory.embedding,
+        });
     }
 
     async removeMemory(memoryId: UUID, tableName: string): Promise<void> {
         return this.withDatabase(async () => {
-            await this.db
-                .delete(memoryTable)
-                .where(
-                    and(
-                        eq(memoryTable.id, memoryId),
-                        eq(memoryTable.type, tableName)
-                    )
-                );
+            await this.db.transaction(async (tx) => {
+                await tx
+                    .delete(embeddingTable)
+                    .where(eq(embeddingTable.memoryId, memoryId));
+
+                await tx
+                    .delete(memoryTable)
+                    .where(
+                        and(
+                            eq(memoryTable.id, memoryId),
+                            eq(memoryTable.type, tableName)
+                        )
+                    );
+            });
+
+            logger.debug("Memory removed successfully:", {
+                memoryId,
+                tableName,
+            });
         }, "removeMemory");
     }
 
     async removeAllMemories(roomId: UUID, tableName: string): Promise<void> {
         return this.withDatabase(async () => {
-            await this.db
-                .delete(memoryTable)
-                .where(
-                    and(
-                        eq(memoryTable.roomId, roomId),
-                        eq(memoryTable.type, tableName)
-                    )
-                );
+            await this.db.transaction(async (tx) => {
+                const memoryIds = await tx
+                    .select({ id: memoryTable.id })
+                    .from(memoryTable)
+                    .where(
+                        and(
+                            eq(memoryTable.roomId, roomId),
+                            eq(memoryTable.type, tableName)
+                        )
+                    );
+
+                if (memoryIds.length > 0) {
+                    await tx.delete(embeddingTable).where(
+                        inArray(
+                            embeddingTable.memoryId,
+                            memoryIds.map((m) => m.id)
+                        )
+                    );
+
+                    await tx
+                        .delete(memoryTable)
+                        .where(
+                            and(
+                                eq(memoryTable.roomId, roomId),
+                                eq(memoryTable.type, tableName)
+                            )
+                        );
+                }
+            });
 
             logger.debug("All memories removed successfully:", {
                 roomId,
@@ -1168,7 +1297,6 @@ export class DrizzleDatabaseAdapter
         userA: UUID;
         userB: UUID;
     }): Promise<boolean> {
-        // Input validation
         if (!params.userA || !params.userB) {
             throw new Error("userA and userB are required");
         }
@@ -1191,9 +1319,7 @@ export class DrizzleDatabaseAdapter
 
                 return true;
             } catch (error) {
-                // Check for unique constraint violation or other specific errors
                 if ((error as { code?: string }).code === "23505") {
-                    // Unique violation
                     logger.warn("Relationship already exists:", {
                         userA: params.userA,
                         userB: params.userB,
@@ -1299,81 +1425,6 @@ export class DrizzleDatabaseAdapter
         }, "getRelationships");
     }
 
-    private async createKnowledgeChunk(
-        params: {
-            id: UUID;
-            originalId: UUID;
-            agentId: UUID | null;
-            content: any;
-            embedding: Float32Array | undefined | null;
-            chunkIndex: number;
-            isShared: boolean;
-            createdAt: number;
-        },
-        tx: NodePgDatabase
-    ): Promise<void> {
-        const embedding = params.embedding
-            ? Array.from(params.embedding)
-            : null;
-
-        const patternId = `${params.originalId}-chunk-${params.chunkIndex}`;
-        const contentWithPatternId = {
-            ...params.content,
-            metadata: {
-                ...params.content.metadata,
-                patternId,
-            },
-        };
-
-        await tx.insert(knowledgeTable).values({
-            id: params.id,
-            agentId: params.agentId,
-            content: sql`${contentWithPatternId}::jsonb`,
-            embedding: embedding,
-            isMain: false,
-            originalId: params.originalId,
-            chunkIndex: params.chunkIndex,
-            isShared: params.isShared,
-            createdAt: params.createdAt,
-        });
-    }
-
-    async removeKnowledge(id: UUID): Promise<void> {
-        return this.withDatabase(async () => {
-            try {
-                await this.db
-                    .delete(knowledgeTable)
-                    .where(eq(knowledgeTable.id, id));
-            } catch (error) {
-                logger.error("Failed to remove knowledge:", {
-                    error:
-                        error instanceof Error ? error.message : String(error),
-                    id,
-                });
-                throw error;
-            }
-        }, "removeKnowledge");
-    }
-
-    async clearKnowledge(agentId: UUID, shared?: boolean): Promise<void> {
-        return this.withDatabase(async () => {
-            if (shared) {
-                await this.db
-                    .delete(knowledgeTable)
-                    .where(
-                        or(
-                            eq(knowledgeTable.agentId, agentId),
-                            eq(knowledgeTable.isShared, true)
-                        )
-                    );
-            } else {
-                await this.db
-                    .delete(knowledgeTable)
-                    .where(eq(knowledgeTable.agentId, agentId));
-            }
-        }, "clearKnowledge");
-    }
-
     async getCache(params: {
         agentId: UUID;
         key: string;
@@ -1463,3 +1514,31 @@ export class DrizzleDatabaseAdapter
         }, "deleteCache");
     }
 }
+
+const drizzleDatabaseAdapter: Adapter = {
+    init: async (runtime: IAgentRuntime) => {
+        const connectionConfig = runtime.getSetting("POSTGRES_URL");
+        logger.info(`Initializing Drizzle database at ${connectionConfig}...`);
+        const db = new DrizzleDatabaseAdapter(connectionConfig);
+
+        // TODO: get embedding zero vector from provider!
+
+        try { 
+            await db.init();
+            logger.success("Successfully connected to Drizzle database");
+        } catch (error) {
+            logger.error("Failed to connect to Drizzle:", error);
+            throw error;
+        }
+
+        return db;
+    },
+};
+
+const drizzlePlugin: Plugin = {
+    name: "drizzle",
+    description: "Drizzle database adapter plugin",
+    adapters: [drizzleDatabaseAdapter],
+};
+
+export default drizzlePlugin;

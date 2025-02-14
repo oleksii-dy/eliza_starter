@@ -543,7 +543,7 @@ export type Client = {
 
 export type Adapter = {
   /** Initialize adapter */
-  init: (runtime: IAgentRuntime) => IDatabaseAdapter & IDatabaseCacheAdapter;
+  init: (runtime: IAgentRuntime) => Promise<IDatabaseAdapter & IDatabaseCacheAdapter>;
 };
 
 export type Route = {

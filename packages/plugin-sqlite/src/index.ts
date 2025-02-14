@@ -761,7 +761,7 @@ export class SqliteDatabaseAdapter
 }
 
 const sqliteDatabaseAdapter: Adapter = {
-    init: (runtime: IAgentRuntime) => {
+    init: async (runtime: IAgentRuntime) => {
         const dataDir = path.join(process.cwd(), "data");
 
         if (!fs.existsSync(dataDir)) {
@@ -772,16 +772,13 @@ const sqliteDatabaseAdapter: Adapter = {
         logger.info(`Initializing SQLite database at ${filePath}...`);
         const db = new SqliteDatabaseAdapter(new Database(filePath));
 
-        // Test the connection
-        db.init()
-            .then(() => {
-                logger.success(
-                    "Successfully connected to SQLite database"
-                );
-            })
-            .catch((error) => {
-                logger.error("Failed to connect to SQLite:", error);
-            });
+        try { 
+            await db.init();
+            logger.success("Successfully connected to SQLite database");
+        } catch (error) {
+            logger.error("Failed to connect to SQLite:", error);
+            throw error;
+        }
 
         return db;
     },

@@ -5,8 +5,22 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1738369218670,
-      "tag": "20250201002018_init",
+      "when": 1739469948094,
+      "tag": "20250213180548_vector_extension",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1739470015820,
+      "tag": "20250213180655_fuzzystrmatch_extension",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1739486473359,
+      "tag": "20250213224113_init_schema",
       "breakpoints": true
     }
   ]
