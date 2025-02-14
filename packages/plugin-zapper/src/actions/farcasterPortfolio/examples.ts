@@ -3,7 +3,7 @@ export default [
         {
             user: "{{user1}}",
             content: {
-                text: "Show me the holdings for Farcaster users @vitalik and @jessepollak",
+                text: "Show me the holdings for Farcaster users @vitalik.eth and @jessepollak",
             },
         },
         {
@@ -15,7 +15,7 @@ export default [
         {
             user: "{{user1}}",
             content: {
-                text: "What's the portfolio for @dwr?",
+                text: "What's the portfolio for @dwr.eth?",
             },
         },
         {

@@ -10,21 +10,9 @@ import {
     type State,
 } from "@elizaos/core";
 import examples from "./examples";
+import { formatFarcasterData } from "../../utils";
 
-interface FarcasterProfile {
-    username: string;
-    fid: number;
-    metadata: {
-        displayName: string;
-        description: string;
-        imageUrl: string;
-        warpcast: string;
-    };
-    connectedAddresses: string[];
-    custodyAddress: string;
-}
-
-export const farcasterPortfolio: Action = {
+export const farcasterPortfolioAction: Action = {
     name: "FARCASTER_PORTFOLIO",
     description: "Get the portfolio for one or more Farcaster usernames",
     similes: ["GET_FARCASTER_PORTFOLIO"],
@@ -32,7 +20,6 @@ export const farcasterPortfolio: Action = {
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         return true;
     },
-
     handler: async (
         _runtime: IAgentRuntime,
         _message: Memory,
@@ -42,8 +29,10 @@ export const farcasterPortfolio: Action = {
     ): Promise<boolean> => {
         async function getFarcasterAddresses(usernames: string[]): Promise<{
             addresses: string[],
-            profiles: FarcasterProfile[]
         }> {
+            if (!process.env.ZAPPER_API_KEY) {
+                throw new Error("ZAPPER API key not found in environment variables. Make sure to set the ZAPPER_API_KEY environment variable.");
+            }
             const encodedKey = btoa(process.env.ZAPPER_API_KEY);
             const query = `
                 query GetFarcasterAddresses($farcasterUsernames: [String!]) {
@@ -81,25 +70,17 @@ export const farcasterPortfolio: Action = {
             const data = await response.json();
             
             if (data.errors) {
-                elizaLogger.error({ errors: data.errors }, "Farcaster API returned errors");
+                elizaLogger.error({ errors: data.errors }, "Zapper API returned errors");
                 throw new Error("Failed to fetch Farcaster addresses");
             }
 
-            const accounts = data.data.accounts || [];
-            const profiles = accounts
-                .map(account => account.farcasterProfile)
-                .filter(Boolean);
-
-            if (profiles.length === 0) {
-                throw new Error("No Farcaster accounts found for the provided usernames");
+            try {
+                const formattedResponse = formatFarcasterData(data);
+                return formattedResponse;
+            } catch (error) {
+                elizaLogger.error({ error }, "Error formatting portfolio data");
+                throw error;
             }
-
-            const allAddresses = profiles.flatMap(profile => [
-                ...(profile.connectedAddresses || []),
-                profile.custodyAddress
-            ]).filter(Boolean);
-
-            return { addresses: allAddresses, profiles };
         }
 
         try {
@@ -124,24 +105,18 @@ export const farcasterPortfolio: Action = {
                 throw new Error("No Farcaster usernames found in the message");
             }
 
-            const { addresses, profiles } = await getFarcasterAddresses(usernames);
+            const { addresses } = await getFarcasterAddresses(usernames);
             
             if (addresses.length === 0) {
                 throw new Error("No addresses found for these Farcaster accounts");
             }
-
-            const profilesSummary = profiles
-                .map(profile => `${profile.metadata.displayName} (@${profile.username})
-FID: ${profile.fid}
-${profile.metadata.description}`)
-                .join('\n\n');
 
             const newMemory: Memory = {
                 userId: _message.userId,
                 agentId: _message.agentId,
                 roomId: _message.roomId,
                 content: {
-                    text: `Fetching portfolio for addresses: ${addresses.join(', ')}\n\nProfiles:\n${profilesSummary}`,
+                    text: `Fetching portfolio for addresses: ${addresses.join(', ')}`,
                     action: "ZAPPER_PORTFOLIO",
                     source: _message.content?.source,
                     addresses: addresses,
@@ -150,7 +125,7 @@ ${profile.metadata.description}`)
             
             await _runtime.messageManager.createMemory(newMemory);
             _callback(newMemory.content);
-
+            // Run the portfolio action with addresses found in Farcaster profiles
             await _runtime.processActions(newMemory, [newMemory], _state, _callback);
 
             return true;

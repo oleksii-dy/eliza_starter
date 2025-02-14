@@ -1,5 +1,5 @@
 import type { Plugin } from "@elizaos/core";
-import { portfolioAction } from "./actions/getPortfolio/portfolio";
+import { portfolioAction } from "./actions/portfolio/portfolio";
 import { farcasterPortfolioAction } from "./actions/farcasterPortfolio/farcasterPortfolio";
 
 export const zapperPlugin: Plugin = {

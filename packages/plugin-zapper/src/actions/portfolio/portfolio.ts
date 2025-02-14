@@ -10,7 +10,7 @@ import {
     type State,
 } from "@elizaos/core";
 import examples from "./examples";
-
+import { formatPortfolioData } from "../../utils";
 export const portfolioAction: Action = {
     name: "ZAPPER_PORTFOLIO",
     description: "Get the portfolio from given address or addresses",
@@ -19,7 +19,6 @@ export const portfolioAction: Action = {
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         return true;
     },
-
     handler: async (
         _runtime: IAgentRuntime,
         _message: Memory,
@@ -28,8 +27,10 @@ export const portfolioAction: Action = {
         _callback: HandlerCallback
     ): Promise<boolean> => {
         async function getZapperAssets(addresses: string[]) {
+            if (!process.env.ZAPPER_API_KEY) {
+                throw new Error("ZAPPER API key not found in environment variables. Make sure to set the ZAPPER_API_KEY environment variable.");
+            }
             const encodedKey = btoa(process.env.ZAPPER_API_KEY);
-
             const query = `
                 query Portfolio($addresses: [Address!]!) {
                     portfolio(addresses: $addresses) {
@@ -81,74 +82,19 @@ export const portfolioAction: Action = {
             });
 
             const data = await response.json();
-
+            
             if (data.errors) {
                 elizaLogger.error({ errors: data.errors }, "Zapper API returned errors");
                 throw new Error("Failed to fetch data from Zapper API");
             }
 
-            const portfolio = data.data.portfolio;
-
-            const tokenSection = portfolio.tokenBalances
-                .sort((a, b) => b.token.balanceUSD - a.token.balanceUSD)
-                .slice(0, 5)
-                .map(balance => {
-                    const formattedBalance = Number(balance.token.balance).toLocaleString(undefined, {
-                        maximumFractionDigits: 4
-                    });
-                    const formattedUSD = balance.token.balanceUSD.toLocaleString(undefined, {
-                        style: 'currency',
-                        currency: 'USD'
-                    });
-
-                    return `${balance.token.baseToken.name} (${balance.token.baseToken.symbol})
-Network: ${balance.network}
-Balance: ${formattedBalance}
-Value: ${formattedUSD}`;
-                });
-
-            const nftSection = portfolio.nftBalances
-                .map(nft => {
-                    const formattedUSD = nft.balanceUSD.toLocaleString(undefined, {
-                        style: 'currency',
-                        currency: 'USD'
-                    });
-                    return `${nft.network}
-NFT Value: ${formattedUSD}`
-                ;});
-
-            const totalUSD = portfolio.totals.total.toLocaleString(undefined, {
-                style: 'currency',
-                currency: 'USD'
-            });
-            const totalWithNFTUSD = portfolio.totals.totalWithNFT.toLocaleString(undefined, {
-                style: 'currency',
-                currency: 'USD'
-            });
-
-            const networkTotals = portfolio.totals.totalByNetwork
-                .filter(net => net.total > 0)
-                .sort((a, b) => b.total - a.total)
-                .map(net => {
-                    const formattedUSD = net.total.toLocaleString(undefined, {
-                        style: 'currency',
-                        currency: 'USD'
-                    });
-                    return `${net.network}: ${formattedUSD}`;
-                });
-
-            return `💰 Portfolio Summary:
-Total Value (excluding NFTs): ${totalUSD}
-Total Value (including NFTs): ${totalWithNFTUSD}
-            
-🌐 Network Breakdown:
-${networkTotals}
-            
-🪙 Top Token Holdings:
-${tokenSection}
-            
-🎨 NFT Holdings:
-${nftSection}`;
+            try {
+                const formattedResponse = formatPortfolioData(data);
+                return formattedResponse;
+            } catch (error) {
+                elizaLogger.error({ error }, "Error formatting portfolio data");
+                throw error;
+            }
         }
 
         try {
