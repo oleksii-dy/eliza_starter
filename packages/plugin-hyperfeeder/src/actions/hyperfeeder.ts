@@ -207,10 +207,8 @@ ${blogData.segmentText}`;
                 source: _message.content?.source,
             } as Content,
         };
-        console.log("New memory:", newMemory);
         await _runtime.messageManager.createMemory(newMemory);
         _callback(newMemory.content);
-        console.log("Callback called");
         return true;
     },
     examples: [
