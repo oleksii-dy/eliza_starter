@@ -1,11 +1,9 @@
-import { jsonb, pgTable, text, uuid } from "drizzle-orm/pg-core";
-import { sql, relations } from "drizzle-orm";
-import { accountTable } from "./account";
+import { jsonb, pgTable, text } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import type { 
     Character,
     TemplateType,
     MessageExample,
-    UUID,
 } from "@elizaos/core";
 import { numberTimestamp } from "./types";
 
@@ -19,8 +17,7 @@ export type StoredTemplates = {
 };
 
 export const characterTable = pgTable("characters", {
-    id: uuid("id").primaryKey().defaultRandom().notNull(),
-    name: text("name").notNull(),
+    name: text("name").primaryKey(),
     username: text("username"),
     email: text("email"),
     system: text("system"),
@@ -44,15 +41,7 @@ export const characterTable = pgTable("characters", {
     }>().default(sql`'{}'::jsonb`),
     extends: jsonb("extends").$type<string[]>().default(sql`'[]'::jsonb`),
     createdAt: numberTimestamp("created_at").default(sql`now()`),
-    userId: uuid("user_id").references(() => accountTable.id),
 });
-
-export const characterRelations = relations(characterTable, ({ one }) => ({
-    account: one(accountTable, {
-        fields: [characterTable.userId],
-        references: [accountTable.id],
-    }),
-}));
 
 export const templateToStored = (template: TemplateType): StoredTemplate => {
     if (typeof template === 'string') {
@@ -70,10 +59,12 @@ export const storedToTemplate = (stored: StoredTemplate): TemplateType => {
 
 export const characterToInsert = (
     character: Character,
-    userId: UUID
 ): typeof characterTable.$inferInsert => {
     return {
-        ...character,
+        username: character.username || "",
+        name: character.name,
+        email: character.email,
+        system: character.system,
         templates: character.templates 
             ? Object.fromEntries(
                 Object.entries(character.templates).map(
@@ -92,6 +83,5 @@ export const characterToInsert = (
         settings: character.settings || {},
         style: character.style || {},
         extends: character.extends || [],
-        userId
     };
 };

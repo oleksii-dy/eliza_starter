@@ -5,22 +5,22 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1739469948094,
-      "tag": "20250213180548_vector_extension",
+      "when": 1739579603447,
+      "tag": "20250215003323_create_extensions",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1739470015820,
-      "tag": "20250213180655_fuzzystrmatch_extension",
+      "when": 1739579648573,
+      "tag": "20250215003408_create_schema",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
-      "when": 1739567712777,
-      "tag": "20250214211512_init_schema",
+      "when": 1739579678337,
+      "tag": "20250215003438_create_hnsw_vector_indices",
       "breakpoints": true
     }
   ]

@@ -2,11 +2,10 @@ CREATE TABLE "accounts" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"createdAt" timestamptz DEFAULT now() NOT NULL,
 	"name" text,
-	"username" text,
+	"username" text NOT NULL,
 	"email" text NOT NULL,
 	"avatarUrl" text,
-	"details" jsonb DEFAULT '{}'::jsonb,
-	"character_id" uuid
+	"details" jsonb DEFAULT '{}'::jsonb
 );
 --> statement-breakpoint
 CREATE TABLE "cache" (
@@ -19,8 +18,7 @@ CREATE TABLE "cache" (
 );
 --> statement-breakpoint
 CREATE TABLE "characters" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"name" text NOT NULL,
+	"name" text PRIMARY KEY NOT NULL,
 	"username" text,
 	"email" text,
 	"system" text,
@@ -36,8 +34,7 @@ CREATE TABLE "characters" (
 	"settings" jsonb DEFAULT '{}'::jsonb,
 	"style" jsonb DEFAULT '{}'::jsonb,
 	"extends" jsonb DEFAULT '[]'::jsonb,
-	"created_at" timestamptz DEFAULT now(),
-	"user_id" uuid
+	"created_at" timestamptz DEFAULT now()
 );
 --> statement-breakpoint
 CREATE TABLE "embeddings" (
@@ -108,9 +105,6 @@ CREATE TABLE "rooms" (
 	"createdAt" timestamptz DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "accounts" ADD CONSTRAINT "accounts_character_id_characters_id_fk" FOREIGN KEY ("character_id") REFERENCES "public"."characters"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "accounts" ADD CONSTRAINT "fk_character" FOREIGN KEY ("character_id") REFERENCES "public"."characters"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "characters" ADD CONSTRAINT "characters_user_id_accounts_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."accounts"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "embeddings" ADD CONSTRAINT "embeddings_memory_id_memories_id_fk" FOREIGN KEY ("memory_id") REFERENCES "public"."memories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "embeddings" ADD CONSTRAINT "fk_embedding_memory" FOREIGN KEY ("memory_id") REFERENCES "public"."memories"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "goals" ADD CONSTRAINT "goals_userId_accounts_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."accounts"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

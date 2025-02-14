@@ -243,9 +243,6 @@ export class DrizzleDatabaseAdapter
     async init(): Promise<void> {
         logger.info("Initializing Drizzle Database Adapter");
         try {
-            // TODO: Get the null embedding from provider, if no provider is set for embeddings, throw an error
-            // Store the embedding dimension on this class so we can use elsewhere
-
             const { rows } = await this.db.execute(sql`
                 SELECT EXISTS (
                     SELECT FROM information_schema.tables
@@ -393,7 +390,7 @@ export class DrizzleDatabaseAdapter
                         roomId: memoryTable.roomId,
                         unique: memoryTable.unique,
                     },
-                    embedding: embeddingTable[this.embeddingDimension],
+                    embedding: embeddingTable[this.embeddingDimension], // TODO: remove dimension from here
                 })
                 .from(memoryTable)
                 .leftJoin(
@@ -1505,18 +1502,15 @@ export class DrizzleDatabaseAdapter
         });
     }
 
-    async createCharacter(character: Character, userId: UUID): Promise<void> {
+    async createCharacter(character: Character): Promise<void> {
         return this.withDatabase(async () => {
-            const characterId = character.id ?? v4() as UUID;
             const insertData = characterToInsert(
-                { ...character, id: characterId },
-                userId
+                { ...character },
             );
             
             await this.db.insert(characterTable).values(insertData);
     
             logger.debug("Character created successfully:", {
-                characterId,
                 name: character.name
             });
         });
@@ -1530,7 +1524,6 @@ export class DrizzleDatabaseAdapter
                 .orderBy(desc(characterTable.createdAt));
     
             return characters.map(char => ({
-                id: char.id as UUID,
                 name: char.name,
                 username: char.username ?? undefined,
                 email: char.email ?? undefined,
@@ -1557,19 +1550,18 @@ export class DrizzleDatabaseAdapter
         });
     }
     
-    async getCharacter(id: UUID): Promise<Character | null> {
+    async getCharacter(name: string): Promise<Character | null> {
         return this.withDatabase(async () => {
             const result = await this.db
                 .select()
                 .from(characterTable)
-                .where(eq(characterTable.id, id))
+                .where(eq(characterTable.name, name))
                 .limit(1);
     
             if (result.length === 0) return null;
     
             const char = result[0];
             return {
-                id: char.id as UUID,
                 name: char.name,
                 username: char.username ?? undefined,
                 email: char.email ?? undefined,
@@ -1596,50 +1588,40 @@ export class DrizzleDatabaseAdapter
         });
     }
     
-    async updateCharacter(character: Character): Promise<void> {
+    async updateCharacter(name: string, updates: Partial<Character>): Promise<void> {
         return this.withDatabase(async () => {
+            const { templates, ...restUpdates } = updates;
+            
+            const updateData: Partial<typeof characterTable.$inferInsert> = {
+                ...restUpdates,
+                ...(templates && {
+                    templates: Object.fromEntries(
+                        Object.entries(templates).map(
+                            ([key, value]) => [key, templateToStored(value)]
+                        )
+                    )
+                })
+            };
+    
             await this.db
                 .update(characterTable)
-                .set({
-                    name: character.name,
-                    username: character.username,
-                    email: character.email,
-                    system: character.system,
-                    templates: character.templates 
-                        ? Object.fromEntries(
-                            Object.entries(character.templates).map(
-                                ([key, value]) => [key, templateToStored(value)]
-                            )
-                        )
-                        : {},
-                    clientConfig: character.clientConfig || {},
-                    bio: character.bio,
-                    messageExamples: character.messageExamples || [],
-                    postExamples: character.postExamples || [],
-                    topics: character.topics || [],
-                    adjectives: character.adjectives || [],
-                    knowledge: character.knowledge || [],
-                    plugins: character.plugins || [],
-                    settings: character.settings || {},
-                    style: character.style || {},
-                    extends: character.extends || [],
-                })
-                .where(eq(characterTable.id, character.id as string));
+                .set(updateData)
+                .where(eq(characterTable.name, name));
     
             logger.debug("Character updated successfully:", {
-                characterId: character.id,
-                name: character.name
+                name,
+                updatedFields: Object.keys(updateData)
             });
         });
     }
     
-    async removeCharacter(id: UUID): Promise<void> {
+    async removeCharacter(name: string): Promise<void> {
         return this.withDatabase(async () => {
             await this.db
                 .delete(characterTable)
-                .where(eq(characterTable.id, id));
+                .where(eq(characterTable.name, name));
     
-            logger.debug("Character removed successfully:", { characterId: id });
+            logger.debug("Character removed successfully:", { name });
         });
     }
 }

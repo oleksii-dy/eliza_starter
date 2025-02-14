@@ -352,7 +352,7 @@ function initializeCache(
 async function findDatabaseAdapter(runtime: IAgentRuntime) {
   const { adapters } = runtime;
   let adapter: Adapter | undefined;
-  // if not found, default to sqlite
+  // if not found, default to drizzle
   if (adapters.length === 0) {
     const drizzleAdapterPlugin = await import('@elizaos/plugin-drizzle');
     const drizzleAdapterPluginDefault = drizzleAdapterPlugin.default;

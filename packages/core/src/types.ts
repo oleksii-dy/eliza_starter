@@ -841,6 +841,16 @@ export interface IDatabaseAdapter {
   }): Promise<Relationship | null>;
 
   getRelationships(params: { userId: UUID }): Promise<Relationship[]>;
+
+  createCharacter(character: Character): Promise<void>;
+
+  listCharacters(): Promise<Character[]>;
+
+  getCharacter(name: string): Promise<Character | null>;
+
+  updateCharacter(name: string, updates: Partial<Character>): Promise<void>;
+  
+  removeCharacter(name: string): Promise<void>;
 }
 
 export interface IDatabaseCacheAdapter {

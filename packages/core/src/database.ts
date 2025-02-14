@@ -1,6 +1,7 @@
 import type {
     Account,
     Actor,
+    Character,
     Goal,
     GoalStatus,
     IDatabaseAdapter,
@@ -343,4 +344,15 @@ export abstract class DatabaseAdapter<DB = any> implements IDatabaseAdapter {
     abstract getRelationships(params: {
         userId: UUID;
     }): Promise<Relationship[]>;
+
+
+    abstract createCharacter(character: Character): Promise<void>;
+
+    abstract listCharacters(): Promise<Character[]>;
+
+    abstract getCharacter(name: string): Promise<Character | null>;
+
+    abstract updateCharacter(name: string, updates: Partial<Character>): Promise<void>;
+
+    abstract removeCharacter(name: string): Promise<void>;
 }
