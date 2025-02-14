@@ -38,7 +38,12 @@ import {
     roomTable,
     characterTable,
 } from "./schema/index";
-import { characterToInsert, StoredTemplate, storedToTemplate, templateToStored } from "./schema/character";
+import {
+    characterToInsert,
+    StoredTemplate,
+    storedToTemplate,
+    templateToStored,
+} from "./schema/character";
 import { drizzle, NodePgDatabase } from "drizzle-orm/node-postgres";
 import { v4 } from "uuid";
 import { runMigrations } from "./migrations";
@@ -126,8 +131,7 @@ export class DrizzleDatabaseAdapter
     }
 
     private async withDatabase<T>(
-        operation: () => Promise<T>,
-        context: string
+        operation: () => Promise<T>
     ): Promise<T> {
         return this.withRetry(operation);
     }
@@ -307,7 +311,7 @@ export class DrizzleDatabaseAdapter
                 avatarUrl: account.avatarUrl ?? "",
                 details: account.details ?? {},
             };
-        }, "getAccountById");
+        });
     }
 
     async createAccount(account: Account): Promise<boolean> {
@@ -340,7 +344,7 @@ export class DrizzleDatabaseAdapter
                 });
                 return false;
             }
-        }, "createAccount");
+        });
     }
 
     async getMemories(params: {
@@ -419,7 +423,7 @@ export class DrizzleDatabaseAdapter
                     ? Array.from(row.embedding)
                     : undefined,
             }));
-        }, "getMemories");
+        });
     }
 
     async getMemoriesByRoomIds(params: {
@@ -471,7 +475,7 @@ export class DrizzleDatabaseAdapter
                 roomId: row.roomId as UUID,
                 unique: row.unique,
             })) as Memory[];
-        }, "getMemoriesByRoomIds");
+        });
     }
 
     async getMemoryById(id: UUID): Promise<Memory | null> {
@@ -505,7 +509,7 @@ export class DrizzleDatabaseAdapter
                 unique: row.memory.unique,
                 embedding: row.embedding ?? undefined,
             };
-        }, "getMemoryById");
+        });
     }
 
     async getMemoriesByIds(
@@ -547,7 +551,7 @@ export class DrizzleDatabaseAdapter
                 unique: row.memory.unique,
                 embedding: row.embedding ?? undefined,
             }));
-        }, "getMemoriesByIds");
+        });
     }
 
     async getCachedEmbeddings(opts: {
@@ -625,7 +629,7 @@ export class DrizzleDatabaseAdapter
                 }
                 throw error;
             }
-        }, "getCachedEmbeddings");
+        });
     }
 
     async log(params: {
@@ -652,7 +656,7 @@ export class DrizzleDatabaseAdapter
                 });
                 throw error;
             }
-        }, "log");
+        });
     }
 
     async getActorDetails(params: { roomId: string }): Promise<Actor[]> {
@@ -732,7 +736,7 @@ export class DrizzleDatabaseAdapter
                     }`
                 );
             }
-        }, "getActorDetails");
+        });
     }
 
     async searchMemories(params: {
@@ -765,7 +769,7 @@ export class DrizzleDatabaseAdapter
                     status: params.status as string
                 })
                 .where(eq(goalTable.id, params.goalId));
-        }, "updateGoalStatus");
+        });
     }
 
     async searchMemoriesByEmbedding(
@@ -835,7 +839,7 @@ export class DrizzleDatabaseAdapter
                 embedding: row.embedding ?? undefined,
                 similarity: row.similarity,
             }));
-        }, "searchMemoriesByEmbedding");
+        });
     }
 
     async createMemory(memory: Memory, tableName: string): Promise<void> {
@@ -925,7 +929,7 @@ export class DrizzleDatabaseAdapter
                 memoryId,
                 tableName,
             });
-        }, "removeMemory");
+        });
     }
 
     async removeAllMemories(roomId: UUID, tableName: string): Promise<void> {
@@ -964,7 +968,7 @@ export class DrizzleDatabaseAdapter
                 roomId,
                 tableName,
             });
-        }, "removeAllMemories");
+        });
     }
 
     async countMemories(
@@ -990,7 +994,7 @@ export class DrizzleDatabaseAdapter
                 .where(and(...conditions));
 
             return Number(result[0]?.count ?? 0);
-        }, "countMemories");
+        });
     }
 
     async getGoals(params: {
@@ -1032,7 +1036,7 @@ export class DrizzleDatabaseAdapter
                 objectives: row.objectives as any[],
                 createdAt: row.createdAt,
             }));
-        }, "getGoals");
+        });
     }
 
     async updateGoal(goal: Goal): Promise<void> {
@@ -1055,7 +1059,7 @@ export class DrizzleDatabaseAdapter
                 });
                 throw error;
             }
-        }, "updateGoal");
+        });
     }
 
     async createGoal(goal: Goal): Promise<void> {
@@ -1097,13 +1101,13 @@ export class DrizzleDatabaseAdapter
                 });
                 throw error;
             }
-        }, "removeGoal");
+        });
     }
 
     async removeAllGoals(roomId: UUID): Promise<void> {
         return this.withDatabase(async () => {
             await this.db.delete(goalTable).where(eq(goalTable.roomId, roomId));
-        }, "removeAllGoals");
+        });
     }
 
     async getRoom(roomId: UUID): Promise<UUID | null> {
@@ -1117,7 +1121,7 @@ export class DrizzleDatabaseAdapter
                 .limit(1);
 
             return (result[0]?.id as UUID) ?? null;
-        }, "getRoom");
+        });
     }
 
     async createRoom(roomId?: UUID): Promise<UUID> {
@@ -1129,14 +1133,14 @@ export class DrizzleDatabaseAdapter
                 },
             ]);
             return newRoomId as UUID;
-        }, "createRoom");
+        });
     }
 
     async removeRoom(roomId: UUID): Promise<void> {
         if (!roomId) throw new Error("Room ID is required");
         return this.withDatabase(async () => {
             await this.db.delete(roomTable).where(eq(roomTable.id, roomId));
-        }, "removeRoom");
+        });
     }
 
     async getRoomsForParticipant(userId: UUID): Promise<UUID[]> {
@@ -1147,7 +1151,7 @@ export class DrizzleDatabaseAdapter
                 .where(eq(participantTable.userId, userId));
 
             return result.map((row) => row.roomId as UUID);
-        }, "getRoomsForParticipant");
+        });
     }
 
     async getRoomsForParticipants(userIds: UUID[]): Promise<UUID[]> {
@@ -1158,7 +1162,7 @@ export class DrizzleDatabaseAdapter
                 .where(inArray(participantTable.userId, userIds));
 
             return result.map((row) => row.roomId as UUID);
-        }, "getRoomsForParticipants");
+        });
     }
 
     async addParticipant(userId: UUID, roomId: UUID): Promise<boolean> {
@@ -1179,7 +1183,7 @@ export class DrizzleDatabaseAdapter
                 });
                 return false;
             }
-        }, "addParticipant");
+        });
     }
 
     async removeParticipant(userId: UUID, roomId: UUID): Promise<boolean> {
@@ -1205,7 +1209,7 @@ export class DrizzleDatabaseAdapter
                 });
                 return false;
             }
-        }, "removeParticipant");
+        });
     }
 
     async getParticipantsForAccount(userId: UUID): Promise<Participant[]> {
@@ -1226,7 +1230,7 @@ export class DrizzleDatabaseAdapter
                 id: row.id as UUID,
                 account: account!,
             }));
-        }, "getParticipantsForAccount");
+        });
     }
 
     async getParticipantsForRoom(roomId: UUID): Promise<UUID[]> {
@@ -1237,7 +1241,7 @@ export class DrizzleDatabaseAdapter
                 .where(eq(participantTable.roomId, roomId));
 
             return result.map((row) => row.userId as UUID);
-        }, "getParticipantsForRoom");
+        });
     }
 
     async getParticipantUserState(
@@ -1259,7 +1263,7 @@ export class DrizzleDatabaseAdapter
             return (
                 (result[0]?.userState as "FOLLOWED" | "MUTED" | null) ?? null
             );
-        }, "getParticipantUserState");
+        });
     }
 
     async setParticipantUserState(
@@ -1277,7 +1281,7 @@ export class DrizzleDatabaseAdapter
                         eq(participantTable.userId, userId)
                     )
                 );
-        }, "setParticipantUserState");
+        });
     }
 
     async createRelationship(params: {
@@ -1327,7 +1331,7 @@ export class DrizzleDatabaseAdapter
                 }
                 return false;
             }
-        }, "createRelationship");
+        });
     }
 
     async getRelationship(params: {
@@ -1375,7 +1379,7 @@ export class DrizzleDatabaseAdapter
                 });
                 throw error;
             }
-        }, "getRelationship");
+        });
     }
 
     async getRelationships(params: { userId: UUID }): Promise<Relationship[]> {
@@ -1409,7 +1413,7 @@ export class DrizzleDatabaseAdapter
                 });
                 throw error;
             }
-        }, "getRelationships");
+        });
     }
 
     async getCache(params: {
@@ -1438,7 +1442,7 @@ export class DrizzleDatabaseAdapter
                 });
                 return undefined;
             }
-        }, "getCache");
+        });
     }
 
     async setCache(params: {
@@ -1471,7 +1475,7 @@ export class DrizzleDatabaseAdapter
                 });
                 return false;
             }
-        }, "setCache");
+        });
     }
 
     async deleteCache(params: {
@@ -1498,7 +1502,7 @@ export class DrizzleDatabaseAdapter
                 });
                 return false;
             }
-        }, "deleteCache");
+        });
     }
 
     async createCharacter(character: Character, userId: UUID): Promise<void> {
@@ -1515,7 +1519,7 @@ export class DrizzleDatabaseAdapter
                 characterId,
                 name: character.name
             });
-        }, "createCharacter");
+        });
     }
 
     async listCharacters(): Promise<Character[]> {
@@ -1550,7 +1554,7 @@ export class DrizzleDatabaseAdapter
                 style: char.style || undefined,
                 extends: char.extends || undefined
             }));
-        }, "listCharacters");
+        });
     }
     
     async getCharacter(id: UUID): Promise<Character | null> {
@@ -1589,7 +1593,7 @@ export class DrizzleDatabaseAdapter
                 style: char.style || undefined,
                 extends: char.extends || undefined
             };
-        }, "getCharacter");
+        });
     }
     
     async updateCharacter(character: Character): Promise<void> {
@@ -1626,7 +1630,7 @@ export class DrizzleDatabaseAdapter
                 characterId: character.id,
                 name: character.name
             });
-        }, "updateCharacter");
+        });
     }
     
     async removeCharacter(id: UUID): Promise<void> {
@@ -1636,7 +1640,7 @@ export class DrizzleDatabaseAdapter
                 .where(eq(characterTable.id, id));
     
             logger.debug("Character removed successfully:", { characterId: id });
-        }, "removeCharacter");
+        });
     }
 }
 
@@ -1650,7 +1654,6 @@ const drizzleDatabaseAdapter: Adapter = {
         // const zeroVector = await runtime.useModel(ModelClass.TEXT_EMBEDDING, null);
         // logger.info("zeroVector", zeroVector);
         // logger.info("zeroVector length", zeroVector.length);
-
 
         try { 
             await db.init();
