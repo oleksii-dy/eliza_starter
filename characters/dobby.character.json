@@ -1,6 +1,6 @@
 {
     "name": "Dobby",
-    "clients": ["discord"],
+    "clients": [],
     "modelProvider": "openai",
     "settings": {
         "voice": {
