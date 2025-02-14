@@ -7,7 +7,7 @@
     "dependencies": {
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-tee": "workspace:*",
-        "dompurify": "3.2.2",
+        "dompurify": "3.2.4",
         "elliptic": "^6.6.1",
         "ethereum-cryptography": "^3.0.0",
         "tsup": "8.3.5",
