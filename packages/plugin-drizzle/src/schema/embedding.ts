@@ -58,3 +58,5 @@ export const embeddingTable = pgTable(
 );
 
 export type EmbeddingDimensionColumn = 'dim384' | 'dim512' | 'dim768' | 'dim1024' | 'dim1536' | 'dim3072';
+
+export type EmbeddingTableColumn = typeof embeddingTable._.columns[EmbeddingDimensionColumn];

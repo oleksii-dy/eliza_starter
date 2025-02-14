@@ -10,10 +10,10 @@ import {
     type Participant,
     type Relationship,
     type UUID,
+    type Character,
     Plugin,
     IAgentRuntime,
     Adapter,
-    ModelClass,
 } from "@elizaos/core";
 import {
     and,
@@ -36,7 +36,9 @@ import {
     participantTable,
     relationshipTable,
     roomTable,
+    characterTable,
 } from "./schema/index";
+import { characterToInsert, StoredTemplate, storedToTemplate, templateToStored } from "./schema/character";
 import { drizzle, NodePgDatabase } from "drizzle-orm/node-postgres";
 import { v4 } from "uuid";
 import { runMigrations } from "./migrations";
@@ -239,8 +241,6 @@ export class DrizzleDatabaseAdapter
         try {
             // TODO: Get the null embedding from provider, if no provider is set for embeddings, throw an error
             // Store the embedding dimension on this class so we can use elsewhere
-
-            
 
             const { rows } = await this.db.execute(sql`
                 SELECT EXISTS (
@@ -478,14 +478,7 @@ export class DrizzleDatabaseAdapter
         return this.withDatabase(async () => {
             const result = await this.db
                 .select({
-                    id: memoryTable.id,
-                    type: memoryTable.type,
-                    createdAt: memoryTable.createdAt,
-                    content: memoryTable.content,
-                    userId: memoryTable.userId,
-                    agentId: memoryTable.agentId,
-                    roomId: memoryTable.roomId,
-                    unique: memoryTable.unique,
+                    memory: memoryTable,
                     embedding: embeddingTable[this.embeddingDimension],
                 })
                 .from(memoryTable)
@@ -500,16 +493,16 @@ export class DrizzleDatabaseAdapter
 
             const row = result[0];
             return {
-                id: row.id as UUID,
-                createdAt: row.createdAt,
+                id: row.memory.id as UUID,
+                createdAt: row.memory.createdAt,
                 content:
-                    typeof row.content === "string"
-                        ? JSON.parse(row.content)
-                        : row.content,
-                userId: row.userId as UUID,
-                agentId: row.agentId as UUID,
-                roomId: row.roomId as UUID,
-                unique: row.unique,
+                    typeof row.memory.content === "string"
+                        ? JSON.parse(row.memory.content)
+                        : row.memory.content,
+                userId: row.memory.userId as UUID,
+                agentId: row.memory.agentId as UUID,
+                roomId: row.memory.roomId as UUID,
+                unique: row.memory.unique,
                 embedding: row.embedding ?? undefined,
             };
         }, "getMemoryById");
@@ -530,16 +523,7 @@ export class DrizzleDatabaseAdapter
 
             const rows = await this.db
                 .select({
-                    memory: {
-                        id: memoryTable.id,
-                        type: memoryTable.type,
-                        createdAt: memoryTable.createdAt,
-                        content: memoryTable.content,
-                        userId: memoryTable.userId,
-                        agentId: memoryTable.agentId,
-                        roomId: memoryTable.roomId,
-                        unique: memoryTable.unique,
-                    },
+                    memory: memoryTable,
                     embedding: embeddingTable[this.embeddingDimension],
                 })
                 .from(memoryTable)
@@ -1516,6 +1500,144 @@ export class DrizzleDatabaseAdapter
             }
         }, "deleteCache");
     }
+
+    async createCharacter(character: Character, userId: UUID): Promise<void> {
+        return this.withDatabase(async () => {
+            const characterId = character.id ?? v4() as UUID;
+            const insertData = characterToInsert(
+                { ...character, id: characterId },
+                userId
+            );
+            
+            await this.db.insert(characterTable).values(insertData);
+    
+            logger.debug("Character created successfully:", {
+                characterId,
+                name: character.name
+            });
+        }, "createCharacter");
+    }
+
+    async listCharacters(): Promise<Character[]> {
+        return this.withDatabase(async () => {
+            const characters = await this.db
+                .select()
+                .from(characterTable)
+                .orderBy(desc(characterTable.createdAt));
+    
+            return characters.map(char => ({
+                id: char.id as UUID,
+                name: char.name,
+                username: char.username ?? undefined,
+                email: char.email ?? undefined,
+                system: char.system ?? undefined,
+                templates: char.templates 
+                    ? Object.fromEntries(
+                        Object.entries(char.templates).map(
+                            ([key, stored]) => [key, storedToTemplate(stored as StoredTemplate)]
+                        )
+                    )
+                    : undefined,
+                clientConfig: char.clientConfig || undefined,
+                bio: char.bio,
+                messageExamples: char.messageExamples || undefined,
+                postExamples: char.postExamples || undefined,
+                topics: char.topics || undefined,
+                adjectives: char.adjectives || undefined,
+                knowledge: char.knowledge || undefined,
+                plugins: char.plugins || undefined,
+                settings: char.settings || undefined,
+                style: char.style || undefined,
+                extends: char.extends || undefined
+            }));
+        }, "listCharacters");
+    }
+    
+    async getCharacter(id: UUID): Promise<Character | null> {
+        return this.withDatabase(async () => {
+            const result = await this.db
+                .select()
+                .from(characterTable)
+                .where(eq(characterTable.id, id))
+                .limit(1);
+    
+            if (result.length === 0) return null;
+    
+            const char = result[0];
+            return {
+                id: char.id as UUID,
+                name: char.name,
+                username: char.username ?? undefined,
+                email: char.email ?? undefined,
+                system: char.system ?? undefined,
+                templates: char.templates 
+                    ? Object.fromEntries(
+                        Object.entries(char.templates).map(
+                            ([key, stored]) => [key, storedToTemplate(stored as StoredTemplate)]
+                        )
+                    )
+                    : undefined,
+                clientConfig: char.clientConfig || undefined,
+                bio: char.bio,
+                messageExamples: char.messageExamples || undefined,
+                postExamples: char.postExamples || undefined,
+                topics: char.topics || undefined,
+                adjectives: char.adjectives || undefined,
+                knowledge: char.knowledge || undefined,
+                plugins: char.plugins || undefined,
+                settings: char.settings || undefined,
+                style: char.style || undefined,
+                extends: char.extends || undefined
+            };
+        }, "getCharacter");
+    }
+    
+    async updateCharacter(character: Character): Promise<void> {
+        return this.withDatabase(async () => {
+            await this.db
+                .update(characterTable)
+                .set({
+                    name: character.name,
+                    username: character.username,
+                    email: character.email,
+                    system: character.system,
+                    templates: character.templates 
+                        ? Object.fromEntries(
+                            Object.entries(character.templates).map(
+                                ([key, value]) => [key, templateToStored(value)]
+                            )
+                        )
+                        : {},
+                    clientConfig: character.clientConfig || {},
+                    bio: character.bio,
+                    messageExamples: character.messageExamples || [],
+                    postExamples: character.postExamples || [],
+                    topics: character.topics || [],
+                    adjectives: character.adjectives || [],
+                    knowledge: character.knowledge || [],
+                    plugins: character.plugins || [],
+                    settings: character.settings || {},
+                    style: character.style || {},
+                    extends: character.extends || [],
+                })
+                .where(eq(characterTable.id, character.id as string));
+    
+            logger.debug("Character updated successfully:", {
+                characterId: character.id,
+                name: character.name
+            });
+        }, "updateCharacter");
+    }
+    
+    async removeCharacter(id: UUID): Promise<void> {
+        return this.withDatabase(async () => {
+            await this.db
+                .delete(characterTable)
+                .where(eq(characterTable.id, id));
+    
+            logger.debug("Character removed successfully:", { characterId: id });
+        }, "removeCharacter");
+    }
 }
 
 const drizzleDatabaseAdapter: Adapter = {
@@ -1528,6 +1650,7 @@ const drizzleDatabaseAdapter: Adapter = {
         // const zeroVector = await runtime.useModel(ModelClass.TEXT_EMBEDDING, null);
         // logger.info("zeroVector", zeroVector);
         // logger.info("zeroVector length", zeroVector.length);
+
 
         try { 
             await db.init();

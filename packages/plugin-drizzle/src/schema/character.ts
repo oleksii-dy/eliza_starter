@@ -1,0 +1,97 @@
+import { jsonb, pgTable, text, uuid } from "drizzle-orm/pg-core";
+import { sql, relations } from "drizzle-orm";
+import { accountTable } from "./account";
+import type { 
+    Character,
+    TemplateType,
+    MessageExample,
+    UUID,
+} from "@elizaos/core";
+import { numberTimestamp } from "./types";
+
+export type StoredTemplate = {
+    type: 'string' | 'function';
+    value: string;
+};
+
+export type StoredTemplates = {
+    [key: string]: StoredTemplate;
+};
+
+export const characterTable = pgTable("characters", {
+    id: uuid("id").primaryKey().defaultRandom().notNull(),
+    name: text("name").notNull(),
+    username: text("username"),
+    email: text("email"),
+    system: text("system"),
+    templates: jsonb("templates").$type<StoredTemplates>().default(sql`'{}'::jsonb`),
+    clientConfig: jsonb("client_config").$type<{ [key: string]: any }>().default(sql`'{}'::jsonb`),
+    bio: jsonb("bio").$type<string | string[]>().notNull(),
+    messageExamples: jsonb("message_examples").$type<MessageExample[][]>().default(sql`'[]'::jsonb`),
+    postExamples: jsonb("post_examples").$type<string[]>().default(sql`'[]'::jsonb`),
+    topics: jsonb("topics").$type<string[]>().default(sql`'[]'::jsonb`),
+    adjectives: jsonb("adjectives").$type<string[]>().default(sql`'[]'::jsonb`),
+    knowledge: jsonb("knowledge").$type<(string | { path: string; shared?: boolean })[]>().default(sql`'[]'::jsonb`),
+    plugins: jsonb("plugins").$type<string[]>().default(sql`'[]'::jsonb`),
+    settings: jsonb("settings").$type<{
+        secrets?: { [key: string]: string | boolean | number };
+        [key: string]: any;
+    }>().default(sql`'{}'::jsonb`),
+    style: jsonb("style").$type<{
+        all?: string[];
+        chat?: string[];
+        post?: string[];
+    }>().default(sql`'{}'::jsonb`),
+    extends: jsonb("extends").$type<string[]>().default(sql`'[]'::jsonb`),
+    createdAt: numberTimestamp("created_at").default(sql`now()`),
+    userId: uuid("user_id").references(() => accountTable.id),
+});
+
+export const characterRelations = relations(characterTable, ({ one }) => ({
+    account: one(accountTable, {
+        fields: [characterTable.userId],
+        references: [accountTable.id],
+    }),
+}));
+
+export const templateToStored = (template: TemplateType): StoredTemplate => {
+    if (typeof template === 'string') {
+        return { type: 'string', value: template };
+    }
+    return { type: 'function', value: template.toString() };
+};
+
+export const storedToTemplate = (stored: StoredTemplate): TemplateType => {
+    if (stored.type === 'string') {
+        return stored.value;
+    }
+    return eval(`(${stored.value})`);
+};
+
+export const characterToInsert = (
+    character: Character,
+    userId: UUID
+): typeof characterTable.$inferInsert => {
+    return {
+        ...character,
+        templates: character.templates 
+            ? Object.fromEntries(
+                Object.entries(character.templates).map(
+                    ([key, value]) => [key, templateToStored(value)]
+                )
+            )
+            : {},
+        bio: character.bio,
+        clientConfig: character.clientConfig || {},
+        messageExamples: character.messageExamples || [],
+        postExamples: character.postExamples || [],
+        topics: character.topics || [],
+        adjectives: character.adjectives || [],
+        knowledge: character.knowledge || [],
+        plugins: character.plugins || [],
+        settings: character.settings || {},
+        style: character.style || {},
+        extends: character.extends || [],
+        userId
+    };
+};
