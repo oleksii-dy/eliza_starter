@@ -1,19 +1,19 @@
-# @elizaos/plugin-news
+# @elizaos/plugin-hyperfeeder
 
-A plugin for fetching and handling real-time news data through NewsAPI integration.
+A plugin for conducting deep research and generating blog content.
 
 ## Overview
 
-This plugin provides functionality to:
-- Fetch latest news articles from NewsAPI
-- Search news by specific topics or keywords
-- Get article summaries including titles, descriptions, and URLs
-- Limit results to most recent and relevant content
+The HyperFeeder plugin is designed to:
+- Perform in-depth research on various topics
+- Generate well-structured blog content
+- Store and retrieve past research for reference
+- Provide summarized insights with key takeaways
 
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-news
+npm install @elizaos/plugin-hyperfeeder
 ```
 
 ## Configuration
@@ -21,45 +21,43 @@ npm install @elizaos/plugin-news
 The plugin requires the following environment variable:
 
 ```env
-NEWS_API_KEY=your_newsapi_key  # Required for accessing NewsAPI
+HYPERFEEDER_API_KEY=your_api_key  # Required for accessing the HyperFeeder API
 ```
 
 ## Usage
 
-Import and register the plugin in your Eliza configuration:
+Integrate and activate the plugin within your Eliza configuration:
 
 ```typescript
-import { newsPlugin } from "@elizaos/plugin-news";
+import { hyperFeederPlugin } from "@elizaos/plugin-hyperfeeder";
 
 export default {
-  plugins: [newsPlugin],
+  plugins: [hyperFeederPlugin],
   // ... other configuration
 };
 ```
 
 ## Features
 
-### Current News Action
+### Deep Research and Blog Writing
 
-The plugin provides a `CURRENT_NEWS` action that responds to various news-related queries:
+The plugin provides a `WRITE_BLOG` action that can generate content in response to research-related queries:
 
 ```typescript
-// Example queries the action responds to:
-"what's the latest news about <searchTerm>?"
-"can you show me the latest news about <searchTerm>?"
-"what's in the <searchTerm> news today?"
-"show me current events about <searchTerm>?"
-"what's going on in the world of <searchTerm>?"
-"give me the latest headlines about <searchTerm>?"
-"show me news updates about <searchTerm>?"
-"what are today's top stories about <searchTerm>?"
+// Example queries triggering the action:
+"Can you research <topic> for me?"
+"Write a blog post about <topic>."
+"Give me a detailed analysis on <topic>."
+"Summarize the key points about <topic>."
+"Generate a well-researched article on <topic>."
 ```
 
-The action returns up to 5 recent articles, including:
-- Article title
-- Description
-- URL
-- Content preview (up to 1000 characters)
+This action returns a well-structured blog post, including:
+- A compelling title
+- An engaging introduction
+- Well-researched sections with citations (if available)
+- A summarized conclusion
+- References and suggested further reading
 
 ## Development
 
@@ -84,12 +82,12 @@ npm run lint
 ### Project Structure
 
 ```
-plugin-news/
+plugin-hyperfeeder/
 ├── src/
-│   ├── actions/        # Action implementations
-│   │   ├── news.ts    # Current news action
-│   │   └── index.ts   # Action exports
-│   └── index.ts       # Main plugin export
+│   ├── actions/         # Action implementations
+│   │   ├── hyperfeeder.ts  # Research and blog generation action
+│   │   └── index.ts     # Action exports
+│   └── index.ts         # Main plugin export
 ├── package.json
 └── tsconfig.json
 ```
@@ -97,75 +95,69 @@ plugin-news/
 ## Dependencies
 
 - `@ai16z/eliza`: Core Eliza framework
-- `tsup`: Build tool for TypeScript packages
-- Other standard dependencies listed in package.json
+- `tsup`: TypeScript build tool
+- Other standard dependencies listed in `package.json`
 
 ## API Reference
 
 ### Actions
 
-- `CURRENT_NEWS`: Main action for fetching news
-  - Aliases: `["NEWS", "GET_NEWS", "GET_CURRENT_NEWS"]`
-  - Automatically extracts search terms from user messages
-  - Returns formatted news articles with titles, descriptions, and URLs
+- `WRITE_BLOG`: Main action for deep research and blog generation
+  - Aliases: `["BLOG", "WRITE_BLOG", "BLOG_POST", "HYPERFEEDER]`
+  - Extracts topic keywords from user input
+  - Returns structured research-based blog content
 
 ### Response Format
 
 ```typescript
-interface NewsResponse {
+interface ResearchResponse {
     title: string;
-    description: string;
-    url: string;
-    content: string;  // Limited to 1000 characters
+    introduction: string;
+    sections: { heading: string; content: string }[];
+    conclusion: string;
+    references?: string[];
 }
 ```
 
 ## Future Enhancements
 
-1. **Additional News Sources**
-   - Integration with multiple news APIs
-   - RSS feed support
-   - Social media news aggregation
+1. **Expanded Research Capabilities**
+   - Integration with multiple research databases
+   - Citation and source verification
+   - Cross-referencing multiple sources
 
-2. **Content Analysis**
-   - Sentiment analysis of news articles
-   - Topic categorization
-   - Trend detection
-   - Fact-checking integration
+2. **Content Optimization**
+   - AI-powered readability improvements
+   - SEO optimization for blog posts
+   - Tone and style customization
 
-3. **Customization Options**
-   - User preferences for news sources
-   - Custom filtering rules
-   - Personalized news feeds
-   - Language preferences
+3. **User Personalization**
+   - Topic tracking for follow-up research
+   - Adaptive learning based on user feedback
+   - Custom formatting and structuring
 
-4. **Advanced Search**
-   - Date range filtering
-   - Source filtering
-   - Category-based search
-   - Advanced query syntax
+4. **Enhanced Search and Retrieval**
+   - Query-based research retrieval
+   - Keyword-based indexing
+   - Long-term storage of research insights
 
 5. **Performance Improvements**
-   - Caching layer
-   - Rate limiting optimization
-   - Response compression
-   - Batch processing
+   - Caching for previously researched topics
+   - Faster response times with optimized algorithms
+   - Load balancing for API calls
 
-We welcome community feedback and contributions to help prioritize these enhancements.
+Community feedback and contributions are encouraged to help guide future developments.
 
 ## Contributing
 
-Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.
-
+Contributions are welcome! Please check the [CONTRIBUTING.md](CONTRIBUTING.md) file for details.
 
 ## License
 
-This plugin is part of the Eliza project. See the main project repository for license information.
+This plugin is part of the Eliza project. Please refer to the main repository for license details.
 
 ## Credits
 
-This plugin integrates with and builds upon several key technologies:
+This plugin integrates with various research tools and AI models to provide high-quality content generation.
 
-- [NewsAPI](https://newsapi.org/): News data provider
-
-Plugin generated from Eliza coding tutorial [Agent Dev School Part 2](https://www.youtube.com/watch?v=XenGeAcPAQo)
+Inspired by the Eliza coding tutorial [Agent Dev School Part 2](https://www.youtube.com/watch?v=XenGeAcPAQo).
