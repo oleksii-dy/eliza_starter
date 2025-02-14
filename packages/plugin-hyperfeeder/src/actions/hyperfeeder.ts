@@ -15,10 +15,6 @@ export const hyperfeederAction: Action = {
     name: "WRITE_BLOG",
     similes: ["BLOG", "WRITE_BLOG", "BLOG_POST", "HYPERFEEDER"],
     validate: async (_runtime: IAgentRuntime, _message: Memory) => {
-        const apiKey = process.env.NEWS_API_KEY;
-        if (!apiKey) {
-            throw new Error('NEWS_API_KEY environment variable is not set');
-        }
         return true;
     },
     description:
@@ -27,65 +23,25 @@ export const hyperfeederAction: Action = {
         _runtime: IAgentRuntime,
         _message: Memory,
         _state: State,
-        _options: { [key: string]: unknown; },
+        _options: { [key: string]: unknown },
         _callback: HandlerCallback,
     ): Promise<boolean> => {
-        async function getCurrentNews(searchTerm: string) {
+        async function getBlogPost(searchTerm: string) {
             try {
-                const enhancedSearchTerm = encodeURIComponent(`"${searchTerm}" AND (Spain OR Spanish OR Madrid OR Felipe)`);
-
-                const [everythingResponse, headlinesResponse] = await Promise.all([
-                    fetch(
-                        `https://newsapi.org/v2/everything?q=${enhancedSearchTerm}&sortBy=relevancy&language=en&pageSize=50&apiKey=${process.env.NEWS_API_KEY}`
-                    ),
-                    fetch(
-                        `https://newsapi.org/v2/top-headlines?q=${searchTerm}&country=es&language=en&pageSize=50&apiKey=${process.env.NEWS_API_KEY}`
-                    )
-                ]);
-
-                const [everythingData, headlinesData] = await Promise.all([
-                    everythingResponse.json(),
-                    headlinesResponse.json()
-                ]);
-
-                // Combine and filter articles
-                const allArticles = [
-                    ...(headlinesData.articles || []),
-                    ...(everythingData.articles || [])
-                ].filter(article =>
-                    article.title &&
-                    article.description &&
-                    (article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                     article.description.toLowerCase().includes(searchTerm.toLowerCase()))
-                );
-
-                // Remove duplicates and get up to 15 articles
-                const uniqueArticles = Array.from(
-                    new Map(allArticles.map(article => [article.title, article])).values()
-                ).slice(0, 15);
-
-                if (!uniqueArticles.length) {
-                    return "No news articles found.";
-                }
-
-                return uniqueArticles.map((article, index) => {
-                    const content = article.description || 'No content available';
-                    const urlDomain = article.url ? new URL(article.url).hostname : '';
-                    return [
-                        `📰 Article ${index + 1}`,
-                        '━━━━━━━━━━━━━━━━━━━━━━',
-                        `📌 **${article.title || 'No title'}**\n`,
-                        `📝 ${content}\n`,
-                        `🔗 Read more at: ${urlDomain}`
-                    ].join('\n');
-                }).join('\n');
+                const context = `Write a detailed, engaging, and well-structured blog post about "${searchTerm}". Include an introduction, several main points with subheadings, and a conclusion. Use a friendly and informative tone.`;
+                const blogPost = await generateText({
+                    runtime: _runtime,
+                    context,
+                    modelClass: ModelClass.LARGE,
+                });
+                return blogPost;
             } catch (error) {
-                console.error('Failed to fetch news:', error);
-                return 'Sorry, there was an error fetching the news.';
+                console.error('Failed to generate blog post:', error);
+                return 'Sorry, there was an error generating the blog post.';
             }
         }
 
-        const context = `What is the specific topic or subject the user wants news about? Extract ONLY the search term from this message: "${_message.content.text}". Return just the search term with no additional text, punctuation, or explanation.`
+        const context = `What is the specific topic or subject the user wants a blog post about? Extract ONLY the search term from this message: "${_message.content.text}". Return just the search term with no additional text, punctuation, or explanation.`;
 
         const searchTerm = await generateText({
             runtime: _runtime,
@@ -94,12 +50,10 @@ export const hyperfeederAction: Action = {
             stop: ["\n"],
         });
 
-        // For debugging
         console.log("Search term extracted:", searchTerm);
 
-        const currentNews = await getCurrentNews(searchTerm);
-        const responseText = ` *protocol droid noises*\n\n${currentNews}`;
-
+        const blogContent = await getBlogPost(searchTerm);
+        const responseText = `Here is your blog post:\n\n${blogContent}`;
 
         const newMemory: Memory = {
             userId: _message.agentId,
@@ -107,7 +61,7 @@ export const hyperfeederAction: Action = {
             roomId: _message.roomId,
             content: {
                 text: responseText,
-                action: "CURRENT_NEWS_RESPONSE",
+                action: "WRITE_BLOG_RESPONSE",
                 source: _message.content?.source,
             } as Content,
         };
@@ -116,94 +70,86 @@ export const hyperfeederAction: Action = {
 
         _callback(newMemory.content);
         return true;
-
     },
     examples: [
         [
             {
                 user: "{{user1}}",
-                content: { text: "what's the latest news about <searchTerm>?" },
+                content: { text: "can you write a blog post about <searchTerm>?" },
             },
             {
                 user: "{{user2}}",
-                content: { text: "", action: "CURRENT NEWS" },
+                content: { text: "", action: "WRITE BLOG" },
             },
         ],
-
         [
             {
                 user: "{{user1}}",
-                content: { text: "can you show me the latest news about <searchTerm>?" },
+                content: { text: "I need a blog on <searchTerm>." },
             },
             {
                 user: "{{user2}}",
-                content: { text: "", action: "CURRENT NEWS" },
+                content: { text: "", action: "WRITE BLOG" },
             },
         ],
-
         [
             {
                 user: "{{user1}}",
-                content: { text: "what's in the <searchTerm> news today?" },
+                content: { text: "please create a blog post about <searchTerm>." },
             },
             {
                 user: "{{user2}}",
-                content: { text: "", action: "CURRENT NEWS" },
+                content: { text: "", action: "WRITE BLOG" },
             },
         ],
-
         [
             {
                 user: "{{user1}}",
-                content: { text: "show me current events about <searchTerm>?" },
+                content: { text: "compose a detailed blog about <searchTerm>." },
             },
             {
                 user: "{{user2}}",
-                content: { text: "", action: "CURRENT NEWS" },
+                content: { text: "", action: "WRITE BLOG" },
             },
         ],
-
         [
             {
                 user: "{{user1}}",
-                content: { text: "what's going on in the world of <searchTerm>?" },
+                content: { text: "i would like a blog article on <searchTerm>." },
             },
             {
                 user: "{{user2}}",
-                content: { text: "", action: "CURRENT NEWS" },
+                content: { text: "", action: "WRITE BLOG" },
             },
         ],
-
         [
             {
                 user: "{{user1}}",
-                content: { text: "give me the latest headlines about <searchTerm>?" },
+                content: { text: "draft a comprehensive blog post about <searchTerm>." },
             },
             {
                 user: "{{user2}}",
-                content: { text: "", action: "CURRENT NEWS" },
+                content: { text: "", action: "WRITE BLOG" },
             },
         ],
-
         [
             {
                 user: "{{user1}}",
-                content: { text: "show me news updates about <searchTerm>?" },
+                content: { text: "can you generate a blog discussing <searchTerm>?" },
             },
             {
                 user: "{{user2}}",
-                content: { text: "", action: "CURRENT NEWS" },
+                content: { text: "", action: "WRITE BLOG" },
             },
         ],
-
         [
             {
                 user: "{{user1}}",
-                content: { text: "what are today's top stories about <searchTerm>?" },
+                content: { text: "please write me a blog on <searchTerm>." },
             },
             {
                 user: "{{user2}}",
-                content: { text: "", action: "CURRENT NEWS" },
+                content: { text: "", action: "WRITE BLOG" },
             },
         ],
     ] as ActionExample[][],
