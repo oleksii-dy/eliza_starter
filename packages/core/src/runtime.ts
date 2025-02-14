@@ -1013,6 +1013,9 @@ export class AgentRuntime implements IAgentRuntime {
                     ),
             );
 
+            // log the action that was triggered based
+            console.log("TRIGGERED ACTION", action);
+
             if (!action) {
                 elizaLogger.info("Attempting to find action in similes.");
                 for (const _action of this.actions) {
