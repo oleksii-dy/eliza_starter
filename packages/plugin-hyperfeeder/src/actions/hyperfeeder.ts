@@ -12,9 +12,6 @@ import {
     type Action,
 } from "@elizaos/core";
 
-/**
- * Represents the full blog generation response from the polling API.
- */
 interface BlogGenerationResponse {
     message: string;
     segmentText: string;
@@ -156,7 +153,6 @@ export const hyperfeederAction: Action = {
 
         let requestId: string;
         try {
-            // Start the blog generation by calling the external API.
             requestId = await startBlogGeneration(searchTerm.trim());
         } catch (err) {
             console.error("Failed to start blog generation:", err);
