@@ -13,6 +13,7 @@ import {
     Plugin,
     IAgentRuntime,
     Adapter,
+    ModelClass,
 } from "@elizaos/core";
 import {
     and,
@@ -314,14 +315,16 @@ export class DrizzleDatabaseAdapter
             try {
                 const accountId = account.id ?? v4();
 
-                await this.db.insert(accountTable).values({
+                const insertData = {
                     id: accountId,
-                    name: account.name ?? null,
-                    username: account.username ?? null,
+                    name: account.name,
+                    username: account.username,
                     email: account.email ?? "",
                     avatarUrl: account.avatarUrl ?? null,
-                    details: sql`${account.details}::jsonb` || {},
-                });
+                    details: account.details ?? {},
+                }
+
+                await this.db.insert(accountTable).values(insertData);
 
                 logger.debug("Account created successfully:", {
                     accountId,
@@ -911,7 +914,7 @@ export class DrizzleDatabaseAdapter
             }
         });
 
-        logger.debug("Memory created successfully:", {
+        logger.info("Memory created successfully:", {
             memoryId,
             hasEmbedding: !!memory.embedding,
         });
@@ -1522,6 +1525,9 @@ const drizzleDatabaseAdapter: Adapter = {
         const db = new DrizzleDatabaseAdapter(connectionConfig);
 
         // TODO: get embedding zero vector from provider!
+        // const zeroVector = await runtime.useModel(ModelClass.TEXT_EMBEDDING, null);
+        // logger.info("zeroVector", zeroVector);
+        // logger.info("zeroVector length", zeroVector.length);
 
         try { 
             await db.init();
