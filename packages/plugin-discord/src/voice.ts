@@ -873,7 +873,7 @@ export class VoiceManager extends EventEmitter {
 
         await this.runtime.databaseAdapter.log({
             body: { message, context, response },
-            userId: userId,
+            userId: stringToUuid(userId),
             roomId,
             type: "response",
         });

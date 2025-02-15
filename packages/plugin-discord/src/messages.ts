@@ -279,7 +279,7 @@ export class MessageManager {
 
                         await this.runtime.databaseAdapter.log({
                             body: { message, context, response: responseContent },
-                            userId: userId,
+                            userId: stringToUuid(userId),
                             roomId,
                             type: "response",
                         });
