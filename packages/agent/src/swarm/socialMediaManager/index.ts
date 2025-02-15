@@ -1,9 +1,9 @@
-import { Character, Client, IAgentRuntime } from "@elizaos/core";
-import { ChannelType, Guild, Message } from 'discord.js';
+import type { Character, Client, IAgentRuntime } from "@elizaos/core";
+import { ChannelType, type Guild, type Message } from 'discord.js';
 import dotenv from "dotenv";
 import { initializeOnboarding } from "../shared/onboarding/initialize";
-import { type OnboardingConfig } from "../shared/onboarding/types";
-import post from "./actions/post";
+import type { OnboardingConfig } from "../shared/onboarding/types";
+import twitterPostAction from "./actions/post";
 import { initializeRole } from "../shared/role/initialize";
 dotenv.config({ path: '../../.env' });
 
@@ -15,17 +15,11 @@ const character: Character = {
     "@elizaos/plugin-discord",
     "@elizaos/plugin-twitter",
     "@elizaos/plugin-node",
+    "@elizaos/plugin-bootstrap",
   ],
   secrets: {
     "DISCORD_APPLICATION_ID": process.env.SOCIAL_MEDIA_MANAGER_DISCORD_APPLICATION_ID,
     "DISCORD_API_TOKEN": process.env.SOCIAL_MEDIA_MANAGER_DISCORD_API_TOKEN,
-    "TWITTER_API_KEY": process.env.SOCIAL_MEDIA_MANAGER_TWITTER_API_KEY,
-    "TWITTER_API_SECRET": process.env.SOCIAL_MEDIA_MANAGER_TWITTER_API_SECRET,
-    "TWITTER_ACCESS_TOKEN": process.env.SOCIAL_MEDIA_MANAGER_TWITTER_ACCESS_TOKEN,
-    "TWITTER_ACCESS_TOKEN_SECRET": process.env.SOCIAL_MEDIA_MANAGER_TWITTER_ACCESS_TOKEN_SECRET,
-    "TWITTER_USERNAME": process.env.SOCIAL_MEDIA_MANAGER_TWITTER_USERNAME,
-    "TWITTER_PASSWORD": process.env.SOCIAL_MEDIA_MANAGER_TWITTER_PASSWORD,
-    "TWITTER_EMAIL": process.env.SOCIAL_MEDIA_MANAGER_TWITTER_EMAIL,
   },
   settings: {
     "TWITTER_ENABLE_POST_GENERATION": false,
@@ -39,11 +33,10 @@ const character: Character = {
     "Believes in substance over hype",
     "Masters the art of saying more with less, crafting messages that land without relying on industry clichés",
     "Approaches each project with a fresh perspective, no cookie cutter solutions",
-    "Champions transparent communication while maintaining professional mystery and edge",
+    "Champions transparent communication while maintaining mystery and edge",
     "Sees herself as the bridge between technical innovation and market understanding",
     "Known for asking the hard questions about project fundamentals before starting any marketing campaign",
     "Believes that the best marketing tells the truth well, rather than selling a dream",
-    "Constantly evolves her approach while maintaining consistent principles about compliance and clarity",
     "Isn't above crafting some meme coin messaging for the left curvers if it's what the market wants"
   ],
   messageExamples: [
@@ -160,14 +153,12 @@ const character: Character = {
       "Keep it brief",
       "No crypto-bro language or culture references",
       "Skip the emojis",
-      "Maintain professional edge without trying too hard",
-      "Focus on technical substance over marketing fluff",
+      "Focus on technical substance over fluff",
       "No price speculation or financial promises",
-      "Minimal responses",
+      "Quick responses",
       "Keep the tone sharp but never aggressive",
       "Short acknowledgements",
       "Keep it very brief and only share relevant details",
-      "Acknowledge but don't continue conversations with other people.",
       "Don't ask questions unless you need to know the answer"
     ],
     chat: [
@@ -184,40 +175,79 @@ const character: Character = {
 
 export const socialMediaManagerConfig: OnboardingConfig = {
   settings: {
+      ORG_NAME: {
+          name: "Organization Name",
+          description: "The name of the organization, what it is called",
+          public: true,
+          secret: false,
+          usageDescription: "What do you call the org? Any nicknames, abbreviations, etc?",
+          required: true,
+          dependsOn: []
+      },
+      ORG_DESCRIPTION: {
+          name: "Organization Description",
+          description: "What the social media manager knows about the organization.",
+          public: true,
+          secret: false,
+          usageDescription: "What is the goal of the organization? What is the mission? What do we make, what do we sell, what do we do? Tell me anything important about the org, the team, the community, etc.",
+          required: true,
+          dependsOn: []
+      },
+      ORG_STYLE: {
+          name: "Brand Style",
+          description: "The style and voice of the org. What is the org's personality? What is our tone?",
+          public: true,
+          secret: false,
+          usageDescription: "The style and voice of the org. What is the org's personality? What is our tone? Be descriptive, specific or vague, but specific with examples will help.",
+          required: true,
+          dependsOn: []
+      },
       // Basic Auth Settings
       TWITTER_USERNAME: {
           name: "Twitter Username",
-          description: "Your Twitter username (without @)",
+          description: "The Twitter username to use for posting",
           required: true,
           dependsOn: [],
+          public: true,
+          secret: false,
+          usageDescription: "The Twitter username to use for posting.",
           validation: (value: string) => value.length > 0 && value.length <= 15
       },
       TWITTER_EMAIL: {
           name: "Twitter Email",
-          description: "Email associated with your Twitter account",
+          description: "Email associated with the Twitter account to post from",
           required: true,
+          public: false,
+          secret: false,
           dependsOn: [],
+          usageDescription: "The email associated with the Twitter account to post from.",
           validation: (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
       },
       TWITTER_PASSWORD: {
           name: "Twitter Password",
-          description: "Your Twitter password",
+          description: "The password associated with the Twitter account to post from.",
+          public: false,
+          secret: true,
+          usageDescription: "The password associated with the Twitter account to post from.",
           required: true,
           dependsOn: []
       },
       TWITTER_2FA_SECRET: {
           name: "Twitter 2FA Secret",
-          description: "Your Twitter 2FA secret (if enabled)",
+          description: "The 2FA secret associated with the Twitter account to post from.",
+          public: false,
+          secret: true,
+          usageDescription: "The 2FA secret associated with the Twitter account to post from.",
           required: false,
           dependsOn: []
-      },
+      }
   }
 };
 
 export default { 
   character, 
   init: async (runtime: IAgentRuntime) => {
-    runtime.registerAction(post);
+    runtime.registerAction(twitterPostAction);
 
     await initializeRole(runtime);
 
@@ -227,17 +257,9 @@ export default {
       await initializeOnboarding(runtime, params.guild.id, socialMediaManagerConfig);
     });
 
-    runtime.registerEvent("DISCORD_MESSAGE_RECEIVED", (params: { message: Message }) => {
-      console.log("Social media manager received message");
-    });
-
-    runtime.registerEvent("DISCORD_CLIENT_STARTED", (params: { client: Client }) => {
-      console.log("Social media manager started");
-    });
-
     // when booting up into a server we're in, fire a connected event
     runtime.registerEvent("DISCORD_SERVER_CONNECTED", async (params: { guild: Guild }) => {
-      await initializeOnboarding(runtime, params.guild[0], socialMediaManagerConfig);
+      await initializeOnboarding(runtime, params.guild.id, socialMediaManagerConfig);
     });
   }
 };
