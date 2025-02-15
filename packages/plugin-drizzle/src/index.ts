@@ -61,7 +61,7 @@ export class DrizzleDatabaseAdapter
     private readonly maxDelay: number = 10000; // 10 seconds
     private readonly jitterMax: number = 1000; // 1 second
     private readonly connectionTimeout: number = 5000; // 5 seconds
-    protected embeddingDimension: EmbeddingDimensionColumn = DIMENSION_MAP[1536]; // TODO handle this on init.
+    protected embeddingDimension: EmbeddingDimensionColumn = DIMENSION_MAP[384];
 
     constructor(
         connectionConfig: any,
@@ -182,6 +182,13 @@ export class DrizzleDatabaseAdapter
         }
 
         throw lastError;
+    }
+
+    private async ensureEmbeddingDimension(dimension: number) {
+        const count = await this.db.select().from(embeddingTable).limit(1);
+        if (count.length === 0) {
+            this.embeddingDimension = DIMENSION_MAP[dimension];
+        }
     }
 
     async cleanup(): Promise<void> {
@@ -849,6 +856,7 @@ export class DrizzleDatabaseAdapter
         let isUnique = true;
         if (memory.embedding && Array.isArray(memory.embedding)) {
             logger.info("Searching for similar memories:");
+            await this.ensureEmbeddingDimension(memory.embedding.length);
             const similarMemories = await this.searchMemoriesByEmbedding(
                 memory.embedding,
                 {
@@ -1507,6 +1515,12 @@ export class DrizzleDatabaseAdapter
             const insertData = characterToInsert(
                 { ...character },
             );
+
+            console.log("insertData", insertData);
+
+            logger.info("Inserting character:", {
+                insertData
+            });
             
             await this.db.insert(characterTable).values(insertData);
     
@@ -1631,11 +1645,6 @@ const drizzleDatabaseAdapter: Adapter = {
         const connectionConfig = runtime.getSetting("POSTGRES_URL");
         logger.info(`Initializing Drizzle database at ${connectionConfig}...`);
         const db = new DrizzleDatabaseAdapter(connectionConfig);
-
-        // TODO: get embedding zero vector from provider!
-        // const zeroVector = await runtime.useModel(ModelClass.TEXT_EMBEDDING, null);
-        // logger.info("zeroVector", zeroVector);
-        // logger.info("zeroVector length", zeroVector.length);
 
         try { 
             await db.init();
