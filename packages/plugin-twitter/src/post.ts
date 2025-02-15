@@ -92,8 +92,6 @@ export class TwitterPostClient {
             await this.client.init();
         }
 
-        console.log("this.client.twitterConfig", this.client.twitterConfig);
-
         const generateNewTweetLoop = async () => {
             const lastPost = await this.runtime.cacheManager.get<{
                 timestamp: number;
