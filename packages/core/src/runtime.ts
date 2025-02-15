@@ -46,8 +46,8 @@ import {
     type UUID,
     type ServiceType,
     type Service,
-    Route,
-    Task
+    type Route,
+    type Task
 } from "./types.ts";
 import { stringToUuid } from "./uuid.ts";
 
@@ -1379,6 +1379,13 @@ Text: ${attachment.text}
             for (const handler of eventHandlers) {
                 handler(params);
             }
+        }
+    }
+
+    async ensureCharacterExists(character: Character) {
+        const characterExists = await this.databaseAdapter.getCharacter(character.name);
+        if (!characterExists) {
+            await this.databaseAdapter.createCharacter(character);
         }
     }
 
