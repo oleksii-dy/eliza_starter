@@ -725,15 +725,15 @@ export class SqliteDatabaseAdapter
         );
     }
 
-    async updateCharacter(character: Character): Promise<void> {
+    async updateCharacter(name: string, updates: Partial<Character>): Promise<void> {
         const sql = "UPDATE characters SET name = ?, bio = ?, json = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?";
         await this.db
         .prepare(sql)
         .run(
-            character.name,
-            character.bio,
-            JSON.stringify(character),
-            character.id
+            updates.name,
+            updates.bio,
+            JSON.stringify(updates),
+            name
         );
 
     }
