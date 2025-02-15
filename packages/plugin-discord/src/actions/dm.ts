@@ -105,8 +105,6 @@ const dmAction: Action = {
                         source: "discord"
                     });
 
-                    
-
                     // Log the DM
                     await runtime.databaseAdapter.log({
                         body: {
@@ -114,7 +112,7 @@ const dmAction: Action = {
                             targetUser: mentionedUser.id,
                             messageLength: content.length
                         },
-                        userId: stringToUuid(runtime.agentId),
+                        userId: runtime.agentId,
                         roomId: message.roomId,
                         type: "direct_message"
                     });
