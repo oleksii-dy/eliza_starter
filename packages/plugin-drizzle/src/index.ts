@@ -185,9 +185,17 @@ export class DrizzleDatabaseAdapter
     }
 
     private async ensureEmbeddingDimension(dimension: number) {
-        const count = await this.db.select().from(embeddingTable).limit(1);
-        if (count.length === 0) {
+        const embedding = await this.db.select().from(embeddingTable).limit(1);
+        logger.debug("Checking embedding dimension:", { embedding });
+        
+        if (embedding.length === 0) {
             this.embeddingDimension = DIMENSION_MAP[dimension];
+        } else {
+            const firstNonNullDimension = Object.values(DIMENSION_MAP).find(
+                dim => embedding[0][dim] !== null
+            );
+            
+            this.embeddingDimension = firstNonNullDimension || DIMENSION_MAP[dimension];
         }
     }
 
