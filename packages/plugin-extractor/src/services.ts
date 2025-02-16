@@ -84,7 +84,7 @@ export class FirewallService extends Service {
 
         if (runtime.actions.find((a) => a.name === FIREWALL_ID)) {
             
-            let risk = await getRiskScore(
+            const risk = await getRiskScore(
                 runtime,
                 JSON.stringify(runtime.character),
                 FIREWALL_CONFIG_ID
