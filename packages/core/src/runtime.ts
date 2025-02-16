@@ -453,6 +453,7 @@ export class AgentRuntime implements IAgentRuntime {
         );
         await this.ensureParticipantExists(this.agentId, this.agentId);
         await this.ensureCharacterExists(this.character);
+        await this.ensureEmbeddingDimension();
 
         if (this.character?.knowledge && this.character.knowledge.length > 0) {
             // Non-RAG mode: only process string knowledge
@@ -1379,6 +1380,11 @@ Text: ${attachment.text}
         if (!characterExists) {
             await this.databaseAdapter.createCharacter(character);
         }
+    }
+
+    async ensureEmbeddingDimension() {
+        const embedding = await this.useModel(ModelClass.TEXT_EMBEDDING, null);
+        this.databaseAdapter.ensureEmbeddingDimension(embedding.length);
     }
 
     registerTask(task: Task): UUID {

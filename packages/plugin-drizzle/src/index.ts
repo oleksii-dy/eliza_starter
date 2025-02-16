@@ -184,19 +184,8 @@ export class DrizzleDatabaseAdapter
         throw lastError;
     }
 
-    private async ensureEmbeddingDimension(dimension: number) {
-        const embedding = await this.db.select().from(embeddingTable).limit(1);
-        logger.debug("Checking embedding dimension:", { embedding });
-        
-        if (embedding.length === 0) {
-            this.embeddingDimension = DIMENSION_MAP[dimension];
-        } else {
-            const firstNonNullDimension = Object.values(DIMENSION_MAP).find(
-                dim => embedding[0][dim] !== null
-            );
-            
-            this.embeddingDimension = firstNonNullDimension || DIMENSION_MAP[dimension];
-        }
+    async ensureEmbeddingDimension(dimension: number) {
+        this.embeddingDimension = DIMENSION_MAP[dimension];
     }
 
     async cleanup(): Promise<void> {
@@ -864,7 +853,6 @@ export class DrizzleDatabaseAdapter
         let isUnique = true;
         if (memory.embedding && Array.isArray(memory.embedding)) {
             logger.info("Searching for similar memories:");
-            await this.ensureEmbeddingDimension(memory.embedding.length);
             const similarMemories = await this.searchMemoriesByEmbedding(
                 memory.embedding,
                 {

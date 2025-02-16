@@ -849,6 +849,8 @@ export interface IDatabaseAdapter {
   updateCharacter(name: string, updates: Partial<Character>): Promise<void>;
   
   removeCharacter(name: string): Promise<void>;
+
+  ensureEmbeddingDimension(dimension: number): void;
 }
 
 export interface IDatabaseCacheAdapter {
