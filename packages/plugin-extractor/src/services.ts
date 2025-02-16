@@ -24,14 +24,18 @@ export async function getRiskScore(
             ...(process.env.FIREWALL_API_KEY?.length
                 ? { "Authorization": `Bearer ${process.env.FIREWALL_API_KEY}` }
                 : {}),
-        },
-        body: JSON.stringify({
-            data: text,
-            data_type: type,
-            agent_id: runtime.agentId,
-            agent_name: runtime.character.name,
-            agent_provider: FIREWALL_AGENT_FRAMEWORK,
-            id: crypto.randomUUID(),
+            },
+            body: JSON.stringify({
+                id: crypto.randomUUID(),
+                data: text,
+                data_type: type,
+                agent_id: runtime.agentId,
+                agent_name: runtime.character.name,
+                agent_provider: FIREWALL_AGENT_FRAMEWORK,
+                // optional parameters for Rules engine
+                options: {
+                    temperature: 0.0,
+                },
             }),
         });
 
