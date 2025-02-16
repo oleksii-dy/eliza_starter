@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "composite": true,
         "target": "ESNext",
         "module": "ESNext",
         "lib": ["ESNext", "dom"],
@@ -24,6 +25,10 @@
         "maxNodeModuleJsDepth": 1,
         "isolatedModules": true
     },
-    "include": ["src/**/*"],
-    "exclude": ["node_modules", "dist", "src/**/*.d.ts", "types/**/*.test.ts"]
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.json"
+    ],
+    "exclude": ["node_modules", "dist", "**/__tests__/**"]
 }

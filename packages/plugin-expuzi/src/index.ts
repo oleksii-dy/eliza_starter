@@ -1,5 +1,5 @@
 import { Plugin, Action, IAgentRuntime } from '@elizaos/core';
-import { auditToken, initializeAuditor } from './services/auditService';
+import { initializeAuditor, auditToken } from './services/auditService';
 import { generateMeme } from './services/meme';
 import { mintNFT } from './services/nft';
 
@@ -24,7 +24,18 @@ export class DefiDetectorPlugin implements Plugin {
       validate: async () => true, // Add proper validation
       suppressInitialMessage: false
     },
-    // ...other actions
+    {
+      name: 'mint-nft',
+      description: 'Mint an NFT badge',
+      similes: ['create badge', 'generate nft'],
+      examples: [[]],
+      handler: async (runtime, message) => {
+        const address = message.content.text;
+        return await mintNFT(address, 1); // Default to level 1
+      },
+      validate: async () => true,
+      suppressInitialMessage: false
+    }
   ];
 }
 

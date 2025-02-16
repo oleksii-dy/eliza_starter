@@ -64,8 +64,8 @@
       "@solana/spl-token": "0.3.8"
     },
     "patchedDependencies": {
-      "@orca-so/whirlpools-client@1.0.2": "patches/@orca-so__whirlpools-client@1.0.2.patch",
-      "@solana-developers/helpers@2.6.0": "patches/@solana-developers__helpers.patch"
+      "@solana-developers/helpers@2.6.0": "patches/@solana-developers__helpers.patch",
+      "@orca-so/whirlpools-client": "patches/@orca-so__whirlpools-client.patch"
     }
   },
   "engines": {

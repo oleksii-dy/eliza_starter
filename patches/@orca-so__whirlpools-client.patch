@@ -1,0 +1,34 @@
+diff --git a/dist/index.js b/dist/index.js
+index 3592fc8aed27138e373e9c5f248d46a34811615f..3e0c83f092a717437777101216dddf91941264c6 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1,5 +1,6 @@
+ // src/generated/accounts/feeTier.ts
+-import {
++import web3 from '@solana/web3.js'
++const {
+   assertAccountExists,
+   assertAccountsExist,
+   combineCodec,
+@@ -17,7 +18,7 @@ import {
+   getU16Decoder,
+   getU16Encoder,
+   transformEncoder
+-} from "@solana/web3.js";
++} = web3;
+ var FEE_TIER_DISCRIMINATOR = new Uint8Array([
+   56,
+   75,
+@@ -1695,11 +1696,11 @@ import {
+ 
+ // src/generated/shared/index.ts
+ import {
+-  AccountRole,
+   isProgramDerivedAddress,
+   isTransactionSigner as web3JsIsTransactionSigner,
+   upgradeRoleToSigner
+ } from "@solana/web3.js";
++const AccountRole = { READONLY: 'readonly', WRITABLE: 'writable', SIGNER: 'signer' };
+ function expectAddress(value) {
+   if (!value) {
+     throw new Error("Expected a Address.");
