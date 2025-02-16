@@ -1,7 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import viteCompression from "vite-plugin-compression";
-import path from "path";
+import path from "node:path";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -21,6 +21,9 @@ export default defineConfig(({ mode }) => {
         define: {
             "import.meta.env.VITE_SERVER_PORT": JSON.stringify(
                 env.SERVER_PORT || "3000"
+            ),
+            "import.meta.env.VITE_SERVER_URL": JSON.stringify(
+                env.SERVER_URL || "http://localhost"
             ),
         },
         build: {
