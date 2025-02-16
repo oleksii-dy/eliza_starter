@@ -1102,6 +1102,10 @@ export type GenerateTextParams = {
   runtime: IAgentRuntime;
   context: string;
   modelClass: ModelClass;
+  maxTokens?: number;
+  temperature?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
   stopSequences?: string[];
 };
 

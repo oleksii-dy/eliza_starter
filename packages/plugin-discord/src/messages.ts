@@ -98,7 +98,12 @@ export class MessageManager {
 
     const promise = new Promise(async (resolve, reject) => {
       try {
+        // Check if cancelled before starting expensive operation
+        if (isCancelled) return;
+        
         const result = await task();
+        
+        // Check if cancelled after generation but before resolving
         if (!isCancelled) {
           resolve(result);
         }
@@ -122,8 +127,8 @@ export class MessageManager {
   async handleMessage(message: DiscordMessage) {
     if (
       this.runtime.character.settings?.discord?.allowedChannelIds &&
-      !this.runtime.character.settings.discord.allowedChannelIds.includes(
-        message.channelId
+      !this.runtime.character.settings.discord.allowedChannelIds.some(
+        (id: string) => id == message.channel.id
       )
     ) {
       return;
@@ -159,6 +164,9 @@ export class MessageManager {
     const hasInterest = this._checkInterest(message.channelId);
     const roomId = stringToUuid(channelId + "-" + this.runtime.agentId);
 
+    // Cancel any existing message tasks for this channel immediately
+    await this.cancelPendingTask(roomId.toString());
+
     try {
       const { processedContent, attachments } = await this.processMessageMedia(
         message
@@ -184,7 +192,6 @@ export class MessageManager {
       );
 
       const messageId = stringToUuid(message.id + "-" + this.runtime.agentId);
-      let shouldIgnore = false;
       let shouldRespond = true;
 
       const content: Content = {
@@ -253,14 +260,6 @@ export class MessageManager {
         );
       }
 
-      if (!shouldIgnore) {
-        shouldIgnore = await this._shouldIgnore(message);
-      }
-
-      if (shouldIgnore) {
-        return;
-      }
-
       const agentUserState =
         await this.runtime.databaseAdapter.getParticipantUserState(
           roomId,
@@ -270,6 +269,7 @@ export class MessageManager {
       if (
         agentUserState === "MUTED" &&
         !message.mentions.has(this.client.user.id) &&
+        !message.content.toLowerCase().includes(this.runtime.character.name.toLowerCase()) &&
         !hasInterest
       ) {
         console.log("Ignoring muted room");
@@ -319,6 +319,14 @@ export class MessageManager {
               content: Content,
               files: any[]
             ) => {
+              // Check if this task is still the current one before sending
+              if (!this.pendingMessageTasks.has(roomId.toString())) {
+                console.log("Message generation was cancelled, not sending response");
+                return [];
+              }
+
+              stopTyping();
+
               try {
                 if (message.id && !content.inReplyTo) {
                   content.inReplyTo = stringToUuid(
@@ -380,14 +388,14 @@ export class MessageManager {
 
             state = await this.runtime.updateRecentMessageState(state);
 
+            stopTyping();
+
             await this.runtime.processActions(
               memory,
               responseMessages,
               state,
               callback
             );
-
-            stopTyping();
             return responseMessages;
           } catch (error) {
             stopTyping();
@@ -424,7 +432,18 @@ export class MessageManager {
   ): Promise<{ processedContent: string; attachments: Media[] }> {
     let processedContent = message.content;
     let attachments: Media[] = [];
-
+  
+    // Format user mentions
+    const mentionRegex = /<@!?(\d+)>/g;
+    processedContent = processedContent.replace(mentionRegex, (match, userId) => {
+      const user = message.mentions.users.get(userId);
+      if (user) {
+        return `${user.username} (@${userId})`;
+      }
+      return match;
+    });
+  
+    // Rest of the existing code for processing code blocks
     const codeBlockRegex = /```([\s\S]*?)```/g;
     let match;
     while ((match = codeBlockRegex.exec(processedContent))) {
@@ -448,16 +467,16 @@ export class MessageManager {
         `Code Block (${attachmentId})`
       );
     }
-
+  
     if (message.attachments.size > 0) {
       attachments = await this.attachmentManager.processAttachments(
         message.attachments
       );
     }
-
+  
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const urls = processedContent.match(urlRegex) || [];
-
+  
     for (const url of urls) {
       if (
         this.runtime
@@ -471,7 +490,7 @@ export class MessageManager {
           throw new Error("Video service not found");
         }
         const videoInfo = await videoService.processVideo(url, this.runtime);
-
+  
         attachments.push({
           id: `youtube-${Date.now()}`,
           url: url,
@@ -487,10 +506,10 @@ export class MessageManager {
         if (!browserService) {
           throw new Error("Browser service not found");
         }
-
+  
         const { title, description: summary } =
           await browserService.getPageContent(url, this.runtime);
-
+  
         attachments.push({
           id: `webpage-${Date.now()}`,
           url: url,
@@ -501,7 +520,7 @@ export class MessageManager {
         });
       }
     }
-
+  
     return { processedContent, attachments };
   }
 
@@ -525,79 +544,6 @@ export class MessageManager {
     }
 
     return true;
-  }
-
-  private async _shouldIgnore(message: DiscordMessage): Promise<boolean> {
-    if (message.author.id === this.client.user?.id) return true;
-
-    let messageContent = message.content.toLowerCase();
-
-    const botMention = `<@!?${this.client.user?.id}>`;
-    messageContent = messageContent.replace(
-      new RegExp(botMention, "gi"),
-      this.runtime.character.name.toLowerCase()
-    );
-
-    const botUsername = this.client.user?.username.toLowerCase();
-    messageContent = messageContent.replace(
-      new RegExp(`\\b${botUsername}\\b`, "g"),
-      this.runtime.character.name.toLowerCase()
-    );
-
-    messageContent = messageContent.replace(/[^a-zA-Z0-9\s]/g, "");
-
-    if (
-      messageContent.length < MESSAGE_LENGTH_THRESHOLDS.LOSE_INTEREST &&
-      LOSE_INTEREST_WORDS.some((word) => messageContent.includes(word))
-    ) {
-      delete this.interestChannels[message.channelId];
-      return true;
-    }
-
-    if (
-      messageContent.length < MESSAGE_LENGTH_THRESHOLDS.SHORT_MESSAGE &&
-      !this.interestChannels[message.channelId]
-    ) {
-      return true;
-    }
-
-    const targetedPhrases = [
-      this.runtime.character.name + " stop responding",
-      this.runtime.character.name + " stop talking",
-      this.runtime.character.name + " shut up",
-      this.runtime.character.name + " stfu",
-      "stop talking" + this.runtime.character.name,
-      this.runtime.character.name + " stop talking",
-      "shut up " + this.runtime.character.name,
-      this.runtime.character.name + " shut up",
-      "stfu " + this.runtime.character.name,
-      this.runtime.character.name + " stfu",
-      "chill" + this.runtime.character.name,
-      this.runtime.character.name + " chill",
-    ];
-
-    if (targetedPhrases.some((phrase) => messageContent.includes(phrase))) {
-      delete this.interestChannels[message.channelId];
-      return true;
-    }
-
-    if (
-      !this.interestChannels[message.channelId] &&
-      messageContent.length < MESSAGE_LENGTH_THRESHOLDS.VERY_SHORT_MESSAGE
-    ) {
-      return true;
-    }
-
-    if (
-      message.content.length < MESSAGE_LENGTH_THRESHOLDS.IGNORE_RESPONSE &&
-      IGNORE_RESPONSE_WORDS.some((word) =>
-        message.content.toLowerCase().includes(word)
-      )
-    ) {
-      return true;
-    }
-
-    return false;
   }
 
   private async _shouldRespond(
