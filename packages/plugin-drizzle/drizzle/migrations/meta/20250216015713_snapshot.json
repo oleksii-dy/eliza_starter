@@ -1,6 +1,6 @@
 {
-  "id": "e7c3152c-d8cf-43d7-bc9a-efcc34e33973",
-  "prevId": "4cbff2a4-d73d-4d3a-a992-d63f7ab82bf8",
+  "id": "c39c03e0-8c31-4491-ba8f-934cf81205c5",
+  "prevId": "0154b7c5-2e16-4315-8f2b-2a4188440e5a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -104,11 +104,11 @@
       "uniqueConstraints": {
         "cache_key_agent_unique": {
           "name": "cache_key_agent_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "key",
             "agentId"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -145,13 +145,6 @@
         },
         "templates": {
           "name": "templates",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'{}'::jsonb"
-        },
-        "client_config": {
-          "name": "client_config",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": false,
@@ -218,13 +211,6 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'{}'::jsonb"
-        },
-        "extends": {
-          "name": "extends",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'[]'::jsonb"
         },
         "created_at": {
           "name": "created_at",
@@ -315,37 +301,37 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "embeddings_memory_id_memories_id_fk": {
           "name": "embeddings_memory_id_memories_id_fk",
           "tableFrom": "embeddings",
-          "tableTo": "memories",
           "columnsFrom": [
             "memory_id"
           ],
+          "tableTo": "memories",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "fk_embedding_memory": {
           "name": "fk_embedding_memory",
           "tableFrom": "embeddings",
-          "tableTo": "memories",
           "columnsFrom": [
             "memory_id"
           ],
+          "tableTo": "memories",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -419,54 +405,54 @@
         "goals_userId_accounts_id_fk": {
           "name": "goals_userId_accounts_id_fk",
           "tableFrom": "goals",
-          "tableTo": "accounts",
           "columnsFrom": [
             "userId"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "goals_roomId_rooms_id_fk": {
           "name": "goals_roomId_rooms_id_fk",
           "tableFrom": "goals",
-          "tableTo": "rooms",
           "columnsFrom": [
             "roomId"
           ],
+          "tableTo": "rooms",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "fk_room": {
           "name": "fk_room",
           "tableFrom": "goals",
-          "tableTo": "rooms",
           "columnsFrom": [
             "roomId"
           ],
+          "tableTo": "rooms",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "fk_user": {
           "name": "fk_user",
           "tableFrom": "goals",
-          "tableTo": "accounts",
           "columnsFrom": [
             "userId"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -523,54 +509,54 @@
         "logs_userId_accounts_id_fk": {
           "name": "logs_userId_accounts_id_fk",
           "tableFrom": "logs",
-          "tableTo": "accounts",
           "columnsFrom": [
             "userId"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "logs_roomId_rooms_id_fk": {
           "name": "logs_roomId_rooms_id_fk",
           "tableFrom": "logs",
-          "tableTo": "rooms",
           "columnsFrom": [
             "roomId"
           ],
+          "tableTo": "rooms",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "fk_room": {
           "name": "fk_room",
           "tableFrom": "logs",
-          "tableTo": "rooms",
           "columnsFrom": [
             "roomId"
           ],
+          "tableTo": "rooms",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "fk_user": {
           "name": "fk_user",
           "tableFrom": "logs",
-          "tableTo": "accounts",
           "columnsFrom": [
             "userId"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -652,89 +638,89 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "memories_userId_accounts_id_fk": {
           "name": "memories_userId_accounts_id_fk",
           "tableFrom": "memories",
-          "tableTo": "accounts",
           "columnsFrom": [
             "userId"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "memories_agentId_accounts_id_fk": {
           "name": "memories_agentId_accounts_id_fk",
           "tableFrom": "memories",
-          "tableTo": "accounts",
           "columnsFrom": [
             "agentId"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "memories_roomId_rooms_id_fk": {
           "name": "memories_roomId_rooms_id_fk",
           "tableFrom": "memories",
-          "tableTo": "rooms",
           "columnsFrom": [
             "roomId"
           ],
+          "tableTo": "rooms",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "fk_room": {
           "name": "fk_room",
           "tableFrom": "memories",
-          "tableTo": "rooms",
           "columnsFrom": [
             "roomId"
           ],
+          "tableTo": "rooms",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "fk_user": {
           "name": "fk_user",
           "tableFrom": "memories",
-          "tableTo": "accounts",
           "columnsFrom": [
             "userId"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "fk_agent": {
           "name": "fk_agent",
           "tableFrom": "memories",
-          "tableTo": "accounts",
           "columnsFrom": [
             "agentId"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -797,9 +783,9 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         },
         "idx_participants_room": {
           "name": "idx_participants_room",
@@ -812,74 +798,74 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "participants_userId_accounts_id_fk": {
           "name": "participants_userId_accounts_id_fk",
           "tableFrom": "participants",
-          "tableTo": "accounts",
           "columnsFrom": [
             "userId"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "participants_roomId_rooms_id_fk": {
           "name": "participants_roomId_rooms_id_fk",
           "tableFrom": "participants",
-          "tableTo": "rooms",
           "columnsFrom": [
             "roomId"
           ],
+          "tableTo": "rooms",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "fk_room": {
           "name": "fk_room",
           "tableFrom": "participants",
-          "tableTo": "rooms",
           "columnsFrom": [
             "roomId"
           ],
+          "tableTo": "rooms",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "fk_user": {
           "name": "fk_user",
           "tableFrom": "participants",
-          "tableTo": "accounts",
           "columnsFrom": [
             "userId"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "participants_user_room_unique": {
           "name": "participants_user_room_unique",
-          "nullsNotDistinct": false,
           "columns": [
             "userId",
             "roomId"
-          ]
+          ],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -946,89 +932,89 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "relationships_userA_accounts_id_fk": {
           "name": "relationships_userA_accounts_id_fk",
           "tableFrom": "relationships",
-          "tableTo": "accounts",
           "columnsFrom": [
             "userA"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "relationships_userB_accounts_id_fk": {
           "name": "relationships_userB_accounts_id_fk",
           "tableFrom": "relationships",
-          "tableTo": "accounts",
           "columnsFrom": [
             "userB"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "relationships_userId_accounts_id_fk": {
           "name": "relationships_userId_accounts_id_fk",
           "tableFrom": "relationships",
-          "tableTo": "accounts",
           "columnsFrom": [
             "userId"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "fk_user_a": {
           "name": "fk_user_a",
           "tableFrom": "relationships",
-          "tableTo": "accounts",
           "columnsFrom": [
             "userA"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "fk_user_b": {
           "name": "fk_user_b",
           "tableFrom": "relationships",
-          "tableTo": "accounts",
           "columnsFrom": [
             "userB"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "fk_user": {
           "name": "fk_user",
           "tableFrom": "relationships",
-          "tableTo": "accounts",
           "columnsFrom": [
             "userId"
           ],
+          "tableTo": "accounts",
           "columnsTo": [
             "id"
           ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -1066,10 +1052,10 @@
   },
   "enums": {},
   "schemas": {},
+  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
-  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},

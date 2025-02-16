@@ -1557,7 +1557,6 @@ export class DrizzleDatabaseAdapter
                         )
                     )
                     : undefined,
-                clientConfig: char.clientConfig || undefined,
                 bio: char.bio,
                 messageExamples: char.messageExamples || undefined,
                 postExamples: char.postExamples || undefined,
@@ -1567,7 +1566,6 @@ export class DrizzleDatabaseAdapter
                 plugins: char.plugins || undefined,
                 settings: char.settings || undefined,
                 style: char.style || undefined,
-                extends: char.extends || undefined
             }));
         });
     }
@@ -1595,7 +1593,6 @@ export class DrizzleDatabaseAdapter
                         )
                     )
                     : undefined,
-                clientConfig: char.clientConfig || undefined,
                 bio: char.bio,
                 messageExamples: char.messageExamples || undefined,
                 postExamples: char.postExamples || undefined,
@@ -1605,7 +1602,6 @@ export class DrizzleDatabaseAdapter
                 plugins: char.plugins || undefined,
                 settings: char.settings || undefined,
                 style: char.style || undefined,
-                extends: char.extends || undefined
             };
         });
     }
@@ -1654,7 +1650,8 @@ const drizzleDatabaseAdapter: Adapter = {
         logger.info(`Initializing Drizzle database at ${connectionConfig}...`);
         const db = new DrizzleDatabaseAdapter(connectionConfig);
 
-        try { 
+        try {
+            console.log("INITLIZING DRIZZLE DATABASE FOR CHARACTER: ", runtime.character);
             await db.init();
             logger.success("Successfully connected to Drizzle database");
         } catch (error) {

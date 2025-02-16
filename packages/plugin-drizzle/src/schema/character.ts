@@ -22,7 +22,6 @@ export const characterTable = pgTable("characters", {
     email: text("email"),
     system: text("system"),
     templates: jsonb("templates").$type<StoredTemplates>().default(sql`'{}'::jsonb`),
-    clientConfig: jsonb("client_config").$type<{ [key: string]: any }>().default(sql`'{}'::jsonb`),
     bio: jsonb("bio").$type<string | string[]>().notNull(),
     messageExamples: jsonb("message_examples").$type<MessageExample[][]>().default(sql`'[]'::jsonb`),
     postExamples: jsonb("post_examples").$type<string[]>().default(sql`'[]'::jsonb`),
@@ -39,7 +38,6 @@ export const characterTable = pgTable("characters", {
         chat?: string[];
         post?: string[];
     }>().default(sql`'{}'::jsonb`),
-    extends: jsonb("extends").$type<string[]>().default(sql`'[]'::jsonb`),
     createdAt: numberTimestamp("created_at").default(sql`now()`),
 });
 
@@ -73,7 +71,6 @@ export const characterToInsert = (
             )
             : {},
         bio: character.bio,
-        clientConfig: character.clientConfig || {},
         messageExamples: character.messageExamples || [],
         postExamples: character.postExamples || [],
         topics: character.topics || [],
@@ -82,6 +79,5 @@ export const characterToInsert = (
         plugins: character.plugins || [],
         settings: character.settings || {},
         style: character.style || {},
-        extends: character.extends || [],
     };
 };

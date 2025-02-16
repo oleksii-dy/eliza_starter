@@ -23,7 +23,6 @@ CREATE TABLE "characters" (
 	"email" text,
 	"system" text,
 	"templates" jsonb DEFAULT '{}'::jsonb,
-	"client_config" jsonb DEFAULT '{}'::jsonb,
 	"bio" jsonb NOT NULL,
 	"message_examples" jsonb DEFAULT '[]'::jsonb,
 	"post_examples" jsonb DEFAULT '[]'::jsonb,
@@ -33,7 +32,6 @@ CREATE TABLE "characters" (
 	"plugins" jsonb DEFAULT '[]'::jsonb,
 	"settings" jsonb DEFAULT '{}'::jsonb,
 	"style" jsonb DEFAULT '{}'::jsonb,
-	"extends" jsonb DEFAULT '[]'::jsonb,
 	"created_at" timestamptz DEFAULT now()
 );
 --> statement-breakpoint
