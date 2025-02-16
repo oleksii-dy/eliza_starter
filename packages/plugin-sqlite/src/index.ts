@@ -758,6 +758,7 @@ export class SqliteDatabaseAdapter
         return this.db.prepare(sql).get(id) as Character;
     }
 
+    async ensureEmbeddingDimension(dimension: number): Promise<void> {}
 }
 
 const sqliteDatabaseAdapter: Adapter = {
