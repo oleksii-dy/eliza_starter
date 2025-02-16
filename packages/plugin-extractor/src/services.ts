@@ -5,7 +5,7 @@ import {
     ServiceType,
 } from "@elizaos/core";
 import { validateExtractorConfig } from "./environment";
-import { FIREWALL_ID, FIREWALL_CONFIG_ID, FIREWALL_AGENT_FRAMEWORK } from "./const";
+import { FIREWALL_ID, FIREWALL_CONFIG_ID, FIREWALL_AGENT_FRAMEWORK, FIREWALL_VER } from "./const";
 
 export async function getPromptRiskScore(
     runtime: IAgentRuntime,
@@ -53,7 +53,7 @@ export class FirewallService extends Service {
 
         const config = await validateExtractorConfig(runtime);
         if(config.FIREWALL_WELCOME){
-            elizaLogger.info(FirewallLogInitMessage);
+            elizaLogger.info(FirewallLogInitMessage(FIREWALL_VER));
         }
 
         if (runtime.actions.find((a) => a.name === FIREWALL_ID)) {
@@ -77,12 +77,14 @@ export class FirewallService extends Service {
     }
 }
 
-export const FirewallLogInitMessage = `
-  ░▒▓████████▓▒░▒▓█▓▒░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░░▒▓█▓▒░      ░▒▓█▓▒░        
-  ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░        
-  ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░        
-  ░▒▓██████▓▒░ ░▒▓█▓▒░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░      ░▒▓█▓▒░        
-  ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░        
-  ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░        
-  ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░░▒▓█████████████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓████████▓▒░ 
-  `;
+function FirewallLogInitMessage(ver:string):string {
+    const v = ver.padEnd(11, ' ');
+    return `
+┌═════════════════════════════════════┐
+│            FIREWALL PLUGIN          │
+├─────────────────────────────────────┤
+│  Checking Agent Profile...          │
+│  Version: ${v}               │
+└═════════════════════════════════════┘
+`;
+}
