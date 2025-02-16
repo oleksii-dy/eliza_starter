@@ -449,36 +449,47 @@ export class MongoDBDatabaseAdapter
         limit?: number;
     }): Promise<Memory[]> {
         await this.ensureConnection();
-        // Implement a basic similarity search using standard MongoDB operations
         const memories = await this.database.collection('memories')
             .find(params.query)
             .limit(params.limit || 10)
             .toArray();
-
+    
         // Sort by cosine similarity computed in application
         return memories
-            .map(memory => ({
-                ...memory,
-                similarity: this.cosineSimilarity(params.embedding, memory.embedding)
-            }))
-            .sort((a, b) => b.similarity - a.similarity)
-            .map(memory => ({
-                ...memory,
-                createdAt: typeof memory.createdAt === "string" ?
-                    Date.parse(memory.createdAt) : memory.createdAt,
-                content: typeof memory.content === 'string' ?
-                    JSON.parse(memory.content) : memory.content
-            }));
-    }
+            .map(memory => {
+                const similarity = memory.embedding
+                    ? this.cosineSimilarity(params.embedding, memory.embedding)
+                    : 0; // Handle missing embeddings gracefully
+                return {
+                    ...memory,
+                    similarity,
+                    createdAt: typeof memory.createdAt === "string"
+                        ? Date.parse(memory.createdAt)
+                        : memory.createdAt,
+                    content: typeof memory.content === 'string'
+                        ? JSON.parse(memory.content)
+                        : memory.content
+                };
+            })
+            .sort((a, b) => b.similarity - a.similarity);
+    }    
 
     private cosineSimilarity(a: Float32Array | number[], b: Float32Array | number[]): number {
         const aArr = Array.from(a);
         const bArr = Array.from(b);
+    
         const dotProduct = aArr.reduce((sum, val, i) => sum + val * bArr[i], 0);
         const magnitudeA = Math.sqrt(aArr.reduce((sum, val) => sum + val * val, 0));
         const magnitudeB = Math.sqrt(bArr.reduce((sum, val) => sum + val * val, 0));
+    
+        // Handle zero magnitudes (zero-vectors)
+        if (magnitudeA === 0 || magnitudeB === 0) {
+            return 0; // Default similarity for zero-vectors
+        }
+    
         return dotProduct / (magnitudeA * magnitudeB);
     }
+    
 
     async searchMemories(params: {
         tableName: string;
