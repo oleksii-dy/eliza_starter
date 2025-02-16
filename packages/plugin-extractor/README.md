@@ -1,6 +1,6 @@
 # @elizaos/plugin-extractor
 
-Extractor AI Agent Firewall plugin provides a firewall functionality for Agent
+Extractor plugin provides a firewall functionality for Agents
 
 ## Features
 
@@ -43,6 +43,7 @@ return new AgentRuntime({
 FIREWALL_API_URL=http://agent.dev.extractor.live/api/v1/agent/firewall
 FIREWALL_API_KEY=
 FIREWALL_SCORE_THRESHOLD=0.5
+FIREWALL_SCORE_FAIL=0.9
 ```
 
 ## License

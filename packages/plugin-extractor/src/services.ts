@@ -12,10 +12,14 @@ export async function getRiskScore(
     text: string,
     type: string
 ) {
-    const url = `${process.env.FIREWALL_API_URL}`;
-    const response = await fetch(url, {
-        method: "POST",
-        headers: {
+    const config = await validateExtractorConfig(runtime);
+    const url = `${config.FIREWALL_API_URL}`;
+
+    let response;
+    try {
+        response = await fetch(url, {
+            method: "POST",
+            headers: {
             "Content-Type": "application/json",
             ...(process.env.FIREWALL_API_KEY?.length
                 ? { "Authorization": `Bearer ${process.env.FIREWALL_API_KEY}` }
@@ -28,16 +32,34 @@ export async function getRiskScore(
             agent_name: runtime.character.name,
             agent_provider: FIREWALL_AGENT_FRAMEWORK,
             id: "1",
-        }),
-    });
+            }),
+        });
 
+    } catch (error) {
+        elizaLogger.warn(`Firewall API failed: ${error.message} (${error.cause})`);
+
+        if(config.FIREWALL_SCORE_FAIL >= config.FIREWALL_SCORE_THRESHOLD){            
+            throw error;
+        } else {
+            return config.FIREWALL_SCORE_FAIL;
+        }
+    }
+    
     if(response.status !== 200){
-        throw new Error(`Firewall API failed: status=${response.status}, ${response.statusText}`);
+
+        if(config.FIREWALL_SCORE_FAIL >= config.FIREWALL_SCORE_THRESHOLD){
+            throw new Error(`Firewall API failed: status=${response.status}, ${response.statusText}`);
+        } else {
+            return config.FIREWALL_SCORE_FAIL;
+        }
     }
 
-    const data = await response.json();
-
-    return data?.risk || 0;
+    try {
+        const data = await response.json();
+        return data?.risk || config.FIREWALL_SCORE_FAIL;
+    } catch (error) {
+        return config.FIREWALL_SCORE_FAIL;
+    }
 }
 
 export class FirewallService extends Service {

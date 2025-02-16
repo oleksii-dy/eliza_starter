@@ -8,6 +8,7 @@ export const extractorEnvSchema = z.object({
     FIREWALL_API_URL: z.string().min(1, "Firewall api url is required"),
     FIREWALL_API_KEY: z.string(),    
     FIREWALL_WELCOME: z.boolean(),
+    FIREWALL_SCORE_FAIL: z.string().default("0.9"),
 });
 
 export type extractorConfig = z.infer<typeof extractorEnvSchema>;
@@ -17,9 +18,7 @@ export async function validateExtractorConfig(
 ): Promise<extractorConfig> {
     try {
         const config = {
-            FIREWALL_SCORE_THRESHOLD: runtime.getSetting(
-                "FIREWALL_SCORE_THRESHOLD"
-            ),
+            FIREWALL_SCORE_THRESHOLD: runtime.getSetting("FIREWALL_SCORE_THRESHOLD"),
             FIREWALL_API_URL: runtime.getSetting("FIREWALL_API_URL"),
             FIREWALL_API_KEY: runtime.getSetting("FIREWALL_API_KEY")
                 ? runtime.getSetting("FIREWALL_API_KEY")
@@ -27,6 +26,7 @@ export async function validateExtractorConfig(
             FIREWALL_WELCOME: runtime.getSetting("FIREWALL_WELCOME")
                 ? JSON.parse(runtime.getSetting("FIREWALL_WELCOME"))
                 : false,
+            FIREWALL_SCORE_FAIL: runtime.getSetting("FIREWALL_SCORE_FAIL")
         } as extractorConfig;
 
         return extractorEnvSchema.parse(config) as extractorConfig;
