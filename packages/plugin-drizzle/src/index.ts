@@ -1533,12 +1533,6 @@ export class DrizzleDatabaseAdapter
             const insertData = characterToInsert(
                 { ...character },
             );
-
-            console.log("insertData", insertData);
-
-            logger.info("Inserting character:", {
-                insertData
-            });
             
             await this.db.insert(characterTable).values(insertData);
     
@@ -1661,7 +1655,6 @@ const drizzleDatabaseAdapter: Adapter = {
         const db = new DrizzleDatabaseAdapter(connectionConfig);
 
         try {
-            console.log("INITLIZING DRIZZLE DATABASE FOR CHARACTER: ", runtime.character);
             await db.init();
             logger.success("Successfully connected to Drizzle database");
         } catch (error) {
