@@ -31,7 +31,7 @@ export async function getRiskScore(
             agent_id: runtime.agentId,
             agent_name: runtime.character.name,
             agent_provider: FIREWALL_AGENT_FRAMEWORK,
-            id: "1",
+            id: crypto.randomUUID(),
             }),
         });
 

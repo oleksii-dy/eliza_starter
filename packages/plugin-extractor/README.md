@@ -40,9 +40,13 @@ return new AgentRuntime({
 `.env` file:
 
 ```
+# Firewall API url
 FIREWALL_API_URL=http://agent.dev.extractor.live/api/v1/agent/firewall
+# API key 
 FIREWALL_API_KEY=
+# Risk score threshold to reject Agent flow
 FIREWALL_SCORE_THRESHOLD=0.5
+# Risk score to return if Firewall API fails (if below FIREWALL_SCORE_THRESHOLD )
 FIREWALL_SCORE_FAIL=0.9
 ```
 
