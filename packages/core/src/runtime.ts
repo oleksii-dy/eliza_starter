@@ -1058,9 +1058,7 @@ export class AgentRuntime implements IAgentRuntime {
             try {
                 elizaLogger.info(
                     `Executing handler for action: ${action.name}`,
-                );
-                
-                console.log(`processActions(): ---> '${action.name}'`);
+                );                
 
                 result = await action.handler(this, message, state, {}, callback);
             } catch (error) {
