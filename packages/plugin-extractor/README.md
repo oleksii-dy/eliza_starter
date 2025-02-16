@@ -6,9 +6,12 @@ Extractor plugin provides a firewall functionality for Agents
 
 - Character Profile scoring
 - User/Agent message scoring (pre-prompt and post-prompt)
+- Rejection of the message if the risk score is above the threshold
 
-Scoring is performed by external [Extractor Firewall API](https://extractor.live) service.
+__NOTES__:
 
+- Scoring is performed by external [Extractor Firewall API](https://extractor.live) service.
+- Currently the message with a high risk score is not removed from `State`
 
 ## Installation
 
@@ -41,7 +44,7 @@ return new AgentRuntime({
 
 ```
 # Firewall API url
-FIREWALL_API_URL=http://agent.dev.extractor.live/api/v1/agent/firewall
+FIREWALL_API_URL=http://localhost:8080/api/v1/agent/firewall
 # API key 
 FIREWALL_API_KEY=
 # Risk score threshold to reject Agent flow

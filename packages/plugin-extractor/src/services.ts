@@ -20,10 +20,10 @@ export async function getRiskScore(
         response = await fetch(url, {
             method: "POST",
             headers: {
-            "Content-Type": "application/json",
-            ...(process.env.FIREWALL_API_KEY?.length
-                ? { "Authorization": `Bearer ${process.env.FIREWALL_API_KEY}` }
-                : {}),
+                "Content-Type": "application/json",
+                ...(process.env.FIREWALL_API_KEY?.length
+                    ? { "Authorization": `Bearer ${process.env.FIREWALL_API_KEY}` }
+                    : {}),
             },
             body: JSON.stringify({
                 id: crypto.randomUUID(),
