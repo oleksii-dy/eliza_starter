@@ -7,7 +7,7 @@ import {
 import { validateExtractorConfig } from "./environment";
 import { FIREWALL_ID, FIREWALL_CONFIG_ID, FIREWALL_AGENT_FRAMEWORK, FIREWALL_VER } from "./const";
 
-export async function getPromptRiskScore(
+export async function getRiskScore(
     runtime: IAgentRuntime,
     text: string,
     type: string
@@ -58,7 +58,7 @@ export class FirewallService extends Service {
 
         if (runtime.actions.find((a) => a.name === FIREWALL_ID)) {
             
-            let risk = await getPromptRiskScore(
+            let risk = await getRiskScore(
                 runtime,
                 JSON.stringify(runtime.character),
                 FIREWALL_CONFIG_ID
@@ -66,10 +66,10 @@ export class FirewallService extends Service {
 
             if (risk > process.env.FIREWALL_SCORE_THRESHOLD) {
                 elizaLogger.error(
-                    `Forbidden by firewall: ${runtime.character.name}`
+                    `Forbidden by firewall: ${runtime.character.name}(${runtime.character.id}): score=${risk} (threshold=${process.env.FIREWALL_SCORE_THRESHOLD})`
                 );
                 throw new Error(
-                    `Forbidden by firewall: ${runtime.character.name}`
+                    `Forbidden by firewall: agent=${runtime.character.id}`
                 );
             }
             

@@ -8,12 +8,12 @@ import {
 } from "@elizaos/core";
 import { validateExtractorConfig } from "../environment";
 import { Content } from "@elizaos/core";
-import { getPromptRiskScore } from "../services";
-import { FIREWALL_ACTION, FIREWALL_PRE_PROMPT_ID, FIREWALL_POST_PROMPT_ID } from "../const";
+import { getRiskScore } from "../services";
+import { FIREWALL_ACTION, FIREWALL_PRE_PROMPT_ID, FIREWALL_POST_PROMPT_ID, FIREWALL_SIMILES } from "../const";
 
 export const firewallAction: Action = {
     name: FIREWALL_ACTION,
-    similes: ["FIREWALL", "*"],
+    similes: FIREWALL_SIMILES,
     description: "Agent Config and Prompt Firewall",
     handler: async (
         runtime: IAgentRuntime,
@@ -29,7 +29,7 @@ export const firewallAction: Action = {
                 (item) => item?.content?.text
             )[0];
 
-            const risk = await getPromptRiskScore(
+            const risk = await getRiskScore(
                 runtime,
                 latestAgentReply,
                 FIREWALL_POST_PROMPT_ID
@@ -37,7 +37,7 @@ export const firewallAction: Action = {
 
             if (risk > config.FIREWALL_SCORE_THRESHOLD) {
                 const rejectMessage: Content = {
-                    text: `Forbidden by firewall: '${message.content.text}'`,
+                    text: `Forbidden by firewall: '${message.content.text}', score=${risk} (threshold=${config.FIREWALL_SCORE_THRESHOLD})`,
                     action: FIREWALL_ACTION,
                 };
 
@@ -57,7 +57,7 @@ export const firewallAction: Action = {
         const config = await validateExtractorConfig(runtime);
 
         if (callback) {
-            const risk = await getPromptRiskScore(
+            const risk = await getRiskScore(
                 runtime,
                 message.content.text,
                 FIREWALL_PRE_PROMPT_ID
@@ -65,7 +65,7 @@ export const firewallAction: Action = {
 
             if (risk > config.FIREWALL_SCORE_THRESHOLD) {
                 const rejectMessage: Content = {
-                    text: `Forbidden by firewall: '${message.content.text}'`,
+                    text: `Forbidden by firewall: '${message.content.text}', score=${risk} (threshold=${config.FIREWALL_SCORE_THRESHOLD})`,
                     action: "FIREWALL",
                 };
 

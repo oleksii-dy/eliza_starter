@@ -1,5 +1,6 @@
 
 export const FIREWALL_ID = "FIREWALL";
+export const FIREWALL_SIMILES = ["FIREWALL", "*"];
 export const FIREWALL_CONFIG_ID = "config";
 export const FIREWALL_PRE_PROMPT_ID = "pre_prompt";
 export const FIREWALL_POST_PROMPT_ID = "post_prompt";
