@@ -850,7 +850,7 @@ export interface IDatabaseAdapter {
   
   removeCharacter(name: string): Promise<void>;
 
-  ensureEmbeddingDimension(dimension: number): void;
+  ensureEmbeddingDimension(dimension: number, agentId: UUID): void;
 }
 
 export interface IDatabaseCacheAdapter {

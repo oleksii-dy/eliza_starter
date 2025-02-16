@@ -1384,7 +1384,7 @@ Text: ${attachment.text}
 
     async ensureEmbeddingDimension() {
         const embedding = await this.useModel(ModelClass.TEXT_EMBEDDING, null);
-        this.databaseAdapter.ensureEmbeddingDimension(embedding.length);
+        this.databaseAdapter.ensureEmbeddingDimension(embedding.length, this.agentId);
     }
 
     registerTask(task: Task): UUID {

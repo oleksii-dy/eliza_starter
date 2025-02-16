@@ -386,5 +386,5 @@ export abstract class DatabaseAdapter<DB = any> implements IDatabaseAdapter {
      * @param dimension The dimension number to ensure.
      * @returns void
      */
-    abstract ensureEmbeddingDimension(dimension: number): void;
+    abstract ensureEmbeddingDimension(dimension: number, agentId: UUID): void;
 }

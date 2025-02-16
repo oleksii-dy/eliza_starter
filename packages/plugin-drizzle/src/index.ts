@@ -184,7 +184,29 @@ export class DrizzleDatabaseAdapter
         throw lastError;
     }
 
-    async ensureEmbeddingDimension(dimension: number) {
+    async ensureEmbeddingDimension(dimension: number, agentId: UUID) {
+        const existingMemory = await this.db
+            .select({
+                embedding: embeddingTable
+            })
+            .from(memoryTable)
+            .innerJoin(
+                embeddingTable,
+                eq(embeddingTable.memoryId, memoryTable.id)
+            )
+            .where(eq(memoryTable.agentId, agentId))
+            .limit(1);
+    
+        if (existingMemory.length > 0) {
+            const usedDimension = Object.entries(DIMENSION_MAP).find(([_, colName]) => 
+                existingMemory[0].embedding[colName] !== null
+            );
+            
+            if (usedDimension && usedDimension[1] !== DIMENSION_MAP[dimension]) {
+                throw new Error('Cannot change embedding dimension for agent');
+            }
+        }
+    
         this.embeddingDimension = DIMENSION_MAP[dimension];
     }
 
