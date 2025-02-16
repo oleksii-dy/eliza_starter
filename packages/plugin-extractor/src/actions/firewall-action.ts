@@ -9,11 +9,12 @@ import {
 import { validateExtractorConfig } from "../environment";
 import { Content } from "@elizaos/core";
 import { getPromptRiskScore } from "../services";
+import { FIREWALL_ACTION, FIREWALL_PRE_PROMPT_ID, FIREWALL_POST_PROMPT_ID } from "../const";
 
 export const firewallAction: Action = {
-    name: "FIREWALL",
+    name: FIREWALL_ACTION,
     similes: ["FIREWALL", "*"],
-    description: "Firewll the user",
+    description: "Agent Config and Prompt Firewall",
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -31,35 +32,20 @@ export const firewallAction: Action = {
             const risk = await getPromptRiskScore(
                 runtime,
                 latestAgentReply,
-                "prompt"
+                FIREWALL_POST_PROMPT_ID
             );
 
             if (risk > config.FIREWALL_SCORE_THRESHOLD) {
                 const rejectMessage: Content = {
                     text: `Forbidden by firewall: '${message.content.text}'`,
-                    action: "FIREWALL",
+                    action: FIREWALL_ACTION,
                 };
 
                 callback(rejectMessage, state);
                 return false;
             }
         }
-
-        if (
-            config.FIREWALL_STOP_LIST.some((word) =>
-                message.content.text.toLowerCase().includes(word)
-            )
-        ) {
-            let rejectMessage: Content = {
-                text: `Forbidden by firewall: '${message.content?.text}'`,
-                action: "FIREWALL",
-            };
-
-            callback(rejectMessage, state);
-            return false;
-        } else {
-            return true;
-        }
+        return true;        
     },
 
     validate: async (
@@ -71,11 +57,13 @@ export const firewallAction: Action = {
         const config = await validateExtractorConfig(runtime);
 
         if (callback) {
-            if (
-                config.FIREWALL_STOP_LIST.some((word) =>
-                    message.content.text.toLowerCase().includes(word)
-                )
-            ) {
+            const risk = await getPromptRiskScore(
+                runtime,
+                message.content.text,
+                FIREWALL_PRE_PROMPT_ID
+            );
+
+            if (risk > config.FIREWALL_SCORE_THRESHOLD) {
                 const rejectMessage: Content = {
                     text: `Forbidden by firewall: '${message.content.text}'`,
                     action: "FIREWALL",
@@ -83,22 +71,6 @@ export const firewallAction: Action = {
 
                 callback(rejectMessage, state);
                 return false;
-            } else {
-                const risk = await getPromptRiskScore(
-                    runtime,
-                    message.content.text,
-                    "prompt"
-                );
-
-                if (risk > config.FIREWALL_SCORE_THRESHOLD) {
-                    const rejectMessage: Content = {
-                        text: `Forbidden by firewall: '${message.content.text}'`,
-                        action: "FIREWALL",
-                    };
-
-                    callback(rejectMessage, state);
-                    return false;
-                }
             }
         }
         return true;

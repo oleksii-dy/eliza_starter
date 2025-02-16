@@ -1,5 +1,5 @@
 import { Plugin } from "@elizaos/core";
-import { firewallAction } from "./actions/getScore";
+import { firewallAction } from "./actions/firewall-action";
 import { FirewallService } from "./services";
 
 export const extractorPlugin: Plugin = {

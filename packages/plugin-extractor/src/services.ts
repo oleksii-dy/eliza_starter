@@ -5,19 +5,20 @@ import {
     ServiceType,
 } from "@elizaos/core";
 import { validateExtractorConfig } from "./environment";
+import { FIREWALL_ID, FIREWALL_CONFIG_ID, FIREWALL_AGENT_FRAMEWORK } from "./const";
 
 export async function getPromptRiskScore(
     runtime: IAgentRuntime,
     text: string,
-    type: string = "prompt"
+    type: string
 ) {
-    const url = `${process.env.FIREWALL_RISKS_API}/firewall`;
+    const url = `${process.env.FIREWALL_API_URL}`;
     const response = await fetch(url, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             ...(process.env.FIREWALL_API_KEY?.length
-                ? { "Authorization:": `Bearer ${process.env.FIREWALL_API_KEY}` }
+                ? { "Authorization": `Bearer ${process.env.FIREWALL_API_KEY}` }
                 : {}),
         },
         body: JSON.stringify({
@@ -25,10 +26,15 @@ export async function getPromptRiskScore(
             data_type: type,
             agent_id: runtime.agentId,
             agent_name: runtime.character.name,
-            agent_provider: "eliza",
+            agent_provider: FIREWALL_AGENT_FRAMEWORK,
             id: "1",
         }),
     });
+
+    if(response.status !== 200){
+        throw new Error(`Firewall API failed: status=${response.status}, ${response.statusText}`);
+    }
+
     const data = await response.json();
 
     return data?.risk || 0;
@@ -44,38 +50,29 @@ export class FirewallService extends Service {
     }
 
     async initialize(runtime: IAgentRuntime): Promise<void> {
-        elizaLogger.info(FirewallLogInitMessage);
 
         const config = await validateExtractorConfig(runtime);
+        if(config.FIREWALL_WELCOME){
+            elizaLogger.info(FirewallLogInitMessage);
+        }
 
-        if (runtime.actions.find((a) => a.name === "FIREWALL")) {
-            if (
-                config.FIREWALL_STOP_LIST.some((word) =>
-                    runtime.character.name.toLowerCase().includes(word)
-                )
-            ) {
+        if (runtime.actions.find((a) => a.name === FIREWALL_ID)) {
+            
+            let risk = await getPromptRiskScore(
+                runtime,
+                JSON.stringify(runtime.character),
+                FIREWALL_CONFIG_ID
+            );
+
+            if (risk > process.env.FIREWALL_SCORE_THRESHOLD) {
                 elizaLogger.error(
                     `Forbidden by firewall: ${runtime.character.name}`
                 );
                 throw new Error(
                     `Forbidden by firewall: ${runtime.character.name}`
                 );
-            } else {
-                let risk = await getPromptRiskScore(
-                    runtime,
-                    runtime.character.name,
-                    "config"
-                );
-
-                if (risk > process.env.FIREWALL_SCORE_THRESHOLD) {
-                    elizaLogger.error(
-                        `Forbidden by firewall: ${runtime.character.name}`
-                    );
-                    throw new Error(
-                        `Forbidden by firewall: ${runtime.character.name}`
-                    );
-                }
             }
+            
         }
     }
 }

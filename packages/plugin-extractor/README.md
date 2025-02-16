@@ -1,12 +1,14 @@
 # plugin-extractor
 
-## Extractor AI prompt firewall
+## Extractor AI Agent Firewall
 
 > Description
 
-## Setup env
+## Setup
 
-FIREWALL_SCORE_THRESHOLD=0.5 // required
-FIREWALL_API_KEY="" // required
-FIREWALL_RISKS_API="https://agent.dev.extractor.live/api/v1/agent" // required
-FIREWALL_STOP_LIST=["exploit", "trade"] // default []
+```
+FIREWALL_API_URL=http://agent.dev.extractor.live/api/v1/agent/firewall
+FIREWALL_API_KEY=
+FIREWALL_SCORE_THRESHOLD=0.5
+```
+
