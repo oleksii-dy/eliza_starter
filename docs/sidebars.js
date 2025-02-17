@@ -111,6 +111,11 @@ const sidebars = {
                 },
                 {
                     type: "doc",
+                    id: "guides/fine-tuning",
+                    label: "Fine-tuning",
+                },
+                {
+                    type: "doc",
                     id: "guides/advanced",
                     label: "Advanced Usage",
                 },
@@ -141,11 +146,6 @@ const sidebars = {
             label: "🎓 Advanced Topics",
             collapsed: false,
             items: [
-                {
-                    type: "doc",
-                    id: "advanced/fine-tuning",
-                    label: "Fine-tuning",
-                },
                 {
                     type: "doc",
                     id: "advanced/infrastructure",

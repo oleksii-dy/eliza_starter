@@ -121,7 +121,7 @@ await runtime.memoryManager.createMemory(memory);
 
 
 :::info Deep Dive
-For a comprehensive guide on how the fact evaluator system works, including implementation details and best practices, check out our [Fact Evaluator Guide](./fact-evaluator.md).
+For a comprehensive guide on how the fact evaluator system works, including implementation details and best practices, check out our [Fact Evaluator Guide](fact-evaluator.md).
 :::
 
 The Fact Evaluator is one of the most powerful built-in evaluators. It processes convos to:
