@@ -23,6 +23,7 @@ pgLite/
 
 cookies.json
 
+characters/
 db.sqlite
 searches/
 tweets/
