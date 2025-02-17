@@ -10,7 +10,10 @@
         "@notionhq/client":"2.2.15"
     },
     "devDependencies": {
-        "@biomejs/biome": "1.9.4"
+        "@biomejs/biome": "1.9.4",
+        "vitest": "^latest"
+
+          }
     },
     "scripts": {
         "build": "tsup --format esm --dts",
