@@ -1,4 +1,4 @@
-// src/commands/agent.ts
+// src/commands/character.ts
 import type { Character, MessageExample, UUID } from "@elizaos/core";
 import { MessageExampleSchema } from "@elizaos/core";
 import { Command } from "commander";
@@ -35,6 +35,22 @@ type CharacterFormData = z.infer<typeof characterSchema>
 export const character = new Command()
   .name("character")
   .description("manage characters")
+
+async function initializeDatabase() {
+  try {
+    await adapter.init();
+  } catch (error) {
+    if ('code' in error && error.code === 'ECONNREFUSED') {
+      logger.error(`Database connection failed. Please ensure that:
+  1. The database server is running
+  2. The connection details are correct in your configuration
+  3. The database server is accepting connections on the configured port`);
+    } else {
+      logger.error(`Database initialization failed: ${error.message}`);
+    }
+    process.exit(1);
+  }
+}
 
 async function collectCharacterData(
   initialData?: Partial<CharacterFormData>
@@ -137,16 +153,41 @@ async function collectCharacterData(
   return formData as CharacterFormData;
 }
 
+async function withDatabase<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    await initializeDatabase();
+    return await operation();
+  } catch (error) {
+    handleError(error);
+    throw error; // Re-throw to maintain error handling flow
+  } finally {
+    try {
+      await adapter.close();
+    } catch (closeError) {
+      logger.info(`Database connection closed with error: ${closeError.message}`);
+    }
+  }
+}
+
+function getDefaultCharacterFields(existingData?: Partial<Character>) {
+  return {
+    topics: existingData?.topics || [],
+    style: {
+      all: existingData?.style?.all || [],
+      chat: existingData?.style?.chat || [],
+      post: existingData?.style?.post || [],
+    },
+    plugins: existingData?.plugins || [],
+    settings: existingData?.settings || {},
+  };
+}
+
 character
   .command("list")
   .description("list all characters")
   .action(async () => {
-    try {
-      
-      await adapter.init();
-
+    await withDatabase(async () => {
       const characters = await adapter.listCharacters();
-
       if (characters.length === 0) {
         logger.info("No characters found");
       } else {
@@ -155,26 +196,19 @@ character
           logger.info(`  ${character.name} (${character.id})`);
         }
       }
-
-      await adapter.close();
-    } catch (error) {
-      handleError(error);
-    }
+    });
   })
 
 character
   .command("create")
   .description("create a new character")
   .action(async () => {
-    try {
-      
-      const formData = await collectCharacterData()
+    await withDatabase(async () => {
+      const formData = await collectCharacterData();
       if (!formData) {
-        logger.info("Character creation cancelled")
-        return
+        logger.info("Character creation cancelled");
+        return;
       }
-
-      await adapter.init()
 
       const characterData = {
         id: uuid() as UUID,
@@ -184,24 +218,12 @@ character
         adjectives: formData.adjectives,
         postExamples: formData.postExamples,
         messageExamples: formData.messageExamples,
-        topics: [],
-        style: { // TODO: add style
-          all: [], 
-          chat: [],
-          post: [],
-        },
-        plugins: [],
-        settings: {},
-      }
+        ...getDefaultCharacterFields()
+      };
 
-      await adapter.createCharacter(characterData as Character)
-      
-      
-      logger.success(`Created character ${formData.name} (${characterData.id})`)
-      await adapter.close()
-    } catch (error) {
-      handleError(error)
-    }
+      await adapter.createCharacter(characterData as Character);
+      logger.success(`Created character ${formData.name} (${characterData.id})`);
+    });
   })
 
 character
@@ -209,16 +231,14 @@ character
   .description("edit a character")
   .argument("<character-id>", "character ID")
   .action(async (characterId) => {
-    try {
-      await adapter.init();
-
+    await withDatabase(async () => {
       const existingCharacter = await adapter.getCharacter(characterId);
       if (!existingCharacter) {
         logger.error(`Character ${characterId} not found`);
         process.exit(1);
       }
 
-      logger.info(`\nEditing character ${existingCharacter.name} (type 'back' or 'forward' to navigate)`)
+      logger.info(`\nEditing character ${existingCharacter.name} (type 'back' or 'forward' to navigate)`);
 
       const formData = await collectCharacterData({
         name: existingCharacter.name,
@@ -226,16 +246,16 @@ character
         adjectives: existingCharacter.adjectives || [],
         postExamples: existingCharacter.postExamples || [],
         messageExamples: (existingCharacter.messageExamples || [] as MessageExample[][]).map(
-          (msgArr: MessageExample[]): MessageExample[] => msgArr.map((msg: MessageExample) => ({ 
-            user: msg.user ?? "unknown", 
-            content: msg.content 
+          (msgArr: MessageExample[]): MessageExample[] => msgArr.map((msg: MessageExample) => ({
+            user: msg.user ?? "unknown",
+            content: msg.content
           }))
         ),
-      })
+      });
 
       if (!formData) {
-        logger.info("Character editing cancelled")
-        return
+        logger.info("Character editing cancelled");
+        return;
       }
 
       const updatedCharacter = {
@@ -244,22 +264,12 @@ character
         adjectives: formData.adjectives || [],
         postExamples: formData.postExamples || [],
         messageExamples: formData.messageExamples as MessageExample[][],
-        topics: existingCharacter.topics || [],
-        style: {
-          all: existingCharacter.style?.all || [],
-          chat: existingCharacter.style?.chat || [],
-          post: existingCharacter.style?.post || [],
-        },
-        plugins: existingCharacter.plugins || [],
-        settings: existingCharacter.settings || {},
-      }
-      await adapter.updateCharacter(characterId, updatedCharacter as Partial<Character>)
+        ...getDefaultCharacterFields(existingCharacter)
+      };
 
-      logger.success(`Updated character ${formData.name}`)
-      await adapter.close()
-    } catch (error) {
-      handleError(error)
-    }
+      await adapter.updateCharacter(characterId, updatedCharacter as Partial<Character>);
+      logger.success(`Updated character ${formData.name}`);
+    });
   })
 
 character
@@ -280,30 +290,28 @@ character
         return
       }
       
-      const characterData = JSON.parse(await fs.promises.readFile(filePath, "utf8"))
-      const character = characterSchema.parse(characterData)
+      const rawData = await fs.promises.readFile(filePath, "utf8")
+      const parsedCharacter = characterSchema.parse(JSON.parse(rawData))
       
-      await adapter.init()
-
-      await adapter.createCharacter({
-        name: character.name,
-        bio: character.bio || [],
-        adjectives: character.adjectives || [],
-        postExamples: character.postExamples || [],
-        messageExamples: character.messageExamples as MessageExample[][],
-        topics: character.topics || [],
-        style: {
-          all: character.style?.all || [],
-          chat: character.style?.chat || [],
-          post: character.style?.post || [],
-        },
-        plugins: character.plugins || [],
-        settings: character.settings || {},
+      await withDatabase(async () => {
+        await adapter.createCharacter({
+          name: parsedCharacter.name,
+          bio: parsedCharacter.bio || [],
+          adjectives: parsedCharacter.adjectives || [],
+          postExamples: parsedCharacter.postExamples || [],
+          messageExamples: parsedCharacter.messageExamples as MessageExample[][],
+          topics: parsedCharacter.topics || [],
+          style: {
+            all: parsedCharacter.style?.all || [],
+            chat: parsedCharacter.style?.chat || [],
+            post: parsedCharacter.style?.post || [],
+          },
+          plugins: parsedCharacter.plugins || [],
+          settings: parsedCharacter.settings || {},
+        })
+        
+        logger.success(`Imported character ${parsedCharacter.name}`)
       })
-
-      logger.success(`Imported character ${character.name}`)
-
-      await adapter.close()
     } catch (error) {
       handleError(error)
     }
@@ -315,9 +323,7 @@ character
   .argument("<character-id>", "character ID")
   .option("-o, --output <file>", "output file path")
   .action(async (characterId, opts) => {
-    try {
-      await adapter.init()
-
+    await withDatabase(async () => {
       const character = await adapter.getCharacter(characterId)
       if (!character) {
         logger.error(`Character ${characterId} not found`)
@@ -327,11 +333,7 @@ character
       const outputPath = opts.output || `${character.name}.json`
       await fs.promises.writeFile(outputPath, JSON.stringify(character, null, 2))
       logger.success(`Exported character to ${outputPath}`)
-
-      await adapter.close()
-    } catch (error) {
-      handleError(error)
-    }
+    })
   })
 
 character
@@ -339,14 +341,11 @@ character
   .description("remove a character")
   .argument("<character-id>", "character ID")
   .action(async (characterId) => {
-    try {
+    await withDatabase(async () => {
       await adapter.removeCharacter(characterId)
+      
       logger.success(`Removed character ${characterId}`)
-
-      await adapter.close()
-    } catch (error) {
-      handleError(error)
-    }
+    })
   })
 
 
