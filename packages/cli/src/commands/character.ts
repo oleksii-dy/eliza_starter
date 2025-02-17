@@ -1,16 +1,14 @@
 // src/commands/agent.ts
-import { Database, SqliteDatabaseAdapter } from "@elizaos/plugin-sqlite";
-import type { MessageExample, UUID } from "@elizaos/core";
+import type { Character, MessageExample, UUID } from "@elizaos/core";
 import { MessageExampleSchema } from "@elizaos/core";
 import { Command } from "commander";
 import fs from "node:fs";
 import prompts from "prompts";
 import { v4 as uuid } from "uuid";
 import { z } from "zod";
-import { getConfig } from "../utils/get-config";
+import { adapter } from "../database";
 import { handleError } from "../utils/handle-error";
 import { logger } from "../utils/logger";
-import { resolveDatabasePath } from "../utils/resolve-database-path";
 
 const characterSchema = z.object({
   id: z.string().uuid(),
@@ -144,10 +142,7 @@ character
   .description("list all characters")
   .action(async () => {
     try {
-      const dbPath = await resolveDatabasePath({ requiredConfig: false });
       
-      const db = new Database(dbPath);
-      const adapter = new SqliteDatabaseAdapter(db);
       await adapter.init();
 
       const characters = await adapter.listCharacters();
@@ -179,9 +174,6 @@ character
         return
       }
 
-      const dbPath = await resolveDatabasePath({ requiredConfig: true });
-      const db = new Database(dbPath);
-      const adapter = new SqliteDatabaseAdapter(db)
       await adapter.init()
 
       const characterData = {
@@ -202,32 +194,8 @@ character
         settings: {},
       }
 
-      const characterToCreate = {
-        ...characterData,
-        messageExamples: (characterData.messageExamples as MessageExample[][]).map(
-          (msgArr: MessageExample[]): MessageExample[] => msgArr.map((msg: MessageExample) => ({
-            user: msg.user || "unknown",
-            content: msg.content
-          }))
-        )
-      }
-
-      await adapter.createCharacter({
-        id: characterData.id,
-        name: characterData.name,
-        bio: characterData.bio || [],
-        adjectives: characterData.adjectives || [],
-        postExamples: characterData.postExamples || [],
-        messageExamples: characterData.messageExamples as MessageExample[][],
-        topics: characterData.topics || [],
-        style: {
-          all: characterData.style?.all || [],
-          chat: characterData.style?.chat || [],
-          post: characterData.style?.post || [],
-        },
-        plugins: characterData.plugins || [],
-        settings: characterData.settings || {},
-      })
+      await adapter.createCharacter(characterData as Character)
+      
       
       logger.success(`Created character ${formData.name} (${characterData.id})`)
       await adapter.close()
@@ -242,9 +210,6 @@ character
   .argument("<character-id>", "character ID")
   .action(async (characterId) => {
     try {
-      const dbPath = await resolveDatabasePath({ requiredConfig: true });
-      const db = new Database(dbPath);
-      const adapter = new SqliteDatabaseAdapter(db);
       await adapter.init();
 
       const existingCharacter = await adapter.getCharacter(characterId);
@@ -274,7 +239,6 @@ character
       }
 
       const updatedCharacter = {
-        ...existingCharacter,
         name: formData.name,
         bio: formData.bio || [],
         adjectives: formData.adjectives || [],
@@ -289,7 +253,7 @@ character
         plugins: existingCharacter.plugins || [],
         settings: existingCharacter.settings || {},
       }
-      await adapter.updateCharacter(updatedCharacter)
+      await adapter.updateCharacter(characterId, updatedCharacter as Partial<Character>)
 
       logger.success(`Updated character ${formData.name}`)
       await adapter.close()
@@ -319,11 +283,6 @@ character
       const characterData = JSON.parse(await fs.promises.readFile(filePath, "utf8"))
       const character = characterSchema.parse(characterData)
       
-      // resolve database path
-      const dbPath = await resolveDatabasePath({ requiredConfig: true })
-
-      const db = new Database(dbPath)
-      const adapter = new SqliteDatabaseAdapter(db)
       await adapter.init()
 
       await adapter.createCharacter({
@@ -357,15 +316,6 @@ character
   .option("-o, --output <file>", "output file path")
   .action(async (characterId, opts) => {
     try {
-      const cwd = process.cwd()
-      const config = await getConfig(cwd)
-      if (!config) {
-        logger.error("No project.json found. Please run init first.")
-        process.exit(1)
-      }
-
-      const db = new Database((config.database.config as { path: string }).path)
-      const adapter = new SqliteDatabaseAdapter(db)
       await adapter.init()
 
       const character = await adapter.getCharacter(characterId)
@@ -390,11 +340,6 @@ character
   .argument("<character-id>", "character ID")
   .action(async (characterId) => {
     try {
-      const dbPath = await resolveDatabasePath({ requiredConfig: true })
-      const db = new Database(dbPath)
-      const adapter = new SqliteDatabaseAdapter(db)
-      await adapter.init()
-
       await adapter.removeCharacter(characterId)
       logger.success(`Removed character ${characterId}`)
 
