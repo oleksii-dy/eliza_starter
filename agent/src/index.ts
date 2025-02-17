@@ -1019,7 +1019,32 @@ export async function createAgent(
         character,
         // character.plugins are handled when clients are added
         plugins: [
+            parseBooleanFromText(getSecret(character, "BITMIND")) &&
+            getSecret(character, "BITMIND_API_TOKEN")
+                ? bittensorPlugin
+                : null,
+            parseBooleanFromText(
+                getSecret(character, "EMAIL_AUTOMATION_ENABLED")
+            )
+                ? emailAutomationPlugin
+                : null,
+            getSecret(character, "IQ_WALLET_ADDRESS") &&
+            getSecret(character, "IQSOlRPC")
+                ? elizaCodeinPlugin
+                : null,
             bootstrapPlugin,
+            getSecret(character, "CDP_API_KEY_NAME") &&
+            getSecret(character, "CDP_API_KEY_PRIVATE_KEY") &&
+            getSecret(character, "CDP_AGENT_KIT_NETWORK")
+                ? agentKitPlugin
+                : null,
+            getSecret(character, "DEXSCREENER_API_KEY")
+                ? dexScreenerPlugin
+                : null,
+            getSecret(character, "FOOTBALL_API_KEY") ? footballPlugin : null,
+            getSecret(character, "CONFLUX_CORE_PRIVATE_KEY")
+                ? confluxPlugin
+                : null,
             nodePlugin,
             getSecret(character, "ROUTER_NITRO_EVM_PRIVATE_KEY") &&
             getSecret(character, "ROUTER_NITRO_EVM_ADDRESS")
