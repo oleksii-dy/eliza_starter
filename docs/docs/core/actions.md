@@ -106,29 +106,44 @@ Actions can be used in character files as well. Here's an example from: https://
 Actions can be found across various plugins in the Eliza ecosystem, with a comprehensive collection available at https://github.com/elizaos-plugins. Here are some notable examples:
 
 ### Blockchain and Token Actions
-- **Transfer**: Move tokens across different blockchain networks (AVAIL, MultiversX)
-- **READ_CONTRACT**: Read blockchain contract states
-- **WRITE_CONTRACT**: Modify blockchain contract states
-- **ERC20_TRANSFER**: Transfer ERC20 tokens
-- **GET_QUOTE_0X**: Retrieve token swap quotes
-- **EXECUTE_SWAP_0X**: Execute token swaps
+- Transfers: `SEND_TOKEN`, `SEND_SOL`, `SEND_NEAR`, `SEND_AVAIL`, `SEND_TON`, `SEND_TOKENS`, `COSMOS_TRANSFER`, `CROSS_CHAIN_TRANSFER`
+- Token Management: `CREATE_TOKEN`, `GET_TOKEN_INFO`, `GET_BALANCE`, `GET_TOKEN_PRICE`, `TOKEN_SWAP`, `SWAP_TOKEN`, `EXECUTE_SPOT_TRADE`
+- Blockchain Interactions: `READ_CONTRACT`, `WRITE_CONTRACT`, `DEPLOY_CONTRACT`, `DEPLOY_TOKEN`, `GET_TRANSACTION`, `GET_CURRENT_NONCE`, `GET_CONTRACT_SCHEMA`
 
 ### Cryptographic and Security Actions
-- **ECDSA_SIGN**: Perform ECDSA digital signatures
-- **LIT_ACTION**: Deploy decentralized JavaScript functions
-- **SUBMIT_DATA**: Submit data to decentralized storage networks
+- Signature and Authentication: `ECDSA_SIGN`, `LIT_ACTION`, `REMOTE_ATTESTATION`, `AUTHENTICATE`
+- Wallet and Key Management: `ERC20_TRANSFER`, `WALLET_TRANSFER`, `BRIDGE_OPERATIONS`
 
-### AI and Agent Management Actions
-- **LAUNCH_AGENT**: Create and deploy new agents
-- **GET_AI_IMAGE**: Analyze images for AI generation
-- **DEPIN_PROJECTS**: Interact with and analyze decentralized infrastructure projects
+### Staking and Governance
+- Staking Actions: `STAKE`, `DELEGATE_TOKEN`, `UNDELEGATE_TOKEN`, `GET_STAKE_BALANCE`, `TOKENS_REDELEGATE`
+- Governance Actions: `VOTE_ON_PROPOSAL`, `PROPOSE`, `EXECUTE_PROPOSAL`, `QUEUE_PROPOSAL`
 
-### Specialized Plugin Actions
-- **CREATE_RESOURCE**: Manage generic resources
-- **AUTHENTICATE**: Blockchain and web3 authentication
-- **STAKING**: Manage staking operations
-- **BRIDGE_OPERATIONS**: Cross-chain token bridging
+### AI and Agent Management
+- Agent Creation: `LAUNCH_AGENT`, `START_SESSION`, `CREATE_AND_REGISTER_AGENT`
+- AI-Specific Actions: `GENERATE_IMAGE`, `DESCRIBE_IMAGE`, `GENERATE_VIDEO`, `GENERATE_MUSIC`, `GET_INFERENCE`, `GENERATE_MEME`
 
+### Media and Content Generation
+- Image and Multimedia: `SEND_GIF`, `GENERATE_3D`, `GENERATE_COLLECTION`, `MINT_NFT`, `LIST_NFT`, `SWEEP_FLOOR_NFT`
+- Audio and Voice: `EXTEND_AUDIO`, `CREATE_TTS`
+
+### Decentralized Infrastructure (DePIN)
+- Project Interactions: `DEPIN_TOKENS`, `DEPIN_ON_CHAIN`, `ANALYZE_DEPIN_PROJECTS`
+
+### Search and Information Retrieval
+- Data Search: `WEB_SEARCH`, `GET_TOKEN_PRICE_BY_ADDRESS`, `GET_TRENDING_POOLS`, `GET_NEW_COINS`, `GET_MARKETS`
+
+### Blockchain and Trading
+- Specialized Actions: `GET_QUOTE_0X`, `EXECUTE_SWAP_0X`, `CANCEL_ORDERS`, `GET_INDICATIVE_PRICE`
+
+### Social and Communication
+- Platform Interactions: `TWEET`, `POST_TWEET`, `QUOTE`, `JOIN_VOICE`, `LEAVE_VOICE`, `TRANSCRIBE_MEDIA`, `SUMMARIZE_CONVERSATION`
+
+### Utility Actions
+- General Utilities: `FAUCET`, `SUBMIT_DATA`, `PRICE_CHECK`, `WEATHER`, `NEWS`
+
+Check out the [ElizaOS Plugins org](https://github.com/elizaos-plugins) on GitHub if interested in studying or using any of these.
+
+### Image Generation Action
 
 Here's a comprehensive example of an image generation action:
 
