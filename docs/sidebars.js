@@ -61,6 +61,11 @@ const sidebars = {
                             id: "tutorials/nader_tutorial_15min",
                             label: "Build Social Agents in 15min",
                         },                        
+                        {
+                            type: "doc",
+                            id: "tutorials/nader_tutorial_35min",
+                            label: "Build a Plugin in 35min",
+                        },                        
                     ],
                     collapsed: true, // Expand by default
                 },

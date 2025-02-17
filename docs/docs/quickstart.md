@@ -21,7 +21,7 @@ Before getting started with Eliza, ensure you have:
 Using https://github.com/elizaOS/eliza-starter
 
 ```bash
-git clone https://github.com/elizaos/eliza-starter.git
+git clone git@github.com:elizaos/eliza-starter.git
 cd eliza-starter
 cp .env.example .env
 pnpm i && pnpm build && pnpm start
@@ -32,7 +32,7 @@ pnpm i && pnpm build && pnpm start
 After installing the prerequisites, clone the repository and enter the directory
 
 ```bash
-git clone https://github.com/elizaOS/eliza.git
+git clone git@github.com:elizaOS/eliza.git
 cd eliza
 ```
 
