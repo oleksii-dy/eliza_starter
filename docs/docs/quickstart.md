@@ -278,6 +278,14 @@ NODE_MODULE_VERSION 131. This version of Node.js requires
 NODE_MODULE_VERSION 127. Please try re-compiling or re-installing
 ```
 
+or 
+
+```
+Error: Could not locate the bindings file. Tried:
+.../better_sqlite3.node
+...
+```
+
 You can try this, which will attempt to rebuild better-sqlite3.
 
 ```bash
@@ -294,6 +302,13 @@ Then reinstall the requirements
 
 ```bash
 pnpm i
+```
+
+You can also add a postinstall script in your `package.json` if you want to automate this:
+```json
+scripts: {
+    "postinstall": "npm rebuild better-sqlite3",
+}
 ```
 
 ## Next Steps
