@@ -500,7 +500,7 @@ export class TwitterPostClient {
             const newTweetContent = await generateText({
                 runtime: this.runtime,
                 context,
-                modelClass: ModelClass.SMALL,
+                modelClass: ModelClass.LARGE,
             });
 
             // First attempt to clean content
@@ -609,7 +609,7 @@ export class TwitterPostClient {
         const response = await generateText({
             runtime: this.runtime,
             context: options?.context || context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
         });
         elizaLogger.debug("generate tweet content response:\n" + response);
 
@@ -734,7 +734,7 @@ export class TwitterPostClient {
                     const actionResponse = await generateTweetActions({
                         runtime: this.runtime,
                         context: actionContext,
-                        modelClass: ModelClass.SMALL,
+                        modelClass: ModelClass.LARGE,
                     });
 
                     if (!actionResponse) {
