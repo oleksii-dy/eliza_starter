@@ -14,7 +14,6 @@ const characterSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   username: z.string(),
-  description: z.string().optional(),
   settings: z.record(z.string(), z.any()).optional(),
   plugins: z.array(z.string()).optional(),
   secrets: z.record(z.string(), z.string()).optional(),
@@ -36,12 +35,79 @@ export const character = new Command()
   .name("character")
   .description("manage characters")
 
+async function collectMessageExample(characterName: string): Promise<MessageExample[] | null> {
+  const messages: MessageExample[] = [];
+  let collecting = true;
+
+  while (collecting) {
+    // Get user's message
+    const userResponse = await prompts({
+      type: 'text',
+      name: 'value',
+      message: 'Enter user message (or "done" to finish this conversation, "end" to finish all):',
+    });
+
+    if (!userResponse.value || userResponse.value.toLowerCase() === 'end') {
+      return null;
+    }
+
+    if (userResponse.value.toLowerCase() === 'done') {
+      return messages.length > 0 ? messages : null;
+    }
+
+    // Add user message
+    messages.push({
+      user: "{{user1}}",
+      content: { text: userResponse.value }
+    });
+
+    // Get character's response
+    const characterResponse = await prompts({
+      type: 'text',
+      name: 'value',
+      message: `Enter ${characterName}'s response:`,
+    });
+
+    if (!characterResponse.value) {
+      return null;
+    }
+
+    // Add character's message
+    messages.push({
+      user: characterName,
+      content: { text: characterResponse.value }
+    });
+  }
+
+  return messages;
+}
+
+async function collectMessageExamples(characterName: string): Promise<MessageExample[][] | null> {
+  const examples: MessageExample[][] = [];
+  let collecting = true;
+
+  logger.info('\nEnter message examples (conversations between user and character)');
+  logger.info('Type "done" to finish current conversation');
+  logger.info('Type "end" to finish all conversations\n');
+
+  while (collecting) {
+    const conversation = await collectMessageExample(characterName);
+    if (!conversation) {
+      collecting = false;
+      continue;
+    }
+    examples.push(conversation);
+  }
+
+  return examples.length > 0 ? examples : null;
+}
+
 async function collectCharacterData(
   initialData?: Partial<CharacterFormData>
 ): Promise<CharacterFormData | null> {
   const formData: Partial<CharacterFormData> = { ...initialData };
   let currentStep = 0;
-  const steps = ['name', 'bio', 'adjectives', 'postExamples', 'messageExamples'];
+  const steps = ['name', 'bio', 'adjectives', 'postExamples', 'messageExamples', 'topics', 'style', 'plugins', 'settings', 'secrets'];
   
   let response: { value?: string };
 
@@ -60,7 +126,7 @@ async function collectCharacterData(
 
       case 'bio':
       case 'postExamples':
-      case 'messageExamples':
+      case 'topics':
         response = await prompts({
           type: 'text',
           name: 'value',
@@ -77,8 +143,50 @@ async function collectCharacterData(
           initial: formData.adjectives?.join(', '),
         });
         break;
+
+      case 'plugins':
+        response = await prompts({
+          type: 'text',
+          name: 'value',
+          message: 'Enter plugins (comma separated):',
+          initial: formData.plugins?.join(', '),
+        });
+        break;
+
+      case 'settings':
+      case 'secrets':
+        response = await prompts({
+          type: 'text',
+          name: 'value',
+          message: `Enter ${field} as JSON:`,
+          initial: JSON.stringify(formData[field] || {}),
+        });
+        break;
+
+      case 'style': {
+        const styleFields = ['all', 'chat', 'post'];
+        formData.style = formData.style || {};
+        
+        for (const styleField of styleFields) {
+          const styleResponse = await prompts({
+            type: 'text',
+            name: 'value',
+            message: `Enter character style — ${styleField} (comma separated):`,
+            initial: formData.style[styleField]?.join(', '),
+          });
+          
+          if (!styleResponse.value) return null;
+          formData.style[styleField] = styleResponse.value
+            .split(',')
+            .map(s => s.trim())
+            .filter(Boolean);
+        }
+        response = { value: 'done' };
+        break;
+      }
     }
 
+    
     if (!response.value) {
       return null;
     }
@@ -98,9 +206,10 @@ async function collectCharacterData(
       case 'name':
         formData.name = response.value;
         break;
-
+        
       case 'bio':
       case 'postExamples':
+      case 'topics':
         formData[field] = response.value
           .split('\\n')
           .map(line => line.trim())
@@ -108,27 +217,34 @@ async function collectCharacterData(
         break;
 
       case 'messageExamples': {
-        const examples = response.value
-          .split('\\n')
-          .map(line => line.trim())
-          .filter(Boolean)
-          .map(line => ({
-            user: line.split(':')[0].trim(),
-            content: {
-              text: line.split(':').slice(1).join(':').trim()
-            }
-          }));
-        formData.messageExamples = examples.length > 0 
-          ? [examples]
-          : [];
+        const examples = await collectMessageExamples(formData.name || '');
+        if (examples) {
+          formData.messageExamples = examples;
+        }
         break;
       }
 
       case 'adjectives':
-        formData.adjectives = response.value
+      case 'plugins':
+        formData[field] = response.value
           .split(',')
-          .map(adj => adj.trim())
+          .map(item => item.trim())
           .filter(Boolean);
+        break;
+
+      case 'settings':
+      case 'secrets':
+        try {
+          formData[field] = JSON.parse(response.value);
+        } catch {
+          logger.error(`Invalid JSON for ${field}`);
+          currentStep--;
+          continue;
+        }
+        break;
+
+      case 'style':
+        // Already handled in the input section
         break;
     }
     currentStep++;
