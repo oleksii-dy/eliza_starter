@@ -1,32 +1,34 @@
-import { Tweet } from "agent-twitter-client";
 import {
+    ActionResponse,
     composeContext,
+    elizaLogger,
     generateText,
+    generateTweetActions,
     getEmbeddingZeroVector,
     IAgentRuntime,
+    IImageDescriptionService,
     ModelClass,
+    postActionResponseFooter,
+    ServiceType,
+    State,
     stringToUuid,
     TemplateType,
-    UUID,
     truncateToCompleteSentence,
+    UUID,
 } from "@elizaos/core";
-import { elizaLogger } from "@elizaos/core";
-import { ClientBase } from "./base.ts";
-import { postActionResponseFooter } from "@elizaos/core";
-import { generateTweetActions } from "@elizaos/core";
-import { IImageDescriptionService, ServiceType } from "@elizaos/core";
-import { buildConversationThread } from "./utils.ts";
-import { twitterMessageHandlerTemplate } from "./interactions.ts";
-import { DEFAULT_MAX_TWEET_LENGTH } from "./environment.ts";
+import { Tweet } from "agent-twitter-client";
+import axios from "axios";
 import {
     Client,
     Events,
     GatewayIntentBits,
-    TextChannel,
     Partials,
+    TextChannel,
 } from "discord.js";
-import { State } from "@elizaos/core";
-import { ActionResponse } from "@elizaos/core";
+import { ClientBase } from "./base.ts";
+import { DEFAULT_MAX_TWEET_LENGTH } from "./environment.ts";
+import { twitterMessageHandlerTemplate } from "./interactions.ts";
+import { buildConversationThread } from "./utils.ts";
 
 const MAX_TIMELINES_TO_FETCH = 15;
 
@@ -45,10 +47,17 @@ const twitterPostTemplate = `
 
 {{postDirections}}
 
-# Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
-Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
-Your response should be 1, 2, or 3 sentences (choose the length at random).
-Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than {{maxTweetLength}}. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.`;
+# Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}} that proposes a topic for a new betting pool.
+Write a post that suggests something that players on Twitter/X could bet on, from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
+You should be as creative as possible, try to suggest novel things to bet on that will shock and delight a community of crypto degens.
+Your response should propose something that users could bet on. It must contain these three items. Avoid including a pretense:
+1. A clear topic that users could bet on.
+2. Clear criteria or options that users can bet on.
+3. What conditions would cause this betting pool to resolve (like a specific event, outcome, or time period). This condition must be coherent and viable for the topic and options.
+
+At the end of your response, say "You can create a new betting pool on this topic by retweeting this post and mentioning @PromptBettingBot".
+The total character count MUST be less than {{maxTweetLength}}. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.
+Your response must contain a suggestion for a new betting pool. Remember to keep under {{maxTweetLength}} characters`;
 
 export const twitterActionTemplate =
     `
@@ -460,6 +469,12 @@ export class TwitterPostClient {
     async generateNewTweet() {
         elizaLogger.log("Generating new tweet");
 
+        //Download 10 articles from news-api.org
+        const { data: newsData } = await axios.get(
+            `https://newsapi.org/v2/everything?country=us&from=${new Date().toISOString().split("T")[0]}&sortBy=publishedAt&apiKey=${process.env.NEWS_API_KEY}`
+        );
+
+        console.log(newsData);
         try {
             const roomId = stringToUuid(
                 "twitter_generate_room-" + this.client.profile.username
@@ -485,6 +500,7 @@ export class TwitterPostClient {
                 },
                 {
                     twitterUserName: this.client.profile.username,
+                    recentNews: newsData.articles,
                 }
             );
 
@@ -495,7 +511,7 @@ export class TwitterPostClient {
                     twitterPostTemplate,
             });
 
-            elizaLogger.debug("generate post prompt:\n" + context);
+            elizaLogger.info("generate post prompt:\n" + context);
 
             const newTweetContent = await generateText({
                 runtime: this.runtime,
