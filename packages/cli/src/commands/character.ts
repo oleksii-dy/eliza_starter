@@ -161,8 +161,7 @@ character
       logger.info("\nCharacters:");
 
       console.table(characters.map(c => ({
-        id: c.name,
-        username: c.username,
+        name: c.name,
         bio: c.bio[0],
       })));
     }
