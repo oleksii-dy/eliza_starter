@@ -410,116 +410,136 @@ export class TwitterPostClient {
         elizaLogger.log("Generating new tweet");
 
         try {
-            const roomId = stringToUuid(
-                "twitter_generate_room-" + this.client.profile.username
-            );
+            const username = this.client.profile.username;
+            const roomId = stringToUuid("twitter_generate_room-" + username);
+
             await this.runtime.ensureUserExists(
                 this.runtime.agentId,
-                this.client.profile.username,
+                username,
                 this.runtime.character.name,
                 "twitter"
             );
 
-            const topics = this.runtime.character.topics.join(", ");
-
-            const maxTweetLength = this.client.twitterConfig.MAX_TWEET_LENGTH;
-            const state = await this.runtime.composeState(
-                {
-                    userId: this.runtime.agentId,
-                    roomId: roomId,
-                    agentId: this.runtime.agentId,
-                    content: {
-                        text: topics || "",
-                        action: "TWEET",
-                    },
-                },
-                {
-                    twitterUserName: this.client.profile.username,
-                    maxTweetLength,
-                }
-            );
-
-            const context = composeContext({
-                state,
-                template:
-                    this.runtime.character.templates?.twitterPostTemplate ||
-                    twitterPostTemplate,
-            });
-
-            elizaLogger.info("generate post prompt:\n" + context);
-
-            const newTweetContent = await generateText({
-                runtime: this.runtime,
-                context,
-                modelClass: ModelClass.LARGE,
-            });
-
-            elizaLogger.info("generate new tweet content:\n" + newTweetContent);
-
-            let cleanedContent = parseTagContent(newTweetContent, "response");
-
-            if (!cleanedContent) {
-                elizaLogger.error(
-                    "Failed to extract valid content from response:",
-                    {
-                        rawResponse: newTweetContent,
-                    }
-                );
-                return;
-            }
-
-            // Truncate the content to the maximum tweet length specified in the environment settings, ensuring the truncation respects sentence boundaries.
-            if (maxTweetLength) {
-                cleanedContent = truncateToCompleteSentence(
-                    cleanedContent,
-                    maxTweetLength
-                );
-            }
-
-            const removeQuotes = (str: string) =>
-                str.replace(/^['"](.*)['"]$/, "$1");
-
-            const fixNewLines = (str: string) => str.replaceAll(/\\n/g, "\n\n"); //ensures double spaces
-
-            // Final cleaning
-            cleanedContent = removeQuotes(fixNewLines(cleanedContent));
+            const newTweetContent = await this.genAndCleanNewTweet(roomId);
 
             if (this.isDryRun) {
                 elizaLogger.info(
-                    `Dry run: would have posted tweet: ${cleanedContent}`
+                    `Dry run: would have posted tweet: ${newTweetContent}`
                 );
                 return;
             }
 
-            try {
-                if (this.approvalRequired) {
-                    // Send for approval instead of posting directly
-                    elizaLogger.log(
-                        `Sending Tweet For Approval:\n ${cleanedContent}`
-                    );
-                    await this.sendForApproval(
-                        cleanedContent,
-                        roomId,
-                        cleanedContent
-                    );
-                    elizaLogger.log("Tweet sent for approval");
-                } else {
-                    elizaLogger.log(`Posting new tweet:\n ${cleanedContent}`);
-                    this.postTweet(
-                        this.runtime,
-                        this.client,
-                        cleanedContent,
-                        roomId,
-                        cleanedContent,
-                        this.twitterUsername
-                    );
-                }
-            } catch (error) {
-                elizaLogger.error("Error sending tweet:", error);
+            if (this.approvalRequired) {
+                await this.forwardTweetToApproval(newTweetContent, roomId);
+            } else {
+                await this.forwardTweetToPosting(newTweetContent, roomId);
             }
         } catch (error) {
             elizaLogger.error("Error generating new tweet:", error);
         }
+    }
+
+    private async forwardTweetToPosting(newTweetContent: string, roomId: UUID) {
+        elizaLogger.log(`Posting new tweet:\n ${newTweetContent}`);
+        await this.postTweet(
+            this.runtime,
+            this.client,
+            newTweetContent,
+            roomId,
+            newTweetContent,
+            this.twitterUsername
+        );
+    }
+
+    private async forwardTweetToApproval(
+        newTweetContent: string,
+        roomId: UUID
+    ) {
+        elizaLogger.log(`Sending Tweet For Approval:\n ${newTweetContent}`);
+        await this.sendForApproval(newTweetContent, roomId, newTweetContent);
+    }
+
+    private truncateNewTweet(maxTweetLength: number, newTweetContent: string) {
+        if (maxTweetLength) {
+            newTweetContent = truncateToCompleteSentence(
+                newTweetContent,
+                maxTweetLength
+            );
+        }
+        return newTweetContent;
+    }
+
+    private async genAndCleanNewTweet(roomId: UUID) {
+        const maxTweetLength = this.client.twitterConfig.MAX_TWEET_LENGTH;
+
+        const newTweetContent = await this.generateNewTweetContent(
+            roomId,
+            maxTweetLength
+        );
+
+        elizaLogger.debug("generate new tweet content:\n" + newTweetContent);
+
+        let cleanedContent = parseTagContent(newTweetContent, "response");
+
+        if (!cleanedContent) {
+            elizaLogger.error(
+                "Failed to extract valid content from response:",
+                {
+                    rawResponse: newTweetContent,
+                }
+            );
+            throw new Error("Failed to extract valid content from response");
+        }
+
+        cleanedContent = this.truncateNewTweet(maxTweetLength, cleanedContent);
+        cleanedContent = this.removeQuotes(this.fixNewLines(cleanedContent));
+
+        return cleanedContent;
+    }
+
+    private async generateNewTweetContent(
+        roomId: UUID,
+        maxTweetLength: number
+    ) {
+        const context = await this.composeNewTweetContext(
+            roomId,
+            maxTweetLength
+        );
+
+        const newTweetContent = await generateText({
+            runtime: this.runtime,
+            context,
+            modelClass: ModelClass.LARGE,
+        });
+        return newTweetContent;
+    }
+
+    private async composeNewTweetContext(roomId: UUID, maxTweetLength: number) {
+        const topics = this.runtime.character.topics.join(", ");
+
+        const state = await this.runtime.composeState(
+            {
+                userId: this.runtime.agentId,
+                roomId,
+                agentId: this.runtime.agentId,
+                content: {
+                    text: topics || "",
+                    action: "TWEET",
+                },
+            },
+            {
+                twitterUserName: this.client.profile.username,
+                maxTweetLength,
+            }
+        );
+
+        const context = composeContext({
+            state,
+            template:
+                this.runtime.character.templates?.twitterPostTemplate ||
+                twitterPostTemplate,
+        });
+        return context;
     }
 
     private async generateTweetContent(
@@ -1383,5 +1403,13 @@ export class TwitterPostClient {
                 }
             }
         }
+    }
+
+    private removeQuotes(str: string) {
+        return str.replace(/^['"](.*)['"]$/, "$1");
+    }
+
+    private fixNewLines(str: string) {
+        return str.replaceAll(/\\n/g, "\n\n"); //ensures double spaces
     }
 }

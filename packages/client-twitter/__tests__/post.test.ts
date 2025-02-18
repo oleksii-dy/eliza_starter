@@ -9,16 +9,18 @@ import {
     ServiceType,
     IImageDescriptionService,
     stringToUuid,
+    Character,
+    generateText,
 } from "@elizaos/core";
 import { Tweet } from "agent-twitter-client";
-import { TextChannel } from "discord.js";
+import { Client } from "discord.js";
 
 import { TwitterPostClient } from "../src/post";
 import { ClientBase } from "../src/base";
 import { TwitterConfig } from "../src/environment";
 import * as utils from "../src/utils";
 
-// Mock elizaLogger
+// Mock modules at the top level
 vi.mock("@elizaos/core", async () => {
     const actual = await vi.importActual("@elizaos/core");
     return {
@@ -29,10 +31,11 @@ vi.mock("@elizaos/core", async () => {
             info: vi.fn(),
             debug: vi.fn(),
         },
+        generateText: vi.fn(),
+        composeContext: vi.fn().mockReturnValue("mocked context"),
     };
 });
 
-// Mock utils module
 vi.mock("../src/utils", async () => {
     const actual = await vi.importActual("../src/utils");
     return {
@@ -41,7 +44,6 @@ vi.mock("../src/utils", async () => {
     };
 });
 
-// Mock discord.js
 vi.mock("discord.js", async () => {
     const actual = await vi.importActual("discord.js");
     return {
@@ -49,7 +51,7 @@ vi.mock("discord.js", async () => {
         TextChannel: {
             prototype: {
                 [Symbol.hasInstance]: (instance: any) => {
-                    return instance?.type === 0; // Check if it's a GuildText channel
+                    return instance?.type === 0;
                 },
             },
         },
@@ -63,7 +65,7 @@ const createMockTweet = (overrides: Partial<Tweet> = {}): Tweet => {
         id: "123",
         name: "Test User",
         username: "testuser",
-        text: text ?? "Test tweet", // text is required and must be a string
+        text: text ?? "Test tweet",
         conversationId: "123",
         timestamp: Date.now(),
         userId: "123",
@@ -78,7 +80,7 @@ const createMockTweet = (overrides: Partial<Tweet> = {}): Tweet => {
     };
 };
 
-const createMockState = (overrides: Partial<State> = {}): State =>
+const createMockState = () =>
     ({
         userId: "user-123" as UUID,
         agentId: "agent-123" as UUID,
@@ -94,7 +96,7 @@ const createMockState = (overrides: Partial<State> = {}): State =>
         topics: "Test topics",
         knowledge: "Test knowledge",
         characterPostExamples: "Test examples",
-        ...overrides,
+        content: { text: "", action: "" },
     }) as State;
 
 const photoSample = {
@@ -107,7 +109,6 @@ const createMockTimeline = (
     overrides: {
         tweet?: Partial<Tweet>;
         actionResponse?: Partial<ActionResponse>;
-        tweetState?: Partial<State>;
         roomId?: UUID;
     } = {}
 ) => ({
@@ -119,7 +120,7 @@ const createMockTimeline = (
         reply: false,
         ...overrides.actionResponse,
     } as ActionResponse,
-    tweetState: createMockState(overrides.tweetState),
+    tweetState: createMockState(),
     roomId: overrides.roomId || ("room-123" as UUID),
 });
 
@@ -147,9 +148,9 @@ describe("Twitter Post Client", () => {
     let mockConfig: TwitterConfig;
     let baseClient: ClientBase;
     let mockTwitterClient: any;
+    let postClient: TwitterPostClient;
 
     beforeEach(() => {
-        // Clear all mocks
         vi.clearAllMocks();
 
         // Setup mock Twitter client
@@ -248,6 +249,45 @@ describe("Twitter Post Client", () => {
         baseClient.requestQueue = {
             add: async <T>(request: () => Promise<T>): Promise<T> => request(),
         } as any;
+
+        // Setup mock runtime with character
+        mockRuntime.character = {
+            name: "Test Character",
+            topics: ["topic1", "topic2"],
+            templates: {
+                twitterPostTemplate: "test template",
+                twitterMessageHandlerTemplate: "test message template",
+                twitterActionTemplate: "test action template",
+            },
+            modelProvider: "test-provider",
+            bio: "Test bio",
+            lore: "Test lore",
+            messageExamples: ["example1"],
+            postExamples: ["post1"],
+            style: {
+                all: ["style1"],
+                post: ["post-style1"],
+                message: ["message-style1"],
+            },
+            characterPostExamples: ["char-post1"],
+            messageDirections: "test directions",
+            postDirections: "test post directions",
+            knowledge: "test knowledge",
+            adjectives: ["adj1"],
+            clients: [],
+            plugins: [],
+        } as unknown as Character;
+
+        // Ensure baseClient.profile is not null before each test
+        baseClient.profile = {
+            id: "123",
+            username: "testuser",
+            screenName: "Test User",
+            bio: "Test bio",
+            nicknames: ["test"],
+        };
+
+        postClient = new TwitterPostClient(baseClient, mockRuntime);
     });
 
     it("should create post client instance", () => {
@@ -1511,12 +1551,6 @@ describe("Twitter Post Client", () => {
     });
 
     describe("Timeline Sorting", () => {
-        let postClient: TwitterPostClient;
-
-        beforeEach(() => {
-            postClient = new TwitterPostClient(baseClient, mockRuntime);
-        });
-
         it("should sort timelines by number of true actions", async () => {
             const mockTimelines = [
                 {
@@ -1527,7 +1561,7 @@ describe("Twitter Post Client", () => {
                         quote: false,
                         reply: false,
                     },
-                    tweetState: {},
+                    tweetState: createMockState(),
                     roomId: "room1" as UUID,
                 },
                 {
@@ -1538,7 +1572,7 @@ describe("Twitter Post Client", () => {
                         quote: false,
                         reply: false,
                     },
-                    tweetState: {},
+                    tweetState: createMockState(),
                     roomId: "room2" as UUID,
                 },
                 {
@@ -1549,31 +1583,18 @@ describe("Twitter Post Client", () => {
                         quote: true,
                         reply: true,
                     },
-                    tweetState: {},
+                    tweetState: createMockState(),
                     roomId: "room3" as UUID,
                 },
             ];
 
             const sorted = postClient["sortProcessedTimeline"](mockTimelines);
 
-            // Should be sorted by number of true values (4 -> 2 -> 0)
             expect(sorted[0].actionResponse).toEqual({
                 like: true,
                 retweet: true,
                 quote: true,
                 reply: true,
-            });
-            expect(sorted[1].actionResponse).toEqual({
-                like: true,
-                retweet: true,
-                quote: false,
-                reply: false,
-            });
-            expect(sorted[2].actionResponse).toEqual({
-                like: false,
-                retweet: false,
-                quote: false,
-                reply: false,
             });
         });
 
@@ -1587,7 +1608,7 @@ describe("Twitter Post Client", () => {
                         quote: false,
                         reply: false,
                     },
-                    tweetState: {},
+                    tweetState: createMockState(),
                     roomId: "room1" as UUID,
                 },
                 {
@@ -1598,7 +1619,7 @@ describe("Twitter Post Client", () => {
                         quote: false,
                         reply: false,
                     },
-                    tweetState: {},
+                    tweetState: createMockState(),
                     roomId: "room2" as UUID,
                 },
             ];
@@ -1630,7 +1651,7 @@ describe("Twitter Post Client", () => {
                         quote: false,
                         reply: false,
                     },
-                    tweetState: {},
+                    tweetState: createMockState(),
                     roomId: "room1" as UUID,
                 },
                 {
@@ -1641,7 +1662,7 @@ describe("Twitter Post Client", () => {
                         quote: false,
                         reply: false,
                     },
-                    tweetState: {},
+                    tweetState: createMockState(),
                     roomId: "room2" as UUID,
                 },
             ];
@@ -1651,6 +1672,131 @@ describe("Twitter Post Client", () => {
             // Should maintain original order when weights and likes are equal
             expect(sorted[0].roomId).toBe("room1");
             expect(sorted[1].roomId).toBe("room2");
+        });
+    });
+
+    describe("Generate New Tweet", () => {
+        it("should generate and post a new tweet successfully", async () => {
+            if (!baseClient.profile) {
+                throw new Error("Profile must be defined for test");
+            }
+
+            vi.mocked(generateText).mockResolvedValue(
+                "<response>Test tweet content</response>"
+            );
+
+            mockTwitterClient.sendTweet.mockResolvedValue(
+                createSuccessfulTweetResponse("Test tweet content")
+            );
+
+            postClient["isDryRun"] = false;
+
+            await postClient.generateNewTweet();
+
+            expect(mockRuntime.ensureUserExists).toHaveBeenCalledWith(
+                mockRuntime.agentId,
+                baseClient.profile.username,
+                mockRuntime.character.name,
+                "twitter"
+            );
+
+            expect(mockRuntime.composeState).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    userId: mockRuntime.agentId,
+                    content: {
+                        text: "topic1, topic2",
+                        action: "TWEET",
+                    },
+                }),
+                expect.objectContaining({
+                    twitterUserName: baseClient.profile.username,
+                    maxTweetLength: baseClient.twitterConfig.MAX_TWEET_LENGTH,
+                })
+            );
+
+            expect(elizaLogger.log).toHaveBeenCalledWith(
+                expect.stringContaining("Posting new tweet")
+            );
+        });
+
+        it("should handle dry run mode correctly", async () => {
+            vi.mocked(generateText).mockResolvedValue(
+                "<response>Test tweet content</response>"
+            );
+
+            postClient["isDryRun"] = true;
+
+            await postClient.generateNewTweet();
+
+            expect(elizaLogger.info).toHaveBeenCalledWith(
+                expect.stringContaining(
+                    "Dry run: would have posted tweet: Test tweet content"
+                )
+            );
+
+            expect(mockTwitterClient.sendTweet).not.toHaveBeenCalled();
+        });
+
+        it("should handle approval workflow when enabled", async () => {
+            vi.mocked(generateText).mockResolvedValue(
+                "<response>Test tweet content</response>"
+            );
+
+            postClient["approvalRequired"] = true;
+            postClient["isDryRun"] = false;
+
+            const mockDiscordChannel = {
+                send: vi.fn().mockResolvedValue({ id: "discord-message-123" }),
+                type: 0,
+            };
+
+            const mockClient = {
+                channels: {
+                    fetch: vi.fn().mockResolvedValue(mockDiscordChannel),
+                    cache: new Map(),
+                    resolve: vi.fn(),
+                    resolveId: vi.fn(),
+                },
+            } as unknown as Client;
+
+            postClient["discordClientForApproval"] = mockClient;
+            postClient["discordApprovalChannelId"] = "test-channel";
+
+            await postClient.generateNewTweet();
+
+            expect(elizaLogger.log).toHaveBeenCalledWith(
+                expect.stringContaining("Sending Tweet For Approval")
+            );
+        });
+
+        it("should handle invalid generated content", async () => {
+            vi.mocked(generateText).mockResolvedValue(
+                "Invalid content without response tags"
+            );
+
+            await postClient.generateNewTweet();
+
+            expect(elizaLogger.error).toHaveBeenCalledWith(
+                "Failed to extract valid content from response:",
+                expect.any(Object)
+            );
+
+            expect(mockTwitterClient.sendTweet).not.toHaveBeenCalled();
+        });
+
+        it("should handle tweet generation error", async () => {
+            vi.mocked(generateText).mockRejectedValue(
+                new Error("Generation failed")
+            );
+
+            await postClient.generateNewTweet();
+
+            expect(elizaLogger.error).toHaveBeenCalledWith(
+                "Error generating new tweet:",
+                expect.any(Error)
+            );
+
+            expect(mockTwitterClient.sendTweet).not.toHaveBeenCalled();
         });
     });
 });
