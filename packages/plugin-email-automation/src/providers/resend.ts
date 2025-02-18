@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 import { elizaLogger } from "@elizaos/core";
-import {
+import type {
     EmailOptions,
     EmailResponse,
     EmailProviderError,
@@ -38,6 +38,7 @@ export class ResendProvider {
 
                 elizaLogger.debug('Email sent successfully', {
                     id: (response as any).id,
+                    //id: response.data.id,
                     attempt
                 });
 

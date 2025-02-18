@@ -32,11 +32,11 @@ EMAIL_EVALUATION_PROMPT=        # Custom detection criteria for shouldEmail
 
 ### Basic Usage
 ```typescript
-import { emailPlugin } from '@elizaos/plugin-email-automation';
+import { emailAutomationPlugin } from '@elizaos/plugin-email-automation';
 
 // Add to your Eliza configuration
 {
-    plugins: [emailPlugin],
+    plugins: [emailAutomationPlugin],
     settings: {
         EMAIL_AUTOMATION_ENABLED: true,
         // ... other settings
