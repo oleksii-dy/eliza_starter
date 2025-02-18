@@ -162,8 +162,7 @@ export class TwitterPostClient {
         if (this.client.twitterConfig.POST_IMMEDIATELY) {
             await this.generateNewTweet();
         }
-
-        this.generateNewTweetLoop();
+        await this.generateNewTweetLoop();
 
         if (this.client.twitterConfig.ENABLE_ACTION_PROCESSING) {
             this.processActionsLoop().catch((error) => {
@@ -178,7 +177,56 @@ export class TwitterPostClient {
         }
     }
 
-    private processActionsLoop = async () => {
+    private async generateNewTweetLoop() {
+        elizaLogger.log("Starting generate new tweet loop");
+
+        const delayMs = this.getPostDelay();
+        await this.postTweetInCurrentIteration(delayMs);
+        this.setupNextTweetIteration(delayMs);
+    }
+
+    private setupNextTweetIteration(delayMs: number) {
+        setTimeout(() => {
+            this.generateNewTweetLoop();
+        }, delayMs);
+
+        const delayMinutes = delayMs / 60000;
+        elizaLogger.log(`Next tweet scheduled in ${delayMinutes} minutes`);
+    }
+
+    private async postTweetInCurrentIteration(delayMs: number) {
+        const isTimeToPost = await this.isTimeToPost(delayMs);
+        if (isTimeToPost) {
+            await this.generateNewTweet();
+        }
+    }
+
+    private async isTimeToPost(delayMs: number) {
+        const lastPostTimestamp = await this.getLastPostTimestamp();
+        return Date.now() > lastPostTimestamp + delayMs;
+    }
+
+    private getPostDelay() {
+        const minMinutes = this.client.twitterConfig.POST_INTERVAL_MIN;
+        const maxMinutes = this.client.twitterConfig.POST_INTERVAL_MAX;
+        // Calculate random number of minutes between min and max
+        const range = maxMinutes - minMinutes + 1;
+        const randomMinutes = Math.floor(Math.random() * range);
+        const delayMinutes = randomMinutes + minMinutes;
+
+        // Convert to milliseconds and return
+        return delayMinutes * 60 * 1000;
+    }
+
+    private async getLastPostTimestamp() {
+        const lastPost = await this.runtime.cacheManager.get<{
+            timestamp: number;
+        }>("twitter/" + this.twitterUsername + "/lastPost");
+
+        return lastPost?.timestamp ?? 0;
+    }
+
+    private async processActionsLoop() {
         const actionInterval = this.client.twitterConfig.ACTION_INTERVAL; // Defaults to 5 minutes
 
         while (!this.stopProcessingActions) {
@@ -201,32 +249,6 @@ export class TwitterPostClient {
                 await new Promise((resolve) => setTimeout(resolve, 30000)); // Wait 30s on error
             }
         }
-    };
-
-    private generateNewTweetLoop = async () => {
-        elizaLogger.log("Starting generate new tweet loop");
-
-        const lastPost = await this.runtime.cacheManager.get<{
-            timestamp: number;
-        }>("twitter/" + this.twitterUsername + "/lastPost");
-
-        const lastPostTimestamp = lastPost?.timestamp ?? 0;
-        const minMinutes = this.client.twitterConfig.POST_INTERVAL_MIN;
-        const maxMinutes = this.client.twitterConfig.POST_INTERVAL_MAX;
-        const randomMinutes =
-            Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) +
-            minMinutes;
-        const delay = randomMinutes * 60 * 1000;
-
-        if (Date.now() > lastPostTimestamp + delay) {
-            await this.generateNewTweet();
-        }
-
-        setTimeout(() => {
-            this.generateNewTweetLoop(); // Set up next iteration
-        }, delay);
-
-        elizaLogger.log(`Next tweet scheduled in ${randomMinutes} minutes`);
     };
 
     private runPendingTweetCheckLoop() {
@@ -453,30 +475,34 @@ export class TwitterPostClient {
 
     private async genAndCleanNewTweet(roomId: UUID) {
         const maxTweetLength = this.client.twitterConfig.MAX_TWEET_LENGTH;
-
         const newTweetContent = await this.generateNewTweetContent(
             roomId,
             maxTweetLength
         );
-
         elizaLogger.debug("generate new tweet content:\n" + newTweetContent);
 
-        let cleanedContent = parseTagContent(newTweetContent, "response");
+        let cleanedContent = this.extractResponse(newTweetContent);
+        cleanedContent = this.truncateNewTweet(maxTweetLength, cleanedContent);
+        cleanedContent = this.fixNewLines(cleanedContent);
+        cleanedContent = this.removeQuotes(cleanedContent);
 
-        if (!cleanedContent) {
+        return cleanedContent;
+    }
+
+    private extractResponse(rawResponse: string) {
+        const extractedResponse = parseTagContent(rawResponse, "response");
+
+        if (!extractedResponse) {
             elizaLogger.error(
                 "Failed to extract valid content from response:",
                 {
-                    rawResponse: newTweetContent,
+                    rawResponse,
                 }
             );
             throw new Error("Failed to extract valid content from response");
         }
 
-        cleanedContent = this.truncateNewTweet(maxTweetLength, cleanedContent);
-        cleanedContent = this.removeQuotes(this.fixNewLines(cleanedContent));
-
-        return cleanedContent;
+        return extractedResponse;
     }
 
     private async generateNewTweetContent(
@@ -488,22 +514,22 @@ export class TwitterPostClient {
             maxTweetLength
         );
 
-        const newTweetContent = await generateText({
+        return generateText({
             runtime: this.runtime,
             context,
             modelClass: ModelClass.LARGE,
         });
-        return newTweetContent;
     }
 
     private async composeNewTweetContext(roomId: UUID, maxTweetLength: number) {
         const topics = this.runtime.character.topics.join(", ");
+        const agentId = this.runtime.agentId;
 
         const state = await this.runtime.composeState(
             {
-                userId: this.runtime.agentId,
+                userId: agentId,
                 roomId,
-                agentId: this.runtime.agentId,
+                agentId,
                 content: {
                     text: topics || "",
                     action: "TWEET",
@@ -515,13 +541,12 @@ export class TwitterPostClient {
             }
         );
 
-        const context = composeContext({
+        return composeContext({
             state,
             template:
                 this.runtime.character.templates?.twitterPostTemplate ||
                 twitterPostTemplate,
         });
-        return context;
     }
 
     private async generateTweetContent(
