@@ -307,7 +307,7 @@ pnpm i
 You can also add a postinstall script in your `package.json` if you want to automate this:
 ```json
 scripts: {
-    "postinstall": "npm rebuild better-sqlite3",
+    "postinstall": "npm rebuild better-sqlite3"
 }
 ```
 
