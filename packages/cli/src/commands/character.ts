@@ -175,9 +175,12 @@ character
       logger.info("No characters found");
     } else {
       logger.info("\nCharacters:");
-      for (const character of characters) {
-        logger.info(`  ${character.name} (${character.id})`);
-      }
+
+      console.table(characters.map(c => ({
+        id: c.name,
+        username: c.username,
+        bio: c.bio[0],
+      })));
     }
   })
 
