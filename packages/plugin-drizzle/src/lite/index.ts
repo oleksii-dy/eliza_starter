@@ -56,7 +56,7 @@ export class PgliteDatabaseAdapter
     extends DatabaseAdapter<PgliteDatabase>
     implements IDatabaseCacheAdapter
 {
-    private database: PGlite;
+    private client: PGlite;
     private readonly maxRetries: number = 3;
     private readonly baseDelay: number = 1000; // 1 second
     private readonly maxDelay: number = 10000; // 10 seconds
@@ -66,16 +66,34 @@ export class PgliteDatabaseAdapter
     constructor(options: PGliteOptions) {
         super();
         
-        this.database = new PGlite({
+        this.client = new PGlite({
             ...options,
+            debug: 5,
             extensions: {
-                ...(options.extensions ?? {}),
                 vector,
                 fuzzystrmatch,
             },
         });
     
-        this.db = drizzle(this.database);
+        this.db = drizzle(this.client);
+
+        this.setupDatabaseShutdownHandlers();
+    }
+
+    private setupDatabaseShutdownHandlers() {
+        process.on("SIGINT", async () => {
+            await this.client.close();
+            process.exit(0);
+        });
+
+        process.on("SIGTERM", async () => {
+            await this.client.close();
+            process.exit(0);
+        });
+
+        process.on("beforeExit", async () => {
+            await this.client.close();
+        });
     }
 
     private async withDatabase<T>(
@@ -158,14 +176,8 @@ export class PgliteDatabaseAdapter
         this.embeddingDimension = DIMENSION_MAP[dimension];
     }
 
-    async cleanup(): Promise<void> {
-        try {
-            // TODO: close database
-            // await this.pool.end();
-            logger.info("Database pool closed");
-        } catch (error) {
-            logger.error("Error closing database pool:", error);
-        }
+    async close() {
+        await this.client.close();
     }
 
     private async validateVectorSetup(): Promise<boolean> {
@@ -189,8 +201,13 @@ export class PgliteDatabaseAdapter
     }
 
     async init(): Promise<void> {
+        console.log("Initializing PGLite Database Adapter");
+        await this.client.waitReady;
+        console.log("PGLite Database Adapter initialized WAIT READY");
+
         logger.info("Initializing Drizzle Database Adapter");
         try {
+            console.log("Initializing Drizzle Database Adapter call execute");
             const { rows } = await this.db.execute(sql`
                 SELECT EXISTS (
                     SELECT FROM information_schema.tables
@@ -198,24 +215,15 @@ export class PgliteDatabaseAdapter
                 );
             `);
 
-            if (!rows[0].exists || !(await this.validateVectorSetup())) {
-                await runMigrations(this.database);
-            }
-        } catch (error) {
-            logger.error("Failed to initialize database:", error);
-            throw error;
-        }
-    }
+            console.log("Initializing Drizzle Database Adapter call validateVectorSetup", rows);
 
-    async close(): Promise<void> {
-        try {
-            if (this.db && (this.db as any).client) {
-                await (this.db as any).client.close();
+            if (!rows[0].exists || !(await this.validateVectorSetup())) {
+                console.log("Initializing Drizzle Database Adapter call runMigrations");
+                await runMigrations(this.client);
             }
         } catch (error) {
-            logger.error("Failed to close database connection:", {
-                error: error instanceof Error ? error.message : String(error),
-            });
+            console.log("Failed to initialize database ERROR:", error);
+            logger.error("Failed to initialize database:", error);
             throw error;
         }
     }
