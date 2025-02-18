@@ -29,7 +29,6 @@ const twitterUsernameSchema = z
     }, "An X Username can only contain letters, numbers, and underscores");
 
 export const twitterEnvSchema = z.object({
-    TWITTER_DRY_RUN: z.boolean(),
     TWITTER_USERNAME: twitterUsernameSchema,
     TWITTER_PASSWORD: z.string().min(1, "X/Twitter password is required"),
     TWITTER_EMAIL: z.string().email("Valid X/Twitter email is required"),
@@ -86,10 +85,6 @@ export async function validateTwitterConfig(
 ): Promise<TwitterConfig> {
     try {
         const twitterConfig = {
-            TWITTER_DRY_RUN:
-                parseBooleanFromText(runtime.getSetting("TWITTER_DRY_RUN")) ??
-                false,
-
             TWITTER_USERNAME: runtime.getSetting("TWITTER_USERNAME"),
 
             TWITTER_PASSWORD: runtime.getSetting("TWITTER_PASSWORD"),

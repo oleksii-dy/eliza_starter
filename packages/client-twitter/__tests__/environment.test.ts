@@ -12,7 +12,6 @@ describe("Twitter Environment Configuration", () => {
     const mockRuntime: IAgentRuntime = {
         env: {
             TWITTER_USERNAME: "testuser123",
-            TWITTER_DRY_RUN: "true",
             TWITTER_SEARCH_ENABLE: "false",
             TWITTER_SPACES_ENABLE: "false",
             TWITTER_TARGET_USERS: "user1,user2,user3",
@@ -146,30 +145,10 @@ describe("Twitter Environment Configuration", () => {
         });
     });
 
-    it("should default to false when TWITTER_DRY_RUN is empty string", async () => {
-        const runtimeWithEmptyDryRun = {
-            ...mockRuntime,
-            env: {
-                ...mockRuntime.env,
-                TWITTER_DRY_RUN: "",
-            },
-            getEnv: function (key: string) {
-                return this.env[key] || null;
-            },
-            getSetting: function (key: string) {
-                return this.env[key] || null;
-            },
-        } as IAgentRuntime;
-
-        const config = await validateTwitterConfig(runtimeWithEmptyDryRun);
-        expect(config.TWITTER_DRY_RUN).toBe(false);
-    });
-
     it("should validate correct configuration", async () => {
         const config = await validateTwitterConfig(mockRuntime);
         expect(config).toBeDefined();
         expect(config.TWITTER_USERNAME).toBe("testuser123");
-        expect(config.TWITTER_DRY_RUN).toBe(true);
         expect(config.TWITTER_SEARCH_ENABLE).toBe(false);
         expect(config.TWITTER_SPACES_ENABLE).toBe(false);
         expect(config.TWITTER_TARGET_USERS).toEqual([
@@ -189,7 +168,6 @@ describe("Twitter Environment Configuration", () => {
         const minimalRuntime = {
             env: {
                 TWITTER_USERNAME: "testuser",
-                TWITTER_DRY_RUN: "true",
                 TWITTER_EMAIL: "test@example.com",
                 TWITTER_PASSWORD: "hashedpassword",
                 TWITTER_2FA_SECRET: "",

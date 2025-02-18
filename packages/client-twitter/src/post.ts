@@ -40,7 +40,6 @@ export class TwitterPostClient {
     twitterUsername: string;
     private isProcessing: boolean = false;
     private stopProcessingActions: boolean = false;
-    private isDryRun: boolean;
     private discordClientForApproval: Client;
     private approvalRequired: boolean = false;
     private discordApprovalChannelId: string;
@@ -50,7 +49,6 @@ export class TwitterPostClient {
         this.client = client;
         this.runtime = runtime;
         this.twitterUsername = this.client.twitterConfig.TWITTER_USERNAME;
-        this.isDryRun = this.client.twitterConfig.TWITTER_DRY_RUN;
 
         this.logConfigOnInitialization();
         this.configureApprovals();
@@ -94,9 +92,6 @@ export class TwitterPostClient {
         elizaLogger.log("Twitter Client Configuration:");
         elizaLogger.log(`- Username: ${this.twitterUsername}`);
         elizaLogger.log(
-            `- Dry Run Mode: ${this.isDryRun ? "enabled" : "disabled"}`
-        );
-        elizaLogger.log(
             `- Post Interval: ${this.client.twitterConfig.POST_INTERVAL_MIN}-${this.client.twitterConfig.POST_INTERVAL_MAX} minutes`
         );
         elizaLogger.log(
@@ -121,12 +116,6 @@ export class TwitterPostClient {
             this.client.twitterConfig.TWITTER_KNOWLEDGE_USERS;
         if (knowledgeUsers) {
             elizaLogger.log(`- Knowledge Users: ${knowledgeUsers}`);
-        }
-
-        if (this.isDryRun) {
-            elizaLogger.log(
-                "Twitter client initialized in dry run mode - no actual tweets should be posted"
-            );
         }
     }
 
@@ -404,7 +393,7 @@ export class TwitterPostClient {
     }
 
     /**
-     * Generates and posts a new tweet. If isDryRun is true, only logs what would have been posted.
+     * Generates and posts a new tweet.
      */
     async generateNewTweet() {
         elizaLogger.log("Generating new tweet");
@@ -421,13 +410,6 @@ export class TwitterPostClient {
             );
 
             const newTweetContent = await this.genAndCleanNewTweet(roomId);
-
-            if (this.isDryRun) {
-                elizaLogger.info(
-                    `Dry run: would have posted tweet: ${newTweetContent}`
-                );
-                return;
-            }
 
             if (this.approvalRequired) {
                 await this.forwardTweetToApproval(newTweetContent, roomId);
@@ -616,8 +598,7 @@ export class TwitterPostClient {
     }
 
     /**
-     * Processes tweet actions (likes, retweets, quotes, replies). If isDryRun is true,
-     * only simulates and logs actions without making API calls.
+     * Processes tweet actions (likes, retweets, quotes, replies).
      */
     private async processTweetActions() {
         if (this.isProcessing) {
@@ -780,42 +761,28 @@ export class TwitterPostClient {
                 const executedActions: string[] = [];
                 // Execute actions
                 if (actionResponse.like) {
-                    if (this.isDryRun) {
-                        elizaLogger.info(
-                            `Dry run: would have liked tweet ${tweet.id}`
+                    try {
+                        await this.client.twitterClient.likeTweet(tweet.id);
+                        executedActions.push("like");
+                        elizaLogger.log(`Liked tweet ${tweet.id}`);
+                    } catch (error) {
+                        elizaLogger.error(
+                            `Error liking tweet ${tweet.id}:`,
+                            error
                         );
-                        executedActions.push("like (dry run)");
-                    } else {
-                        try {
-                            await this.client.twitterClient.likeTweet(tweet.id);
-                            executedActions.push("like");
-                            elizaLogger.log(`Liked tweet ${tweet.id}`);
-                        } catch (error) {
-                            elizaLogger.error(
-                                `Error liking tweet ${tweet.id}:`,
-                                error
-                            );
-                        }
                     }
                 }
 
                 if (actionResponse.retweet) {
-                    if (this.isDryRun) {
-                        elizaLogger.info(
-                            `Dry run: would have retweeted tweet ${tweet.id}`
+                    try {
+                        await this.client.twitterClient.retweet(tweet.id);
+                        executedActions.push("retweet");
+                        elizaLogger.log(`Retweeted tweet ${tweet.id}`);
+                    } catch (error) {
+                        elizaLogger.error(
+                            `Error retweeting tweet ${tweet.id}:`,
+                            error
                         );
-                        executedActions.push("retweet (dry run)");
-                    } else {
-                        try {
-                            await this.client.twitterClient.retweet(tweet.id);
-                            executedActions.push("retweet");
-                            elizaLogger.log(`Retweeted tweet ${tweet.id}`);
-                        } catch (error) {
-                            elizaLogger.error(
-                                `Error retweeting tweet ${tweet.id}:`,
-                                error
-                            );
-                        }
                     }
                 }
 
@@ -916,43 +883,31 @@ export class TwitterPostClient {
                             "Generated quote tweet content:",
                             quoteContent
                         );
-                        // Check for dry run mode
-                        if (this.isDryRun) {
-                            elizaLogger.info(
-                                `Dry run: A quote tweet for tweet ID ${tweet.id} would have been posted with the following content: "${quoteContent}".`
+                        // Send the tweet through request queue
+                        const result = await this.client.requestQueue.add(
+                            async () =>
+                                await this.client.twitterClient.sendQuoteTweet(
+                                    quoteContent,
+                                    tweet.id
+                                )
+                        );
+
+                        const body = await result.json();
+
+                        if (body?.data?.create_tweet?.tweet_results?.result) {
+                            elizaLogger.log("Successfully posted quote tweet");
+                            executedActions.push("quote");
+
+                            // Cache generation context for debugging
+                            await this.runtime.cacheManager.set(
+                                `twitter/quote_generation_${tweet.id}.txt`,
+                                `Context:\n${enrichedState}\n\nGenerated Quote:\n${quoteContent}`
                             );
-                            executedActions.push("quote (dry run)");
                         } else {
-                            // Send the tweet through request queue
-                            const result = await this.client.requestQueue.add(
-                                async () =>
-                                    await this.client.twitterClient.sendQuoteTweet(
-                                        quoteContent,
-                                        tweet.id
-                                    )
+                            elizaLogger.error(
+                                "Quote tweet creation failed:",
+                                body
                             );
-
-                            const body = await result.json();
-
-                            if (
-                                body?.data?.create_tweet?.tweet_results?.result
-                            ) {
-                                elizaLogger.log(
-                                    "Successfully posted quote tweet"
-                                );
-                                executedActions.push("quote");
-
-                                // Cache generation context for debugging
-                                await this.runtime.cacheManager.set(
-                                    `twitter/quote_generation_${tweet.id}.txt`,
-                                    `Context:\n${enrichedState}\n\nGenerated Quote:\n${quoteContent}`
-                                );
-                            } else {
-                                elizaLogger.error(
-                                    "Quote tweet creation failed:",
-                                    body
-                                );
-                            }
                         }
                     } catch (error) {
                         elizaLogger.error(
@@ -990,23 +945,21 @@ export class TwitterPostClient {
                     roomId
                 );
 
-                if (!this.isDryRun) {
-                    // Then create the memory
-                    await this.runtime.messageManager.createMemory({
-                        id: stringToUuid(tweet.id + "-" + this.runtime.agentId),
-                        userId: stringToUuid(tweet.userId),
-                        content: {
-                            text: tweet.text,
-                            url: tweet.permanentUrl,
-                            source: "twitter",
-                            action: executedActions.join(","),
-                        },
-                        agentId: this.runtime.agentId,
-                        roomId,
-                        embedding: getEmbeddingZeroVector(),
-                        createdAt: tweet.timestamp * 1000,
-                    });
-                }
+                // Then create the memory
+                await this.runtime.messageManager.createMemory({
+                    id: stringToUuid(tweet.id + "-" + this.runtime.agentId),
+                    userId: stringToUuid(tweet.userId),
+                    content: {
+                        text: tweet.text,
+                        url: tweet.permanentUrl,
+                        source: "twitter",
+                        action: executedActions.join(","),
+                    },
+                    agentId: this.runtime.agentId,
+                    roomId,
+                    embedding: getEmbeddingZeroVector(),
+                    createdAt: tweet.timestamp * 1000,
+                });
 
                 results.push({
                     tweetId: tweet.id,
@@ -1023,8 +976,7 @@ export class TwitterPostClient {
     }
 
     /**
-     * Handles text-only replies to tweets. If isDryRun is true, only logs what would
-     * have been replied without making API calls.
+     * Handles text-only replies to tweets.
      */
     private async handleTextOnlyReply(
         tweet: Tweet,
@@ -1106,14 +1058,6 @@ export class TwitterPostClient {
 
             if (!cleanedReplyText) {
                 elizaLogger.error("Failed to generate valid reply content");
-                return;
-            }
-
-            if (this.isDryRun) {
-                elizaLogger.info(
-                    `Dry run: reply to tweet ${tweet.id} would have been: ${cleanedReplyText}`
-                );
-                executedActions.push("reply (dry run)");
                 return;
             }
 
