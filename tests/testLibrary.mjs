@@ -1,9 +1,10 @@
 import { spawn } from "node:child_process";
-import { stringToUuid } from "../packages/core/dist/index.js";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
+import { stringToUuid } from "../packages/core/dist/index.js";
 
 export const DEFAULT_CHARACTER = "trump";
-export const DEFAULT_AGENT_ID = stringToUuid(DEFAULT_CHARACTER ?? uuidv4());
+export const DEFAULT_AGENT_ID = stringToUuid(DEFAULT_CHARACTER ?? randomUUID());
 
 function projectRoot() {
     return path.join(import.meta.dirname, "..");
@@ -187,16 +188,8 @@ async function runIntegrationTest(fn) {
 }
 
 export {
-    projectRoot,
-    runProcess,
-    installProjectDependencies,
-    buildProject,
-    writeEnvFile,
-    startAgent,
-    stopAgent,
-    send,
-    runIntegrationTest,
-    log,
-    logError,
-    sleep,
+    buildProject, installProjectDependencies, log,
+    logError, projectRoot, runIntegrationTest, runProcess, send, sleep, startAgent,
+    stopAgent, writeEnvFile
 };
+

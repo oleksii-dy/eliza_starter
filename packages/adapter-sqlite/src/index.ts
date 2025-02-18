@@ -25,7 +25,7 @@ import type {
     Plugin,
 } from "@elizaos/core";
 import type { Database as BetterSqlite3Database } from "better-sqlite3";
-import { v4 } from "uuid";
+import { randomUUID } from "node:crypto";
 import { load } from "./sqlite_vec.ts";
 import { sqliteTables } from "./sqliteTables.ts";
 
@@ -118,7 +118,7 @@ export class SqliteDatabaseAdapter
             this.db
                 .prepare(sql)
                 .run(
-                    account.id ?? v4(),
+                    account.id ?? randomUUID(),
                     account.name,
                     account.username,
                     account.email,
@@ -277,7 +277,7 @@ export class SqliteDatabaseAdapter
         this.db
             .prepare(sql)
             .run(
-                memory.id ?? v4(),
+                memory.id ?? randomUUID(),
                 tableName,
                 content,
                 embeddingValue,
@@ -611,7 +611,7 @@ export class SqliteDatabaseAdapter
         this.db
             .prepare(sql)
             .run(
-                goal.id ?? v4(),
+                goal.id ?? randomUUID(),
                 goal.roomId,
                 goal.userId,
                 goal.name,
@@ -631,10 +631,10 @@ export class SqliteDatabaseAdapter
     }
 
     async createRoom(roomId?: UUID): Promise<UUID> {
-        roomId = roomId || (v4() as UUID);
+        roomId = roomId || (randomUUID();
         try {
             const sql = "INSERT INTO rooms (id) VALUES (?)";
-            this.db.prepare(sql).run(roomId ?? (v4() as UUID));
+            this.db.prepare(sql).run(roomId ?? (randomUUID();
         } catch (error) {
             console.log("Error creating room", error);
         }
@@ -669,7 +669,7 @@ export class SqliteDatabaseAdapter
         try {
             const sql =
                 "INSERT INTO participants (id, userId, roomId) VALUES (?, ?, ?)";
-            this.db.prepare(sql).run(v4(), userId, roomId);
+            this.db.prepare(sql).run(randomUUID();
             return true;
         } catch (error) {
             console.log("Error adding participant", error);
@@ -700,7 +700,7 @@ export class SqliteDatabaseAdapter
             "INSERT INTO relationships (id, userA, userB, userId) VALUES (?, ?, ?, ?)";
         this.db
             .prepare(sql)
-            .run(v4(), params.userA, params.userB, params.userA);
+            .run(randomUUID();
         return true;
     }
 

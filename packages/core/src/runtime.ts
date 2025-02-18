@@ -1,7 +1,9 @@
+import { existsSync } from "fs";
 import { readFile } from "fs/promises";
+import { glob } from "glob";
+import { randomUUID } from "node:crypto";
 import { join } from "path";
 import { names, uniqueNamesGenerator } from "unique-names-generator";
-import { v4 as uuidv4 } from "uuid";
 import {
     composeActionExamples,
     formatActionNames,
@@ -26,7 +28,13 @@ import { getProviders } from "./providers.ts";
 import { RAGKnowledgeManager } from "./ragknowledge.ts";
 import settings from "./settings.ts";
 import {
+    type Action,
+    type Actor,
+    type Adapter,
     type Character,
+    type ClientInstance,
+    type DirectoryItem,
+    type Evaluator,
     type Goal,
     type HandlerCallback,
     type IAgentRuntime,
@@ -36,27 +44,19 @@ import {
     type IRAGKnowledgeManager,
     // type IVerifiableInferenceAdapter,
     type KnowledgeItem,
+    type Memory,
     // RAGKnowledgeItem,
     //Media,
     ModelClass,
     ModelProviderName,
     type Plugin,
     type Provider,
-    type Adapter,
     type Service,
     type ServiceType,
     type State,
     type UUID,
-    type Action,
-    type Actor,
-    type Evaluator,
-    type Memory,
-    type DirectoryItem,
-    type ClientInstance,
 } from "./types.ts";
 import { stringToUuid } from "./uuid.ts";
-import { glob } from "glob";
-import { existsSync } from "fs";
 /**
  * Represents the runtime environment for an agent, handling message processing,
  * action registration, and interaction with external services like OpenAI and Supabase.
@@ -267,7 +267,7 @@ export class AgentRuntime implements IAgentRuntime {
         this.agentId =
             opts.character?.id ??
             opts?.agentId ??
-            stringToUuid(opts.character?.name ?? uuidv4());
+            stringToUuid(opts.character?.name ?? randomUUID());
         this.character = opts.character;
 
         if(!this.character) {
@@ -365,10 +365,10 @@ export class AgentRuntime implements IAgentRuntime {
 
         this.imageModelProvider =
             this.character.imageModelProvider ?? this.modelProvider;
-        
+
         this.imageVisionModelProvider =
             this.character.imageVisionModelProvider ?? this.modelProvider;
-            
+
         elizaLogger.info(
           `${this.character.name}(${this.agentId}) - Selected model provider:`,
           this.modelProvider
@@ -1796,12 +1796,12 @@ const formatKnowledge = (knowledge: KnowledgeItem[]) => {
     return knowledge.map(item => {
         // Get the main content text
         const text = item.content.text;
-        
+
         // Clean up formatting but maintain natural text flow
         const cleanedText = text
             .trim()
             .replace(/\n{3,}/g, '\n\n'); // Replace excessive newlines
-            
+
         return cleanedText;
     }).join('\n\n'); // Separate distinct pieces with double newlines
 };
