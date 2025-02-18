@@ -1,6 +1,7 @@
 ---
 sidebar_position: 13
 ---
+
 # Deploying ElizaOS to Production
 
 A guide to deploying and maintaining an [ElizaOS](https://github.com/elizaOS/eliza) agent in a production environment.

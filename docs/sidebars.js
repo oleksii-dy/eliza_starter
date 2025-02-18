@@ -17,12 +17,17 @@ const sidebars = {
                 },
                 {
                     type: "doc",
+                    id: "guides/start-script",
+                    label: "Start Script",
+                },
+                {
+                    type: "doc",
                     id: "faq",
                     label: "❓ FAQ",
                 },
-				{
-					type: "category",
-					label: "Tutorials",
+		{
+		    type: "category",
+		    label: "Tutorials",
                     items: [
                         {
                             type: "category",
@@ -79,6 +84,11 @@ const sidebars = {
             items: [
                 {
                     type: "doc",
+                    id: "core/overview",
+                    label: "Overview",
+                },
+                {
+                    type: "doc",
                     id: "core/characterfile",
                     label: "Character Files",
                 },
@@ -113,6 +123,16 @@ const sidebars = {
                     type: "doc",
                     id: "guides/configuration",
                     label: "Configuration",
+                },
+                {
+                    type: "doc",
+                    id: "guides/docker-setup",
+                    label: "Docker Setup",
+                },
+                {
+                    type: "doc",
+                    id: "guides/remote-deployment",
+                    label: "Deployment",
                 },
                 {
                     type: "doc",
@@ -183,11 +203,6 @@ const sidebars = {
             label: "📦 Packages",
             collapsed: false,
             items: [
-                {
-                    type: "doc",
-                    id: "packages/packages",
-                    label: "Overview",
-                },
                 {
                     type: "doc",
                     id: "packages/core",

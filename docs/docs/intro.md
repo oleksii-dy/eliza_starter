@@ -38,7 +38,7 @@ Eliza can be used to create:
 - **Knowledge Workers**: Research assistants, Content analysts, Document processors
 - **Interactive Characters**: Role-playing characters, Educational tutors, Entertainment bots
 
-## Architecture Overview
+## Architecture
 
 ![](/img/eliza-architecture.jpg)
 Source: https://x.com/0xCygaar/status/1874575841763770492
