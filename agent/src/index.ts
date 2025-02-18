@@ -134,6 +134,7 @@ import nitroPlugin from "@elizaos/plugin-router-nitro";
 import { devinPlugin } from "@elizaos/plugin-devin";
 import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
 import { chainbasePlugin } from "@elizaos/plugin-chainbase";
+import { xtreamlyPlugin } from "@elizaos/plugin-xtreamly";
 import { holdstationPlugin } from "@elizaos/plugin-holdstation";
 import { nvidiaNimPlugin } from "@elizaos/plugin-nvidia-nim";
 import { zxPlugin } from "@elizaos/plugin-0x";
@@ -1225,6 +1226,7 @@ export async function createAgent(
                 ? akashPlugin
                 : null,
             getSecret(character, "CHAINBASE_API_KEY") ? chainbasePlugin : null,
+            getSecret(character, "XTREAMLY_API_KEY") ? xtreamlyPlugin : null,
             getSecret(character, "QUAI_PRIVATE_KEY") ? quaiPlugin : null,
             getSecret(character, "RESERVOIR_API_KEY")
                 ? createNFTCollectionsPlugin()

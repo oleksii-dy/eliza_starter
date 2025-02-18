@@ -144,6 +144,7 @@
         "@elizaos/plugin-form": "workspace:*",
         "@elizaos/plugin-ankr": "workspace:*",
         "@elizaos/client-xmtp": "workspace:*",
+        "@elizaos/plugin-xtreamly": "workspace:*",
         "@elizaos/plugin-trikon": "workspace:*",
         "@elizaos/plugin-zilliqa": "workspace:*",
         "@elizaos/client-deva": "workspace:*",
