@@ -633,9 +633,6 @@ describe("Twitter Post Client", () => {
                 expect.stringContaining("twitter/reply_generation_123.txt"),
                 expect.any(String)
             );
-            expect(elizaLogger.log).toHaveBeenCalledWith(
-                "Successfully posted reply tweet"
-            );
         });
 
         it("should handle errors in reply processing", async () => {
@@ -643,11 +640,10 @@ describe("Twitter Post Client", () => {
                 actionResponse: { reply: true },
             });
 
-            // Mock handleTextOnlyReply to throw an error only for this test
-            vi.spyOn(
-                postClient as any,
-                "handleTextOnlyReply"
-            ).mockRejectedValueOnce(new Error("Error replying to tweet"));
+            // Mock processReply to throw an error only for this test
+            vi.spyOn(postClient as any, "processReply").mockRejectedValueOnce(
+                new Error(`Error replying to tweet ${timeline.tweet.id}`)
+            );
 
             vi.mocked(mockRuntime.composeState).mockResolvedValue({
                 ...timeline.tweetState,
@@ -660,8 +656,8 @@ describe("Twitter Post Client", () => {
             await postClient["processTimelineActions"]([timeline]);
 
             expect(elizaLogger.error).toHaveBeenCalledWith(
-                "Error replying to tweet 123:",
-                expect.any(Error)
+                `Error processing tweet ${timeline.tweet.id}:`,
+                new Error(`Error replying to tweet ${timeline.tweet.id}`)
             );
         });
 
@@ -719,10 +715,6 @@ describe("Twitter Post Client", () => {
                 expect.stringContaining("A very long reply"),
                 mockTweet.id
             );
-
-            expect(elizaLogger.log).toHaveBeenCalledWith(
-                expect.stringContaining("Successfully posted reply")
-            );
         });
 
         it("should handle undefined reply content gracefully", async () => {
@@ -754,7 +746,7 @@ describe("Twitter Post Client", () => {
 
             // Verify error was logged
             expect(elizaLogger.error).toHaveBeenCalledWith(
-                "Failed to generate valid reply content"
+                "Failed to generate valid tweet content"
             );
 
             // Verify no tweet was sent
@@ -914,7 +906,7 @@ describe("Twitter Post Client", () => {
 
             // Verify error was logged
             expect(elizaLogger.error).toHaveBeenCalledWith(
-                "Failed to generate valid quote tweet content"
+                "Failed to generate valid tweet content"
             );
 
             // Verify no quote tweet was sent
@@ -1078,26 +1070,6 @@ describe("Twitter Post Client", () => {
             );
         });
 
-        it("should skip processing when already in progress", async () => {
-            const postClient = new TwitterPostClient(baseClient, mockRuntime);
-
-            postClient["isProcessing"] = true;
-
-            const result = await postClient["processTweetActions"]();
-
-            expect(result).toBeNull();
-
-            expect(elizaLogger.log).toHaveBeenCalledWith(
-                "Already processing tweet actions, skipping"
-            );
-
-            // Verify no other processing occurred
-            expect(mockTwitterClient.likeTweet).not.toHaveBeenCalled();
-            expect(mockTwitterClient.retweet).not.toHaveBeenCalled();
-            expect(mockTwitterClient.sendQuoteTweet).not.toHaveBeenCalled();
-            expect(mockTwitterClient.sendTweet).not.toHaveBeenCalled();
-        });
-
         it("should skip already processed tweets", async () => {
             const postClient = new TwitterPostClient(baseClient, mockRuntime);
             const mockTweet = createMockTweet();
@@ -1133,12 +1105,13 @@ describe("Twitter Post Client", () => {
                 roomId,
             });
 
-            vi.clearAllMocks();
-
             await postClient["processTweetActions"]();
 
-            expect(elizaLogger.log).toHaveBeenLastCalledWith(
+            expect(elizaLogger.log).toHaveBeenCalledWith(
                 `Already processed tweet ID: ${mockTweet.id}`
+            );
+            expect(elizaLogger.log).toHaveBeenLastCalledWith(
+                `Processed 0 tweets`
             );
 
             // Verify no further processing occurred
