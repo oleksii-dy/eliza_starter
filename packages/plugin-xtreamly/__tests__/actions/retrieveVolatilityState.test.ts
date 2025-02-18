@@ -63,6 +63,7 @@ describe('retrieveVolatilityPrediction', () => {
     describe('validation', () => {
         it('should validate successfully when API is up and running', async () => {
             mockFetch.mockResolvedValueOnce({
+                ok: true,
                 json: () => Promise.resolve({ status: 'ok' }),
             });
             const result = await retrieveVolatilityState.validate(mockRuntime, mockMessage);
@@ -71,6 +72,7 @@ describe('retrieveVolatilityPrediction', () => {
 
         it('should fail validation when API is down', async () => {
             mockFetch.mockResolvedValueOnce({
+                ok: true,
                 json: () => Promise.resolve({ status: 'down' }),
             });
             const result = await retrieveVolatilityState.validate(mockRuntime, mockMessage);
@@ -97,6 +99,7 @@ describe('retrieveVolatilityPrediction', () => {
             const mockFormattedResponse = mockVolatilityState.classification_description;
 
             mockFetch.mockResolvedValueOnce({
+                ok: true,
                 json: () => Promise.resolve(mockVolatilityState),
             });
 

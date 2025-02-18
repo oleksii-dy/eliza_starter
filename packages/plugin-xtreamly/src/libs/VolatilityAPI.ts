@@ -36,7 +36,7 @@ export class VolatilityAPI extends XtreamlyAPI {
         startDate: Date,
         endDate: Date,
         symbol = 'ETH'
-    ): Promise<VolatilityPrediction[]> {
+    ): Promise<StatePrediction[]> {
         return this.get(XtreamlyAPIPath.stateHistorical, {
             symbol,
             start_date: startDate.getTime(),

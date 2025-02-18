@@ -38,7 +38,12 @@ export class XtreamlyAPI {
         return fetch(url.toString(), {
             method: 'GET',
             headers: this.headers,
-        }).then((res) => res.json());
+        }).then(async (res) => {
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            return res.json();
+        });
     }
 
     async is_ok(): Promise<boolean> {

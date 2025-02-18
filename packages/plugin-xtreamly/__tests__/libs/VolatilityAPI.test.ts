@@ -42,6 +42,7 @@ describe('VolatilityAPI library', () => {
                 volatility: 0.111,
             };
             mockFetch.mockResolvedValueOnce({
+                ok: true,
                 json: () => Promise.resolve(mockResponse),
             });
 
@@ -65,6 +66,7 @@ describe('VolatilityAPI library', () => {
                 },
             ];
             mockFetch.mockResolvedValueOnce({
+                ok: true,
                 json: () => Promise.resolve(mockResponse),
             });
 
@@ -94,6 +96,7 @@ describe('VolatilityAPI library', () => {
                 classification_description: 'This is midvol',
             };
             mockFetch.mockResolvedValueOnce({
+                ok: true,
                 json: () => Promise.resolve(mockResponse),
             });
 
@@ -118,6 +121,7 @@ describe('VolatilityAPI library', () => {
                 },
             ];
             mockFetch.mockResolvedValueOnce({
+                ok: true,
                 json: () => Promise.resolve(mockResponse),
             });
 
