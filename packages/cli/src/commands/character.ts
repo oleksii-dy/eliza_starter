@@ -36,22 +36,6 @@ export const character = new Command()
   .name("character")
   .description("manage characters")
 
-async function initializeDatabase() {
-  try {
-    await adapter.init();
-  } catch (error) {
-    if ('code' in error && error.code === 'ECONNREFUSED') {
-      logger.error(`Database connection failed. Please ensure that:
-  1. The database server is running
-  2. The connection details are correct in your configuration
-  3. The database server is accepting connections on the configured port`);
-    } else {
-      logger.error(`Database initialization failed: ${error.message}`);
-    }
-    process.exit(1);
-  }
-}
-
 async function collectCharacterData(
   initialData?: Partial<CharacterFormData>
 ): Promise<CharacterFormData | null> {
@@ -212,11 +196,11 @@ character
 character
   .command("edit")
   .description("edit a character")
-  .argument("<character-id>", "character ID")
-  .action(async (characterId) => {
-    const existingCharacter = await adapter.getCharacter(characterId);
+  .argument("<character-name>", "character name")
+  .action(async (characterName) => {
+    const existingCharacter = await adapter.getCharacter(characterName);
     if (!existingCharacter) {
-      logger.error(`Character ${characterId} not found`);
+      logger.error(`Character ${characterName} not found`);
       process.exit(1);
     }
 
@@ -249,8 +233,8 @@ character
       ...getDefaultCharacterFields(existingCharacter)
     };
 
-    await adapter.updateCharacter(characterId, updatedCharacter as Partial<Character>);
-    logger.success(`Updated character ${formData.name}`);
+    await adapter.updateCharacter(characterName, updatedCharacter as Partial<Character>);
+    logger.success(`Updated character ${formData.name} successfully`);
   })
 
 character
@@ -298,12 +282,12 @@ character
 character
   .command("export")
   .description("export a character to file")
-  .argument("<character-id>", "character ID")
+  .argument("<character-name>", "character name")
   .option("-o, --output <file>", "output file path")
-  .action(async (characterId, opts) => {
-    const character = await adapter.getCharacter(characterId)
+  .action(async (characterName, opts) => {
+    const character = await adapter.getCharacter(characterName)
     if (!character) {
-      logger.error(`Character ${characterId} not found`)
+      logger.error(`Character ${characterName} not found`)
       process.exit(1)
     }
 
@@ -315,10 +299,10 @@ character
 character
   .command("remove")
   .description("remove a character")
-  .argument("<character-id>", "character ID")
-  .action(async (characterId) => {
-    await adapter.removeCharacter(characterId)
-    logger.success(`Removed character ${characterId}`)
+  .argument("<character-name>", "character name")
+  .action(async (characterName) => {
+    await adapter.removeCharacter(characterName)
+    logger.success(`Removed character ${characterName}`)
   })
 
 
