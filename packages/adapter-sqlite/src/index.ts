@@ -1,28 +1,28 @@
-import path from "path";
 import fs from "fs";
+import path from "path";
 
-export * from "./sqliteTables.ts";
 export * from "./sqlite_vec.ts";
+export * from "./sqliteTables.ts";
 
+import type {
+    Account,
+    Actor,
+    Adapter,
+    ChunkRow,
+    Goal,
+    GoalStatus,
+    IAgentRuntime,
+    Memory,
+    Participant,
+    Plugin,
+    RAGKnowledgeItem,
+    Relationship,
+    UUID,
+} from "@elizaos/core";
 import {
     DatabaseAdapter,
     elizaLogger,
     type IDatabaseCacheAdapter,
-} from "@elizaos/core";
-import type {
-    Account,
-    Actor,
-    GoalStatus,
-    Participant,
-    Goal,
-    Memory,
-    Relationship,
-    UUID,
-    RAGKnowledgeItem,
-    ChunkRow,
-    Adapter,
-    IAgentRuntime,
-    Plugin,
 } from "@elizaos/core";
 import type { Database as BetterSqlite3Database } from "better-sqlite3";
 import { randomUUID } from "node:crypto";
@@ -631,14 +631,14 @@ export class SqliteDatabaseAdapter
     }
 
     async createRoom(roomId?: UUID): Promise<UUID> {
-        roomId = roomId || (randomUUID();
+        const newRoomId = roomId ?? randomUUID();
         try {
             const sql = "INSERT INTO rooms (id) VALUES (?)";
-            this.db.prepare(sql).run(roomId ?? (randomUUID();
+            this.db.prepare(sql).run(newRoomId);
         } catch (error) {
             console.log("Error creating room", error);
         }
-        return roomId as UUID;
+        return newRoomId as UUID;
     }
 
     async removeRoom(roomId: UUID): Promise<void> {
@@ -669,7 +669,7 @@ export class SqliteDatabaseAdapter
         try {
             const sql =
                 "INSERT INTO participants (id, userId, roomId) VALUES (?, ?, ?)";
-            this.db.prepare(sql).run(randomUUID();
+            this.db.prepare(sql).run(randomUUID(), userId, roomId);
             return true;
         } catch (error) {
             console.log("Error adding participant", error);
@@ -700,7 +700,7 @@ export class SqliteDatabaseAdapter
             "INSERT INTO relationships (id, userA, userB, userId) VALUES (?, ?, ?, ?)";
         this.db
             .prepare(sql)
-            .run(randomUUID();
+            .run(randomUUID(), params.userA, params.userB, params.userA);
         return true;
     }
 
