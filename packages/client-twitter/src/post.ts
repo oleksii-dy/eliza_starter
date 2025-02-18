@@ -10,15 +10,13 @@ import {
     UUID,
     truncateToCompleteSentence,
     parseTagContent,
+    elizaLogger,
+    generateTweetActions,
+    IImageDescriptionService,
+    ServiceType,
+    State,
+    ActionResponse,
 } from "@elizaos/core";
-import { elizaLogger } from "@elizaos/core";
-import { ClientBase } from "./base.ts";
-import { postActionResponseFooter } from "@elizaos/core";
-import { generateTweetActions } from "@elizaos/core";
-import { IImageDescriptionService, ServiceType } from "@elizaos/core";
-import { buildConversationThread } from "./utils.ts";
-import { twitterMessageHandlerTemplate } from "./interactions.ts";
-import { DEFAULT_MAX_TWEET_LENGTH } from "./environment.ts";
 import {
     Client,
     Events,
@@ -26,75 +24,15 @@ import {
     TextChannel,
     Partials,
 } from "discord.js";
-import { State } from "@elizaos/core";
-import { ActionResponse } from "@elizaos/core";
+
+import { ClientBase } from "./base.ts";
+import { buildConversationThread } from "./utils.ts";
+import { twitterMessageHandlerTemplate } from "./interactions.ts";
+import { DEFAULT_MAX_TWEET_LENGTH } from "./environment.ts";
+import { PendingTweet, PendingTweetApprovalStatus } from "./types.ts";
+import { twitterActionTemplate, twitterPostTemplate } from "./templates.ts";
 
 const MAX_TIMELINES_TO_FETCH = 15;
-
-const twitterPostTemplate = `
-# Areas of Expertise
-{{knowledge}}
-
-# About {{agentName}} (@{{twitterUserName}}):
-{{bio}}
-{{lore}}
-{{topics}}
-
-{{providers}}
-
-{{characterPostExamples}}
-
-{{postDirections}}
-
-# Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
-Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
-Your response should be 1, 2, or 3 sentences (choose the length at random).
-Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than {{maxTweetLength}}. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.
-
-Respond with the post in the following format:
-<response>
-New post
-</response>
-`;
-
-export const twitterActionTemplate =
-    `
-# INSTRUCTIONS: Determine actions for {{agentName}} (@{{twitterUserName}}) based on:
-{{bio}}
-{{postDirections}}
-
-Guidelines:
-- ONLY engage with content that DIRECTLY relates to character's core interests
-- Direct mentions are priority IF they are on-topic
-- Skip ALL content that is:
-  - Off-topic or tangentially related
-  - From high-profile accounts unless explicitly relevant
-  - Generic/viral content without specific relevance
-  - Political/controversial unless central to character
-  - Promotional/marketing unless directly relevant
-
-Actions (respond only with tags):
-[LIKE] - Perfect topic match AND aligns with character (9.8/10)
-[RETWEET] - Exceptional content that embodies character's expertise (9.5/10)
-[QUOTE] - Can add substantial domain expertise (9.5/10)
-[REPLY] - Can contribute meaningful, expert-level insight (9.5/10)
-
-Tweet:
-{{currentTweet}}
-
-# Respond with qualifying action tags only. Default to NO action unless extremely confident of relevance.` +
-    postActionResponseFooter;
-
-interface PendingTweet {
-    cleanedContent: string;
-    roomId: UUID;
-    newTweetContent: string;
-    discordMessageId: string;
-    channelId: string;
-    timestamp: number;
-}
-
-type PendingTweetApprovalStatus = "PENDING" | "APPROVED" | "REJECTED";
 
 export class TwitterPostClient {
     client: ClientBase;
@@ -115,40 +53,11 @@ export class TwitterPostClient {
         this.twitterUsername = this.client.twitterConfig.TWITTER_USERNAME;
         this.isDryRun = this.client.twitterConfig.TWITTER_DRY_RUN;
 
-        // Log configuration on initialization
-        elizaLogger.log("Twitter Client Configuration:");
-        elizaLogger.log(`- Username: ${this.twitterUsername}`);
-        elizaLogger.log(
-            `- Dry Run Mode: ${this.isDryRun ? "enabled" : "disabled"}`
-        );
-        elizaLogger.log(
-            `- Post Interval: ${this.client.twitterConfig.POST_INTERVAL_MIN}-${this.client.twitterConfig.POST_INTERVAL_MAX} minutes`
-        );
-        elizaLogger.log(
-            `- Action Processing: ${this.client.twitterConfig.ENABLE_ACTION_PROCESSING ? "enabled" : "disabled"}`
-        );
-        elizaLogger.log(
-            `- Action Interval: ${this.client.twitterConfig.ACTION_INTERVAL} minutes`
-        );
-        elizaLogger.log(
-            `- Post Immediately: ${this.client.twitterConfig.POST_IMMEDIATELY ? "enabled" : "disabled"}`
-        );
-        elizaLogger.log(
-            `- Search Enabled: ${this.client.twitterConfig.TWITTER_SEARCH_ENABLE ? "enabled" : "disabled"}`
-        );
+        this.logConfigOnInitialization();
+        this.configureApprovals();
+    }
 
-        const targetUsers = this.client.twitterConfig.TWITTER_TARGET_USERS;
-        if (targetUsers) {
-            elizaLogger.log(`- Target Users: ${targetUsers}`);
-        }
-
-        if (this.isDryRun) {
-            elizaLogger.log(
-                "Twitter client initialized in dry run mode - no actual tweets should be posted"
-            );
-        }
-
-        // Initialize Discord webhook
+    private configureApprovals() {
         const approvalRequired: boolean =
             this.runtime
                 .getSetting("TWITTER_APPROVAL_ENABLED")
@@ -179,6 +88,46 @@ export class TwitterPostClient {
 
             // Set up Discord client event handlers
             this.setupDiscordClient();
+        }
+    }
+
+    private logConfigOnInitialization() {
+        elizaLogger.log("Twitter Client Configuration:");
+        elizaLogger.log(`- Username: ${this.twitterUsername}`);
+        elizaLogger.log(
+            `- Dry Run Mode: ${this.isDryRun ? "enabled" : "disabled"}`
+        );
+        elizaLogger.log(
+            `- Post Interval: ${this.client.twitterConfig.POST_INTERVAL_MIN}-${this.client.twitterConfig.POST_INTERVAL_MAX} minutes`
+        );
+        elizaLogger.log(
+            `- Action Processing: ${this.client.twitterConfig.ENABLE_ACTION_PROCESSING ? "enabled" : "disabled"}`
+        );
+        elizaLogger.log(
+            `- Action Interval: ${this.client.twitterConfig.ACTION_INTERVAL} minutes`
+        );
+        elizaLogger.log(
+            `- Post Immediately: ${this.client.twitterConfig.POST_IMMEDIATELY ? "enabled" : "disabled"}`
+        );
+        elizaLogger.log(
+            `- Search Enabled: ${this.client.twitterConfig.TWITTER_SEARCH_ENABLE ? "enabled" : "disabled"}`
+        );
+
+        const targetUsers = this.client.twitterConfig.TWITTER_TARGET_USERS;
+        if (targetUsers) {
+            elizaLogger.log(`- Target Users: ${targetUsers}`);
+        }
+
+        const knowledgeUsers =
+            this.client.twitterConfig.TWITTER_KNOWLEDGE_USERS;
+        if (knowledgeUsers) {
+            elizaLogger.log(`- Knowledge Users: ${knowledgeUsers}`);
+        }
+
+        if (this.isDryRun) {
+            elizaLogger.log(
+                "Twitter client initialized in dry run mode - no actual tweets should be posted"
+            );
         }
     }
 
@@ -664,8 +613,6 @@ export class TwitterPostClient {
             this.isProcessing = true;
             this.lastProcessTime = Date.now();
 
-            elizaLogger.log("Processing tweet actions");
-
             await this.runtime.ensureUserExists(
                 this.runtime.agentId,
                 this.twitterUsername,
@@ -745,33 +692,9 @@ export class TwitterPostClient {
                     continue;
                 }
             }
-
-            const sortProcessedTimeline = (arr: typeof processedTimelines) => {
-                return arr.sort((a, b) => {
-                    // Count the number of true values in the actionResponse object
-                    const countTrue = (obj: typeof a.actionResponse) =>
-                        Object.values(obj).filter(Boolean).length;
-
-                    const countA = countTrue(a.actionResponse);
-                    const countB = countTrue(b.actionResponse);
-
-                    // Primary sort by number of true values
-                    if (countA !== countB) {
-                        return countB - countA;
-                    }
-
-                    // Secondary sort by the "like" property
-                    if (a.actionResponse.like !== b.actionResponse.like) {
-                        return a.actionResponse.like ? -1 : 1;
-                    }
-
-                    // Tertiary sort keeps the remaining objects with equal weight
-                    return 0;
-                });
-            };
             // Sort the timeline based on the action decision score,
             // then slice the results according to the environment variable to limit the number of actions per cycle.
-            const sortedTimelines = sortProcessedTimeline(
+            const sortedTimelines = this.sortProcessedTimeline(
                 processedTimelines
             ).slice(0, maxActionsProcessing);
 
@@ -783,7 +706,36 @@ export class TwitterPostClient {
             this.isProcessing = false;
         }
     }
+    private sortProcessedTimeline(
+        arr: {
+            tweet: Tweet;
+            actionResponse: ActionResponse;
+            tweetState: State;
+            roomId: UUID;
+        }[]
+    ) {
+        return arr.sort((a, b) => {
+            // Count the number of true values in the actionResponse object
+            const countTrue = (obj: typeof a.actionResponse) =>
+                Object.values(obj).filter(Boolean).length;
 
+            const countA = countTrue(a.actionResponse);
+            const countB = countTrue(b.actionResponse);
+
+            // Primary sort by number of true values
+            if (countA !== countB) {
+                return countB - countA;
+            }
+
+            // Secondary sort by the "like" property
+            if (a.actionResponse.like !== b.actionResponse.like) {
+                return a.actionResponse.like ? -1 : 1;
+            }
+
+            // Tertiary sort keeps the remaining objects with equal weight
+            return 0;
+        });
+    }
     /**
      * Processes a list of timelines by executing the corresponding tweet actions.
      * Each timeline includes the tweet, action response, tweet state, and room context.
@@ -1266,8 +1218,6 @@ export class TwitterPostClient {
             const channel = await this.discordClientForApproval.channels.fetch(
                 this.discordApprovalChannelId
             );
-
-            elizaLogger.log(`channel ${JSON.stringify(channel)}`);
 
             if (!(channel instanceof TextChannel)) {
                 elizaLogger.error("Invalid approval channel");
