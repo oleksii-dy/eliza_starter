@@ -19,9 +19,14 @@ export const retrieveVolatilityState: Action = {
     similes: ['RETRIEVE_LIVE_VOLATILITY_STATE'],
     description: 'Retrieve live volatility state of a given symbol.',
 
-    validate: async (_runtime: IAgentRuntime, _message: Memory) => {
+    validate: async (runtime: IAgentRuntime, _message: Memory) => {
         elizaLogger.log('Validating runtime for RETRIEVE_VOLATILITY_STATE...');
-        return new XtreamlyAPI().is_ok();
+
+        if (runtime.character.settings.secrets?.XTREAMLY_API_KEY) {
+            process.env.XTREAMLY_API_KEY = runtime.character.settings.secrets?.XTREAMLY_API_KEY;
+        }
+
+        return process.env.XTREAMLY_API_KEY && new XtreamlyAPI().is_ok();
     },
 
     handler: async (

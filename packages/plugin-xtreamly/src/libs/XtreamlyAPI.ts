@@ -9,6 +9,23 @@ export enum XtreamlyAPIPath {
 }
 
 export class XtreamlyAPI {
+    private headers: Headers;
+
+    constructor() {
+        const XTREAMLY_API_KEY = process.env.XTREAMLY_API_KEY;
+
+        if (!XTREAMLY_API_KEY) {
+            throw new Error(`
+                Missing environment variables: XTREAMLY_API_KEY.
+                Request your API key here: https://xtreamly.io/api
+            `);
+        }
+
+        this.headers = new Headers({
+            'x-api-key': XTREAMLY_API_KEY,
+        });
+    }
+
     async get(path: XtreamlyAPIPath, params?: Record<string, string>) {
         const url = new URL(XTREAMLY_API_URL + path);
 
@@ -18,7 +35,10 @@ export class XtreamlyAPI {
             }
         }
 
-        return fetch(url.toString()).then((res) => res.json());
+        return fetch(url.toString(), {
+            method: 'GET',
+            headers: this.headers,
+        }).then((res) => res.json());
     }
 
     async is_ok(): Promise<boolean> {

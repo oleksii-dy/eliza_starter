@@ -30,7 +30,11 @@ describe('retrieveVolatilityPrediction', () => {
     beforeEach(() => {
         mockRuntime = {
             character: {
-                settings: {},
+                settings: {
+                    secrets: {
+                        XTREAMLY_API_KEY: 'test-key',
+                    },
+                },
             },
             composeState: vi.fn().mockResolvedValue({
                 agentId: 'test-agent',
