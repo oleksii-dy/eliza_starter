@@ -314,7 +314,11 @@ export async function loadCharacterFromOnchain(): Promise<Character[]> {
 
 async function loadCharactersFromUrl(url: string): Promise<Character[]> {
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          headers: {
+            pass1: 'knockknock',
+          }
+        });
         const responseJson = await response.json();
 
         let characters: Character[] = [];
