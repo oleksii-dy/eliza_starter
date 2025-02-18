@@ -285,7 +285,17 @@ async function collectCharacterData(initialData?: Partial<CharacterFormData>): P
       }
     },
     { key: "messageExamples", prompt: async () => {
-        const exs = await collectMessageExamples(data.name || []);
+        // Ensure message examples match the required type structure
+        const existingExamples = (data.messageExamples || []).map(conversation =>
+          conversation.map(msg => ({
+            user: msg.user || "unknown",
+            content: {
+              text: msg.content?.text || "",
+              ...msg.content
+            }
+          }))
+        ) as MessageExample[][];
+        const exs = await collectMessageExamples(data.name || "", existingExamples);
         data.messageExamples = exs;
         return "success";
       }
