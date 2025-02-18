@@ -201,8 +201,8 @@ export async function embed(runtime: IAgentRuntime, input: string) {
     }
 
     // Check cache first
-    const cachedEmbedding = await retrieveCachedEmbedding(runtime, input);
-    if (cachedEmbedding) return cachedEmbedding;
+    //const cachedEmbedding = await retrieveCachedEmbedding(runtime, input);
+    //if (cachedEmbedding) return cachedEmbedding;
 
     const config = getEmbeddingConfig();
     const isNode = typeof process !== "undefined" && process.versions?.node;
