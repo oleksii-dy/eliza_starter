@@ -327,7 +327,7 @@ export class TwitterPostClient {
         client: ClientBase,
         content: string,
         tweetId?: string
-    ): Promise<void> {
+    ) {
         const noteTweetResult = await client.requestQueue.add(
             async () =>
                 await client.twitterClient.sendNoteTweet(content, tweetId)
@@ -339,17 +339,23 @@ export class TwitterPostClient {
                 content,
                 this.client.twitterConfig.MAX_TWEET_LENGTH
             );
-            await this.sendStandardTweet(client, truncateContent, tweetId);
-        } else if (!noteTweetResult.data.notetweet_create.tweet_results) {
+            return await this.sendStandardTweet(
+                client,
+                truncateContent,
+                tweetId
+            );
+        } else if (!noteTweetResult.data?.notetweet_create?.tweet_results) {
             throw new Error(`Note Tweet failed`);
         }
+
+        return noteTweetResult.data.notetweet_create.tweet_results.result;
     }
 
     async sendStandardTweet(
         client: ClientBase,
         content: string,
         tweetId?: string
-    ): Promise<void> {
+    ) {
         const standardTweetResult = await client.requestQueue.add(
             async () => await client.twitterClient.sendTweet(content, tweetId)
         );
@@ -358,6 +364,8 @@ export class TwitterPostClient {
         if (!body?.data?.create_tweet?.tweet_results?.result) {
             throw new Error("Error sending tweet; Bad response");
         }
+
+        return body.data.create_tweet.tweet_results.result;
     }
 
     async postTweet(
@@ -369,7 +377,7 @@ export class TwitterPostClient {
         twitterUsername: string
     ) {
         try {
-            elizaLogger.log(`Posting new tweet:\n`);
+            elizaLogger.log(`Posting new tweet:\n ${newTweetContent}`);
 
             let result;
 
@@ -417,33 +425,24 @@ export class TwitterPostClient {
             const newTweetContent = await this.genAndCleanNewTweet(roomId);
 
             if (this.approvalRequired) {
-                await this.forwardTweetToApproval(newTweetContent, roomId);
+                await this.sendForApproval(
+                    newTweetContent,
+                    roomId,
+                    newTweetContent
+                );
             } else {
-                await this.forwardTweetToPosting(newTweetContent, roomId);
+                await this.postTweet(
+                    this.runtime,
+                    this.client,
+                    newTweetContent,
+                    roomId,
+                    newTweetContent,
+                    this.twitterUsername
+                );
             }
         } catch (error) {
             elizaLogger.error("Error generating new tweet:", error);
         }
-    }
-
-    private async forwardTweetToPosting(newTweetContent: string, roomId: UUID) {
-        elizaLogger.log(`Posting new tweet:\n ${newTweetContent}`);
-        await this.postTweet(
-            this.runtime,
-            this.client,
-            newTweetContent,
-            roomId,
-            newTweetContent,
-            this.twitterUsername
-        );
-    }
-
-    private async forwardTweetToApproval(
-        newTweetContent: string,
-        roomId: UUID
-    ) {
-        elizaLogger.log(`Sending Tweet For Approval:\n ${newTweetContent}`);
-        await this.sendForApproval(newTweetContent, roomId, newTweetContent);
     }
 
     private truncateNewTweet(maxTweetLength: number, newTweetContent: string) {
@@ -1060,6 +1059,7 @@ export class TwitterPostClient {
         roomId: UUID,
         newTweetContent: string
     ): Promise<string | null> {
+        elizaLogger.log(`Sending Tweet For Approval:\n ${newTweetContent}`);
         try {
             const embed = {
                 title: "New Tweet Pending Approval",
