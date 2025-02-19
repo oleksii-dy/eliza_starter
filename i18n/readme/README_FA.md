@@ -13,7 +13,7 @@
 ## 🚩 معرفی کلی
 
 <div align="center">
-  <img src="./docs/static/img/eliza_diagram.png" alt="نمودار الیزا" width="100%" />
+  <img src="/docs/static/img/eliza_diagram.png" alt="نمودار الیزا" width="100%" />
 </div>
 
 ## ✨ ویژگی‌ها
