@@ -1,5 +1,5 @@
 import {
-    IAgentRuntime,
+    type IAgentRuntime,
     ModelClass,
     elizaLogger,
     generateText,
@@ -8,9 +8,9 @@ import {
 } from "@elizaos/core";
 import {
     ChannelType,
-    Message as DiscordMessage,
+    type Message as DiscordMessage,
     PermissionsBitField,
-    TextChannel,
+    type TextChannel,
     ThreadChannel,
 } from "discord.js";
 
@@ -62,8 +62,8 @@ export const uriToHttp = (uri: string): string[] => {
 export function getWavHeader(
     audioLength: number,
     sampleRate: number,
-    channelCount: number = 1,
-    bitsPerSample: number = 16
+    channelCount = 1,
+    bitsPerSample = 16
 ): Buffer {
     const wavHeader = Buffer.alloc(44);
     wavHeader.write("RIFF", 0);
@@ -116,7 +116,7 @@ export async function generateSummary(
 
     const parsedResponse = parseJSONObjectFromText(response);
 
-    if (parsedResponse) {
+    if (parsedResponse?.title && parsedResponse?.summary) {
         return {
             title: parsedResponse.title,
             description: parsedResponse.summary,
@@ -177,17 +177,15 @@ function splitMessage(content: string): string[] {
 
     const rawLines = content?.split("\n") || [];
     // split all lines into MAX_MESSAGE_LENGTH chunks so any long lines are split
-    const lines = rawLines
-        .map((line) => {
-            const chunks = [];
-            while (line.length > MAX_MESSAGE_LENGTH) {
-                chunks.push(line.slice(0, MAX_MESSAGE_LENGTH));
-                line = line.slice(MAX_MESSAGE_LENGTH);
-            }
-            chunks.push(line);
-            return chunks;
-        })
-        .flat();
+    const lines = rawLines.flatMap((line) => {
+        const chunks = [];
+        while (line.length > MAX_MESSAGE_LENGTH) {
+            chunks.push(line.slice(0, MAX_MESSAGE_LENGTH));
+            line = line.slice(MAX_MESSAGE_LENGTH);
+        }
+        chunks.push(line);
+        return chunks;
+    });
 
     for (const line of lines) {
         if (currentMessage.length + line.length + 1 > MAX_MESSAGE_LENGTH) {
@@ -262,7 +260,9 @@ export function canSendMessage(channel) {
         missingPermissions: missingPermissions,
         reason:
             missingPermissions.length > 0
-                ? `Missing permissions: ${missingPermissions.map((p) => String(p)).join(", ")}`
+                ? `Missing permissions: ${missingPermissions
+                      .map((p) => String(p))
+                      .join(", ")}`
                 : null,
     };
 }
