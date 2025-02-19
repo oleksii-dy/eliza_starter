@@ -17,11 +17,6 @@ const sidebars = {
                 },
                 {
                     type: "doc",
-                    id: "guides/start-script",
-                    label: "Start Script",
-                },
-                {
-                    type: "doc",
                     id: "faq",
                     label: "❓ FAQ",
                 },
@@ -95,7 +90,7 @@ const sidebars = {
                 {
                     type: "doc",
                     id: "core/agents",
-                    label: "Agents",
+                    label: "Agent Runtime",
                 },
                 {
                     type: "doc",
@@ -205,11 +200,6 @@ const sidebars = {
             items: [
                 {
                     type: "doc",
-                    id: "packages/core",
-                    label: "Core Package",
-                },
-                {
-                    type: "doc",
                     id: "packages/adapters",
                     label: "Database Adapters",
                 },
@@ -217,11 +207,6 @@ const sidebars = {
                     type: "doc",
                     id: "packages/clients",
                     label: "Client Packages",
-                },
-                {
-                    type: "doc",
-                    id: "packages/agent",
-                    label: "Agent Package",
                 },
                 {
                     type: "doc",
