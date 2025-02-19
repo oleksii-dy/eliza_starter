@@ -26,7 +26,8 @@ export default defineConfig(({ mode }) => {
                 env.SERVER_URL || "http://localhost"
             ),
             "import.meta.env.VITE_SERVER_BASE_URL": JSON.stringify(
-                env.SERVER_BASE_URL,
+                env.SERVER_BASE_URL
+            )
         },
         build: {
             outDir: "dist",
