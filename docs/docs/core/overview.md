@@ -5,6 +5,7 @@ sidebar_position: 1
 # Overview
 
 Eliza is a framework for creating AI agents that can interact across multiple platforms.
+
  **Features**
 - **Modular Design**: Plugins and services allow for flexible customization.
 - **Scalable Knowledge**: Supports both RAG-based and direct knowledge processing.
@@ -14,6 +15,7 @@ Eliza is a framework for creating AI agents that can interact across multiple pl
 
 This document provides a high-level overview of the system architecture and how components work together.
 
+---
 
 ## [Agent Runtime](./agents.md)
 

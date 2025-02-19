@@ -89,6 +89,11 @@ const sidebars = {
                 },
                 {
                     type: "doc",
+                    id: "core/clients",
+                    label: "Clients",
+                },
+                {
+                    type: "doc",
                     id: "core/agents",
                     label: "Agent Runtime",
                 },
@@ -106,6 +111,11 @@ const sidebars = {
                     type: "doc",
                     id: "core/evaluators",
                     label: "Evaluators",
+                },
+                {
+                    type: "doc",
+                    id: "core/database",
+                    label: "Database Adapters",
                 },
             ],
         },
@@ -198,16 +208,6 @@ const sidebars = {
             label: "📦 Packages",
             collapsed: false,
             items: [
-                {
-                    type: "doc",
-                    id: "packages/adapters",
-                    label: "Database Adapters",
-                },
-                {
-                    type: "doc",
-                    id: "packages/clients",
-                    label: "Client Packages",
-                },
                 {
                     type: "doc",
                     id: "packages/plugins",
