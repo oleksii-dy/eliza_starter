@@ -40,18 +40,21 @@ agent
       const sortedAgents = agents.sort((a, b) => a.name.localeCompare(b.name))
       
       // Format data for table
-      const tableData = sortedAgents.map(agent => ({
+      const agentData = sortedAgents.map(agent => ({
         Name: agent.name,
         ID: agent.id,
         Clients: agent.clients.join(", ")
       }))
 
       if (opts.json) {
-        logger.info(JSON.stringify(tableData, null, 2))
+        logger.info(JSON.stringify(agentData, null, 2))
       } else {
         logger.info("\nAvailable agents:")
-        console.table(tableData)
-        logger.info("")
+        if (agentData.length === 0) {
+          logger.info("No agents found")
+        } else {
+          console.table(agentData)
+        }
       }
 
       process.exit(0)
