@@ -1,7 +1,4 @@
 export const sqliteTables = `
-PRAGMA foreign_keys=OFF;
-BEGIN TRANSACTION;
-
 -- Table: accounts
 CREATE TABLE IF NOT EXISTS "accounts" (
     "id" TEXT PRIMARY KEY,
@@ -125,6 +122,4 @@ CREATE INDEX IF NOT EXISTS "knowledge_content_key" ON "knowledge"
     ((json_extract(content, '$.text')))
     WHERE json_extract(content, '$.text') IS NOT NULL;
 CREATE INDEX IF NOT EXISTS "knowledge_created_key" ON "knowledge" ("agentId", "createdAt");
-CREATE INDEX IF NOT EXISTS "knowledge_shared_key" ON "knowledge" ("isShared");
-
-COMMIT;`;
+CREATE INDEX IF NOT EXISTS "knowledge_shared_key" ON "knowledge" ("isShared");`;

@@ -480,7 +480,7 @@ export function getTokenForProvider(
     }
 }
 
-function initializeDatabase(dataDir: string) {
+async function initializeDatabase(dataDir: string) {
     if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
         elizaLogger.info("Initializing Supabase connection...");
         const db = new SupabaseDatabaseAdapter(
@@ -489,7 +489,7 @@ function initializeDatabase(dataDir: string) {
         );
 
         // Test the connection
-        db.init()
+        await db.init()
             .then(() => {
                 elizaLogger.success(
                     "Successfully connected to Supabase database"
@@ -497,6 +497,7 @@ function initializeDatabase(dataDir: string) {
             })
             .catch((error) => {
                 elizaLogger.error("Failed to connect to Supabase:", error);
+                throw error;
             });
 
         return db;
@@ -508,7 +509,7 @@ function initializeDatabase(dataDir: string) {
         });
 
         // Test the connection
-        db.init()
+        await db.init()
             .then(() => {
                 elizaLogger.success(
                     "Successfully connected to PostgreSQL database"
@@ -516,6 +517,7 @@ function initializeDatabase(dataDir: string) {
             })
             .catch((error) => {
                 elizaLogger.error("Failed to connect to PostgreSQL:", error);
+                throw error;
             });
 
         return db;
@@ -527,23 +529,52 @@ function initializeDatabase(dataDir: string) {
         });
         return db;
     } else {
-        const filePath =
-            process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
+        const filePath = process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
         elizaLogger.info(`Initializing SQLite database at ${filePath}...`);
-        const db = new SqliteDatabaseAdapter(new Database(filePath));
 
-        // Test the connection
-        db.init()
-            .then(() => {
-                elizaLogger.success(
-                    "Successfully connected to SQLite database"
-                );
-            })
-            .catch((error) => {
-                elizaLogger.error("Failed to connect to SQLite:", error);
+        try {
+            // Ensure the directory exists
+            const dbDir = path.dirname(filePath);
+            if (!fs.existsSync(dbDir)) {
+                fs.mkdirSync(dbDir, { recursive: true });
+            }
+
+            // Create/open database with WAL mode for better concurrency
+            const sqliteDb = new Database(filePath, {
+                verbose: process.env.NODE_ENV === 'development' ? console.log : undefined,
+                fileMustExist: false,
             });
 
-        return db;
+            // Configure SQLite before any transactions
+            sqliteDb.pragma('journal_mode = WAL');
+            sqliteDb.pragma('foreign_keys = ON');
+            sqliteDb.pragma('synchronous = NORMAL');
+            sqliteDb.pragma('temp_store = MEMORY');
+
+            const db = new SqliteDatabaseAdapter(sqliteDb);
+
+            // Initialize the database
+            try {
+                await db.init()
+                    .then(() => {
+                        elizaLogger.success(
+                            `Successfully initialized SQLite database at ${filePath}`
+                        );
+                    })
+                    .catch((error) => {
+                        elizaLogger.error("Failed to initialize SQLite database:", error);
+                        throw error;
+                    });
+
+                return db;
+            } catch (error) {
+                elizaLogger.error("Failed to initialize SQLite database:", error);
+                throw error;
+            }
+        } catch (error) {
+            elizaLogger.error("Failed to create/open SQLite database:", error);
+            throw error;
+        }
     }
 }
 
@@ -983,7 +1014,7 @@ async function startAgent(
             fs.mkdirSync(dataDir, { recursive: true });
         }
 
-        db = initializeDatabase(dataDir) as IDatabaseAdapter &
+        db = await initializeDatabase(dataDir) as IDatabaseAdapter &
             IDatabaseCacheAdapter;
 
         await db.init();
