@@ -125,23 +125,25 @@ export default {
 
             const name = await contract.methods.name().call()
 
-            const transaction = {
+            const data = contract.methods.transfer(content.recipient, String(toWei(content.amount.toString(), unit[decimals]))).encodeABI()
+
+            const inputTransaction = {
                 from : sender,
                 nonce,
                 to : content.tokenAddress,
-                value: '0'
+                value: '0',
+                data
             }
 
-            //@ts-expect-error
-            transaction.data = contract.methods.transfer(content.recipient, String(toWei(content.amount.toString(), unit[decimals]))).encodeABI()
+            const gas = await client.eth.estimateGas(inputTransaction)
 
-            const gas = await client.eth.estimateGas(transaction)
+            const rawTransaction = {
+                ...inputTransaction,
+                gas: toHex(gas),
+                gasLimit: toHex(gas),
+            }
 
-            //@ts-ignore
-            transaction.gas = toHex(gas)
-            //@ts-ignore
-            transaction.gasLimit = toHex(gas)
-            const { rawTransaction: signedTransaction } = await client.eth.accounts.signTransaction(transaction as any, privateKey as string)
+            const { rawTransaction: signedTransaction } = await client.eth.accounts.signTransaction(rawTransaction as any, privateKey as string)
 
             const { transactionHash }  = await client.eth.sendSignedTransaction(signedTransaction as string)
 
