@@ -192,6 +192,15 @@ const searchHatAction = {
             return callbackData;
         } catch (error) {
             console.error("Error fetching hat", error);
+
+            const callbackData: Content = {
+                text: "This hat doesn't exist",
+                action: "HAT_DETAILS_RESPONSE",
+                source: message.content.source,
+                attachments: [],
+            };
+
+            await callback(callbackData);
             return;
         }
     },
