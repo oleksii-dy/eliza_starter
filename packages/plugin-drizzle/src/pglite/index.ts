@@ -80,16 +80,16 @@ export class PgliteDatabaseAdapter
         this.shuttingDown = true;
     
         const shutdownTimeout = setTimeout(() => {
-            console.log("Shutdown timeout reached, closing database connection...");
+            logger.warn("Shutdown timeout reached, closing database connection...");
             this.client.close().finally(() => {
                 process.exit(1);
             });
-        }, 10000);
+        }, 1010);
 
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 1010));
 
         clearTimeout(shutdownTimeout);
-    
+
         await this.client.close();
     
         process.exit(0);
@@ -199,6 +199,8 @@ export class PgliteDatabaseAdapter
 
     async init(): Promise<void> {
         try {
+            await this.client.waitReady;
+
             await runMigrations(this.client);
         } catch (error) {
             logger.error("Failed to initialize database:", error);
@@ -792,8 +794,6 @@ export class PgliteDatabaseAdapter
             embeddingLength: memory.embedding?.length,
             contentLength: memory.content?.text?.length,
         });
-
-        console.log("DrizzleAdapter createMemory:::::::::::", memory);
 
         let isUnique = true;
         if (memory.embedding && Array.isArray(memory.embedding)) {

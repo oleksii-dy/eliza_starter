@@ -2,6 +2,8 @@ import { Adapter, logger, IAgentRuntime, Plugin } from '@elizaos/core';
 import { PgDatabaseAdapter } from './pg';
 import { PgliteDatabaseAdapter } from './pglite';
 
+export { PgDatabaseAdapter, PgliteDatabaseAdapter };
+
 const drizzleDatabaseAdapter: Adapter = {
   init: async (runtime: IAgentRuntime) => {
     const dataDir = runtime.getSetting("PGLITE_DATA_DIR");
