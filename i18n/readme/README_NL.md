@@ -17,7 +17,7 @@
 ## 🚩 Overzicht
 
 <div align="center">
-  <img src="./docs/static/img/eliza_diagram.jpg" alt="Eliza Diagram" width="100%" />
+  <img src="/docs/static/img/eliza_diagram.jpg" alt="Eliza Diagram" width="100%" />
 </div>
 
 ## ✨ Functies
