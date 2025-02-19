@@ -421,7 +421,7 @@ const hasValidRemoteUrls = () =>
   process.env.REMOTE_CHARACTER_URLS.startsWith("http");
 
 const startAgents = async () => {
-  const AgentServer = new AgentServer();
+  const server = new AgentServer();
   let serverPort = Number.parseInt(settings.SERVER_PORT || "3000");
   const args = parseArguments();
   const charactersArg = args.characters || args.character;
@@ -432,7 +432,7 @@ const startAgents = async () => {
       for (const swarmMember of swarm) {
         await startAgent(
           swarmMember.character,
-          AgentServer,
+          server,
           swarmMember.init
         );
         characters.push(swarmMember.character);
@@ -451,7 +451,7 @@ const startAgents = async () => {
 
     try {
       for (const character of characters) {
-        await startAgent(character, AgentServer);
+          await startAgent(character, server);
       }
     } catch (error) {
       logger.error("Error starting agents:", error);
@@ -464,15 +464,15 @@ const startAgents = async () => {
     serverPort++;
   }
 
-  AgentServer.startAgent = async (character) => {
+  server.startAgent = async (character) => {
     logger.info(`Starting agent for character ${character.name}`);
-    return startAgent(character, AgentServer);
+    return startAgent(character, server);
   };
 
-  AgentServer.loadCharacterTryPath = loadCharacterTryPath;
-  AgentServer.jsonToCharacter = jsonToCharacter;
+  server.loadCharacterTryPath = loadCharacterTryPath;
+  server.jsonToCharacter = jsonToCharacter;
 
-  AgentServer.start(serverPort);
+  server.start(serverPort);
 
   if (serverPort !== Number.parseInt(settings.SERVER_PORT || "3000")) {
     logger.log(`Server started on alternate port ${serverPort}`);
