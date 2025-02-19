@@ -3,11 +3,16 @@ import { logger } from "@/src/utils/logger"
 import { Command } from "commander"
 import fs from "node:fs"
 
-const AGENT_RUNTIME_URL = process.env.AGENT_RUNTIME_URL
+const AGENT_RUNTIME_URL = process.env.AGENT_RUNTIME_URL || "http://localhost:3000"
 
 export const agent = new Command()
   .name("agent")
   .description("manage ElizaOS agents")
+
+interface AgentStartPayload {
+  characterPath?: string;
+  characterJson?: Record<string, unknown>;
+}
 
 async function getAgentIdFromIndex(index: number): Promise<string> {
   const listResponse = await fetch(`${AGENT_RUNTIME_URL}/agents`)
@@ -38,7 +43,7 @@ agent
       const tableData = sortedAgents.map(agent => ({
         Name: agent.name,
         ID: agent.id,
-        Clients: agent.clients.join(", ")
+        Clients: Array.isArray(agent.clients) ? agent.clients.join(", ") : "No clients"
       }))
 
       if (opts.json) {
@@ -48,6 +53,8 @@ agent
         console.table(tableData)
         logger.info("")
       }
+
+      process.exit(0)
     } catch (error) {
       handleError(error)
     }
@@ -61,11 +68,11 @@ agent
   .action(async (agentIdOrIndex, opts) => {
     try {
       // If input is a number, get agent ID from index
-      if (!isNaN(Number(agentIdOrIndex))) {
-        agentIdOrIndex = await getAgentIdFromIndex(Number.parseInt(agentIdOrIndex))
-      }
+      const resolvedAgentId = !Number.isNaN(Number(agentIdOrIndex))
+        ? await getAgentIdFromIndex(Number.parseInt(agentIdOrIndex))
+        : agentIdOrIndex;
 
-      const response = await fetch(`${AGENT_RUNTIME_URL}/agents/${agentIdOrIndex}`)
+      const response = await fetch(`${AGENT_RUNTIME_URL}/agents/${resolvedAgentId}`)
       if (!response.ok) {
         throw new Error(`Failed to get agent: ${response.statusText}`)
       }
@@ -94,9 +101,9 @@ agent
   .option("-j, --json <json>", "character JSON string")
   .action(async (characterPath, opts) => {
     try {
-      const payload: any = {}
-      if (characterPath) payload.characterPath = characterPath
-      if (opts.json) payload.characterJson = JSON.parse(opts.json)
+      const payload: AgentStartPayload = {};
+      if (characterPath) payload.characterPath = characterPath;
+      if (opts.json) payload.characterJson = JSON.parse(opts.json);
 
       const response = await fetch(`${AGENT_RUNTIME_URL}/agent/start`, {
         method: 'POST',
@@ -121,11 +128,11 @@ agent
   .argument("<agentId>", "agent id, name, or index number from list")
   .action(async (agentIdOrIndex) => {
     try {
-      if (!isNaN(Number(agentIdOrIndex))) {
-        agentIdOrIndex = await getAgentIdFromIndex(Number.parseInt(agentIdOrIndex))
-      }
+      const resolvedAgentId = !Number.isNaN(Number(agentIdOrIndex))
+        ? await getAgentIdFromIndex(Number.parseInt(agentIdOrIndex))
+        : agentIdOrIndex;
 
-      const response = await fetch(`${AGENT_RUNTIME_URL}/agents/${agentIdOrIndex}/stop`, {
+      const response = await fetch(`${AGENT_RUNTIME_URL}/agents/${resolvedAgentId}/stop`, {
         method: 'POST'
       })
 
@@ -133,7 +140,7 @@ agent
         throw new Error(`Failed to stop agent: ${response.statusText}`)
       }
 
-      logger.success(`Successfully stopped agent ${agentIdOrIndex}`)
+      logger.success(`Successfully stopped agent ${resolvedAgentId}`)
     } catch (error) {
       handleError(error)
     }
@@ -145,11 +152,11 @@ agent
   .argument("<agentId>", "agent id, name, or index number from list")
   .action(async (agentIdOrIndex) => {
     try {
-      if (!isNaN(Number(agentIdOrIndex))) {
-        agentIdOrIndex = await getAgentIdFromIndex(Number.parseInt(agentIdOrIndex))
-      }
+      const resolvedAgentId = !Number.isNaN(Number(agentIdOrIndex))
+        ? await getAgentIdFromIndex(Number.parseInt(agentIdOrIndex))
+        : agentIdOrIndex;
 
-      const response = await fetch(`${AGENT_RUNTIME_URL}/agents/${agentIdOrIndex}`, {
+      const response = await fetch(`${AGENT_RUNTIME_URL}/agents/${resolvedAgentId}`, {
         method: 'DELETE'
       })
 
@@ -157,7 +164,7 @@ agent
         throw new Error(`Failed to remove agent: ${response.statusText}`)
       }
 
-      logger.success(`Successfully removed agent ${agentIdOrIndex}`)
+      logger.success(`Successfully removed agent ${resolvedAgentId}`)
     } catch (error) {
       handleError(error)
     }
@@ -170,12 +177,12 @@ agent
   .argument("<configPath>", "path to configuration JSON file")
   .action(async (agentIdOrIndex, configPath) => {
     try {
-      if (!isNaN(Number(agentIdOrIndex))) {
-        agentIdOrIndex = await getAgentIdFromIndex(Number.parseInt(agentIdOrIndex))
-      }
+      const resolvedAgentId = !isNaN(Number(agentIdOrIndex))
+        ? await getAgentIdFromIndex(Number.parseInt(agentIdOrIndex))
+        : agentIdOrIndex;
 
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
-      const response = await fetch(`${AGENT_RUNTIME_URL}/agents/${agentIdOrIndex}/set`, {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      const response = await fetch(`${AGENT_RUNTIME_URL}/agents/${resolvedAgentId}/set`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config)
