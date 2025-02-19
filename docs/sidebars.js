@@ -17,10 +17,64 @@ const sidebars = {
                 },
                 {
                     type: "doc",
+                    id: "guides/start-script",
+                    label: "Start Script",
+                },
+                {
+                    type: "doc",
                     id: "faq",
                     label: "❓ FAQ",
                 },
-            ],
+		{
+		    type: "category",
+		    label: "Tutorials",
+                    items: [
+                        {
+                            type: "category",
+                            label: "AI Agent Dev School",
+                            items: [
+                                {
+                                    type: "doc",
+                                    id: "tutorials/index",
+                                    label: "Overview",
+                                },                            
+                                {
+                                    type: "doc",
+                                    id: "tutorials/part1",
+                                    label: "Part 1",
+                                },
+                                {
+                                    type: "doc",
+                                    id: "tutorials/part2",
+                                    label: "Part 2",
+                                },
+                                {
+                                    type: "doc",
+                                    id: "tutorials/part3",
+                                    label: "Part 3",
+                                },
+                            ],
+                            collapsed: true, // Expand by default
+                        },
+                        {
+                            type: "doc",
+                            id: "tutorials/nader_tutorial_10min",
+                            label: "Clone Yourself in 10min",
+                        },
+                        {
+                            type: "doc",
+                            id: "tutorials/nader_tutorial_15min",
+                            label: "Build Social Agents in 15min",
+                        },                        
+                        {
+                            type: "doc",
+                            id: "tutorials/nader_tutorial_35min",
+                            label: "Build a Plugin in 35min",
+                        },                        
+                    ],
+                    collapsed: true, // Expand by default
+                },
+			],
             collapsed: false,
         },
         {
@@ -28,6 +82,11 @@ const sidebars = {
             label: "🧠 Core Concepts",
             collapsed: false,
             items: [
+                {
+                    type: "doc",
+                    id: "core/overview",
+                    label: "Overview",
+                },
                 {
                     type: "doc",
                     id: "core/characterfile",
@@ -67,6 +126,21 @@ const sidebars = {
                 },
                 {
                     type: "doc",
+                    id: "guides/docker-setup",
+                    label: "Docker Setup",
+                },
+                {
+                    type: "doc",
+                    id: "guides/remote-deployment",
+                    label: "Deployment",
+                },
+                {
+                    type: "doc",
+                    id: "guides/fine-tuning",
+                    label: "Fine-tuning",
+                },
+                {
+                    type: "doc",
                     id: "guides/advanced",
                     label: "Advanced Usage",
                 },
@@ -74,6 +148,11 @@ const sidebars = {
                     type: "doc",
                     id: "guides/secrets-management",
                     label: "Secrets Management",
+                },
+                {
+                    type: "doc",
+                    id: "guides/memory-management",
+                    label: "Memory Management",
                 },
                 {
                     type: "doc",
@@ -92,11 +171,6 @@ const sidebars = {
             label: "🎓 Advanced Topics",
             collapsed: false,
             items: [
-                {
-                    type: "doc",
-                    id: "advanced/fine-tuning",
-                    label: "Fine-tuning",
-                },
                 {
                     type: "doc",
                     id: "advanced/infrastructure",
@@ -129,11 +203,6 @@ const sidebars = {
             label: "📦 Packages",
             collapsed: false,
             items: [
-                {
-                    type: "doc",
-                    id: "packages/packages",
-                    label: "Overview",
-                },
                 {
                     type: "doc",
                     id: "packages/core",
