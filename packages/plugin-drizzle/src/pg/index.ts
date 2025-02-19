@@ -63,9 +63,7 @@ export class PgDatabaseAdapter
     private readonly connectionTimeout: number = 5000; // 5 seconds
     protected embeddingDimension: EmbeddingDimensionColumn = DIMENSION_MAP[384];
 
-    constructor(
-        connectionConfig: any,
-    ) {
+    constructor(connectionConfig: any) {
         super();
         const defaultConfig = {
             max: 20,
@@ -130,9 +128,7 @@ export class PgDatabaseAdapter
         }
     }
 
-    private async withDatabase<T>(
-        operation: () => Promise<T>
-    ): Promise<T> {
+    private async withDatabase<T>(operation: () => Promise<T>): Promise<T> {
         return this.withRetry(operation);
     }
 
@@ -147,7 +143,7 @@ export class PgDatabaseAdapter
 
                 if (attempt < this.maxRetries) {
                     const backoffDelay = Math.min(
-                        this.baseDelay * (2 ** (attempt - 1)),
+                        this.baseDelay * 2 ** (attempt - 1),
                         this.maxDelay
                     );
 
@@ -187,7 +183,7 @@ export class PgDatabaseAdapter
     async ensureEmbeddingDimension(dimension: number, agentId: UUID) {
         const existingMemory = await this.db
             .select({
-                embedding: embeddingTable
+                embedding: embeddingTable,
             })
             .from(memoryTable)
             .innerJoin(
@@ -196,17 +192,20 @@ export class PgDatabaseAdapter
             )
             .where(eq(memoryTable.agentId, agentId))
             .limit(1);
-    
+
         if (existingMemory.length > 0) {
-            const usedDimension = Object.entries(DIMENSION_MAP).find(([_, colName]) => 
-                existingMemory[0].embedding[colName] !== null
+            const usedDimension = Object.entries(DIMENSION_MAP).find(
+                ([_, colName]) => existingMemory[0].embedding[colName] !== null
             );
-            
-            if (usedDimension && usedDimension[1] !== DIMENSION_MAP[dimension]) {
-                throw new Error('Cannot change embedding dimension for agent');
+
+            if (
+                usedDimension &&
+                usedDimension[1] !== DIMENSION_MAP[dimension]
+            ) {
+                throw new Error("Cannot change embedding dimension for agent");
             }
         }
-    
+
         this.embeddingDimension = DIMENSION_MAP[dimension];
     }
 
@@ -349,7 +348,7 @@ export class PgDatabaseAdapter
                     email: account.email ?? "",
                     avatarUrl: account.avatarUrl ?? null,
                     details: account.details ?? {},
-                }
+                };
 
                 await this.db.insert(accountTable).values(insertData);
 
@@ -788,8 +787,8 @@ export class PgDatabaseAdapter
         return this.withDatabase(async () => {
             await this.db
                 .update(goalTable)
-                .set({ 
-                    status: params.status as string
+                .set({
+                    status: params.status as string,
                 })
                 .where(eq(goalTable.id, params.goalId));
         });
@@ -1530,14 +1529,12 @@ export class PgDatabaseAdapter
 
     async createCharacter(character: Character): Promise<void> {
         return this.withDatabase(async () => {
-            const insertData = characterToInsert(
-                { ...character },
-            );
-            
+            const insertData = characterToInsert({ ...character });
+
             await this.db.insert(characterTable).values(insertData);
-    
+
             logger.debug("Character created successfully:", {
-                name: character.name
+                name: character.name,
             });
         });
     }
@@ -1548,18 +1545,21 @@ export class PgDatabaseAdapter
                 .select()
                 .from(characterTable)
                 .orderBy(desc(characterTable.createdAt));
-    
-            return characters.map(char => ({
+
+            return characters.map((char) => ({
                 name: char.name,
                 username: char.username ?? undefined,
                 email: char.email ?? undefined,
                 system: char.system ?? undefined,
-                templates: char.templates 
+                templates: char.templates
                     ? Object.fromEntries(
-                        Object.entries(char.templates).map(
-                            ([key, stored]) => [key, storedToTemplate(stored as StoredTemplate)]
-                        )
-                    )
+                          Object.entries(char.templates).map(
+                              ([key, stored]) => [
+                                  key,
+                                  storedToTemplate(stored as StoredTemplate),
+                              ]
+                          )
+                      )
                     : undefined,
                 bio: char.bio,
                 messageExamples: char.messageExamples || undefined,
@@ -1573,7 +1573,7 @@ export class PgDatabaseAdapter
             }));
         });
     }
-    
+
     async getCharacter(name: string): Promise<Character | null> {
         return this.withDatabase(async () => {
             const result = await this.db
@@ -1581,21 +1581,24 @@ export class PgDatabaseAdapter
                 .from(characterTable)
                 .where(eq(characterTable.name, name))
                 .limit(1);
-    
+
             if (result.length === 0) return null;
-    
+
             const char = result[0];
             return {
                 name: char.name,
                 username: char.username ?? undefined,
                 email: char.email ?? undefined,
                 system: char.system ?? undefined,
-                templates: char.templates 
+                templates: char.templates
                     ? Object.fromEntries(
-                        Object.entries(char.templates).map(
-                            ([key, stored]) => [key, storedToTemplate(stored as StoredTemplate)]
-                        )
-                    )
+                          Object.entries(char.templates).map(
+                              ([key, stored]) => [
+                                  key,
+                                  storedToTemplate(stored as StoredTemplate),
+                              ]
+                          )
+                      )
                     : undefined,
                 bio: char.bio,
                 messageExamples: char.messageExamples || undefined,
@@ -1609,42 +1612,45 @@ export class PgDatabaseAdapter
             };
         });
     }
-    
-    async updateCharacter(name: string, updates: Partial<Character>): Promise<void> {
+
+    async updateCharacter(
+        name: string,
+        updates: Partial<Character>
+    ): Promise<void> {
         return this.withDatabase(async () => {
             const { templates, ...restUpdates } = updates;
-            
+
             const updateData: Partial<typeof characterTable.$inferInsert> = {
                 ...restUpdates,
                 ...(templates && {
                     templates: Object.fromEntries(
-                        Object.entries(templates).map(
-                            ([key, value]) => [key, templateToStored(value)]
-                        )
-                    )
-                })
+                        Object.entries(templates).map(([key, value]) => [
+                            key,
+                            templateToStored(value),
+                        ])
+                    ),
+                }),
             };
-    
+
             await this.db
                 .update(characterTable)
                 .set(updateData)
                 .where(eq(characterTable.name, name));
-    
+
             logger.debug("Character updated successfully:", {
                 name,
-                updatedFields: Object.keys(updateData)
+                updatedFields: Object.keys(updateData),
             });
         });
     }
-    
+
     async removeCharacter(name: string): Promise<void> {
         return this.withDatabase(async () => {
             await this.db
                 .delete(characterTable)
                 .where(eq(characterTable.name, name));
-    
+
             logger.debug("Character removed successfully:", { name });
         });
     }
 }
-

@@ -45,10 +45,7 @@ import { drizzle, PgliteDatabase } from "drizzle-orm/pglite";
 import { v4 } from "uuid";
 import { runMigrations } from "./migrations";
 import { DIMENSION_MAP, EmbeddingDimensionColumn } from "../schema/embedding";
-import {
-    PGlite,
-    type PGliteOptions,
-} from "@electric-sql/pglite";
+import { PGlite, type PGliteOptions } from "@electric-sql/pglite";
 import { vector } from "@electric-sql/pglite/vector";
 import { fuzzystrmatch } from "@electric-sql/pglite/contrib/fuzzystrmatch";
 
@@ -62,43 +59,61 @@ export class PgliteDatabaseAdapter
     private readonly maxDelay: number = 10000; // 10 seconds
     private readonly jitterMax: number = 1000; // 1 second
     protected embeddingDimension: EmbeddingDimensionColumn = DIMENSION_MAP[384];
+    private shuttingDown = false;
 
     constructor(options: PGliteOptions) {
         super();
-        
+
         this.client = new PGlite({
             ...options,
-            debug: 5,
             extensions: {
                 vector,
                 fuzzystrmatch,
             },
         });
-    
-        this.db = drizzle(this.client);
 
-        this.setupDatabaseShutdownHandlers();
+        this.db = drizzle(this.client);
+        this.setupShutdownHandlers();
     }
 
-    private setupDatabaseShutdownHandlers() {
+    private async gracefulShutdown() {
+        this.shuttingDown = true;
+    
+        const shutdownTimeout = setTimeout(() => {
+            console.log("Shutdown timeout reached, closing database connection...");
+            this.client.close().finally(() => {
+                process.exit(1);
+            });
+        }, 10000);
+
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
+        clearTimeout(shutdownTimeout);
+    
+        await this.client.close();
+    
+        process.exit(0);
+    }
+
+    private setupShutdownHandlers() {
         process.on("SIGINT", async () => {
-            await this.client.close();
-            process.exit(0);
+            await this.gracefulShutdown();
         });
 
         process.on("SIGTERM", async () => {
-            await this.client.close();
-            process.exit(0);
+            await this.gracefulShutdown();
         });
 
         process.on("beforeExit", async () => {
-            await this.client.close();
+            await this.gracefulShutdown();
         });
     }
 
-    private async withDatabase<T>(
-        operation: () => Promise<T>
-    ): Promise<T> {
+    private async withDatabase<T>(operation: () => Promise<T>): Promise<T> {
+        if (this.shuttingDown) {
+            logger.warn("Database is shutting down, waiting for 5 seconds before retrying");
+            return null as unknown as T;
+        }
         return this.withRetry(operation);
     }
 
@@ -113,7 +128,7 @@ export class PgliteDatabaseAdapter
 
                 if (attempt < this.maxRetries) {
                     const backoffDelay = Math.min(
-                        this.baseDelay * (2 ** (attempt - 1)),
+                        this.baseDelay * 2 ** (attempt - 1),
                         this.maxDelay
                     );
 
@@ -146,14 +161,13 @@ export class PgliteDatabaseAdapter
                 }
             }
         }
-
         throw lastError;
     }
 
     async ensureEmbeddingDimension(dimension: number, agentId: UUID) {
         const existingMemory = await this.db
             .select({
-                embedding: embeddingTable
+                embedding: embeddingTable,
             })
             .from(memoryTable)
             .innerJoin(
@@ -162,17 +176,20 @@ export class PgliteDatabaseAdapter
             )
             .where(eq(memoryTable.agentId, agentId))
             .limit(1);
-    
+
         if (existingMemory.length > 0) {
-            const usedDimension = Object.entries(DIMENSION_MAP).find(([_, colName]) => 
-                existingMemory[0].embedding[colName] !== null
+            const usedDimension = Object.entries(DIMENSION_MAP).find(
+                ([_, colName]) => existingMemory[0].embedding[colName] !== null
             );
-            
-            if (usedDimension && usedDimension[1] !== DIMENSION_MAP[dimension]) {
-                throw new Error('Cannot change embedding dimension for agent');
+
+            if (
+                usedDimension &&
+                usedDimension[1] !== DIMENSION_MAP[dimension]
+            ) {
+                throw new Error("Cannot change embedding dimension for agent");
             }
         }
-    
+
         this.embeddingDimension = DIMENSION_MAP[dimension];
     }
 
@@ -180,49 +197,10 @@ export class PgliteDatabaseAdapter
         await this.client.close();
     }
 
-    private async validateVectorSetup(): Promise<boolean> {
-        try {
-            const vectorExt = await this.db.execute(sql`
-                SELECT * FROM pg_extension WHERE extname = 'vector'
-            `);
-
-            const hasVector = vectorExt?.rows.length > 0;
-
-            if (!hasVector) {
-                logger.warn("Vector extension not found");
-                return false;
-            }
-
-            return true;
-        } catch (error) {
-            logger.error("Error validating vector setup:", error);
-            return false;
-        }
-    }
-
     async init(): Promise<void> {
-        console.log("Initializing PGLite Database Adapter");
-        await this.client.waitReady;
-        console.log("PGLite Database Adapter initialized WAIT READY");
-
-        logger.info("Initializing Drizzle Database Adapter");
         try {
-            console.log("Initializing Drizzle Database Adapter call execute");
-            const { rows } = await this.db.execute(sql`
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables
-                    WHERE table_name = 'rooms'
-                );
-            `);
-
-            console.log("Initializing Drizzle Database Adapter call validateVectorSetup", rows);
-
-            if (!rows[0].exists || !(await this.validateVectorSetup())) {
-                console.log("Initializing Drizzle Database Adapter call runMigrations");
-                await runMigrations(this.client);
-            }
+            await runMigrations(this.client);
         } catch (error) {
-            console.log("Failed to initialize database ERROR:", error);
             logger.error("Failed to initialize database:", error);
             throw error;
         }
@@ -270,28 +248,28 @@ export class PgliteDatabaseAdapter
     async createAccount(account: Account): Promise<boolean> {
         return this.withDatabase(async () => {
             try {
-                const accountId = account.id ?? v4();
+                return await this.db.transaction(async (tx) => {
+                    const accountId = account.id ?? v4();
+                    const insertData = {
+                        id: accountId,
+                        name: account.name,
+                        username: account.username,
+                        email: account.email ?? "",
+                        avatarUrl: account.avatarUrl ?? null,
+                        details: account.details ?? {},
+                    };
 
-                const insertData = {
-                    id: accountId,
-                    name: account.name,
-                    username: account.username,
-                    email: account.email ?? "",
-                    avatarUrl: account.avatarUrl ?? null,
-                    details: account.details ?? {},
-                }
-
-                await this.db.insert(accountTable).values(insertData);
-
-                logger.debug("Account created successfully:", {
-                    accountId,
+                    await tx.insert(accountTable).values(insertData);
+    
+                    logger.debug("Account created successfully:", {
+                        accountId,
+                    });
+    
+                    return true;
                 });
-
-                return true;
             } catch (error) {
                 logger.error("Error creating account:", {
-                    error:
-                        error instanceof Error ? error.message : String(error),
+                    error: error instanceof Error ? error.message : String(error),
                     accountId: account.id,
                     name: account.name,
                 });
@@ -593,11 +571,13 @@ export class PgliteDatabaseAdapter
     }): Promise<void> {
         return this.withDatabase(async () => {
             try {
-                await this.db.insert(logTable).values({
-                    body: sql`${params.body}::jsonb`,
-                    userId: params.userId,
-                    roomId: params.roomId,
-                    type: params.type,
+                await this.db.transaction(async (tx) => {
+                    await tx.insert(logTable).values({
+                        body: sql`${params.body}::jsonb`,
+                        userId: params.userId,
+                        roomId: params.roomId,
+                        type: params.type,
+                    });
                 });
             } catch (error) {
                 logger.error("Failed to create log entry:", {
@@ -716,12 +696,23 @@ export class PgliteDatabaseAdapter
         status: GoalStatus;
     }): Promise<void> {
         return this.withDatabase(async () => {
-            await this.db
-                .update(goalTable)
-                .set({ 
-                    status: params.status as string
-                })
-                .where(eq(goalTable.id, params.goalId));
+            try {
+                await this.db.transaction(async (tx) => {
+                    await tx
+                        .update(goalTable)
+                        .set({
+                            status: params.status as string,
+                        })
+                        .where(eq(goalTable.id, params.goalId));
+                });
+            } catch (error) {
+                logger.error("Failed to update goal status:", {
+                    goalId: params.goalId,
+                    status: params.status,
+                    error: error instanceof Error ? error.message : String(error),
+                });
+                throw error;
+            }
         });
     }
 
@@ -801,6 +792,8 @@ export class PgliteDatabaseAdapter
             embeddingLength: memory.embedding?.length,
             contentLength: memory.content?.text?.length,
         });
+
+        console.log("DrizzleAdapter createMemory:::::::::::", memory);
 
         let isUnique = true;
         if (memory.embedding && Array.isArray(memory.embedding)) {
@@ -995,14 +988,16 @@ export class PgliteDatabaseAdapter
     async updateGoal(goal: Goal): Promise<void> {
         return this.withDatabase(async () => {
             try {
-                await this.db
-                    .update(goalTable)
-                    .set({
-                        name: goal.name,
-                        status: goal.status,
-                        objectives: goal.objectives,
-                    })
-                    .where(eq(goalTable.id, goal.id as string));
+                await this.db.transaction(async (tx) => {
+                    await tx
+                        .update(goalTable)
+                        .set({
+                            name: goal.name,
+                            status: goal.status,
+                            objectives: goal.objectives,
+                        })
+                        .where(eq(goalTable.id, goal.id as string));
+                });
             } catch (error) {
                 logger.error("Failed to update goal:", {
                     error:
@@ -1016,32 +1011,38 @@ export class PgliteDatabaseAdapter
     }
 
     async createGoal(goal: Goal): Promise<void> {
-        try {
-            await this.db.insert(goalTable).values({
-                id: goal.id ?? v4(),
-                roomId: goal.roomId,
-                userId: goal.userId,
-                name: goal.name,
-                status: goal.status,
-                objectives: sql`${goal.objectives}::jsonb`,
-            });
-        } catch (error) {
-            logger.error("Failed to update goal:", {
-                goalId: goal.id,
-                error: error instanceof Error ? error.message : String(error),
-                status: goal.status,
-            });
-            throw error;
-        }
+        return this.withDatabase(async () => {
+            try {
+                await this.db.transaction(async (tx) => {
+                    await tx.insert(goalTable).values({
+                        id: goal.id ?? v4(),
+                        roomId: goal.roomId,
+                        userId: goal.userId,
+                        name: goal.name,
+                        status: goal.status,
+                        objectives: sql`${goal.objectives}::jsonb`,
+                    });
+                });
+            } catch (error) {
+                logger.error("Failed to update goal:", {
+                    goalId: goal.id,
+                    error: error instanceof Error ? error.message : String(error),
+                    status: goal.status,
+                });
+                throw error;
+            }
+        });
     }
 
     async removeGoal(goalId: UUID): Promise<void> {
         if (!goalId) throw new Error("Goal ID is required");
-
+    
         return this.withDatabase(async () => {
             try {
-                await this.db.delete(goalTable).where(eq(goalTable.id, goalId));
-
+                await this.db.transaction(async (tx) => {
+                    await tx.delete(goalTable).where(eq(goalTable.id, goalId));
+                });
+    
                 logger.debug("Goal removal attempt:", {
                     goalId,
                     removed: true,
@@ -1059,7 +1060,9 @@ export class PgliteDatabaseAdapter
 
     async removeAllGoals(roomId: UUID): Promise<void> {
         return this.withDatabase(async () => {
-            await this.db.delete(goalTable).where(eq(goalTable.roomId, roomId));
+            await this.db.transaction(async (tx) => {
+                await tx.delete(goalTable).where(eq(goalTable.roomId, roomId));
+            });
         });
     }
 
@@ -1080,11 +1083,13 @@ export class PgliteDatabaseAdapter
     async createRoom(roomId?: UUID): Promise<UUID> {
         return this.withDatabase(async () => {
             const newRoomId = roomId || v4();
-            await this.db.insert(roomTable).values([
-                {
-                    id: newRoomId,
-                },
-            ]);
+            await this.db.transaction(async (tx) => {
+                await tx.insert(roomTable).values([
+                    {
+                        id: newRoomId,
+                    },
+                ]);
+            });
             return newRoomId as UUID;
         });
     }
@@ -1092,7 +1097,9 @@ export class PgliteDatabaseAdapter
     async removeRoom(roomId: UUID): Promise<void> {
         if (!roomId) throw new Error("Room ID is required");
         return this.withDatabase(async () => {
-            await this.db.delete(roomTable).where(eq(roomTable.id, roomId));
+            await this.db.transaction(async (tx) => {
+                await tx.delete(roomTable).where(eq(roomTable.id, roomId));
+            });
         });
     }
 
@@ -1121,10 +1128,12 @@ export class PgliteDatabaseAdapter
     async addParticipant(userId: UUID, roomId: UUID): Promise<boolean> {
         return this.withDatabase(async () => {
             try {
-                await this.db.insert(participantTable).values({
-                    id: v4(),
-                    userId,
-                    roomId,
+                await this.db.transaction(async (tx) => {
+                    await tx.insert(participantTable).values({
+                        id: v4(),
+                        userId,
+                        roomId,
+                    });
                 });
                 return true;
             } catch (error) {
@@ -1142,17 +1151,27 @@ export class PgliteDatabaseAdapter
     async removeParticipant(userId: UUID, roomId: UUID): Promise<boolean> {
         return this.withDatabase(async () => {
             try {
-                const result = await this.db
-                    .delete(participantTable)
-                    .where(
-                        and(
-                            eq(participantTable.userId, userId),
-                            eq(participantTable.roomId, roomId)
+                const result = await this.db.transaction(async (tx) => {
+                    return await tx
+                        .delete(participantTable)
+                        .where(
+                            and(
+                                eq(participantTable.userId, userId),
+                                eq(participantTable.roomId, roomId)
+                            )
                         )
-                    )
-                    .returning();
-
-                return result.length > 0;
+                        .returning();
+                });
+                
+                const removed = result.length > 0;
+                
+                logger.debug(`Participant ${removed ? 'removed' : 'not found'}:`, {
+                    userId,
+                    roomId,
+                    removed,
+                });
+                
+                return removed;
             } catch (error) {
                 logger.error("Failed to remove participant:", {
                     error:
@@ -1225,15 +1244,27 @@ export class PgliteDatabaseAdapter
         state: "FOLLOWED" | "MUTED" | null
     ): Promise<void> {
         return this.withDatabase(async () => {
-            await this.db
-                .update(participantTable)
-                .set({ userState: state })
-                .where(
-                    and(
-                        eq(participantTable.roomId, roomId),
-                        eq(participantTable.userId, userId)
-                    )
-                );
+            try {
+                await this.db.transaction(async (tx) => {
+                    await tx
+                        .update(participantTable)
+                        .set({ userState: state })
+                        .where(
+                            and(
+                                eq(participantTable.roomId, roomId),
+                                eq(participantTable.userId, userId)
+                            )
+                        );
+                });
+            } catch (error) {
+                logger.error("Failed to set participant user state:", {
+                    roomId,
+                    userId,
+                    state,
+                    error: error instanceof Error ? error.message : String(error),
+                });
+                throw error;
+            }
         });
     }
 
@@ -1244,24 +1275,26 @@ export class PgliteDatabaseAdapter
         if (!params.userA || !params.userB) {
             throw new Error("userA and userB are required");
         }
-
+    
         return this.withDatabase(async () => {
             try {
-                const relationshipId = v4();
-                await this.db.insert(relationshipTable).values({
-                    id: relationshipId,
-                    userA: params.userA,
-                    userB: params.userB,
-                    userId: params.userA,
+                return await this.db.transaction(async (tx) => {
+                    const relationshipId = v4();
+                    await tx.insert(relationshipTable).values({
+                        id: relationshipId,
+                        userA: params.userA,
+                        userB: params.userB,
+                        userId: params.userA,
+                    });
+    
+                    logger.debug("Relationship created successfully:", {
+                        relationshipId,
+                        userA: params.userA,
+                        userB: params.userB,
+                    });
+    
+                    return true;
                 });
-
-                logger.debug("Relationship created successfully:", {
-                    relationshipId,
-                    userA: params.userA,
-                    userB: params.userB,
-                });
-
-                return true;
             } catch (error) {
                 if ((error as { code?: string }).code === "23505") {
                     logger.warn("Relationship already exists:", {
@@ -1405,19 +1438,21 @@ export class PgliteDatabaseAdapter
     }): Promise<boolean> {
         return this.withDatabase(async () => {
             try {
-                await this.db
-                    .insert(cacheTable)
-                    .values({
-                        key: params.key,
-                        agentId: params.agentId,
-                        value: sql`${params.value}::jsonb`,
-                    })
-                    .onConflictDoUpdate({
-                        target: [cacheTable.key, cacheTable.agentId],
-                        set: {
-                            value: params.value,
-                        },
-                    });
+                await this.db.transaction(async (tx) => {
+                    await tx
+                        .insert(cacheTable)
+                        .values({
+                            key: params.key,
+                            agentId: params.agentId,
+                            value: sql`${params.value}::jsonb`,
+                        })
+                        .onConflictDoUpdate({
+                            target: [cacheTable.key, cacheTable.agentId],
+                            set: {
+                                value: params.value,
+                            },
+                        });
+                });
                 return true;
             } catch (error) {
                 logger.error("Error setting cache", {
@@ -1437,14 +1472,16 @@ export class PgliteDatabaseAdapter
     }): Promise<boolean> {
         return this.withDatabase(async () => {
             try {
-                await this.db
-                    .delete(cacheTable)
-                    .where(
-                        and(
-                            eq(cacheTable.agentId, params.agentId),
-                            eq(cacheTable.key, params.key)
-                        )
-                    );
+                await this.db.transaction(async (tx) => {
+                    await tx
+                        .delete(cacheTable)
+                        .where(
+                            and(
+                                eq(cacheTable.agentId, params.agentId),
+                                eq(cacheTable.key, params.key)
+                            )
+                        );
+                });
                 return true;
             } catch (error) {
                 logger.error("Error deleting cache", {
@@ -1460,15 +1497,22 @@ export class PgliteDatabaseAdapter
 
     async createCharacter(character: Character): Promise<void> {
         return this.withDatabase(async () => {
-            const insertData = characterToInsert(
-                { ...character },
-            );
-            
-            await this.db.insert(characterTable).values(insertData);
+            try {
+                await this.db.transaction(async (tx) => {
+                    const insertData = characterToInsert({ ...character });
+                    await tx.insert(characterTable).values(insertData);
+                });
     
-            logger.debug("Character created successfully:", {
-                name: character.name
-            });
+                logger.debug("Character created successfully:", {
+                    name: character.name,
+                });
+            } catch (error) {
+                logger.error("Failed to create character:", {
+                    error: error instanceof Error ? error.message : String(error),
+                    characterName: character.name,
+                });
+                throw error;
+            }
         });
     }
 
@@ -1478,18 +1522,21 @@ export class PgliteDatabaseAdapter
                 .select()
                 .from(characterTable)
                 .orderBy(desc(characterTable.createdAt));
-    
-            return characters.map(char => ({
+
+            return characters.map((char) => ({
                 name: char.name,
                 username: char.username ?? undefined,
                 email: char.email ?? undefined,
                 system: char.system ?? undefined,
-                templates: char.templates 
+                templates: char.templates
                     ? Object.fromEntries(
-                        Object.entries(char.templates).map(
-                            ([key, stored]) => [key, storedToTemplate(stored as StoredTemplate)]
-                        )
-                    )
+                          Object.entries(char.templates).map(
+                              ([key, stored]) => [
+                                  key,
+                                  storedToTemplate(stored as StoredTemplate),
+                              ]
+                          )
+                      )
                     : undefined,
                 bio: char.bio,
                 messageExamples: char.messageExamples || undefined,
@@ -1503,7 +1550,7 @@ export class PgliteDatabaseAdapter
             }));
         });
     }
-    
+
     async getCharacter(name: string): Promise<Character | null> {
         return this.withDatabase(async () => {
             const result = await this.db
@@ -1511,21 +1558,24 @@ export class PgliteDatabaseAdapter
                 .from(characterTable)
                 .where(eq(characterTable.name, name))
                 .limit(1);
-    
+
             if (result.length === 0) return null;
-    
+
             const char = result[0];
             return {
                 name: char.name,
                 username: char.username ?? undefined,
                 email: char.email ?? undefined,
                 system: char.system ?? undefined,
-                templates: char.templates 
+                templates: char.templates
                     ? Object.fromEntries(
-                        Object.entries(char.templates).map(
-                            ([key, stored]) => [key, storedToTemplate(stored as StoredTemplate)]
-                        )
-                    )
+                          Object.entries(char.templates).map(
+                              ([key, stored]) => [
+                                  key,
+                                  storedToTemplate(stored as StoredTemplate),
+                              ]
+                          )
+                      )
                     : undefined,
                 bio: char.bio,
                 messageExamples: char.messageExamples || undefined,
@@ -1539,42 +1589,58 @@ export class PgliteDatabaseAdapter
             };
         });
     }
-    
-    async updateCharacter(name: string, updates: Partial<Character>): Promise<void> {
+
+    async updateCharacter(
+        name: string,
+        updates: Partial<Character>
+    ): Promise<void> {
         return this.withDatabase(async () => {
-            const { templates, ...restUpdates } = updates;
-            
-            const updateData: Partial<typeof characterTable.$inferInsert> = {
-                ...restUpdates,
-                ...(templates && {
-                    templates: Object.fromEntries(
-                        Object.entries(templates).map(
-                            ([key, value]) => [key, templateToStored(value)]
-                        )
-                    )
-                })
-            };
+            try {
+                await this.db.transaction(async (tx) => {
+                    const { templates, ...restUpdates } = updates;
     
-            await this.db
-                .update(characterTable)
-                .set(updateData)
-                .where(eq(characterTable.name, name));
+                    const updateData: Partial<typeof characterTable.$inferInsert> = {
+                        ...restUpdates,
+                        ...(templates && {
+                            templates: Object.fromEntries(
+                                Object.entries(templates).map(([key, value]) => [
+                                    key,
+                                    templateToStored(value),
+                                ])
+                            ),
+                        }),
+                    };
     
-            logger.debug("Character updated successfully:", {
-                name,
-                updatedFields: Object.keys(updateData)
+                    await tx
+                        .update(characterTable)
+                        .set(updateData)
+                        .where(eq(characterTable.name, name));
+                });
+    
+                logger.debug("Character updated successfully:", {
+                    name,
+                    updatedFields: Object.keys(updates),
+                });
+            } catch (error) {
+                logger.error("Failed to update character:", {
+                    name,
+                    error: error instanceof Error ? error.message : String(error),
+                    updatedFields: Object.keys(updates),
+                });
+                throw error;
+            }
+        });
+    }
+
+    async removeCharacter(name: string): Promise<void> {
+        return this.withDatabase(async () => {
+            await this.db.transaction(async (tx) => {
+                await tx
+                    .delete(characterTable)
+                    .where(eq(characterTable.name, name));
+
+                logger.debug("Character removed successfully:", { name });
             });
         });
     }
-    
-    async removeCharacter(name: string): Promise<void> {
-        return this.withDatabase(async () => {
-            await this.db
-                .delete(characterTable)
-                .where(eq(characterTable.name, name));
-    
-            logger.debug("Character removed successfully:", { name });
-        });
-    }
 }
-
