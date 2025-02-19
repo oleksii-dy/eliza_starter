@@ -2,6 +2,7 @@ import { handleError } from "@/src/utils/handle-error"
 import { logger } from "@/src/utils/logger"
 import { Command } from "commander"
 import fs from "node:fs"
+import path from "node:path"
 
 const AGENT_RUNTIME_URL = process.env.AGENT_RUNTIME_URL || "http://localhost:3000"
 
@@ -74,24 +75,28 @@ agent
       const resolvedAgentId = !Number.isNaN(Number(agentIdOrIndex))
         ? await getAgentIdFromIndex(Number.parseInt(agentIdOrIndex))
         : agentIdOrIndex;
+      
+      logger.info(`Getting agent ${resolvedAgentId}`)
 
       const response = await fetch(`${AGENT_RUNTIME_URL}/agents/${resolvedAgentId}`)
       if (!response.ok) {
         throw new Error(`Failed to get agent: ${response.statusText}`)
       }
-      const agent = await response.json()
       
+      const agent = await response.json()
+
+      logger.info(JSON.stringify(agent, null, 2))
+
+      // check if json argument is provided
       if (opts.json) {
-        logger.info(JSON.stringify(agent, null, 2))
-      } else {
-        console.table({
-          Name: agent.name,
-          ID: agent.id,
-          Clients: agent.clients.join(", "),
-          Status: agent.status,
-          // Add other relevant fields here
-        })
+        const jsonPath = path.join(process.cwd(), `${agent.character.name}.json`)
+        // exclude .id field from the json
+        const { id, ...character } = agent.character
+        fs.writeFileSync(jsonPath, JSON.stringify(character, null, 2))
       }
+
+      process.exit(0)
+
     } catch (error) {
       handleError(error)
     }
