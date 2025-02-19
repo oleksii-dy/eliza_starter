@@ -18,7 +18,7 @@ import {
     ServiceType
 } from "@elizaos/core";
 import type { ClientBase } from "./base";
-import { buildConversationThread, sendTweet, wait } from "./utils.ts";
+import { buildConversationThread, isConversationDone,analyzeConversation, sendTweet, wait } from "./utils.ts";
 
 export const twitterMessageHandlerTemplate =
     `

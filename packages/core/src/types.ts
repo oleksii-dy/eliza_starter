@@ -1704,7 +1704,7 @@ export enum RapportTier {
     HOSTILE = "Make response very cold and hostile. Show strong distrust and negativity.",
     ANTAGONISTIC = "Make response dismissive and unfriendly. Use stern and disapproving tone.",
     UNFRIENDLY = "Make response slightly cold and distant. Show mild irritation and reluctance.",
-    NEUTRAL = "Make response professionally neutral. Maintain balanced and objective tone.",
+    NEUTRAL = "",
     ACQUAINTANCE = "Make response casually friendly. Show polite interest and openness.",
     FRIEND = "Make response warm and engaging. Share enthusiasm and positive energy.",
     CLOSE_FRIEND = "Make response very warm and supportive. Show genuine care and trust.",
