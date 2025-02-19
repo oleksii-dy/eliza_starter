@@ -43,7 +43,7 @@ agent
       const tableData = sortedAgents.map(agent => ({
         Name: agent.name,
         ID: agent.id,
-        Clients: Array.isArray(agent.clients) ? agent.clients.join(", ") : "No clients"
+        Clients: agent.clients.join(", ")
       }))
 
       if (opts.json) {

@@ -75,7 +75,7 @@ export function createApiRouter(
         const agentsList = Array.from(agents.values()).map((agent) => ({
             id: agent.agentId,
             name: agent.character.name,
-            clients: agent.getAllClients().keys(),
+            clients: Array.from(agent.getAllClients().keys())
         }));
         res.json({ agents: agentsList });
     });
