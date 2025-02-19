@@ -45,72 +45,26 @@ import { drizzle, PgliteDatabase } from "drizzle-orm/pglite";
 import { v4 } from "uuid";
 import { runMigrations } from "./migrations";
 import { DIMENSION_MAP, EmbeddingDimensionColumn } from "../schema/embedding";
-import { PGlite, type PGliteOptions } from "@electric-sql/pglite";
-import { vector } from "@electric-sql/pglite/vector";
-import { fuzzystrmatch } from "@electric-sql/pglite/contrib/fuzzystrmatch";
-
+import { PGliteClientManager } from "./client";
 export class PgliteDatabaseAdapter
     extends DatabaseAdapter<PgliteDatabase>
     implements IDatabaseCacheAdapter
 {
-    private client: PGlite;
+    private client: PGliteClientManager;
     private readonly maxRetries: number = 3;
     private readonly baseDelay: number = 1000; // 1 second
     private readonly maxDelay: number = 10000; // 10 seconds
     private readonly jitterMax: number = 1000; // 1 second
     protected embeddingDimension: EmbeddingDimensionColumn = DIMENSION_MAP[384];
-    private shuttingDown = false;
 
-    constructor(options: PGliteOptions) {
+    constructor(client: PGliteClientManager) {
         super();
-
-        this.client = new PGlite({
-            ...options,
-            extensions: {
-                vector,
-                fuzzystrmatch,
-            },
-        });
-
-        this.db = drizzle(this.client);
-        this.setupShutdownHandlers();
-    }
-
-    private async gracefulShutdown() {
-        this.shuttingDown = true;
-    
-        const shutdownTimeout = setTimeout(() => {
-            logger.warn("Shutdown timeout reached, closing database connection...");
-            this.client.close().finally(() => {
-                process.exit(1);
-            });
-        }, 1010);
-
-        await new Promise((resolve) => setTimeout(resolve, 1010));
-
-        clearTimeout(shutdownTimeout);
-
-        await this.client.close();
-    
-        process.exit(0);
-    }
-
-    private setupShutdownHandlers() {
-        process.on("SIGINT", async () => {
-            await this.gracefulShutdown();
-        });
-
-        process.on("SIGTERM", async () => {
-            await this.gracefulShutdown();
-        });
-
-        process.on("beforeExit", async () => {
-            await this.gracefulShutdown();
-        });
+        this.client = client;
+        this.db = drizzle(this.client.getClient());
     }
 
     private async withDatabase<T>(operation: () => Promise<T>): Promise<T> {
-        if (this.shuttingDown) {
+        if (this.client.isShuttingDown()) {
             logger.warn("Database is shutting down, waiting for 5 seconds before retrying");
             return null as unknown as T;
         }
@@ -199,9 +153,7 @@ export class PgliteDatabaseAdapter
 
     async init(): Promise<void> {
         try {
-            await this.client.waitReady;
-
-            await runMigrations(this.client);
+            await runMigrations(this.client.getClient());
         } catch (error) {
             logger.error("Failed to initialize database:", error);
             throw error;
@@ -326,7 +278,7 @@ export class PgliteDatabaseAdapter
                         roomId: memoryTable.roomId,
                         unique: memoryTable.unique,
                     },
-                    embedding: embeddingTable[this.embeddingDimension], // TODO: remove dimension from here
+                    embedding: embeddingTable[this.embeddingDimension],
                 })
                 .from(memoryTable)
                 .leftJoin(

@@ -1,8 +1,11 @@
 import { Adapter, logger, IAgentRuntime, Plugin } from '@elizaos/core';
 import { PgDatabaseAdapter } from './pg';
-import { PgliteDatabaseAdapter } from './pg-lite';
+import { PgliteDatabaseAdapter } from './pg-lite/adapter';
+import { PGliteClientManager } from './pg-lite/client';
 
 export { PgDatabaseAdapter, PgliteDatabaseAdapter };
+
+let pgliteClient: PGliteClientManager | null = null;
 
 const drizzleDatabaseAdapter: Adapter = {
   init: async (runtime: IAgentRuntime) => {
@@ -13,7 +16,13 @@ const drizzleDatabaseAdapter: Adapter = {
       let db;
       if (dataDir) {
         logger.info(`Initializing PGLite database adapter with data directory: ${dataDir}`);
-        db = new PgliteDatabaseAdapter({ dataDir });
+        
+        if (!pgliteClient) {
+          pgliteClient = new PGliteClientManager({ dataDir });
+          await pgliteClient.initialize();
+        }
+
+        db = new PgliteDatabaseAdapter(pgliteClient);
       }
       else if (postgresUrl) {
         logger.info("Initializing Postgres database adapter...");
