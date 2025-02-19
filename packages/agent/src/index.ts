@@ -23,7 +23,7 @@ import yargs from "yargs";
 import {
   hasValidRemoteUrls,
   loadCharacters,
-} from "./loader.ts";
+} from "./server/loader.ts";
 import { AgentServer } from "./server/index.ts";
 import { defaultCharacter } from "./single-agent/character.ts";
 import swarm from "./swarm/index";
@@ -162,7 +162,7 @@ async function findDatabaseAdapter(runtime: IAgentRuntime) {
 
 async function startAgent(
   character: Character,
-  AgentServer: AgentServer,
+  server: AgentServer,
   init?: (runtime: IAgentRuntime) => Promise<void>
 ): Promise<IAgentRuntime> {
   let db: IDatabaseAdapter & IDatabaseCacheAdapter;
@@ -194,7 +194,7 @@ async function startAgent(
     await runtime.initialize();
 
     // add to container
-    AgentServer.registerAgent(runtime);
+    server.registerAgent(runtime);
 
     // report to console
     logger.debug(`Started ${character.name} as ${runtime.agentId}`);
@@ -216,7 +216,6 @@ async function startAgent(
 const checkPortAvailable = (port: number): Promise<boolean> => {
   return new Promise((resolve) => {
     const server = net.createServer();
-
     server.once("error", (err: NodeJS.ErrnoException) => {
       if (err.code === "EADDRINUSE") {
         resolve(false);

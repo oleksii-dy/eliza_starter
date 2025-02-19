@@ -2,7 +2,7 @@ import { type Character, logger, validateCharacterConfig } from "@elizaos/core";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { defaultCharacter } from "./single-agent/character.ts";
+import { defaultCharacter } from "../single-agent/character.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
