@@ -313,7 +313,7 @@ Each adapter implements vector storage based on its native capabilities - Postgr
 
 ### What about data migration?
 
-Use the adapter's export/import methods defined in the [`DatabaseAdapter`](/api/classes/DatabaseAdapter) base class. See [Migration Guide](../guides/data-migration.md) for detailed steps.
+Use the adapter's export/import methods defined in the [`DatabaseAdapter`](/api/classes/DatabaseAdapter) base class.
 
 ### How do I handle schema updates?
 
