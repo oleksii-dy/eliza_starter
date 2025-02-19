@@ -2,7 +2,7 @@
 
 # Variable: uuidSchema
 
-> `const` **uuidSchema**: `ZodType`\<\`$\{string\}-$\{string\}-$\{string\}-$\{string\}-$\{string\}\`\>
+> `const` **uuidSchema**: `ZodType`\<\`$\{string\}-$\{string\}-$\{string\}-$\{string\}-$\{string\}\`, `ZodTypeDef`, \`$\{string\}-$\{string\}-$\{string\}-$\{string\}-$\{string\}\`\>
 
 ## Defined in
 

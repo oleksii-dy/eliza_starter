@@ -2,7 +2,7 @@
 
 # Variable: elizaLogger
 
-> `const` **elizaLogger**: `any`
+> `const` **elizaLogger**: `Logger`\<`string`, `boolean`\>
 
 ## Defined in
 

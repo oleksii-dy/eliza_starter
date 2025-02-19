@@ -20,7 +20,7 @@ The context of the message to be completed.
 
 • **opts.modelClass**: [`ModelClass`](../enumerations/ModelClass.md)
 
-• **opts.tools?**: `Record`\<`string`, `CoreTool`\<`any`, `any`\>\> = `{}`
+• **opts.tools?**: `Record`\<`string`, `Tool`\> = `{}`
 
 • **opts.onStepFinish?**
 
