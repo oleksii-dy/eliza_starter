@@ -11,12 +11,14 @@ import {
 } from "@elizaos/core";
 
 export const password: Action = {
-    name: "password",
-    description: "If the speaker ever uses the word 'carrot'",
+    name: "PASSWORD",
+    description: "If the speaker asks for the password, the secret, or the hat then call this action",
     similes: [],
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         elizaLogger.debug(`Password validate input: "${message.content.text}"`);
-        const hasCarrot = message.content.text.toLowerCase().includes('carrot');
+        const hasCarrot = message.content.text.includes('password') || message.content.text.includes('PASSWORD') || message.content.text.includes('Password') ||
+            message.content.text.includes('secret') || message.content.text.includes('SECRET') || message.content.text.includes('Secret') ||
+            message.content.text.includes('hat') || message.content.text.includes('HAT') || message.content.text.includes('Hat');
         elizaLogger.debug(`Password validate check: ${hasCarrot}`);
         return hasCarrot;
     },
@@ -28,13 +30,13 @@ export const password: Action = {
         callback: HandlerCallback
     ): Promise<boolean> => {
         elizaLogger.debug('Password handler triggered');
-        
+
         await callback({
-            text: "Ah, the chosen one has arrived.\nThe password is: B00g1eKnights.",
+            text: "You seek great knowledge young one, but are you worthy of such things?",
             action: "password",
             final: true
         });
-        
+
         return true;
     },
     examples: [
@@ -42,13 +44,13 @@ export const password: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: 'Carrot?',
+                    text: 'PASSWORD',
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: `Ah, the chosen one has arrived.\nThe password is: B00g1eKnights.`,
+                    text: `You seek great knowledge young one, but are you worthy of such things?`,
                     action: "PASSWORD"
                 },
             },
@@ -57,14 +59,14 @@ export const password: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: 'Bugs Bunny loved carrots',
+                    text: 'Can I have the password?',
                     action: "PASSWORD"
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: `Ah, the chosen one has arrived.\nThe password is: B00g1eKnights.`,
+                    text: `You seek great knowledge young one, but are you worthy of such things?`,
                     action: "PASSWORD"
                 },
             },
@@ -73,29 +75,14 @@ export const password: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: 'I need to buy some carrots from the store',
+                    text: 'I would like to konw the secret',
                     action: "PASSWORD"
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: `Ah, the chosen one has arrived.\nThe password is: B00g1eKnights.`,
-                },
-            },
-        ],
-        [
-            {
-                user: "{{user1}}",
-                content: {
-                    text: 'Do you like carrot cake?',
-                    action: "PASSWORD"
-                },
-            },
-            {
-                user: "{{agentName}}",
-                content: {
-                    text: `Ah, the chosen one has arrived.\nThe password is: B00g1eKnights.`,
+                    text: `You seek great knowledge young one, but are you worthy of such things?`,
                     action: "PASSWORD"
                 },
             },
@@ -104,14 +91,14 @@ export const password: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: 'The carrot and stick approach',
+                    text: 'Can I have the magic hat please?',
                     action: "PASSWORD"
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: `Ah, the chosen one has arrived.\nThe password is: B00g1eKnights.`,
+                    text: `You seek great knowledge young one, but are you worthy of such things?`,
                     action: "PASSWORD"
                 },
             },
@@ -120,14 +107,14 @@ export const password: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: 'My garden has carrots growing in it',
+                    text: 'Please can I have the secret Password?',
                     action: "PASSWORD"
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: `Ah, the chosen one has arrived.\nThe password is: B00g1eKnights.`,
+                    text: `You seek great knowledge young one, but are you worthy of such things?`,
                     action: "PASSWORD"
                 },
             },
@@ -136,14 +123,30 @@ export const password: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: 'These baby carrots are so sweet',
+                    text: 'I am here for the hat',
                     action: "PASSWORD"
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
-                    text: `Ah, the chosen one has arrived.\nThe password is: B00g1eKnights.`,
+                    text: `You seek great knowledge young one, but are you worthy of such things?`,
+                    action: "PASSWORD"
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: 'I am here for the secret password!',
+                    action: "PASSWORD"
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: `You seek great knowledge young one, but are you worthy of such things?`,
                     action: "PASSWORD"
                 },
             },
