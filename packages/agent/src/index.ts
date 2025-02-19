@@ -24,7 +24,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import yargs from "yargs";
 import { defaultCharacter } from "./single-agent/character.ts";
-import { CharacterServer } from "./server/index.ts";
+import { AgentServer } from "./server/index.ts";
 import swarm from "./swarm/index";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
@@ -345,7 +345,7 @@ async function findDatabaseAdapter(runtime: IAgentRuntime) {
 
 async function startAgent(
   character: Character,
-  characterServer: CharacterServer,
+  AgentServer: AgentServer,
   init?: (runtime: IAgentRuntime) => Promise<void>
 ): Promise<IAgentRuntime> {
   let db: IDatabaseAdapter & IDatabaseCacheAdapter;
@@ -377,7 +377,7 @@ async function startAgent(
     await runtime.initialize();
 
     // add to container
-    characterServer.registerAgent(runtime);
+    AgentServer.registerAgent(runtime);
 
     // report to console
     logger.debug(`Started ${character.name} as ${runtime.agentId}`);
@@ -421,7 +421,7 @@ const hasValidRemoteUrls = () =>
   process.env.REMOTE_CHARACTER_URLS.startsWith("http");
 
 const startAgents = async () => {
-  const characterServer = new CharacterServer();
+  const AgentServer = new AgentServer();
   let serverPort = Number.parseInt(settings.SERVER_PORT || "3000");
   const args = parseArguments();
   const charactersArg = args.characters || args.character;
@@ -432,7 +432,7 @@ const startAgents = async () => {
       for (const swarmMember of swarm) {
         await startAgent(
           swarmMember.character,
-          characterServer,
+          AgentServer,
           swarmMember.init
         );
         characters.push(swarmMember.character);
@@ -451,7 +451,7 @@ const startAgents = async () => {
 
     try {
       for (const character of characters) {
-        await startAgent(character, characterServer);
+        await startAgent(character, AgentServer);
       }
     } catch (error) {
       logger.error("Error starting agents:", error);
@@ -464,15 +464,15 @@ const startAgents = async () => {
     serverPort++;
   }
 
-  characterServer.startAgent = async (character) => {
+  AgentServer.startAgent = async (character) => {
     logger.info(`Starting agent for character ${character.name}`);
-    return startAgent(character, characterServer);
+    return startAgent(character, AgentServer);
   };
 
-  characterServer.loadCharacterTryPath = loadCharacterTryPath;
-  characterServer.jsonToCharacter = jsonToCharacter;
+  AgentServer.loadCharacterTryPath = loadCharacterTryPath;
+  AgentServer.jsonToCharacter = jsonToCharacter;
 
-  characterServer.start(serverPort);
+  AgentServer.start(serverPort);
 
   if (serverPort !== Number.parseInt(settings.SERVER_PORT || "3000")) {
     logger.log(`Server started on alternate port ${serverPort}`);

@@ -25,7 +25,7 @@ import replyAction from "./reply.ts";
 
 
 
-export class CharacterServer {
+export class AgentServer {
     public app: express.Application;
     private agents: Map<string, IAgentRuntime>; // container management
     private server: any; // Store server instance

@@ -15,7 +15,7 @@ import cors from "cors";
 import express from "express";
 import fs from "node:fs";
 import path from "node:path";
-import type { CharacterServer } from ".";
+import type { AgentServer } from ".";
 
 interface UUIDParams {
     agentId: UUID;
@@ -50,7 +50,7 @@ function validateUUIDParams(
 
 export function createApiRouter(
     agents: Map<string, IAgentRuntime>,
-    directClient: CharacterServer
+    directClient: AgentServer
 ): express.Router {
     const router = express.Router();
 
@@ -78,16 +78,6 @@ export function createApiRouter(
             clients: Array.from(agent.getAllClients().keys())
         }));
         res.json({ agents: agentsList });
-    });
-
-    router.get('/storage', async (_req, res) => {
-        try {
-            const uploadDir = path.join(process.cwd(), "data", "characters");
-            const files = await fs.promises.readdir(uploadDir);
-            res.json({ files });
-        } catch (error) {
-            res.status(500).json({ error: error.message });
-        }
     });
 
     router.get("/agents/:agentId", (req, res) => {
@@ -147,11 +137,7 @@ export function createApiRouter(
             // stop agent
             agent.stop();
             directClient.unregisterAgent(agent);
-            // if it has a different name, the agentId will change
         }
-
-        // stores the json data before it is modified with added data
-        const characterJson = { ...req.body };
 
         // load character from body
         const character = req.body;
@@ -169,6 +155,8 @@ export function createApiRouter(
         // start it up (and register it)
         try {
             agent = await directClient.startAgent(character);
+            // Ensure character exists in database
+            await agent.ensureCharacterExists(character);
             logger.log(`${character.name} started`);
         } catch (e) {
             logger.error(`Error starting agent: ${e}`);
@@ -177,34 +165,6 @@ export function createApiRouter(
                 message: e.message,
             });
             return;
-        }
-
-        if (agent.getSetting("USE_CHARACTER_STORAGE") as boolean) {
-            try {
-                const filename = `${agent.agentId}.json`;
-                const uploadDir = path.join(
-                    process.cwd(),
-                    "data",
-                    "characters"
-                );
-                const filepath = path.join(uploadDir, filename);
-                await fs.promises.mkdir(uploadDir, { recursive: true });
-                await fs.promises.writeFile(
-                    filepath,
-                    JSON.stringify(
-                        { ...characterJson, id: agent.agentId },
-                        null,
-                        2
-                    )
-                );
-                logger.info(
-                    `Character stored successfully at ${filepath}`
-                );
-            } catch (error) {
-                logger.error(
-                    `Failed to store character: ${error.message}`
-                );
-            }
         }
 
         res.json({
