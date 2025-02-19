@@ -22,6 +22,9 @@ export default defineConfig(({ mode }) => {
             "import.meta.env.VITE_SERVER_PORT": JSON.stringify(
                 env.SERVER_PORT || "3000"
             ),
+            "import.meta.env.VITE_SERVER_BASE_URL": JSON.stringify(
+                env.SERVER_BASE_URL
+            ),
         },
         build: {
             outDir: "dist",
