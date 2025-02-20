@@ -1,5 +1,5 @@
 import pkg, { Pool as PgPool } from 'pg';
-import { IDatabaseClientManager } from "../schema/types";
+import { IDatabaseClientManager } from "../types";
 import { logger } from "@elizaos/core";
 
 const { Pool } = pkg;

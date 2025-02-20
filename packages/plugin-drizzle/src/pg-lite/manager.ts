@@ -2,7 +2,7 @@ import { PGlite, type PGliteOptions } from "@electric-sql/pglite";
 import { vector } from "@electric-sql/pglite/vector";
 import { fuzzystrmatch } from "@electric-sql/pglite/contrib/fuzzystrmatch";
 import { logger } from "@elizaos/core";
-import { IDatabaseClientManager } from "../schema/types";
+import { IDatabaseClientManager } from "../types";
 
 export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
     private client: PGlite;
