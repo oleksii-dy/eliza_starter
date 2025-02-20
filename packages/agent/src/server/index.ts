@@ -19,8 +19,9 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { z } from "zod";
 import { createApiRouter } from "./api.ts";
-import { hyperfiHandlerTemplate, messageHandlerTemplate, upload } from "./helper.ts";
+import { hyperfiHandlerTemplate, messageHandlerTemplate } from "./helper.ts";
 import replyAction from "./reply.ts";
+import { upload } from "./loader.ts";
 
 
 
