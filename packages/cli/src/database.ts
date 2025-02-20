@@ -1,4 +1,4 @@
-import { createDatabaseAdapter } from "@elizaos/plugin-drizzle";
+import { createDatabaseAdapter } from "@elizaos/plugin-sql";
 
 export const adapter = createDatabaseAdapter({
   dataDir: process.env.PGLITE_DATA_DIR,
