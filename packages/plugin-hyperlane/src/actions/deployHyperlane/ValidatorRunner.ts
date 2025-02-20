@@ -1,7 +1,6 @@
 import Docker from "dockerode";
 import path from "path";
 import fs from "fs";
-import { elizaLogger } from "@elizaos/core";
 
 const docker = new Docker();
 
@@ -20,6 +19,7 @@ export class ValidatorRunner {
   private configFilePath: string;
   private validatorSignaturesDir: string;
   private validatorDbPath: string;
+  private containerId: string | null = null;
 
   constructor(chainName: string, validatorKey: string, configFilePath: string) {
     this.chainName = chainName;
@@ -37,14 +37,36 @@ export class ValidatorRunner {
 
   async run(): Promise<void> {
     try {
+      console.log(`Pulling latest Hyperlane agent Docker image...`);
+      await docker.pull("gcr.io/abacus-labs-dev/hyperlane-agent:agents-v1.1.0", (err, stream) => {
+        if (err) {
+          console.error("Error pulling Docker image:", err);
+          return;
+        }
+        docker.modem.followProgress(stream, onFinished, onProgress);
+
+        function onFinished(err?: Error) {
+          if (err) {
+            console.error("Error pulling Docker image:", err);
+          } else {
+            console.log("Docker image pulled successfully.");
+          }
+        }
+
+        function onProgress(event: any) {
+          console.log("Downloading Docker image...", event);
+        }
+      });
+
+      console.log(`Creating container for validator on chain: ${this.chainName}...`);
       const container = await docker.createContainer({
         Image: "gcr.io/abacus-labs-dev/hyperlane-agent:agents-v1.1.0",
-        Env: [`CONFIG_FILES=/config/agent-config.json`],
+        Env: [`CONFIG_FILES=/home/ruddy/Hyperlane-ChainDeployer/hyperlane-deployer/configs/agent-config.json`],
         HostConfig: {
           Mounts: [
             {
               Source: path.resolve(this.configFilePath),
-              Target: "/config/agent-config.json",
+              Target: "/home/ruddy/Hyperlane-ChainDeployer/hyperlane-deployer/configs/agent-config.json",
               Type: "bind",
               ReadOnly: true,
             },
@@ -76,11 +98,39 @@ export class ValidatorRunner {
         Tty: true,
       });
 
-      elizaLogger.log(`Starting validator for chain: ${this.chainName}...`);
+      this.containerId = container.id;
+
+      console.log(`Starting validator for chain: ${this.chainName}...`);
       await container.start();
-    elizaLogger.log(`Validator for chain: ${this.chainName} started successfully.`);
+      console.log(`Validator for chain: ${this.chainName} started successfully.`);
+
+      console.log("Fetching container logs...");
+      const logStream = await container.logs({
+        follow: true,
+        stdout: true,
+        stderr: true,
+      });
+      logStream.on("data", (chunk) => {
+        console.log(chunk.toString());
+      });
+
+      console.log("Validator is now running. Monitoring logs...");
     } catch (error) {
-      elizaLogger.error(`Error starting validator for chain: ${this.chainName}`, error);
+      console.error(`Error starting validator for chain: ${this.chainName}`, error);
+    }
+  }
+
+  async checkStatus(): Promise<void> {
+    try {
+      const containers = await docker.listContainers({ all: true });
+      const runningContainer = containers.find((c) => c.Id === this.containerId);
+      if (runningContainer) {
+        console.log(`Validator container is running: ${runningContainer.Id}`);
+      } else {
+        console.log("Validator container is not running.");
+      }
+    } catch (error) {
+      console.error("Error checking container status:", error);
     }
   }
 }

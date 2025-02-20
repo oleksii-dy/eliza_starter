@@ -56,3 +56,13 @@ export interface HyperlaneContractAddresses {
         validatorAnnounce: Address;
     };
 }
+import type { WarpCoreConfig } from '@hyperlane-xyz/sdk';
+import { z } from 'zod';
+export type MaybePromise<T> = T | Promise<T> | PromiseLike<T>;
+export declare const ChainAddressesSchema: z.ZodRecord<z.ZodString, z.ZodString>;
+export type ChainAddresses = z.infer<typeof ChainAddressesSchema>;
+export type WarpRouteId = string;
+export type WarpRouteConfigMap = Record<WarpRouteId, WarpCoreConfig>;
+export type DeepPartial<T> = T extends object ? {
+    [P in keyof T]?: DeepPartial<T[P]>;
+} : T;

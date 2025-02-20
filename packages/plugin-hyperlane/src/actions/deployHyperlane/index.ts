@@ -115,15 +115,16 @@ async function InitializeDeployment({
 }) {
     elizaLogger.log("Initializing deployment...");
 
-    const defaultIsm = createMultisignConfig(IsmType.MERKLE_ROOT_MULTISIG);
+    const defaultIsm = await createMultisignConfig(IsmType.MERKLE_ROOT_MULTISIG);
     const defaultHook = await createMerkleTreeConfig();
     const requiredHook = await createMerkleTreeConfig();
-    const owner = context.signerAddress;
+    const owner = context.signerAddress
 
     const proxyAdmin: OwnableConfig = {
         owner,
     };
 
+    const validator = context.signerAddress;
     try {
         const coreConfig = CoreConfigSchema.parse({
             owner,
@@ -132,6 +133,11 @@ async function InitializeDeployment({
             requiredHook,
             proxyAdmin,
         });
+
+
+        //@ts-ignore
+        coreConfig.defaultIsm.validators = [validator];
+
 
         writeYamlOrJson(configFilePath, coreConfig, "yaml");
         elizaLogger.log("Core config created");
@@ -147,7 +153,8 @@ async function runCoreDeploy(params: HyperlaneDeployParams) {
 
     let chain = params.chain;
     let apiKeys = await requestAndSaveApiKeys([chain], chainMetadata, registry);
-    const multiProvider = new MultiProvider(chainMetadata);
+    const multiProvider = context.multiProvider;
+    multiProvider.setSigner(chain , context.signer);
     const signer = multiProvider.getSigner(chain);
     const deploymentParams: HyperlaneDeployParams = {
         context: { ...context, signer },
@@ -366,8 +373,18 @@ export const setUpAgentOnHyperlane: Action = {
 
             await validator.run();
 
+            const chain_1 = runtime.getSetting("CHAIN_NAME_1");
+            if (!chain_1) {
+                throw new Error("Chain name not found");
+            }
+
+            const chain_2 = runtime.getSetting("CHAIN_NAME_2");
+            if (!chain_2) {
+                throw new Error("Chain name not found");
+            }
+
             const relayer = new RelayerRunner(
-                [],
+                [chain_1, chain_2],
                 //@ts-ignore
                 signerPrivateKey,
                 AGENT_CONFIG_FILE,
