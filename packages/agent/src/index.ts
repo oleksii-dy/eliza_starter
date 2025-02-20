@@ -22,6 +22,7 @@ import { AgentServer } from "./server/index.ts";
 import {
   hasValidRemoteUrls,
   loadCharacters,
+  mergeCharacters,
 } from "./server/loader.ts";
 import { defaultCharacter } from "./single-agent/character.ts";
 import swarm from "./swarm/index";
@@ -64,33 +65,6 @@ export function parseArguments(): {
     logger.error("Error parsing arguments:", error);
     return {};
   }
-}
-
-export function mergeCharacters(base: Character, child: Character): Character {
-  const mergeObjects = (baseObj: any, childObj: any) => {
-    const result: any = {};
-    const keys = new Set([
-      ...Object.keys(baseObj || {}),
-      ...Object.keys(childObj || {}),
-    ]);
-    for (const key of keys) {
-      if (
-        typeof baseObj[key] === "object" &&
-        typeof childObj[key] === "object" &&
-        !Array.isArray(baseObj[key]) &&
-        !Array.isArray(childObj[key])
-      ) {
-        result[key] = mergeObjects(baseObj[key], childObj[key]);
-      } else if (Array.isArray(baseObj[key]) || Array.isArray(childObj[key])) {
-        result[key] = [...(baseObj[key] || []), ...(childObj[key] || [])];
-      } else {
-        result[key] =
-          childObj[key] !== undefined ? childObj[key] : baseObj[key];
-      }
-    }
-    return result;
-  };
-  return mergeObjects(base, child);
 }
 
 export async function createAgent(

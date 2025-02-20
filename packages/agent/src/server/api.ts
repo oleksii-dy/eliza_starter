@@ -13,8 +13,6 @@ import {
 import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
-import fs from "node:fs";
-import path from "node:path";
 import type { AgentServer } from ".";
 
 interface UUIDParams {

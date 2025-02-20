@@ -11,7 +11,7 @@ export function tryLoadFile(filePath: string): string | null {
   try {
     return fs.readFileSync(filePath, "utf8");
   } catch (e) {
-    return null;
+    throw new Error(`Error loading file ${filePath}: ${e}`);
   }
 }
 
@@ -52,10 +52,10 @@ export async function loadCharactersFromUrl(url: string): Promise<Character[]> {
     let characters: Character[] = [];
     if (Array.isArray(responseJson)) {
       characters = await Promise.all(
-        responseJson.map((character) => jsonToCharacter(url, character))
+        responseJson.map((character) => jsonToCharacter(character))
       );
     } else {
-      const character = await jsonToCharacter(url, responseJson);
+      const character = await jsonToCharacter(responseJson);
       characters.push(character);
     }
     return characters;
@@ -66,14 +66,13 @@ export async function loadCharactersFromUrl(url: string): Promise<Character[]> {
 }
 
 export async function jsonToCharacter(
-  filePath: string,
-  character: Record<string, unknown>
+  character: any
 ): Promise<Character> {
   validateCharacterConfig(character);
 
   // .id isn't really valid
   const characterId = character.id || character.name;
-  const characterPrefix = `CHARACTER.${String(characterId)
+  const characterPrefix = `CHARACTER.${characterId
     .toUpperCase()
     .replace(/ /g, "_")}.`;
   const characterSettings = Object.entries(process.env)
@@ -91,7 +90,7 @@ export async function jsonToCharacter(
     };
   }
 
-  return character as Character;
+  return character;
 }
 
 export async function loadCharacter(filePath: string): Promise<Character> {
@@ -100,49 +99,48 @@ export async function loadCharacter(filePath: string): Promise<Character> {
     throw new Error(`Character file not found: ${filePath}`);
   }
   const character = JSON.parse(content);
-  return jsonToCharacter(filePath, character);
+  return jsonToCharacter(character);
+}
+
+function handleCharacterLoadError(path: string, error: unknown): never {
+  const message = `Error loading character from ${path}: ${error}`;
+  logger.error(message);
+  throw new Error(message);
+}
+
+async function safeLoadCharacter(path: string): Promise<Character> {
+  try {
+    const character = await loadCharacter(path);
+    logger.info(`Successfully loaded character from: ${path}`);
+    return character;
+  } catch (e) {
+    return handleCharacterLoadError(path, e);
+  }
 }
 
 export async function loadCharacterTryPath(characterPath: string): Promise<Character> {
-  let content: string | null = null;
-  let resolvedPath = "";
-
-  // Try different path resolutions in order
   const pathsToTry = [
-    characterPath, // exact path as specified
-    path.resolve(process.cwd(), "..", "..", characterPath), // relative to root directory
-    path.resolve(process.cwd(), characterPath), // relative to cwd
-    path.resolve(process.cwd(), "agent", characterPath), // Add this
-    path.resolve(__dirname, characterPath), // relative to current script
-    path.resolve(__dirname, "characters", path.basename(characterPath)), // relative to agent/characters
-    path.resolve(__dirname, "../characters", path.basename(characterPath)), // relative to characters dir from agent
-    path.resolve(__dirname, "../../characters", path.basename(characterPath)), // relative to project root characters dir
+    characterPath,
+    path.resolve(process.cwd(), "..", "..", characterPath),
+    path.resolve(process.cwd(), characterPath),
+    path.resolve(process.cwd(), "agent", characterPath),
+    path.resolve(__dirname, characterPath),
+    path.resolve(__dirname, "characters", path.basename(characterPath)),
+    path.resolve(__dirname, "../characters", path.basename(characterPath)),
+    path.resolve(__dirname, "../../characters", path.basename(characterPath)),
   ];
 
   for (const tryPath of pathsToTry) {
-    content = tryLoadFile(tryPath);
+    const content = tryLoadFile(tryPath);
     if (content !== null) {
-      resolvedPath = tryPath;
-      break;
+      return safeLoadCharacter(tryPath);
     }
   }
 
-  if (content === null) {
-    logger.error(
-      `Error loading character from ${characterPath}: File not found in any of the expected locations`
-    );
-    throw new Error(
-      `Error loading character from ${characterPath}: File not found in any of the expected locations`
-    );
-  }
-  try {
-    const character: Character = await loadCharacter(resolvedPath);
-    logger.info(`Successfully loaded character from: ${resolvedPath}`);
-    return character;
-  } catch (e) {
-    logger.error(`Error parsing character from ${resolvedPath}: ${e}`);
-    throw new Error(`Error parsing character from ${resolvedPath}: ${e}`);
-  }
+  return handleCharacterLoadError(
+    characterPath,
+    "File not found in any of the expected locations"
+  );
 }
 
 function commaSeparatedStringToArray(commaSeparated: string): string[] {
@@ -171,26 +169,18 @@ export const hasValidRemoteUrls = () =>
   process.env.REMOTE_CHARACTER_URLS !== "" &&
   process.env.REMOTE_CHARACTER_URLS.startsWith("http");
 
-export async function loadCharacters(
-  charactersArg: string
-): Promise<Character[]> {
+export async function loadCharacters(charactersArg: string): Promise<Character[]> {
   let characterPaths = commaSeparatedStringToArray(charactersArg);
+  const loadedCharacters: Character[] = [];
 
   if (process.env.USE_CHARACTER_STORAGE === "true") {
     characterPaths = await readCharactersFromStorage(characterPaths);
   }
 
-  const loadedCharacters: Character[] = [];
-
   if (characterPaths?.length > 0) {
     for (const characterPath of characterPaths) {
-      try {
-        const character: Character = await loadCharacterTryPath(characterPath);
-        loadedCharacters.push(character);
-      } catch (e) {
-        logger.error(`Error loading character from ${characterPath}: ${e}`);
-        process.exit(1);
-      }
+      const character = await loadCharacterTryPath(characterPath);
+      loadedCharacters.push(character);
     }
   }
 
