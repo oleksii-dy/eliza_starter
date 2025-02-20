@@ -9,7 +9,7 @@ import { adapter } from "../database";
 import { availablePlugins } from "../plugins";
 import { handleError } from "../utils/handle-error";
 import { logger } from "../utils/logger";
-
+import { displayCharacter, formatMessageExamples } from "../utils/helpers";
 let isShuttingDown = false;
 
 const cleanup = async () => {
@@ -373,95 +373,8 @@ function getDefaultCharacterFields(existing?: Partial<Character>) {
   };
 }
 
-/**
- * Format message examples into readable conversation format
- */
-function formatMessageExamples(examples: MessageExample[][]): string {
-  if (!examples || examples.length === 0) return "No message examples";
-  
-  return examples.map((conversation, i) => {
-    const messages = conversation.map(msg => {
-      const user = msg.user === "{{user1}}" ? "User" : msg.user;
-      return `  ${user}: ${msg.content.text}`;
-    }).join("\n");
-    return `\nConversation ${i + 1}:\n${messages}`;
-  }).join("\n");
-}
 
-/**
- * Display character data
- */
-function displayCharacter(data: Partial<Character>, title = "Character Review"): void {
-  logger.info(`\n=== ${title} ===`);
-  
-  // Display basic info
-  logger.info(`Name: ${data.name}`);
-  logger.info(`Username: ${data.username || data.name?.toLowerCase().replace(/\s+/g, "_")}`);
-  
-  // Display bio
-  logger.info("\nBio:");
-  for (const line of (Array.isArray(data.bio) ? data.bio : [data.bio])) {
-    logger.info(`  ${line}`);
-  }
-  
-  // Display adjectives
-  logger.info("\nAdjectives:");
-  for (const adj of (data.adjectives || [])) {
-    logger.info(`  ${adj}`);
-  }
-  
-  // Display topics
-  if (data.topics && data.topics.length > 0) {
-    logger.info("\nTopics:");
-    for (const topic of data.topics) {
-      logger.info(`  ${topic}`);
-    }
-  }
-  
-  // Display plugins
-  if (data.plugins && data.plugins.length > 0) {
-    logger.info("\nPlugins:");
-    for (const plugin of data.plugins) {
-      logger.info(`  ${plugin}`);
-    }
-  }
-  
-  // Display style
-  if (data.style) {
-    if (data.style.all && data.style.all.length > 0) {
-      logger.info("\nGeneral Style:");
-      for (const style of data.style.all) {
-        logger.info(`  ${style}`);
-      }
-    }
-    if (data.style.chat && data.style.chat.length > 0) {
-      logger.info("\nChat Style:");
-      for (const style of data.style.chat) {
-        logger.info(`  ${style}`);
-      }
-    }
-    if (data.style.post && data.style.post.length > 0) {
-      logger.info("\nPost Style:");
-      for (const style of data.style.post) {
-        logger.info(`  ${style}`);
-      }
-    }
-  }
-  
-  // Display post examples
-  if (data.postExamples && data.postExamples.length > 0) {
-    logger.info("\nPost Examples:");
-    for (const post of data.postExamples) {
-      logger.info(`  ${post}`);
-    }
-  }
-  
-  // Display message examples
-  if (data.messageExamples && data.messageExamples.length > 0) {
-    logger.info("\nMessage Examples:");
-    logger.info(formatMessageExamples(data.messageExamples));
-  }
-}
+
 
 /**
  * Display character data for review and get confirmation
@@ -479,17 +392,32 @@ async function reviewCharacter(data: Partial<Character>): Promise<boolean> {
   return confirmed;
 }
 
+async function confirmAction(message: string): Promise<boolean> {
+  const response = await prompts({
+    type: "confirm",
+    name: "confirm",
+    message,
+    initial: false
+  });
+  return Boolean(response.confirm);
+}
+
 //
 // COMMAND ACTIONS
 //
 
 character.command("list")
+  .alias("ls")
   .description("list all characters")
-  .action(async () => {
+  .option("-j, --json", "output as JSON")
+  .action(async (opts) => {
     await withConnection(async () => {
       const chars = await adapter.listCharacters();
-      if (chars.length === 0) logger.info("No characters found");
-      else {
+      if (chars.length === 0) {
+        logger.info("No characters found");
+      } else if (opts.json) {
+        logger.info(JSON.stringify(chars, null, 2));
+      } else {
         logger.info("\nCharacters:");
         console.table(chars.map(c => ({ name: c.name, bio: c.bio[0] })));
       }
@@ -497,16 +425,33 @@ character.command("list")
   });
 
 character.command("create")
+  .alias("new")
   .description("create a new character")
-  .action(async () => {
+  .option("-i, --import <file>", "import from JSON file")
+  .option("-y, --yes", "skip confirmation")
+  .action(async (opts) => {
     await withConnection(async () => {
-      const formData = await collectCharacterData();
+      let formData: CharacterFormData | null = null;
+      
+      if (opts.import) {
+        try {
+          const raw = await fs.promises.readFile(opts.import, "utf8");
+          formData = characterSchema.parse(JSON.parse(raw));
+        } catch (error) {
+          logger.error(`Failed to import file: ${error.message}`);
+          return;
+        }
+      } else {
+        formData = await collectCharacterData();
+      }
+
       if (!formData) {
         logger.info("Creation cancelled");
         return;
       }
+
       const charData = {
-        ...getDefaultCharacterFields(),  // Default field values first in case of missing data
+        ...getDefaultCharacterFields(),
         name: formData.name,
         username: formData.username,
         bio: formData.bio,
@@ -514,7 +459,7 @@ character.command("create")
         postExamples: formData.postExamples,
         messageExamples: (formData.messageExamples || []).map(conversation => 
           conversation.map(msg => ({
-            user: msg.user || "{{user1}}",  // Ensure user is never undefined
+            user: msg.user || "{{user1}}",
             content: msg.content
           }))
         ),
@@ -525,9 +470,9 @@ character.command("create")
           chat: formData.style?.chat || [],
           post: formData.style?.post || []
         }
-      } as Character;  // Cast the entire object to Character type
+      } as Character;
 
-      if (await reviewCharacter(charData)) {
+      if (opts.yes || await reviewCharacter(charData)) {
         await adapter.createCharacter(charData);
         logger.success(`Created character ${charData.name}`);
       } else {
@@ -537,13 +482,16 @@ character.command("create")
   });
 
 character.command("edit")
+  .alias("e")
   .description("edit a character")
-  .requiredOption("-c, --character <name>", "character name")
+  .requiredOption("-n, --name <name>", "character name")
+  .option("-y, --yes", "skip confirmation")
+  .option("-f, --field <field>", "edit specific field (bio, adjectives, topics, style, plugins, examples)")
   .action(async (opts) => {
     await withConnection(async () => {
-      const existing = await adapter.getCharacter(opts.character);
+      const existing = await adapter.getCharacter(opts.name);
       if (!existing) {
-        logger.error(`Character ${opts.character} not found`);
+        logger.error(`Character ${opts.name} not found`);
         return;
       }
 
@@ -570,19 +518,21 @@ character.command("edit")
           post: existing.style?.post || []
         },
       });
+
       if (!formData) {
         logger.info("Editing cancelled");
         return;
       }
+
       const updated = {
-        ...getDefaultCharacterFields(existing),  // Include existing data in defaults
+        ...getDefaultCharacterFields(existing),
         name: formData.name,
         bio: formData.bio || [],
         adjectives: formData.adjectives || [],
         postExamples: formData.postExamples || [],
         messageExamples: (formData.messageExamples || []).map(conversation => 
           conversation.map(msg => ({
-            user: msg.user || "unknown",  // Ensure user is never undefined
+            user: msg.user || "unknown",
             content: msg.content
           }))
         ),
@@ -593,10 +543,10 @@ character.command("edit")
           chat: formData.style?.chat || [],
           post: formData.style?.post || []
         }
-      } as Character;  // Cast the entire object to Character type
+      } as Character;
 
-      if (await reviewCharacter(updated)) {
-        await adapter.updateCharacter(opts.character, updated);
+      if (opts.yes || await reviewCharacter(updated)) {
+        await adapter.updateCharacter(opts.name, updated);
         logger.success(`Updated character ${formData.name} successfully`);
       } else {
         logger.info("Update cancelled");
@@ -605,19 +555,16 @@ character.command("edit")
   });
 
 character.command("import")
+  .alias("i")
   .description("import a character from file")
-  .requiredOption("-f, --file <file>", "JSON file path")
-  .action(async (opts) => {
+  .argument("<file>", "JSON file path")
+  .option("-y, --yes", "skip confirmation")
+  .action(async (file, opts) => {
     await withConnection(async () => {
       try {
-        const filePath = opts.file || (await promptWithNav("Path to JSON file:"));
-        if (!filePath || filePath === NAV_NEXT) {
-          logger.info("Import cancelled");
-          return;
-        }
-        const raw = await fs.promises.readFile(filePath, "utf8");
+        const raw = await fs.promises.readFile(file, "utf8");
         const parsed = characterSchema.parse(JSON.parse(raw));
-        await adapter.createCharacter({
+        const charData = {
           name: parsed.name,
           bio: parsed.bio || [],
           adjectives: parsed.adjectives || [],
@@ -630,8 +577,14 @@ character.command("import")
             post: parsed.style?.post || [],
           },
           plugins: parsed.plugins || [],
-        });
-        logger.success(`Imported character ${parsed.name}`);
+        };
+
+        if (opts.yes || await reviewCharacter(charData)) {
+          await adapter.createCharacter(charData);
+          logger.success(`Imported character ${parsed.name}`);
+        } else {
+          logger.info("Import cancelled");
+        }
       } catch (error) {
         handleError(error);
       }
@@ -639,34 +592,46 @@ character.command("import")
   });
 
 character.command("export")
+  .alias("x")
   .description("export a character to file")
-  .requiredOption("-c, --character <name>", "character name")
+  .requiredOption("-n, --name <name>", "character name")
   .option("-o, --output <file>", "output file path")
+  .option("-p, --pretty", "pretty print JSON")
   .action(async (opts) => {
     await withConnection(async () => {
-      const characterData = await adapter.getCharacter(opts.character);
+      const characterData = await adapter.getCharacter(opts.name);
       if (!characterData) {
-        logger.error(`Character ${opts.character} not found`);
+        logger.error(`Character ${opts.name} not found`);
         return;
       }
       const outputPath = opts.output || `${characterData.name}.json`;
-      await fs.promises.writeFile(outputPath, JSON.stringify(characterData, null, 2));
+      await fs.promises.writeFile(
+        outputPath, 
+        JSON.stringify(characterData, null, opts.pretty ? 2 : undefined)
+      );
       logger.success(`Exported character to ${outputPath}`);
     });
   });
 
 character.command("remove")
+  .alias("rm")
   .description("remove a character")
-  .requiredOption("<character-name>", "character name")
+  .requiredOption("-n, --name <name>", "character name")
+  .option("-f, --force", "skip confirmation")
   .action(async (opts) => {
     await withConnection(async () => {
-      const exists = await adapter.getCharacter(opts.character);
+      const exists = await adapter.getCharacter(opts.name);
       if (!exists) {
-        logger.error(`Character ${opts.character} not found`);
+        logger.error(`Character ${opts.name} not found`);
         return;
       }
-      await adapter.removeCharacter(opts.character);
-      logger.success(`Removed character ${opts.character}`);
+
+      if (opts.force || await confirmAction(`Are you sure you want to remove character "${opts.name}"?`)) {
+        await adapter.removeCharacter(opts.name);
+        logger.success(`Removed character ${opts.name}`);
+      } else {
+        logger.info("Removal cancelled");
+      }
     });
   });
 

@@ -1,4 +1,5 @@
 import { handleError } from "@/src/utils/handle-error"
+import { displayCharacter } from "@/src/utils/helpers"
 import { logger } from "@/src/utils/logger"
 import { Command } from "commander"
 import fs from "node:fs"
@@ -13,6 +14,19 @@ export const agent = new Command()
 interface AgentStartPayload {
   characterPath?: string;
   characterJson?: Record<string, unknown>;
+  remoteUrl?: string;
+}
+
+interface AgentErrorResponse {
+  error: string;
+}
+
+interface AgentStartResponse {
+  id: string;
+  character: {
+    name: string;
+    [key: string]: unknown;
+  };
 }
 
 async function getAgentIdFromIndex(index: number): Promise<string> {
@@ -30,8 +44,9 @@ async function getAgentIdFromIndex(index: number): Promise<string> {
 
 agent
   .command("list")
+  .alias("ls")
   .description("list available agents")
-  .option("--json", "output as JSON")
+  .option("-j, --json", "output as JSON")
   .action(async (opts) => {
     try {
       const response = await fetch(`${AGENT_RUNTIME_URL}/agents`)
@@ -66,15 +81,17 @@ agent
 
 agent
   .command("get")
+  .alias("g")
   .description("get agent details")
-  .argument("<agentId>", "agent id, name, or index number from list")
-  .option("--json", "output as JSON")
-  .action(async (agentIdOrIndex, opts) => {
+  .requiredOption("-n, --name <name>", "agent id, name, or index number from list")
+  .option("-j, --json", "output as JSON")
+  .option("-o, --output <file>", "output to file (default: {name}.json)")
+  .action(async (opts) => {
     try {
       // If input is a number, get agent ID from index
-      const resolvedAgentId = !Number.isNaN(Number(agentIdOrIndex))
-        ? await getAgentIdFromIndex(Number.parseInt(agentIdOrIndex))
-        : agentIdOrIndex;
+      const resolvedAgentId = !Number.isNaN(Number(opts.name))
+        ? await getAgentIdFromIndex(Number.parseInt(opts.name))
+        : opts.name;
       
       logger.info(`Getting agent ${resolvedAgentId}`)
 
@@ -85,11 +102,11 @@ agent
       
       const agent = await response.json()
 
-      logger.info(JSON.stringify(agent, null, 2))
+      displayCharacter(agent.character, "Agent Details")
 
       // check if json argument is provided
       if (opts.json) {
-        const jsonPath = path.join(process.cwd(), `${agent.character.name}.json`)
+        const jsonPath = opts.output || path.join(process.cwd(), `${agent.character.name}.json`)
         // exclude .id field from the json
         const { id, ...character } = agent.character
         fs.writeFileSync(jsonPath, JSON.stringify(character, null, 2))
@@ -104,41 +121,89 @@ agent
 
 agent
   .command("start")
+  .alias("s")
   .description("start an agent")
-  .argument("[characterPath]", "path to character JSON file")
+  .option("-n, --name <name>", "character name to start the agent with")
   .option("-j, --json <json>", "character JSON string")
-  .action(async (characterPath, opts) => {
+  .option("-p, --path <path>", "local path to character JSON file")
+  .option("-r, --remote <url>", "remote URL to character JSON file")
+  .action(async (opts) => {
     try {
-      const payload: AgentStartPayload = {};
-      if (characterPath) payload.characterPath = characterPath;
-      if (opts.json) payload.characterJson = JSON.parse(opts.json);
+      const response: Response = await (async () => {
+        const payload: AgentStartPayload = {};
 
-      const response = await fetch(`${AGENT_RUNTIME_URL}/agent/start`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
+        // Determine which start option to use
+        const startOption = opts.json ? 'json'
+          : opts.remote ? 'remote'
+          : opts.path ? 'path'
+          : opts.name ? 'name'
+          : 'none';
+
+        switch (startOption) {
+          case 'json':
+            payload.characterJson = JSON.parse(opts.json);
+            return await fetch(`${AGENT_RUNTIME_URL}/agent/start`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+
+          case 'remote':
+            if (!opts.remote.startsWith('http://') && !opts.remote.startsWith('https://')) {
+              throw new Error('Remote URL must start with http:// or https://');
+            }
+            payload.remoteUrl = opts.remote;
+            return await fetch(`${AGENT_RUNTIME_URL}/agent/start`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+
+          case 'path':
+            try {
+              const fileContent = fs.readFileSync(opts.path, 'utf8');
+              payload.characterJson = JSON.parse(fileContent);
+              return await fetch(`${AGENT_RUNTIME_URL}/agent/start`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+            } catch (error) {
+              throw new Error(`Failed to read or parse local JSON file: ${error.message}`);
+            }
+
+          case 'name':
+            return await fetch(`${AGENT_RUNTIME_URL}/agent/start/${encodeURIComponent(opts.name)}`, {
+              method: 'POST'
+            });
+
+          default:
+            throw new Error("Please provide either a character name, path to JSON file, remote URL, or character JSON string");
+        }
+      })();
 
       if (!response.ok) {
-        throw new Error(`Failed to start agent: ${response.statusText}`)
+        const errorData = await response.json() as AgentErrorResponse;
+        throw new Error(errorData.error || `Failed to start agent: ${response.statusText}`);
       }
 
-      const result = await response.json()
-      logger.success(`Successfully started agent ${result.character.name} (${result.id})`)
+      const result = await response.json() as AgentStartResponse;
+      logger.success(`Successfully started agent ${result.character.name} (${result.id})`);
     } catch (error) {
-      handleError(error)
+      handleError(error);
     }
-  })
+  });
 
 agent
   .command("stop")
+  .alias("st")
   .description("stop an agent")
-  .argument("<agentId>", "agent id, name, or index number from list")
-  .action(async (agentIdOrIndex) => {
+  .requiredOption("-n, --name <name>", "agent id, name, or index number from list")
+  .action(async (opts) => {
     try {
-      const resolvedAgentId = !Number.isNaN(Number(agentIdOrIndex))
-        ? await getAgentIdFromIndex(Number.parseInt(agentIdOrIndex))
-        : agentIdOrIndex;
+      const resolvedAgentId = !Number.isNaN(Number(opts.name))
+        ? await getAgentIdFromIndex(Number.parseInt(opts.name))
+        : opts.name;
 
       const response = await fetch(`${AGENT_RUNTIME_URL}/agents/${resolvedAgentId}/stop`, {
         method: 'POST'
@@ -152,17 +217,18 @@ agent
     } catch (error) {
       handleError(error)
     }
-  })
+  });
 
 agent
   .command("remove")
+  .alias("rm")
   .description("remove an agent")
-  .argument("<agentId>", "agent id, name, or index number from list")
-  .action(async (agentIdOrIndex) => {
+  .requiredOption("-n, --name <name>", "agent id, name, or index number from list")
+  .action(async (opts) => {
     try {
-      const resolvedAgentId = !Number.isNaN(Number(agentIdOrIndex))
-        ? await getAgentIdFromIndex(Number.parseInt(agentIdOrIndex))
-        : agentIdOrIndex;
+      const resolvedAgentId = !Number.isNaN(Number(opts.name))
+        ? await getAgentIdFromIndex(Number.parseInt(opts.name))
+        : opts.name;
 
       const response = await fetch(`${AGENT_RUNTIME_URL}/agents/${resolvedAgentId}`, {
         method: 'DELETE'
@@ -176,20 +242,29 @@ agent
     } catch (error) {
       handleError(error)
     }
-  })
+  });
 
 agent
   .command("set")
   .description("update agent configuration")
-  .argument("<agentId>", "agent id, name, or index number from list")
-  .argument("<configPath>", "path to configuration JSON file")
-  .action(async (agentIdOrIndex, configPath) => {
+  .requiredOption("-n, --name <name>", "agent id, name, or index number from list")
+  .option("-c, --config <json>", "configuration as JSON string")
+  .option("-f, --file <path>", "path to configuration JSON file")
+  .action(async (opts) => {
     try {
-      const resolvedAgentId = !isNaN(Number(agentIdOrIndex))
-        ? await getAgentIdFromIndex(Number.parseInt(agentIdOrIndex))
-        : agentIdOrIndex;
+      const resolvedAgentId = !isNaN(Number(opts.name))
+        ? await getAgentIdFromIndex(Number.parseInt(opts.name))
+        : opts.name;
 
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      let config: Record<string, unknown>;
+      if (opts.config) {
+        config = JSON.parse(opts.config);
+      } else if (opts.file) {
+        config = JSON.parse(fs.readFileSync(opts.file, 'utf8'));
+      } else {
+        throw new Error("Please provide either a config JSON string (-c) or a config file path (-f)");
+      }
+
       const response = await fetch(`${AGENT_RUNTIME_URL}/agents/${resolvedAgentId}/set`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -205,7 +280,7 @@ agent
     } catch (error) {
       handleError(error)
     }
-  })
+  });
 
 agent
   .command("storage")

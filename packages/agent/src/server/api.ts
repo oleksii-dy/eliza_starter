@@ -297,6 +297,56 @@ export function createApiRouter(
         }
     });
 
+    router.post("/agent/start/:characterName", async (req, res) => {
+        const characterName = req.params.characterName;
+        try {
+            let character: Character;
+
+            // First try to find character in database using adapter from any running agent
+            const anyAgent = Array.from(agents.values())[0];
+            if (anyAgent?.databaseAdapter) {
+                character = await anyAgent.databaseAdapter.getCharacter(characterName);
+            }
+
+            // If not in database, try filesystem
+            if (!character) {
+                try {
+                    character = await directClient.loadCharacterTryPath(characterName);
+                } catch (e) {
+                    // If not in filesystem, check running agents
+                    const existingAgent = Array.from(agents.values()).find(
+                        (a) => a.character.name.toLowerCase() === characterName.toLowerCase()
+                    );
+
+                    if (!existingAgent) {
+                        res.status(404).json({
+                            error: `Character '${characterName}' not found in database, filesystem, or running agents`
+                        });
+                        return;
+                    }
+
+                    // Use the existing agent's character
+                    character = existingAgent.character;
+                }
+            }
+
+            // Start the agent with this character
+            await directClient.startAgent(character);
+            logger.log(`${character.name} started`);
+
+            res.json({
+                id: character.id,
+                character: character,
+            });
+        } catch (e) {
+            logger.error(`Error starting character by name: ${e}`);
+            res.status(400).json({
+                error: `Failed to start character '${characterName}': ${e.message}`,
+            });
+            return;
+        }
+    });
+
     router.post("/agents/:agentId/stop", async (req, res) => {
         const agentId = req.params.agentId;
         const agent: IAgentRuntime = agents.get(agentId);

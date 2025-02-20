@@ -21,7 +21,9 @@ import yargs from "yargs";
 import { AgentServer } from "./server/index.ts";
 import {
   hasValidRemoteUrls,
-  loadCharacters
+  loadCharacters,
+  loadCharacterTryPath,
+  jsonToCharacter
 } from "./server/loader.ts";
 import { defaultCharacter } from "./single-agent/character.ts";
 import swarm from "./swarm/index";
@@ -212,6 +214,10 @@ const startAgents = async () => {
   const args = parseArguments();
   const charactersArg = args.characters || args.character;
   let characters = [];
+
+  // Assign the character loading functions
+  server.loadCharacterTryPath = loadCharacterTryPath;
+  server.jsonToCharacter = jsonToCharacter;
 
   if (args.swarm) {
     try {
