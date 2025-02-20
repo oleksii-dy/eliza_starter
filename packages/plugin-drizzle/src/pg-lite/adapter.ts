@@ -45,26 +45,27 @@ import { drizzle, PgliteDatabase } from "drizzle-orm/pglite";
 import { v4 } from "uuid";
 import { runMigrations } from "./migrations";
 import { DIMENSION_MAP, EmbeddingDimensionColumn } from "../schema/embedding";
-import { PGliteClientManager } from "./client";
+import { type PGliteClientManager } from "./manager";
+
 export class PgliteDatabaseAdapter
     extends DatabaseAdapter<PgliteDatabase>
     implements IDatabaseCacheAdapter
 {
-    private client: PGliteClientManager;
+    private manager: PGliteClientManager;
     private readonly maxRetries: number = 3;
     private readonly baseDelay: number = 1000; // 1 second
     private readonly maxDelay: number = 10000; // 10 seconds
     private readonly jitterMax: number = 1000; // 1 second
     protected embeddingDimension: EmbeddingDimensionColumn = DIMENSION_MAP[384];
 
-    constructor(client: PGliteClientManager) {
+    constructor(manager: PGliteClientManager) {
         super();
-        this.client = client;
-        this.db = drizzle(this.client.getClient());
+        this.manager = manager;
+        this.db = drizzle(this.manager.getConnection());
     }
 
     private async withDatabase<T>(operation: () => Promise<T>): Promise<T> {
-        if (this.client.isShuttingDown()) {
+        if (this.manager.isShuttingDown()) {
             logger.warn("Database is shutting down, waiting for 5 seconds before retrying");
             return null as unknown as T;
         }
@@ -118,6 +119,19 @@ export class PgliteDatabaseAdapter
         throw lastError;
     }
 
+    async init(): Promise<void> {
+        try {
+            await runMigrations(this.manager.getConnection());
+        } catch (error) {
+            logger.error("Failed to initialize database:", error);
+            throw error;
+        }
+    }
+
+    async close() {
+        await this.manager.close();
+    }
+
     async ensureEmbeddingDimension(dimension: number, agentId: UUID) {
         const existingMemory = await this.db
             .select({
@@ -145,35 +159,6 @@ export class PgliteDatabaseAdapter
         }
 
         this.embeddingDimension = DIMENSION_MAP[dimension];
-    }
-
-    async close() {
-        await this.client.close();
-    }
-
-    async init(): Promise<void> {
-        try {
-            await runMigrations(this.client.getClient());
-        } catch (error) {
-            logger.error("Failed to initialize database:", error);
-            throw error;
-        }
-    }
-
-    async testConnection(): Promise<boolean> {
-        try {
-            const result = await this.db.execute(sql`SELECT NOW()`);
-            logger.success(
-                "Database connection test successful:",
-                result.rows[0]
-            );
-            return true;
-        } catch (error) {
-            logger.error("Database connection test failed:", error);
-            throw new Error(
-                `Failed to connect to database: ${(error as Error).message}`
-            );
-        }
     }
 
     async getAccountById(userId: UUID): Promise<Account | null> {

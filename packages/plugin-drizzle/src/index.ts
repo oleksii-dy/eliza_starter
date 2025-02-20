@@ -1,46 +1,37 @@
-import { Adapter, logger, IAgentRuntime, Plugin } from '@elizaos/core';
-import { PgDatabaseAdapter } from './pg';
+import { Adapter, logger, IAgentRuntime, Plugin, IDatabaseAdapter, IDatabaseCacheAdapter } from '@elizaos/core';
+import { PgDatabaseAdapter } from './pg/adapter';
 import { PgliteDatabaseAdapter } from './pg-lite/adapter';
-import { PGliteClientManager } from './pg-lite/client';
+import { PGliteClientManager } from './pg-lite/manager';
+import { PostgresConnectionManager } from './pg/manager';
 
-export { PgDatabaseAdapter, PgliteDatabaseAdapter };
-
-let pgliteClient: PGliteClientManager | null = null;
+export function createDatabaseAdapter(config: any): IDatabaseAdapter & IDatabaseCacheAdapter {
+  if (config.dataDir) {
+    const manager = new PGliteClientManager({ dataDir: config.dataDir });
+    return new PgliteDatabaseAdapter(manager);
+  } else if (config.postgresUrl) {
+    const manager = new PostgresConnectionManager(config.postgresUrl);
+    return new PgDatabaseAdapter(manager);
+  }
+  throw new Error("No valid database configuration provided");
+}
 
 const drizzleDatabaseAdapter: Adapter = {
   init: async (runtime: IAgentRuntime) => {
-    const dataDir = runtime.getSetting("PGLITE_DATA_DIR");
-    const postgresUrl = runtime.getSetting("POSTGRES_URL");
-    
-    try {
-      let db;
-      if (dataDir) {
-        logger.info(`Initializing PGLite database adapter with data directory: ${dataDir}`);
-        
-        if (!pgliteClient) {
-          pgliteClient = new PGliteClientManager({ dataDir });
-          await pgliteClient.initialize();
-        }
+    const config = {
+      dataDir: runtime.getSetting("PGLITE_DATA_DIR"),
+      postgresUrl: runtime.getSetting("POSTGRES_URL"),
+    };
 
-        db = new PgliteDatabaseAdapter(pgliteClient);
-      }
-      else if (postgresUrl) {
-        logger.info("Initializing Postgres database adapter...");
-        db = new PgDatabaseAdapter(postgresUrl);
-      } 
-      else {
-        throw new Error("No database configuration found. Please set either PGLITE_DATA_DIR or POSTGRES_URL");
-      }
-      
+    try {
+      const db = createDatabaseAdapter(config);
       await db.init();
       logger.success("Database connection established successfully");
-      
       return db;
     } catch (error) {
       logger.error("Failed to initialize database:", error);
       throw error;
     }
-  },
+  }
 };
 
 const drizzlePlugin: Plugin = {

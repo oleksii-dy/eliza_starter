@@ -1,0 +1,133 @@
+import pkg, { Pool as PgPool } from 'pg';
+import { IDatabaseClientManager } from "../schema/types";
+import { logger } from "@elizaos/core";
+
+const { Pool } = pkg;
+
+export class PostgresConnectionManager implements IDatabaseClientManager<PgPool> {
+    private pool: PgPool;
+    private isShuttingDown: boolean = false;
+    private readonly connectionTimeout: number = 5000; // 5 seconds
+
+    constructor(
+        connectionString: string,
+    ) {
+        const defaultConfig = {
+            max: 20,
+            idleTimeoutMillis: 30000,
+            connectionTimeoutMillis: this.connectionTimeout,
+        };
+
+        this.pool = new Pool({
+            ...defaultConfig,
+            connectionString,
+        });
+
+        this.pool.on("error", (err) => {
+            logger.error("Unexpected pool error", err);
+            this.handlePoolError(err);
+        });
+
+        this.setupPoolErrorHandling();
+        this.testConnection();
+    }
+
+    private async handlePoolError(error: Error) {
+        logger.error("Pool error occurred, attempting to reconnect", {
+            error: error.message,
+        });
+
+        try {
+            await this.pool.end();
+
+            this.pool = new Pool({
+                ...this.pool.options,
+                connectionTimeoutMillis: this.connectionTimeout,
+            });
+
+            await this.testConnection();
+            logger.success("Pool reconnection successful");
+        } catch (reconnectError) {
+            logger.error("Failed to reconnect pool", {
+                error:
+                    reconnectError instanceof Error
+                        ? reconnectError.message
+                        : String(reconnectError),
+            });
+            throw reconnectError;
+        }
+    }
+
+    async testConnection(): Promise<boolean> {
+        let client;
+        try {
+            client = await this.pool.connect();
+            const result = await client.query("SELECT NOW()");
+            logger.success(
+                "Database connection test successful:",
+                result.rows[0]
+            );
+            return true;
+        } catch (error) {
+            logger.error("Database connection test failed:", error);
+            throw new Error(
+                `Failed to connect to database: ${(error as Error).message}`
+            );
+        } finally {
+            if (client) client.release();
+        }
+    }
+
+    private setupPoolErrorHandling() {
+        process.on("SIGINT", async () => {
+            console.log("SIGINT");
+            await this.cleanup();
+            process.exit(0);
+        });
+
+        process.on("SIGTERM", async () => {
+            await this.cleanup();
+            process.exit(0);
+        });
+
+        process.on("beforeExit", async () => {
+            await this.cleanup();
+        });
+    }
+
+    public getConnection(): PgPool {
+        if (this.isShuttingDown) {
+            throw new Error('Connection manager is shutting down');
+        }
+
+        try {
+            return this.pool;
+        } catch (error) {
+            logger.error('Failed to get connection from pool:', error);
+            throw error;
+        }
+    }
+
+    public async initialize(): Promise<void> {
+        try {
+            await this.testConnection();
+            logger.info('PostgreSQL connection manager initialized successfully');
+        } catch (error) {
+            logger.error('Failed to initialize connection manager:', error);
+            throw error;
+        }
+    }
+
+    public async close(): Promise<void> {
+        await this.cleanup();
+    }
+
+    async cleanup(): Promise<void> {
+        try {
+            await this.pool.end();
+            logger.info("Database pool closed");
+        } catch (error) {
+            logger.error("Error closing database pool:", error);
+        }
+    }
+}

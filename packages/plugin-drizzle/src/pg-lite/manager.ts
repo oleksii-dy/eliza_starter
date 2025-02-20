@@ -2,11 +2,12 @@ import { PGlite, type PGliteOptions } from "@electric-sql/pglite";
 import { vector } from "@electric-sql/pglite/vector";
 import { fuzzystrmatch } from "@electric-sql/pglite/contrib/fuzzystrmatch";
 import { logger } from "@elizaos/core";
+import { IDatabaseClientManager } from "../schema/types";
 
-export class PGliteClientManager {
+export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
     private client: PGlite;
     private shuttingDown = false;
-    private readonly shutdownTimeout = 1010; // ms
+    private readonly shutdownTimeout = 1000;
 
     constructor(options: PGliteOptions) {
         this.client = new PGlite({
@@ -19,7 +20,7 @@ export class PGliteClientManager {
         this.setupShutdownHandlers();
     }
 
-    public getClient(): PGlite {
+    public getConnection(): PGlite {
         if (this.shuttingDown) {
             throw new Error("Client manager is shutting down");
         }

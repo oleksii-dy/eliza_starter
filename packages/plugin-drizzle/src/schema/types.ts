@@ -25,3 +25,9 @@ export const numberTimestamp = customType<{ data: number; driverData: string }>(
         },
     }
 );
+
+export interface IDatabaseClientManager<T> {
+    initialize(): Promise<void>;
+    getConnection(): T;
+    close(): Promise<void>;
+}

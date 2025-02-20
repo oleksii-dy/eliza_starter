@@ -11,9 +11,6 @@ import {
     type Relationship,
     type UUID,
     type Character,
-    Plugin,
-    IAgentRuntime,
-    Adapter,
 } from "@elizaos/core";
 import {
     and,
@@ -47,88 +44,26 @@ import {
 import { drizzle, NodePgDatabase } from "drizzle-orm/node-postgres";
 import { v4 } from "uuid";
 import { runMigrations } from "./migrations";
-import pg, { ConnectionConfig, PoolConfig } from "pg";
 import { DIMENSION_MAP, EmbeddingDimensionColumn } from "../schema/embedding";
-type Pool = pg.Pool;
+import { PostgresConnectionManager } from "./manager";
 
 export class PgDatabaseAdapter
     extends DatabaseAdapter<NodePgDatabase>
     implements IDatabaseCacheAdapter
 {
-    private pool: Pool;
     private readonly maxRetries: number = 3;
     private readonly baseDelay: number = 1000; // 1 second
     private readonly maxDelay: number = 10000; // 10 seconds
     private readonly jitterMax: number = 1000; // 1 second
-    private readonly connectionTimeout: number = 5000; // 5 seconds
     protected embeddingDimension: EmbeddingDimensionColumn = DIMENSION_MAP[384];
 
-    constructor(connectionConfig: any) {
+    constructor(private manager: PostgresConnectionManager) {
         super();
-        const defaultConfig = {
-            max: 20,
-            idleTimeoutMillis: 30000,
-            connectionTimeoutMillis: this.connectionTimeout,
-        };
-
-        const { poolConfig } = this.parseConnectionConfig(
-            connectionConfig,
-            defaultConfig
-        );
-        this.pool = new pg.Pool(poolConfig);
-
-        this.pool.on("error", (err) => {
-            logger.error("Unexpected pool error", err);
-            this.handlePoolError(err);
-        });
-
-        this.setupPoolErrorHandling();
-        this.db = drizzle({ client: this.pool });
+        this.manager = manager;
+        this.db = drizzle(this.manager.getConnection());
     }
 
-    private setupPoolErrorHandling() {
-        process.on("SIGINT", async () => {
-            await this.cleanup();
-            process.exit(0);
-        });
-
-        process.on("SIGTERM", async () => {
-            await this.cleanup();
-            process.exit(0);
-        });
-
-        process.on("beforeExit", async () => {
-            await this.cleanup();
-        });
-    }
-
-    private async handlePoolError(error: Error) {
-        logger.error("Pool error occurred, attempting to reconnect", {
-            error: error.message,
-        });
-
-        try {
-            await this.pool.end();
-
-            this.pool = new pg.Pool({
-                ...this.pool.options,
-                connectionTimeoutMillis: this.connectionTimeout,
-            });
-
-            await this.testConnection();
-            logger.success("Pool reconnection successful");
-        } catch (reconnectError) {
-            logger.error("Failed to reconnect pool", {
-                error:
-                    reconnectError instanceof Error
-                        ? reconnectError.message
-                        : String(reconnectError),
-            });
-            throw reconnectError;
-        }
-    }
-
-    private async withDatabase<T>(operation: () => Promise<T>): Promise<T> {
+    public async withDatabase<T>(operation: () => Promise<T>): Promise<T> {
         return this.withRetry(operation);
     }
 
@@ -180,6 +115,20 @@ export class PgDatabaseAdapter
         throw lastError;
     }
 
+    async init(): Promise<void> {
+        try {
+            await runMigrations(this.manager.getConnection());
+            logger.info("PgDatabaseAdapter initialized successfully");
+        } catch (error) {
+            logger.error("Failed to initialize PgDatabaseAdapter:", error);
+            throw error;
+        }
+    }
+
+    async close(): Promise<void> {
+        await this.manager.close();
+    }
+
     async ensureEmbeddingDimension(dimension: number, agentId: UUID) {
         const existingMemory = await this.db
             .select({
@@ -207,110 +156,6 @@ export class PgDatabaseAdapter
         }
 
         this.embeddingDimension = DIMENSION_MAP[dimension];
-    }
-
-    async cleanup(): Promise<void> {
-        try {
-            await this.pool.end();
-            logger.info("Database pool closed");
-        } catch (error) {
-            logger.error("Error closing database pool:", error);
-        }
-    }
-
-    private parseConnectionConfig(
-        config: ConnectionConfig,
-        defaults: Partial<PoolConfig>
-    ): { poolConfig: PoolConfig; databaseName: string } {
-        if (typeof config === "string") {
-            try {
-                const url = new URL(config);
-                const databaseName = url.pathname.split("/")[1] || "postgres";
-                return {
-                    poolConfig: { ...defaults, connectionString: config },
-                    databaseName,
-                };
-            } catch (error) {
-                throw new Error(
-                    `Invalid connection string: ${
-                        error instanceof Error ? error.message : String(error)
-                    }`
-                );
-            }
-        } else {
-            return {
-                poolConfig: { ...defaults, ...config },
-                databaseName: config.database || "postgres",
-            };
-        }
-    }
-
-    private async validateVectorSetup(): Promise<boolean> {
-        try {
-            const vectorExt = await this.db.execute(sql`
-                SELECT * FROM pg_extension WHERE extname = 'vector'
-            `);
-
-            const hasVector = vectorExt?.rows.length > 0;
-
-            if (!hasVector) {
-                logger.warn("Vector extension not found");
-                return false;
-            }
-
-            return true;
-        } catch (error) {
-            logger.error("Error validating vector setup:", error);
-            return false;
-        }
-    }
-
-    async init(): Promise<void> {
-        logger.info("Initializing Drizzle Database Adapter");
-        try {
-            const { rows } = await this.db.execute(sql`
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables
-                    WHERE table_name = 'rooms'
-                );
-            `);
-
-            if (!rows[0].exists || !(await this.validateVectorSetup())) {
-                await runMigrations(this.pool);
-            }
-        } catch (error) {
-            logger.error("Failed to initialize database:", error);
-            throw error;
-        }
-    }
-
-    async close(): Promise<void> {
-        try {
-            if (this.db && (this.db as any).client) {
-                await (this.db as any).client.close();
-            }
-        } catch (error) {
-            logger.error("Failed to close database connection:", {
-                error: error instanceof Error ? error.message : String(error),
-            });
-            throw error;
-        }
-    }
-
-    async testConnection(): Promise<boolean> {
-        try {
-            const result = await this.db.execute(sql`SELECT NOW()`);
-            logger.success(
-                "Database connection test successful:",
-                result.rows[0]
-            );
-            return true;
-        } catch (error) {
-            logger.error("Database connection test failed:", error);
-            throw new Error(
-                `Failed to connect to database: ${(error as Error).message}`
-            );
-        }
     }
 
     async getAccountById(userId: UUID): Promise<Account | null> {

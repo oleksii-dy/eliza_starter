@@ -8,9 +8,9 @@ import { logger } from "@elizaos/core";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export async function runMigrations(pgPool: Pool): Promise<void> {
+export async function runMigrations(pgClient: Pool): Promise<void> {
     try {
-        const db = drizzle(pgPool);
+        const db = drizzle(pgClient);
         await migrate(db, {
             migrationsFolder: path.resolve(__dirname, "../drizzle/migrations"),
         });
