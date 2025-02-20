@@ -4,10 +4,14 @@ import { PgliteDatabaseAdapter } from './pg-lite/adapter';
 import { PGliteClientManager } from './pg-lite/manager';
 import { PostgresConnectionManager } from './pg/manager';
 
+let pgLiteClientManager: PGliteClientManager;
+
 export function createDatabaseAdapter(config: any): IDatabaseAdapter & IDatabaseCacheAdapter {
   if (config.dataDir) {
-    const manager = new PGliteClientManager({ dataDir: config.dataDir });
-    return new PgliteDatabaseAdapter(manager);
+    if (!pgLiteClientManager) {
+      pgLiteClientManager = new PGliteClientManager({ dataDir: config.dataDir });
+    }
+    return new PgliteDatabaseAdapter(pgLiteClientManager);
   } else if (config.postgresUrl) {
     const manager = new PostgresConnectionManager(config.postgresUrl);
     return new PgDatabaseAdapter(manager);

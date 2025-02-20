@@ -16,7 +16,7 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter<PgliteDatabase> {
 
     protected async withDatabase<T>(operation: () => Promise<T>): Promise<T> {
         if (this.manager.isShuttingDown()) {
-            logger.warn("Database is shutting down, waiting for 5 seconds before retrying");
+            logger.warn("Database is shutting down");
             return null as unknown as T;
         }
         return this.withRetry(operation);

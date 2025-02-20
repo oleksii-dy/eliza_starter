@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 export class PostgresConnectionManager implements IDatabaseClientManager<PgPool> {
     private pool: PgPool;
     private isShuttingDown: boolean = false;
-    private readonly connectionTimeout: number = 5000; // 5 seconds
+    private readonly connectionTimeout: number = 5000;
 
     constructor(
         connectionString: string,
@@ -87,7 +87,6 @@ export class PostgresConnectionManager implements IDatabaseClientManager<PgPool>
 
     private setupPoolErrorHandling() {
         process.on("SIGINT", async () => {
-            console.log("SIGINT");
             await this.cleanup();
             process.exit(0);
         });
