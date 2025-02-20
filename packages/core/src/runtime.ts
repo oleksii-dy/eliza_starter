@@ -50,6 +50,7 @@ import {
     type Task
 } from "./types.ts";
 import { stringToUuid } from "./uuid.ts";
+import { diffJson } from "diff";
 
 // Utility functions
 function isDirectoryItem(item: any): item is DirectoryItem {
@@ -1378,10 +1379,17 @@ Text: ${attachment.text}
         if (!characterExists) {
             await this.databaseAdapter.createCharacter(character);
         }
+
+        // do a diff of the character and the character in the database
+        const characterDiff = diffJson(characterExists, character);
+        // log the diff
+        logger.log(`[AgentRuntime][${this.character.name}] Character diff:`, characterDiff);
+        // update the character with the latest character provided
+        await this.databaseAdapter.updateCharacter(character.name, character);
     }
 
     async ensureEmbeddingDimension() {
-        console.log(`[AgentRuntime][${this.character.name}] Starting ensureEmbeddingDimension`);
+        logger.log(`[AgentRuntime][${this.character.name}] Starting ensureEmbeddingDimension`);
         
         if (!this.databaseAdapter) {
             throw new Error(`[AgentRuntime][${this.character.name}] Database adapter not initialized before ensureEmbeddingDimension`);
