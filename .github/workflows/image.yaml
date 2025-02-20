@@ -7,7 +7,7 @@ on:
 
 env:
     REGISTRY: docker.io  # CHANGED: Target Docker Hub instead of GHCR
-    IMAGE_BASE: your-dockerhub-username/your-image-name  # MUST INCLUDE YOUR DOCKERHUB USERNAME
+    IMAGE_BASE: firemountain/eliza  # MUST INCLUDE YOUR DOCKERHUB USERNAME
 
 jobs:
     build-and-push-image:
