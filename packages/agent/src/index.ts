@@ -150,6 +150,12 @@ async function startAgent(
     db = await findDatabaseAdapter(runtime);
     runtime.databaseAdapter = db;
 
+    // Make sure character exists in database
+    await runtime.ensureCharacterExists(character);
+
+    // Make sure agent points to character in database
+    // TODO
+
     // initialize cache
     const cache = initializeCache(
       runtime.getSetting("CACHE_STORE") ?? CacheStore.DATABASE,

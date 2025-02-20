@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defaultCharacter } from "../single-agent/character.ts";
+import multer from "multer";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -202,3 +203,23 @@ export async function loadCharacters(charactersArg: string): Promise<Character[]
 
   return loadedCharacters;
 } 
+
+
+
+export const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+      const uploadDir = path.join(process.cwd(), "data", "uploads");
+      // Create the directory if it doesn't exist
+      if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+      cb(null, `${uniqueSuffix}-${file.originalname}`);
+  },
+});
+
+// some people have more memory than disk.io
+export const upload = multer({ storage /*: multer.memoryStorage() */ });
