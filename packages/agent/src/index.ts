@@ -21,8 +21,7 @@ import yargs from "yargs";
 import { AgentServer } from "./server/index.ts";
 import {
   hasValidRemoteUrls,
-  loadCharacters,
-  mergeCharacters,
+  loadCharacters
 } from "./server/loader.ts";
 import { defaultCharacter } from "./single-agent/character.ts";
 import swarm from "./swarm/index";
