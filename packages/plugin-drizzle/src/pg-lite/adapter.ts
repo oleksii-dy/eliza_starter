@@ -1,6 +1,5 @@
 import { logger } from "@elizaos/core";
 import { drizzle, PgliteDatabase } from "drizzle-orm/pglite";
-import { runMigrations } from "./migrations";
 import { DIMENSION_MAP, EmbeddingDimensionColumn } from "../schema/embedding";
 import { type PGliteClientManager } from "./manager";
 import { BaseDrizzleAdapter } from "../base";
@@ -25,7 +24,7 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter<PgliteDatabase> {
 
     async init(): Promise<void> {
         try {
-            await runMigrations(this.manager.getConnection());
+            await this.manager.runMigrations();
         } catch (error) {
             logger.error("Failed to initialize database:", error);
             throw error;

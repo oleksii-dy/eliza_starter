@@ -7,6 +7,7 @@ export type TDatabase = NodePgDatabase<any> | PgliteDatabase<any>;
 export interface IDatabaseClientManager<T> {
     initialize(): Promise<void>;
     getConnection(): T;
+    runMigrations(): Promise<void>;
     close(): Promise<void>;
 }
 

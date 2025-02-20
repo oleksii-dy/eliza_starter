@@ -1,6 +1,5 @@
 import { logger } from "@elizaos/core";
 import { drizzle, NodePgDatabase } from "drizzle-orm/node-postgres";
-import { runMigrations } from "./migrations";
 import { DIMENSION_MAP, EmbeddingDimensionColumn } from "../schema/embedding";
 import { PostgresConnectionManager } from "./manager";
 import { BaseDrizzleAdapter } from "../base";
@@ -20,7 +19,7 @@ export class PgDatabaseAdapter extends BaseDrizzleAdapter<NodePgDatabase> {
 
     async init(): Promise<void> {
         try {
-            await runMigrations(this.manager.getConnection());
+            await this.manager.runMigrations();
             logger.info("PgDatabaseAdapter initialized successfully");
         } catch (error) {
             logger.error("Failed to initialize PgDatabaseAdapter:", error);

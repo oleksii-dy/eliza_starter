@@ -3,6 +3,13 @@ import { vector } from "@electric-sql/pglite/vector";
 import { fuzzystrmatch } from "@electric-sql/pglite/contrib/fuzzystrmatch";
 import { logger } from "@elizaos/core";
 import { IDatabaseClientManager } from "../types";
+import { migrate } from "drizzle-orm/pglite/migrator";
+import { fileURLToPath } from 'url';
+import path from "path";
+import { drizzle } from "drizzle-orm/pglite";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
     private client: PGlite;
@@ -86,5 +93,18 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
 
     public isShuttingDown(): boolean {
         return this.shuttingDown;
+    }
+
+    async runMigrations(): Promise<void> {
+        try {
+            const db = drizzle(this.client);
+            await migrate(db, {
+                migrationsFolder: path.resolve(__dirname, "../drizzle/migrations"),
+            });
+            logger.info("Migrations completed successfully!");
+        } catch (error) {
+            logger.error("Failed to run database migrations:", error);
+            throw error;
+        }
     }
 }

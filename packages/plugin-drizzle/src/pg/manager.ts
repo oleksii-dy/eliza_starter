@@ -1,8 +1,15 @@
 import pkg, { Pool as PgPool } from 'pg';
 import { IDatabaseClientManager } from "../types";
 import { logger } from "@elizaos/core";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { fileURLToPath } from 'url';
+import path from "path";
+import { drizzle } from "drizzle-orm/node-postgres";
 
 const { Pool } = pkg;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export class PostgresConnectionManager implements IDatabaseClientManager<PgPool> {
     private pool: PgPool;
@@ -128,6 +135,19 @@ export class PostgresConnectionManager implements IDatabaseClientManager<PgPool>
             logger.info("Database pool closed");
         } catch (error) {
             logger.error("Error closing database pool:", error);
+        }
+    }
+
+    async runMigrations(): Promise<void> {
+        try {
+            const db = drizzle(this.pool);
+            await migrate(db, {
+                migrationsFolder: path.resolve(__dirname, "../drizzle/migrations"),
+            });
+            logger.info("Migrations completed successfully!");
+        } catch (error) {
+            logger.error("Failed to run database migrations:", error);
+            throw error;
         }
     }
 }
