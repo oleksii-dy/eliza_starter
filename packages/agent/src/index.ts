@@ -17,19 +17,15 @@ import {
   stringToUuid
 } from "@elizaos/core";
 import net from "node:net";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import yargs from "yargs";
+import { AgentServer } from "./server/index.ts";
 import {
   hasValidRemoteUrls,
   loadCharacters,
 } from "./server/loader.ts";
-import { AgentServer } from "./server/index.ts";
 import { defaultCharacter } from "./single-agent/character.ts";
 import swarm from "./swarm/index";
 
-const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
-const __dirname = path.dirname(__filename); // get the name of the directory
 
 export const wait = (minTime = 1000, maxTime = 3000) => {
   const waitTime =
