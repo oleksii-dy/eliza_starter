@@ -12,13 +12,21 @@ import {
 
 export const password: Action = {
     name: "PASSWORD",
-    description: "If the speaker asks for the password, the secret, or the hat then call this action",
+    description:
+        "If the speaker asks for the password, the secret, or the hat then call this action",
     similes: [],
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         elizaLogger.debug(`Password validate input: "${message.content.text}"`);
-        const hasCarrot = message.content.text.includes('password') || message.content.text.includes('PASSWORD') || message.content.text.includes('Password') ||
-            message.content.text.includes('secret') || message.content.text.includes('SECRET') || message.content.text.includes('Secret') ||
-            message.content.text.includes('hat') || message.content.text.includes('HAT') || message.content.text.includes('Hat');
+        const hasCarrot =
+            message.content.text.includes("password") ||
+            message.content.text.includes("PASSWORD") ||
+            message.content.text.includes("Password") ||
+            message.content.text.includes("secret") ||
+            message.content.text.includes("SECRET") ||
+            message.content.text.includes("Secret") ||
+            message.content.text.includes("hat") ||
+            message.content.text.includes("HAT") ||
+            message.content.text.includes("Hat");
         elizaLogger.debug(`Password validate check: ${hasCarrot}`);
         return hasCarrot;
     },
@@ -29,29 +37,28 @@ export const password: Action = {
         _options: any,
         callback: HandlerCallback
     ): Promise<boolean> => {
-        elizaLogger.debug('Password handler triggered');
+        elizaLogger.debug("Password handler triggered");
 
         await callback({
             text: "You seek great knowledge young one, but are you worthy of such things?",
-            action: "password",
-            final: true
+            action: "PASSWORD_RESPONSE",
         });
 
-        return true;
+        return;
     },
     examples: [
         [
             {
                 user: "{{user1}}",
                 content: {
-                    text: 'PASSWORD',
+                    text: "can I get the password?",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
                     text: `You seek great knowledge young one, but are you worthy of such things?`,
-                    action: "PASSWORD"
+                    action: "CONTINUE",
                 },
             },
         ],
@@ -59,15 +66,14 @@ export const password: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: 'Can I have the password?',
-                    action: "PASSWORD"
+                    text: "Can I have the password?",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
                     text: `You seek great knowledge young one, but are you worthy of such things?`,
-                    action: "PASSWORD"
+                    action: "CONTINUE",
                 },
             },
         ],
@@ -75,15 +81,14 @@ export const password: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: 'I would like to konw the secret',
-                    action: "PASSWORD"
+                    text: "I would like to know the secret",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
                     text: `You seek great knowledge young one, but are you worthy of such things?`,
-                    action: "PASSWORD"
+                    action: "CONTINUE",
                 },
             },
         ],
@@ -91,15 +96,14 @@ export const password: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: 'Can I have the magic hat please?',
-                    action: "PASSWORD"
+                    text: "Can I have the magic hat please?",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
                     text: `You seek great knowledge young one, but are you worthy of such things?`,
-                    action: "PASSWORD"
+                    action: "CONTINUE",
                 },
             },
         ],
@@ -107,15 +111,14 @@ export const password: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: 'Please can I have the secret Password?',
-                    action: "PASSWORD"
+                    text: "Please can I have the secret Password?",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
                     text: `You seek great knowledge young one, but are you worthy of such things?`,
-                    action: "PASSWORD"
+                    action: "CONTINUE",
                 },
             },
         ],
@@ -123,15 +126,14 @@ export const password: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: 'I am here for the hat',
-                    action: "PASSWORD"
+                    text: "I am here for the hat",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
                     text: `You seek great knowledge young one, but are you worthy of such things?`,
-                    action: "PASSWORD"
+                    action: "CONTINUE",
                 },
             },
         ],
@@ -139,15 +141,14 @@ export const password: Action = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: 'I am here for the secret password!',
-                    action: "PASSWORD"
+                    text: "I am here for the secret password!",
                 },
             },
             {
                 user: "{{agentName}}",
                 content: {
                     text: `You seek great knowledge young one, but are you worthy of such things?`,
-                    action: "PASSWORD"
+                    action: "CONTINUE",
                 },
             },
         ],
