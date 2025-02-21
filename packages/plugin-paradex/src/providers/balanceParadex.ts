@@ -5,8 +5,9 @@ import {
     State,
     elizaLogger,
 } from "@elizaos/core";
-import { authenticate, getParadexConfig } from "../utils/paradexUtils";
 import { Account } from "../utils/paradex-ts/types";
+import { authenticate } from "../utils/paradex-ts/api";
+import { getParadexConfig } from "../utils/paradexUtils";
 
 interface ParadexState extends State {
     starknetAccount?: string;
@@ -50,7 +51,8 @@ async function fetchAccountBalance(): Promise<BalanceResponse> {
 
     if (!account.jwtToken) {
         console.error("No JWT token");
-    }    try {
+    }
+    try {
         const balanceResponse = await fetch(`${config.apiBaseUrl}/balance`, {
             headers: {
                 Authorization: `Bearer ${account.jwtToken}`,
@@ -67,7 +69,7 @@ export const paradexBalanceProvider: Provider = {
     get: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state?: ParadexState,
+        state?: ParadexState
     ) => {
         if (!state) {
             state = (await runtime.composeState(message)) as ParadexState;
@@ -87,7 +89,7 @@ export const paradexBalanceProvider: Provider = {
                 })
                 .join("\n");
 
-            elizaLogger.success(`Current Balances:\n${formattedBalances}`)
+            elizaLogger.success(`Current Balances:\n${formattedBalances}`);
             return `Current Balances:\n${formattedBalances}`;
         } catch (error) {
             console.error("Balance fetch error:", error);

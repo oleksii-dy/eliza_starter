@@ -10,8 +10,11 @@ import {
 import { authenticate } from "../utils/paradex-ts/api";
 import { signOrder } from "../utils/paradex-ts/signature";
 import { SystemConfig, Account } from "../utils/paradex-ts/types";
-import { getParadexConfig, initializeAccount } from "../utils/paradexUtils";
-import { BaseParadexState } from "../types";
+import {
+    BaseParadexState,
+    getParadexConfig,
+    initializeAccount,
+} from "../utils/paradexUtils";
 
 interface OrderRequest {
     action: "long" | "short" | "buy" | "sell";

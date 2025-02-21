@@ -2,7 +2,7 @@ import { ec, shortString, typedData as starkTypedData, hash } from "starknet";
 import BigNumber from "bignumber.js";
 import { SystemConfig, Account } from "./paradex-ts/types";
 import { signAuthRequest } from "./paradex-ts/signature";
-import { IAgentRuntime, elizaLogger } from "@elizaos/core";
+import { IAgentRuntime, State, elizaLogger } from "@elizaos/core";
 import { ParadexOrderError } from "../actions/placeOrder";
 import { validateParadexConfig } from "../environment";
 
@@ -72,7 +72,9 @@ export interface Order {
     signature_timestamp: number;
 }
 
-export async function initializeAccount(runtime: IAgentRuntime): Promise<Account> {
+export async function initializeAccount(
+    runtime: IAgentRuntime
+): Promise<Account> {
     try {
         const config = await validateParadexConfig(runtime);
         return {
@@ -87,4 +89,19 @@ export async function initializeAccount(runtime: IAgentRuntime): Promise<Account
             "Failed to initialize account configuration"
         );
     }
+}
+
+export class ParadexAuthenticationError extends Error {
+    constructor(message: string, public details?: any) {
+        super(message);
+        this.name = "ParadexAuthenticationError";
+    }
+}
+
+export interface BaseParadexState extends State {
+    starknetAccount?: string;
+    publicKey?: string;
+    lastMessage?: string;
+    jwtToken?: string;
+    jwtExpiry?: number;
 }

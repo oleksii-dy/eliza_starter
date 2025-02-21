@@ -5,8 +5,7 @@ import {
     State,
     elizaLogger,
 } from "@elizaos/core";
-import { getParadexConfig } from "../utils/paradexUtils";
-import { BaseParadexState } from "../types";
+import { BaseParadexState, getParadexConfig } from "../utils/paradexUtils";
 
 interface MarketInfo {
     base_token: string;

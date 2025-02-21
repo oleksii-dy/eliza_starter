@@ -7,11 +7,14 @@ import {
     composeContext,
     elizaLogger,
 } from "@elizaos/core";
-import { getParadexConfig } from "../utils/paradexUtils";
+import {
+    BaseParadexState,
+    getParadexConfig,
+    initializeAccount,
+    ParadexAuthenticationError,
+} from "../utils/paradexUtils";
 import { Account } from "../utils/paradex-ts/types";
-import { BaseParadexState } from "../types";
 import { authenticate } from "../utils/paradex-ts/api";
-import { validateParadexConfig } from "../environment";
 import { z } from "zod";
 
 interface CancelOrderRequest {
@@ -39,35 +42,6 @@ export class ParadexCancelError extends Error {
     constructor(message: string, public details?: any) {
         super(message);
         this.name = "ParadexCancelError";
-    }
-}
-
-export class ParadexAuthenticationError extends Error {
-    constructor(message: string, public details?: any) {
-        super(message);
-        this.name = "ParadexAuthenticationError";
-    }
-}
-
-async function initializeAccount(runtime: IAgentRuntime): Promise<Account> {
-    try {
-        const config = await validateParadexConfig(runtime);
-        return {
-            address: config.PARADEX_ACCOUNT_ADDRESS,
-            publicKey: config.PARADEX_ACCOUNT_ADDRESS,
-            privateKey: config.PARADEX_PRIVATE_KEY,
-            ethereumAccount: config.ETHEREUM_ACCOUNT_ADDRESS,
-        };
-    } catch (error) {
-        if (error instanceof z.ZodError) {
-            const errorMessages = error.errors
-                .map((err) => `${err.path.join(".")}: ${err.message}`)
-                .join("\n");
-            throw new ParadexCancelError(
-                `Configuration validation failed: ${errorMessages}`
-            );
-        }
-        throw new ParadexCancelError("Failed to initialize account", error);
     }
 }
 
