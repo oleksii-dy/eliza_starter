@@ -785,6 +785,10 @@ export class AgentRuntime implements IAgentRuntime {
         channelId?: string,
         serverId?: string,
     }) {
+        if(userId === this.agentId) {
+            throw new Error("Agent should not connect to itself");
+        }
+
         await Promise.all([
             this.ensureUserExists(
                 this.agentId,
@@ -805,6 +809,15 @@ export class AgentRuntime implements IAgentRuntime {
             this.ensureParticipantInRoom(userId, roomId),
             this.ensureParticipantInRoom(this.agentId, roomId),
         ]);
+    }
+
+    /**
+     * Get a world by ID.
+     * @param worldId - The ID of the world to get.
+     * @returns The world.
+     */
+    async getWorld(worldId: UUID) {
+        return await this.databaseAdapter.getWorld(worldId);
     }
 
     /**
