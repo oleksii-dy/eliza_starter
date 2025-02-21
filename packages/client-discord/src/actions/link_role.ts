@@ -29,11 +29,6 @@ import { createSigner, createGuildClient } from "@guildxyz/sdk";
 
 import { uriToHttp } from "../utils";
 
-export const summarizationTemplate = `# Summarized a hat based on these details
-{{hatDetails}}
-
-# Instructions: Summarize the most human understandable parts of the hat details. Return the summary. Do not acknowledge this request.`;
-
 export const roleAndHatIdTemplate = `# Messages we are trying to extract the role ID and hat ID from
 {{recentMessages}}
 
@@ -53,8 +48,9 @@ Your response must be formatted as a JSON block with this structure:
 
 const linkRoleAction = {
     name: "LINK_ROLE",
-    similes: ["FIND_HAT"],
-    description: "Gets hat details for a Hats Protocol hat ID.",
+    similes: ["LINK_HAT"],
+    description:
+        "Creates a guild.xyz guild and role that corresponds with Discord role.",
     validate: async (
         runtime: IAgentRuntime,
         message: Memory,
@@ -283,13 +279,13 @@ const linkRoleAction = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "can you search this hat for me 0x0000000100020001000000000000000000000000000000000000000000000000?",
+                    text: "can you link the <@&1234567890123456789> role with this (0x0000000100020001000000000000000000000000000000000000000000000000) hat?",
                 },
             },
             {
                 user: "{{user2}}",
                 content: {
-                    text: "sure, searching now...",
+                    text: "sure, linking now...",
                     action: "LINK_ROLE",
                 },
             },
@@ -298,7 +294,7 @@ const linkRoleAction = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "can you search this (0x0000000100020001000000000000000000000000000000000000000000000000) hat for me?",
+                    text: "can you link the <@&1234567890123456789> role with this (0x0000000100020001000000000000000000000000000000000000000000000000) hat for me?",
                 },
             },
             {
@@ -319,13 +315,13 @@ const linkRoleAction = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "can you search this hat for me 26960769425706402133074773335446698772097302206575744715499319066624?",
+                    text: "can you link the <@&1234567890123456789> role with this hat for me 26960769425706402133074773335446698772097302206575744715499319066624?",
                 },
             },
             {
                 user: "{{user2}}",
                 content: {
-                    text: "sure, searching now...",
+                    text: "sure, linking now...",
                     action: "LINK_ROLE",
                 },
             },
@@ -334,7 +330,7 @@ const linkRoleAction = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "can you search this (26960769425706402133074773335446698772097302206575744715499319066624) hat for me?",
+                    text: "can you link the <@&1234567890123456789> role with this (26960769425706402133074773335446698772097302206575744715499319066624) hat for me?",
                 },
             },
             {

@@ -78,15 +78,58 @@ export class SqliteDatabaseAdapter
     constructor(db: Database) {
         super();
         this.db = db;
-        load(db);
+
+        // Configure database settings at construction time
+        this.db.pragma('journal_mode = WAL');
+        this.db.pragma('synchronous = NORMAL');
+        this.db.pragma('temp_store = MEMORY');
+        this.db.pragma('cache_size = -2000');
+        this.db.pragma('foreign_keys = ON');
+
+        load(this.db);
     }
 
     async init() {
-        this.db.exec(sqliteTables);
+        try {
+            // Ensure the database is open
+            if (!this.db || !this.db.open) {
+                throw new Error("Database connection is not open");
+            }
+
+            try {
+                // Begin transaction
+                this.db.exec('BEGIN TRANSACTION;');
+
+                // Split the SQL statements and execute them one by one
+                const statements = sqliteTables.split(';').filter(stmt => stmt.trim());
+                for (const stmt of statements) {
+                    if (stmt.trim()) {
+                        this.db.exec(stmt + ';');
+                    }
+                }
+
+                // Commit transaction
+                this.db.exec('COMMIT;');
+
+                elizaLogger.success("SQLite database initialized successfully");
+            } catch (error) {
+                // Rollback on error
+                this.db.exec('ROLLBACK;');
+                elizaLogger.error("Failed to initialize SQLite database schema:", error);
+                throw error;
+            }
+        } catch (error) {
+            elizaLogger.error("Failed to initialize SQLite database:", error);
+            throw error;
+        }
     }
 
     async close() {
-        this.db.close();
+        if (this.db) {
+            // Ensure all transactions are finished
+            this.db.exec('PRAGMA analysis_limit=400; PRAGMA optimize;');
+            this.db.close();
+        }
     }
 
     async getAccountById(userId: UUID): Promise<Account | null> {
