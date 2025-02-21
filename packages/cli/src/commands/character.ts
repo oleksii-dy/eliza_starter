@@ -10,48 +10,15 @@ import { handleError } from "../utils/handle-error";
 import { displayCharacter, formatMessageExamples } from "../utils/helpers";
 import { logger } from "../utils/logger";
 import { getRegistryIndex } from "../utils/registry";
-let isShuttingDown = false;
+import { 
+  promptWithNav, 
+  promptForMultipleItems, 
+  confirmAction,
+  NAV_BACK,
+  NAV_NEXT,
+} from "../utils/cli-prompts";
 
-const cleanup = async () => {
-    if (isShuttingDown) return;
-    isShuttingDown = true;
-
-    logger.info("\nOperation cancelled by user. Cleaning up...");
-    try {
-        await adapter.close();
-        logger.info("Database connection closed successfully.");
-        process.exit(0); // Exit successfully after cleanup
-    } catch (error) {
-        logger.error("Error while closing database connection:", error);
-        process.exit(1); // Exit with error if cleanup fails
-    }
-};
-
-process.on("SIGINT", cleanup);
-process.on("SIGTERM", cleanup);
-
-async function withConnection(action: () => Promise<void>) {
-    let initialized = false;
-    try {
-        adapter.init();
-        initialized = true;
-        await action();
-        process.exit(0);
-    } catch (error) {
-        if (!isShuttingDown) {
-            logger.error("Error during command execution:", error);
-        }
-        throw error;
-    } finally {
-        if (initialized && !isShuttingDown) {
-            try {
-                await adapter.close();
-            } catch (error) {
-                logger.error("Error while closing database connection:", error);
-            }
-        }
-    }
-}
+import { withConnection } from "../utils/with-connection";
 
 
 const characterSchema = z.object({
@@ -77,63 +44,6 @@ type CharacterFormData = z.infer<typeof characterSchema>;
 export const character = new Command()
   .name("character")
   .description("manage characters");
-
-const NAV_BACK = "__back__";
-const NAV_NEXT = "__next__";
-
-/**
- * Prompt helper with navigation.
- * Short instructions: type "back", "next" or "cancel".
- */
-async function promptWithNav(
-  label: string,
-  initial = "",
-  validate?: (val: string) => true | string
-): Promise<string> {
-  const msg = `${label}${initial ? ` (current: ${initial})` : ""}`;
-  const res = await prompts({
-    type: "text",
-    name: "value",
-    message: msg,
-    initial,
-    validate,
-  });
-  const input = (res.value !== undefined ? res.value.trim() : "");
-  if (input.toLowerCase() === "cancel") return "cancel";
-  if (input.toLowerCase() === "back") return NAV_BACK;
-  if (input.toLowerCase() === "quit" || input.toLowerCase() === "exit") {
-    logger.info("Exiting...");
-    process.exit(0);
-  }
-  if (input === "" && initial) return initial; // Return initial value if empty input
-  if (input === "" || input.toLowerCase() === "next") return NAV_NEXT;
-  return input;
-}
-
-/**
- * Prompt for multiple items (one by one).
- */
-async function promptForMultipleItems(fieldName: string, initial: string[] = []): Promise<string[]> {
-  const items = [...initial];
-  logger.info(`\n${fieldName}`);
-  if (initial.length > 0) {
-    logger.info("Current values:");
-    initial.forEach((item, i) => logger.info(`  ${i + 1}. ${item}`));
-    logger.info("\nPress Enter to keep existing values, or start typing new ones:");
-  }
-  
-  while (true) {
-    const val = await promptWithNav(`> ${fieldName}:`);
-    if (val === NAV_NEXT) break;
-    if (val === NAV_BACK) {
-      if (items.length === initial.length) return initial; // Return original values if no changes
-      break;
-    }
-    if (val === "cancel") return initial;
-    items.push(val);
-  }
-  return items;
-}
 
 /**
  * Collects a conversation example.
@@ -413,16 +323,6 @@ async function reviewCharacter(data: Partial<Character>): Promise<boolean> {
   });
 
   return confirmed;
-}
-
-async function confirmAction(message: string): Promise<boolean> {
-  const response = await prompts({
-    type: "confirm",
-    name: "confirm",
-    message,
-    initial: false
-  });
-  return Boolean(response.confirm);
 }
 
 //

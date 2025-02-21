@@ -104,9 +104,8 @@ export async function loadCharacter(filePath: string): Promise<Character> {
 }
 
 function handleCharacterLoadError(path: string, error: unknown): never {
-  const message = `Error loading character from ${path}: ${error}`;
-  logger.error(message);
-  throw new Error(message);
+  logger.error(`Error loading character from ${path}: ${error}`);
+  throw new Error(`Error loading character from ${path}: ${error}`);
 }
 
 async function safeLoadCharacter(path: string): Promise<Character> {
