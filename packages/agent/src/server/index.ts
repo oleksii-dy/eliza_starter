@@ -30,7 +30,7 @@ export class AgentServer {
     private server: any; // Store server instance
     public startAgent: (character: Character) => Promise<IAgentRuntime>; // Store startAgent function
     public loadCharacterTryPath: (characterPath: string) => Promise<Character>; // Store loadCharacterTryPath function
-    public jsonToCharacter: (filePath: string, character: string | never) => Promise<Character>; // Store jsonToCharacter function
+    public jsonToCharacter: (character: string | never) => Promise<Character>; // Store jsonToCharacter function
 
     constructor() {
         logger.log("DirectClient constructor");

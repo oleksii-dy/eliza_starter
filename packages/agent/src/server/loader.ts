@@ -119,6 +119,12 @@ async function safeLoadCharacter(path: string): Promise<Character> {
 }
 
 export async function loadCharacterTryPath(characterPath: string): Promise<Character> {
+
+  if (characterPath.startsWith("http")) {
+    const characters = await loadCharactersFromUrl(characterPath);
+    return characters[0];
+  }
+
   const pathsToTry = [
     characterPath,
     path.resolve(process.cwd(), "..", "..", characterPath),

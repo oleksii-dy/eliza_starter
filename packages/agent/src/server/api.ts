@@ -272,7 +272,6 @@ export function createApiRouter(
             let character: Character;
             if (characterJson) {
                 character = await directClient.jsonToCharacter(
-                    characterPath,
                     characterJson
                 );
             } else if (characterPath) {
