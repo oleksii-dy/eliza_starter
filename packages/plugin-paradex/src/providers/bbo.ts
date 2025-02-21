@@ -1,7 +1,7 @@
 import { Provider, IAgentRuntime, Memory, elizaLogger } from "@elizaos/core";
 import { BaseParadexState, getParadexConfig } from "../utils/paradexUtils";
 
-interface BBOState extends BaseParadexState {
+export interface BBOState extends BaseParadexState {
     watchlist: string[];
     marketMetrics: Record<string, MarketMetrics>;
 }
@@ -89,9 +89,11 @@ export const bboProvider: Provider = {
 
         if (!state) {
             state = (await runtime.composeState(message)) as BBOState;
-            state.watchlist = state.watchlist || [];
-            state.marketMetrics = state.marketMetrics || {};
         }
+        
+        // Ensure watchlist and marketMetrics exist
+        state.watchlist = state.watchlist || [];
+        state.marketMetrics = state.marketMetrics || {};
 
         try {
             const marketMetrics: Record<string, MarketMetrics> = {};
@@ -134,7 +136,7 @@ ${results.join("\n")}`;
             elizaLogger.info("Successfully retrieved BBO data");
             return summary.trim();
         } catch (error) {
-            elizaLogger.error("Error in BBO provider:", error);
+            elizaLogger.error("Error in BBO provider:", error.message);
             return "Unable to fetch BBO data. Please check your configuration and try again.";
         }
     },
