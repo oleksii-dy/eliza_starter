@@ -14,7 +14,7 @@ export const getGnfdConfig = async (runtime: IAgentRuntime) => {
 
 export const InitGnfdClient = async (runtime: IAgentRuntime) => {
     const config = await getGnfdConfig(runtime)
-    if (!config.GREENFIELD_CHAIN_ID || !config.GREENFIELD_CHAIN_ID) {
+    if (!config.GREENFIELD_CHAIN_ID || !config.GREENFIELD_RPC_URL) {
         throw new Error("Creating greenfield client params is error");
     }
 
