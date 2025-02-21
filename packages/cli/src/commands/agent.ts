@@ -32,7 +32,6 @@ export const agent = new Command()
 interface AgentStartPayload {
   characterPath?: string;
   characterJson?: Record<string, unknown>;
-  remoteUrl?: string;
 }
 
 interface AgentErrorResponse {
@@ -170,7 +169,7 @@ agent
             if (!opts.remote.startsWith('http://') && !opts.remote.startsWith('https://')) {
               throw new Error('Remote URL must start with http:// or https://');
             }
-            payload.remoteUrl = opts.remote;
+            payload.characterPath = opts.remote;
             return await fetch(`${AGENT_RUNTIME_URL}/agent/start`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
