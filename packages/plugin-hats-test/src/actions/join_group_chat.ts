@@ -1,16 +1,9 @@
-import {
-    ModelClass,
-    composeContext,
-    generateText,
-    parseJSONObjectFromText,
-} from "@elizaos/core";
 import type {
     Action,
-    ActionExample,
     Content,
-    HandlerCallback,
     IAgentRuntime,
     Memory,
+    HandlerCallback,
     State,
 } from "@elizaos/core";
 import { sepolia } from "viem/chains";
@@ -27,25 +20,37 @@ import {
 } from "@hatsprotocol/sdk-v1-subgraph";
 import { HatsClient, hatIdHexToDecimal } from "@hatsprotocol/sdk-v1-core";
 import { createSigner, createGuildClient } from "@guildxyz/sdk";
-import { hatIdTemplate } from "./search_hat";
 
 // TODO: This needs to be dynamic
 const GUILD_NAME = "guild-master";
 
-const mintHatAction = {
-    name: "MINT_HAT",
-    similes: ["GIVE_HAT", "GIVE_ROLE", "MINT_ROLE"],
-    description: "Mints a hat that corresponds with a Discord role.",
+export const joinGroupChat: Action = {
+    name: "JOIN_GROUP_CHAT",
+    description:
+        "Say the right thing and to join a secret group chat via Hats Protocol.",
+    similes: ["JOIN_CHAT", "JOIN_GROUP"],
     validate: async (
-        runtime: IAgentRuntime,
+        _runtime: IAgentRuntime,
         message: Memory,
         _state: State
     ) => {
-        if (message.content.source !== "discord") {
+        if (
+            !(
+                message.content.source === "discord" ||
+                message.content.source === "telegram"
+            )
+        ) {
             return false;
         }
         // only show if one of the keywords are in the message
-        const keywords: string[] = ["hat", "role", "mint"];
+        const keywords: string[] = [
+            "join",
+            "group",
+            "chat",
+            "mint",
+            "hat",
+            "secret",
+        ];
         return keywords.some((keyword) =>
             message.content.text.toLowerCase().includes(keyword.toLowerCase())
         );
@@ -54,39 +59,17 @@ const mintHatAction = {
         runtime: IAgentRuntime,
         message: Memory,
         state: State,
-        options: any,
+        _options: any,
         callback: HandlerCallback
     ) => {
         try {
-            const context = composeContext({
-                state,
-                template: hatIdTemplate,
-            });
-
-            const response = await generateText({
-                runtime,
-                context,
-                modelClass: ModelClass.SMALL,
-            });
-
-            const parsedResponse = parseJSONObjectFromText(response) as {
-                hatId: string;
-            } | null;
-
-            if (!parsedResponse) {
-                console.log("Failed to parse hat ID");
-                return;
-            }
-
             const hatsSubgraphClient = new HatsSubgraphClient({
                 config: DEFAULT_ENDPOINTS_CONFIG,
             });
 
-            const { hatId } = parsedResponse;
-
             const hat = await hatsSubgraphClient.getHat({
                 chainId: sepolia.id,
-                hatId: BigInt(hatId),
+                hatId: BigInt(runtime.getSetting("HAT_ID") as `0x${string}`),
                 props: {
                     wearers: {
                         props: {},
@@ -186,12 +169,12 @@ const mintHatAction = {
             });
 
             if (mintHatResult.status !== "success") {
-                throw new Error("Failed to mint hat!");
+                throw new Error("Failed to mint hat for chat access!");
             }
 
             const callbackData: Content = {
-                text: `You have successfully minted the hat!`,
-                action: "HAT_MINT_RESPONSE",
+                text: `You have successfully minted the hat that allows you to access the private chat!`,
+                action: "JOIN_GROUP_CHAT_RESPONSE",
                 source: message.content.source,
                 attachments: [],
             };
@@ -216,20 +199,14 @@ const mintHatAction = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "```js\nconst x = 10\n```",
+                    text: "I'd like access to the secret chat.",
                 },
             },
             {
-                user: "{{user1}}",
+                user: "{{agentName}}",
                 content: {
-                    text: "Can you mint me this hat 0x0000000100020001000000000000000000000000000000000000000000000000?",
-                },
-            },
-            {
-                user: "{{user2}}",
-                content: {
-                    text: "sure, minting now...",
-                    action: "MINT_HAT",
+                    text: "Let more work on that for you.",
+                    action: "JOIN_GROUP_CHAT",
                 },
             },
         ],
@@ -237,14 +214,14 @@ const mintHatAction = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "can you mint this (0x0000000100020001000000000000000000000000000000000000000000000000) hat for me?",
+                    text: "Please give me access to the secret chat.",
                 },
             },
             {
-                user: "{{user2}}",
+                user: "{{agentName}}",
                 content: {
-                    text: "sure, give me a sec",
-                    action: "MINT_HAT",
+                    text: "Let more work on that for you.",
+                    action: "JOIN_GROUP_CHAT",
                 },
             },
         ],
@@ -252,20 +229,14 @@ const mintHatAction = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "```js\nconst x = 10\n```",
+                    text: "I need access to the secret chat!",
                 },
             },
             {
-                user: "{{user1}}",
+                user: "{{agentName}}",
                 content: {
-                    text: "can you mint this hat for me 26960769425706402133074773335446698772097302206575744715499319066624?",
-                },
-            },
-            {
-                user: "{{user2}}",
-                content: {
-                    text: "sure, minting now...",
-                    action: "MINT_HAT",
+                    text: "Let more work on that for you.",
+                    action: "JOIN_GROUP_CHAT",
                 },
             },
         ],
@@ -273,18 +244,31 @@ const mintHatAction = {
             {
                 user: "{{user1}}",
                 content: {
-                    text: "can you mint this (26960769425706402133074773335446698772097302206575744715499319066624) hat for me?",
+                    text: "Can I join the secret chat group?",
                 },
             },
             {
-                user: "{{user2}}",
+                user: "{{agentName}}",
                 content: {
-                    text: "sure, give me a sec",
-                    action: "MINT_HAT",
+                    text: "Let more work on that for you.",
+                    action: "JOIN_GROUP_CHAT",
                 },
             },
         ],
-    ] as ActionExample[][],
-} as Action;
-
-export default mintHatAction;
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Can I join the group chat?",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Let more work on that for you.",
+                    action: "JOIN_GROUP_CHAT",
+                },
+            },
+        ],
+    ],
+};
