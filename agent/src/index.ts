@@ -157,6 +157,7 @@ import { ankrPlugin } from "@elizaos/plugin-ankr";
 import { formPlugin } from "@elizaos/plugin-form";
 import { MongoClient } from "mongodb";
 import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
+import { paradexPlugin } from "@elizaos/plugin-paradex";
 
 import { trikonPlugin } from "@elizaos/plugin-trikon";
 import arbitragePlugin from "@elizaos/plugin-arbitrage";
@@ -1069,8 +1070,8 @@ export async function createAgent(
                 getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
                 ? evmPlugin
                 : null,
-            (getSecret(character, "EVM_PRIVATE_KEY") ||
-                getSecret(character, "SOLANA_PRIVATE_KEY"))
+            getSecret(character, "EVM_PRIVATE_KEY") ||
+            getSecret(character, "SOLANA_PRIVATE_KEY")
                 ? edwinPlugin
                 : null,
             (getSecret(character, "EVM_PUBLIC_KEY") ||
