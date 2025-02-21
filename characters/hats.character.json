@@ -1,6 +1,6 @@
 {
     "name": "Hats Bot",
-    "clients": ["discord"],
+    "clients": ["telegram"],
     "modelProvider": "openai",
     "settings": {
         "voice": {

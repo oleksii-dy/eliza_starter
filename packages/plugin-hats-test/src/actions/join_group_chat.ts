@@ -34,11 +34,23 @@ export const joinGroupChat: Action = {
         message: Memory,
         _state: State
     ) => {
-        if (message.content.source !== "discord") {
+        if (
+            !(
+                message.content.source === "discord" ||
+                message.content.source === "telegram"
+            )
+        ) {
             return false;
         }
         // only show if one of the keywords are in the message
-        const keywords: string[] = ["join", "group", "chat", "mint", "hat"];
+        const keywords: string[] = [
+            "join",
+            "group",
+            "chat",
+            "mint",
+            "hat",
+            "secret",
+        ];
         return keywords.some((keyword) =>
             message.content.text.toLowerCase().includes(keyword.toLowerCase())
         );
@@ -188,6 +200,66 @@ export const joinGroupChat: Action = {
                 user: "{{user1}}",
                 content: {
                     text: "I'd like access to the secret chat.",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Let more work on that for you.",
+                    action: "JOIN_GROUP_CHAT",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Please give me access to the secret chat.",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Let more work on that for you.",
+                    action: "JOIN_GROUP_CHAT",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "I need access to the secret chat!",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Let more work on that for you.",
+                    action: "JOIN_GROUP_CHAT",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Can I join the secret chat group?",
+                },
+            },
+            {
+                user: "{{agentName}}",
+                content: {
+                    text: "Let more work on that for you.",
+                    action: "JOIN_GROUP_CHAT",
+                },
+            },
+        ],
+        [
+            {
+                user: "{{user1}}",
+                content: {
+                    text: "Can I join the group chat?",
                 },
             },
             {
