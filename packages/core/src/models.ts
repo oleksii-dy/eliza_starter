@@ -741,6 +741,10 @@ export const models: Models = {
                 presence_penalty: 0.4,
                 temperature: 0.6,
             },
+            [ModelClass.EMBEDDING]: {
+                name: "text-embedding-v3",
+                dimensions: 1024,
+            },
             [ModelClass.IMAGE]: {
                 name: "wanx-v1",
             },

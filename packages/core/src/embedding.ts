@@ -20,6 +20,7 @@ export const EmbeddingProvider = {
     GaiaNet: "GaiaNet",
     Heurist: "Heurist",
     BGE: "BGE",
+    ALI_BAILIAN: "ali_bailian",
 } as const;
 
 export type EmbeddingProviderType =
@@ -42,7 +43,10 @@ export const getEmbeddingConfig = (): EmbeddingConfig => ({
                       .dimensions
                 : settings.USE_HEURIST_EMBEDDING?.toLowerCase() === "true"
                   ? getEmbeddingModelSettings(ModelProviderName.HEURIST)
-                        .dimensions
+                            .dimensions
+                        : settings.USE_ALI_BAILIAN_EMBEDDING?.toLowerCase() === "true"
+                            ? getEmbeddingModelSettings(ModelProviderName.ALI_BAILIAN)
+                                .dimensions
                   : 384, // BGE
     model:
         settings.USE_OPENAI_EMBEDDING?.toLowerCase() === "true"
@@ -53,6 +57,8 @@ export const getEmbeddingConfig = (): EmbeddingConfig => ({
                 ? getEmbeddingModelSettings(ModelProviderName.GAIANET).name
                 : settings.USE_HEURIST_EMBEDDING?.toLowerCase() === "true"
                   ? getEmbeddingModelSettings(ModelProviderName.HEURIST).name
+                    : settings.USE_ALI_BAILIAN_EMBEDDING?.toLowerCase() === "true"
+                        ? getEmbeddingModelSettings(ModelProviderName.ALI_BAILIAN).name
                   : "BGE-small-en-v1.5",
     provider:
         settings.USE_OPENAI_EMBEDDING?.toLowerCase() === "true"
@@ -63,6 +69,8 @@ export const getEmbeddingConfig = (): EmbeddingConfig => ({
                 ? "GaiaNet"
                 : settings.USE_HEURIST_EMBEDDING?.toLowerCase() === "true"
                   ? "Heurist"
+                    : settings.USE_ALI_BAILIAN_EMBEDDING?.toLowerCase() === "true"
+                        ? "ali_bailian"
                   : "BGE",
 });
 
@@ -159,6 +167,10 @@ export function getEmbeddingZeroVector(): number[] {
         embeddingDimension = getEmbeddingModelSettings(
             ModelProviderName.HEURIST
         ).dimensions; // Heurist dimension
+    } else if (settings.USE_ALI_BAILIAN_EMBEDDING?.toLowerCase() === "true") {
+        embeddingDimension = getEmbeddingModelSettings(
+            ModelProviderName.ALI_BAILIAN
+        ).dimensions; // ALI_BAILIAN dimension
     }
 
     return Array(embeddingDimension).fill(0);
@@ -247,6 +259,15 @@ export async function embed(runtime: IAgentRuntime, input: string) {
             model: config.model,
             endpoint: getEndpoint(ModelProviderName.HEURIST),
             apiKey: runtime.token,
+            dimensions: config.dimensions,
+        });
+    }
+
+    if (config.provider === EmbeddingProvider.ALI_BAILIAN) {
+        return await getRemoteEmbedding(input, {
+            model: config.model,
+            endpoint: getEndpoint(ModelProviderName.ALI_BAILIAN),
+            apiKey: settings.ALI_BAILIAN_API_KEY,
             dimensions: config.dimensions,
         });
     }
