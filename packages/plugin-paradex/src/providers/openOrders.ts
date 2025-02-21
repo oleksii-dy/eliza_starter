@@ -2,12 +2,16 @@ import {
     Provider,
     IAgentRuntime,
     Memory,
-    State,
     elizaLogger,
 } from "@elizaos/core";
-import { authenticate, getParadexConfig } from "../utils/paradexUtils";
 import { Account } from "../utils/paradex-ts/types";
-import { BaseParadexState } from "../types";
+import { authenticate } from "../utils/paradex-ts/api";
+import {
+    ParadexAuthenticationError,
+    BaseParadexState,
+    getParadexConfig,
+    initializeAccount,
+} from "../utils/paradexUtils";
 
 interface OrderResult {
     account: string;
@@ -38,33 +42,27 @@ interface OrderResponse {
     results: OrderResult[];
 }
 
-async function fetchOpenOrders(market?: string): Promise<OrderResponse> {
+async function fetchOpenOrders(
+    account: Account,
+    market?: string
+): Promise<OrderResponse> {
     elizaLogger.info("Starting fetchOpenOrders...");
 
     try {
         // Get configuration and set up account
         const config = getParadexConfig();
-        const account: Account = {
-            address: process.env.PARADEX_ACCOUNT_ADDRESS,
-            publicKey: process.env.PARADEX_ACCOUNT_ADDRESS,
-            privateKey: process.env.PARADEX_PRIVATE_KEY,
-            ethereumAccount: process.env.ETHEREUM_ACCOUNT_ADDRESS,
-        };
-
-        // Validate required environment variables
-        if (
-            !account.address ||
-            !account.privateKey ||
-            !account.ethereumAccount
-        ) {
-            throw new Error(
-                "Missing required Paradex configuration. Please check PARADEX_ACCOUNT_ADDRESS, PARADEX_PRIVATE_KEY, and ETHEREUM_ACCOUNT_ADDRESS.",
-            );
-        }
 
         // Authenticate and get JWT token
         elizaLogger.info("Authenticating with Paradex...");
-        account.jwtToken = await authenticate(config, account);
+        try {
+            account.jwtToken = await authenticate(config, account);
+        } catch (error) {
+            elizaLogger.error("Authentication failed:", error);
+            throw new ParadexAuthenticationError(
+                "Failed to authenticate with Paradex",
+                error
+            );
+        }
 
         if (!account.jwtToken) {
             throw new Error("Failed to obtain JWT token");
@@ -88,7 +86,7 @@ async function fetchOpenOrders(market?: string): Promise<OrderResponse> {
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(
-                `Failed to fetch orders: ${response.status} - ${errorText}`,
+                `Failed to fetch orders: ${response.status} - ${errorText}`
             );
         }
 
@@ -114,7 +112,7 @@ function formatOrder(order: OrderResult): string {
             "Error formatting order:",
             error,
             "Order data:",
-            order,
+            order
         );
         return `Error formatting order ${order.id}`;
     }
@@ -124,7 +122,7 @@ export const openOrdersProvider: Provider = {
     get: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state?: BaseParadexState,
+        state?: BaseParadexState
     ) => {
         elizaLogger.info("Starting openOrdersProvider.get...");
 
@@ -132,8 +130,12 @@ export const openOrdersProvider: Provider = {
             state = (await runtime.composeState(message)) as BaseParadexState;
         }
 
+        // Initialize account
+        const account = await initializeAccount(runtime);
+        elizaLogger.success("Account initialized");
+
         try {
-            const ordersData = await fetchOpenOrders();
+            const ordersData = await fetchOpenOrders(account);
 
             if (!ordersData.results || ordersData.results.length === 0) {
                 elizaLogger.info("No open orders found");
@@ -147,8 +149,12 @@ export const openOrdersProvider: Provider = {
                 state.openOrders = ordersData.results;
             }
 
-            const finalResponse = `Current Open Orders:\n${formattedOrders.join("\n")}`;
-            elizaLogger.info(`Current Open Orders:\n${formattedOrders.join("\n")}`);
+            const finalResponse = `Current Open Orders:\n${formattedOrders.join(
+                "\n"
+            )}`;
+            elizaLogger.info(
+                `Current Open Orders:\n${formattedOrders.join("\n")}`
+            );
             return finalResponse;
         } catch (error) {
             elizaLogger.error("Error in openOrdersProvider:", error);
