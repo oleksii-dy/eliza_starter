@@ -32,7 +32,6 @@ import {
   jsonToCharacter
 } from "./server/loader.ts";
 import { defaultCharacter } from "./single-agent/character.ts";
-import { CharacterServer } from "./server/index.ts";
 import { startScenario } from "./swarm/scenario.ts";
 
 import swarm from "./swarm/index";

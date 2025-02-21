@@ -1439,13 +1439,10 @@ Text: ${attachment.text}
     async ensureCharacterExists(character: Character) {
         const characterExists = await this.databaseAdapter.getCharacter(character.name);
         if (!characterExists) {
-            await this.databaseAdapter.createCharacter(character);
+            logger.log(`[AgentRuntime][${this.character.name}] Creating character`);
+            return await this.databaseAdapter.createCharacter(character);
         }
-
-        // do a diff of the character and the character in the database
-        const characterDiff = diffJson(characterExists, character);
-        // log the diff
-        logger.log(`[AgentRuntime][${this.character.name}] Character diff:`, characterDiff);
+        logger.log(`[AgentRuntime][${this.character.name}] Updating character`);
         // update the character with the latest character provided
         await this.databaseAdapter.updateCharacter(character.name, character);
     }
