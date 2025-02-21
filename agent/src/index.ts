@@ -1306,6 +1306,11 @@ export async function createAgent(
             getSecret(character, "DESK_EXCHANGE_NETWORK")
                 ? deskExchangePlugin
                 : null,
+            getSecret(character, "PARADEX_ACCOUNT_ADDRESS") &&
+            getSecret(character, "PARADEX_PRIVATE_KEY") &&
+            getSecret(character, "ETHEREUM_ACCOUNT_ADDRESS")
+                ? paradexPlugin
+                : null,
         ]
             .flat()
             .filter(Boolean),
