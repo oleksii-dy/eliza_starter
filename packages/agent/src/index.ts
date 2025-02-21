@@ -14,8 +14,14 @@ import {
   logger,
   parseBooleanFromText,
   settings,
-  stringToUuid
+  stringToUuid,
+  TeeVendors,
+  validateCharacterConfig,
+  type Plugin,
+  elizaLogger,
 } from "@elizaos/core";
+import { teePlugin } from "@elizaos/plugin-tee";
+import fs from "node:fs";
 import net from "node:net";
 import yargs from "yargs";
 import { AgentServer } from "./server/index.ts";
@@ -26,6 +32,9 @@ import {
   jsonToCharacter
 } from "./server/loader.ts";
 import { defaultCharacter } from "./single-agent/character.ts";
+import { CharacterServer } from "./server/index.ts";
+import { startScenario } from "./swarm/scenario.ts";
+
 import swarm from "./swarm/index";
 
 
@@ -46,6 +55,7 @@ export function parseArguments(): {
   character?: string;
   characters?: string;
   swarm?: boolean;
+  scenario?: boolean;
 } {
   try {
     return yargs(process.argv.slice(2))
@@ -61,12 +71,23 @@ export function parseArguments(): {
         type: "boolean",
         description: "Load characters from swarm",
       })
+      .option("scenario", {
+        type: "boolean",
+        description: "Run scenario tests",
+      })
+      // scenario filter
+      .option("scenario-filter", {
+        type: "string",
+        description: "Filter scenario tests (only tests which contain this string)",
+      })
       .parseSync();
   } catch (error) {
     logger.error("Error parsing arguments:", error);
     return {};
   }
 }
+
+
 
 export async function createAgent(
   character: Character
@@ -91,7 +112,7 @@ function initializeDbCache(character: Character, db: IDatabaseCacheAdapter) {
 function initializeCache(
   cacheStore: string,
   character: Character,
-  baseDir?: string,
+  _baseDir?: string,
   db?: IDatabaseCacheAdapter
 ) {
   switch (cacheStore) {
@@ -111,16 +132,56 @@ function initializeCache(
   }
 }
 
+async function initializeTEE(runtime: IAgentRuntime) {
+  if (runtime.getSetting("TEE_VENDOR")) {
+    const vendor = runtime.getSetting("TEE_VENDOR");
+    elizaLogger.info(`Initializing TEE with vendor: ${vendor}`);
+    let plugin: Plugin;
+    switch (vendor) {
+      case "phala":
+        plugin = teePlugin({
+          vendor: TeeVendors.PHALA,
+          vendorConfig: {
+            apiKey: runtime.getSetting("TEE_API_KEY"),
+          },
+        });
+        break;
+      case "marlin":
+        plugin = teePlugin({
+            vendor: TeeVendors.MARLIN,
+          }
+        );
+        break;
+      case "fleek":
+        plugin = teePlugin({
+            vendor: TeeVendors.FLEEK,
+          }
+        );
+        break;
+      case "sgx-gramine":
+        plugin = teePlugin({
+            vendor: TeeVendors.SGX_GRAMINE,
+          }
+        );
+        break;
+      default:
+        throw new Error(`Invalid TEE vendor: ${vendor}`);
+    }
+    elizaLogger.info(`Pushing plugin: ${plugin.name}`);
+    runtime.plugins.push(plugin);
+  }
+}
+
 async function findDatabaseAdapter(runtime: IAgentRuntime) {
   const { adapters } = runtime;
   let adapter: Adapter | undefined;
   // if not found, default to drizzle
   if (adapters.length === 0) {
-    const drizzleAdapterPlugin = await import('@elizaos/plugin-drizzle');
+    const drizzleAdapterPlugin = await import('@elizaos/plugin-sql');
     const drizzleAdapterPluginDefault = drizzleAdapterPlugin.default;
     adapter = drizzleAdapterPluginDefault.adapters[0];
     if (!adapter) {
-      throw new Error("Internal error: No database adapter found for default plugin-drizzle");
+      throw new Error("Internal error: No database adapter found for default plugin-sql");
     }
   } else if (adapters.length === 1) {
     adapter = adapters[0];
@@ -167,7 +228,10 @@ async function startAgent(
     ); // "" should be replaced with dir for file system caching. THOUGHTS: might probably make this into an env
     runtime.cacheManager = cache;
 
-    // start services/plugins/process knowledge
+    // initialize TEE, if specified
+    await initializeTEE(runtime);
+
+    // start services/plugins/process knowledge    
     await runtime.initialize();
 
     // add to container
@@ -221,13 +285,17 @@ const startAgents = async () => {
 
   if (args.swarm) {
     try {
+        const members = [];
       for (const swarmMember of swarm) {
-        await startAgent(
+        const runtime = await startAgent(
           swarmMember.character,
           server,
           swarmMember.init
         );
-        characters.push(swarmMember.character);
+        members.push(runtime);
+      }
+      if (args.scenario) {
+        startScenario(members);
       }
       logger.info("Loaded characters from swarm configuration");
     } catch (error) {
@@ -235,6 +303,7 @@ const startAgents = async () => {
       process.exit(1);
     }
   } else {
+    let characters = [];
     if (charactersArg || hasValidRemoteUrls()) {
       characters = await loadCharacters(charactersArg);
     } else {
