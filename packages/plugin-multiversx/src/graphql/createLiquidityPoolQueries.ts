@@ -93,7 +93,7 @@ export const createPoolSetInitialExchangeRateQuery = gql`
     ${createPoolSetInitialExchangeRateString}
 `;
 
-// 6.  Add Liquidity (Optionnal)
+// 6.  Add Liquidity (Optional)
 const createPoolAddLiquidityString = `
   query createPoolAddLiquidity($tolerance: Float!, $pairAddress: String!, $tokens: [InputTokenModel!]!) {
     addLiquidityBatch(tokens: $tokens, tolerance: $tolerance, pairAddress: $pairAddress) {
