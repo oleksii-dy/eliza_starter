@@ -32,6 +32,7 @@ export class WalletProvider {
     private currentChain: SupportedChain = "bsc";
     chains: Record<string, Chain> = { bsc: viemChains.bsc };
     account: PrivateKeyAccount;
+    pk: `0x${string}`;
 
     constructor(privateKey: `0x${string}`, chains?: Record<string, Chain>) {
         this.setAccount(privateKey);
@@ -48,6 +49,10 @@ export class WalletProvider {
 
     getAddress(): Address {
         return this.account.address;
+    }
+
+    getPk(): Address {
+        return this.pk;
     }
 
     getCurrentChain(): Chain {
@@ -244,6 +249,7 @@ export class WalletProvider {
     }
 
     private setAccount = (pk: `0x${string}`) => {
+        this.pk = pk;
         this.account = privateKeyToAccount(pk);
     };
 

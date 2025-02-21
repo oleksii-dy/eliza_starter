@@ -17,5 +17,6 @@ export default defineConfig({
         "agentkeepalive",
         "viem",
         "@lifi/sdk",
+        "@bnb-chain/greenfield-js-sdk",
     ],
 });
