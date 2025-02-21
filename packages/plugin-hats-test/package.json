@@ -20,7 +20,11 @@
     ],
     "dependencies": {
         "@elizaos/core": "workspace:*",
-        "tsup": "8.3.5"
+        "@guildxyz/sdk": "^2.6.9",
+        "@hatsprotocol/sdk-v1-core": "^0.10.0",
+        "@hatsprotocol/sdk-v1-subgraph": "^1.0.0",
+        "tsup": "8.3.5",
+        "viem": "2.21.58"
     },
     "scripts": {
         "build": "tsup --format esm --dts",
