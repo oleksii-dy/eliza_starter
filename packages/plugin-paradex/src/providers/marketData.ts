@@ -84,8 +84,9 @@ export const availableMarketsProvider: Provider = {
     ) => {
         elizaLogger.info("Starting availableMarketsProvider.get...");
 
+        // Initializing the state
         if (!state) {
-            state = (await runtime.composeState(message)) as BaseParadexState;
+            state = {} as BaseParadexState;
         }
 
         try {

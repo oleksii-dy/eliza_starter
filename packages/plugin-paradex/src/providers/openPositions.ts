@@ -2,12 +2,12 @@ import { Provider, IAgentRuntime, Memory, elizaLogger } from "@elizaos/core";
 import {
     BaseParadexState,
     getParadexConfig,
-    initializeAccount,
+    getAccount,
     ParadexAuthenticationError,
 } from "../utils/paradexUtils";
-import { Account } from "../utils/paradex-ts/types";
+import { Account, SystemConfig } from "../utils/paradex-ts/types";
 import { authenticate } from "../utils/paradex-ts/api";
-
+//TODO fix that provider, atm its an order providers
 interface OrderResult {
     market: string;
     side: string;
@@ -58,31 +58,18 @@ class OrderFormatting {
 }
 
 async function fetchOpenOrders(
+    config: SystemConfig,
     account: Account,
     market?: string
 ): Promise<OrderResponse> {
     elizaLogger.info("Starting fetchOpenOrders...");
 
     try {
-        const config = getParadexConfig();
-
-        // Authenticate and get JWT token
-        elizaLogger.info("Authenticating with Paradex...");
-        try {
-            account.jwtToken = await authenticate(config, account);
-        } catch (error) {
-            elizaLogger.error("Authentication failed:", error);
-            throw new ParadexAuthenticationError(
-                "Failed to authenticate with Paradex",
-                error
-            );
-        }
-
         const url = market
-            ? `${config.apiBaseUrl}/orders?market=${market}`
-            : `${config.apiBaseUrl}/orders`;
+            ? `${config.apiBaseUrl}/positions?market=${market}`
+            : `${config.apiBaseUrl}/positions`;
 
-        elizaLogger.info("Fetching open orders from URL:", url);
+        elizaLogger.info("Fetching open positions from URL:", url);
 
         const response = await fetch(url, {
             headers: {
@@ -115,16 +102,27 @@ export const openOrdersProvider: Provider = {
     ) => {
         elizaLogger.info("Starting openOrdersProvider.get...");
 
+        // Initializing the state
         if (!state) {
-            state = (await runtime.composeState(message)) as BaseParadexState;
+            state = {} as BaseParadexState;
         }
 
-        // Initialize account
-        const account = await initializeAccount(runtime);
-        elizaLogger.success("Account initialized");
+        const config = getParadexConfig();
+        const account = await getAccount(runtime);
 
         try {
-            const ordersData = await fetchOpenOrders(account);
+            account.jwtToken = await authenticate(config, account);
+        } catch (error) {
+            elizaLogger.error("Authentication failed:", error);
+            throw new ParadexAuthenticationError(
+                "Failed to authenticate with Paradex",
+                error
+            );
+        }
+        elizaLogger.success("Account retrieved and JWT token generated");
+
+        try {
+            const ordersData = await fetchOpenOrders(config, account);
 
             if (!ordersData.results?.length) {
                 return "No open orders found.";

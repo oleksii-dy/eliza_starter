@@ -7,7 +7,8 @@ import {
     composeContext,
     elizaLogger,
 } from "@elizaos/core";
-import { BBOState } from "../providers/bbo";
+import { WatchlistState } from "../providers/bbo";
+import { BaseParadexState } from "../utils/paradexUtils";
 
 interface WatchlistRequest {
     action: "add" | "remove" | "clear";
@@ -50,12 +51,12 @@ export const manageWatchlistAction: Action = {
     handler: async (
         runtime: IAgentRuntime,
         message: Memory,
-        state?: BBOState
+        state?: WatchlistState
     ) => {
         elizaLogger.info("Starting watchlist management...");
 
         if (!state) {
-            state = (await runtime.composeState(message)) as BBOState;
+            state = {} as WatchlistState;
             state.watchlist = state.watchlist || [];
             elizaLogger.info("State initialized with empty watchlist");
         }

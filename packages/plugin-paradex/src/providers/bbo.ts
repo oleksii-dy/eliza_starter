@@ -1,7 +1,7 @@
 import { Provider, IAgentRuntime, Memory, elizaLogger } from "@elizaos/core";
 import { BaseParadexState, getParadexConfig } from "../utils/paradexUtils";
 
-export interface BBOState extends BaseParadexState {
+export interface WatchlistState extends BaseParadexState {
     watchlist: string[];
     marketMetrics: Record<string, MarketMetrics>;
 }
@@ -84,16 +84,17 @@ async function fetchMarketBBO(market: string): Promise<BBOResponse> {
 }
 
 export const bboProvider: Provider = {
-    get: async (runtime: IAgentRuntime, message: Memory, state?: BBOState) => {
+    get: async (runtime: IAgentRuntime, message: Memory, state?: WatchlistState) => {
         elizaLogger.info("Starting BBO provider...");
 
+        // Initializing the state
         if (!state) {
-            state = (await runtime.composeState(message)) as BBOState;
+            state = {} as WatchlistState;
         }
         
         // Ensure watchlist and marketMetrics exist
         state.watchlist = state.watchlist || [];
-        state.marketMetrics = state.marketMetrics || {};
+        state.marketMetrics = state.marketMetrics || {};    // TODO: put BTC by default if empty
 
         try {
             const marketMetrics: Record<string, MarketMetrics> = {};

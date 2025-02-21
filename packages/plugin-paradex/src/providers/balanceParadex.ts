@@ -5,9 +5,9 @@ import {
     State,
     elizaLogger,
 } from "@elizaos/core";
-import { Account } from "../utils/paradex-ts/types";
+import { Account, SystemConfig } from "../utils/paradex-ts/types";
 import { authenticate } from "../utils/paradex-ts/api";
-import { getParadexConfig } from "../utils/paradexUtils";
+import { BaseParadexState, getAccount, getParadexConfig, ParadexAuthenticationError } from "../utils/paradexUtils";
 
 interface ParadexState extends State {
     starknetAccount?: string;
@@ -29,26 +29,10 @@ interface BalanceResponse {
     results: BalanceResult[];
 }
 
-function getParadexUrl(): string {
-    const network = (process.env.PARADEX_NETWORK || "testnet").toLowerCase();
-    if (network !== "testnet" && network !== "prod") {
-        throw new Error("PARADEX_NETWORK must be either 'testnet' or 'prod'");
-    }
-    return `https://api.${network}.paradex.trade/v1`;
-}
-
-async function fetchAccountBalance(): Promise<BalanceResponse> {
-    const config = getParadexConfig();
-
-    const account: Account = {
-        address: process.env.PARADEX_ACCOUNT_ADDRESS,
-        publicKey: process.env.PARADEX_ACCOUNT_ADDRESS,
-        privateKey: process.env.PARADEX_PRIVATE_KEY,
-        ethereumAccount: process.env.ETHEREUM_ACCOUNT_ADDRESS,
-    };
-
-    account.jwtToken = await authenticate(config, account);
-
+async function fetchAccountBalance(
+    config: SystemConfig,
+    account: Account
+): Promise<BalanceResponse> {
     if (!account.jwtToken) {
         console.error("No JWT token");
     }
@@ -71,12 +55,27 @@ export const paradexBalanceProvider: Provider = {
         message: Memory,
         state?: ParadexState
     ) => {
+        // Initializing the state
         if (!state) {
-            state = (await runtime.composeState(message)) as ParadexState;
+            state = {} as BaseParadexState;
         }
 
+        const config = getParadexConfig();
+        const account = await getAccount(runtime);
+
         try {
-            const balance = await fetchAccountBalance();
+            account.jwtToken = await authenticate(config, account);
+        } catch (error) {
+            elizaLogger.error("Authentication failed:", error);
+            throw new ParadexAuthenticationError(
+                "Failed to authenticate with Paradex",
+                error
+            );
+        }
+        elizaLogger.success("Account retrieved and JWT token generated");
+
+        try {
+            const balance = await fetchAccountBalance(config, account);
 
             if (!balance.results || balance.results.length === 0) {
                 return "No balance information available.";

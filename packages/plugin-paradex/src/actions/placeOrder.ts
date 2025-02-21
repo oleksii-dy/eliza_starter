@@ -13,7 +13,8 @@ import { SystemConfig, Account } from "../utils/paradex-ts/types";
 import {
     BaseParadexState,
     getParadexConfig,
-    initializeAccount,
+    getAccount,
+    ParadexAuthenticationError,
 } from "../utils/paradexUtils";
 
 interface OrderRequest {
@@ -162,22 +163,27 @@ export const paradexPlaceOrderAction: Action = {
         elizaLogger.info("Starting order placement...");
 
         try {
-            // Initialize state if needed
+            // Initializing the state
             if (!state) {
-                state = (await runtime.composeState(
-                    message
-                )) as BaseParadexState;
+                state = {} as BaseParadexState;
             }
-            state.lastMessage = message.content.text;
 
-            // Get account and config
-            const account = await initializeAccount(runtime);
             const config = getParadexConfig();
+            const account = await getAccount(runtime);
+            
+            try {
+                account.jwtToken = await authenticate(config, account);
+            } catch (error) {
+                elizaLogger.error("Authentication failed:", error);
+                throw new ParadexAuthenticationError(
+                    "Failed to authenticate with Paradex",
+                    error
+                );
+            }
+            elizaLogger.success("Account retrieved and JWT token generated");
 
-            // Authenticate
-            account.jwtToken = await authenticate(config, account);
-            elizaLogger.info("Authentication successful");
-
+            state.lastMessage = message.content.text;
+            
             // Parse order request
             const request = await parseOrderRequest(runtime, state);
             state.orderRequestObj = request;

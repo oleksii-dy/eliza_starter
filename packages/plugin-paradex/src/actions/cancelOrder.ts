@@ -10,7 +10,7 @@ import {
 import {
     BaseParadexState,
     getParadexConfig,
-    initializeAccount,
+    getAccount,
     ParadexAuthenticationError,
 } from "../utils/paradexUtils";
 import { Account } from "../utils/paradex-ts/types";
@@ -46,21 +46,10 @@ export class ParadexCancelError extends Error {
 }
 
 async function cancelOrder(
+    config,
     account: Account,
     orderId: string
 ): Promise<boolean> {
-    const config = getParadexConfig();
-
-    try {
-        account.jwtToken = await authenticate(config, account);
-    } catch (error) {
-        elizaLogger.error("Authentication failed:", error);
-        throw new ParadexAuthenticationError(
-            "Failed to authenticate with Paradex",
-            error
-        );
-    }
-
     try {
         const response = await fetch(`${config.apiBaseUrl}/orders/${orderId}`, {
             method: "DELETE",
@@ -145,17 +134,24 @@ export const paradexCancelOrderAction: Action = {
         elizaLogger.info("Starting cancel order process...");
 
         try {
-            // Initialize or compose state
+            // Initializing the state
             if (!state) {
-                state = (await runtime.composeState(
-                    message
-                )) as BaseParadexState;
-                elizaLogger.success("State composed");
+                state = {} as BaseParadexState;
             }
 
-            // Initialize account
-            const account = await initializeAccount(runtime);
-            elizaLogger.success("Account initialized");
+            const config = getParadexConfig();
+            const account = await getAccount(runtime);
+            
+            try {
+                account.jwtToken = await authenticate(config, account);
+            } catch (error) {
+                elizaLogger.error("Authentication failed:", error);
+                throw new ParadexAuthenticationError(
+                    "Failed to authenticate with Paradex",
+                    error
+                );
+            }
+            elizaLogger.success("Account retrieved and JWT token generated");
 
             // Update state with latest message
             state.lastMessage = message.content.text;
@@ -165,7 +161,7 @@ export const paradexCancelOrderAction: Action = {
             elizaLogger.success("Order ID extracted:", orderId);
 
             // Execute cancel order
-            const success = await cancelOrder(account, orderId);
+            const success = await cancelOrder(config, account, orderId);
 
             if (success) {
                 elizaLogger.success(`Order ${orderId} cancelled successfully`);
