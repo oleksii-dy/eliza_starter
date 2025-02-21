@@ -6,10 +6,10 @@ import fs from "node:fs";
 import prompts from "prompts";
 import { z } from "zod";
 import { adapter } from "../database";
-import { availablePlugins } from "../plugins";
 import { handleError } from "../utils/handle-error";
-import { logger } from "../utils/logger";
 import { displayCharacter, formatMessageExamples } from "../utils/helpers";
+import { logger } from "../utils/logger";
+import { getRegistryIndex } from "../utils/registry";
 let isShuttingDown = false;
 
 const cleanup = async () => {
@@ -101,6 +101,10 @@ async function promptWithNav(
   const input = (res.value !== undefined ? res.value.trim() : "");
   if (input.toLowerCase() === "cancel") return "cancel";
   if (input.toLowerCase() === "back") return NAV_BACK;
+  if (input.toLowerCase() === "quit" || input.toLowerCase() === "exit") {
+    logger.info("Exiting...");
+    process.exit(0);
+  }
   if (input === "" && initial) return initial; // Return initial value if empty input
   if (input === "" || input.toLowerCase() === "next") return NAV_NEXT;
   return input;
@@ -137,7 +141,7 @@ async function promptForMultipleItems(fieldName: string, initial: string[] = [])
  */
 async function collectSingleConversation(characterName: string, initial?: MessageExample[]): Promise<MessageExample[] | null> {
   const msgs: MessageExample[] = [...(initial || [])];
-  let role: "user" | "character" = initial?.length ? (initial[initial.length - 1].user === characterName ? "user" : "character") : "user";
+  let role: "user" | "character" = initial?.length ? (initial[initial.length - 1].user === "{{user1}}" ? "user" : "character") : "user";
   
   logger.info("\nEnter conversation messages (alternating user/character)");
   if (initial?.length) {
@@ -156,13 +160,7 @@ async function collectSingleConversation(characterName: string, initial?: Messag
     const label = role === "user" ? "User Message" : `${characterName} Response`;
     const input = await promptWithNav(label, "", (val) => role === "user" || val ? true : "Enter a message");
     if (input === "cancel") return initial || null;
-    if (input === NAV_NEXT) {
-      if (msgs.length === 0) {
-        logger.info("At least one message is required. Type 'cancel' to skip message examples entirely.");
-        continue;
-      }
-      break;
-    }
+    if (input === NAV_NEXT) break;
     if (input === NAV_BACK) continue;
     msgs.push({
       user: role === "user" ? "{{user1}}" : characterName,
@@ -215,6 +213,16 @@ async function collectMessageExamples(characterName: string, initial: MessageExa
  */
 async function collectCharacterData(initialData?: Partial<CharacterFormData>): Promise<CharacterFormData | null> {
   const data: Partial<CharacterFormData> = { ...initialData };
+  
+  // Fetch plugin registry in advance
+  let pluginRegistry: Record<string, string>;
+  try {
+    pluginRegistry = await getRegistryIndex();
+  } catch (error) {
+    logger.error("Error fetching plugins from registry:", error);
+    pluginRegistry = {};
+  }
+
   logger.info("\n=== Create Your Character ===");
   logger.info("Navigation Instructions:");
   logger.info("- Press Enter or type 'next' to move forward");
@@ -241,11 +249,25 @@ async function collectCharacterData(initialData?: Partial<CharacterFormData>): P
       }
     },
     { key: "adjectives", prompt: async () => {
-        const items = await promptForMultipleItems("Adjectives", data.adjectives || []);
-        if (items.length < 3) {
-          logger.error("Require at least 3 adjectives.");
-          return await fields[2].prompt();
+        // Start with any existing adjectives from data
+        let items = [...(data.adjectives || [])];
+
+        // This helper will prompt for multiple items and append them:
+        async function promptAdjectives() {
+          const newItems = await promptForMultipleItems("Adjectives", items);
+          // If the user typed "cancel", promptForMultipleItems might just return the original array
+          items = newItems;
         }
+
+        // Prompt the user once:
+        await promptAdjectives();
+        // If under 3 adjectives, prompt again in a loop until the user provides at least 3 (or cancels):
+        while (items.length < 3) {
+          logger.error(`Require at least 3 adjectives, but you only provided ${items.length}. Please enter additional adjectives.`);
+          await promptAdjectives();
+        }
+
+        // Now that we have 3 or more, save them:
         data.adjectives = items;
         return "success";
       }
@@ -257,10 +279,12 @@ async function collectCharacterData(initialData?: Partial<CharacterFormData>): P
       }
     },
     { key: "plugins", prompt: async () => {
-        const pluginChoices = Object.keys(availablePlugins).map(plugin => ({
+        // Use pre-fetched plugin registry
+        const pluginChoices = Object.keys(pluginRegistry).map(plugin => ({
           title: plugin,
           value: plugin,
-          selected: data.plugins?.includes(plugin) || false
+          selected: data.plugins?.includes(plugin) || false,
+          description: pluginRegistry[plugin]
         }));
 
         if (pluginChoices.length === 0) {
@@ -270,7 +294,6 @@ async function collectCharacterData(initialData?: Partial<CharacterFormData>): P
         }
 
         logger.info("\nSelect plugins for your character:");
-        logger.info("Use space to select/deselect, arrow keys to move, enter to confirm");
         
         const { selectedPlugins } = await prompts({
           type: 'multiselect',
@@ -579,11 +602,35 @@ character.command("import")
           plugins: parsed.plugins || [],
         };
 
-        if (opts.yes || await reviewCharacter(charData)) {
-          await adapter.createCharacter(charData);
-          logger.success(`Imported character ${parsed.name}`);
+        // Check if a character with the same name already exists.
+        const existing = await adapter.getCharacter(parsed.name);
+        if (existing) {
+          logger.warn(`Character "${parsed.name}" already exists.`);
+          let proceed: boolean;
+          if (opts.yes) {
+            proceed = true;
+          } else {
+            proceed = await confirmAction(`Do you want to replace the existing character "${parsed.name}"?`);
+          }
+          if (!proceed) {
+            logger.info("Import cancelled");
+            return;
+          }
+
+          // Optionally review the character before replacing if not skipping confirmation.
+          if (!(opts.yes || await reviewCharacter(charData))) {
+            logger.info("Replacement cancelled");
+            return;
+          }
+          await adapter.updateCharacter(parsed.name, charData);
+          logger.success(`Replaced character "${parsed.name}" successfully`);
         } else {
-          logger.info("Import cancelled");
+          if (opts.yes || await reviewCharacter(charData)) {
+            await adapter.createCharacter(charData);
+            logger.success(`Imported character "${parsed.name}" successfully`);
+          } else {
+            logger.info("Import cancelled");
+          }
         }
       } catch (error) {
         handleError(error);
