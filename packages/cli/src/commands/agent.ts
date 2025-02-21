@@ -283,32 +283,3 @@ agent
     logger.success(`Successfully updated configuration for agent ${result.id}`)
   });
 
-agent
-  .command("storage")
-  .description("list files in character storage")
-  .option("--json", "output as JSON")
-  .action(async (opts) => {
-    try {
-      const response = await fetch(`${AGENT_RUNTIME_URL}/storage`)
-      if (!response.ok) {
-        throw new Error(`Failed to list storage: ${response.statusText}`)
-      }
-      const { files } = await response.json()
-      
-      // Sort files alphabetically
-      const sortedFiles = files.sort()
-      
-      if (opts.json) {
-        logger.info(JSON.stringify(sortedFiles, null, 2))
-      } else {
-        logger.info("\nCharacter files in storage:")
-        console.table(sortedFiles.map((file, index) => ({
-          Index: index,
-          Filename: file
-        })))
-        logger.info("")
-      }
-    } catch (error) {
-      handleError(error)
-    }
-  })
