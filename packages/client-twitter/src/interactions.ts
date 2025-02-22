@@ -127,8 +127,6 @@ export class TwitterInteractionClient {
 
     async checkActiveConversations() {
         try {
-
-            elizaLogger.debug("Checking active conversations");
             // Get all active conversations
             const activeConversations = await this.runtime.databaseAdapter.getConversationsByStatus('ACTIVE');
 
@@ -137,6 +135,8 @@ export class TwitterInteractionClient {
           
                 if( isConversationDone(conversation.id, this.runtime)&&messageIds.length>=3){
                     await analyzeConversation(conversation.id, this.runtime);
+                    //temporary
+                    elizaLogger.debug("analyzing conversation", conversation.id);
                 }
                 else{
                     elizaLogger.debug("Conversation not done yet, skipping");

@@ -533,7 +533,7 @@ export async function analyzeConversation(
 ): Promise<void> {
     
     const conversation = await runtime.databaseAdapter.getConversation(conversationId);
-    console.log("analyze conversation", conversation)
+    console.debug("analyze conversation", conversation)
     if (!conversation) {
         elizaLogger.error("No conversation found for analysis", conversationId);
         return;
@@ -575,7 +575,6 @@ export async function analyzeConversation(
         state,
         template: analysisTemplate
     });
-    console.log("context", context)
 
     const analysis = await generateText({
         runtime,
@@ -583,18 +582,15 @@ export async function analyzeConversation(
         modelClass: ModelClass.LARGE,
     });
 
-
     elizaLogger.log("User sentiment scores:", analysis);
 
     try {
         const sentimentScores = JSON.parse(analysis);
-
         // Update conversation with analysis
         await runtime.databaseAdapter.updateConversation({
             id: conversationId,
             status: 'CLOSED'
         });
-
         // Update user rapport based on sentiment scores
         for (const [username, score] of Object.entries(sentimentScores)) {
             await runtime.databaseAdapter.setUserRapport(
