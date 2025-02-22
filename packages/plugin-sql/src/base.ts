@@ -196,6 +196,12 @@ export abstract class BaseDrizzleAdapter<TDatabase extends DrizzleOperations>
         });
     }
 
+    async updateAccount(account: Account): Promise<void> {
+        return this.withDatabase(async () => {
+            await this.db.update(accountTable).set(account).where(eq(accountTable.id, account.id));
+        });
+    }
+
     async getMemories(params: {
         roomId: UUID;
         count?: number;
