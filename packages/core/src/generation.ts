@@ -2682,8 +2682,10 @@ async function handleNearAi({
     modelOptions,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     const nearai = createOpenAI({ apiKey, baseURL: models.nearai.endpoint });
+    // require structured output if schema is configured
+    const settings = schema ? { structuredOutputs: true } : undefined;
     return await aiGenerateObject({
-        model: nearai.languageModel(model),
+        model: nearai.languageModel(model, settings),
         schema,
         schemaName,
         schemaDescription,
