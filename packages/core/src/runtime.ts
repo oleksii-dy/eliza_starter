@@ -1256,15 +1256,15 @@ export class AgentRuntime implements IAgentRuntime {
             Goal[],
         ] = await Promise.all([
             getActorDetails({ runtime: this, roomId }).then(actors => {
-                console.log("Actor details retrieved:", {
+                elizaLogger.debug("Actor details retrieved:", {
                     roomId,
                     actorCount: actors.length,
                     actors: actors.map(a => ({id: a.id, username: a.username}))
                 });
                 if (!actors || actors.length === 0) {
                     // This should never happen as we should at least have the message author
-                    console.error("No actors found for room:", roomId);
-                    console.error("Message details:", {
+                    elizaLogger.error("No actors found for room:", roomId);
+                    elizaLogger.error("Message details:", {
                         messageId: message.id,
                         userId: message.userId,
                         roomId: message.roomId
@@ -1525,9 +1525,7 @@ Text: ${attachment.text}
                 .join(" ");
         }
         const knowledegeData = await knowledge.get(this, message);
-        console.log("12")
         const formattedKnowledge = formatKnowledge(knowledegeData);
-        console.log("13")   
         const initialState = {
             agentId: this.agentId,
             agentName,
