@@ -951,7 +951,6 @@ export async function createAgent(
             getSecret(character, secret)
         );
         elizaLogger.info("Goat plugin initialized");
-        elizaLogger.info(goatPlugin);
     } else {
         throw new Error("No EVM Private key specified")
     }

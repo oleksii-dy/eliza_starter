@@ -31,21 +31,6 @@
         [
             {
                 "user": "{{user1}}",
-                "content": {
-                    "text": "Send hyperlane message"
-                }
-            },
-            {
-                "user": "C-3PO",
-                "content": {
-                    "text": "Sending message...",
-                    "action": "hyperlane_send_message"
-                }
-            }
-        ],
-        [
-            {
-                "user": "{{user1}}",
                 "content": { "text": "Can you help me with this task?" }
             },
             {
