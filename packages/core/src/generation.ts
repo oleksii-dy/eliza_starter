@@ -1734,7 +1734,7 @@ export const generateImage = async (
                             const config = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.nearai/config.json'), 'utf8'));
                             return JSON.stringify(config?.auth);
                           } catch (e) {
-                            elizaLogger.warn(`Error loading NEAR AI config: ${e}`);
+                            elizaLogger.warn(`Error loading NEAR AI config. The environment variable NEARAI_API_KEY will be used. ${e}`);
                           }
                           return runtime.getSetting("NEARAI_API_KEY");
                       default:
