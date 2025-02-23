@@ -51,6 +51,13 @@ export async function getOnChainActions(wallet: WalletClientBase) {
             similes: [],
             validate: async () => true,
             examples: [],
+        },
+        {
+            name: "hyperlane_list_warp_routes",
+            description: "List all available Warp routes",
+            similes: [],
+            validate: async () => true,
+            examples: [],
         }
         // 1. Add your actions here
     ];

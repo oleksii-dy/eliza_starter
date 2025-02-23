@@ -23,7 +23,7 @@
         "@goat-sdk/adapter-vercel-ai": "0.2.0",
         "@goat-sdk/core": "0.4.6",
         "@goat-sdk/plugin-erc20": "0.2.2",
-        "@goat-sdk/plugin-hyperlane": "0.0.3",
+        "@goat-sdk/plugin-hyperlane": "link:/Users/cmaklin/goat-fork/corymaklin/typescript/packages/plugins/hyperlane",
         "@goat-sdk/plugin-kim": "0.1.2",
         "@goat-sdk/wallet-evm": "0.2.0",
         "@goat-sdk/wallet-viem": "0.2.0",
