@@ -270,7 +270,7 @@ describe("DirectClient", () => {
                 });
 
             expect(response.status).toBe(404);
-            expect(response.text).toBe("Agent not found");
+            expect(response.body).toEqual({ error: "Agent not found" });
         });
     });
 
