@@ -10,6 +10,7 @@ import {
     handleWhisper,
     handleGetChannels,
 } from "./handlers";
+import { AgentNotFound } from "./errors";
 
 export function createApiRouter(directClient: DirectClient) {
     const router = express.Router();
@@ -39,15 +40,44 @@ export function createApiRouter(directClient: DirectClient) {
         res.json({ agents: agentsList });
     });
 
-    router.get("/agents/:agentId/channels", async (req, res) => {
-        await handleGetChannels(req, res, directClient);
-    });
+    router.get(
+        "/agents/:agentId/channels",
+        async (req: express.Request, res: express.Response) => {
+            try {
+                await handleGetChannels(req, res, directClient);
+            } catch (error) {
+                if (error instanceof AgentNotFound) {
+                    res.status(404).json({
+                        error: error.message,
+                    });
+                } else {
+                    res.status(500).json({
+                        error: "Error processing channels",
+                        details: error.message,
+                    });
+                }
+            }
+        }
+    );
 
     router.post(
         "/:agentId/message",
         upload.single("file"),
         async (req: express.Request, res: express.Response) => {
-            await handleMessage(req, res, directClient);
+            try {
+                await handleMessage(req, res, directClient);
+            } catch (error) {
+                if (error instanceof AgentNotFound) {
+                    res.status(404).json({
+                        error: error.message,
+                    });
+                } else {
+                    res.status(500).json({
+                        error: "Error processing message",
+                        details: error.message,
+                    });
+                }
+            }
         }
     );
 
@@ -55,20 +85,62 @@ export function createApiRouter(directClient: DirectClient) {
         "/:agentId/whisper",
         upload.single("file"),
         async (req: CustomRequest, res: express.Response) => {
-            await handleWhisper(req, res, directClient);
+            try {
+                await handleWhisper(req, res, directClient);
+            } catch (error) {
+                if (error instanceof AgentNotFound) {
+                    res.status(404).json({
+                        error: error.message,
+                    });
+                } else {
+                    res.status(500).json({
+                        error: "Error processing whisper",
+                        details: error.message,
+                    });
+                }
+            }
         }
     );
 
     router.post(
         "/:agentId/image",
         async (req: express.Request, res: express.Response) => {
-            await handleImage(req, res, directClient);
+            try {
+                await handleImage(req, res, directClient);
+            } catch (error) {
+                if (error instanceof AgentNotFound) {
+                    res.status(404).json({
+                        error: error.message,
+                    });
+                } else {
+                    res.status(500).json({
+                        error: "Error processing image",
+                        details: error.message,
+                    });
+                }
+            }
         }
     );
 
-    router.post("/:agentId/speak", async (req, res) => {
-        await handleSpeak(req, res, directClient);
-    });
+    router.post(
+        "/:agentId/speak",
+        async (req: express.Request, res: express.Response) => {
+            try {
+                await handleSpeak(req, res, directClient);
+            } catch (error) {
+                if (error instanceof AgentNotFound) {
+                    res.status(404).json({
+                        error: error.message,
+                    });
+                } else {
+                    res.status(500).json({
+                        error: "Error processing speach",
+                        details: error.message,
+                    });
+                }
+            }
+        }
+    );
 
     return router;
 }
