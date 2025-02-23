@@ -15,101 +15,23 @@ import {
     State,
     generateCaption,
     generateImage,
+    ServiceType,
 } from "@elizaos/core";
 
 import { DirectClient } from "./client";
-import { AgentNotFound, NoResponseError } from "./errors";
+import { NoResponseError, NoTextError } from "./errors";
 import { messageHandlerTemplate } from "./templates";
 import { CustomRequest } from "./types";
+import { ISpeechService } from "@elizaos/core";
 
 export async function handleMessage(
     req: express.Request,
     res: express.Response,
     directClient: DirectClient
 ) {
-    console.log("message", req.body);
+    const { runtime, message, response, messageId } =
+        await processTextualRequest(req, directClient);
 
-    const agentId = req.params.agentId;
-    const roomId = stringToUuid(req.body.roomId ?? "default-room-" + agentId);
-    const userId = stringToUuid(req.body.userId ?? "user");
-    const runtime = directClient.getRuntime(agentId);
-
-    await runtime.ensureConnection(
-        userId,
-        roomId,
-        req.body.userName,
-        req.body.name,
-        "direct"
-    );
-
-    const attachments = collectAttachments(req);
-
-    const content: Content = {
-        text: req.body.text,
-        attachments,
-        source: "direct",
-        inReplyTo: undefined,
-    };
-
-    const userMessage = {
-        content,
-        userId,
-        roomId,
-        agentId: runtime.agentId,
-    };
-
-    const messageId = stringToUuid(Date.now().toString());
-
-    console.log("userMessage", userMessage);
-    console.log("messageId", messageId);
-    console.log("userId", userId);
-    console.log("roomId", roomId);
-    console.log("content", content);
-
-    const memory: Memory = {
-        id: stringToUuid(messageId + "-" + userId),
-        ...userMessage,
-        agentId: runtime.agentId,
-        userId,
-        roomId,
-        content,
-        createdAt: Date.now(),
-    };
-
-    await runtime.messageManager.addEmbeddingToMemory(memory);
-    await runtime.messageManager.createMemory(memory);
-
-    let state = await runtime.composeState(userMessage, {
-        agentName: runtime.character.name,
-    });
-
-    const response = await genResponse(runtime, state);
-
-    const responseMessage: Memory = {
-        id: stringToUuid(messageId + "-" + runtime.agentId),
-        ...userMessage,
-        userId: runtime.agentId,
-        content: response,
-        embedding: getEmbeddingZeroVector(),
-        createdAt: Date.now(),
-    };
-
-    await runtime.messageManager.createMemory(responseMessage);
-
-    state = await runtime.updateRecentMessageState(state);
-
-    let message = null as Content | null;
-
-    await runtime.processActions(
-        memory,
-        [responseMessage],
-        state,
-        async (newMessages) => {
-            message = newMessages;
-            return [memory];
-        }
-    );
-    await runtime.evaluate(memory, state);
     respondWithMessage(runtime, message, res, response, messageId);
 }
 
@@ -155,146 +77,27 @@ export async function handleSpeak(
     res: express.Response,
     directClient: DirectClient
 ) {
-    const agentId = req.params.agentId;
-    const roomId = stringToUuid(req.body.roomId ?? "default-room-" + agentId);
-    const userId = stringToUuid(req.body.userId ?? "user");
-    const text = req.body.text;
+    const { response, runtime } = await processTextualRequest(
+        req,
+        directClient
+    );
 
-    if (!text) {
-        res.status(400).send("No text provided");
+    const speechService = runtime.getService<ISpeechService>(
+        ServiceType.SPEECH_GENERATION
+    );
+    const responseStream = await speechService.generate(runtime, response.text);
+
+    if (!responseStream) {
+        res.status(500).send("Failed to generate speech");
         return;
     }
 
-    const runtime = directClient.getRuntime(agentId);
+    res.set({
+        "Content-Type": "audio/mpeg",
+        // 'Transfer-Encoding': 'chunked'
+    });
 
-    try {
-        // Process message through agent (same as /message endpoint)
-        await runtime.ensureConnection(
-            userId,
-            roomId,
-            req.body.userName,
-            req.body.name,
-            "direct"
-        );
-
-        const messageId = stringToUuid(Date.now().toString());
-
-        const content: Content = {
-            text,
-            attachments: [],
-            source: "direct",
-            inReplyTo: undefined,
-        };
-
-        const userMessage = {
-            content,
-            userId,
-            roomId,
-            agentId: runtime.agentId,
-        };
-
-        const memory: Memory = {
-            id: messageId,
-            agentId: runtime.agentId,
-            userId,
-            roomId,
-            content,
-            createdAt: Date.now(),
-        };
-
-        await runtime.messageManager.createMemory(memory);
-
-        const state = await runtime.composeState(userMessage, {
-            agentName: runtime.character.name,
-        });
-
-        const response = await genResponse(runtime, state);
-
-        // save response to memory
-        const responseMessage = {
-            ...userMessage,
-            userId: runtime.agentId,
-            content: response,
-        };
-
-        await runtime.messageManager.createMemory(responseMessage);
-
-        if (!response) {
-            res.status(500).send("No response from generateMessageResponse");
-            return;
-        }
-
-        await runtime.evaluate(memory, state);
-
-        const _result = await runtime.processActions(
-            memory,
-            [responseMessage],
-            state,
-            async () => {
-                return [memory];
-            }
-        );
-
-        // Get the text to convert to speech
-        const textToSpeak = response.text;
-
-        // Convert to speech using ElevenLabs
-        const elevenLabsApiUrl = `https://api.elevenlabs.io/v1/text-to-speech/${process.env.ELEVENLABS_VOICE_ID}`;
-        const apiKey = process.env.ELEVENLABS_XI_API_KEY;
-
-        if (!apiKey) {
-            throw new Error("ELEVENLABS_XI_API_KEY not configured");
-        }
-
-        const speechResponse = await fetch(elevenLabsApiUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "xi-api-key": apiKey,
-            },
-            body: JSON.stringify({
-                text: textToSpeak,
-                model_id:
-                    process.env.ELEVENLABS_MODEL_ID || "eleven_multilingual_v2",
-                voice_settings: {
-                    stability: parseFloat(
-                        process.env.ELEVENLABS_VOICE_STABILITY || "0.5"
-                    ),
-                    similarity_boost: parseFloat(
-                        process.env.ELEVENLABS_VOICE_SIMILARITY_BOOST || "0.9"
-                    ),
-                    style: parseFloat(
-                        process.env.ELEVENLABS_VOICE_STYLE || "0.66"
-                    ),
-                    use_speaker_boost:
-                        process.env.ELEVENLABS_VOICE_USE_SPEAKER_BOOST ===
-                        "true",
-                },
-            }),
-        });
-
-        if (!speechResponse.ok) {
-            throw new Error(
-                `ElevenLabs API error: ${speechResponse.statusText}`
-            );
-        }
-
-        const audioBuffer = await speechResponse.arrayBuffer();
-
-        // Set appropriate headers for audio streaming
-        res.set({
-            "Content-Type": "audio/mpeg",
-            // 'Transfer-Encoding': 'chunked'
-        });
-
-        res.send(Buffer.from(audioBuffer));
-    } catch (error) {
-        console.error("Error processing message or generating speech:", error);
-        res.status(500).json({
-            error: "Error processing message or generating speech",
-            details: error.message,
-        });
-    }
+    responseStream.pipe(res);
 }
 
 export async function handleImage(
@@ -331,29 +134,18 @@ export async function handleGetChannels(
     res: express.Response,
     directClient: DirectClient
 ) {
-    const agentId = req.params.agentId;
-    const runtime = directClient.getAgent(agentId);
-
-    if (!runtime) {
-        res.status(404).json({ error: "Runtime not found" });
-        return;
-    }
+    const runtime = directClient.getRuntime(req.params.agentId);
 
     const API_TOKEN = runtime.getSetting("DISCORD_API_TOKEN") as string;
     const rest = new REST({ version: "10" }).setToken(API_TOKEN);
 
-    try {
-        const guilds = (await rest.get(Routes.userGuilds())) as Array<any>;
+    const guilds = (await rest.get(Routes.userGuilds())) as Array<any>;
 
-        res.json({
-            id: runtime.agentId,
-            guilds: guilds,
-            serverCount: guilds.length,
-        });
-    } catch (error) {
-        console.error("Error fetching guilds:", error);
-        res.status(500).json({ error: "Failed to fetch guilds" });
-    }
+    res.json({
+        id: runtime.agentId,
+        guilds,
+        serverCount: guilds.length,
+    });
 }
 
 function respondWithMessage(
@@ -437,4 +229,103 @@ async function genResponse(runtime: AgentRuntime, state: State) {
     }
 
     return response;
+}
+
+function genRoomId(req: express.Request) {
+    return stringToUuid(
+        req.body.roomId ?? "default-room-" + req.params.agentId
+    );
+}
+
+function genUserId(req: express.Request) {
+    return stringToUuid(req.body.userId ?? "user");
+}
+
+function extractTextFromRequest(req: express.Request) {
+    const text = req.body.text;
+
+    if (!text) {
+        throw new NoTextError();
+    }
+
+    return text;
+}
+
+function composeContent(req: express.Request): Content {
+    const text = extractTextFromRequest(req);
+    const attachments = collectAttachments(req);
+
+    return {
+        text,
+        attachments,
+        source: "direct",
+        inReplyTo: undefined,
+    };
+}
+
+async function processTextualRequest(req, directClient: DirectClient) {
+    const roomId = genRoomId(req);
+    const userId = genUserId(req);
+    const runtime = directClient.getRuntime(req.params.agentId);
+    const agentId = runtime.agentId;
+
+    await runtime.ensureConnection(
+        userId,
+        roomId,
+        req.body.userName,
+        req.body.name,
+        "direct"
+    );
+
+    const content = composeContent(req);
+    const userMessage = {
+        content,
+        userId,
+        roomId,
+        agentId,
+    };
+
+    const messageId = stringToUuid(Date.now().toString());
+    const memory: Memory = {
+        id: stringToUuid(messageId + "-" + userId),
+        ...userMessage,
+        createdAt: Date.now(),
+    };
+
+    await runtime.messageManager.addEmbeddingToMemory(memory);
+    await runtime.messageManager.createMemory(memory);
+
+    let state = await runtime.composeState(userMessage, {
+        agentName: runtime.character.name,
+    });
+
+    const response = await genResponse(runtime, state);
+
+    const responseMessage: Memory = {
+        id: stringToUuid(messageId + "-" + agentId),
+        ...userMessage,
+        userId: agentId,
+        content: response,
+        embedding: getEmbeddingZeroVector(),
+        createdAt: Date.now(),
+    };
+
+    await runtime.messageManager.createMemory(responseMessage);
+
+    state = await runtime.updateRecentMessageState(state);
+
+    let message = null as Content | null;
+
+    await runtime.processActions(
+        memory,
+        [responseMessage],
+        state,
+        async (newMessages) => {
+            message = newMessages;
+            return [memory];
+        }
+    );
+    await runtime.evaluate(memory, state);
+
+    return { runtime, memory, state, message, response, messageId };
 }

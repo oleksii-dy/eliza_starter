@@ -9,3 +9,9 @@ export class NoResponseError extends Error {
         super(message);
     }
 }
+
+export class NoTextError extends Error {
+    constructor(message: string = "No text provided") {
+        super(message);
+    }
+}

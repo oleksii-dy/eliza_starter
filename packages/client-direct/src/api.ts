@@ -10,7 +10,7 @@ import {
     handleWhisper,
     handleGetChannels,
 } from "./handlers";
-import { AgentNotFound } from "./errors";
+import { AgentNotFound, NoTextError } from "./errors";
 
 export function createApiRouter(directClient: DirectClient) {
     const router = express.Router();
@@ -69,6 +69,10 @@ export function createApiRouter(directClient: DirectClient) {
             } catch (error) {
                 if (error instanceof AgentNotFound) {
                     res.status(404).json({
+                        error: error.message,
+                    });
+                } else if (error instanceof NoTextError) {
+                    res.status(400).json({
                         error: error.message,
                     });
                 } else {
@@ -132,9 +136,13 @@ export function createApiRouter(directClient: DirectClient) {
                     res.status(404).json({
                         error: error.message,
                     });
+                } else if (error instanceof NoTextError) {
+                    res.status(400).json({
+                        error: error.message,
+                    });
                 } else {
                     res.status(500).json({
-                        error: "Error processing speach",
+                        error: "Error processing speech",
                         details: error.message,
                     });
                 }
