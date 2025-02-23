@@ -3,6 +3,7 @@ import { MODE, USDC, erc20 } from "@goat-sdk/plugin-erc20";
 import { kim } from "@goat-sdk/plugin-kim";
 import { sendETH } from "@goat-sdk/wallet-evm";
 import type { WalletClientBase } from "@goat-sdk/core";
+import { hyperlane } from "@goat-sdk/plugin-hyperlane";
 
 import {
     generateText,
@@ -23,13 +24,41 @@ export async function getOnChainActions(wallet: WalletClientBase) {
             validate: async () => true,
             examples: [],
         },
+        {
+            name: "hyperlane_send_message",
+            description: "Send a message from one chain to another using Hyperlane",
+            similes: [],
+            validate: async () => true,
+            examples: [],
+        },
+        {
+            name: "hyperlane_read_message",
+            description: "Check the status and content of a Hyperlane message using chain name and message ID",
+            similes: [],
+            validate: async () => true,
+            examples: [],
+        },
+        {
+            name: "make_hyperlane_warp",
+            description: "Deploy a Hyperlane Warp bridge between two chains",
+            similes: [],
+            validate: async () => true,
+            examples: [],
+        },
+        {
+            name: "hyperlane_send_test_transfer",
+            description: "Send assets from one chain to another using Hyperlane",
+            similes: [],
+            validate: async () => true,
+            examples: [],
+        }
         // 1. Add your actions here
     ];
 
     const tools = await getOnChainTools({
         wallet: wallet,
         // 2. Configure the plugins you need to perform those actions
-        plugins: [sendETH(), erc20({ tokens: [USDC, MODE] }), kim()],
+        plugins: [sendETH(), erc20({ tokens: [USDC, MODE] }), kim(), hyperlane()],
     });
 
     // 3. Let GOAT handle all the actions
@@ -76,7 +105,6 @@ function getActionHandler(
             // 2. Compose the response
             const response = composeResponseContext(result, currentState);
             const responseText = await generateResponse(runtime, response);
-
             callback?.({
                 text: responseText,
                 content: {},

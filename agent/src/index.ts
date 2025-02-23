@@ -282,6 +282,7 @@ export async function loadCharacterFromOnchain(): Promise<Character[]> {
                 })
             );
             character.plugins = importedPlugins;
+            elizaLogger.info("Loaded plugins: ", importedPlugins);
         }
 
         loadedCharacters.push(character);
@@ -949,6 +950,10 @@ export async function createAgent(
         goatPlugin = await createGoatPlugin((secret) =>
             getSecret(character, secret)
         );
+        elizaLogger.info("Goat plugin initialized");
+        elizaLogger.info(goatPlugin);
+    } else {
+        throw new Error("No EVM Private key specified")
     }
 
     let zilliqaPlugin: any | undefined;
