@@ -331,6 +331,35 @@ export const models: Models = {
             },
         },
     },
+    [ModelProviderName.LMSTUDIO]: {
+        endpoint: settings.LMSTUDIO_SERVER_URL || "http://localhost:1234/v1",
+        model: {
+            [ModelClass.SMALL]: {
+                name: settings.SMALL_LMSTUDIO_MODEL || settings.LMSTUDIO_MODEL || "hermes-3-llama-3.1-8b",
+                stop: ["<|eot_id|>", "<|eom_id|>"],
+                maxInputTokens: 32768,
+                maxOutputTokens: 8192,
+                repetition_penalty: 0.4,
+                temperature: 0.7,
+            },
+            [ModelClass.MEDIUM]: {
+                name: settings.MEDIUM_LMSTUDIO_MODEL || settings.LMSTUDIO_MODEL || "hermes-3-llama-3.1-8b",
+                stop: ["<|eot_id|>", "<|eom_id|>"],
+                maxInputTokens: 32768,
+                maxOutputTokens: 8192,
+                repetition_penalty: 0.4,
+                temperature: 0.7,
+            },
+            [ModelClass.LARGE]: {
+                name: settings.LARGE_LMSTUDIO_MODEL || settings.LMSTUDIO_MODEL || "hermes-3-llama-3.1-8b",
+                stop: ["<|eot_id|>", "<|eom_id|>"],
+                maxInputTokens: 32768,
+                maxOutputTokens: 8192,
+                repetition_penalty: 0.4,
+                temperature: 0.7,
+            },
+        },
+    },
     [ModelProviderName.GOOGLE]: {
         endpoint: "https://generativelanguage.googleapis.com",
         model: {
@@ -862,6 +891,32 @@ export const models: Models = {
             },
         },
     },
+    [ModelProviderName.NVIDIA]: {
+        endpoint: "https://integrate.api.nvidia.com/v1",
+        model: {
+            [ModelClass.SMALL]: {
+                name: settings.SMALL_NVIDIA_MODEL || "meta/llama-3.2-3b-instruct",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.6,
+            },
+            [ModelClass.MEDIUM]: {
+                name: settings.MEDIUM_NVIDIA_MODEL || "meta/llama-3.3-70b-instruct",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.6,
+            },
+            [ModelClass.LARGE]: {
+                name: settings.LARGE_NVIDIA_MODEL || "meta/llama-3.1-405b-instruct",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.6,
+            },
+        },
+    },
     [ModelProviderName.NINETEEN_AI]: {
         endpoint: "https://api.nineteen.ai/v1",
         model: {
@@ -932,7 +987,7 @@ export const models: Models = {
         },
     },
     [ModelProviderName.LIVEPEER]: {
-        endpoint: settings.LIVEPEER_GATEWAY_URL,
+        endpoint: settings.LIVEPEER_GATEWAY_URL || "http://gateway.test-gateway",
         model: {
             [ModelClass.SMALL]: {
                 name:
@@ -1025,6 +1080,45 @@ export const models: Models = {
             },
         },
     },
+    [ModelProviderName.BEDROCK]: {
+        model: {
+            [ModelClass.SMALL]: {
+                name: settings.SMALL_BEDROCK_MODEL || "amazon.nova-micro-v1:0",
+                maxInputTokens: 128000,
+                maxOutputTokens: 5120,
+                frequency_penalty: 0.0,
+                presence_penalty: 0.0,
+                temperature: 0.6,
+                stop: [],
+            },
+            [ModelClass.MEDIUM]: {
+                name: settings.MEDIUM_BEDROCK_MODEL || "amazon.nova-lite-v1:0",
+                maxInputTokens: 128000,
+                maxOutputTokens: 5120,
+                frequency_penalty: 0.0,
+                presence_penalty: 0.0,
+                temperature: 0.6,
+                stop: [],
+            },
+            [ModelClass.LARGE]: {
+                name: settings.LARGE_BEDROCK_MODEL || "amazon.nova-pro-v1:0",
+                maxInputTokens: 128000,
+                maxOutputTokens: 5120,
+                frequency_penalty: 0.0,
+                presence_penalty: 0.0,
+                temperature: 0.6,
+                stop: [],
+            },
+            [ModelClass.EMBEDDING]: {
+                name:
+                    settings.EMBEDDING_BEDROCK_MODEL ||
+                    "amazon.titan-embed-text-v1",
+            },
+            [ModelClass.IMAGE]: {
+                name: settings.IMAGE_BEDROCK_MODEL || "amazon.nova-canvas-v1:0",
+            },
+        },
+    },
     [ModelProviderName.ATOMA]: {
         endpoint: settings.ATOMA_API_URL || "https://api.atoma.network/v1",
         model: {
@@ -1054,6 +1148,73 @@ export const models: Models = {
                 maxInputTokens: 128000,
                 maxOutputTokens: 8192,
                 temperature: 0.7,
+            },
+        },
+    },
+    [ModelProviderName.SECRETAI]: {
+        endpoint: settings.SECRET_AI_URL || "https://ai1.scrtlabs.com:21434",
+        model: {
+            [ModelClass.SMALL]: {
+                name:
+                    settings.SMALL_SECRET_AI_MODEL ||
+                    "deepseek-r1:70b",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.7,
+            },
+            [ModelClass.MEDIUM]: {
+                name:
+                    settings.MEDIUM_SECRET_AI_MODEL ||
+                    "deepseek-r1:70b",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.7,
+            },
+            [ModelClass.LARGE]: {
+                name:
+                    settings.LARGE_SECRET_AI_MODEL ||
+                    "deepseek-r1:70b",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.7,
+            },
+        },
+    },
+    [ModelProviderName.NEARAI]: {
+        endpoint: settings.NEARAI_API_URL || "https://api.near.ai/v1",
+        model: {
+            [ModelClass.SMALL]: {
+                name:
+                    settings.SMALL_NEARAI_MODEL ||
+                    settings.NEARAI_MODEL ||
+                    "fireworks::accounts/fireworks/models/llama-v3p2-3b-instruct",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.6,
+            },
+            [ModelClass.MEDIUM]: {
+                name:
+                    settings.MEDIUM_NEARAI_MODEL ||
+                    settings.NEARAI_MODEL ||
+                    "fireworks::accounts/fireworks/models/llama-v3p1-70b-instruct",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.6,
+            },
+            [ModelClass.LARGE]: {
+                name:
+                    settings.LARGE_NEARAI_MODEL ||
+                    settings.NEARAI_MODEL ||
+                    "fireworks::accounts/fireworks/models/llama-v3p1-405b-instruct",
+                stop: [],
+                maxInputTokens: 128000,
+                maxOutputTokens: 8192,
+                temperature: 0.6,
             },
         },
     },
