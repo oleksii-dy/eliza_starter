@@ -1731,6 +1731,7 @@ export const generateImage = async (
                           return runtime.getSetting("SECRET_AI_API_KEY");
                       case ModelProviderName.NEARAI:
                           try {
+                            // Read auth config from ~/.nearai/config.json if it exists
                             const config = JSON.parse(fs.readFileSync(path.join(os.homedir(), '.nearai/config.json'), 'utf8'));
                             return JSON.stringify(config?.auth);
                           } catch (e) {
@@ -2682,7 +2683,7 @@ async function handleNearAi({
     modelOptions,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     const nearai = createOpenAI({ apiKey, baseURL: models.nearai.endpoint });
-    // require structured output if schema is provided
+    // Require structured output if schema is provided
     const settings = schema ? { structuredOutputs: true } : undefined;
     return await aiGenerateObject({
         model: nearai.languageModel(model, settings),
