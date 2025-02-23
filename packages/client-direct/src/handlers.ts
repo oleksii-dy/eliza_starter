@@ -16,6 +16,7 @@ import {
     generateCaption,
     generateImage,
     ServiceType,
+    IImageDescriptionService,
 } from "@elizaos/core";
 
 import { DirectClient } from "./client";
@@ -29,10 +30,99 @@ export async function handleMessage(
     res: express.Response,
     directClient: DirectClient
 ) {
-    const { runtime, message, response, messageId } =
-        await processTextualRequest(req, directClient);
+    // Set headers for SSE
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
 
-    respondWithMessage(runtime, message, res, response, messageId);
+    try {
+        const roomId = genRoomId(req);
+        const userId = genUserId(req);
+        const runtime = directClient.getRuntime(req.params.agentId);
+        const agentId = runtime.agentId;
+
+        await runtime.ensureConnection(
+            userId,
+            roomId,
+            req.body.userName,
+            req.body.name,
+            "direct"
+        );
+
+        const content = await composeContent(req, runtime);
+        const userMessage = {
+            content,
+            userId,
+            roomId,
+            agentId,
+        };
+
+        const messageId = stringToUuid(Date.now().toString());
+        const memory: Memory = {
+            id: stringToUuid(messageId + "-" + userId),
+            ...userMessage,
+            createdAt: Date.now(),
+        };
+
+        await runtime.messageManager.addEmbeddingToMemory(memory);
+        await runtime.messageManager.createMemory(memory);
+
+        let state = await runtime.composeState(userMessage, {
+            agentName: runtime.character.name,
+        });
+
+        const response = await genResponse(runtime, state);
+
+        // Send initial response immediately
+        const responseData = {
+            id: messageId,
+            ...response,
+        };
+        res.write(`data: ${JSON.stringify(responseData)}\n\n`);
+
+        const responseMessage: Memory = {
+            id: stringToUuid(messageId + "-" + agentId),
+            ...userMessage,
+            userId: agentId,
+            content: response,
+            embedding: getEmbeddingZeroVector(),
+            createdAt: Date.now(),
+        };
+
+        await runtime.messageManager.createMemory(responseMessage);
+        state = await runtime.updateRecentMessageState(state);
+
+        // Process actions and stream any additional messages
+        await runtime.processActions(
+            memory,
+            [responseMessage],
+            state,
+            async (content: Content) => {
+                if (content) {
+                    const messageData = {
+                        id: stringToUuid(Date.now().toString() + "-" + userId),
+                        ...content,
+                    };
+                    const stringifiedMessageData = JSON.stringify(messageData);
+                    console.log(stringifiedMessageData);
+                    res.write(`data: ${stringifiedMessageData}\n\n`);
+                }
+                return [memory];
+            }
+        );
+
+        // Run evaluators last
+        await runtime.evaluate(memory, state);
+
+        // End the stream
+        res.write("event: end\ndata: stream completed\n\n");
+        res.end();
+    } catch (error) {
+        res.write(
+            `event: error\ndata: ${JSON.stringify({ error: error.message })}\n\n`
+        );
+        res.end();
+    }
 }
 
 export async function handleWhisper(
@@ -148,48 +238,10 @@ export async function handleGetChannels(
     });
 }
 
-function respondWithMessage(
-    runtime: AgentRuntime,
-    message: Content,
-    res: express.Response<any, Record<string, any>>,
-    response: Content,
-    messageId: string
+async function collectAndDescribeAttachments(
+    req: express.Request,
+    runtime: AgentRuntime
 ) {
-    const action = runtime.actions.find((a) => a.name === response.action);
-    const shouldSuppressInitialMessage = action?.suppressInitialMessage;
-
-    if (shouldSuppressInitialMessage) {
-        if (message) {
-            res.json([
-                {
-                    ...message,
-                    id: messageId,
-                },
-            ]);
-        } else {
-            res.json([]);
-        }
-    } else {
-        if (message) {
-            res.json([
-                {
-                    ...response,
-                    id: messageId,
-                },
-                message,
-            ]);
-        } else {
-            res.json([
-                {
-                    ...response,
-                    id: messageId,
-                },
-            ]);
-        }
-    }
-}
-
-function collectAttachments(req: express.Request) {
     const attachments: Media[] = [];
     if (req.file) {
         const filePath = path.join(
@@ -198,18 +250,26 @@ function collectAttachments(req: express.Request) {
             "uploads",
             req.file.filename
         );
+        const { title, description } = await desribePhoto(filePath, runtime);
+
         attachments.push({
             id: Date.now().toString(),
             url: filePath,
-            title: req.file.originalname,
+            title,
             source: "direct",
-            description: `Uploaded file: ${req.file.originalname}`,
+            description,
             text: "",
             contentType: req.file.mimetype,
         });
     }
 
     return attachments;
+}
+
+async function desribePhoto(photoUrl: string, runtime: AgentRuntime) {
+    return runtime
+        .getService<IImageDescriptionService>(ServiceType.IMAGE_DESCRIPTION)
+        .describeImage(photoUrl);
 }
 
 async function genResponse(runtime: AgentRuntime, state: State) {
@@ -251,9 +311,12 @@ function extractTextFromRequest(req: express.Request) {
     return text;
 }
 
-function composeContent(req: express.Request): Content {
+async function composeContent(
+    req: express.Request,
+    runtime: AgentRuntime
+): Promise<Content> {
     const text = extractTextFromRequest(req);
-    const attachments = collectAttachments(req);
+    const attachments = await collectAndDescribeAttachments(req, runtime);
 
     return {
         text,
@@ -263,7 +326,10 @@ function composeContent(req: express.Request): Content {
     };
 }
 
-async function processTextualRequest(req, directClient: DirectClient) {
+async function processTextualRequest(
+    req: express.Request,
+    directClient: DirectClient
+) {
     const roomId = genRoomId(req);
     const userId = genUserId(req);
     const runtime = directClient.getRuntime(req.params.agentId);
@@ -277,7 +343,7 @@ async function processTextualRequest(req, directClient: DirectClient) {
         "direct"
     );
 
-    const content = composeContent(req);
+    const content = await composeContent(req, runtime);
     const userMessage = {
         content,
         userId,
