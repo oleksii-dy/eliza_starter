@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",            // Output all compiled files here
+    "rootDir": "./src",            // Source files location
+    "module": "commonjs",          // Use commonjs module system
+    "target": "ES6",               // Target ES6 or later
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,             // Include source maps for debugging
+    "declaration": true            // Generate .d.ts type files
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

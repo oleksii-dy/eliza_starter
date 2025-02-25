@@ -1,0 +1,31 @@
+{
+  "name": "@elizaos/darssi-plugin",
+  "version": "1.0.0",
+  "description": "Darssi plugin for ElizaOS",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@elizaos/adapter-mongodb": "0.25.6-alpha.1",
+    "@elizaos/core": "0.25.6-alpha.1",
+    "chalk": "^5.4.1",
+    "cli-table3": "^0.6.5",
+    "dotenv": "^16.4.7",
+    "mongodb": "^6.13.1",
+    "ora": "^8.2.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/mongodb": "^4.0.7",
+    "@types/node": "^22.13.5",
+    "typescript": "^5.7.3"
+  }
+}

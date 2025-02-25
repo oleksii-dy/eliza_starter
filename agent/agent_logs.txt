@@ -1,0 +1,30 @@
+[2025-02-25T11:08:04.912Z] INFO: [MongoDB] Connected and initialized successfully.
+[2025-02-25T11:08:04.913Z] INFO: [Darssi Plugin] Plugin initialized and loading actions/providers...
+[2025-02-25T11:08:04.913Z] INFO: [Darssi Plugin] Loaded Action: FETCH_CHAPTER_CONTENT
+[2025-02-25T11:08:04.913Z] DEBUG: [Darssi Plugin] Action details: {
+  "name": "FETCH_CHAPTER_CONTENT",
+  "similes": [
+    "GET_COURSE",
+    "LOAD_COURSE_CONTENT"
+  ],
+  "description": "Fetches and displays the entire course content by courseId.",
+  "examples": [
+    [
+      {
+        "user": "{{user1}}",
+        "content": {
+          "text": "Show me the course with ID 67b9a25b9b9bd23062cb80db",
+          "courseId": "67b9a25b9b9bd23062cb80db"
+        }
+      },
+      {
+        "user": "{{assistant}}",
+        "content": {
+          "text": "Here’s the full course data:"
+        }
+      }
+    ]
+  ]
+}
+[2025-02-25T11:08:04.913Z] INFO: [Darssi Plugin] Loaded Provider: Object
+[2025-02-25T11:08:04.913Z] INFO: [Darssi Plugin] Loaded Evaluator: Object
