@@ -1,9 +1,15 @@
 import { ChatOpenAI } from "@langchain/openai";
 import dotenv from "dotenv";
 import type { Configuration } from "../Configuration.js";
-import { TypeScriptParser } from "../TypeScriptParser.js";
+
+
+// This is the retriever we will use in RAGimport { TypeScriptParser } from "../TypeScriptParser.js";
 import { CodeFormatter } from "./utils/CodeFormatter.js";
 import { DocumentOrganizer } from "./utils/DocumentOrganizer.js";
+
+import { wrapOpenAI } from "langsmith/wrappers";
+import { FakeListChatModel } from "@langchain/core/utils/testing";
+
 
 dotenv.config();
 
@@ -11,9 +17,9 @@ dotenv.config();
  * Service for interacting with OpenAI chat API.
  */
 export class AIService {
-    private chatModel: ChatOpenAI;
+    private chatModel: FakeListChatModel;
     private codeFormatter: CodeFormatter;
-    private chatModelFAQ: ChatOpenAI;
+    private chatModelFAQ: FakeListChatModel;
 
     /**
      * Constructor for initializing the ChatOpenAI instance.
@@ -22,14 +28,9 @@ export class AIService {
      * @throws {Error} If OPENAI_API_KEY environment variable is not set
      */
     constructor(private configuration: Configuration) {
-        if (!process.env.OPENAI_API_KEY) {
-            throw new Error("OPENAI_API_KEY is not set");
-        }
-        this.chatModel = new ChatOpenAI({ apiKey: process.env.OPENAI_API_KEY });
-        this.chatModelFAQ = new ChatOpenAI({
-            apiKey: process.env.OPENAI_API_KEY,
-            model: "gpt-4o",
-        });
+
+        this.chatModel = new wrapOpenAI(FakeListChatModule({ responses: []}));
+					this.chatModelFAQ = new wrapOpenAI(FakeListChatModule({	    responses: []        }));
         this.codeFormatter = new CodeFormatter();
     }
 
