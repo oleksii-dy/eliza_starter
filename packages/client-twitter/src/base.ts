@@ -18,7 +18,7 @@ import {
 } from "agent-twitter-client";
 import { EventEmitter } from "events";
 import type { TwitterConfig } from "./environment.ts";
-import { Agent, fetch, ProxyAgent, setGlobalDispatcher } from "undici";
+import { Agent, fetch as undiciFetch, ProxyAgent, setGlobalDispatcher } from "undici";
 
 export function extractAnswer(text: string): string {
     const startIndex = text.indexOf("Answer: ") + 8;
@@ -120,7 +120,6 @@ function doLogin(username, cb, proxyUrl?: string, localAddress?: string) {
                     `${username}:${password}`
                 ).toString("base64")}`;
             }
-
             proxyAgent = new ProxyAgent(agentOptions);
         }
         if (localAddress) {
@@ -131,10 +130,10 @@ function doLogin(username, cb, proxyUrl?: string, localAddress?: string) {
         }
         try {
             const twitterClient = new Scraper({
-                fetch: fetch,
+                fetch: undiciFetch,
                 transform: {
                     request: (input: any, init: any) => {
-                        if (agent) {
+                        if (proxyAgent || agent) {
                             return [
                                 input,
                                 { ...init, dispatcher: proxyAgent ?? agent },
