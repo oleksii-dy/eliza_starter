@@ -5,6 +5,10 @@ import { TypeScriptParser } from "../TypeScriptParser.js";
 import { CodeFormatter } from "./utils/CodeFormatter.js";
 import { DocumentOrganizer } from "./utils/DocumentOrganizer.js";
 
+//import { wrapOpenAI } from "langsmith/wrappers";
+//import { FakeListChatModel } from "@langchain/core/utils/testing";
+
+
 dotenv.config();
 
 /**
@@ -13,7 +17,7 @@ dotenv.config();
 export class AIService {
     private chatModel: ChatOpenAI;
     private codeFormatter: CodeFormatter;
-    private chatModelFAQ: ChatOpenAI;
+    private chatModelFAQ: ChatOpenAI; //FakeListChatModel
 
     /**
      * Constructor for initializing the ChatOpenAI instance.
@@ -22,6 +26,7 @@ export class AIService {
      * @throws {Error} If OPENAI_API_KEY environment variable is not set
      */
     constructor(private configuration: Configuration) {
+
         if (!process.env.OPENAI_API_KEY) {
             throw new Error("OPENAI_API_KEY is not set");
         }
@@ -30,6 +35,13 @@ export class AIService {
             apiKey: process.env.OPENAI_API_KEY,
             model: "gpt-4o",
         });
+
+// both not working
+	//      this.chatModel = wrapOpenAI(new ChatOpenAI({ apiKey: process.env.OPENAI_API_KEY }));
+	//      this.chatModelFAQ = wrapOpenAI(new ChatOpenAI({       apiKey: process.env.OPENAI_API_KEY,            model: "gpt-4o",        }));
+	//      this.chatModel = new FakeListChatModel({ responses: []});
+	//	this.chatModelFAQ = new FakeListChatModel({	    responses: []        });
+
         this.codeFormatter = new CodeFormatter();
     }
 
