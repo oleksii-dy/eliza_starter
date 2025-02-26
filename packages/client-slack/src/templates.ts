@@ -31,6 +31,10 @@ Result: [STOP]
 <user>: Not you, I need someone else
 Result: [IGNORE]
 
+<user>: Status Update
+"Some status update"
+Result: [RESPOND]
+
 Response options are [RESPOND], [IGNORE] and [STOP].
 
 {{agentName}} is in a Slack channel with other users and is very mindful about not being disruptive.
@@ -38,6 +42,7 @@ Respond with [RESPOND] to messages that:
 - Directly mention @{{agentName}}
 - Are follow-ups to {{agentName}}'s previous messages
 - Are relevant to ongoing conversations {{agentName}} is part of
+- Contain the words Status or Update
 
 Respond with [IGNORE] to messages that:
 - Are not directed at {{agentName}}

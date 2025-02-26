@@ -40,8 +40,6 @@ timeline_cache.json
 
 *.sqlite
 
-characters/
-
 packages/core/src/providers/cache
 packages/core/src/providers/cache/*
 cache/*
@@ -61,3 +59,5 @@ agent/content
 eliza.manifest
 eliza.manifest.sgx
 eliza.sig
+
+data

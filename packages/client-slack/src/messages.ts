@@ -11,12 +11,14 @@ import {
     elizaLogger,
     HandlerCallback,
 } from "@elizaos/core";
+import { WebClient } from "@slack/web-api";
+import { IAgentRuntime } from "@elizaos/core";
+
 import {
     slackMessageHandlerTemplate,
     slackShouldRespondTemplate,
 } from "./templates";
-import { WebClient } from "@slack/web-api";
-import { IAgentRuntime } from "@elizaos/core";
+import { leaveMentionTracking } from "./utils/slack-utils";
 
 export class MessageManager {
     private client: WebClient;
@@ -87,12 +89,33 @@ export class MessageManager {
         console.log("\n=== SHOULD_RESPOND PHASE ===");
         console.log("🔍 Step 1: Evaluating if should respond to message");
 
+        // Check if the message contains the phrase "is on leave" (case-insensitive) and memtioned users
+        const leaveMatches = [...(message.text?.matchAll(/<@(\w+)>/g) || [])];
+        const isOnLeave = /(is|are)\s+(on\s+leave|absent)/i.test(message.text || "");
+
+        if (leaveMatches.length > 0 && isOnLeave) {
+            // Extract user IDs from matches
+            const mentionedUsers = leaveMatches.map(match => match[1]);
+
+            // Add mentioned users to the shared state
+            mentionedUsers.forEach(user => leaveMentionTracking.mentionedOnLeave.add(user));
+
+            console.log(`✅ Detected that ${mentionedUsers.map(user => `<@${user}>`).join(", ")} are on leave - will respond`);
+            return true;
+        }
+
         // Always respond to direct mentions
         if (
             message.type === "app_mention" ||
             message.text?.includes(`<@${this.botUserId}>`)
         ) {
             console.log("✅ Direct mention detected - will respond");
+            return true;
+        }
+
+        // Always respond to status update messages
+        if (['Status', 'Update', 'status', 'update'].some(word => message.text?.includes(word))) {
+            console.log("✅ Status/Update detected - will respond");
             return true;
         }
 
@@ -334,21 +357,13 @@ export class MessageManager {
                                 console.log(
                                     " Step 12: Executing response callback"
                                 );
-                                const result =
-                                    await this.client.chat.postMessage({
-                                        channel: event.channel,
-                                        text:
-                                            content.text ||
-                                            responseContent.text,
-                                        thread_ts: event.thread_ts,
-                                    });
 
                                 console.log(
                                     "💾 Step 13: Creating response memory"
                                 );
                                 const responseMemory: Memory = {
                                     id: stringToUuid(
-                                        `${result.ts}-${this.runtime.agentId}`
+                                        `${messageId}-${this.runtime.agentId}`
                                     ),
                                     userId: this.runtime.agentId,
                                     agentId: this.runtime.agentId,
@@ -396,14 +411,62 @@ export class MessageManager {
                         state =
                             await this.runtime.updateRecentMessageState(state);
 
+                        let message = null as Content | null;
+
                         if (responseContent.action) {
                             console.log("⚡ Step 18: Processing actions");
                             await this.runtime.processActions(
                                 memory,
                                 responseMessages,
                                 state,
-                                callback
+                                async (newMessages) => {
+                                    message = newMessages;
+                                    return [memory];
+                                }
                             );
+                        }
+
+                        // Check if we should suppress the initial message
+                        const action = this.runtime.actions.find(
+                            (a) => a.name === responseContent.action
+                        );
+
+                        const shouldSuppressInitialMessage =
+                            action?.suppressInitialMessage;
+
+                        if (!shouldSuppressInitialMessage) {
+                            if (message) {
+                                await this.client.chat.postMessage({
+                                    channel: event.channel,
+                                    text:
+                                        content.text ||
+                                        responseContent.text,
+                                    thread_ts: event.thread_ts,
+                                });
+                                await this.client.chat.postMessage({
+                                    channel: event.channel,
+                                    text:
+                                        content.text ||
+                                        message.text,
+                                    thread_ts: event.thread_ts,
+                                });
+                            } else {
+                                await this.client.chat.postMessage({
+                                    channel: event.channel,
+                                    text:
+                                        content.text ||
+                                        responseContent.text,
+                                    thread_ts: event.thread_ts,
+                                });
+                            }
+                        } else {
+                            if (message) {
+                                await this.client.chat.postMessage({
+                                    channel: event.channel,
+                                    text: message.text,
+                                    thread_ts: event.thread_ts,
+                                });
+                            }
                         }
                     }
                 } else {
