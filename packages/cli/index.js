@@ -1,18 +1,32 @@
 #!/usr/bin/env node
+
 const { execSync } = require('child_process')
 const pathUtil = require('path')
 const fs = require('fs')
 const { Command } = require('commander')
-
 const program = new Command()
 const { version } = require('./package.json')
+
+
+const pluginPkgPath = (pluginRepo) => {
+  const parts = pluginRepo.split('/')
+  const elizaOSroot = pathUtil.resolve(__dirname, '../..')
+  const pkgPath = elizaOSroot + '/packages/' + parts[1]
+  return pkgPath
+}
+
+const isPluginInstalled = (pluginRepo) => {
+  const pkgPath = pluginPkgPath(pluginRepo)
+  const packageJsonPath = pkgPath + '/package.json'
+  return fs.existsSync(packageJsonPath)
+}
 
 program
   .name('elizaos')
   .description('elizaOS CLI - Manage your plugins')
   .version(version);
 
-const plugins = new Command()
+const pluginsCmd = new Command()
   .name('plugins')
   .description('manage elizaOS plugins')
 
@@ -21,7 +35,9 @@ async function getPlugins() {
   return await resp.json();
 }
 
-plugins
+
+
+pluginsCmd
   .command('list')
   .alias('l')
   .alias('ls')
@@ -36,7 +52,7 @@ plugins
 
       console.info("\nAvailable plugins:")
       for (const plugin of pluginNames) {
-        console.info(`  ${plugin}`)
+        console.info(` ${isPluginInstalled(plugins[plugin]) ? '✅' : '  '}  ${plugin} `)
       }
       console.info("")
     } catch (error) {
@@ -44,7 +60,7 @@ plugins
     }
   })
 
-plugins
+pluginsCmd
   .command('add')
   .alias('install')
   .description('add a plugin')
@@ -113,7 +129,7 @@ plugins
     console.log('Remember to add it to your character file\'s plugin field: ["' + plugin + '"]')
   })
 
-plugins
+pluginsCmd
   .command('remove')
   .alias('delete')
   .alias('del')
@@ -156,6 +172,6 @@ plugins
   })
 
 
-program.addCommand(plugins)
+program.addCommand(pluginsCmd)
 
 program.parse(process.argv)
