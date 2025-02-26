@@ -792,6 +792,25 @@ const hasValidRemoteUrls = () =>
     process.env.REMOTE_CHARACTER_URLS !== "" &&
     process.env.REMOTE_CHARACTER_URLS.startsWith("http");
 
+/**
+ * Post processing of character after loading
+ * @param character
+ */
+const handlePostCharacterLoaded = async (character: Character): Promise<Character> => {
+    let processedCharacter = character;
+    // Filtering the plugins with the method of handlePostCharacterLoaded
+    const processors = character?.postProcessors?.filter(p => typeof p.handlePostCharacterLoaded === 'function');
+    if (processors?.length > 0) {
+        // process the character with each processor
+        // the order is important, so we loop through the processors
+        for (let i = 0; i < processors.length; i++) {
+            const processor = processors[i];
+            processedCharacter = await processor.handlePostCharacterLoaded(processedCharacter);
+        }
+    }
+    return processedCharacter;
+}
+
 const startAgents = async () => {
     const directClient = new DirectClient();
     let serverPort = Number.parseInt(settings.SERVER_PORT || "3000");
@@ -805,7 +824,8 @@ const startAgents = async () => {
 
     try {
         for (const character of characters) {
-            await startAgent(character, directClient);
+            const processedCharacter = await handlePostCharacterLoaded(character);
+            await startAgent(processedCharacter, directClient);
         }
     } catch (error) {
         elizaLogger.error("Error starting agents:", error);
@@ -825,8 +845,11 @@ const startAgents = async () => {
         // Handle plugins
         character.plugins = await handlePluginImporting(character.plugins);
 
+        // character's post processing
+        const processedCharacter = await handlePostCharacterLoaded(character);
+
         // wrap it so we don't have to inject directClient later
-        return startAgent(character, directClient);
+        return startAgent(processedCharacter, directClient);
     };
 
     directClient.loadCharacterTryPath = loadCharacterTryPath;
