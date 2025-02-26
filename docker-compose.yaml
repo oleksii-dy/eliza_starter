@@ -1,5 +1,5 @@
 services:
-  eliza-mark-1:
+  slack-nova:
     restart: always
     build:
       context: .
