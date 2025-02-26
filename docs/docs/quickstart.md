@@ -8,13 +8,13 @@ sidebar_position: 2
 
 Before getting started with Eliza, ensure you have:
 
-- [Node.js 23+](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (using [nvm](https://github.com/nvm-sh/nvm) is recommended)
+- [Node.js 23+](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (using [nvm](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) is recommended)
 - [pnpm 9+](https://pnpm.io/installation)
 - Git for version control
 - A code editor ([VS Code](https://code.visualstudio.com/), [Cursor](https://cursor.com/) or [VSCodium](https://vscodium.com) recommended)
-- [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit) (optional, for GPU acceleration)
 - Python (mainly for installing NPM)
-- FFmpeg (optional, for audio/video handling)
+- (Optional) FFmpeg (for audio/video handling)
+- (Optional) [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit) (for GPU acceleration)
 
 > On Windows? See here before continuing to make life easier: [WSL setup guide](/docs/guides/wsl)
 
@@ -41,9 +41,25 @@ cd eliza
 ./scripts/start.sh
 ```
 
+
+3. Using Docker
+
+Prerequisites:
+- A Linux-based server (Ubuntu/Debian recommended)
+- Git installed
+- [Docker](https://docs.docker.com/get-started/get-docker/)
+
+```bash
+git clone git@github.com:elizaOS/eliza.git
+cd eliza
+docker-compose build
+docker-compose up
+```
+
+> Note: If you get permission issues run the docker-compose commands with sudo or add yourself to the docker group
+
 <details>
 <summary>Troubleshooting</summary>
-
 #### Common Error
 ```bash
 - "characters not found": Check working directory
@@ -99,6 +115,14 @@ pnpm may be bundled with a different node version, ignoring nvm. If this is the 
 ```bash
 pnpm env use --global 23.3.0
 ```
+
+#### Docker issues
+
+Some tips on cleaning your working directory before rebuilding:
+- List all docker images: `sudo docker images`
+- Reomove all Docker images: `docker rmi -f $(docker images -aq)`
+- Remove all build cache: `docker builder prune -a -f`
+- Verify cleanup: `docker system df`
 </details>
 
 ---
@@ -294,12 +318,6 @@ If you have a Nvidia GPU you can enable CUDA support. First ensure CUDA Toolkit,
 ---
 
 ## FAQ
-
-### Which Node.js version should I use?
-Use Node.js version 23+ (specifically 23.3.0 is recommended) and pnpm v9.x for optimal compatibility. You can use [nvm](https://github.com/nvm-sh/nvm) to manage Node versions with `nvm install 23` and `nvm use 23`.
-
-### How do I run multiple agents?
-Create separate projects with unique character files and run in separate terminals, or use `pnpm start --characters="characters/agent1.json,characters/agent2.json"`.
 
 ### What's the difference between eliza and eliza-starter?
 Eliza-starter is a lightweight version for simpler setups, while the main eliza repository includes all advanced features and a web client.

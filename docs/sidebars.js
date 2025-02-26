@@ -136,11 +136,6 @@ const sidebars = {
                 },
                 {
                     type: "doc",
-                    id: "guides/docker-setup",
-                    label: "Docker Setup",
-                },
-                {
-                    type: "doc",
                     id: "guides/remote-deployment",
                     label: "Deployment",
                 },
