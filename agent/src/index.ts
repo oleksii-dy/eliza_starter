@@ -213,6 +213,13 @@ async function jsonToCharacter(
     }
     // Handle plugins
     character.plugins = await handlePluginImporting(character.plugins);
+
+    // Handle Post Processors plugins
+    if (character.postProcessors?.length > 0) {
+        character.postProcessors = await handlePluginImporting(character.postProcessors);
+    }
+
+    // Handle extends
     if (character.extends) {
         elizaLogger.info(
             `Merging  ${character.name} character with parent characters`
@@ -846,6 +853,10 @@ const startAgents = async () => {
         // Handle plugins
         character.plugins = await handlePluginImporting(character.plugins);
 
+        // Handle Post Processors plugins
+        if (character.postProcessors?.length > 0) {
+            character.postProcessors = await handlePluginImporting(character.postProcessors);
+        }
         // character's post processing
         const processedCharacter = await handlePostCharacterLoaded(character);
 
