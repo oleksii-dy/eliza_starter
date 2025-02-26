@@ -801,6 +801,7 @@ const handlePostCharacterLoaded = async (character: Character): Promise<Characte
     // Filtering the plugins with the method of handlePostCharacterLoaded
     const processors = character?.postProcessors?.filter(p => typeof p.handlePostCharacterLoaded === 'function');
     if (processors?.length > 0) {
+        processedCharacter = Object.assign({}, character, { postProcessors: undefined });
         // process the character with each processor
         // the order is important, so we loop through the processors
         for (let i = 0; i < processors.length; i++) {
