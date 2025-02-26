@@ -25,7 +25,7 @@ COPY characters ./characters
 
 # Install dependencies and build the project
 RUN pnpm install \
-    && pnpm build-docker \
+    && pnpm build:serial \
     && pnpm prune --prod
 
 # Create a new stage for the final image
