@@ -18,7 +18,9 @@ export function createDatabaseAdapter(config: any): IDatabaseAdapter & IDatabase
     return new PgDatabaseAdapter(manager);
   }
   else {
+    // Defaulting to the root if dataDir is not provided.
     const DEFAULT_DATA_DIR = '../../pgLite';
+    console.log("DEFAULT_DATA_DIR:::::::", DEFAULT_DATA_DIR);
     if (!pgLiteClientManager) {
       pgLiteClientManager = new PGliteClientManager({ dataDir: DEFAULT_DATA_DIR });
     }
