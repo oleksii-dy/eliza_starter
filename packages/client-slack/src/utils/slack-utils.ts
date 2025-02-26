@@ -355,6 +355,6 @@ export function getUpdatesDataPathForUser(userId: string) {
     const __dirname = path.dirname(__filename);
 
     const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
-    const dataDir = path.join(__dirname, "../../../data");
+    const dataDir = path.join(__dirname, "../../../agent/data/updates");
     return path.join(dataDir, `${userId}_${today}.txt`);
 }
