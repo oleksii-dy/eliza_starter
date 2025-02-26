@@ -20,6 +20,11 @@ const sidebars = {
                     id: "faq",
                     label: "❓ FAQ",
                 },
+                {
+                    type: "doc",
+                    id: "changelog",
+                    label: "CHANGELOG",
+                },
 		{
 		    type: "category",
 		    label: "Tutorials",
@@ -176,11 +181,6 @@ const sidebars = {
             label: "🎓 Advanced Topics",
             collapsed: false,
             items: [
-                {
-                    type: "doc",
-                    id: "advanced/infrastructure",
-                    label: "Infrastructure",
-                },
                 {
                     type: "doc",
                     id: "advanced/trust-engine",
