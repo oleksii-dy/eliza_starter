@@ -12,11 +12,18 @@ export function createDatabaseAdapter(config: any): IDatabaseAdapter & IDatabase
       pgLiteClientManager = new PGliteClientManager({ dataDir: config.dataDir });
     }
     return new PgliteDatabaseAdapter(pgLiteClientManager);
-  } else if (config.postgresUrl) {
+  }
+  else if (config.postgresUrl) {
     const manager = new PostgresConnectionManager(config.postgresUrl);
     return new PgDatabaseAdapter(manager);
   }
-  throw new Error("No valid database configuration provided");
+  else {
+    const DEFAULT_DATA_DIR = '../../pgLite';
+    if (!pgLiteClientManager) {
+      pgLiteClientManager = new PGliteClientManager({ dataDir: DEFAULT_DATA_DIR });
+    }
+    return new PgliteDatabaseAdapter(pgLiteClientManager);
+  }
 }
 
 const drizzleDatabaseAdapter: Adapter = {
