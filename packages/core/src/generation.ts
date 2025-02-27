@@ -1320,7 +1320,7 @@ export async function generateText({
                     response = secretAiResponse;
                 }
                 break;
-  
+
             case ModelProviderName.BEDROCK: {
                 elizaLogger.debug("Initializing Bedrock model.");
 
@@ -2322,8 +2322,8 @@ async function handleOpenAI({
     const baseURL =
         getCloudflareGatewayBaseURL(runtime, "openai") || endpoint;
     const openai = createOpenAI({ apiKey, baseURL });
-    return await aiGenerateObject({
-        model: openai.languageModel(model),
+    return aiGenerateObject({
+        model: openai.languageModel(model) as any,
         schema,
         schemaName,
         schemaDescription,
@@ -2383,7 +2383,7 @@ async function handleGrok({
     modelOptions,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     const grok = createOpenAI({ apiKey, baseURL: models.grok.endpoint });
-    return await aiGenerateObject({
+    return aiGenerateObject({
         model: grok.languageModel(model, { parallelToolCalls: false }),
         schema,
         schemaName,
@@ -2440,7 +2440,7 @@ async function handleGoogle({
     modelOptions,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     const google = createGoogleGenerativeAI({apiKey});
-    return await aiGenerateObject({
+    return aiGenerateObject({
         model: google(model),
         schema,
         schemaName,
@@ -2465,7 +2465,7 @@ async function handleMistral({
     modelOptions,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     const mistral = createMistral();
-    return await aiGenerateObject({
+    return aiGenerateObject({
         model: mistral(model),
         schema,
         schemaName,
@@ -2491,7 +2491,7 @@ async function handleRedPill({
     modelOptions,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     const redPill = createOpenAI({ apiKey, baseURL: models.redpill.endpoint });
-    return await aiGenerateObject({
+    return aiGenerateObject({
         model: redPill.languageModel(model),
         schema,
         schemaName,
@@ -2520,7 +2520,7 @@ async function handleOpenRouter({
         apiKey,
         baseURL: models.openrouter.endpoint,
     });
-    return await aiGenerateObject({
+    return aiGenerateObject({
         model: openRouter.languageModel(model),
         schema,
         schemaName,
@@ -2549,7 +2549,7 @@ async function handleOllama({
         baseURL: getEndpoint(provider) + "/api",
     });
     const ollama = ollamaProvider(model);
-    return await aiGenerateObject({
+    return aiGenerateObject({
         model: ollama,
         schema,
         schemaName,
@@ -2575,7 +2575,7 @@ async function handleDeepSeek({
     modelOptions,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     const openai = createOpenAI({ apiKey, baseURL: models.deepseek.endpoint });
-    return await aiGenerateObject({
+    return aiGenerateObject({
         model: openai.languageModel(model),
         schema,
         schemaName,
@@ -2600,7 +2600,7 @@ async function handleBedrock({
     modelOptions,
     provider,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    return await aiGenerateObject({
+    return aiGenerateObject({
         model: bedrock(model),
         schema,
         schemaName,
@@ -2631,7 +2631,7 @@ async function handleLivepeer({
         baseURL: apiKey, // Use the apiKey as the baseURL since it contains the gateway URL
     });
 
-    return await aiGenerateObject({
+    return aiGenerateObject({
         model: livepeerClient.languageModel(model),
         schema,
         schemaName,
@@ -2665,7 +2665,7 @@ async function handleSecretAi({
         }
     });
     const secretAi = secretAiProvider(model);
-    return await aiGenerateObject({
+    return aiGenerateObject({
         model: secretAi,
         schema,
         schemaName,
@@ -2693,7 +2693,7 @@ async function handleNearAi({
     const nearai = createOpenAI({ apiKey, baseURL: models.nearai.endpoint });
     // Require structured output if schema is provided
     const settings = schema ? { structuredOutputs: true } : undefined;
-    return await aiGenerateObject({
+    return aiGenerateObject({
         model: nearai.languageModel(model, settings),
         schema,
         schemaName,
@@ -2712,6 +2712,7 @@ interface TogetherAIImageResponse {
     }>;
 }
 
+// doesn't belong here
 export async function generateTweetActions({
     runtime,
     context,
