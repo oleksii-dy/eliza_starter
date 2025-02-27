@@ -2218,9 +2218,9 @@ export const generateObject = async ({
 interface ProviderOptions {
     runtime: IAgentRuntime;
     provider: ModelProviderName;
-    model: any;
+    model: string;  // Make this more specific instead of 'any'
     apiKey: string;
-    schema?: ZodSchema;
+    schema?: ZodSchema<any>;  // Add explicit type parameter
     schemaName?: string;
     schemaDescription?: string;
     mode?: "auto" | "json" | "tool";
@@ -2293,6 +2293,8 @@ export async function handleProvider(
             return await handleSecretAi(options);
         case ModelProviderName.NEARAI:
             return await handleNearAi(options);
+        case ModelProviderName.BEDROCK:
+            return await handleBedrock(options);
         default: {
             const errorMessage = `Unsupported provider: ${provider}`;
             elizaLogger.error(errorMessage);
@@ -2316,12 +2318,14 @@ async function handleOpenAI({
     modelOptions,
     provider,
     runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<any>> {
-    const endpoint =
-        runtime.character.modelEndpointOverride || getEndpoint(provider);
-    const baseURL =
-        getCloudflareGatewayBaseURL(runtime, "openai") || endpoint;
-    const openai = createOpenAI({ apiKey, baseURL });
+}: ProviderOptions) {
+    const endpoint = runtime.character.modelEndpointOverride || getEndpoint(provider);
+    const baseURL = getCloudflareGatewayBaseURL(runtime, "openai") || endpoint;
+    const openai = createOpenAI({ 
+        apiKey, 
+        baseURL,
+        fetch: runtime.fetch 
+    });
     return aiGenerateObject({
         model: openai.languageModel(model),
         schema,
@@ -2356,7 +2360,11 @@ async function handleAnthropic({
     const baseURL = getCloudflareGatewayBaseURL(runtime, "anthropic");
     elizaLogger.debug("Anthropic handleAnthropic baseURL:", { baseURL });
 
-    const anthropic = createAnthropic({ apiKey, baseURL });
+    const anthropic = createAnthropic({ 
+        apiKey, 
+        baseURL,
+        fetch: runtime.fetch 
+    });
     return await aiGenerateObject({
         model: anthropic.languageModel(model),
         schema,
@@ -2381,8 +2389,13 @@ async function handleGrok({
     schemaDescription,
     mode = "json",
     modelOptions,
+    runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const grok = createOpenAI({ apiKey, baseURL: models.grok.endpoint });
+    const grok = createOpenAI({ 
+        apiKey, 
+        baseURL: models.grok.endpoint,
+        fetch: runtime.fetch 
+    });
     return aiGenerateObject({
         model: grok.languageModel(model, { parallelToolCalls: false }),
         schema,
@@ -2413,7 +2426,11 @@ async function handleGroq({
     const baseURL = getCloudflareGatewayBaseURL(runtime, "groq");
     elizaLogger.debug("Groq handleGroq baseURL:", { baseURL });
 
-    const groq = createGroq({ apiKey, baseURL });
+    const groq = createGroq({ 
+        apiKey, 
+        baseURL,
+        fetch: runtime.fetch 
+    });
     return await aiGenerateObject({
         model: groq.languageModel(model),
         schema,
@@ -2438,8 +2455,12 @@ async function handleGoogle({
     schemaDescription,
     mode = "json",
     modelOptions,
+    runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const google = createGoogleGenerativeAI({apiKey});
+    const google = createGoogleGenerativeAI({
+        apiKey,
+        fetch: runtime.fetch 
+    });
     return aiGenerateObject({
         model: google(model),
         schema,
@@ -2463,8 +2484,9 @@ async function handleMistral({
     schemaDescription,
     mode,
     modelOptions,
+    runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const mistral = createMistral();
+    const mistral = createMistral({ fetch: runtime.fetch });
     return aiGenerateObject({
         model: mistral(model),
         schema,
@@ -2489,8 +2511,13 @@ async function handleRedPill({
     schemaDescription,
     mode = "json",
     modelOptions,
+    runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const redPill = createOpenAI({ apiKey, baseURL: models.redpill.endpoint });
+    const redPill = createOpenAI({ 
+        apiKey, 
+        baseURL: models.redpill.endpoint,
+        fetch: runtime.fetch 
+    });
     return aiGenerateObject({
         model: redPill.languageModel(model),
         schema,
@@ -2515,10 +2542,12 @@ async function handleOpenRouter({
     schemaDescription,
     mode = "json",
     modelOptions,
+    runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     const openRouter = createOpenAI({
         apiKey,
         baseURL: models.openrouter.endpoint,
+        fetch: runtime.fetch
     });
     return aiGenerateObject({
         model: openRouter.languageModel(model),
@@ -2544,9 +2573,11 @@ async function handleOllama({
     mode = "json",
     modelOptions,
     provider,
+    runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     const ollamaProvider = createOllama({
         baseURL: getEndpoint(provider) + "/api",
+        fetch: runtime.fetch
     });
     const ollama = ollamaProvider(model);
     return aiGenerateObject({
@@ -2573,8 +2604,13 @@ async function handleDeepSeek({
     schemaDescription,
     mode,
     modelOptions,
+    runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const openai = createOpenAI({ apiKey, baseURL: models.deepseek.endpoint });
+    const openai = createOpenAI({ 
+        apiKey, 
+        baseURL: models.deepseek.endpoint,
+        fetch: runtime.fetch 
+    });
     return aiGenerateObject({
         model: openai.languageModel(model),
         schema,
@@ -2599,9 +2635,11 @@ async function handleBedrock({
     mode,
     modelOptions,
     provider,
+    runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+    const bedrockClient = bedrock(model);
     return aiGenerateObject({
-        model: bedrock(model),
+        model: bedrockClient,
         schema,
         schemaName,
         schemaDescription,
@@ -2618,6 +2656,7 @@ async function handleLivepeer({
     schemaDescription,
     mode,
     modelOptions,
+    runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     console.log("Livepeer provider api key:", apiKey);
     if (!apiKey) {
@@ -2628,9 +2667,9 @@ async function handleLivepeer({
 
     const livepeerClient = createOpenAI({
         apiKey,
-        baseURL: apiKey, // Use the apiKey as the baseURL since it contains the gateway URL
+        baseURL: apiKey,
+        fetch: runtime.fetch
     });
-
     return aiGenerateObject({
         model: livepeerClient.languageModel(model),
         schema,
@@ -2656,13 +2695,15 @@ async function handleSecretAi({
     mode = "json",
     modelOptions,
     provider,
+    runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
     const secretAiProvider = createOllama({
         baseURL: getEndpoint(provider) + "/api",
         headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${apiKey}`,
-        }
+        },
+        fetch: runtime.fetch
     });
     const secretAi = secretAiProvider(model);
     return aiGenerateObject({
@@ -2689,9 +2730,13 @@ async function handleNearAi({
     schemaDescription,
     mode = "json",
     modelOptions,
+    runtime,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const nearai = createOpenAI({ apiKey, baseURL: models.nearai.endpoint });
-    // Require structured output if schema is provided
+    const nearai = createOpenAI({ 
+        apiKey, 
+        baseURL: models.nearai.endpoint,
+        fetch: runtime.fetch 
+    });
     const settings = schema ? { structuredOutputs: true } : undefined;
     return aiGenerateObject({
         model: nearai.languageModel(model, settings),
