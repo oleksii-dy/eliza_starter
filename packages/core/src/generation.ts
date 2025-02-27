@@ -2316,21 +2316,20 @@ async function handleOpenAI({
     modelOptions,
     provider,
     runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+}: ProviderOptions): Promise<GenerateObjectResult<any>> {
     const endpoint =
         runtime.character.modelEndpointOverride || getEndpoint(provider);
     const baseURL =
         getCloudflareGatewayBaseURL(runtime, "openai") || endpoint;
     const openai = createOpenAI({ apiKey, baseURL });
-    const prom = aiGenerateObject({
-        model: openai.languageModel(model) as any,
+    return aiGenerateObject({
+        model: openai.languageModel(model),
         schema,
         schemaName,
         schemaDescription,
         mode,
         ...modelOptions,
     });
-    return prom as any as Promise<GenerateObjectResult<unknown>>;
 }
 
 /**
