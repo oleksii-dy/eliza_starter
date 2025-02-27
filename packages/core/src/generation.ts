@@ -2322,14 +2322,15 @@ async function handleOpenAI({
     const baseURL =
         getCloudflareGatewayBaseURL(runtime, "openai") || endpoint;
     const openai = createOpenAI({ apiKey, baseURL });
-    return await aiGenerateObject({
+    const obj1 = {
         model: openai.languageModel(model),
         schema,
         schemaName,
         schemaDescription,
         mode,
         ...modelOptions,
-    });
+    };
+    return await aiGenerateObject(obj1);
 }
 
 /**
@@ -2357,14 +2358,16 @@ async function handleAnthropic({
     elizaLogger.debug("Anthropic handleAnthropic baseURL:", { baseURL });
 
     const anthropic = createAnthropic({ apiKey, baseURL });
-    return await aiGenerateObject({
+    
+    const obj1 = {
         model: anthropic.languageModel(model),
         schema,
         schemaName,
         schemaDescription,
         mode,
         ...modelOptions,
-    });
+    };
+    return await aiGenerateObject(obj1);
 }
 
 /**
