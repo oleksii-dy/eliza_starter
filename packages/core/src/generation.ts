@@ -60,6 +60,23 @@ import path from "path";
 type Tool = CoreTool<any, any>;
 type StepResult = AIStepResult<any>;
 
+// Simplify the types to avoid deep recursion
+type GenerationResult = GenerateObjectResult<unknown>;
+
+interface ProviderOptions {
+    runtime: IAgentRuntime;
+    provider: ModelProviderName;
+    model: string;
+    apiKey: string;
+    schema?: ZodSchema;
+    schemaName?: string;
+    schemaDescription?: string;
+    mode?: "auto" | "json" | "tool";
+    modelOptions: ModelSettings;
+    modelClass: ModelClass;
+    context: string;
+}
+
 /**
  * Trims the provided text context to a specified token limit using a tokenizer model and type.
  *
@@ -2213,27 +2230,6 @@ export const generateObject = async ({
 };
 
 /**
- * Interface for provider-specific generation options.
- */
-interface ProviderOptions {
-    runtime: IAgentRuntime;
-    provider: ModelProviderName;
-    model: string;  // Make this more specific instead of 'any'
-    apiKey: string;
-    schema?: ZodSchema<any>;  // Add explicit type parameter
-    schemaName?: string;
-    schemaDescription?: string;
-    mode?: "auto" | "json" | "tool";
-    experimental_providerMetadata?: Record<string, unknown>;
-    modelOptions: ModelSettings;
-    modelClass: ModelClass;
-    context: string;
-    // verifiableInference?: boolean;
-    // verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
-    // verifiableInferenceOptions?: VerifiableInferenceOptions;
-}
-
-/**
  * Handles AI generation based on the specified provider.
  *
  * @param {ProviderOptions} options - Configuration options specific to the provider.
@@ -2241,7 +2237,7 @@ interface ProviderOptions {
  */
 export async function handleProvider(
     options: ProviderOptions
-): Promise<GenerateObjectResult<unknown>> {
+): Promise<GenerationResult> {
     const {
         provider,
         runtime,
@@ -2318,7 +2314,7 @@ async function handleOpenAI({
     modelOptions,
     provider,
     runtime,
-}: ProviderOptions) {
+}: ProviderOptions): Promise<GenerationResult> {
     const endpoint = runtime.character.modelEndpointOverride || getEndpoint(provider);
     const baseURL = getCloudflareGatewayBaseURL(runtime, "openai") || endpoint;
     const openai = createOpenAI({ 
@@ -2351,7 +2347,7 @@ async function handleAnthropic({
     mode = "auto",
     modelOptions,
     runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+}: ProviderOptions): Promise<GenerationResult> {
     elizaLogger.debug("Handling Anthropic request with Cloudflare check");
     if (mode === "json") {
         elizaLogger.warn("Anthropic mode is set to json, changing to auto");
@@ -2390,7 +2386,7 @@ async function handleGrok({
     mode = "json",
     modelOptions,
     runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+}: ProviderOptions): Promise<GenerationResult> {
     const grok = createOpenAI({ 
         apiKey, 
         baseURL: models.grok.endpoint,
@@ -2421,7 +2417,7 @@ async function handleGroq({
     mode = "json",
     modelOptions,
     runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+}: ProviderOptions): Promise<GenerationResult> {
     elizaLogger.debug("Handling Groq request with Cloudflare check");
     const baseURL = getCloudflareGatewayBaseURL(runtime, "groq");
     elizaLogger.debug("Groq handleGroq baseURL:", { baseURL });
@@ -2456,7 +2452,7 @@ async function handleGoogle({
     mode = "json",
     modelOptions,
     runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+}: ProviderOptions): Promise<GenerationResult> {
     const google = createGoogleGenerativeAI({
         apiKey,
         fetch: runtime.fetch 
@@ -2485,7 +2481,7 @@ async function handleMistral({
     mode,
     modelOptions,
     runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+}: ProviderOptions): Promise<GenerationResult> {
     const mistral = createMistral({ fetch: runtime.fetch });
     return aiGenerateObject({
         model: mistral(model),
@@ -2512,7 +2508,7 @@ async function handleRedPill({
     mode = "json",
     modelOptions,
     runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+}: ProviderOptions): Promise<GenerationResult> {
     const redPill = createOpenAI({ 
         apiKey, 
         baseURL: models.redpill.endpoint,
@@ -2543,7 +2539,7 @@ async function handleOpenRouter({
     mode = "json",
     modelOptions,
     runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+}: ProviderOptions): Promise<GenerationResult> {
     const openRouter = createOpenAI({
         apiKey,
         baseURL: models.openrouter.endpoint,
@@ -2574,7 +2570,7 @@ async function handleOllama({
     modelOptions,
     provider,
     runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+}: ProviderOptions): Promise<GenerationResult> {
     const ollamaProvider = createOllama({
         baseURL: getEndpoint(provider) + "/api",
         fetch: runtime.fetch
@@ -2605,7 +2601,7 @@ async function handleDeepSeek({
     mode,
     modelOptions,
     runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+}: ProviderOptions): Promise<GenerationResult> {
     const openai = createOpenAI({ 
         apiKey, 
         baseURL: models.deepseek.endpoint,
@@ -2636,7 +2632,7 @@ async function handleBedrock({
     modelOptions,
     provider,
     runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+}: ProviderOptions): Promise<GenerationResult> {
     const bedrockClient = bedrock(model);
     return aiGenerateObject({
         model: bedrockClient,
@@ -2657,7 +2653,7 @@ async function handleLivepeer({
     mode,
     modelOptions,
     runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+}: ProviderOptions): Promise<GenerationResult> {
     console.log("Livepeer provider api key:", apiKey);
     if (!apiKey) {
         throw new Error(
@@ -2696,7 +2692,7 @@ async function handleSecretAi({
     modelOptions,
     provider,
     runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+}: ProviderOptions): Promise<GenerationResult> {
     const secretAiProvider = createOllama({
         baseURL: getEndpoint(provider) + "/api",
         headers: {
@@ -2731,7 +2727,7 @@ async function handleNearAi({
     mode = "json",
     modelOptions,
     runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
+}: ProviderOptions): Promise<GenerationResult> {
     const nearai = createOpenAI({ 
         apiKey, 
         baseURL: models.nearai.endpoint,
