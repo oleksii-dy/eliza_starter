@@ -2322,7 +2322,7 @@ async function handleOpenAI({
     const baseURL =
         getCloudflareGatewayBaseURL(runtime, "openai") || endpoint;
     const openai = createOpenAI({ apiKey, baseURL });
-    return aiGenerateObject({
+    const prom: Promise<GenerateObjectResult<unknown>> = aiGenerateObject({
         model: openai.languageModel(model) as any,
         schema,
         schemaName,
@@ -2330,6 +2330,7 @@ async function handleOpenAI({
         mode,
         ...modelOptions,
     });
+    return prom;
 }
 
 /**
