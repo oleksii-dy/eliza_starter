@@ -30,11 +30,23 @@ export class AIService {
         if (!process.env.OPENAI_API_KEY) {
             throw new Error("OPENAI_API_KEY is not set");
         }
-        this.chatModel = new ChatOpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        this.chatModel = new ChatOpenAI(
+		{
+			       apiKey: process.env.OPENAI_API_KEY,
+			              	       },
+		       {
+		basePath: process.env.OPENAI_API_BASE
+		}
+		       
+	);
         this.chatModelFAQ = new ChatOpenAI({
             apiKey: process.env.OPENAI_API_KEY,
             model: "gpt-4o",
-        });
+	    
+        },
+{	    basePath: process.env.OPENAI_API_BASE,
+}
+);
 
 // both not working
 	//      this.chatModel = wrapOpenAI(new ChatOpenAI({ apiKey: process.env.OPENAI_API_KEY }));
