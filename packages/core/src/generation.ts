@@ -2329,7 +2329,7 @@ async function handleOpenAI({
         schemaDescription,
         mode,
         ...modelOptions,
-    });
+    }) as Promise<GenerateObjectResult<unknown>>;
     return prom;
 }
 
