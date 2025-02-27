@@ -434,38 +434,29 @@ export class MessageManager {
                         const shouldSuppressInitialMessage =
                             action?.suppressInitialMessage;
 
-                        if (!shouldSuppressInitialMessage) {
-                            if (message) {
-                                await this.client.chat.postMessage({
-                                    channel: event.channel,
-                                    text:
-                                        content.text ||
-                                        responseContent.text,
-                                    thread_ts: event.thread_ts,
-                                });
-                                await this.client.chat.postMessage({
-                                    channel: event.channel,
-                                    text:
-                                        content.text ||
-                                        message.text,
-                                    thread_ts: event.thread_ts,
-                                });
+                        if (action.name !== 'NONE') {
+                            if (!shouldSuppressInitialMessage) {
+                                if (message && message.text !== event.text) {
+                                    await this.client.chat.postMessage({
+                                        channel: event.channel,
+                                        text: message.text,
+                                        thread_ts: event.thread_ts,
+                                    });
+                                } else if (responseContent.text && responseContent.text !== event.text) {
+                                    await this.client.chat.postMessage({
+                                        channel: event.channel,
+                                        text: responseContent.text,
+                                        thread_ts: event.thread_ts,
+                                    });
+                                }
                             } else {
-                                await this.client.chat.postMessage({
-                                    channel: event.channel,
-                                    text:
-                                        content.text ||
-                                        responseContent.text,
-                                    thread_ts: event.thread_ts,
-                                });
-                            }
-                        } else {
-                            if (message) {
-                                await this.client.chat.postMessage({
-                                    channel: event.channel,
-                                    text: message.text,
-                                    thread_ts: event.thread_ts,
-                                });
+                                if (message && message.text !== event.text) {
+                                    await this.client.chat.postMessage({
+                                        channel: event.channel,
+                                        text: message.text,
+                                        thread_ts: event.thread_ts,
+                                    });
+                                }
                             }
                         }
                     }

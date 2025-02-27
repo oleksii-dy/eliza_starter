@@ -168,7 +168,7 @@ export function startReminderLoop(slackService: SlackService) {
         { hour: 11, minute: 30 }, // 11:30 AM
         { hour: 12, minute: 45 }, // 12:45 PM
         { hour: 14, minute: 30 }, // 2:30 PM
-        { hour: 16, minute: 13 },  // 4:00 PM
+        { hour: 16, minute: 0 },  // 4:00 PM
         { hour: 17, minute: 30 }, // 5:30 PM
         { hour: 18, minute: 45 }  // 6:45 PM
     ];
@@ -185,12 +185,13 @@ export function startReminderLoop(slackService: SlackService) {
     setInterval(async () => {
         try {
             const now = new Date();
-            const hours = now.getHours();
-            const minutes = now.getMinutes();
-            const day = now.getDay();
+            const istTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+            const hours = istTime.getHours();
+            const minutes = istTime.getMinutes();
+            const day = istTime.getDay();
 
             // Clear mentionedOnLeave at 7:00 PM and Send out EOD updates
-            if (hours === 19) {
+            if (hours === 19 && minutes === 0) {
                 sendEod(slackService);
                 leaveMentionTracking.mentionedOnLeave.clear();
                 elizaLogger.info("Cleared mentionedOnLeave set at 9:30 PM");

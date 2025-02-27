@@ -56,13 +56,8 @@ const getStatusUpdateHandler = {
         }
 
         const keywords: string[] = [
-            "work done",
-            "tasks done",
-            "list down",
-            "tasks completed",
-            "done by",
-            "tasks",
-            "what work was done",
+            "tasks", "work", "done", "completed", "progress", "update", "summary",
+            "finish", "finished", "list", "log", "history", "report"
         ];
 
         return keywords.some((keyword) =>
@@ -93,7 +88,7 @@ const getStatusUpdateHandler = {
         };
 
         const currentState = (await runtime.composeState(message)) as State;
-        currentState.summary = statusText;;
+        currentState.summary = statusText;
 
         const statusContext = composeContext({
             state: currentState,
@@ -154,6 +149,48 @@ const getStatusUpdateHandler = {
                 }
             }
         ],
+        [
+            {
+                user: "{{user4}}",
+                content: {
+                    text: "Give me a summary of @abc's work."
+                }
+            },
+            {
+                user: "{{nova}}",
+                content: {
+                    text: "• Fixed UI inconsistencies in dark mode.\n- Refactored API call structure for better error handling."
+                }
+            }
+        ],
+        [
+            {
+                user: "{{user5}}",
+                content: {
+                    text: "What are the completed tasks of @xyz?"
+                }
+            },
+            {
+                user: "{{nova}}",
+                content: {
+                    text: "• Deployed new CI/CD pipeline.\n- Optimized Docker build times by reducing image size."
+                }
+            }
+        ],
+        [
+            {
+                user: "{{user6}}",
+                content: {
+                    text: "Tasks done by @pqr today?"
+                }
+            },
+            {
+                user: "{{nova}}",
+                content: {
+                    text: "• Implemented caching for API responses.\n- Reduced response time by 40%."
+                }
+            }
+        ]
     ] as ActionExample[][],
 } as Action;
 
