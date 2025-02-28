@@ -191,16 +191,16 @@ const config = {
                     docId: "index",
                 },
                 {
+                  to: 'showcase',
+                  label: 'Packages',
+                  position: 'left'
+                },
+                {
                     type: "doc",
                     docsPluginId: "community",
                     position: "left",
                     label: "Community",
                     docId: "index",
-                },
-                {
-                  to: 'showcase',
-                  label: 'Showcase',
-                  position: 'left'
                 },
                 {
                     href: "https://github.com/elizaos/eliza",

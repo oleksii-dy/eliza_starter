@@ -5,8 +5,8 @@ import ShowcaseSearchBar from './_components/ShowcaseSearchBar';
 import ShowcaseCards from './_components/ShowcaseCards';
 import ShowcaseFilters from './_components/ShowcaseFilters';
 
-const TITLE = 'Plugin Showcase';
-const DESCRIPTION = 'Discover the awesome plugins in our ecosystem';
+const TITLE = 'elizaOS Packages';
+const DESCRIPTION = 'Discover the awesome plugins in the eliza ecosystem. Submit a package through a pull request here: https://github.com/elizaos-plugins/registry';
 
 function ShowcaseHeader() {
   return (

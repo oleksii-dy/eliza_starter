@@ -66,7 +66,7 @@ export default function ShowcaseFilters({
         </div>
       </div>
       <ul className={clsx('clean-list', styles.tagList)}>
-        {TagList.filter(tag => tag !== 'favorite').map((tag) => {
+        {TagList.filter(tag => tag).map((tag) => {
           const {label, description, color} = Tags[tag];
           return (
             <ShowcaseTagSelect
