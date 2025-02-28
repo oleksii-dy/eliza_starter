@@ -32,7 +32,11 @@ export default function NewCharacter() {
             topics: character.topics ?? [],
             adjectives: character.adjectives ?? [],
             plugins: character.plugins ?? [],
-            style: character.style ?? { all: [], chat: [], post: [] },
+            style: {
+                all: character.style?.all ?? [],
+                chat: character.style?.chat ?? [],
+                post: character.style?.post ?? [],
+            },
         };
     };    
 
@@ -41,6 +45,8 @@ export default function NewCharacter() {
 
         try {
             const completeCharacter = ensureRequiredFields(character);
+
+            console.log(completeCharacter)
             await apiClient.createCharacter(completeCharacter);
 
             // Invalidate the characters query to refresh the characters list
