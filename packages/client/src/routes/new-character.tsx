@@ -45,7 +45,6 @@ export default function NewCharacter() {
 
         try {
             const completeCharacter = ensureRequiredFields(character);
-
             await apiClient.createCharacter(completeCharacter);
 
             // Invalidate the characters query to refresh the characters list

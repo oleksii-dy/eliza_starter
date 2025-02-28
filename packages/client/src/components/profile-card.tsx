@@ -6,7 +6,6 @@ interface ButtonConfig {
     icon?: React.ReactNode;
     action?: () => void;
     className?: string;
-    route?: string;
     variant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined;
     size?: "default" | "sm" | "lg" | "icon" | null | undefined
 }
