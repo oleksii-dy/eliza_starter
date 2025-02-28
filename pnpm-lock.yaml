@@ -598,9 +598,6 @@ importers:
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
-      tsup:
-        specifier: 8.3.5
-        version: 8.3.5(@swc/core@1.11.4)(jiti@1.21.7)(postcss@8.5.3)(typescript@5.6.3)(yaml@2.7.0)
       whatwg-url:
         specifier: 7.1.0
         version: 7.1.0
@@ -608,6 +605,9 @@ importers:
       '@types/node':
         specifier: ^22.10.5
         version: 22.13.5
+      tsup:
+        specifier: 8.3.5
+        version: 8.3.5(@swc/core@1.11.4)(jiti@1.21.7)(postcss@8.5.3)(typescript@5.6.3)(yaml@2.7.0)
 
 packages:
 
