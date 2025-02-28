@@ -1,13 +1,35 @@
 .filtersContainer {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   margin-bottom: 20px;
-  padding: 0 var(--ifm-spacing-horizontal);
+  padding: 12px var(--ifm-spacing-horizontal);
+  gap: 16px;
+  background-color: var(--ifm-color-emphasis-100);
+  border-radius: 8px;
+}
+
+.filtersRow {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  flex-wrap: nowrap;
+  gap: 16px;
+}
+
+.tagsRow {
+  display: flex;
+  width: 100%;
 }
 
 .submitButton {
   margin-top: 1rem;
+}
+
+@media (max-width: 992px) {
+  .filtersContainer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 768px) {

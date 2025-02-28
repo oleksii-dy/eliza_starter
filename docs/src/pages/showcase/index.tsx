@@ -72,6 +72,10 @@ export default function Showcase(): JSX.Element {
     setOperator(op => op === 'OR' ? 'AND' : 'OR');
   };
 
+  const clearSearch = () => {
+    setSearchValue('');
+  };
+
   const filteredUsers = useMemo(() => {
     return filterUsers(sortedUsers, searchValue, selectedTags, operator);
   }, [searchValue, selectedTags, operator]);
@@ -81,17 +85,24 @@ export default function Showcase(): JSX.Element {
       <main className="margin-vert--lg">
         <ShowcaseHeader />
         
-        <div className={styles.filtersContainer}>
-          <ShowcaseFilters
-            selectedTags={selectedTags}
-            toggleTag={toggleTag}
-            operator={operator}
-            toggleOperator={toggleOperator}
-          />
-          <ShowcaseSearchBar 
-            onChange={setSearchValue}
-            value={searchValue}
-          />
+        <div className="container">
+          <div className={styles.filtersContainer}>
+            <div className={styles.filtersRow}>
+              <ShowcaseFilters
+                selectedTags={selectedTags}
+                toggleTag={toggleTag}
+                operator={operator}
+                toggleOperator={toggleOperator}
+              />
+              <ShowcaseSearchBar 
+                onChange={setSearchValue}
+                value={searchValue}
+              />
+            </div>
+            <div className={styles.tagsRow}>
+              {/* Tag buttons will be rendered inside ShowcaseFilters component */}
+            </div>
+          </div>
         </div>
         
         <ShowcaseCards users={filteredUsers} />

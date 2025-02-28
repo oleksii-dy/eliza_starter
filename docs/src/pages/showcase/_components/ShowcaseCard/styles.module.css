@@ -62,11 +62,8 @@
   line-height: 1.66;
 }
 
-.cardFooter {
-  display: flex;
-  flex-wrap: wrap;
-}
 
+/* Base tag styling */
 .tag {
   font-size: 0.675rem;
   border: 1px solid var(--ifm-color-secondary-darkest);
@@ -77,8 +74,19 @@
   display: inline-flex;
   align-items: center;
   padding: 2px 10px;
+  /* Width is controlled by content */
 }
 
+/* Make the text label for all tags exactly the same width */
 .textLabel {
+  width: 40px; /* Fixed width for all text labels */
+  text-align: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Specific fix for the TagIcon spacing */
+.tag span:first-child {
   margin-right: 4px;
 }

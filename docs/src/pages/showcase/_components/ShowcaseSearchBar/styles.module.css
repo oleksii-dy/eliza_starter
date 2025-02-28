@@ -1,5 +1,7 @@
 .searchContainer {
   width: 300px;
+  min-width: 200px;
+  flex-shrink: 0;
 }
 
 .searchInputWrapper {
@@ -24,6 +26,7 @@
   color: var(--ifm-font-color-base);
   font-size: 0.9rem;
   transition: all var(--ifm-transition-fast);
+  margin: 0;
 }
 
 .searchInput:focus {
@@ -56,6 +59,12 @@
 .clearButton:hover {
   background-color: var(--ifm-color-emphasis-200);
   color: var(--ifm-color-emphasis-700);
+}
+
+@media (max-width: 992px) {
+  .searchContainer {
+    width: 300px;
+  }
 }
 
 @media (max-width: 768px) {
