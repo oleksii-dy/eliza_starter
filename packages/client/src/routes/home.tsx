@@ -1,10 +1,12 @@
 import PageTitle from "@/components/page-title";
-import { ActionCard } from "@/components/ui/action-card";
+import ProfileCard from "@/components/profile-card";
 import { useAgents } from "@/hooks/use-query-hooks";
+import { formatAgentName } from "@/lib/utils";
+import { useNavigate } from "react-router";
 import { Cog } from "lucide-react";
 
 export default function Home() {
-
+    const navigate = useNavigate();
     const { data: agentsData, isLoading, isError, error } = useAgents();
 
     // Extract agents properly from the response
@@ -38,15 +40,27 @@ export default function Home() {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {agents?.sort((a, b) => Number(b?.enabled) - Number(a?.enabled)).map((agent) => (
-                    <ActionCard
+                    <ProfileCard
                         key={agent.id}
-                        name={agent.name}
-                        primaryText={agent.enabled ? "Chat" : "Start"}
-                        primaryVariant={agent.enabled ? "default" : "secondary"}
-                        primaryLink={`/chat/${agent.id}`}
-                        secondaryIcon={<Cog className="h-4 w-4" />}
-                        secondaryTitle="Agent settings"
-                        secondaryLink={`/settings/${agent.id}`}
+                        title={agent.name}
+                        content={formatAgentName(agent.name)}
+                        buttons={[
+                            {
+                                label: agent.enabled ? "Chat" : "Start",
+                                icon: undefined,
+                                action: () => navigate(`/chat/${agent.id}`),
+                                className: "w-full grow",
+                                variant: "default",
+                                size: "default"
+                            },
+                            {
+                                icon: <Cog className="h-4 w-4" />,
+                                className: "p-2",
+                                action: () => navigate(`/settings/${agent.id}`),
+                                variant: "outline",
+                                size: "icon"
+                            }
+                        ]}
                     />
                 ))}
             </div>
