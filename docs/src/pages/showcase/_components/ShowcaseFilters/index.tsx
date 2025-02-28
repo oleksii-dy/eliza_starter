@@ -50,19 +50,22 @@ export default function ShowcaseFilters({
   toggleOperator: () => void;
 }): JSX.Element {
   return (
-    <section className="container margin-top--l margin-bottom--lg">
+    <div className={styles.filtersWrapper}>
       <div className={styles.filterHeader}>
-        <div className={styles.filterTitle}>
-          <h2>
-            Filters
-            <button
-              className={styles.operatorButton}
-              onClick={toggleOperator}
-              title={operator === 'OR' ? 'Change to AND' : 'Change to OR'}
-            >
-              {operator}
-            </button>
-          </h2>
+        <h3 className={styles.filterTitle}>Filters</h3>
+        <div className={styles.operatorToggle}>
+          <span>Match:</span>
+          <button
+            className={clsx(styles.operatorSwitch, {
+              [styles.operatorSwitchAnd]: operator === 'AND'
+            })}
+            onClick={toggleOperator}
+            title={operator === 'OR' ? 'Change to AND (all filters must match)' : 'Change to OR (any filter can match)'}
+          >
+            <span className={styles.switchKnob}></span>
+            <span className={styles.switchLabel}>OR</span>
+            <span className={styles.switchLabel}>AND</span>
+          </button>
         </div>
       </div>
       <ul className={clsx('clean-list', styles.tagList)}>
@@ -81,6 +84,6 @@ export default function ShowcaseFilters({
           );
         })}
       </ul>
-    </section>
+    </div>
   );
 }
