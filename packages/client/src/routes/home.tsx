@@ -40,7 +40,7 @@ export default function Home() {
                 {agents?.sort((a, b) => Number(b?.enabled) - Number(a?.enabled)).map((agent) => (
                     <ActionCard
                         key={agent.id}
-                        name={agent.character.name}
+                        name={agent.name}
                         primaryText={agent.enabled ? "Chat" : "Start"}
                         primaryVariant={agent.enabled ? "default" : "secondary"}
                         primaryLink={`/chat/${agent.id}`}

@@ -70,7 +70,7 @@ import {
                               isActive={location.pathname.includes(agent.id)}
                             >
                               <User />
-                              <span>{agent.character.name}</span>
+                              <span>{agent.name}</span>
                             </SidebarMenuButton>
                           </NavLink>
                         </SidebarMenuItem>
