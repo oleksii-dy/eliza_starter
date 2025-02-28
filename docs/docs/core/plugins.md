@@ -39,6 +39,27 @@ Eliza now supports dynamic plugin loading directly from the package registry. He
 }
 ```
 
+3. Use the new CLI tool:
+
+You can list available plugins, install new ones, and remove them when needed.  
+
+Go into the eliza directory you cloned and type `npx elizaos plugins` to use it.
+
+```bash
+Usage: elizaos plugins [options] [command]
+
+manage elizaOS plugins
+
+Options:
+  -h, --help              display help for command
+
+Commands:
+  list|l [options]        list available plugins
+  add|install <plugin>    add a plugin
+  remove|delete <plugin>  remove a plugin
+  help [command]          display help for command
+```
+
 ---
 
 ## Architecture
