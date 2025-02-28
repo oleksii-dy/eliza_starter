@@ -1,13 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Play, RefreshCw, Settings } from "lucide-react";
+import { Plus, Play, Settings } from "lucide-react";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import {
     Card,
-    CardContent,
-    CardFooter,
-    CardHeader,
-    CardTitle,
 } from "@/components/ui/card";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -15,8 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { characterNameToUrl, formatAgentName } from "@/lib/utils";
 import { useCharacters, useStartAgent } from "@/hooks/use-query-hooks";
 import { NavLink } from "react-router-dom";
-import { CardActions } from "@/components/ui/card-actions";
-import { ActionCard } from "@/components/ui/action-card";
+import ProfileCard from "@/components/profile-card";
 
 export default function Characters() {
     const { toast } = useToast();
@@ -90,32 +85,39 @@ export default function Characters() {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {characters.map((character: { name: string }) => (
-                    <ActionCard
-                        key={character.name}
-                        name={character.name}
-                        primaryText="Start"
-                        primaryIcon={<Play className="h-4 w-4" />}
-                        primaryAction={() => handleStartAgent(character.name)}
-                        secondaryIcon={<Settings className="h-4 w-4" />}
-                        secondaryTitle="Edit character"
-                        secondaryLink={`/characters/edit/${characterNameToUrl(character.name)}`}
+                    <ProfileCard
+                        title={character.name}
+                        content={formatAgentName(character.name)}
+                        buttons={[
+                            {
+                                label: "Start",
+                                icon: <Play className="h-4 w-4" />,
+                                action: () => handleStartAgent(character.name),
+                                className: "w-full grow",
+                                variant: "default",
+                                size: "default"
+                            },
+                            {
+                                icon: <Settings className="h-4 w-4" />,
+                                className: "p-2",
+                                action: () => navigate(`/characters/edit/${characterNameToUrl(character.name)}`),
+                                variant: "outline",
+                                size: "icon"
+                            }
+                        ]}
                     />
                 ))}
-                
+
                 {/* Card to create a new character */}
-                <ActionCard
-                    name=""
-                    isSpecial
-                    specialContent={
-                        <Button 
-                            variant="ghost" 
-                            className="h-24 w-24 rounded-full"
-                            onClick={() => navigate('/characters/new')}
-                        >
-                            <Plus className="h-12 w-12" />
-                        </Button>
-                    }
-                />
+                <Card className="flex justify-center items-center">
+                    <Button 
+                        variant="ghost" 
+                        className="h-24 w-24 rounded-full flex items-center justify-center"
+                        onClick={() => navigate('/characters/new')}
+                    >
+                        <Plus className="h-12 w-12" />
+                    </Button>
+                </Card>
             </div>
         </div>
     );
