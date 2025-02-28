@@ -84,10 +84,7 @@ const useNetworkStatus = () => {
 // Add AgentData interface
 interface AgentData {
   id: string;
-  character: { 
-    name: string;
-    // Include other character properties as needed
-  };
+  name: string;
   enabled: boolean;
 }
 
