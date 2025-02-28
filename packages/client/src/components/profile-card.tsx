@@ -1,8 +1,5 @@
-import { NavLink } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
-import { Play, Settings } from "lucide-react";
-
 
 interface ButtonConfig {
     label?: string;
