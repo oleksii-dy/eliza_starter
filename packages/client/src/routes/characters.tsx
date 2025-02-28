@@ -42,7 +42,9 @@ export default function Characters() {
         try {
             // Use the mutation hook which handles success/error states
             const response = await apiClient.startAgentByName(characterName);
-            
+
+            queryClient.invalidateQueries({ queryKey: ['agents'] });
+
             // Navigate to the chat with the newly created agent on success
             if (response && response.id) {
                 navigate(`/chat/${response.id}`);
