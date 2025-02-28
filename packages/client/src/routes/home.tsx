@@ -1,13 +1,14 @@
 import PageTitle from "@/components/page-title";
-import { ActionCard } from "@/components/ui/action-card";
 import { Button } from "@/components/ui/button";
 import { useAgents, useCharacters } from "@/hooks/use-query-hooks";
 import type { UUID } from "@elizaos/core";
 import { Cog, Users } from "lucide-react";
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
+import ProfileCard from "@/components/profile-card";
+import { formatAgentName } from "@/lib/utils";
 
 export default function Home() {
-
+    const navigate = useNavigate();
     const { data: agentsData } = useAgents();
     const { data: charactersData } = useCharacters();
 
@@ -49,15 +50,26 @@ export default function Home() {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {agents?.map((agent: { id: UUID; name: string }) => (
-                    <ActionCard
-                        key={agent.id}
-                        name={agent?.name}
-                        primaryText="Chat"
-                        primaryVariant="default"
-                        primaryLink={`/chat/${agent.id}`}
-                        secondaryIcon={<Cog className="h-4 w-4" />}
-                        secondaryTitle="Agent settings"
-                        secondaryLink={`/settings/${agent.id}`}
+                    <ProfileCard
+                        title={agent.name}
+                        content={formatAgentName(agent.name)}
+                        buttons={[
+                            {
+                                label: "Chat",
+                                icon: undefined,
+                                action: () => navigate(`/chat/${agent.id}`),
+                                className: "w-full grow",
+                                variant: "default",
+                                size: "default"
+                            },
+                            {
+                                icon: <Cog className="h-4 w-4" />,
+                                className: "p-2",
+                                action: () => navigate(`/settings/${agent.id}`),
+                                variant: "outline",
+                                size: "icon"
+                            }
+                        ]}
                     />
                 ))}
             </div>
