@@ -14,7 +14,7 @@
 
 #### Parameters
 
-• **initialData?**: `Map`\<`string`, `string`\>
+• **initialData?**: `Map<string, string>`
 
 #### Returns
 
@@ -28,7 +28,7 @@
 
 ### data
 
-> **data**: `Map`\<`string`, `string`\>
+> **data**: `Map<string, string>`
 
 #### Defined in
 
@@ -38,7 +38,7 @@
 
 ### get()
 
-> **get**(`key`): `Promise`\<`string`\>
+> **get**(`key`): `Promise<string>`
 
 #### Parameters
 
@@ -46,7 +46,7 @@
 
 #### Returns
 
-`Promise`\<`string`\>
+`Promise<string>`
 
 #### Implementation of
 
@@ -70,7 +70,7 @@
 
 #### Returns
 
-`Promise`\<`void`\>
+`Promise<void>`
 
 #### Implementation of
 
@@ -84,7 +84,7 @@
 
 ### delete()
 
-> **delete**(`key`): `Promise`\<`void`\>
+> **delete**(`key`): `Promise<void>`
 
 #### Parameters
 
@@ -92,7 +92,7 @@
 
 #### Returns
 
-`Promise`\<`void`\>
+`Promise<void>`
 
 #### Implementation of
 
