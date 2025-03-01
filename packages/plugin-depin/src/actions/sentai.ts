@@ -24,7 +24,7 @@ export const sentai: Action = {
         "ETHDENVER",
     ],
     description:
-        "Multi-purpose data provider that can answer questions about weather, IoTeX L1 data, DePIN projects, news, directions, ethdenver events and more. Can chain multiple data sources to answer complex questions.",
+        "Provides real-time data access for answering factual questions about the world. Use for: current weather and forecasts; cryptocurrency and DePIN project metrics (prices, market caps, TVL); IoTeX blockchain statistics; nuclear power plant status; real-time news; location-based information and directions; event schedules; and complex queries that combine multiple data sources. Ideal for questions requiring up-to-date information rather than general knowledge.",
     suppressInitialMessage: true,
     validate: async (_runtime: IAgentRuntime) => {
         return true;
