@@ -10,16 +10,21 @@ export const weatherDataProvider: Provider = {
         _message: Memory,
         _state?: State
     ): Promise<string | null> {
-        const randomCity = cities[Math.floor(Math.random() * cities.length)];
-        const coordinates = await getLatLngMapbox(runtime, randomCity);
+        try {
+            const randomCity = cities[Math.floor(Math.random() * cities.length)];
+            const coordinates = await getLatLngMapbox(runtime, randomCity);
 
-        // Get weather data from Quicksilver using coordinates
-        const weather = await getRawDataFromQuicksilver("weather-current", {
-            lat: coordinates.lat,
-            lon: coordinates.lon,
-        });
+            // Get weather data from Quicksilver using coordinates
+            const weather = await getRawDataFromQuicksilver("weather-current", {
+                lat: coordinates.lat,
+                lon: coordinates.lon,
+            });
 
-        return formatWeatherData(weather);
+            return formatWeatherData(weather);
+        } catch (error) {
+            console.error("Error fetching weather data:", error);
+            return null;
+        }
     },
 };
 
