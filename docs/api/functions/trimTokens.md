@@ -2,7 +2,7 @@
 
 # Function: trimTokens()
 
-> **trimTokens**(`context`, `maxTokens`, `runtime`): `Promise`\<`string`\>
+> **trimTokens**(`context`, `maxTokens`, `runtime`): `Promise<string>`
 
 Trims the provided text context to a specified token limit using a tokenizer model and type.
 
@@ -26,7 +26,7 @@ The runtime interface providing tokenizer settings.
 
 ## Returns
 
-`Promise`\<`string`\>
+`Promise<string>`
 
 A promise that resolves to the trimmed text.
 
