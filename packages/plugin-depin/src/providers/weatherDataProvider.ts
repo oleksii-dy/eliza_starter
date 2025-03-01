@@ -1,4 +1,10 @@
-import { Provider, IAgentRuntime, Memory, State } from "@elizaos/core";
+import {
+    Provider,
+    IAgentRuntime,
+    Memory,
+    State,
+    elizaLogger,
+} from "@elizaos/core";
 
 import { getLatLngMapbox } from "../services/map";
 import { getRawDataFromQuicksilver } from "../services/quicksilver";
@@ -11,7 +17,8 @@ export const weatherDataProvider: Provider = {
         _state?: State
     ): Promise<string | null> {
         try {
-            const randomCity = cities[Math.floor(Math.random() * cities.length)];
+            const randomCity =
+                cities[Math.floor(Math.random() * cities.length)];
             const coordinates = await getLatLngMapbox(runtime, randomCity);
 
             // Get weather data from Quicksilver using coordinates
@@ -22,7 +29,7 @@ export const weatherDataProvider: Provider = {
 
             return formatWeatherData(weather);
         } catch (error) {
-            console.error("Error fetching weather data:", error);
+            elizaLogger.error("Error fetching weather data:", error.message);
             return null;
         }
     },
