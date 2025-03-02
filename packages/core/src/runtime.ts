@@ -8,6 +8,7 @@ import {
     formatActions,
 } from "./actions.ts";
 import { addHeader, composeContext } from "./context.ts";
+import { defaultCharacter } from "./defaultCharacter.ts";
 import {
     evaluationTemplate,
     formatEvaluatorExamples,
@@ -34,7 +35,7 @@ import {
     type IDatabaseAdapter,
     type IMemoryManager,
     type IRAGKnowledgeManager,
-    // type IVerifiableInferenceAdapter,
+    type IVerifiableInferenceAdapter,
     type KnowledgeItem,
     // RAGKnowledgeItem,
     //Media,
@@ -42,7 +43,6 @@ import {
     ModelProviderName,
     type Plugin,
     type Provider,
-    type Adapter,
     type Service,
     type ServiceType,
     type State,
@@ -50,9 +50,11 @@ import {
     type Action,
     type Actor,
     type Evaluator,
+    getRapportTier,
+    RapportTier,
+    Content,
     type Memory,
     type DirectoryItem,
-    type ClientInstance,
 } from "./types.ts";
 import { stringToUuid } from "./uuid.ts";
 import { glob } from "glob";
@@ -110,11 +112,6 @@ export class AgentRuntime implements IAgentRuntime {
      * Context providers used to provide context for message generation.
      */
     providers: Provider[] = [];
-
-    /**
-     * Database adapters used to interact with the database.
-     */
-    adapters: Adapter[] = [];
 
     plugins: Plugin[] = [];
 
@@ -176,9 +173,9 @@ export class AgentRuntime implements IAgentRuntime {
     services: Map<ServiceType, Service> = new Map();
     memoryManagers: Map<string, IMemoryManager> = new Map();
     cacheManager: ICacheManager;
-    clients: ClientInstance[] = [];
+    clients: Record<string, any>;
 
-    // verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
+    verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
 
     registerMemoryManager(manager: IMemoryManager): void {
         if (!manager.tableName) {
@@ -256,23 +253,19 @@ export class AgentRuntime implements IAgentRuntime {
 
         services?: Service[]; // Map of service name to service instance
         managers?: IMemoryManager[]; // Map of table name to memory manager
-        databaseAdapter?: IDatabaseAdapter; // The database adapter used for interacting with the database
+        databaseAdapter: IDatabaseAdapter; // The database adapter used for interacting with the database
         fetch?: typeof fetch | unknown;
         speechModelPath?: string;
-        cacheManager?: ICacheManager;
+        cacheManager: ICacheManager;
         logging?: boolean;
-        // verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
+        verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
     }) {
         // use the character id if it exists, otherwise use the agentId if it is passed in, otherwise use the character name
         this.agentId =
             opts.character?.id ??
             opts?.agentId ??
             stringToUuid(opts.character?.name ?? uuidv4());
-        this.character = opts.character;
-
-        if(!this.character) {
-            throw new Error("Character input is required");
-        }
+        this.character = opts.character || defaultCharacter;
 
         elizaLogger.info(`${this.character.name}(${this.agentId}) - Initializing AgentRuntime with options:`, {
             character: opts.character?.name,
@@ -299,7 +292,22 @@ export class AgentRuntime implements IAgentRuntime {
         this.#conversationLength =
             opts.conversationLength ?? this.#conversationLength;
 
+        if (!opts.databaseAdapter) {
+            throw new Error("No database adapter provided");
+        }
         this.databaseAdapter = opts.databaseAdapter;
+
+        // By convention, we create a user and room using the agent id.
+        // Memories related to it are considered global context for the agent.
+        this.ensureRoomExists(this.agentId);
+        this.ensureUserExists(
+            this.agentId,
+            this.character.username || this.character.name,
+            this.character.name,
+        ).then(() => {
+            // postgres needs the user to exist before you can add a participant
+            this.ensureParticipantExists(this.agentId, this.agentId);
+        });
 
         elizaLogger.success(`Agent ID: ${this.agentId}`);
 
@@ -421,10 +429,6 @@ export class AgentRuntime implements IAgentRuntime {
             plugin.providers?.forEach((provider) => {
                 this.registerContextProvider(provider);
             });
-
-            plugin.adapters?.forEach((adapter) => {
-                this.registerAdapter(adapter);
-            });
         });
 
         (opts.actions ?? []).forEach((action) => {
@@ -439,26 +443,10 @@ export class AgentRuntime implements IAgentRuntime {
             this.registerEvaluator(evaluator);
         });
 
-        // this.verifiableInferenceAdapter = opts.verifiableInferenceAdapter;
-    }
-
-    private async initializeDatabase() {
-        // By convention, we create a user and room using the agent id.
-        // Memories related to it are considered global context for the agent.
-        this.ensureRoomExists(this.agentId);
-        this.ensureUserExists(
-            this.agentId,
-            this.character.username || this.character.name,
-            this.character.name,
-        ).then(() => {
-            // postgres needs the user to exist before you can add a participant
-            this.ensureParticipantExists(this.agentId, this.agentId);
-        });
+        this.verifiableInferenceAdapter = opts.verifiableInferenceAdapter;
     }
 
     async initialize() {
-        this.initializeDatabase();
-
         for (const [serviceType, service] of this.services.entries()) {
             try {
                 await service.initialize(this);
@@ -558,7 +546,7 @@ export class AgentRuntime implements IAgentRuntime {
                     elizaLogger.info(
                         `[RAG Process] Processing direct string knowledge`,
                     );
-                    await this.processCharacterRAGKnowledge(stringKnowledge);
+                    await this.processCharacterKnowledge(stringKnowledge);
                 }
             } else {
                 // Non-RAG mode: only process string knowledge
@@ -587,14 +575,15 @@ export class AgentRuntime implements IAgentRuntime {
         // services (just initialized), clients
 
         // client have a start
-        for (const c of this.clients) {
+        for (const cStr in this.clients) {
+            const c = this.clients[cStr];
             elizaLogger.log(
                 "runtime::stop - requesting",
-                c,
+                cStr,
                 "client stop for",
                 this.character.name,
             );
-            c.stop(this);
+            c.stop();
         }
         // we don't need to unregister with directClient
         // don't need to worry about knowledge
@@ -994,14 +983,6 @@ export class AgentRuntime implements IAgentRuntime {
     }
 
     /**
-     * Register an adapter for the agent to use.
-     * @param adapter The adapter to register.
-     */
-    registerAdapter(adapter: Adapter) {
-        this.adapters.push(adapter);
-    }
-
-    /**
      * Process the actions of a message.
      * @param message The message to process.
      * @param content The content of the message to process actions from.
@@ -1138,7 +1119,7 @@ export class AgentRuntime implements IAgentRuntime {
             runtime: this,
             context,
             modelClass: ModelClass.SMALL,
-            // verifiableInferenceAdapter: this.verifiableInferenceAdapter,
+            verifiableInferenceAdapter: this.verifiableInferenceAdapter,
         });
 
         const evaluators = parseJsonArrayFromText(
@@ -1189,14 +1170,8 @@ export class AgentRuntime implements IAgentRuntime {
                 id: userId,
                 name: name || this.character.name || "Unknown User",
                 username: userName || this.character.username || "Unknown",
-                // TODO: We might not need these account pieces
-                email: email || this.character.email || userId,
-                // When invoke ensureUserExists and saving account.details
-                // Performing a complete JSON.stringify on character will cause a TypeError: Converting circular structure to JSON error in some more complex plugins.
-                details: this.character ? Object.assign({}, this.character, {
-                    source,
-                    plugins: this.character?.plugins?.map((plugin) => plugin.name),
-                }) : { summary: "" },
+                email: email || this.character.email || userId, // Temporary
+                details: this.character || { summary: "" },
             });
             elizaLogger.success(`User ${userName} created successfully.`);
         }
@@ -1275,13 +1250,36 @@ export class AgentRuntime implements IAgentRuntime {
         const { userId, roomId } = message;
 
         const conversationLength = this.getConversationLength();
-
         const [actorsData, recentMessagesData, goalsData]: [
             Actor[],
             Memory[],
             Goal[],
         ] = await Promise.all([
-            getActorDetails({ runtime: this, roomId }),
+            getActorDetails({ runtime: this, roomId }).then(actors => {
+                elizaLogger.debug("Actor details retrieved:", {
+                    roomId,
+                    actorCount: actors.length,
+                    actors: actors.map(a => ({id: a.id, username: a.username}))
+                });
+                if (!actors || actors.length === 0) {
+                    // This should never happen as we should at least have the message author
+                    elizaLogger.error("No actors found for room:", roomId);
+                    elizaLogger.error("Message details:", {
+                        messageId: message.id,
+                        userId: message.userId,
+                        roomId: message.roomId
+                    });
+                    
+                    // Emergency fallback: Create an actor from the message
+                    return [{
+                        id: message.userId,
+                        name: "Unknown User",
+                        username: "unknown",
+                        details: { tagline: "", summary: "", quote: "" }
+                    }];
+                }
+                return actors;
+            }),
             this.messageManager.getMemories({
                 roomId,
                 count: conversationLength,
@@ -1294,9 +1292,7 @@ export class AgentRuntime implements IAgentRuntime {
                 roomId,
             }),
         ]);
-
         const goals = formatGoalsAsString({ goals: goalsData });
-
         const actors = formatActors({ actors: actorsData ?? [] });
 
         const recentMessages = formatMessages({
@@ -1430,6 +1426,12 @@ Text: ${attachment.text}
                 ? await getRecentInteractions(userId, this.agentId)
                 : [];
 
+        // Get formatted conversation if conversationId is provided
+        let recentUserConversations = "";
+        if (additionalKeys.conversationId) {
+            const currentConversationId = additionalKeys.conversationId as UUID;
+            recentUserConversations = await this.databaseAdapter.getFormattedConversation(currentConversationId);
+        }
         const getRecentMessageInteractions = async (
             recentInteractionsData: Memory[],
         ): Promise<string> => {
@@ -1450,13 +1452,11 @@ Text: ${attachment.text}
                     return `${sender}: ${message.content.text}`;
                 }),
             );
-
             return formattedInteractions.join("\n");
         };
 
         const formattedMessageInteractions =
             await getRecentMessageInteractions(recentInteractions);
-
         const getRecentPostInteractions = async (
             recentInteractionsData: Memory[],
             actors: Actor[],
@@ -1474,7 +1474,36 @@ Text: ${attachment.text}
             recentInteractions,
             actorsData,
         );
+        // Retrieve user rapport if message is from a user
+        let userRapportScore = 0;
+        let userRapportTier = getRapportTier(0);  // Default to neutral
 
+        if (actorsData && actorsData.length > 0 && actorsData[0]?.id) {
+            userRapportScore = await this.databaseAdapter.getUserRapport(actorsData[0].id, this.agentId) || 0;
+            userRapportTier = getRapportTier(userRapportScore);
+            elizaLogger.debug("Found user rapport for:", actorsData[0].id, "Score:", userRapportScore);
+        } else {
+            elizaLogger.debug("No valid actor data found for rapport calculation");
+        }
+
+
+
+        const getUserRapportDescription = (tier: RapportTier): string => {
+            if(tier === RapportTier.NEUTRAL){
+                return '';
+            }
+            else{
+                return tier;
+            }
+        };
+
+        const userRapportDescription = getUserRapportDescription(userRapportTier);
+        elizaLogger.debug("Building rapport context for user:", {
+            userId: message.userId,
+            score: userRapportScore,
+            tier: userRapportTier,
+            description: userRapportDescription,
+        });
         // if bio is a string, use it. if its an array, pick one at random
         let bio = this.character.bio || "";
         if (Array.isArray(bio)) {
@@ -1486,7 +1515,6 @@ Text: ${attachment.text}
         }
 
         let knowledgeData = [];
-        let formattedKnowledge = "";
 
         if (this.character.settings?.ragKnowledge) {
             const recentContext = recentMessagesData
@@ -1495,20 +1523,9 @@ Text: ${attachment.text}
                 .reverse() // Reverse to get chronological order
                 .map((msg) => msg.content.text)
                 .join(" ");
-
-            knowledgeData = await this.ragKnowledgeManager.getKnowledge({
-                query: message.content.text,
-                conversationContext: recentContext,
-                limit: 8,
-            });
-
-            formattedKnowledge = formatKnowledge(knowledgeData);
-        } else {
-            knowledgeData = await knowledge.get(this, message);
-
-            formattedKnowledge = formatKnowledge(knowledgeData);
         }
-
+        const knowledegeData = await knowledge.get(this, message);
+        const formattedKnowledge = formatKnowledge(knowledegeData);
         const initialState = {
             agentId: this.agentId,
             agentName,
@@ -1532,6 +1549,7 @@ Text: ${attachment.text}
             recentPostInteractions: formattedPostInteractions,
             // Raw memory[] array of interactions
             recentInteractionsData: recentInteractions,
+            recentUserConversations: recentUserConversations,
             // randomly pick one topic
             topic:
                 this.character.topics && this.character.topics.length > 0
@@ -1653,7 +1671,6 @@ Text: ${attachment.text}
                     : "",
             ...additionalKeys,
         } as State;
-
         const actionPromises = this.actions.map(async (action: Action) => {
             const result = await action.validate(this, message, initialState);
             if (result) {
@@ -1661,7 +1678,6 @@ Text: ${attachment.text}
             }
             return null;
         });
-
         const evaluatorPromises = this.evaluators.map(async (evaluator) => {
             const result = await evaluator.validate(
                 this,
@@ -1673,7 +1689,6 @@ Text: ${attachment.text}
             }
             return null;
         });
-
         const [resolvedEvaluators, resolvedActions, providers] =
             await Promise.all([
                 Promise.all(evaluatorPromises),
@@ -1721,7 +1736,6 @@ Text: ${attachment.text}
                 providers,
             ),
         };
-
         return { ...initialState, ...actionState } as State;
     }
 
@@ -1788,6 +1802,14 @@ Text: ${attachment.text}
             recentMessagesData,
             attachments: formattedAttachments,
         } as State;
+    }
+
+    getVerifiableInferenceAdapter(): IVerifiableInferenceAdapter | undefined {
+        return this.verifiableInferenceAdapter;
+    }
+
+    setVerifiableInferenceAdapter(adapter: IVerifiableInferenceAdapter): void {
+        this.verifiableInferenceAdapter = adapter;
     }
 }
 

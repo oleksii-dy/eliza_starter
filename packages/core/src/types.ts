@@ -233,8 +233,6 @@ export type Models = {
     [ModelProviderName.INFERA]: Model;
     [ModelProviderName.BEDROCK]: Model;
     [ModelProviderName.ATOMA]: Model;
-    [ModelProviderName.SECRETAI]: Model;
-    [ModelProviderName.NEARAI]: Model;
 };
 
 /**
@@ -274,8 +272,6 @@ export enum ModelProviderName {
     INFERA = "infera",
     BEDROCK = "bedrock",
     ATOMA = "atoma",
-    SECRETAI = "secret_ai",
-    NEARAI = "nearai",
 }
 
 /**
@@ -338,7 +334,14 @@ export interface State {
 
     /** Optional action examples */
     actionExamples?: string;
+    /** User rapport score based on memory */
+    userRapport?: number;
 
+    /** User rapport tier based on score */
+    userRapportDescription?: string;
+
+    /** Recent conversations specific to the current user */
+    recentUserConversations?: string;
     /** Optional provider descriptions */
     providers?: string;
 
@@ -561,6 +564,8 @@ export interface Account {
 
     /** Optional avatar URL */
     avatarUrl?: string;
+    /** User rapport score based on memory */
+    userRapport?: number;
 }
 
 /**
@@ -612,33 +617,14 @@ export type Media = {
 };
 
 /**
- * Client instance
- */
-export type ClientInstance = {
-    /** Client name */
-    // name: string;
-
-    /** Stop client connection */
-    stop: (runtime: IAgentRuntime) => Promise<unknown>;
-};
-
-/**
  * Client interface for platform connections
  */
 export type Client = {
-    /** Client name */
-    name: string;
-
-    /** Client configuration */
-    config?: { [key: string]: any };
-
     /** Start client connection */
-    start: (runtime: IAgentRuntime) => Promise<ClientInstance>;
-};
+    start: (runtime: IAgentRuntime) => Promise<unknown>;
 
-export type Adapter = {
-    /** Initialize adapter */
-    init: (runtime: IAgentRuntime) => IDatabaseAdapter & IDatabaseCacheAdapter;
+    /** Stop client connection */
+    stop: (runtime: IAgentRuntime) => Promise<unknown>;
 };
 
 /**
@@ -647,9 +633,6 @@ export type Adapter = {
 export type Plugin = {
     /** Plugin name */
     name: string;
-
-    /** Plugin configuration */
-    config?: { [key: string]: any };
 
     /** Plugin description */
     description: string;
@@ -668,10 +651,28 @@ export type Plugin = {
 
     /** Optional clients */
     clients?: Client[];
-
-    /** Optional adapters */
-    adapters?: Adapter[];
 };
+
+/**
+ * Available client platforms
+ */
+export enum Clients {
+    ALEXA= "alexa",
+    DISCORD = "discord",
+    DIRECT = "direct",
+    TWITTER = "twitter",
+    TELEGRAM = "telegram",
+    TELEGRAM_ACCOUNT = "telegram-account",
+    FARCASTER = "farcaster",
+    LENS = "lens",
+    AUTO = "auto",
+    SLACK = "slack",
+    GITHUB = "github",
+    INSTAGRAM = "instagram",
+    SIMSAI = "simsai",
+    XMTP = "xmtp",
+    DEVA = "deva",
+}
 
 export interface IAgentConfig {
     [key: string]: string;
@@ -806,6 +807,9 @@ export type Character = {
 
     /** Optional knowledge base */
     knowledge?: (string | { path: string; shared?: boolean })[];
+
+    /** Supported client platforms */
+    clients: Clients[];
 
     /** Available plugins */
     plugins: Plugin[];
@@ -1123,6 +1127,16 @@ export interface IDatabaseAdapter {
     }): Promise<Relationship | null>;
 
     getRelationships(params: { userId: UUID }): Promise<Relationship[]>;
+    getRelationships(params: { userId: UUID }): Promise<Relationship[]>;
+
+    getFormattedConversation(conversationId: UUID): Promise<string>;
+    getConversation(conversationId: UUID): Promise<Conversation | null>;
+    storeConversation(conversation: Conversation): Promise<void>;
+    updateConversation(conversation: Partial<Conversation> & { id: UUID }): Promise<void>;
+    getConversationsByStatus(status: 'ACTIVE' | 'CLOSED', limit?: number): Promise<Conversation[]>;
+    getConversationMessages(conversationId: UUID): Promise<Memory[]>;
+    setUserRapport(userId: UUID, agentId: UUID, score: number): Promise<void>;
+    getUserRapport(userId: UUID, agentId: UUID): Promise<number>;
 
     getKnowledge(params: {
         id?: UUID;
@@ -1299,9 +1313,11 @@ export interface IAgentRuntime {
     cacheManager: ICacheManager;
 
     services: Map<ServiceType, Service>;
-    clients: ClientInstance[];
+    // any could be EventEmitter
+    // but I think the real solution is forthcoming as a base client interface
+    clients: Record<string, any>;
 
-    // verifiableInferenceAdapter?: IVerifiableInferenceAdapter | null;
+    verifiableInferenceAdapter?: IVerifiableInferenceAdapter | null;
 
     initialize(): Promise<void>;
 
@@ -1527,7 +1543,6 @@ export enum ServiceType {
     GOPLUS_SECURITY = "goplus_security",
     WEB_SEARCH = "web_search",
     EMAIL_AUTOMATION = "email_automation",
-    NKN_CLIENT_SERVICE = "nkn_client_service",
 }
 
 export enum LoggingLevel {
@@ -1574,6 +1589,69 @@ export interface ISlackService extends Service {
     client: any;
 }
 
+/**
+ * Available verifiable inference providers
+ */
+export enum VerifiableInferenceProvider {
+    RECLAIM = "reclaim",
+    OPACITY = "opacity",
+    PRIMUS = "primus",
+}
+
+/**
+ * Options for verifiable inference
+ */
+export interface VerifiableInferenceOptions {
+    /** Custom endpoint URL */
+    endpoint?: string;
+    /** Custom headers */
+    headers?: Record<string, string>;
+    /** Provider-specific options */
+    providerOptions?: Record<string, unknown>;
+}
+
+/**
+ * Result of a verifiable inference request
+ */
+export interface VerifiableInferenceResult {
+    /** Generated text */
+    text: string;
+    /** Proof */
+    proof: any;
+    /** Proof id */
+    id?: string;
+    /** Provider information */
+    provider: VerifiableInferenceProvider;
+    /** Timestamp */
+    timestamp: number;
+}
+
+/**
+ * Interface for verifiable inference adapters
+ */
+export interface IVerifiableInferenceAdapter {
+    options: any;
+    /**
+     * Generate text with verifiable proof
+     * @param context The input text/prompt
+     * @param modelClass The model class/name to use
+     * @param options Additional provider-specific options
+     * @returns Promise containing the generated text and proof data
+     */
+    generateText(
+        context: string,
+        modelClass: string,
+        options?: VerifiableInferenceOptions,
+    ): Promise<VerifiableInferenceResult>;
+
+    /**
+     * Verify the proof of a generated response
+     * @param result The result containing response and proof to verify
+     * @returns Promise indicating if the proof is valid
+     */
+    verifyProof(result: VerifiableInferenceResult): Promise<boolean>;
+}
+
 export enum TokenizerType {
     Auto = "auto",
     TikToken = "tiktoken",
@@ -1606,4 +1684,41 @@ export interface DirectoryItem {
 export interface ChunkRow {
     id: string;
     // Add other properties if needed
+}
+
+export interface Conversation {
+    id: UUID;
+    rootTweetId?: string;
+    messageIds: string;
+    participantIds: string;
+    startedAt: Date;
+    lastMessageAt: Date;
+    context: string;
+    agentId: UUID;
+    status: 'ACTIVE' | 'CLOSED';
+}
+
+
+
+export enum RapportTier {
+    HOSTILE = "Make response very cold and hostile. Show strong distrust and negativity.",
+    ANTAGONISTIC = "Make response dismissive and unfriendly. Use stern and disapproving tone.",
+    UNFRIENDLY = "Make response slightly cold and distant. Show mild irritation and reluctance.",
+    NEUTRAL = "",
+    ACQUAINTANCE = "Make response casually friendly. Show polite interest and openness.",
+    FRIEND = "Make response warm and engaging. Share enthusiasm and positive energy.",
+    CLOSE_FRIEND = "Make response very warm and supportive. Show genuine care and trust.",
+    FAMILY = "Make response deeply caring and protective. Express unconditional support and affection."
+}
+
+// Helper function to get tier from score
+export function getRapportTier(score: number): RapportTier {
+    if (score >= 300) return RapportTier.FAMILY;
+    if (score >= 100) return RapportTier.CLOSE_FRIEND;
+    if (score >= 50) return RapportTier.FRIEND;
+    if (score >= 25) return RapportTier.ACQUAINTANCE;
+    if (score >= 0) return RapportTier.NEUTRAL;
+    if (score >= -25) return RapportTier.UNFRIENDLY;
+    if (score >= -100) return RapportTier.ANTAGONISTIC;
+    return RapportTier.HOSTILE;
 }

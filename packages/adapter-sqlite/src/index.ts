@@ -1,6 +1,3 @@
-import path from "path";
-import fs from "fs";
-
 export * from "./sqliteTables.ts";
 export * from "./sqlite_vec.ts";
 
@@ -20,21 +17,43 @@ import type {
     UUID,
     RAGKnowledgeItem,
     ChunkRow,
-    Adapter,
-    IAgentRuntime,
-    Plugin,
 } from "@elizaos/core";
-import type { Database as BetterSqlite3Database } from "better-sqlite3";
+import type { Database } from "better-sqlite3";
 import { v4 } from "uuid";
 import { load } from "./sqlite_vec.ts";
 import { sqliteTables } from "./sqliteTables.ts";
 
-import Database from "better-sqlite3";
+interface Conversation {
+    id: UUID;
+    rootTweetId?: string;
+    messageIds: string;  // JSON string of UUIDs
+    participantIds: string;  // JSON string of UUIDs
+    startedAt: Date;
+    lastMessageAt: Date;
+    context: string;
+    agentId: UUID;
+    status: 'ACTIVE' | 'CLOSED';  // Updated to match interface
+}
 
 export class SqliteDatabaseAdapter
-    extends DatabaseAdapter<BetterSqlite3Database>
+    extends DatabaseAdapter<Database>
     implements IDatabaseCacheAdapter
 {
+    public db: Database;
+
+    constructor(db: Database) {
+        super();
+        this.db = db;
+        // Load SQLite vector extension functions
+        try {
+            load(db);
+            console.log("SQLite vector extension loaded successfully");
+        } catch (error) {
+            console.error("Error loading SQLite vector extension:", error);
+            throw error;
+        }
+    }
+
     async getRoom(roomId: UUID): Promise<UUID | null> {
         const sql = "SELECT id FROM rooms WHERE id = ?";
         const room = this.db.prepare(sql).get(roomId) as
@@ -71,6 +90,64 @@ export class SqliteDatabaseAdapter
             | undefined;
         return res?.userState ?? null;
     }
+    async getConversationMessages(conversationId: UUID): Promise<Memory[]> {
+        const conversation = await this.getConversation(conversationId);
+        if (!conversation) return [];
+
+        const messageIds = JSON.parse(conversation.messageIds);
+        const messages = await Promise.all(
+            messageIds.map(id => this.getMemoryById(id))
+        );
+
+        return messages
+            .filter((m): m is Memory => m !== null)
+            .map(memory => {
+                let timestamp: number;
+
+                if (typeof memory.createdAt === 'number') {
+                    timestamp = memory.createdAt;
+                } else if (typeof memory.createdAt === 'string') {
+                    timestamp = new Date(memory.createdAt).getTime();
+                } else if (memory.createdAt && typeof memory.createdAt === 'object') {
+                    timestamp = (memory.createdAt as Date).getTime();
+                } else {
+                    timestamp = Date.now();
+                }
+
+                return {
+                    ...memory,
+                    createdAt: timestamp
+                };
+            })
+            .sort((a, b) => a.createdAt - b.createdAt);
+    }
+
+    async getFormattedConversation(conversationId: UUID): Promise<string> {
+        const conversation = await this.getConversation(conversationId);
+        if (!conversation) return "";
+
+        const messages = await this.getConversationMessages(conversationId);
+
+        // Format each message showing only username
+        const formattedMessages = await Promise.all(messages.map(async msg => {
+            // First try to get username from message content
+            let username = msg.content.username;
+
+            // If no username in content, try to get it from accounts table
+            if (!username) {
+                const account = await this.getAccountById(msg.userId);
+                if (account?.username) {
+                    username = account.username;
+                }
+            }
+            console.log("username", username)
+            // Add @ prefix if we found a username
+            const displayName = username ? `@${username}` : `user_${msg.userId.substring(0, 8)}`;
+            return `${displayName}: ${msg.content.text}`;
+        }));
+
+        return formattedMessages.join('\n\n');
+    }
 
     async setParticipantUserState(
         roomId: UUID,
@@ -81,12 +158,6 @@ export class SqliteDatabaseAdapter
             "UPDATE participants SET userState = ? WHERE roomId = ? AND userId = ?"
         );
         stmt.run(state, roomId, userId);
-    }
-
-    constructor(db: BetterSqlite3Database) {
-        super();
-        this.db = db;
-        load(db);
     }
 
     async init() {
@@ -729,6 +800,39 @@ export class SqliteDatabaseAdapter
             .prepare(sql)
             .all(params.userId, params.userId) as Relationship[];
     }
+    async getUserRapport(userId: UUID, agentId: UUID): Promise<number> {
+        try {
+            const sql = "SELECT userRapport FROM accounts WHERE id = ?";
+            const account = this.db.prepare(sql).get(userId) as { userRapport: number } | undefined;
+            return account?.userRapport ?? 0;
+        } catch (error) {
+            console.error("Error getting user rapport:", error);
+            return 0;
+        }
+    }
+
+    async setUserRapport(userIdOrUsername: UUID | string, agentId: UUID, score: number): Promise<void> {
+        try {
+            let sql;
+            let params;
+
+            // Check if we're dealing with a username or userId
+            if (userIdOrUsername.includes('-')) {
+                // It's a UUID
+                sql = "UPDATE accounts SET userRapport = userRapport + ? WHERE id = ?";
+                params = [score, userIdOrUsername];
+            } else {
+                // It's a username
+                sql = "UPDATE accounts SET userRapport = userRapport + ? WHERE username = ?";
+                params = [score, userIdOrUsername.replace('@', '')];
+            }
+
+            elizaLogger.debug("Setting rapport for", userIdOrUsername, "score:", score);
+            this.db.prepare(sql).run(...params);
+        } catch (error) {
+            elizaLogger.error("Error setting user rapport:", error);
+        }
+    }
 
     async getCache(params: {
         key: string;
@@ -1091,38 +1195,103 @@ export class SqliteDatabaseAdapter
             throw error;
         }
     }
-}
+    async getConversation(conversationId: UUID): Promise<Conversation | null> {
+        const sql = "SELECT * FROM conversations WHERE id = ?";
+        const conversation = this.db.prepare(sql).get(conversationId) as (Omit<Conversation, 'status'> & { status?: string }) | undefined;
 
-const sqliteDatabaseAdapter: Adapter = {
-    init: (runtime: IAgentRuntime) => {
-        const dataDir = path.join(process.cwd(), "data");
+        if (!conversation) return null;
 
-        if (!fs.existsSync(dataDir)) {
-            fs.mkdirSync(dataDir, { recursive: true });
+        return {
+            ...conversation,
+            startedAt: new Date(conversation.startedAt),
+            lastMessageAt: new Date(conversation.lastMessageAt),
+            status: (conversation.status || 'ACTIVE') as 'ACTIVE' | 'CLOSED'
+        };
+    }
+
+    async storeConversation(conversation: Conversation): Promise<void> {
+        const sql = `
+            INSERT INTO conversations (
+                id, rootTweetId, messageIds, participantIds,
+                startedAt, lastMessageAt, context, agentId, status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        this.db.prepare(sql).run(
+            conversation.id,
+            conversation.rootTweetId || '',  // Ensure string
+            conversation.messageIds,
+            conversation.participantIds,
+            conversation.startedAt.getTime(),
+            conversation.lastMessageAt.getTime(),
+            conversation.context,
+            conversation.agentId,
+            conversation.status || 'ACTIVE'  // Ensure status is set
+        );
+    }
+
+    async updateConversation(conversation: Partial<Conversation> & { id: UUID }): Promise<void> {
+        const updates: string[] = [];
+        const values: any[] = [];
+
+        if (conversation.messageIds !== undefined) {
+            const existingConversation = await this.getConversation(conversation.id);
+            if (existingConversation) {
+                const existingIds = JSON.parse(existingConversation.messageIds);
+                const allNewIds = JSON.parse(conversation.messageIds);
+                const lastNewId = allNewIds[allNewIds.length - 1]; // Get the last message ID
+                elizaLogger.debug("added new message ", lastNewId);
+
+                if (existingIds.includes(lastNewId)) {
+                    elizaLogger.debug("message already exists");
+                    return; // Exit early if message already exists
+                }
+            }
+            updates.push('messageIds = ?');
+            values.push(conversation.messageIds);
+        }
+        if (conversation.participantIds !== undefined) {
+            updates.push('participantIds = ?');
+            values.push(conversation.participantIds);
+        }
+        if (conversation.lastMessageAt !== undefined) {
+            updates.push('lastMessageAt = ?');
+            values.push(conversation.lastMessageAt.getTime());
+        }
+        if (conversation.context !== undefined) {
+            updates.push('context = ?');
+            values.push(conversation.context);
+        }
+        if (conversation.status !== undefined) {
+            updates.push('status = ?');
+            values.push(conversation.status);
         }
 
-        const filePath = runtime.getSetting("SQLITE_FILE") ?? path.resolve(dataDir, "db.sqlite");
-        elizaLogger.info(`Initializing SQLite database at ${filePath}...`);
-        const db = new SqliteDatabaseAdapter(new Database(filePath));
+        if (updates.length === 0) return;
 
-        // Test the connection
-        db.init()
-            .then(() => {
-                elizaLogger.success(
-                    "Successfully connected to SQLite database"
-                );
-            })
-            .catch((error) => {
-                elizaLogger.error("Failed to connect to SQLite:", error);
-            });
+        const sql = `UPDATE conversations SET ${updates.join(', ')} WHERE id = ?`;
+        values.push(conversation.id);
 
-        return db;
-    },
-};
+        this.db.prepare(sql).run(...values);
+    }
 
-const sqlitePlugin: Plugin = {
-    name: "sqlite",
-    description: "SQLite database adapter plugin",
-    adapters: [sqliteDatabaseAdapter],
-};
-export default sqlitePlugin;
+    async getConversationsByStatus(status: 'ACTIVE' | 'CLOSED', limit?: number): Promise<Conversation[]> {
+        let sql = "SELECT * FROM conversations WHERE status = ?";
+        const params: any[] = [status];
+
+        if (typeof limit === 'number') {
+            sql += " LIMIT ?";
+            params.push(limit);
+        }
+
+        const conversations = this.db.prepare(sql).all(...params) as (Omit<Conversation, 'status'> & { status?: string })[];
+
+        return conversations.map(conversation => ({
+            ...conversation,
+            startedAt: new Date(conversation.startedAt),
+            lastMessageAt: new Date(conversation.lastMessageAt),
+            status: (conversation.status || 'ACTIVE') as 'ACTIVE' | 'CLOSED'
+        }));
+    }
+}

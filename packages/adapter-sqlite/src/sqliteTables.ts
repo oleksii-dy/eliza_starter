@@ -2,6 +2,7 @@ export const sqliteTables = `
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 
+
 -- Table: accounts
 CREATE TABLE IF NOT EXISTS "accounts" (
     "id" TEXT PRIMARY KEY,
@@ -10,8 +11,16 @@ CREATE TABLE IF NOT EXISTS "accounts" (
     "username" TEXT,
     "email" TEXT NOT NULL,
     "avatarUrl" TEXT,
-    "details" TEXT DEFAULT '{}' CHECK(json_valid("details")) -- Ensuring details is a valid JSON field
+    "details" TEXT DEFAULT '{}' CHECK(json_valid("details")), -- Ensuring details is a valid JSON field
+    "userRapport" REAL NOT NULL DEFAULT 0
 );
+
+-- Add userRapport column if it doesn't exist (using correct SQLite syntax)
+SELECT CASE 
+    WHEN NOT EXISTS(SELECT 1 FROM pragma_table_info('accounts') WHERE name='userRapport') 
+    THEN 'ALTER TABLE accounts ADD COLUMN "userRapport" REAL NOT NULL DEFAULT 0;'
+END
+WHERE NOT EXISTS(SELECT 1 FROM pragma_table_info('accounts') WHERE name='userRapport');
 
 -- Table: memories
 CREATE TABLE IF NOT EXISTS "memories" (
@@ -41,6 +50,9 @@ CREATE TABLE IF NOT EXISTS "goals" (
     "objectives" TEXT DEFAULT '[]' NOT NULL CHECK(json_valid("objectives")) -- Ensuring objectives is a valid JSON array
 );
 
+
+
+
 -- Table: logs
 CREATE TABLE IF NOT EXISTS "logs" (
     "id" TEXT PRIMARY KEY,
@@ -49,6 +61,20 @@ CREATE TABLE IF NOT EXISTS "logs" (
     "body" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "roomId" TEXT NOT NULL
+);
+
+-- Table: conversations
+CREATE TABLE IF NOT EXISTS "conversations" (
+    "id" TEXT PRIMARY KEY,
+    "rootTweetId" TEXT NOT NULL,
+    "messageIds" TEXT NOT NULL CHECK(json_valid(messageIds)), -- JSON array string
+    "participantIds" TEXT NOT NULL CHECK(json_valid(participantIds)), -- JSON array string
+    "startedAt" TIMESTAMP,
+    "lastMessageAt" TIMESTAMP,
+    "context" TEXT,
+    "agentId" TEXT NOT NULL,
+    "status" TEXT DEFAULT 'ACTIVE',
+    FOREIGN KEY ("agentId") REFERENCES "accounts"("id")
 );
 
 -- Table: participants
