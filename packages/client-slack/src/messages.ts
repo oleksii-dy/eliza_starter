@@ -104,6 +104,14 @@ export class MessageManager {
             return true;
         }
 
+        if (
+            message.type === "app_mention" ||
+            message.text?.includes(`weather`)
+        ) {
+            console.log("✅ weather related query detected - will respond");
+            return true;
+        }
+
         // Always respond to direct mentions
         if (
             message.type === "app_mention" ||
@@ -207,6 +215,8 @@ export class MessageManager {
             return;
         }
 
+        console.log("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvthis is in handleMessage")
+
         // Generate event key for deduplication
         const eventKey = this.generateEventKey(event);
 
@@ -266,6 +276,14 @@ export class MessageManager {
                 );
                 const messageId = stringToUuid(
                     `${event.ts}-${this.runtime.agentId}`
+                );
+
+                await this.runtime.ensureConnection(
+                    userId,
+                    roomId,
+                    event.user,
+                    event.user,
+                    "slack"
                 );
 
                 // Create initial memory
@@ -357,6 +375,12 @@ export class MessageManager {
                                 console.log(
                                     " Step 12: Executing response callback"
                                 );
+
+                                // const result = await this.client.chat.postMessage({
+                                //     channel: event.channel,
+                                //     text: content.text || responseContent.text,
+                                //     thread_ts: event.thread_ts,
+                                // });
 
                                 console.log(
                                     "💾 Step 13: Creating response memory"

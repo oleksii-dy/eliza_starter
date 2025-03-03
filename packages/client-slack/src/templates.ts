@@ -99,6 +99,30 @@ Note that {{agentName}} is capable of reading/seeing/hearing various forms of me
 
 {{recentMessages}}
 
+Explicitly check if the user is asking about weather. If so, use the getCurrentWeather action to respond.
+If the action is not relevant then use the webSearch action
 # Instructions: Write the next message for {{agentName}}. Include an action, if appropriate. {{actionNames}}
 Remember to follow the conversation flow rules above.
 ` + messageCompletionFooter;
+
+// export const slackMessageHandlerTemplate =
+//     `{ "user": "{{agentName}}", "text": "string", "action": "getCurrentWeatherAction" }
+// ` + messageCompletionFooter;
+
+export const getCurrentWeatherTemplate = `Respond with a JSON object containing location information for weather data.
+Extract the location from the most recent message. If no specific location is provided, respond with an error.
+
+The response must include:
+- city: The city name
+- country: The country code (ISO 2-letter code)
+
+Example response:
+\`\`\`json
+{
+    "city": "London",
+    "country": "GB"
+}
+\`\`\`
+{{recentMessages}}
+Extract the location from the most recent message.
+Respond with a JSON markdown block containing both city and country.`;

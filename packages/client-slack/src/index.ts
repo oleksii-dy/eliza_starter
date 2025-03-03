@@ -13,6 +13,8 @@ import summarize_updates from "./actions/summarize_updates_for_user";
 import { channelStateProvider } from "./providers/channelState";
 import { SlackService } from "./services/slack.service";
 import { startReminderLoop } from "./utils/slack-utils";
+import getCurrentWeatherAction from "./actions/chat_with_attachments";
+import {webSearch} from "./actions/web_search";
 
 interface SlackRequest extends Request {
     rawBody?: Buffer;
@@ -195,8 +197,12 @@ export class SlackClient extends EventEmitter {
             this.runtime.registerAction(summarize_conversation);
             this.runtime.registerAction(summarize_updates);
             this.runtime.registerAction(summarize_eod_updates);
+            this.runtime.registerAction(getCurrentWeatherAction);
+            this.runtime.registerAction(webSearch);
+            // this.runtime.registerAction(getCurrentWeatherAction as any);
             // this.runtime.registerAction(transcribe_media);
             this.runtime.providers.push(channelStateProvider);
+            
 
             // Add request logging middleware
             this.server.use((req: SlackRequest, res, next) => {
