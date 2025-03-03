@@ -251,10 +251,22 @@ export abstract class BaseDrizzleAdapter<TDatabase extends DrizzleOperations>
     async deleteAgent(agentId: UUID): Promise<boolean> {
         // casacade delete all related for the agent
         return this.withDatabase(async () => {
-            await this.db.transaction(async (tx) => {
-                await tx.delete(agentTable).where(eq(agentTable.id, agentId));
-            });
-            return true;
+            try {
+                await this.db.transaction(async (tx) => {
+                    await tx.delete(agentTable).where(eq(agentTable.id, agentId));
+                });
+                
+                logger.debug("Agent deleted successfully:", {
+                    agentId
+                });
+                return true;
+            } catch (error) {
+                logger.error("Error deleting agent:", {
+                    error: error instanceof Error ? error.message : String(error),
+                    agentId
+                });
+                return false;
+            }
         });
     }
 

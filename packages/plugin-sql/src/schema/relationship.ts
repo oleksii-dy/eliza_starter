@@ -21,13 +21,19 @@ export const relationshipTable = pgTable(
             .notNull(),
         sourceEntityId: uuid("sourceEntityId")
             .notNull()
-            .references(() => entityTable.id),
+            .references(() => entityTable.id, {
+                onDelete: "set null",
+            }),
         targetEntityId: uuid("targetEntityId")
             .notNull()
-            .references(() => entityTable.id),
+            .references(() => entityTable.id, {
+                onDelete: "set null",
+            }),
         agentId: uuid("agentId")
             .notNull()
-            .references(() => agentTable.id),
+            .references(() => agentTable.id, {
+                onDelete: "set null",
+            }),
         tags: text("tags").array(),
         metadata: jsonb("metadata"),
     },

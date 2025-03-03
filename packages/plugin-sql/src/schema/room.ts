@@ -6,11 +6,15 @@ import { worldTable } from "./worldTable";
 
 export const roomTable = pgTable("rooms", {
   id: uuid("id").notNull().primaryKey().default(sql`gen_random_uuid()`),
-  agentId: uuid("agentId").references(() => agentTable.id),
+  agentId: uuid("agentId").references(() => agentTable.id, {
+    onDelete: "set null",
+  }),
   source: text("source").notNull(),
   type: text("type").notNull(),
   serverId: text("serverId"),
-  worldId: uuid("worldId").references(() => worldTable.id),
+  worldId: uuid("worldId").references(() => worldTable.id, {
+    onDelete: "set null",
+  }),
   name: text("name"),
   metadata: jsonb("metadata"),
   channelId: text("channelId"),

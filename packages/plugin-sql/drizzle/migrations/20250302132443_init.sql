@@ -215,4 +215,70 @@ CREATE INDEX "idx_memories_document_id" ON "memories" USING btree (((metadata->>
 CREATE INDEX "idx_fragments_order" ON "memories" USING btree (((metadata->>'documentId')),((metadata->>'position')));--> statement-breakpoint
 CREATE INDEX "idx_participants_user" ON "participants" USING btree ("userId");--> statement-breakpoint
 CREATE INDEX "idx_participants_room" ON "participants" USING btree ("roomId");--> statement-breakpoint
-CREATE INDEX "idx_relationships_users" ON "relationships" USING btree ("sourceEntityId","targetEntityId");
+CREATE INDEX "idx_relationships_users" ON "relationships" USING btree ("sourceEntityId","targetEntityId");--> statement-breakpoint
+ALTER TABLE "cache" DROP CONSTRAINT "cache_agentId_agents_id_fk";
+--> statement-breakpoint
+ALTER TABLE "components" DROP CONSTRAINT "components_agentId_agents_id_fk";
+--> statement-breakpoint
+ALTER TABLE "components" DROP CONSTRAINT "components_roomId_rooms_id_fk";
+--> statement-breakpoint
+ALTER TABLE "components" DROP CONSTRAINT "components_worldId_worlds_id_fk";
+--> statement-breakpoint
+ALTER TABLE "components" DROP CONSTRAINT "components_sourceEntityId_entities_id_fk";
+--> statement-breakpoint
+ALTER TABLE "entities" DROP CONSTRAINT "entities_agentId_agents_id_fk";
+--> statement-breakpoint
+ALTER TABLE "goals" DROP CONSTRAINT "goals_userId_entities_id_fk";
+--> statement-breakpoint
+ALTER TABLE "goals" DROP CONSTRAINT "goals_agentId_agents_id_fk";
+--> statement-breakpoint
+ALTER TABLE "goals" DROP CONSTRAINT "goals_roomId_rooms_id_fk";
+--> statement-breakpoint
+ALTER TABLE "memories" DROP CONSTRAINT "memories_userId_entities_id_fk";
+--> statement-breakpoint
+ALTER TABLE "memories" DROP CONSTRAINT "memories_agentId_agents_id_fk";
+--> statement-breakpoint
+ALTER TABLE "memories" DROP CONSTRAINT "memories_roomId_rooms_id_fk";
+--> statement-breakpoint
+ALTER TABLE "participants" DROP CONSTRAINT "participants_userId_entities_id_fk";
+--> statement-breakpoint
+ALTER TABLE "participants" DROP CONSTRAINT "participants_roomId_rooms_id_fk";
+--> statement-breakpoint
+ALTER TABLE "participants" DROP CONSTRAINT "participants_agentId_agents_id_fk";
+--> statement-breakpoint
+ALTER TABLE "relationships" DROP CONSTRAINT "relationships_sourceEntityId_entities_id_fk";
+--> statement-breakpoint
+ALTER TABLE "relationships" DROP CONSTRAINT "relationships_targetEntityId_entities_id_fk";
+--> statement-breakpoint
+ALTER TABLE "relationships" DROP CONSTRAINT "relationships_agentId_agents_id_fk";
+--> statement-breakpoint
+ALTER TABLE "rooms" DROP CONSTRAINT "rooms_agentId_agents_id_fk";
+--> statement-breakpoint
+ALTER TABLE "rooms" DROP CONSTRAINT "rooms_worldId_worlds_id_fk";
+--> statement-breakpoint
+ALTER TABLE "worlds" DROP CONSTRAINT "worlds_agentId_agents_id_fk";
+--> statement-breakpoint
+ALTER TABLE "cache" ALTER COLUMN "value" DROP DEFAULT;--> statement-breakpoint
+ALTER TABLE "cache" ALTER COLUMN "value" SET NOT NULL;--> statement-breakpoint
+ALTER TABLE "cache" ADD CONSTRAINT "cache_agentId_agents_id_fk" FOREIGN KEY ("agentId") REFERENCES "public"."agents"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "components" ADD CONSTRAINT "components_agentId_agents_id_fk" FOREIGN KEY ("agentId") REFERENCES "public"."agents"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "components" ADD CONSTRAINT "components_roomId_rooms_id_fk" FOREIGN KEY ("roomId") REFERENCES "public"."rooms"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "components" ADD CONSTRAINT "components_worldId_worlds_id_fk" FOREIGN KEY ("worldId") REFERENCES "public"."worlds"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "components" ADD CONSTRAINT "components_sourceEntityId_entities_id_fk" FOREIGN KEY ("sourceEntityId") REFERENCES "public"."entities"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "entities" ADD CONSTRAINT "entities_agentId_agents_id_fk" FOREIGN KEY ("agentId") REFERENCES "public"."agents"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "goals" ADD CONSTRAINT "goals_userId_entities_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."entities"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "goals" ADD CONSTRAINT "goals_agentId_agents_id_fk" FOREIGN KEY ("agentId") REFERENCES "public"."agents"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "goals" ADD CONSTRAINT "goals_roomId_rooms_id_fk" FOREIGN KEY ("roomId") REFERENCES "public"."rooms"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "memories" ADD CONSTRAINT "memories_userId_entities_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."entities"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "memories" ADD CONSTRAINT "memories_agentId_agents_id_fk" FOREIGN KEY ("agentId") REFERENCES "public"."agents"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "memories" ADD CONSTRAINT "memories_roomId_rooms_id_fk" FOREIGN KEY ("roomId") REFERENCES "public"."rooms"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "participants" ADD CONSTRAINT "participants_userId_entities_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."entities"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "participants" ADD CONSTRAINT "participants_roomId_rooms_id_fk" FOREIGN KEY ("roomId") REFERENCES "public"."rooms"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "participants" ADD CONSTRAINT "participants_agentId_agents_id_fk" FOREIGN KEY ("agentId") REFERENCES "public"."agents"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "relationships" ADD CONSTRAINT "relationships_sourceEntityId_entities_id_fk" FOREIGN KEY ("sourceEntityId") REFERENCES "public"."entities"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "relationships" ADD CONSTRAINT "relationships_targetEntityId_entities_id_fk" FOREIGN KEY ("targetEntityId") REFERENCES "public"."entities"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "relationships" ADD CONSTRAINT "relationships_agentId_agents_id_fk" FOREIGN KEY ("agentId") REFERENCES "public"."agents"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "rooms" ADD CONSTRAINT "rooms_agentId_agents_id_fk" FOREIGN KEY ("agentId") REFERENCES "public"."agents"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "rooms" ADD CONSTRAINT "rooms_worldId_worlds_id_fk" FOREIGN KEY ("worldId") REFERENCES "public"."worlds"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "worlds" ADD CONSTRAINT "worlds_agentId_agents_id_fk" FOREIGN KEY ("agentId") REFERENCES "public"."agents"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "agents" ADD CONSTRAINT "name_unique" UNIQUE("name");

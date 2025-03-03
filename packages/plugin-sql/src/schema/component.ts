@@ -9,10 +9,18 @@ import { worldTable } from "./worldTable";
 export const componentTable = pgTable("components", {
     id: uuid("id").primaryKey().defaultRandom(),
     entityId: uuid("entityId").notNull().references(() => entityTable.id),
-    agentId: uuid("agentId").notNull().references(() => agentTable.id),
-    roomId: uuid("roomId").notNull().references(() => roomTable.id),
-    worldId: uuid("worldId").references(() => worldTable.id),
-    sourceEntityId: uuid("sourceEntityId").references(() => entityTable.id),
+    agentId: uuid("agentId").notNull().references(() => agentTable.id, {
+        onDelete: "set null",
+    }),
+    roomId: uuid("roomId").notNull().references(() => roomTable.id, {
+        onDelete: "set null",
+    }),
+    worldId: uuid("worldId").references(() => worldTable.id, {
+        onDelete: "set null",
+    }),
+    sourceEntityId: uuid("sourceEntityId").references(() => entityTable.id, {
+        onDelete: "set null",
+    }),
     type: text("type").notNull(),
     data: jsonb("data").default(sql`'{}'::jsonb`),
     createdAt: numberTimestamp("createdAt")

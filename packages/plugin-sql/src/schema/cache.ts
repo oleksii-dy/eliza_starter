@@ -8,7 +8,9 @@ export const cacheTable = pgTable(
     {
         id: uuid("id").notNull().primaryKey().default(sql`gen_random_uuid()`),
         key: text("key").notNull(),
-        agentId: uuid("agentId").notNull().references(() => agentTable.id),
+        agentId: uuid("agentId").notNull().references(() => agentTable.id, {
+            onDelete: "set null",
+        }),
         value: jsonb("value").notNull(),
         createdAt: numberTimestamp("createdAt")
             .default(sql`now()`)
