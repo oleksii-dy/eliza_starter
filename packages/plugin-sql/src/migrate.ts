@@ -16,33 +16,37 @@ async function runMigrations() {
       await connectionManager.initialize();
       await connectionManager.runMigrations();
       await connectionManager.close();
+      console.log("PostgreSQL migrations completed successfully");
+      process.exit(0);
     } catch (error) {
       console.error("PostgreSQL migration failed:", error);
-      process.exitCode = 1;
-      return;
+      process.exit(1);
     }
-    return;
-  }
-
-  console.log("Using PGlite database");
-  const clientManager = new PGliteClientManager({
-    dataDir: "../../pglite"
-  });
-  
-  try {
-    await clientManager.initialize();
-    await clientManager.runMigrations();
-    console.log("Migrations completed successfully");
-    await clientManager.close();
-  } catch (error) {
-    console.error("Migration failed:", error);
+  } else {
+    console.log("Using PGlite database");
+    const clientManager = new PGliteClientManager({
+      dataDir: "../../pglite"
+    });
+    
     try {
+      await clientManager.initialize();
+      await clientManager.runMigrations();
+      console.log("PGlite migrations completed successfully");
       await clientManager.close();
-    } catch (closeError) {
-      console.error("Error during client close:", closeError);
+      process.exit(0);
+    } catch (error) {
+      console.error("PGlite migration failed:", error);
+      try {
+        await clientManager.close();
+      } catch (closeError) {
+        console.error("Failed to close PGlite connection:", closeError);
+      }
+      process.exit(1);
     }
-    process.exitCode = 1;
   }
 }
 
-runMigrations().catch(console.error);
+runMigrations().catch((error) => {
+  console.error("Unhandled error in migrations:", error);
+  process.exit(1);
+});
