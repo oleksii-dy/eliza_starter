@@ -55,7 +55,6 @@ class ProviderRegistry {
 
         this.enabledSources = sourceStrings
             .filter((s) => {
-                // Check if the source is a valid ProviderName
                 const isValid = Object.values(ProviderName).includes(
                     s as ProviderName
                 );
@@ -66,7 +65,6 @@ class ProviderRegistry {
             })
             .map((s) => s as ProviderName);
 
-        // If no valid sources, use default
         if (this.enabledSources.length === 0) {
             this.enabledSources = [];
             elizaLogger.info(

@@ -34,17 +34,14 @@ export class DePINScanProvider {
     }
 
     private async getCachedData<T>(key: string): Promise<T | null> {
-        // Check in-memory cache first
         try {
             const cachedData = this.cache.get<T>(key);
             if (cachedData) {
                 return cachedData;
             }
 
-            // Check file-based cache
             const fileCachedData = await this.readFromCache<T>(key);
             if (fileCachedData) {
-                // Populate in-memory cache
                 this.cache.set(key, fileCachedData);
                 return fileCachedData;
             }
@@ -60,10 +57,8 @@ export class DePINScanProvider {
     }
 
     private async setCachedData<T>(cacheKey: string, data: T): Promise<void> {
-        // Set in-memory cache
         this.cache.set(cacheKey, data);
 
-        // Write to file-based cache
         await this.writeToCache(cacheKey, data);
     }
 
@@ -104,16 +99,15 @@ export class DePINScanProvider {
         } else if (typeof value === "number") {
             num = value;
         } else if (typeof value === "string") {
-            // Parse string to number
             num = parseFloat(value);
         } else {
-            return ""; // Handle unexpected types gracefully
+            return "";
         }
 
-        if (isNaN(num)) return value.toString(); // Return as string if not a valid number
+        if (isNaN(num)) return value.toString();
         if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
         if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
-        return num.toString(); // Return original number as string if no abbreviation is needed
+        return num.toString();
     };
 
     private parseProjects(projects: DepinScanProject[]): DepinScanProject[] {
@@ -179,16 +173,13 @@ export const depinDataProvider: Provider = {
             const depinscanMetrics = await depinscan.getDailyMetrics();
             const depinscanProjects = await depinscan.getProjects();
 
-            // Get a random project
             const randomProject =
                 depinscanProjects[
                     Math.floor(Math.random() * depinscanProjects.length)
                 ];
 
-            // Format the metrics with textual labels
             const metricsFormatted = depinscan.formatMetrics(depinscanMetrics);
 
-            // Format the random project with textual labels
             const projectFormatted = depinscan.formatProject(randomProject);
 
             return `

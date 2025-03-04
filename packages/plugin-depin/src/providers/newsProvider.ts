@@ -98,7 +98,6 @@ class NewsProvider implements Provider {
         _state?: State
     ): Promise<string> {
         try {
-            // Try to get cached news data
             const cachedNews = await this.readFromCache<NewsAPIResponse>(
                 this.NEWS_CACHE_KEY
             );
@@ -109,10 +108,8 @@ class NewsProvider implements Provider {
                 elizaLogger.info("Using cached technology news");
                 newsData = cachedNews;
             } else {
-                // Fetch fresh news data
                 newsData = await this.fetchNewsData();
 
-                // Cache the news data
                 await this.writeToCache(
                     this.NEWS_CACHE_KEY,
                     newsData,
@@ -120,7 +117,6 @@ class NewsProvider implements Provider {
                 );
             }
 
-            // Format and return the news data
             return this.formatNewsData(newsData);
         } catch (error) {
             elizaLogger.error("Error fetching technology news:", error);

@@ -6,7 +6,6 @@ import { weatherForecastProvider } from "../providers/weatherForecastProvider";
 import { newsProvider } from "../providers/newsProvider";
 import { l1DataProvider } from "../providers/l1DataProvider";
 
-// Mock the providers
 vi.mock("../providers/depinData", () => ({
     depinDataProvider: {
         get: vi.fn().mockResolvedValue("Depin Data Result"),
@@ -37,7 +36,6 @@ vi.mock("../providers/l1DataProvider", () => ({
     },
 }));
 
-// Mock the elizaLogger
 vi.mock("@elizaos/core", async () => {
     const actual = await vi.importActual("@elizaos/core");
     return {
@@ -56,10 +54,8 @@ describe("SentaiProvider", () => {
     let mockState: any;
 
     beforeEach(() => {
-        // Reset mocks
         vi.clearAllMocks();
 
-        // Setup mock runtime, message, and state
         mockRuntime = {
             getSetting: vi.fn(),
             cacheManager: {},

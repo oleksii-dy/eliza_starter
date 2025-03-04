@@ -9,7 +9,6 @@ import {
 import { z } from "zod";
 import { getRawDataFromQuicksilver } from "../services/quicksilver";
 
-// Define the schema for L1 stats
 const L1StatsSchema = z.object({
     tvl: z.number().describe("Total Value Locked in the chain"),
     contracts: z.number().describe("Number of deployed contracts"),
@@ -25,7 +24,6 @@ const L1StatsSchema = z.object({
     tps: z.number().describe("Transactions per second"),
 });
 
-// Infer the type from the schema
 type L1Stats = z.infer<typeof L1StatsSchema>;
 
 class L1DataProvider implements Provider {
@@ -70,7 +68,6 @@ class L1DataProvider implements Provider {
 
         const l1Data = await getRawDataFromQuicksilver("l1data", {});
 
-        // Validate the data against the schema
         try {
             return L1StatsSchema.parse(l1Data);
         } catch (error) {
@@ -113,10 +110,8 @@ class L1DataProvider implements Provider {
                 elizaLogger.info("Using cached L1 blockchain statistics");
                 l1Data = cachedL1Data;
             } else {
-                // Fetch fresh L1 data
                 l1Data = await this.fetchL1Data();
 
-                // Cache the L1 data
                 await this.writeToCache(
                     this.L1_CACHE_KEY,
                     l1Data,
@@ -124,7 +119,6 @@ class L1DataProvider implements Provider {
                 );
             }
 
-            // Format and return the L1 data
             return this.formatL1Data(l1Data);
         } catch (error) {
             elizaLogger.error(

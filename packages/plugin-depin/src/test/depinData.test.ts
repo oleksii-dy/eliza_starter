@@ -3,7 +3,6 @@ import { depinDataProvider } from "../providers/depinData";
 import { elizaLogger } from "@elizaos/core";
 import { DepinScanMetrics, DepinScanProject } from "../types/depin";
 
-// Mock the external dependencies
 vi.mock("@elizaos/core", async () => {
     const actual = await vi.importActual("@elizaos/core");
     return {
@@ -16,7 +15,6 @@ vi.mock("@elizaos/core", async () => {
     };
 });
 
-// Mock NodeCache
 vi.mock("node-cache", () => {
     return {
         default: vi.fn().mockImplementation(() => {
@@ -29,7 +27,6 @@ vi.mock("node-cache", () => {
     };
 });
 
-// Mock the getRawDataFromQuicksilver function
 vi.mock("../services/quicksilver", () => ({
     getRawDataFromQuicksilver: vi.fn().mockImplementation((endpoint) => {
         if (endpoint === "depin-metrics") {
@@ -81,7 +78,6 @@ vi.mock("../services/quicksilver", () => ({
     }),
 }));
 
-// Import the mocked functions for assertions
 import { getRawDataFromQuicksilver } from "../services/quicksilver";
 
 describe("DePINScanProvider", () => {
@@ -91,17 +87,14 @@ describe("DePINScanProvider", () => {
     let mockCacheManager: any;
 
     beforeEach(() => {
-        // Reset mocks
         vi.clearAllMocks();
 
-        // Setup mock cache manager
         mockCacheManager = {
             get: vi.fn().mockResolvedValue(undefined),
             set: vi.fn().mockResolvedValue(undefined),
             delete: vi.fn().mockResolvedValue(undefined),
         };
 
-        // Setup mock runtime, message, and state
         mockRuntime = {
             getSetting: vi.fn(),
             cacheManager: mockCacheManager,
@@ -109,13 +102,11 @@ describe("DePINScanProvider", () => {
         mockMessage = { content: { text: "test message" } };
         mockState = {};
 
-        // Mock Math.random to always return 0 for predictable tests
         vi.spyOn(global.Math, "random").mockReturnValue(0);
     });
 
     describe("get", () => {
         it("should fetch and format DePIN data when not cached", async () => {
-            // Ensure cache miss
             mockCacheManager.get.mockResolvedValue(undefined);
 
             const result = await depinDataProvider.get(
@@ -124,10 +115,8 @@ describe("DePINScanProvider", () => {
                 mockState
             );
 
-            // Verify cache was checked
             expect(mockCacheManager.get).toHaveBeenCalled();
 
-            // Verify data was fetched from service
             expect(getRawDataFromQuicksilver).toHaveBeenCalledWith(
                 "depin-metrics",
                 { isLatest: true }
@@ -137,10 +126,8 @@ describe("DePINScanProvider", () => {
                 {}
             );
 
-            // Verify cache was updated
             expect(mockCacheManager.set).toHaveBeenCalled();
 
-            // Verify the formatted output
             expect(result).toContain("DePINScan Daily Metrics");
             expect(result).toContain("**Date**: 2023-06-01");
             expect(result).toContain("**Total Projects**: 123");
@@ -155,7 +142,6 @@ describe("DePINScanProvider", () => {
         });
 
         it("should use cached DePIN data when available", async () => {
-            // Mock cached metrics data
             const cachedMetrics: DepinScanMetrics = {
                 date: "2023-06-01",
                 total_projects: "123",
@@ -163,7 +149,6 @@ describe("DePINScanProvider", () => {
                 total_device: "500000",
             };
 
-            // Mock cached projects data
             const cachedProjects: DepinScanProject[] = [
                 {
                     project_name: "Project A",
@@ -184,7 +169,6 @@ describe("DePINScanProvider", () => {
                 },
             ];
 
-            // Setup cache hits for both metrics and projects
             mockCacheManager.get.mockImplementation((key) => {
                 if (key.includes("depinscanDailyMetrics")) {
                     return Promise.resolve(cachedMetrics);
@@ -200,20 +184,16 @@ describe("DePINScanProvider", () => {
                 mockState
             );
 
-            // Verify cache was checked
             expect(mockCacheManager.get).toHaveBeenCalled();
 
-            // Verify no API calls were made
             expect(getRawDataFromQuicksilver).not.toHaveBeenCalled();
 
-            // Verify the formatted output
             expect(result).toContain("DePINScan Daily Metrics");
             expect(result).toContain("**Date**: 2023-06-01");
             expect(result).toContain("DePIN Project: Project A");
         });
 
         it("should handle cache errors gracefully", async () => {
-            // Mock cache error
             mockCacheManager.get.mockRejectedValue(new Error("Cache error"));
 
             const result = await depinDataProvider.get(
@@ -222,14 +202,12 @@ describe("DePINScanProvider", () => {
                 mockState
             );
 
-            // Should still work by fetching from service
             expect(getRawDataFromQuicksilver).toHaveBeenCalled();
             expect(result).toContain("DePINScan Daily Metrics");
             expect(elizaLogger.error).toHaveBeenCalled();
         });
 
         it("should handle API errors", async () => {
-            // Mock API error
             (getRawDataFromQuicksilver as any).mockRejectedValueOnce(
                 new Error("API error")
             );
@@ -253,7 +231,6 @@ describe("DePINScanProvider", () => {
                 mockState
             );
 
-            // Check for abbreviated numbers in the output
             expect(result).toContain("**Market Cap**: 5.00B");
             expect(result).toContain("**Market Cap**: 1.00B");
         });
@@ -265,7 +242,6 @@ describe("DePINScanProvider", () => {
                 mockState
             );
 
-            // Check for formatted project data
             expect(result).toContain("DePIN Project: Project A");
             expect(result).toContain("**Token**: TKNA");
             expect(result).toContain("**Description**: Description for Project A");
@@ -288,7 +264,6 @@ describe("DePINScanProvider", () => {
                 mockState
             );
 
-            // Check for formatted metrics data
             expect(result).toContain("DePINScan Daily Metrics");
             expect(result).toContain("**Date**: 2023-06-01");
             expect(result).toContain("**Total Projects**: 123");

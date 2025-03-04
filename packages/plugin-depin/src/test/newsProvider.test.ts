@@ -2,7 +2,6 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { newsProvider } from "../providers/newsProvider";
 import { elizaLogger } from "@elizaos/core";
 
-// Mock the external dependencies
 vi.mock("@elizaos/core", async () => {
     const actual = await vi.importActual("@elizaos/core");
     return {
@@ -15,7 +14,6 @@ vi.mock("@elizaos/core", async () => {
     };
 });
 
-// Mock the getRawDataFromQuicksilver function
 vi.mock("../services/quicksilver", () => ({
     getRawDataFromQuicksilver: vi
         .fn()
@@ -55,7 +53,6 @@ vi.mock("../services/quicksilver", () => ({
         }),
 }));
 
-// Import the mocked functions for assertions
 import { getRawDataFromQuicksilver } from "../services/quicksilver";
 
 describe("NewsProvider", () => {
@@ -65,17 +62,14 @@ describe("NewsProvider", () => {
     let mockCacheManager: any;
 
     beforeEach(() => {
-        // Reset mocks
         vi.clearAllMocks();
 
-        // Setup mock cache manager
         mockCacheManager = {
             get: vi.fn().mockResolvedValue(undefined),
             set: vi.fn().mockResolvedValue(undefined),
             delete: vi.fn().mockResolvedValue(undefined),
         };
 
-        // Setup mock runtime, message, and state
         mockRuntime = {
             getSetting: vi.fn(),
             cacheManager: mockCacheManager,
@@ -86,7 +80,6 @@ describe("NewsProvider", () => {
 
     describe("get", () => {
         it("should fetch and format news data when not cached", async () => {
-            // Ensure cache miss
             mockCacheManager.get.mockResolvedValue(undefined);
 
             const result = await newsProvider.get(
@@ -95,18 +88,15 @@ describe("NewsProvider", () => {
                 mockState
             );
 
-            // Verify cache was checked
             expect(mockCacheManager.get).toHaveBeenCalledWith(
                 "news/technology"
             );
 
-            // Verify data was fetched from service
             expect(getRawDataFromQuicksilver).toHaveBeenCalledWith("news", {
                 category: "technology",
                 q: "",
             });
 
-            // Verify cache was updated
             expect(mockCacheManager.set).toHaveBeenCalledTimes(1);
             expect(mockCacheManager.set).toHaveBeenCalledWith(
                 "news/technology",
@@ -114,7 +104,6 @@ describe("NewsProvider", () => {
                 expect.any(Object)
             );
 
-            // Verify the formatted output
             expect(result).toContain("Technology News Headlines");
             expect(result).toContain("New AI breakthrough announced");
             expect(result).toContain("The future of quantum computing");
@@ -123,7 +112,6 @@ describe("NewsProvider", () => {
         });
 
         it("should use cached news data when available", async () => {
-            // Mock cached news data
             const cachedNewsData = {
                 status: "ok",
                 totalResults: 2,
@@ -161,25 +149,20 @@ describe("NewsProvider", () => {
                 mockState
             );
 
-            // Verify cache was checked
             expect(mockCacheManager.get).toHaveBeenCalledWith(
                 "news/technology"
             );
 
-            // Verify no API calls were made
             expect(getRawDataFromQuicksilver).not.toHaveBeenCalled();
 
-            // Verify no cache updates were made
             expect(mockCacheManager.set).not.toHaveBeenCalled();
 
-            // Verify the formatted output
             expect(result).toContain("Technology News Headlines");
             expect(result).toContain("New AI breakthrough announced");
             expect(result).toContain("The future of quantum computing");
         });
 
         it("should handle empty news data", async () => {
-            // Mock empty news data
             (getRawDataFromQuicksilver as any).mockResolvedValueOnce({
                 status: "ok",
                 totalResults: 0,
@@ -196,7 +179,6 @@ describe("NewsProvider", () => {
         });
 
         it("should handle cache errors gracefully", async () => {
-            // Mock cache error
             mockCacheManager.get.mockRejectedValue(new Error("Cache error"));
 
             const result = await newsProvider.get(
@@ -205,14 +187,12 @@ describe("NewsProvider", () => {
                 mockState
             );
 
-            // Should still work by fetching from service
             expect(getRawDataFromQuicksilver).toHaveBeenCalled();
             expect(result).toContain("Technology News Headlines");
             expect(elizaLogger.error).toHaveBeenCalled();
         });
 
         it("should handle API errors", async () => {
-            // Mock API error
             (getRawDataFromQuicksilver as any).mockRejectedValueOnce(
                 new Error("API error")
             );
@@ -228,7 +208,6 @@ describe("NewsProvider", () => {
         });
 
         it("should limit the number of headlines to MAX_HEADLINES", async () => {
-            // Create a large array of articles
             const manyArticles = Array(30)
                 .fill(0)
                 .map((_, i) => ({
@@ -254,7 +233,6 @@ describe("NewsProvider", () => {
                 mockState
             );
 
-            // Count the number of headlines in the result
             const headlineCount = (result?.match(/\d+\. \*\*/g) || []).length;
 
             expect(headlineCount).toBeLessThanOrEqual(20);
