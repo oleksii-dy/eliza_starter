@@ -10,12 +10,14 @@ import { depinDataProvider } from "./depinData";
 import { weatherDataProvider } from "./weatherDataProvider";
 import { weatherForecastProvider } from "./weatherForecastProvider";
 import { newsProvider } from "./newsProvider";
+import { l1DataProvider } from "./l1DataProvider";
 
 export enum ProviderName {
     DEPIN = "depin",
     WEATHER_CURRENT = "weather-current",
     WEATHER_FORECAST = "weather-forecast",
     NEWS = "news",
+    L1_DATA = "l1-data",
 }
 
 interface ProviderTool {
@@ -32,6 +34,7 @@ class ProviderRegistry {
         this.register(ProviderName.WEATHER_CURRENT, weatherDataProvider);
         this.register(ProviderName.WEATHER_FORECAST, weatherForecastProvider);
         this.register(ProviderName.NEWS, newsProvider);
+        this.register(ProviderName.L1_DATA, l1DataProvider);
 
         this.setEnabledSources(runtime);
     }
