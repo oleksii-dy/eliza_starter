@@ -3,6 +3,7 @@ import { sentaiProvider, ProviderName } from "../providers/sentai";
 import { depinDataProvider } from "../providers/depinData";
 import { weatherDataProvider } from "../providers/weatherDataProvider";
 import { weatherForecastProvider } from "../providers/weatherForecastProvider";
+import { newsProvider } from "../providers/newsProvider";
 
 // Mock the providers
 vi.mock("../providers/depinData", () => ({
@@ -20,6 +21,12 @@ vi.mock("../providers/weatherDataProvider", () => ({
 vi.mock("../providers/weatherForecastProvider", () => ({
     weatherForecastProvider: {
         get: vi.fn().mockResolvedValue("Weather Forecast Result"),
+    },
+}));
+
+vi.mock("../providers/newsProvider", () => ({
+    newsProvider: {
+        get: vi.fn().mockResolvedValue("Technology News Result"),
     },
 }));
 
@@ -64,15 +71,12 @@ describe("SentaiProvider", () => {
                 mockState
             );
 
-            expect(depinDataProvider.get).toHaveBeenCalledTimes(0);
-            expect(weatherDataProvider.get).toHaveBeenCalledTimes(0);
-            expect(weatherForecastProvider.get).toHaveBeenCalledTimes(0);
             expect(result).toBe("No data sources were specified or available.");
         });
 
         it("should use sources from SENTAI_SOURCES setting", async () => {
             mockRuntime.getSetting.mockReturnValue(
-                `${ProviderName.DEPIN},${ProviderName.WEATHER_CURRENT}`
+                `${ProviderName.DEPIN},${ProviderName.NEWS}`
             );
 
             const result = await sentaiProvider.get(
@@ -82,10 +86,12 @@ describe("SentaiProvider", () => {
             );
 
             expect(depinDataProvider.get).toHaveBeenCalledTimes(1);
-            expect(weatherDataProvider.get).toHaveBeenCalledTimes(1);
+            expect(weatherDataProvider.get).toHaveBeenCalledTimes(0);
             expect(weatherForecastProvider.get).toHaveBeenCalledTimes(0);
+            expect(newsProvider.get).toHaveBeenCalledTimes(1);
             expect(result).toContain("Depin Data Result");
-            expect(result).toContain("Weather Data Result");
+            expect(result).toContain("Technology News Result");
+            expect(result).not.toContain("Weather Data Result");
             expect(result).not.toContain("Weather Forecast Result");
         });
 
@@ -103,6 +109,7 @@ describe("SentaiProvider", () => {
             expect(depinDataProvider.get).toHaveBeenCalledTimes(1);
             expect(weatherDataProvider.get).toHaveBeenCalledTimes(0);
             expect(weatherForecastProvider.get).toHaveBeenCalledTimes(0);
+            expect(newsProvider.get).toHaveBeenCalledTimes(0);
             expect(result).toContain("Depin Data Result");
         });
 
@@ -120,6 +127,7 @@ describe("SentaiProvider", () => {
             expect(depinDataProvider.get).toHaveBeenCalledTimes(0);
             expect(weatherDataProvider.get).toHaveBeenCalledTimes(0);
             expect(weatherForecastProvider.get).toHaveBeenCalledTimes(0);
+            expect(newsProvider.get).toHaveBeenCalledTimes(0);
             expect(result).toBe("No data sources were specified or available.");
         });
     });
@@ -142,7 +150,7 @@ describe("SentaiProvider", () => {
 
         it("should handle errors with two providers where one provider malfunctions", async () => {
             mockRuntime.getSetting.mockReturnValue(
-                `${ProviderName.DEPIN},${ProviderName.WEATHER_CURRENT}`
+                `${ProviderName.DEPIN},${ProviderName.NEWS}`
             );
             (depinDataProvider.get as any).mockRejectedValueOnce(
                 new Error("Provider error")
@@ -154,7 +162,7 @@ describe("SentaiProvider", () => {
                 mockState
             );
 
-            expect(result).toBe("Weather Data Result");
+            expect(result).toBe("Technology News Result");
         });
 
         it("should handle null results from providers", async () => {
@@ -200,7 +208,7 @@ describe("SentaiProvider", () => {
 
         it("should combine results from multiple providers", async () => {
             mockRuntime.getSetting.mockReturnValue(
-                `${ProviderName.DEPIN},${ProviderName.WEATHER_CURRENT}`
+                `${ProviderName.DEPIN},${ProviderName.NEWS}`
             );
 
             const result = await sentaiProvider.get(
@@ -209,7 +217,20 @@ describe("SentaiProvider", () => {
                 mockState
             );
 
-            expect(result).toBe("Depin Data Result\n\nWeather Data Result");
+            expect(result).toBe("Depin Data Result\n\nTechnology News Result");
+        });
+
+        it("should include news provider when specified", async () => {
+            mockRuntime.getSetting.mockReturnValue(ProviderName.NEWS);
+
+            const result = await sentaiProvider.get(
+                mockRuntime,
+                mockMessage,
+                mockState
+            );
+
+            expect(newsProvider.get).toHaveBeenCalledTimes(1);
+            expect(result).toBe("Technology News Result");
         });
     });
 });

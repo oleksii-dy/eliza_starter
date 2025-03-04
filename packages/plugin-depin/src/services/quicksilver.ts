@@ -21,10 +21,22 @@ type QuicksilverTool =
     | "nuclear"
     | "mapbox";
 
+type NewsToolParams = {
+    category:
+        | "business"
+        | "entertainment"
+        | "general"
+        | "health"
+        | "science"
+        | "sports"
+        | "technology";
+    q: string;
+};
+
 type ToolParams = {
     "weather-current": { lat: number; lon: number };
     "weather-forecast": { lat: number; lon: number };
-    news: Record<string, never>;
+    news: NewsToolParams;
     "depin-metrics": { isLatest?: boolean };
     "depin-projects": Record<string, never>;
     l1data: Record<string, never>;

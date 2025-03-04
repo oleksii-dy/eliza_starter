@@ -9,11 +9,13 @@ import {
 import { depinDataProvider } from "./depinData";
 import { weatherDataProvider } from "./weatherDataProvider";
 import { weatherForecastProvider } from "./weatherForecastProvider";
+import { newsProvider } from "./newsProvider";
 
 export enum ProviderName {
     DEPIN = "depin",
     WEATHER_CURRENT = "weather-current",
     WEATHER_FORECAST = "weather-forecast",
+    NEWS = "news",
 }
 
 interface ProviderTool {
@@ -29,6 +31,7 @@ class ProviderRegistry {
         this.register(ProviderName.DEPIN, depinDataProvider);
         this.register(ProviderName.WEATHER_CURRENT, weatherDataProvider);
         this.register(ProviderName.WEATHER_FORECAST, weatherForecastProvider);
+        this.register(ProviderName.NEWS, newsProvider);
 
         this.setEnabledSources(runtime);
     }
@@ -39,7 +42,7 @@ class ProviderRegistry {
 
     getProvider(name: ProviderName): Provider | null {
         const providerTool = this.providers.find((p) => p.name === name);
-        return providerTool.provider;
+        return providerTool?.provider || null;
     }
 
     setEnabledSources(runtime: IAgentRuntime): void {
@@ -48,20 +51,31 @@ class ProviderRegistry {
         const sourceStrings = sourcesString.split(",").map((s) => s.trim());
 
         this.enabledSources = sourceStrings
-            .filter((source) =>
-                Object.values(ProviderName).includes(source as ProviderName)
-            )
-            .map((source) => source as ProviderName);
+            .filter((s) => {
+                // Check if the source is a valid ProviderName
+                const isValid = Object.values(ProviderName).includes(
+                    s as ProviderName
+                );
+                if (!isValid && s) {
+                    elizaLogger.warn(`Invalid source: ${s}`);
+                }
+                return isValid;
+            })
+            .map((s) => s as ProviderName);
 
-        const invalidSources = sourceStrings.filter(
-            (source) =>
-                !Object.values(ProviderName).includes(source as ProviderName)
-        );
-        if (invalidSources.length > 0) {
-            elizaLogger.warn(
-                `Invalid provider sources found and ignored: ${invalidSources.join(", ")}`
+        // If no valid sources, use default
+        if (this.enabledSources.length === 0) {
+            this.enabledSources = [];
+            elizaLogger.info(
+                `No valid sources specified, using defaults: ${this.enabledSources.join(
+                    ","
+                )}`
             );
         }
+    }
+
+    getEnabledSources(): ProviderName[] {
+        return this.enabledSources;
     }
 
     async fetchFromEnabledSources(
@@ -72,47 +86,41 @@ class ProviderRegistry {
         const results: string[] = [];
 
         for (const source of this.enabledSources) {
-            const provider = this.getProvider(source);
-            elizaLogger.info(`Fetching data from ${source} provider`);
-            const result = await this.fetchFromSource(
-                runtime,
-                message,
-                provider,
-                state
-            );
-            if (result) {
-                results.push(result);
+            try {
+                const provider = this.getProvider(source);
+                if (!provider) {
+                    elizaLogger.warn(
+                        `Provider not found for source: ${source}`
+                    );
+                    continue;
+                }
+
+                elizaLogger.info(`Fetching data from provider: ${source}`);
+                const result = await provider.get(runtime, message, state);
+                if (result) {
+                    results.push(result);
+                }
+            } catch (error) {
+                elizaLogger.error(
+                    `Error fetching data from provider ${source}:`,
+                    error
+                );
             }
         }
 
         return results;
     }
-
-    async fetchFromSource(
-        runtime: IAgentRuntime,
-        message: Memory,
-        provider: Provider,
-        state?: State
-    ): Promise<string | null> {
-        try {
-            const result = await provider.get(runtime, message, state);
-            return result;
-        } catch (error) {
-            elizaLogger.error(`Error fetching from provider: ${error.message}`);
-            return null;
-        }
-    }
 }
 
-export const sentaiProvider: Provider = {
+class SentaiProvider implements Provider {
     async get(
         runtime: IAgentRuntime,
         message: Memory,
         state?: State
     ): Promise<string | null> {
         try {
-            const providerRegistry = new ProviderRegistry(runtime);
-            const results = await providerRegistry.fetchFromEnabledSources(
+            const registry = new ProviderRegistry(runtime);
+            const results = await registry.fetchFromEnabledSources(
                 runtime,
                 message,
                 state
@@ -124,8 +132,10 @@ export const sentaiProvider: Provider = {
 
             return results.join("\n\n");
         } catch (error) {
-            elizaLogger.error("Error in Sentai provider:", error.message);
+            elizaLogger.error("Error in SentaiProvider:", error.message);
             return null;
         }
-    },
-};
+    }
+}
+
+export const sentaiProvider = new SentaiProvider();
