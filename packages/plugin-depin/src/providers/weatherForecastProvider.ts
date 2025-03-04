@@ -78,13 +78,12 @@ class WeatherForecastProvider {
     async getCoordinates(city: string): Promise<{ lat: number; lon: number }> {
         const cacheKey = `${this.COORDINATES_CACHE_KEY}/${city}`;
 
-        const cachedCoordinates = await this.readFromCache<{
-            lat: number;
-            lon: number;
-        }>(cacheKey);
+        const cachedCoordinates = await this.readFromCache<any>(cacheKey);
         if (cachedCoordinates) {
             elizaLogger.info(`Using cached coordinates for ${city}`);
-            return cachedCoordinates;
+            const [lon, lat] =
+                cachedCoordinates.features[0].geometry.coordinates;
+            return { lat, lon };
         }
 
         elizaLogger.info(`Fetching coordinates for ${city}`);
@@ -94,7 +93,9 @@ class WeatherForecastProvider {
 
         await this.writeToCache(cacheKey, coordinates);
 
-        return coordinates;
+        const [lon, lat] = coordinates.features[0].geometry.coordinates;
+
+        return { lat, lon };
     }
 
     async getWeatherData(

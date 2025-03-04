@@ -26,7 +26,7 @@ class NewsProvider implements Provider {
     private cacheManager: ICacheManager;
     private readonly NEWS_CACHE_KEY = "news/technology";
     private readonly NEWS_CACHE_TTL = 60 * 60; // 1 hour in seconds
-    private readonly MAX_HEADLINES = 20;
+    private readonly MAX_HEADLINES = 10;
 
     constructor(runtime: IAgentRuntime) {
         this.cacheManager = runtime.cacheManager;

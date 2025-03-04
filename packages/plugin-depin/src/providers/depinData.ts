@@ -133,7 +133,7 @@ export class DePINScanProvider {
     }
 
     formatProject(project: DepinScanProject): string {
-        return `## DePIN Project: ${project.project_name}
+        return `## DePINScan Random Project: ${project.project_name}
 
 - **Token**: ${project.token || "N/A"}
 - **Description**: ${project.description || "N/A"}
@@ -154,10 +154,10 @@ export class DePINScanProvider {
     formatMetrics(metrics: DepinScanMetrics): string {
         return `## DePINScan Daily Metrics
 
-- **Date**: ${metrics.date || "N/A"}
-- **Total Projects**: ${metrics.total_projects || "N/A"}
-- **Market Cap**: ${this.abbreviateNumber(metrics.market_cap) || "N/A"}
-- **Total Devices**: ${metrics.total_device || "N/A"}
+- **Date**: ${metrics[0].date || "N/A"}
+- **Total Projects**: ${metrics[0].total_projects || "N/A"}
+- **Market Cap**: ${this.abbreviateNumber(metrics[0].market_cap) || "N/A"}
+- **Total Devices**: ${metrics[0].total_device || "N/A"}
 `;
     }
 }
