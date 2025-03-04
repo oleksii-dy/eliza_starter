@@ -148,7 +148,7 @@ export const weatherDataProvider: Provider = {
         runtime: IAgentRuntime,
         _message: Memory,
         _state?: State
-    ): Promise<string | null> {
+    ): Promise<string> {
         try {
             const weatherDataProvider = new WeatherDataProvider(runtime);
             const weather =

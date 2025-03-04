@@ -223,7 +223,7 @@ describe("NewsProvider", () => {
                 mockState
             );
 
-            expect(result).toBeNull();
+            expect(result).toBe("");
             expect(elizaLogger.error).toHaveBeenCalled();
         });
 

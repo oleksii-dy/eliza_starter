@@ -96,7 +96,7 @@ class NewsProvider implements Provider {
         _runtime: IAgentRuntime,
         _message: Memory,
         _state?: State
-    ): Promise<string | null> {
+    ): Promise<string> {
         try {
             // Try to get cached news data
             const cachedNews = await this.readFromCache<NewsAPIResponse>(
@@ -124,7 +124,7 @@ class NewsProvider implements Provider {
             return this.formatNewsData(newsData);
         } catch (error) {
             elizaLogger.error("Error fetching technology news:", error);
-            return null;
+            return "";
         }
     }
 }

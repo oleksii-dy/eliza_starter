@@ -194,7 +194,7 @@ export const depinDataProvider: Provider = {
         runtime: IAgentRuntime,
         _message: Memory,
         _state?: State
-    ): Promise<string | null> {
+    ): Promise<string> {
         try {
             const depinscan = new DePINScanProvider(runtime.cacheManager);
             const depinscanMetrics = await depinscan.getDailyMetrics();
@@ -214,7 +214,7 @@ export const depinDataProvider: Provider = {
             `;
         } catch (error) {
             elizaLogger.error("Error in DePIN data provider:", error.message);
-            return null;
+            return "";
         }
     },
 };

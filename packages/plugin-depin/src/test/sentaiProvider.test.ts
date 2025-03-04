@@ -189,7 +189,7 @@ describe("SentaiProvider", () => {
                 mockState
             );
 
-            expect(result).toBe(null);
+            expect(result).toBe("");
         });
     });
 

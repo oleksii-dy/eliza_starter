@@ -117,7 +117,7 @@ class SentaiProvider implements Provider {
         runtime: IAgentRuntime,
         message: Memory,
         state?: State
-    ): Promise<string | null> {
+    ): Promise<string> {
         try {
             const registry = new ProviderRegistry(runtime);
             const results = await registry.fetchFromEnabledSources(
@@ -133,7 +133,7 @@ class SentaiProvider implements Provider {
             return results.join("\n\n");
         } catch (error) {
             elizaLogger.error("Error in SentaiProvider:", error.message);
-            return null;
+            return "";
         }
     }
 }
