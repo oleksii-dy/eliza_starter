@@ -19,7 +19,13 @@ vi.mock("../services/quicksilver", () => ({
         .fn()
         .mockImplementation((endpoint, params) => {
             if (endpoint === "mapbox") {
-                return Promise.resolve({ lat: 40.7128, lon: -74.006 });
+                return Promise.resolve({
+                    features: [
+                        {
+                            geometry: { coordinates: [-74.006, 40.7128] },
+                        },
+                    ],
+                });
             } else if (endpoint === "weather-current") {
                 return Promise.resolve({
                     location_name: "New York",
@@ -105,7 +111,13 @@ describe("WeatherDataProvider", () => {
         it("should use cached coordinates when available", async () => {
             mockCacheManager.get.mockImplementation((key) => {
                 if (key.includes("weather/coordinates")) {
-                    return Promise.resolve({ lat: 40.7128, lon: -74.006 });
+                    return Promise.resolve({
+                        features: [
+                            {
+                                geometry: { coordinates: [-74.006, 40.7128] },
+                            },
+                        ],
+                    });
                 }
                 return Promise.resolve(undefined);
             });
@@ -162,7 +174,13 @@ describe("WeatherDataProvider", () => {
 
             mockCacheManager.get.mockImplementation((key) => {
                 if (key.includes("weather/coordinates")) {
-                    return Promise.resolve({ lat: 40.7128, lon: -74.006 });
+                    return Promise.resolve({
+                        features: [
+                            {
+                                geometry: { coordinates: [-74.006, 40.7128] },
+                            },
+                        ],
+                    });
                 } else if (key.includes("weather/current")) {
                     return Promise.resolve(cachedWeatherData);
                 }

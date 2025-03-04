@@ -30,12 +30,14 @@ vi.mock("node-cache", () => {
 vi.mock("../services/quicksilver", () => ({
     getRawDataFromQuicksilver: vi.fn().mockImplementation((endpoint) => {
         if (endpoint === "depin-metrics") {
-            return Promise.resolve({
-                date: "2023-06-01",
-                total_projects: "123",
-                market_cap: "5000000000",
-                total_device: "500000",
-            } as DepinScanMetrics);
+            return Promise.resolve([
+                {
+                    date: "2023-06-01",
+                    total_projects: "123",
+                    market_cap: "5000000000",
+                    total_device: "500000",
+                },
+            ] as DepinScanMetrics);
         } else if (endpoint === "depin-projects") {
             return Promise.resolve([
                 {
@@ -134,7 +136,7 @@ describe("DePINScanProvider", () => {
             expect(result).toContain("**Market Cap**: 5.00B");
             expect(result).toContain("**Total Devices**: 500000");
 
-            expect(result).toContain("DePIN Project: Project A");
+            expect(result).toContain("DePINScan Random Project: Project A");
             expect(result).toContain("**Token**: TKNA");
             expect(result).toContain("**Layer 1**: Ethereum, Polygon");
             expect(result).toContain("**Categories**: Computing, Storage");
@@ -142,12 +144,14 @@ describe("DePINScanProvider", () => {
         });
 
         it("should use cached DePIN data when available", async () => {
-            const cachedMetrics: DepinScanMetrics = {
-                date: "2023-06-01",
-                total_projects: "123",
-                market_cap: "5000000000",
-                total_device: "500000",
-            };
+            const cachedMetrics: DepinScanMetrics = [
+                {
+                    date: "2023-06-01",
+                    total_projects: "123",
+                    market_cap: "5000000000",
+                    total_device: "500000",
+                },
+            ];
 
             const cachedProjects: DepinScanProject[] = [
                 {
@@ -190,7 +194,7 @@ describe("DePINScanProvider", () => {
 
             expect(result).toContain("DePINScan Daily Metrics");
             expect(result).toContain("**Date**: 2023-06-01");
-            expect(result).toContain("DePIN Project: Project A");
+            expect(result).toContain("DePINScan Random Project: Project A");
         });
 
         it("should handle cache errors gracefully", async () => {
@@ -242,7 +246,7 @@ describe("DePINScanProvider", () => {
                 mockState
             );
 
-            expect(result).toContain("DePIN Project: Project A");
+            expect(result).toContain("DePINScan Random Project: Project A");
             expect(result).toContain("**Token**: TKNA");
             expect(result).toContain("**Description**: Description for Project A");
             expect(result).toContain("**Layer 1**: Ethereum, Polygon");
