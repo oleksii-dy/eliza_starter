@@ -5,8 +5,6 @@ import { config } from "dotenv";
 config({ path: "../../.env" });
 
 async function runMigrations() {
-  console.log("Running migrations");
-  console.log("POSTGRES_URL:", process.env.POSTGRES_URL);
   if (process.env.POSTGRES_URL) {
     console.log("Using PostgreSQL database");
     try {

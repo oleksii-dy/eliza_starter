@@ -69,17 +69,14 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
 
     private setupShutdownHandlers() {
         process.on("SIGINT", async () => {
-            logger.info("SIGINT received, initiating graceful shutdown...");
             await this.gracefulShutdown();
         });
 
         process.on("SIGTERM", async () => {
-            logger.info("SIGTERM received, initiating graceful shutdown...");
             await this.gracefulShutdown();
         });
 
         process.on("beforeExit", async () => {
-            logger.info("beforeExit received, initiating graceful shutdown...");
             await this.gracefulShutdown();
         });
     }
