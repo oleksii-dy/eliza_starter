@@ -10,27 +10,41 @@ import { getRawDataFromQuicksilver } from "../services/quicksilver";
 import { WeatherData } from "../types/depin";
 
 class WeatherDataProvider {
-    async getWeatherForRandomCity(
+    async getRandomCityWeather(
         runtime: IAgentRuntime
     ): Promise<WeatherData | null> {
+        const citiesArray = this.getCitiesArray(runtime);
+        const randomCity = this.pickRandomCity(citiesArray);
+        const coordinates = await this.getCoordinates(randomCity);
+        const weather = await this.getWeatherData(coordinates);
+
+        return weather;
+    }
+
+    pickRandomCity(citiesArray: string[]) {
+        return citiesArray[Math.floor(Math.random() * citiesArray.length)];
+    }
+
+    getCitiesArray(runtime: IAgentRuntime) {
         const cities = runtime.getSetting("WEATHER_CITIES") || "";
         if (!cities) {
-            elizaLogger.error("WEATHER_CITIES is not set");
-            return null;
+            throw new Error("WEATHER_CITIES is not set");
         }
-        const citiesArray = cities.split(",");
-        const randomCity =
-            citiesArray[Math.floor(Math.random() * citiesArray.length)];
-        const coordinates = await getRawDataFromQuicksilver("mapbox", {
-            location: randomCity,
-        });
+        return cities.split(",");
+    }
 
-        // Get weather data from Quicksilver using coordinates
+    async getCoordinates(city: string) {
+        const coordinates = await getRawDataFromQuicksilver("mapbox", {
+            location: city,
+        });
+        return coordinates;
+    }
+
+    async getWeatherData(coordinates: { lat: number; lon: number }) {
         const weather = await getRawDataFromQuicksilver("weather-current", {
             lat: coordinates.lat,
             lon: coordinates.lon,
         });
-
         return weather;
     }
 
@@ -66,10 +80,7 @@ export const weatherDataProvider: Provider = {
         try {
             const weatherDataProvider = new WeatherDataProvider();
             const weather =
-                await weatherDataProvider.getWeatherForRandomCity(runtime);
-            if (!weather) {
-                return null;
-            }
+                await weatherDataProvider.getRandomCityWeather(runtime);
             return WeatherDataProvider.formatWeatherData(weather);
         } catch (error) {
             elizaLogger.error("Error fetching weather data:", error.message);

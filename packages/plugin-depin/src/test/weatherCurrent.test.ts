@@ -110,6 +110,7 @@ describe("WeatherDataProvider", () => {
             );
 
             expect(elizaLogger.error).toHaveBeenCalledWith(
+                "Error fetching weather data:",
                 "WEATHER_CITIES is not set"
             );
             expect(result).toBeNull();
