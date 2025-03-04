@@ -1,57 +1,48 @@
-import { drizzle } from 'drizzle-orm/pglite';
-import { migrate as pgliteMigrate } from 'drizzle-orm/pglite/migrator';
-import { migrate as pgMigrate } from 'drizzle-orm/node-postgres/migrator';
-import { PGlite } from '@electric-sql/pglite';
-import { PostgresConnectionManager } from './pg/manager.js';
-import { drizzle as pgDrizzle } from 'drizzle-orm/node-postgres';
-import { config } from 'dotenv';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { PostgresConnectionManager } from "./pg/manager.js";
+import { PGliteClientManager } from "./pg-lite/manager.js";
+import { config } from "dotenv";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const projectRoot = path.resolve(__dirname, '..');
-const migrationsPath = path.resolve(projectRoot, 'drizzle/migrations');
-
-config({ path: '../../.env' });
+config({ path: "../../.env" });
 
 async function runMigrations() {
+  console.log("Running migrations");
+  console.log("POSTGRES_URL:", process.env.POSTGRES_URL);
   if (process.env.POSTGRES_URL) {
-    console.log('Using PostgreSQL database');
+    console.log("Using PostgreSQL database");
     try {
-      const connectionManager = new PostgresConnectionManager(process.env.POSTGRES_URL);
+      const connectionManager = new PostgresConnectionManager(
+        process.env.POSTGRES_URL
+      );
       await connectionManager.initialize();
-      
-
-      const client = await connectionManager.getClient();
-      const db = pgDrizzle(client);
-      
-      await pgMigrate(db, {
-        migrationsFolder: migrationsPath,
-      });
-      
+      await connectionManager.runMigrations();
       await connectionManager.close();
     } catch (error) {
-      console.error('PostgreSQL migration failed:', error);
-      process.exit(1);
+      console.error("PostgreSQL migration failed:", error);
+      process.exitCode = 1;
+      return;
     }
     return;
   }
 
-  console.log('Using PGlite database');
-  const client = new PGlite('file://../../pglite');
-  const db = drizzle(client);
-
+  console.log("Using PGlite database");
+  const clientManager = new PGliteClientManager({
+    dataDir: "../../pglite"
+  });
+  
   try {
-    await pgliteMigrate(db, {
-      migrationsFolder: './drizzle/migrations',
-    });
-    console.log('Migrations completed successfully');
+    await clientManager.initialize();
+    await clientManager.runMigrations();
+    console.log("Migrations completed successfully");
+    await clientManager.close();
   } catch (error) {
-    console.error('Migration failed:', error);
-    process.exit(1);
+    console.error("Migration failed:", error);
+    try {
+      await clientManager.close();
+    } catch (closeError) {
+      console.error("Error during client close:", closeError);
+    }
+    process.exitCode = 1;
   }
 }
 
-runMigrations().catch(console.error); 
+runMigrations().catch(console.error);
