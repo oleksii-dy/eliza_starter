@@ -4,21 +4,35 @@ import {
     Memory,
     State,
     elizaLogger,
+    ICacheManager,
 } from "@elizaos/core";
 
 import { getRawDataFromQuicksilver } from "../services/quicksilver";
 import { WeatherData } from "../types/depin";
 
 class WeatherDataProvider {
+    private cacheManager: ICacheManager;
+    private readonly COORDINATES_CACHE_KEY = "weather/coordinates";
+    private readonly WEATHER_CACHE_KEY = "weather/current";
+    private readonly WEATHER_CACHE_TTL = 60 * 60; // 1 hour in seconds
+
+    constructor(runtime: IAgentRuntime) {
+        this.cacheManager = runtime.cacheManager;
+    }
+
     async getRandomCityWeather(
         runtime: IAgentRuntime
     ): Promise<WeatherData | null> {
-        const citiesArray = this.getCitiesArray(runtime);
-        const randomCity = this.pickRandomCity(citiesArray);
-        const coordinates = await this.getCoordinates(randomCity);
-        const weather = await this.getWeatherData(coordinates);
+        try {
+            const citiesArray = this.getCitiesArray(runtime);
+            const randomCity = this.pickRandomCity(citiesArray);
+            const coordinates = await this.getCoordinates(randomCity);
+            const weather = await this.getWeatherData(coordinates, randomCity);
 
-        return weather;
+            return weather;
+        } catch (error) {
+            throw error;
+        }
     }
 
     pickRandomCity(citiesArray: string[]) {
@@ -33,18 +47,76 @@ class WeatherDataProvider {
         return cities.split(",");
     }
 
-    async getCoordinates(city: string) {
+    private async readFromCache<T>(key: string): Promise<T | null> {
+        try {
+            return await this.cacheManager.get<T>(key);
+        } catch (error) {
+            elizaLogger.error(
+                `Error reading from cache for key ${key}:`,
+                error
+            );
+            return null;
+        }
+    }
+
+    private async writeToCache<T>(
+        key: string,
+        data: T,
+        ttl?: number
+    ): Promise<void> {
+        try {
+            const options = ttl
+                ? { expires: Date.now() + ttl * 1000 }
+                : undefined;
+            await this.cacheManager.set(key, data, options);
+        } catch (error) {
+            elizaLogger.error(`Error writing to cache for key ${key}:`, error);
+        }
+    }
+
+    async getCoordinates(city: string): Promise<{ lat: number; lon: number }> {
+        const cacheKey = `${this.COORDINATES_CACHE_KEY}/${city}`;
+
+        const cachedCoordinates = await this.readFromCache<{
+            lat: number;
+            lon: number;
+        }>(cacheKey);
+        if (cachedCoordinates) {
+            elizaLogger.info(`Using cached coordinates for ${city}`);
+            return cachedCoordinates;
+        }
+
+        elizaLogger.info(`Fetching coordinates for ${city}`);
         const coordinates = await getRawDataFromQuicksilver("mapbox", {
             location: city,
         });
+
+        // Cache the coordinates permanently (no TTL)
+        await this.writeToCache(cacheKey, coordinates);
+
         return coordinates;
     }
 
-    async getWeatherData(coordinates: { lat: number; lon: number }) {
+    async getWeatherData(
+        coordinates: { lat: number; lon: number },
+        city: string
+    ): Promise<WeatherData> {
+        const cacheKey = `${this.WEATHER_CACHE_KEY}/${city}`;
+
+        const cachedWeather = await this.readFromCache<WeatherData>(cacheKey);
+        if (cachedWeather) {
+            elizaLogger.info(`Using cached weather data for ${city}`);
+            return cachedWeather;
+        }
+
+        elizaLogger.info(`Fetching weather data for ${city}`);
         const weather = await getRawDataFromQuicksilver("weather-current", {
             lat: coordinates.lat,
             lon: coordinates.lon,
         });
+
+        await this.writeToCache(cacheKey, weather, this.WEATHER_CACHE_TTL);
+
         return weather;
     }
 
@@ -78,13 +150,13 @@ export const weatherDataProvider: Provider = {
         _state?: State
     ): Promise<string | null> {
         try {
-            const weatherDataProvider = new WeatherDataProvider();
+            const weatherDataProvider = new WeatherDataProvider(runtime);
             const weather =
                 await weatherDataProvider.getRandomCityWeather(runtime);
             return WeatherDataProvider.formatWeatherData(weather);
         } catch (error) {
             elizaLogger.error("Error fetching weather data:", error.message);
-            return null;
+            return "";
         }
     },
 };

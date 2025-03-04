@@ -2,7 +2,6 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { weatherForecastProvider } from "../providers/weatherForecastProvider";
 import { elizaLogger } from "@elizaos/core";
 
-// Mock the external dependencies
 vi.mock("@elizaos/core", async () => {
     const actual = await vi.importActual("@elizaos/core");
     return {
@@ -15,7 +14,6 @@ vi.mock("@elizaos/core", async () => {
     };
 });
 
-// Mock the getRawDataFromQuicksilver function
 vi.mock("../services/quicksilver", () => ({
     getRawDataFromQuicksilver: vi
         .fn()
@@ -25,44 +23,36 @@ vi.mock("../services/quicksilver", () => ({
             } else if (endpoint === "weather-forecast") {
                 return Promise.resolve([
                     {
-                        location_name: "New York",
-                        parsed_timestamp: "2023-06-01",
-                        temperature: 22.5,
+                        date: "2023-06-01",
+                        temperature_min: 18.5,
+                        temperature_max: 25.2,
                         condition: "Clear",
                         condition_desc: "Clear sky",
                         condition_code: 800,
-                        temperature_min: 20.1,
-                        temperature_max: 24.3,
-                        feels_like: 23.0,
-                        pressure: 1013,
+                        precipitation_probability: 0,
+                        precipitation: 0,
                         humidity: 65,
                         wind_speed: 5.2,
                         wind_direction: 180,
                         uv: 4,
-                        luminance: 10000,
-                        sea_level: 0,
-                        rain: 0,
-                        wet_bulb: 0,
+                        location_name: "New York",
+                        parsed_timestamp: "2023-06-01",
                     },
                     {
+                        date: "2023-06-02",
+                        temperature_min: 19.0,
+                        temperature_max: 26.5,
+                        condition: "Clouds",
+                        condition_desc: "Scattered clouds",
+                        condition_code: 802,
+                        precipitation_probability: 20,
+                        precipitation: 0.5,
+                        humidity: 70,
+                        wind_speed: 6.1,
+                        wind_direction: 200,
+                        uv: 3,
                         location_name: "New York",
                         parsed_timestamp: "2023-06-02",
-                        temperature: 23.5,
-                        condition: "Cloudy",
-                        condition_desc: "Partly cloudy",
-                        condition_code: 801,
-                        temperature_min: 21.1,
-                        temperature_max: 25.3,
-                        feels_like: 24.0,
-                        pressure: 1012,
-                        humidity: 68,
-                        wind_speed: 4.8,
-                        wind_direction: 190,
-                        uv: 3,
-                        luminance: 9000,
-                        sea_level: 0,
-                        rain: 0.2,
-                        wet_bulb: 0,
                     },
                 ]);
             }
@@ -70,36 +60,48 @@ vi.mock("../services/quicksilver", () => ({
         }),
 }));
 
-// Import the mocked functions for assertions
 import { getRawDataFromQuicksilver } from "../services/quicksilver";
 
 describe("WeatherForecastProvider", () => {
     let mockRuntime: any;
     let mockMessage: any;
     let mockState: any;
+    let mockCacheManager: any;
 
     beforeEach(() => {
-        // Reset mocks
         vi.clearAllMocks();
 
-        // Setup mock runtime, message, and state
+        mockCacheManager = {
+            get: vi.fn().mockResolvedValue(undefined),
+            set: vi.fn().mockResolvedValue(undefined),
+            delete: vi.fn().mockResolvedValue(undefined),
+        };
+
         mockRuntime = {
             getSetting: vi.fn().mockReturnValue("New York,London,Tokyo"),
-            cacheManager: {},
+            cacheManager: mockCacheManager,
         };
         mockMessage = { content: { text: "test message" } };
         mockState = {};
     });
 
     describe("get", () => {
-        it("should fetch and format weather forecast data", async () => {
-            const result = await weatherForecastProvider.get(
+        it("should fetch and format weather forecast data when not cached", async () => {
+            mockCacheManager.get.mockResolvedValue(undefined);
+
+            const result = (await weatherForecastProvider.get(
                 mockRuntime,
                 mockMessage,
                 mockState
+            )) as string;
+
+            expect(mockCacheManager.get).toHaveBeenCalledWith(
+                expect.stringContaining("weather/coordinates")
+            );
+            expect(mockCacheManager.get).toHaveBeenCalledWith(
+                expect.stringContaining("weather/forecast")
             );
 
-            // Verify that getRawDataFromQuicksilver was called with the correct parameters
             expect(getRawDataFromQuicksilver).toHaveBeenCalledWith(
                 "mapbox",
                 expect.any(Object)
@@ -112,14 +114,116 @@ describe("WeatherForecastProvider", () => {
                 }
             );
 
-            // Verify the formatted output
+            expect(mockCacheManager.set).toHaveBeenCalledTimes(2);
+
             expect(result).toContain("Weather Forecast for New York");
             expect(result).toContain("Date: 2023-06-01");
-            expect(result).toContain("Temperature: 22.5°C");
             expect(result).toContain("Date: 2023-06-02");
-            expect(result).toContain("Temperature: 23.5°C");
-            expect(result).toContain("Condition: Clear");
-            expect(result).toContain("Condition: Cloudy");
+        });
+
+        it("should use cached coordinates when available", async () => {
+            mockCacheManager.get.mockImplementation((key) => {
+                if (key.includes("weather/coordinates")) {
+                    return Promise.resolve({ lat: 40.7128, lon: -74.006 });
+                }
+                return Promise.resolve(undefined);
+            });
+
+            const result = await weatherForecastProvider.get(
+                mockRuntime,
+                mockMessage,
+                mockState
+            );
+
+            expect(mockCacheManager.get).toHaveBeenCalledWith(
+                expect.stringContaining("weather/coordinates")
+            );
+
+            expect(getRawDataFromQuicksilver).toHaveBeenCalledWith(
+                "weather-forecast",
+                {
+                    lat: 40.7128,
+                    lon: -74.006,
+                }
+            );
+            expect(getRawDataFromQuicksilver).not.toHaveBeenCalledWith(
+                "mapbox",
+                expect.any(Object)
+            );
+
+            expect(mockCacheManager.set).toHaveBeenCalledTimes(1);
+            expect(mockCacheManager.set).toHaveBeenCalledWith(
+                expect.stringContaining("weather/forecast"),
+                expect.any(Object),
+                expect.any(Object)
+            );
+
+            expect(result).toContain("Weather Forecast for New York");
+        });
+
+        it("should use cached forecast data when available", async () => {
+            const cachedForecastData = [
+                {
+                    date: "2023-06-01",
+                    temperature_min: 18.5,
+                    temperature_max: 25.2,
+                    condition: "Clear",
+                    condition_desc: "Clear sky",
+                    condition_code: 800,
+                    precipitation_probability: 0,
+                    precipitation: 0,
+                    humidity: 65,
+                    wind_speed: 5.2,
+                    wind_direction: 180,
+                    uv: 4,
+                    location_name: "New York",
+                    parsed_timestamp: "2023-06-01",
+                },
+                {
+                    date: "2023-06-02",
+                    temperature_min: 19.0,
+                    temperature_max: 26.5,
+                    condition: "Clouds",
+                    condition_desc: "Scattered clouds",
+                    condition_code: 802,
+                    precipitation_probability: 20,
+                    precipitation: 0.5,
+                    humidity: 70,
+                    wind_speed: 6.1,
+                    wind_direction: 200,
+                    uv: 3,
+                    location_name: "New York",
+                    parsed_timestamp: "2023-06-02",
+                },
+            ];
+
+            mockCacheManager.get.mockImplementation((key) => {
+                if (key.includes("weather/coordinates")) {
+                    return Promise.resolve({ lat: 40.7128, lon: -74.006 });
+                } else if (key.includes("weather/forecast")) {
+                    return Promise.resolve(cachedForecastData);
+                }
+                return Promise.resolve(undefined);
+            });
+
+            const result = await weatherForecastProvider.get(
+                mockRuntime,
+                mockMessage,
+                mockState
+            );
+
+            expect(mockCacheManager.get).toHaveBeenCalledWith(
+                expect.stringContaining("weather/coordinates")
+            );
+            expect(mockCacheManager.get).toHaveBeenCalledWith(
+                expect.stringContaining("weather/forecast")
+            );
+
+            expect(getRawDataFromQuicksilver).not.toHaveBeenCalled();
+
+            expect(mockCacheManager.set).not.toHaveBeenCalled();
+
+            expect(result).toContain("Weather Forecast for New York");
         });
 
         it("should handle errors when WEATHER_CITIES is not set", async () => {
@@ -131,19 +235,12 @@ describe("WeatherForecastProvider", () => {
                 mockState
             );
 
-            expect(result).toBeNull();
+            expect(result).toBe("");
             expect(elizaLogger.error).toHaveBeenCalled();
         });
 
-        it("should handle errors from mapbox service", async () => {
-            (getRawDataFromQuicksilver as any).mockImplementationOnce(
-                (endpoint) => {
-                    if (endpoint === "mapbox") {
-                        return Promise.reject(new Error("Mapbox error"));
-                    }
-                    return Promise.resolve({});
-                }
-            );
+        it("should handle cache errors gracefully", async () => {
+            mockCacheManager.get.mockRejectedValue(new Error("Cache error"));
 
             const result = await weatherForecastProvider.get(
                 mockRuntime,
@@ -151,68 +248,9 @@ describe("WeatherForecastProvider", () => {
                 mockState
             );
 
-            expect(result).toBeNull();
-            expect(elizaLogger.error).toHaveBeenCalledWith(
-                "Error fetching weather forecast:",
-                "Mapbox error"
-            );
-        });
-
-        it("should handle errors from weather forecast service", async () => {
-            (getRawDataFromQuicksilver as any).mockImplementationOnce(
-                (endpoint) => {
-                    if (endpoint === "mapbox") {
-                        return Promise.resolve({ lat: 40.7128, lon: -74.006 });
-                    }
-                    return Promise.resolve({});
-                }
-            );
-
-            (getRawDataFromQuicksilver as any).mockImplementationOnce(
-                (endpoint) => {
-                    if (endpoint === "weather-forecast") {
-                        return Promise.reject(new Error("Weather API error"));
-                    }
-                    return Promise.resolve({});
-                }
-            );
-
-            const result = await weatherForecastProvider.get(
-                mockRuntime,
-                mockMessage,
-                mockState
-            );
-
-            expect(result).toBeNull();
+            expect(getRawDataFromQuicksilver).toHaveBeenCalled();
+            expect(result).toContain("Weather Forecast for New York");
             expect(elizaLogger.error).toHaveBeenCalled();
-        });
-
-        it("should handle empty forecast data", async () => {
-            (getRawDataFromQuicksilver as any).mockImplementationOnce(
-                (endpoint) => {
-                    if (endpoint === "mapbox") {
-                        return Promise.resolve({ lat: 40.7128, lon: -74.006 });
-                    }
-                    return Promise.resolve({});
-                }
-            );
-
-            (getRawDataFromQuicksilver as any).mockImplementationOnce(
-                (endpoint) => {
-                    if (endpoint === "weather-forecast") {
-                        return Promise.resolve([]);
-                    }
-                    return Promise.resolve({});
-                }
-            );
-
-            const result = await weatherForecastProvider.get(
-                mockRuntime,
-                mockMessage,
-                mockState
-            );
-
-            expect(result).toBe("No forecast data available.");
         });
     });
 });

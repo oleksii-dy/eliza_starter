@@ -4,12 +4,22 @@ import {
     Memory,
     State,
     elizaLogger,
+    ICacheManager,
 } from "@elizaos/core";
 
 import { getRawDataFromQuicksilver } from "../services/quicksilver";
 import { WeatherForecast } from "../types/depin";
 
 class WeatherForecastProvider {
+    private cacheManager: ICacheManager;
+    private readonly COORDINATES_CACHE_KEY = "weather/coordinates";
+    private readonly FORECAST_CACHE_KEY = "weather/forecast";
+    private readonly FORECAST_CACHE_TTL = 60 * 60; // 1 hour in seconds
+
+    constructor(runtime: IAgentRuntime) {
+        this.cacheManager = runtime.cacheManager;
+    }
+
     async getRandomCityWeather(
         runtime: IAgentRuntime
     ): Promise<WeatherForecast | null> {
@@ -17,7 +27,7 @@ class WeatherForecastProvider {
             const citiesArray = this.getCitiesArray(runtime);
             const randomCity = this.pickRandomCity(citiesArray);
             const coordinates = await this.getCoordinates(randomCity);
-            const forecast = await this.getWeatherData(coordinates);
+            const forecast = await this.getWeatherData(coordinates, randomCity);
 
             return forecast;
         } catch (error) {
@@ -37,18 +47,77 @@ class WeatherForecastProvider {
         return cities.split(",");
     }
 
-    async getCoordinates(city: string) {
+    private async readFromCache<T>(key: string): Promise<T | null> {
+        try {
+            const data = await this.cacheManager.get<T>(key);
+            return data || null;
+        } catch (error) {
+            elizaLogger.error(
+                `Error reading from cache for key ${key}:`,
+                error
+            );
+            return null;
+        }
+    }
+
+    private async writeToCache<T>(
+        key: string,
+        data: T,
+        ttl?: number
+    ): Promise<void> {
+        try {
+            const options = ttl
+                ? { expires: Date.now() + ttl * 1000 }
+                : undefined;
+            await this.cacheManager.set(key, data, options);
+        } catch (error) {
+            elizaLogger.error(`Error writing to cache for key ${key}:`, error);
+        }
+    }
+
+    async getCoordinates(city: string): Promise<{ lat: number; lon: number }> {
+        const cacheKey = `${this.COORDINATES_CACHE_KEY}/${city}`;
+
+        const cachedCoordinates = await this.readFromCache<{
+            lat: number;
+            lon: number;
+        }>(cacheKey);
+        if (cachedCoordinates) {
+            elizaLogger.info(`Using cached coordinates for ${city}`);
+            return cachedCoordinates;
+        }
+
+        elizaLogger.info(`Fetching coordinates for ${city}`);
         const coordinates = await getRawDataFromQuicksilver("mapbox", {
             location: city,
         });
+
+        await this.writeToCache(cacheKey, coordinates);
+
         return coordinates;
     }
 
-    async getWeatherData(coordinates: { lat: number; lon: number }) {
+    async getWeatherData(
+        coordinates: { lat: number; lon: number },
+        city: string
+    ): Promise<WeatherForecast> {
+        const cacheKey = `${this.FORECAST_CACHE_KEY}/${city}`;
+
+        const cachedForecast =
+            await this.readFromCache<WeatherForecast>(cacheKey);
+        if (cachedForecast) {
+            elizaLogger.info(`Using cached forecast data for ${city}`);
+            return cachedForecast;
+        }
+
+        elizaLogger.info(`Fetching forecast data for ${city}`);
         const forecast = await getRawDataFromQuicksilver("weather-forecast", {
             lat: coordinates.lat,
             lon: coordinates.lon,
         });
+
+        await this.writeToCache(cacheKey, forecast, this.FORECAST_CACHE_TTL);
+
         return forecast;
     }
 
@@ -85,21 +154,40 @@ class WeatherForecastProvider {
 
         return result;
     }
+
+    async get(
+        runtime: IAgentRuntime,
+        _message: Memory,
+        _state?: State
+    ): Promise<string> {
+        try {
+            const forecast = await this.getRandomCityWeather(runtime);
+            return WeatherForecastProvider.formatWeatherData(forecast);
+        } catch (error) {
+            elizaLogger.error(
+                "Error fetching weather forecast:",
+                error.message
+            );
+            return "";
+        }
+    }
 }
 
 export const weatherForecastProvider: Provider = {
     async get(
         runtime: IAgentRuntime,
-        _message: Memory,
-        _state?: State
-    ): Promise<string | null> {
+        message: Memory,
+        state?: State
+    ): Promise<string> {
         try {
-            const weatherForecastProvider = new WeatherForecastProvider();
-            const forecast = await weatherForecastProvider.getRandomCityWeather(runtime);
-            return WeatherForecastProvider.formatWeatherData(forecast);
+            const provider = new WeatherForecastProvider(runtime);
+            return await provider.get(runtime, message, state);
         } catch (error) {
-            elizaLogger.error("Error fetching weather forecast:", error.message);
-            return null;
+            elizaLogger.error(
+                "Error fetching weather forecast:",
+                error.message
+            );
+            return "";
         }
     },
 };
