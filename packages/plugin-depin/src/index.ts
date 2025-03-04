@@ -6,7 +6,7 @@ import type { Plugin } from "@elizaos/core";
 // import { placeBet } from "./actions/placeBet";
 // import { prepareBet } from "./actions/prepareBet";
 // import { listPredictions } from "./actions/listPredictions";
-import { sentai } from "./actions/sentai";
+import { askSentai } from "./actions/sentai";
 
 import { sentaiProvider } from "./providers/sentai";
 
@@ -24,7 +24,7 @@ export const depinPlugin: Plugin = {
     services: [
         // Add services here
     ],
-    actions: [sentai],
+    actions: [askSentai],
 };
 
 export default depinPlugin;
