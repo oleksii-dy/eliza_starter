@@ -35,20 +35,28 @@ export class DePINScanProvider {
 
     private async getCachedData<T>(key: string): Promise<T | null> {
         // Check in-memory cache first
-        const cachedData = this.cache.get<T>(key);
-        if (cachedData) {
-            return cachedData;
-        }
+        try {
+            const cachedData = this.cache.get<T>(key);
+            if (cachedData) {
+                return cachedData;
+            }
 
-        // Check file-based cache
-        const fileCachedData = await this.readFromCache<T>(key);
-        if (fileCachedData) {
-            // Populate in-memory cache
-            this.cache.set(key, fileCachedData);
-            return fileCachedData;
-        }
+            // Check file-based cache
+            const fileCachedData = await this.readFromCache<T>(key);
+            if (fileCachedData) {
+                // Populate in-memory cache
+                this.cache.set(key, fileCachedData);
+                return fileCachedData;
+            }
 
-        return null;
+            return null;
+        } catch (error) {
+            elizaLogger.error(
+                `Error retrieving cached data for key ${key}:`,
+                error
+            );
+            return null;
+        }
     }
 
     private async setCachedData<T>(cacheKey: string, data: T): Promise<void> {
@@ -108,72 +116,14 @@ export class DePINScanProvider {
         return num.toString(); // Return original number as string if no abbreviation is needed
     };
 
-    private parseProjects(projects: DepinScanProject[]): string[][] {
-        const schema = [
-            "project_name",
-            "slug",
-            "token",
-            "description",
-            "layer_1",
-            "categories",
-            "market_cap",
-            "token_price",
-            "total_devices",
-            "avg_device_cost",
-            "days_to_breakeven",
-            "estimated_daily_earnings",
-            "chainid",
-            "coingecko_id",
-            "fully_diluted_valuation",
-        ];
-
-        const parsedProjects = projects.map((project) => {
-            const {
-                project_name,
-                slug,
-                token,
-                description,
-                layer_1,
-                categories,
-                market_cap,
-                token_price,
-                total_devices,
-                avg_device_cost,
-                days_to_breakeven,
-                estimated_daily_earnings,
-                chainid,
-                coingecko_id,
-                fully_diluted_valuation,
-            } = project;
-
-            // Create an array following the schema
-            return [
-                project_name,
-                slug,
-                token,
-                description,
-                layer_1 ? layer_1.join(", ") : "", // Flatten array for compact representation
-                categories ? categories.join(", ") : "", // Flatten array for compact representation
-                this.abbreviateNumber(market_cap?.toString()),
-                token_price?.toString(),
-                total_devices?.toString(),
-                avg_device_cost?.toString(),
-                days_to_breakeven?.toString(),
-                estimated_daily_earnings?.toString(),
-                chainid?.toString(),
-                coingecko_id?.toString(),
-                this.abbreviateNumber(fully_diluted_valuation?.toString()),
-            ];
-        });
-
-        parsedProjects.unshift(schema);
-
-        return parsedProjects;
+    private parseProjects(projects: DepinScanProject[]): DepinScanProject[] {
+        return projects;
     }
 
-    async getProjects(): Promise<string[][]> {
+    async getProjects(): Promise<DepinScanProject[]> {
         const cacheKey = "depinscanProjects";
-        const cachedData = await this.getCachedData<string[][]>(cacheKey);
+        const cachedData =
+            await this.getCachedData<DepinScanProject[]>(cacheKey);
         if (cachedData) {
             console.log("Returning cached DePINScan projects");
             return cachedData;
@@ -182,10 +132,39 @@ export class DePINScanProvider {
         const projects = await this.fetchDepinscanProjects();
         const parsedProjects = this.parseProjects(projects);
 
-        this.setCachedData<string[][]>(cacheKey, parsedProjects);
+        this.setCachedData<DepinScanProject[]>(cacheKey, parsedProjects);
         console.log("DePINScan projects cached");
 
         return parsedProjects;
+    }
+
+    formatProject(project: DepinScanProject): string {
+        return `## DePIN Project: ${project.project_name}
+
+- **Token**: ${project.token || "N/A"}
+- **Description**: ${project.description || "N/A"}
+- **Layer 1**: ${project.layer_1 ? project.layer_1.join(", ") : "N/A"}
+- **Categories**: ${project.categories ? project.categories.join(", ") : "N/A"}
+- **Market Cap**: ${this.abbreviateNumber(project.market_cap?.toString()) || "N/A"}
+- **Token Price**: ${project.token_price?.toString() || "N/A"}
+- **Total Devices**: ${project.total_devices?.toString() || "N/A"}
+- **Average Device Cost**: ${project.avg_device_cost?.toString() || "N/A"}
+- **Days to Breakeven**: ${project.days_to_breakeven?.toString() || "N/A"}
+- **Estimated Daily Earnings**: ${project.estimated_daily_earnings?.toString() || "N/A"}
+- **Chain ID**: ${project.chainid?.toString() || "N/A"}
+- **CoinGecko ID**: ${project.coingecko_id?.toString() || "N/A"}
+- **Fully Diluted Valuation**: ${this.abbreviateNumber(project.fully_diluted_valuation?.toString()) || "N/A"}
+`;
+    }
+
+    formatMetrics(metrics: DepinScanMetrics): string {
+        return `## DePINScan Daily Metrics
+
+- **Date**: ${metrics.date || "N/A"}
+- **Total Projects**: ${metrics.total_projects || "N/A"}
+- **Market Cap**: ${this.abbreviateNumber(metrics.market_cap) || "N/A"}
+- **Total Devices**: ${metrics.total_device || "N/A"}
+`;
     }
 }
 
@@ -199,18 +178,22 @@ export const depinDataProvider: Provider = {
             const depinscan = new DePINScanProvider(runtime.cacheManager);
             const depinscanMetrics = await depinscan.getDailyMetrics();
             const depinscanProjects = await depinscan.getProjects();
-            const randomProject = [
-                ...depinscanProjects[0],
-                ...depinscanProjects[
+
+            // Get a random project
+            const randomProject =
+                depinscanProjects[
                     Math.floor(Math.random() * depinscanProjects.length)
-                ],
-            ];
+                ];
+
+            // Format the metrics with textual labels
+            const metricsFormatted = depinscan.formatMetrics(depinscanMetrics);
+
+            // Format the random project with textual labels
+            const projectFormatted = depinscan.formatProject(randomProject);
 
             return `
-                #### **DePINScan Daily Metrics**
-                ${JSON.stringify(depinscanMetrics)}
-                #### **Random DePINScan Project**
-                ${randomProject}
+            ${metricsFormatted}
+            ${projectFormatted}
             `;
         } catch (error) {
             elizaLogger.error("Error in DePIN data provider:", error.message);
