@@ -18,7 +18,8 @@ type QuicksilverTool =
     | "depin-metrics"
     | "depin-projects"
     | "l1data"
-    | "nuclear";
+    | "nuclear"
+    | "mapbox";
 
 type ToolParams = {
     "weather-current": { lat: number; lon: number };
@@ -28,6 +29,7 @@ type ToolParams = {
     "depin-projects": Record<string, never>;
     l1data: Record<string, never>;
     nuclear: { start: string; end: string }; // Format: YYYY-MM-DD
+    mapbox: { location: string };
 };
 
 export async function askQuickSilver(content: string): Promise<string> {
