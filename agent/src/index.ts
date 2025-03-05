@@ -160,6 +160,7 @@ import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
 
 import { trikonPlugin } from "@elizaos/plugin-trikon";
 import arbitragePlugin from "@elizaos/plugin-arbitrage";
+
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
@@ -1069,8 +1070,8 @@ export async function createAgent(
                 getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
                 ? evmPlugin
                 : null,
-            (getSecret(character, "EVM_PRIVATE_KEY") ||
-                getSecret(character, "SOLANA_PRIVATE_KEY"))
+            getSecret(character, "EVM_PRIVATE_KEY") ||
+            getSecret(character, "SOLANA_PRIVATE_KEY")
                 ? edwinPlugin
                 : null,
             (getSecret(character, "EVM_PUBLIC_KEY") ||

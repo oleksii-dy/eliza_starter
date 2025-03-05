@@ -3,6 +3,7 @@ import { Signer } from "@mysten/sui/cryptography";
 import { Ed25519Keypair } from "@mysten/sui/keypairs/ed25519";
 import { Secp256k1Keypair } from "@mysten/sui/keypairs/secp256k1";
 import { Secp256r1Keypair } from "@mysten/sui/keypairs/secp256r1";
+import { getFullnodeUrl } from "@mysten/sui/client";
 
 const parseAccount = (runtime: IAgentRuntime): Signer => {
     const privateKey = runtime.getSetting("SUI_PRIVATE_KEY");
@@ -43,6 +44,19 @@ const loadFromMnemonics = (mnemonics: string) => {
     throw new Error("Failed to derive keypair from mnemonics");
 };
 
+const parseFullNodeUrl = (runtime: IAgentRuntime) => {
+    let fullNodeUrl = runtime.getSetting("SUI_FULLNODE_URL");
+    if (!fullNodeUrl) {
+      const network = runtime.getSetting("SUI_NETWORK");
+      if (!network) {
+        throw new Error("SUI_NETWORK is not set");
+      }
+      fullNodeUrl = getFullnodeUrl(network as SuiNetwork);
+    }
+    
+    return fullNodeUrl;
+};
+
 export type SuiNetwork = "mainnet" | "testnet" | "devnet" | "localnet";
 
-export { parseAccount };
+export { parseAccount, parseFullNodeUrl };
