@@ -143,7 +143,7 @@ export class PostgresConnectionManager implements IDatabaseClientManager<PgPool>
             logger.info("Migrations completed successfully!");
         } catch (error) {
             logger.error("Failed to run database migrations:", error);
-            throw error;
+            // throw error;
         } finally {
             if (client) {
                 client.release();
