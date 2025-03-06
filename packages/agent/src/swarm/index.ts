@@ -1,6 +1,6 @@
 
 import dotenv from "dotenv";
-dotenv.config({ path: '../../.env' });
+dotenv.config();
 
 import type { Character, IAgentRuntime, Plugin } from "@elizaos/core";
 import communityManager from "./communityManager";

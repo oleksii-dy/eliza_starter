@@ -1,9 +1,8 @@
 import { drizzle } from 'drizzle-orm/pglite';
 import { migrate as pgliteMigrate } from 'drizzle-orm/pglite/migrator';
 import { PGlite } from '@electric-sql/pglite';
-import { config } from 'dotenv';
-
-config({ path: '../../.env' });
+import dotenv from 'dotenv';
+dotenv.config();
 
 async function runMigrations() {
   if (process.env.POSTGRES_URL) {

@@ -13,21 +13,13 @@ RUN apt-get update && \
 RUN npm install -g bun turbo@2.3.3
 
 # Set Python 3 as the default python
-RUN ln -s /usr/bin/python3 /usr/bin/python
+RUN ln -sf /usr/bin/python3 /usr/bin/python
 
-# Copy package files
-COPY .npmrc .
-COPY package.json .
-COPY turbo.json .
-COPY tsconfig.json .
-COPY lerna.json .
-COPY biome.json .
-COPY renovate.json .
-COPY scripts ./scripts
-# Copy source code
-COPY packages ./packages
+RUN git clone https://github.com/elizaos/eliza.git
 
+WORKDIR /app/eliza
 
+RUN git checkout v2-develop
 
 # Install dependencies
 RUN bun install
@@ -52,15 +44,15 @@ RUN apt-get update && \
 RUN npm install -g bun turbo@2.3.3
 
 # Copy built artifacts and production dependencies from the builder stage
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/tsconfig.json ./
-COPY --from=builder /app/turbo.json ./
-COPY --from=builder /app/lerna.json ./
-COPY --from=builder /app/renovate.json ./
-COPY --from=builder /app/biome.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/eliza/package.json ./
+COPY --from=builder /app/eliza/tsconfig.json ./
+COPY --from=builder /app/eliza/turbo.json ./
+COPY --from=builder /app/eliza/lerna.json ./
+COPY --from=builder /app/eliza/renovate.json ./
+COPY --from=builder /app/eliza/biome.json ./
+COPY --from=builder /app/eliza/node_modules ./node_modules
+COPY --from=builder /app/eliza/packages ./packages
+COPY --from=builder /app/eliza/scripts ./scripts
 
 # Set environment variables
 ENV NODE_ENV=production

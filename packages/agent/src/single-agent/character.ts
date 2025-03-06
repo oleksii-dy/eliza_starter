@@ -1,8 +1,6 @@
 import type { Character } from "@elizaos/core";
 import dotenv from "dotenv";
-dotenv.config({
-  path: "../../.env",
-});
+dotenv.config();
 
 export const defaultCharacter: Character = {
   name: "Eliza",

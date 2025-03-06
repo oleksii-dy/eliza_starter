@@ -3,7 +3,7 @@ import type { Guild } from 'discord.js';
 import dotenv from "dotenv";
 import twitterPostAction from "./actions/post";
 import { initCharacter, initializeAllSystems } from "../settings";
-dotenv.config({ path: '../../.env' });
+dotenv.config();
 
 const character: Character = {
   name: "Laura",

@@ -4,8 +4,7 @@ import { initCharacter } from "../settings";
 import { degenIntelPlugin } from "./plugins/degen-intel";
 import { degenTraderPlugin } from "./plugins/degen-trader";
 import { communityTraderPlugin } from "./plugins/community-investor";
-
-dotenv.config({ path: "../../.env" });
+dotenv.config();
 
 const character: Character = {
   name: "Spartan",
