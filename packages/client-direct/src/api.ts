@@ -26,43 +26,6 @@ interface UUIDParams {
     roomId?: UUID;
 }
 
-// just ensure some types
-function patchupCharacter(character) {
-  if (character.clientConfig?.telegram) {
-    if (character.clientConfig?.telegram?.shouldIgnoreDirectMessages && typeof character.clientConfig?.telegram?.shouldIgnoreDirectMessages === 'string') {
-      // is it a string
-      // we want bool
-      character.clientConfig.telegram.shouldIgnoreDirectMessages = parseBooleanFromText(character.clientConfig.telegram.shouldIgnoreDirectMessages)
-    }
-    if (character.clientConfig?.telegram?.shouldIgnoreBotMessages && typeof character.clientConfig?.telegram?.shouldIgnoreBotMessages === 'string') {
-      // is it a string
-      // we want bool
-      character.clientConfig.telegram.shouldIgnoreBotMessages = parseBooleanFromText(character.clientConfig.telegram.shouldIgnoreBotMessages)
-    }
-  }
-  if (character.clientConfig?.discord) {
-    if (character.clientConfig?.discord?.shouldIgnoreDirectMessages && typeof character.clientConfig?.discord?.shouldIgnoreDirectMessages === 'string') {
-      // is it a string
-      // we want bool
-      character.clientConfig.discord.shouldIgnoreDirectMessages = parseBooleanFromText(character.clientConfig.discord.shouldIgnoreDirectMessages)
-    }
-    if (character.clientConfig?.discord?.shouldIgnoreBotMessages && typeof character.clientConfig?.discord?.shouldIgnoreBotMessages === 'string') {
-      // is it a string
-      // we want bool
-      character.clientConfig.discord.shouldIgnoreBotMessages = parseBooleanFromText(character.clientConfig.discord.shouldIgnoreBotMessages)
-    }
-  }
-  // ENABLE_ACTION_PROCESSING
-  if (character.settings?.secrets?.ENABLE_ACTION_PROCESSING !== undefined && typeof character.settings.secrets.ENABLE_ACTION_PROCESSING === 'boolean') {
-    character.settings.secrets.ENABLE_ACTION_PROCESSING = "" + character.settings.secrets.ENABLE_ACTION_PROCESSING
-    //console.log('making ENABLE_ACTION_PROCESSING a string', typeof character.settings.secrets.ENABLE_ACTION_PROCESSING, character.settings.secrets.ENABLE_ACTION_PROCESSING)
-  }
-  if (character.settings?.secrets?.ELEVENLABS_VOICE_USE_SPEAKER_BOOST !== undefined && typeof character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST === 'boolean') {
-    character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST = "" + character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST
-    //console.log('making settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST a string', typeof character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST, character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST)
-  }
-}
-
 function validateUUIDParams(
     params: { agentId: string; roomId?: string },
     res: express.Response
@@ -219,7 +182,7 @@ export function createApiRouter(
         const character = req.body;
         console.log("character in", character);
         try {
-            patchupCharacter(character)
+            directClient.patchupCharacter(character)
             validateCharacterConfig(character);
         } catch (e) {
             elizaLogger.error(`Error parsing character: ${e}`);
@@ -287,7 +250,7 @@ export function createApiRouter(
         const character = req.body;
         console.log("character", character);
         try {
-            patchupCharacter(character)
+            directClient.patchupCharacter(character)
             validateCharacterConfig(character);
         } catch (e) {
             elizaLogger.error(`Error parsing character: ${e}`);

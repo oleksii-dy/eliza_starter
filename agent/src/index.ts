@@ -313,34 +313,83 @@ export async function loadCharacterFromOnchain(): Promise<Character[]> {
 */
 
 async function loadCharactersFromUrl(url: string): Promise<Character[]> {
-    try {
-        const response = await fetch(url, {
-          headers: {
-            pass1: 'knockknock',
-          }
-        });
-        const responseJson = await response.json();
+  const response = await fetch(url, {
+    headers: {
+      //pass1: 'knockknock',
+      knockknock: 'whosthere?m33333',
+    }
+  });
+  const responseJson = await response.json();
 
-        let characters: Character[] = [];
-        if (Array.isArray(responseJson)) {
-            characters = await Promise.all(
-                responseJson.map((character) => jsonToCharacter(url, character))
-            );
-        } else {
-            const character = await jsonToCharacter(url, responseJson);
-            characters.push(character);
-        }
-        return characters;
+  let characters: Character[] = [];
+  if (Array.isArray(responseJson)) {
+      console.log('responseJson has', responseJson.length, 'characters')
+      characters = await Promise.all(
+        responseJson.map(async (character) => {
+          try {
+            return await jsonToCharacter(url, character)
+          } catch (e) {
+            elizaLogger.error(`Error loading character(s) from ${url}: ${e}`);
+            //process.exit(1);
+            return false
+          }
+        }).filter(c => !!c)
+      );
+      console.log('characters now has', characters.length, 'characters')
+  } else {
+    try {
+      const character = await jsonToCharacter(url, responseJson);
+      characters.push(character);
     } catch (e) {
         elizaLogger.error(`Error loading character(s) from ${url}: ${e}`);
-        process.exit(1);
+        //process.exit(1);
     }
+  }
+  return characters;
+}
+
+// just ensure some types
+function patchupCharacter(character) {
+  if (character.clientConfig?.telegram) {
+    if (character.clientConfig?.telegram?.shouldIgnoreDirectMessages && typeof character.clientConfig?.telegram?.shouldIgnoreDirectMessages === 'string') {
+      // is it a string
+      // we want bool
+      character.clientConfig.telegram.shouldIgnoreDirectMessages = parseBooleanFromText(character.clientConfig.telegram.shouldIgnoreDirectMessages)
+    }
+    if (character.clientConfig?.telegram?.shouldIgnoreBotMessages && typeof character.clientConfig?.telegram?.shouldIgnoreBotMessages === 'string') {
+      // is it a string
+      // we want bool
+      character.clientConfig.telegram.shouldIgnoreBotMessages = parseBooleanFromText(character.clientConfig.telegram.shouldIgnoreBotMessages)
+    }
+  }
+  if (character.clientConfig?.discord) {
+    if (character.clientConfig?.discord?.shouldIgnoreDirectMessages && typeof character.clientConfig?.discord?.shouldIgnoreDirectMessages === 'string') {
+      // is it a string
+      // we want bool
+      character.clientConfig.discord.shouldIgnoreDirectMessages = parseBooleanFromText(character.clientConfig.discord.shouldIgnoreDirectMessages)
+    }
+    if (character.clientConfig?.discord?.shouldIgnoreBotMessages && typeof character.clientConfig?.discord?.shouldIgnoreBotMessages === 'string') {
+      // is it a string
+      // we want bool
+      character.clientConfig.discord.shouldIgnoreBotMessages = parseBooleanFromText(character.clientConfig.discord.shouldIgnoreBotMessages)
+    }
+  }
+  // ENABLE_ACTION_PROCESSING
+  if (character.settings?.secrets?.ENABLE_ACTION_PROCESSING !== undefined && typeof character.settings.secrets.ENABLE_ACTION_PROCESSING === 'boolean') {
+    character.settings.secrets.ENABLE_ACTION_PROCESSING = "" + character.settings.secrets.ENABLE_ACTION_PROCESSING
+    //console.log('making ENABLE_ACTION_PROCESSING a string', typeof character.settings.secrets.ENABLE_ACTION_PROCESSING, character.settings.secrets.ENABLE_ACTION_PROCESSING)
+  }
+  if (character.settings?.secrets?.ELEVENLABS_VOICE_USE_SPEAKER_BOOST !== undefined && typeof character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST === 'boolean') {
+    character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST = "" + character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST
+    //console.log('making settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST a string', typeof character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST, character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST)
+  }
 }
 
 async function jsonToCharacter(
     filePath: string,
     character: any
 ): Promise<Character> {
+    patchupCharacter(character);
     validateCharacterConfig(character);
 
     // .id isn't really valid
@@ -1474,6 +1523,11 @@ async function startAgent(
         character.id ??= stringToUuid(character.name);
         character.username ??= character.name;
 
+        if (!character.modelProvider) {
+          console.warn(character.name, 'has no modelProvider')
+          return false
+        }
+
         const token = getTokenForProvider(character.modelProvider, character);
         const dataDir = path.join(__dirname, "../data");
 
@@ -1571,13 +1625,15 @@ const startAgents = async () => {
     // Normalize characters for injectable plugins
     characters = await Promise.all(characters.map(normalizeCharacter));
 
-    try {
-        for (const character of characters) {
-            await startAgent(character, directClient);
-        }
-    } catch (error) {
-        elizaLogger.error("Error starting agents:", error);
+    console.log('starting', characters.length, 'characters')
+    for (const character of characters) {
+      try {
+        startAgent(character, directClient);
+      } catch (error) {
+        console.error("Error starting agent:", character.name, error);
+      }
     }
+    console.log('start command issued for', characters.length, 'characters')
 
     // Find available port
     while (!(await checkPortAvailable(serverPort))) {
@@ -1595,7 +1651,7 @@ const startAgents = async () => {
         // wrap it so we don't have to inject directClient later
         return startAgent(character, directClient);
     };
-
+    directClient.patchupCharacter = patchupCharacter;
     directClient.loadCharacterTryPath = loadCharacterTryPath;
     directClient.jsonToCharacter = jsonToCharacter;
 
