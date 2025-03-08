@@ -39,7 +39,7 @@
     "only-allow": "1.2.1",
     "turbo": "2.4.4",
     "typedoc": "0.26.11",
-    "typescript": "5.6.3",
+    "typescript": "5.8.2",
     "viem": "2.21.58",
     "vite": "5.4.12",
     "vitest": "3.0.5"
