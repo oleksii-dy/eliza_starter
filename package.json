@@ -76,7 +76,7 @@
     "node": "23.3.0"
   },
   "dependencies": {
-    "@0glabs/0g-ts-sdk": "0.2.1",
+    "@0glabs/0g-ts-sdk": "0.2.6",
     "@coinbase/coinbase-sdk": "0.10.0",
     "@deepgram/sdk": "^3.9.0",
     "@elizaos-plugins/adapter-sqlite": "workspace:*",
