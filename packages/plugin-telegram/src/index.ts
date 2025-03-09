@@ -7,6 +7,7 @@ import { TelegramTestSuite } from "./tests.ts";
 import { TELEGRAM_SERVICE_NAME } from "./constants.ts";
 
 export class TelegramService implements Service {
+    static serviceType = TELEGRAM_SERVICE_NAME; 
     name = TELEGRAM_SERVICE_NAME;
     private bot: Telegraf<Context>;
     private runtime: IAgentRuntime;
