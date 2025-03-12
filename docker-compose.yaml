@@ -1,6 +1,6 @@
 services:
-    tee:
-        image: bino:latest
+    bino:
+        image: ghcr.io/iotexproject/bino:latest
         command: ["pnpm", "start", "--character=${CHARACTER_FILE}"]
         stdin_open: true
         tty: true
