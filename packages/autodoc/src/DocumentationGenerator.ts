@@ -157,10 +157,12 @@ export class DocumentationGenerator {
 
 			if (this.configuration.generateJsDoc) {
 				this.branchName = `docs-update-${pullNumber || "full"}-${Date.now()}`;
-				await this.gitManager.createBranch(
-					this.branchName,
-					this.configuration.branch,
-				);
+				if (this.configuration.createBranch) {
+					await this.gitManager.createBranch(
+						this.branchName,
+						this.configuration.branch,
+					);
+				}
 			}
 
 			// Process each node
@@ -187,7 +189,7 @@ export class DocumentationGenerator {
 			}
 
 			// Only commit and create PR for JSDoc changes if generateJsDoc is true
-			if (this.hasChanges && this.branchName) {
+			if (this.hasChanges && this.branchName && this.configuration.createBranch ) {
 				for (const [filePath, content] of this.fileContents) {
 					await this.gitManager.commitFile(
 						this.branchName,
