@@ -27,7 +27,7 @@ export const placeBet: Action = {
     name: "PLACE_BET",
     similes: ["EXECUTE_BET", "CONFIRM_BET", "FINALIZE_BET"],
     description: "Place a bet after token approval is confirmed",
-    validate: async (runtime: IAgentRuntime) => {
+    validate: async (_runtime: IAgentRuntime) => {
         return !!process.env.BINARY_PREDICTION_CONTRACT_ADDRESS;
     },
     examples: [

@@ -1,8 +1,4 @@
-import {
-    composeContext,
-    composeRandomUser,
-    parseTagContent,
-} from "@elizaos/core";
+import { composeContext, composeRandomUser } from "@elizaos/core";
 import { generateMessageResponse, generateShouldRespond } from "@elizaos/core";
 import {
     Content,

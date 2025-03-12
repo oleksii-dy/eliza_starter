@@ -6,7 +6,10 @@ const platform = os.platform();
 const rel = os.release();
 
 if (platform !== "linux") {
-    console.log("Skipping playwright installation: non-Linux platform detected:", platform);
+    console.log(
+        "Skipping playwright installation: non-Linux platform detected:",
+        platform
+    );
     process.exit(0);
 }
 
@@ -18,7 +21,10 @@ function getDistroName() {
         for (const line of lines) {
             const [key, value] = line.split("=");
             if (key && value) {
-                info[key.toLowerCase()] = value.replace(/"/g, "").toLowerCase().trim();
+                info[key.toLowerCase()] = value
+                    .replace(/"/g, "")
+                    .toLowerCase()
+                    .trim();
             }
         }
         return info["id"] || info["id_like"] || null;
@@ -41,7 +47,7 @@ const supportedDistros = [
     "linuxmint",
     "elementary",
     "pureos",
-    "kali"
+    "kali",
 ];
 
 if (!distro || !supportedDistros.some((name) => distro.includes(name))) {
@@ -56,7 +62,7 @@ if (!distro || !supportedDistros.some((name) => distro.includes(name))) {
 
 try {
     execSync("npx playwright install-deps && npx playwright install", {
-        stdio: "inherit"
+        stdio: "inherit",
     });
 } catch (err) {
     console.error("Failed to install Playwright dependencies:", err.message);

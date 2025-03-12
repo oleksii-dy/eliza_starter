@@ -119,7 +119,7 @@ async function handler(
         }
     }
 
-    for (const goal of updatedGoals) {
+    for (const _outerGoal of updatedGoals) {
         for (const goal of updatedGoals) {
             const id = goal.id;
             if (goal.id) delete goal.id;

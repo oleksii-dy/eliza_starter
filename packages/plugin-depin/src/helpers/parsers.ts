@@ -6,4 +6,3 @@ export function parseTagContent(text: string, tag: string) {
     }
     return null;
 }
-

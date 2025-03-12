@@ -15,55 +15,53 @@ vi.mock("@elizaos/core", async () => {
 });
 
 vi.mock("../services/quicksilver", () => ({
-    getRawDataFromQuicksilver: vi
-        .fn()
-        .mockImplementation((endpoint, params) => {
-            if (endpoint === "mapbox") {
-                return Promise.resolve({
-                    features: [
-                        {
-                            geometry: { coordinates: [-74.006, 40.7128] },
-                        },
-                    ],
-                });
-            } else if (endpoint === "weather-forecast") {
-                return Promise.resolve([
+    getRawDataFromQuicksilver: vi.fn().mockImplementation((endpoint) => {
+        if (endpoint === "mapbox") {
+            return Promise.resolve({
+                features: [
                     {
-                        date: "2023-06-01",
-                        temperature_min: 18.5,
-                        temperature_max: 25.2,
-                        condition: "Clear",
-                        condition_desc: "Clear sky",
-                        condition_code: 800,
-                        precipitation_probability: 0,
-                        precipitation: 0,
-                        humidity: 65,
-                        wind_speed: 5.2,
-                        wind_direction: 180,
-                        uv: 4,
-                        location_name: "New York",
-                        parsed_timestamp: "2023-06-01",
+                        geometry: { coordinates: [-74.006, 40.7128] },
                     },
-                    {
-                        date: "2023-06-02",
-                        temperature_min: 19.0,
-                        temperature_max: 26.5,
-                        condition: "Clouds",
-                        condition_desc: "Scattered clouds",
-                        condition_code: 802,
-                        precipitation_probability: 20,
-                        precipitation: 0.5,
-                        humidity: 70,
-                        wind_speed: 6.1,
-                        wind_direction: 200,
-                        uv: 3,
-                        location_name: "New York",
-                        parsed_timestamp: "2023-06-02",
-                    },
-                ]);
-            }
-            return Promise.reject(new Error("Unknown endpoint"));
-        }),
+                ],
+            });
+        } else if (endpoint === "weather-forecast") {
+            return Promise.resolve([
+                {
+                    date: "2023-06-01",
+                    temperature_min: 18.5,
+                    temperature_max: 25.2,
+                    condition: "Clear",
+                    condition_desc: "Clear sky",
+                    condition_code: 800,
+                    precipitation_probability: 0,
+                    precipitation: 0,
+                    humidity: 65,
+                    wind_speed: 5.2,
+                    wind_direction: 180,
+                    uv: 4,
+                    location_name: "New York",
+                    parsed_timestamp: "2023-06-01",
+                },
+                {
+                    date: "2023-06-02",
+                    temperature_min: 19.0,
+                    temperature_max: 26.5,
+                    condition: "Clouds",
+                    condition_desc: "Scattered clouds",
+                    condition_code: 802,
+                    precipitation_probability: 20,
+                    precipitation: 0.5,
+                    humidity: 70,
+                    wind_speed: 6.1,
+                    wind_direction: 200,
+                    uv: 3,
+                    location_name: "New York",
+                    parsed_timestamp: "2023-06-02",
+                },
+            ]);
+        }
+        return Promise.reject(new Error("Unknown endpoint"));
+    }),
 }));
 
 import { getRawDataFromQuicksilver } from "../services/quicksilver";

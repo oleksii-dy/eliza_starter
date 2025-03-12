@@ -65,7 +65,7 @@ export const predictionEvaluator: Evaluator = {
                 process.env.MAX_ONGOING_PREDICTIONS || "20"
             );
             return predictions.length < maxPredictions;
-        } catch (error) {
+        } catch {
             return false;
         }
     },

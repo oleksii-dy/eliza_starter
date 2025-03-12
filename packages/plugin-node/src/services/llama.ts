@@ -552,7 +552,7 @@ export class LlamaService extends Service {
         }
 
         const session = new LlamaChatSession({
-            contextSequence: this.sequence
+            contextSequence: this.sequence,
         });
 
         const wordsToPunishTokens = wordsToPunish
@@ -567,11 +567,12 @@ export class LlamaService extends Service {
         };
 
         const response = await session.prompt(context, {
-            onTextChunk(chunk) {                // stream the response to the console as it's being generated
+            onTextChunk(chunk) {
+                // stream the response to the console as it's being generated
                 process.stdout.write(chunk);
             },
             temperature: Number(temperature),
-            repeatPenalty: repeatPenalty
+            repeatPenalty: repeatPenalty,
         });
 
         if (!response) {
