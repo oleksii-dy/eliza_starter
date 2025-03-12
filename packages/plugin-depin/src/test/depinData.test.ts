@@ -248,7 +248,9 @@ describe("DePINScanProvider", () => {
 
             expect(result).toContain("DePINScan Random Project: Project A");
             expect(result).toContain("**Token**: TKNA");
-            expect(result).toContain("**Description**: Description for Project A");
+            expect(result).toContain(
+                "**Description**: Description for Project A"
+            );
             expect(result).toContain("**Layer 1**: Ethereum, Polygon");
             expect(result).toContain("**Categories**: Computing, Storage");
             expect(result).toContain("**Token Price**: 2.5");

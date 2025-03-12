@@ -234,7 +234,10 @@ const getBetAmount = async (
         address: process.env.PREDICTION_TOKEN as `0x${string}`,
         abi: erc20Abi,
         functionName: "allowance",
-        args: [bettor, process.env.BINARY_PREDICTION_CONTRACT_ADDRESS as `0x${string}`],
+        args: [
+            bettor,
+            process.env.BINARY_PREDICTION_CONTRACT_ADDRESS as `0x${string}`,
+        ],
     })) as bigint;
 
     if (allowance <= BigInt(0)) {

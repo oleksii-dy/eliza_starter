@@ -47,11 +47,11 @@ The DePINScan provider fetches and caches data from the IoTeX DePINScan API, pro
 
 - **Daily Metrics**: Latest aggregated statistics about DePIN activity on IoTeX
 - **Project Data**: Detailed information about DePIN projects including:
-  - Project name and slug
-  - Token details and market metrics
-  - Device statistics (total devices, costs, earnings)
-  - Layer 1 chains and categories
-  - Market data (market cap, token price, FDV)
+    - Project name and slug
+    - Token details and market metrics
+    - Device statistics (total devices, costs, earnings)
+    - Layer 1 chains and categories
+    - Market data (market cap, token price, FDV)
 
 ## Actions
 
@@ -125,22 +125,25 @@ The PREPARE_BET action (also known as APPROVE_BET) handles the first step of the
 
 1. **Token Approval**: Generates the necessary transaction data for users to approve the ERC20 token contract to spend tokens on their behalf
 2. **Bet Validation**: Validates and processes bet parameters including:
-   - Prediction ID: The unique identifier of the prediction being bet on
-   - Amount: How many $SENTAI tokens to bet
-   - Outcome: The predicted outcome (true/false)
-   - Bettor Address: The user's wallet address
+    - Prediction ID: The unique identifier of the prediction being bet on
+    - Amount: How many $SENTAI tokens to bet
+    - Outcome: The predicted outcome (true/false)
+    - Bettor Address: The user's wallet address
 
 **Usage Example:**
+
 ```
 "PREPARE A BET FOR PREDICTION 1, 100 $SENTAI, true, 0x742d35Cc6634C0532925a3b844Bc454e4438f44e"
 ```
 
 The action will respond with:
+
 - A unique Bet ID
 - Transaction data for token approval
 - Instructions for confirming the approval
 
 **Note:** This is a two-step process:
+
 1. First approve the token spending (this action)
 2. Then place the actual bet using the PLACE_BET action after approval
 
@@ -150,25 +153,27 @@ The PLACE_BET action executes the second and final step of the betting process a
 
 1. **Validates the Approval**: Verifies the provided transaction hash of the token approval
 2. **Executes the Bet**: Places the bet on-chain with the previously approved parameters:
-   - Prediction ID
-   - Bet amount in $SENTAI
-   - Chosen outcome (Yes/No)
-   - Bettor's wallet address
+    - Prediction ID
+    - Bet amount in $SENTAI
+    - Chosen outcome (Yes/No)
+    - Bettor's wallet address
 
 **Usage Example:**
+
 ```
 "BET 123 APPROVED: 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
 ```
 
 The action will:
+
 - Confirm the approval transaction
 - Execute the bet on-chain
 - Return a confirmation with:
-  - Prediction statement
-  - Your bet choice (Yes/No)
-  - Bet amount
-  - Bettor address
-  - Transaction hash
+    - Prediction statement
+    - Your bet choice (Yes/No)
+    - Bet amount
+    - Bettor address
+    - Transaction hash
 
 **Note:** This action should only be used after successfully completing the PREPARE_BET step and receiving confirmation of the token approval transaction.
 
@@ -181,10 +186,10 @@ The Prediction Evaluator is an automated system that analyzes conversations to i
 - **Monitors Conversations**: Continuously scans discussions for predictive statements about weather
 - **Mints Predictions**: Automatically creates predictions on-chain
 - **Manages Prediction Lifecycle**:
-  - Validates prediction statements
-  - Sets appropriate deadlines
-  - Tracks prediction status
-  - Limits the number of active predictions
+    - Validates prediction statements
+    - Sets appropriate deadlines
+    - Tracks prediction status
+    - Limits the number of active predictions
 
 ### Services
 
@@ -194,10 +199,10 @@ The Prediction Resolver is an automated service that validates and resolves weat
 
 - **Monitors Active Predictions**: Checks for predictions ready to be resolved every minute
 - **Validates Outcomes**:
-  - Fetches current weather data via QUICKSILVER
-  - Compares prediction statements against actual conditions
-  - Determines true/false outcomes automatically
+    - Fetches current weather data via QUICKSILVER
+    - Compares prediction statements against actual conditions
+    - Determines true/false outcomes automatically
 - **Resolves On-Chain**:
-  - Updates prediction status in the blockchain
-  - Triggers reward distribution to winning bettors
-  - Updates prediction status in the database
+    - Updates prediction status in the blockchain
+    - Triggers reward distribution to winning bettors
+    - Updates prediction status in the database

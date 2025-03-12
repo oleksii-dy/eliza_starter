@@ -1,4 +1,8 @@
-import { composeContext, getModelSettings, parseTagContent } from "@elizaos/core";
+import {
+    composeContext,
+    getModelSettings,
+    parseTagContent,
+} from "@elizaos/core";
 import { generateText, splitChunks, trimTokens } from "@elizaos/core";
 import { getActorDetails } from "@elizaos/core";
 import { parseJSONObjectFromText } from "@elizaos/core";

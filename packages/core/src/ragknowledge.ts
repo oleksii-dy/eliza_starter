@@ -34,10 +34,12 @@ export class RAGKnowledgeManager implements IRAGKnowledgeManager {
         this.tableName = opts.tableName;
     }
 
-    private readonly defaultRAGMatchThreshold =
-        Number(process.env.DEFAULT_RAG_MATCH_THRESHOLD || "0.85");
-    private readonly defaultRAGMatchCount =
-        Number(process.env.DEFAULT_RAG_MATCH_COUNT || "5");
+    private readonly defaultRAGMatchThreshold = Number(
+        process.env.DEFAULT_RAG_MATCH_THRESHOLD || "0.85"
+    );
+    private readonly defaultRAGMatchCount = Number(
+        process.env.DEFAULT_RAG_MATCH_COUNT || "5"
+    );
 
     /**
      * Common English stop words to filter out from query analysis

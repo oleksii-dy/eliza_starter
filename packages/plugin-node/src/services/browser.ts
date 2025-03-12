@@ -1,4 +1,9 @@
-import { generateText, IBrowserService, parseTagContent, trimTokens } from "@elizaos/core";
+import {
+    generateText,
+    IBrowserService,
+    parseTagContent,
+    trimTokens,
+} from "@elizaos/core";
 import { parseJSONObjectFromText } from "@elizaos/core";
 import { Service } from "@elizaos/core";
 import { settings } from "@elizaos/core";
