@@ -26,15 +26,20 @@ export class AIService {
 	 * @throws {Error} If OPENAI_API_KEY environment variable is not set
 	 */
 	constructor(private configuration: Configuration) {
-		if (!process.env.OPENAI_API_KEY) {
-			throw new Error("OPENAI_API_KEY is not set");
-		}
-		this.chatModel = new ChatOpenAI({ apiKey: process.env.OPENAI_API_KEY });
-		this.chatModelFAQ = new ChatOpenAI({
-			apiKey: process.env.OPENAI_API_KEY,
-			model: "gpt-4o",
-		});
-		this.codeFormatter = new CodeFormatter();
+	    if (!process.env.OPENAI_API_KEY) {
+		throw new Error("OPENAI_API_KEY is not set");
+	    }
+	    
+	    let defaultCreds = { apiKey: process.env.OPENAI_API_KEY }
+	    if (process.env.OPENAI_API_BASE) {
+		console.log("OPENAI_API_BASE",process.env.OPENAI_API_BASE);
+		defaultCreds.configuration = { "basePath" : process.env.OPENAI_API_BASE }
+	    }
+
+	    console.log("DEFAULT_CREDS",defaultCreds);
+	    this.chatModel = new ChatOpenAI(defaultCreds)
+	    this.chatModelFAQ = new ChatOpenAI({ ...defaultCreds, ...{model: "gpt-4o"}});
+	    this.codeFormatter = new CodeFormatter();
 	}
 
 	/**
