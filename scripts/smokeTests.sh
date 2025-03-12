@@ -66,7 +66,7 @@ APP_PID=$!  # Capture the PID of the background process
         exit 1
     fi
 
-    if grep -q "REST API bound to 0.0.0.0" "$OUTFILE"; then
+    if grep -q ".*REST API bound to 0.0.0.0.*" "$OUTFILE"; then
         >&2 echo "SUCCESS: Direct Client API is ready! Proceeding..."
         break
     fi
