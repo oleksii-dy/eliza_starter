@@ -15,37 +15,35 @@ vi.mock("@elizaos/core", async () => {
 });
 
 vi.mock("../services/quicksilver", () => ({
-    getRawDataFromQuicksilver: vi
-        .fn()
-        .mockImplementation((endpoint) => {
-            if (endpoint === "mapbox") {
-                return Promise.resolve({
-                    features: [
-                        {
-                            geometry: { coordinates: [-74.006, 40.7128] },
-                        },
-                    ],
-                });
-            } else if (endpoint === "weather-current") {
-                return Promise.resolve({
-                    location_name: "New York",
-                    temperature: 22.5,
-                    condition: "Clear",
-                    condition_desc: "Clear sky",
-                    condition_code: 800,
-                    temperature_min: 20.1,
-                    temperature_max: 24.3,
-                    feels_like: 23.0,
-                    pressure: 1013,
-                    humidity: 65,
-                    wind_speed: 5.2,
-                    wind_direction: 180,
-                    uv: 4,
-                    luminance: 10000,
-                });
-            }
-            return Promise.reject(new Error("Unknown endpoint"));
-        }),
+    getRawDataFromQuicksilver: vi.fn().mockImplementation((endpoint) => {
+        if (endpoint === "mapbox") {
+            return Promise.resolve({
+                features: [
+                    {
+                        geometry: { coordinates: [-74.006, 40.7128] },
+                    },
+                ],
+            });
+        } else if (endpoint === "weather-current") {
+            return Promise.resolve({
+                location_name: "New York",
+                temperature: 22.5,
+                condition: "Clear",
+                condition_desc: "Clear sky",
+                condition_code: 800,
+                temperature_min: 20.1,
+                temperature_max: 24.3,
+                feels_like: 23.0,
+                pressure: 1013,
+                humidity: 65,
+                wind_speed: 5.2,
+                wind_direction: 180,
+                uv: 4,
+                luminance: 10000,
+            });
+        }
+        return Promise.reject(new Error("Unknown endpoint"));
+    }),
 }));
 
 import { getRawDataFromQuicksilver } from "../services/quicksilver";
