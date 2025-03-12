@@ -44,13 +44,13 @@ export const resolvePrediction = async (
     });
 
     const walletClient = walletProvider.getWalletClient(network);
-    // @ts-ignore
+    // @ts-expect-error: kzg is not required
     const request = await walletClient.prepareTransactionRequest({
         to: contractAddress,
         data,
         account: walletClient.account,
     });
-    // @ts-ignore
+    // @ts-expect-error: works, need closer look
     const serializedTransaction = await walletClient.signTransaction(request);
     const hash = await walletClient.sendRawTransaction({
         serializedTransaction,
@@ -91,13 +91,13 @@ export const createPrediction = async (
     });
 
     const walletClient = walletProvider.getWalletClient(network);
-    // @ts-ignore
+    // @ts-expect-error: kzg is not required
     const requestt = await walletClient.prepareTransactionRequest({
         to: address,
         data,
         account: walletClient.account,
     });
-    // @ts-ignore
+    // @ts-expect-error: works, need closer look
     const serializedTransaction = await walletClient.signTransaction(requestt);
     const hash = await walletClient.sendRawTransaction({
         serializedTransaction,
@@ -172,13 +172,13 @@ export const placeBet = async (
     });
 
     const walletClient = walletProvider.getWalletClient(network);
-    // @ts-ignore
+    // @ts-expect-error: kzg is not required
     const request = await walletClient.prepareTransactionRequest({
         to: process.env.BINARY_PREDICTION_CONTRACT_ADDRESS as `0x${string}`,
         data,
         account: walletClient.account,
     });
-    // @ts-ignore
+    // @ts-expect-error: works, need closer look
     const serializedTransaction = await walletClient.signTransaction(request);
     const hash = await walletClient.sendRawTransaction({
         serializedTransaction,
@@ -262,7 +262,7 @@ const getBetAmount = async (
         throw new Error("Bet amount is less than the minimum bet");
     }
 
-    let betAmount: bigint = amount > maxBet ? maxBet : amount;
+    const betAmount: bigint = amount > maxBet ? maxBet : amount;
 
     if (allowance < betAmount) {
         throw new Error("Insufficient allowance");

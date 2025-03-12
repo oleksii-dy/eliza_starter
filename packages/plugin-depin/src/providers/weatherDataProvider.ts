@@ -23,16 +23,12 @@ class WeatherDataProvider {
     async getRandomCityWeather(
         runtime: IAgentRuntime
     ): Promise<WeatherData | null> {
-        try {
-            const citiesArray = this.getCitiesArray(runtime);
-            const randomCity = this.pickRandomCity(citiesArray);
-            const coordinates = await this.getCoordinates(randomCity);
-            const weather = await this.getWeatherData(coordinates, randomCity);
+        const citiesArray = this.getCitiesArray(runtime);
+        const randomCity = this.pickRandomCity(citiesArray);
+        const coordinates = await this.getCoordinates(randomCity);
+        const weather = await this.getWeatherData(coordinates, randomCity);
 
-            return weather;
-        } catch (error) {
-            throw error;
-        }
+        return weather;
     }
 
     pickRandomCity(citiesArray: string[]) {

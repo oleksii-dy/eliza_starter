@@ -17,7 +17,7 @@ vi.mock("@elizaos/core", async () => {
 vi.mock("../services/quicksilver", () => ({
     getRawDataFromQuicksilver: vi
         .fn()
-        .mockImplementation((endpoint, params) => {
+        .mockImplementation((endpoint) => {
             if (endpoint === "mapbox") {
                 return Promise.resolve({
                     features: [
