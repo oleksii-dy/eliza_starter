@@ -8,6 +8,7 @@ import fs from "fs";
 import {
     type AgentRuntime,
     elizaLogger,
+    parseBooleanFromText,
     getEnvVariable,
     type UUID,
     validateCharacterConfig,
@@ -177,13 +178,11 @@ export function createApiRouter(
             // if it has a different name, the agentId will change
         }
 
-        // stores the json data before it is modified with added data
-        const characterJson = { ...req.body };
-
         // load character from body
         const character = req.body;
-        console.log("character", character);
+        console.log("character in", character);
         try {
+            directClient.patchupCharacter(character)
             validateCharacterConfig(character);
         } catch (e) {
             elizaLogger.error(`Error parsing character: ${e}`);
@@ -193,6 +192,9 @@ export function createApiRouter(
             });
             return;
         }
+
+        console.log("character out settings?.secrets", character.settings?.secrets);
+        console.log("character out clientConfig", character.clientConfig);
 
         // start it up (and register it)
         try {
@@ -217,6 +219,8 @@ export function createApiRouter(
                 );
                 const filepath = path.join(uploadDir, filename);
                 await fs.promises.mkdir(uploadDir, { recursive: true });
+                // stores the json data before it is modified with added data
+                const characterJson = { ...req.body };
                 await fs.promises.writeFile(
                     filepath,
                     JSON.stringify(
@@ -246,6 +250,7 @@ export function createApiRouter(
         const character = req.body;
         console.log("character", character);
         try {
+            directClient.patchupCharacter(character)
             validateCharacterConfig(character);
         } catch (e) {
             elizaLogger.error(`Error parsing character: ${e}`);

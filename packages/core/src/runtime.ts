@@ -296,6 +296,13 @@ export class AgentRuntime implements IAgentRuntime {
 
         // By convention, we create a user and room using the agent id.
         // Memories related to it are considered global context for the agent.
+        this.ensureConnection(
+          this.agentId,
+          this.agentId,
+          this.character.username || this.character.name,
+          this.character.name
+        )
+        /*
         this.ensureRoomExists(this.agentId).then(() => {
             this.ensureUserExists(
                 this.agentId,
@@ -306,6 +313,7 @@ export class AgentRuntime implements IAgentRuntime {
                 this.ensureParticipantExists(this.agentId, this.agentId);
             });
         });
+        */
 
         elizaLogger.success(`Agent ID: ${this.agentId}`);
 
@@ -1166,6 +1174,7 @@ export class AgentRuntime implements IAgentRuntime {
         email?: string | null,
         source?: string | null,
     ) {
+        //console.log(userId, 'name', name, 'character.name', this.character.name)
         const account = await this.databaseAdapter.getAccountById(userId);
         if (!account) {
             await this.databaseAdapter.createAccount({
