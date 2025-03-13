@@ -460,27 +460,6 @@ export async function generateText({
                 break;
             }
 
-            // case ModelProviderName.MISTRAL: {
-            //     const mistral = createMistral();
-
-            //     const { text: mistralResponse } = await aiGenerateText({
-            //         model: mistral(model),
-            //         prompt: context,
-            //         system:
-            //             runtime.character.system ??
-            //             settings.SYSTEM_PROMPT ??
-            //             undefined,
-            //         temperature: temperature,
-            //         maxTokens: max_response_length,
-            //         frequencyPenalty: frequency_penalty,
-            //         presencePenalty: presence_penalty,
-            //     });
-
-            //     response = mistralResponse;
-            //     elizaLogger.debug("Received response from Mistral model.");
-            //     break;
-            // }
-
             case ModelProviderName.ANTHROPIC: {
                 elizaLogger.debug(
                     "Initializing Anthropic model with Cloudflare check"
@@ -1773,15 +1752,7 @@ export async function generateTweetActions({
 async function handleProvider(
     options: ProviderOptions
 ): Promise<GenerateObjectResult<unknown>> {
-    const {
-        provider,
-        runtime,
-        context,
-        modelClass,
-        //verifiableInference,
-        //verifiableInferenceAdapter,
-        //verifiableInferenceOptions,
-    } = options;
+    const { provider, runtime, context, modelClass } = options;
     switch (provider) {
         case ModelProviderName.OPENAI:
         case ModelProviderName.ETERNALAI:
@@ -1795,26 +1766,12 @@ async function handleProvider(
         case ModelProviderName.ANTHROPIC:
         case ModelProviderName.CLAUDE_VERTEX:
             return await handleAnthropic(options);
-        case ModelProviderName.GROK:
-            return await handleGrok(options);
-        case ModelProviderName.GROQ:
-            return await handleGroq(options);
         case ModelProviderName.LLAMALOCAL:
             return await generateObjectDeprecated({
                 runtime,
                 context,
                 modelClass,
             });
-        case ModelProviderName.GOOGLE:
-            return await handleGoogle(options);
-        // case ModelProviderName.MISTRAL:
-        //     return await handleMistral(options);
-        case ModelProviderName.REDPILL:
-            return await handleRedPill(options);
-        case ModelProviderName.OPENROUTER:
-            return await handleOpenRouter(options);
-        case ModelProviderName.OLLAMA:
-            return await handleOllama(options);
         case ModelProviderName.DEEPSEEK:
             return await handleDeepSeek(options);
         default: {
@@ -1869,137 +1826,6 @@ async function handleAnthropic({
         schema,
         schemaName,
         schemaDescription,
-        ...modelOptions,
-    });
-}
-
-async function handleGrok({
-    model,
-    apiKey,
-    schema,
-    schemaName,
-    schemaDescription,
-    mode = "json",
-    modelOptions,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const grok = createOpenAI({ apiKey, baseURL: models.grok.endpoint });
-    return await aiGenerateObject({
-        model: grok.languageModel(model, { parallelToolCalls: false }),
-        schema,
-        schemaName,
-        schemaDescription,
-        mode,
-        ...modelOptions,
-    });
-}
-
-async function handleGroq({
-    model,
-    apiKey,
-    schema,
-    schemaName,
-    schemaDescription,
-    mode = "json",
-    modelOptions,
-    runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    elizaLogger.debug("Handling Groq request with Cloudflare check");
-    const baseURL = getCloudflareGatewayBaseURL(runtime, "groq");
-    elizaLogger.debug("Groq handleGroq baseURL:", { baseURL });
-
-    const groq = createGroq({ apiKey, baseURL });
-    return await aiGenerateObject({
-        model: groq.languageModel(model),
-        schema,
-        schemaName,
-        schemaDescription,
-        mode,
-        ...modelOptions,
-    });
-}
-
-async function handleGoogle({
-    model,
-    apiKey: _apiKey,
-    schema,
-    schemaName,
-    schemaDescription,
-    mode = "json",
-    modelOptions,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const google = createGoogleGenerativeAI();
-    return await aiGenerateObject({
-        model: google(model),
-        schema,
-        schemaName,
-        schemaDescription,
-        mode,
-        ...modelOptions,
-    });
-}
-
-async function handleRedPill({
-    model,
-    apiKey,
-    schema,
-    schemaName,
-    schemaDescription,
-    mode = "json",
-    modelOptions,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const redPill = createOpenAI({ apiKey, baseURL: models.redpill.endpoint });
-    return await aiGenerateObject({
-        model: redPill.languageModel(model),
-        schema,
-        schemaName,
-        schemaDescription,
-        mode,
-        ...modelOptions,
-    });
-}
-
-async function handleOpenRouter({
-    model,
-    apiKey,
-    schema,
-    schemaName,
-    schemaDescription,
-    mode = "json",
-    modelOptions,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const openRouter = createOpenAI({
-        apiKey,
-        baseURL: models.openrouter.endpoint,
-    });
-    return await aiGenerateObject({
-        model: openRouter.languageModel(model),
-        schema,
-        schemaName,
-        schemaDescription,
-        mode,
-        ...modelOptions,
-    });
-}
-
-async function handleOllama({
-    model,
-    schema,
-    schemaName,
-    schemaDescription,
-    mode = "json",
-    modelOptions,
-    provider,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const ollamaProvider = createOllama({
-        baseURL: getEndpoint(provider) + "/api",
-    });
-    const ollama = ollamaProvider(model);
-    return await aiGenerateObject({
-        model: ollama,
-        schema,
-        schemaName,
-        schemaDescription,
-        mode,
         ...modelOptions,
     });
 }

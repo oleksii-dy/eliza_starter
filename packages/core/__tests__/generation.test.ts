@@ -18,20 +18,6 @@ vi.mock("@ai-sdk/anthropic", () => ({
     })),
 }));
 
-vi.mock("@ai-sdk/groq", () => ({
-    createGroq: vi.fn(() => ({
-        languageModel: vi.fn(() => "mocked-groq-model"),
-    })),
-}));
-
-vi.mock("@ai-sdk/google", () => ({
-    createGoogleGenerativeAI: vi.fn(() => (model) => "mocked-google-model"),
-}));
-
-vi.mock("ollama-ai-provider", () => ({
-    createOllama: vi.fn(() => (model) => "mocked-ollama-model"),
-}));
-
 // Mock the ai module
 vi.mock("ai", () => ({
     generateObject: vi.fn().mockResolvedValue({
@@ -159,66 +145,6 @@ describe("Generation Module", () => {
         it("should generate an object using Anthropic provider", async () => {
             // Setup
             runtime.modelProvider = ModelProviderName.ANTHROPIC;
-
-            // Execute
-            const result = await generateObject({
-                runtime,
-                context: "Generate a person object",
-                modelClass: ModelClass.LARGE,
-                schema: testSchema,
-            });
-
-            // Verify
-            expect(ai.generateObject).toHaveBeenCalled();
-            expect(result).toEqual({
-                text: "mocked response",
-                response: { foo: "bar" },
-            });
-        });
-
-        it("should generate an object using Groq provider", async () => {
-            // Setup
-            runtime.modelProvider = ModelProviderName.GROQ;
-
-            // Execute
-            const result = await generateObject({
-                runtime,
-                context: "Generate a person object",
-                modelClass: ModelClass.LARGE,
-                schema: testSchema,
-            });
-
-            // Verify
-            expect(ai.generateObject).toHaveBeenCalled();
-            expect(result).toEqual({
-                text: "mocked response",
-                response: { foo: "bar" },
-            });
-        });
-
-        it("should generate an object using Google provider", async () => {
-            // Setup
-            runtime.modelProvider = ModelProviderName.GOOGLE;
-
-            // Execute
-            const result = await generateObject({
-                runtime,
-                context: "Generate a person object",
-                modelClass: ModelClass.LARGE,
-                schema: testSchema,
-            });
-
-            // Verify
-            expect(ai.generateObject).toHaveBeenCalled();
-            expect(result).toEqual({
-                text: "mocked response",
-                response: { foo: "bar" },
-            });
-        });
-
-        it("should generate an object using Ollama provider", async () => {
-            // Setup
-            runtime.modelProvider = ModelProviderName.OLLAMA;
 
             // Execute
             const result = await generateObject({
