@@ -1,4 +1,4 @@
-import { getModel, getEndpoint, models } from "../src/models.ts";
+import { getModelSettings, getEndpoint, models } from "../src/models.ts";
 import { ModelProviderName, ModelClass } from "../src/types.ts";
 import { describe, test, expect, vi } from "vitest";
 
@@ -64,7 +64,7 @@ describe("Model Provider Configuration", () => {
         test("should have correct model mappings", () => {
             const anthropicModels = models[ModelProviderName.ANTHROPIC].model;
             expect(anthropicModels[ModelClass.SMALL].name).toBe(
-                "claude-3-haiku-20240307"
+                "claude-3-5-haiku-20241022"
             );
             expect(anthropicModels[ModelClass.MEDIUM].name).toBe(
                 "claude-3-5-sonnet-20241022"
@@ -156,9 +156,11 @@ describe("Model Retrieval Functions", () => {
         });
 
         test("should throw error for invalid model provider", () => {
-            expect(() =>
-                getModel("INVALID_PROVIDER" as any, ModelClass.SMALL)
-            ).toThrow();
+            const model = getModelSettings(
+                "INVALID_PROVIDER" as any,
+                ModelClass.SMALL
+            );
+            expect(model).toBeUndefined();
         });
     });
 

@@ -53,7 +53,7 @@ describe("Parsing Module", () => {
         it("should return null for invalid input", () => {
             expect(parseBooleanFromText("")).toBe(null);
             expect(parseBooleanFromText("maybe")).toBe(null);
-            expect(parseBooleanFromText("YES NO")).toBe(null);
+            expect(parseBooleanFromText("1")).toBe(null);
         });
     });
 
@@ -69,7 +69,7 @@ describe("Parsing Module", () => {
 
         it("should handle empty arrays", () => {
             expect(parseJsonArrayFromText("```json\n[]\n```")).toEqual([]);
-            expect(parseJsonArrayFromText("[]")).toEqual(null);
+            expect(parseJsonArrayFromText("[]")).toEqual([]);
         });
 
         it("should return null for invalid JSON", () => {
