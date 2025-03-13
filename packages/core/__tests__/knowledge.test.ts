@@ -1,3 +1,4 @@
+import { MessageManager } from "./../../client-discord/src/messages";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import knowledge from "../src/knowledge";
 import { AgentRuntime } from "../src/runtime";
@@ -73,6 +74,9 @@ describe("Knowledge Module", () => {
         beforeEach(() => {
             mockRuntime = {
                 agentId: "test-agent",
+                character: {
+                    modelProvider: "local",
+                },
                 knowledgeManager: {
                     searchMemoriesByEmbedding: vi.fn().mockResolvedValue([
                         {
@@ -84,6 +88,15 @@ describe("Knowledge Module", () => {
                         },
                     ]),
                     createMemory: vi.fn().mockResolvedValue(undefined),
+                },
+                messageManager: {
+                    getCachedEmbeddings: vi.fn().mockResolvedValue([
+                        {
+                            embedding: new Float32Array(1536).fill(0),
+                            text: "test fragment",
+                            source: "source1",
+                        },
+                    ]),
                 },
                 documentsManager: {
                     getMemoryById: vi.fn().mockResolvedValue({
