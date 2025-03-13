@@ -1,4 +1,4 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { createAnthropic, anthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import {
@@ -14,7 +14,7 @@ import OpenAI from "openai";
 import { encodingForModel, TiktokenModel } from "js-tiktoken";
 import { AutoTokenizer } from "@huggingface/transformers";
 import Together from "together-ai";
-import { ZodSchema } from "zod";
+import { ZodSchema, z } from "zod";
 import { fal } from "@fal-ai/client";
 import { tavily } from "@tavily/core";
 
@@ -666,51 +666,28 @@ export async function generateMessageResponse({
     context: string;
     modelClass: ModelClass;
 }): Promise<Content> {
-    const modelSettings = getModelSettings(runtime.modelProvider, modelClass);
-    const max_context_length = modelSettings.maxInputTokens;
+    const contentSchema = z.object({
+        responseAnalysis: z.string(),
+        text: z.string().describe("Cleaned up response for the user."),
+        user: z.string().describe("Your name."),
+        action: z.string().describe("The action to take."),
+    });
 
-    context = await trimTokens(context, max_context_length, runtime);
-    elizaLogger.debug("Context:", context);
-
-    let retryDelay = 1000;
-    let retryCount = 0;
-    const MAX_RETRIES = 5;
-
-    while (retryCount < MAX_RETRIES) {
-        try {
-            elizaLogger.log("Generating message response..");
-
-            const response = await generateText({
-                runtime,
-                context,
-                modelClass,
-            });
-
-            const responseText = parseTagContent(response, "response");
-
-            // try parsing the response as JSON, if null then try again
-            const parsedContent = parseJSONObjectFromText(
-                responseText
-            ) as Content;
-            if (parsedContent) {
-                return parsedContent;
-            }
-            elizaLogger.debug("parsedContent is null, retrying");
-        } catch (error) {
-            elizaLogger.error("ERROR:", error);
-        }
-
-        elizaLogger.log(
-            `Retrying in ${retryDelay}ms... (Attempt ${retryCount + 1}/${MAX_RETRIES})`
-        );
-        await new Promise((resolve) => setTimeout(resolve, retryDelay));
-        retryDelay *= 2;
-        retryCount++;
+    try {
+        const result = await generateObject({
+            runtime,
+            context,
+            modelClass,
+            schema: contentSchema,
+            schemaName: "Content",
+            schemaDescription: "Message content structure",
+        });
+        elizaLogger.debug("generateMessageResponse result:", result.object);
+        return result.object as Content;
+    } catch (error) {
+        elizaLogger.error("Error in generateMessageResponse:", error);
+        throw error;
     }
-
-    throw new Error(
-        "Failed to generate message response after maximum retries"
-    );
 }
 
 export const generateImage = async (
@@ -1331,9 +1308,8 @@ async function handleAnthropic({
     const baseURL = getCloudflareGatewayBaseURL(runtime, "anthropic");
     elizaLogger.debug("Anthropic handleAnthropic baseURL:", { baseURL });
 
-    const anthropic = createAnthropic({ apiKey, baseURL });
     return await aiGenerateObject({
-        model: anthropic.languageModel(model),
+        model: anthropic(model),
         schema,
         schemaName,
         schemaDescription,

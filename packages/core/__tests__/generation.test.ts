@@ -17,6 +17,9 @@ vi.mock("@ai-sdk/anthropic", () => ({
     createAnthropic: vi.fn(() => ({
         languageModel: vi.fn(() => "mocked-anthropic-model"),
     })),
+    anthropic: vi.fn(() => ({
+        languageModel: vi.fn(() => "mocked-anthropic-model"),
+    })),
 }));
 
 // Mock the ai module
