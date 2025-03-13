@@ -57,27 +57,6 @@ import { tavily } from "@tavily/core";
 type Tool = CoreTool<any, any>;
 type StepResult = AIStepResult<any>;
 
-/**
- * Trims the provided text context to a specified token limit using a tokenizer model and type.
- *
- * The function dynamically determines the truncation method based on the tokenizer settings
- * provided by the runtime. If no tokenizer settings are defined, it defaults to using the
- * TikToken truncation method with the "gpt-4o" model.
- *
- * @async
- * @function trimTokens
- * @param {string} context - The text to be tokenized and trimmed.
- * @param {number} maxTokens - The maximum number of tokens allowed after truncation.
- * @param {IAgentRuntime} runtime - The runtime interface providing tokenizer settings.
- *
- * @returns {Promise<string>} A promise that resolves to the trimmed text.
- *
- * @throws {Error} Throws an error if the runtime settings are invalid or missing required fields.
- *
- * @example
- * const trimmedText = await trimTokens("This is an example text", 50, runtime);
- * console.log(trimmedText); // Output will be a truncated version of the input text.
- */
 export async function trimTokens(
     context: string,
     maxTokens: number,
@@ -165,12 +144,6 @@ async function truncateTiktoken(
     }
 }
 
-/**
- * Gets the Cloudflare Gateway base URL for a specific provider if enabled
- * @param runtime The runtime environment
- * @param provider The model provider name
- * @returns The Cloudflare Gateway base URL if enabled, undefined otherwise
- */
 function getCloudflareGatewayBaseURL(
     runtime: IAgentRuntime,
     provider: string
@@ -216,19 +189,6 @@ function getCloudflareGatewayBaseURL(
 
     return baseURL;
 }
-
-/**
- * Send a message to the model for a text generateText - receive a string back and parse how you'd like
- * @param opts - The options for the generateText request.
- * @param opts.context The context of the message to be completed.
- * @param opts.stop A list of strings to stop the generateText at.
- * @param opts.model The model to use for generateText.
- * @param opts.frequency_penalty The frequency penalty to apply to the generateText.
- * @param opts.presence_penalty The presence penalty to apply to the generateText.
- * @param opts.temperature The temperature to apply to the generateText.
- * @param opts.max_context_length The maximum length of the context to apply to the generateText.
- * @returns The completed message.
- */
 
 export async function generateText({
     runtime,
@@ -1047,20 +1007,6 @@ export async function generateText({
     }
 }
 
-/**
- * Sends a message to the model to determine if it should respond to the given context.
- * @param opts - The options for the generateText request
- * @param opts.context The context to evaluate for response
- * @param opts.stop A list of strings to stop the generateText at
- * @param opts.model The model to use for generateText
- * @param opts.frequency_penalty The frequency penalty to apply (0.0 to 2.0)
- * @param opts.presence_penalty The presence penalty to apply (0.0 to 2.0)
- * @param opts.temperature The temperature to control randomness (0.0 to 2.0)
- * @param opts.serverUrl The URL of the API server
- * @param opts.max_context_length Maximum allowed context length in tokens
- * @param opts.max_response_length Maximum allowed response length in tokens
- * @returns Promise resolving to "RESPOND", "IGNORE", "STOP" or null
- */
 export async function generateShouldRespond({
     runtime,
     context,
@@ -1118,13 +1064,6 @@ export async function generateShouldRespond({
     throw new Error("generateShouldRespond failed after 5 retries");
 }
 
-/**
- * Splits content into chunks of specified size with optional overlapping bleed sections
- * @param content - The text content to split into chunks
- * @param chunkSize - The maximum size of each chunk in tokens
- * @param bleed - Number of characters to overlap between chunks (default: 100)
- * @returns Promise resolving to array of text chunks with bleed sections
- */
 export async function splitChunks(
     content: string,
     chunkSize: number = 512,
@@ -1138,21 +1077,6 @@ export async function splitChunks(
     return textSplitter.splitText(content);
 }
 
-/**
- * Sends a message to the model and parses the response as a boolean value
- * @param opts - The options for the generateText request
- * @param opts.context The context to evaluate for the boolean response
- * @param opts.stop A list of strings to stop the generateText at
- * @param opts.model The model to use for generateText
- * @param opts.frequency_penalty The frequency penalty to apply (0.0 to 2.0)
- * @param opts.presence_penalty The presence penalty to apply (0.0 to 2.0)
- * @param opts.temperature The temperature to control randomness (0.0 to 2.0)
- * @param opts.serverUrl The URL of the API server
- * @param opts.token The API token for authentication
- * @param opts.max_context_length Maximum allowed context length in tokens
- * @param opts.max_response_length Maximum allowed response length in tokens
- * @returns Promise resolving to a boolean value parsed from the model's response
- */
 export async function generateTrueOrFalse({
     runtime,
     context = "",
@@ -1201,21 +1125,6 @@ export async function generateTrueOrFalse({
     );
 }
 
-/**
- * Send a message to the model and parse the response as a string array
- * @param opts - The options for the generateText request
- * @param opts.context The context/prompt to send to the model
- * @param opts.stop Array of strings that will stop the model's generation if encountered
- * @param opts.model The language model to use
- * @param opts.frequency_penalty The frequency penalty to apply (0.0 to 2.0)
- * @param opts.presence_penalty The presence penalty to apply (0.0 to 2.0)
- * @param opts.temperature The temperature to control randomness (0.0 to 2.0)
- * @param opts.serverUrl The URL of the API server
- * @param opts.token The API token for authentication
- * @param opts.max_context_length Maximum allowed context length in tokens
- * @param opts.max_response_length Maximum allowed response length in tokens
- * @returns Promise resolving to an array of strings parsed from the model's response
- */
 export async function generateTextArray({
     runtime,
     context,
@@ -1352,18 +1261,6 @@ export async function generateObjectArray({
     throw new Error("Failed to generate object array after maximum retries");
 }
 
-/**
- * Send a message to the model for generateText.
- * @param opts - The options for the generateText request.
- * @param opts.context The context of the message to be completed.
- * @param opts.stop A list of strings to stop the generateText at.
- * @param opts.model The model to use for generateText.
- * @param opts.frequency_penalty The frequency penalty to apply to the generateText.
- * @param opts.presence_penalty The presence penalty to apply to the generateText.
- * @param opts.temperature The temperature to apply to the generateText.
- * @param opts.max_context_length The maximum length of the context to apply to the generateText.
- * @returns The completed message.
- */
 export async function generateMessageResponse({
     runtime,
     context,
@@ -1844,9 +1741,7 @@ export const generateWebSearch = async (
         elizaLogger.error("Error:", error);
     }
 };
-/**
- * Configuration options for generating objects with a model.
- */
+
 export interface GenerationOptions {
     runtime: IAgentRuntime;
     context: string;
@@ -1862,9 +1757,7 @@ export interface GenerationOptions {
     verifiableInferenceOptions?: VerifiableInferenceOptions;
 }
 
-/**
- * Base settings for model generation.
- */
+
 interface ModelSettings {
     prompt: string;
     temperature: number;
@@ -1875,13 +1768,6 @@ interface ModelSettings {
     experimental_telemetry?: TelemetrySettings;
 }
 
-/**
- * Generates structured objects from a prompt using specified AI models and configuration options.
- *
- * @param {GenerationOptions} options - Configuration options for generating objects.
- * @returns {Promise<any[]>} - A promise that resolves to an array of generated objects.
- * @throws {Error} - Throws an error if the provider is unsupported or if generation fails.
- */
 export const generateObject = async ({
     runtime,
     context,
@@ -1949,9 +1835,6 @@ export const generateObject = async ({
     }
 };
 
-/**
- * Interface for provider-specific generation options.
- */
 interface ProviderOptions {
     runtime: IAgentRuntime;
     provider: ModelProviderName;
@@ -1970,12 +1853,6 @@ interface ProviderOptions {
     verifiableInferenceOptions?: VerifiableInferenceOptions;
 }
 
-/**
- * Handles AI generation based on the specified provider.
- *
- * @param {ProviderOptions} options - Configuration options specific to the provider.
- * @returns {Promise<any[]>} - A promise that resolves to an array of generated objects.
- */
 export async function handleProvider(
     options: ProviderOptions
 ): Promise<GenerateObjectResult<unknown>> {
@@ -2030,12 +1907,7 @@ export async function handleProvider(
         }
     }
 }
-/**
- * Handles object generation for OpenAI.
- *
- * @param {ProviderOptions} options - Options specific to OpenAI.
- * @returns {Promise<GenerateObjectResult<unknown>>} - A promise that resolves to generated objects.
- */
+
 async function handleOpenAI({
     model,
     apiKey,
@@ -2061,12 +1933,6 @@ async function handleOpenAI({
     });
 }
 
-/**
- * Handles object generation for Anthropic models.
- *
- * @param {ProviderOptions} options - Options specific to Anthropic.
- * @returns {Promise<GenerateObjectResult<unknown>>} - A promise that resolves to generated objects.
- */
 async function handleAnthropic({
     model,
     apiKey,
@@ -2090,12 +1956,6 @@ async function handleAnthropic({
     });
 }
 
-/**
- * Handles object generation for Grok models.
- *
- * @param {ProviderOptions} options - Options specific to Grok.
- * @returns {Promise<GenerateObjectResult<unknown>>} - A promise that resolves to generated objects.
- */
 async function handleGrok({
     model,
     apiKey,
@@ -2116,12 +1976,6 @@ async function handleGrok({
     });
 }
 
-/**
- * Handles object generation for Groq models.
- *
- * @param {ProviderOptions} options - Options specific to Groq.
- * @returns {Promise<GenerateObjectResult<unknown>>} - A promise that resolves to generated objects.
- */
 async function handleGroq({
     model,
     apiKey,
@@ -2147,12 +2001,6 @@ async function handleGroq({
     });
 }
 
-/**
- * Handles object generation for Google models.
- *
- * @param {ProviderOptions} options - Options specific to Google.
- * @returns {Promise<GenerateObjectResult<unknown>>} - A promise that resolves to generated objects.
- */
 async function handleGoogle({
     model,
     apiKey: _apiKey,
@@ -2173,37 +2021,6 @@ async function handleGoogle({
     });
 }
 
-// /**
-//  * Handles object generation for Mistral models.
-//  *
-//  * @param {ProviderOptions} options - Options specific to Mistral.
-//  * @returns {Promise<GenerateObjectResult<unknown>>} - A promise that resolves to generated objects.
-//  */
-// async function handleMistral({
-//     model,
-//     schema,
-//     schemaName,
-//     schemaDescription,
-//     mode,
-//     modelOptions,
-// }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-//     const mistral = createMistral();
-//     return await aiGenerateObject({
-//         model: mistral(model),
-//         schema,
-//         schemaName,
-//         schemaDescription,
-//         mode,
-//         ...modelOptions,
-//     });
-// }
-
-/**
- * Handles object generation for Redpill models.
- *
- * @param {ProviderOptions} options - Options specific to Redpill.
- * @returns {Promise<GenerateObjectResult<unknown>>} - A promise that resolves to generated objects.
- */
 async function handleRedPill({
     model,
     apiKey,
@@ -2224,12 +2041,6 @@ async function handleRedPill({
     });
 }
 
-/**
- * Handles object generation for OpenRouter models.
- *
- * @param {ProviderOptions} options - Options specific to OpenRouter.
- * @returns {Promise<GenerateObjectResult<unknown>>} - A promise that resolves to generated objects.
- */
 async function handleOpenRouter({
     model,
     apiKey,
@@ -2253,12 +2064,6 @@ async function handleOpenRouter({
     });
 }
 
-/**
- * Handles object generation for Ollama models.
- *
- * @param {ProviderOptions} options - Options specific to Ollama.
- * @returns {Promise<GenerateObjectResult<unknown>>} - A promise that resolves to generated objects.
- */
 async function handleOllama({
     model,
     schema,
@@ -2282,12 +2087,6 @@ async function handleOllama({
     });
 }
 
-/**
- * Handles object generation for DeepSeek models.
- *
- * @param {ProviderOptions} options - Options specific to DeepSeek.
- * @returns {Promise<GenerateObjectResult<unknown>>} - A promise that resolves to generated objects.
- */
 async function handleDeepSeek({
     model,
     apiKey,
@@ -2308,7 +2107,6 @@ async function handleDeepSeek({
     });
 }
 
-// Add type definition for Together AI response
 interface TogetherAIImageResponse {
     data: Array<{
         url: string;
