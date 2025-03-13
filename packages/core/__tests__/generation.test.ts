@@ -1,121 +1,325 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import knowledge from "../src/knowledge";
+import { describe, beforeEach, it, expect, vi, afterEach } from "vitest";
+import { z } from "zod";
+import * as ai from "ai";
+import { generateObject } from "../src/generation";
+import { ModelClass, ModelProviderName, ServiceType } from "../src/types";
 import { AgentRuntime } from "../src/runtime";
-import { KnowledgeItem, Memory } from "../src/types";
 
-// Mock dependencies
-vi.mock("../embedding", () => ({
-    embed: vi.fn().mockResolvedValue(new Float32Array(1536).fill(0)),
-    getEmbeddingZeroVector: vi
-        .fn()
-        .mockReturnValue(new Float32Array(1536).fill(0)),
+// Mock the ai-sdk modules
+vi.mock("@ai-sdk/openai", () => ({
+    createOpenAI: vi.fn(() => ({
+        languageModel: vi.fn(() => "mocked-openai-model"),
+    })),
 }));
 
-vi.mock("../generation", () => ({
-    splitChunks: vi.fn().mockImplementation(async (text) => [text]),
+vi.mock("@ai-sdk/anthropic", () => ({
+    createAnthropic: vi.fn(() => ({
+        languageModel: vi.fn(() => "mocked-anthropic-model"),
+    })),
 }));
 
-vi.mock("../uuid", () => ({
-    stringToUuid: vi.fn().mockImplementation((str) => str),
+vi.mock("@ai-sdk/groq", () => ({
+    createGroq: vi.fn(() => ({
+        languageModel: vi.fn(() => "mocked-groq-model"),
+    })),
 }));
 
-describe("Knowledge Module", () => {
-    describe("preprocess", () => {
-        it("should handle invalid inputs", () => {
-            expect(knowledge.preprocess(null)).toBe("");
-            expect(knowledge.preprocess(undefined)).toBe("");
-            expect(knowledge.preprocess("")).toBe("");
-        });
+vi.mock("@ai-sdk/google", () => ({
+    createGoogleGenerativeAI: vi.fn(() => (model) => "mocked-google-model"),
+}));
 
-        it("should remove code blocks and inline code", () => {
-            const input =
-                "Here is some code: ```const x = 1;``` and `inline code`";
-            expect(knowledge.preprocess(input)).toBe("here is some code: and");
-        });
+vi.mock("ollama-ai-provider", () => ({
+    createOllama: vi.fn(() => (model) => "mocked-ollama-model"),
+}));
 
-        it("should handle markdown formatting", () => {
-            const input =
-                "# Header\n## Subheader\n[Link](http://example.com)\n![Image](image.jpg)";
-            expect(knowledge.preprocess(input)).toBe(
-                "header subheader link image"
-            );
-        });
+// Mock the ai module
+vi.mock("ai", () => ({
+    generateObject: vi.fn().mockResolvedValue({
+        text: "mocked response",
+        response: { foo: "bar" },
+    }),
+    generateText: vi.fn().mockResolvedValue({
+        text: "mocked text response",
+    }),
+}));
 
-        it("should simplify URLs", () => {
-            const input = "Visit https://www.example.com/path?param=value";
-            expect(knowledge.preprocess(input)).toBe(
-                "visit example.com/path?param=value"
-            );
-        });
+// Mock js-tiktoken to avoid issues with trimTokens
+vi.mock("js-tiktoken", () => ({
+    encodingForModel: vi.fn().mockReturnValue({
+        encode: vi.fn().mockReturnValue([]),
+        decode: vi.fn().mockReturnValue(""),
+    }),
+}));
 
-        it("should remove Discord mentions and HTML tags", () => {
-            const input = "Hello <@123456789> and <div>HTML content</div>";
-            expect(knowledge.preprocess(input)).toBe("hello and html content");
-        });
+// Mock generateObjectDeprecated at the top level
+vi.mock("../src/generation", async () => {
+    const actual = await vi.importActual("../src/generation");
+    return {
+        ...(actual as object),
+        generateObjectDeprecated: vi.fn().mockResolvedValue({ foo: "bar" }),
+        trimTokens: vi.fn().mockImplementation((text) => Promise.resolve(text)),
+    };
+});
 
-        it("should normalize whitespace and newlines", () => {
-            const input = "Multiple    spaces\n\n\nand\nnewlines";
-            expect(knowledge.preprocess(input)).toBe(
-                "multiple spaces and newlines"
-            );
-        });
+describe("Generation Module", () => {
+    let runtime: AgentRuntime;
 
-        it("should remove comments", () => {
-            const input = "/* Block comment */ Normal text // Line comment";
-            expect(knowledge.preprocess(input)).toBe("normal text");
-        });
+    beforeEach(() => {
+        // Create a mock runtime
+        runtime = {
+            modelProvider: ModelProviderName.OPENAI,
+            token: "mock-api-key",
+            character: {
+                system: "You are a helpful assistant",
+                settings: {
+                    modelConfig: {
+                        temperature: 0.7,
+                        frequency_penalty: 0,
+                        presence_penalty: 0,
+                    },
+                },
+            },
+            getSetting: vi.fn((key) => {
+                const settings = {
+                    TOKENIZER_MODEL: "gpt-4o",
+                    TOKENIZER_TYPE: "tiktoken",
+                    CLOUDFLARE_GW_ENABLED: "false",
+                };
+                return settings[key];
+            }),
+            fetch: vi.fn().mockImplementation(() =>
+                Promise.resolve({
+                    ok: true,
+                    json: () =>
+                        Promise.resolve({
+                            choices: [
+                                { message: { content: "mocked response" } },
+                            ],
+                        }),
+                    clone: () => ({
+                        json: () =>
+                            Promise.resolve({
+                                choices: [
+                                    { message: { content: "mocked response" } },
+                                ],
+                            }),
+                    }),
+                })
+            ),
+            getService: vi.fn().mockImplementation((serviceType) => {
+                if (serviceType === ServiceType.TEXT_GENERATION) {
+                    return {
+                        queueTextCompletion: vi
+                            .fn()
+                            .mockResolvedValue(
+                                '<response>{"foo": "local response"}</response>'
+                            ),
+                    };
+                }
+                return null;
+            }),
+        } as unknown as AgentRuntime;
+
+        // Reset all mocks before each test
+        vi.clearAllMocks();
     });
 
-    describe("get and set", () => {
-        let mockRuntime: AgentRuntime;
+    afterEach(() => {
+        // vi.resetAllMocks();
+    });
 
-        beforeEach(() => {
-            mockRuntime = {
-                agentId: "test-agent",
-                character: {
-                    modelProvider: "openai",
-                },
-                messageManager: {
-                    getCachedEmbeddings: vi.fn().mockResolvedValue([]),
-                },
-                knowledgeManager: {
-                    searchMemoriesByEmbedding: vi.fn().mockResolvedValue([
-                        {
-                            content: {
-                                text: "test fragment",
-                                source: "source1",
-                            },
-                            similarity: 0.9,
-                        },
-                    ]),
-                    createMemory: vi.fn().mockResolvedValue(undefined),
-                },
-                documentsManager: {
-                    getMemoryById: vi.fn().mockResolvedValue({
-                        id: "source1",
-                        content: { text: "test document" },
-                    }),
-                    createMemory: vi.fn().mockResolvedValue(undefined),
-                },
-            } as unknown as AgentRuntime;
+    describe("generateObject", () => {
+        const testSchema = z.object({
+            name: z.string(),
+            age: z.number(),
         });
 
-        describe("get", () => {
-            it("should handle invalid messages", async () => {
-                const invalidMessage = {} as Memory;
-                const result = await knowledge.get(mockRuntime, invalidMessage);
-                expect(result).toEqual([]);
+        it("should generate an object using OpenAI provider", async () => {
+            // Setup
+            runtime.modelProvider = ModelProviderName.OPENAI;
+
+            // Execute
+            const result = await generateObject({
+                runtime,
+                context: "Generate a person object",
+                modelClass: ModelClass.LARGE,
+                schema: testSchema,
+                schemaName: "Person",
+                schemaDescription: "A person with name and age",
             });
 
-            it("should handle empty processed text", async () => {
-                const message: Memory = {
-                    agentId: "test-agent",
-                    content: { text: "```code only```" },
-                } as unknown as Memory;
-
-                const result = await knowledge.get(mockRuntime, message);
-                expect(result).toEqual([]);
+            // Verify
+            expect(ai.generateObject).toHaveBeenCalled();
+            expect(result).toEqual({
+                text: "mocked response",
+                response: { foo: "bar" },
             });
+        });
+
+        it("should generate an object using Anthropic provider", async () => {
+            // Setup
+            runtime.modelProvider = ModelProviderName.ANTHROPIC;
+
+            // Execute
+            const result = await generateObject({
+                runtime,
+                context: "Generate a person object",
+                modelClass: ModelClass.LARGE,
+                schema: testSchema,
+            });
+
+            // Verify
+            expect(ai.generateObject).toHaveBeenCalled();
+            expect(result).toEqual({
+                text: "mocked response",
+                response: { foo: "bar" },
+            });
+        });
+
+        it("should generate an object using Groq provider", async () => {
+            // Setup
+            runtime.modelProvider = ModelProviderName.GROQ;
+
+            // Execute
+            const result = await generateObject({
+                runtime,
+                context: "Generate a person object",
+                modelClass: ModelClass.LARGE,
+                schema: testSchema,
+            });
+
+            // Verify
+            expect(ai.generateObject).toHaveBeenCalled();
+            expect(result).toEqual({
+                text: "mocked response",
+                response: { foo: "bar" },
+            });
+        });
+
+        it("should generate an object using Google provider", async () => {
+            // Setup
+            runtime.modelProvider = ModelProviderName.GOOGLE;
+
+            // Execute
+            const result = await generateObject({
+                runtime,
+                context: "Generate a person object",
+                modelClass: ModelClass.LARGE,
+                schema: testSchema,
+            });
+
+            // Verify
+            expect(ai.generateObject).toHaveBeenCalled();
+            expect(result).toEqual({
+                text: "mocked response",
+                response: { foo: "bar" },
+            });
+        });
+
+        it("should generate an object using Ollama provider", async () => {
+            // Setup
+            runtime.modelProvider = ModelProviderName.OLLAMA;
+
+            // Execute
+            const result = await generateObject({
+                runtime,
+                context: "Generate a person object",
+                modelClass: ModelClass.LARGE,
+                schema: testSchema,
+            });
+
+            // Verify
+            expect(ai.generateObject).toHaveBeenCalled();
+            expect(result).toEqual({
+                text: "mocked response",
+                response: { foo: "bar" },
+            });
+        });
+
+        it("should generate an object using LlamaLocal provider", async () => {
+            // Setup
+            runtime.modelProvider = ModelProviderName.LLAMALOCAL;
+            vi.spyOn(global, "setTimeout").mockImplementation((cb) => {
+                if (typeof cb === "function") cb();
+                return null as any;
+            });
+
+            // Execute
+            const result = await generateObject({
+                runtime,
+                context: "Generate a person object",
+                modelClass: ModelClass.LARGE,
+                schema: testSchema,
+            });
+
+            // Verify
+            expect(runtime.getService).toHaveBeenCalledWith(
+                ServiceType.TEXT_GENERATION
+            );
+            expect(result).toEqual({ foo: "local response" });
+        });
+
+        it("should throw an error for empty context", async () => {
+            // Execute & Verify
+            await expect(
+                generateObject({
+                    runtime,
+                    context: "",
+                    modelClass: ModelClass.LARGE,
+                    schema: testSchema,
+                })
+            ).rejects.toThrow("generateObject context is empty");
+        });
+
+        it("should throw an error for unsupported provider", async () => {
+            // Setup
+            runtime.modelProvider = "UNSUPPORTED_PROVIDER" as ModelProviderName;
+
+            // Execute & Verify
+            await expect(
+                generateObject({
+                    runtime,
+                    context: "Generate a person object",
+                    modelClass: ModelClass.LARGE,
+                    schema: testSchema,
+                })
+            ).rejects.toThrow(
+                "Model settings not found for provider: UNSUPPORTED_PROVIDER"
+            );
+        });
+
+        it("should handle different modes (json, tool, auto)", async () => {
+            // Test with json mode
+            await generateObject({
+                runtime,
+                context: "Generate a person object",
+                modelClass: ModelClass.LARGE,
+                schema: testSchema,
+                mode: "json",
+            });
+
+            expect(ai.generateObject).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    mode: "json",
+                })
+            );
+
+            vi.clearAllMocks();
+
+            // Test with tool mode
+            await generateObject({
+                runtime,
+                context: "Generate a person object",
+                modelClass: ModelClass.LARGE,
+                schema: testSchema,
+                mode: "tool",
+            });
+
+            expect(ai.generateObject).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    mode: "tool",
+                })
+            );
         });
     });
 });
