@@ -215,7 +215,7 @@ export class ClientBase extends EventEmitter {
                 throw new Error("Twitter login failed after maximum retries.");
             }
 
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+            await new Promise((resolve) => setTimeout(resolve, 10000));
         }
         // Initialize Twitter profile
         this.profile = await this.fetchProfile(username);
