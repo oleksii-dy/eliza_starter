@@ -1,7 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
-
+/**
+ * store queries to the llm in a git like directory
+ */
 // Directory for storing text objects
 const OBJECTS_DIR = './text_objects';
 
@@ -18,7 +20,7 @@ function generateHash(content: string): string {
 }
 
 // Function to write content to object store
-function writeToObjectStore(content: string, hash:string): string {
+function writeToObjectStore(content: string, output: string, hash:string): string {
 
     const dir = path.join(OBJECTS_DIR, hash.substring(0, 2));
     const filename = path.join(dir, hash.substring(2));
@@ -36,6 +38,10 @@ function writeToObjectStore(content: string, hash:string): string {
         console.log(`Skipped  hash: ${hash}`);
     }
 
+    // always write the output
+    fs.writeFileSync(filename + ".json", output);
+        
+
     return hash;
 }
 
@@ -48,7 +54,7 @@ export function processText(finalPrompt: string, result: string): void {
         return;
     }
 
-    writeToObjectStore(trimmedText + "\n\nRESULT:\n\n```" + result + "```", hash);
+    writeToObjectStore(trimmedText, result, hash);
     console.log("New text found:", hash);
     
 }
