@@ -1297,7 +1297,6 @@ async function handleOpenAI({
 
 async function handleAnthropic({
     model,
-    apiKey,
     schema,
     schemaName,
     schemaDescription,
