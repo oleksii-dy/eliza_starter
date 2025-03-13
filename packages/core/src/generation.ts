@@ -4,10 +4,10 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import {
     generateObject as aiGenerateObject,
     generateText as aiGenerateText,
-    CoreTool,
     GenerateObjectResult,
     StepResult as AIStepResult,
     Message,
+    Tool,
 } from "ai";
 import { Buffer } from "buffer";
 import OpenAI from "openai";
@@ -51,7 +51,6 @@ import {
     TokenizerType,
 } from "./types.ts";
 
-type Tool = CoreTool<any, any>;
 type StepResult = AIStepResult<any>;
 
 type GenerationOptions = {
