@@ -18,6 +18,9 @@ import { encodingForModel, TiktokenModel } from "js-tiktoken";
 import { AutoTokenizer } from "@huggingface/transformers";
 import Together from "together-ai";
 import { ZodSchema } from "zod";
+import { fal } from "@fal-ai/client";
+import { tavily } from "@tavily/core";
+
 import { elizaLogger } from "./index.ts";
 import {
     models,
@@ -47,15 +50,63 @@ import {
     IVerifiableInferenceAdapter,
     VerifiableInferenceOptions,
     VerifiableInferenceResult,
-    //VerifiableInferenceProvider,
     TelemetrySettings,
     TokenizerType,
 } from "./types.ts";
-import { fal } from "@fal-ai/client";
-import { tavily } from "@tavily/core";
 
 type Tool = CoreTool<any, any>;
 type StepResult = AIStepResult<any>;
+
+type GenerationOptions = {
+    runtime: IAgentRuntime;
+    context: string;
+    modelClass: ModelClass;
+    schema?: ZodSchema;
+    schemaName?: string;
+    schemaDescription?: string;
+    stop?: string[];
+    mode?: "auto" | "json" | "tool";
+    experimental_providerMetadata?: Record<string, unknown>;
+    verifiableInference?: boolean;
+    verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
+    verifiableInferenceOptions?: VerifiableInferenceOptions;
+};
+
+type ModelSettings = {
+    prompt: string;
+    temperature: number;
+    maxTokens: number;
+    frequencyPenalty: number;
+    presencePenalty: number;
+    stop?: string[];
+    experimental_telemetry?: TelemetrySettings;
+};
+
+type ProviderOptions = {
+    runtime: IAgentRuntime;
+    provider: ModelProviderName;
+    model: any;
+    apiKey: string;
+    schema?: ZodSchema;
+    schemaName?: string;
+    schemaDescription?: string;
+    mode?: "auto" | "json" | "tool";
+    experimental_providerMetadata?: Record<string, unknown>;
+    modelOptions: ModelSettings;
+    modelClass: ModelClass;
+    context: string;
+    verifiableInference?: boolean;
+    verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
+    verifiableInferenceOptions?: VerifiableInferenceOptions;
+};
+
+type TogetherAIImageResponse = {
+    data: Array<{
+        url: string;
+        content_type?: string;
+        image_type?: string;
+    }>;
+};
 
 export async function trimTokens(
     context: string,
@@ -88,106 +139,6 @@ export async function trimTokens(
 
     elizaLogger.warn(`Unsupported tokenizer type: ${tokenizerType}`);
     return truncateTiktoken("gpt-4o", context, maxTokens);
-}
-
-async function truncateAuto(
-    modelPath: string,
-    context: string,
-    maxTokens: number
-) {
-    try {
-        const tokenizer = await AutoTokenizer.from_pretrained(modelPath);
-        const tokens = tokenizer.encode(context);
-
-        // If already within limits, return unchanged
-        if (tokens.length <= maxTokens) {
-            return context;
-        }
-
-        // Keep the most recent tokens by slicing from the end
-        const truncatedTokens = tokens.slice(-maxTokens);
-
-        // Decode back to text - js-tiktoken decode() returns a string directly
-        return tokenizer.decode(truncatedTokens);
-    } catch (error) {
-        elizaLogger.error("Error in trimTokens:", error);
-        // Return truncated string if tokenization fails
-        return context.slice(-maxTokens * 4); // Rough estimate of 4 chars per token
-    }
-}
-
-async function truncateTiktoken(
-    model: TiktokenModel,
-    context: string,
-    maxTokens: number
-) {
-    try {
-        const encoding = encodingForModel(model);
-
-        // Encode the text into tokens
-        const tokens = encoding.encode(context);
-
-        // If already within limits, return unchanged
-        if (tokens.length <= maxTokens) {
-            return context;
-        }
-
-        // Keep the most recent tokens by slicing from the end
-        const truncatedTokens = tokens.slice(-maxTokens);
-
-        // Decode back to text - js-tiktoken decode() returns a string directly
-        return encoding.decode(truncatedTokens);
-    } catch (error) {
-        elizaLogger.error("Error in trimTokens:", error);
-        // Return truncated string if tokenization fails
-        return context.slice(-maxTokens * 4); // Rough estimate of 4 chars per token
-    }
-}
-
-function getCloudflareGatewayBaseURL(
-    runtime: IAgentRuntime,
-    provider: string
-): string | undefined {
-    const isCloudflareEnabled =
-        runtime.getSetting("CLOUDFLARE_GW_ENABLED") === "true";
-    const cloudflareAccountId = runtime.getSetting("CLOUDFLARE_AI_ACCOUNT_ID");
-    const cloudflareGatewayId = runtime.getSetting("CLOUDFLARE_AI_GATEWAY_ID");
-
-    elizaLogger.debug("Cloudflare Gateway Configuration:", {
-        isEnabled: isCloudflareEnabled,
-        hasAccountId: !!cloudflareAccountId,
-        hasGatewayId: !!cloudflareGatewayId,
-        provider: provider,
-    });
-
-    if (!isCloudflareEnabled) {
-        elizaLogger.debug("Cloudflare Gateway is not enabled");
-        return undefined;
-    }
-
-    if (!cloudflareAccountId) {
-        elizaLogger.warn(
-            "Cloudflare Gateway is enabled but CLOUDFLARE_AI_ACCOUNT_ID is not set"
-        );
-        return undefined;
-    }
-
-    if (!cloudflareGatewayId) {
-        elizaLogger.warn(
-            "Cloudflare Gateway is enabled but CLOUDFLARE_AI_GATEWAY_ID is not set"
-        );
-        return undefined;
-    }
-
-    const baseURL = `https://gateway.ai.cloudflare.com/v1/${cloudflareAccountId}/${cloudflareGatewayId}/${provider.toLowerCase()}`;
-    elizaLogger.info("Using Cloudflare Gateway:", {
-        provider,
-        baseURL,
-        accountId: cloudflareAccountId,
-        gatewayId: cloudflareGatewayId,
-    });
-
-    return baseURL;
 }
 
 export async function generateText({
@@ -1125,51 +1076,6 @@ export async function generateTrueOrFalse({
     );
 }
 
-export async function generateTextArray({
-    runtime,
-    context,
-    modelClass,
-}: {
-    runtime: IAgentRuntime;
-    context: string;
-    modelClass: ModelClass;
-}): Promise<string[]> {
-    if (!context) {
-        elizaLogger.error("generateTextArray context is empty");
-        return [];
-    }
-
-    let retryDelay = 1000;
-    let retryCount = 0;
-    const MAX_RETRIES = 5;
-
-    while (retryCount < MAX_RETRIES) {
-        try {
-            const response = await generateText({
-                runtime,
-                context,
-                modelClass,
-            });
-
-            const parsedResponse = parseJsonArrayFromText(response);
-            if (parsedResponse) {
-                return parsedResponse;
-            }
-        } catch (error) {
-            elizaLogger.error("Error in generateTextArray:", error);
-        }
-
-        elizaLogger.log(
-            `Retrying in ${retryDelay}ms... (Attempt ${retryCount + 1}/${MAX_RETRIES})`
-        );
-        await new Promise((resolve) => setTimeout(resolve, retryDelay));
-        retryDelay *= 2;
-        retryCount++;
-    }
-
-    throw new Error("Failed to generate text array after maximum retries");
-}
-
 export async function generateObjectDeprecated({
     runtime,
     context,
@@ -1247,7 +1153,7 @@ export async function generateObjectArray({
                 return parsedResponse;
             }
         } catch (error) {
-            elizaLogger.error("Error in generateTextArray:", error);
+            elizaLogger.error("Error in generateObjectArray:", error);
         }
 
         elizaLogger.log(
@@ -1742,32 +1648,6 @@ export const generateWebSearch = async (
     }
 };
 
-export interface GenerationOptions {
-    runtime: IAgentRuntime;
-    context: string;
-    modelClass: ModelClass;
-    schema?: ZodSchema;
-    schemaName?: string;
-    schemaDescription?: string;
-    stop?: string[];
-    mode?: "auto" | "json" | "tool";
-    experimental_providerMetadata?: Record<string, unknown>;
-    verifiableInference?: boolean;
-    verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
-    verifiableInferenceOptions?: VerifiableInferenceOptions;
-}
-
-
-interface ModelSettings {
-    prompt: string;
-    temperature: number;
-    maxTokens: number;
-    frequencyPenalty: number;
-    presencePenalty: number;
-    stop?: string[];
-    experimental_telemetry?: TelemetrySettings;
-}
-
 export const generateObject = async ({
     runtime,
     context,
@@ -1835,25 +1715,57 @@ export const generateObject = async ({
     }
 };
 
-interface ProviderOptions {
+export async function generateTweetActions({
+    runtime,
+    context,
+    modelClass,
+}: {
     runtime: IAgentRuntime;
-    provider: ModelProviderName;
-    model: any;
-    apiKey: string;
-    schema?: ZodSchema;
-    schemaName?: string;
-    schemaDescription?: string;
-    mode?: "auto" | "json" | "tool";
-    experimental_providerMetadata?: Record<string, unknown>;
-    modelOptions: ModelSettings;
-    modelClass: ModelClass;
     context: string;
-    verifiableInference?: boolean;
-    verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
-    verifiableInferenceOptions?: VerifiableInferenceOptions;
+    modelClass: ModelClass;
+}): Promise<ActionResponse | null> {
+    let retryDelay = 1000;
+    let retryCount = 0;
+    const MAX_RETRIES = 5;
+
+    while (retryCount < MAX_RETRIES) {
+        try {
+            const response = await generateText({
+                runtime,
+                context,
+                modelClass,
+            });
+
+            const parsedResponse = parseTagContent(response, "response");
+            const { actions } = parseActionResponseFromText(parsedResponse);
+            if (actions) {
+                console.debug("Parsed tweet actions:", actions);
+                return actions;
+            }
+            elizaLogger.debug("generateTweetActions no valid response");
+        } catch (error) {
+            elizaLogger.error("Error in generateTweetActions:", error);
+            if (
+                error instanceof TypeError &&
+                error.message.includes("queueTextCompletion")
+            ) {
+                elizaLogger.error(
+                    "TypeError: Cannot read properties of null (reading 'queueTextCompletion')"
+                );
+            }
+        }
+        elizaLogger.log(
+            `Retrying in ${retryDelay}ms... (Attempt ${retryCount + 1}/${MAX_RETRIES})`
+        );
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
+        retryDelay *= 2;
+        retryCount++;
+    }
+
+    throw new Error("Failed to generate tweet actions after maximum retries");
 }
 
-export async function handleProvider(
+async function handleProvider(
     options: ProviderOptions
 ): Promise<GenerateObjectResult<unknown>> {
     const {
@@ -2107,60 +2019,102 @@ async function handleDeepSeek({
     });
 }
 
-interface TogetherAIImageResponse {
-    data: Array<{
-        url: string;
-        content_type?: string;
-        image_type?: string;
-    }>;
+async function truncateAuto(
+    modelPath: string,
+    context: string,
+    maxTokens: number
+) {
+    try {
+        const tokenizer = await AutoTokenizer.from_pretrained(modelPath);
+        const tokens = tokenizer.encode(context);
+
+        // If already within limits, return unchanged
+        if (tokens.length <= maxTokens) {
+            return context;
+        }
+
+        // Keep the most recent tokens by slicing from the end
+        const truncatedTokens = tokens.slice(-maxTokens);
+
+        // Decode back to text - js-tiktoken decode() returns a string directly
+        return tokenizer.decode(truncatedTokens);
+    } catch (error) {
+        elizaLogger.error("Error in trimTokens:", error);
+        // Return truncated string if tokenization fails
+        return context.slice(-maxTokens * 4); // Rough estimate of 4 chars per token
+    }
 }
 
-export async function generateTweetActions({
-    runtime,
-    context,
-    modelClass,
-}: {
-    runtime: IAgentRuntime;
-    context: string;
-    modelClass: ModelClass;
-}): Promise<ActionResponse | null> {
-    let retryDelay = 1000;
-    let retryCount = 0;
-    const MAX_RETRIES = 5;
+async function truncateTiktoken(
+    model: TiktokenModel,
+    context: string,
+    maxTokens: number
+) {
+    try {
+        const encoding = encodingForModel(model);
 
-    while (retryCount < MAX_RETRIES) {
-        try {
-            const response = await generateText({
-                runtime,
-                context,
-                modelClass,
-            });
+        // Encode the text into tokens
+        const tokens = encoding.encode(context);
 
-            const parsedResponse = parseTagContent(response, "response");
-            const { actions } = parseActionResponseFromText(parsedResponse);
-            if (actions) {
-                console.debug("Parsed tweet actions:", actions);
-                return actions;
-            }
-            elizaLogger.debug("generateTweetActions no valid response");
-        } catch (error) {
-            elizaLogger.error("Error in generateTweetActions:", error);
-            if (
-                error instanceof TypeError &&
-                error.message.includes("queueTextCompletion")
-            ) {
-                elizaLogger.error(
-                    "TypeError: Cannot read properties of null (reading 'queueTextCompletion')"
-                );
-            }
+        // If already within limits, return unchanged
+        if (tokens.length <= maxTokens) {
+            return context;
         }
-        elizaLogger.log(
-            `Retrying in ${retryDelay}ms... (Attempt ${retryCount + 1}/${MAX_RETRIES})`
-        );
-        await new Promise((resolve) => setTimeout(resolve, retryDelay));
-        retryDelay *= 2;
-        retryCount++;
+
+        // Keep the most recent tokens by slicing from the end
+        const truncatedTokens = tokens.slice(-maxTokens);
+
+        // Decode back to text - js-tiktoken decode() returns a string directly
+        return encoding.decode(truncatedTokens);
+    } catch (error) {
+        elizaLogger.error("Error in trimTokens:", error);
+        // Return truncated string if tokenization fails
+        return context.slice(-maxTokens * 4); // Rough estimate of 4 chars per token
+    }
+}
+
+function getCloudflareGatewayBaseURL(
+    runtime: IAgentRuntime,
+    provider: string
+): string | undefined {
+    const isCloudflareEnabled =
+        runtime.getSetting("CLOUDFLARE_GW_ENABLED") === "true";
+    const cloudflareAccountId = runtime.getSetting("CLOUDFLARE_AI_ACCOUNT_ID");
+    const cloudflareGatewayId = runtime.getSetting("CLOUDFLARE_AI_GATEWAY_ID");
+
+    elizaLogger.debug("Cloudflare Gateway Configuration:", {
+        isEnabled: isCloudflareEnabled,
+        hasAccountId: !!cloudflareAccountId,
+        hasGatewayId: !!cloudflareGatewayId,
+        provider: provider,
+    });
+
+    if (!isCloudflareEnabled) {
+        elizaLogger.debug("Cloudflare Gateway is not enabled");
+        return undefined;
     }
 
-    throw new Error("Failed to generate tweet actions after maximum retries");
+    if (!cloudflareAccountId) {
+        elizaLogger.warn(
+            "Cloudflare Gateway is enabled but CLOUDFLARE_AI_ACCOUNT_ID is not set"
+        );
+        return undefined;
+    }
+
+    if (!cloudflareGatewayId) {
+        elizaLogger.warn(
+            "Cloudflare Gateway is enabled but CLOUDFLARE_AI_GATEWAY_ID is not set"
+        );
+        return undefined;
+    }
+
+    const baseURL = `https://gateway.ai.cloudflare.com/v1/${cloudflareAccountId}/${cloudflareGatewayId}/${provider.toLowerCase()}`;
+    elizaLogger.info("Using Cloudflare Gateway:", {
+        provider,
+        baseURL,
+        accountId: cloudflareAccountId,
+        gatewayId: cloudflareGatewayId,
+    });
+
+    return baseURL;
 }
