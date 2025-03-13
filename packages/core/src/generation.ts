@@ -222,7 +222,7 @@ export async function generateText({
         runtime.character.modelEndpointOverride || getEndpoint(provider);
     const modelSettings = getModelSettings(runtime.modelProvider, modelClass);
 
-    let model = modelSettings.name;
+    const model = modelSettings.name;
 
     elizaLogger.info("Selected model:", model);
 
