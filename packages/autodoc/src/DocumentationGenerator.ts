@@ -388,7 +388,8 @@ export class DocumentationGenerator {
 		try {
 			// Clean up the response - remove any markdown formatting or extra text
 			const jsonStart = response.indexOf("{");
-			const jsonEnd = response.lastIndexOf("}") + 1;
+		    const jsonEnd = response.lastIndexOf("}") + 1;
+		    console.log("DEBUG",response);
 			if (jsonStart === -1 || jsonEnd === -1) {
 				throw new Error("No valid JSON object found in response");
 			}
@@ -398,6 +399,7 @@ export class DocumentationGenerator {
 				.replace(/```json/g, "")
 				.replace(/```/g, "")
 				.trim();
+
 
 			const content = JSON.parse(jsonStr);
 

@@ -2,6 +2,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 
+// Define the dictionary to track occurrences
+const textDict: { [key: string]: number } = {};
+
 // Directory for storing text objects
 const OBJECTS_DIR = './text_objects';
 
@@ -18,10 +21,12 @@ function generateHash(content: string): string {
 }
 
 // Function to write content to object store
-function writeToObjectStore(content: string, hash:string): string {
-
+function writeToObjectStore(content: string): string {
+    const hash = generateHash(content);
     const dir = path.join(OBJECTS_DIR, hash.substring(0, 2));
     const filename = path.join(dir, hash.substring(2));
+
+    //console.log(`DEBUG: ${hash}`);
 
     // Create directory if it doesn't exist
     if (!fs.existsSync(dir)) {
@@ -32,24 +37,31 @@ function writeToObjectStore(content: string, hash:string): string {
     if (!fs.existsSync(filename)) {
         fs.writeFileSync(filename, content);
         console.log(`Stored new text with hash: ${hash}`);
-    } else {
-        console.log(`Skipped  hash: ${hash}`);
-    }
+    } else  {
+        //console.log(`Text with hash ${hash} already exists, skipping...`);
+   }
 
     return hash;
 }
 
-export function processText(finalPrompt: string, result: string): void {
+export function processText(finalPrompt: string): void {
     const trimmedText = finalPrompt.trim();
-    const hash = generateHash(trimmedText);
-    console.log("DEBUG12:", hash);
+    
     if (!trimmedText) {
         console.log("Empty text, skipping...");
         return;
     }
 
-    writeToObjectStore(trimmedText + "\n\nRESULT:\n\n```" + result + "```", hash);
-    console.log("New text found:", hash);
-    
+    if (textDict[trimmedText]) {
+        // Text exists, increment count and report if it becomes a duplicate
+        textDict[trimmedText]++;
+        //if (textDict[trimmedText] === 2) {
+            console.log("Duplicate text found:", trimmedText);
+        //}
+    } else {
+        // New text, add to dictionary and store
+        textDict[trimmedText] = 1;
+        writeToObjectStore(trimmedText);
+    }
 }
 

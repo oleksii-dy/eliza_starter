@@ -114,3 +114,5 @@ flycheck_*.el
 # network security
 /network-security.data
 
+packages/autodoc/text_objects/*/*
+agent/data/db.sqlite
