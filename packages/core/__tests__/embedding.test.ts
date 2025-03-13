@@ -5,7 +5,7 @@ import {
     getEmbeddingType,
     getEmbeddingZeroVector,
 } from "../src/embedding.ts";
-import { IAgentRuntime, ModelProviderName } from "../types.ts";
+import { IAgentRuntime, ModelProviderName } from "../src/types.ts";
 import settings from "../src/settings.ts";
 
 // Mock environment-related settings
@@ -147,8 +147,9 @@ describe("Embedding Module", () => {
         });
 
         test("should fallback to remote if local embedding fails", async () => {
-            // Force fastembed import to fail
-            vi.mock("fastembed", () => {
+            // Temporarily override the fastembed mock to simulate failure
+            const originalMock = vi.mocked(await import("fastembed"));
+            vi.doMock("fastembed", () => {
                 throw new Error("Module not found");
             });
 
@@ -165,6 +166,9 @@ describe("Embedding Module", () => {
             const result = await embed(mockRuntime, "test input");
             expect(result).toHaveLength(384);
             expect(mockFetch).toHaveBeenCalled();
+
+            // Restore the original mock
+            vi.doMock("fastembed", () => originalMock);
         });
 
         test("should throw on remote embedding if fetch fails", async () => {
