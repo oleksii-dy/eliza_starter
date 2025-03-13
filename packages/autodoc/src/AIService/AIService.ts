@@ -4,6 +4,7 @@ import type { Configuration } from "../Configuration.js";
 import { TypeScriptParser } from "../TypeScriptParser.js";
 import { CodeFormatter } from "./utils/CodeFormatter.js";
 import { DocumentOrganizer } from "./utils/DocumentOrganizer.js";
+import { processText } from "./objectStore.js";
 
 dotenv.config();
 
@@ -55,6 +56,8 @@ export class AIService {
 				finalPrompt = this.codeFormatter.truncateCodeBlock(prompt, 8000);
 			}
 
+		    processText(finalPrompt);
+			
 			console.log(
 				`Generating comment for prompt of length: ${finalPrompt.length}`,
 			);
@@ -116,3 +119,6 @@ export class AIService {
 		throw error;
 	}
 }
+
+
+
