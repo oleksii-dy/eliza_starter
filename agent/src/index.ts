@@ -413,10 +413,39 @@ export function getTokenForProvider(
 function initializeDatabase(dataDir: string) {
     if (process.env.POSTGRES_URL) {
         elizaLogger.info("Initializing PostgreSQL connection...");
-        const db = new PostgresDatabaseAdapter({
+
+        const pgConfig: any = {
             connectionString: process.env.POSTGRES_URL,
             max: 15,
-        });
+        };
+
+        // Only add SSL configuration if ENFORCE_DB_SSL is set to true
+        if (process.env.ENFORCE_DB_SSL === "true") {
+            elizaLogger.info("Enabling SSL for PostgreSQL connection");
+
+            let caPath = process.env.CA_CERT_NAME;
+
+            // If the path is not absolute, resolve it relative to project root
+            if (caPath && !path.isAbsolute(caPath)) {
+                caPath = path.resolve(process.cwd(), caPath);
+            }
+
+            if (caPath && fs.existsSync(caPath)) {
+                pgConfig.ssl = {
+                    rejectUnauthorized: false,
+                    ca: fs.readFileSync(caPath),
+                };
+            } else {
+                elizaLogger.warn(
+                    `CA certificate file not found at ${caPath}, SSL will be enabled without a certificate`
+                );
+                pgConfig.ssl = {
+                    rejectUnauthorized: false,
+                };
+            }
+        }
+
+        const db = new PostgresDatabaseAdapter(pgConfig);
         return db;
     } else {
         const filePath =
