@@ -72,9 +72,9 @@
     },
     "packages/cli": {
       "name": "@elizaos/cli",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "bin": {
-        "elizaos": "./dist/index.js",
+        "elizaos": "./dist/index.js"
       },
       "dependencies": {
         "@electric-sql/pglite": "^0.2.17",
@@ -176,7 +176,7 @@
     },
     "packages/core": {
       "name": "@elizaos/core",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "dependencies": {
         "dotenv": "16.4.5",
         "events": "^3.3.0",
@@ -215,9 +215,9 @@
     },
     "packages/create-eliza": {
       "name": "create-eliza",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "bin": {
-        "create-eliza": "index.mjs",
+        "create-eliza": "index.mjs"
       },
     },
     "packages/docs": {
@@ -250,10 +250,10 @@
     },
     "packages/plugin-anthropic": {
       "name": "@elizaos/plugin-anthropic",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "dependencies": {
         "@ai-sdk/anthropic": "^1.1.6",
-        "@elizaos/core": "^1.0.0-alpha.42",
+        "@elizaos/core": "^1.0.0-alpha.44",
         "fastembed": "^1.0.0",
         "tsup": "8.4.0",
         "zod": "3.21.4",
@@ -261,11 +261,11 @@
     },
     "packages/plugin-browser": {
       "name": "@elizaos/plugin-browser",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "dependencies": {
         "@aws-sdk/client-s3": "^3.705.0",
         "@aws-sdk/s3-request-presigner": "^3.705.0",
-        "@elizaos/core": "^1.0.0-alpha.42",
+        "@elizaos/core": "^1.0.0-alpha.44",
         "@types/uuid": "10.0.0",
         "capsolver-npm": "2.0.2",
         "fluent-ffmpeg": "2.1.3",
@@ -284,7 +284,7 @@
     },
     "packages/plugin-discord": {
       "name": "@elizaos/plugin-discord",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "dependencies": {
         "@discordjs/rest": "2.4.0",
         "@discordjs/voice": "0.18.0",
@@ -303,17 +303,17 @@
     },
     "packages/plugin-elevenlabs": {
       "name": "@elizaos/plugin-elevenlabs",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "dependencies": {
-        "@elizaos/core": "^1.0.0-alpha.42",
+        "@elizaos/core": "^1.0.0-alpha.44",
         "tsup": "8.4.0",
       },
     },
     "packages/plugin-local-ai": {
       "name": "@elizaos/plugin-local-ai",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "dependencies": {
-        "@elizaos/core": "^1.0.0-alpha.42",
+        "@elizaos/core": "^1.0.0-alpha.44",
         "@huggingface/hub": "^1.0.1",
         "@huggingface/inference": "^3.3.4",
         "@huggingface/transformers": "^3.3.3",
@@ -338,11 +338,11 @@
     },
     "packages/plugin-openai": {
       "name": "@elizaos/plugin-openai",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "dependencies": {
         "@ai-sdk/openai": "^1.1.9",
         "@ai-sdk/ui-utils": "1.1.9",
-        "@elizaos/core": "^1.0.0-alpha.42",
+        "@elizaos/core": "^1.0.0-alpha.44",
         "ai": "^4.1.25",
         "js-tiktoken": "^1.0.18",
         "tsup": "8.4.0",
@@ -354,11 +354,11 @@
     },
     "packages/plugin-pdf": {
       "name": "@elizaos/plugin-pdf",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "dependencies": {
         "@aws-sdk/client-s3": "^3.705.0",
         "@aws-sdk/s3-request-presigner": "^3.705.0",
-        "@elizaos/core": "^1.0.0-alpha.42",
+        "@elizaos/core": "^1.0.0-alpha.44",
         "@types/uuid": "10.0.0",
         "capsolver-npm": "2.0.2",
         "fluent-ffmpeg": "2.1.3",
@@ -378,9 +378,9 @@
     },
     "packages/plugin-solana": {
       "name": "@elizaos/plugin-solana",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "dependencies": {
-        "@elizaos/core": "^1.0.0-alpha.42",
+        "@elizaos/core": "^1.0.0-alpha.44",
         "@solana/spl-token": "0.4.9",
         "@solana/web3.js": "^1.98.0",
         "bignumber.js": "9.1.2",
@@ -399,10 +399,10 @@
     },
     "packages/plugin-sql": {
       "name": "@elizaos/plugin-sql",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "dependencies": {
         "@electric-sql/pglite": "^0.2.17",
-        "@elizaos/core": "^1.0.0-alpha.42",
+        "@elizaos/core": "^1.0.0-alpha.44",
         "@types/pg": "8.11.10",
         "drizzle-kit": "^0.30.4",
         "drizzle-orm": "^0.39.1",
@@ -430,11 +430,11 @@
     },
     "packages/plugin-storage-s3": {
       "name": "@elizaos/plugin-storage-s3",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "dependencies": {
         "@aws-sdk/client-s3": "^3.705.0",
         "@aws-sdk/s3-request-presigner": "^3.705.0",
-        "@elizaos/core": "^1.0.0-alpha.42",
+        "@elizaos/core": "^1.0.0-alpha.44",
         "@types/uuid": "10.0.0",
         "capsolver-npm": "2.0.2",
         "fluent-ffmpeg": "2.1.3",
@@ -451,9 +451,9 @@
     },
     "packages/plugin-tee": {
       "name": "@elizaos/plugin-tee",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "dependencies": {
-        "@elizaos/core": "^1.0.0-alpha.42",
+        "@elizaos/core": "^1.0.0-alpha.44",
         "@phala/dstack-sdk": "^0.1.7",
         "@solana/web3.js": "^1.98.0",
         "better-sqlite3": "11.8.1",
@@ -466,7 +466,7 @@
     },
     "packages/plugin-telegram": {
       "name": "@elizaos/plugin-telegram",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "dependencies": {
         "@telegraf/types": "7.1.0",
         "strip-literal": "^3.0.0",
@@ -480,9 +480,9 @@
     },
     "packages/plugin-twitter": {
       "name": "@elizaos/plugin-twitter",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "dependencies": {
-        "@elizaos/core": "^1.0.0-alpha.42",
+        "@elizaos/core": "^1.0.0-alpha.44",
         "@roamhq/wrtc": "^0.8.0",
         "@sinclair/typebox": "^0.32.20",
         "glob": "11.0.0",
@@ -507,11 +507,11 @@
     },
     "packages/plugin-video-understanding": {
       "name": "@elizaos/plugin-video-understanding",
-      "version": "1.0.0-alpha.42",
+      "version": "1.0.0-alpha.44",
       "dependencies": {
         "@aws-sdk/client-s3": "^3.705.0",
         "@aws-sdk/s3-request-presigner": "^3.705.0",
-        "@elizaos/core": "^1.0.0-alpha.42",
+        "@elizaos/core": "^1.0.0-alpha.44",
         "@types/uuid": "10.0.0",
         "capsolver-npm": "2.0.2",
         "fluent-ffmpeg": "2.1.3",
