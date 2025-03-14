@@ -1,0 +1,11 @@
+// .npmignore
+*
+!dist/**
+!package.json
+!readme.md
+!tsup.config.ts
+
+// eslint.config.mjs
+import eslintGlobalConfig from "../../eslint.config.mjs";
+
+export default [...eslintGlobalConfig];
