@@ -1,5 +1,6 @@
 import { createAnthropic, anthropic } from "@ai-sdk/anthropic";
-import { createOpenAI } from "@ai-sdk/openai";
+import { createOpenAI, openai } from "@ai-sdk/openai";
+import { deepseek } from "@ai-sdk/deepseek";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import {
     generateObject as aiGenerateObject,
@@ -8,6 +9,7 @@ import {
     StepResult as AIStepResult,
     Message,
     Tool,
+    LanguageModelV1,
 } from "ai";
 import { Buffer } from "buffer";
 import OpenAI from "openai";
@@ -84,14 +86,10 @@ type ProviderOptions = {
     schema?: ZodSchema;
     schemaName?: string;
     schemaDescription?: string;
-    mode?: "auto" | "json" | "tool";
     experimental_providerMetadata?: Record<string, unknown>;
     modelOptions: ModelSettings;
     modelClass: ModelClass;
     context: string;
-    verifiableInference?: boolean;
-    verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
-    verifiableInferenceOptions?: VerifiableInferenceOptions;
 };
 
 type TogetherAIImageResponse = {
@@ -1080,78 +1078,6 @@ export const generateWebSearch = async (
     }
 };
 
-export const generateObject = async ({
-    runtime,
-    context,
-    modelClass,
-    schema,
-    schemaName,
-    schemaDescription,
-    stop,
-    mode = "json",
-    verifiableInference = false,
-    verifiableInferenceAdapter,
-    verifiableInferenceOptions,
-}: GenerationOptions): Promise<GenerateObjectResult<unknown>> => {
-    if (!context) {
-        const errorMessage = "generateObject context is empty";
-        console.error(errorMessage);
-        throw new Error(errorMessage);
-    }
-
-    const provider = runtime.modelProvider;
-    const modelSettings = getModelSettings(runtime.modelProvider, modelClass);
-
-    if (!modelSettings) {
-        throw new Error(`Model settings not found for provider: ${provider}`);
-    }
-
-    const model = modelSettings.name;
-    const temperature = modelSettings.temperature;
-    const frequency_penalty = modelSettings.frequency_penalty;
-    const presence_penalty = modelSettings.presence_penalty;
-    const max_context_length = modelSettings.maxInputTokens;
-    const max_response_length = modelSettings.maxOutputTokens;
-    const experimental_telemetry = modelSettings.experimental_telemetry;
-    const apiKey = runtime.token;
-
-    try {
-        context = await trimTokens(context, max_context_length, runtime);
-
-        const modelOptions: ModelSettings = {
-            prompt: context,
-            temperature,
-            maxTokens: max_response_length,
-            frequencyPenalty: frequency_penalty,
-            presencePenalty: presence_penalty,
-            stop: stop || modelSettings.stop,
-            experimental_telemetry: experimental_telemetry,
-        };
-
-        const response = await handleProvider({
-            provider,
-            model,
-            apiKey,
-            schema,
-            schemaName,
-            schemaDescription,
-            mode,
-            modelOptions,
-            runtime,
-            context,
-            modelClass,
-            verifiableInference,
-            verifiableInferenceAdapter,
-            verifiableInferenceOptions,
-        });
-
-        return response;
-    } catch (error) {
-        console.error("Error in generateObject:", error);
-        throw error;
-    }
-};
-
 export async function generateTweetActions({
     runtime,
     context,
@@ -1202,103 +1128,77 @@ export async function generateTweetActions({
     throw new Error("Failed to generate tweet actions after maximum retries");
 }
 
+export const generateObject = async ({
+    runtime,
+    context,
+    modelClass,
+    schema,
+    schemaName,
+    schemaDescription,
+    stop,
+}: GenerationOptions): Promise<GenerateObjectResult<unknown>> => {
+    if (!context) {
+        throw new Error("generateObject context is empty");
+    }
+
+    const provider = runtime.modelProvider;
+    const modelSettings = getModelSettings(provider, modelClass);
+
+    if (!modelSettings) {
+        throw new Error(`Model settings not found for provider: ${provider}`);
+    }
+
+    context = await trimTokens(context, modelSettings.maxInputTokens, runtime);
+
+    const modelOptions: ModelSettings = {
+        prompt: context,
+        temperature: modelSettings.temperature,
+        maxTokens: modelSettings.maxOutputTokens,
+        frequencyPenalty: modelSettings.frequency_penalty,
+        presencePenalty: modelSettings.presence_penalty,
+        stop: stop || modelSettings.stop,
+        experimental_telemetry: modelSettings.experimental_telemetry,
+    };
+
+    return handleProvider({
+        provider,
+        model: modelSettings.name,
+        apiKey: runtime.token,
+        schema,
+        schemaName,
+        schemaDescription,
+        modelOptions,
+        runtime,
+        context,
+        modelClass,
+    });
+};
+
 async function handleProvider(
     options: ProviderOptions
 ): Promise<GenerateObjectResult<unknown>> {
-    const { provider, runtime, context, modelClass } = options;
+    const { provider, schema, schemaName, schemaDescription } = options;
+    const model = getModel(provider, options.model);
+
+    return aiGenerateObject({
+        model,
+        schema,
+        schemaName,
+        schemaDescription,
+    });
+}
+
+function getModel(provider: ModelProviderName, model: string): LanguageModelV1 {
     switch (provider) {
         case ModelProviderName.OPENAI:
-        case ModelProviderName.ETERNALAI:
-        case ModelProviderName.ALI_BAILIAN:
-        case ModelProviderName.VOLENGINE:
-        case ModelProviderName.LLAMACLOUD:
-        case ModelProviderName.TOGETHER:
-        case ModelProviderName.NANOGPT:
-        case ModelProviderName.AKASH_CHAT_API:
-            return await handleOpenAI(options);
+            return openai(model);
         case ModelProviderName.ANTHROPIC:
-        case ModelProviderName.CLAUDE_VERTEX:
-            return await handleAnthropic(options);
-        case ModelProviderName.LLAMALOCAL:
-            return await generateObjectDeprecated({
-                runtime,
-                context,
-                modelClass,
-            });
+            return anthropic(model);
         case ModelProviderName.DEEPSEEK:
-            return await handleDeepSeek(options);
-        default: {
-            const errorMessage = `Unsupported provider: ${provider}`;
-            elizaLogger.error(errorMessage);
-            throw new Error(errorMessage);
-        }
+            return deepseek(model);
+        default:
+            throw new Error(`Unsupported provider: ${provider}`);
     }
-}
-
-async function handleOpenAI({
-    model,
-    apiKey,
-    schema,
-    schemaName,
-    schemaDescription,
-    mode = "json",
-    modelOptions,
-    provider: _provider,
-    runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const baseURL =
-        getCloudflareGatewayBaseURL(runtime, "openai") ||
-        models.openai.endpoint;
-    const openai = createOpenAI({ apiKey, baseURL });
-    return await aiGenerateObject({
-        model: openai.languageModel(model),
-        schema,
-        schemaName,
-        schemaDescription,
-        mode,
-        ...modelOptions,
-    });
-}
-
-async function handleAnthropic({
-    model,
-    schema,
-    schemaName,
-    schemaDescription,
-    modelOptions,
-    runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    elizaLogger.debug("Handling Anthropic request with Cloudflare check");
-    const baseURL = getCloudflareGatewayBaseURL(runtime, "anthropic");
-    elizaLogger.debug("Anthropic handleAnthropic baseURL:", { baseURL });
-
-    return await aiGenerateObject({
-        model: anthropic(model),
-        schema,
-        schemaName,
-        schemaDescription,
-        ...modelOptions,
-    });
-}
-
-async function handleDeepSeek({
-    model,
-    apiKey,
-    schema,
-    schemaName,
-    schemaDescription,
-    mode,
-    modelOptions,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const openai = createOpenAI({ apiKey, baseURL: models.deepseek.endpoint });
-    return await aiGenerateObject({
-        model: openai.languageModel(model),
-        schema,
-        schemaName,
-        schemaDescription,
-        mode,
-        ...modelOptions,
-    });
 }
 
 function getCloudflareGatewayBaseURL(

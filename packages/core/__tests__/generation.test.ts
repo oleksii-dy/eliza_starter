@@ -11,6 +11,9 @@ vi.mock("@ai-sdk/openai", () => ({
     createOpenAI: vi.fn(() => ({
         languageModel: vi.fn(() => "mocked-openai-model"),
     })),
+    openai: vi.fn(() => ({
+        languageModel: vi.fn(() => "mocked-openai-model"),
+    })),
 }));
 
 vi.mock("@ai-sdk/anthropic", () => ({
@@ -166,29 +169,6 @@ describe("Generation Module", () => {
             });
         });
 
-        it("should generate an object using LlamaLocal provider", async () => {
-            // Setup
-            runtime.modelProvider = ModelProviderName.LLAMALOCAL;
-            vi.spyOn(global, "setTimeout").mockImplementation((cb) => {
-                if (typeof cb === "function") cb();
-                return null as any;
-            });
-
-            // Execute
-            const result = await generateObject({
-                runtime,
-                context: "Generate a person object",
-                modelClass: ModelClass.LARGE,
-                schema: testSchema,
-            });
-
-            // Verify
-            expect(runtime.getService).toHaveBeenCalledWith(
-                ServiceType.TEXT_GENERATION
-            );
-            expect(result).toEqual({ foo: "local response" });
-        });
-
         it("should throw an error for empty context", async () => {
             // Execute & Verify
             await expect(
@@ -215,40 +195,6 @@ describe("Generation Module", () => {
                 })
             ).rejects.toThrow(
                 "Model settings not found for provider: UNSUPPORTED_PROVIDER"
-            );
-        });
-
-        it("should handle different modes (json, tool, auto)", async () => {
-            // Test with json mode
-            await generateObject({
-                runtime,
-                context: "Generate a person object",
-                modelClass: ModelClass.LARGE,
-                schema: testSchema,
-                mode: "json",
-            });
-
-            expect(ai.generateObject).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    mode: "json",
-                })
-            );
-
-            vi.clearAllMocks();
-
-            // Test with tool mode
-            await generateObject({
-                runtime,
-                context: "Generate a person object",
-                modelClass: ModelClass.LARGE,
-                schema: testSchema,
-                mode: "tool",
-            });
-
-            expect(ai.generateObject).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    mode: "tool",
-                })
             );
         });
     });
