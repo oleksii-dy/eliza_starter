@@ -859,7 +859,6 @@ export class AgentRuntime implements IAgentRuntime {
             runtime: this,
             context,
             modelClass: ModelClass.SMALL,
-            verifiableInferenceAdapter: this.verifiableInferenceAdapter,
         });
 
         const extractedReponse = parseTagContent(result, "response");
