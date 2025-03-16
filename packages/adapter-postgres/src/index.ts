@@ -522,17 +522,24 @@ export class PostgresDatabaseAdapter
             });
 
             let isUnique = true;
+
             if (memory.embedding) {
-                const similarMemories = await this.searchMemoriesByEmbedding(
-                    memory.embedding,
-                    {
-                        tableName,
-                        roomId: memory.roomId,
-                        match_threshold: 0.95,
-                        count: 1,
-                    }
-                );
-                isUnique = similarMemories.length === 0;
+                // Check if this is a zero embedding vector
+                const isZeroVector = memory.embedding.every((val) => val === 0);
+                if (isZeroVector) {
+                    elizaLogger.debug(
+                        "Zero embedding vector, skipping similarity search"
+                    );
+                } else {
+                    const similarMemories =
+                        await this.searchMemoriesByEmbedding(memory.embedding, {
+                            tableName,
+                            roomId: memory.roomId,
+                            match_threshold: 0.95,
+                            count: 1,
+                        });
+                    isUnique = similarMemories.length === 0;
+                }
             }
 
             await this.pool.query(
