@@ -235,8 +235,7 @@ export async function generateText({
                 elizaLogger.debug(
                     "Initializing OpenAI model with Cloudflare check"
                 );
-                const baseURL =
-                    getCloudflareGatewayBaseURL(runtime, "openai") || endpoint;
+                const baseURL = endpoint;
 
                 //elizaLogger.debug("OpenAI baseURL result:", { baseURL });
                 const openai = createOpenAI({
@@ -272,9 +271,7 @@ export async function generateText({
                 elizaLogger.debug(
                     "Initializing Anthropic model with Cloudflare check"
                 );
-                const baseURL =
-                    getCloudflareGatewayBaseURL(runtime, "anthropic") ||
-                    "https://api.anthropic.com/v1";
+                const baseURL = "https://api.anthropic.com/v1";
                 elizaLogger.debug("Anthropic baseURL result:", { baseURL });
 
                 const anthropic = createAnthropic({
@@ -1199,50 +1196,4 @@ function getModel(provider: ModelProviderName, model: string): LanguageModelV1 {
         default:
             throw new Error(`Unsupported provider: ${provider}`);
     }
-}
-
-function getCloudflareGatewayBaseURL(
-    runtime: IAgentRuntime,
-    provider: string
-): string | undefined {
-    const isCloudflareEnabled =
-        runtime.getSetting("CLOUDFLARE_GW_ENABLED") === "true";
-    const cloudflareAccountId = runtime.getSetting("CLOUDFLARE_AI_ACCOUNT_ID");
-    const cloudflareGatewayId = runtime.getSetting("CLOUDFLARE_AI_GATEWAY_ID");
-
-    elizaLogger.debug("Cloudflare Gateway Configuration:", {
-        isEnabled: isCloudflareEnabled,
-        hasAccountId: !!cloudflareAccountId,
-        hasGatewayId: !!cloudflareGatewayId,
-        provider: provider,
-    });
-
-    if (!isCloudflareEnabled) {
-        elizaLogger.debug("Cloudflare Gateway is not enabled");
-        return undefined;
-    }
-
-    if (!cloudflareAccountId) {
-        elizaLogger.warn(
-            "Cloudflare Gateway is enabled but CLOUDFLARE_AI_ACCOUNT_ID is not set"
-        );
-        return undefined;
-    }
-
-    if (!cloudflareGatewayId) {
-        elizaLogger.warn(
-            "Cloudflare Gateway is enabled but CLOUDFLARE_AI_GATEWAY_ID is not set"
-        );
-        return undefined;
-    }
-
-    const baseURL = `https://gateway.ai.cloudflare.com/v1/${cloudflareAccountId}/${cloudflareGatewayId}/${provider.toLowerCase()}`;
-    elizaLogger.info("Using Cloudflare Gateway:", {
-        provider,
-        baseURL,
-        accountId: cloudflareAccountId,
-        gatewayId: cloudflareGatewayId,
-    });
-
-    return baseURL;
 }
