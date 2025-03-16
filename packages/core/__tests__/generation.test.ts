@@ -29,7 +29,7 @@ vi.mock("@ai-sdk/anthropic", () => ({
 vi.mock("ai", () => ({
     generateObject: vi.fn().mockResolvedValue({
         text: "mocked response",
-        response: { foo: "bar" },
+        object: { foo: "bar" },
     }),
     generateText: vi.fn().mockResolvedValue({
         text: "mocked text response",
@@ -123,8 +123,7 @@ describe("Generation Module", () => {
 
     describe("generateObject", () => {
         const testSchema = z.object({
-            name: z.string(),
-            age: z.number(),
+            foo: z.string(),
         });
 
         it("should generate an object using OpenAI provider", async () => {
@@ -148,9 +147,8 @@ describe("Generation Module", () => {
                     schema: testSchema,
                 })
             );
-            expect(result).toEqual({
-                text: "mocked response",
-                response: { foo: "bar" },
+            expect(result.object).toEqual({
+                foo: "bar",
             });
         });
 
@@ -170,7 +168,7 @@ describe("Generation Module", () => {
             expect(ai.generateObject).toHaveBeenCalled();
             expect(result).toEqual({
                 text: "mocked response",
-                response: { foo: "bar" },
+                object: { foo: "bar" },
             });
         });
 

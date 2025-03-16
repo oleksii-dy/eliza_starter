@@ -362,7 +362,7 @@ export async function generateMessageResponse({
     const contentSchema = z.object({
         responseAnalysis: z.string(),
         text: z.string().describe("Cleaned up response for the user."),
-        user: z.string().describe("Your name."),
+        user: z.string().describe("Your name as a character."),
         action: z.string().describe("The action to take."),
     });
 
@@ -376,7 +376,7 @@ export async function generateMessageResponse({
             schemaDescription: "Message content structure",
         });
         elizaLogger.debug("generateMessageResponse result:", result.object);
-        return result.object as Content;
+        return result.object;
     } catch (error) {
         elizaLogger.error("Error in generateMessageResponse:", error);
         throw error;
@@ -892,13 +892,16 @@ export async function generateObject<T>({
 
     const model = getModel(provider, modelSettings.name);
 
-    return aiGenerateObject({
+    const result = await aiGenerateObject({
         model,
         schema,
         schemaName,
         schemaDescription,
         ...modelOptions,
     });
+
+    schema.parse(result.object);
+    return result;
 }
 
 function getModel(provider: ModelProviderName, model: string): LanguageModelV1 {
