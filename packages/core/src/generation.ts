@@ -637,7 +637,7 @@ export async function generateMessageResponse({
     });
 
     try {
-        const result = await generateObject({
+        const result = await generateObject<Content>({
             runtime,
             context,
             modelClass,
@@ -1128,7 +1128,7 @@ export async function generateTweetActions({
     throw new Error("Failed to generate tweet actions after maximum retries");
 }
 
-export const generateObject = async ({
+export async function generateObject<T>({
     runtime,
     context,
     modelClass,
@@ -1136,7 +1136,7 @@ export const generateObject = async ({
     schemaName,
     schemaDescription,
     stop,
-}: GenerationOptions): Promise<GenerateObjectResult<unknown>> => {
+}: GenerationOptions): Promise<GenerateObjectResult<T>> {
     if (!context) {
         throw new Error("generateObject context is empty");
     }
@@ -1172,11 +1172,11 @@ export const generateObject = async ({
         context,
         modelClass,
     });
-};
+}
 
-async function handleProvider(
+async function handleProvider<T>(
     options: ProviderOptions
-): Promise<GenerateObjectResult<unknown>> {
+): Promise<GenerateObjectResult<T>> {
     const { provider, schema, schemaName, schemaDescription } = options;
     const model = getModel(provider, options.model);
 
