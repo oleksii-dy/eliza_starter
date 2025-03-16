@@ -1,5 +1,4 @@
-import { generateText, parseTagContent, trimTokens } from "@elizaos/core";
-import { parseJSONObjectFromText } from "@elizaos/core";
+import { generateObject, trimTokens } from "@elizaos/core";
 import {
     IAgentRuntime,
     IImageDescriptionService,
@@ -13,6 +12,7 @@ import {
 import { Attachment, Collection } from "discord.js";
 import ffmpeg from "fluent-ffmpeg";
 import fs from "fs";
+import { z } from "zod";
 
 async function generateSummary(
     runtime: IAgentRuntime,
@@ -26,24 +26,27 @@ async function generateSummary(
   Text: """
   ${text}
   """
-
-  Respond with a JSON object in the following format:
-  <response>
-  {
-    "title": "Generated Title",
-    "summary": "Generated summary and/or description of the text"
-  }
-  </response>
 `;
 
-    const response = await generateText({
+    const summarySchema = z.object({
+        title: z.string().describe("Generated Title"),
+        summary: z
+            .string()
+            .describe("Generated summary and/or description of the text"),
+    });
+
+    type Summary = z.infer<typeof summarySchema>;
+
+    const response = await generateObject<Summary>({
         runtime,
         context: prompt,
         modelClass: ModelClass.SMALL,
+        schema: summarySchema,
+        schemaName: "summary",
+        schemaDescription: "A summary of the text",
     });
 
-    const extractedResponse = parseTagContent(response, "response");
-    const parsedResponse = parseJSONObjectFromText(extractedResponse);
+    const parsedResponse = summarySchema.parse(response.object);
 
     if (parsedResponse) {
         return {

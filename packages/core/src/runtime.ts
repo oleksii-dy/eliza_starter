@@ -15,13 +15,13 @@ import {
     formatEvaluatorNames,
     formatEvaluators,
 } from "./evaluators.ts";
-import { generateText } from "./generation.ts";
+import { generateObject } from "./generation.ts";
 import { formatGoalsAsString, getGoals } from "./goals.ts";
 import { elizaLogger } from "./index.ts";
 import knowledge from "./knowledge.ts";
 import { MemoryManager } from "./memory.ts";
 import { formatMessages, retrieveActorIdsFromMessages } from "./messages.ts";
-import { parseJsonArrayFromText, parseTagContent } from "./parsing.ts";
+import { stringArraySchema } from "./parsing.ts";
 import { formatPosts } from "./posts.ts";
 import { getProviders } from "./providers.ts";
 import { RAGKnowledgeManager } from "./ragknowledge.ts";
@@ -855,17 +855,16 @@ export class AgentRuntime implements IAgentRuntime {
                 evaluationTemplate,
         });
 
-        const result = await generateText({
+        const result = await generateObject<{ values: string[] }>({
             runtime: this,
             context,
             modelClass: ModelClass.SMALL,
-            verifiableInferenceAdapter: this.verifiableInferenceAdapter,
+            schema: stringArraySchema,
+            schemaName: "evaluatorNames",
+            schemaDescription: "The names of the evaluators",
         });
 
-        const extractedReponse = parseTagContent(result, "response");
-        const evaluators = parseJsonArrayFromText(
-            extractedReponse
-        ) as unknown as string[];
+        const evaluators = result.object?.values || [];
 
         for (const evaluator of this.evaluators) {
             if (!evaluators?.includes(evaluator.name)) continue;

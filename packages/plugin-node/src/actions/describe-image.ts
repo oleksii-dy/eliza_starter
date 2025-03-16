@@ -40,6 +40,8 @@ export const describeImage: Action = {
             context: getFileLocationContext,
             modelClass: ModelClass.SMALL,
             schema: FileLocationResultSchema,
+            schemaName: "fileLocationResult",
+            schemaDescription: "The file location result",
             stop: ["\n"],
         });
 

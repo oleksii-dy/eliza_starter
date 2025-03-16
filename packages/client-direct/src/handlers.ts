@@ -20,7 +20,7 @@ import {
 } from "@elizaos/core";
 
 import { DirectClient } from "./client";
-import { NoResponseError, NoTextError } from "./errors";
+import { NoTextError } from "./errors";
 import { messageHandlerTemplate } from "./templates";
 import { CustomRequest } from "./types";
 import { ISpeechService } from "@elizaos/core";
@@ -278,17 +278,11 @@ async function genResponse(runtime: AgentRuntime, state: State) {
         template: messageHandlerTemplate,
     });
 
-    const response = await generateMessageResponse({
+    return generateMessageResponse({
         runtime: runtime,
         context,
         modelClass: ModelClass.LARGE,
     });
-
-    if (!response) {
-        throw new NoResponseError();
-    }
-
-    return response;
 }
 
 function genRoomId(req: express.Request) {

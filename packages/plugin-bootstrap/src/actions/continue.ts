@@ -1,6 +1,6 @@
 import { composeContext, elizaLogger } from "@elizaos/core";
 import { generateMessageResponse, generateTrueOrFalse } from "@elizaos/core";
-import { booleanFooter, messageCompletionFooter } from "@elizaos/core";
+import { booleanFooter } from "@elizaos/core";
 import {
     Action,
     ActionExample,
@@ -40,7 +40,7 @@ Note that {{agentName}} is capable of reading/seeing/hearing various forms of me
 {{actions}}
 
 # Instructions: Write the next message for {{agentName}}.
-` + messageCompletionFooter;
+`;
 
 export const shouldContinueTemplate =
     `# Task: Decide if {{agentName}} should continue, or wait for others in the conversation so speak.

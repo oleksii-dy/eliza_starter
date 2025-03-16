@@ -1,4 +1,4 @@
-import { messageCompletionFooter, shouldRespondFooter } from "@elizaos/core";
+import { shouldRespondFooter } from "@elizaos/core";
 
 export const discordShouldRespondTemplate =
     `# Task: Decide if {{agentName}} should respond.
@@ -87,7 +87,7 @@ Note that {{agentName}} is capable of reading/seeing/hearing various forms of me
 {{recentMessages}}
 
 # Instructions: Write the next message for {{agentName}}. Include an optional action if appropriate. {{actionNames}}
-` + messageCompletionFooter;
+`;
 
 export const discordMessageHandlerTemplate =
     // {{goals}}
@@ -120,4 +120,4 @@ Note that {{agentName}} is capable of reading/seeing/hearing various forms of me
 {{recentMessages}}
 
 # Instructions: Write the next message for {{agentName}}. Include an action, if appropriate. {{actionNames}}
-` + messageCompletionFooter;
+`;

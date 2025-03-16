@@ -1,4 +1,5 @@
-import { composeContext, generateObjectArray } from "@elizaos/core";
+import { z } from "zod";
+import { composeContext, generateObject } from "@elizaos/core";
 import { getGoals } from "@elizaos/core";
 import {
     IAgentRuntime,
@@ -33,19 +34,7 @@ TASK: Analyze the conversation and update the status of the goals based on the n
 - If the goal has been successfully completed, set status to DONE. If the goal cannot be completed, set status to FAILED.
 - If those goal is still in progress, do not include the status field.
 
-Response format should be:
-<response>
-[
-  {
-    "id": <goal uuid>, // required
-    "status": "IN_PROGRESS" | "DONE" | "FAILED", // optional
-    "objectives": [ // optional
-      { "description": "Objective description", "completed": true | false },
-      { "description": "Objective description", "completed": true | false }
-    ] // NOTE: If updating objectives, include the entire objectives array including unchanged fields.
-  }
-]
-</response>
+// NOTE: If updating objectives, include the entire objectives array including unchanged fields.
 `;
 
 async function handler(
@@ -66,11 +55,45 @@ async function handler(
         template: runtime.character.templates?.goalsTemplate || goalsTemplate,
     });
 
-    const updates = await generateObjectArray({
+    const updatesSchema = z.object({
+        updates: z.array(
+            z.object({
+                id: z.string().describe("The id of the goal"),
+                status: z
+                .enum(["IN_PROGRESS", "DONE", "FAILED"])
+                .optional()
+                .describe("The status of the goal"),
+            objectives: z
+                .array(
+                    z.object({
+                        description: z
+                            .string()
+                            .describe("The description of the objective"),
+                        completed: z
+                            .boolean()
+                            .describe(
+                                "Whether the objective has been completed"
+                            ),
+                    })
+                )
+                .optional()
+                .describe("The objectives of the goal"),
+            })
+        ),
+    });
+
+    type Updates = z.infer<typeof updatesSchema>;
+
+    const updatesRes = await generateObject<Updates>({
         runtime,
         context,
         modelClass: ModelClass.SMALL,
+        schema: updatesSchema,
+        schemaName: "updates",
+        schemaDescription: "The updates to the goals",
     });
+
+    const updates = updatesRes.object?.updates || [];
 
     goalsData = await getGoals({
         runtime,

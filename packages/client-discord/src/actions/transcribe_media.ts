@@ -1,6 +1,4 @@
-import { composeContext, parseTagContent } from "@elizaos/core";
-import { generateText } from "@elizaos/core";
-import { parseJSONObjectFromText } from "@elizaos/core";
+import { composeContext, generateObject } from "@elizaos/core";
 import {
     Action,
     ActionExample,
@@ -11,6 +9,7 @@ import {
     ModelClass,
     State,
 } from "@elizaos/core";
+import { z } from "zod";
 
 export const transcriptionTemplate = `# Transcription of media file
 {{mediaTranscript}}
@@ -22,13 +21,6 @@ export const mediaAttachmentIdTemplate = `# Messages we are transcribing
 
 # Instructions: {{senderName}} is requesting a transcription of a specific media file (audio or video). Your goal is to determine the ID of the attachment they want transcribed.
 The "attachmentId" is the ID of the media file attachment that the user wants transcribed. If not specified, return null.
-
-Your response must be formatted as a JSON block with this structure:
-<response>
-{
-  "attachmentId": "<Attachment ID>"
-}
-</response>
 \`\`\`
 `;
 
@@ -44,17 +36,25 @@ const getMediaAttachmentId = async (
         template: mediaAttachmentIdTemplate,
     });
 
+    const mediaAttachmentIdSchema = z.object({
+        attachmentId: z
+            .string()
+            .describe("The ID of the media file to transcribe"),
+    });
+
+    type MediaAttachmentId = z.infer<typeof mediaAttachmentIdSchema>;
+
     for (let i = 0; i < 5; i++) {
-        const response = await generateText({
+        const response = await generateObject<MediaAttachmentId>({
             runtime,
             context,
             modelClass: ModelClass.SMALL,
+            schema: mediaAttachmentIdSchema,
+            schemaName: "mediaAttachmentId",
+            schemaDescription: "The ID of the media file to transcribe",
         });
         console.log("response", response);
-        const extractedResponse = parseTagContent(response, "response");
-        const parsedResponse = parseJSONObjectFromText(extractedResponse) as {
-            attachmentId: string;
-        } | null;
+        const parsedResponse = mediaAttachmentIdSchema.parse(response.object);
 
         if (parsedResponse?.attachmentId) {
             return parsedResponse.attachmentId;

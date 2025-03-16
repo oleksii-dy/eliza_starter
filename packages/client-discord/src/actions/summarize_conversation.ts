@@ -1,11 +1,10 @@
 import {
     composeContext,
+    generateObject,
     getModelSettings,
-    parseTagContent,
 } from "@elizaos/core";
 import { generateText, splitChunks, trimTokens } from "@elizaos/core";
 import { getActorDetails } from "@elizaos/core";
-import { parseJSONObjectFromText } from "@elizaos/core";
 import {
     Action,
     ActionExample,
@@ -17,6 +16,7 @@ import {
     ModelClass,
     State,
 } from "@elizaos/core";
+import { z } from "zod";
 export const summarizationTemplate = `# Summarized so far (we are adding to this)
 {{currentSummary}}
 
@@ -35,15 +35,6 @@ export const dateRangeTemplate = `# Messages we are summarizing (the conversatio
 The "objective" is a detailed description of what the user wants to summarize based on the conversation. If they just ask for a general summary, you can either base it off the converation if the summary range is very recent, or set the object to be general, like "a detailed summary of the conversation between all users".
 The "start" and "end" are the range of dates that the user wants to summarize, relative to the current time. The start and end should be relative to the current time, and measured in seconds, minutes, hours and days. The format is "2 days ago" or "3 hours ago" or "4 minutes ago" or "5 seconds ago", i.e. "<integer> <unit> ago".
 If you aren't sure, you can use a default range of "0 minutes ago" to "2 hours ago" or more. Better to err on the side of including too much than too little.
-
-Your response must be formatted as a JSON block with this structure:
-<response>
-{
-  "objective": "<What the user wants to summarize>",
-  "start": "0 minutes ago",
-  "end": "2 hours ago"
-}
-</response>
 `;
 
 const getDateRange = async (
@@ -58,20 +49,38 @@ const getDateRange = async (
         template: dateRangeTemplate,
     });
 
+    const dateRangeSchema = z.object({
+        objective: z
+            .string()
+            .describe(
+                "Detailed description of what the user wants to summarize"
+            ),
+        start: z
+            .string()
+            .describe(
+                "Start date of the range, measured in seconds, minutes, hours and days"
+            ),
+        end: z
+            .string()
+            .describe(
+                "End date of the range, measured in seconds, minutes, hours and days"
+            ),
+    });
+
+    type DateRange = z.infer<typeof dateRangeSchema>;
+
     for (let i = 0; i < 5; i++) {
-        const response = await generateText({
+        const response = await generateObject<DateRange>({
             runtime,
             context,
             modelClass: ModelClass.SMALL,
+            schema: dateRangeSchema,
+            schemaName: "dateRange",
+            schemaDescription: "The objective, start and end of the date range",
         });
         console.log("response", response);
         // try parsing to a json object
-        const extractedResponse = parseTagContent(response, "response");
-        const parsedResponse = parseJSONObjectFromText(extractedResponse) as {
-            objective: string;
-            start: string | number;
-            end: string | number;
-        } | null;
+        const parsedResponse = dateRangeSchema.parse(response.object);
         // see if it contains objective, start and end
         if (parsedResponse) {
             if (
@@ -122,11 +131,11 @@ const getDateRange = async (
 
                 console.log("endTime", endTime);
 
-                // get the current time and subtract the start and end times
-                parsedResponse.start = Date.now() - startTime;
-                parsedResponse.end = Date.now() - endTime;
-
-                return parsedResponse;
+                return {
+                    objective: parsedResponse.objective,
+                    start: Date.now() - startTime,
+                    end: Date.now() - endTime,
+                };
             }
         }
     }

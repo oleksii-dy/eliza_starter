@@ -1,5 +1,5 @@
-import { composeContext } from "@elizaos/core";
-import { generateObjectArray } from "@elizaos/core";
+import { z } from "zod";
+import { composeContext, generateObject } from "@elizaos/core";
 import { MemoryManager } from "@elizaos/core";
 import {
     ActionExample,
@@ -62,11 +62,35 @@ async function handler(runtime: IAgentRuntime, message: Memory) {
         template: runtime.character.templates?.factsTemplate || factsTemplate,
     });
 
-    const facts = await generateObjectArray({
+    const factsSchema = z.object({
+        facts: z.array(
+            z.object({
+                claim: z.string().describe("The claim"),
+                type: z
+                    .enum(["fact", "opinion", "status"])
+                    .describe("The type of the claim"),
+                in_bio: z
+                    .boolean()
+                    .describe("Whether the claim is in the user's bio"),
+                already_known: z
+                    .boolean()
+                    .describe("Whether the claim is already known"),
+            })
+        ),
+    });
+
+    type Facts = z.infer<typeof factsSchema>;
+
+    const factsRes = await generateObject<Facts>({
         runtime,
         context,
         modelClass: ModelClass.SMALL,
+        schema: factsSchema,
+        schemaName: "facts",
+        schemaDescription: "The facts extracted from the conversation",
     });
+
+    const facts = factsRes.object?.facts || [];
 
     const factsManager = new MemoryManager({
         runtime,

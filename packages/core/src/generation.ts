@@ -1,5 +1,6 @@
-import { createAnthropic, anthropic } from "@ai-sdk/anthropic";
-import { createOpenAI } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { openai } from "@ai-sdk/openai";
+import { deepseek } from "@ai-sdk/deepseek";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import {
     generateObject as aiGenerateObject,
@@ -8,37 +9,28 @@ import {
     StepResult as AIStepResult,
     Message,
     Tool,
+    LanguageModelV1,
 } from "ai";
 import { Buffer } from "buffer";
 import OpenAI from "openai";
-import { encodingForModel, TiktokenModel } from "js-tiktoken";
-import { AutoTokenizer } from "@huggingface/transformers";
 import Together from "together-ai";
 import { ZodSchema, z } from "zod";
 import { fal } from "@fal-ai/client";
 import { tavily } from "@tavily/core";
 
 import { elizaLogger } from "./index.ts";
-import {
-    models,
-    getModelSettings,
-    getImageModelSettings,
-    getEndpoint,
-} from "./models.ts";
+import { getModelSettings, getImageModelSettings } from "./models.ts";
 import {
     parseBooleanFromText,
-    parseJsonArrayFromText,
     parseJSONObjectFromText,
     parseShouldRespondFromText,
     parseActionResponseFromText,
     parseTagContent,
 } from "./parsing.ts";
-import settings from "./settings.ts";
 import {
     Content,
     IAgentRuntime,
     IImageDescriptionService,
-    ITextGenerationService,
     ModelClass,
     ModelProviderName,
     ServiceType,
@@ -46,10 +38,9 @@ import {
     ActionResponse,
     IVerifiableInferenceAdapter,
     VerifiableInferenceOptions,
-    VerifiableInferenceResult,
     TelemetrySettings,
-    TokenizerType,
 } from "./types.ts";
+import { trimTokens } from "./tokenTrimming.ts";
 
 type StepResult = AIStepResult<any>;
 
@@ -57,9 +48,9 @@ type GenerationOptions = {
     runtime: IAgentRuntime;
     context: string;
     modelClass: ModelClass;
-    schema?: ZodSchema;
-    schemaName?: string;
-    schemaDescription?: string;
+    schema: ZodSchema;
+    schemaName: string;
+    schemaDescription: string;
     stop?: string[];
     mode?: "auto" | "json" | "tool";
     experimental_providerMetadata?: Record<string, unknown>;
@@ -78,24 +69,6 @@ type ModelSettings = {
     experimental_telemetry?: TelemetrySettings;
 };
 
-type ProviderOptions = {
-    runtime: IAgentRuntime;
-    provider: ModelProviderName;
-    model: any;
-    apiKey: string;
-    schema?: ZodSchema;
-    schemaName?: string;
-    schemaDescription?: string;
-    mode?: "auto" | "json" | "tool";
-    experimental_providerMetadata?: Record<string, unknown>;
-    modelOptions: ModelSettings;
-    modelClass: ModelClass;
-    context: string;
-    verifiableInference?: boolean;
-    verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
-    verifiableInferenceOptions?: VerifiableInferenceOptions;
-};
-
 type TogetherAIImageResponse = {
     data: Array<{
         url: string;
@@ -103,39 +76,6 @@ type TogetherAIImageResponse = {
         image_type?: string;
     }>;
 };
-
-export async function trimTokens(
-    context: string,
-    maxTokens: number,
-    runtime: IAgentRuntime
-) {
-    if (!context) return "";
-    if (maxTokens <= 0) throw new Error("maxTokens must be positive");
-
-    const tokenizerModel = runtime.getSetting("TOKENIZER_MODEL");
-    const tokenizerType = runtime.getSetting("TOKENIZER_TYPE");
-
-    if (!tokenizerModel || !tokenizerType) {
-        // Default to TikToken truncation using the "gpt-4o" model if tokenizer settings are not defined
-        return truncateTiktoken("gpt-4o", context, maxTokens);
-    }
-
-    // Choose the truncation method based on tokenizer type
-    if (tokenizerType === TokenizerType.Auto) {
-        return truncateAuto(tokenizerModel, context, maxTokens);
-    }
-
-    if (tokenizerType === TokenizerType.TikToken) {
-        return truncateTiktoken(
-            tokenizerModel as TiktokenModel,
-            context,
-            maxTokens
-        );
-    }
-
-    elizaLogger.warn(`Unsupported tokenizer type: ${tokenizerType}`);
-    return truncateTiktoken("gpt-4o", context, maxTokens);
-}
 
 export async function generateText({
     runtime,
@@ -146,8 +86,6 @@ export async function generateText({
     maxSteps = 1,
     stop,
     customSystemPrompt,
-    verifiableInference = process.env.VERIFIABLE_INFERENCE_ENABLED === "true",
-    verifiableInferenceOptions,
     messages,
 }: {
     runtime: IAgentRuntime;
@@ -158,294 +96,48 @@ export async function generateText({
     maxSteps?: number;
     stop?: string[];
     customSystemPrompt?: string;
-    verifiableInference?: boolean;
-    verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
-    verifiableInferenceOptions?: VerifiableInferenceOptions;
     messages?: Message[];
 }): Promise<string> {
     if (!context) {
-        elizaLogger.error("generateText context is empty");
-        return "";
-    }
-
-    elizaLogger.info("Generating text with options:", {
-        modelProvider: runtime.modelProvider,
-        model: modelClass,
-        verifiableInference,
-    });
-    elizaLogger.log("Using provider:", runtime.modelProvider);
-    // If verifiable inference is requested and adapter is provided, use it
-    if (verifiableInference && runtime.verifiableInferenceAdapter) {
-        elizaLogger.log(
-            "Using verifiable inference adapter:",
-            runtime.verifiableInferenceAdapter
-        );
-        try {
-            const result: VerifiableInferenceResult =
-                await runtime.verifiableInferenceAdapter.generateText(
-                    context,
-                    modelClass,
-                    verifiableInferenceOptions
-                );
-            elizaLogger.log("Verifiable inference result:", result);
-            // Verify the proof
-            const isValid =
-                await runtime.verifiableInferenceAdapter.verifyProof(result);
-            if (!isValid) {
-                throw new Error("Failed to verify inference proof");
-            }
-
-            return result.text;
-        } catch (error) {
-            elizaLogger.error("Error in verifiable inference:", error);
-            throw error;
-        }
+        throw new Error("generateText context is empty");
     }
 
     const provider = runtime.modelProvider;
-    elizaLogger.debug("Provider settings:", {
-        provider,
-        hasRuntime: !!runtime,
-        runtimeSettings: {
-            CLOUDFLARE_GW_ENABLED: runtime.getSetting("CLOUDFLARE_GW_ENABLED"),
-            CLOUDFLARE_AI_ACCOUNT_ID: runtime.getSetting(
-                "CLOUDFLARE_AI_ACCOUNT_ID"
-            ),
-            CLOUDFLARE_AI_GATEWAY_ID: runtime.getSetting(
-                "CLOUDFLARE_AI_GATEWAY_ID"
-            ),
-        },
+    const settings = getModelSettings(provider, modelClass);
+
+    if (!settings) {
+        throw new Error(`Model settings not found for provider: ${provider}`);
+    }
+
+    const cfg = runtime.character?.settings?.modelConfig;
+    const temp = cfg?.temperature || settings.temperature;
+    const freq = cfg?.frequency_penalty || settings.frequency_penalty;
+    const pres = cfg?.presence_penalty || settings.presence_penalty;
+    const max_in = cfg?.maxInputTokens || settings.maxInputTokens;
+    const max_out = cfg?.max_response_length || settings.maxOutputTokens;
+    const tel = cfg?.experimental_telemetry || settings.experimental_telemetry;
+
+    context = await trimTokens(context, max_in, runtime);
+
+    const llmModel = getModel(provider, settings.name);
+
+    const result = await aiGenerateText({
+        model: llmModel,
+        prompt: context,
+        system: customSystemPrompt ?? runtime.character.system ?? undefined,
+        tools,
+        messages,
+        onStepFinish,
+        maxSteps,
+        temperature: temp,
+        maxTokens: max_out,
+        frequencyPenalty: freq,
+        presencePenalty: pres,
+        experimental_telemetry: tel,
+        stopSequences: stop || settings.stop,
     });
 
-    const endpoint =
-        runtime.character.modelEndpointOverride || getEndpoint(provider);
-    const modelSettings = getModelSettings(runtime.modelProvider, modelClass);
-
-    const model = modelSettings.name;
-
-    elizaLogger.info("Selected model:", model);
-
-    const modelConfiguration = runtime.character?.settings?.modelConfig;
-    const temperature =
-        modelConfiguration?.temperature || modelSettings.temperature;
-    const frequency_penalty =
-        modelConfiguration?.frequency_penalty ||
-        modelSettings.frequency_penalty;
-    const presence_penalty =
-        modelConfiguration?.presence_penalty || modelSettings.presence_penalty;
-    const max_context_length =
-        modelConfiguration?.maxInputTokens || modelSettings.maxInputTokens;
-    const max_response_length =
-        modelConfiguration?.max_response_length ||
-        modelSettings.maxOutputTokens;
-    const experimental_telemetry =
-        modelConfiguration?.experimental_telemetry ||
-        modelSettings.experimental_telemetry;
-
-    const apiKey = runtime.token;
-
-    try {
-        elizaLogger.debug(
-            `Trimming context to max length of ${max_context_length} tokens.`
-        );
-
-        context = await trimTokens(context, max_context_length, runtime);
-
-        let response: string;
-
-        const _stop = stop || modelSettings.stop;
-        elizaLogger.debug(
-            `Using provider: ${provider}, model: ${model}, temperature: ${temperature}, max response length: ${max_response_length}`
-        );
-
-        switch (provider) {
-            // OPENAI & LLAMACLOUD shared same structure.
-            case ModelProviderName.OPENAI:
-            case ModelProviderName.ALI_BAILIAN:
-            case ModelProviderName.VOLENGINE:
-            case ModelProviderName.LLAMACLOUD:
-            case ModelProviderName.NANOGPT:
-            case ModelProviderName.HYPERBOLIC:
-            case ModelProviderName.TOGETHER:
-            case ModelProviderName.NINETEEN_AI:
-            case ModelProviderName.AKASH_CHAT_API: {
-                elizaLogger.debug(
-                    "Initializing OpenAI model with Cloudflare check"
-                );
-                const baseURL =
-                    getCloudflareGatewayBaseURL(runtime, "openai") || endpoint;
-
-                //elizaLogger.debug("OpenAI baseURL result:", { baseURL });
-                const openai = createOpenAI({
-                    apiKey,
-                    baseURL,
-                    fetch: runtime.fetch,
-                });
-
-                const { text: openaiResponse } = await aiGenerateText({
-                    model: openai.languageModel(model),
-                    prompt: context,
-                    system:
-                        customSystemPrompt ??
-                        runtime.character.system ??
-                        settings.SYSTEM_PROMPT ??
-                        undefined,
-                    tools: tools,
-                    onStepFinish: onStepFinish,
-                    maxSteps: maxSteps,
-                    temperature: temperature,
-                    maxTokens: max_response_length,
-                    frequencyPenalty: frequency_penalty,
-                    presencePenalty: presence_penalty,
-                    experimental_telemetry: experimental_telemetry,
-                });
-
-                response = openaiResponse;
-                console.log("Received response from OpenAI model.");
-                break;
-            }
-
-            case ModelProviderName.ANTHROPIC: {
-                elizaLogger.debug(
-                    "Initializing Anthropic model with Cloudflare check"
-                );
-                const baseURL =
-                    getCloudflareGatewayBaseURL(runtime, "anthropic") ||
-                    "https://api.anthropic.com/v1";
-                elizaLogger.debug("Anthropic baseURL result:", { baseURL });
-
-                const anthropic = createAnthropic({
-                    apiKey,
-                    baseURL,
-                    fetch: runtime.fetch,
-                });
-                const { text: anthropicResponse } = await aiGenerateText({
-                    model: anthropic.languageModel(model),
-                    prompt: context,
-                    system:
-                        customSystemPrompt ??
-                        runtime.character.system ??
-                        settings.SYSTEM_PROMPT ??
-                        undefined,
-                    tools: tools,
-                    messages,
-                    onStepFinish: onStepFinish,
-                    maxSteps: maxSteps,
-                    temperature: temperature,
-                    maxTokens: max_response_length,
-                    frequencyPenalty: frequency_penalty,
-                    presencePenalty: presence_penalty,
-                    experimental_telemetry: experimental_telemetry,
-                });
-
-                response = anthropicResponse;
-                elizaLogger.debug("Received response from Anthropic model.");
-                break;
-            }
-
-            case ModelProviderName.CLAUDE_VERTEX: {
-                elizaLogger.debug("Initializing Claude Vertex model.");
-
-                const anthropic = createAnthropic({
-                    apiKey,
-                    fetch: runtime.fetch,
-                });
-
-                const { text: anthropicResponse } = await aiGenerateText({
-                    model: anthropic.languageModel(model),
-                    prompt: context,
-                    system:
-                        customSystemPrompt ??
-                        runtime.character.system ??
-                        settings.SYSTEM_PROMPT ??
-                        undefined,
-                    tools: tools,
-                    onStepFinish: onStepFinish,
-                    maxSteps: maxSteps,
-                    temperature: temperature,
-                    maxTokens: max_response_length,
-                    frequencyPenalty: frequency_penalty,
-                    presencePenalty: presence_penalty,
-                    experimental_telemetry: experimental_telemetry,
-                });
-
-                response = anthropicResponse;
-                elizaLogger.debug(
-                    "Received response from Claude Vertex model."
-                );
-                break;
-            }
-
-            case ModelProviderName.LLAMALOCAL: {
-                elizaLogger.debug(
-                    "Using local Llama model for text completion."
-                );
-                const textGenerationService =
-                    runtime.getService<ITextGenerationService>(
-                        ServiceType.TEXT_GENERATION
-                    );
-
-                if (!textGenerationService) {
-                    throw new Error("Text generation service not found");
-                }
-
-                response = await textGenerationService.queueTextCompletion(
-                    context,
-                    temperature,
-                    _stop,
-                    frequency_penalty,
-                    presence_penalty,
-                    max_response_length
-                );
-                elizaLogger.debug("Received response from local Llama model.");
-                break;
-            }
-
-            case ModelProviderName.DEEPSEEK: {
-                elizaLogger.debug("Initializing Deepseek model.");
-                const serverUrl = models[provider].endpoint;
-                const deepseek = createOpenAI({
-                    apiKey,
-                    baseURL: serverUrl,
-                    fetch: runtime.fetch,
-                });
-
-                const { text: deepseekResponse } = await aiGenerateText({
-                    model: deepseek.languageModel(model),
-                    prompt: context,
-                    temperature: temperature,
-                    system:
-                        customSystemPrompt ??
-                        runtime.character.system ??
-                        settings.SYSTEM_PROMPT ??
-                        undefined,
-                    tools: tools,
-                    onStepFinish: onStepFinish,
-                    maxSteps: maxSteps,
-                    maxTokens: max_response_length,
-                    frequencyPenalty: frequency_penalty,
-                    presencePenalty: presence_penalty,
-                    experimental_telemetry: experimental_telemetry,
-                });
-
-                response = deepseekResponse;
-                elizaLogger.debug("Received response from Deepseek model.");
-                break;
-            }
-
-            default: {
-                const errorMessage = `Unsupported provider: ${provider}`;
-                elizaLogger.error(errorMessage);
-                throw new Error(errorMessage);
-            }
-        }
-
-        elizaLogger.info("Response:", response);
-        return response;
-    } catch (error) {
-        elizaLogger.error("Error in generateText:", error);
-        throw error;
-    }
+    return result.text;
 }
 
 export async function generateShouldRespond({
@@ -611,52 +303,6 @@ export async function generateObjectDeprecated({
     throw new Error("Failed to generate object after maximum retries");
 }
 
-export async function generateObjectArray({
-    runtime,
-    context,
-    modelClass,
-}: {
-    runtime: IAgentRuntime;
-    context: string;
-    modelClass: ModelClass;
-}): Promise<any[]> {
-    if (!context) {
-        elizaLogger.error("generateObjectArray context is empty");
-        return [];
-    }
-
-    let retryDelay = 1000;
-    let retryCount = 0;
-    const MAX_RETRIES = 5;
-
-    while (retryCount < MAX_RETRIES) {
-        try {
-            const response = await generateText({
-                runtime,
-                context,
-                modelClass,
-            });
-
-            const extractedResponse = parseTagContent(response, "response");
-            const parsedResponse = parseJsonArrayFromText(extractedResponse);
-            if (parsedResponse) {
-                return parsedResponse;
-            }
-        } catch (error) {
-            elizaLogger.error("Error in generateObjectArray:", error);
-        }
-
-        elizaLogger.log(
-            `Retrying in ${retryDelay}ms... (Attempt ${retryCount + 1}/${MAX_RETRIES})`
-        );
-        await new Promise((resolve) => setTimeout(resolve, retryDelay));
-        retryDelay *= 2;
-        retryCount++;
-    }
-
-    throw new Error("Failed to generate object array after maximum retries");
-}
-
 export async function generateMessageResponse({
     runtime,
     context,
@@ -669,12 +315,12 @@ export async function generateMessageResponse({
     const contentSchema = z.object({
         responseAnalysis: z.string(),
         text: z.string().describe("Cleaned up response for the user."),
-        user: z.string().describe("Your name."),
+        user: z.string().describe("Your name as a character."),
         action: z.string().describe("The action to take."),
     });
 
     try {
-        const result = await generateObject({
+        const result = await generateObject<Content>({
             runtime,
             context,
             modelClass,
@@ -683,7 +329,7 @@ export async function generateMessageResponse({
             schemaDescription: "Message content structure",
         });
         elizaLogger.debug("generateMessageResponse result:", result.object);
-        return result.object as Content;
+        return result.object;
     } catch (error) {
         elizaLogger.error("Error in generateMessageResponse:", error);
         throw error;
@@ -1115,78 +761,6 @@ export const generateWebSearch = async (
     }
 };
 
-export const generateObject = async ({
-    runtime,
-    context,
-    modelClass,
-    schema,
-    schemaName,
-    schemaDescription,
-    stop,
-    mode = "json",
-    verifiableInference = false,
-    verifiableInferenceAdapter,
-    verifiableInferenceOptions,
-}: GenerationOptions): Promise<GenerateObjectResult<unknown>> => {
-    if (!context) {
-        const errorMessage = "generateObject context is empty";
-        console.error(errorMessage);
-        throw new Error(errorMessage);
-    }
-
-    const provider = runtime.modelProvider;
-    const modelSettings = getModelSettings(runtime.modelProvider, modelClass);
-
-    if (!modelSettings) {
-        throw new Error(`Model settings not found for provider: ${provider}`);
-    }
-
-    const model = modelSettings.name;
-    const temperature = modelSettings.temperature;
-    const frequency_penalty = modelSettings.frequency_penalty;
-    const presence_penalty = modelSettings.presence_penalty;
-    const max_context_length = modelSettings.maxInputTokens;
-    const max_response_length = modelSettings.maxOutputTokens;
-    const experimental_telemetry = modelSettings.experimental_telemetry;
-    const apiKey = runtime.token;
-
-    try {
-        context = await trimTokens(context, max_context_length, runtime);
-
-        const modelOptions: ModelSettings = {
-            prompt: context,
-            temperature,
-            maxTokens: max_response_length,
-            frequencyPenalty: frequency_penalty,
-            presencePenalty: presence_penalty,
-            stop: stop || modelSettings.stop,
-            experimental_telemetry: experimental_telemetry,
-        };
-
-        const response = await handleProvider({
-            provider,
-            model,
-            apiKey,
-            schema,
-            schemaName,
-            schemaDescription,
-            mode,
-            modelOptions,
-            runtime,
-            context,
-            modelClass,
-            verifiableInference,
-            verifiableInferenceAdapter,
-            verifiableInferenceOptions,
-        });
-
-        return response;
-    } catch (error) {
-        console.error("Error in generateObject:", error);
-        throw error;
-    }
-};
-
 export async function generateTweetActions({
     runtime,
     context,
@@ -1237,201 +811,61 @@ export async function generateTweetActions({
     throw new Error("Failed to generate tweet actions after maximum retries");
 }
 
-async function handleProvider(
-    options: ProviderOptions
-): Promise<GenerateObjectResult<unknown>> {
-    const { provider, runtime, context, modelClass } = options;
+export async function generateObject<T>({
+    runtime,
+    context,
+    modelClass,
+    schema,
+    schemaName,
+    schemaDescription,
+    stop,
+}: GenerationOptions): Promise<GenerateObjectResult<T>> {
+    if (!context) {
+        throw new Error("generateObject context is empty");
+    }
+
+    const provider = runtime.modelProvider;
+    const modelSettings = getModelSettings(provider, modelClass);
+
+    if (!modelSettings) {
+        throw new Error(`Model settings not found for provider: ${provider}`);
+    }
+
+    context = await trimTokens(context, modelSettings.maxInputTokens, runtime);
+
+    const modelOptions: ModelSettings = {
+        prompt: context,
+        temperature: modelSettings.temperature,
+        maxTokens: modelSettings.maxOutputTokens,
+        frequencyPenalty: modelSettings.frequency_penalty,
+        presencePenalty: modelSettings.presence_penalty,
+        stop: stop || modelSettings.stop,
+        experimental_telemetry: modelSettings.experimental_telemetry,
+    };
+
+    const model = getModel(provider, modelSettings.name);
+
+    const result = await aiGenerateObject({
+        model,
+        schema,
+        schemaName,
+        schemaDescription,
+        ...modelOptions,
+    });
+
+    schema.parse(result.object);
+    return result;
+}
+
+function getModel(provider: ModelProviderName, model: string): LanguageModelV1 {
     switch (provider) {
         case ModelProviderName.OPENAI:
-        case ModelProviderName.ETERNALAI:
-        case ModelProviderName.ALI_BAILIAN:
-        case ModelProviderName.VOLENGINE:
-        case ModelProviderName.LLAMACLOUD:
-        case ModelProviderName.TOGETHER:
-        case ModelProviderName.NANOGPT:
-        case ModelProviderName.AKASH_CHAT_API:
-            return await handleOpenAI(options);
+            return openai(model);
         case ModelProviderName.ANTHROPIC:
-        case ModelProviderName.CLAUDE_VERTEX:
-            return await handleAnthropic(options);
-        case ModelProviderName.LLAMALOCAL:
-            return await generateObjectDeprecated({
-                runtime,
-                context,
-                modelClass,
-            });
+            return anthropic(model);
         case ModelProviderName.DEEPSEEK:
-            return await handleDeepSeek(options);
-        default: {
-            const errorMessage = `Unsupported provider: ${provider}`;
-            elizaLogger.error(errorMessage);
-            throw new Error(errorMessage);
-        }
+            return deepseek(model);
+        default:
+            throw new Error(`Unsupported provider: ${provider}`);
     }
-}
-
-async function handleOpenAI({
-    model,
-    apiKey,
-    schema,
-    schemaName,
-    schemaDescription,
-    mode = "json",
-    modelOptions,
-    provider: _provider,
-    runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const baseURL =
-        getCloudflareGatewayBaseURL(runtime, "openai") ||
-        models.openai.endpoint;
-    const openai = createOpenAI({ apiKey, baseURL });
-    return await aiGenerateObject({
-        model: openai.languageModel(model),
-        schema,
-        schemaName,
-        schemaDescription,
-        mode,
-        ...modelOptions,
-    });
-}
-
-async function handleAnthropic({
-    model,
-    schema,
-    schemaName,
-    schemaDescription,
-    modelOptions,
-    runtime,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    elizaLogger.debug("Handling Anthropic request with Cloudflare check");
-    const baseURL = getCloudflareGatewayBaseURL(runtime, "anthropic");
-    elizaLogger.debug("Anthropic handleAnthropic baseURL:", { baseURL });
-
-    return await aiGenerateObject({
-        model: anthropic(model),
-        schema,
-        schemaName,
-        schemaDescription,
-        ...modelOptions,
-    });
-}
-
-async function handleDeepSeek({
-    model,
-    apiKey,
-    schema,
-    schemaName,
-    schemaDescription,
-    mode,
-    modelOptions,
-}: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    const openai = createOpenAI({ apiKey, baseURL: models.deepseek.endpoint });
-    return await aiGenerateObject({
-        model: openai.languageModel(model),
-        schema,
-        schemaName,
-        schemaDescription,
-        mode,
-        ...modelOptions,
-    });
-}
-
-async function truncateAuto(
-    modelPath: string,
-    context: string,
-    maxTokens: number
-) {
-    try {
-        const tokenizer = await AutoTokenizer.from_pretrained(modelPath);
-        const tokens = tokenizer.encode(context);
-
-        // If already within limits, return unchanged
-        if (tokens.length <= maxTokens) {
-            return context;
-        }
-
-        // Keep the most recent tokens by slicing from the end
-        const truncatedTokens = tokens.slice(-maxTokens);
-
-        // Decode back to text - js-tiktoken decode() returns a string directly
-        return tokenizer.decode(truncatedTokens);
-    } catch (error) {
-        elizaLogger.error("Error in trimTokens:", error);
-        // Return truncated string if tokenization fails
-        return context.slice(-maxTokens * 4); // Rough estimate of 4 chars per token
-    }
-}
-
-async function truncateTiktoken(
-    model: TiktokenModel,
-    context: string,
-    maxTokens: number
-) {
-    try {
-        const encoding = encodingForModel(model);
-
-        // Encode the text into tokens
-        const tokens = encoding.encode(context);
-
-        // If already within limits, return unchanged
-        if (tokens.length <= maxTokens) {
-            return context;
-        }
-
-        // Keep the most recent tokens by slicing from the end
-        const truncatedTokens = tokens.slice(-maxTokens);
-
-        // Decode back to text - js-tiktoken decode() returns a string directly
-        return encoding.decode(truncatedTokens);
-    } catch (error) {
-        elizaLogger.error("Error in trimTokens:", error);
-        // Return truncated string if tokenization fails
-        return context.slice(-maxTokens * 4); // Rough estimate of 4 chars per token
-    }
-}
-
-function getCloudflareGatewayBaseURL(
-    runtime: IAgentRuntime,
-    provider: string
-): string | undefined {
-    const isCloudflareEnabled =
-        runtime.getSetting("CLOUDFLARE_GW_ENABLED") === "true";
-    const cloudflareAccountId = runtime.getSetting("CLOUDFLARE_AI_ACCOUNT_ID");
-    const cloudflareGatewayId = runtime.getSetting("CLOUDFLARE_AI_GATEWAY_ID");
-
-    elizaLogger.debug("Cloudflare Gateway Configuration:", {
-        isEnabled: isCloudflareEnabled,
-        hasAccountId: !!cloudflareAccountId,
-        hasGatewayId: !!cloudflareGatewayId,
-        provider: provider,
-    });
-
-    if (!isCloudflareEnabled) {
-        elizaLogger.debug("Cloudflare Gateway is not enabled");
-        return undefined;
-    }
-
-    if (!cloudflareAccountId) {
-        elizaLogger.warn(
-            "Cloudflare Gateway is enabled but CLOUDFLARE_AI_ACCOUNT_ID is not set"
-        );
-        return undefined;
-    }
-
-    if (!cloudflareGatewayId) {
-        elizaLogger.warn(
-            "Cloudflare Gateway is enabled but CLOUDFLARE_AI_GATEWAY_ID is not set"
-        );
-        return undefined;
-    }
-
-    const baseURL = `https://gateway.ai.cloudflare.com/v1/${cloudflareAccountId}/${cloudflareGatewayId}/${provider.toLowerCase()}`;
-    elizaLogger.info("Using Cloudflare Gateway:", {
-        provider,
-        baseURL,
-        accountId: cloudflareAccountId,
-        gatewayId: cloudflareGatewayId,
-    });
-
-    return baseURL;
 }

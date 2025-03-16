@@ -880,11 +880,6 @@ export class VoiceManager extends EventEmitter {
 
         response.source = "discord";
 
-        if (!response) {
-            console.error("No response from generateMessageResponse");
-            return;
-        }
-
         await this.runtime.databaseAdapter.log({
             body: { message, context, response },
             userId: userId,
