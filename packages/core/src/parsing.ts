@@ -58,8 +58,9 @@ export const parseBooleanFromText = (text: string): boolean | null => {
     return null;
 };
 
-
-export const stringArraySchema = z.array(z.string());
+export const stringArraySchema = z.object({
+    values: z.array(z.string()),
+});
 
 export const stringArrayFooter = `Respond with a JSON array containing the values in a JSON block formatted for markdown with this structure:
 <response>

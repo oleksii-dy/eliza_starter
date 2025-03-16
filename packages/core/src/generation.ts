@@ -22,7 +22,6 @@ import { elizaLogger } from "./index.ts";
 import { getModelSettings, getImageModelSettings } from "./models.ts";
 import {
     parseBooleanFromText,
-    parseJsonArrayFromText,
     parseJSONObjectFromText,
     parseShouldRespondFromText,
     parseActionResponseFromText,
@@ -49,9 +48,9 @@ type GenerationOptions = {
     runtime: IAgentRuntime;
     context: string;
     modelClass: ModelClass;
-    schema?: ZodSchema;
-    schemaName?: string;
-    schemaDescription?: string;
+    schema: ZodSchema;
+    schemaName: string;
+    schemaDescription: string;
     stop?: string[];
     mode?: "auto" | "json" | "tool";
     experimental_providerMetadata?: Record<string, unknown>;
@@ -302,52 +301,6 @@ export async function generateObjectDeprecated({
     }
 
     throw new Error("Failed to generate object after maximum retries");
-}
-
-export async function generateObjectArray({
-    runtime,
-    context,
-    modelClass,
-}: {
-    runtime: IAgentRuntime;
-    context: string;
-    modelClass: ModelClass;
-}): Promise<any[]> {
-    if (!context) {
-        elizaLogger.error("generateObjectArray context is empty");
-        return [];
-    }
-
-    let retryDelay = 1000;
-    let retryCount = 0;
-    const MAX_RETRIES = 5;
-
-    while (retryCount < MAX_RETRIES) {
-        try {
-            const response = await generateText({
-                runtime,
-                context,
-                modelClass,
-            });
-
-            const extractedResponse = parseTagContent(response, "response");
-            const parsedResponse = parseJsonArrayFromText(extractedResponse);
-            if (parsedResponse) {
-                return parsedResponse;
-            }
-        } catch (error) {
-            elizaLogger.error("Error in generateObjectArray:", error);
-        }
-
-        elizaLogger.log(
-            `Retrying in ${retryDelay}ms... (Attempt ${retryCount + 1}/${MAX_RETRIES})`
-        );
-        await new Promise((resolve) => setTimeout(resolve, retryDelay));
-        retryDelay *= 2;
-        retryCount++;
-    }
-
-    throw new Error("Failed to generate object array after maximum retries");
 }
 
 export async function generateMessageResponse({

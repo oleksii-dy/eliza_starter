@@ -855,7 +855,7 @@ export class AgentRuntime implements IAgentRuntime {
                 evaluationTemplate,
         });
 
-        const result = await generateObject<string[]>({
+        const result = await generateObject<{ values: string[] }>({
             runtime: this,
             context,
             modelClass: ModelClass.SMALL,
@@ -864,7 +864,7 @@ export class AgentRuntime implements IAgentRuntime {
             schemaDescription: "The names of the evaluators",
         });
 
-        const evaluators = result.object;
+        const evaluators = result.object?.values || [];
 
         for (const evaluator of this.evaluators) {
             if (!evaluators?.includes(evaluator.name)) continue;

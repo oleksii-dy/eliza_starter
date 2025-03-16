@@ -62,20 +62,22 @@ async function handler(runtime: IAgentRuntime, message: Memory) {
         template: runtime.character.templates?.factsTemplate || factsTemplate,
     });
 
-    const factsSchema = z.array(
-        z.object({
-            claim: z.string().describe("The claim"),
-            type: z
-                .enum(["fact", "opinion", "status"])
-                .describe("The type of the claim"),
-            in_bio: z
-                .boolean()
-                .describe("Whether the claim is in the user's bio"),
-            already_known: z
-                .boolean()
-                .describe("Whether the claim is already known"),
-        })
-    );
+    const factsSchema = z.object({
+        facts: z.array(
+            z.object({
+                claim: z.string().describe("The claim"),
+                type: z
+                    .enum(["fact", "opinion", "status"])
+                    .describe("The type of the claim"),
+                in_bio: z
+                    .boolean()
+                    .describe("Whether the claim is in the user's bio"),
+                already_known: z
+                    .boolean()
+                    .describe("Whether the claim is already known"),
+            })
+        ),
+    });
 
     type Facts = z.infer<typeof factsSchema>;
 
@@ -88,7 +90,7 @@ async function handler(runtime: IAgentRuntime, message: Memory) {
         schemaDescription: "The facts extracted from the conversation",
     });
 
-    const facts = factsRes.object;
+    const facts = factsRes.object?.facts || [];
 
     const factsManager = new MemoryManager({
         runtime,

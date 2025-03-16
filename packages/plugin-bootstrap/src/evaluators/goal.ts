@@ -55,10 +55,11 @@ async function handler(
         template: runtime.character.templates?.goalsTemplate || goalsTemplate,
     });
 
-    const updatesSchema = z.array(
-        z.object({
-            id: z.string().describe("The id of the goal"),
-            status: z
+    const updatesSchema = z.object({
+        updates: z.array(
+            z.object({
+                id: z.string().describe("The id of the goal"),
+                status: z
                 .enum(["IN_PROGRESS", "DONE", "FAILED"])
                 .optional()
                 .describe("The status of the goal"),
@@ -77,8 +78,9 @@ async function handler(
                 )
                 .optional()
                 .describe("The objectives of the goal"),
-        })
-    );
+            })
+        ),
+    });
 
     type Updates = z.infer<typeof updatesSchema>;
 
@@ -91,7 +93,7 @@ async function handler(
         schemaDescription: "The updates to the goals",
     });
 
-    const updates = updatesRes.object;
+    const updates = updatesRes.object?.updates || [];
 
     goalsData = await getGoals({
         runtime,

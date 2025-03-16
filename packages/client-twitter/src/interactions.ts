@@ -319,38 +319,42 @@ Description: ${desc.description}`
 For each tweet that contains valuable information (in either text or media), provide a concise summary and any key knowledge points.
   `;
 
-                                const analysisSchema = z.array(
-                                    z.object({
-                                        tweetId: z
-                                            .string()
-                                            .describe("The ID of the tweet"),
-                                        summary: z
-                                            .string()
-                                            .describe(
-                                                "A concise summary of the tweet if it contains valuable information, otherwise null"
-                                            ),
-                                        knowledgePoints: z
-                                            .array(z.string())
-                                            .describe(
-                                                "Specific facts or insights extracted from both text and media, if any"
-                                            ),
-                                        mediaInsights: z
-                                            .array(z.string())
-                                            .describe(
-                                                "Insights extracted from media, if any"
-                                            ),
-                                        topics: z
-                                            .array(z.string())
-                                            .describe(
-                                                "Topics or categories relevant to the tweet"
-                                            ),
-                                        relevanceScore: z
-                                            .number()
-                                            .describe(
-                                                "A score between 0 and 1, where 1 is highly informative"
-                                            ),
-                                    })
-                                );
+                                const analysisSchema = z.object({
+                                    analysis: z.array(
+                                        z.object({
+                                            tweetId: z
+                                                .string()
+                                                .describe(
+                                                    "The ID of the tweet"
+                                                ),
+                                            summary: z
+                                                .string()
+                                                .describe(
+                                                    "A concise summary of the tweet if it contains valuable information, otherwise null"
+                                                ),
+                                            knowledgePoints: z
+                                                .array(z.string())
+                                                .describe(
+                                                    "Specific facts or insights extracted from both text and media, if any"
+                                                ),
+                                            mediaInsights: z
+                                                .array(z.string())
+                                                .describe(
+                                                    "Insights extracted from media, if any"
+                                                ),
+                                            topics: z
+                                                .array(z.string())
+                                                .describe(
+                                                    "Topics or categories relevant to the tweet"
+                                                ),
+                                            relevanceScore: z
+                                                .number()
+                                                .describe(
+                                                    "A score between 0 and 1, where 1 is highly informative"
+                                                ),
+                                        })
+                                    ),
+                                });
 
                                 type Analysis = z.infer<typeof analysisSchema>;
 
@@ -361,12 +365,15 @@ For each tweet that contains valuable information (in either text or media), pro
                                         modelClass: ModelClass.SMALL,
                                         schema: analysisSchema,
                                         schemaName: "analysis",
-                                        schemaDescription: "The analysis of the tweets",
+                                        schemaDescription:
+                                            "The analysis of the tweets",
                                     });
 
-                                const analysisResults = analysisSchema.parse(
+                                const analysisResultsObj = analysisSchema.parse(
                                     analysysResponse.object
                                 );
+                                const analysisResults =
+                                    analysisResultsObj.analysis;
 
                                 try {
                                     // Process each analyzed tweet
