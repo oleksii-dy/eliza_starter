@@ -1,10 +1,4 @@
-import {
-    generateText,
-    IBrowserService,
-    parseTagContent,
-    trimTokens,
-} from "@elizaos/core";
-import { parseJSONObjectFromText } from "@elizaos/core";
+import { generateObject, IBrowserService, trimTokens } from "@elizaos/core";
 import { Service } from "@elizaos/core";
 import { settings } from "@elizaos/core";
 import { IAgentRuntime, ModelClass, ServiceType } from "@elizaos/core";
@@ -13,6 +7,7 @@ import { PlaywrightBlocker } from "@cliqz/adblocker-playwright";
 import CaptchaSolver from "capsolver-npm";
 import { Browser, BrowserContext, chromium, Page } from "playwright";
 import { elizaLogger } from "@elizaos/core";
+import { z } from "zod";
 
 async function generateSummary(
     runtime: IAgentRuntime,
@@ -36,14 +31,21 @@ async function generateSummary(
   </response>
   `;
 
-    const response = await generateText({
+    const summarySchema = z.object({
+        title: z.string().describe("The title of the page"),
+        summary: z.string().describe("The summary of the page"),
+    });
+
+    type Summary = z.infer<typeof summarySchema>;
+
+    const response = await generateObject<Summary>({
         runtime,
         context: prompt,
         modelClass: ModelClass.SMALL,
+        schema: summarySchema,
     });
 
-    const extractedResponse = parseTagContent(response, "response");
-    const parsedResponse = parseJSONObjectFromText(extractedResponse);
+    const parsedResponse = response.object;
 
     if (parsedResponse) {
         return {

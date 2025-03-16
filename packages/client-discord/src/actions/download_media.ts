@@ -1,6 +1,5 @@
 import path from "path";
-import { composeContext, parseTagContent } from "@elizaos/core";
-import { parseJSONObjectFromText } from "@elizaos/core";
+import { composeContext, generateObject } from "@elizaos/core";
 import {
     Action,
     ActionExample,
@@ -13,20 +12,13 @@ import {
     ServiceType,
     State,
 } from "@elizaos/core";
-import { generateText } from "@elizaos/core";
+import { z } from "zod";
 
 export const mediaUrlTemplate = `# Messages we are searching for a media URL
 {{recentMessages}}
 
 # Instructions: {{senderName}} is requesting to download a specific media file (video or audio). Your goal is to determine the URL of the media they want to download.
 The "mediaUrl" is the URL of the media file that the user wants downloaded. If not specified, return null.
-
-Your response must be formatted as a JSON block with this structure:
-<response>
-{
-  "mediaUrl": "<Media URL>"
-}
-</response>
 `;
 
 const getMediaUrl = async (
@@ -43,17 +35,20 @@ const getMediaUrl = async (
         template: mediaUrlTemplate,
     });
 
+    const mediaUrlSchema = z.object({
+        mediaUrl: z.string().describe("The URL of the media file to download"),
+    });
+
+    type MediaUrl = z.infer<typeof mediaUrlSchema>;
+
     for (let i = 0; i < 5; i++) {
-        const response = await generateText({
+        const response = await generateObject<MediaUrl>({
             runtime,
             context,
             modelClass: ModelClass.SMALL,
         });
 
-        const extractedResponse = parseTagContent(response, "response");
-        const parsedResponse = parseJSONObjectFromText(extractedResponse) as {
-            mediaUrl: string;
-        } | null;
+        const parsedResponse = mediaUrlSchema.parse(response.object);
 
         if (parsedResponse?.mediaUrl) {
             return parsedResponse.mediaUrl;

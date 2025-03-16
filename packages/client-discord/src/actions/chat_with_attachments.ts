@@ -1,10 +1,9 @@
 import {
     composeContext,
+    generateObject,
     getModelSettings,
-    parseTagContent,
 } from "@elizaos/core";
 import { generateText, trimTokens } from "@elizaos/core";
-import { parseJSONObjectFromText } from "@elizaos/core";
 import {
     Action,
     ActionExample,
@@ -16,6 +15,7 @@ import {
     State,
 } from "@elizaos/core";
 import * as fs from "fs";
+import { z } from "zod";
 
 export const summarizationTemplate = `# Summarized so far (we are adding to this)
 {{currentSummary}}
@@ -33,14 +33,6 @@ export const attachmentIdsTemplate = `# Messages we are summarizing
 # Instructions: {{senderName}} is requesting a summary of specific attachments. Your goal is to determine their objective, along with the list of attachment IDs to summarize.
 The "objective" is a detailed description of what the user wants to summarize based on the conversation.
 The "attachmentIds" is an array of attachment IDs that the user wants to summarize. If not specified, default to including all attachments from the conversation.
-
-Your response must be formatted as a JSON block with this structure:
-<response>
-{
-  "objective": "<What the user wants to summarize>",
-  "attachmentIds": ["<Attachment ID 1>", "<Attachment ID 2>", ...]
-}
-</response>
 `;
 
 const getAttachmentIds = async (
@@ -50,27 +42,36 @@ const getAttachmentIds = async (
 ): Promise<{ objective: string; attachmentIds: string[] } | null> => {
     state = (await runtime.composeState(message)) as State;
 
+    const attachmentIdsSchema = z.object({
+        objective: z.string().describe("What the user wants to summarize"),
+        attachmentIds: z
+            .array(z.string())
+            .describe("List of attachment IDs to summarize"),
+    });
+
+    type AttachmentIds = z.infer<typeof attachmentIdsSchema>;
+
     const context = composeContext({
         state,
         template: attachmentIdsTemplate,
     });
 
     for (let i = 0; i < 5; i++) {
-        const response = await generateText({
+        const response = await generateObject<AttachmentIds>({
             runtime,
             context,
             modelClass: ModelClass.SMALL,
+            schema: attachmentIdsSchema,
         });
         console.log("response", response);
         // try parsing to a json object
-        const extractedResponse = parseTagContent(response, "response");
-        const parsedResponse = parseJSONObjectFromText(extractedResponse) as {
-            objective: string;
-            attachmentIds: string[];
-        } | null;
+        const parsedResponse = attachmentIdsSchema.parse(response.object);
         // see if it contains objective and attachmentIds
         if (parsedResponse?.objective && parsedResponse?.attachmentIds) {
-            return parsedResponse;
+            return {
+                objective: parsedResponse.objective,
+                attachmentIds: parsedResponse.attachmentIds,
+            };
         }
     }
     return null;

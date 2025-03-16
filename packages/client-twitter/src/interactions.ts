@@ -15,14 +15,13 @@ import {
     getEmbeddingZeroVector,
     IImageDescriptionService,
     ServiceType,
-    generateText,
-    parseTagContent,
+    generateObject,
 } from "@elizaos/core";
 import { ClientBase } from "./base";
 import { buildConversationThread, sendTweet, wait } from "./utils.ts";
+import { z } from "zod";
 
-export const twitterMessageHandlerTemplate =
-    `
+export const twitterMessageHandlerTemplate = `
 # Areas of Expertise
 {{knowledge}}
 
@@ -317,34 +316,57 @@ Description: ${desc.description}`
     })
     .join("\n\n")}
 
-For each tweet that contains valuable information (in either text or media), provide a concise summary and any key knowledge points. Format as JSON with the following structure:
-{
-  "tweetId": "string",
-  "summary": "concise summary if tweet contains valuable information, otherwise null",
-  "knowledgePoints": ["array of specific facts or insights extracted from both text and media"],
-  "mediaInsights": ["specific insights extracted from media, if any"],
-  "topics": ["relevant topics or categories"],
-  "relevanceScore": number (0-1, where 1 is highly informative)
-}
-
-Return an array of valid json objects, wrapp in response tags.
+For each tweet that contains valuable information (in either text or media), provide a concise summary and any key knowledge points.
   `;
 
-                                const analysysResponse = await generateText({
-                                    runtime: this.runtime,
-                                    context: batchPrompt,
-                                    modelClass: ModelClass.SMALL,
-                                });
+                                const analysisSchema = z.array(
+                                    z.object({
+                                        tweetId: z
+                                            .string()
+                                            .describe("The ID of the tweet"),
+                                        summary: z
+                                            .string()
+                                            .describe(
+                                                "A concise summary of the tweet if it contains valuable information, otherwise null"
+                                            ),
+                                        knowledgePoints: z
+                                            .array(z.string())
+                                            .describe(
+                                                "Specific facts or insights extracted from both text and media, if any"
+                                            ),
+                                        mediaInsights: z
+                                            .array(z.string())
+                                            .describe(
+                                                "Insights extracted from media, if any"
+                                            ),
+                                        topics: z
+                                            .array(z.string())
+                                            .describe(
+                                                "Topics or categories relevant to the tweet"
+                                            ),
+                                        relevanceScore: z
+                                            .number()
+                                            .describe(
+                                                "A score between 0 and 1, where 1 is highly informative"
+                                            ),
+                                    })
+                                );
 
-                                const batchAnalysis = parseTagContent(
-                                    analysysResponse,
-                                    "response"
+                                type Analysis = z.infer<typeof analysisSchema>;
+
+                                const analysysResponse =
+                                    await generateObject<Analysis>({
+                                        runtime: this.runtime,
+                                        context: batchPrompt,
+                                        modelClass: ModelClass.SMALL,
+                                        schema: analysisSchema,
+                                    });
+
+                                const analysisResults = analysisSchema.parse(
+                                    analysysResponse.object
                                 );
 
                                 try {
-                                    const analysisResults =
-                                        JSON.parse(batchAnalysis);
-
                                     // Process each analyzed tweet
                                     for (const tweet of batchTweets) {
                                         const analysis = analysisResults.find(

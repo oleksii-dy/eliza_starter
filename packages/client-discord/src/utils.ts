@@ -2,10 +2,8 @@ import {
     IAgentRuntime,
     ModelClass,
     elizaLogger,
-    generateText,
     trimTokens,
-    parseJSONObjectFromText,
-    parseTagContent,
+    generateObject,
 } from "@elizaos/core";
 import {
     ChannelType,
@@ -14,6 +12,7 @@ import {
     TextChannel,
     ThreadChannel,
 } from "discord.js";
+import { z } from "zod";
 
 export function getWavHeader(
     audioLength: number,
@@ -55,24 +54,25 @@ export async function generateSummary(
   Text: """
   ${text}
   """
-
-  Respond with a JSON object in the following format:
-  <response>
-  {
-    "title": "Generated Title",
-    "summary": "Generated summary and/or description of the text"
-  }
-  </response>
   `;
 
-    const response = await generateText({
+    const summarySchema = z.object({
+        title: z.string().describe("Generated Title"),
+        summary: z
+            .string()
+            .describe("Generated summary and/or description of the text"),
+    });
+
+    type Summary = z.infer<typeof summarySchema>;
+
+    const response = await generateObject<Summary>({
         runtime,
         context: prompt,
         modelClass: ModelClass.SMALL,
+        schema: summarySchema,
     });
 
-    const extractedResponse = parseTagContent(response, "response");
-    const parsedResponse = parseJSONObjectFromText(extractedResponse);
+    const parsedResponse = summarySchema.parse(response.object);
 
     if (parsedResponse) {
         return {
