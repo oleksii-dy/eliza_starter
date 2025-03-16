@@ -11,8 +11,6 @@ import {
 } from "ai";
 import { Buffer } from "buffer";
 import OpenAI from "openai";
-import { encodingForModel, TiktokenModel } from "js-tiktoken";
-import { AutoTokenizer } from "@huggingface/transformers";
 import Together from "together-ai";
 import { ZodSchema, z } from "zod";
 import { fal } from "@fal-ai/client";
@@ -48,8 +46,8 @@ import {
     VerifiableInferenceOptions,
     VerifiableInferenceResult,
     TelemetrySettings,
-    TokenizerType,
 } from "./types.ts";
+import { trimTokens } from "./tokenTrimming.ts";
 
 type StepResult = AIStepResult<any>;
 
@@ -103,39 +101,6 @@ type TogetherAIImageResponse = {
         image_type?: string;
     }>;
 };
-
-export async function trimTokens(
-    context: string,
-    maxTokens: number,
-    runtime: IAgentRuntime
-) {
-    if (!context) return "";
-    if (maxTokens <= 0) throw new Error("maxTokens must be positive");
-
-    const tokenizerModel = runtime.getSetting("TOKENIZER_MODEL");
-    const tokenizerType = runtime.getSetting("TOKENIZER_TYPE");
-
-    if (!tokenizerModel || !tokenizerType) {
-        // Default to TikToken truncation using the "gpt-4o" model if tokenizer settings are not defined
-        return truncateTiktoken("gpt-4o", context, maxTokens);
-    }
-
-    // Choose the truncation method based on tokenizer type
-    if (tokenizerType === TokenizerType.Auto) {
-        return truncateAuto(tokenizerModel, context, maxTokens);
-    }
-
-    if (tokenizerType === TokenizerType.TikToken) {
-        return truncateTiktoken(
-            tokenizerModel as TiktokenModel,
-            context,
-            maxTokens
-        );
-    }
-
-    elizaLogger.warn(`Unsupported tokenizer type: ${tokenizerType}`);
-    return truncateTiktoken("gpt-4o", context, maxTokens);
-}
 
 export async function generateText({
     runtime,
@@ -1334,60 +1299,6 @@ async function handleDeepSeek({
         mode,
         ...modelOptions,
     });
-}
-
-async function truncateAuto(
-    modelPath: string,
-    context: string,
-    maxTokens: number
-) {
-    try {
-        const tokenizer = await AutoTokenizer.from_pretrained(modelPath);
-        const tokens = tokenizer.encode(context);
-
-        // If already within limits, return unchanged
-        if (tokens.length <= maxTokens) {
-            return context;
-        }
-
-        // Keep the most recent tokens by slicing from the end
-        const truncatedTokens = tokens.slice(-maxTokens);
-
-        // Decode back to text - js-tiktoken decode() returns a string directly
-        return tokenizer.decode(truncatedTokens);
-    } catch (error) {
-        elizaLogger.error("Error in trimTokens:", error);
-        // Return truncated string if tokenization fails
-        return context.slice(-maxTokens * 4); // Rough estimate of 4 chars per token
-    }
-}
-
-async function truncateTiktoken(
-    model: TiktokenModel,
-    context: string,
-    maxTokens: number
-) {
-    try {
-        const encoding = encodingForModel(model);
-
-        // Encode the text into tokens
-        const tokens = encoding.encode(context);
-
-        // If already within limits, return unchanged
-        if (tokens.length <= maxTokens) {
-            return context;
-        }
-
-        // Keep the most recent tokens by slicing from the end
-        const truncatedTokens = tokens.slice(-maxTokens);
-
-        // Decode back to text - js-tiktoken decode() returns a string directly
-        return encoding.decode(truncatedTokens);
-    } catch (error) {
-        elizaLogger.error("Error in trimTokens:", error);
-        // Return truncated string if tokenization fails
-        return context.slice(-maxTokens * 4); // Rough estimate of 4 chars per token
-    }
 }
 
 function getCloudflareGatewayBaseURL(
