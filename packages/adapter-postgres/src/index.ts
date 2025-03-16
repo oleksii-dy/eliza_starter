@@ -1309,6 +1309,16 @@ export class PostgresDatabaseAdapter
         }, "removeAllGoals");
     }
 
+    async getIsUserInTheRoom(roomId: UUID, userId: UUID): Promise<boolean> {
+        return this.withDatabase(async () => {
+            const { rows } = await this.pool.query(
+                `SELECT id FROM participants WHERE "roomId" = $1 AND "userId" = $2`,
+                [roomId, userId]
+            );
+            return rows.length > 0 ? true : false;
+        }, "getIsUserInTheRoom");
+    }
+
     async getRoomsForParticipant(userId: UUID): Promise<UUID[]> {
         return this.withDatabase(async () => {
             const { rows } = await this.pool.query(

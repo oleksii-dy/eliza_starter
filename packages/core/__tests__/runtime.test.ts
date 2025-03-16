@@ -48,6 +48,12 @@ const mockDatabaseAdapter: IDatabaseAdapter = {
     createRelationship: vi.fn().mockResolvedValue(true),
     getRelationship: vi.fn().mockResolvedValue(null),
     getRelationships: vi.fn().mockResolvedValue([]),
+    getKnowledge: vi.fn().mockResolvedValue([]),
+    searchKnowledge: vi.fn().mockResolvedValue([]),
+    createKnowledge: vi.fn().mockResolvedValue(undefined),
+    removeKnowledge: vi.fn().mockResolvedValue(undefined),
+    clearKnowledge: vi.fn().mockResolvedValue(undefined),
+    getIsUserInTheRoom: vi.fn().mockResolvedValue(false),
 };
 
 const mockCacheManager = {
@@ -138,6 +144,87 @@ describe("AgentRuntime", () => {
 
             expect(action.handler).toBeDefined();
             expect(action.validate).toBeDefined();
+        });
+    });
+
+    describe("room management", () => {
+        const testUserId = "123e4567-e89b-12d3-a456-426614174004" as UUID;
+        const testRoomId = "123e4567-e89b-12d3-a456-426614174003" as UUID;
+
+        beforeEach(() => {
+            // Reset all mocks before each test
+            vi.clearAllMocks();
+        });
+
+        it("should add participant to room if not already in room", async () => {
+            // Setup mock to indicate user is not in the room
+            vi.mocked(
+                mockDatabaseAdapter.getIsUserInTheRoom
+            ).mockImplementationOnce(() => Promise.resolve(false));
+
+            await runtime.ensureParticipantInRoom(testUserId, testRoomId);
+
+            // Verify getIsUserInTheRoom was called with correct parameters
+            expect(mockDatabaseAdapter.getIsUserInTheRoom).toHaveBeenCalledWith(
+                testRoomId,
+                testUserId
+            );
+
+            // Verify addParticipant was called since user was not in room
+            expect(mockDatabaseAdapter.addParticipant).toHaveBeenCalledWith(
+                testUserId,
+                testRoomId
+            );
+        });
+
+        it("should not add participant to room if already in room", async () => {
+            // Setup mock to indicate user is already in the room
+            vi.mocked(
+                mockDatabaseAdapter.getIsUserInTheRoom
+            ).mockImplementationOnce(() => Promise.resolve(true));
+
+            await runtime.ensureParticipantInRoom(testUserId, testRoomId);
+
+            // Verify getIsUserInTheRoom was called with correct parameters
+            expect(mockDatabaseAdapter.getIsUserInTheRoom).toHaveBeenCalledWith(
+                testRoomId,
+                testUserId
+            );
+
+            // Verify addParticipant was NOT called since user was already in room
+            expect(mockDatabaseAdapter.addParticipant).not.toHaveBeenCalledWith(
+                testUserId,
+                testRoomId
+            );
+        });
+
+        it("should log differently when adding agent vs regular user to room", async () => {
+            // Mock console.log since elizaLogger uses it
+            const consoleSpy = vi.spyOn(console, "log");
+
+            // First call for agent ID
+            vi.mocked(
+                mockDatabaseAdapter.getIsUserInTheRoom
+            ).mockImplementationOnce(() => Promise.resolve(false));
+            await runtime.ensureParticipantInRoom(runtime.agentId, testRoomId);
+
+            // Second call for regular user ID
+            vi.mocked(
+                mockDatabaseAdapter.getIsUserInTheRoom
+            ).mockImplementationOnce(() => Promise.resolve(false));
+            await runtime.ensureParticipantInRoom(testUserId, testRoomId);
+
+            // Verify addParticipant was called twice
+            expect(mockDatabaseAdapter.addParticipant).toHaveBeenCalledWith(
+                runtime.agentId,
+                testRoomId
+            );
+            expect(mockDatabaseAdapter.addParticipant).toHaveBeenCalledWith(
+                testUserId,
+                testRoomId
+            );
+            // Restore the spy
+            consoleSpy.mockRestore();
         });
     });
 });

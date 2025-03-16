@@ -1067,6 +1067,7 @@ export interface IDatabaseAdapter {
     createPrediction?(prediction: Prediction): Promise<void>;
     getReadyActivePredictions?(): Promise<Prediction[]>;
     resolvePrediction?(predictionId: string, outcome: boolean): Promise<string>;
+    getIsUserInTheRoom(roomId: UUID, userId: UUID): Promise<boolean>;
 }
 
 export interface IDatabaseCacheAdapter {

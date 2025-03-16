@@ -919,19 +919,22 @@ export class AgentRuntime implements IAgentRuntime {
     }
 
     async ensureParticipantInRoom(userId: UUID, roomId: UUID) {
-        const participants =
-            await this.databaseAdapter.getParticipantsForRoom(roomId);
-        if (!participants.includes(userId)) {
-            await this.databaseAdapter.addParticipant(userId, roomId);
-            if (userId === this.agentId) {
-                elizaLogger.log(
-                    `Agent ${this.character.name} linked to room ${roomId} successfully.`
-                );
-            } else {
-                elizaLogger.log(
-                    `User ${userId} linked to room ${roomId} successfully.`
-                );
-            }
+        const isUserInTheRoom = await this.databaseAdapter.getIsUserInTheRoom(
+            roomId,
+            userId
+        );
+        if (isUserInTheRoom) {
+            return;
+        }
+        await this.databaseAdapter.addParticipant(userId, roomId);
+        if (userId === this.agentId) {
+            elizaLogger.log(
+                `Agent ${this.character.name} linked to room ${roomId} successfully.`
+            );
+        } else {
+            elizaLogger.log(
+                `User ${userId} linked to room ${roomId} successfully.`
+            );
         }
     }
 
