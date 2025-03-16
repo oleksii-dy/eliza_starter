@@ -74,6 +74,9 @@ const getDateRange = async (
             runtime,
             context,
             modelClass: ModelClass.SMALL,
+            schema: dateRangeSchema,
+            schemaName: "dateRange",
+            schemaDescription: "The objective, start and end of the date range",
         });
         console.log("response", response);
         // try parsing to a json object

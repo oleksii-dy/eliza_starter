@@ -860,6 +860,8 @@ export class AgentRuntime implements IAgentRuntime {
             context,
             modelClass: ModelClass.SMALL,
             schema: stringArraySchema,
+            schemaName: "evaluatorNames",
+            schemaDescription: "The names of the evaluators",
         });
 
         const evaluators = result.object;

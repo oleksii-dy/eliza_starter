@@ -43,6 +43,8 @@ async function generateSummary(
         context: prompt,
         modelClass: ModelClass.SMALL,
         schema: summarySchema,
+        schemaName: "summary",
+        schemaDescription: "A summary of the text",
     });
 
     const parsedResponse = response.object;

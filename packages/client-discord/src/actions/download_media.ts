@@ -46,6 +46,9 @@ const getMediaUrl = async (
             runtime,
             context,
             modelClass: ModelClass.SMALL,
+            schema: mediaUrlSchema,
+            schemaName: "mediaUrl",
+            schemaDescription: "The URL of the media file to download",
         });
 
         const parsedResponse = mediaUrlSchema.parse(response.object);

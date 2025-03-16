@@ -62,6 +62,8 @@ const getAttachmentIds = async (
             context,
             modelClass: ModelClass.SMALL,
             schema: attachmentIdsSchema,
+            schemaName: "attachmentIds",
+            schemaDescription: "The objective and attachment IDs",
         });
         console.log("response", response);
         // try parsing to a json object

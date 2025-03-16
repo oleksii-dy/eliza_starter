@@ -49,6 +49,9 @@ const getMediaAttachmentId = async (
             runtime,
             context,
             modelClass: ModelClass.SMALL,
+            schema: mediaAttachmentIdSchema,
+            schemaName: "mediaAttachmentId",
+            schemaDescription: "The ID of the media file to transcribe",
         });
         console.log("response", response);
         const parsedResponse = mediaAttachmentIdSchema.parse(response.object);

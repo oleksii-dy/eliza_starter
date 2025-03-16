@@ -360,6 +360,8 @@ For each tweet that contains valuable information (in either text or media), pro
                                         context: batchPrompt,
                                         modelClass: ModelClass.SMALL,
                                         schema: analysisSchema,
+                                        schemaName: "analysis",
+                                        schemaDescription: "The analysis of the tweets",
                                     });
 
                                 const analysisResults = analysisSchema.parse(
