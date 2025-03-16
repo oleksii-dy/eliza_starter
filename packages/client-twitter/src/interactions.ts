@@ -3,7 +3,6 @@ import {
     composeContext,
     generateMessageResponse,
     generateShouldRespond,
-    messageCompletionFooter,
     shouldRespondFooter,
     Content,
     HandlerCallback,
@@ -61,7 +60,7 @@ Here is the current post text again. Remember to include an action if the curren
 {{currentPost}}
 Here is the descriptions of images in the Current post.
 {{imageDescriptions}}
-` + messageCompletionFooter;
+`;
 
 export const twitterShouldRespondTemplate = (targetUsersStr: string) =>
     `# INSTRUCTIONS: Determine if {{agentName}} (@{{twitterUserName}}) should respond to the message and participate in the conversation. Do not comment. Just respond with "true" or "false".

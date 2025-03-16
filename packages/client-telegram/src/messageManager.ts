@@ -21,7 +21,7 @@ import {
 import { stringToUuid } from "@elizaos/core";
 
 import { generateMessageResponse, generateShouldRespond } from "@elizaos/core";
-import { messageCompletionFooter, shouldRespondFooter } from "@elizaos/core";
+import { shouldRespondFooter } from "@elizaos/core";
 
 import { cosineSimilarity, escapeMarkdown } from "./utils";
 import {
@@ -136,7 +136,7 @@ Note that {{agentName}} is capable of reading/seeing/hearing various forms of me
 
 # Task: Generate a reply in the voice, style and perspective of {{agentName}} while using the thread above as additional context. You are replying on Telegram.
 {{formattedConversation}}
-` + messageCompletionFooter;
+`;
 
 interface MessageContext {
     content: string;
@@ -826,11 +826,6 @@ export class MessageManager {
             context,
             modelClass: ModelClass.LARGE,
         });
-
-        if (!response) {
-            console.error("❌ No response from generateMessageResponse");
-            return null;
-        }
 
         await this.runtime.databaseAdapter.log({
             body: { message, context, response },

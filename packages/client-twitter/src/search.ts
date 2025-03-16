@@ -1,7 +1,6 @@
 import { SearchMode } from "agent-twitter-client";
 import { composeContext, elizaLogger } from "@elizaos/core";
 import { generateMessageResponse, generateText } from "@elizaos/core";
-import { messageCompletionFooter } from "@elizaos/core";
 import {
     Content,
     HandlerCallback,
@@ -15,8 +14,7 @@ import { stringToUuid } from "@elizaos/core";
 import { ClientBase } from "./base";
 import { buildConversationThread, sendTweet, wait } from "./utils.ts";
 
-const twitterSearchTemplate =
-    `{{timeline}}
+const twitterSearchTemplate = `{{timeline}}
 
 {{providers}}
 
@@ -40,7 +38,7 @@ Aim for 1-2 short sentences maximum. Be concise and direct.
 
 Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.
 
-` + messageCompletionFooter;
+`;
 
 export class TwitterSearchClient {
     client: ClientBase;
@@ -268,11 +266,6 @@ export class TwitterSearchClient {
             responseContent.inReplyTo = message.id;
 
             const response = responseContent;
-
-            if (!response.text) {
-                elizaLogger.warn("Returning: No response text found");
-                return;
-            }
 
             elizaLogger.log(
                 `Bot would respond to tweet ${selectedTweet.id} with: ${response.text}`

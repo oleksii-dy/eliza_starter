@@ -1284,11 +1284,6 @@ export class MessageManager {
             modelClass: ModelClass.LARGE,
         });
 
-        if (!response) {
-            console.error("No response from generateMessageResponse");
-            return;
-        }
-
         await this.runtime.databaseAdapter.log({
             body: { message, context, response },
             userId: userId,
