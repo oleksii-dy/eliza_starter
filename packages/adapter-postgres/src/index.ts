@@ -495,6 +495,22 @@ export class PostgresDatabaseAdapter
         });
     }
 
+    async getAccountsByIds(actorIds: UUID[]): Promise<Actor[]> {
+        return this.withDatabase(async () => {
+            const { rows } = await this.pool.query(
+                "SELECT * FROM accounts WHERE id = ANY($1)",
+                [actorIds]
+            );
+            return rows.map((row) => ({
+                ...row,
+                details:
+                    typeof row.details === "string"
+                        ? JSON.parse(row.details)
+                        : row.details,
+            }));
+        }, "getAccountsByIds");
+    }
+
     async getMemoryById(id: UUID): Promise<Memory | null> {
         return this.withDatabase(async () => {
             const { rows } = await this.pool.query(

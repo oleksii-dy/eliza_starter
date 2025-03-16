@@ -51,6 +51,11 @@ export function formatActors({ actors }: { actors: Actor[] }) {
     return finalActorStrings;
 }
 
+export function retrieveActorIdsFromMessages(messages: Memory[]) {
+    // return a list of unique actor ids
+    return [...new Set(messages.map((message) => message.userId))];
+}
+
 /**
  * Format messages into a string
  * @param messages - list of messages

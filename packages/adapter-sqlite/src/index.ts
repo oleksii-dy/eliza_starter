@@ -957,4 +957,10 @@ export class SqliteDatabaseAdapter
             throw error;
         }
     }
+
+    async getAccountsByIds(actorIds: UUID[]): Promise<Actor[]> {
+        const sql = "SELECT * FROM accounts WHERE id IN ?";
+        const rows = this.db.prepare(sql).all(...actorIds) as Actor[];
+        return rows;
+    }
 }

@@ -20,7 +20,7 @@ import { formatGoalsAsString, getGoals } from "./goals.ts";
 import { elizaLogger } from "./index.ts";
 import knowledge from "./knowledge.ts";
 import { MemoryManager } from "./memory.ts";
-import { formatActors, formatMessages, getActorDetails } from "./messages.ts";
+import { formatMessages, retrieveActorIdsFromMessages } from "./messages.ts";
 import { parseJsonArrayFromText, parseTagContent } from "./parsing.ts";
 import { formatPosts } from "./posts.ts";
 import { getProviders } from "./providers.ts";
@@ -995,29 +995,26 @@ export class AgentRuntime implements IAgentRuntime {
 
         const conversationLength = this.getConversationLength();
 
-        const [actorsData, recentMessagesData, goalsData]: [
-            Actor[],
-            Memory[],
-            Goal[],
-        ] = await Promise.all([
-            getActorDetails({ runtime: this, roomId }),
-            this.messageManager.getMemories({
-                roomId,
-                count: conversationLength,
-                unique: false,
-            }),
-            getGoals({
-                runtime: this,
-                count: 10,
-                onlyInProgress: false,
-                roomId,
-            }),
-        ]);
+        const [recentMessagesData, goalsData]: [Memory[], Goal[]] =
+            await Promise.all([
+                this.messageManager.getMemories({
+                    roomId,
+                    count: conversationLength,
+                    unique: false,
+                }),
+                getGoals({
+                    runtime: this,
+                    count: 10,
+                    onlyInProgress: false,
+                    roomId,
+                }),
+            ]);
 
         const goals = formatGoalsAsString({ goals: goalsData });
 
-        const actors = formatActors({ actors: actorsData ?? [] });
-
+        const actorIds = retrieveActorIdsFromMessages(recentMessagesData);
+        const actorsData =
+            await this.databaseAdapter.getAccountsByIds(actorIds);
         const recentMessages = formatMessages({
             messages: recentMessagesData,
             actors: actorsData,
@@ -1028,6 +1025,8 @@ export class AgentRuntime implements IAgentRuntime {
             actors: actorsData,
             conversationHeader: false,
         });
+
+        elizaLogger.debug("Actors data", actorsData);
 
         // const lore = formatLore(loreData);
 
@@ -1264,12 +1263,9 @@ export class AgentRuntime implements IAgentRuntime {
                           })()
                       )
                     : "",
-            // Agent runtime stuff
             senderName,
-            actors:
-                actors && actors.length > 0
-                    ? addHeader("# Actors", actors)
-                    : "",
+            // TODO: Can be removed globally once we verify that this is not used anywhere
+            actors: "",
             actorsData,
             roomId,
             goals:
