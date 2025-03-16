@@ -142,7 +142,12 @@ describe("Generation Module", () => {
             });
 
             // Verify
-            expect(ai.generateObject).toHaveBeenCalled();
+            expect(ai.generateObject).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    prompt: "Generate a person object",
+                    schema: testSchema,
+                })
+            );
             expect(result).toEqual({
                 text: "mocked response",
                 response: { foo: "bar" },
@@ -212,7 +217,11 @@ describe("Generation Module", () => {
             });
 
             // Verify
-            expect(ai.generateText).toHaveBeenCalled();
+            expect(ai.generateText).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    prompt: "Generate a response",
+                })
+            );
             expect(result).toBe("mocked text response");
         });
 
@@ -232,39 +241,16 @@ describe("Generation Module", () => {
             expect(result).toBe("mocked text response");
         });
 
-        it("should generate text using LlamaLocal provider", async () => {
-            // Setup
-            runtime.modelProvider = ModelProviderName.LLAMALOCAL;
-
-            // Execute
-            const result = await generateText({
-                runtime,
-                context: "Generate a response",
-                modelClass: ModelClass.LARGE,
-            });
-
-            // Verify
-            expect(runtime.getService).toHaveBeenCalledWith(
-                ServiceType.TEXT_GENERATION
-            );
-            expect(result).toBe(
-                '<response>{"foo": "local response"}</response>'
-            );
-        });
-
         it("should handle empty context", async () => {
-            // Setup
             runtime.modelProvider = ModelProviderName.OPENAI;
 
-            // Execute
-            const result = await generateText({
-                runtime,
-                context: "",
-                modelClass: ModelClass.LARGE,
-            });
-
-            // Verify
-            expect(result).toBe("");
+            await expect(
+                generateText({
+                    runtime,
+                    context: "",
+                    modelClass: ModelClass.LARGE,
+                })
+            ).rejects.toThrow("generateText context is empty");
         });
 
         it("should throw an error for unsupported provider", async () => {
@@ -279,7 +265,7 @@ describe("Generation Module", () => {
                     modelClass: ModelClass.LARGE,
                 })
             ).rejects.toThrow(
-                "Cannot read properties of undefined (reading 'endpoint')"
+                "Model settings not found for provider: UNSUPPORTED_PROVIDER"
             );
         });
 
@@ -345,7 +331,7 @@ describe("Generation Module", () => {
             );
         });
 
-        it.skip("should support stop sequences", async () => {
+        it("should support stop sequences", async () => {
             // Setup
             runtime.modelProvider = ModelProviderName.OPENAI;
             const stop = ["END", "STOP"];
@@ -361,7 +347,7 @@ describe("Generation Module", () => {
             // Verify
             expect(ai.generateText).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    stop,
+                    stopSequences: stop,
                 })
             );
         });
