@@ -57,6 +57,7 @@ type GenerationOptions = {
     verifiableInference?: boolean;
     verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
     verifiableInferenceOptions?: VerifiableInferenceOptions;
+    customSystemPrompt?: string;
 };
 
 type ModelSettings = {
@@ -819,6 +820,7 @@ export async function generateObject<T>({
     schemaName,
     schemaDescription,
     stop,
+    customSystemPrompt,
 }: GenerationOptions): Promise<GenerateObjectResult<T>> {
     if (!context) {
         throw new Error("generateObject context is empty");
@@ -850,6 +852,7 @@ export async function generateObject<T>({
         schema,
         schemaName,
         schemaDescription,
+        system: customSystemPrompt ?? runtime.character?.system ?? undefined,
         ...modelOptions,
     });
 
