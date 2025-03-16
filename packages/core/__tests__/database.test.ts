@@ -9,11 +9,18 @@ import {
     Participant,
     Relationship,
     UUID,
+    RAGKnowledgeItem,
 } from "../src/types.ts";
 
 class MockDatabaseAdapter extends DatabaseAdapter {
     getMemoryById(_id: UUID): Promise<Memory | null> {
         throw new Error("Method not implemented.");
+    }
+    init(): Promise<void> {
+        return Promise.resolve();
+    }
+    close(): Promise<void> {
+        return Promise.resolve();
     }
     log(_params: {
         body: { [key: string]: unknown };
@@ -253,6 +260,46 @@ class MockDatabaseAdapter extends DatabaseAdapter {
             objectives: [],
         } as Goal;
     }
+
+    async getKnowledge(params: {
+        id?: UUID;
+        agentId: UUID;
+        limit?: number;
+        query?: string;
+        conversationContext?: string;
+    }): Promise<RAGKnowledgeItem[]> {
+        return [];
+    }
+
+    async createKnowledge(knowledge: RAGKnowledgeItem): Promise<void> {
+        return Promise.resolve();
+    }
+
+    async removeKnowledge(id: UUID): Promise<void> {
+        return Promise.resolve();
+    }
+
+    async removeAllKnowledge(agentId: UUID): Promise<void> {
+        return Promise.resolve();
+    }
+
+    async searchKnowledge(params: {
+        agentId: UUID;
+        embedding: Float32Array;
+        match_threshold: number;
+        match_count: number;
+        searchText?: string;
+    }): Promise<RAGKnowledgeItem[]> {
+        return [];
+    }
+
+    async clearKnowledge(agentId: UUID, shared?: boolean): Promise<void> {
+        return Promise.resolve();
+    }
+
+    async getIsUserInTheRoom(roomId: UUID, userId: UUID): Promise<boolean> {
+        return false;
+    }
 }
 
 // Now, let’s fix the test suite.
@@ -305,7 +352,7 @@ describe("DatabaseAdapter Tests", () => {
     it("should get an account by user ID", async () => {
         const account = await adapter.getAccountById("test-user-id" as UUID);
         expect(account).not.toBeNull();
-        expect(account.username).toBe("testuser");
+        expect(account?.username).toBe("testuser");
     });
 
     it("should create a new account", async () => {
