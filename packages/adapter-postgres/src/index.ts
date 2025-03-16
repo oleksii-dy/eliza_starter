@@ -495,6 +495,22 @@ export class PostgresDatabaseAdapter
         });
     }
 
+    async getAccountsByIds(actorIds: UUID[]): Promise<Actor[]> {
+        return this.withDatabase(async () => {
+            const { rows } = await this.pool.query(
+                "SELECT * FROM accounts WHERE id = ANY($1)",
+                [actorIds]
+            );
+            return rows.map((row) => ({
+                ...row,
+                details:
+                    typeof row.details === "string"
+                        ? JSON.parse(row.details)
+                        : row.details,
+            }));
+        }, "getAccountsByIds");
+    }
+
     async getMemoryById(id: UUID): Promise<Memory | null> {
         return this.withDatabase(async () => {
             const { rows } = await this.pool.query(
@@ -522,17 +538,24 @@ export class PostgresDatabaseAdapter
             });
 
             let isUnique = true;
+
             if (memory.embedding) {
-                const similarMemories = await this.searchMemoriesByEmbedding(
-                    memory.embedding,
-                    {
-                        tableName,
-                        roomId: memory.roomId,
-                        match_threshold: 0.95,
-                        count: 1,
-                    }
-                );
-                isUnique = similarMemories.length === 0;
+                // Check if this is a zero embedding vector
+                const isZeroVector = memory.embedding.every((val) => val === 0);
+                if (isZeroVector) {
+                    elizaLogger.debug(
+                        "Zero embedding vector, skipping similarity search"
+                    );
+                } else {
+                    const similarMemories =
+                        await this.searchMemoriesByEmbedding(memory.embedding, {
+                            tableName,
+                            roomId: memory.roomId,
+                            match_threshold: 0.95,
+                            count: 1,
+                        });
+                    isUnique = similarMemories.length === 0;
+                }
             }
 
             await this.pool.query(
@@ -1307,6 +1330,16 @@ export class PostgresDatabaseAdapter
                 roomId,
             ]);
         }, "removeAllGoals");
+    }
+
+    async getIsUserInTheRoom(roomId: UUID, userId: UUID): Promise<boolean> {
+        return this.withDatabase(async () => {
+            const { rows } = await this.pool.query(
+                `SELECT id FROM participants WHERE "roomId" = $1 AND "userId" = $2`,
+                [roomId, userId]
+            );
+            return rows.length > 0 ? true : false;
+        }, "getIsUserInTheRoom");
     }
 
     async getRoomsForParticipant(userId: UUID): Promise<UUID[]> {

@@ -150,6 +150,16 @@ export class SqliteDatabaseAdapter
             .filter((row): row is Actor => row !== null);
     }
 
+    async getIsUserInTheRoom(roomId: UUID, userId: UUID): Promise<boolean> {
+        const sql =
+            "SELECT COUNT(*) FROM participants WHERE roomId = ? AND userId = ?";
+        const res = this.db.prepare(sql).get(roomId, userId) as
+            | { count: number }
+            | undefined;
+        const count = res?.count ?? 0;
+        return count > 0;
+    }
+
     async getMemoriesByRoomIds(params: {
         agentId: UUID;
         roomIds: UUID[];
@@ -946,5 +956,11 @@ export class SqliteDatabaseAdapter
             );
             throw error;
         }
+    }
+
+    async getAccountsByIds(actorIds: UUID[]): Promise<Actor[]> {
+        const sql = "SELECT * FROM accounts WHERE id IN ?";
+        const rows = this.db.prepare(sql).all(...actorIds) as Actor[];
+        return rows;
     }
 }

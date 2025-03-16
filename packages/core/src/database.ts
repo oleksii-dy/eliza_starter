@@ -446,4 +446,8 @@ export abstract class DatabaseAdapter<DB = any> implements IDatabaseAdapter {
             throw error;
         }
     }
+
+    abstract getIsUserInTheRoom(roomId: UUID, userId: UUID): Promise<boolean>;
+
+    abstract getAccountsByIds(actorIds: UUID[]): Promise<Actor[]>;
 }
