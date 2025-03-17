@@ -235,7 +235,7 @@ export type Models = {
     [ModelProviderName.ATOMA]: Model;
     [ModelProviderName.SECRETAI]: Model;
     [ModelProviderName.NEARAI]: Model;
-    [ModelProviderName.KLUSTER]: Model;
+    [ModelProviderName.KLUSTERAI]: Model;
 };
 
 /**
@@ -277,7 +277,7 @@ export enum ModelProviderName {
     ATOMA = "atoma",
     SECRETAI = "secret_ai",
     NEARAI = "nearai",
-    KLUSTER = "kluster",
+    KLUSTERAI = "kluster_ai",
 }
 
 /**

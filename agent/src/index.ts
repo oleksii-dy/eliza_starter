@@ -613,10 +613,10 @@ export function getTokenForProvider(
                 character.settings?.secrets?.NEARAI_API_KEY ||
                 settings.NEARAI_API_KEY
             );
-        case ModelProviderName.KLUSTER:
+        case ModelProviderName.KLUSTERAI:
             return (
-                character.settings?.secrets?.KLUSTER_API_KEY ||
-                settings.KLUSTER_API_KEY
+                character.settings?.secrets?.KLUSTERAI_API_KEY ||
+                settings.KLUSTERAI_API_KEY
             );
 
         default:
