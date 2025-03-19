@@ -58,9 +58,7 @@ export class DirectoryTraversal {
      * Traverses the directory based on PRFiles or all files in the root directory.
      * If PRFiles are detected, processes only files from the PR.
      * Otherwise, scans all files in the root directory for TypeScript files.
-     *
-     *
-     * @returns An array of string containing the files to process.
+     * @returns An array of strings containing the files to process.
      */
     public traverse(): string[] {
         if (this.prFiles.length > 0) {
