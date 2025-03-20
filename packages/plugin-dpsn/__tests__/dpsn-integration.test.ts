@@ -62,18 +62,11 @@ describe('DPSN Integration', () => {
       );
       const errorPromise = new Promise((resolve) => {
         invalidUrlService.onError((err) => {
-          console.log('Error from onError callback:', err);
-          console.log('Error type:', typeof err);
-          console.log('Error properties:', Object.keys(err));
           resolve(err);
         });
       });
       await errorPromise;
     } catch (error) {
-      console.log('Caught error in try/catch:', error);
-      console.log('Error message:', error.message);
-      console.log('Error code:', error.code);
-      console.log('Full error object:', JSON.stringify(error, null, 2));
       expect(error).toBeDefined();
       expect(error.code).toBe(400);
       await invalidUrlService.stop();
