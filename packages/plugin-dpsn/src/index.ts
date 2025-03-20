@@ -10,6 +10,9 @@ export interface DpsnPublishData {
   [key: string]: any;
 }
 
+export type DpsnConnectCallback = (response: any) => void;
+export type DpsnErrorCallback = (error: any) => void;
+
 /**
  * Service for interacting with DPSN (Decentralized Publish Subscribe Network)
  * Provides functionality for publishing and subscribing to topics
@@ -36,7 +39,10 @@ export class DpsnService extends Service {
     logger.log('Initializing DpsnService');
     const service = new DpsnService(runtime);
     service.runtime = runtime;
-    await service.initializeDpsnClient();
+    await service.initializeDpsnClient(
+      runtime.getSetting('DPSN_URL'),
+      runtime.getSetting('DPSN_WALLET_PVT_KEY')
+    );
     return service;
   }
 
@@ -66,13 +72,10 @@ export class DpsnService extends Service {
    * Initializes the DPSN client with the provided settings
    * @returns {Promise<void>}
    */
-  private async initializeDpsnClient(): Promise<void> {
+  private async initializeDpsnClient(dpsnUrl: string, pvtKey: string): Promise<void> {
     if (!this.runtime) {
       throw new Error('Runtime is not available');
     }
-
-    const dpsnUrl = this.runtime.getSetting('DPSN_URL');
-    const pvtKey = this.runtime.getSetting('DPSN_WALLET_PVT_KEY');
 
     if (!dpsnUrl) throw new Error('DPSN_URL is not defined in the environment variables');
     if (!pvtKey) throw new Error('DPSN_WALLET_PVT_KEY is not defined in the environment variables');
@@ -84,15 +87,15 @@ export class DpsnService extends Service {
 
     this.dpsnClient.init();
 
-    this.dpsnClient.onConnect((res: any) => {
-      logger.log('[ON CONNECT LOG]', res);
-    });
-
-    this.dpsnClient.onError((error: any) => {
-      logger.log('[ERROR LOG]', error);
-    });
-
     logger.log('DPSN Service initialized');
+  }
+
+  public onConnect(callback: DpsnConnectCallback): void {
+    this.dpsnClient.onConnect(callback);
+  }
+
+  public onError(callback: DpsnErrorCallback): void {
+    this.dpsnClient.onError(callback);
   }
 
   /**
