@@ -10,6 +10,10 @@
 
 The DPSN plugin enables elizaOS agents to subscribe any data streams available on [DPSN Data Streams Store](https://streams.dpsn.org/)
 
+For more information, visit:
+
+- [DPSN Official Website](https://dpsn.org)
+
 ## ✨ Features
 
 - **Easy Integration**: Simple API for publishing and subscribing to topics
