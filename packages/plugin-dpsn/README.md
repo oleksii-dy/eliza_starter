@@ -16,9 +16,9 @@ For more information, visit:
 
 ## ✨ Features
 
-- **Easy Integration**: Publish any realtime data to DPSN pub/sub topics and subscribe directly to your ElizaOS agent. 
+- **Easy Integration**: Publish any realtime data to DPSN pub/sub topics and subscribe directly to your ElizaOS agent.
 - **Real-time Updates**: Receive instant notifications when new messages are published
-- **DPSN Marketplace feeds**: Subscribe to any dpsn stream listed over [DPSN Data Streams Store](https://streams.dpsn.org/) to directly start consuming data stream events. 
+- **DPSN Marketplace feeds**: Subscribe to any dpsn stream listed over [DPSN Data Streams Store](https://streams.dpsn.org/) to directly start consuming data stream events.
 
 ## 🚀 Installation
 
@@ -56,6 +56,12 @@ dpsnService.subscribe(
 );
 ```
 
+## 📢 Publishing Data using DPSN
+
+Here's how you can create topics, manage ownership, and publish data to DPSN:
+
+[**→ Visit the DPSN Publishing Guide**](https://github.com/DPSN-org/dpsn-client-nodejs?tab=readme-ov-file#understanding-dpsn-topics)
+
 ## 📖 API Reference
 
 ### DpsnService
@@ -73,3 +79,5 @@ The main service class that provides DPSN functionality.
 
 - [elizaOS](https://github.com/elizaOS/eliza) - The main elizaOS framework
 - [DPSN Client](https://www.npmjs.com/package/dpsn-client) - The underlying client library for DPSN
+
+> Incase of any queries please reach out to us on [Telegram](https://t.me/dpsn_dev) 📥.
