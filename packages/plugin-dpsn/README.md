@@ -16,8 +16,9 @@ For more information, visit:
 
 ## ✨ Features
 
-- **Easy Integration**: Simple API for publishing and subscribing to topics
+- **Easy Integration**: Publish any realtime data to DPSN pub/sub topics and subscribe directly to your ElizaOS agent. 
 - **Real-time Updates**: Receive instant notifications when new messages are published
+- **DPSN Marketplace feeds**: Subscribe to any dpsn stream listed over [DPSN Data Streams Store](https://streams.dpsn.org/) to directly start consuming data stream events. 
 
 ## 🚀 Installation
 
@@ -31,7 +32,7 @@ bun add @elizaos/plugin-dpsn
 Add the following environment variables to your `.env` file:
 
 ```
-DPSN_URL=testnet.dpsn.org
+DPSN_URL=betanet.dpsn.org
 DPSN_WALLET_PVT_KEY=your_private_key_here
 ```
 
