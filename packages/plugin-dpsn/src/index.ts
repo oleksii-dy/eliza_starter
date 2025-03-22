@@ -90,12 +90,15 @@ export class DpsnService extends Service {
     logger.log('DPSN Service initialized');
   }
 
-  public onConnect(callback: DpsnConnectCallback): void {
-    this.dpsnClient.onConnect(callback);
-  }
-
-  public onError(callback: DpsnErrorCallback): void {
-    this.dpsnClient.onError(callback);
+  /**
+   * Register an event handler for DPSN events
+   * @param eventType - The type of event to listen for ('connect', 'error', 'subscription', 'publish', 'disconnect')
+   * @param callback - The callback function to execute when the event occurs
+   * @returns This instance for method chaining
+   */
+  public on(eventType: string, callback: (...args: any[]) => void): this {
+    this.dpsnClient.on(eventType, callback);
+    return this;
   }
 
   /**

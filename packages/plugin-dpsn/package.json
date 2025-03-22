@@ -40,8 +40,7 @@
     "dev": "npx @elizaos/cli dev",
     "build": "tsup",
     "lint": "prettier --write ./src",
-    "test": "npx @elizaos/cli test",
-    "test:vitest": "vitest run",
+    "test": "vitest run",
     "publish": "npx @elizaos/cli plugin publish",
     "format": "prettier --write ./src",
     "format:check": "prettier --check ./src"

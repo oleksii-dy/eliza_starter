@@ -29,19 +29,18 @@ describe('DPSN Integration', () => {
     // Directly call initializeDpsnClient with real values
     // @ts-ignore - Accessing private method for testing
     await dpsnService.initializeDpsnClient(
-      'testnet.dpsn.org',
+      'betanet.dpsn.org',
       '44185c015d82247881a787bb912c10a219f4b7c3bca752da6316b61beb22170b'
     );
 
-    // Register connect callback after initialization
-    dpsnService.onConnect((res) => {
-      logger.log(res);
-    });
-
-    // Register error callback if needed
-    dpsnService.onError((err) => {
-      logger.log(err);
-    });
+    // Register event handlers after initialization
+    dpsnService
+      .on('connect', (res) => {
+        logger.log(res);
+      })
+      .on('error', (err) => {
+        logger.log(err);
+      });
   }, 10000); // Longer timeout for network connection
 
   it('should connect to DPSN network', async () => {
@@ -61,7 +60,7 @@ describe('DPSN Integration', () => {
         '44185c015d82247881a787bb912c10a219f4b7c3bca752da6316b61beb22170b'
       );
       const errorPromise = new Promise((resolve) => {
-        invalidUrlService.onError((err) => {
+        invalidUrlService.on('error', (err) => {
           resolve(err);
         });
       });
@@ -79,9 +78,9 @@ describe('DPSN Integration', () => {
     try {
       // Directly call initializeDpsnClient with real values
       // @ts-ignore - Accessing private method for testing
-      await invalidPvtKeyService.initializeDpsnClient('testnet.dpsn.org', 'invalid-pvt-key');
+      await invalidPvtKeyService.initializeDpsnClient('betanet.dpsn.org', 'invalid-pvt-key');
       const errorPromise = new Promise((resolve) => {
-        invalidPvtKeyService.onError((err) => {
+        invalidPvtKeyService.on('error', (err) => {
           resolve(err);
         });
       });
