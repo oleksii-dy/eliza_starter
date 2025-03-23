@@ -1,11 +1,11 @@
 # Name our workflow
-name: Production Deployment
+name: Staging Deployment
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "prod" branch
+  # Triggers the workflow on push or pull request events but only for the "next" branch (our Staging)
   push:
-    branches: [ prod ]
+    branches: [ next ]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
@@ -27,13 +27,13 @@ jobs:
       - name: Install SSH Key
         uses: webfactory/ssh-agent@v0.7.0
         with:
-          ssh-private-key: ${{ secrets.PROD_SSH_KEY }}
+          ssh-private-key: ${{ secrets.NEXT_SSH_KEY }}
           
       # Add our server to known_hosts to prevent SSH security prompts
       - name: Add Known Hosts
-        run: ssh-keyscan -H ${{ secrets.PROD_SERVER_IP }} >> ~/.ssh/known_hosts
+        run: ssh-keyscan -H ${{ secrets.NEXT_SERVER_IP }} >> ~/.ssh/known_hosts
         
       # Connect to our server and run the update script
       - name: Deploy
         run: |
-          ssh ${{ secrets.PROD_SERVER_USER }}@${{ secrets.PROD_SERVER_IP }} '${{ secrets.PROD_DEPLOY_COMMAND }}'
+          ssh ${{ secrets.NEXT_SERVER_USER }}@${{ secrets.NEXT_SERVER_IP }} '${{ secrets.NEXT_DEPLOY_COMMAND }}'
