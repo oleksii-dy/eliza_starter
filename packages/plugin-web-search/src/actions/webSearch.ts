@@ -80,9 +80,10 @@ export const webSearch: Action = {
 
         if (searchResponse && searchResponse.results.length) {
             // Format results into a searchable context
-            const searchContext = searchResponse.results
-                .map(result => `${result.title}\n${result.content}`)
-                .join('\n\n');
+            const searchContext = [
+                searchResponse.answer,
+                ...searchResponse.results.map(result => `${result.title}\n${result.content}`)
+            ].filter(Boolean).join('\n\n');
             
             // Update state with search results
             state = await runtime.composeState(message, {
@@ -101,7 +102,9 @@ export const webSearch: Action = {
                 .join('\n');
 
             callback({
-                text: `Found ${searchResponse.results.length} relevant results:\n\n${formattedResults}`,
+                text: searchResponse.answer 
+                    ? `${searchResponse.answer}\n\nRelevant sources:\n\n${formattedResults}`
+                    : `Found ${searchResponse.results.length} relevant results:\n\n${formattedResults}`,
                 metadata: {
                     count: searchResponse.results.length,
                     results: searchResponse.results,
@@ -111,13 +114,6 @@ export const webSearch: Action = {
             });
         } else {
             elizaLogger.error("search failed or returned no data.");
-            callback({
-                text: "I couldn't find any relevant information for your search.",
-                metadata: {
-                    error: "No results found",
-                    query: webSearchPrompt
-                }
-            });
         }
     },
     examples: [
