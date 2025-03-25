@@ -15,7 +15,39 @@ import { type Context, Telegraf } from 'telegraf';
 import { TELEGRAM_SERVICE_NAME } from './constants';
 import { validateTelegramConfig } from './environment';
 import { MessageManager } from './messageManager';
+import {
+  determineWorldModel,
+  extractTopicMetadata,
+  generateForumWorldId,
+  generateRoomId,
+  generateTopicName,
+  generateTopicRoomId,
+  generateWorldId,
+  isForum,
+  transformTelegramId,
+  isGeneralTopic,
+} from './utils';
 import { TelegramEventTypes } from './types';
+
+/**
+ * Simple interface for cached chat data - lightweight version with only IDs
+ */
+interface CachedChatData {
+  isAuthorized: boolean;
+  worldId?: UUID;
+  roomId?: UUID;
+  entityId?: UUID;
+}
+
+interface TopicMetadata {
+  topicId: string;
+  isGeneral: boolean;
+  isTopic: boolean;
+  isForumTopic: boolean;
+  createdAt: number;
+  iconColor?: number;
+  iconCustomEmojiId?: string;
+}
 
 /**
  * Class representing a Telegram service that allows the agent to send and receive messages on Telegram.
@@ -28,7 +60,7 @@ export class TelegramService extends Service {
   private bot: Telegraf<Context>;
   public messageManager: MessageManager;
   private options;
-  private knownChats: Map<string, any> = new Map();
+  private knownChats: Map<string, CachedChatData> = new Map();
 
   /**
    * Constructor for TelegramService class.
@@ -75,6 +107,9 @@ export class TelegramService extends Service {
         logger.log('🚀 Starting Telegram bot...');
         await service.initializeBot();
         service.setupMessageHandlers();
+
+        // Register onboarding handlers
+        service.registerOnboardingHandlers();
 
         // Wait for bot to be ready by testing getMe()
         await service.bot.telegram.getMe();
@@ -141,47 +176,176 @@ export class TelegramService extends Service {
   }
 
   /**
-   * Checks if a group is authorized, based on the TELEGRAM_ALLOWED_CHATS setting.
-   * @param {Context} ctx - The context of the incoming update.
-   * @returns {Promise<boolean>} A Promise that resolves with a boolean indicating if the group is authorized.
+   * Registers event handlers for Telegram onboarding processes.
+   * This method listens for TELEGRAM_WORLD_JOINED events and
+   * initiates the onboarding process for new forum owners.
+   *
+   * @returns {void}
    */
-  private async isGroupAuthorized(ctx: Context): Promise<boolean> {
-    const chatId = ctx.chat?.id.toString();
-    if (!chatId) return false;
+  public registerOnboardingHandlers(): void {
+    // Register handler for TELEGRAM_WORLD_JOINED events
+    this.runtime.registerEvent(TelegramEventTypes.WORLD_JOINED, async (payload) => {
+      try {
+        logger.info('Received TELEGRAM_WORLD_JOINED event, checking if onboarding is needed');
 
-    // If this is a chat we haven't seen before, emit WORLD_JOINED event
-    if (!this.knownChats.has(chatId)) {
-      await this.handleNewChat(ctx);
-    }
+        // Only handle forum-centric worlds
+        const world = payload.world;
+        if (!world?.metadata?.isForum) {
+          logger.debug('Not a forum world, skipping onboarding');
+          return;
+        }
 
-    const allowedChats = this.runtime.getSetting('TELEGRAM_ALLOWED_CHATS');
-    if (!allowedChats) {
-      return true; // All chats are allowed if no restriction is set
-    }
+        logger.info('Forum world joined, preparing for onboarding');
 
-    try {
-      const allowedChatsList = JSON.parse(allowedChats as string);
-      return allowedChatsList.includes(chatId);
-    } catch (error) {
-      logger.error('Error parsing TELEGRAM_ALLOWED_CHATS:', error);
-      return false;
-    }
+        // Get the owner ID from world metadata
+        if (!world?.metadata?.ownership?.ownerId) {
+          logger.warn('No owner ID found in world metadata, cannot start onboarding');
+          return;
+        }
+
+        const ownerId = world.metadata.ownership.ownerId as UUID;
+
+        // Get the owner entity to check for telegram ID
+        const ownerEntity = await this.runtime.getEntityById(ownerId);
+        if (!ownerEntity || !ownerEntity.metadata?.telegram?.userId) {
+          logger.warn('Owner entity not found or missing Telegram user ID');
+          return;
+        }
+
+        const telegramUserId = ownerEntity.metadata.telegram.userId.toString();
+
+        // Start the onboarding DM
+        await this.messageManager.startOnboardingDM(telegramUserId, world.id, world.serverId);
+
+        logger.info(`Started onboarding for Telegram forum owner ${telegramUserId}`);
+      } catch (error) {
+        logger.error('Error handling Telegram world joined event for onboarding:', error);
+      }
+    });
   }
 
   /**
-   * Handles new chat discovery and emits WORLD_JOINED event
-   * @param {Context} ctx - The context of the incoming update
+   * Checks if a chat is authorized based on the TELEGRAM_ALLOWED_CHATS setting.
+   * @param {Context} ctx - The context of the incoming update.
+   * @returns {Promise<boolean>} A Promise that resolves with a boolean indicating if the chat is authorized.
    */
-  private async handleNewChat(ctx: Context): Promise<void> {
-    if (!ctx.chat) return;
+  private async isChatAuthorized(ctx: Context): Promise<boolean> {
+    const chatId = ctx.chat?.id.toString();
+    if (!chatId) return false;
 
+    // Get topic ID if available for forum chats
+    const topicId = ctx.message?.message_thread_id?.toString();
+
+    // Use topic-specific cache key for forum messages
+    const cacheKey =
+      topicId && isForum(ctx.chat)
+        ? `telegram:chat:${chatId}:topic:${topicId}`
+        : `telegram:chat:${chatId}`;
+
+    // Check if we already know this chat
+    const cachedData = this.knownChats.get(cacheKey);
+    if (cachedData) {
+      // No longer updating lastInteraction
+      return cachedData.isAuthorized;
+    }
+
+    // Try to get from persistent cache
+    try {
+      const persistedCache = (await this.runtime.getCache(cacheKey)) as CachedChatData | null;
+
+      if (
+        persistedCache &&
+        typeof persistedCache === 'object' &&
+        'isAuthorized' in persistedCache
+      ) {
+        this.knownChats.set(cacheKey, persistedCache);
+        return persistedCache.isAuthorized;
+      }
+    } catch (error) {
+      logger.warn(`Error getting cache for chat ${chatId}: ${error}`);
+    }
+
+    // Check against allowed chats setting
+    const allowedChats = this.runtime.getSetting('TELEGRAM_ALLOWED_CHATS');
+    let isAuthorized = true; // Default to true if no restriction is set
+
+    if (allowedChats) {
+      try {
+        const allowedChatsList = JSON.parse(allowedChats as string);
+        isAuthorized = allowedChatsList.includes(chatId);
+      } catch (error) {
+        logger.error('Error parsing TELEGRAM_ALLOWED_CHATS:', error);
+        isAuthorized = false;
+      }
+    }
+
+    // Initialize cache
+    const newCachedData: CachedChatData = {
+      isAuthorized,
+    };
+
+    this.knownChats.set(cacheKey, newCachedData);
+
+    // Store in database cache for persistence across restarts
+    await this.runtime.setCache(cacheKey, newCachedData);
+
+    return isAuthorized;
+  }
+
+  /**
+   * Gets or creates a world for a user
+   * @param {Context} ctx - The context of the incoming update
+   * @returns {Promise<World>} - The created or retrieved world
+   */
+  private async ensureUserWorld(ctx: Context): Promise<World> {
+    const userId = ctx.from.id.toString();
+    const worldIdStr = generateWorldId(userId);
+    const worldId = createUniqueUuid(this.runtime, worldIdStr) as UUID;
+
+    // Try to get existing world
+    let world = await this.runtime.getWorld(worldId);
+
+    // If world doesn't exist, create it
+    if (!world) {
+      const entityIdStr = transformTelegramId(userId, 'user');
+      const entityId = createUniqueUuid(this.runtime, entityIdStr) as UUID;
+      const worldName = `${ctx.from.first_name || ctx.from.username || 'Unknown User'}'s World`;
+
+      world = {
+        id: worldId,
+        name: worldName,
+        agentId: this.runtime.agentId,
+        serverId: userId,
+        metadata: {
+          source: 'telegram',
+          ownership: { ownerId: entityId },
+          roles: {
+            [entityId]: Role.OWNER,
+          },
+        },
+      };
+
+      logger.info(`Creating new world: ${worldName} (${worldId})`);
+    }
+
+    return world;
+  }
+
+  /**
+   * Gets or creates a room within a world for a specific chat
+   * @param {Context} ctx - The context of the incoming update
+   * @param {UUID} worldId - The world ID the room belongs to
+   * @returns {Promise<Room>} - The created or retrieved room
+   */
+  private async ensureUserRoom(ctx: Context, worldId: UUID): Promise<Room> {
     const chat = ctx.chat;
     const chatId = chat.id.toString();
 
-    // Mark this chat as known
-    this.knownChats.set(chatId, chat);
+    // Generate room ID from chat ID only to ensure all users see the same room
+    const roomIdStr = generateRoomId(chatId);
+    const roomId = createUniqueUuid(this.runtime, roomIdStr) as UUID;
 
-    // Get chat title based on type
+    // Determine chat title and channel type
     let chatTitle: string;
     let channelType: ChannelType;
 
@@ -207,126 +371,731 @@ export class TelegramService extends Service {
         channelType = ChannelType.GROUP;
     }
 
-    // Ensure chatId is properly formatted for UUID creation by removing negative sign if present
-    const formattedChatId = chatId.startsWith('-') ? chatId.substring(1) : chatId;
+    // Try to get existing room
+    let room = await this.runtime.getRoom(roomId);
 
-    // Create standardized world data
-    const worldId = createUniqueUuid(this.runtime, formattedChatId) as UUID;
-    const roomId = createUniqueUuid(this.runtime, formattedChatId) as UUID;
-
-    // Build world representation
-    const world: World = {
-      id: worldId,
-      name: chatTitle,
-      agentId: this.runtime.agentId,
-      serverId: chatId,
-      metadata: {
+    // If room doesn't exist, create it
+    if (!room) {
+      room = {
+        id: roomId,
+        name: chatTitle,
         source: 'telegram',
-        ownership: { ownerId: chatId },
-        roles: {
-          [chatId]: Role.OWNER,
-        },
-      },
-    };
+        type: channelType,
+        channelId: chatId,
+        // Set serverId for all chat types to ensure role provider can find the world
+        serverId: chatId,
+        // Associate with the world for this user
+        worldId: worldId,
+      };
 
-    // Build room representation
-    const room: Room = {
-      id: roomId,
-      name: chatTitle,
-      source: 'telegram',
-      type: channelType,
-      channelId: chatId,
-      serverId: chatId,
-      worldId: worldId,
-    };
-
-    // Build users list
-    const users: Entity[] = [];
-    // For private chats, add the user
-    if (chat.type === 'private' && chat.id) {
-      const userId = createUniqueUuid(this.runtime, chat.id.toString()) as UUID;
-      users.push({
-        id: userId,
-        names: [chat.first_name || 'Unknown User'],
-        agentId: this.runtime.agentId,
-        metadata: {
-          telegram: {
-            id: chat.id.toString(),
-            username: chat.username || 'unknown',
-            name: chat.first_name || 'Unknown User',
-          },
-          source: 'telegram',
-        },
-      });
-    } else if (chat.type === 'group' || chat.type === 'supergroup') {
-      // For groups and supergroups, try to get member information
-      try {
-        // Get chat administrators (this is what's available through the Bot API)
-        const admins = await this.bot.telegram.getChatAdministrators(chat.id);
-
-        if (admins && admins.length > 0) {
-          for (const admin of admins) {
-            const userId = createUniqueUuid(this.runtime, admin.user.id.toString()) as UUID;
-            users.push({
-              id: userId,
-              names: [admin.user.first_name || admin.user.username || 'Unknown Admin'],
-              agentId: this.runtime.agentId,
-              metadata: {
-                telegram: {
-                  id: admin.user.id.toString(),
-                  username: admin.user.username || 'unknown',
-                  name: admin.user.first_name || 'Unknown Admin',
-                  isAdmin: true,
-                  adminTitle:
-                    admin.custom_title || (admin.status === 'creator' ? 'Owner' : 'Admin'),
-                },
-                source: 'telegram',
-                roles: [admin.status === 'creator' ? Role.OWNER : Role.ADMIN],
-              },
-            });
-          }
-        }
-
-        // Additionally, we can estimate member count
+      // For groups, add member count if available
+      if (chat.type === 'group' || chat.type === 'supergroup') {
         try {
           const chatInfo = await this.bot.telegram.getChat(chat.id);
           if (chatInfo && 'member_count' in chatInfo) {
-            // Store this information in the world metadata
-            world.metadata.memberCount = chatInfo.member_count;
+            room.metadata = {
+              ...room.metadata,
+              memberCount: chatInfo.member_count,
+            };
           }
         } catch (countError) {
           logger.warn(`Could not get member count for chat ${chatId}: ${countError}`);
         }
-      } catch (error) {
-        logger.warn(`Could not fetch administrators for chat ${chatId}: ${error}`);
+      }
+
+      logger.info(`Creating new room: ${chatTitle} (${roomId})`);
+    }
+
+    return room;
+  }
+
+  /**
+   * Gets or creates an entity for a user
+   * @param {Context} ctx - The context of the incoming update
+   * @returns {Promise<Entity>} - The created or retrieved entity
+   */
+  private async ensureUserEntity(ctx: Context): Promise<Entity> {
+    if (!ctx.from) {
+      throw new Error('Cannot create entity: no user information available');
+    }
+
+    const userId = ctx.from.id.toString();
+    const entityIdStr = transformTelegramId(userId, 'user');
+    const entityId = createUniqueUuid(this.runtime, entityIdStr) as UUID;
+
+    // Try to get existing entity
+    let entity = await this.runtime.getEntityById(entityId);
+
+    // If entity doesn't exist, create it
+    if (!entity) {
+      entity = {
+        id: entityId,
+        names: [ctx.from.first_name || ctx.from.username || 'Unknown User'],
+        agentId: this.runtime.agentId,
+        metadata: {
+          telegram: {
+            id: userId,
+            username: ctx.from.username || 'unknown',
+            name: ctx.from.first_name || 'Unknown User',
+          },
+          source: 'telegram',
+          roles: [Role.OWNER],
+        },
+      };
+
+      // Create the entity in the database
+      // await this.runtime.createEntity(entity);
+      logger.debug(`Creating new entity: ${entity.names[0]} (${entityId})`);
+    }
+
+    return entity;
+  }
+
+  /**
+   * Gets other entities in a group chat (for groups and supergroups)
+   * @param {Context} ctx - The context of the incoming update
+   * @returns {Promise<Entity[]>} - Array of other entities in the chat
+   */
+  private async getGroupEntities(ctx: Context): Promise<Entity[]> {
+    const chat = ctx.chat;
+    if (!chat || (chat.type !== 'group' && chat.type !== 'supergroup')) {
+      return [];
+    }
+
+    const entities: Entity[] = [];
+
+    try {
+      // Get chat administrators
+      const admins = await this.bot.telegram.getChatAdministrators(chat.id);
+      const currentUserId = ctx.from?.id.toString();
+
+      if (admins && admins.length > 0) {
+        for (const admin of admins) {
+          // Skip if it's the same user who triggered this event
+          if (admin.user.id.toString() === currentUserId) continue;
+
+          const adminIdStr = transformTelegramId(admin.user.id.toString(), 'user');
+          const adminId = createUniqueUuid(this.runtime, adminIdStr) as UUID;
+
+          entities.push({
+            id: adminId,
+            names: [admin.user.first_name || admin.user.username || 'Unknown Admin'],
+            agentId: this.runtime.agentId,
+            metadata: {
+              telegram: {
+                id: admin.user.id.toString(),
+                username: admin.user.username || 'unknown',
+                name: admin.user.first_name || 'Unknown Admin',
+                isAdmin: true,
+                adminTitle: admin.custom_title || (admin.status === 'creator' ? 'Owner' : 'Admin'),
+              },
+              source: 'telegram',
+              roles: [admin.status === 'creator' ? Role.ADMIN : Role.NONE],
+            },
+          });
+        }
+      }
+    } catch (error) {
+      logger.warn(`Could not fetch administrators for chat ${chat.id}: ${error}`);
+    }
+
+    return entities;
+  }
+
+  /**
+   * Function to safely get chat title
+   * @param {any} chat - The chat object
+   * @returns {string} - The safe chat title
+   */
+  private getChatTitle(chat: any): string {
+    if (chat.type === 'private') {
+      return `Chat with ${chat.first_name || 'Unknown User'}`;
+    }
+    return chat.title || 'Unknown Chat';
+  }
+
+  /**
+   * Handle setup for a new interaction
+   * @param {Context} ctx - The context of the incoming update
+   * @returns {Promise<{ success: boolean, roomId?: UUID, entityId?: UUID }>} - Result with roomId and entityId if successful
+   */
+  private async setupInteraction(
+    ctx: Context
+  ): Promise<{ success: boolean; roomId?: UUID; entityId?: UUID }> {
+    try {
+      if (!this.validateContext(ctx)) {
+        return { success: false };
+      }
+
+      const chatId = ctx.chat.id.toString();
+      const topicId = ctx.message?.message_thread_id?.toString();
+
+      // Generate a cache key that includes the topic ID for forum messages
+      const cacheKey = this.generateCacheKey(chatId, ctx.chat, topicId);
+
+      // Check chat authorization
+      if (!(await this.isChatAuthorized(ctx))) {
+        logger.warn(`Unauthorized chat: ${chatId}`);
+        return { success: false };
+      }
+
+      // Get cached chat data or create empty object
+      const cachedData = this.knownChats.get(cacheKey) || { isAuthorized: true };
+
+      // Create entity for the current user
+      const entity = await this.ensureUserEntity(ctx);
+      const entityId = entity.id;
+
+      // Check if we can use cached data
+      const cachedResult = await this.tryUseCachedData(cachedData, chatId, topicId);
+      if (cachedResult.success) {
+        return cachedResult;
+      }
+
+      // Prepare world and room based on chat type
+      const result = await this.prepareWorldAndRoom(ctx, entity);
+      if (!result.success) {
+        return { success: false };
+      }
+
+      // Store updated cache data
+      await this.updateCache(cacheKey, result.worldId, result.roomId, entityId);
+
+      return { success: true, roomId: result.roomId, entityId };
+    } catch (error) {
+      logger.error(
+        `Error in setupInteraction: ${error instanceof Error ? error.message : String(error)}`
+      );
+      return { success: false };
+    }
+  }
+
+  /**
+   * Validates that the context has all required data
+   * @param {Context} ctx - The context to validate
+   * @returns {boolean} - Whether the context is valid
+   */
+  private validateContext(ctx: Context): boolean {
+    if (!ctx.chat || !ctx.from) {
+      logger.error('Missing chat or user information');
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Generates a cache key for the chat
+   * @param {string} chatId - The chat ID
+   * @param {any} chat - The chat object
+   * @param {string | undefined} topicId - The topic ID if available
+   * @returns {string} - The cache key
+   */
+  private generateCacheKey(chatId: string, chat: any, topicId?: string): string {
+    return topicId && isForum(chat)
+      ? `telegram:chat:${chatId}:topic:${topicId}`
+      : `telegram:chat:${chatId}`;
+  }
+
+  /**
+   * Attempts to use cached data if available and valid
+   * @param {CachedChatData} cachedData - The cached data
+   * @param {string} chatId - The chat ID
+   * @param {string | undefined} topicId - The topic ID if available
+   * @returns {Promise<{ success: boolean, roomId?: UUID, entityId?: UUID }>} - Result with cached data if successful
+   */
+  private async tryUseCachedData(
+    cachedData: CachedChatData,
+    chatId: string,
+    topicId?: string
+  ): Promise<{ success: boolean; roomId?: UUID; entityId?: UUID }> {
+    if (cachedData.worldId && cachedData.roomId && cachedData.entityId) {
+      logger.debug(`Using cached IDs for chat ${chatId}${topicId ? ` topic ${topicId}` : ''}`);
+
+      // Verify these IDs still exist in the database
+      const [world, room, entity] = await Promise.all([
+        this.runtime.getWorld(cachedData.worldId),
+        this.runtime.getRoom(cachedData.roomId),
+        this.runtime.getEntityById(cachedData.entityId),
+      ]);
+
+      // If all entities exist, we can return immediately
+      if (world && room && entity) {
+        return {
+          success: true,
+          roomId: cachedData.roomId,
+          entityId: cachedData.entityId,
+        };
+      }
+
+      logger.debug(`Some cached entities missing for chat ${chatId}, recreating...`);
+    }
+
+    return { success: false };
+  }
+
+  /**
+   * Updates the cache with new data
+   * @param {string} cacheKey - The cache key
+   * @param {UUID} worldId - The world ID
+   * @param {UUID} roomId - The room ID
+   * @param {UUID} entityId - The entity ID
+   * @returns {Promise<void>}
+   */
+  private async updateCache(
+    cacheKey: string,
+    worldId: UUID,
+    roomId: UUID,
+    entityId: UUID
+  ): Promise<void> {
+    const cachedData: CachedChatData = {
+      isAuthorized: true,
+      worldId,
+      roomId,
+      entityId,
+    };
+
+    this.knownChats.set(cacheKey, cachedData);
+    await this.runtime.setCache(cacheKey, cachedData);
+  }
+
+  /**
+   * Prepare world and room based on chat type
+   * @param {Context} ctx - The context of the incoming update
+   * @param {Entity} entity - The user entity
+   * @returns {Promise<{ success: boolean, worldId?: UUID, roomId?: UUID }>} - Result with world and room IDs
+   */
+  private async prepareWorldAndRoom(
+    ctx: Context,
+    entity: Entity
+  ): Promise<{ success: boolean; worldId?: UUID; roomId?: UUID }> {
+    try {
+      const worldModel = determineWorldModel(ctx.chat);
+
+      // Branch based on world model
+      if (worldModel === 'forum-centric' && isForum(ctx.chat)) {
+        return this.prepareForumCentricWorld(ctx, entity);
+      } else {
+        return this.prepareUserCentricWorld(ctx, entity);
+      }
+    } catch (error) {
+      logger.error(
+        `Error in prepareWorldAndRoom: ${error instanceof Error ? error.message : String(error)}`
+      );
+      return { success: false };
+    }
+  }
+
+  /**
+   * Prepare a forum-centric world and room
+   * @param {Context} ctx - The context of the incoming update
+   * @param {Entity} entity - The user entity
+   * @returns {Promise<{ success: boolean, worldId?: UUID, roomId?: UUID }>} - Result with world and room IDs
+   */
+  private async prepareForumCentricWorld(
+    ctx: Context,
+    entity: Entity
+  ): Promise<{ success: boolean; worldId?: UUID; roomId?: UUID }> {
+    try {
+      const chatId = ctx.chat.id.toString();
+      const entityId = entity.id;
+
+      // Create forum world
+      const forumWorldIdStr = generateForumWorldId(chatId);
+      const worldId = createUniqueUuid(this.runtime, forumWorldIdStr) as UUID;
+
+      // Create roles map with current user as OWNER initially
+      const worldRoles = { [entityId]: Role.OWNER };
+
+      // Add roles for all admins
+      const otherEntities = await this.getGroupEntities(ctx);
+      for (const otherEntity of otherEntities) {
+        if (otherEntity.metadata?.telegram?.isAdmin) {
+          worldRoles[otherEntity.id] = Role.ADMIN;
+        }
+      }
+
+      // Prepare forum world
+      const world = {
+        id: worldId,
+        name: `${this.getChatTitle(ctx.chat)} World`,
+        agentId: this.runtime.agentId,
+        serverId: chatId,
+        metadata: {
+          source: 'telegram',
+          isForum: true,
+          ownership: { ownerId: entityId },
+          roles: worldRoles,
+        },
+      };
+
+      // Create appropriate room based on whether it's a topic
+      const { roomId, room } = await this.createForumRoom(ctx, worldId);
+
+      // Build standardized data structure similar to Discord
+      const standardizedRooms = await this.buildStandardizedForumRooms(ctx.chat, worldId);
+      const standardizedEntities = [entity, ...otherEntities];
+
+      console.log('standardizedRooms', standardizedRooms);
+      console.log('standardizedEntities', standardizedEntities);
+
+      // Prepare the complete standardized data structure
+      const standardizedData = {
+        runtime: this.runtime,
+        world: world,
+        rooms: standardizedRooms,
+        entities: standardizedEntities,
+        source: 'telegram',
+        entityId: entityId, // Add the entity ID of the forum owner/creator
+      };
+
+      // Emit world joined event with complete structure
+      await this.runtime.emitEvent(EventType.WORLD_JOINED, standardizedData);
+
+      // Emit start onboarding event for tg;
+      await this.runtime.emitEvent(TelegramEventTypes.WORLD_JOINED, standardizedData);
+
+      return { success: true, worldId, roomId };
+    } catch (error) {
+      logger.error(
+        `Error in prepareForumCentricWorld: ${error instanceof Error ? error.message : String(error)}`
+      );
+      return { success: false };
+    }
+  }
+
+  /**
+   * Build standardized rooms for a forum chat
+   * @param {any} chat - The forum chat object
+   * @param {UUID} worldId - The world ID
+   * @returns {Promise<any[]>} - An array of standardized room objects
+   */
+  private async buildStandardizedForumRooms(chat: any, worldId: UUID): Promise<any[]> {
+    const rooms = [];
+    const chatId = chat.id.toString();
+
+    try {
+      // Add general room for the forum
+      const generalRoomIdStr = generateRoomId(chatId);
+      const generalRoomId = createUniqueUuid(this.runtime, generalRoomIdStr) as UUID;
+      rooms.push({
+        id: generalRoomId,
+        name: `${this.getChatTitle(chat)} (General)`,
+        source: 'telegram',
+        type: ChannelType.GROUP,
+        channelId: chatId,
+        serverId: chatId,
+        worldId: worldId,
+        metadata: {
+          isGeneral: true,
+        },
+      });
+
+      // Try to get forum topics if available
+      if (isForum(chat)) {
+        try {
+          // Safely try to get forum topics with type assertion
+          const telegramApi = this.bot.telegram as any;
+          if (
+            typeof telegramApi.getForumTopicInfo === 'function' &&
+            typeof telegramApi.getForumTopics === 'function'
+          ) {
+            const forumTopics = await telegramApi.getForumTopics(parseInt(chatId));
+
+            if (forumTopics && forumTopics.topics && Array.isArray(forumTopics.topics)) {
+              for (const topic of forumTopics.topics) {
+                if (!topic.message_thread_id) continue;
+
+                const topicId = topic.message_thread_id.toString();
+                const topicRoomIdStr = generateTopicRoomId(chatId, topicId);
+                const topicRoomId = createUniqueUuid(this.runtime, topicRoomIdStr) as UUID;
+
+                const topicName = generateTopicName(topic);
+                const topicMetadata = extractTopicMetadata(topic);
+
+                rooms.push({
+                  id: topicRoomId,
+                  name: topicName,
+                  source: 'telegram',
+                  type: ChannelType.FORUM,
+                  channelId: topicId,
+                  serverId: chatId,
+                  worldId: worldId,
+                  metadata: {
+                    ...topicMetadata,
+                    topicId,
+                    parentChatId: chatId,
+                    isTopic: true,
+                  },
+                });
+              }
+            }
+          }
+        } catch (error) {
+          logger.warn(`Could not get forum topics: ${error}`);
+          // Continue with just the general room if we can't get topics
+        }
+      }
+    } catch (error) {
+      logger.error(`Error building standardized forum rooms: ${error}`);
+    }
+
+    return rooms;
+  }
+
+  /**
+   * Create a room for a forum
+   * @param {Context} ctx - The context of the incoming update
+   * @param {UUID} worldId - The world ID
+   * @returns {Promise<{ roomId: UUID, room: Room }>} - The room ID and room object
+   */
+  private async createForumRoom(
+    ctx: Context,
+    worldId: UUID
+  ): Promise<{ roomId: UUID; room: Room }> {
+    // Get the chatId and topicId
+    const chatId = ctx.chat.id.toString();
+    const topicId = ctx.message?.message_thread_id?.toString();
+
+    logger.debug(
+      `Creating forum room for chat ${chatId}${topicId ? ` with topic ${topicId}` : ''}`
+    );
+
+    let roomId: UUID;
+    let room: Room;
+
+    if (topicId) {
+      // Create room for this specific topic
+      const topicRoomIdStr = generateTopicRoomId(chatId, topicId);
+      roomId = createUniqueUuid(this.runtime, topicRoomIdStr) as UUID;
+
+      // Try to get topic information if available
+      const { topicName, topicMetadata } = await this.getTopicInfo(chatId, topicId);
+
+      // Prepare topic room
+      room = {
+        id: roomId,
+        name: topicName,
+        source: 'telegram',
+        type: ChannelType.FORUM,
+        channelId: topicId, // Use just the topic ID as it's unique within a forum
+        serverId: chatId,
+        worldId: worldId,
+        metadata: {
+          ...topicMetadata,
+          topicId,
+          parentChatId: chatId,
+          isTopic: true, // Add explicit flag for topic rooms
+        },
+      };
+
+      logger.debug(`Created forum topic room: ${topicName} (${roomId}) for topic ${topicId}`);
+    } else {
+      // Default to general room for the forum
+      const generalRoomIdStr = generateRoomId(chatId);
+      roomId = createUniqueUuid(this.runtime, generalRoomIdStr) as UUID;
+
+      // Prepare general room
+      room = {
+        id: roomId,
+        name: `${this.getChatTitle(ctx.chat)} (General)`,
+        source: 'telegram',
+        type: ChannelType.GROUP,
+        channelId: chatId,
+        serverId: chatId,
+        worldId: worldId,
+        metadata: {
+          isGeneral: true, // Add flag for general forum room
+        },
+      };
+
+      logger.debug(`Created general forum room: ${room.name} (${roomId})`);
+    }
+
+    return { roomId, room };
+  }
+
+  /**
+   * Get topic information
+   * @param {string} chatId - The chat ID
+   * @param {string} topicId - The topic ID
+   * @returns {Promise<{ topicName: string; topicMetadata: TopicMetadata }>} - Topic name and metadata
+   */
+  private async getTopicInfo(
+    chatId: string,
+    topicId: string
+  ): Promise<{ topicName: string; topicMetadata: TopicMetadata }> {
+    let topicName = `Topic ${topicId}`;
+    let topicMetadata: TopicMetadata = {
+      topicId,
+      isGeneral: isGeneralTopic(topicId),
+      isTopic: true,
+      isForumTopic: true,
+      createdAt: Date.now(),
+    };
+
+    try {
+      // Safely try to get forum topic info with type assertion
+      const telegramApi = this.bot.telegram as any;
+      if (typeof telegramApi.getForumTopicInfo === 'function') {
+        const forumTopicInfo = await telegramApi.getForumTopicInfo(
+          parseInt(chatId),
+          parseInt(topicId)
+        );
+
+        if (forumTopicInfo) {
+          // If it's the general topic (ID 1), use a special name
+          if (isGeneralTopic(topicId)) {
+            topicName = 'General';
+            topicMetadata = {
+              ...topicMetadata,
+              iconColor: forumTopicInfo.icon_color,
+              iconCustomEmojiId: forumTopicInfo.icon_custom_emoji_id,
+            };
+          } else {
+            topicName = generateTopicName(forumTopicInfo);
+            topicMetadata = {
+              ...topicMetadata,
+              ...extractTopicMetadata(forumTopicInfo),
+            };
+          }
+        }
+      }
+    } catch (error) {
+      logger.warn(`Could not get forum topic info: ${error}`);
+      // Even if we fail to get topic info, we still return basic metadata
+    }
+
+    return { topicName, topicMetadata };
+  }
+
+  /**
+   * Prepare a user-centric world and room
+   * @param {Context} ctx - The context of the incoming update
+   * @param {Entity} entity - The user entity
+   * @returns {Promise<{ success: boolean, worldId?: UUID, roomId?: UUID }>} - Result with world and room IDs
+   */
+  private async prepareUserCentricWorld(
+    ctx: Context,
+    entity: Entity
+  ): Promise<{ success: boolean; worldId?: UUID; roomId?: UUID }> {
+    try {
+      const chatId = ctx.chat.id.toString();
+      const entityId = entity.id;
+
+      // Get or create world for the current user
+      const world = await this.ensureUserWorld(ctx);
+      const worldId = world.id;
+
+      // Generate room ID consistently for this chat
+      const roomIdStr = generateRoomId(chatId);
+      const roomId = createUniqueUuid(this.runtime, roomIdStr) as UUID;
+
+      // Get or create the room
+      const room = await this.ensureUserRoom(ctx, world.id);
+
+      // For group chats, also create a group chat world
+      if (ctx.chat.type === 'group' || ctx.chat.type === 'supergroup') {
+        await this.createGroupChatWorld(ctx, entity);
+      }
+
+      // Get other entities in the chat
+      const otherEntities = await this.getGroupEntities(ctx);
+
+      // Emit world joined event
+      await this.emitWorldJoinedEvent(world, room, entity, otherEntities);
+
+      return { success: true, worldId, roomId };
+    } catch (error) {
+      logger.error(
+        `Error in prepareUserCentricWorld: ${error instanceof Error ? error.message : String(error)}`
+      );
+      return { success: false };
+    }
+  }
+
+  /**
+   * Create a group chat world
+   * @param {Context} ctx - The context of the incoming update
+   * @param {Entity} entity - The user entity
+   * @returns {Promise<void>}
+   */
+  private async createGroupChatWorld(ctx: Context, entity: Entity): Promise<void> {
+    const chatId = ctx.chat.id.toString();
+    const entityId = entity.id;
+
+    // Generate world ID from chat ID for the group chat world
+    const groupWorldIdStr = generateWorldId(chatId);
+    const groupWorldId = createUniqueUuid(this.runtime, groupWorldIdStr) as UUID;
+
+    // Create roles map with current user as OWNER initially
+    const worldRoles = { [entityId]: Role.OWNER };
+
+    // Add roles for all admins
+    const otherEntities = await this.getGroupEntities(ctx);
+    for (const otherEntity of otherEntities) {
+      if (otherEntity.metadata?.telegram?.isAdmin) {
+        worldRoles[otherEntity.id] = Role.ADMIN;
       }
     }
 
-    // Create payload for world events
-    const worldPayload = {
+    // Prepare group world
+    const groupWorld = {
+      id: groupWorldId,
+      name: `${this.getChatTitle(ctx.chat)} World`,
+      agentId: this.runtime.agentId,
+      serverId: chatId,
+      metadata: {
+        source: 'telegram',
+        ownership: { ownerId: entityId },
+        roles: worldRoles,
+      },
+    };
+
+    // Generate room ID consistently for this chat
+    const roomIdStr = generateRoomId(chatId);
+    const roomId = createUniqueUuid(this.runtime, roomIdStr) as UUID;
+    const room = await this.ensureUserRoom(ctx, groupWorldId);
+
+    // Emit a separate WORLD_JOINED event for the group world
+    const groupEntities = await this.getGroupEntities(ctx);
+    const groupWorldPayload = {
       runtime: this.runtime,
-      world,
-      rooms: [room],
-      entities: users,
+      world: groupWorld,
+      rooms: [room], // Use the same room for now
+      entities: [entity, ...groupEntities],
       source: 'telegram',
     };
 
-    // Create Telegram-specific payload
-    const telegramWorldPayload = {
-      ...worldPayload,
-      chat,
+    // Emit group world joined event
+    await this.runtime.emitEvent(EventType.WORLD_JOINED, groupWorldPayload);
+  }
+
+  /**
+   * Emit the WORLD_JOINED event
+   * This function is no longer used by prepareForumCentricWorld as it now builds and emits a complete standardized structure
+   * @param {World} world - The world object
+   * @param {Room} room - The room object
+   * @param {Entity} entity - The entity object
+   * @param {Entity[]} otherEntities - Other entities in the chat
+   * @returns {Promise<void>}
+   */
+  private async emitWorldJoinedEvent(
+    world: World,
+    room: Room,
+    entity: Entity,
+    otherEntities: Entity[]
+  ): Promise<void> {
+    // Prepare payload for WORLD_JOINED event
+    const worldPayload = {
+      runtime: this.runtime,
+      world: world,
+      rooms: [room],
+      entities: [entity, ...otherEntities],
+      source: 'telegram',
     };
 
-    // Emit generic WORLD_JOINED event
-    this.runtime.emitEvent(EventType.WORLD_JOINED, worldPayload);
-
-    // Emit platform-specific WORLD_JOINED event
-    this.runtime.emitEvent(TelegramEventTypes.WORLD_JOINED, telegramWorldPayload);
-
-    // Set up a handler to track new entities as they interact with the chat
-    if (chat.type === 'group' || chat.type === 'supergroup') {
-      this.setupEntityTracking(chat.id);
-    }
+    // Emit WORLD_JOINED event to ensure everything is set up in the database
+    await this.runtime.emitEvent(EventType.WORLD_JOINED, worldPayload);
   }
 
   /**
@@ -339,160 +1108,57 @@ export class TelegramService extends Service {
     // Regular message handler
     this.bot.on('message', async (ctx) => {
       try {
-        if (!(await this.isGroupAuthorized(ctx))) return;
-        await this.messageManager.handleMessage(ctx);
+        // Handle the interaction setup
+        const setupResult = await this.setupInteraction(ctx);
+        if (!setupResult.success) {
+          return;
+        }
+
+        // Pass the established room and entity IDs directly
+        if (setupResult.roomId && setupResult.entityId) {
+          await this.messageManager.handleMessage(ctx, setupResult.roomId, setupResult.entityId);
+        }
       } catch (error) {
-        logger.error('Error handling message:', error);
+        logger.error(
+          `Error handling message: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     });
 
     // Reaction handler
     this.bot.on('message_reaction', async (ctx) => {
       try {
-        if (!(await this.isGroupAuthorized(ctx))) return;
-        await this.messageManager.handleReaction(ctx);
-      } catch (error) {
-        logger.error('Error handling reaction:', error);
-      }
-    });
-  }
+        // Handle the interaction setup
+        const setupResult = await this.setupInteraction(ctx);
+        if (!setupResult.success) {
+          return;
+        }
 
-  /**
-   * Sets up tracking for new entities in a group chat to sync them as entities
-   * @param {number} chatId - The Telegram chat ID to track entities for
-   */
-  private setupEntityTracking(chatId: number): void {
-    // We'll maintain a set of entity IDs we've already synced
-    const syncedEntityIds = new Set<string>();
-
-    // Add handler to track new message authors
-    this.bot.on('message', async (ctx) => {
-      if (!ctx.chat || ctx.chat.id !== chatId || !ctx.from) return;
-
-      const entityId = ctx.from.id.toString();
-      if (syncedEntityIds.has(entityId)) return;
-
-      // Add to synced set to avoid duplicate processing
-      syncedEntityIds.add(entityId);
-
-      // Sync this entity
-      const entityUuid = createUniqueUuid(this.runtime, entityId) as UUID;
-      const worldId = createUniqueUuid(this.runtime, chatId.toString()) as UUID;
-      const chatIdStr = chatId.toString();
-
-      try {
-        // Create entity
-        await this.runtime.ensureConnection({
-          entityId: entityUuid,
-          roomId: createUniqueUuid(this.runtime, chatIdStr),
-          userName: ctx.from.username || ctx.from.first_name || 'Unknown Entity',
-          name: ctx.from.first_name || ctx.from.username || 'Unknown Entity',
-          source: 'telegram',
-          channelId: chatIdStr,
-          serverId: chatIdStr,
-          type: ChannelType.GROUP,
-          worldId,
-        });
-
-        // Create entity joined payload
-        const entityJoinedPayload = {
-          runtime: this.runtime,
-          entityId: entityUuid,
-          entity: {
-            id: entityId,
-            username: ctx.from.username || ctx.from.first_name || 'Unknown Entity',
-            displayName: ctx.from.first_name || ctx.from.username || 'Unknown Entity',
-          },
-          worldId,
-          source: 'telegram',
-          metadata: {
-            joinedAt: Date.now(),
-          },
-        };
-
-        // Create Telegram-specific payload
-        const telegramEntityJoinedPayload = {
-          ...entityJoinedPayload,
-          telegramUser: {
-            id: ctx.from.id,
-            username: ctx.from.username,
-            first_name: ctx.from.first_name,
-          },
-        };
-
-        // Emit generic ENTITY_JOINED event
-        this.runtime.emitEvent(EventType.ENTITY_JOINED, entityJoinedPayload);
-
-        // Emit platform-specific ENTITY_JOINED event
-        this.runtime.emitEvent(TelegramEventTypes.ENTITY_JOINED, telegramEntityJoinedPayload);
-
-        logger.info(
-          `Tracked new Telegram entity: ${ctx.from.username || ctx.from.first_name || entityId}`
-        );
-      } catch (error) {
-        logger.error(`Error syncing new Telegram entity ${entityId} from chat ${chatId}:`, error);
-      }
-    });
-
-    // Track when entities leave chat (from service message)
-    this.bot.on('left_chat_member', async (ctx) => {
-      if (!ctx.message?.left_chat_member || ctx.chat?.id !== chatId) return;
-
-      const leftUser = ctx.message.left_chat_member;
-      const entityId = createUniqueUuid(this.runtime, leftUser.id.toString()) as UUID;
-      const chatIdStr = chatId.toString();
-      const worldId = createUniqueUuid(this.runtime, chatIdStr);
-
-      try {
-        // Get the entity
-        const entity = await this.runtime.getEntityById(entityId);
-        if (entity) {
-          // Update entity metadata to show as inactive
-          entity.metadata = {
-            ...entity.metadata,
-            status: 'INACTIVE',
-            leftAt: Date.now(),
-          };
-          await this.runtime.updateEntity(entity);
-
-          // Create entity left payload
-          const entityLeftPayload = {
-            runtime: this.runtime,
-            entityId,
-            entity: {
-              id: leftUser.id.toString(),
-              username: leftUser.username || leftUser.first_name || 'Unknown Entity',
-              displayName: leftUser.first_name || leftUser.username || 'Unknown Entity',
-            },
-            worldId,
-            source: 'telegram',
-            metadata: {
-              leftAt: Date.now(),
-            },
-          };
-
-          // Create Telegram-specific payload
-          const telegramEntityLeftPayload = {
-            ...entityLeftPayload,
-            telegramUser: {
-              id: leftUser.id,
-              username: leftUser.username,
-              first_name: leftUser.first_name,
-            },
-          };
-
-          // Emit generic ENTITY_LEFT event
-          this.runtime.emitEvent(EventType.ENTITY_LEFT, entityLeftPayload);
-
-          // Emit platform-specific ENTITY_LEFT event
-          this.runtime.emitEvent(TelegramEventTypes.ENTITY_LEFT, telegramEntityLeftPayload);
-
-          logger.info(
-            `Entity ${leftUser.username || leftUser.first_name || leftUser.id} left chat ${chatId}`
-          );
+        // Pass the established room and entity IDs directly
+        if (setupResult.roomId && setupResult.entityId) {
+          await this.messageManager.handleReaction(ctx, setupResult.roomId, setupResult.entityId);
         }
       } catch (error) {
-        logger.error(`Error handling Telegram entity leaving chat ${chatId}:`, error);
+        logger.error(
+          `Error handling reaction: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
+    });
+
+    // Channel post handler
+    this.bot.on('channel_post', async (ctx) => {
+      try {
+        // Handle the interaction setup to register the channel
+        const setupResult = await this.setupInteraction(ctx);
+        if (!setupResult.success) {
+          return;
+        }
+
+        logger.info(`Registered channel ${ctx.chat.id}`);
+      } catch (error) {
+        logger.error(
+          `Error handling channel post: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     });
   }

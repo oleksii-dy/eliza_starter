@@ -19,7 +19,13 @@ import {
   type TelegramMessageSentPayload,
   type TelegramReactionReceivedPayload,
 } from './types';
-import { escapeMarkdown } from './utils';
+import {
+  escapeMarkdown,
+  generateReactionId,
+  generateRoomId,
+  generateWorldId,
+  transformTelegramId,
+} from './utils';
 
 import fs from 'node:fs';
 
@@ -249,22 +255,22 @@ export class MessageManager {
   /**
    * Handle incoming messages from Telegram and process them accordingly.
    * @param {Context} ctx - The context object containing information about the message.
+   * @param {UUID} roomId - The room ID established by setupInteraction
+   * @param {UUID} entityId - The entity ID established by setupInteraction
    * @returns {Promise<void>}
    */
-  public async handleMessage(ctx: Context): Promise<void> {
+  public async handleMessage(ctx: Context, roomId: UUID, entityId: UUID): Promise<void> {
     // Type guard to ensure message exists
     if (!ctx.message || !ctx.from) return;
 
     const message = ctx.message as Message.TextMessage;
+    const chat = ctx.chat;
 
     try {
-      // Convert IDs to UUIDs
-      const entityId = createUniqueUuid(this.runtime, ctx.from.id.toString()) as UUID;
-      const userName = ctx.from.username || ctx.from.first_name || 'Unknown User';
-      const roomId = createUniqueUuid(this.runtime, ctx.chat?.id.toString());
+      logger.debug('Using provided room and entity IDs');
 
-      // Get message ID
-      const messageId = createUniqueUuid(this.runtime, message?.message_id?.toString());
+      const messageIdStr = transformTelegramId(message.message_id.toString(), 'message');
+      const messageId = createUniqueUuid(this.runtime, messageIdStr);
 
       // Handle images
       const imageInfo = await this.processImage(message);
@@ -282,63 +288,7 @@ export class MessageManager {
       if (!fullText) return;
 
       // Get chat type and determine channel type
-      const chat = message.chat as Chat;
       const channelType = getChannelType(chat);
-
-      // Get world and room IDs
-      // For private chats, the world is the chat itself
-      // For groups/channels, the world is the supergroup/channel
-      const worldId = createUniqueUuid(
-        this.runtime,
-        chat.type === 'private' ? `private_${chat.id}` : chat.id.toString()
-      );
-
-      // Get world and room names
-      const worldName =
-        chat.type === 'supergroup'
-          ? (chat as Chat.SupergroupChat).title
-          : chat.type === 'channel'
-            ? (chat as Chat.ChannelChat).title
-            : chat.type === 'private'
-              ? `Chat with ${(chat as Chat.PrivateChat).first_name || 'Unknown'}`
-              : 'Telegram';
-
-      const roomName =
-        chat.type === 'private'
-          ? (chat as Chat.PrivateChat).first_name
-          : chat.type === 'supergroup'
-            ? (chat as Chat.SupergroupChat).title
-            : chat.type === 'channel'
-              ? (chat as Chat.ChannelChat).title
-              : chat.type === 'group'
-                ? (chat as Chat.GroupChat).title
-                : 'Unknown Group';
-
-      // Ensure entity connection with proper world/server ID handling
-      await this.runtime.ensureConnection({
-        entityId,
-        roomId,
-        userName,
-        name: userName,
-        source: 'telegram',
-        channelId: ctx.chat.id.toString(),
-        serverId: chat.type === 'private' ? undefined : chat.id.toString(), // Only set serverId for non-private chats
-        type: channelType,
-        worldId: worldId,
-      });
-
-      // Ensure room exists
-      const room = {
-        id: roomId,
-        name: roomName,
-        source: 'telegram',
-        type: channelType,
-        channelId: ctx.chat.id.toString(),
-        serverId: chat.type === 'private' ? undefined : chat.id.toString(),
-        worldId: worldId,
-      };
-
-      await this.runtime.ensureRoomExists(room);
 
       // Create the memory object
       const memory: Memory = {
@@ -352,7 +302,10 @@ export class MessageManager {
           channelType: channelType,
           inReplyTo:
             'reply_to_message' in message && message.reply_to_message
-              ? createUniqueUuid(this.runtime, message.reply_to_message.message_id.toString())
+              ? createUniqueUuid(
+                  this.runtime,
+                  transformTelegramId(message.reply_to_message.message_id.toString(), 'message')
+                )
               : undefined,
         },
         createdAt: message.date * 1000,
@@ -373,8 +326,14 @@ export class MessageManager {
             const sentMessage = sentMessages[i];
             const _isLastMessage = i === sentMessages.length - 1;
 
+            const sentMessageIdStr = transformTelegramId(
+              sentMessage.message_id.toString(),
+              'message'
+            );
+            const sentMessageId = createUniqueUuid(this.runtime, sentMessageIdStr);
+
             const responseMemory: Memory = {
-              id: createUniqueUuid(this.runtime, sentMessage.message_id.toString()),
+              id: sentMessageId,
               entityId: this.runtime.agentId,
               agentId: this.runtime.agentId,
               roomId,
@@ -429,10 +388,14 @@ export class MessageManager {
   /**
    * Handles the reaction event triggered by a user reacting to a message.
    * * @param {NarrowedContext<Context<Update>, Update.MessageReactionUpdate>} ctx The context of the message reaction update
+   * @param {UUID} roomId - The room ID established by setupInteraction
+   * @param {UUID} entityId - The entity ID established by setupInteraction
    * @returns {Promise<void>} A Promise that resolves when the reaction handling is complete
    */
   public async handleReaction(
-    ctx: NarrowedContext<Context<Update>, Update.MessageReactionUpdate>
+    ctx: NarrowedContext<Context<Update>, Update.MessageReactionUpdate>,
+    roomId: UUID,
+    entityId: UUID
   ): Promise<void> {
     // Ensure we have the necessary data
     if (!ctx.update.message_reaction || !ctx.from) return;
@@ -442,14 +405,14 @@ export class MessageManager {
     const reactionEmoji = (reaction.new_reaction[0] as ReactionType).type;
 
     try {
-      const entityId = createUniqueUuid(this.runtime, ctx.from.id.toString()) as UUID;
-      const roomId = createUniqueUuid(this.runtime, ctx.chat.id.toString());
-      const worldId = createUniqueUuid(this.runtime, ctx.chat.id.toString());
+      logger.debug('Using provided room and entity IDs');
 
-      const reactionId = createUniqueUuid(
-        this.runtime,
-        `${reaction.message_id}-${ctx.from.id}-${Date.now()}`
+      const reactionIdStr = generateReactionId(
+        reaction.message_id.toString(),
+        ctx.from.id.toString(),
+        Date.now()
       );
+      const reactionId = createUniqueUuid(this.runtime, reactionIdStr);
 
       // Create reaction memory
       const memory: Memory = {
@@ -461,7 +424,10 @@ export class MessageManager {
           channelType: getChannelType(reaction.chat as Chat),
           text: `Reacted with: ${reactionType === 'emoji' ? reactionEmoji : reactionType}`,
           source: 'telegram',
-          inReplyTo: createUniqueUuid(this.runtime, reaction.message_id.toString()),
+          inReplyTo: createUniqueUuid(
+            this.runtime,
+            transformTelegramId(reaction.message_id.toString(), 'message')
+          ),
         },
         createdAt: Date.now(),
       };
@@ -470,8 +436,15 @@ export class MessageManager {
       const callback: HandlerCallback = async (content: Content) => {
         try {
           const sentMessage = await ctx.reply(content.text);
+
+          const sentMessageIdStr = transformTelegramId(
+            sentMessage.message_id.toString(),
+            'message'
+          );
+          const sentMessageId = createUniqueUuid(this.runtime, sentMessageIdStr);
+
           const responseMemory: Memory = {
-            id: createUniqueUuid(this.runtime, sentMessage.message_id.toString()),
+            id: sentMessageId,
             entityId: this.runtime.agentId,
             agentId: this.runtime.agentId,
             roomId,
@@ -538,14 +511,19 @@ export class MessageManager {
 
       if (!sentMessages?.length) return [];
 
-      // Create room ID
-      const roomId = createUniqueUuid(this.runtime, chatId.toString());
+      // Generate a consistent room ID based on chat ID
+      const chatIdStr = chatId.toString();
+      const roomIdStr = generateRoomId(chatIdStr);
+      const roomId = createUniqueUuid(this.runtime, roomIdStr);
 
       // Create memories for the sent messages
       const memories: Memory[] = [];
       for (const sentMessage of sentMessages) {
+        const sentMessageIdStr = transformTelegramId(sentMessage.message_id.toString(), 'message');
+        const messageId = createUniqueUuid(this.runtime, sentMessageIdStr);
+
         const memory: Memory = {
-          id: createUniqueUuid(this.runtime, sentMessage.message_id.toString()),
+          id: messageId,
           entityId: this.runtime.agentId,
           agentId: this.runtime.agentId,
           roomId,
@@ -583,6 +561,63 @@ export class MessageManager {
     } catch (error) {
       logger.error('Error sending message to Telegram:', error);
       return [];
+    }
+  }
+
+  /**
+   * Initiates an onboarding conversation with a Telegram user
+   * @param {number | string} telegramUserId - The Telegram user ID to start onboarding with
+   * @param {UUID} worldId - The ID of the world the user is connected to
+   * @param {string} serverId - The server ID associated with the world
+   * @returns {Promise<void>}
+   */
+  public async startOnboardingDM(
+    telegramUserId: number | string,
+    worldId: UUID,
+    serverId: string
+  ): Promise<void> {
+    try {
+      logger.info(`Starting onboarding DM with Telegram user ${telegramUserId}`);
+
+      // Generate random onboarding message
+      const onboardingMessages = [
+        'Hi! I need to collect some information to get set up for your forum. Is now a good time?',
+        'Hey there! I need to configure a few things for your forum. Do you have a moment?',
+        'Hello! Could we take a few minutes to set up everything for your forum?',
+      ];
+      const randomMessage =
+        onboardingMessages[Math.floor(Math.random() * onboardingMessages.length)];
+
+      // Create a DM room
+      const dmRoomId = createUniqueUuid(this.runtime, `private_${telegramUserId}`);
+
+      // Ensure the room exists in the runtime
+      await this.runtime.ensureRoomExists({
+        id: dmRoomId,
+        name: `Chat with Telegram User ${telegramUserId}`,
+        source: 'telegram',
+        type: ChannelType.DM,
+        channelId: telegramUserId.toString(),
+        serverId: serverId,
+        worldId: worldId,
+        metadata: {
+          isOnboarding: true,
+        },
+      });
+
+      // Send the initial message
+      await this.sendMessage(telegramUserId, {
+        text: randomMessage,
+        actions: ['BEGIN_ONBOARDING'],
+        source: 'telegram',
+        channelType: ChannelType.DM,
+      });
+
+      logger.info(
+        `Started onboarding DM with Telegram user ${telegramUserId} for world ${worldId}`
+      );
+    } catch (error) {
+      logger.error(`Error starting onboarding DM with Telegram user: ${error}`);
     }
   }
 }

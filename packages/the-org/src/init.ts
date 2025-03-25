@@ -12,7 +12,6 @@ import {
   initializeOnboarding,
   logger,
 } from '@elizaos/core';
-
 import type { Guild } from 'discord.js';
 
 /**
@@ -67,6 +66,30 @@ export const initCharacter = async ({
   runtime.registerEvent('DISCORD_SERVER_CONNECTED', async (params: { server: Guild }) => {
     await initializeAllSystems(runtime, [params.server], config);
   });
+
+  // Handle Telegram forum worlds
+  runtime.registerEvent(
+    'TELEGRAM_WORLD_JOINED',
+    async (params: { world: World; entityId: UUID }) => {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Only handle forum-centric worlds
+      if (params.world?.metadata?.isForum) {
+        console.log('TELEGRAM_WORLD_JOINED INITIALIZING ONBOARDING');
+        await initializeOnboarding(runtime, params.world, config);
+
+        // Start onboarding DM with the forum owner
+        if (params.world?.metadata?.ownership?.ownerId) {
+          console.log('TELEGRAM_WORLD_JOINED STARTING ONBOARDING DM');
+          console.log('params.world', params.world);
+          await startTelegramOnboardingDM(
+            runtime,
+            params.world,
+            params.world.metadata.ownership.ownerId as UUID
+          );
+        }
+      }
+    }
+  );
 };
 
 /**
@@ -191,5 +214,98 @@ export async function startOnboardingDM(
   } catch (error) {
     logger.error(`Error starting DM with owner: ${error}`);
     throw error;
+  }
+}
+
+/**
+ * Starts the settings DM with the Telegram forum owner
+ */
+export async function startTelegramOnboardingDM(
+  runtime: IAgentRuntime,
+  world: World,
+  ownerId: UUID
+): Promise<void> {
+  logger.info('startTelegramOnboardingDM - worldId', world.id);
+  try {
+    // Get the entity for the owner
+    const ownerEntity = await runtime.getEntityById(ownerId);
+    if (!ownerEntity) {
+      logger.error(`Could not fetch owner entity with ID ${ownerId}`);
+      throw new Error(`Could not fetch owner entity with ID ${ownerId}`);
+    }
+
+    // Need the Telegram user ID to send a DM
+    if (!ownerEntity.metadata?.telegram?.userId) {
+      logger.warn(`Owner entity ${ownerId} doesn't have a Telegram userId`);
+      return;
+    }
+
+    const telegramUserId = ownerEntity.metadata.telegram.userId.toString();
+
+    // Get a telegram service if available
+    const telegramService = runtime.getService('telegram');
+    if (!telegramService) {
+      logger.error('Telegram service not available');
+      return;
+    }
+
+    const onboardingMessages = [
+      'Hi! I need to collect some information to get set up for your forum. Is now a good time?',
+      'Hey there! I need to configure a few things for your forum. Do you have a moment?',
+      'Hello! Could we take a few minutes to set up everything for your forum?',
+    ];
+
+    const randomMessage = onboardingMessages[Math.floor(Math.random() * onboardingMessages.length)];
+
+    // Create a DM room
+    const dmRoomId = createUniqueUuid(runtime, `private_${telegramUserId}`);
+
+    await runtime.ensureRoomExists({
+      id: dmRoomId,
+      name: `Chat with ${ownerEntity.metadata.telegram.firstName || ownerEntity.names[0] || 'Owner'}`,
+      source: 'telegram',
+      type: ChannelType.DM,
+      channelId: telegramUserId,
+      serverId: world.serverId,
+      worldId: world.id,
+      metadata: {
+        isOnboarding: true,
+      },
+    });
+
+    // Send the initial message using the Telegram service
+    // We need to cast to any since we don't have the specific type
+    // This is safe because we're only using known properties
+    const tgService = telegramService as any;
+    if (tgService.messageManager && typeof tgService.messageManager.sendMessage === 'function') {
+      await tgService.messageManager.sendMessage(telegramChatId, randomMessage);
+    } else {
+      logger.error('Telegram message manager not available or sendMessage not a function');
+      return;
+    }
+
+    // Create memory of the initial message
+    await runtime.createMemory(
+      {
+        agentId: runtime.agentId,
+        entityId: runtime.agentId,
+        roomId: dmRoomId,
+        content: {
+          text: randomMessage,
+          actions: ['BEGIN_ONBOARDING'],
+          source: 'telegram',
+          channelType: ChannelType.DM,
+        },
+        createdAt: Date.now(),
+      },
+      'messages'
+    );
+
+    logger.info(
+      `Started settings DM with Telegram owner ${telegramUserId} for forum ${world.serverId}`
+    );
+  } catch (error) {
+    logger.error(`Error starting DM with Telegram owner: ${error}`);
+    // Don't rethrow here since this is not a critical error
   }
 }
