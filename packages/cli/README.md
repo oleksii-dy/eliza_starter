@@ -201,3 +201,8 @@ For more help, use the `--help` flag with any command:
 elizaos tee phala --help
 elizaos tee phala <command> --help
 ```
+
+##
+
+notes
+bun run ./dist/index.js start --character ./src/characters/eliza.ts

@@ -66,23 +66,22 @@ function getCloudflareGatewayBaseURL(runtime: any, provider: string): string | u
 /**
  * Asynchronously tokenizes the given text based on the specified model and prompt.
  *
- * @param {ModelTypeName} model - The type of model to use for tokenization.
- * @param {string} prompt - The text prompt to tokenize.
+ * @param {ModelTypeName} model - The type of model to use for tokenization.% * @param {string} prompt - The text prompt to tokenize.
  * @returns {number[]} - An array of tokens representing the encoded prompt.
 
 GROQ_API_KEY=
 EMBEDDING_GROQ_MODEL=llama-3.1-8b-instant
-LARGE_GROQ_MODEL=llama-3.2-90b-vision-preview
-MEDIUM_GROQ_MODEL=llama-3.3-70b-versatile
-SMALL_GROQ_MODEL=llama-3.1-8b-instant
+GROQ_LARGE_MODEL=llama-3.2-90b-vision-preview
+GROQ_MEDIUM_MODEL=llama-3.3-70b-versatile
+GROQ_SMALL_MODEL=llama-3.1-8b-instant
 
 */
 
 function findModelName(model: ModelTypeName): TiktokenModel {
   const name =
     model === ModelType.TEXT_SMALL
-      ? (process.env.SMALL_GROQ_MODEL ?? 'llama-3.1-8b-instant')
-      : (process.env.LARGE_GROQ_MODEL ?? 'llama-3.2-90b-vision-preview');
+      ? (process.env.GROQ_SMALL_MODEL ?? 'llama-3.1-8b-instant-nope')
+      : (process.env.GROQ_LARGE_MODEL ?? 'llama-3.2-90b-vision-preview');
   return name as TiktokenModel;
 }
 async function tokenizeText(model: ModelTypeName, prompt: string) {
@@ -176,9 +175,9 @@ export const groqPlugin: Plugin = {
   description: 'Groq plugin',
   config: {
     GROQ_API_KEY: process.env.GROQ_API_KEY,
-    SMALL_GROQ_MODEL: process.env.SMALL_GROQ_MODEL,
-    MEDIUM_GROQ_MODEL: process.env.MEDIUM_GROQ_MODEL,
-    LARGE_GROQ_MODEL: process.env.LARGE_GROQ_MODEL,
+    GROQ_SMALL_MODEL: process.env.GROQ_SMALL_MODEL,
+    GROQ_MEDIUM_MODEL: process.env.GROQ_MEDIUM_MODEL,
+    GROQ_LARGE_MODEL: process.env.GROQ_LARGE_MODEL,
   },
   async init(config: Record<string, string>) {
     //try {
@@ -349,7 +348,8 @@ export const groqPlugin: Plugin = {
       const temperature = 0.7;
       const frequency_penalty = 0.7;
       const presence_penalty = 0.7;
-      const max_response_length = 8000;
+      //      const max_response_length = 8000;
+      const max_response_length = 6000;
       const baseURL = getCloudflareGatewayBaseURL(runtime, 'groq');
       const groq = createGroq({
         apiKey: runtime.getSetting('GROQ_API_KEY'),
@@ -360,7 +360,7 @@ export const groqPlugin: Plugin = {
       const model =
         runtime.getSetting('GROQ_SMALL_MODEL') ??
         runtime.getSetting('SMALL_MODEL') ??
-        'llama-3.1-8b-instant';
+        'llama-3.1-8b-instant-ope2';
 
       logger.log('generating text');
       logger.log(prompt);
@@ -558,7 +558,7 @@ export const groqPlugin: Plugin = {
       const model =
         runtime.getSetting('GROQ_SMALL_MODEL') ??
         runtime.getSetting('SMALL_MODEL') ??
-        'llama-3.1-8b-instangt';
+        'llama-3.1-8b-instant-noope';
 
       try {
         if (params.schema) {
