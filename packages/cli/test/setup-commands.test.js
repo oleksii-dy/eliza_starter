@@ -6,15 +6,14 @@ import path from 'path';
 import os from 'os';
 import { existsSync } from 'fs';
 import { elizaLogger } from '@elizaos/core';
+import { invalidName, testDir, cliCommand, commands } from './utils/constants';
 
 const execAsync = promisify(exec);
 
 describe('CLI Command Structure Tests', () => {
-  const testDir = path.join(os.tmpdir(), 'elizaos-test-' + Date.now());
   const projectName = 'test-project-cli';
   const pluginName = 'test-plugin-cli';
   const agentName = 'test-agent-cli';
-  const cliCommand = 'elizaos'; // Assume elizaos is globally available
 
   beforeEach(async () => {
     // Create test directory if it doesn't exist
@@ -51,7 +50,7 @@ describe('CLI Command Structure Tests', () => {
     expect(result.stdout).toContain('Commands:');
 
     // Check for key commands
-    const commands = ['create', 'start', 'agent', 'plugin', 'env'];
+
     for (const cmd of commands) {
       expect(result.stdout).toContain(cmd);
     }
@@ -144,7 +143,6 @@ describe('CLI Command Structure Tests', () => {
 
   it('should handle invalid project name', async () => {
     // Use a project name with invalid characters
-    const invalidName = '!invalid@name';
 
     // Run create project command with invalid name
     const result = await execAsync(`${cliCommand} create project ${invalidName}`, {

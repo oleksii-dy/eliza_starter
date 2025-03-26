@@ -6,7 +6,8 @@ export const testDir = path.join(os.tmpdir(), 'elizaos-test-' + Date.now());
 export const agentName = 'test-agent';
 export const agent1Name = 'test-agent1';
 export const agent2Name = 'test-agent2';
-
+export const commands = ['create', 'start', 'agent', 'plugin', 'env'];
+export const invalidName = '!invalid@name';
 export const characters = [
   {
     name: agent1Name,
