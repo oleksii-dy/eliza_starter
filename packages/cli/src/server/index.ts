@@ -485,7 +485,12 @@ export class AgentServer {
    */
   public train() {
     logger.debug('Training agent...');
+
     // Implement training logic here
+    this.agents.forEach((agent, id) => {
+      logger.debug('Training agent debug', agent);
+      logger.debug(`- Agent ${id}: ${agent.character.name}`);
+    });
   }
   public start(port: number) {
     try {

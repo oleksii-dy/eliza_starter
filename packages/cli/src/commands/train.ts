@@ -191,7 +191,7 @@ export async function trainAgent(
     const importedPlugin = pluginModule.default || pluginModule[functionName];
 
     if (importedPlugin) {
-      logger.debug(`Found plugin: ${importedPlugin.name}`);
+      logger.debug(`Found plugin import : ${importedPlugin.name}`);
       characterPlugins.push(importedPlugin);
     } else {
       // Try more aggressively to find a suitable plugin export
@@ -227,6 +227,9 @@ export async function trainAgent(
     character: encryptedChar,
     plugins: [...plugins, ...characterPlugins],
   });
+
+  logger.debug('RUNTIME', runtime);
+
   if (init) {
     await init(runtime);
   }
