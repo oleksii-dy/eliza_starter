@@ -13,7 +13,13 @@
     "lint": "prettier --write ./src",
     "format": "prettier --write ./src",
     "format:check": "prettier --check ./src",
-    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo"
+    "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
+    "test:ui": "cd ui-tests && npm run test",
+    "test:ui:headed": "cd ui-tests && npm run test:headed",
+    "test:ui:debug": "cd ui-tests && npm run test:debug",
+    "test:ui:with-server": "cd ui-tests && npm run start:and:test",
+    "test:ui:with-server:headed": "cd ui-tests && npm run start:and:test:headed",
+    "test:ui:file": "cd ui-tests && npm run test -- $npm_config_test_file --project=$npm_config_project"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*",
