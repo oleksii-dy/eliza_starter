@@ -16,6 +16,7 @@ import { plugin } from './commands/plugin';
 import { project } from './commands/project';
 import { publish } from './commands/publish';
 import { start } from './commands/start';
+import { train } from './commands/train';
 import { teeCommand as tee } from './commands/tee';
 import { test } from './commands/test';
 import { update } from './commands/update';
@@ -60,6 +61,7 @@ async function main() {
     .addCommand(agent)
     .addCommand(tee)
     .addCommand(start)
+    .addCommand(train)
     .addCommand(update)
     .addCommand(test)
     .addCommand(env)

@@ -483,6 +483,10 @@ export class AgentServer {
    * @param {number} port - The port number on which the server should listen.
    * @throws {Error} If the port is invalid or if there is an error while starting the server.
    */
+  public train() {
+    logger.debug('Training agent...');
+    // Implement training logic here
+  }
   public start(port: number) {
     try {
       if (!port || typeof port !== 'number') {

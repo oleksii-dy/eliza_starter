@@ -71,6 +71,7 @@ export async function promptForProjectPlugins(
 
   // Prompt for each identified plugin
   for (const pluginName of pluginsToPrompt) {
+    logger.info(`Prompting for ${pluginName} environment variables...`);
     try {
       await promptForEnvVars(pluginName);
     } catch (error) {
@@ -80,16 +81,16 @@ export async function promptForProjectPlugins(
 }
 
 /**
- * gyms an agent with the given character, agent server, initialization function, plugins, and options.
+ * trains an agent with the given character, agent server, initialization function, plugins, and options.
  *
  * @param character The character object representing the agent.
  * @param server The agent server where the agent will be registered.
  * @param init Optional initialization function to be called with the agent runtime.
  * @param plugins An array of plugins to be used by the agent.
- * @param options Additional options for gyming the agent, such as data directory and postgres URL.
+ * @param options Additional options for training the agent, such as data directory and postgres URL.
  * @returns A promise that resolves to the agent runtime object.
  */
-export async function gymAgent(
+export async function trainAgent(
   character: Character,
   server: AgentServer,
   init?: (runtime: IAgentRuntime) => void,
@@ -228,14 +229,14 @@ export async function gymAgent(
     await init(runtime);
   }
 
-  // gym services/plugins/process knowledge
+  // train services/plugins/process knowledge
   await runtime.initialize();
 
   // add to container
   server.registerAgent(runtime);
 
   // report to console
-  logger.debug(`gymed ${runtime.character.name} as ${runtime.agentId}`);
+  logger.debug(`trained ${runtime.character.name} as ${runtime.agentId}`);
 
   return runtime;
 }
@@ -253,14 +254,15 @@ async function stopAgent(runtime: IAgentRuntime, server: AgentServer) {
 }
 
 /**
- * Function that gyms the agents.
+ * Function that trains the agents.
  *
  * @param {Object} options - Command options
- * @returns {Promise<void>} A promise that resolves when the agents are successfully gymed.
+ * @returns {Promise<void>} A promise that resolves when the agents are successfully trained.
  */
-const gymAgents = async (options: {
+const trainAgents = async (options: {
   configure?: boolean;
-  port?: number;
+  trainer?: Character;
+  plugins?: string[];
   characters?: Character[];
 }) => {
   // Load environment variables from project .env or .eliza/.env
@@ -301,16 +303,14 @@ const gymAgents = async (options: {
 
   // Set up server properties
   server.trainAgent = async (character) => {
-    logger.info(`gyming agent for character ${character.name}`);
-    return gymAgent(character, server);
+    logger.info(`training agent for character ${character.name}`);
+    return trainAgent(character, server);
   };
   server.stopAgent = (runtime: IAgentRuntime) => {
     stopAgent(runtime, server);
   };
   server.loadCharacterTryPath = loadCharacterTryPath;
   server.jsonToCharacter = jsonToCharacter;
-
-  const serverPort = options.port || Number.parseInt(process.env.SERVER_PORT || '3000');
 
   // Try to find a project or plugin in the current directory
   let isProject = false;
@@ -342,7 +342,7 @@ const gymAgents = async (options: {
       }
 
       // Also check for project indicators like a Project type export
-      // or if the description mentions "project"
+      // or if the description mentions "project">
       if (!isProject && !isPlugin) {
         if (packageJson.description?.toLowerCase().includes('project')) {
           isProject = true;
@@ -446,9 +446,9 @@ const gymAgents = async (options: {
 
   await server.initialize();
 
-  server.train(serverPort);
+  server.train();
 
-  // if characters are provided, gym the agents with the characters
+  // if characters are provided, train the agents with the characters
   if (options.characters) {
     for (const character of options.characters) {
       // make sure character has sql plugin
@@ -465,10 +465,10 @@ const gymAgents = async (options: {
         character.plugins.push('@elizaos/plugin-local-ai');
       }
 
-      await gymAgent(character, server);
+      await trainAgent(character, server);
     }
   } else {
-    // gym agents based on project, plugin, or custom configuration
+    // train agents based on project, plugin, or custom configuration
     if (isProject && projectModule?.default) {
       // Load all project agents, call their init and register their plugins
       const project = projectModule.default;
@@ -490,36 +490,36 @@ const gymAgents = async (options: {
           logger.warn(`Failed to prompt for project environment variables: ${error}`);
         }
 
-        const gymedAgents = [];
+        const trainedAgents = [];
         for (const agent of agents) {
           try {
-            logger.debug(`gyming agent: ${agent.character.name}`);
-            const runtime = await gymAgent(
+            logger.debug(`training agent: ${agent.character.name}`);
+            const runtime = await trainAgent(
               agent.character,
               server,
               agent.init,
               agent.plugins || []
             );
-            gymedAgents.push(runtime);
+            trainedAgents.push(runtime);
             // wait .5 seconds
             await new Promise((resolve) => setTimeout(resolve, 500));
           } catch (agentError) {
-            logger.error(`Error gyming agent ${agent.character.name}: ${agentError}`);
+            logger.error(`Error training agent ${agent.character.name}: ${agentError}`);
           }
         }
 
-        if (gymedAgents.length === 0) {
-          logger.warn('Failed to gym any agents from project, falling back to custom character');
-          await gymAgent(defaultCharacter, server);
+        if (trainedAgents.length === 0) {
+          logger.warn('Failed to train any agents from project, falling back to custom character');
+          await trainAgent(defaultCharacter, server);
         } else {
-          logger.debug(`Successfully gymed ${gymedAgents.length} agents from project`);
+          logger.debug(`Successfully trained ${trainedAgents.length} agents from project`);
         }
       } else {
         logger.debug('Project found but no agents defined, falling back to custom character');
-        await gymAgent(defaultCharacter, server);
+        await trainAgent(defaultCharacter, server);
       }
     } else if (isPlugin && pluginModule) {
-      // Before gyming with the plugin, prompt for any environment variables it needs
+      // Before training with the plugin, prompt for any environment variables it needs
       if (pluginModule.name) {
         try {
           await promptForEnvVars(pluginModule.name);
@@ -530,7 +530,7 @@ const gymAgents = async (options: {
 
       // Load the default character with all its default plugins, then add the test plugin
       logger.info(
-        `gyming default Eliza character with plugin: ${pluginModule.name || 'unnamed plugin'}`
+        `training default Eliza character with plugin: ${pluginModule.name || 'unnamed plugin'}`
       );
 
       // Import the default character with all its plugins
@@ -541,23 +541,23 @@ const gymAgents = async (options: {
       const pluginsToLoad = [pluginModule];
 
       logger.debug(
-        `Using default character with plugins: ${defaultElizaCharacter.plugins.join(', ')}`
+        `Using default character with plugins for training: ${defaultElizaCharacter.plugins.join(', ')}`
       );
       logger.info(
         "Plugin test mode: Using default character's plugins plus the plugin being tested"
       );
 
-      // gym the agent with the default character and our test plugin
+      // train the agent with the default character and our test plugin
       // We're in plugin test mode, so we should skip auto-loading embedding models
-      await gymAgent(defaultElizaCharacter, server, undefined, pluginsToLoad, {
+      await trainAgent(defaultElizaCharacter, server, undefined, pluginsToLoad, {
         isPluginTestMode: true,
       });
-      logger.info('Character gymed with plugin successfully');
+      logger.info('Character trained with plugin successfully');
     } else {
       // When not in a project or plugin, load the default character with all plugins
       const { character: defaultElizaCharacter } = await import('../characters/eliza');
-      logger.info('Using default Eliza character with all plugins');
-      await gymAgent(defaultElizaCharacter, server);
+      logger.info('Using default Eliza character with all plugins for training');
+      await trainAgent(defaultElizaCharacter, server);
     }
 
     // Display link to the client UI
@@ -571,13 +571,14 @@ const gymAgents = async (options: {
   }
 };
 // Create command that can be imported directly
-export const gym = new Command()
-  .name('gym')
-  .description('gym the Eliza agent with configurable plugins and services')
-  .option('-p, --port <port>', 'Port to listen on', (val) => Number.parseInt(val))
+export const train = new Command()
+  .name('train')
+  .description('train the Eliza agent with configurable plugins and services')
+  .option('-t, --trainer <trainer>', 'Trainer to use')
+  .option('-p, --plugins <program>', 'Program to run')
   .option('-c, --configure', 'Reconfigure services and AI models (skips using saved configuration)')
   .option('--character <character>', 'Path or URL to character file to use instead of default')
-  .option('--build', 'Build the project before gyming')
+  .option('--build', 'Build the project before training')
   .action(async (options) => {
     displayBanner();
 
@@ -603,13 +604,13 @@ export const gym = new Command()
               options.characters.push(characterData);
             }
           }
-          await gymAgents(options);
+          await trainAgents(options);
         } catch (error) {
           logger.error(`Failed to load character: ${error}`);
           process.exit(1);
         }
       } else {
-        await gymAgents(options);
+        await trainAgents(options);
       }
     } catch (error) {
       handleError(error);
@@ -618,5 +619,5 @@ export const gym = new Command()
 
 // This is the function that registers the command with the CLI
 export default function registerCommand(cli: Command) {
-  return cli.addCommand(gym);
+  return cli.addCommand(train);
 }
