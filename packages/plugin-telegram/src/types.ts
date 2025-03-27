@@ -1,4 +1,4 @@
-import type { EntityPayload, MessagePayload, WorldPayload } from '@elizaos/core';
+import type { EntityPayload, MessagePayload, UUID, WorldPayload } from '@elizaos/core';
 import type { Chat, Message, ReactionType } from '@telegraf/types';
 import type { Context } from 'telegraf';
 
@@ -87,4 +87,27 @@ export interface TelegramEventPayloadMap {
   [TelegramEventTypes.ENTITY_LEFT]: TelegramEntityPayload;
   [TelegramEventTypes.ENTITY_UPDATED]: TelegramEntityPayload;
   [TelegramEventTypes.INTERACTION_RECEIVED]: TelegramReactionReceivedPayload;
+}
+
+export interface TopicMetadata {
+  topicId: string;
+  isGeneral: boolean;
+  isTopic: boolean;
+  isForumTopic: boolean;
+  createdAt: number;
+  iconColor?: number;
+  iconCustomEmojiId?: string;
+  isPinned?: boolean;
+  isHidden?: boolean;
+  forumTopicCreated?: any;
+}
+
+/**
+ * Simple interface for cached chat data - lightweight version with only IDs
+ */
+export interface CachedChatData {
+  isAuthorized: boolean;
+  worldId?: UUID;
+  roomId?: UUID;
+  entityId?: UUID;
 }

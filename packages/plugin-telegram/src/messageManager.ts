@@ -19,13 +19,7 @@ import {
   type TelegramMessageSentPayload,
   type TelegramReactionReceivedPayload,
 } from './types';
-import {
-  escapeMarkdown,
-  generateReactionId,
-  generateRoomId,
-  generateWorldId,
-  transformTelegramId,
-} from './utils';
+import { escapeMarkdown, generateReactionId, generateRoomId, transformTelegramId } from './utils';
 
 import fs from 'node:fs';
 
@@ -561,63 +555,6 @@ export class MessageManager {
     } catch (error) {
       logger.error('Error sending message to Telegram:', error);
       return [];
-    }
-  }
-
-  /**
-   * Initiates an onboarding conversation with a Telegram user
-   * @param {number | string} telegramUserId - The Telegram user ID to start onboarding with
-   * @param {UUID} worldId - The ID of the world the user is connected to
-   * @param {string} serverId - The server ID associated with the world
-   * @returns {Promise<void>}
-   */
-  public async startOnboardingDM(
-    telegramUserId: number | string,
-    worldId: UUID,
-    serverId: string
-  ): Promise<void> {
-    try {
-      logger.info(`Starting onboarding DM with Telegram user ${telegramUserId}`);
-
-      // Generate random onboarding message
-      const onboardingMessages = [
-        'Hi! I need to collect some information to get set up for your forum. Is now a good time?',
-        'Hey there! I need to configure a few things for your forum. Do you have a moment?',
-        'Hello! Could we take a few minutes to set up everything for your forum?',
-      ];
-      const randomMessage =
-        onboardingMessages[Math.floor(Math.random() * onboardingMessages.length)];
-
-      // Create a DM room
-      const dmRoomId = createUniqueUuid(this.runtime, `private_${telegramUserId}`);
-
-      // Ensure the room exists in the runtime
-      await this.runtime.ensureRoomExists({
-        id: dmRoomId,
-        name: `Chat with Telegram User ${telegramUserId}`,
-        source: 'telegram',
-        type: ChannelType.DM,
-        channelId: telegramUserId.toString(),
-        serverId: serverId,
-        worldId: worldId,
-        metadata: {
-          isOnboarding: true,
-        },
-      });
-
-      // Send the initial message
-      await this.sendMessage(telegramUserId, {
-        text: randomMessage,
-        actions: ['BEGIN_ONBOARDING'],
-        source: 'telegram',
-        channelType: ChannelType.DM,
-      });
-
-      logger.info(
-        `Started onboarding DM with Telegram user ${telegramUserId} for world ${worldId}`
-      );
-    } catch (error) {
-      logger.error(`Error starting onboarding DM with Telegram user: ${error}`);
     }
   }
 }

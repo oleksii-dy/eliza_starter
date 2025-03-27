@@ -27,27 +27,7 @@ import {
   transformTelegramId,
   isGeneralTopic,
 } from './utils';
-import { TelegramEventTypes } from './types';
-
-/**
- * Simple interface for cached chat data - lightweight version with only IDs
- */
-interface CachedChatData {
-  isAuthorized: boolean;
-  worldId?: UUID;
-  roomId?: UUID;
-  entityId?: UUID;
-}
-
-interface TopicMetadata {
-  topicId: string;
-  isGeneral: boolean;
-  isTopic: boolean;
-  isForumTopic: boolean;
-  createdAt: number;
-  iconColor?: number;
-  iconCustomEmojiId?: string;
-}
+import { TelegramEventTypes, TopicMetadata, CachedChatData } from './types';
 
 /**
  * Class representing a Telegram service that allows the agent to send and receive messages on Telegram.
@@ -107,9 +87,6 @@ export class TelegramService extends Service {
         logger.log('🚀 Starting Telegram bot...');
         await service.initializeBot();
         service.setupMessageHandlers();
-
-        // Register onboarding handlers
-        service.registerOnboardingHandlers();
 
         // Wait for bot to be ready by testing getMe()
         await service.bot.telegram.getMe();
@@ -173,55 +150,6 @@ export class TelegramService extends Service {
     // Handle sigint and sigterm signals to gracefully stop the bot
     process.once('SIGINT', () => this.bot.stop('SIGINT'));
     process.once('SIGTERM', () => this.bot.stop('SIGTERM'));
-  }
-
-  /**
-   * Registers event handlers for Telegram onboarding processes.
-   * This method listens for TELEGRAM_WORLD_JOINED events and
-   * initiates the onboarding process for new forum owners.
-   *
-   * @returns {void}
-   */
-  public registerOnboardingHandlers(): void {
-    // Register handler for TELEGRAM_WORLD_JOINED events
-    this.runtime.registerEvent(TelegramEventTypes.WORLD_JOINED, async (payload) => {
-      try {
-        logger.info('Received TELEGRAM_WORLD_JOINED event, checking if onboarding is needed');
-
-        // Only handle forum-centric worlds
-        const world = payload.world;
-        if (!world?.metadata?.isForum) {
-          logger.debug('Not a forum world, skipping onboarding');
-          return;
-        }
-
-        logger.info('Forum world joined, preparing for onboarding');
-
-        // Get the owner ID from world metadata
-        if (!world?.metadata?.ownership?.ownerId) {
-          logger.warn('No owner ID found in world metadata, cannot start onboarding');
-          return;
-        }
-
-        const ownerId = world.metadata.ownership.ownerId as UUID;
-
-        // Get the owner entity to check for telegram ID
-        const ownerEntity = await this.runtime.getEntityById(ownerId);
-        if (!ownerEntity || !ownerEntity.metadata?.telegram?.userId) {
-          logger.warn('Owner entity not found or missing Telegram user ID');
-          return;
-        }
-
-        const telegramUserId = ownerEntity.metadata.telegram.userId.toString();
-
-        // Start the onboarding DM
-        await this.messageManager.startOnboardingDM(telegramUserId, world.id, world.serverId);
-
-        logger.info(`Started onboarding for Telegram forum owner ${telegramUserId}`);
-      } catch (error) {
-        logger.error('Error handling Telegram world joined event for onboarding:', error);
-      }
-    });
   }
 
   /**
@@ -686,6 +614,123 @@ export class TelegramService extends Service {
   }
 
   /**
+   * Build standardized entities for a Telegram chat
+   * @param {Context} ctx - The context of the incoming update
+   * @param {Entity} currentEntity - The current user entity who triggered this event
+   * @returns {Promise<{entities: Entity[], ownerEntityId: UUID}>} - List of entities and the owner entity ID
+   */
+  private async buildStandardizedEntities(
+    ctx: Context,
+    currentEntity: Entity
+  ): Promise<{ entities: Entity[]; ownerEntityId: UUID }> {
+    const chat = ctx.chat;
+    const currentUserId = ctx.from?.id.toString();
+    const currentEntityId = currentEntity.id;
+
+    // Start with the current user entity
+    const entities: Entity[] = [currentEntity];
+    let ownerEntityId = currentEntityId; // Default to current user
+
+    try {
+      if (chat.type === 'group' || chat.type === 'supergroup') {
+        // Get chat administrators
+        const admins = await this.bot.telegram.getChatAdministrators(chat.id);
+
+        if (admins && admins.length > 0) {
+          // First pass: find the owner
+          for (const admin of admins) {
+            if (admin.status === 'creator') {
+              const adminIdStr = transformTelegramId(admin.user.id.toString(), 'user');
+              const adminId = createUniqueUuid(this.runtime, adminIdStr) as UUID;
+
+              // If this is the current user, update their role instead of creating duplicate
+              if (admin.user.id.toString() === currentUserId) {
+                ownerEntityId = currentEntityId;
+                // Update current entity metadata to reflect ownership
+                currentEntity.metadata = {
+                  ...currentEntity.metadata,
+                  telegram: {
+                    ...currentEntity.metadata?.telegram,
+                    isAdmin: true,
+                    adminTitle: 'Owner',
+                  },
+                  roles: [Role.OWNER],
+                };
+              } else {
+                ownerEntityId = adminId;
+
+                // Create entity for the owner
+                entities.push({
+                  id: adminId,
+                  names: [admin.user.first_name || admin.user.username || 'Unknown Owner'],
+                  agentId: this.runtime.agentId,
+                  metadata: {
+                    telegram: {
+                      id: admin.user.id.toString(),
+                      username: admin.user.username || 'unknown',
+                      name: admin.user.first_name || 'Unknown Owner',
+                      isAdmin: true,
+                      adminTitle: 'Owner',
+                    },
+                    source: 'telegram',
+                    roles: [Role.OWNER],
+                  },
+                });
+              }
+              break; // Found the owner, exit the loop
+            }
+          }
+
+          // Second pass: add other admins
+          for (const admin of admins) {
+            // Skip the owner (already added) and current user (already in entities list)
+            if (admin.status === 'creator' || admin.user.id.toString() === currentUserId) continue;
+
+            const adminIdStr = transformTelegramId(admin.user.id.toString(), 'user');
+            const adminId = createUniqueUuid(this.runtime, adminIdStr) as UUID;
+
+            entities.push({
+              id: adminId,
+              names: [admin.user.first_name || admin.user.username || 'Unknown Admin'],
+              agentId: this.runtime.agentId,
+              metadata: {
+                telegram: {
+                  id: admin.user.id.toString(),
+                  username: admin.user.username || 'unknown',
+                  name: admin.user.first_name || 'Unknown Admin',
+                  isAdmin: true,
+                  adminTitle: admin.custom_title || 'Admin',
+                },
+                source: 'telegram',
+                roles: [Role.ADMIN],
+              },
+            });
+          }
+
+          // If current user isn't an admin, make sure they have the right role
+          if (!admins.some((admin) => admin.user.id.toString() === currentUserId)) {
+            currentEntity.metadata = {
+              ...currentEntity.metadata,
+              roles: [Role.NONE],
+            };
+          }
+        }
+      } else if (chat.type === 'private') {
+        // In private chats, the user is always the owner
+        ownerEntityId = currentEntityId;
+        currentEntity.metadata = {
+          ...currentEntity.metadata,
+          roles: [Role.OWNER],
+        };
+      }
+    } catch (error) {
+      logger.warn(`Could not build standardized entities for chat ${chat.id}: ${error}`);
+    }
+
+    return { entities, ownerEntityId };
+  }
+
+  /**
    * Prepare a forum-centric world and room
    * @param {Context} ctx - The context of the incoming update
    * @param {Entity} entity - The user entity
@@ -703,14 +748,24 @@ export class TelegramService extends Service {
       const forumWorldIdStr = generateForumWorldId(chatId);
       const worldId = createUniqueUuid(this.runtime, forumWorldIdStr) as UUID;
 
-      // Create roles map with current user as OWNER initially
-      const worldRoles = { [entityId]: Role.OWNER };
+      // Get standardized entities and find owner
+      const { entities: standardizedEntities, ownerEntityId } =
+        await this.buildStandardizedEntities(ctx, entity);
 
-      // Add roles for all admins
-      const otherEntities = await this.getGroupEntities(ctx);
-      for (const otherEntity of otherEntities) {
-        if (otherEntity.metadata?.telegram?.isAdmin) {
-          worldRoles[otherEntity.id] = Role.ADMIN;
+      // Create roles map with correct owner
+      const worldRoles = {};
+
+      // Set the found owner
+      worldRoles[ownerEntityId] = Role.OWNER;
+
+      // Add roles for all other entities
+      for (const e of standardizedEntities) {
+        if (e.id !== ownerEntityId) {
+          if (e.metadata?.telegram?.isAdmin) {
+            worldRoles[e.id] = Role.ADMIN;
+          } else {
+            worldRoles[e.id] = Role.NONE;
+          }
         }
       }
 
@@ -723,7 +778,7 @@ export class TelegramService extends Service {
         metadata: {
           source: 'telegram',
           isForum: true,
-          ownership: { ownerId: entityId },
+          ownership: { ownerId: ownerEntityId },
           roles: worldRoles,
         },
       };
@@ -733,10 +788,6 @@ export class TelegramService extends Service {
 
       // Build standardized data structure similar to Discord
       const standardizedRooms = await this.buildStandardizedForumRooms(ctx.chat, worldId);
-      const standardizedEntities = [entity, ...otherEntities];
-
-      console.log('standardizedRooms', standardizedRooms);
-      console.log('standardizedEntities', standardizedEntities);
 
       // Prepare the complete standardized data structure
       const standardizedData = {
@@ -745,14 +796,22 @@ export class TelegramService extends Service {
         rooms: standardizedRooms,
         entities: standardizedEntities,
         source: 'telegram',
-        entityId: entityId, // Add the entity ID of the forum owner/creator
+        entityId: ownerEntityId, // Set the actual owner entity ID here
       };
 
       // Emit world joined event with complete structure
       await this.runtime.emitEvent(EventType.WORLD_JOINED, standardizedData);
 
-      // Emit start onboarding event for tg;
-      await this.runtime.emitEvent(TelegramEventTypes.WORLD_JOINED, standardizedData);
+      const ownerEntity = standardizedEntities.find((e) => e.metadata?.roles?.includes(Role.OWNER));
+
+      await this.runtime.emitEvent('TELEGRAM_SERVER_CONNECTED', {
+        serverId: chatId,
+        serverName: `${this.getChatTitle(ctx.chat)} World`,
+        chatType: 'supergroup',
+        worldId: worldId,
+        ownerId: ownerEntity?.metadata?.telegram?.id || '',
+        ownerUsername: ownerEntity?.metadata?.telegram?.username || '',
+      });
 
       return { success: true, worldId, roomId };
     } catch (error) {
@@ -998,11 +1057,12 @@ export class TelegramService extends Service {
         await this.createGroupChatWorld(ctx, entity);
       }
 
-      // Get other entities in the chat
-      const otherEntities = await this.getGroupEntities(ctx);
+      // Get standardized entities
+      const { entities: standardizedEntities, ownerEntityId } =
+        await this.buildStandardizedEntities(ctx, entity);
 
       // Emit world joined event
-      await this.emitWorldJoinedEvent(world, room, entity, otherEntities);
+      await this.emitWorldJoinedEvent(world, room, entity, standardizedEntities);
 
       return { success: true, worldId, roomId };
     } catch (error) {
@@ -1027,14 +1087,26 @@ export class TelegramService extends Service {
     const groupWorldIdStr = generateWorldId(chatId);
     const groupWorldId = createUniqueUuid(this.runtime, groupWorldIdStr) as UUID;
 
-    // Create roles map with current user as OWNER initially
-    const worldRoles = { [entityId]: Role.OWNER };
+    // Get standardized entities and find owner
+    const { entities: standardizedEntities, ownerEntityId } = await this.buildStandardizedEntities(
+      ctx,
+      entity
+    );
 
-    // Add roles for all admins
-    const otherEntities = await this.getGroupEntities(ctx);
-    for (const otherEntity of otherEntities) {
-      if (otherEntity.metadata?.telegram?.isAdmin) {
-        worldRoles[otherEntity.id] = Role.ADMIN;
+    // Create roles map with correct owner
+    const worldRoles = {};
+
+    // Set the found owner
+    worldRoles[ownerEntityId] = Role.OWNER;
+
+    // Add roles for all other entities
+    for (const e of standardizedEntities) {
+      if (e.id !== ownerEntityId) {
+        if (e.metadata?.telegram?.isAdmin) {
+          worldRoles[e.id] = Role.ADMIN;
+        } else {
+          worldRoles[e.id] = Role.NONE;
+        }
       }
     }
 
@@ -1046,7 +1118,7 @@ export class TelegramService extends Service {
       serverId: chatId,
       metadata: {
         source: 'telegram',
-        ownership: { ownerId: entityId },
+        ownership: { ownerId: ownerEntityId },
         roles: worldRoles,
       },
     };
@@ -1057,12 +1129,11 @@ export class TelegramService extends Service {
     const room = await this.ensureUserRoom(ctx, groupWorldId);
 
     // Emit a separate WORLD_JOINED event for the group world
-    const groupEntities = await this.getGroupEntities(ctx);
     const groupWorldPayload = {
       runtime: this.runtime,
       world: groupWorld,
       rooms: [room], // Use the same room for now
-      entities: [entity, ...groupEntities],
+      entities: standardizedEntities,
       source: 'telegram',
     };
 
@@ -1090,7 +1161,7 @@ export class TelegramService extends Service {
       runtime: this.runtime,
       world: world,
       rooms: [room],
-      entities: [entity, ...otherEntities],
+      entities: otherEntities,
       source: 'telegram',
     };
 

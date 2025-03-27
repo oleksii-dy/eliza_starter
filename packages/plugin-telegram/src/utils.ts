@@ -1,3 +1,4 @@
+import type { TopicMetadata } from './types';
 /**
  * Escapes Markdown special characters in the given text, excluding code blocks.
  * @param {string} text - The text to escape Markdown characters from.
@@ -78,19 +79,6 @@ export function transformTelegramId(id: string, type: string): string {
  */
 export function generateRoomId(chatId: string | number): string {
   return `room-${chatId}`;
-}
-
-// Keep the old function as a separate function for backward compatibility if needed
-/**
- * Generates a user-specific room ID based on user ID and chat ID.
- * This was used in previous implementation and is kept for backward compatibility.
- *
- * @param {string | number} userId - The Telegram user ID
- * @param {string | number} chatId - The Telegram chat ID
- * @returns {string} A prefixed ID string suitable for UUID generation
- */
-export function generateUserRoomId(userId: string | number, chatId: string | number): string {
-  return `user-room-${userId}-${chatId}`;
 }
 
 /**
@@ -194,19 +182,6 @@ export function generateTopicName(topic: any): string {
   return emoji ? `${emoji} ${name}` : name;
 }
 
-interface TopicMetadata {
-  topicId: string;
-  isGeneral: boolean;
-  isTopic: boolean;
-  isForumTopic: boolean;
-  createdAt: number;
-  iconColor?: number;
-  iconCustomEmojiId?: string;
-  isPinned?: boolean;
-  isHidden?: boolean;
-  forumTopicCreated?: any;
-}
-
 /**
  * Extracts room metadata for a forum topic.
  *
@@ -226,14 +201,4 @@ export function extractTopicMetadata(topic: any): TopicMetadata {
     createdAt: topic.created_at || Date.now(),
     forumTopicCreated: topic.forum_topic_created || null,
   };
-}
-
-/**
- * Find a world ID based on a chat ID
- * @param chatId The Telegram chat ID
- * @returns A string that can be used to find the world
- */
-export function findWorldByChatId(chatId: string): string {
-  // For group chats, use the chat ID directly as the world identifier
-  return `world-${chatId}`;
 }
