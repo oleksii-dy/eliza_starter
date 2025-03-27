@@ -12,6 +12,7 @@
     "build": "turbo run build --filter=@elizaos/client && turbo run build --filter=!@elizaos/docs",
     "clean": "turbo run clean --filter=./packages/* && rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo bun.lock*",
     "build:cli": "turbo run build --filter=@elizaos/cli --no-cache",
+    "build:twitter": "turbo run build --filter=@elizaos/plugin-twitter --no-cache",
     "build:core": "turbo run build --filter=@elizaos/core --no-cache",
     "lint": "turbo run lint --filter=./packages/* && prettier --write . && prettier --check .",
     "pre-commit": "bun run scripts/pre-commit-lint.js",

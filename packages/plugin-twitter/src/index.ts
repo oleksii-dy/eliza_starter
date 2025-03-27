@@ -310,7 +310,7 @@ export class TwitterService extends Service {
 
 const twitterPlugin: Plugin = {
   name: TWITTER_SERVICE_NAME,
-  description: 'Twitter client with per-server instance management',
+  description: 'Twitter client with per-server instance management in v2',
   services: [TwitterService],
   actions: [spaceJoin],
   tests: [new TwitterTestSuite()],

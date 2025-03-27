@@ -33,9 +33,9 @@ export function searchTweets(
   searchMode: SearchMode,
   auth: TwitterAuth
 ): AsyncGenerator<Tweet, void> {
-  return getTweetTimeline(query, maxTweets, (q, mt, c) => {
-    return fetchSearchTweets(q, mt, searchMode, auth, c);
-  });
+  //  return getTweetTimeline(query, maxTweets, (q, mt, c) => {
+  //    return fetchSearchTweets(q, mt, searchMode, auth, c);
+  //  });
 }
 
 export function searchProfiles(
@@ -55,9 +55,8 @@ export async function fetchSearchTweets(
   auth: TwitterAuth,
   cursor?: string
 ): Promise<QueryTweetsResponse> {
-  const timeline = await getSearchTimeline(query, maxTweets, searchMode, auth, cursor);
-
-  return parseSearchTimelineTweets(timeline);
+  //const timeline = await getSearchTimeline(query, maxTweets, searchMode, auth, cursor);
+  //  return parseSearchTimelineTweets(timeline);
 }
 
 export async function fetchSearchProfiles(

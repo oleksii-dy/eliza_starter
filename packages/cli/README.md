@@ -206,3 +206,7 @@ elizaos tee phala <command> --help
 
 notes
 bun run ./dist/index.js start --character ./src/characters/eliza.ts
+
+CLI
+
+`tsx ./src/index.ts  train`

@@ -59,6 +59,8 @@ export async function promptForProjectPlugins(
         for (const plugin of agent.plugins) {
           const pluginName = typeof plugin === 'string' ? plugin : plugin.name;
 
+          logger.debug('Checking if plugin is installed: ', pluginName);
+
           if (pluginName) {
             // Extract just the plugin name from the package name if needed
             const simpleName = pluginName.split('/').pop()?.replace('plugin-', '') || pluginName;
@@ -131,7 +133,7 @@ export async function trainAgent(
     try {
       // For local plugins, use regular import
       pluginModule = await import(plugin);
-      logger.debug(`Successfully loaded plugin ${plugin}`);
+      logger.debug(`Successfully loaded plugin ${plugin}`, pluginModule);
     } catch (error) {
       logger.info(`Plugin ${plugin} not installed, installing into ${process.cwd()}...`);
       await installPlugin(plugin, process.cwd(), version);
@@ -444,7 +446,7 @@ const trainAgents = async (options: {
     );
   }
 
-  await server.initialize();
+  //  await server.initialize();
 
   server.train();
 

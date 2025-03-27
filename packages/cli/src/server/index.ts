@@ -144,8 +144,8 @@ export class AgentServer {
       // Setup middleware for all requests
       logger.debug('Setting up standard middlewares...');
       this.app.use(cors());
-      this.app.use(bodyParser.json());
-      this.app.use(bodyParser.urlencoded({ extended: true }));
+      //      this.app.use(bodyParser.json());
+      //      this.app.use(bodyParser.urlencoded({ extended: true }));
       this.app.use(
         express.json({
           limit: process.env.EXPRESS_MAX_PAYLOAD || '100kb',
