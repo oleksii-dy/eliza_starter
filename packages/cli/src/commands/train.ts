@@ -247,6 +247,17 @@ export async function trainAgent(
   // report to console
   logger.debug(`trained ${runtime.character.name} as ${runtime.agentId}`);
 
+  let message = {};
+  let state = {};
+
+  await runtime.evaluate(
+    message,
+    state,
+    true, // Post generation is always a "responding" scenario
+    callback,
+    responseMessages
+  );
+
   return runtime;
 }
 
