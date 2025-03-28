@@ -97,17 +97,16 @@ export class TwitterInteractionClient {
    * Uses an interval based on the 'TWITTER_POLL_INTERVAL' setting, or defaults to 2 minutes if not set.
    */
   async start() {
-    const handleTwitterInteractionsLoop = () => {
-      // Defaults to 2 minutes
-      const interactionInterval =
-        (this.state?.TWITTER_POLL_INTERVAL ||
-          (this.runtime.getSetting('TWITTER_POLL_INTERVAL') as unknown as number) ||
-          120) * 1000;
-
-      this.handleTwitterInteractions();
-      setTimeout(handleTwitterInteractionsLoop, interactionInterval);
-    };
-    handleTwitterInteractionsLoop();
+    // const handleTwitterInteractionsLoop = () => {
+    //   // Defaults to 2 minutes
+    //   const interactionInterval =
+    //     (this.state?.TWITTER_POLL_INTERVAL ||
+    //       (this.runtime.getSetting('TWITTER_POLL_INTERVAL') as unknown as number) ||
+    //       120) * 1000;
+    //   this.handleTwitterInteractions();
+    //   setTimeout(handleTwitterInteractionsLoop, interactionInterval);
+    // };
+    // handleTwitterInteractionsLoop();
   }
 
   /**

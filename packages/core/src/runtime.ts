@@ -396,7 +396,7 @@ export class AgentRuntime implements IAgentRuntime {
 
     // Register plugin services
     if (plugin.services) {
-      await Promise.all(plugin.services.map((service) => this.registerService(service)));
+      //await Promise.all(plugin.services.map((service) => this.registerService(service)));
     }
   }
 
