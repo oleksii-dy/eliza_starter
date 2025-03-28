@@ -295,7 +295,7 @@ export const models: Models = {
                 name: "togethercomputer/m2-bert-80M-32k-retrieval",
             },
             [ModelClass.IMAGE]: {
-                name: "black-forest-labs/FLUX.1-schnell",
+                name: settings.TOGETHER_IMAGE_MODEL || "black-forest-labs/FLUX.1-schnell",
                 steps: 4,
             },
         },

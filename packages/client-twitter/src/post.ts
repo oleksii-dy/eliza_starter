@@ -583,7 +583,7 @@ export class TwitterPostClient {
             const response = await generateText({
                 runtime: this.runtime,
                 context,
-                modelClass: ModelClass.SMALL,
+                modelClass: ModelClass.LARGE,
             });
 
             const rawTweetContent = cleanJsonResponse(response);
@@ -709,7 +709,7 @@ export class TwitterPostClient {
         const response = await generateText({
             runtime: this.runtime,
             context: options?.context || context,
-            modelClass: ModelClass.SMALL,
+            modelClass: ModelClass.LARGE,
         });
 
         elizaLogger.log("generate tweet content response:\n" + response);

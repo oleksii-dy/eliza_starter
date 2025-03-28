@@ -18,7 +18,7 @@ import {
 } from "agent-twitter-client";
 import { EventEmitter } from "events";
 import type { TwitterConfig } from "./environment.ts";
-import { Agent, fetch, ProxyAgent, setGlobalDispatcher } from "undici";
+import { Agent, fetch as undiciFetch, ProxyAgent, setGlobalDispatcher } from "undici";
 
 export function extractAnswer(text: string): string {
     const startIndex = text.indexOf("Answer: ") + 8;
@@ -120,7 +120,6 @@ function doLogin(username, cb, proxyUrl?: string, localAddress?: string) {
                     `${username}:${password}`
                 ).toString("base64")}`;
             }
-
             proxyAgent = new ProxyAgent(agentOptions);
         }
         if (localAddress) {
@@ -131,10 +130,10 @@ function doLogin(username, cb, proxyUrl?: string, localAddress?: string) {
         }
         try {
             const twitterClient = new Scraper({
-                fetch: fetch,
+                fetch: undiciFetch,
                 transform: {
                     request: (input: any, init: any) => {
-                        if (agent) {
+                        if (proxyAgent || agent) {
                             return [
                                 input,
                                 { ...init, dispatcher: proxyAgent ?? agent },
@@ -606,6 +605,7 @@ export class ClientBase extends EventEmitter {
                             "twitter"
                         );
                     } else {
+                        // ensure connection to this agent runtime in this room
                         await this.runtime.ensureConnection(
                             userId,
                             roomId,
@@ -642,6 +642,12 @@ export class ClientBase extends EventEmitter {
                         );
                         break;
                     }
+                    // handled by ensureConnection
+                    //await this.runtime.ensureRoomExists(roomId)
+                    // shouldn't need this
+                    //await this.runtime.ensureUserExists(userId, tweet.username)
+                    // postgres needs the user to exist before you can add a participant
+                    //await this.ensureParticipantExists(this.runtime.agentId, this.runtime.agentId);
 
                     await this.runtime.messageManager.createMemory({
                         id: stringToUuid(tweet.id + "-" + this.runtime.agentId),

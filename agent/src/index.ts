@@ -1,4 +1,36 @@
+<<<<<<< HEAD
 import { DirectClient } from "@elizaos/client-direct";
+=======
+//import { PGLiteDatabaseAdapter } from "@elizaos/adapter-pglite";
+import { PostgresDatabaseAdapter } from "@elizaos/adapter-postgres";
+//import { QdrantDatabaseAdapter } from "@elizaos/adapter-qdrant";
+//import { RedisClient } from "@elizaos/adapter-redis";
+//import { SqliteDatabaseAdapter } from "@elizaos/adapter-sqlite";
+//import { SupabaseDatabaseAdapter } from "@elizaos/adapter-supabase";
+import { AutoClientInterface } from "@elizaos/client-auto";
+import { DiscordClientInterface } from "@elizaos/client-discord";
+import { InstagramClientInterface } from "@elizaos/client-instagram";
+import { LensAgentClient } from "@elizaos/client-lens";
+import { SlackClientInterface } from "@elizaos/client-slack";
+import { TelegramClientInterface } from "@elizaos/client-telegram";
+import { TelegramAccountClientInterface } from "@elizaos/client-telegram-account";
+import { TwitterClientInterface } from "@elizaos/client-twitter";
+import { AlexaClientInterface } from "@elizaos/client-alexa";
+//import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb";
+import { DevaClientInterface } from "@elizaos/client-deva";
+
+import { FarcasterClientInterface } from "@elizaos/client-farcaster";
+//import { OmniflixPlugin } from "@elizaos/plugin-omniflix";
+//import { JeeterClientInterface } from "@elizaos/client-simsai";
+import { XmtpClientInterface } from "@elizaos/client-xmtp";
+import { DirectClient } from "@elizaos/client-direct";
+//import { agentKitPlugin } from "@elizaos/plugin-agentkit";
+//import { gelatoPlugin } from "@elizaos/plugin-gelato";
+//import { PrimusAdapter } from "@elizaos/plugin-primus";
+//import { lightningPlugin } from "@elizaos/plugin-lightning";
+//import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
+//import { dcapPlugin } from "@elizaos/plugin-dcap";
+>>>>>>> 4d3de8fc495b19ca272f3c70a5e0aa70e22dcee4
 import {
     type Adapter,
     AgentRuntime,
@@ -20,17 +52,140 @@ import {
     validateCharacterConfig,
     parseBooleanFromText,
 } from "@elizaos/core";
+<<<<<<< HEAD
 import { defaultCharacter } from "./defaultCharacter.ts";
 
 import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
 import JSON5 from 'json5';
 
+=======
+//import { zgPlugin } from "@elizaos/plugin-0g";
+//import { footballPlugin } from "@elizaos/plugin-football";
+
+import { bootstrapPlugin } from "@elizaos/plugin-bootstrap";
+import { normalizeCharacter } from "@elizaos/plugin-di";
+//import createGoatPlugin from "@elizaos/plugin-goat";
+//import createZilliqaPlugin from "@elizaos/plugin-zilliqa";
+
+// import { intifacePlugin } from "@elizaos/plugin-intiface";
+//import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
+//import { abstractPlugin } from "@elizaos/plugin-abstract";
+//import { akashPlugin } from "@elizaos/plugin-akash";
+//import { alloraPlugin } from "@elizaos/plugin-allora";
+//import { aptosPlugin } from "@elizaos/plugin-aptos";
+//import { artheraPlugin } from "@elizaos/plugin-arthera";
+//import { autonomePlugin } from "@elizaos/plugin-autonome";
+//import { availPlugin } from "@elizaos/plugin-avail";
+//import { avalanchePlugin } from "@elizaos/plugin-avalanche";
+//import { b2Plugin } from "@elizaos/plugin-b2";
+//import { binancePlugin } from "@elizaos/plugin-binance";
+//import { birdeyePlugin } from "@elizaos/plugin-birdeye";
+//import { bittensorPlugin } from "@elizaos/plugin-bittensor";
+//import { bnbPlugin } from "@elizaos/plugin-bnb";
+/*
+import {
+    advancedTradePlugin,
+    coinbaseCommercePlugin,
+    coinbaseMassPaymentsPlugin,
+    tokenContractPlugin,
+    tradePlugin,
+    webhookPlugin,
+} from "@elizaos/plugin-coinbase";
+import { coingeckoPlugin } from "@elizaos/plugin-coingecko";
+import { coinmarketcapPlugin } from "@elizaos/plugin-coinmarketcap";
+import { confluxPlugin } from "@elizaos/plugin-conflux";
+import { createCosmosPlugin } from "@elizaos/plugin-cosmos";
+import { cronosZkEVMPlugin } from "@elizaos/plugin-cronoszkevm";
+import { deskExchangePlugin } from "@elizaos/plugin-desk-exchange";
+import { evmPlugin } from "@elizaos/plugin-evm";
+import { edwinPlugin } from "@elizaos/plugin-edwin";
+import { flowPlugin } from "@elizaos/plugin-flow";
+import { fuelPlugin } from "@elizaos/plugin-fuel";
+import { genLayerPlugin } from "@elizaos/plugin-genlayer";
+import { gitcoinPassportPlugin } from "@elizaos/plugin-gitcoin-passport";
+import { initiaPlugin } from "@elizaos/plugin-initia";
+*/
+import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
+import { videoGenerationPlugin } from "@elizaos/plugin-video-generation";
+import { createNodePlugin } from "@elizaos/plugin-node";
+/*
+import { lensPlugin } from "@elizaos/plugin-lens-network";
+import { litPlugin } from "@elizaos/plugin-lit";
+import { mindNetworkPlugin } from "@elizaos/plugin-mind-network";
+import { multiversxPlugin } from "@elizaos/plugin-multiversx";
+import { nearPlugin } from "@elizaos/plugin-near";
+import createNFTCollectionsPlugin from "@elizaos/plugin-nft-collections";
+import { nftGenerationPlugin } from "@elizaos/plugin-nft-generation";
+import { obsidianPlugin } from "@elizaos/plugin-obsidian";
+import { OpacityAdapter } from "@elizaos/plugin-opacity";
+import { openWeatherPlugin } from "@elizaos/plugin-open-weather";
+import { quaiPlugin } from "@elizaos/plugin-quai";
+import { sgxPlugin } from "@elizaos/plugin-sgx";
+import { solanaPlugin } from "@elizaos/plugin-solana";
+import { solanaPluginV2 } from "@elizaos/plugin-solana-v2";
+import { solanaAgentkitPlugin } from "@elizaos/plugin-solana-agent-kit";
+import { squidRouterPlugin } from "@elizaos/plugin-squid-router";
+import { stargazePlugin } from "@elizaos/plugin-stargaze";
+import { storyPlugin } from "@elizaos/plugin-story";
+import { suiPlugin } from "@elizaos/plugin-sui";
+import { TEEMode, teePlugin } from "@elizaos/plugin-tee";
+import { teeLogPlugin } from "@elizaos/plugin-tee-log";
+import { teeMarlinPlugin } from "@elizaos/plugin-tee-marlin";
+import { verifiableLogPlugin } from "@elizaos/plugin-tee-verifiable-log";
+import { tonPlugin } from "@elizaos/plugin-ton";
+*/
+import { webSearchPlugin } from "@elizaos/plugin-web-search";
+
+/*
+import { dkgPlugin } from "@elizaos/plugin-dkg";
+import { injectivePlugin } from "@elizaos/plugin-injective";
+import { giphyPlugin } from "@elizaos/plugin-giphy";
+import { letzAIPlugin } from "@elizaos/plugin-letzai";
+import { thirdwebPlugin } from "@elizaos/plugin-thirdweb";
+import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
+import { moralisPlugin } from "@elizaos/plugin-moralis";
+import { echoChambersPlugin } from "@elizaos/plugin-echochambers";
+import { dexScreenerPlugin } from "@elizaos/plugin-dexscreener";
+import { pythDataPlugin } from "@elizaos/plugin-pyth-data";
+import { openaiPlugin } from "@elizaos/plugin-openai";
+import nitroPlugin from "@elizaos/plugin-router-nitro";
+import { devinPlugin } from "@elizaos/plugin-devin";
+import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
+import { chainbasePlugin } from "@elizaos/plugin-chainbase";
+import { holdstationPlugin } from "@elizaos/plugin-holdstation";
+import { nvidiaNimPlugin } from "@elizaos/plugin-nvidia-nim";
+import { zxPlugin } from "@elizaos/plugin-0x";
+import { hyperbolicPlugin } from "@elizaos/plugin-hyperbolic";
+*/
+import Database from "better-sqlite3";
+>>>>>>> 4d3de8fc495b19ca272f3c70a5e0aa70e22dcee4
 import fs from "fs";
 import net from "net";
 import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
+<<<<<<< HEAD
+=======
+//import { dominosPlugin } from "@elizaos/plugin-dominos";
+import { emailPlugin } from "@elizaos/plugin-email";
+import { emailAutomationPlugin } from "@elizaos/plugin-email-automation";
+/*
+import { seiPlugin } from "@elizaos/plugin-sei";
+import { sunoPlugin } from "@elizaos/plugin-suno";
+import { udioPlugin } from "@elizaos/plugin-udio";
+import { imgflipPlugin } from "@elizaos/plugin-imgflip";
+import { ethstoragePlugin } from "@elizaos/plugin-ethstorage";
+import { zerionPlugin } from "@elizaos/plugin-zerion";
+import { minaPlugin } from "@elizaos/plugin-mina";
+import { ankrPlugin } from "@elizaos/plugin-ankr";
+import { formPlugin } from "@elizaos/plugin-form";
+import { MongoClient } from "mongodb";
+import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
+import { trikonPlugin } from "@elizaos/plugin-trikon";
+import arbitragePlugin from "@elizaos/plugin-arbitrage";
+*/
+>>>>>>> 4d3de8fc495b19ca272f3c70a5e0aa70e22dcee4
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -112,6 +267,8 @@ function mergeCharacters(base: Character, child: Character): Character {
 /* function isAllStrings(arr: unknown[]): boolean {
     return Array.isArray(arr) && arr.every((item) => typeof item === "string");
 }
+
+/*
 export async function loadCharacterFromOnchain(): Promise<Character[]> {
     const jsonText = onchainJson;
 
@@ -167,33 +324,104 @@ export async function loadCharacterFromOnchain(): Promise<Character[]> {
         );
         process.exit(1);
     }
+<<<<<<< HEAD
 } */
+=======
+}
+*/
+>>>>>>> 4d3de8fc495b19ca272f3c70a5e0aa70e22dcee4
 
 async function loadCharactersFromUrl(url: string): Promise<Character[]> {
-    try {
-        const response = await fetch(url);
-        const responseJson = await response.json();
+  const response = await fetch(url, {
+    headers: {
+      //pass1: 'knockknock',
+      knockknock: 'whosthere?m33333',
+    }
+  });
+  const responseJson = await response.json();
 
-        let characters: Character[] = [];
-        if (Array.isArray(responseJson)) {
-            characters = await Promise.all(
-                responseJson.map((character) => jsonToCharacter(url, character))
-            );
-        } else {
-            const character = await jsonToCharacter(url, responseJson);
-            characters.push(character);
-        }
-        return characters;
+  let characters: Character[] = [];
+  if (Array.isArray(responseJson)) {
+      console.log('responseJson has', responseJson.length, 'characters')
+      characters = await Promise.all(
+        responseJson.map(async (character) => {
+          try {
+            return await jsonToCharacter(url, character)
+          } catch (e) {
+            elizaLogger.error(`Error loading character(s) from ${url}: ${e}`);
+            //process.exit(1);
+            return false
+          }
+        }).filter(c => !!c)
+      );
+      console.log('characters now has', characters.length, 'characters')
+  } else {
+    try {
+      const character = await jsonToCharacter(url, responseJson);
+      characters.push(character);
     } catch (e) {
+<<<<<<< HEAD
         console.error(`Error loading character(s) from ${url}: `, e);
         process.exit(1);
+=======
+        elizaLogger.error(`Error loading character(s) from ${url}: ${e}`);
+        //process.exit(1);
+>>>>>>> 4d3de8fc495b19ca272f3c70a5e0aa70e22dcee4
     }
+  }
+  return characters;
+}
+
+// just ensure some types
+function patchupCharacter(character) {
+  if (character.clientConfig?.telegram) {
+    if (character.clientConfig?.telegram?.shouldIgnoreDirectMessages && typeof character.clientConfig?.telegram?.shouldIgnoreDirectMessages === 'string') {
+      // is it a string
+      // we want bool
+      character.clientConfig.telegram.shouldIgnoreDirectMessages = parseBooleanFromText(character.clientConfig.telegram.shouldIgnoreDirectMessages)
+    }
+    if (character.clientConfig?.telegram?.shouldIgnoreBotMessages && typeof character.clientConfig?.telegram?.shouldIgnoreBotMessages === 'string') {
+      // is it a string
+      // we want bool
+      character.clientConfig.telegram.shouldIgnoreBotMessages = parseBooleanFromText(character.clientConfig.telegram.shouldIgnoreBotMessages)
+    }
+  }
+  if (character.clientConfig?.discord) {
+    if (character.clientConfig?.discord?.shouldIgnoreDirectMessages && typeof character.clientConfig?.discord?.shouldIgnoreDirectMessages === 'string') {
+      // is it a string
+      // we want bool
+      character.clientConfig.discord.shouldIgnoreDirectMessages = parseBooleanFromText(character.clientConfig.discord.shouldIgnoreDirectMessages)
+    }
+    if (character.clientConfig?.discord?.shouldIgnoreBotMessages && typeof character.clientConfig?.discord?.shouldIgnoreBotMessages === 'string') {
+      // is it a string
+      // we want bool
+      character.clientConfig.discord.shouldIgnoreBotMessages = parseBooleanFromText(character.clientConfig.discord.shouldIgnoreBotMessages)
+    }
+  }
+  // ENABLE_ACTION_PROCESSING
+  if (character.settings?.secrets?.ENABLE_ACTION_PROCESSING !== undefined && typeof character.settings.secrets.ENABLE_ACTION_PROCESSING === 'boolean') {
+    character.settings.secrets.ENABLE_ACTION_PROCESSING = "" + character.settings.secrets.ENABLE_ACTION_PROCESSING
+    //console.log('making ENABLE_ACTION_PROCESSING a string', typeof character.settings.secrets.ENABLE_ACTION_PROCESSING, character.settings.secrets.ENABLE_ACTION_PROCESSING)
+  }
+  if (character.settings?.secrets?.ELEVENLABS_VOICE_USE_SPEAKER_BOOST !== undefined && typeof character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST === 'boolean') {
+    character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST = "" + character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST
+    //console.log('making settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST a string', typeof character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST, character.settings.secrets.ELEVENLABS_VOICE_USE_SPEAKER_BOOST)
+  }
+  // Email automation
+  if (character.settings?.secrets?.EMAIL_AUTOMATION_ENABLED !== undefined && typeof character.settings.secrets.EMAIL_AUTOMATION_ENABLED === 'boolean') {
+    character.settings.secrets.EMAIL_AUTOMATION_ENABLED = "" + character.settings.secrets.EMAIL_AUTOMATION_ENABLED
+  }
+  // Twitter spaces
+  if (character.settings?.secrets?.TWITTER_SPACES_ENABLE !== undefined && typeof character.settings.secrets.TWITTER_SPACES_ENABLE === 'boolean') {
+    character.settings.secrets.TWITTER_SPACES_ENABLE = "" + character.settings.secrets.TWITTER_SPACES_ENABLE
+  }
 }
 
 async function jsonToCharacter(
     filePath: string,
     character: any
 ): Promise<Character> {
+    patchupCharacter(character);
     validateCharacterConfig(character);
 
     // .id isn't really valid
@@ -810,6 +1038,93 @@ export async function createAgent(
     token: string
 ): Promise<AgentRuntime> {
     elizaLogger.log(`Creating runtime for character ${character.name}`);
+<<<<<<< HEAD
+=======
+
+    nodePlugin ??= createNodePlugin();
+
+    //const teeMode = getSecret(character, "TEE_MODE") || "OFF";
+    const teeMode = "OFF"
+    const walletSecretSalt = getSecret(character, "WALLET_SECRET_SALT");
+
+    // Validate TEE configuration
+    /*
+    if (teeMode !== TEEMode.OFF && !walletSecretSalt) {
+        elizaLogger.error(
+            "A WALLET_SECRET_SALT required when TEE_MODE is enabled"
+        );
+        throw new Error("Invalid TEE configuration");
+    }
+    */
+
+    let goatPlugin: any | undefined;
+
+    if (getSecret(character, "EVM_PRIVATE_KEY")) {
+        goatPlugin = await createGoatPlugin((secret) =>
+            getSecret(character, secret)
+        );
+    }
+
+    let zilliqaPlugin: any | undefined;
+    if (getSecret(character, "ZILLIQA_PRIVATE_KEY")) {
+        zilliqaPlugin = await createZilliqaPlugin((secret) =>
+            getSecret(character, secret)
+        );
+    }
+
+    // Initialize Reclaim adapter if environment variables are present
+    // let verifiableInferenceAdapter;
+    // if (
+    //     process.env.RECLAIM_APP_ID &&
+    //     process.env.RECLAIM_APP_SECRET &&
+    //     process.env.VERIFIABLE_INFERENCE_ENABLED === "true"
+    // ) {
+    //     verifiableInferenceAdapter = new ReclaimAdapter({
+    //         appId: process.env.RECLAIM_APP_ID,
+    //         appSecret: process.env.RECLAIM_APP_SECRET,
+    //         modelProvider: character.modelProvider,
+    //         token,
+    //     });
+    //     elizaLogger.log("Verifiable inference adapter initialized");
+    // }
+    // Initialize Opacity adapter if environment variables are present
+    let verifiableInferenceAdapter;
+    if (
+        process.env.OPACITY_TEAM_ID &&
+        process.env.OPACITY_CLOUDFLARE_NAME &&
+        process.env.OPACITY_PROVER_URL &&
+        process.env.VERIFIABLE_INFERENCE_ENABLED === "true"
+    ) {
+        verifiableInferenceAdapter = new OpacityAdapter({
+            teamId: process.env.OPACITY_TEAM_ID,
+            teamName: process.env.OPACITY_CLOUDFLARE_NAME,
+            opacityProverUrl: process.env.OPACITY_PROVER_URL,
+            modelProvider: character.modelProvider,
+            token: token,
+        });
+        elizaLogger.log("Verifiable inference adapter initialized");
+        elizaLogger.log("teamId", process.env.OPACITY_TEAM_ID);
+        elizaLogger.log("teamName", process.env.OPACITY_CLOUDFLARE_NAME);
+        elizaLogger.log("opacityProverUrl", process.env.OPACITY_PROVER_URL);
+        elizaLogger.log("modelProvider", character.modelProvider);
+        elizaLogger.log("token", token);
+    }
+    if (
+        process.env.PRIMUS_APP_ID &&
+        process.env.PRIMUS_APP_SECRET &&
+        process.env.VERIFIABLE_INFERENCE_ENABLED === "true"
+    ) {
+        verifiableInferenceAdapter = new PrimusAdapter({
+            appId: process.env.PRIMUS_APP_ID,
+            appSecret: process.env.PRIMUS_APP_SECRET,
+            attMode: "proxytls",
+            modelProvider: character.modelProvider,
+            token,
+        });
+        elizaLogger.log("Verifiable inference primus adapter initialized");
+    }
+
+>>>>>>> 4d3de8fc495b19ca272f3c70a5e0aa70e22dcee4
     return new AgentRuntime({
         token,
         modelProvider: character.modelProvider,
@@ -924,6 +1239,7 @@ export async function createAgent(
                       advancedTradePlugin,
                   ]
                 : []),
+            /*
             ...(teeMode !== TEEMode.OFF && walletSecretSalt ? [teePlugin] : []),
             teeMode !== TEEMode.OFF &&
             walletSecretSalt &&
@@ -936,6 +1252,7 @@ export async function createAgent(
                 getSecret(character, "SGX"))
                 ? teeLogPlugin
                 : null,
+            */
             getSecret(character, "OMNIFLIX_API_URL") &&
             getSecret(character, "OMNIFLIX_MNEMONIC")
                 ? OmniflixPlugin
@@ -1219,6 +1536,11 @@ async function startAgent(
         character.id ??= stringToUuid(character.name);
         character.username ??= character.name;
 
+        if (!character.modelProvider) {
+          console.warn(character.name, 'has no modelProvider')
+          return false
+        }
+
         const token = getTokenForProvider(character.modelProvider, character);
 
         const runtime: AgentRuntime = await createAgent(
@@ -1317,6 +1639,7 @@ const startAgents = async () => {
     const charactersArg = args.characters || args.character;
     let characters = [defaultCharacter];
 
+<<<<<<< HEAD
     if ((charactersArg) || hasValidRemoteUrls()) {
         characters = await loadCharacters(charactersArg);
     }
@@ -1328,7 +1651,32 @@ const startAgents = async () => {
         }
     } catch (error) {
         elizaLogger.error("Error starting agents:", error);
+=======
+    /*
+    if (process.env.IQ_WALLET_ADDRESS && process.env.IQSOlRPC) {
+        characters = await loadCharacterFromOnchain();
     }
+    */
+
+    const notOnchainJson = true; //!onchainJson || onchainJson == "null";
+
+    if ((notOnchainJson && charactersArg) || hasValidRemoteUrls()) {
+        characters = await loadCharacters(charactersArg);
+    }
+
+    // Normalize characters for injectable plugins
+    characters = await Promise.all(characters.map(normalizeCharacter));
+
+    console.log('starting', characters.length, 'characters')
+    for (const character of characters) {
+      try {
+        startAgent(character, directClient);
+      } catch (error) {
+        console.error("Error starting agent:", character.name, error);
+      }
+>>>>>>> 4d3de8fc495b19ca272f3c70a5e0aa70e22dcee4
+    }
+    console.log('start command issued for', characters.length, 'characters')
 
     // Find available port
     while (!(await checkPortAvailable(serverPort))) {
@@ -1356,7 +1704,7 @@ const startAgents = async () => {
         // wrap it so we don't have to inject directClient later
         return startAgent(processedCharacter, directClient);
     };
-
+    directClient.patchupCharacter = patchupCharacter;
     directClient.loadCharacterTryPath = loadCharacterTryPath;
     directClient.jsonToCharacter = jsonToCharacter;
 
@@ -1372,6 +1720,7 @@ const startAgents = async () => {
 };
 
 startAgents().catch((error) => {
+    console.log('startAgents - error', error)
     elizaLogger.error("Unhandled error in startAgents:", error);
     process.exit(1);
 });

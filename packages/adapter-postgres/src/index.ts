@@ -456,6 +456,7 @@ export class PostgresDatabaseAdapter
                 });
                 return true;
             } catch (error) {
+                console.log('postgres:createAccount - error', error)
                 elizaLogger.error("Error creating account:", {
                     error:
                         error instanceof Error ? error.message : String(error),
@@ -1039,10 +1040,10 @@ export class PostgresDatabaseAdapter
                     WITH content_text AS (
                         SELECT
                             embedding,
-                            COALESCE(
+                            SUBSTR(COALESCE(
                                 content->>$2,
                                 ''
-                            ) as content_text
+                            ), 1, 255) as content_text
                         FROM memories
                         WHERE type = $3
                         AND content->>$2 IS NOT NULL
@@ -1050,14 +1051,14 @@ export class PostgresDatabaseAdapter
                     SELECT
                         embedding,
                         levenshtein(
-                            $1,
+                            SUBSTR($1, 1, 255),
                             content_text
                         ) as levenshtein_score
                     FROM content_text
                     WHERE levenshtein(
-                        $1,
+                        SUBSTR($1, 1, 255),
                         content_text
-                    ) <= $5  -- Add threshold check
+                    ) <= $5
                     ORDER BY levenshtein_score
                     LIMIT $4
                 `;
