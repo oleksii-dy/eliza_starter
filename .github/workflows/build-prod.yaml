@@ -3,7 +3,8 @@ name: Production Deployment
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "prod" branch
+  # Triggers the workflow on push or pull request events but only for the "prod" branch (our Production)
+  push:
     branches: [ prod ]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
