@@ -19,24 +19,24 @@ dotenv.config({ path: '../../.env' });
 //...(process.env.ANTHROPIC_API_KEY ? ['@elizaos/plugin-anthropic'] : []),
 //...(!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY      ? ['@elizaos/plugin-local-ai']      : []),
 
-import * as Sql from '@elizaos/plugin-sql';
-import * as Groq from '@elizaos/plugin-groq';
+//import * as Sql from '@elizaos/plugin-sql';
+//import * as Groq from '@elizaos/plugin-groq';
 //import * as Discord from '@elizaos/plugin-discord';
-import * as Twitter from '@elizaos/plugin-twitter';
+//import * as Twitter from '@elizaos/plugin-twitter';
 //import * as Telgram from '@elizaos/plugin-telegram';
 
-const plugins = {
-  '@elizaos/plugin-sql': Sql,
-  ...(process.env.GROQ_API_KEY ? { '@elizaos/plugin-groq': Groq } : {}),
-  //  ...(process.env.DISCORD_API_TOKEN ? { '@elizaos/plugin-discord': Discord } : {}),
-  ...(process.env.TWITTER_USERNAME ? { '@elizaos/plugin-twitter': Twitter } : {}),
-  //  ...(process.env.TELEGRAM_BOT_TOKEN ? { '@elizaos/plugin-telegram': Telgram } : {}),
-};
+//const plugins = {
+//  '@elizaos/plugin-sql': Sql,
+//  ...(process.env.GROQ_API_KEY ? { '@elizaos/plugin-groq': Groq } : {}),
+//  ...(process.env.DISCORD_API_TOKEN ? { '@elizaos/plugin-discord': Discord } : {}),
+//  ...(process.env.TWITTER_USERNAME ? { '@elizaos/plugin-twitter': Twitter } : {}),
+//  ...(process.env.TELEGRAM_BOT_TOKEN ? { '@elizaos/plugin-telegram': Telgram } : {}),
+//};
 
-function globalPlugin(name: string) {
-  const plugin = plugins[name];
-  return plugin;
-}
+//function globalPlugin(name: string) {
+//  const plugin = plugins[name];
+//  return plugin;
+//}
 
 export const character: Character = {
   name: 'METZGER',

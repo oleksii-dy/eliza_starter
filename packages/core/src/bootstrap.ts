@@ -529,7 +529,7 @@ const syncSingleUser = async (
       worldId,
     });
 
-    logger.success(`Successfully synced user: ${entity.id}`);
+    logger.info(`Successfully synced user: ${entity.id}`);
   } catch (error) {
     logger.error(`Error syncing user: ${error instanceof Error ? error.message : String(error)}`);
   }

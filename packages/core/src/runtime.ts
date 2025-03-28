@@ -118,7 +118,7 @@ export function loadEnvConfig(): Settings {
     if (dotenv) {
       const result = dotenv.config(envPath ? { path: envPath } : {});
       if (!result.error && envPath) {
-        logger.log(`Loaded .env file from: ${envPath}`);
+        logger.info(`Loaded .env file from: ${envPath}`);
       }
     }
   } catch (err) {
@@ -524,7 +524,7 @@ export class AgentRuntime implements IAgentRuntime {
       this.runtimeLogger.warn(
         `[AgentRuntime][${this.character.name}] No TEXT_EMBEDDING model registered. Skipping embedding dimension setup.`
       );
-      console.log('DeBUG models', this.models);
+      console.info('DeBUG models', this.models);
     } else {
       // Only run ensureEmbeddingDimension if we have an embedding model
       await this.ensureEmbeddingDimension();

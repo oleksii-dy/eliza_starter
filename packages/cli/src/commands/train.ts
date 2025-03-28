@@ -103,6 +103,7 @@ export async function trainAgent(
     isPluginTestMode?: boolean;
   } = {}
 ): Promise<IAgentRuntime> {
+  console.log('train agent');
   character.id ??= stringToUuid(character.name);
 
   const encryptedChar = encryptedCharacter(character);
@@ -110,6 +111,8 @@ export async function trainAgent(
   // For ESM modules we need to use import.meta.url instead of __dirname
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
+
+  console.log('Filename', __filename);
 
   // Find package.json relative to the current file
   const packageJsonPath = path.resolve(__dirname, '../package.json');
@@ -124,6 +127,7 @@ export async function trainAgent(
 
   const characterPlugins: Plugin[] = [];
 
+  console.log('encryptedChar', encryptedChar);
   // for each plugin, check if it installed, and install if it is not
   for (const plugin of encryptedChar.plugins) {
     logger.debug('Checking if plugin is installed: ', plugin);
@@ -270,6 +274,7 @@ const trainAgents = async (options: {
   plugins?: string[];
   characters?: Character[];
 }) => {
+  console.log('train agents');
   // Load environment variables from project .env or .eliza/.env
   await loadEnvironment();
 
@@ -286,6 +291,7 @@ const trainAgents = async (options: {
   const shouldConfigure = options.configure || existingConfig.isDefault;
 
   // Handle service and model selection
+  console.log('Should configure?');
   if (shouldConfigure) {
     // First-time setup or reconfiguration requested
     if (existingConfig.isDefault) {
@@ -585,6 +591,7 @@ export const train = new Command()
   .option('--character <character>', 'Path or URL to character file to use instead of default')
   .option('--build', 'Build the project before training')
   .action(async (options) => {
+    console.log('train!');
     displayBanner();
 
     try {
