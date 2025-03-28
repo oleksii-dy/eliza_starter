@@ -301,6 +301,8 @@ export class AgentRuntime implements IAgentRuntime {
 
         this.databaseAdapter = opts.databaseAdapter;
 
+        // adapters aren't set up yet
+        /*
         // By convention, we create a user and room using the agent id.
         // Memories related to it are considered global context for the agent.
         this.ensureConnection(
@@ -613,7 +615,7 @@ export class AgentRuntime implements IAgentRuntime {
             const c = this.clients[cStr];
             elizaLogger.log('runtime::stop - requesting', cStr, 'client stop for', this.character.name)
             if (c.stop) {
-              await c.stop()
+              await c.stop(this)
             } else {
               elizaLogger.error('runtime::stop - no stop for', cStr)
             }
