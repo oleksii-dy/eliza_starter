@@ -12,6 +12,7 @@ import {
     stringToUuid,
     type AgentRuntime,
     type Client,
+    type ClientInstance,
     type Content,
     type IAgentRuntime,
     type Media,
@@ -27,7 +28,7 @@ import OpenAI from "openai";
 import * as path from "path";
 import { z } from "zod";
 import { createApiRouter } from "./api.ts";
-import { createVerifiableLogApiRouter } from "./verifiable-log-api.ts";
+//import { createVerifiableLogApiRouter } from "./verifiable-log-api.ts";
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -139,8 +140,8 @@ export class DirectClient {
         const apiRouter = createApiRouter(this.agents, this);
         this.app.use(apiRouter);
 
-        const apiLogRouter = createVerifiableLogApiRouter(this.agents);
-        this.app.use(apiLogRouter);
+        //const apiLogRouter = createVerifiableLogApiRouter(this.agents);
+        //this.app.use(apiLogRouter);
 
         // Define an interface that extends the Express Request interface
         interface CustomRequest extends ExpressRequest {
@@ -1041,8 +1042,8 @@ export const DirectClientInterface: Client = {
         client.start(serverPort);
         return client;
     },
-    stop: async (_runtime: IAgentRuntime, client?: Client) => {
-    },
+    //stop: async (_runtime: IAgentRuntime, client?: Client) => {
+    //},
 };
 
 const directPlugin: Plugin = {
