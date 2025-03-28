@@ -7,6 +7,8 @@ import {
   logger,
   stringToUuid,
   encryptedCharacter,
+  Memory,
+  State,
 } from '@elizaos/core';
 import { Command } from 'commander';
 import fs from 'node:fs';
@@ -247,9 +249,28 @@ export async function trainAgent(
   // report to console
   logger.debug(`trained ${runtime.character.name} as ${runtime.agentId}`);
 
-  let message = {};
-  let state = {};
+  let uuid = 'f81d4fae-7dec-11d0-a765-00a0c91e6bf6';
+  let message: Memory = {
+    entityId: uuid,
+    content: {},
+    roomId: uuid,
+  };
+  let state: State = {
+    values: {},
+    data: {},
+    text: '',
+  };
 
+  let responseMessages: Memory[] = [];
+  let callback = (response: any): Promise<Memory[]> => {
+    console.log('response', response);
+    let m: Memory = {
+      entityId: uuid,
+      content: {},
+      roomId: uuid,
+    };
+    return Promise.resolve([m]);
+  };
   await runtime.evaluate(
     message,
     state,

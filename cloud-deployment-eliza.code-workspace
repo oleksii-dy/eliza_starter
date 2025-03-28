@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../ai-agent-terraform"
+		},
+		{
+			"path": "../../../.vscode/extensions/amazonwebservices.aws-toolkit-vscode-3.48.0/resources"
+		}
+	],
+	"settings": {}
+}
