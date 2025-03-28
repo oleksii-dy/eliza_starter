@@ -54,8 +54,20 @@ import { fal } from "@fal-ai/client";
 import BigNumber from "bignumber.js";
 import { createPublicClient, http } from "viem";
 import fs from "fs";
+//import { promises as fsp } from "fs";
 import os from "os";
 import path from "path";
+
+import {
+    accessSync,
+    mkdirSync,
+    appendFileSync,
+    writeFileSync,
+    readdirSync,
+    unlinkSync,
+} from "fs";
+import { resolve, dirname } from "path";
+
 
 type Tool = CoreTool<any, any>;
 type StepResult = AIStepResult<any>;
@@ -184,17 +196,6 @@ async function truncateTiktoken(
         return context.slice(-maxTokens * 4); // Rough estimate of 4 chars per token
     }
 }
-
-import { promises as fs } from "fs";
-import {
-    accessSync,
-    mkdirSync,
-    appendFileSync,
-    writeFileSync,
-    readdirSync,
-    unlinkSync,
-} from "fs";
-import { resolve, dirname } from "path";
 
 // Synchronous version
 function mkdirpSync(targetPath) {
@@ -613,8 +614,8 @@ export async function generateText({
     maxSteps = 1,
     stop,
     customSystemPrompt,
-    verifiableInference = process.env.VERIFIABLE_INFERENCE_ENABLED === "true",
-    verifiableInferenceOptions,
+    //verifiableInference = process.env.VERIFIABLE_INFERENCE_ENABLED === "true",
+    //verifiableInferenceOptions,
 }: {
     runtime: IAgentRuntime;
     context: string;
@@ -624,9 +625,9 @@ export async function generateText({
     maxSteps?: number;
     stop?: string[];
     customSystemPrompt?: string;
-    verifiableInference?: boolean;
-    verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
-    verifiableInferenceOptions?: VerifiableInferenceOptions;
+    //verifiableInference?: boolean;
+    //verifiableInferenceAdapter?: IVerifiableInferenceAdapter;
+    //verifiableInferenceOptions?: VerifiableInferenceOptions;
 }): Promise<string> {
     if (!context) {
         elizaLogger.error("generateText context is empty");
@@ -638,11 +639,12 @@ export async function generateText({
     elizaLogger.info("Generating text with options:", {
         modelProvider: runtime.modelProvider,
         model: modelClass,
-        verifiableInference,
+        //verifiableInference,
     });
     elizaLogger.log("Using provider:", runtime.modelProvider);
 
     // If verifiable inference is requested and adapter is provided, use it
+    /*
     if (verifiableInference && runtime.verifiableInferenceAdapter) {
         elizaLogger.log(
             "Using verifiable inference adapter:",
@@ -669,6 +671,7 @@ export async function generateText({
             throw error;
         }
     }
+    */
 
     const provider = runtime.modelProvider;
     elizaLogger.debug("Provider settings:", {
