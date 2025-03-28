@@ -226,8 +226,17 @@ const options = {
   hooks: {
     logMethod(inputArgs: [string | Record<string, unknown>, ...unknown[]], method: LogFn): void {
       const error = new Error();
-      console.log(error.stack);
-      console.log('DEBUG2', inputArgs);
+      //	const stack = error.stack.replace("/mnt/data1/nix/time/","TIME")
+      const stack = error.stack
+        .replaceAll('/mnt/data1/nix/time/2025/03/14/cloud-deployment-eliza', 'PRJ1')
+        .replaceAll('/mnt/data1/nix/time/2025/03/14/cloud-deployment-eliza', 'PRJ2')
+        .replaceAll('/mnt/data1/nix/time/', 'TIME')
+        .split('\n')
+        .slice(3, 9)
+        .join('|');
+
+      console.log('DEBUG2', inputArgs, stack);
+      //console.log('DEBUGSTACK', stack);
     },
   },
 

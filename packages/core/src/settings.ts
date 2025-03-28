@@ -48,7 +48,7 @@ export function getSalt(): string {
 
   const salt = secretSalt;
 
-  logger.debug(`Generated salt with length: ${salt.length} (truncated for security)`);
+  //logger.debug(`Generated salt with length: ${salt.length} (truncated for security)`);
   return salt;
 }
 
@@ -62,7 +62,7 @@ export function encryptStringValue(value: string, salt: string): string {
   try {
     // Check if value is undefined or null
     if (value === undefined || value === null) {
-      logger.debug('Attempted to encrypt undefined or null value');
+      //      logger.debug('Attempted to encrypt undefined or null value');
       return value; // Return the value as is (undefined or null)
     }
 
@@ -74,7 +74,7 @@ export function encryptStringValue(value: string, salt: string): string {
         const possibleIv = Buffer.from(parts[0], 'hex');
         if (possibleIv.length === 16) {
           // Value is likely already encrypted, return as is
-          logger.debug('Value appears to be already encrypted, skipping re-encryption');
+          //          logger.debug('Value appears to be already encrypted, skipping re-encryption');
           return value;
         }
       } catch (e) {
@@ -110,16 +110,16 @@ export function decryptStringValue(value: string, salt: string): string {
   try {
     // Check if value is undefined or null
     if (value === undefined || value === null) {
-      logger.debug('Attempted to decrypt undefined or null value');
+      //logger.debug('Attempted to decrypt undefined or null value');
       return value; // Return the value as is (undefined or null)
     }
 
     // Split the IV and encrypted value
     const parts = value.split(':');
     if (parts.length !== 2) {
-      logger.warn(
-        `Invalid encrypted value format - expected 'iv:encrypted', returning original value`
-      );
+      //logger.warn(
+      //        `Invalid encrypted value format - expected 'iv:encrypted', returning original value`
+      //      );
       return value; // Return the original value without decryption
     }
 
@@ -128,7 +128,7 @@ export function decryptStringValue(value: string, salt: string): string {
 
     // Verify IV length
     if (iv.length !== 16) {
-      logger.warn(`Invalid IV length (${iv.length}) - expected 16 bytes`);
+      //logger.warn(`Invalid IV length (${iv.length}) - expected 16 bytes`);
       return value; // Return the original value without decryption
     }
 
@@ -142,7 +142,7 @@ export function decryptStringValue(value: string, salt: string): string {
 
     return decrypted;
   } catch (error) {
-    logger.error(`Error decrypting value: ${error}`);
+    //    logger.error(`Error decrypting value: ${error}`);
     // Return the encrypted value on error
     return value;
   }

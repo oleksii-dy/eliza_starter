@@ -259,7 +259,8 @@ export class AgentRuntime implements IAgentRuntime {
     this.runtimeLogger = logger.child({
       agentName: this.character?.name,
       agentId: this.agentId,
-      level: logLevel === 'debug' ? 'debug' : 'error', // Show only errors unless debug mode is enabled
+      level: 'trace',
+      //logLevel === 'debug' ? 'debug' : 'error', // Show only errors unless debug mode is enabled
     });
 
     this.runtimeLogger.debug(`[AgentRuntime] Process working directory: ${process.cwd()}`);
@@ -297,6 +298,8 @@ export class AgentRuntime implements IAgentRuntime {
    * @param plugin The plugin to register
    */
   async registerPlugin(plugin: Plugin): Promise<void> {
+    this.runtimeLogger.debug('Registering plugin', plugin);
+
     if (!plugin) {
       this.runtimeLogger.error('*** registerPlugin plugin is undefined');
       throw new Error('*** registerPlugin plugin is undefined');
@@ -349,6 +352,7 @@ export class AgentRuntime implements IAgentRuntime {
     // Register plugin actions
     if (plugin.actions) {
       for (const action of plugin.actions) {
+        this.runtimeLogger.debug('Registering plugin action', action);
         this.registerAction(action);
       }
     }
