@@ -615,17 +615,16 @@ export type Media = {
  * Client instance
  */
 export type ClientInstance = {
-//export type Client = {
-    runtime?: any;
+    //runtime?: any;
 
     /** Client name */
-    // name: string;
+    //name: string;
 
     /** Start client connection */
-    start: (runtime: IAgentRuntime) => Promise<unknown>;
+    //start: (runtime: IAgentRuntime) => Promise<unknown>;
 
     /** validate config */
-    validate?: (any) => Promise<{ success: boolean; message: string }>;
+    //validate?: (any) => Promise<{ success: boolean; message: string }>;
 
     /** Stop client connection */
     stop: (runtime: IAgentRuntime) => Promise<unknown>;
@@ -635,6 +634,8 @@ export type ClientInstance = {
  * Client interface for platform connections
  */
 export type Client = {
+    runtime?: any;
+
     /** Client name */
     name: string;
 
@@ -642,7 +643,14 @@ export type Client = {
     config?: { [key: string]: any };
 
     /** Start client connection */
-    start: (runtime: IAgentRuntime) => Promise<ClientInstance>;
+    // needs to be able to fail to start
+    start: (runtime: IAgentRuntime) => Promise<ClientInstance | false>;
+
+    /** validate config */
+    validate?: (any) => Promise<{ success: boolean; message: string }>;
+
+    /** Stop client connection */
+    //stop?: (runtime: IAgentRuntime) => Promise<unknown>;
 };
 
 /**
